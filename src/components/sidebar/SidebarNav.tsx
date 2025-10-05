@@ -233,84 +233,131 @@ export function SidebarNav({
     fetchUserProfile();
   }, []);
 
-  const handleImageUploadClick = () => {
-    fileInputRef.current?.click();
+  const handleProfileImageClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
-    if (file) {
-      try {
-        setIsUploading(true);
+    if (!file) return;
 
-        // Obter o usuário atual
-        const { data: currentUser } = await supabase.auth.getUser();
-        if (!currentUser.user) {
-          throw new Error("Usuário não autenticado");
-        }
-
-        // Upload da imagem para o Supabase Storage
-        const fileExt = file.name.split(".").pop();
-        const fileName = `avatar-${currentUser.user.id}-${Date.now()}.${fileExt}`;
-        const filePath = `avatars/${fileName}`;
-
-        // Fazer upload para o storage do Supabase
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("profile-images")
-          .upload(filePath, file, {
-            cacheControl: "3600",
-            upsert: true,
-          });
-
-        if (uploadError) {
-          console.error("Erro ao fazer upload da imagem:", uploadError);
-          throw new Error(uploadError.message);
-        }
-
-        // Obter a URL pública da imagem
-        const { data: publicUrlData } = supabase.storage
-          .from("profile-images")
-          .getPublicUrl(filePath);
-
-        if (!publicUrlData.publicUrl) {
-          throw new Error("Não foi possível obter a URL pública da imagem");
-        }
-
-        // Atualizar o perfil do usuário com a URL da imagem
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({
-            avatar_url: publicUrlData.publicUrl,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", currentUser.user.id);
-
-        if (updateError) {
-          console.error("Erro ao atualizar perfil com avatar:", updateError);
-          throw new Error(updateError.message);
-        }
-
-        // Atualizar o estado local
-        setProfileImage(publicUrlData.publicUrl);
-
-        // Salvar no localStorage para persistência
-        localStorage.setItem("userAvatarUrl", publicUrlData.publicUrl);
-
-        // Disparar evento para outros componentes saberem que o avatar foi atualizado
-        document.dispatchEvent(
-          new CustomEvent("userAvatarUpdated", {
-            detail: { url: publicUrlData.publicUrl },
-          }),
-        );
-
-        console.log("Avatar atualizado com sucesso!");
-      } catch (error) {
-        console.error("Erro ao processar upload de avatar:", error);
-      } finally {
-        setIsUploading(false);
+    try {
+      // Validar tipo de arquivo
+      if (!file.type.startsWith("image/")) {
+        throw new Error("Por favor, selecione uma imagem válida");
       }
+
+      // Validar tamanho do arquivo (máx 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("A imagem deve ter no máximo 5MB");
+      }
+
+      // Verificar se o usuário está autenticado
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+
+      if (!currentUser) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      let userEmail = currentUser.email;
+      if (!userEmail) {
+        throw new Error("Email do usuário não encontrado");
+      }
+
+      // Criar preview local IMEDIATAMENTE
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setProfileImage(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+
+      // Criar nome único para o arquivo
+      const fileExt = file.name.split(".").pop();
+      const fileName = `avatar-${currentUser.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // Fazer upload para o storage do Supabase
+      const { error: uploadError } = await supabase.storage
+        .from("profile-images")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error("Erro ao fazer upload da imagem:", uploadError);
+        throw new Error(uploadError.message);
+      }
+
+      // Obter a URL pública da imagem
+      const { data: publicUrlData } = supabase.storage
+        .from("profile-images")
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData.publicUrl) {
+        throw new Error("Não foi possível obter a URL pública da imagem");
+      }
+
+      console.log("🖼️ URL da imagem gerada:", publicUrlData.publicUrl);
+
+      // Atualizar o perfil no banco NEON via API
+      const response = await fetch('/api/perfis/avatar', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userEmail,
+          avatar_url: publicUrlData.publicUrl,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Erro ao atualizar avatar no banco de dados');
+      }
+
+      console.log("✅ Avatar atualizado no Neon:", result.data);
+
+      // Atualizar o estado local
+      setProfileImage(publicUrlData.publicUrl);
+      localStorage.setItem("userAvatarUrl", publicUrlData.publicUrl);
+
+      // Atualizar o cache do perfil
+      const cachedProfile = localStorage.getItem('userProfile');
+      if (cachedProfile) {
+        try {
+          const profile = JSON.parse(cachedProfile);
+          profile.imagem_avatar = publicUrlData.publicUrl;
+          localStorage.setItem('userProfile', JSON.stringify(profile));
+        } catch (e) {
+          console.error('Erro ao atualizar cache:', e);
+        }
+      }
+
+      // Disparar evento customizado para notificar outros componentes
+      const avatarEvent = new CustomEvent("userAvatarUpdated", {
+        detail: { avatarUrl: publicUrlData.publicUrl },
+      });
+      document.dispatchEvent(avatarEvent);
+
+      console.log("✅ Avatar atualizado com sucesso!");
+    } catch (error) {
+      console.error("❌ Erro ao atualizar avatar:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Erro ao atualizar imagem de perfil",
+      );
     }
   };
 

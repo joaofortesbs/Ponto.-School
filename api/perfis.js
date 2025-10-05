@@ -222,23 +222,26 @@ router.patch('/avatar', async (req, res) => {
     }
 
     console.log('🖼️ Atualizando avatar para:', email);
+    console.log('🖼️ Nova URL do avatar:', avatar_url);
 
     const query = `
       UPDATE usuarios 
       SET imagem_avatar = $1, updated_at = NOW()
       WHERE email = $2
-      RETURNING id, nome_completo, nome_usuario, email, imagem_avatar
+      RETURNING id, nome_completo, nome_usuario, email, imagem_avatar, updated_at
     `;
 
     const result = await neonDB.executeQuery(query, [avatar_url, email]);
 
     if (result.success && result.data.length > 0) {
-      console.log('✅ Avatar atualizado com sucesso');
+      console.log('✅ Avatar atualizado com sucesso no Neon');
+      console.log('✅ Dados retornados:', result.data[0]);
       res.json({ 
         success: true, 
         data: result.data[0] 
       });
     } else {
+      console.log('⚠️ Nenhum perfil encontrado para o email:', email);
       res.status(404).json({ 
         success: false, 
         error: 'Perfil não encontrado' 
