@@ -158,19 +158,20 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
       setIsSaving(true);
       console.log('💾 Iniciando salvamento de atividades criadas no Neon...');
 
-      // Importar serviços necessários
+      // Importar serviço necessário
       const { atividadesNeonService } = await import('@/services/atividadesNeonService');
-      const { profileService } = await import('@/services/profileService');
 
-      // Obter perfil do usuário
-      const profile = await profileService.getCurrentUserProfile();
+      // Obter ID do usuário do localStorage (sistema de autenticação Neon)
+      const userId = localStorage.getItem('user_id');
+      const authToken = localStorage.getItem('auth_token');
       
-      if (!profile?.id) {
+      if (!userId || !authToken) {
         alert('❌ Erro: Usuário não autenticado. Faça login para salvar as atividades.');
+        console.error('❌ Autenticação não encontrada:', { userId: !!userId, authToken: !!authToken });
         return;
       }
 
-      console.log('👤 Usuário identificado:', profile.id);
+      console.log('👤 Usuário identificado:', userId);
 
       // Buscar atividades construídas do localStorage
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
@@ -201,7 +202,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
             // Salvar no banco Neon
             const result = await atividadesNeonService.salvarAtividade(
               activityId,
-              profile.id,
+              userId,
               tipo,
               parsedData
             );
