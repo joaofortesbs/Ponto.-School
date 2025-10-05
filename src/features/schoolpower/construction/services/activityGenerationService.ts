@@ -1,4 +1,6 @@
 import { ActivityFormData } from '../types/ActivityTypes';
+import { atividadesNeonService } from '@/services/atividadesNeonService';
+import { profileService } from '@/services/profileService';
 
 interface GeneratedActivity {
   id: string;
@@ -53,23 +55,61 @@ export class ActivityGenerationService {
 
     console.log('✅ Atividade gerada com sucesso:', generatedActivity);
 
-    // Simular salvamento no localStorage para cada atividade
-    this.saveActivityData(activityId, generatedActivity);
+    // Salvar atividade (localStorage + banco Neon)
+    await this.saveActivityData(activityId, generatedActivity);
 
     return generatedActivity;
   }
 
-  private saveActivityData(activityId: string, activity: GeneratedActivity): void {
+  private async saveActivityData(activityId: string, activity: GeneratedActivity): Promise<void> {
     try {
-      // Salvar dados da atividade gerada
+      // 1. Salvar dados da atividade gerada no localStorage (backward compatibility)
       const activityKey = `schoolpower_activity_${activityId}`;
       localStorage.setItem(activityKey, JSON.stringify(activity));
 
-      // Salvar dados para pré-visualização
+      // 2. Salvar dados para pré-visualização no localStorage
       const previewKey = `schoolpower_preview_${activityId}`;
       localStorage.setItem(previewKey, JSON.stringify(activity.previewData));
 
-      console.log(`💾 Dados da atividade ${activityId} salvos com sucesso`);
+      console.log(`💾 Dados da atividade ${activityId} salvos no localStorage`);
+
+      // 3. Salvar no banco Neon automaticamente
+      try {
+        const profile = await profileService.getCurrentUserProfile();
+        
+        if (profile?.id) {
+          console.log(`🔄 Salvando atividade ${activityId} no banco Neon...`);
+          
+          const result = await atividadesNeonService.salvarAtividade(
+            activityId,
+            profile.id,
+            activity.type,
+            activity
+          );
+          
+          if (result.success) {
+            console.log(`✅ Atividade ${activityId} salva no banco Neon com sucesso!`);
+            
+            // Marcar como sincronizada
+            const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+            constructedActivities[activityId] = {
+              ...constructedActivities[activityId],
+              isBuilt: true,
+              builtAt: new Date().toISOString(),
+              type: activity.type,
+              syncedToNeon: true
+            };
+            localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+          } else {
+            console.warn(`⚠️ Não foi possível salvar no Neon, mas atividade está no localStorage`);
+          }
+        } else {
+          console.warn('⚠️ Usuário não autenticado, atividade salva apenas no localStorage');
+        }
+      } catch (neonError) {
+        console.error('❌ Erro ao salvar no Neon, mas atividade está no localStorage:', neonError);
+      }
+
     } catch (error) {
       console.error(`❌ Erro ao salvar atividade ${activityId}:`, error);
     }

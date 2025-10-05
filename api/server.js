@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import emailRoutes from './enviar-email.js';
 import neonDBModule from './neon-db.js';
 import perfilsHandler from './perfis.js';
+import atividadesRoutes from './atividades.js';
 
 const { neonDB } = neonDBModule;
 
@@ -60,6 +61,7 @@ app.use((err, req, res, next) => {
 // Rotas
 app.use('/api/email', emailRoutes);  // Mover para prefixo específico para não interferir com outras rotas
 app.use('/api/perfis', perfilsHandler);
+app.use('/api/atividades-neon', atividadesRoutes); // Nova API de atividades no Neon
 
 // =================
 // FUNÇÃO PARA REGISTRAR ROTAS DE ATIVIDADES

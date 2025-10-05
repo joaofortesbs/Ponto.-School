@@ -144,4 +144,9 @@ Replit Secrets (auto-configured):
   - All passwords stored with irreversible bcrypt hashes
   - Registration page fully connected to database
   - Login system authenticates against real database
+  - **Created table "Atividades"** with columns: id, id_user (UUID FK), tipo, id_json (TEXT)
+  - Automatic triggers for updated_at column
+  - Activities now persist in database instead of localStorage
+  - All School Power activities automatically saved to Neon database
+  - Activity history loads from database
   - All data operations affect the real Neon database
