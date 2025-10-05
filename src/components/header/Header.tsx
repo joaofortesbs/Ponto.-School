@@ -73,9 +73,17 @@ export function Header() {
             2
           </Badge>
         </Button>
-        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-          <User className="h-4 w-4" />
-          <span>{userName}</span>
+        <div className="flex items-center gap-3 bg-[#001427] dark:bg-[#1a2332] px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center flex-shrink-0">
+            <User className="h-4 w-4 text-white" />
+          </div>
+          <div className="flex flex-col items-start gap-0.5">
+            <span className="text-sm font-medium text-white dark:text-white leading-none">{userName}</span>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-[#FF6B00]"></div>
+              <span className="text-xs font-semibold text-[#FF6B00] leading-none">Full</span>
+            </div>
+          </div>
         </div>
       </div>
     </header>
