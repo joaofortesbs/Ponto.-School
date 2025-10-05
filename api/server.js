@@ -5,7 +5,7 @@ import emailRoutes from './enviar-email.js';
 import neonDBModule from './neon-db.js';
 import perfilsHandler from './perfis.js';
 import atividadesRoutes from './atividades.js';
-import uploadAvatarRoutes from './api/perfis/upload-avatar.js'; // Importar as novas rotas de upload
+import uploadAvatarRoutes from './upload-avatar.js'; // Importar as novas rotas de upload
 
 const { neonDB } = neonDBModule;
 
@@ -49,7 +49,7 @@ app.use((err, req, res, next) => {
 // Rotas
 app.use('/api/enviar-email', emailRoutes);
 app.use('/api/perfis', perfilsHandler);
-app.use('/api/perfis/upload-avatar', uploadAvatarRoutes); // Rota para upload de avatar
+app.use('/api/upload-avatar', uploadAvatarRoutes); // Rota para upload de avatar
 app.use('/api/atividades-neon', atividadesRoutes);
 
 // =================
@@ -295,7 +295,7 @@ app.get('/', (req, res) => {
           <p><strong>POST /api/perfis</strong> - Criar perfil</p>
         </div>
         <div class="endpoint">
-          <p><strong>POST /api/perfis/upload-avatar</strong> - Upload de avatar</p>
+          <p><strong>POST /api/upload-avatar</strong> - Upload de avatar</p>
         </div>
         <h3>Endpoints de Atividades:</h3>
         <div class="endpoint">

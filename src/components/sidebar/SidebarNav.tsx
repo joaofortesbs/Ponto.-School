@@ -263,10 +263,17 @@ export function SidebarNav({
       formData.append("email", userEmail);
 
       // Upload para o servidor que salvará no Supabase Storage E no Neon
-      const uploadResponse = await fetch('/api/perfis/upload-avatar', {
+      const uploadResponse = await fetch('/api/upload-avatar', {
         method: 'POST',
         body: formData,
       });
+
+      // Verificar se a resposta é válida
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error('❌ Erro na resposta do servidor:', errorText);
+        throw new Error(`Erro no servidor: ${uploadResponse.status}`);
+      }
 
       const uploadResult = await uploadResponse.json();
 
