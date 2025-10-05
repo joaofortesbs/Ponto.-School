@@ -36,7 +36,7 @@ Preferred communication style: Simple, everyday language.
 - **User Roles**: Support for students, teachers, and administrators with role-based access
 
 ### Data Architecture
-- **Database**: Supabase PostgreSQL for structured data storage
+- **Database**: Replit PostgreSQL (Neon-backed) for API data storage and Supabase PostgreSQL for user authentication
 - **Real-time Features**: Supabase Realtime for live chat, user presence, and collaborative features
 - **File Storage**: Supabase Storage for user-generated content, avatars, and educational materials
 - **Local Storage**: Browser storage for temporary data and user preferences
@@ -101,7 +101,7 @@ Preferred communication style: Simple, everyday language.
 - **Backend Server**: Express.js configured to:
   - Listen on localhost:3001 (internal only)
   - Handle API routes: email, profiles, activities
-  - Initialize Neon database connection on startup
+  - Initialize Replit PostgreSQL database connection on startup
 
 ### Deployment Configuration
 - **Type**: VM (stateful deployment)
@@ -117,6 +117,10 @@ Located in `.env` file:
 - `PORT`: Backend server port (default: 3001)
 - `SENDGRID_API_KEY`: SendGrid API key for emails (optional)
 
+Replit Secrets (auto-configured):
+- `DATABASE_URL`: PostgreSQL connection string (Replit-managed)
+- `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`: PostgreSQL credentials
+
 ### Key Files
 - `vite.config.ts`: Vite configuration with proxy setup
 - `api/server.js`: Backend Express server
@@ -128,3 +132,5 @@ Located in `.env` file:
 - Updated backend to bind to localhost:3001
 - Set up combined workflow running both frontend and backend
 - Configured VM deployment for stateful application
+- Created and configured Replit PostgreSQL database for API data storage
+- Successfully initialized database schema with profiles table and indexes
