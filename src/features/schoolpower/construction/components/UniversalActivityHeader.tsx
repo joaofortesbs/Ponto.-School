@@ -353,15 +353,25 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
     }
   };
 
-  // Definir estilo condicional baseado na prop isSharedActivity
+  // Definir estilo condicional baseado na prop isSharedActivity - FORÇADO com !important
   const headerStyle = isSharedActivity 
-    ? { backgroundColor: '#021321' }
+    ? { 
+        backgroundColor: '#021321 !important' as any,
+        color: '#ffffff !important' as any
+      }
     : {};
 
   return (
     <div 
-      className={`universal-activity-header w-full h-24 ${!isSharedActivity ? 'border-b-2 border-orange-200 dark:border-orange-800/50' : 'border border-slate-700 border-b-0'} px-6 py-4 shadow-sm rounded-t-2xl ${!isSharedActivity ? 'bg-gradient-to-r from-orange-50 via-white to-orange-50 dark:from-orange-950/20 dark:via-gray-800 dark:to-orange-950/20' : ''}`}
-      style={headerStyle}
+      className={`universal-activity-header w-full h-24 px-6 py-4 shadow-sm rounded-t-2xl ${
+        isSharedActivity 
+          ? 'border border-slate-700 border-b-0' 
+          : 'border-b-2 border-orange-200 dark:border-orange-800/50 bg-gradient-to-r from-orange-50 via-white to-orange-50 dark:from-orange-950/20 dark:via-gray-800 dark:to-orange-950/20'
+      }`}
+      style={isSharedActivity ? {
+        backgroundColor: '#021321',
+        color: '#ffffff'
+      } : {}}
     >
       <div className="flex items-center justify-between h-full">
         {/* Lado Esquerdo - Ícone e Informações da Atividade */}

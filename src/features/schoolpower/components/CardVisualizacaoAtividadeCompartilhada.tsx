@@ -415,10 +415,14 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         <CardContent className="p-8 min-h-[550px] flex flex-col">
           {/* Cabeçalho da Atividade - Removido pois agora está no UniversalActivityHeader */}
 
-          {/* Seção de Descrição da Atividade - Expansível com Clique */}
+          {/* Seção de Descrição da Atividade - Expansível com Clique - TEMA ESCURO FORÇADO */}
           <div className="mb-6">
             <Card 
-              className="bg-gradient-to-r from-orange-50/10 to-orange-100/10 border-orange-200/20 dark:border-orange-700/30 rounded-2xl shadow-sm cursor-pointer hover:bg-gradient-to-r hover:from-orange-50/15 hover:to-orange-100/15 transition-all duration-300"
+              className="border-orange-700/30 rounded-2xl shadow-sm cursor-pointer transition-all duration-300"
+              style={{
+                backgroundColor: 'rgba(251, 146, 60, 0.1)',
+                borderColor: 'rgba(251, 146, 60, 0.3)'
+              }}
               onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
             >
               <CardContent className={`transition-all duration-500 ease-in-out ${
@@ -505,12 +509,15 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
             </Card>
           </div>
 
-        {/* Card de Pré-visualização da Atividade - Com tema escuro forçado */}
+        {/* Card de Pré-visualização da Atividade - TEMA ESCURO FORÇADO */}
         <div className="mb-8 flex-1 relative group">
-          <Card ref={cardRef} className="border-slate-700 rounded-2xl shadow-lg overflow-hidden h-full" style={{ backgroundColor: '#1e293b' }}>
+          <Card ref={cardRef} className="border-slate-700 rounded-2xl shadow-lg overflow-hidden h-full" style={{ backgroundColor: '#0f172a' }}>
             <CardContent className="p-0 h-full flex flex-col">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4">
-                <div className="flex items-center justify-center gap-2 text-white">
+              <div className="p-4" style={{ 
+                background: 'linear-gradient(to right, #f97316, #ea580c)',
+                color: '#ffffff'
+              }}>
+                <div className="flex items-center justify-center gap-2">
                   <Eye className="w-5 h-5" />
                   <span className="font-semibold">Pré-visualização da Atividade</span>
                 </div>
@@ -518,7 +525,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
 
               <div className="flex-1 overflow-hidden min-h-[350px] max-h-[350px] relative">
                 {/* Conteúdo da pré-visualização com interação desabilitada - visualização fixa tipo captura */}
-                <div className="p-4 pointer-events-none overflow-hidden h-full" style={{ backgroundColor: '#f8f9fa' }}>
+                <div className="p-4 pointer-events-none overflow-hidden h-full" style={{ backgroundColor: '#ffffff' }}>
                   <div className="transform scale-75 origin-top-left w-[133%] h-[133%] overflow-hidden">
                     {renderActivityPreview()}
                   </div>
