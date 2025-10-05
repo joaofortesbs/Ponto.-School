@@ -1,17 +1,9 @@
-
 import express from 'express';
 import multer from 'multer';
-import { createClient } from '@supabase/supabase-js';
 import neonDBModule from './neon-db.js';
 
 const { neonDB } = neonDBModule;
 const router = express.Router();
-
-// Configurar Supabase
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL || 'https://zwmznopdzujcxzujijge.supabase.co',
-  process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bXpub3BkenVqY3h6dWppamdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAzNjM3NjgsImV4cCI6MjA1NTkzOTc2OH0.CiihfkrmPoyiE0R_nFONFHYgwIbq8BaNcYNEavQKRK8'
-);
 
 // Configurar multer para upload em memória
 const upload = multer({
@@ -28,7 +20,7 @@ const upload = multer({
   },
 });
 
-// Rota de upload
+// Rota de upload - Salva imagem como Base64 no banco Neon
 router.post('/', upload.single('avatar'), async (req, res) => {
   try {
     const { email } = req.body;
@@ -49,39 +41,15 @@ router.post('/', upload.single('avatar'), async (req, res) => {
     }
 
     console.log('📤 Upload de avatar recebido para:', email);
+    console.log('📦 Tamanho do arquivo:', file.size, 'bytes');
+    console.log('🖼️ Tipo MIME:', file.mimetype);
 
-    // Gerar nome único para o arquivo
-    const fileExt = file.originalname.split('.').pop();
-    const fileName = `avatar-${Date.now()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
+    // Converter imagem para Base64
+    const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
 
-    // Upload para Supabase Storage
-    const { error: uploadError } = await supabase.storage
-      .from('profile-images')
-      .upload(filePath, file.buffer, {
-        contentType: file.mimetype,
-        cacheControl: '3600',
-        upsert: true,
-      });
+    console.log('✅ Imagem convertida para Base64');
 
-    if (uploadError) {
-      console.error('❌ Erro no upload para Storage:', uploadError);
-      throw new Error(uploadError.message);
-    }
-
-    // Obter URL pública
-    const { data: publicUrlData } = supabase.storage
-      .from('profile-images')
-      .getPublicUrl(filePath);
-
-    if (!publicUrlData?.publicUrl) {
-      throw new Error('Não foi possível obter URL pública');
-    }
-
-    const avatarUrl = publicUrlData.publicUrl;
-    console.log('✅ Arquivo salvo no Storage:', avatarUrl);
-
-    // Atualizar banco Neon
+    // Atualizar banco Neon com a imagem Base64
     const updateQuery = `
       UPDATE usuarios 
       SET imagem_avatar = $1, updated_at = NOW()
@@ -89,17 +57,18 @@ router.post('/', upload.single('avatar'), async (req, res) => {
       RETURNING id, nome_completo, email, imagem_avatar
     `;
 
-    const neonResult = await neonDB.executeQuery(updateQuery, [avatarUrl, email]);
+    const neonResult = await neonDB.executeQuery(updateQuery, [base64Image, email]);
 
     if (!neonResult.success || neonResult.data.length === 0) {
+      console.error('❌ Erro ao atualizar perfil no Neon:', neonResult.error);
       throw new Error('Erro ao atualizar perfil no banco Neon');
     }
 
-    console.log('✅ Perfil atualizado no Neon:', neonResult.data[0]);
+    console.log('✅ Avatar salvo com sucesso no banco Neon');
 
     res.json({
       success: true,
-      avatar_url: avatarUrl,
+      avatar_url: base64Image,
       profile: neonResult.data[0],
     });
 
