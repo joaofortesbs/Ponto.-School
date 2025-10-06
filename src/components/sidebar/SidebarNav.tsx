@@ -395,7 +395,7 @@ export function SidebarNav({
     {
       icon: "fas fa-route",
       label: "Trilhas School",
-      path: "/trilhas-school",
+      path: "trilhas-school",
     },
     {
       icon: "fas fa-rocket",
