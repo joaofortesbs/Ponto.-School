@@ -392,50 +392,44 @@ export function SidebarNav({
       icon: "fas fa-user-graduate",
       label: "Minhas Turmas",
       path: "/turmas",
-      disabled: true, // Desabilitado conforme a solicitação
     },
     {
       icon: "fas fa-route",
       label: "Trilhas School",
       path: "/trilhas-school/alunos",
-      disabled: true, // Desabilitado conforme a solicitação
     },
     {
       icon: "fas fa-project-diagram",
       label: "School Planner",
       path: "/school-planner",
-      disabled: true, // Desabilitado conforme a solicitação
+      disabled: true,
     },
     {
       icon: "fas fa-brain",
       label: "Epictus IA",
       path: "/epictus-ia",
       isSpecial: true,
-      disabled: true, // Desabilitado conforme a solicitação
     },
     {
       icon: "fas fa-calendar-alt",
       label: "Agenda",
       path: "/agenda",
-      disabled: true, // Desabilitado conforme a solicitação
     },
     {
       icon: "fas fa-users",
       label: "Comunidades",
       path: "/comunidades",
-      disabled: true, // Desabilitado conforme a solicitação
     },
     {
       icon: "fas fa-trophy",
       label: "Conquistas",
       path: "/conquistas",
-      disabled: true, // Desabilitado conforme a solicitação
     },
     {
       icon: "fas fa-compass",
       label: "Explorar",
       path: "/explorar",
-      disabled: true, // Desabilitado conforme a solicitação
+      disabled: true,
     },
   ];
 

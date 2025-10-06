@@ -342,51 +342,6 @@ function App() {
                       <TrilhasSchoolAlunoInterface />
                     </Suspense>
                   } />
-                  <Route path="portal/alunos" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/PortalAlunoConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="agenda/alunos" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AgendaAlunoConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="biblioteca/alunos" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/BibliotecaAlunoConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="conquistas/alunos" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/ConquistasAlunoConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="carteira/alunos" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/CarteiraAlunoConstruction')))}
-                    </Suspense>
-                  } />
                   <Route path="epictus-ia" element={<EpictusIAPage />} />
                   <Route path="/school-power" element={<SchoolPowerPageIndex />} />
                   <Route path="trilhas-school" element={<TrilhasSchoolProfessorInterface />} />
