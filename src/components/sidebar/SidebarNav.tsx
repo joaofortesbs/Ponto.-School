@@ -312,7 +312,11 @@ export function SidebarNav({
     }
   };
 
-  const handleNavigation = (path: string, isSpecial?: boolean) => {
+  const handleNavigation = (path: string, isSpecial?: boolean, disabled?: boolean) => {
+    if (disabled) {
+      return; // Não navega se o item estiver desabilitado
+    }
+    
     if (path === "/mentor-ia") {
       setShowMentorAI(true);
     } else {
@@ -352,6 +356,7 @@ export function SidebarNav({
       icon: "fas fa-project-diagram",
       label: "School Planner",
       path: "/school-planner",
+      disabled: true,
     },
     {
       icon: "fas fa-brain",
@@ -378,6 +383,7 @@ export function SidebarNav({
       icon: "fas fa-compass",
       label: "Explorar",
       path: "/explorar",
+      disabled: true,
     },
   ];
 
@@ -915,9 +921,10 @@ export function SidebarNav({
                   <div 
                     className={cn(
                       "menu-item",
-                      isActive(item.path) ? "active" : ""
+                      isActive(item.path) ? "active" : "",
+                      item.disabled ? "opacity-50 cursor-not-allowed" : ""
                     )}
-                    onClick={() => handleNavigation(item.path, item.isSpecial)}
+                    onClick={() => handleNavigation(item.path, item.isSpecial, item.disabled)}
                   >
                     <div className="item-content">
                       <div className={cn(

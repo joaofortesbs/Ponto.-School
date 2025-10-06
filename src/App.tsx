@@ -331,7 +331,15 @@ function App() {
                   <Route path="turmas/grupos2" element={<GruposEstudo2 />} />
                   <Route path="turmas/grupos" element={<GruposEstudo />} />
                   <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
-                  <Route path="comunidades" element={<Comunidades />} />
+                  <Route path="comunidades" element={
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <TypewriterLoader />
+                      </div>
+                    }>
+                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
+                    </Suspense>
+                  } />
                   <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
                   <Route path="trilhas-school/alunos" element={
                     <Suspense fallback={
@@ -340,6 +348,26 @@ function App() {
                       </div>
                     }>
                       <TrilhasSchoolAlunoInterface />
+                    </Suspense>
+                  } />
+                  <Route path="school-planner" element={
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <TypewriterLoader />
+                      </div>
+                    }>
+                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
+                    </Suspense>
+                  } />
+                  <Route path="agenda" element={<Agenda />} />
+                  <Route path="conquistas" element={<Conquistas />} />
+                  <Route path="explorar" element={
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <TypewriterLoader />
+                      </div>
+                    }>
+                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
                     </Suspense>
                   } />
                   <Route path="epictus-ia" element={<EpictusIAPage />} />
