@@ -3,23 +3,28 @@ import { Client } from 'pg';
 class NeonDBManager {
   constructor() {
     // URLs dos bancos Neon externos fornecidos pelo usuário
-    const DEVELOPMENT_DB_URL = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-delicate-bush-acsigqej-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+    // ATENÇÃO: Lógica invertida conforme solicitado pelo usuário
+    const DEPLOYMENT_DB_URL = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-delicate-bush-acsigqej-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
     const PRODUCTION_DB_URL = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
     
-    // Detectar ambiente: se REPLIT_DEPLOYMENT existe, estamos em produção
-    const isProduction = process.env.REPLIT_DEPLOYMENT === '1' || 
+    // Detectar ambiente: se REPLIT_DEPLOYMENT existe, estamos em deployment (publicado)
+    const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || 
                          process.env.NODE_ENV === 'production' ||
                          process.env.REPL_DEPLOYMENT === '1';
     
-    // Selecionar banco baseado no ambiente
-    let connectionString = isProduction ? PRODUCTION_DB_URL : DEVELOPMENT_DB_URL;
-    const environment = isProduction ? 'PRODUCTION' : 'DEVELOPMENT';
+    // LÓGICA INVERTIDA conforme solicitado:
+    // - Desenvolvimento (Replit) → usa PRODUCTION database (ep-spring-truth)
+    // - Deployment (Publicado) → usa DEPLOYMENT database (ep-delicate-bush)
+    let connectionString = isDeployment ? DEPLOYMENT_DB_URL : PRODUCTION_DB_URL;
+    const environment = isDeployment ? 'DEPLOYMENT (Publicado)' : 'DEVELOPMENT (Replit)';
+    const dbName = isDeployment ? 'ep-delicate-bush (deployment)' : 'ep-spring-truth (production)';
     
     // Log de debug para verificar qual banco está sendo usado
     if (connectionString) {
       const dbHost = connectionString.match(/@([^/]+)/)?.[1] || 'unknown';
       console.log(`🔗 [NeonDB] Ambiente: ${environment}`);
-      console.log(`🔗 [NeonDB] Conectando ao banco:`, dbHost);
+      console.log(`🔗 [NeonDB] Usando banco:`, dbName);
+      console.log(`🔗 [NeonDB] Host:`, dbHost);
     } else {
       console.error('❌ [NeonDB] DATABASE_URL não encontrado!');
     }
