@@ -74,20 +74,24 @@ app.get('/api/test-db-connection', async (req, res) => {
     };
     
     // Tentar consulta simples
-    const result = await neonDB.query('SELECT NOW() as current_time, current_database() as database_name');
+    const result = await neonDB.executeQuery('SELECT NOW() as current_time, current_database() as database_name');
     
-    console.log('✅ [TEST] Conexão bem-sucedida!');
-    console.log('✅ [TEST] Database:', result.rows[0]?.database_name);
-    
-    res.json({
-      success: true,
-      message: 'Conexão com banco de dados Neon estabelecida com sucesso!',
-      environmentInfo,
-      databaseInfo: {
-        currentTime: result.rows[0]?.current_time,
-        databaseName: result.rows[0]?.database_name
-      }
-    });
+    if (result.success) {
+      console.log('✅ [TEST] Conexão bem-sucedida!');
+      console.log('✅ [TEST] Database:', result.data[0]?.database_name);
+      
+      res.json({
+        success: true,
+        message: 'Conexão com banco de dados Neon estabelecida com sucesso!',
+        environmentInfo,
+        databaseInfo: {
+          currentTime: result.data[0]?.current_time,
+          databaseName: result.data[0]?.database_name
+        }
+      });
+    } else {
+      throw new Error(result.error);
+    }
   } catch (error) {
     console.error('❌ [TEST] Erro ao conectar com banco:', error.message);
     res.status(500).json({
