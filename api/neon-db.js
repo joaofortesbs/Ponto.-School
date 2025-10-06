@@ -2,10 +2,18 @@ import { Client } from 'pg';
 
 class NeonDBManager {
   constructor() {
-    // Limpar DATABASE_URL removendo prefixo 'psql' se existir
-    let connectionString = process.env.DATABASE_URL;
-    if (connectionString && connectionString.startsWith("psql '")) {
-      connectionString = connectionString.replace("psql '", "").replace(/'$/, "");
+    // FORÇAR uso do banco Neon externo de development
+    // URL do banco Neon externo fornecida pelo usuário
+    const DEVELOPMENT_DB_URL = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-delicate-bush-acsigqej-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+    
+    let connectionString = DEVELOPMENT_DB_URL;
+    
+    // Log de debug para verificar qual banco está sendo usado
+    if (connectionString) {
+      const dbHost = connectionString.match(/@([^/]+)/)?.[1] || 'unknown';
+      console.log('🔗 [NeonDB] Conectando ao banco DEVELOPMENT:', dbHost);
+    } else {
+      console.error('❌ [NeonDB] DATABASE_URL não encontrado!');
     }
     
     this.connectionConfig = {
