@@ -72,12 +72,6 @@ export function useNeonAuth() {
           throw lastError || new Error("Nenhuma URL de backend respondeu");
         }
 
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          console.error("Resposta não é JSON:", await response.text());
-          throw new Error("Resposta inválida do servidor");
-        }
-
         const result = await response.json();
 
         if (result.success) {
@@ -283,19 +277,8 @@ export function useNeonAuth() {
       }
 
       if (!response || !response.ok) {
-        let errorMessage = 'Email ou senha incorretos';
-        if (response) {
-          try {
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.includes("application/json")) {
-              const errorData = await response.json();
-              errorMessage = errorData.error || errorMessage;
-            }
-          } catch (e) {
-            console.error("Erro ao parsear resposta de erro:", e);
-          }
-        }
-        throw new Error(errorMessage);
+        const errorData = response ? await response.json() : {};
+        throw new Error(errorData.error || 'Email ou senha incorretos');
       }
 
       const result = await response.json();
