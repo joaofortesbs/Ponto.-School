@@ -59,7 +59,7 @@ import MentorIAPage from "./pages/mentor-ia";
 import QuizPage from '@/pages/quiz';
 import TrilhasSchoolProfessorInterface from '@/pages/trilhas-school/professores/interface';
 
-const TrilhasSchoolAlunoInterface = lazy(() => import('@/pages/trilhas-school/alunos'));
+const TrilhasSchoolAlunoInterface = lazy(() => import('@/pages/trilhas-school/alunos/interface'));
 
 // Public activity page (no authentication required)
 // Aceita apenas o código único como parâmetro
@@ -334,7 +334,11 @@ function App() {
                   <Route path="comunidades" element={<Comunidades />} />
                   <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
                   <Route path="trilhas-school/alunos" element={
-                    <Suspense fallback={<TypewriterLoader />}>
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <TypewriterLoader />
+                      </div>
+                    }>
                       <TrilhasSchoolAlunoInterface />
                     </Suspense>
                   } />
