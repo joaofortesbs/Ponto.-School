@@ -343,9 +343,9 @@ function App() {
                     </Suspense>
                   } />
                   <Route path="epictus-ia" element={<EpictusIAPage />} />
-                  <Route path="school-power" element={<SchoolPowerPageIndex />} />
-                  <Route path="trilhas-school/professores" element={<TrilhasSchoolProfessorInterface />} />
+                  <Route path="/school-power" element={<SchoolPowerPageIndex />} />
                   <Route path="trilhas-school" element={<TrilhasSchoolProfessorInterface />} />
+                  <Route path="trilhas-school/professores" element={<TrilhasSchoolProfessorInterface />} />
                   <Route path="agenda" element={<Agenda />} />
                   <Route path="biblioteca" element={<Biblioteca />} />
                   <Route path="conquistas" element={<Conquistas />} />

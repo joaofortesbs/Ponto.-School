@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Wrench, Rocket, Route } from 'lucide-react';
+import { Route, Rocket, Wrench } from 'lucide-react';
 
 const TrilhasSchoolAlunoInterface = () => {
   return (
@@ -12,17 +12,18 @@ const TrilhasSchoolAlunoInterface = () => {
         transition={{ duration: 0.5 }}
         className="max-w-md w-full"
       >
+        {/* Card de Construção */}
         <div className="bg-white dark:bg-[#0A2540] rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-white/10">
+          {/* Decorative Header */}
           <div className="h-32 bg-gradient-to-r from-[#2563eb] to-[#3b82f6] relative overflow-hidden">
             <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-0 left-0 w-full h-full bg-repeat" style={{
-                backgroundImage: `url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQwIiBoZWlnaHQ9IjE0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAgLTYpIiBmaWxsPSIjRkZGIiBmaWxsLW9wYWNpdHk9Ii4yIj48Y2lyY2xlIGN4PSI0OCIgY3k9IjQ4IiByPSI4Ii8+PGNpcmNsZSBjeD0iNDgiIGN5PSI5NiIgcj0iOCIvPjxjaXJjbGUgY3g9Ijk2IiBjeT0iNDgiIHI9IjgiLz48Y2lyY2xlIGN4PSI5NiIgY3k9Ijk2IiByPSI4Ii8+PGNpcmNsZSBjeD0iNDgiIGN5PSIxNDQiIHI9IjgiLz48Y2lyY2xlIGN4PSI5NiIgY3k9IjE0NCIgcj0iOCIvPjxjaXJjbGUgY3g9IjE0NCIgY3k9IjQ4IiByPSI4Ii8+PGNpcmNsZSBjeD0iMTQ0IiBjeT0iOTYiIHI9IjgiLz48Y2lyY2xlIGN4PSIxNDQiIGN5PSIxNDQiIHI9IjgiLz48L2c+PC9nPjwvc3ZnPg==')`
-              }}></div>
+              <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQwIiBoZWlnaHQ9IjE0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAgLTYpIiBmaWxsPSIjRkZGIiBmaWxsLW9wYWNpdHk9Ii4yIj48Y2lyY2xlIGN4PSI0OCIgY3k9IjQ4IiByPSI4Ii8+PGNpcmNsZSBjeD0iNDgiIGN5PSI5NiIgcj0iOCIvPjxjaXJjbGUgY3g9Ijk2IiBjeT0iNDgiIHI9IjgiLz48Y2lyY2xlIGN4PSI5NiIgY3k9Ijk2IiByPSI4Ii8+PGNpcmNsZSBjeD0iNDgiIGN5PSIxNDQiIHI9IjgiLz48Y2lyY2xlIGN4PSI5NiIgY3k9IjE0NCIgcj0iOCIvPjxjaXJjbGUgY3g9IjE0NCIgY3k9IjQ4IiByPSI4Ii8+PGNpcmNsZSBjeD0iMTQ0IiBjeT0iOTYiIHI9IjgiLz48Y2lyY2xlIGN4PSIxNDQiIGN5PSIxNDQiIHI9IjgiLz48L2c+PC9nPjwvc3ZnPg==')] bg-repeat"></div>
             </div>
             <div className="absolute -bottom-16 -right-16 w-64 h-64 bg-white/10 rounded-full"></div>
             <div className="absolute -top-8 -left-8 w-32 h-32 bg-white/10 rounded-full"></div>
           </div>
 
+          {/* Content */}
           <div className="p-8 text-center">
             <div className="flex justify-center mb-6">
               <div className="bg-blue-100 dark:bg-blue-900/20 p-6 rounded-full relative">

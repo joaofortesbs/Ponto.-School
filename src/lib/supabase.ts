@@ -1,24 +1,24 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
+import { createClient } from "@supabase/supabase-js";
 
-// Singleton pattern para evitar múltiplas instâncias
-let supabaseInstance: SupabaseClient | null = null;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = (() => {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
-        storage: window.localStorage,
-      },
-    });
-  }
-  return supabaseInstance;
-})();
+// Verificar se as variáveis de ambiente estão definidas
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error(
+    "Variáveis de ambiente do Supabase não configuradas corretamente. Verifique o arquivo .env"
+  );
+}
+
+export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "", {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage,
+  },
+});
 
 // Função auxiliar para verificar a conexão
 export const checkSupabaseConnection = async () => {
@@ -31,7 +31,7 @@ export const checkSupabaseConnection = async () => {
 
     // Tentamos uma operação simples para verificar conexão
     const { data, error } = await supabase.from('profiles').select('count').limit(1);
-
+    
     if (error) {
       if (error.code === 'PGRST204') {
         // Esta tabela existe, mas não tem dados - a conexão está ok
@@ -41,13 +41,13 @@ export const checkSupabaseConnection = async () => {
 
       // Caso a tabela profiles não exista ainda, tentamos outra operação
       const { error: healthCheckError } = await supabase.rpc('rpc_ping');
-
+      
       if (healthCheckError && healthCheckError.code !== 'PGRST301') {
         console.error('Erro ao conectar com Supabase:', error);
         return false;
       }
     }
-
+    
     console.log('Conexão com Supabase estabelecida com sucesso!');
     return true;
   } catch (error) {
@@ -60,7 +60,7 @@ export const checkSupabaseConnection = async () => {
 export const setupSupabaseHealthCheck = async () => {
   try {
     const serviceRoleKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
-
+    
     if (!serviceRoleKey) {
       console.warn('Chave de serviço do Supabase não configurada para criar função de ping');
       return;
@@ -68,7 +68,7 @@ export const setupSupabaseHealthCheck = async () => {
 
     // Usando client com service role key para criar função RPC
     const adminClient = createClient(supabaseUrl || "", serviceRoleKey);
-
+    
     // Criar função RPC para ping
     const { error } = await adminClient.rpc('execute_sql', {
       sql_query: `
