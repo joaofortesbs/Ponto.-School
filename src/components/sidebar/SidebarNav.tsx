@@ -52,6 +52,13 @@ import AgendaNav from "./AgendaNav";
 import TurmasNav from "./TurmasNav";
 import { useUserName } from "@/hooks/useUserName";
 
+// Componente placeholder para "Interface em Construção"
+const InterfaceEmConstrucao = () => (
+  <div className="flex items-center justify-center h-full w-full text-gray-500 dark:text-gray-400">
+    Interface em Construção
+  </div>
+);
+
 interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -312,7 +319,14 @@ export function SidebarNav({
     }
   };
 
-  const handleNavigation = (path: string, isSpecial?: boolean) => {
+  const handleNavigation = (path: string, isSpecial?: boolean, isDisabled?: boolean) => {
+    if (isDisabled) {
+      // Lógica para lidar com item desabilitado (pode ser um modal, um toast, etc.)
+      // Por enquanto, apenas retorna sem fazer nada ou mostra uma mensagem.
+      console.log(`Acesso negado: ${path} está desabilitado.`);
+      return;
+    }
+
     if (path === "/mentor-ia") {
       setShowMentorAI(true);
     } else {
@@ -332,9 +346,45 @@ export function SidebarNav({
     setExpandedSection(expandedSection === section ? null : section);
   };
 
+  // Mapeamento de ícones Font Awesome para Lucide
+  const iconMap: { [key: string]: React.ElementType } = {
+    "fas fa-home": Home,
+    "fas fa-user-graduate": Users2, // Ícone para "Minhas Turmas"
+    "fas fa-route": Route,
+    "fas fa-project-diagram": ProjectDiagram,
+    "fas fa-brain": Brain,
+    "fas fa-calendar-alt": Calendar,
+    "fas fa-users": Users,
+    "fas fa-trophy": Trophy,
+    "fas fa-compass": Compass,
+    "fas fa-chalkboard-teacher": Briefcase, // Ícone para "Minhas Turmas" Professor
+    "fas fa-rocket": Rocket,
+    "fas fa-globe": Map, // Usando Map como um placeholder para "Portal"
+    "fas fa-book": BookOpen,
+    "fas fa-wallet": Wallet,
+    "fas fa-th-large": Home, // Dashboard
+  };
+
+  // Componente para renderizar o ícone
+  const renderIcon = (iconName: string, isActive: boolean, isCollapsed: boolean) => {
+    const LucideIcon = iconMap[iconName];
+    if (!LucideIcon) return null;
+
+    const iconSize = isCollapsed ? 20 : 18;
+    const iconColor = isActive ? "white" : (isCollapsed ? "white" : "#2563eb"); // Cor padrão ou branca se colapsado
+
+    return (
+      <LucideIcon
+        size={iconSize}
+        color={iconColor}
+        strokeWidth={isActive ? 2 : 1.5}
+      />
+    );
+  };
+
   const navItemsAluno = [
     {
-      icon: "fas fa-home",
+      icon: "fas fa-th-large",
       label: "Painel",
       path: "/",
     },
@@ -342,42 +392,50 @@ export function SidebarNav({
       icon: "fas fa-user-graduate",
       label: "Minhas Turmas",
       path: "/turmas",
+      disabled: true, // Desabilitado conforme a solicitação
     },
     {
       icon: "fas fa-route",
       label: "Trilhas School",
       path: "/trilhas-school/alunos",
+      disabled: true, // Desabilitado conforme a solicitação
     },
     {
       icon: "fas fa-project-diagram",
       label: "School Planner",
       path: "/school-planner",
+      disabled: true, // Desabilitado conforme a solicitação
     },
     {
       icon: "fas fa-brain",
       label: "Epictus IA",
       path: "/epictus-ia",
       isSpecial: true,
+      disabled: true, // Desabilitado conforme a solicitação
     },
     {
       icon: "fas fa-calendar-alt",
       label: "Agenda",
       path: "/agenda",
+      disabled: true, // Desabilitado conforme a solicitação
     },
     {
       icon: "fas fa-users",
       label: "Comunidades",
       path: "/comunidades",
+      disabled: true, // Desabilitado conforme a solicitação
     },
     {
       icon: "fas fa-trophy",
       label: "Conquistas",
       path: "/conquistas",
+      disabled: true, // Desabilitado conforme a solicitação
     },
     {
       icon: "fas fa-compass",
       label: "Explorar",
       path: "/explorar",
+      disabled: true, // Desabilitado conforme a solicitação
     },
   ];
 
@@ -619,11 +677,11 @@ export function SidebarNav({
                 {/* Barra de progresso quando colapsado */}
                 {isCollapsed && (
                   <div className="flex justify-center mt-2">
-                    <div 
+                    <div
                       className="h-1 bg-[#2563eb] rounded-full opacity-30"
                       style={{ width: "40px" }}
                     >
-                      <div 
+                      <div
                         className="h-full bg-[#2563eb] rounded-full transition-all duration-300"
                         style={{ width: "65%" }}
                       />
@@ -665,18 +723,18 @@ export function SidebarNav({
                       Nível {userProfile?.level || 1}
                     </p>
                     <div className="flex justify-center">
-                      <div 
+                      <div
                         className="h-1.5 bg-[#2563eb] rounded-full opacity-30"
                         style={{ width: "80px" }}
                       >
-                        <div 
+                        <div
                           className="h-full bg-[#2563eb] rounded-full transition-all duration-300"
                           style={{ width: "65%" }}
                         />
                       </div>
                     </div>
                     <div className="flex justify-center mt-2">
-                      <div 
+                      <div
                         className="px-5 py-0.5 border border-[#2563eb] bg-[#2563eb] bg-opacity-20 rounded-md flex items-center justify-center"
                       >
                         <span className="text-xs font-medium text-[#2563eb]">
@@ -826,11 +884,11 @@ export function SidebarNav({
                 {/* Barra de progresso quando colapsado */}
                 {isCollapsed && (
                   <div className="flex justify-center mt-2">
-                    <div 
+                    <div
                       className="h-1 bg-[#FF6B00] rounded-full opacity-30"
                       style={{ width: "40px" }}
                     >
-                      <div 
+                      <div
                         className="h-full bg-[#FF6B00] rounded-full transition-all duration-300"
                         style={{ width: "65%" }}
                       />
@@ -854,18 +912,18 @@ export function SidebarNav({
                       Nível {userProfile?.level || 1}
                     </p>
                     <div className="flex justify-center">
-                      <div 
+                      <div
                         className="h-1.5 bg-[#FF6B00] rounded-full opacity-30"
                         style={{ width: "80px" }}
                       >
-                        <div 
+                        <div
                           className="h-full bg-[#FF6B00] rounded-full transition-all duration-300"
                           style={{ width: "65%" }}
                         />
                       </div>
                     </div>
                     <div className="flex justify-center mt-2">
-                      <div 
+                      <div
                         className="px-5 py-0.5 border border-[#FF6B00] bg-[#FF6B00] bg-opacity-20 rounded-md flex items-center justify-center"
                       >
                         <span className="text-xs font-medium text-[#FF6B00]">
@@ -889,7 +947,7 @@ export function SidebarNav({
       >
         {/* Navigation Menu com novo design */}
         <div className={cn(
-          "navigation-menu-container px-2", 
+          "navigation-menu-container px-2",
           isCollapsed && "sidebar-collapsed",
           isCardFlipped ? "professor-mode" : "aluno-mode",
           isModeChanging && "mode-changing"
@@ -898,46 +956,58 @@ export function SidebarNav({
             "menu-navigation",
             isMenuFlipping && "menu-flipping"
           )}>
-            {navItems.map((item, index) => (
-              <div 
-                key={`${isCardFlipped ? 'professor' : 'aluno'}-${item.path}-${index}`} 
-                className={cn(
-                  "relative menu-item-wrapper",
-                  isMenuFlipping && "animate-menu-transition"
-                )}
-                style={{
-                  animationDelay: `${index * 80}ms`
-                }}
-              >
-                {item.label === "Agenda" && !isCollapsed ? (
-                  <AgendaNav />
-                ) : (
-                  <div 
-                    className={cn(
-                      "menu-item",
-                      isActive(item.path) ? "active" : ""
-                    )}
-                    onClick={() => handleNavigation(item.path, item.isSpecial)}
-                  >
-                    <div className="item-content">
-                      <div className={cn(
-                        "icon-container",
-                        isActive(item.path) ? "active" : ""
-                      )}>
-                        <i className={item.icon}></i>
-                        <div className="icon-glow"></div>
+            {navItems.map((item, index) => {
+              const isCurrentActive = isActive(item.path);
+              const itemKey = `${isCardFlipped ? 'professor' : 'aluno'}-${item.path}-${index}`;
+              const itemClassName = cn(
+                "menu-item",
+                isCurrentActive ? "active" : "",
+                item.disabled ? "disabled" : "",
+                isMenuFlipping && "animate-menu-transition",
+                isModeTransitioning && "cascading-menu-item",
+              );
+
+              return (
+                <div
+                  key={itemKey}
+                  className="relative menu-item-wrapper"
+                  style={{
+                    animationDelay: `${index * 80}ms`,
+                    "--cascade-delay": `${index * 80}ms` // Para o CSS
+                  }}
+                >
+                  {item.label === "Agenda" && !isCollapsed ? (
+                    <AgendaNav />
+                  ) : (
+                    <div
+                      className={itemClassName}
+                      onClick={() => handleNavigation(item.path, item.isSpecial, item.disabled)}
+                    >
+                      <div className="item-content">
+                        <div className={cn(
+                          "icon-container",
+                          isCurrentActive ? "active" : ""
+                        )}>
+                          {renderIcon(item.icon, isCurrentActive, isCollapsed)}
+                          <div className="icon-glow"></div>
+                        </div>
+                        {!isCollapsed && (
+                          <div className="item-text">
+                            <span className="item-title">{item.label}</span>
+                          </div>
+                        )}
+                        <div className="item-indicator"></div>
                       </div>
-                      {!isCollapsed && (
-                        <div className="item-text">
-                          <span className="item-title">{item.label}</span>
-                                                </div>
+                      {item.disabled && !isCollapsed && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-[#121212]/50 rounded-lg pointer-events-none">
+                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">EM BREVE</span>
+                        </div>
                       )}
-                      <div className="item-indicator"></div>
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              );
+            })}
           </nav>
         </div>
       </ScrollArea>
@@ -968,6 +1038,12 @@ export function SidebarNav({
           height: 56px !important;
         }
 
+        .menu-item.disabled {
+          cursor: not-allowed;
+          opacity: 0.7;
+          background-color: rgba(255, 255, 255, 0.05) !important; /* Leve opacidade */
+        }
+
         .menu-item::before {
           content: '';
           position: absolute;
@@ -979,11 +1055,11 @@ export function SidebarNav({
           transition: left 0.6s;
         }
 
-        .menu-item:hover::before {
+        .menu-item:not(.disabled):hover::before {
           left: 100%;
         }
 
-        .menu-item:hover:not(.active) {
+        .menu-item:not(.disabled):hover:not(.active) {
           transform: translateX(6px);
           background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(37, 99, 235, 0.08));
         }
@@ -1041,58 +1117,13 @@ export function SidebarNav({
           color: white !important;
         }
 
-        .menu-item:hover:not(.active) .icon-container {
+        .menu-item:not(.disabled):hover:not(.active) .icon-container {
           background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(37, 99, 235, 0.2));
           transform: scale(1.08);
         }
 
-        .menu-item:hover:not(.active) .icon-container i {
+        .menu-item:not(.disabled):hover:not(.active) .icon-container i {
           color: #2563eb !important;
-        }
-
-        .icon-glow {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 20px;
-          height: 20px;
-          background: radial-gradient(circle, rgba(37, 99, 235, 0.5), transparent);
-          border-radius: 50%;
-          transform: translate(-50%, -50%) scale(0);
-          transition: transform 0.3s ease;
-        }
-
-        .icon-container.active .icon-glow {
-          transform: translate(-50%, -50%) scale(2.5);
-        }
-
-        .item-text {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          min-height: 36px !important;
-          justify-content: center !important;
-          min-width: 0 !important;
-          overflow: hidden !important;
-        }
-
-        .item-title {
-          font-size: 15px !important;
-          font-weight: 600;
-          color: #1a202c;
-          transition: color 0.3s ease;
-          line-height: 1.4 !important;
-          margin: 0 !important;
-          white-space: nowrap !important;
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
-          display: block !important;
-          width: 100% !important;
-        }
-
-        .dark .item-title {
-          color: white !important;
         }
 
         .menu-item.active .item-title {
@@ -1104,7 +1135,7 @@ export function SidebarNav({
           color: #2563eb !important;
         }
 
-        .menu-item:hover:not(.active) .item-title {
+        .menu-item:not(.disabled):hover:not(.active) .item-title {
           color: #2563eb !important;
         }
 
@@ -1150,7 +1181,7 @@ export function SidebarNav({
           background: linear-gradient(90deg, transparent, rgba(255, 107, 0, 0.1), transparent);
         }
 
-        .professor-mode .menu-item:hover:not(.active) {
+        .professor-mode .menu-item:not(.disabled):hover:not(.active) {
           background: linear-gradient(135deg, rgba(255, 107, 0, 0.08), rgba(255, 107, 0, 0.08));
         }
 
@@ -1178,11 +1209,11 @@ export function SidebarNav({
           color: white !important;
         }
 
-        .professor-mode .menu-item:hover:not(.active) .icon-container {
+        .professor-mode .menu-item:not(.disabled):hover:not(.active) .icon-container {
           background: linear-gradient(135deg, rgba(255, 107, 0, 0.2), rgba(255, 107, 0, 0.2));
         }
 
-        .professor-mode .menu-item:hover:not(.active) .icon-container i {
+        .professor-mode .menu-item:not(.disabled):hover:not(.active) .icon-container i {
           color: #FF6B00 !important;
         }
 
@@ -1190,7 +1221,7 @@ export function SidebarNav({
           color: #FF6B00 !important;
         }
 
-        .professor-mode .menu-item:hover:not(.active) .item-title {
+        .professor-mode .menu-item:not(.disabled):hover:not(.active) .item-title {
           color: #FF6B00 !important;
         }
 
@@ -1252,10 +1283,10 @@ export function SidebarNav({
         }
 
         @keyframes navigationPulse {
-          0%, 100% { 
+          0%, 100% {
             box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.2);
           }
-          50% { 
+          50% {
             box-shadow: 0 0 0 8px rgba(255, 107, 0, 0);
           }
         }
@@ -1390,11 +1421,11 @@ export function SidebarNav({
           }
           25% {
             transform: scale(1.02);
-            filter: brightness(1.1);
+            filter: brightness(1.05);
           }
           50% {
             transform: scale(0.98);
-            filter: brightness(1.05);
+            filter: brightness(1.1);
           }
           75% {
             transform: scale(1.01);
@@ -1405,7 +1436,6 @@ export function SidebarNav({
         /* Animações para o flip do menu */
         .menu-animating .menu-navigation {
           animation: menuFlipCascade 1.5s ease-in-out;
-          animation-delay: var(--cascade-delay, 0s);
         }
 
         .menu-item-flip-animation {
@@ -1443,54 +1473,6 @@ export function SidebarNav({
           }
         }
 
-        @keyframes menuItemFlipTransition {
-          0% {
-            transform: translateX(0) rotateY(0deg) scale(1);
-            filter: brightness(1) hue-rotate(0deg);
-            box-shadow: 0 0 0 rgba(255, 107, 0, 0);
-          }
-          10% {
-            transform: translateX(-8px) rotateY(-20deg) scale(0.98);
-            filter: brightness(1.1) hue-rotate(10deg);
-            box-shadow: 0 2px 8px rgba(255, 107, 0, 0.1);
-          }
-          25% {
-            transform: translateX(-15px) rotateY(-45deg) scale(0.92);
-            filter: brightness(1.2) hue-rotate(30deg);
-            box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2);
-          }
-          40% {
-            transform: translateX(-20px) rotateY(-90deg) scale(0.85);
-            filter: brightness(1.3) hue-rotate(60deg);
-            box-shadow: 0 6px 24px rgba(255, 107, 0, 0.3);
-          }
-          50% {
-            transform: translateX(-15px) rotateY(-135deg) scale(0.8);
-            filter: brightness(1.4) hue-rotate(90deg);
-            box-shadow: 0 8px 32px rgba(255, 107, 0, 0.4);
-          }
-          60% {
-            transform: translateX(-5px) rotateY(-180deg) scale(0.85);
-            filter: brightness(1.3) hue-rotate(120deg);
-            box-shadow: 0 6px 24px rgba(37, 99, 235, 0.3);
-          }
-          75% {
-            transform: translateX(5px) rotateY(-225deg) scale(0.92);
-            filter: brightness(1.2) hue-rotate(150deg);
-            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
-          }
-          90% {
-            transform: translateX(8px) rotateY(-340deg) scale(0.98);
-            filter: brightness(1.1) hue-rotate(170deg);
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
-          }
-          100% {
-            transform: translateX(0) rotateY(-360deg) scale(1);
-            filter: brightness(1) hue-rotate(180deg);
-            box-shadow: 0 0 0 rgba(37, 99, 235, 0);
-          }
-        }
-
         /* Animação específica para modo professor */
         .professor-mode .menu-item-flip-animation {
           animation: menuItemFlipTransitionProfessor 1.8s cubic-bezier(0.23, 1, 0.32, 1);
@@ -1500,47 +1482,47 @@ export function SidebarNav({
           0% {
             transform: translateX(0) rotateY(0deg) scale(1);
             filter: brightness(1) hue-rotate(0deg);
-            box-shadow: 0 0 0 rgba(37, 99, 235, 0);
+            box-shadow: 0 0 0 rgba(255, 107, 0, 0);
           }
           10% {
             transform: translateX(-8px) rotateY(-20deg) scale(0.98);
             filter: brightness(1.1) hue-rotate(-10deg);
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 2px 8px rgba(255, 107, 0, 0.1);
           }
           25% {
             transform: translateX(-15px) rotateY(-45deg) scale(0.92);
             filter: brightness(1.2) hue-rotate(-30deg);
-            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2);
           }
           40% {
             transform: translateX(-20px) rotateY(-90deg) scale(0.85);
             filter: brightness(1.3) hue-rotate(-60deg);
-            box-shadow: 0 6px 24px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 6px 24px rgba(255, 107, 0, 0.3);
           }
           50% {
             transform: translateX(-15px) rotateY(-135deg) scale(0.8);
             filter: brightness(1.4) hue-rotate(-90deg);
-            box-shadow: 0 8px 32px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 8px 32px rgba(255, 107, 0, 0.4);
           }
           60% {
             transform: translateX(-5px) rotateY(-180deg) scale(0.85);
             filter: brightness(1.3) hue-rotate(-120deg);
-            box-shadow: 0 6px 24px rgba(255, 107, 0, 0.3);
+            box-shadow: 0 6px 24px rgba(37, 99, 235, 0.3);
           }
           75% {
             transform: translateX(5px) rotateY(-225deg) scale(0.92);
             filter: brightness(1.2) hue-rotate(-150deg);
-            box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2);
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
           }
           90% {
             transform: translateX(8px) rotateY(-340deg) scale(0.98);
             filter: brightness(1.1) hue-rotate(-170deg);
-            box-shadow: 0 2px 8px rgba(255, 107, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
           }
           100% {
             transform: translateX(0) rotateY(-360deg) scale(1);
             filter: brightness(1) hue-rotate(-180deg);
-            box-shadow: 0 0 0 rgba(255, 107, 0, 0);
+            box-shadow: 0 0 0 rgba(37, 99, 235, 0);
           }
         }
 
