@@ -36,7 +36,8 @@ Preferred communication style: Simple, everyday language.
 - **User Roles**: Support for students, teachers, and administrators with role-based access
 
 ### Data Architecture
-- **Database**: Replit PostgreSQL (Neon-backed) nativo - ep-rapid-mountain-ae49pxeq.c-2.us-east-2.aws.neon.tech
+- **Database Development**: Neon PostgreSQL externo - ep-delicate-bush-acsigqej-pooler.sa-east-1.aws.neon.tech (ATIVO)
+- **Database Production**: Neon PostgreSQL - ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech
 - **Authentication**: Supabase PostgreSQL for user sessions and profile management
 - **Real-time Features**: Supabase Realtime for live chat, user presence, and collaborative features
 - **File Storage**: Supabase Storage for user-generated content, avatars, and educational materials
