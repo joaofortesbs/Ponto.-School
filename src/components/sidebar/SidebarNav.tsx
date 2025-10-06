@@ -74,7 +74,7 @@ export function SidebarNav({
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(isCollapsed);
   const [firstName, setFirstName] = useState<string | null>(null);
-  const [isCardFlipped, setIsCardFlipped] = useState(false);
+  const [isCardFlipped, setIsCardFlipped] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMenuFlipping, setIsMenuFlipping] = useState(false);
   const [isModeChanging, setIsModeChanging] = useState(false);
