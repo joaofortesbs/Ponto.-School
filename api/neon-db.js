@@ -2,10 +2,13 @@ import { Client } from 'pg';
 
 class NeonDBManager {
   constructor() {
-    // URLs dos bancos Neon externos fornecidos pelo usuário
-    // ATENÇÃO: Lógica invertida conforme solicitado pelo usuário
-    const DEPLOYMENT_DB_URL = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-delicate-bush-acsigqej-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
-    const PRODUCTION_DB_URL = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+    // Usar variáveis de ambiente configuradas nos Secrets do Replit
+    // Fallback para valores hardcoded se as variáveis não existirem
+    const DEPLOYMENT_DB_URL = process.env.DEPLOYMENT_DB_URL || 
+      'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-delicate-bush-acsigqej-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+    
+    const PRODUCTION_DB_URL = process.env.PRODUCTION_DB_URL || 
+      'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
     
     // Detectar ambiente: se REPLIT_DEPLOYMENT existe, estamos em deployment (publicado)
     const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || 
@@ -20,6 +23,12 @@ class NeonDBManager {
     const dbName = isDeployment ? 'ep-delicate-bush (deployment)' : 'ep-spring-truth (production)';
     
     // Log de debug para verificar qual banco está sendo usado
+    console.log('🔗 [NeonDB] Configuração de ambiente:');
+    console.log(`   - REPLIT_DEPLOYMENT: ${process.env.REPLIT_DEPLOYMENT || 'não definido'}`);
+    console.log(`   - NODE_ENV: ${process.env.NODE_ENV || 'não definido'}`);
+    console.log(`   - DEPLOYMENT_DB_URL: ${process.env.DEPLOYMENT_DB_URL ? 'configurado' : 'usando fallback'}`);
+    console.log(`   - PRODUCTION_DB_URL: ${process.env.PRODUCTION_DB_URL ? 'configurado' : 'usando fallback'}`);
+    
     if (connectionString) {
       const dbHost = connectionString.match(/@([^/]+)/)?.[1] || 'unknown';
       console.log(`🔗 [NeonDB] Ambiente: ${environment}`);
