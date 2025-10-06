@@ -1147,63 +1147,49 @@ export function SidebarNav({
 
         /* ESTILOS ESPECÍFICOS PARA MODO PROFESSOR */
         .professor-mode .menu-item::before {
-          background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.1), transparent);
+          background: linear-gradient(135deg, rgba(255, 107, 0, 0.1), rgba(255, 140, 64, 0.05));
         }
 
-        .professor-mode .menu-item:hover:not(.active) {
-          background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(37, 99, 235, 0.08));
+        .professor-mode .menu-item.active::before {
+          background: linear-gradient(135deg, rgba(255, 107, 0, 0.15), rgba(255, 140, 64, 0.1));
         }
 
         .professor-mode .menu-item.active {
-          background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(37, 99, 235, 0.15));
-          border: 1px solid rgba(37, 99, 235, 0.3);
-          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1) !important;
+          background: linear-gradient(135deg, rgba(255, 107, 0, 0.08), rgba(255, 140, 64, 0.05)) !important;
+          border-left: 3px solid #FF6B00 !important;
         }
 
-        .professor-mode .icon-container {
-          background: rgba(37, 99, 235, 0.1);
-        }
-
-        .professor-mode .icon-container i {
-          color: #2563eb !important;
-        }
-
-        .professor-mode .icon-container.active {
-          background: linear-gradient(135deg, #2563eb, #2563eb);
-          color: white;
-          box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
-        }
-
-        .professor-mode .icon-container.active i {
-          color: white !important;
-        }
-
-        .professor-mode .menu-item:hover:not(.active) .icon-container {
-          background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(37, 99, 235, 0.2));
-        }
-
-        .professor-mode .menu-item:hover:not(.active) .icon-container i {
-          color: #2563eb !important;
+        .professor-mode .menu-item.active .item-icon {
+          color: #FF6B00 !important;
         }
 
         .professor-mode .menu-item.active .item-title {
-          color: #2563eb !important;
+          color: #FF6B00 !important;
+          font-weight: 700;
+        }
+
+        .professor-mode .menu-item:hover:not(.active) {
+          background: linear-gradient(135deg, rgba(255, 107, 0, 0.05), rgba(255, 140, 64, 0.03)) !important;
+        }
+
+        .professor-mode .menu-item:hover:not(.active) .item-icon {
+          color: #FF8C40 !important;
         }
 
         .professor-mode .menu-item:hover:not(.active) .item-title {
-          color: #2563eb !important;
+          color: #FF8C40 !important;
         }
 
         .professor-mode .item-indicator {
-          background: #2563eb;
+          background: #FF6B00;
         }
 
         .professor-mode .menu-item.active .item-indicator {
-          box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
+          box-shadow: 0 0 8px rgba(255, 107, 0, 0.6);
         }
 
         .professor-mode .icon-glow {
-          background: radial-gradient(circle, rgba(37, 99, 235, 0.5), transparent);
+          background: radial-gradient(circle, rgba(255, 107, 0, 0.5), transparent);
         }
 
         @keyframes orangeBounce {
@@ -1290,7 +1276,7 @@ export function SidebarNav({
         }
 
         /* Efeito cascata para modo aluno */
-        .student-mode .cascading-effect {
+        .aluno-mode .cascading-effect {
           animation: cascadeWaveOrange 1.2s ease-in-out infinite;
         }
 
@@ -1443,54 +1429,6 @@ export function SidebarNav({
           }
         }
 
-        @keyframes menuItemFlipTransition {
-          0% {
-            transform: translateX(0) rotateY(0deg) scale(1);
-            filter: brightness(1) hue-rotate(0deg);
-            box-shadow: 0 0 0 rgba(255, 107, 0, 0);
-          }
-          10% {
-            transform: translateX(-8px) rotateY(-20deg) scale(0.98);
-            filter: brightness(1.1) hue-rotate(10deg);
-            box-shadow: 0 2px 8px rgba(255, 107, 0, 0.1);
-          }
-          25% {
-            transform: translateX(-15px) rotateY(-45deg) scale(0.92);
-            filter: brightness(1.2) hue-rotate(30deg);
-            box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2);
-          }
-          40% {
-            transform: translateX(-20px) rotateY(-90deg) scale(0.85);
-            filter: brightness(1.3) hue-rotate(60deg);
-            box-shadow: 0 6px 24px rgba(255, 107, 0, 0.3);
-          }
-          50% {
-            transform: translateX(-15px) rotateY(-135deg) scale(0.8);
-            filter: brightness(1.4) hue-rotate(90deg);
-            box-shadow: 0 8px 32px rgba(255, 107, 0, 0.4);
-          }
-          60% {
-            transform: translateX(-5px) rotateY(-180deg) scale(0.85);
-            filter: brightness(1.3) hue-rotate(120deg);
-            box-shadow: 0 6px 24px rgba(37, 99, 235, 0.3);
-          }
-          75% {
-            transform: translateX(5px) rotateY(-225deg) scale(0.92);
-            filter: brightness(1.2) hue-rotate(150deg);
-            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
-          }
-          90% {
-            transform: translateX(8px) rotateY(-340deg) scale(0.98);
-            filter: brightness(1.1) hue-rotate(170deg);
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
-          }
-          100% {
-            transform: translateX(0) rotateY(-360deg) scale(1);
-            filter: brightness(1) hue-rotate(180deg);
-            box-shadow: 0 0 0 rgba(37, 99, 235, 0);
-          }
-        }
-
         /* Animação específica para modo professor */
         .professor-mode .menu-item-flip-animation {
           animation: menuItemFlipTransitionProfessor 1.8s cubic-bezier(0.23, 1, 0.32, 1);
@@ -1500,47 +1438,47 @@ export function SidebarNav({
           0% {
             transform: translateX(0) rotateY(0deg) scale(1);
             filter: brightness(1) hue-rotate(0deg);
-            box-shadow: 0 0 0 rgba(37, 99, 235, 0);
+            box-shadow: 0 0 0 rgba(255, 107, 0, 0);
           }
           10% {
             transform: translateX(-8px) rotateY(-20deg) scale(0.98);
             filter: brightness(1.1) hue-rotate(-10deg);
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 2px 8px rgba(255, 107, 0, 0.1);
           }
           25% {
             transform: translateX(-15px) rotateY(-45deg) scale(0.92);
             filter: brightness(1.2) hue-rotate(-30deg);
-            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2);
           }
           40% {
             transform: translateX(-20px) rotateY(-90deg) scale(0.85);
             filter: brightness(1.3) hue-rotate(-60deg);
-            box-shadow: 0 6px 24px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 6px 24px rgba(255, 107, 0, 0.3);
           }
           50% {
             transform: translateX(-15px) rotateY(-135deg) scale(0.8);
             filter: brightness(1.4) hue-rotate(-90deg);
-            box-shadow: 0 8px 32px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 8px 32px rgba(255, 107, 0, 0.4);
           }
           60% {
             transform: translateX(-5px) rotateY(-180deg) scale(0.85);
             filter: brightness(1.3) hue-rotate(-120deg);
-            box-shadow: 0 6px 24px rgba(255, 107, 0, 0.3);
+            box-shadow: 0 6px 24px rgba(37, 99, 235, 0.3);
           }
           75% {
             transform: translateX(5px) rotateY(-225deg) scale(0.92);
             filter: brightness(1.2) hue-rotate(-150deg);
-            box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2);
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
           }
           90% {
-            transform: translateX(8px) rotateY(-340deg) scale(0.98);
+            transform: translateX(8px) rotateY(-270deg) scale(0.98);
             filter: brightness(1.1) hue-rotate(-170deg);
-            box-shadow: 0 2px 8px rgba(255, 107, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
           }
           100% {
             transform: translateX(0) rotateY(-360deg) scale(1);
-            filter: brightness(1) hue-rotate(-180deg);
-            box-shadow: 0 0 0 rgba(255, 107, 0, 0);
+            filter: brightness(1) hue-rotate(0deg);
+            box-shadow: 0 0 0 rgba(37, 99, 235, 0);
           }
         }
 
