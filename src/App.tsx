@@ -59,6 +59,8 @@ import MentorIAPage from "./pages/mentor-ia";
 import QuizPage from '@/pages/quiz';
 import TrilhasSchoolProfessorInterface from '@/pages/trilhas-school/professores/interface';
 
+const TrilhasSchoolAlunoInterface = lazy(() => import('@/pages/trilhas-school/alunos'));
+
 // Public activity page (no authentication required)
 // Aceita apenas o código único como parâmetro
 const AtividadeCompartilhadaPage = lazy(() => import('@/pages/atividade/[activityId]/[uniqueCode]'));
@@ -331,6 +333,11 @@ function App() {
                   <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
                   <Route path="comunidades" element={<Comunidades />} />
                   <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
+                  <Route path="trilhas-school/alunos" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <TrilhasSchoolAlunoInterface />
+                    </Suspense>
+                  } />
                   <Route path="epictus-ia" element={<EpictusIAPage />} />
                   <Route path="/school-power" element={<SchoolPowerPageIndex />} />
                   <Route path="trilhas-school" element={<TrilhasSchoolProfessorInterface />} />
