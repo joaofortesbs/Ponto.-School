@@ -2,16 +2,24 @@ import { Client } from 'pg';
 
 class NeonDBManager {
   constructor() {
-    // FORÇAR uso do banco Neon externo de development
-    // URL do banco Neon externo fornecida pelo usuário
+    // URLs dos bancos Neon externos fornecidos pelo usuário
     const DEVELOPMENT_DB_URL = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-delicate-bush-acsigqej-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+    const PRODUCTION_DB_URL = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
     
-    let connectionString = DEVELOPMENT_DB_URL;
+    // Detectar ambiente: se REPLIT_DEPLOYMENT existe, estamos em produção
+    const isProduction = process.env.REPLIT_DEPLOYMENT === '1' || 
+                         process.env.NODE_ENV === 'production' ||
+                         process.env.REPL_DEPLOYMENT === '1';
+    
+    // Selecionar banco baseado no ambiente
+    let connectionString = isProduction ? PRODUCTION_DB_URL : DEVELOPMENT_DB_URL;
+    const environment = isProduction ? 'PRODUCTION' : 'DEVELOPMENT';
     
     // Log de debug para verificar qual banco está sendo usado
     if (connectionString) {
       const dbHost = connectionString.match(/@([^/]+)/)?.[1] || 'unknown';
-      console.log('🔗 [NeonDB] Conectando ao banco DEVELOPMENT:', dbHost);
+      console.log(`🔗 [NeonDB] Ambiente: ${environment}`);
+      console.log(`🔗 [NeonDB] Conectando ao banco:`, dbHost);
     } else {
       console.error('❌ [NeonDB] DATABASE_URL não encontrado!');
     }
