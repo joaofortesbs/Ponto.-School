@@ -326,11 +326,51 @@ function App() {
                   </ProtectedRoute>
                 }>
                   <Route index element={<Dashboard />} />
-                  <Route path="turmas" element={<Turmas />} />
-                  <Route path="turmas/:id" element={<TurmaDetail />} />
-                  <Route path="turmas/grupos2" element={<GruposEstudo2 />} />
-                  <Route path="turmas/grupos" element={<GruposEstudo />} />
-                  <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
+                  <Route path="turmas" element={
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <TypewriterLoader />
+                      </div>
+                    }>
+                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
+                    </Suspense>
+                  } />
+                  <Route path="turmas/:id" element={
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <TypewriterLoader />
+                      </div>
+                    }>
+                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
+                    </Suspense>
+                  } />
+                  <Route path="turmas/grupos2" element={
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <TypewriterLoader />
+                      </div>
+                    }>
+                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
+                    </Suspense>
+                  } />
+                  <Route path="turmas/grupos" element={
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <TypewriterLoader />
+                      </div>
+                    }>
+                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
+                    </Suspense>
+                  } />
+                  <Route path="turmas/grupos/:id" element={
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <TypewriterLoader />
+                      </div>
+                    }>
+                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
+                    </Suspense>
+                  } />
                   <Route path="comunidades" element={
                     <Suspense fallback={
                       <div className="flex items-center justify-center min-h-screen">
