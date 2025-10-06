@@ -5,6 +5,19 @@ const router = express.Router();
 
 // Função para criar conexão com banco
 const getDbClient = () => {
+  // Priorizar variáveis PG* do Replit (banco development correto)
+  if (process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD) {
+    return new Client({
+      host: process.env.PGHOST,
+      port: process.env.PGPORT || 5432,
+      user: process.env.PGUSER,
+      password: process.env.PGPASSWORD,
+      database: process.env.PGDATABASE || 'neondb',
+      ssl: { rejectUnauthorized: false }
+    });
+  }
+  
+  // Fallback para DATABASE_URL
   let connectionString = process.env.DATABASE_URL;
   if (connectionString && connectionString.startsWith("psql '")) {
     connectionString = connectionString.replace("psql '", "").replace(/'$/, "");

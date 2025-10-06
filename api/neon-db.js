@@ -2,18 +2,34 @@ import { Client } from 'pg';
 
 class NeonDBManager {
   constructor() {
-    // Limpar DATABASE_URL removendo prefixo 'psql' se existir
-    let connectionString = process.env.DATABASE_URL;
-    if (connectionString && connectionString.startsWith("psql '")) {
-      connectionString = connectionString.replace("psql '", "").replace(/'$/, "");
-    }
-    
-    this.connectionConfig = {
-      connectionString: connectionString,
-      ssl: {
-        rejectUnauthorized: false
+    // Priorizar variáveis PG* do Replit (banco development correto)
+    // sobre DATABASE_URL (que pode apontar para outro banco)
+    if (process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD) {
+      console.log('🔧 Usando credenciais PG* do Replit para banco development');
+      this.connectionConfig = {
+        host: process.env.PGHOST,
+        port: process.env.PGPORT || 5432,
+        user: process.env.PGUSER,
+        password: process.env.PGPASSWORD,
+        database: process.env.PGDATABASE || 'neondb',
+        ssl: {
+          rejectUnauthorized: false
+        }
+      };
+    } else {
+      // Fallback para DATABASE_URL
+      let connectionString = process.env.DATABASE_URL;
+      if (connectionString && connectionString.startsWith("psql '")) {
+        connectionString = connectionString.replace("psql '", "").replace(/'$/, "");
       }
-    };
+      
+      this.connectionConfig = {
+        connectionString: connectionString,
+        ssl: {
+          rejectUnauthorized: false
+        }
+      };
+    }
   }
 
   // Criar cliente de conexão

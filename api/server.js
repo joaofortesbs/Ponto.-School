@@ -1,6 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+
+// Carregar variáveis de ambiente ANTES de importar módulos que usam banco
+dotenv.config();
+
 import emailRoutes from './enviar-email.js';
 import neonDBModule from './neon-db.js';
 import perfilsHandler from './perfis.js';
@@ -8,8 +12,6 @@ import atividadesRoutes from './atividades.js';
 import uploadAvatarRoutes from './upload-avatar.js'; // Importar as novas rotas de upload
 
 const { neonDB } = neonDBModule;
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
