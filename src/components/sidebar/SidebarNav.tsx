@@ -312,7 +312,11 @@ export function SidebarNav({
     }
   };
 
-  const handleNavigation = (path: string, isSpecial?: boolean) => {
+  const handleNavigation = (path: string, isSpecial?: boolean, disabled?: boolean) => {
+    if (disabled || path === "#") {
+      return; // Não faz nada se o item estiver desabilitado
+    }
+    
     if (path === "/mentor-ia") {
       setShowMentorAI(true);
     } else {
@@ -346,7 +350,8 @@ export function SidebarNav({
     {
       icon: "fas fa-route",
       label: "Trilhas School",
-      path: "/trilhas-school",
+      path: "#",
+      disabled: true,
     },
     {
       icon: "fas fa-project-diagram",
@@ -915,14 +920,16 @@ export function SidebarNav({
                   <div 
                     className={cn(
                       "menu-item",
-                      isActive(item.path) ? "active" : ""
+                      isActive(item.path) ? "active" : "",
+                      item.disabled ? "disabled" : ""
                     )}
-                    onClick={() => handleNavigation(item.path, item.isSpecial)}
+                    onClick={() => handleNavigation(item.path, item.isSpecial, item.disabled)}
                   >
                     <div className="item-content">
                       <div className={cn(
                         "icon-container",
-                        isActive(item.path) ? "active" : ""
+                        isActive(item.path) ? "active" : "",
+                        item.disabled ? "disabled" : ""
                       )}>
                         <i className={item.icon}></i>
                         <div className="icon-glow"></div>
@@ -966,6 +973,24 @@ export function SidebarNav({
           overflow: hidden;
           min-height: 56px !important;
           height: 56px !important;
+        }
+
+        .menu-item.disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
+        }
+
+        .menu-item.disabled:hover {
+          transform: none;
+          background: none;
+        }
+
+        .menu-item.disabled .icon-container {
+          opacity: 0.5;
+        }
+
+        .menu-item.disabled .item-title {
+          opacity: 0.5;
         }
 
         .menu-item::before {
