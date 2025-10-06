@@ -397,6 +397,7 @@ export function SidebarNav({
       icon: "fas fa-route",
       label: "Trilhas School",
       path: "/trilhas-school/alunos",
+      disabled: false,
     },
     {
       icon: "fas fa-project-diagram",
@@ -409,21 +410,25 @@ export function SidebarNav({
       label: "Epictus IA",
       path: "/epictus-ia",
       isSpecial: true,
+      disabled: false,
     },
     {
       icon: "fas fa-calendar-alt",
       label: "Agenda",
       path: "/agenda",
+      disabled: false,
     },
     {
       icon: "fas fa-users",
       label: "Comunidades",
       path: "/comunidades",
+      disabled: false,
     },
     {
       icon: "fas fa-trophy",
       label: "Conquistas",
       path: "/conquistas",
+      disabled: false,
     },
     {
       icon: "fas fa-compass",
