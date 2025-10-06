@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
 
     if (result.success && result.data.length > 0) {
       const profile = result.data[0];
-      // Não retornar a senha
+      // Não retornar a senha apenas para GET requests normais
       delete profile.senha_hash;
       res.json({ 
         success: true, 
@@ -167,7 +167,10 @@ router.post('/login', async (req, res) => {
 
     if (!email || !senha) {
       console.log('❌ Email ou senha ausentes');
-      return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'Email e senha são obrigatórios' 
+      });
     }
 
     // Buscar perfil por email
@@ -176,18 +179,36 @@ router.post('/login', async (req, res) => {
 
     if (!result.success || result.data.length === 0) {
       console.log('❌ Perfil não encontrado para email:', email);
-      return res.status(401).json({ error: 'Credenciais inválidas' });
+      return res.status(401).json({ 
+        success: false,
+        error: 'Credenciais inválidas' 
+      });
     }
 
     const profile = result.data[0];
 
+    // Verificar se senha_hash existe
+    if (!profile.senha_hash) {
+      console.log('❌ Senha hash não encontrada para:', email);
+      return res.status(401).json({ 
+        success: false,
+        error: 'Credenciais inválidas' 
+      });
+    }
+
     // Verificar senha
     console.log('🔒 Verificando senha...');
+    console.log('🔒 Senha fornecida:', senha ? 'Presente' : 'Ausente');
+    console.log('🔒 Hash armazenado:', profile.senha_hash ? 'Presente' : 'Ausente');
+    
     const senhaValida = await bcrypt.compare(senha, profile.senha_hash);
 
     if (!senhaValida) {
       console.log('❌ Senha inválida para:', email);
-      return res.status(401).json({ error: 'Credenciais inválidas' });
+      return res.status(401).json({ 
+        success: false,
+        error: 'Credenciais inválidas' 
+      });
     }
 
     // Login bem-sucedido
@@ -203,6 +224,7 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('❌ Erro no login:', error);
     res.status(500).json({ 
+      success: false,
       error: 'Erro interno do servidor',
       details: error.message 
     });
