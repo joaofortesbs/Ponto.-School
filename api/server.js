@@ -52,6 +52,52 @@ app.use('/api/perfis', perfilsHandler);
 app.use('/api/upload-avatar', uploadAvatarRoutes); // Rota para upload de avatar
 app.use('/api/atividades-neon', atividadesRoutes);
 
+// Rota de teste de conexão com banco de dados
+app.get('/api/test-db-connection', async (req, res) => {
+  try {
+    console.log('🔍 [TEST] Testando conexão com banco de dados Neon...');
+    
+    // Detectar ambiente
+    const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || 
+                         process.env.NODE_ENV === 'production' ||
+                         process.env.REPL_DEPLOYMENT === '1' ||
+                         process.env.REPLIT_ENV === 'production';
+    
+    const environmentInfo = {
+      ambiente: isDeployment ? 'DEPLOYMENT (Publicado)' : 'DEVELOPMENT (Replit)',
+      REPLIT_DEPLOYMENT: process.env.REPLIT_DEPLOYMENT || 'não definido',
+      NODE_ENV: process.env.NODE_ENV || 'não definido',
+      REPL_DEPLOYMENT: process.env.REPL_DEPLOYMENT || 'não definido',
+      REPLIT_ENV: process.env.REPLIT_ENV || 'não definido',
+      hasDeploymentSecret: !!process.env.DEPLOYMENT_DB_URL,
+      hasProductionSecret: !!process.env.PRODUCTION_DB_URL
+    };
+    
+    // Tentar consulta simples
+    const result = await neonDB.query('SELECT NOW() as current_time, current_database() as database_name');
+    
+    console.log('✅ [TEST] Conexão bem-sucedida!');
+    console.log('✅ [TEST] Database:', result.rows[0]?.database_name);
+    
+    res.json({
+      success: true,
+      message: 'Conexão com banco de dados Neon estabelecida com sucesso!',
+      environmentInfo,
+      databaseInfo: {
+        currentTime: result.rows[0]?.current_time,
+        databaseName: result.rows[0]?.database_name
+      }
+    });
+  } catch (error) {
+    console.error('❌ [TEST] Erro ao conectar com banco:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Falha ao conectar com banco de dados',
+      message: error.message
+    });
+  }
+});
+
 // =================
 // FUNÇÃO PARA REGISTRAR ROTAS DE ATIVIDADES
 // =================
