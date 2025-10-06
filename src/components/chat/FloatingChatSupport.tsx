@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import NotebookSimulation from "./NotebookSimulation";
 import SlidesPresentationModal from "./SlidesPresentationModal";
-import QuizTask from "../agenda/challenges/QuizTask";
+// import QuizTask from "../agenda/challenges/QuizTask";
 import AprofundarModal from "./AprofundarModal";
 import {
   MessageSquare,
@@ -464,7 +464,7 @@ const FloatingChatSupport: React.FC = () => {
   const [presentationSlides, setPresentationSlides] = useState<any[]>([]);
   
   // Estado para mostrar quiz
-  const [showQuizTask, setShowQuizTask] = useState(false);
+  // const [showQuizTask, setShowQuizTask] = useState(false);
   
   // Função para mostrar o modal de caderno
   const openNotebookModal = (content: string) => {
@@ -2649,7 +2649,7 @@ Exemplo de formato da resposta:
                                                   questions: fallbackQuestions,
                                                   showExplanation: useStudyMode,
                                                   onComplete: (score, totalQuestions) => {
-                                                    setShowQuizTask(false);
+                                                    // setShowQuizTask(false);
                                                     setMessages(prev => [
                                                       ...prev,
                                                       {
@@ -2660,7 +2660,7 @@ Exemplo de formato da resposta:
                                                       }
                                                     ]);
                                                   },
-                                                  onClose: () => setShowQuizTask(false)
+                                                  onClose: () => {} // setShowQuizTask(false)
                                                 };
                                                 
                                                 // Tentativa de gerar perguntas personalizadas (opcional - como fallback já existe)
@@ -2742,7 +2742,7 @@ Exemplo de formato da resposta:
                                                 console.log('Quiz gerado com sucesso:', quizProps);
                                                 
                                                 // Mostrar componente de Quiz e adicionar mensagem no chat
-                                                setShowQuizTask(true);
+                                                // setShowQuizTask(true);
                                                 setMessages(prev => [
                                                   ...prev,
                                                   {
@@ -4243,7 +4243,7 @@ Exemplo de formato da resposta:
       )}
       
       {/* Quiz Task */}
-      {showQuizTask && (
+      {/* showQuizTask && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-3xl max-h-[90vh] overflow-auto p-2">
             <QuizTask
@@ -4309,7 +4309,7 @@ Exemplo de formato da resposta:
               ]}
               timeLimit={45}
               onComplete={(score, total) => {
-                setShowQuizTask(false);
+                // setShowQuizTask(false);
                 setMessages(prev => [
                   ...prev,
                   {
@@ -4320,11 +4320,11 @@ Exemplo de formato da resposta:
                   }
                 ]);
               }}
-              onClose={() => setShowQuizTask(false)}
+              onClose={() => {}} // setShowQuizTask(false)
             />
           </div>
         </div>
-      )}
+      ) */}
 
       {/* Modal de Personalização do Epictus IA */}
       {showEpictusPersonalizeModal && (

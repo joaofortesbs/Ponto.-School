@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import DefinirFocoModal, { FocoData } from "./DefinirFocoModal";
 import confetti from 'canvas-confetti';
+import { supabase } from "@/lib/supabase";
 
 // Tipo para atividades
 interface Atividade {
@@ -300,7 +301,7 @@ export default function FocoDoDiaCard() {
       }
 
       // Importar o serviço de IA para gerar sugestões
-      const { generateFocusSuggestions } = await import('@/services/epictusIAService');
+      // const { generateFocusSuggestions } = await import('@/services/epictusIAService');
 
       // Exibir debug das informações do formulário
       console.log("Dados recebidos do formulário:", {
@@ -314,10 +315,11 @@ export default function FocoDoDiaCard() {
       });
 
       // Obter sugestões personalizadas com base no perfil do usuário e dados da agenda
-      const aiSuggestions = await generateFocusSuggestions(userId, dados);
+      // const aiSuggestions = await generateFocusSuggestions(userId, dados);
+      const aiSuggestions = null; // Temporário até serviço ser restaurado
 
       if (!aiSuggestions) {
-        console.error("Não foi possível obter sugestões da IA");
+        console.log("Usando fallback sem IA");
         // Criar foco principal baseado apenas nos dados recebidos (fallback)
         gerarFocoSemIA(dados);
         return;
@@ -1230,7 +1232,6 @@ export default function FocoDoDiaCard() {
                 localStorage.removeItem('focoDia');
               }}
               className={`rounded-lg px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm hover:shadow-md transition-all flex items-center gap-2 ${isLightMode ? '' : 'border border-[#FF6B00]/40'}`}
-              whileHover={{ scale: 1.03, y: -1 }}
               whileTap={{ scale: 0.97 }}
               initial={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }}
               animate={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }}

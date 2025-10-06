@@ -25,7 +25,6 @@ import {
 
 import MaterialCard, { Material } from "./MaterialCard";
 import MaterialListItem from "./MaterialListItem";
-import TurmaCard, { Turma } from "./TurmaCard";
 import DisciplinaCard, { Disciplina } from "./DisciplinaCard";
 import TrilhaCard, { Trilha } from "./TrilhaCard";
 import RecentlyAccessedItem from "./RecentlyAccessedItem";
@@ -33,6 +32,15 @@ import FilterPanel from "./FilterPanel";
 import MaterialViewer from "./MaterialViewer";
 
 // Mock data
+interface Turma {
+  id: string;
+  name: string;
+  professor: string;
+  materialsCount: number;
+  progress: number;
+  image: string;
+}
+
 const mockTurmas: Turma[] = [
   {
     id: "t1",
@@ -319,21 +327,9 @@ const PortalContent = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-[#001427] dark:text-white">
-                Minhas Turmas
+                Turmas - Em desenvolvimento
               </h2>
-              <Button className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white">
-                Adicionar Turma
-              </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {mockTurmas.map((turma) => (
-                <TurmaCard key={turma.id} turma={turma} />
-              ))}
-            </div>
-
-            {/* Estudos section removed */}
-            
-            {/* Estudos 2 section removed */}
           </div>
         );
 
@@ -409,7 +405,6 @@ const PortalContent = () => {
             <FilterPanel
               isOpen={isFilterOpen}
               onClose={() => setIsFilterOpen(false)}
-              mockTurmas={mockTurmas}
             />
 
             {viewMode === "grid" ? (
@@ -489,7 +484,6 @@ const PortalContent = () => {
             <FilterPanel
               isOpen={isFilterOpen}
               onClose={() => setIsFilterOpen(false)}
-              mockTurmas={mockTurmas}
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

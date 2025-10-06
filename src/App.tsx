@@ -20,12 +20,8 @@ import UsernameProvider from "./components/UsernameProvider";
 
 // Importações diretas
 import Dashboard from "@/pages/dashboard";
-import Turmas from "@/pages/turmas";
-import TurmaDetail from "@/pages/turmas/[id]";
-import GruposEstudo2 from "@/pages/turmas/grupos2";
 import Comunidades from "@/pages/comunidades";
 import PedidosAjuda from "@/pages/pedidos-ajuda";
-import EpictusIA from "@/pages/epictus-ia";
 import Agenda from "@/pages/agenda";
 import Biblioteca from "@/pages/biblioteca";
 import Conquistas from "@/pages/conquistas";
@@ -35,7 +31,6 @@ import Novidades from "@/pages/novidades";
 import Configuracoes from "@/pages/configuracoes";
 import PlanosEstudo from "@/pages/planos-estudo";
 import Portal from "@/pages/portal";
-import GruposEstudo from "@/pages/turmas/grupos";
 
 // Auth Pages
 import LoginPage from "@/pages/auth/login";
@@ -54,7 +49,6 @@ import AlunoUnderConstruction from "@/pages/under-construction/AlunoUnderConstru
 import BlankPage from "@/pages/BlankPage";
 
 // Import das paginas novas
-import EpictusIAPage from "./pages/epictus-ia";
 import SchoolPowerPageIndex from "./pages/school-power";
 import MentorIAPage from "./pages/mentor-ia";
 import QuizPage from '@/pages/quiz';

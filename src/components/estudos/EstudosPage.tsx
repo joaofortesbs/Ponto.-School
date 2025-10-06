@@ -1,4 +1,3 @@
-` tags empty.
-
-
-<replit_final_file>
+export default function EstudosPage() {
+  return null;
+}

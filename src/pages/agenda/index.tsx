@@ -13,23 +13,23 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 // Components
-import MonthView from "@/components/agenda/calendar-views/month-view";
-import WeekView from "@/components/agenda/calendar-views/week-view";
-import DayView from "@/components/agenda/calendar-views/day-view";
-import EpictusAIWidget from "@/components/agenda/cards/epictus-ai-widget";
-import EpictusAIAssistantModal from "@/components/agenda/modals/epictus-ai-assistant-modal";
-import EpictusAISuggestionsModal from "@/components/agenda/modals/epictus-ai-suggestions-modal";
-import EpictusCalendar from "@/components/agenda/cards/epictus-calendar";
-import AIMentor from "@/components/agenda/cards/ai-mentor";
-import UpcomingEvents from "@/components/agenda/cards/upcoming-events";
-import FlowView from "@/components/agenda/flow/FlowView";
-import AddEventModal from "@/components/agenda/modals/add-event-modal";
-import AddTaskModal from "@/components/agenda/modals/add-task-modal";
-import EventDetailsModal from "@/components/agenda/modals/event-details-modal";
-import TasksView from "@/components/agenda/tasks/TasksView";
-import ChallengesView from "@/components/agenda/challenges/ChallengesView";
-import MetricsGrid from "@/components/agenda/metrics/MetricsGrid";
-import ManagementGrid from "@/components/agenda/management/ManagementGrid";
+// import MonthView from "@/components/agenda/calendar-views/month-view";
+// import WeekView from "@/components/agenda/calendar-views/week-view";
+// import DayView from "@/components/agenda/calendar-views/day-view";
+// import EpictusAIWidget from "@/components/agenda/cards/epictus-ai-widget";
+// import EpictusAIAssistantModal from "@/components/agenda/modals/epictus-ai-assistant-modal";
+// import EpictusAISuggestionsModal from "@/components/agenda/modals/epictus-ai-suggestions-modal";
+// import EpictusCalendar from "@/components/agenda/cards/epictus-calendar";
+// import AIMentor from "@/components/agenda/cards/ai-mentor";
+// import UpcomingEvents from "@/components/agenda/cards/upcoming-events";
+// import FlowView from "@/components/agenda/flow/FlowView";
+// import AddEventModal from "@/components/agenda/modals/add-event-modal";
+// import AddTaskModal from "@/components/agenda/modals/add-task-modal";
+// import EventDetailsModal from "@/components/agenda/modals/event-details-modal";
+// import TasksView from "@/components/agenda/tasks/TasksView";
+// import ChallengesView from "@/components/agenda/challenges/ChallengesView";
+// import MetricsGrid from "@/components/agenda/metrics/MetricsGrid";
+// import ManagementGrid from "@/components/agenda/management/ManagementGrid";
 
 // Icons
 import {
@@ -1044,18 +1044,7 @@ export default function AgendaPage() {
             <div className="lg:col-span-9">
               <div className="bg-[#001427] rounded-b-xl overflow-hidden shadow-md">
                 {calendarView === "month" && (
-                  <MonthView
-                    currentYear={currentYear}
-                    currentMonth={currentMonth}
-                    selectedDay={selectedDay}
-                    setSelectedDay={setSelectedDay}
-                    eventData={eventData}
-                    getEventIcon={getEventIcon}
-                    openEventDetails={openEventDetails}
-                    onEventDrop={handleEventDrop}
-                    setCalendarView={setCalendarView}
-                    calendarView={calendarView}
-                  />
+                  <div className="p-8 text-center text-white">Visualização de calendário em desenvolvimento</div>
                 )}
                 {calendarView === "week" && (
                   <>
@@ -1121,7 +1110,7 @@ export default function AgendaPage() {
                         </div>
                       </div>
                     </div>
-                    <WeekView openEventDetails={openEventDetails} />
+                    <div className="p-8 text-center text-white">Visualização semanal em desenvolvimento</div>
                   </>
                 )}
                 {calendarView === "day" && (
@@ -1188,10 +1177,11 @@ export default function AgendaPage() {
                         </div>
                       </div>
                     </div>
-                    <DayView
+                    {/* <DayView
                       selectedDay={selectedDay}
                       openEventDetails={openEventDetails}
-                    />
+                    /> */}
+                    <div className="p-8 text-center text-white">Visualização diária em desenvolvimento</div>
                   </>
                 )}
               </div>

@@ -4,7 +4,6 @@ import { useTheme } from "@/components/ThemeProvider";
 import FocoDoDiaCard from "./FocoDoDiaCard";
 import AtalhoSchoolCard from "./AtalhoSchoolCard";
 import SequenciaEstudosCard from "./SequenciaEstudosCard";
-import EpictusIACopilotoCard from "./EpictusIACopilotoCard";
 import TempoEstudoCard from "./TempoEstudoCard";
 import PosicaoRankingCard from './PosicaoRankingCard';
 import SchoolPointsCard from './SchoolPointsCard';
@@ -46,7 +45,6 @@ export default function DashboardMetricsGrid() {
         <SequenciaEstudosCard />
 
         {/* Card de Epictus IA Copiloto */}
-        <EpictusIACopilotoCard />
       </div>
     </div>
   );

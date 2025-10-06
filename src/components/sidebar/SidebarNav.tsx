@@ -45,11 +45,10 @@ import {
   CalendarClock,
   Upload,
   Route,
-  ProjectDiagram,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
-import AgendaNav from "./AgendaNav";
-import TurmasNav from "./TurmasNav";
+// import AgendaNav from "./AgendaNav";
+// import TurmasNav from "./TurmasNav";
 import { useUserName } from "@/hooks/useUserName";
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -914,15 +913,14 @@ export function SidebarNav({
                 }}
               >
                 {item.label === "Agenda" && !isCollapsed ? (
-                  <AgendaNav />
+                  <div className="text-sm text-gray-400 px-4 py-2">Agenda em desenvolvimento</div>
                 ) : (
                   <div 
                     className={cn(
                       "menu-item",
-                      isActive(item.path) ? "active" : "",
-                      item.disabled ? "opacity-50 cursor-not-allowed" : ""
+                      isActive(item.path) ? "active" : ""
                     )}
-                    onClick={() => handleNavigation(item.path, item.isSpecial, item.disabled)}
+                    onClick={() => handleNavigation(item.path, item.isSpecial, false)}
                   >
                     <div className="item-content">
                       <div className={cn(
@@ -947,7 +945,7 @@ export function SidebarNav({
         </div>
       </ScrollArea>
 
-      <style jsx>{`
+      <style>{`
         @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
         * {

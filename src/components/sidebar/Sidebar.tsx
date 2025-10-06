@@ -26,8 +26,6 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import AgendaNav from "./AgendaNav";
-import OrganizacaoNav from "./OrganizacaoNav";
 
 interface SidebarProps {
   className?: string;
@@ -97,77 +95,6 @@ const Sidebar: React.FC<SidebarProps> = ({ className, isCollapsed }) => {
           Início
         </Button>
 
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start text-sm font-medium h-10 px-3",
-            activeItem === "turmas"
-              ? "bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20"
-              : "text-gray-300 hover:bg-[#29335C]/30 hover:text-white",
-          )}
-          onClick={() => handleItemClick("turmas", "/turmas")}
-        >
-          <Users className="h-4 w-4 mr-3" />
-          Turmas
-        </Button>
-
-        <div>
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start text-sm font-medium h-10 px-3",
-              isExpanded("agenda")
-                ? "bg-[#29335C]/30 text-white"
-                : activeItem?.startsWith("agenda")
-                  ? "bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20"
-                  : "text-gray-300 hover:bg-[#29335C]/30 hover:text-white",
-            )}
-            onClick={() => toggleExpand("agenda")}
-          >
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-3" />
-                Agenda
-              </div>
-              {isExpanded("agenda") ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </div>
-          </Button>
-          {isExpanded("agenda") && <AgendaNav activeItem={activeItem} />}
-        </div>
-
-        <div>
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start text-sm font-medium h-10 px-3",
-              isExpanded("organizacao")
-                ? "bg-[#29335C]/30 text-white"
-                : activeItem?.startsWith("organizacao")
-                  ? "bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20"
-                  : "text-gray-300 hover:bg-[#29335C]/30 hover:text-white",
-            )}
-            onClick={() => toggleExpand("organizacao")}
-          >
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center">
-                <CheckSquare className="h-4 w-4 mr-3" />
-                Organização
-              </div>
-              {isExpanded("organizacao") ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </div>
-          </Button>
-          {isExpanded("organizacao") && (
-            <OrganizacaoNav activeItem={activeItem} />
-          )}
-        </div>
 
         <Button
           variant="ghost"
