@@ -417,11 +417,6 @@ export function SidebarNav({
       path: "/portal",
     },
     {
-      icon: "fas fa-calendar-alt",
-      label: "Agenda",
-      path: "/agenda",
-    },
-    {
       icon: "fas fa-users",
       label: "Comunidades",
       path: "/comunidades",
