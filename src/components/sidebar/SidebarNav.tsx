@@ -356,7 +356,6 @@ export function SidebarNav({
       icon: "fas fa-project-diagram",
       label: "School Planner",
       path: "/school-planner",
-      disabled: true,
     },
     {
       icon: "fas fa-brain",
@@ -383,7 +382,6 @@ export function SidebarNav({
       icon: "fas fa-compass",
       label: "Explorar",
       path: "/explorar",
-      disabled: true,
     },
   ];
 

@@ -340,14 +340,22 @@ function App() {
                       {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
                     </Suspense>
                   } />
-                  <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
+                  <Route path="pedidos-ajuda" element={
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <TypewriterLoader />
+                      </div>
+                    }>
+                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
+                    </Suspense>
+                  } />
                   <Route path="trilhas-school/alunos" element={
                     <Suspense fallback={
                       <div className="flex items-center justify-center min-h-screen">
                         <TypewriterLoader />
                       </div>
                     }>
-                      <TrilhasSchoolAlunoInterface />
+                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
                     </Suspense>
                   } />
                   <Route path="school-planner" element={
@@ -359,8 +367,24 @@ function App() {
                       {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
                     </Suspense>
                   } />
-                  <Route path="agenda" element={<Agenda />} />
-                  <Route path="conquistas" element={<Conquistas />} />
+                  <Route path="agenda" element={
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <TypewriterLoader />
+                      </div>
+                    }>
+                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
+                    </Suspense>
+                  } />
+                  <Route path="conquistas" element={
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <TypewriterLoader />
+                      </div>
+                    }>
+                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
+                    </Suspense>
+                  } />
                   <Route path="explorar" element={
                     <Suspense fallback={
                       <div className="flex items-center justify-center min-h-screen">
@@ -370,7 +394,15 @@ function App() {
                       {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
                     </Suspense>
                   } />
-                  <Route path="epictus-ia" element={<EpictusIAPage />} />
+                  <Route path="epictus-ia" element={
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <TypewriterLoader />
+                      </div>
+                    }>
+                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
+                    </Suspense>
+                  } />
                   <Route path="/school-power" element={<SchoolPowerPageIndex />} />
                   <Route path="trilhas-school" element={<TrilhasSchoolProfessorInterface />} />
                   <Route path="trilhas-school/professores" element={<TrilhasSchoolProfessorInterface />} />
