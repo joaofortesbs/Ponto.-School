@@ -48,6 +48,7 @@ import PlanSelectionPage from "@/pages/plan-selection";
 import ProfilePage from "@/pages/profile";
 import WelcomeModal from "./components/auth/WelcomeModal";
 import { TypewriterLoader } from "./components/ui/typewriter-loader";
+import AlunoUnderConstruction from "@/pages/under-construction/AlunoUnderConstruction";
 
 // Nova página em branco
 import BlankPage from "@/pages/BlankPage";
@@ -326,123 +327,19 @@ function App() {
                   </ProtectedRoute>
                 }>
                   <Route index element={<Dashboard />} />
-                  <Route path="turmas" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="turmas/:id" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="turmas/grupos2" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="turmas/grupos" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="turmas/grupos/:id" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="comunidades" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="pedidos-ajuda" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="trilhas-school/alunos" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="school-planner" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="agenda" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="conquistas" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="explorar" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
-                    </Suspense>
-                  } />
-                  <Route path="epictus-ia" element={
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <TypewriterLoader />
-                      </div>
-                    }>
-                      {React.createElement(lazy(() => import('@/pages/under-construction/AlunoUnderConstruction')))}
-                    </Suspense>
-                  } />
+                  <Route path="turmas" element={<AlunoUnderConstruction />} />
+                  <Route path="turmas/:id" element={<AlunoUnderConstruction />} />
+                  <Route path="turmas/grupos2" element={<AlunoUnderConstruction />} />
+                  <Route path="turmas/grupos" element={<AlunoUnderConstruction />} />
+                  <Route path="turmas/grupos/:id" element={<AlunoUnderConstruction />} />
+                  <Route path="comunidades" element={<AlunoUnderConstruction />} />
+                  <Route path="pedidos-ajuda" element={<AlunoUnderConstruction />} />
+                  <Route path="trilhas-school/alunos" element={<AlunoUnderConstruction />} />
+                  <Route path="school-planner" element={<AlunoUnderConstruction />} />
+                  <Route path="agenda" element={<AlunoUnderConstruction />} />
+                  <Route path="conquistas" element={<AlunoUnderConstruction />} />
+                  <Route path="explorar" element={<AlunoUnderConstruction />} />
+                  <Route path="epictus-ia" element={<AlunoUnderConstruction />} />
                   <Route path="/school-power" element={<SchoolPowerPageIndex />} />
                   <Route path="trilhas-school" element={<TrilhasSchoolProfessorInterface />} />
                   <Route path="trilhas-school/professores" element={<TrilhasSchoolProfessorInterface />} />
