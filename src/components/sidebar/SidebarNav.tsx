@@ -497,14 +497,221 @@ export function SidebarNav({
               {!isCollapsed && (
                 <div className="absolute top-3 left-3 z-10">
                   <div className="w-7 h-7">
-                    <div className="w-full h-full rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center">
-                      <GraduationCap size={14} className="text-orange-500" />
+                    <div className="w-full h-full rounded-full border-2 border-blue-600 bg-blue-600 bg-opacity-20 flex items-center justify-center">
+                      <GraduationCap size={14} className="text-blue-600" />
                     </div>
                   </div>
                 </div>
               )}
 
               {/* Botão Flip circular na mesma altura do ícone de graduação */}
+              {!isCollapsed && isCardHovered && (
+                <button
+                  className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-blue-600 bg-blue-600 bg-opacity-20 hover:bg-blue-600 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
+                  onClick={() => {
+                    // Limpar timeouts anteriores se existirem
+                    clearAllTimeouts();
+
+                    // Iniciar todas as animações simultaneamente
+                    setIsModeTransitioning(true);
+                    setIsMenuAnimating(true);
+                    setIsMenuFlipping(true);
+                    setIsCardFlipped(!isCardFlipped); // Flip imediato do card
+
+                    // Calcular tempo total baseado no número de itens do menu
+                    const totalItems = navItems.length;
+                    const cascadeDelay = 80; // Delay entre cada item
+                    const totalAnimationTime = (totalItems * cascadeDelay) + 600; // Tempo total da cascata
+
+                    // Finalizar todas as animações após o tempo calculado
+                    const finishTimeout = setTimeout(() => {
+                      setIsModeTransitioning(false);
+                      setIsMenuFlipping(false);
+                      setIsMenuAnimating(false);
+                    }, totalAnimationTime);
+                    addTimeout(finishTimeout);
+                  }}
+                  title="Flip Card"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-blue-600"
+                  >
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M8 16H3v5" />
+                  </svg>
+                </button>
+              )}
+              {/* Profile Image Component - Responsive avatar */}
+              <div
+                className={cn(
+                  "relative flex justify-center flex-col items-center",
+                  isCollapsed ? "mb-1" : "mb-4",
+                )}
+              >
+                <div
+                  className={cn(
+                    "rounded-full overflow-hidden bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 p-0.5 cursor-pointer transition-all duration-300",
+                    isCollapsed ? "w-10 h-10" : "w-20 h-20",
+                  )}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error("Error loading profile image");
+                          setProfileImage(null);
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                        <div
+                          className={cn(
+                            "bg-yellow-300 rounded-full flex items-center justify-center",
+                            isCollapsed ? "w-5 h-5" : "w-10 h-10",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "text-black font-bold",
+                              isCollapsed ? "text-xs" : "text-lg",
+                            )}
+                          >
+                            {(() => {
+                              // Buscar primeiro nome do Neon DB para iniciais
+                              const neonUser = localStorage.getItem("neon_user");
+                              if (neonUser) {
+                                try {
+                                  const userData = JSON.parse(neonUser);
+                                  const fullName = userData.nome_completo || userData.nome_usuario || userData.email;
+                                  if (fullName) {
+                                    const firstChar = fullName.charAt(0).toUpperCase();
+                                    return firstChar;
+                                  }
+                                } catch (error) {
+                                  console.error("Erro ao buscar iniciais do Neon:", error);
+                                }
+                              }
+
+                              return firstName ? firstName.charAt(0).toUpperCase() : "U";
+                            })()}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Barra de progresso quando colapsado */}
+                {isCollapsed && (
+                  <div className="flex justify-center mt-2">
+                    <div 
+                      className="h-1 bg-[#2563eb] rounded-full opacity-30"
+                      style={{ width: "40px" }}
+                    >
+                      <div 
+                        className="h-full bg-[#2563eb] rounded-full transition-all duration-300"
+                        style={{ width: "65%" }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* File input component */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </div>
+
+              {isUploading && (
+                <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                  Enviando...
+                </div>
+              )}
+
+              {/* Hidden File Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+
+              {!isCollapsed && (
+                <div className="text-[#001427] dark:text-white text-center w-full">
+                  <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
+                    <span className="mr-1">👋</span> Olá, {userName}</h3>
+                  <div className="flex flex-col items-center mt-1">
+                    <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
+                      Nível {userProfile?.level || 1}
+                    </p>
+                    <div className="flex justify-center">
+                      <div 
+                        className="h-1.5 bg-[#2563eb] rounded-full opacity-30"
+                        style={{ width: "80px" }}
+                      >
+                        <div 
+                          className="h-full bg-[#2563eb] rounded-full transition-all duration-300"
+                          style={{ width: "65%" }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-center mt-2">
+                      <div 
+                        className="px-5 py-0.5 border border-[#2563eb] bg-[#2563eb] bg-opacity-20 rounded-md flex items-center justify-center"
+                      >
+                        <span className="text-xs font-medium text-[#2563eb]">
+                          ALUNO
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Back Side - Idêntico ao front */}
+            <div
+              className={cn(
+                "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden absolute inset-0 rotate-y-180",
+                isCollapsed ? "w-14 p-2" : "w-full p-4",
+              )}
+            >
+              {/* Ícone de Briefcase no canto superior esquerdo quando expandido */}
+              {!isCollapsed && (
+                <div className="absolute top-3 left-3 z-10">
+                  <div className="w-7 h-7">
+                    <div className="w-full h-full rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 flex items-center justify-center">
+                      <Briefcase
+                        size={12}
+                        className="text-orange-500"
+                        strokeWidth={2.5}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Botão Flip circular na mesma altura do ícone de Briefcase */}
               {!isCollapsed && isCardHovered && (
                 <button
                   className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 hover:bg-orange-600 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
@@ -630,15 +837,6 @@ export function SidebarNav({
                     </div>
                   </div>
                 )}
-
-                {/* File input component */}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
               </div>
 
               {isUploading && (
@@ -646,15 +844,6 @@ export function SidebarNav({
                   Enviando...
                 </div>
               )}
-
-              {/* Hidden File Input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
 
               {!isCollapsed && (
                 <div className="text-[#001427] dark:text-white text-center w-full">
@@ -680,195 +869,6 @@ export function SidebarNav({
                         className="px-5 py-0.5 border border-[#FF6B00] bg-[#FF6B00] bg-opacity-20 rounded-md flex items-center justify-center"
                       >
                         <span className="text-xs font-medium text-[#FF6B00]">
-                          ALUNO
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Back Side - Idêntico ao front */}
-            <div
-              className={cn(
-                "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden absolute inset-0 rotate-y-180",
-                isCollapsed ? "w-14 p-2" : "w-full p-4",
-              )}
-            >
-              {/* Ícone de Briefcase no canto superior esquerdo quando expandido */}
-              {!isCollapsed && (
-                <div className="absolute top-3 left-3 z-10">
-                  <div className="w-7 h-7">
-                    <div className="w-full h-full rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 flex items-center justify-center">
-                      <Briefcase
-                        size={12}
-                        className="text-[#2462EA]"
-                        strokeWidth={2.5}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Botão Flip circular na mesma altura do ícone de Briefcase */}
-              {!isCollapsed && isCardHovered && (
-                <button
-                  className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-[#2462EA] bg-[#0f26aa] bg-opacity-20 hover:bg-[#0f26aa] hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
-                  onClick={() => {
-                    // Limpar timeouts anteriores se existirem
-                    clearAllTimeouts();
-
-                    // Iniciar todas as animações simultaneamente
-                    setIsModeTransitioning(true);
-                    setIsMenuAnimating(true);
-                    setIsMenuFlipping(true);
-                    setIsCardFlipped(!isCardFlipped); // Flip imediato do card
-
-                    // Calcular tempo total baseado no número de itens do menu
-                    const totalItems = navItems.length;
-                    const cascadeDelay = 80; // Delay entre cada item
-                    const totalAnimationTime = (totalItems * cascadeDelay) + 600; // Tempo total da cascata
-
-                    // Finalizar todas as animações após o tempo calculado
-                    const finishTimeout = setTimeout(() => {
-                      setIsModeTransitioning(false);
-                      setIsMenuFlipping(false);
-                      setIsMenuAnimating(false);
-                    }, totalAnimationTime);
-                    addTimeout(finishTimeout);
-                  }}
-                  title="Flip Card"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-[#2462EA]"
-                  >
-                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                    <path d="M21 3v5h-5" />
-                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-                    <path d="M8 16H3v5" />
-                  </svg>
-                </button>
-              )}
-              {/* Profile Image Component - Responsive avatar */}
-              <div
-                className={cn(
-                  "relative flex justify-center flex-col items-center",
-                  isCollapsed ? "mb-1" : "mb-4",
-                )}
-              >
-                <div
-                  className={cn(
-                    "rounded-full overflow-hidden bg-gradient-to-r from-blue-500 via-purple-520 to-blue-600 p-0.5 cursor-pointer transition-all duration-300",
-                    isCollapsed ? "w-10 h-10" : "w-20 h-20",
-                  )}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
-                    {profileImage ? (
-                      <img
-                        src={profileImage}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          console.error("Error loading profile image");
-                          setProfileImage(null);
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                        <div
-                          className={cn(
-                            "bg-yellow-300 rounded-full flex items-center justify-center",
-                            isCollapsed ? "w-5 h-5" : "w-10 h-10",
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              "text-black font-bold",
-                              isCollapsed ? "text-xs" : "text-lg",
-                            )}
-                          >
-                            {(() => {
-                              // Buscar primeiro nome do Neon DB para iniciais
-                              const neonUser = localStorage.getItem("neon_user");
-                              if (neonUser) {
-                                try {
-                                  const userData = JSON.parse(neonUser);
-                                  const fullName = userData.nome_completo || userData.nome_usuario || userData.email;
-                                  if (fullName) {
-                                    const firstChar = fullName.charAt(0).toUpperCase();
-                                    return firstChar;
-                                  }
-                                } catch (error) {
-                                  console.error("Erro ao buscar iniciais do Neon:", error);
-                                }
-                              }
-
-                              return firstName ? firstName.charAt(0).toUpperCase() : "U";
-                            })()}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Barra de progresso quando colapsado */}
-                {isCollapsed && (
-                  <div className="flex justify-center mt-2">
-                    <div 
-                      className="h-1 bg-[#2461E7] rounded-full opacity-30"
-                      style={{ width: "40px" }}
-                    >
-                      <div 
-                        className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
-                        style={{ width: "65%" }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {isUploading && (
-                <div className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-                  Enviando...
-                </div>
-              )}
-
-              {!isCollapsed && (
-                <div className="text-[#001427] dark:text-white text-center w-full">
-                  <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-                    <span className="mr-1">👋</span> Olá, {userName}</h3>
-                  <div className="flex flex-col items-center mt-1">
-                    <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
-                      Nível {userProfile?.level || 1}
-                    </p>
-                    <div className="flex justify-center">
-                      <div 
-                        className="h-1.5 bg-[#2461E7] rounded-full opacity-30"
-                        style={{ width: "80px" }}
-                      >
-                        <div 
-                          className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
-                          style={{ width: "65%" }}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-center mt-2">
-                      <div 
-                        className="px-5 py-0.5 border border-[#2461E7] bg-[#2461E7] bg-opacity-20 rounded-md flex items-center justify-center"
-                      >
-                        <span className="text-xs font-medium text-[#2461E7]">
                           PROFESSOR
                         </span>
                       </div>
@@ -975,7 +975,7 @@ export function SidebarNav({
           left: -100%;
           width: 100%;
           height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255, 107, 0, 0.1), transparent);
+          background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.1), transparent);
           transition: left 0.6s;
         }
 
@@ -985,13 +985,13 @@ export function SidebarNav({
 
         .menu-item:hover:not(.active) {
           transform: translateX(6px);
-          background: linear-gradient(135deg, rgba(255, 107, 0, 0.08), rgba(255, 107, 0, 0.08));
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(37, 99, 235, 0.08));
         }
 
         .menu-item.active {
-          background: linear-gradient(135deg, rgba(255, 107, 0, 0.15), rgba(255, 107, 0, 0.15));
-          border: 1px solid rgba(255, 107, 0, 0.3);
-          box-shadow: 0 4px 12px rgba(255, 107, 0, 0.1) !important;
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(37, 99, 235, 0.15));
+          border: 1px solid rgba(37, 99, 235, 0.3);
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1) !important;
         }
 
         .item-content {
@@ -1016,7 +1016,7 @@ export function SidebarNav({
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(255, 107, 0, 0.1);
+          background: rgba(37, 99, 235, 0.1);
           transition: all 0.3s ease;
           position: relative;
           overflow: hidden;
@@ -1024,14 +1024,14 @@ export function SidebarNav({
         }
 
         .icon-container.active {
-          background: linear-gradient(135deg, #FF6B00, #FF6B00);
+          background: linear-gradient(135deg, #2563eb, #2563eb);
           color: white;
-          box-shadow: 0 8px 16px rgba(255, 107, 0, 0.3);
+          box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
         }
 
         .icon-container i {
           font-size: 15px;
-          color: #FF6B00 !important;
+          color: #2563eb !important;
           transition: all 0.3s ease;
           position: relative;
           z-index: 1;
@@ -1042,12 +1042,12 @@ export function SidebarNav({
         }
 
         .menu-item:hover:not(.active) .icon-container {
-          background: linear-gradient(135deg, rgba(255, 107, 0, 0.2), rgba(255, 107, 0, 0.2));
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(37, 99, 235, 0.2));
           transform: scale(1.08);
         }
 
         .menu-item:hover:not(.active) .icon-container i {
-          color: #FF6B00 !important;
+          color: #2563eb !important;
         }
 
         .icon-glow {
@@ -1056,7 +1056,7 @@ export function SidebarNav({
           left: 50%;
           width: 20px;
           height: 20px;
-          background: radial-gradient(circle, rgba(255, 107, 0, 0.5), transparent);
+          background: radial-gradient(circle, rgba(37, 99, 235, 0.5), transparent);
           border-radius: 50%;
           transform: translate(-50%, -50%) scale(0);
           transition: transform 0.3s ease;
@@ -1096,16 +1096,16 @@ export function SidebarNav({
         }
 
         .menu-item.active .item-title {
-          color: #FF6B00 !important;
+          color: #2563eb !important;
           font-weight: 700;
         }
 
         .dark .menu-item.active .item-title {
-          color: #FF6B00 !important;
+          color: #2563eb !important;
         }
 
         .menu-item:hover:not(.active) .item-title {
-          color: #FF6B00 !important;
+          color: #2563eb !important;
         }
 
         /* Estilos para sidebar colapsado - apenas ícones */
@@ -1132,7 +1132,7 @@ export function SidebarNav({
           min-width: 8px !important;
           min-height: 8px !important;
           border-radius: 50%;
-          background: #FF6B00;
+          background: #2563eb;
           opacity: 0;
           transform: scale(0);
           transition: all 0.3s ease;
@@ -1142,36 +1142,36 @@ export function SidebarNav({
         .menu-item.active .item-indicator {
           opacity: 1;
           transform: scale(1);
-          box-shadow: 0 0 8px rgba(255, 107, 0, 0.6);
+          box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
         }
 
         /* ESTILOS ESPECÍFICOS PARA MODO PROFESSOR */
         .professor-mode .menu-item::before {
-          background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.1), transparent);
+          background: linear-gradient(90deg, transparent, rgba(255, 107, 0, 0.1), transparent);
         }
 
         .professor-mode .menu-item:hover:not(.active) {
-          background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(37, 99, 235, 0.08));
+          background: linear-gradient(135deg, rgba(255, 107, 0, 0.08), rgba(255, 107, 0, 0.08));
         }
 
         .professor-mode .menu-item.active {
-          background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(37, 99, 235, 0.15));
-          border: 1px solid rgba(37, 99, 235, 0.3);
-          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1) !important;
+          background: linear-gradient(135deg, rgba(255, 107, 0, 0.15), rgba(255, 107, 0, 0.15));
+          border: 1px solid rgba(255, 107, 0, 0.3);
+          box-shadow: 0 4px 12px rgba(255, 107, 0, 0.1) !important;
         }
 
         .professor-mode .icon-container {
-          background: rgba(37, 99, 235, 0.1);
+          background: rgba(255, 107, 0, 0.1);
         }
 
         .professor-mode .icon-container i {
-          color: #2563eb !important;
+          color: #FF6B00 !important;
         }
 
         .professor-mode .icon-container.active {
-          background: linear-gradient(135deg, #2563eb, #2563eb);
+          background: linear-gradient(135deg, #FF6B00, #FF6B00);
           color: white;
-          box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
+          box-shadow: 0 8px 16px rgba(255, 107, 0, 0.3);
         }
 
         .professor-mode .icon-container.active i {
@@ -1179,31 +1179,31 @@ export function SidebarNav({
         }
 
         .professor-mode .menu-item:hover:not(.active) .icon-container {
-          background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(37, 99, 235, 0.2));
+          background: linear-gradient(135deg, rgba(255, 107, 0, 0.2), rgba(255, 107, 0, 0.2));
         }
 
         .professor-mode .menu-item:hover:not(.active) .icon-container i {
-          color: #2563eb !important;
+          color: #FF6B00 !important;
         }
 
         .professor-mode .menu-item.active .item-title {
-          color: #2563eb !important;
+          color: #FF6B00 !important;
         }
 
         .professor-mode .menu-item:hover:not(.active) .item-title {
-          color: #2563eb !important;
+          color: #FF6B00 !important;
         }
 
         .professor-mode .item-indicator {
-          background: #2563eb;
+          background: #FF6B00;
         }
 
         .professor-mode .menu-item.active .item-indicator {
-          box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
+          box-shadow: 0 0 8px rgba(255, 107, 0, 0.6);
         }
 
         .professor-mode .icon-glow {
-          background: radial-gradient(circle, rgba(37, 99, 235, 0.5), transparent);
+          background: radial-gradient(circle, rgba(255, 107, 0, 0.5), transparent);
         }
 
         @keyframes orangeBounce {
