@@ -2,18 +2,22 @@ import { Client } from 'pg';
 
 class NeonDBManager {
   constructor() {
-    // Usar variáveis de ambiente configuradas nos Secrets do Replit
-    // Fallback para valores hardcoded se as variáveis não existirem
-    const DEPLOYMENT_DB_URL = process.env.DEPLOYMENT_DB_URL || 
-      'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-delicate-bush-acsigqej-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+    // URLs HARDCODED dos bancos Neon externos - CONFIGURAÇÃO DIRETA
+    // Banco usado no DEPLOYMENT (Publicado) - ep-delicate-bush
+    const DEPLOYMENT_DB_HARDCODED = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-delicate-bush-acsigqej-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
     
-    const PRODUCTION_DB_URL = process.env.PRODUCTION_DB_URL || 
-      'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+    // Banco usado no DEVELOPMENT (Replit) - ep-spring-truth
+    const PRODUCTION_DB_HARDCODED = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
     
-    // Detectar ambiente: se REPLIT_DEPLOYMENT existe, estamos em deployment (publicado)
+    // Sistema de fallback múltiplo: Secrets → Hardcoded
+    const DEPLOYMENT_DB_URL = process.env.DEPLOYMENT_DB_URL || DEPLOYMENT_DB_HARDCODED;
+    const PRODUCTION_DB_URL = process.env.PRODUCTION_DB_URL || PRODUCTION_DB_HARDCODED;
+    
+    // Detectar ambiente com múltiplas verificações
     const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || 
                          process.env.NODE_ENV === 'production' ||
-                         process.env.REPL_DEPLOYMENT === '1';
+                         process.env.REPL_DEPLOYMENT === '1' ||
+                         process.env.REPLIT_ENV === 'production';
     
     // LÓGICA INVERTIDA conforme solicitado:
     // - Desenvolvimento (Replit) → usa PRODUCTION database (ep-spring-truth)
@@ -22,21 +26,28 @@ class NeonDBManager {
     const environment = isDeployment ? 'DEPLOYMENT (Publicado)' : 'DEVELOPMENT (Replit)';
     const dbName = isDeployment ? 'ep-delicate-bush (deployment)' : 'ep-spring-truth (production)';
     
-    // Log de debug para verificar qual banco está sendo usado
+    // Log de debug detalhado
+    console.log('🔗 [NeonDB] ==========================================');
     console.log('🔗 [NeonDB] Configuração de ambiente:');
     console.log(`   - REPLIT_DEPLOYMENT: ${process.env.REPLIT_DEPLOYMENT || 'não definido'}`);
     console.log(`   - NODE_ENV: ${process.env.NODE_ENV || 'não definido'}`);
-    console.log(`   - DEPLOYMENT_DB_URL: ${process.env.DEPLOYMENT_DB_URL ? 'configurado' : 'usando fallback'}`);
-    console.log(`   - PRODUCTION_DB_URL: ${process.env.PRODUCTION_DB_URL ? 'configurado' : 'usando fallback'}`);
+    console.log(`   - REPL_DEPLOYMENT: ${process.env.REPL_DEPLOYMENT || 'não definido'}`);
+    console.log(`   - REPLIT_ENV: ${process.env.REPLIT_ENV || 'não definido'}`);
+    console.log(`   - DEPLOYMENT_DB_URL (Secret): ${process.env.DEPLOYMENT_DB_URL ? 'configurado' : 'não configurado'}`);
+    console.log(`   - PRODUCTION_DB_URL (Secret): ${process.env.PRODUCTION_DB_URL ? 'configurado' : 'não configurado'}`);
+    console.log(`   - Usando hardcoded deployment: ${!process.env.DEPLOYMENT_DB_URL ? 'SIM' : 'NÃO'}`);
+    console.log(`   - Usando hardcoded production: ${!process.env.PRODUCTION_DB_URL ? 'SIM' : 'NÃO'}`);
     
     if (connectionString) {
       const dbHost = connectionString.match(/@([^/]+)/)?.[1] || 'unknown';
       console.log(`🔗 [NeonDB] Ambiente: ${environment}`);
       console.log(`🔗 [NeonDB] Usando banco:`, dbName);
       console.log(`🔗 [NeonDB] Host:`, dbHost);
+      console.log(`🔗 [NeonDB] Connection String: ${connectionString.substring(0, 50)}...`);
     } else {
-      console.error('❌ [NeonDB] DATABASE_URL não encontrado!');
+      console.error('❌ [NeonDB] ERRO CRÍTICO: DATABASE_URL não encontrado!');
     }
+    console.log('🔗 [NeonDB] ==========================================');
     
     this.connectionConfig = {
       connectionString: connectionString,
