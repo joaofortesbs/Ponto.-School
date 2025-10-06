@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { useIsMobile } from "../../../hooks/useIsMobile";
+import { useUserName } from "../../../hooks/useUserName";
 
 interface TopHeaderProps {
   isDarkTheme?: boolean;
@@ -17,6 +18,9 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
     "construir",
     "compartilhar",
   ];
+
+  // Hook para obter o nome do usuário sincronizado com o Dashboard
+  const { userName, isLoading } = useUserName();
 
   // Função para obter a saudação baseada no horário atual
   const getGreeting = () => {
@@ -192,7 +196,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
                 : "bg-gradient-to-r from-gray-900 via-black to-gray-900 bg-clip-text text-transparent"
             }
           >
-            {isQuizMode ? "Bom dia, professor!" : `Bom dia, João!`}
+            {isQuizMode ? `${greeting}, professor!` : `${greeting}, ${isLoading ? "..." : userName}!`}
           </span>
         </div>
 
