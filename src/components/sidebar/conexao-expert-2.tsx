@@ -405,4 +405,30 @@ export function ConexaoExpert2() {
                 onClick={() => handleRequestClick(request)}
               >
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-sm font-medium text-[#29335C] dark
+                  <h3 className="text-sm font-medium text-[#29335C] dark:text-white truncate">{request.title}</h3>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              Nenhum pedido encontrado
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+
+      {/* Modals */}
+      {showNewRequestModal && (
+        <div>Nova solicitação modal</div>
+      )}
+      {showRequestDetailModal && selectedRequest && (
+        <div>Detalhes da solicitação modal</div>
+      )}
+      {showSuccessModal && (
+        <div>Modal de sucesso</div>
+      )}
+    </div>
+  );
+};
+
+export default ConexaoExpert2;

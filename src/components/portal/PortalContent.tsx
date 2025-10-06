@@ -331,29 +331,9 @@ const PortalContent = () => {
               ))}
             </div>
 
-            <div className="mt-8">
-              {/* Estudos section removed */}10 text-[#FF6B00] hover:bg-[#FF6B00]/20 mt-2"
-                      size="sm"
-                    >
-                      Ver detalhes
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-8">
-              {/* Estudos 2 section removed */}10 text-[#FF6B00] hover:bg-[#FF6B00]/20 mt-2"
-                      size="sm"
-                    >
-                      Ver detalhes
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Estudos section removed */}
+            
+            {/* Estudos 2 section removed */}
           </div>
         );
 
@@ -365,11 +345,13 @@ const PortalContent = () => {
                 Disciplinas
               </h2>
               <div className="flex items-center space-x-2">
-                <Input
-                  placeholder="Buscar disciplina..."
-                  className="w-64"
-                  prefix={<Search className="h-4 w-4 text-gray-400" />}
-                />
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Buscar disciplina..."
+                    className="w-64 pl-10"
+                  />
+                </div>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -485,11 +467,13 @@ const PortalContent = () => {
                 Portal de Materiais
               </h2>
               <div className="flex items-center space-x-2">
-                <Input
-                  placeholder="Buscar materiais..."
-                  className="w-64"
-                  prefix={<Search className="h-4 w-4 text-gray-400" />}
-                />
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Buscar materiais..."
+                    className="w-64 pl-10"
+                  />
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
