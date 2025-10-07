@@ -16,21 +16,35 @@ class NeonDBManager {
     let environment;
     let connectionType;
     
+    // TENTAR CONSTRUIR CONNECTION STRING MANUALMENTE COMO FALLBACK
+    // (Caso as URLs completas estejam desatualizadas, mas os componentes individuais estejam corretos)
+    let manualConnectionString = null;
+    if (process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE) {
+      const host = process.env.PGHOST;
+      const user = process.env.PGUSER;
+      const password = process.env.PGPASSWORD;
+      const database = process.env.PGDATABASE;
+      const port = process.env.PGPORT || '5432';
+      
+      manualConnectionString = `postgresql://${user}:${password}@${host}:${port}/${database}?sslmode=require`;
+      console.log('🔧 [NeonDB] Construindo connection string manualmente a partir de componentes individuais...');
+    }
+    
     if (isProduction) {
-      // PRODUCTION/DEPLOYMENT: Usar POOLED connection (PRODUCTION_DB_URL)
-      connectionString = process.env.PRODUCTION_DB_URL;
+      // PRODUCTION/DEPLOYMENT: Tentar manualmente primeiro, depois URLs completas
+      connectionString = manualConnectionString || process.env.DEPLOYMENT_DB_URL || process.env.PRODUCTION_DB_URL || process.env.DATABASE_URL;
       if (!connectionString) {
-        console.error('❌ [NeonDB] PRODUCTION_DB_URL não configurado nos Secrets!');
-        throw new Error('PRODUCTION_DB_URL é obrigatório no deployment');
+        console.error('❌ [NeonDB] Nenhuma database URL configurada para produção!');
+        throw new Error('É obrigatório configurar DEPLOYMENT_DB_URL, PRODUCTION_DB_URL ou DATABASE_URL no deployment');
       }
       environment = 'PRODUCTION (Deployment)';
-      connectionType = 'POOLED (PgBouncer)';
+      connectionType = connectionString.includes('-pooler') ? 'POOLED (PgBouncer)' : 'DIRECT';
     } else {
-      // DEVELOPMENT: Usar PRODUCTION_DB_URL (pooled) ou DATABASE_URL como fallback
-      connectionString = process.env.PRODUCTION_DB_URL || process.env.DATABASE_URL;
+      // DEVELOPMENT: Tentar manualmente primeiro, depois URLs completas
+      connectionString = manualConnectionString || process.env.DATABASE_URL || process.env.DEPLOYMENT_DB_URL || process.env.PRODUCTION_DB_URL;
       if (!connectionString) {
-        console.error('❌ [NeonDB] Nenhuma database URL configurada (PRODUCTION_DB_URL ou DATABASE_URL)!');
-        throw new Error('É necessário configurar PRODUCTION_DB_URL ou DATABASE_URL nos Secrets');
+        console.error('❌ [NeonDB] Nenhuma database URL configurada!');
+        throw new Error('É necessário configurar DATABASE_URL, DEPLOYMENT_DB_URL ou PRODUCTION_DB_URL nos Secrets');
       }
       environment = 'DEVELOPMENT (Local)';
       connectionType = connectionString.includes('-pooler') ? 'POOLED (PgBouncer)' : 'DIRECT';
@@ -44,13 +58,26 @@ class NeonDBManager {
     console.log(`   - Ambiente: ${environment}`);
     console.log(`   - Tipo de Conexão: ${connectionType}`);
     console.log(`   - PRODUCTION_DB_URL: ${process.env.PRODUCTION_DB_URL ? 'configurado ✅' : 'não configurado'}`);
+    console.log(`   - DEPLOYMENT_DB_URL: ${process.env.DEPLOYMENT_DB_URL ? 'configurado ✅' : 'não configurado'}`);
     console.log(`   - DATABASE_URL: ${process.env.DATABASE_URL ? 'configurado ✅' : 'não configurado'}`);
     
     if (connectionString) {
       const dbHost = connectionString.match(/@([^/]+)/)?.[1] || 'unknown';
       const isPooled = dbHost.includes('-pooler');
-      const usingProduction = connectionString === process.env.PRODUCTION_DB_URL;
-      console.log(`   - Usando: ${usingProduction ? 'PRODUCTION_DB_URL' : 'DATABASE_URL (fallback)'}`);
+      
+      // Identificar qual Secret está sendo usado
+      let usingSecret = 'UNKNOWN';
+      if (connectionString === manualConnectionString) {
+        usingSecret = 'MANUAL (PG* vars)';
+      } else if (connectionString === process.env.DEPLOYMENT_DB_URL) {
+        usingSecret = 'DEPLOYMENT_DB_URL';
+      } else if (connectionString === process.env.PRODUCTION_DB_URL) {
+        usingSecret = 'PRODUCTION_DB_URL';
+      } else if (connectionString === process.env.DATABASE_URL) {
+        usingSecret = 'DATABASE_URL';
+      }
+      
+      console.log(`   - Usando Secret: ${usingSecret}`);
       console.log(`   - Database Host: ${dbHost}`);
       console.log(`   - Pooled Connection: ${isPooled ? 'SIM ✅' : 'NÃO ⚠️'}`);
       console.log(`   - Connection URL: [OCULTO POR SEGURANÇA]`);
