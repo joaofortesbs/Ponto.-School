@@ -95,37 +95,23 @@ class NeonDBManager {
         console.log('   3️⃣ DATABASE_URL não configurado - PULANDO');
       }
       
-      // 4ª TENTATIVA: MANUAL (PG* vars) - ÚLTIMA OPÇÃO
-      if (!connectionString && process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE) {
-        console.log('   4️⃣ Testando MANUAL (construído de PG* vars)...');
-        const host = process.env.PGHOST;
-        const user = process.env.PGUSER;
-        const password = process.env.PGPASSWORD;
-        const database = process.env.PGDATABASE;
-        const port = process.env.PGPORT || '5432';
-        
-        const manualURL = `postgresql://${user}:${password}@${host}:${port}/${database}?sslmode=require`;
-        
-        if (isPooledURL(manualURL)) {
-          connectionString = manualURL;
-          selectedSecret = 'MANUAL (PG* vars)';
-          console.log(`      ✅ MANUAL URL é POOLED (host: ${host}) - USANDO!`);
-        } else {
-          console.log(`      ⚠️ MANUAL URL NÃO é pooled (host: ${host}) - PULANDO`);
-          fallbackReason = fallbackReason || 'MANUAL (PG* vars) não é pooled';
-        }
-      } else if (!connectionString) {
-        console.log('   4️⃣ MANUAL (PG* vars) incompleto - PULANDO');
-      }
-      
-      // 5ª TENTATIVA: FALLBACK HARDCODED (GARANTIDO POOLED)
+      // 4ª TENTATIVA: FALLBACK HARDCODED (GARANTIDO POOLED)
       if (!connectionString) {
-        console.log('   5️⃣ ⚠️ TODAS as tentativas falharam! Usando FALLBACK HARDCODED...');
+        console.log('   4️⃣ ⚠️ TODAS as tentativas falharam! Usando FALLBACK HARDCODED...');
         console.log(`      Razão: ${fallbackReason || 'Nenhum Secret configurado'}`);
         connectionString = FALLBACK_POOLED_URL;
         selectedSecret = 'FALLBACK_HARDCODED';
         console.log('      ✅ FALLBACK HARDCODED é POOLED (garantido) - USANDO!');
       }
+      
+      // 🛡️ PROTEÇÃO: Deletar PG* vars para evitar Replit re-injetar valores antigos
+      console.log('🛡️ [SEGURANÇA] Removendo PG* vars do ambiente em PRODUCTION...');
+      delete process.env.PGHOST;
+      delete process.env.PGUSER;
+      delete process.env.PGPASSWORD;
+      delete process.env.PGDATABASE;
+      delete process.env.PGPORT;
+      console.log('✅ [SEGURANÇA] PG* vars removidas com sucesso');
       
     } else {
       // DEVELOPMENT - Mesma lógica, prioridade: URLs primeiro, MANUAL por último
@@ -176,32 +162,9 @@ class NeonDBManager {
         console.log('   3️⃣ PRODUCTION_DB_URL não configurado - PULANDO');
       }
       
-      // 4ª TENTATIVA: MANUAL (PG* vars)
-      if (!connectionString && process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE) {
-        console.log('   4️⃣ Testando MANUAL (construído de PG* vars)...');
-        const host = process.env.PGHOST;
-        const user = process.env.PGUSER;
-        const password = process.env.PGPASSWORD;
-        const database = process.env.PGDATABASE;
-        const port = process.env.PGPORT || '5432';
-        
-        const manualURL = `postgresql://${user}:${password}@${host}:${port}/${database}?sslmode=require`;
-        
-        if (isPooledURL(manualURL)) {
-          connectionString = manualURL;
-          selectedSecret = 'MANUAL (PG* vars)';
-          console.log(`      ✅ MANUAL URL é POOLED (host: ${host}) - USANDO!`);
-        } else {
-          console.log(`      ⚠️ MANUAL URL NÃO é pooled (host: ${host}) - PULANDO`);
-          fallbackReason = fallbackReason || 'MANUAL (PG* vars) não é pooled';
-        }
-      } else if (!connectionString) {
-        console.log('   4️⃣ MANUAL (PG* vars) incompleto - PULANDO');
-      }
-      
-      // 5ª TENTATIVA: FALLBACK HARDCODED
+      // 4ª TENTATIVA: FALLBACK HARDCODED
       if (!connectionString) {
-        console.log('   5️⃣ ⚠️ TODAS as tentativas falharam! Usando FALLBACK HARDCODED...');
+        console.log('   4️⃣ ⚠️ TODAS as tentativas falharam! Usando FALLBACK HARDCODED...');
         console.log(`      Razão: ${fallbackReason || 'Nenhum Secret configurado'}`);
         connectionString = FALLBACK_POOLED_URL;
         selectedSecret = 'FALLBACK_HARDCODED';
@@ -219,6 +182,23 @@ class NeonDBManager {
     console.log(`   - Database Host: ${finalHostname}`);
     console.log(`   - Pooled Connection: ${finalIsPooled ? 'SIM ✅' : 'NÃO ⚠️ PROBLEMA!'}`);
     console.log(`   - Tipo de Conexão: ${finalIsPooled ? 'POOLED (PgBouncer)' : 'DIRECT (pode ter auto-suspend!)'}`);
+    
+    // ⚡ ASSERTION FAIL-FAST: Garantir URL POOLED em PRODUCTION
+    if (isProduction && !finalIsPooled) {
+      console.error('');
+      console.error('❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌');
+      console.error('❌ ERRO FATAL: URL NÃO-POOLED detectada em PRODUCTION!');
+      console.error('❌ Host:', finalHostname);
+      console.error('❌ Secret:', selectedSecret);
+      console.error('❌ ');
+      console.error('❌ PRODUCTION requer conexão POOLED (com -pooler)!');
+      console.error('❌ URLs não-pooled causam auto-suspend após 5min de idle!');
+      console.error('❌ ');
+      console.error('❌ TERMINANDO PROCESSO IMEDIATAMENTE!');
+      console.error('❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌');
+      console.error('');
+      process.exit(1);
+    }
     
     if (!finalIsPooled) {
       console.error('⚠️⚠️⚠️ [NeonDB] AVISO: Usando conexão NÃO-POOLED! Isso pode causar auto-suspend após 5min!');
