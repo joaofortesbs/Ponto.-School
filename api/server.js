@@ -2,12 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import emailRoutes from './enviar-email.js';
-import neonDBModule from './neon-db.js';
+import neonDB from './neon-db.js';
 import perfilsHandler from './perfis.js';
 import atividadesRoutes from './atividades.js';
 import uploadAvatarRoutes from './upload-avatar.js'; // Importar as novas rotas de upload
-
-const { neonDB } = neonDBModule;
 
 dotenv.config();
 

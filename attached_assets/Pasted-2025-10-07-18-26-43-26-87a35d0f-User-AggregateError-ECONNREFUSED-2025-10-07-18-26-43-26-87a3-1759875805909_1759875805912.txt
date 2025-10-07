@@ -1,0 +1,144 @@
+2025-10-07 18:26:43.26
+87a35d0f
+User
+AggregateError [ECONNREFUSED]:
+2025-10-07 18:26:43.26
+87a35d0f
+User
+at internalConnectMultiple (node:net:1122:18)
+2025-10-07 18:26:43.26
+87a35d0f
+User
+at afterConnectMultiple (node:net:1689:7)
+2025-10-07 18:26:44.47
+87a35d0f
+User
+9:26:44 PM [vite] http proxy error: /api/perfis/login
+2025-10-07 18:26:44.47
+87a35d0f
+User
+AggregateError [ECONNREFUSED]:
+2025-10-07 18:26:44.47
+87a35d0f
+User
+at internalConnectMultiple (node:net:1122:18)
+2025-10-07 18:26:44.47
+87a35d0f
+User
+at afterConnectMultiple (node:net:1689:7)
+2025-10-07 18:26:45.26
+87a35d0f
+User
+9:26:45 PM [vite] http proxy error: /api/perfis/login
+2025-10-07 18:26:45.26
+87a35d0f
+User
+AggregateError [ECONNREFUSED]:
+2025-10-07 18:26:45.26
+87a35d0f
+User
+at internalConnectMultiple (node:net:1122:18)
+2025-10-07 18:26:45.26
+87a35d0f
+User
+at afterConnectMultiple (node:net:1689:7)
+2025-10-07 18:26:46.37
+87a35d0f
+User
+9:26:46 PM [vite] http proxy error: /api/perfis/login
+2025-10-07 18:26:46.37
+87a35d0f
+User
+AggregateError [ECONNREFUSED]:
+2025-10-07 18:26:46.37
+87a35d0f
+User
+at internalConnectMultiple (node:net:1122:18)
+2025-10-07 18:26:46.37
+87a35d0f
+User
+at afterConnectMultiple (node:net:1689:7)
+2025-10-07 18:26:53.46
+87a35d0f
+User
+9:26:53 PM [vite] http proxy error: /api/perfis/login
+2025-10-07 18:26:53.46
+87a35d0f
+User
+AggregateError [ECONNREFUSED]:
+2025-10-07 18:26:53.46
+87a35d0f
+User
+at internalConnectMultiple (node:net:1122:18)
+2025-10-07 18:26:53.46
+87a35d0f
+User
+at afterConnectMultiple (node:net:1689:7)
+2025-10-07 18:26:54.54
+87a35d0f
+User
+9:26:54 PM [vite] http proxy error: /api/perfis/login
+2025-10-07 18:26:54.54
+87a35d0f
+User
+AggregateError [ECONNREFUSED]:
+2025-10-07 18:26:54.54
+87a35d0f
+User
+at internalConnectMultiple (node:net:1122:18)
+2025-10-07 18:26:54.54
+87a35d0f
+User
+at afterConnectMultiple (node:net:1689:7)
+2025-10-07 19:15:52.28
+15832fec
+System
+starting up user application
+2025-10-07 19:15:52.28
+15832fec
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-10-07 19:16:00.66
+15832fec
+User
+> starter@0.0.0 preview
+2025-10-07 19:16:00.66
+15832fec
+User
+> vite preview
+2025-10-07 19:16:03.55
+15832fec
+User
+🔧 [NeonDB] Construindo connection string manualmente a partir de componentes individuais...
+2025-10-07 19:16:03.55
+15832fec
+User
+🔗 [NeonDB] ==========================================
+2025-10-07 19:16:03.55
+15832fec
+User
+🔗 [NeonDB] Configuração de Conexão:
+2025-10-07 19:16:03.55
+15832fec
+User
+- NODE_ENV: não definido
+2025-10-07 19:16:03.55
+15832fec
+User
+- REPLIT_DEPLOYMENT: 1
+2025-10-07 19:16:03.55
+15832fec
+User
+- Ambiente: PRODUCTION (Deployment)
+2025-10-07 19:16:03.55
+15832fec
+User
+- Tipo de Conexão: DIRECT
+2025-10-07 19:16:03.55
+15832fec
+User
+- PRODUCTION_DB_URL: configurado ✅
+2025-10-07 19:16:03.55
+15832fec
+User
+- DEPLOYMENT_DB_URL: configurado ✅

@@ -1,8 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import neonDBModule from './neon-db.js';
+import neonDB from './neon-db.js';
 
-const { neonDB } = neonDBModule;
 const router = express.Router();
 
 // Buscar perfil por email
