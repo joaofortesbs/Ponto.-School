@@ -32,10 +32,11 @@ class NeonDBManager {
       environment = 'PRODUCTION (Deployment)';
       connectionType = 'POOLED (PgBouncer)';
     } else {
-      // DEVELOPMENT: Usar DIRECT connection (DATABASE_URL)
-      connectionString = process.env.DATABASE_URL || DIRECT_PRODUCTION_DB;
+      // DEVELOPMENT: Usar POOLED connection também (para evitar auto-suspend issues)
+      // Usar PRODUCTION_DB_URL se disponível, senão fallback para pooled hardcoded
+      connectionString = process.env.PRODUCTION_DB_URL || POOLED_PRODUCTION_DB;
       environment = 'DEVELOPMENT (Local)';
-      connectionType = 'DIRECT';
+      connectionType = 'POOLED (PgBouncer)';
     }
     
     // Log de debug detalhado
