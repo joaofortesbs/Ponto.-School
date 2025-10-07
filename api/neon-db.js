@@ -83,23 +83,63 @@ class NeonDBManager {
     return new Client(this.connectionConfig);
   }
 
-  // Executar query usando POOL (para pooled connections)
-  async executeQuery(query, params = []) {
-    try {
-      // Usar pool ao invés de criar novo client
-      const result = await this.pool.query(query, params);
-      return {
-        success: true,
-        data: result.rows,
-        rowCount: result.rowCount
-      };
-    } catch (error) {
-      console.error('❌ Erro ao executar query:', error.message);
-      return {
-        success: false,
-        error: error.message
-      };
+  // Executar query COM RETRY e EXPONENTIAL BACKOFF (para lidar com Neon auto-suspend)
+  async executeQuery(query, params = [], retries = 3) {
+    let attempt = 0;
+    
+    while (attempt < retries) {
+      try {
+        // Usar pool ao invés de criar novo client
+        const result = await this.pool.query(query, params);
+        
+        // Se bem-sucedido, retornar imediatamente
+        return {
+          success: true,
+          data: result.rows,
+          rowCount: result.rowCount
+        };
+      } catch (error) {
+        attempt++;
+        
+        // Verificar se é erro reconectável (Neon suspend, ECONNRESET, SSL, terminated)
+        const isReconnectable = 
+          error.code === 'ECONNRESET' || 
+          error.code === 'ENOTFOUND' ||
+          error.code === 'ETIMEDOUT' ||
+          error.message.includes('terminated') || 
+          error.message.includes('SSL') ||
+          error.message.includes('Connection') ||
+          error.message.includes('timeout');
+        
+        if (isReconnectable && attempt < retries) {
+          // Exponential backoff: 1s, 2s, 4s
+          const waitTime = 1000 * Math.pow(2, attempt - 1);
+          console.warn(`⚠️ [NeonDB Retry] Query falhou (tentativa ${attempt}/${retries}): ${error.message}`);
+          console.log(`🔄 [NeonDB Retry] Aguardando ${waitTime}ms antes de retentar...`);
+          
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        } else {
+          // Erro não reconectável ou max retries atingido
+          if (attempt >= retries) {
+            console.error(`❌ [NeonDB] Falha após ${retries} tentativas: ${error.message}`);
+          } else {
+            console.error('❌ [NeonDB] Erro não reconectável:', error.message);
+          }
+          
+          return {
+            success: false,
+            error: error.message,
+            code: error.code
+          };
+        }
+      }
     }
+    
+    // Fallback (nunca deve chegar aqui)
+    return {
+      success: false,
+      error: 'Falha após max retries'
+    };
   }
   
   // Fechar pool (chamar ao desligar servidor)

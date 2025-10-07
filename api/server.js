@@ -52,7 +52,7 @@ app.use('/api/perfis', perfilsHandler);
 app.use('/api/upload-avatar', uploadAvatarRoutes); // Rota para upload de avatar
 app.use('/api/atividades-neon', atividadesRoutes);
 
-// Rota de teste de conexão com banco de dados
+// Rota de teste de conexão com banco de dados (simples)
 app.get('/api/test-db-connection', async (req, res) => {
   try {
     console.log('🔍 [TEST] Testando conexão com banco de dados Neon...');
@@ -98,6 +98,88 @@ app.get('/api/test-db-connection', async (req, res) => {
       success: false,
       error: 'Falha ao conectar com banco de dados',
       message: error.message
+    });
+  }
+});
+
+// Endpoint /db-status - HEALTH CHECK COMPLETO com monitoring
+app.get('/api/db-status', async (req, res) => {
+  try {
+    console.log('🏥 [HEALTH CHECK] Verificando status do banco de dados...');
+    
+    // Detectar ambiente
+    const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || 
+                         process.env.NODE_ENV === 'production' ||
+                         process.env.REPL_DEPLOYMENT === '1' ||
+                         process.env.REPLIT_ENV === 'production';
+    
+    // 1. Teste de conexão básico (SELECT 1)
+    const testQuery = await neonDB.executeQuery('SELECT 1 as test');
+    
+    if (!testQuery.success) {
+      throw new Error(`Teste de conexão falhou: ${testQuery.error}`);
+    }
+    
+    // 2. Consultar conexões ativas no banco
+    const activeConnectionsQuery = await neonDB.executeQuery(
+      `SELECT COUNT(*) as count FROM pg_stat_activity WHERE datname = $1`,
+      [process.env.PGDATABASE || 'neondb']
+    );
+    
+    // 3. Consultar max_connections permitido
+    const maxConnectionsQuery = await neonDB.executeQuery('SHOW max_connections');
+    
+    // 4. Informações do banco
+    const dbInfoQuery = await neonDB.executeQuery(
+      `SELECT current_database() as database_name, 
+              current_user as user_name,
+              version() as postgres_version,
+              NOW() as server_time`
+    );
+    
+    // 5. Verificar tabelas principais
+    const tablesQuery = await neonDB.executeQuery(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      ORDER BY table_name
+    `);
+    
+    const tables = tablesQuery.success ? tablesQuery.data.map(t => t.table_name) : [];
+    
+    // Montar resposta completa
+    const healthStatus = {
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      environment: isDeployment ? 'PRODUCTION (Deployment)' : 'DEVELOPMENT (Local)',
+      test_query: testQuery.data,
+      database_info: dbInfoQuery.success ? dbInfoQuery.data[0] : null,
+      connections: {
+        active: activeConnectionsQuery.success ? parseInt(activeConnectionsQuery.data[0].count) : 'unknown',
+        max_allowed: maxConnectionsQuery.success ? maxConnectionsQuery.data[0].max_connections : 'unknown'
+      },
+      tables: tables,
+      env_vars: {
+        PRODUCTION_DB_URL: process.env.PRODUCTION_DB_URL ? 'configurado ✅' : 'não configurado',
+        DATABASE_URL: process.env.DATABASE_URL ? 'configurado ✅' : 'não configurado',
+        DEPLOYMENT_DB_URL: process.env.DEPLOYMENT_DB_URL ? 'configurado ✅' : 'não configurado',
+        PGDATABASE: process.env.PGDATABASE || 'não definido',
+        NODE_ENV: process.env.NODE_ENV || 'não definido'
+      }
+    };
+    
+    console.log('✅ [HEALTH CHECK] Status: OK');
+    console.log(`   - Conexões ativas: ${healthStatus.connections.active}/${healthStatus.connections.max_allowed}`);
+    console.log(`   - Tabelas: ${tables.length} encontradas`);
+    
+    res.json(healthStatus);
+    
+  } catch (error) {
+    console.error('❌ [HEALTH CHECK] Erro:', error.message);
+    res.status(500).json({
+      status: 'ERRO',
+      timestamp: new Date().toISOString(),
+      error: error.message
     });
   }
 });
@@ -397,6 +479,31 @@ async function startServer() {
 }
 
 startServer();
+
+// SHUTDOWN HANDLER - Fechar pool de conexões ao desligar servidor
+process.on('SIGTERM', async () => {
+  console.log('⚠️ SIGTERM recebido, encerrando servidor graciosamente...');
+  try {
+    await neonDB.closePool();
+    console.log('✅ Pool de conexões encerrado com sucesso');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Erro ao encerrar pool:', error);
+    process.exit(1);
+  }
+});
+
+process.on('SIGINT', async () => {
+  console.log('⚠️ SIGINT recebido, encerrando servidor graciosamente...');
+  try {
+    await neonDB.closePool();
+    console.log('✅ Pool de conexões encerrado com sucesso');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Erro ao encerrar pool:', error);
+    process.exit(1);
+  }
+});
 
 // Tratamento global de erros para evitar que o servidor caia
 process.on('uncaughtException', (error) => {

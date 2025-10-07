@@ -1,0 +1,118 @@
+Ei, Agent! Meu app Node.js (Web Server, projeto de vibe code/educacional) no Replit está conectado a um banco de dados Neon Postgres externo. A conexão funciona perfeitamente no ambiente de run local (dev e production interna no Replit), mas após o deploy no domínio customizado (Reserved VM), o app perde a conexão com o DB – erros comuns incluem "connection terminated unexpectedly", "fetch failed", "ECONNRESET", ou "the last operation failed to run". Já atualizei todas as Secrets relevantes: DATABASE_URL para a string pooled de desenvolvimento (postgresql://neondb_owner:[SENHA_CORRETA]@ep-delicate-bush-acsigqej-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require), PRODUCTION_DB_URL para a string pooled de produção (postgresql://neondb_owner:[SENHA_CORRETA]@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require), e DEPLOYMENT_DB_URL para a mesma string pooled de produção. Outras Secrets como PGHOST, PGUSER (neondb_owner), PGPASSWORD (senha correta), PGDATABASE (neondb), PGPORT (5432), e SESSION_SECRET estão configuradas corretamente e injetadas no deploy.
+O problema raiz é o auto-suspend do compute no Neon (suspende após 5 minutos de inatividade no plano free/básico), que causa drops de conexão em deploys com tráfego variável. A solução é usar a conexão pooled (PgBouncer) para reconexões automáticas, combinada com retries, error handling, SSL strict, e monitoring no código. Priorize PRODUCTION_DB_URL e DEPLOYMENT_DB_URL para produção/deploy, e DATABASE_URL para dev. Assuma que o código usa 'pg' como client Postgres (ajuste se for Prisma, Drizzle, Sequelize ou outro ORM – pergunte se precisar confirmar).
+Considerações importantes (siga rigorosamente para compatibilidade com Replit e Neon):
+
+Replit injeta Secrets como env vars automaticamente no deploy; use process.env para acessá-las.
+Neon exige SSL: Sempre inclua ssl: { rejectUnauthorized: false } ou sslmode=require na config.
+Limites Neon (plano free): Max connections ~20-100; defina pool size baixo (ex: max: 10) para evitar rejeições.
+Replit policies: Conexões outbound permitidas; app é Web Server com build "npm run build" e run "bash -c 'node /app/server.js & npm run preview'"; respeite max_connections e feche idle.
+Se ORM: Para Prisma, adicione ?pgbouncer=true na URL pooled e use directUrl para migrations; para Drizzle, considere @neondatabase/serverless como fallback.
+Erros comuns: "Relation does not exist" (qualifique schemas como public.tabela); "Too many connections" (reduza pool); "SSL required" (force SSL).
+Otimização: Adicione cache in-memory para queries frequentes; use cron/ping externo (ex: UptimeRobot) se tráfego for baixo para manter awake.
+
+Tarefas exatas para você executar agora, passo a passo (seja criativo, mas siga à risca; mostre diffs/snippets de código alterado, logs e confirmações):
+
+Diagnósticos iniciais (verifique antes de mudar código):
+
+No server.js ou arquivo principal, adicione logging de env vars no startup:
+javascriptconsole.log('Ambiente:', process.env.NODE_ENV || 'dev');
+console.log('DB URLs:', {
+  dev: process.env.DATABASE_URL ? 'set (hashed: ' + process.env.DATABASE_URL.replace(/:.+@/, ':***@') + ')' : 'unset',
+  prod: process.env.PRODUCTION_DB_URL ? 'set (hashed: ' + process.env.PRODUCTION_DB_URL.replace(/:.+@/, ':***@') + ')' : 'unset',
+  deploy: process.env.DEPLOYMENT_DB_URL ? 'set (hashed: ' + process.env.DEPLOYMENT_DB_URL.replace(/:.+@/, ':***@') + ')' : 'unset'
+});
+console.log('PG vars:', { PGUSER: process.env.PGUSER, PGDATABASE: process.env.PGDATABASE, PGPORT: process.env.PGPORT });
+
+Rode localmente e me mostre os logs para confirmar injeção de vars.
+Teste conexão básica local: Rode uma query simples como 'SELECT 1;' usando a DATABASE_URL.
+
+
+Atualize a configuração de conexão ao DB (use pooled em prod/deploy):
+
+No arquivo de conexão (db.js, config.js ou server.js), detecte ambiente:
+javascriptconst isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'deployment';
+const dbUrl = isProduction ? (process.env.DEPLOYMENT_DB_URL || process.env.PRODUCTION_DB_URL) : process.env.DATABASE_URL;
+console.log(`Usando DB URL: ${isProduction ? 'Produção/Deploy (pooled)' : 'Dev (pooled)'} - Hashed: ${dbUrl.replace(/:.+@/, ':***@')}`);
+
+Configure o client Postgres com pooling, SSL e timeouts (exemplo com 'pg'):
+javascriptconst { Pool } = require('pg');
+const pool = new Pool({
+  connectionString: dbUrl,
+  ssl: { rejectUnauthorized: false }, // Essencial para Neon SSL
+  max: 10, // Baixo para limites Neon
+  idleTimeoutMillis: 30000, // Fecha idle rápido
+  connectionTimeoutMillis: 5000, // Timeout de conexão
+});
+// Evento de erro para reconexão
+pool.on('error', (err) => {
+  console.error('Erro no pool DB, tentando reconectar...', err);
+});
+module.exports = pool; // Ou exporte para uso no app
+
+Se for ORM (confirme comigo se sim):
+
+Prisma: Em schema.prisma, defina datasource com url = env("PRODUCTION_DB_URL") para prod; adicione ?pgbouncer=true.
+Drizzle: Use import { neon } from '@neondatabase/serverless'; const sql = neon(dbUrl); como fallback se pg falhar.
+
+
+
+
+Adicione retries com exponential backoff para todas as queries (para lidar com suspend):
+
+Crie uma função wrapper reutilizável:
+javascriptasync function queryWithRetry(text, params = [], retries = 3) {
+  let attempt = 0;
+  while (attempt < retries) {
+    try {
+      return await pool.query(text, params);
+    } catch (err) {
+      console.error(`Query falhou (tentativa ${attempt + 1}): ${err.message}`);
+      if (err.code === 'ECONNRESET' || err.message.includes('terminated') || err.message.includes('SSL')) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt))); // Backoff: 1s, 2s, 4s
+        attempt++;
+      } else {
+        throw err; // Erros não reconectáveis
+      }
+    }
+  }
+  throw new Error('Falha após max retries');
+}
+// Uso exemplo: const result = await queryWithRetry('SELECT * FROM sua_tabela', []);
+
+Atualize todas as queries no app para usar essa função (procure por pool.query ou equivalente e substitua).
+
+
+Adicione monitoring e health check (para debug e estabilidade):
+
+Crie endpoint /db-status (assuma Express ou adicione se não tiver):
+javascriptapp.get('/db-status', async (req, res) => {
+  try {
+    const test = await queryWithRetry('SELECT 1');
+    const active = await queryWithRetry('SELECT COUNT(*) FROM pg_stat_activity WHERE datname = $1', [process.env.PGDATABASE]);
+    const maxConn = await queryWithRetry('SHOW max_connections');
+    res.json({ status: 'OK', test: test.rows, active_connections: active.rows[0].count, max_connections: maxConn.rows[0].max_connections });
+  } catch (err) {
+    res.status(500).json({ status: 'ERRO', message: err.message });
+  }
+});
+
+No startup, logue max_connections: await queryWithRetry('SHOW max_connections;').
+
+
+Otimize e feche conexões (para Replit/Neon):
+
+Adicione shutdown handler: Em process.on('SIGTERM', () => { pool.end(); process.exit(0); });
+Para queries frequentes (ex: em vibe code), adicione cache simples: Use um Map() in-memory para armazenar resultados por 5min.
+Qualifique schemas em queries: Ex: 'SELECT * FROM public.sua_tabela' para evitar "relation does not exist".
+
+
+Testes completos após updates (execute e me mostre resultados):
+
+Local (dev): Rode app, acesse /db-status, force queries, simule idle (espere 6min), teste retry.
+Deploy: Publique novo build, acesse domínio + /db-status, monitore Logs no Replit Deployments por 15min (inclua idle).
+Simule erro: Suspend compute no Neon dashboard, teste se retry reconecta.
+Se falhar: Logue erro completo, sugira alternatives como migrar para Replit DB interno ou upgrade Neon para always-on.
+
+
+
+Execute tudo sequencialmente agora, confirme mudanças no código (mostre diffs ou arquivos alterados), rode testes, e diga se o deploy está estável. Se precisar de mais detalhes (ex: código atual, ORM usado, stacktrace), pergunte! Vamos tornar isso 100% funcional em produção com Neon externo pooled.
