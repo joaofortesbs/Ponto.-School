@@ -2,48 +2,61 @@ import { Client } from 'pg';
 
 class NeonDBManager {
   constructor() {
-    // URLs HARDCODED dos bancos Neon externos - CONFIGURAÇÃO DIRETA
-    // Banco usado no DEPLOYMENT (Publicado) - ep-delicate-bush
-    const DEPLOYMENT_DB_HARDCODED = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-delicate-bush-acsigqej-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+    // POOLED Connection Strings (para PRODUCTION/DEPLOYMENT - com PgBouncer)
+    // Usam -pooler no hostname para reconexão automática após auto-suspend
+    const POOLED_DEPLOYMENT_DB = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-delicate-bush-acsigqej-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+    const POOLED_PRODUCTION_DB = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
     
-    // Banco usado no DEVELOPMENT (Replit) - ep-spring-truth
-    const PRODUCTION_DB_HARDCODED = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+    // DIRECT Connection Strings (para DEVELOPMENT - conexão direta)
+    // Sem -pooler, ideal para desenvolvimento local
+    const DIRECT_DEPLOYMENT_DB = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-delicate-bush-acsigqej.sa-east-1.aws.neon.tech/neondb?sslmode=require';
+    const DIRECT_PRODUCTION_DB = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9.sa-east-1.aws.neon.tech/neondb?sslmode=require';
     
-    // Sistema de fallback múltiplo: Secrets → Hardcoded
-    const DEPLOYMENT_DB_URL = process.env.DEPLOYMENT_DB_URL || DEPLOYMENT_DB_HARDCODED;
-    const PRODUCTION_DB_URL = process.env.PRODUCTION_DB_URL || PRODUCTION_DB_HARDCODED;
-    
-    // Detectar ambiente com múltiplas verificações
-    const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || 
-                         process.env.NODE_ENV === 'production' ||
+    // Detectar ambiente de PRODUÇÃO (deployment/publicado)
+    const isProduction = process.env.NODE_ENV === 'production' || 
+                         process.env.REPLIT_DEPLOYMENT === '1' ||
                          process.env.REPL_DEPLOYMENT === '1' ||
                          process.env.REPLIT_ENV === 'production';
     
-    // LÓGICA INVERTIDA conforme solicitado:
-    // - Desenvolvimento (Replit) → usa PRODUCTION database (ep-spring-truth)
-    // - Deployment (Publicado) → usa DEPLOYMENT database (ep-delicate-bush)
-    let connectionString = isDeployment ? DEPLOYMENT_DB_URL : PRODUCTION_DB_URL;
-    const environment = isDeployment ? 'DEPLOYMENT (Publicado)' : 'DEVELOPMENT (Replit)';
-    const dbName = isDeployment ? 'ep-delicate-bush (deployment)' : 'ep-spring-truth (production)';
+    // LÓGICA CORRETA PARA POOLED CONNECTION:
+    // - PRODUCTION (deployment): USA PRODUCTION_DB_URL (pooled) do Secret ou fallback pooled hardcoded
+    // - DEVELOPMENT (local): USA DATABASE_URL (direct) do Secret ou fallback direct hardcoded
+    
+    let connectionString;
+    let environment;
+    let connectionType;
+    
+    if (isProduction) {
+      // PRODUCTION/DEPLOYMENT: Usar POOLED connection (PRODUCTION_DB_URL)
+      connectionString = process.env.PRODUCTION_DB_URL || POOLED_PRODUCTION_DB;
+      environment = 'PRODUCTION (Deployment)';
+      connectionType = 'POOLED (PgBouncer)';
+    } else {
+      // DEVELOPMENT: Usar DIRECT connection (DATABASE_URL)
+      connectionString = process.env.DATABASE_URL || DIRECT_PRODUCTION_DB;
+      environment = 'DEVELOPMENT (Local)';
+      connectionType = 'DIRECT';
+    }
     
     // Log de debug detalhado
     console.log('🔗 [NeonDB] ==========================================');
-    console.log('🔗 [NeonDB] Configuração de ambiente:');
-    console.log(`   - REPLIT_DEPLOYMENT: ${process.env.REPLIT_DEPLOYMENT || 'não definido'}`);
+    console.log('🔗 [NeonDB] Configuração de Conexão:');
     console.log(`   - NODE_ENV: ${process.env.NODE_ENV || 'não definido'}`);
+    console.log(`   - REPLIT_DEPLOYMENT: ${process.env.REPLIT_DEPLOYMENT || 'não definido'}`);
     console.log(`   - REPL_DEPLOYMENT: ${process.env.REPL_DEPLOYMENT || 'não definido'}`);
     console.log(`   - REPLIT_ENV: ${process.env.REPLIT_ENV || 'não definido'}`);
-    console.log(`   - DEPLOYMENT_DB_URL (Secret): ${process.env.DEPLOYMENT_DB_URL ? 'configurado' : 'não configurado'}`);
+    console.log(`   - Ambiente: ${environment}`);
+    console.log(`   - Tipo de Conexão: ${connectionType}`);
+    console.log(`   - DATABASE_URL (Secret): ${process.env.DATABASE_URL ? 'configurado' : 'não configurado'}`);
     console.log(`   - PRODUCTION_DB_URL (Secret): ${process.env.PRODUCTION_DB_URL ? 'configurado' : 'não configurado'}`);
-    console.log(`   - Usando hardcoded deployment: ${!process.env.DEPLOYMENT_DB_URL ? 'SIM' : 'NÃO'}`);
-    console.log(`   - Usando hardcoded production: ${!process.env.PRODUCTION_DB_URL ? 'SIM' : 'NÃO'}`);
+    console.log(`   - Usando fallback hardcoded: ${(!process.env.PRODUCTION_DB_URL && isProduction) || (!process.env.DATABASE_URL && !isProduction) ? 'SIM' : 'NÃO'}`);
     
     if (connectionString) {
       const dbHost = connectionString.match(/@([^/]+)/)?.[1] || 'unknown';
-      console.log(`🔗 [NeonDB] Ambiente: ${environment}`);
-      console.log(`🔗 [NeonDB] Usando banco:`, dbName);
-      console.log(`🔗 [NeonDB] Host:`, dbHost);
-      console.log(`🔗 [NeonDB] Connection String: ${connectionString.substring(0, 50)}...`);
+      const isPooled = dbHost.includes('-pooler');
+      console.log(`   - Database Host: ${dbHost}`);
+      console.log(`   - Pooled Connection: ${isPooled ? 'SIM ✅' : 'NÃO'}`);
+      console.log(`   - Connection String: ${connectionString.substring(0, 50)}...`);
     } else {
       console.error('❌ [NeonDB] ERRO CRÍTICO: DATABASE_URL não encontrado!');
     }
@@ -53,7 +66,11 @@ class NeonDBManager {
       connectionString: connectionString,
       ssl: {
         rejectUnauthorized: false
-      }
+      },
+      // Configurações adicionais para pooled connection
+      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 30000,
+      max: 10 // pool size
     };
   }
 
