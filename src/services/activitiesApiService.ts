@@ -35,13 +35,10 @@ class ActivitiesApiService {
    * Determina a URL base da API baseada no ambiente
    */
   private getApiBaseUrl(): string {
-    if (process.env.NODE_ENV === 'production') {
-      // Em produção, usar domínio público
-      return `https://${window.location.hostname}/api`;
-    } else {
-      // Em desenvolvimento, usar localhost na porta 3001
-      return 'http://localhost:3001/api';
-    }
+    // Sempre usar caminho relativo - o proxy do Vite resolve automaticamente
+    // Em dev: /api → proxy → localhost:3001
+    // Em deployment: /api → proxy → localhost:3000
+    return '/api';
   }
 
   /**

@@ -12,8 +12,13 @@ export const preloadAllComponents = () => {
 
 // Função para verificar se o servidor de API está rodando
 async function verificarServidorAPI() {
+  // Guard: só executa no browser
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
   try {
-    // Primeiro tenta no caminho padrão
+    // Usa o caminho relativo - o proxy do Vite resolve automaticamente
     const response = await fetch('/api/status', { 
       method: 'GET',
       headers: { 'Accept': 'application/json' },
@@ -22,33 +27,23 @@ async function verificarServidorAPI() {
     
     if (response.ok) {
       const data = await response.json();
-      console.log('Status do servidor API:', data.status);
+      console.log('✅ Status do servidor API:', data.status);
       return true;
     }
     return false;
   } catch (error) {
-    // Tenta na porta específica como fallback
-    try {
-      const altResponse = await fetch('http://localhost:3001/api/status', { 
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(2000)
-      });
-      
-      if (altResponse.ok) {
-        const data = await altResponse.json();
-        console.log('Status do servidor API (porta 3001):', data.status);
-        return true;
-      }
-    } catch (altError) {
-      console.warn('Servidor API não está rodando');
-    }
+    console.warn('⚠️ Servidor API não está respondendo');
     return false;
   }
 }
 
 // Função inicializadora principal que executa todas as tarefas de inicialização
 export async function inicializarAplicacao() {
+  // Guard: só executa no browser
+  if (typeof window === 'undefined') {
+    return;
+  }
+
   console.log('Iniciando aplicação...');
 
   // Verifica se o servidor API está rodando
