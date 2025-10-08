@@ -275,7 +275,7 @@ class ActivitiesApiService {
       
       for (const [activityId, activityInfo] of Object.entries(constructedActivities)) {
         try {
-          if (activityInfo?.isBuilt) {
+          if ((activityInfo as any)?.isBuilt) {
             // Buscar dados completos da atividade
             const activityData = localStorage.getItem(`activity_${activityId}`);
             if (activityData) {

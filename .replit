@@ -5,7 +5,7 @@ run = "npm run dev"
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "bash -c \"node api/server.js & until curl -sf http://localhost:3000/api/status > /dev/null 2>&1; do sleep 0.5; done && npm run preview\""]
+run = ["sh", "-c", "node api/server.js & sleep 8 && npm run preview"]
 deploymentTarget = "vm"
 build = ["npm", "run", "build"]
 
@@ -49,10 +49,6 @@ externalPort = 8080
 [[ports]]
 localPort = 8081
 externalPort = 8081
-
-[[ports]]
-localPort = 34875
-externalPort = 3000
 
 [[ports]]
 localPort = 41579
