@@ -466,7 +466,7 @@ async function startServer() {
     registerActivityRoutes();
 
     // Iniciar servidor
-    app.listen(PORT, 'localhost', () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Servidor de API rodando na porta ${PORT}`);
       console.log(`🌐 Acesse em: http://localhost:${PORT}/api/status`);
     });

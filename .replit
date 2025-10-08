@@ -5,14 +5,13 @@ run = "npm run dev"
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "node api/server.js & sleep 8 && npm run preview"]
+run = ["sh", "-c", "node api/server.js & sleep 15 && npm run preview"]
 deploymentTarget = "vm"
 build = ["npm", "run", "build"]
 
 [[ports]]
 localPort = 3001
 externalPort = 3001
-exposeLocalhost = true
 
 [[ports]]
 localPort = 3002
