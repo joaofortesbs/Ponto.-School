@@ -5,8 +5,8 @@ run = "npm run dev"
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "node api/server.js & sleep 15 && npm run preview"]
-deploymentTarget = "vm"
+run = ["npm", "run", "start"]
+deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 
 [[ports]]
