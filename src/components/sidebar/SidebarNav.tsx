@@ -395,37 +395,44 @@ export function SidebarNav({
       icon: "fas fa-chalkboard-teacher",
       label: "Minhas Turmas",
       path: "/turmas",
+      disabled: true,
     },
     {
       icon: "fas fa-route",
       label: "Trilhas School",
       path: "/trilhas-school/professores",
+      disabled: true,
     },
     {
       icon: "fas fa-brain",
       label: "Epictus IA",
       path: "/epictus-ia",
       isSpecial: true,
+      disabled: true,
     },
     {
       icon: "fas fa-globe",
       label: "Portal",
       path: "/portal",
+      disabled: true,
     },
     {
       icon: "fas fa-users",
       label: "Comunidades",
       path: "/comunidades",
+      disabled: true,
     },
     {
       icon: "fas fa-trophy",
       label: "Conquistas",
       path: "/conquistas",
+      disabled: true,
     },
     {
       icon: "fas fa-compass",
       label: "Explorar",
       path: "/explorar",
+      disabled: true,
     },
   ];
 
@@ -909,14 +916,16 @@ export function SidebarNav({
                   <div
                     className={cn(
                       "menu-item",
-                      isActive(item.path) ? "active" : ""
+                      isActive(item.path) ? "active" : "",
+                      item.disabled ? "disabled" : ""
                     )}
-                    onClick={() => handleNavigation(item.path, item.isSpecial, false)}
+                    onClick={() => handleNavigation(item.path, item.isSpecial, item.disabled)}
                   >
                     <div className="item-content">
                       <div className={cn(
                         "icon-container",
-                        isActive(item.path) ? "active" : ""
+                        isActive(item.path) ? "active" : "",
+                        item.disabled ? "disabled" : ""
                       )}>
                         <i className={item.icon}></i>
                         <div className="icon-glow"></div>
@@ -924,6 +933,11 @@ export function SidebarNav({
                       {!isCollapsed && (
                         <div className="item-text">
                           <span className="item-title">{item.label}</span>
+                        </div>
+                      )}
+                      {item.disabled && !isCollapsed && (
+                        <div className="lock-icon">
+                          <i className="fas fa-lock"></i>
                         </div>
                       )}
                       <div className="item-indicator"></div>
@@ -1286,6 +1300,61 @@ export function SidebarNav({
         /* Efeito cascata para modo aluno */
         .student-mode .cascading-effect {
           animation: cascadeWaveOrange 1.2s ease-in-out infinite;
+        }
+
+        /* Estilos para itens desabilitados */
+        .menu-item.disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          pointer-events: none;
+        }
+
+        .menu-item.disabled .icon-container {
+          background: rgba(156, 163, 175, 0.1) !important;
+        }
+
+        .menu-item.disabled .icon-container i {
+          color: #9ca3af !important;
+        }
+
+        .menu-item.disabled .item-title {
+          color: #9ca3af !important;
+        }
+
+        .dark .menu-item.disabled .item-title {
+          color: #6b7280 !important;
+        }
+
+        .menu-item.disabled:hover {
+          transform: none !important;
+          background: transparent !important;
+        }
+
+        .menu-item.disabled .icon-container:hover {
+          transform: none !important;
+          background: rgba(156, 163, 175, 0.1) !important;
+        }
+
+        /* Ícone de cadeado */
+        .lock-icon {
+          width: 16px !important;
+          height: 16px !important;
+          min-width: 16px !important;
+          min-height: 16px !important;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0 !important;
+          margin-left: auto;
+        }
+
+        .lock-icon i {
+          font-size: 12px;
+          color: #9ca3af !important;
+        }
+
+        .dark .lock-icon i {
+          color: #6b7280 !important;
         }
 
         @keyframes cascadeWaveOrange {
