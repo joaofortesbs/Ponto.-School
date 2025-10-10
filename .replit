@@ -6,7 +6,7 @@ channel = "stable-25_05"
 
 [deployment]
 run = ["node", "api/server.js"]
-deploymentTarget = "vm"
+deploymentTarget = "cloudrun"
 build = ["npm", "run", "build"]
 
 [[ports]]
