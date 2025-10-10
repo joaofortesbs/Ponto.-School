@@ -92,9 +92,22 @@ const Sidebar: React.FC<SidebarProps> = ({ className, isCollapsed }) => {
           onClick={() => handleItemClick("dashboard", "/dashboard")}
         >
           <Home className="h-4 w-4 mr-3" />
-          Início
+          Painel
         </Button>
 
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start text-sm font-medium h-10 px-3",
+            activeItem === "school-power"
+              ? "bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20"
+              : "text-gray-300 hover:bg-[#29335C]/30 hover:text-white",
+          )}
+          onClick={() => handleItemClick("school-power", "/school-power")}
+        >
+          <Star className="h-4 w-4 mr-3" />
+          School Power
+        </Button>
 
         <Button
           variant="ghost"

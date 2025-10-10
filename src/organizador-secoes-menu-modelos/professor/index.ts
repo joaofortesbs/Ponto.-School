@@ -10,6 +10,12 @@ export const professorSections = {
     interface: '/src/pages/dashboard/index.tsx'
   },
   
+  schoolPower: {
+    path: '/school-power',
+    component: 'SchoolPower',
+    interface: '/src/pages/school-power/index.tsx'
+  },
+  
   turmas: {
     path: '/turmas',
     component: 'Turmas',
