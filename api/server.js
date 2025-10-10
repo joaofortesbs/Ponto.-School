@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import emailRoutes from './enviar-email.js';
 import neonDB from './neon-db.js';
 import perfilsHandler from './perfis.js';
@@ -9,12 +11,24 @@ import uploadAvatarRoutes from './upload-avatar.js'; // Importar as novas rotas 
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
-const PORT = process.env.PORT || 3001;
+
+// Detectar ambiente
+const isProduction = process.env.REPLIT_DEPLOYMENT === '1' || 
+                     process.env.NODE_ENV === 'production' ||
+                     process.env.REPL_DEPLOYMENT === '1';
+
+// Em produção usa porta 5000 (porta única), em dev usa 3001 (backend separado)
+const PORT = isProduction ? 5000 : (process.env.PORT || 3001);
+
+console.log(`🌍 Ambiente: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5000', 'http://127.0.0.1:5000', 'http://0.0.0.0:5000', 'http://localhost:3000', 'http://0.0.0.0:3000'],
+  origin: isProduction ? true : ['http://localhost:5000', 'http://127.0.0.1:5000', 'http://0.0.0.0:5000', 'http://localhost:3000', 'http://0.0.0.0:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
@@ -44,7 +58,14 @@ app.use((err, req, res, next) => {
   next();
 });
 
-// Rotas
+// Em produção, servir arquivos estáticos do build
+if (isProduction) {
+  const distPath = path.join(__dirname, '..', 'dist');
+  console.log(`📁 Servindo arquivos estáticos de: ${distPath}`);
+  app.use(express.static(distPath));
+}
+
+// Rotas API
 app.use('/api/enviar-email', emailRoutes);
 app.use('/api/perfis', perfilsHandler);
 app.use('/api/upload-avatar', uploadAvatarRoutes); // Rota para upload de avatar
@@ -454,6 +475,15 @@ app.get('/api/status', (req, res) => {
 });
 
 // Rotas de atividades foram registradas com sucesso na função registerActivityRoutes()
+
+// SPA Fallback - Servir index.html para todas as rotas não-API em produção
+if (isProduction) {
+  app.get('*', (req, res) => {
+    const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
+    console.log(`📄 Servindo index.html de: ${indexPath} para rota: ${req.path}`);
+    res.sendFile(indexPath);
+  });
+}
 
 // Inicializar banco de dados e iniciar servidor
 async function startServer() {
