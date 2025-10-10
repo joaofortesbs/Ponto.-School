@@ -476,15 +476,6 @@ app.get('/api/status', (req, res) => {
 
 // Rotas de atividades foram registradas com sucesso na função registerActivityRoutes()
 
-// SPA Fallback - Servir index.html para todas as rotas não-API em produção
-if (isProduction) {
-  app.get('*', (req, res) => {
-    const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
-    console.log(`📄 Servindo index.html de: ${indexPath} para rota: ${req.path}`);
-    res.sendFile(indexPath);
-  });
-}
-
 // Inicializar banco de dados e iniciar servidor
 async function startServer() {
   try {
@@ -494,6 +485,17 @@ async function startServer() {
 
     // REGISTRAR ROTAS APÓS INICIALIZAÇÃO DO BANCO
     registerActivityRoutes();
+
+    // SPA Fallback - Servir index.html para todas as rotas não-API em produção
+    // IMPORTANTE: Deve ser a ÚLTIMA rota registrada!
+    if (isProduction) {
+      app.get('*', (req, res) => {
+        const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
+        console.log(`📄 Servindo index.html de: ${indexPath} para rota: ${req.path}`);
+        res.sendFile(indexPath);
+      });
+      console.log('✅ SPA Fallback configurado (servindo index.html para rotas não-API)');
+    }
 
     // Iniciar servidor
     app.listen(PORT, '0.0.0.0', () => {
