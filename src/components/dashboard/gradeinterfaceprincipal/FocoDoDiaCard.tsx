@@ -1248,7 +1248,6 @@ export default function FocoDoDiaCard() {
             <motion.button 
               onClick={() => setModalAberto(true)}
               className={`rounded-lg px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm hover:shadow-md transition-all flex items-center gap-2 ${isLightMode ? '' : 'border border-[#FF6B00]/40'}`}
-              whileHover={{ scale: 1.03, y: -1 }}
               whileTap={{ scale: 0.97 }}
               initial={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }}
               animate={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }}

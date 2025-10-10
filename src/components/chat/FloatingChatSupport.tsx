@@ -5635,19 +5635,14 @@ Exemplo de formato da resposta:
                 
                 <Button
                   size="icon"
-                  className={`h-8 w-8 rounded-full transition-all duration-300 ${
-                    isMessageEmpty && selectedFiles.length === 0
-                      ? "bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                      : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-                  }`}
-                  onClick={inputMessage.trim().length > 0 ? sendMessage : startVoiceRecording}
-                  disabled={isMessageEmpty && selectedFiles.length === 0}
-                  title={inputMessage.trim().length > 0 ? "Enviar mensagem" : "Gravar áudio"}
                   className={`h-8 w-8 mr-2 rounded-full transition-all duration-300 ${
                     isMessageEmpty && selectedFiles.length === 0
                       ? "bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500 hover:bg-orange-500 hover:text-white dark:hover:bg-orange-600"
                       : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
                   }`}
+                  onClick={inputMessage.trim().length > 0 ? sendMessage : startVoiceRecording}
+                  disabled={isMessageEmpty && selectedFiles.length === 0}
+                  title={inputMessage.trim().length > 0 ? "Enviar mensagem" : "Gravar áudio"}
                 >
                   {inputMessage.trim().length > 0 ? (
                     <Send className="h-4 w-4" />
