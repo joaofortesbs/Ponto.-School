@@ -1343,6 +1343,14 @@ export function SidebarNav({
           background: rgba(156, 163, 175, 0.2) !important;
         }
 
+        .menu-item.disabled:hover .icon-container i {
+          color: #9ca3af !important;
+        }
+
+        .dark .menu-item.disabled:hover .icon-container i {
+          color: #6b7280 !important;
+        }
+
         /* Efeito de onda para itens desabilitados */
         .menu-item.disabled::before {
           content: '';
