@@ -113,6 +113,34 @@ const Sidebar: React.FC<SidebarProps> = ({ className, isCollapsed }) => {
           variant="ghost"
           className={cn(
             "w-full justify-start text-sm font-medium h-10 px-3",
+            activeItem === "turmas"
+              ? "bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20"
+              : "text-gray-300 hover:bg-[#29335C]/30 hover:text-white",
+          )}
+          onClick={() => handleItemClick("turmas", "/turmas")}
+        >
+          <Users className="h-4 w-4 mr-3" />
+          Minhas Turmas
+        </Button>
+
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start text-sm font-medium h-10 px-3",
+            activeItem === "trilhas-school"
+              ? "bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20"
+              : "text-gray-300 hover:bg-[#29335C]/30 hover:text-white",
+          )}
+          onClick={() => handleItemClick("trilhas-school", "/trilhas-school/professores")}
+        >
+          <BookOpen className="h-4 w-4 mr-3" />
+          Trilhas School
+        </Button>
+
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start text-sm font-medium h-10 px-3",
             activeItem === "biblioteca"
               ? "bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20"
               : "text-gray-300 hover:bg-[#29335C]/30 hover:text-white",
