@@ -1306,7 +1306,6 @@ export function SidebarNav({
         .menu-item.disabled {
           opacity: 0.5;
           cursor: not-allowed;
-          pointer-events: none;
         }
 
         .menu-item.disabled .icon-container {
@@ -1325,14 +1324,31 @@ export function SidebarNav({
           color: #6b7280 !important;
         }
 
+        /* Efeito de hover para itens desabilitados */
         .menu-item.disabled:hover {
-          transform: none !important;
-          background: transparent !important;
+          transform: translateX(6px) !important;
+          background: linear-gradient(135deg, rgba(156, 163, 175, 0.08), rgba(156, 163, 175, 0.08)) !important;
         }
 
-        .menu-item.disabled .icon-container:hover {
-          transform: none !important;
-          background: rgba(156, 163, 175, 0.1) !important;
+        .menu-item.disabled:hover .icon-container {
+          transform: scale(1.08) !important;
+          background: rgba(156, 163, 175, 0.2) !important;
+        }
+
+        /* Efeito de onda para itens desabilitados */
+        .menu-item.disabled::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(156, 163, 175, 0.1), transparent);
+          transition: left 0.6s;
+        }
+
+        .menu-item.disabled:hover::before {
+          left: 100%;
         }
 
         /* Ícone de cadeado */
