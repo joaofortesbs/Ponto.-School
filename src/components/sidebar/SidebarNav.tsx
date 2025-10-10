@@ -1330,6 +1330,14 @@ export function SidebarNav({
           background: linear-gradient(135deg, rgba(156, 163, 175, 0.08), rgba(156, 163, 175, 0.08)) !important;
         }
 
+        .menu-item.disabled:hover .item-title {
+          color: #9ca3af !important;
+        }
+
+        .dark .menu-item.disabled:hover .item-title {
+          color: #6b7280 !important;
+        }
+
         .menu-item.disabled:hover .icon-container {
           transform: scale(1.08) !important;
           background: rgba(156, 163, 175, 0.2) !important;
