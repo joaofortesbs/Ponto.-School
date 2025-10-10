@@ -387,6 +387,11 @@ export function SidebarNav({
       path: "/",
     },
     {
+      icon: "fas fa-rocket",
+      label: "School Power",
+      path: "/school-power",
+    },
+    {
       icon: "fas fa-chalkboard-teacher",
       label: "Minhas Turmas",
       path: "/turmas",
@@ -395,11 +400,6 @@ export function SidebarNav({
       icon: "fas fa-route",
       label: "Trilhas School",
       path: "/trilhas-school/professores",
-    },
-    {
-      icon: "fas fa-rocket",
-      label: "School Power",
-      path: "/school-power",
     },
     {
       icon: "fas fa-brain",
