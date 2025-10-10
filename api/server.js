@@ -489,10 +489,16 @@ async function startServer() {
     // SPA Fallback - Servir index.html para todas as rotas não-API em produção
     // IMPORTANTE: Deve ser a ÚLTIMA rota registrada!
     if (isProduction) {
-      app.get('*', (req, res) => {
-        const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
-        console.log(`📄 Servindo index.html de: ${indexPath} para rota: ${req.path}`);
-        res.sendFile(indexPath);
+      // Usando middleware ao invés de wildcard route para evitar problemas com path-to-regexp
+      app.use((req, res, next) => {
+        // Se a rota não for de API, servir index.html
+        if (!req.path.startsWith('/api')) {
+          const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
+          console.log(`📄 Servindo index.html de: ${indexPath} para rota: ${req.path}`);
+          res.sendFile(indexPath);
+        } else {
+          next();
+        }
       });
       console.log('✅ SPA Fallback configurado (servindo index.html para rotas não-API)');
     }
