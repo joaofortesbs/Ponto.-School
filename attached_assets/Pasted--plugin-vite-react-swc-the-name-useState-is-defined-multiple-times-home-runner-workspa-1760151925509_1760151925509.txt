@@ -1,0 +1,56 @@
+[plugin:vite:react-swc] × the name `useState` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/construction/components/UniversalActivityHeader.tsx:1:1]
+  1 │ import React, { useRef, useEffect, useState, useCallback } from 'react';
+    ·                                    ────┬───
+    ·                                        ╰── previous definition of `useState` here
+  2 │ import { MoreHorizontal, Pencil, Route, Plus, Download, Share2, Send, Lock, Trash2, Link } from 'lucide-react';
+  3 │ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+  4 │ import { Button } from '@/components/ui/button';
+  5 │ import { Badge } from '@/components/ui/badge';
+  6 │ import { 
+  7 │   DropdownMenu, 
+  8 │   DropdownMenuContent, 
+  9 │   DropdownMenuItem, 
+ 10 │   DropdownMenuTrigger 
+ 11 │ } from '@/components/ui/dropdown-menu';
+ 12 │ import { useUserInfo } from '../hooks/useUserInfo';
+ 13 │ import schoolPowerActivities from '../../data/schoolPowerActivities.json';
+ 14 │ import { ShareActivityModal } from '@/components/ui/share-activity-modal';
+ 15 │ import { useState, useEffect } from 'react';
+    ·          ────┬───
+    ·              ╰── `useState` redefined here
+ 16 │ import { 
+ 17 │   Wrench, CheckSquare, Filter, 
+ 18 │   Trophy, Zap, Brain, Heart, 
+    ╰────
+
+  × the name `useEffect` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/construction/components/UniversalActivityHeader.tsx:1:1]
+  1 │ import React, { useRef, useEffect, useState, useCallback } from 'react';
+    ·                         ────┬────
+    ·                             ╰── previous definition of `useEffect` here
+  2 │ import { MoreHorizontal, Pencil, Route, Plus, Download, Share2, Send, Lock, Trash2, Link } from 'lucide-react';
+  3 │ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+  4 │ import { Button } from '@/components/ui/button';
+  5 │ import { Badge } from '@/components/ui/badge';
+  6 │ import { 
+  7 │   DropdownMenu, 
+  8 │   DropdownMenuContent, 
+  9 │   DropdownMenuItem, 
+ 10 │   DropdownMenuTrigger 
+ 11 │ } from '@/components/ui/dropdown-menu';
+ 12 │ import { useUserInfo } from '../hooks/useUserInfo';
+ 13 │ import schoolPowerActivities from '../../data/schoolPowerActivities.json';
+ 14 │ import { ShareActivityModal } from '@/components/ui/share-activity-modal';
+ 15 │ import { useState, useEffect } from 'react';
+    ·                    ────┬────
+    ·                        ╰── `useEffect` redefined here
+ 16 │ import { 
+ 17 │   Wrench, CheckSquare, Filter, 
+ 18 │   Trophy, Zap, Brain, Heart, 
+    ╰────
+/home/runner/workspace/src/features/schoolpower/construction/components/UniversalActivityHeader.tsx:1:1
+1  |  import React, { useRef, useEffect, useState, useCallback } from 'react';
+   |   ^
+2  |  import { MoreHorizontal, Pencil, Route, Plus, Download, Share2, Send, Lock, Trash2, Link } from 'lucide-react';
+3  |  import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
