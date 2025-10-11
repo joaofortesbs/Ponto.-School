@@ -74,7 +74,31 @@ export function SidebarNav({
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(isCollapsed);
   const [firstName, setFirstName] = useState<string | null>(null);
-  const [isCardFlipped, setIsCardFlipped] = useState(true);
+  
+  // Determinar estado inicial do flip baseado no tipo de conta
+  const getInitialFlipState = () => {
+    const cachedAccountType = localStorage.getItem("userAccountType");
+    const neonUser = localStorage.getItem("neon_user");
+    
+    if (cachedAccountType) {
+      // Professor = true (flipped), Aluno = false (não flipped)
+      return cachedAccountType === 'Professor';
+    }
+    
+    if (neonUser) {
+      try {
+        const userData = JSON.parse(neonUser);
+        return userData.tipo_conta === 'Professor';
+      } catch (e) {
+        console.error("Erro ao parsear neon_user:", e);
+      }
+    }
+    
+    // Default para Aluno (não flipped)
+    return false;
+  };
+  
+  const [isCardFlipped, setIsCardFlipped] = useState(getInitialFlipState());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMenuFlipping, setIsMenuFlipping] = useState(false);
   const [isModeChanging, setIsModeChanging] = useState(false);
@@ -83,6 +107,7 @@ export function SidebarNav({
   const [isMenuAnimating, setIsMenuAnimating] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const [isCardHovered, setIsCardHovered] = useState(false); // Variável isCardHovered agora está definida
+  const [userAccountType, setUserAccountType] = useState<'Professor' | 'Aluno' | 'Coordenador' | null>(null);
 
   // Função para adicionar timeouts ao array
   const addTimeout = (timeout: NodeJS.Timeout) => {
@@ -187,6 +212,13 @@ export function SidebarNav({
             const firstName = profile.nome_completo?.split(" ")[0] || profile.nome_usuario || "Usuário";
             setFirstName(firstName);
             localStorage.setItem("userFirstName", firstName);
+
+            // Definir tipo de conta do usuário
+            if (profile.tipo_conta) {
+              setUserAccountType(profile.tipo_conta);
+              localStorage.setItem("userAccountType", profile.tipo_conta);
+              console.log("✅ Tipo de conta identificado:", profile.tipo_conta);
+            }
 
             // Atualizar cache
             localStorage.setItem("neon_user", JSON.stringify(profile));
@@ -436,7 +468,63 @@ export function SidebarNav({
     },
   ];
 
-  const navItems = isCardFlipped ? navItemsProfessor : navItemsAluno;
+  const navItemsCoordenador = [
+    {
+      icon: "fas fa-home",
+      label: "Painel",
+      path: "/",
+    },
+    {
+      icon: "fas fa-users-cog",
+      label: "Gestão",
+      path: "/gestao",
+      disabled: true,
+    },
+    {
+      icon: "fas fa-chalkboard-teacher",
+      label: "Turmas",
+      path: "/turmas",
+      disabled: true,
+    },
+    {
+      icon: "fas fa-route",
+      label: "Trilhas School",
+      path: "/trilhas-school/coordenador",
+      disabled: true,
+    },
+    {
+      icon: "fas fa-brain",
+      label: "Epictus IA",
+      path: "/epictus-ia",
+      isSpecial: true,
+      disabled: true,
+    },
+    {
+      icon: "fas fa-chart-line",
+      label: "Relatórios",
+      path: "/relatorios",
+      disabled: true,
+    },
+    {
+      icon: "fas fa-book-open",
+      label: "Biblioteca",
+      path: "/biblioteca",
+      disabled: true,
+    },
+  ];
+
+  // Determinar qual menu usar baseado no tipo de conta
+  const getNavItems = () => {
+    if (userAccountType === 'Professor') {
+      return navItemsProfessor;
+    } else if (userAccountType === 'Coordenador') {
+      return navItemsCoordenador;
+    } else {
+      return navItemsAluno; // Default para Aluno
+    }
+  };
+
+  const navItems = getNavItems();
 
   return (
     <div className="relative h-full">
@@ -505,54 +593,7 @@ export function SidebarNav({
                 </div>
               )}
 
-              {/* Botão Flip circular na mesma altura do ícone de graduação */}
-              {!isCollapsed && isCardHovered && (
-                <button
-                  className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-blue-600 bg-blue-600 bg-opacity-20 hover:bg-blue-600 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
-                  onClick={() => {
-                    // Limpar timeouts anteriores se existirem
-                    clearAllTimeouts();
-
-                    // Iniciar todas as animações simultaneamente
-                    setIsModeTransitioning(true);
-                    setIsMenuAnimating(true);
-                    setIsMenuFlipping(true);
-                    setIsCardFlipped(!isCardFlipped); // Flip imediato do card
-
-                    // Calcular tempo total baseado no número de itens do menu
-                    const totalItems = navItems.length;
-                    const cascadeDelay = 80; // Delay entre cada item
-                    const totalAnimationTime = (totalItems * cascadeDelay) + 600; // Tempo total da cascata
-
-                    // Finalizar todas as animações após o tempo calculado
-                    const finishTimeout = setTimeout(() => {
-                      setIsModeTransitioning(false);
-                      setIsMenuFlipping(false);
-                      setIsMenuAnimating(false);
-                    }, totalAnimationTime);
-                    addTimeout(finishTimeout);
-                  }}
-                  title="Flip Card"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-blue-600"
-                  >
-                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                    <path d="M21 3v5h-5" />
-                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-                    <path d="M8 16H3v5" />
-                  </svg>
-                </button>
-              )}
+              
               {/* Profile Image Component - Responsive avatar */}
               <div
                 className={cn(
@@ -678,10 +719,22 @@ export function SidebarNav({
                     </div>
                     <div className="flex justify-center mt-2">
                       <div
-                        className="px-5 py-0.5 border border-[#2563eb] bg-[#2563eb] bg-opacity-20 rounded-md flex items-center justify-center"
+                        className={`px-5 py-0.5 border rounded-md flex items-center justify-center ${
+                          userAccountType === 'Professor' 
+                            ? 'border-[#FF6B00] bg-[#FF6B00] bg-opacity-20' 
+                            : userAccountType === 'Coordenador'
+                            ? 'border-[#9333EA] bg-[#9333EA] bg-opacity-20'
+                            : 'border-[#2563eb] bg-[#2563eb] bg-opacity-20'
+                        }`}
                       >
-                        <span className="text-xs font-medium text-[#2563eb]">
-                          ALUNO
+                        <span className={`text-xs font-medium ${
+                          userAccountType === 'Professor' 
+                            ? 'text-[#FF6B00]' 
+                            : userAccountType === 'Coordenador'
+                            ? 'text-[#9333EA]'
+                            : 'text-[#2563eb]'
+                        }`}>
+                          {userAccountType || 'ALUNO'}
                         </span>
                       </div>
                     </div>
@@ -712,54 +765,7 @@ export function SidebarNav({
                 </div>
               )}
 
-              {/* Botão Flip circular na mesma altura do ícone de Briefcase */}
-              {!isCollapsed && isCardHovered && (
-                <button
-                  className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-orange-500 bg-orange-600 bg-opacity-20 hover:bg-orange-600 hover:bg-opacity-30 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm cursor-pointer z-10"
-                  onClick={() => {
-                    // Limpar timeouts anteriores se existirem
-                    clearAllTimeouts();
-
-                    // Iniciar todas as animações simultaneamente
-                    setIsModeTransitioning(true);
-                    setIsMenuAnimating(true);
-                    setIsMenuFlipping(true);
-                    setIsCardFlipped(!isCardFlipped); // Flip imediato do card
-
-                    // Calcular tempo total baseado no número de itens do menu
-                    const totalItems = navItems.length;
-                    const cascadeDelay = 80; // Delay entre cada item
-                    const totalAnimationTime = (totalItems * cascadeDelay) + 600; // Tempo total da cascata
-
-                    // Finalizar todas as animações após o tempo calculado
-                    const finishTimeout = setTimeout(() => {
-                      setIsModeTransitioning(false);
-                      setIsMenuFlipping(false);
-                      setIsMenuAnimating(false);
-                    }, totalAnimationTime);
-                    addTimeout(finishTimeout);
-                  }}
-                  title="Flip Card"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-orange-500"
-                  >
-                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                    <path d="M21 3v5h-5" />
-                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-                    <path d="M8 16H3v5" />
-                  </svg>
-                </button>
-              )}
+              
               {/* Profile Image Component - Responsive avatar */}
               <div
                 className={cn(
