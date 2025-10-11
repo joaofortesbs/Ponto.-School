@@ -27,6 +27,14 @@ router.get('/', async (req, res) => {
       const profile = result.data[0];
       // Não retornar a senha apenas para GET requests normais
       delete profile.senha_hash;
+      
+      console.log('✅ Perfil encontrado e retornado:', {
+        id: profile.id,
+        nome_completo: profile.nome_completo,
+        nome_usuario: profile.nome_usuario,
+        imagem_avatar: profile.imagem_avatar
+      });
+      
       res.json({ 
         success: true, 
         data: profile 

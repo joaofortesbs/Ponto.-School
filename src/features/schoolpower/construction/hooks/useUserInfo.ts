@@ -45,12 +45,15 @@ export const useUserInfo = (): UserInfo => {
 
         const result = await response.json();
 
-        if (result.success && result.data && result.data.length > 0) {
-          const userData = result.data[0];
+        if (result.success && result.data) {
+          // result.data pode ser um array ou um objeto direto
+          const userData = Array.isArray(result.data) ? result.data[0] : result.data;
+          
+          console.log('📋 [useUserInfo] Dados brutos recebidos do Neon:', userData);
           
           const userInfoData = {
             name: userData.nome_completo || userData.nome_usuario || 'Usuário',
-            avatar: userData.imagem_avatar,
+            avatar: userData.imagem_avatar || userData.avatar_url,
             displayName: userData.nome_completo || userData.nome_usuario,
             isLoading: false
           };
@@ -63,7 +66,7 @@ export const useUserInfo = (): UserInfo => {
             full_name: userData.nome_completo,
             username: userData.nome_usuario,
             display_name: userData.nome_completo,
-            avatar_url: userData.imagem_avatar
+            avatar_url: userData.imagem_avatar || userData.avatar_url
           }));
         } else {
           console.warn('⚠️ [useUserInfo] Dados do usuário não encontrados no Neon');

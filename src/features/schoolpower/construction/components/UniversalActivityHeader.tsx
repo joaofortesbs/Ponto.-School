@@ -189,8 +189,21 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   const [showShareButton, setShowShareButton] = useState<boolean>(isSharedActivity);
 
   // Usar dados do hook se não forem fornecidos via props
-  const finalUserName = userName || userInfo.name || 'Usuário';
+  const finalUserName = userName || userInfo.displayName || userInfo.name || 'Usuário';
   const finalUserAvatar = userAvatar || userInfo.avatar;
+  
+  // Log para debug
+  React.useEffect(() => {
+    console.log('👤 [HEADER] Dados do usuário:', {
+      userName,
+      userAvatar,
+      userInfoName: userInfo.name,
+      userInfoDisplayName: userInfo.displayName,
+      userInfoAvatar: userInfo.avatar,
+      finalUserName,
+      finalUserAvatar
+    });
+  }, [userName, userAvatar, userInfo, finalUserName, finalUserAvatar]);
 
   // Função para obter o ícone correto - SINCRONIZADA com CardDeConstrucao.tsx
   const getActivityIcon = () => {
@@ -410,7 +423,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                 {userInfo.isLoading ? (
                   <div className="w-24 h-5 bg-orange-200 dark:bg-orange-800 animate-pulse rounded"></div>
                 ) : (
-                  finalUserName.startsWith('Prof.') ? finalUserName : `Prof. ${finalUserName}`
+                  `Prof. ${finalUserName}`
                 )}
               </span>
             </div>
