@@ -89,8 +89,10 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
       className={`relative flex ${isMobile && isQuizMode ? 'h-screen min-h-screen' : 'h-[90vh] min-h-[650px]'} w-full flex-col items-center justify-center overflow-hidden rounded-lg`}
       style={{ backgroundColor: "transparent" }}
     >
-      {/* Background de estrelas - sempre visível */}
-      <ParticlesBackground isDarkTheme={isDarkTheme} />
+      {/* Background de estrelas - SEMPRE visível em todos os estados */}
+      <div className="absolute inset-0 z-0">
+        <ParticlesBackground isDarkTheme={isDarkTheme} />
+      </div>
 
       {/* Componentes padrões - só aparecem quando flowState é 'idle' */}
       {componentsVisible && (
@@ -156,16 +158,13 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
         </>
       )}
 
-      {/* Card de Construção unificado - aparece baseado no flowState e nunca some */}
+      {/* Card de Construção unificado - aparece baseado no flowState com fundo estrelado visível */}
       {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
         <motion.div 
-          className="absolute inset-0 flex items-center justify-center z-50"
+          className="absolute inset-0 flex items-center justify-center z-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          style={{ 
-            background: 'rgba(15, 23, 42, 0.95)'
-          }}
         >
           <div className={`flex items-center justify-center w-full h-full ${isMobile ? 'p-2' : 'p-4'}`}>
             <div className={`w-full ${isMobile ? 'max-w-sm' : 'max-w-7xl'} mx-auto`}>
