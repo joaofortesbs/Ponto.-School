@@ -502,7 +502,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                 align="end" 
                 className="w-52 backdrop-blur-md rounded-2xl border border-orange-200 dark:border-orange-700/50 shadow-lg p-2"
                 style={{
-                  backgroundColor: 'rgba(255, 247, 237, 0.73)',
+                  backgroundColor: 'rgba(255, 247, 237, 0.47)',
                   backgroundImage: 'none'
                 }}
               >
