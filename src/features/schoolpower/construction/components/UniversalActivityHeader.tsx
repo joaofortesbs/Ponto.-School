@@ -506,54 +506,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                   <Plus className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:rotate-90 transition-all duration-200" />
                   <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Adicionar à aula</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={async () => {
-                  try {
-                    const { DownloadActivityService } = await import('../services/downloadActivityService');
-                    
-                    // Buscar TODAS as fontes possíveis de dados
-                    const storageKeys = [
-                      `constructed_${activityType}_${activityId}`,
-                      `activity_${activityId}`,
-                      `activity_fields_${activityId}`,
-                      `schoolpower_${activityType}_content`,
-                      'constructedActivities'
-                    ];
-                    
-                    let activityData = {};
-                    
-                    for (const key of storageKeys) {
-                      const stored = localStorage.getItem(key);
-                      if (stored) {
-                        try {
-                          const parsed = JSON.parse(stored);
-                          // Mesclar dados de todas as fontes
-                          if (key === 'constructedActivities') {
-                            activityData = { ...activityData, ...(parsed[activityId]?.generatedContent || {}) };
-                          } else {
-                            activityData = { ...activityData, ...(parsed.data || parsed.content || parsed) };
-                          }
-                        } catch (e) {
-                          console.warn(`Erro ao parsear ${key}:`, e);
-                        }
-                      }
-                    }
-                    
-                    console.log('📦 Dados completos para download:', activityData);
-                    
-                    await DownloadActivityService.downloadActivity(
-                      activityId || 'default',
-                      activityData,
-                      activityType || 'default'
-                    );
-                    
-                    console.log('✅ Download iniciado com sucesso');
-                  } catch (error) {
-                    console.error('❌ Erro ao baixar atividade:', error);
-                    alert('Erro ao baixar atividade. Tente novamente.');
-                  }
-                  
-                  if (onDownload) onDownload();
-                }} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                <DropdownMenuItem onClick={onDownload} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
                   <Download className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-200" />
                   <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Baixar</span>
                 </DropdownMenuItem>
