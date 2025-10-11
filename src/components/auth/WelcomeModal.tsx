@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { X, CheckCircle, Sparkles, Wand2, Share2 } from 'lucide-react';
+import { X, CheckCircle, Sparkles, Wand2, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
@@ -15,26 +16,23 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose, userName =
   const steps = [
     {
       icon: Sparkles,
-      title: 'Conta criada com sucesso!',
-      subtitle: `Bem-vindo ao School Power, ${userName}`,
-      description: 'Sua ferramenta de IA para criar atividades educacionais incríveis em minutos.',
+      title: 'Bem-vindo à Ponto. School!',
+      subtitle: `Olá, ${userName}`,
+      description: 'Primeiro Agente IA Educacional',
       gradient: 'from-orange-500 to-pink-500',
-      features: [
-        'Crie atividades personalizadas com IA',
-        'Mais de 137 tipos de conteúdo disponíveis',
-        'Gere e compartilhe em segundos'
-      ]
+      highlight: 'Sua jornada educacional começa agora'
     },
     {
       icon: Wand2,
-      title: 'Como usar o School Power',
-      subtitle: 'Siga esses 3 passos simples',
-      description: 'Criar atividades nunca foi tão fácil!',
+      title: 'School Power',
+      subtitle: 'Crie atividades em minutos',
+      description: 'Use a ferramenta School Power para criar todas as atividades do semestre personalizadas e interativas!',
       gradient: 'from-blue-500 to-purple-500',
-      steps: [
-        { icon: Wand2, text: '1. Descreva a atividade desejada' },
-        { icon: CheckCircle, text: '2. Revise e personalize o conteúdo' },
-        { icon: Share2, text: '3. Compartilhe com seus alunos' }
+      limit: 'Você pode criar 5/137 atividades atualmente!',
+      features: [
+        'Atividades personalizadas com IA',
+        'Conteúdo interativo e engajador',
+        'Tudo pronto em minutos'
       ]
     }
   ];
@@ -103,46 +101,55 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose, userName =
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                     {currentStepData.title}
                   </h2>
-                  <p className="text-base text-gray-600 dark:text-gray-400 mb-1">
+                  <p className="text-base text-gray-600 dark:text-gray-400 mb-2">
                     {currentStepData.subtitle}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-500">
+                  <p className="text-sm font-medium bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
                     {currentStepData.description}
                   </p>
+                  {currentStepData.highlight && (
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                      {currentStepData.highlight}
+                    </p>
+                  )}
                 </div>
 
-                {/* Features or Steps */}
-                <div className="space-y-3 mb-6">
-                  {currentStepData.features && currentStepData.features.map((feature, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                    >
-                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {feature}
-                      </p>
-                    </motion.div>
-                  ))}
+                {/* Features */}
+                {currentStepData.features && (
+                  <div className="space-y-3 mb-4">
+                    {currentStepData.features.map((feature, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                      >
+                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {feature}
+                        </p>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
 
-                  {currentStepData.steps && currentStepData.steps.map((step, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                    >
-                      <step.icon className={`w-5 h-5 flex-shrink-0 bg-gradient-to-br ${currentStepData.gradient} bg-clip-text text-transparent`} />
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {step.text}
+                {/* Limit Badge */}
+                {currentStepData.limit && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="mb-6 p-3 bg-gradient-to-r from-orange-500/10 to-pink-500/10 border border-orange-500/30 rounded-lg"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Zap className="w-4 h-4 text-orange-500" />
+                      <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                        {currentStepData.limit}
                       </p>
-                    </motion.div>
-                  ))}
-                </div>
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* Progress Dots */}
                 <div className="flex items-center justify-center gap-2 mb-6">
