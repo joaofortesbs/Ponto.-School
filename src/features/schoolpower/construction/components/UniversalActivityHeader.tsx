@@ -500,7 +500,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="end" 
-                className="w-52 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl border border-orange-200 dark:border-orange-700/50 shadow-lg p-2"
+                className="w-52 bg-gradient-to-r from-orange-50/73 to-orange-100/73 dark:from-orange-900/22 dark:to-orange-800/15 backdrop-blur-md rounded-2xl border border-orange-200 dark:border-orange-700/50 shadow-lg p-2"
               >
                 <DropdownMenuItem onClick={onAddToClass} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
                   <Plus className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:rotate-90 transition-all duration-200" />
