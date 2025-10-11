@@ -62,15 +62,26 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
         console.log('🔑 [PÚBLICO] Código único:', codigoUnicoAtividade);
         console.log('🌐 [PÚBLICO] URL completa:', window.location.href);
         
-        // Buscar atividade do banco Neon usando o código único
+        // Buscar atividade com dados do criador do banco Neon
         const { atividadesNeonService } = await import('@/services/atividadesNeonService');
-        const resultado = await atividadesNeonService.buscarAtividade(codigoUnicoAtividade);
+        const resultado = await atividadesNeonService.buscarAtividadeComCriador(codigoUnicoAtividade);
         
         if (resultado.success && resultado.data) {
           console.log('✅ [PÚBLICO] Atividade encontrada no banco Neon:', resultado.data);
           
           // Converter dados do banco para formato da interface
           const atividadeNeon = resultado.data;
+          const criador = atividadeNeon.criador;
+          
+          // Usar dados do criador se disponíveis, senão usar fallback
+          const professorNome = criador?.nome_completo || atividadeNeon.id_json?.professorNome || 'Professor';
+          const professorAvatar = criador?.imagem_avatar || atividadeNeon.id_json?.professorAvatar;
+          
+          console.log('👤 [PÚBLICO] Dados do criador:', {
+            nome: professorNome,
+            avatar: professorAvatar ? 'Disponível' : 'Não disponível'
+          });
+          
           const atividadeConvertida: AtividadeCompartilhavel = {
             id: atividadeNeon.id,
             titulo: atividadeNeon.id_json?.title || 'Atividade',
@@ -78,8 +89,8 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
             tipo: atividadeNeon.tipo,
             dados: atividadeNeon.id_json,
             customFields: atividadeNeon.id_json?.customFields || {},
-            professorNome: atividadeNeon.id_json?.professorNome || 'Professor',
-            professorAvatar: atividadeNeon.id_json?.professorAvatar,
+            professorNome: professorNome,
+            professorAvatar: professorAvatar,
             schoolPoints: atividadeNeon.id_json?.schoolPoints || 100,
             criadoPor: atividadeNeon.id_user,
             criadoEm: atividadeNeon.created_at || new Date().toISOString(),
@@ -91,7 +102,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
             tempo_estimado: atividadeNeon.id_json?.tempo_estimado
           };
           
-          console.log('🔄 [PÚBLICO] Setando atividade convertida:', atividadeConvertida);
+          console.log('🔄 [PÚBLICO] Setando atividade convertida com dados do criador:', atividadeConvertida);
           setAtividade(atividadeConvertida);
           console.log('📝 [PÚBLICO] Mudando título do documento para:', `${atividadeConvertida.titulo} - Ponto School`);
           document.title = `${atividadeConvertida.titulo} - Ponto School`;

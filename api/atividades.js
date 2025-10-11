@@ -113,11 +113,27 @@ router.get('/:id', async (req, res) => {
   
   try {
     const { id } = req.params;
+    const { incluirCriador } = req.query;
     
     await client.connect();
     console.log('🔍 Buscando atividade:', id);
     
-    const query = 'SELECT * FROM atividades WHERE id = $1;';
+    let query = 'SELECT * FROM atividades WHERE id = $1;';
+    
+    // Se solicitado, fazer JOIN com tabela de usuários
+    if (incluirCriador === 'true') {
+      query = `
+        SELECT 
+          a.*,
+          u.nome_completo as criador_nome,
+          u.imagem_avatar as criador_avatar,
+          u.nome_usuario as criador_username
+        FROM atividades a
+        LEFT JOIN usuarios u ON a.id_user = u.id
+        WHERE a.id = $1;
+      `;
+    }
+    
     const result = await client.query(query, [id]);
     
     if (result.rows.length === 0) {
@@ -133,6 +149,20 @@ router.get('/:id', async (req, res) => {
         ? JSON.parse(result.rows[0].id_json) 
         : result.rows[0].id_json
     };
+    
+    // Se incluir criador, adicionar objeto criador
+    if (incluirCriador === 'true' && result.rows[0].criador_nome) {
+      atividade.criador = {
+        nome_completo: result.rows[0].criador_nome,
+        imagem_avatar: result.rows[0].criador_avatar,
+        nome_usuario: result.rows[0].criador_username
+      };
+      
+      // Remover campos temporários
+      delete atividade.criador_nome;
+      delete atividade.criador_avatar;
+      delete atividade.criador_username;
+    }
     
     res.json({
       success: true,

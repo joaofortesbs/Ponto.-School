@@ -99,6 +99,44 @@ class AtividadesNeonService {
     }
   }
 
+  // Buscar atividade com dados do criador
+  async buscarAtividadeComCriador(id: string): Promise<{ 
+    success: boolean; 
+    data?: AtividadeNeon & { criador?: any }; 
+    error?: string 
+  }> {
+    try {
+      console.log('🔍 Buscando atividade com dados do criador:', id);
+      
+      // Buscar atividade com criador em uma única requisição otimizada
+      const response = await fetch(`${API_BASE_URL}/${id}?incluirCriador=true`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao buscar atividade');
+      }
+
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        console.log('✅ Atividade com dados do criador encontrada:', result.data);
+        return { success: true, data: result.data };
+      }
+      
+      return { 
+        success: false, 
+        error: 'Atividade não encontrada' 
+      };
+      
+    } catch (error) {
+      console.error('❌ Erro ao buscar atividade com criador:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      };
+    }
+  }
+
   // Deletar atividade
   async deletarAtividade(id: string, userId?: string): Promise<{ success: boolean; error?: string }> {
     try {
