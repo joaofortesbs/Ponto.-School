@@ -600,71 +600,71 @@ export class AutoBuildService {
     }
 
     // Lógica para outras atividades...
-    const formData = await this.prepareFormDataExactlyLikeModal(activity);
-    const { generateActivityContent } = await import('../api/generateActivity');
-    const activityType = activity.type || activity.id || 'lista-exercicios';
+    try {
+      const formData = await this.prepareFormDataExactlyLikeModal(activity);
+      const { generateActivityContent } = await import('../api/generateActivity');
+      const activityType = activity.type || activity.id || 'lista-exercicios';
 
-    console.log(`🤖 [AUTO-BUILD] Chamando generateActivityContent: ${activityType}`);
-    const result = await generateActivityContent(activityType, formData);
+      console.log(`🤖 [AUTO-BUILD] Chamando generateActivityContent: ${activityType}`);
+      const result = await generateActivityContent(activityType, formData);
 
-    if (result) {
-      const saveKey = `activity_${activity.id}`;
-      const savedContent = {
-        ...result,
-        generatedAt: new Date().toISOString(),
-        activityId: activity.id,
-        activityType: activityType,
-        formData: formData
-      };
+      if (result) {
+        const saveKey = `activity_${activity.id}`;
+        const savedContent = {
+          ...result,
+          generatedAt: new Date().toISOString(),
+          activityId: activity.id,
+          activityType: activityType,
+          formData: formData
+        };
 
-      localStorage.setItem(saveKey, JSON.stringify(savedContent));
+        localStorage.setItem(saveKey, JSON.stringify(savedContent));
 
-      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-      constructedActivities[activity.id] = {
-        isBuilt: true,
-        builtAt: new Date().toISOString(),
-        formData: formData,
-        generatedContent: result
-      };
-      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+        constructedActivities[activity.id] = {
+          isBuilt: true,
+          builtAt: new Date().toISOString(),
+          formData: formData,
+          generatedContent: result
+        };
+        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
 
-      activity.isBuilt = true;
-      activity.builtAt = new Date().toISOString();
-      activity.progress = 100;
-      activity.status = 'completed';
+        activity.isBuilt = true;
+        activity.builtAt = new Date().toISOString();
+        activity.progress = 100;
+        activity.status = 'completed';
 
         // SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS
-      console.log('💾 [AUTO-BUILD] ==========================================');
-      console.log('💾 [AUTO-BUILD] ATIVIDADE CONCLUÍDA - SALVAMENTO AUTOMÁTICO');
-      console.log('💾 [AUTO-BUILD] Título:', activity.title);
-      console.log('💾 [AUTO-BUILD] ID:', activity.id);
-      console.log('💾 [AUTO-BUILD] Status:', activity.status);
-      console.log('💾 [AUTO-BUILD] Progress:', activity.progress);
-      console.log('💾 [AUTO-BUILD] isBuilt:', activity.isBuilt);
-      console.log('💾 [AUTO-BUILD] ==========================================');
+        console.log('💾 [AUTO-BUILD] ==========================================');
+        console.log('💾 [AUTO-BUILD] ATIVIDADE CONCLUÍDA - SALVAMENTO AUTOMÁTICO');
+        console.log('💾 [AUTO-BUILD] Título:', activity.title);
+        console.log('💾 [AUTO-BUILD] ID:', activity.id);
+        console.log('💾 [AUTO-BUILD] Status:', activity.status);
+        console.log('💾 [AUTO-BUILD] Progress:', activity.progress);
+        console.log('💾 [AUTO-BUILD] isBuilt:', activity.isBuilt);
+        console.log('💾 [AUTO-BUILD] ==========================================');
 
-      try {
-        await this.saveActivityToDatabase(activity);
-      } catch (saveError) {
-        console.error('💥 [AUTO-BUILD] Erro crítico no salvamento automático:', saveError);
+        try {
+          await this.saveActivityToDatabase(activity);
+        } catch (saveError) {
+          console.error('💥 [AUTO-BUILD] Erro crítico no salvamento automático:', saveError);
+        }
+
+        if (this.onActivityBuilt) {
+          this.onActivityBuilt(activity.id);
+        }
+
+        console.log(`✅ [AUTO-BUILD] Atividade construída: ${activity.title}`);
+      } else {
+        throw new Error('Falha na geração do conteúdo pela IA');
       }
-
-      if (this.onActivityBuilt) {
-        this.onActivityBuilt(activity.id);
-      }
-
-      console.log(`✅ [AUTO-BUILD] Atividade construída: ${activity.title}`);
-    } else {
-      throw new Error('Falha na geração do conteúdo pela IA');
+    } catch (error) {
+      console.error(`❌ [AUTO-BUILD] Erro na construção de ${activity.title}:`, error);
+      activity.status = 'error';
+      activity.progress = 0;
+      throw error;
     }
-
-  } catch (error) {
-    console.error(`❌ [AUTO-BUILD] Erro na construção de ${activity.title}:`, error);
-    activity.status = 'error';
-    activity.progress = 0;
-    throw error;
   }
-}
 
   /**
    * Sistema exclusivo para construção de Quadro Interativo
