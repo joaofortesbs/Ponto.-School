@@ -39,7 +39,9 @@ export const downloadFlashCardsAsPDF = async (
     doc.text(`Data: ${formatDate()} | Total de cards: ${cards.length}`, pageWidth / 2, 23, { align: 'center' });
 
     cards.forEach((card: any, index: number) => {
-      doc.addPage();
+      if (index > 0) {
+        doc.addPage();
+      }
 
       doc.setFillColor(255, 248, 240);
       doc.rect(0, 0, pageWidth, pageHeight, 'F');

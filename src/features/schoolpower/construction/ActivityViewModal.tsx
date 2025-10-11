@@ -14,6 +14,7 @@ import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-intera
 import FlashCardsPreview from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
 import { UniversalActivityHeader } from './components/UniversalActivityHeader';
 import { useUserInfo } from './hooks/useUserInfo';
+import { downloadActivity, isDownloadSupported, getDownloadFormatLabel } from '../Sistema-baixar-atividades';
 
 // Helper function to get activity icon based on activity type
 const getActivityIcon = (activityId: string) => {
@@ -57,6 +58,74 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
   const [flashCardsContent, setFlashCardsContent] = useState<any>(null);
 
+  const handleDownload = async () => {
+    if (!activity) return;
+
+    const activityType = activity.originalData?.type || activity.categoryId || activity.type || '';
+    
+    console.log('📥 Iniciando download da atividade:', activityType);
+
+    if (!isDownloadSupported(activityType)) {
+      alert(`Download para "${activityType}" ainda não está disponível. Em breve!`);
+      return;
+    }
+
+    const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
+    const storedFields = JSON.parse(localStorage.getItem(`activity_${activity.id}_fields`) || '{}');
+
+    let downloadData: any = {
+      id: activity.id,
+      type: activityType,
+      title: activity.personalizedTitle || activity.title || storedData.title || 'Atividade',
+      description: activity.personalizedDescription || activity.description || storedData.description,
+      customFields: {
+        ...activity.customFields,
+        ...storedFields
+      },
+      originalData: activity.originalData,
+      ...storedData
+    };
+
+    if (activityType === 'lista-exercicios') {
+      const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
+      if (deletedQuestionsJson) {
+        const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
+        downloadData.deletedQuestionIds = deletedQuestionIds;
+      }
+    }
+
+    if (activityType === 'quiz-interativo') {
+      const quizContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`);
+      if (quizContent) {
+        const parsed = JSON.parse(quizContent);
+        downloadData = { ...downloadData, ...(parsed.data || parsed) };
+      }
+    }
+
+    if (activityType === 'flash-cards') {
+      const flashCardsContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
+      if (flashCardsContent) {
+        const parsed = JSON.parse(flashCardsContent);
+        downloadData = { ...downloadData, ...(parsed.data || parsed) };
+      }
+    }
+
+    if (activityType === 'sequencia-didatica') {
+      const sequenciaContent = localStorage.getItem(`constructed_sequencia-didatica_${activity.id}`);
+      if (sequenciaContent) {
+        const parsed = JSON.parse(sequenciaContent);
+        downloadData = { ...downloadData, ...(parsed.data || parsed) };
+      }
+    }
+
+    const result = await downloadActivity(downloadData);
+
+    if (result.success) {
+      console.log('✅ Download concluído com sucesso!');
+    } else {
+      alert(result.error || 'Erro ao fazer download. Tente novamente.');
+    }
+  };
 
   // Função específica para carregar dados do Plano de Aula
   const loadPlanoAulaData = (activityId: string) => {
@@ -590,8 +659,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             userName={userInfo.displayName || userInfo.name}
             userAvatar={userInfo.avatar}
             schoolPoints={100}
+            onDownload={handleDownload}
             onMoreOptions={() => {
-              // TODO: Implementar menu de opções
               console.log('Menu de opções clicado');
             }}
           />

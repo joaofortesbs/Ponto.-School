@@ -172,3 +172,17 @@ Replit Secrets (auto-configured):
   - Updated `setOnActivityBuilt` callback to use `setActivities()` directly instead of `refreshActivities()`
   - Removed all reload triggers from buildAll finally block and event listeners
   - Result: Flash Cards now turn green immediately after construction with ZERO UI flicker or page reloads
+- **Sistema de Download de Atividades (October 11, 2025)**
+  - Criado sistema completo de download em `src/features/schoolpower/Sistema-baixar-atividades/`
+  - Suporte para download de atividades em Word (.docx) e PDF:
+    - **Lista de Exercícios**: Word (.docx) com questões, alternativas e gabaritos
+    - **Plano de Aula**: Word (.docx) com objetivos, metodologia e desenvolvimento
+    - **Sequência Didática**: Word (.docx) com todas as aulas estruturadas
+    - **Quiz Interativo**: PDF com questões formatadas profissionalmente
+    - **Flash Cards**: PDF com cards frente/verso em layout visual
+  - Bibliotecas utilizadas: `docx` para Word, `jsPDF` para PDF, `file-saver` para download
+  - Sistema totalmente integrado ao dropdown do modal de visualização (botão "Baixar")
+  - Arquitetura modular com serviços independentes por tipo de atividade
+  - Formatação automática e conversão de HTML para texto quando necessário
+  - Sistema de validação de dados antes da geração do arquivo
+  - Documentação completa em README.md dentro do sistema

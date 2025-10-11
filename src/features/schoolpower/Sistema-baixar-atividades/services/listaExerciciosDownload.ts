@@ -10,7 +10,12 @@ export const downloadListaExerciciosAsWord = async (
   try {
     console.log('📥 Iniciando download de Lista de Exercícios como Word...', data);
 
-    const questions = data.questoes || data.questions || data.content?.questoes || data.content?.questions || [];
+    let questions = data.questoes || data.questions || data.content?.questoes || data.content?.questions || [];
+    
+    if (data.deletedQuestionIds && Array.isArray(data.deletedQuestionIds)) {
+      console.log('🗑️ Filtrando questões deletadas:', data.deletedQuestionIds);
+      questions = questions.filter(q => !data.deletedQuestionIds.includes(q.id));
+    }
     
     if (questions.length === 0) {
       return {

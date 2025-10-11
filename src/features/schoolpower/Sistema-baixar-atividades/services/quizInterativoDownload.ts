@@ -68,10 +68,10 @@ export const downloadQuizInterativoAsPDF = async (
       yPosition += (questionLines.length * 7) + 3;
 
       if (question.type === 'multipla-escolha' || question.tipo === 'multipla-escolha') {
-        const options = question.options || question.opcoes || [];
+        const questionOptions = question.options || question.opcoes || [];
         doc.setFont('helvetica', 'normal');
         
-        options.forEach((option: any, optIndex: number) => {
+        questionOptions.forEach((option: any, optIndex: number) => {
           if (yPosition > pageHeight - 20) {
             doc.addPage();
             yPosition = 20;
