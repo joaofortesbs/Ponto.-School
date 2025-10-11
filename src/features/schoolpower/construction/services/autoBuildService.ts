@@ -447,8 +447,9 @@ export class AutoBuildService {
                activity.customFields?.['Tópicos Principais'] ||
                activity.customFields?.['topicos'] ||
                activity.customFields?.['tópicos'] ||
-               activity.description || // Usar descrição como fallback
-               '',
+               activity.description || 
+               activity.title || 
+               'Tópicos gerais', // Fallback final garantido
 
       numberOfFlashcards: activity.customFields?.['Número de flashcards'] ||
                          activity.customFields?.['Número de Flash Cards'] ||
