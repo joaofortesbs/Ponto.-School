@@ -443,14 +443,15 @@ export class AutoBuildService {
                                        'Atividade interativa no quadro',
 
       // CAMPOS ESPECÍFICOS PARA FLASH CARDS - MAPEAMENTO COMPLETO
-      topicos: activity.customFields?.['Tópicos Principais'] ||
-               activity.customFields?.['Tópicos'] ||
+      topicos: activity.customFields?.['Tópicos'] ||
+               activity.customFields?.['Tópicos Principais'] ||
                activity.customFields?.['topicos'] ||
                activity.customFields?.['tópicos'] ||
                activity.description || // Usar descrição como fallback
                '',
 
-      numberOfFlashcards: activity.customFields?.['Número de Flash Cards'] ||
+      numberOfFlashcards: activity.customFields?.['Número de flashcards'] ||
+                         activity.customFields?.['Número de Flash Cards'] ||
                          activity.customFields?.['numeroFlashcards'] ||
                          activity.customFields?.['Quantidade de Flash Cards'] ||
                          activity.customFields?.['quantidadeFlashcards'] ||
@@ -480,20 +481,22 @@ export class AutoBuildService {
         const { FlashCardsGenerator } = await import('@/features/schoolpower/activities/flash-cards');
         const generator = new FlashCardsGenerator();
 
-        // Extrair tópicos com fallback robusto
+        // Extrair tópicos com fallback robusto - priorizar campo correto
         const topicos = activity.customFields?.['Tópicos'] || 
+                       activity.customFields?.['Tópicos Principais'] || 
                        activity.customFields?.['topicos'] || 
                        activity.description || 
                        activity.title || 
                        'Tópicos gerais';
 
         const flashCardsData = {
-          title: activity.title || 'Flash Cards',
+          title: activity.title || activity.customFields?.['Título'] || 'Flash Cards',
           theme: activity.customFields?.['Tema'] || activity.customFields?.['theme'] || activity.title || 'Tema Geral',
           subject: activity.customFields?.['Disciplina'] || activity.customFields?.['subject'] || 'Geral',
           schoolYear: activity.customFields?.['Ano de Escolaridade'] || activity.customFields?.['schoolYear'] || 'Ensino Médio',
           topicos: topicos,
           numberOfFlashcards: activity.customFields?.['Número de flashcards'] || 
+                             activity.customFields?.['Número de Flash Cards'] ||
                              activity.customFields?.['numberOfFlashcards'] || '10',
           context: activity.customFields?.['Contexto'] || activity.customFields?.['context'] || 'Estudos e revisão',
           difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || 
