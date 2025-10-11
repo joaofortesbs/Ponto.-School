@@ -12,7 +12,6 @@ import {
 import { useUserInfo } from '../hooks/useUserInfo';
 import schoolPowerActivities from '../../data/schoolPowerActivities.json';
 import { ShareActivityModal } from '@/components/ui/share-activity-modal';
-import { useState, useEffect } from 'react';
 import { 
   Wrench, CheckSquare, Filter, 
   Trophy, Zap, Brain, Heart, 
