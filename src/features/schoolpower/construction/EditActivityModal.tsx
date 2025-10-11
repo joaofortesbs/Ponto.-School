@@ -611,10 +611,20 @@ const EditActivityModal = ({
              formData.generalObjective?.trim() &&
              formData.evaluationCriteria?.trim();
     } else if (activityType === 'flash-cards') { // Validar campos específicos do Flash Cards
-      return formData.title.trim() &&
-             formData.theme?.trim() &&
-             formData.topicos?.trim() &&
-             formData.numberOfFlashcards?.trim();
+      const isValid = formData.title?.trim() &&
+                     formData.theme?.trim() &&
+                     formData.topicos?.trim() &&
+                     formData.numberOfFlashcards?.trim();
+
+      console.log('🔍 Validação do Flash Cards:', {
+        title: !!formData.title?.trim(),
+        theme: !!formData.theme?.trim(),
+        topicos: !!formData.topicos?.trim(),
+        numberOfFlashcards: !!formData.numberOfFlashcards?.trim(),
+        isValid
+      });
+
+      return isValid;
     }
     else {
       return formData.title.trim() &&

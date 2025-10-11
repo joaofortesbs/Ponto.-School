@@ -202,45 +202,93 @@ async function generateQuizInterativo(formData: ActivityFormData) {
 }
 
 async function generateFlashCards(formData: ActivityFormData) {
-  const numberOfCards = parseInt(formData.numberOfFlashcards) || 10;
-  const topicos = formData.topicos?.split('\n').filter(t => t.trim()) || [];
-  
-  // Garantir que temos pelo menos alguns tópicos
-  const finalTopicos = topicos.length > 0 ? topicos : [
-    formData.theme || 'Conceito Principal',
-    `Aplicação de ${formData.theme || 'Conceito'}`,
-    `Importância de ${formData.theme || 'Conceito'}`,
-    `Exercícios sobre ${formData.theme || 'Conceito'}`,
-    `Exemplos de ${formData.theme || 'Conceito'}`
-  ];
-  
-  const content = {
-    title: formData.title,
-    description: formData.description,
-    theme: formData.theme,
-    subject: formData.subject,
-    schoolYear: formData.schoolYear,
-    topicos: formData.topicos,
-    numberOfFlashcards: numberOfCards,
-    context: formData.context,
-    difficultyLevel: formData.difficultyLevel,
-    objectives: formData.objectives,
-    instructions: formData.instructions,
-    evaluation: formData.evaluation,
-    cards: finalTopicos.slice(0, numberOfCards).map((topic, i) => ({
-      id: i + 1,
-      front: `O que é ${topic.trim()}?`,
-      back: `${topic.trim()} é um conceito importante em ${formData.subject || 'Geral'} que deve ser compreendido por estudantes do ${formData.schoolYear || 'ensino médio'}. É essencial para o desenvolvimento acadêmico nesta área.`,
-      category: formData.subject || 'Geral',
-      difficulty: formData.difficultyLevel || 'Médio'
-    })),
-    totalCards: Math.min(numberOfCards, finalTopicos.length),
-    generatedAt: new Date().toISOString(),
-    isGeneratedByAI: false,
-    isFallback: true
-  };
+  console.log('🃏 [generateFlashCards] Iniciando geração com dados:', formData);
 
-  return { success: true, data: content };
+  try {
+    // Importar o gerador real de Flash Cards
+    const { FlashCardsGenerator } = await import('@/features/schoolpower/activities/flash-cards/FlashCardsGenerator');
+    
+    // Validar dados obrigatórios
+    if (!formData.theme || formData.theme.trim() === '') {
+      throw new Error('Tema é obrigatório para gerar flash cards');
+    }
+
+    if (!formData.topicos || formData.topicos.trim() === '') {
+      throw new Error('Tópicos são obrigatórios para gerar flash cards');
+    }
+
+    const numberOfCards = parseInt(formData.numberOfFlashcards?.toString() || '10');
+
+    // Preparar dados para o gerador
+    const flashCardsData = {
+      title: formData.title || `Flash Cards: ${formData.theme}`,
+      theme: formData.theme,
+      subject: formData.subject || 'Geral',
+      schoolYear: formData.schoolYear || 'Ensino Médio',
+      topicos: formData.topicos,
+      numberOfFlashcards: numberOfCards.toString(),
+      context: formData.context || 'Estudos e revisão',
+      difficultyLevel: formData.difficultyLevel || 'Médio',
+      objectives: formData.objectives || `Facilitar o aprendizado sobre ${formData.theme}`,
+      instructions: formData.instructions || 'Use os flash cards para estudar e revisar o conteúdo',
+      evaluation: formData.evaluation || 'Avalie o conhecimento através da prática com os cards'
+    };
+
+    console.log('🃏 [generateFlashCards] Dados preparados para API Gemini:', flashCardsData);
+
+    // Criar instância do gerador e gerar conteúdo com API Gemini
+    const generator = new FlashCardsGenerator();
+    const result = await generator.generateFlashCardsContent(flashCardsData);
+
+    console.log('✅ [generateFlashCards] Conteúdo gerado com sucesso pela API Gemini:', result);
+
+    return { success: true, data: result };
+
+  } catch (error) {
+    console.error('❌ [generateFlashCards] Erro ao gerar com API Gemini:', error);
+
+    // Fallback apenas em caso de erro
+    const numberOfCards = parseInt(formData.numberOfFlashcards) || 10;
+    const topicos = formData.topicos?.split('\n').filter(t => t.trim()) || [];
+    
+    const finalTopicos = topicos.length > 0 ? topicos : [
+      formData.theme || 'Conceito Principal',
+      `Aplicação de ${formData.theme || 'Conceito'}`,
+      `Importância de ${formData.theme || 'Conceito'}`,
+      `Exercícios sobre ${formData.theme || 'Conceito'}`,
+      `Exemplos de ${formData.theme || 'Conceito'}`
+    ];
+    
+    const fallbackContent = {
+      title: formData.title || `Flash Cards: ${formData.theme} (Fallback)`,
+      description: formData.description || `Flash cards sobre ${formData.theme}`,
+      theme: formData.theme,
+      subject: formData.subject,
+      schoolYear: formData.schoolYear,
+      topicos: formData.topicos,
+      numberOfFlashcards: numberOfCards,
+      context: formData.context,
+      difficultyLevel: formData.difficultyLevel,
+      objectives: formData.objectives,
+      instructions: formData.instructions,
+      evaluation: formData.evaluation,
+      cards: finalTopicos.slice(0, numberOfCards).map((topic, i) => ({
+        id: i + 1,
+        front: `O que é ${topic.trim()}?`,
+        back: `${topic.trim()} é um conceito importante em ${formData.subject || 'Geral'} que deve ser compreendido por estudantes do ${formData.schoolYear || 'ensino médio'}. É essencial para o desenvolvimento acadêmico nesta área.`,
+        category: formData.subject || 'Geral',
+        difficulty: formData.difficultyLevel || 'Médio'
+      })),
+      totalCards: Math.min(numberOfCards, finalTopicos.length),
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false,
+      isFallback: true
+    };
+
+    console.log('🛡️ [generateFlashCards] Usando conteúdo de fallback:', fallbackContent);
+
+    return { success: true, data: fallbackContent };
+  }
 }
 
 async function generateMapaMental(formData: ActivityFormData) {

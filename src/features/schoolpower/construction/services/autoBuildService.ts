@@ -312,6 +312,7 @@ export class AutoBuildService {
 
       theme: activity.customFields?.['Tema'] ||
              activity.customFields?.['tema'] ||
+             activity.customFields?.['Tema dos Flash Cards'] ||
              'Conteúdo Geral',
 
       schoolYear: activity.customFields?.['Ano de Escolaridade'] ||
@@ -360,6 +361,7 @@ export class AutoBuildService {
       context: activity.customFields?.['Contexto de Aplicação'] ||
               activity.customFields?.['contextoAplicacao'] ||
               activity.customFields?.['contexto'] ||
+              activity.customFields?.['Contexto de Uso'] ||
               '',
 
       // Campos específicos para diferentes tipos de atividade (COMPLETOS)
@@ -438,7 +440,21 @@ export class AutoBuildService {
                                        activity.customFields?.['Tipo de Atividade'] ||
                                        activity.customFields?.['Interatividade'] ||
                                        activity.customFields?.['Campo Específico'] ||
-                                       'Atividade interativa no quadro'
+                                       'Atividade interativa no quadro',
+
+      // CAMPOS ESPECÍFICOS PARA FLASH CARDS - MAPEAMENTO COMPLETO
+      topicos: activity.customFields?.['Tópicos Principais'] ||
+               activity.customFields?.['Tópicos'] ||
+               activity.customFields?.['topicos'] ||
+               activity.customFields?.['tópicos'] ||
+               activity.description || // Usar descrição como fallback
+               '',
+
+      numberOfFlashcards: activity.customFields?.['Número de Flash Cards'] ||
+                         activity.customFields?.['numeroFlashcards'] ||
+                         activity.customFields?.['Quantidade de Flash Cards'] ||
+                         activity.customFields?.['quantidadeFlashcards'] ||
+                         '10'
     };
 
 
