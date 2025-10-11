@@ -927,7 +927,7 @@ const EditActivityModal = ({
 
         console.log('📦 Conteúdo final preparado:', finalContent);
 
-        // Salvar no localStorage
+        // Salvar dados gerados com múltiplas chaves para compatibilidade
         const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
         const storageData = {
           success: true,
@@ -938,6 +938,16 @@ const EditActivityModal = ({
 
         localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
         console.log('💾 Flash Cards salvos no localStorage:', flashCardsStorageKey);
+        console.log('💾 Dados salvos:', storageData);
+
+        // Salvar também como activity_fields para compatibilidade
+        localStorage.setItem(`activity_fields_${activity?.id}`, JSON.stringify(finalContent));
+
+        // Salvar cards diretamente
+        if (finalContent.cards && finalContent.cards.length > 0) {
+          localStorage.setItem(`flashcards_data_${activity?.id}`, JSON.stringify(finalContent.cards));
+          console.log(`💾 ${finalContent.cards.length} cards salvos separadamente`);
+        }
 
         // Sincronização com cache de atividades
         const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
@@ -1461,6 +1471,7 @@ const EditActivityModal = ({
               console.log('📚 Processando dados específicos de Plano de Aula');
 
               enrichedFormData = {
+                ...formData, // Start with current formData to keep default values
                 title: consolidatedData.personalizedTitle || consolidatedData.title || activity.personalizedTitle || activity.title || '',
                 description: consolidatedData.personalizedDescription || consolidatedData.description || activity.personalizedDescription || activity.description || '',
                 subject: consolidatedCustomFields['Componente Curricular'] ||
@@ -1670,6 +1681,7 @@ const EditActivityModal = ({
             }
             else {
               enrichedFormData = {
+                ...formData, // Start with current formData to keep default values
                 title: consolidatedData.title || autoFormData.title || '',
                 description: consolidatedData.description || autoFormData.description || '',
                 subject: consolidatedCustomFields['Disciplina'] || consolidatedCustomFields['disciplina'] || autoFormData.subject || 'Português',
@@ -1803,6 +1815,7 @@ const EditActivityModal = ({
             console.log('📚 Processando dados diretos de Plano de Aula');
 
             directFormData = {
+              ...formData,
               title: activityData.personalizedTitle || activityData.title || '',
               description: activityData.personalizedDescription || activityData.description || '',
               subject: customFields['Componente Curricular'] ||
@@ -1985,7 +1998,7 @@ const EditActivityModal = ({
                           'Objetivos de aprendizagem',
 
               difficultyLevel: customFields['Nível de Dificuldade'] ||
-                              customCustomFields['nivelDificuldade'] ||
+                              customFields['nivelDificuldade'] ||
                               customFields['dificuldade'] ||
                               customFields['Dificuldade'] ||
                               customFields['Nível'] ||
@@ -2067,6 +2080,7 @@ const EditActivityModal = ({
             }
           else {
             directFormData = {
+              ...formData,
               title: activityData.title || '',
               description: activityData.description || '',
               subject: customFields['Disciplina'] || customFields['disciplina'] || 'Português',

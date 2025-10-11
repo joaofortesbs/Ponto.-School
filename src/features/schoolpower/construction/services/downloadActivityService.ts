@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -13,19 +12,19 @@ interface DownloadConfig {
  * Gerencia o download de atividades em diferentes formatos
  */
 export class DownloadActivityService {
-  
+
   /**
    * Baixa uma atividade no formato apropriado
    */
   static async downloadActivity(activityId: string, activityData: any, activityType: string) {
     console.log(`📥 Iniciando download da atividade: ${activityType}`);
     console.log(`📊 Dados recebidos:`, activityData);
-    
+
     // MAPEAMENTO ESPECÍFICO POR TIPO DE ATIVIDADE NO MOMENTO DO DOWNLOAD
     let dadosReais = await this.mapActivityData(activityId, activityType, activityData);
-    
+
     const config = this.getDownloadConfig(activityType);
-    
+
     try {
       switch (config.format) {
         case 'pdf':
@@ -43,7 +42,7 @@ export class DownloadActivityService {
         default:
           throw new Error(`Formato ${config.format} não suportado`);
       }
-      
+
       console.log(`✅ Download concluído: ${config.fileName}`);
     } catch (error) {
       console.error(`❌ Erro ao baixar atividade:`, error);
@@ -56,7 +55,7 @@ export class DownloadActivityService {
    */
   private static async mapActivityData(activityId: string, activityType: string, initialData: any): Promise<any> {
     console.log(`🔍 Mapeando dados para ${activityType}...`);
-    
+
     // Chaves de busca específicas por tipo
     const storageKeys = {
       'lista-exercicios': [
@@ -113,19 +112,19 @@ export class DownloadActivityService {
     switch (activityType) {
       case 'lista-exercicios':
         return this.mapListaExercicios(dadosCompletos);
-      
+
       case 'plano-aula':
         return this.mapPlanoAula(dadosCompletos);
-      
+
       case 'sequencia-didatica':
         return this.mapSequenciaDidatica(dadosCompletos);
-      
+
       case 'quiz-interativo':
         return this.mapQuizInterativo(dadosCompletos);
-      
+
       case 'flash-cards':
         return this.mapFlashCards(dadosCompletos);
-      
+
       default:
         return dadosCompletos;
     }
@@ -278,7 +277,7 @@ export class DownloadActivityService {
         // Número da questão
         pdf.setFont('helvetica', 'bold');
         pdf.text(`${index + 1}. `, margin, yPosition);
-        
+
         // Enunciado
         pdf.setFont('helvetica', 'normal');
         const enunciado = questao.enunciado || questao.question || questao.text || '';
@@ -316,7 +315,7 @@ export class DownloadActivityService {
         pdf.setFont('helvetica', 'bold');
         pdf.text(`Card ${index + 1} - Frente:`, margin, yPosition);
         yPosition += 7;
-        
+
         pdf.setFont('helvetica', 'normal');
         const splitFront = pdf.splitTextToSize(card.front || card.frente || '', contentWidth);
         pdf.text(splitFront, margin + 5, yPosition);
@@ -326,7 +325,7 @@ export class DownloadActivityService {
         pdf.setFont('helvetica', 'bold');
         pdf.text(`Verso:`, margin, yPosition);
         yPosition += 7;
-        
+
         pdf.setFont('helvetica', 'normal');
         const splitBack = pdf.splitTextToSize(card.back || card.verso || '', contentWidth);
         pdf.text(splitBack, margin + 5, yPosition);
@@ -403,20 +402,20 @@ export class DownloadActivityService {
   private static async downloadAsWord(data: any, fileName: string) {
     console.log('📝 Gerando arquivo Word para:', fileName);
     console.log('📊 Dados recebidos:', data);
-    
+
     // Normalizar dados - tentar extrair de diferentes estruturas
     let dadosNormalizados = data;
-    
+
     // Se data tem content, extrair
     if (data?.content && typeof data.content === 'object') {
       dadosNormalizados = { ...data, ...data.content };
     }
-    
+
     // Se tem data dentro de data, extrair
     if (data?.data && typeof data.data === 'object') {
       dadosNormalizados = { ...dadosNormalizados, ...data.data };
     }
-    
+
     console.log('📊 Dados normalizados:', dadosNormalizados);
 
     // Criar conteúdo HTML estruturado com estilos profissionais
@@ -579,7 +578,7 @@ export class DownloadActivityService {
 
     // METADADOS GERAIS
     htmlContent += `<div class="metadata">`;
-    
+
     if (dadosNormalizados.disciplina || dadosNormalizados.subject) {
       htmlContent += `<div class="metadata-item"><span class="metadata-label">Disciplina:</span> ${dadosNormalizados.disciplina || dadosNormalizados.subject}</div>`;
     }
@@ -604,20 +603,20 @@ export class DownloadActivityService {
     if (dadosNormalizados.tempoLimite) {
       htmlContent += `<div class="metadata-item"><span class="metadata-label">Tempo Limite:</span> ${dadosNormalizados.tempoLimite}</div>`;
     }
-    
+
     htmlContent += `</div>`;
 
     // LISTA DE EXERCÍCIOS
     if (dadosNormalizados.questoes || dadosNormalizados.questions) {
       htmlContent += `<h2>Questões</h2>`;
-      
+
       if (dadosNormalizados.objetivos) {
         htmlContent += `<div class="section">`;
         htmlContent += `<h3>Objetivos de Aprendizagem</h3>`;
         htmlContent += `<div class="content-block">${dadosNormalizados.objetivos}</div>`;
         htmlContent += `</div>`;
       }
-      
+
       if (dadosNormalizados.conteudoPrograma) {
         htmlContent += `<div class="section">`;
         htmlContent += `<h3>Conteúdo Programático</h3>`;
@@ -630,7 +629,7 @@ export class DownloadActivityService {
         htmlContent += `<div class="question">`;
         htmlContent += `<div class="question-header">Questão ${i + 1}</div>`;
         htmlContent += `<p><strong>Enunciado:</strong> ${q.enunciado || q.question || q.text || ''}</p>`;
-        
+
         if (q.alternativas || q.options) {
           htmlContent += `<div style="margin-top: 10px;"><strong>Alternativas:</strong></div>`;
           const alternativas = q.alternativas || q.options || [];
@@ -639,23 +638,23 @@ export class DownloadActivityService {
             htmlContent += `<div class="alternative">${letra}) ${alt}</div>`;
           });
         }
-        
+
         if (q.respostaCorreta !== undefined || q.correctAnswer !== undefined) {
           const respostaIndex = q.respostaCorreta !== undefined ? q.respostaCorreta : q.correctAnswer;
           const respostaLetra = String.fromCharCode(65 + respostaIndex);
           htmlContent += `<p style="margin-top: 10px;"><strong>Resposta Correta:</strong> ${respostaLetra})</p>`;
         }
-        
+
         if (q.explicacao || q.explanation) {
           htmlContent += `<div class="content-block" style="margin-top: 10px;">`;
           htmlContent += `<strong>Explicação:</strong><br>${q.explicacao || q.explanation}`;
           htmlContent += `</div>`;
         }
-        
+
         if (q.dificuldade || q.difficulty) {
           htmlContent += `<p style="margin-top: 8px;"><strong>Nível:</strong> ${q.dificuldade || q.difficulty}</p>`;
         }
-        
+
         htmlContent += `</div>`;
       });
 
@@ -794,37 +793,37 @@ export class DownloadActivityService {
       data.aulas.forEach((aula: any, i: number) => {
         htmlContent += `<div class="aula-card">`;
         htmlContent += `<div class="aula-header">Aula ${i + 1}: ${aula.titulo || aula.title || 'Sem título'}</div>`;
-        
+
         if (aula.objetivos) {
           htmlContent += `<div class="content-block">`;
           htmlContent += `<strong>Objetivos:</strong><br>${aula.objetivos}`;
           htmlContent += `</div>`;
         }
-        
+
         if (aula.conteudo) {
           htmlContent += `<div class="content-block">`;
           htmlContent += `<strong>Conteúdo:</strong><br>${aula.conteudo}`;
           htmlContent += `</div>`;
         }
-        
+
         if (aula.metodologia) {
           htmlContent += `<div class="content-block">`;
           htmlContent += `<strong>Metodologia:</strong><br>${aula.metodologia}`;
           htmlContent += `</div>`;
         }
-        
+
         if (aula.recursos) {
           htmlContent += `<div class="content-block">`;
           htmlContent += `<strong>Recursos:</strong><br>${Array.isArray(aula.recursos) ? aula.recursos.join(', ') : aula.recursos}`;
           htmlContent += `</div>`;
         }
-        
+
         if (aula.avaliacao) {
           htmlContent += `<div class="content-block">`;
           htmlContent += `<strong>Avaliação:</strong><br>${aula.avaliacao}`;
           htmlContent += `</div>`;
         }
-        
+
         htmlContent += `</div>`;
       });
 
@@ -857,7 +856,7 @@ export class DownloadActivityService {
     if (data.cards || data.flashcards) {
       htmlContent += `<h2>Flash Cards</h2>`;
       const cards = data.cards || data.flashcards || [];
-      
+
       cards.forEach((card: any, i: number) => {
         htmlContent += `<div class="card">`;
         htmlContent += `<h4>Card ${i + 1}</h4>`;
@@ -881,19 +880,47 @@ export class DownloadActivityService {
 
     htmlContent += '</body></html>';
 
-    // Converter HTML para Blob compatível com Word
-    const blob = new Blob([htmlContent], { 
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-    });
-    
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    window.URL.revokeObjectURL(url);
+    try {
+      // Criar blob e fazer download
+      const blob = new Blob([htmlContent], { type: 'application/msword' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
-    console.log('✅ Arquivo Word gerado com sucesso:', fileName);
+      console.log('✅ Arquivo Word gerado com sucesso:', fileName);
+
+    } catch (error) {
+      console.error('❌ Erro ao gerar Word:', error);
+
+      // Fallback: tentar salvamento alternativo
+      try {
+        console.log('🔄 Tentando método alternativo de salvamento...');
+
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+
+        // Usar window.open como fallback
+        const newWindow = window.open(url, '_blank');
+        if (newWindow) {
+          newWindow.document.title = fileName;
+        }
+
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 100);
+
+        console.log('✅ Arquivo aberto em nova janela (fallback)');
+
+      } catch (fallbackError) {
+        console.error('❌ Erro no fallback:', fallbackError);
+        throw new Error('Não foi possível salvar o arquivo. Verifique as permissões do navegador.');
+      }
+    }
   }
 
   /**
@@ -911,7 +938,7 @@ export class DownloadActivityService {
       <h1 style="color: #ff8c00;">${data.title || data.titulo || 'Atividade'}</h1>
       <div>${JSON.stringify(data, null, 2)}</div>
     `;
-    
+
     document.body.appendChild(tempDiv);
 
     try {
