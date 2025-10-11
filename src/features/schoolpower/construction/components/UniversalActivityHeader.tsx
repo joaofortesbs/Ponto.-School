@@ -506,7 +506,29 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                   <Plus className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:rotate-90 transition-all duration-200" />
                   <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Adicionar à aula</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onDownload} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                <DropdownMenuItem onClick={async () => {
+                  try {
+                    const { DownloadActivityService } = await import('../services/downloadActivityService');
+                    
+                    // Buscar dados da atividade do localStorage
+                    const storageKey = `constructed_${activityType}_${activityId}`;
+                    const storedData = localStorage.getItem(storageKey);
+                    const activityData = storedData ? JSON.parse(storedData) : {};
+                    
+                    await DownloadActivityService.downloadActivity(
+                      activityId || 'default',
+                      activityData.data || activityData,
+                      activityType || 'default'
+                    );
+                    
+                    console.log('✅ Download iniciado com sucesso');
+                  } catch (error) {
+                    console.error('❌ Erro ao baixar atividade:', error);
+                    alert('Erro ao baixar atividade. Tente novamente.');
+                  }
+                  
+                  if (onDownload) onDownload();
+                }} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
                   <Download className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-200" />
                   <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Baixar</span>
                 </DropdownMenuItem>
