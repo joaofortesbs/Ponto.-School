@@ -1,303 +1,191 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, CheckCircle, Settings, Rocket, Share2 } from "lucide-react";
-import { Button } from "../ui/button";
-import { cn } from "@/lib/utils";
-
-// Chave para controle de sessão
-const SESSION_MODAL_KEY = 'welcomeModalShown';
+import React, { useState } from 'react';
+import { X, Check, ArrowRight, Sparkles, BookOpen, Target, Users } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 interface WelcomeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  isFirstLogin: boolean;
+  userName?: string;
 }
 
-export const WelcomeModal: React.FC<WelcomeModalProps> = ({
-  isOpen,
-  onClose,
-  isFirstLogin,
-}) => {
-  const navigate = useNavigate();
-  const [shouldDisplay, setShouldDisplay] = useState(true);
+const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose, userName = 'Estudante' }) => {
+  const [currentStep, setCurrentStep] = useState(0);
 
-  useEffect(() => {
-    if (isOpen) {
-      if (isFirstLogin) {
-        setShouldDisplay(true);
-        setTimeout(() => {
-          sessionStorage.setItem(SESSION_MODAL_KEY, 'true');
-        }, 2000);
-      } else {
-        const modalShown = sessionStorage.getItem(SESSION_MODAL_KEY);
-        if (modalShown) {
-          setShouldDisplay(false);
-          onClose();
-        } else {
-          setShouldDisplay(true);
-          sessionStorage.setItem(SESSION_MODAL_KEY, 'true');
-        }
-      }
+  const steps = [
+    {
+      icon: Sparkles,
+      title: 'Conta criada com sucesso!',
+      subtitle: `Estamos muito felizes em ter você na Ponto. School!`,
+      description: 'Bem-vindo à plataforma educacional mais completa do Brasil.',
+      color: 'from-orange-500 to-orange-600',
+      bgGradient: 'from-orange-50 to-orange-100'
+    },
+    {
+      icon: BookOpen,
+      title: 'Configure sua conta',
+      subtitle: 'Personalize seu perfil e preferências para melhorar sua experiência.',
+      description: 'Adicione suas informações básicas, foto de perfil e áreas de interesse.',
+      color: 'from-orange-500 to-orange-600',
+      bgGradient: 'from-orange-50 to-orange-100'
+    },
+    {
+      icon: Target,
+      title: 'Tour pela plataforma',
+      subtitle: 'Conheça os recursos e funcionalidades da Ponto. School.',
+      description: 'Descubra como usar o Epictus IA, School Power, Biblioteca Digital e muito mais.',
+      color: 'from-orange-500 to-orange-600',
+      bgGradient: 'from-orange-50 to-orange-100'
+    },
+    {
+      icon: Users,
+      title: 'Comece a aprender',
+      subtitle: 'Vá direto para o dashboard e comece sua jornada de aprendizado.',
+      description: 'Acesse seus estudos, atividades e conecte-se com outros estudantes.',
+      color: 'from-orange-500 to-orange-600',
+      bgGradient: 'from-orange-50 to-orange-100'
     }
-  }, [isOpen, onClose, isFirstLogin]);
+  ];
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.classList.add('modal-open');
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
     } else {
-      document.body.classList.remove('modal-open');
+      onClose();
     }
+  };
 
-    return () => {
-      document.body.classList.remove('modal-open');
-    };
-  }, [isOpen]);
-
-  const handleClose = () => {
-    document.body.classList.remove('modal-open');
-    sessionStorage.setItem(SESSION_MODAL_KEY, 'true');
+  const handleSkip = () => {
     onClose();
   };
 
-  const handleGoToSchoolPower = () => {
-    handleClose();
-    navigate("/school-power");
-  };
+  if (!isOpen) return null;
 
-  const handleGoToSettings = () => {
-    handleClose();
-    navigate("/configuracoes");
-  };
-
-  if (!isOpen || !shouldDisplay) return null;
+  const currentStepData = steps[currentStep];
+  const Icon = currentStepData.icon;
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] welcome-modal-overlay flex items-center justify-center p-4"
-        style={{ pointerEvents: 'auto' }}
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 10 }}
-          transition={{ 
-            type: "spring", 
-            damping: 25, 
-            stiffness: 300,
-            duration: 0.4 
-          }}
-          className="bg-gradient-to-br from-[#0A1929] via-[#001427] to-[#000B1A] rounded-2xl overflow-hidden max-w-4xl w-full shadow-2xl border border-[#FF6B00]/30 relative"
-        >
-          {/* Header com gradiente */}
-          <div className="relative h-48 overflow-hidden bg-gradient-to-br from-[#001427] to-[#0A1929]">
-            {/* Padrão de fundo animado */}
-            <motion.div 
-              className="absolute inset-0 opacity-20"
-              animate={{
-                backgroundPosition: ["0% 0%", "100% 100%"]
-              }}
-              transition={{
-                duration: 20,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-              style={{
-                backgroundImage: `radial-gradient(circle at 20% 50%, rgba(255, 107, 0, 0.3) 0%, transparent 50%),
-                                 radial-gradient(circle at 80% 80%, rgba(255, 140, 64, 0.2) 0%, transparent 50%)`
-              }}
-            />
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={handleSkip}
+          />
 
-            {/* Estrela decorativa */}
-            <motion.div
-              className="absolute top-8 left-12"
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-            >
-              <div className="text-yellow-400 text-4xl">⭐</div>
-            </motion.div>
+          {/* Modal */}
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="relative z-10 w-full max-w-2xl"
+          >
+            {/* Card Container */}
+            <div className="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden border-4 border-orange-500">
+              {/* Header Background Gradient */}
+              <div className={`absolute top-0 left-0 right-0 h-48 bg-gradient-to-br ${currentStepData.bgGradient} opacity-30`} />
 
-            {/* Avatar animado no canto superior direito */}
-            <motion.div
-              className="absolute top-6 right-8"
-              initial={{ scale: 0, y: -50 }}
-              animate={{ scale: 1, y: 0 }}
-              transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
-            >
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-xl">
+              {/* Close Button */}
+              <button
+                onClick={handleSkip}
+                className="absolute top-6 right-6 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 transition-all shadow-lg"
+              >
+                <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              </button>
+
+              {/* Content */}
+              <div className="relative p-8 sm:p-12">
+                {/* Icon */}
                 <motion.div
-                  animate={{ 
-                    rotate: [0, 10, -10, 0],
-                    y: [0, -5, 0]
-                  }}
-                  transition={{ 
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
+                  key={currentStep}
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                  className="mb-6"
                 >
-                  <div className="text-5xl">👋</div>
+                  <div className={`w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br ${currentStepData.color} flex items-center justify-center shadow-xl`}>
+                    <Icon className="w-10 h-10 text-white" />
+                  </div>
                 </motion.div>
-              </div>
-            </motion.div>
 
-            {/* Título principal */}
-            <div className="absolute bottom-8 left-8 z-10">
-              <motion.div
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="flex items-center gap-3 mb-2"
-              >
-                <div className="w-12 h-12 rounded-full bg-[#FF6B00] flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white">
-                    Conta <span className="text-[#FF6B00]">criada</span> com <span className="text-[#FF6B00]">sucesso!</span>
+                {/* Title & Subtitle */}
+                <motion.div
+                  key={`title-${currentStep}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-center mb-8"
+                >
+                  <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+                    {currentStepData.title}
                   </h2>
-                </div>
-              </motion.div>
-              <motion.p
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-white/80 ml-14"
-              >
-                Estamos muito felizes em ter você na <span className="text-[#FF6B00] font-semibold">Ponto. School</span> !
-              </motion.p>
-            </div>
-
-            {/* Botão fechar */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-              className="absolute top-4 right-4 rounded-full bg-white/10 text-white hover:bg-white/20 hover:text-white z-20"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Conteúdo principal */}
-          <div className="p-8">
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="mb-6"
-            >
-              <h3 className="text-2xl font-bold text-white mb-2 text-center">
-                Bem-vindo à Ponto. School
-              </h3>
-              <p className="text-white/70 text-center">
-                Estamos animados para ajudar você em sua jornada de aprendizado!
-              </p>
-            </motion.div>
-
-            {/* Cards de ação */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Card 1 - Configurar conta */}
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="bg-gradient-to-br from-[#1A2332] to-[#0F1824] p-6 rounded-xl border border-white/10 hover:border-[#FF6B00]/50 transition-all duration-300 group cursor-pointer"
-                onClick={handleGoToSettings}
-              >
-                <div className="w-12 h-12 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Settings className="h-6 w-6 text-[#FF6B00]" />
-                </div>
-                <h4 className="text-lg font-semibold text-white mb-2">Configure sua conta</h4>
-                <p className="text-white/60 text-sm mb-4">
-                  Personalize seu perfil e preferências para melhorar sua experiência.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
-                >
-                  Configurar agora
-                </Button>
-              </motion.div>
-
-              {/* Card 2 - Tour (Em breve) */}
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className="bg-gradient-to-br from-[#1A2332] to-[#0F1824] p-6 rounded-xl border border-white/10 opacity-60"
-              >
-                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-4">
-                  <Rocket className="h-6 w-6 text-white/50" />
-                </div>
-                <h4 className="text-lg font-semibold text-white mb-2">Tour pela plataforma</h4>
-                <p className="text-white/60 text-sm mb-4">
-                  Conheça os recursos e funcionalidades da Ponto. School.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full border-white/20 text-white/50 cursor-not-allowed"
-                  disabled
-                >
-                  Em breve
-                </Button>
-              </motion.div>
-
-              {/* Card 3 - Começar com School Power */}
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.7 }}
-                className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] p-6 rounded-xl border border-[#FF6B00] hover:shadow-xl hover:shadow-[#FF6B00]/20 transition-all duration-300 group cursor-pointer"
-                onClick={handleGoToSchoolPower}
-              >
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Share2 className="h-6 w-6 text-white" />
-                </div>
-                <h4 className="text-lg font-semibold text-white mb-2">Comece a aprender</h4>
-                <p className="text-white/90 text-sm mb-4">
-                  Acesse o School Power, crie atividades e compartilhe com seus alunos!
-                </p>
-                <Button
-                  size="sm"
-                  className="w-full bg-white text-[#FF6B00] hover:bg-white/90 font-semibold"
-                >
-                  Ir para School Power
-                </Button>
-              </motion.div>
-            </div>
-
-            {/* Dica rápida */}
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="mt-6 p-4 bg-[#FF6B00]/10 border border-[#FF6B00]/30 rounded-lg"
-            >
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#FF6B00]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-lg">💡</span>
-                </div>
-                <div>
-                  <h5 className="text-white font-semibold mb-1">Dica rápida:</h5>
-                  <p className="text-white/70 text-sm">
-                    No School Power, digite o que você precisa (ex: "Lista de exercícios sobre funções"), 
-                    aguarde a criação automática e depois clique em <strong className="text-[#FF6B00]">"Compartilhar"</strong> para 
-                    gerar um link que seus alunos podem acessar!
+                  <p className="text-lg text-orange-600 dark:text-orange-400 font-medium mb-2">
+                    {currentStepData.subtitle}
                   </p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {currentStepData.description}
+                  </p>
+                </motion.div>
+
+                {/* Progress Indicator */}
+                <div className="flex items-center justify-center gap-2 mb-8">
+                  {steps.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        index === currentStep
+                          ? 'w-8 bg-orange-500'
+                          : index < currentStep
+                          ? 'w-2 bg-orange-300'
+                          : 'w-2 bg-gray-300 dark:bg-gray-600'
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  {currentStep < steps.length - 1 ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={handleSkip}
+                        className="px-6 py-3 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        Pular tutorial
+                      </Button>
+                      <Button
+                        onClick={handleNext}
+                        className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg"
+                      >
+                        Próximo
+                        <ArrowRight className="ml-2 w-4 h-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      onClick={handleNext}
+                      className="px-12 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg"
+                    >
+                      Ir para o Dashboard
+                      <Check className="ml-2 w-5 h-5" />
+                    </Button>
+                  )}
                 </div>
               </div>
-            </motion.div>
-          </div>
-        </motion.div>
-      </motion.div>
+
+              {/* Decorative Elements */}
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+            </div>
+          </motion.div>
+        </div>
+      )}
     </AnimatePresence>
   );
 };
