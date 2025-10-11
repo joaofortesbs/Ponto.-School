@@ -75,22 +75,28 @@ export function SidebarNav({
   const [isUploading, setIsUploading] = useState(isCollapsed);
   const [firstName, setFirstName] = useState<string | null>(null);
   
-  // Determinar estado inicial do flip baseado no tipo de conta
+  // Determinar estado inicial do flip baseado no tipo de conta (otimizado)
   const getInitialFlipState = () => {
+    // Prioridade 1: Cache direto (mais rápido)
     const cachedAccountType = localStorage.getItem("userAccountType");
+    if (cachedAccountType === 'Professor') return true;
+    if (cachedAccountType === 'Aluno' || cachedAccountType === 'Coordenador') return false;
+    
+    // Prioridade 2: Dados do Neon (fallback)
     const neonUser = localStorage.getItem("neon_user");
-    
-    if (cachedAccountType) {
-      // Professor = true (flipped), Aluno = false (não flipped)
-      return cachedAccountType === 'Professor';
-    }
-    
     if (neonUser) {
       try {
         const userData = JSON.parse(neonUser);
-        return userData.tipo_conta === 'Professor';
+        const tipoConta = userData.tipo_conta;
+        
+        // Atualizar cache imediatamente
+        if (tipoConta) {
+          localStorage.setItem("userAccountType", tipoConta);
+        }
+        
+        return tipoConta === 'Professor';
       } catch (e) {
-        console.error("Erro ao parsear neon_user:", e);
+        console.debug("Erro ao parsear neon_user:", e);
       }
     }
     
@@ -107,7 +113,15 @@ export function SidebarNav({
   const [isMenuAnimating, setIsMenuAnimating] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const [isCardHovered, setIsCardHovered] = useState(false); // Variável isCardHovered agora está definida
-  const [userAccountType, setUserAccountType] = useState<'Professor' | 'Aluno' | 'Coordenador' | null>(null);
+  // Estado do tipo de conta com valor inicial do cache
+  const [userAccountType, setUserAccountType] = useState<'Professor' | 'Aluno' | 'Coordenador' | null>(() => {
+    // Buscar do cache imediatamente para renderização instantânea
+    const cachedType = localStorage.getItem("userAccountType");
+    if (cachedType === 'Professor' || cachedType === 'Aluno' || cachedType === 'Coordenador') {
+      return cachedType;
+    }
+    return 'Aluno'; // Default para renderização imediata
+  });
 
   // Função para adicionar timeouts ao array
   const addTimeout = (timeout: NodeJS.Timeout) => {
@@ -179,55 +193,79 @@ export function SidebarNav({
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // Carregar do localStorage primeiro (cache rápido)
-        const storedAvatarUrl = localStorage.getItem("userAvatarUrl");
+        // 1. CARREGAMENTO INSTANTÂNEO DO CACHE
+        const cachedData = localStorage.getItem("neon_user");
+        const cachedAvatar = localStorage.getItem("userAvatarUrl");
+        const cachedFirstName = localStorage.getItem("userFirstName");
+        const cachedAccountType = localStorage.getItem("userAccountType");
         const tempPreview = localStorage.getItem("tempAvatarPreview");
 
+        // Renderizar imediatamente com dados do cache
         if (tempPreview) {
           setProfileImage(tempPreview);
-        } else if (storedAvatarUrl) {
-          setProfileImage(storedAvatarUrl);
+        } else if (cachedAvatar) {
+          setProfileImage(cachedAvatar);
         }
 
-        // Buscar do Neon para dados atualizados
-        const neonUser = localStorage.getItem("neon_user");
-        if (neonUser) {
-          const userData = JSON.parse(neonUser);
+        if (cachedFirstName) {
+          setFirstName(cachedFirstName);
+        }
 
-          // Buscar perfil atualizado do Neon
-          const response = await fetch(`/api/perfis?email=${encodeURIComponent(userData.email)}`);
-          const result = await response.json();
+        if (cachedAccountType === 'Professor' || cachedAccountType === 'Aluno' || cachedAccountType === 'Coordenador') {
+          setUserAccountType(cachedAccountType);
+        }
 
-          if (result.success && result.data) {
-            const profile = result.data;
+        // Desligar loading imediatamente após carregar cache
+        setLoading(false);
 
-            // Atualizar avatar se existir no banco
-            if (profile.imagem_avatar) {
-              setProfileImage(profile.imagem_avatar);
-              localStorage.setItem("userAvatarUrl", profile.imagem_avatar);
-              localStorage.removeItem("tempAvatarPreview");
+        // 2. ATUALIZAÇÃO EM BACKGROUND (não bloqueia UI)
+        if (cachedData) {
+          const userData = JSON.parse(cachedData);
+          
+          // Buscar atualizações do servidor em background
+          requestAnimationFrame(async () => {
+            try {
+              const response = await fetch(`/api/perfis?email=${encodeURIComponent(userData.email)}`, {
+                priority: 'low' // Baixa prioridade para não bloquear
+              });
+              
+              if (!response.ok) return; // Silenciosamente ignorar erros
+              
+              const result = await response.json();
+
+              if (result.success && result.data) {
+                const profile = result.data;
+
+                // Atualizar apenas se houver mudanças
+                if (profile.imagem_avatar && profile.imagem_avatar !== cachedAvatar) {
+                  setProfileImage(profile.imagem_avatar);
+                  localStorage.setItem("userAvatarUrl", profile.imagem_avatar);
+                  localStorage.removeItem("tempAvatarPreview");
+                }
+
+                const newFirstName = profile.nome_completo?.split(" ")[0] || profile.nome_usuario || "Usuário";
+                if (newFirstName !== cachedFirstName) {
+                  setFirstName(newFirstName);
+                  localStorage.setItem("userFirstName", newFirstName);
+                }
+
+                if (profile.tipo_conta && profile.tipo_conta !== cachedAccountType) {
+                  setUserAccountType(profile.tipo_conta);
+                  localStorage.setItem("userAccountType", profile.tipo_conta);
+                }
+
+                // Atualizar cache completo
+                localStorage.setItem("neon_user", JSON.stringify(profile));
+              }
+            } catch (error) {
+              // Silenciosamente ignorar erros de atualização em background
+              console.debug("Atualização em background falhou (não crítico):", error);
             }
-
-            // Atualizar nome
-            const firstName = profile.nome_completo?.split(" ")[0] || profile.nome_usuario || "Usuário";
-            setFirstName(firstName);
-            localStorage.setItem("userFirstName", firstName);
-
-            // Definir tipo de conta do usuário
-            if (profile.tipo_conta) {
-              setUserAccountType(profile.tipo_conta);
-              localStorage.setItem("userAccountType", profile.tipo_conta);
-              console.log("✅ Tipo de conta identificado:", profile.tipo_conta);
-            }
-
-            // Atualizar cache
-            localStorage.setItem("neon_user", JSON.stringify(profile));
-          }
+          });
         }
       } catch (error) {
         console.error("Erro ao carregar perfil:", error);
         setFirstName("Usuário");
-      } finally {
         setLoading(false);
       }
     };

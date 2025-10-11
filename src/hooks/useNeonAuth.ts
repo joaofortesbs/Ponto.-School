@@ -220,18 +220,36 @@ export function useNeonAuth() {
       const loginData = await loginResponse.json();
       console.log("✅ Login automático realizado com sucesso:", loginData);
 
+      const profile = loginData.profile;
+
       setAuthState({
-        user: loginData.profile,
+        user: profile,
         isLoading: false,
         isAuthenticated: true,
         error: null
       });
 
       // Salvar dados no localStorage
-      localStorage.setItem("neon_user", JSON.stringify(loginData.profile));
+      localStorage.setItem("neon_user", JSON.stringify(profile));
       localStorage.setItem("neon_authenticated", "true");
+      
+      // CACHE INSTANTÂNEO: Salvar dados críticos para renderização rápida
+      if (profile.tipo_conta) {
+        localStorage.setItem("userAccountType", profile.tipo_conta);
+      }
+      
+      if (profile.nome_completo) {
+        const firstName = profile.nome_completo.split(" ")[0];
+        localStorage.setItem("userFirstName", firstName);
+      } else if (profile.nome_usuario) {
+        localStorage.setItem("userFirstName", profile.nome_usuario);
+      }
+      
+      if (profile.imagem_avatar) {
+        localStorage.setItem("userAvatarUrl", profile.imagem_avatar);
+      }
 
-      return { success: true, profile: loginData.profile };
+      return { success: true, profile };
 
     } catch (error) {
       console.error("❌ Erro geral na requisição:", error);
@@ -313,6 +331,23 @@ export function useNeonAuth() {
       localStorage.setItem('user_id', user.id);
       localStorage.setItem("neon_user", JSON.stringify(user));
       localStorage.setItem("neon_authenticated", "true");
+      
+      // CACHE INSTANTÂNEO: Salvar tipo de conta imediatamente para renderização rápida
+      if (user.tipo_conta) {
+        localStorage.setItem("userAccountType", user.tipo_conta);
+      }
+      
+      // Salvar outros dados de cache para renderização instantânea
+      if (user.nome_completo) {
+        const firstName = user.nome_completo.split(" ")[0];
+        localStorage.setItem("userFirstName", firstName);
+      } else if (user.nome_usuario) {
+        localStorage.setItem("userFirstName", user.nome_usuario);
+      }
+      
+      if (user.imagem_avatar) {
+        localStorage.setItem("userAvatarUrl", user.imagem_avatar);
+      }
 
       setAuthState({
         user,
