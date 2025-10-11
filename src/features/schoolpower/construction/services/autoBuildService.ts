@@ -43,17 +43,17 @@ export class AutoBuildService {
     console.log('💾 [AUTO-SAVE] Status:', activity.status);
     console.log('💾 [AUTO-SAVE] Progress:', activity.progress);
     console.log('💾 [AUTO-SAVE] ==========================================');
-    
+
     try {
       // 1. Obter o perfil do usuário atual
       console.log('🔍 [AUTO-SAVE] Tentando obter perfil do usuário...');
       const profile = await profileService.getCurrentUserProfile();
       console.log('📋 [AUTO-SAVE] Perfil retornado:', profile);
-      
+
       if (!profile || !profile.id) {
         console.error('❌ [AUTO-SAVE] PROBLEMA: Usuário não encontrado ou não autenticado');
         console.error('❌ [AUTO-SAVE] Profile:', profile);
-        
+
         // Salvar erro para debug
         localStorage.setItem(`auto_save_error_${activity.id}`, JSON.stringify({
           error: 'Usuário não autenticado ou perfil não encontrado',
@@ -87,15 +87,15 @@ export class AutoBuildService {
         status: 'completed', // Sempre completed quando salva automaticamente
         isBuilt: activity.isBuilt,
         builtAt: activity.builtAt,
-        
+
         // Campos customizados da construção
         customFields: activity.customFields,
         originalData: activity.originalData,
-        
+
         // Dados do localStorage se existirem
         generatedContent: this.getGeneratedContentFromStorage(activity.id),
         constructedData: this.getConstructedDataFromStorage(activity.id),
-        
+
         // Metadados do salvamento automático
         autoSaved: true,
         autoSavedAt: new Date().toISOString(),
@@ -131,7 +131,7 @@ export class AutoBuildService {
         console.log('🎉 [AUTO-SAVE] Tipo:', response.data?.tipo);
         console.log('🎉 [AUTO-SAVE] Título:', response.data?.titulo);
         console.log('🎉 [AUTO-SAVE] ==========================================');
-        
+
         // 5. Marcar que foi salva automaticamente
         localStorage.setItem(`auto_saved_${activity.id}`, JSON.stringify({
           saved: true,
@@ -156,7 +156,7 @@ export class AutoBuildService {
         console.error('💥 [AUTO-SAVE] Erro:', response.error);
         console.error('💥 [AUTO-SAVE] Response completo:', response);
         console.error('💥 [AUTO-SAVE] ==========================================');
-        
+
         // Marcar tentativa de salvamento falhada para retry posterior
         localStorage.setItem(`auto_save_failed_${activity.id}`, JSON.stringify({
           failed: true,
@@ -169,7 +169,7 @@ export class AutoBuildService {
 
     } catch (error) {
       console.error('❌ [AUTO-SAVE] Erro inesperado no salvamento automático:', error);
-      
+
       // Salvar erro para debug
       localStorage.setItem(`auto_save_error_${activity.id}`, JSON.stringify({
         error: error instanceof Error ? error.message : 'Erro desconhecido',
@@ -304,7 +304,7 @@ export class AutoBuildService {
     const formData = {
       title: activity.title || '',
       description: activity.description || '',
-      
+
       // Campos principais com fallbacks
       subject: activity.customFields?.['Disciplina'] ||
                activity.customFields?.['disciplina'] ||
@@ -449,80 +449,222 @@ export class AutoBuildService {
   private async buildActivityWithExactModalLogic(activity: ConstructionActivity): Promise<void> {
     console.log(`🎯 [AUTO-BUILD] Construindo: ${activity.title}`);
 
-    try {
-      // SISTEMA EXCLUSIVO PARA QUADRO INTERATIVO
-      if (activity.id === 'quadro-interativo') {
-        console.log('🎯 [QUADRO INTERATIVO] Sistema exclusivo de construção');
-        await this.buildQuadroInterativoExclusively(activity);
-        return;
-      }
+    // SISTEMA EXCLUSIVO PARA QUADRO INTERATIVO
+    if (activity.id === 'quadro-interativo') {
+      console.log('🎯 [QUADRO INTERATIVO] Sistema exclusivo de construção');
+      await this.buildQuadroInterativoExclusively(activity);
+      return;
+    }
 
-      // Lógica para outras atividades...
-      const formData = await this.prepareFormDataExactlyLikeModal(activity);
-      const { generateActivityContent } = await import('../api/generateActivity');
-      const activityType = activity.type || activity.id || 'lista-exercicios';
+    // Para Flash Cards, usar gerador específico com tratamento robusto
+    if (activity.id === 'flash-cards') {
+      console.log('🃏 [FLASH CARDS] Sistema exclusivo de auto-build');
 
-      console.log(`🤖 [AUTO-BUILD] Chamando generateActivityContent: ${activityType}`);
-      const result = await generateActivityContent(activityType, formData);
+      try {
+        const { FlashCardsGenerator } = await import('@/features/schoolpower/activities/flash-cards');
+        const generator = new FlashCardsGenerator();
 
-      if (result) {
-        const saveKey = `activity_${activity.id}`;
-        const savedContent = {
-          ...result,
-          generatedAt: new Date().toISOString(),
-          activityId: activity.id,
-          activityType: activityType,
-          formData: formData
+        // Extrair tópicos com fallback robusto
+        const topicos = activity.customFields?.['Tópicos'] || 
+                       activity.customFields?.['topicos'] || 
+                       activity.description || 
+                       activity.title || 
+                       'Tópicos gerais';
+
+        const flashCardsData = {
+          title: activity.title || 'Flash Cards',
+          theme: activity.customFields?.['Tema'] || activity.customFields?.['theme'] || activity.title || 'Tema Geral',
+          subject: activity.customFields?.['Disciplina'] || activity.customFields?.['subject'] || 'Geral',
+          schoolYear: activity.customFields?.['Ano de Escolaridade'] || activity.customFields?.['schoolYear'] || 'Ensino Médio',
+          topicos: topicos,
+          numberOfFlashcards: activity.customFields?.['Número de flashcards'] || 
+                             activity.customFields?.['numberOfFlashcards'] || '10',
+          context: activity.customFields?.['Contexto'] || activity.customFields?.['context'] || 'Estudos e revisão',
+          difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || 
+                          activity.customFields?.['difficultyLevel'] || 'Médio',
+          objectives: activity.customFields?.['Objetivos'] || 
+                     activity.customFields?.['objectives'] || 
+                     `Facilitar aprendizado sobre ${activity.title}`,
+          instructions: activity.customFields?.['Instruções'] || 
+                       activity.customFields?.['instructions'] || 
+                       'Use os flash cards para estudar',
+          evaluation: activity.customFields?.['Avaliação'] || 
+                     activity.customFields?.['evaluation'] || 
+                     'Avalie o conhecimento através dos cards'
         };
 
-        localStorage.setItem(saveKey, JSON.stringify(savedContent));
+        console.log('🃏 [FLASH CARDS] Dados preparados:', flashCardsData);
 
-        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-        constructedActivities[activity.id] = {
-          isBuilt: true,
-          builtAt: new Date().toISOString(),
-          formData: formData,
-          generatedContent: result
+        const result = await generator.generateFlashCardsContent(flashCardsData);
+
+        if (result && result.cards && result.cards.length > 0) {
+          console.log(`✅ [FLASH CARDS] ${result.cards.length} cards gerados com sucesso`);
+
+          // Salvar dados gerados com múltiplas chaves para compatibilidade
+          const storageKey = `constructed_flash-cards_${activity.id}`;
+          const constructedData = {
+            success: true,
+            data: result,
+            timestamp: new Date().toISOString()
+          };
+
+          localStorage.setItem(storageKey, JSON.stringify(constructedData));
+          localStorage.setItem(`activity_${activity.id}`, JSON.stringify(result));
+
+          activity.isBuilt = true;
+          activity.builtAt = new Date().toISOString();
+          activity.progress = 100;
+          activity.status = 'completed';
+
+          // SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS
+          console.log('💾 [AUTO-BUILD] ==========================================');
+          console.log('💾 [AUTO-BUILD] ATIVIDADE CONCLUÍDA - SALVAMENTO AUTOMÁTICO');
+          console.log('💾 [AUTO-BUILD] Título:', activity.title);
+          console.log('💾 [AUTO-BUILD] ID:', activity.id);
+          console.log('💾 [AUTO-BUILD] Status:', activity.status);
+          console.log('💾 [AUTO-BUILD] Progress:', activity.progress);
+          console.log('💾 [AUTO-BUILD] isBuilt:', activity.isBuilt);
+          console.log('💾 [AUTO-BUILD] ==========================================');
+
+          try {
+            await this.saveActivityToDatabase(activity);
+          } catch (saveError) {
+            console.error('💥 [AUTO-BUILD] Erro crítico no salvamento automático:', saveError);
+          }
+
+          if (this.onActivityBuilt) {
+            this.onActivityBuilt(activity.id);
+          }
+
+          console.log(`✅ [AUTO-BUILD] Atividade construída: ${activity.title}`);
+          return; // Sai da função após construção bem-sucedida
+        } else {
+          console.error('❌ [FLASH CARDS] Resultado inválido:', result);
+          throw new Error('Nenhum card foi gerado pela IA');
+        }
+      } catch (error) {
+        console.error('❌ [FLASH CARDS] Erro no sistema exclusivo:', error);
+
+        // Fallback manual em caso de erro total
+        console.log('🛡️ [FLASH CARDS] Ativando fallback manual');
+        const fallbackCards = Array.from({ length: 5 }, (_, i) => ({
+          id: i + 1,
+          front: `Conceito ${i + 1} sobre ${activity.title}`,
+          back: `Este é um conceito importante relacionado a ${activity.title}`,
+          category: 'Geral',
+          difficulty: 'Médio'
+        }));
+
+        const fallbackResult = {
+          title: activity.title,
+          cards: fallbackCards,
+          totalCards: fallbackCards.length,
+          isFallback: true
         };
-        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+
+        localStorage.setItem(`constructed_flash-cards_${activity.id}`, JSON.stringify({
+          success: true,
+          data: fallbackResult,
+          isFallback: true,
+          timestamp: new Date().toISOString()
+        }));
 
         activity.isBuilt = true;
         activity.builtAt = new Date().toISOString();
         activity.progress = 100;
         activity.status = 'completed';
 
-          // SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS
+        // SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS (mesmo com fallback)
         console.log('💾 [AUTO-BUILD] ==========================================');
-        console.log('💾 [AUTO-BUILD] ATIVIDADE CONCLUÍDA - SALVAMENTO AUTOMÁTICO');
+        console.log('💾 [AUTO-BUILD] ATIVIDADE CONCLUÍDA COM FALLBACK - SALVAMENTO AUTOMÁTICO');
         console.log('💾 [AUTO-BUILD] Título:', activity.title);
         console.log('💾 [AUTO-BUILD] ID:', activity.id);
         console.log('💾 [AUTO-BUILD] Status:', activity.status);
         console.log('💾 [AUTO-BUILD] Progress:', activity.progress);
         console.log('💾 [AUTO-BUILD] isBuilt:', activity.isBuilt);
         console.log('💾 [AUTO-BUILD] ==========================================');
-        
+
         try {
           await this.saveActivityToDatabase(activity);
         } catch (saveError) {
-          console.error('💥 [AUTO-BUILD] Erro crítico no salvamento automático:', saveError);
+          console.error('💥 [AUTO-BUILD] Erro crítico no salvamento automático (fallback):', saveError);
         }
 
         if (this.onActivityBuilt) {
           this.onActivityBuilt(activity.id);
         }
 
-        console.log(`✅ [AUTO-BUILD] Atividade construída: ${activity.title}`);
-      } else {
-        throw new Error('Falha na geração do conteúdo pela IA');
+        console.log(`✅ [AUTO-BUILD] Atividade construída com fallback: ${activity.title}`);
+        return; // Sai da função após fallback
+      }
+    }
+
+    // Lógica para outras atividades...
+    const formData = await this.prepareFormDataExactlyLikeModal(activity);
+    const { generateActivityContent } = await import('../api/generateActivity');
+    const activityType = activity.type || activity.id || 'lista-exercicios';
+
+    console.log(`🤖 [AUTO-BUILD] Chamando generateActivityContent: ${activityType}`);
+    const result = await generateActivityContent(activityType, formData);
+
+    if (result) {
+      const saveKey = `activity_${activity.id}`;
+      const savedContent = {
+        ...result,
+        generatedAt: new Date().toISOString(),
+        activityId: activity.id,
+        activityType: activityType,
+        formData: formData
+      };
+
+      localStorage.setItem(saveKey, JSON.stringify(savedContent));
+
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      constructedActivities[activity.id] = {
+        isBuilt: true,
+        builtAt: new Date().toISOString(),
+        formData: formData,
+        generatedContent: result
+      };
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+
+      activity.isBuilt = true;
+      activity.builtAt = new Date().toISOString();
+      activity.progress = 100;
+      activity.status = 'completed';
+
+        // SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS
+      console.log('💾 [AUTO-BUILD] ==========================================');
+      console.log('💾 [AUTO-BUILD] ATIVIDADE CONCLUÍDA - SALVAMENTO AUTOMÁTICO');
+      console.log('💾 [AUTO-BUILD] Título:', activity.title);
+      console.log('💾 [AUTO-BUILD] ID:', activity.id);
+      console.log('💾 [AUTO-BUILD] Status:', activity.status);
+      console.log('💾 [AUTO-BUILD] Progress:', activity.progress);
+      console.log('💾 [AUTO-BUILD] isBuilt:', activity.isBuilt);
+      console.log('💾 [AUTO-BUILD] ==========================================');
+
+      try {
+        await this.saveActivityToDatabase(activity);
+      } catch (saveError) {
+        console.error('💥 [AUTO-BUILD] Erro crítico no salvamento automático:', saveError);
       }
 
-    } catch (error) {
-      console.error(`❌ [AUTO-BUILD] Erro na construção de ${activity.title}:`, error);
-      activity.status = 'error';
-      activity.progress = 0;
-      throw error;
+      if (this.onActivityBuilt) {
+        this.onActivityBuilt(activity.id);
+      }
+
+      console.log(`✅ [AUTO-BUILD] Atividade construída: ${activity.title}`);
+    } else {
+      throw new Error('Falha na geração do conteúdo pela IA');
     }
+
+  } catch (error) {
+    console.error(`❌ [AUTO-BUILD] Erro na construção de ${activity.title}:`, error);
+    activity.status = 'error';
+    activity.progress = 0;
+    throw error;
   }
+}
 
   /**
    * Sistema exclusivo para construção de Quadro Interativo

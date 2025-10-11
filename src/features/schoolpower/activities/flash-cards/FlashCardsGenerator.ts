@@ -51,8 +51,12 @@ export class FlashCardsGenerator {
 
     try {
       // Validar dados obrigatórios
-      if (!data.theme || !data.topicos) {
-        throw new Error('Tema e tópicos são obrigatórios para gerar flash cards');
+      if (!data.theme || typeof data.theme !== 'string' || data.theme.trim() === '') {
+        throw new Error('Tema é obrigatório para gerar flash cards');
+      }
+
+      if (!data.topicos || typeof data.topicos !== 'string' || data.topicos.trim() === '') {
+        throw new Error('Tópicos são obrigatórios para gerar flash cards');
       }
 
       const numberOfCards = parseInt(data.numberOfFlashcards?.toString() || '10');
@@ -60,6 +64,8 @@ export class FlashCardsGenerator {
       if (numberOfCards <= 0 || numberOfCards > 50) {
         throw new Error('Número de cards deve estar entre 1 e 50');
       }
+      
+      console.log('✅ Validação inicial passou - Tema:', data.theme, '| Tópicos:', data.topicos, '| Quantidade:', numberOfCards);
 
       // Preparar prompt otimizado para o Gemini
       const prompt = this.buildFlashCardsPrompt(data, numberOfCards);
@@ -247,16 +253,17 @@ IMPORTANTE:
     console.log('🛡️ Gerando conteúdo de fallback para Flash Cards');
 
     const numberOfCards = Math.min(parseInt(data.numberOfFlashcards?.toString() || '5'), 20);
-    const topicos = data.topicos.split('\n').filter(t => t.trim());
+    const topicosList = data.topicos.split('\n').filter(t => t.trim());
 
-    // Garantir pelo menos alguns cards mesmo com poucos tópicos
+    console.log(`📝 Processando fallback: ${numberOfCards} cards de ${topicosList.length} tópicos`);
+
     const fallbackCards: FlashCard[] = [];
 
-    // Se temos tópicos, usar eles
-    if (topicos.length > 0) {
+    // Se temos tópicos, usar eles (repetindo se necessário)
+    if (topicosList.length > 0) {
       for (let i = 0; i < numberOfCards; i++) {
-        const topicoIndex = i % topicos.length;
-        const topico = topicos[topicoIndex].trim();
+        const topicoIndex = i % topicosList.length;
+        const topico = topicosList[topicoIndex].trim();
         const cardType = i % 4; // Variar tipos de pergunta
         
         let front: string;
@@ -289,7 +296,8 @@ IMPORTANTE:
         });
       }
     } else {
-      // Se não temos tópicos, criar cards genéricos sobre o tema
+      // Se não temos tópicos, criar cards genéricos baseados no tema
+      console.warn('⚠️ Nenhum tópico fornecido, gerando cards genéricos');
       for (let i = 0; i < Math.max(numberOfCards, 3); i++) {
         fallbackCards.push({
           id: i + 1,
@@ -300,6 +308,8 @@ IMPORTANTE:
         });
       }
     }
+    
+    console.log(`✅ Fallback gerou ${fallbackCards.length} cards válidos`);
 
     return {
       title: data.title || `Flash Cards: ${data.theme} (Modo Demonstração)`,

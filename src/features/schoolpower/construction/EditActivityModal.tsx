@@ -841,19 +841,22 @@ const EditActivityModal = ({
   // Função para gerar conteúdo de Flash Cards
   const handleGenerateFlashCards = useCallback(async () => {
     if (isBuilding) return; // Evitar múltiplas execuções simultâneas
-    
+
     try {
       setIsBuilding(true);
       setGenerationError(null);
       setBuildProgress(0);
 
-      console.log('🃏 Iniciando geração de Flash Cards');
-      console.log('📋 FormData completo para Flash Cards:', formData);
+      console.log('🃏 Iniciando geração de Flash Cards...');
 
-      // Validar dados obrigatórios para Flash Cards
-      if (!formData.title?.trim()) throw new Error('Título é obrigatório');
-      if (!formData.theme?.trim()) throw new Error('Tema é obrigatório');
-      if (!formData.topicos?.trim()) throw new Error('Tópicos são obrigatórios');
+      // Validação de campos obrigatórios com mensagens mais claras
+      if (!formData.theme?.trim()) {
+        throw new Error('Tema é obrigatório para gerar Flash Cards');
+      }
+
+      if (!formData.topicos?.trim()) {
+        throw new Error('Tópicos são obrigatórios para gerar Flash Cards');
+      }
 
       const numberOfCards = parseInt(formData.numberOfFlashcards || '10') || 10;
       if (numberOfCards <= 0 || numberOfCards > 50) {
@@ -869,7 +872,7 @@ const EditActivityModal = ({
         // Importar o gerador de Flash Cards
         const { FlashCardsGenerator } = await import('@/features/schoolpower/activities/flash-cards/FlashCardsGenerator');
 
-        // Preparar dados estruturados para o gerador
+        // Preparar dados estruturados para o gerador com validação
         const flashCardData = {
           title: formData.title.trim(),
           theme: formData.theme.trim(),
@@ -879,12 +882,12 @@ const EditActivityModal = ({
           numberOfFlashcards: numberOfCards.toString(),
           context: formData.context?.trim() || 'Estudos e revisão',
           difficultyLevel: formData.difficultyLevel?.trim() || 'Médio',
-          objectives: formData.objectives?.trim() || `Facilitar o aprendizado sobre ${formData.theme}`,
+          objectives: formData.objectives?.trim() || `Facilitar o aprendizado sobre ${formData.theme.trim()}`,
           instructions: formData.instructions?.trim() || 'Use os flash cards para estudar e revisar o conteúdo',
           evaluation: formData.evaluation?.trim() || 'Avalie o conhecimento através da prática com os cards'
         };
 
-        console.log('🃏 Dados estruturados para o Gemini:', flashCardData);
+        console.log('🃏 Dados preparados para geração:', flashCardData);
 
         // Criar instância do gerador e gerar conteúdo
         const generator = new FlashCardsGenerator();
@@ -954,7 +957,7 @@ const EditActivityModal = ({
       } catch (apiError) {
         clearInterval(progressTimer);
         console.warn('⚠️ Erro na API, gerando fallback:', apiError);
-        
+
         // Gerar conteúdo de fallback
         const topicos = formData.topicos?.split('\n').filter(t => t.trim()) || [];
         const maxCards = Math.min(numberOfCards, Math.max(topicos.length, 5));
@@ -962,7 +965,7 @@ const EditActivityModal = ({
         const fallbackCards = [];
         for (let i = 0; i < maxCards; i++) {
           const topic = topicos[i % topicos.length] || `Conceito ${i + 1} de ${formData.theme}`;
-          
+
           fallbackCards.push({
             id: i + 1,
             front: `O que é ${topic.trim()}?`,
@@ -1200,7 +1203,7 @@ const EditActivityModal = ({
       const profile = await profileService.getCurrentUserProfile();
       if (profile?.id) {
         console.log('🏦 Salvando atividade no banco Neon...');
-        
+
         try {
           // Verificar se já existe no banco
           const existingActivities = await activitiesApi.getUserActivities(profile.id);
@@ -1237,7 +1240,7 @@ const EditActivityModal = ({
 
           if (saveResult && saveResult.success) {
             console.log('✅ Atividade salva no banco Neon com sucesso');
-            
+
             // Marcar como sincronizada no localStorage
             const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
             constructedActivities[activity.id] = {
@@ -1246,7 +1249,7 @@ const EditActivityModal = ({
               neonSyncAt: new Date().toISOString()
             };
             localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-            
+
           } else {
             console.warn('⚠️ Erro ao salvar no banco Neon, mantendo apenas no localStorage');
           }
@@ -1365,11 +1368,11 @@ const EditActivityModal = ({
           console.log('🃏 Flash Cards - Conteúdo parseado:', contentToLoad);
 
           // Validar se o conteúdo tem cards válidos
-          const hasValidCards = contentToLoad && 
-                               contentToLoad.cards && 
-                               Array.isArray(contentToLoad.cards) && 
+          const hasValidCards = contentToLoad &&
+                               contentToLoad.cards &&
+                               Array.isArray(contentToLoad.cards) &&
                                contentToLoad.cards.length > 0 &&
-                               contentToLoad.cards.every(card => 
+                               contentToLoad.cards.every(card =>
                                  card && card.front && card.back
                                );
 
@@ -2338,11 +2341,11 @@ const EditActivityModal = ({
       return () => clearTimeout(timer);
     }
   }, [
-    activity?.id, 
-    isOpen, 
-    formData.theme, 
-    formData.topicos, 
-    formData.numberOfFlashcards, 
+    activity?.id,
+    isOpen,
+    formData.theme,
+    formData.topicos,
+    formData.numberOfFlashcards,
     formData.context,
     formData.subject,
     formData.schoolYear,
