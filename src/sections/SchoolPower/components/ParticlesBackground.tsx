@@ -676,7 +676,7 @@ const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({
 }) => {
   return (
     <div className={cn("absolute inset-0 z-0", className)}>
-      {isDarkTheme && (
+      {isDarkTheme ? (
         <>
           <StarsBackground
             starDensity={0.00015}
@@ -693,6 +693,29 @@ const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({
             maxDelay={4200}
             starColor="#f97316"
             trailColor="#fb923c"
+            starWidth={10}
+            starHeight={1}
+            className="z-0"
+          />
+        </>
+      ) : (
+        <>
+          <StarsBackground
+            starDensity={0.00015}
+            allStarsTwinkle={true}
+            twinkleProbability={0.7}
+            minTwinkleSpeed={0.5}
+            maxTwinkleSpeed={1}
+            className="z-0"
+            starColor="#374151"
+          />
+          <ShootingStars
+            minSpeed={10}
+            maxSpeed={30}
+            minDelay={1200}
+            maxDelay={4200}
+            starColor="#4b5563"
+            trailColor="#6b7280"
             starWidth={10}
             starHeight={1}
             className="z-0"
