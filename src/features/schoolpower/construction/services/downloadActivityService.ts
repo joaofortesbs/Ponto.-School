@@ -19,22 +19,58 @@ export class DownloadActivityService {
    */
   static async downloadActivity(activityId: string, activityData: any, activityType: string) {
     console.log(`📥 Iniciando download da atividade: ${activityType}`);
+    console.log(`📊 Dados recebidos:`, activityData);
+    
+    // Extrair dados reais da atividade do localStorage se necessário
+    let dadosReais = activityData;
+    
+    // Tentar múltiplas fontes de dados
+    if (!dadosReais || Object.keys(dadosReais).length === 0) {
+      const storageKey = `constructed_${activityType}_${activityId}`;
+      const storedData = localStorage.getItem(storageKey);
+      
+      if (storedData) {
+        try {
+          const parsed = JSON.parse(storedData);
+          dadosReais = parsed.data || parsed;
+          console.log(`✅ Dados recuperados do localStorage:`, dadosReais);
+        } catch (e) {
+          console.error('Erro ao parsear dados do localStorage:', e);
+        }
+      }
+    }
+    
+    // Se ainda não tiver dados, buscar do content gerado
+    if (!dadosReais?.questoes && !dadosReais?.aulas && !dadosReais?.cards) {
+      const contentKey = `schoolpower_${activityType}_content`;
+      const contentData = localStorage.getItem(contentKey);
+      
+      if (contentData) {
+        try {
+          const parsed = JSON.parse(contentData);
+          dadosReais = { ...dadosReais, ...parsed };
+          console.log(`✅ Dados de conteúdo mesclados:`, dadosReais);
+        } catch (e) {
+          console.error('Erro ao parsear dados de conteúdo:', e);
+        }
+      }
+    }
     
     const config = this.getDownloadConfig(activityType);
     
     try {
       switch (config.format) {
         case 'pdf':
-          await this.downloadAsPDF(activityData, config.fileName);
+          await this.downloadAsPDF(dadosReais, config.fileName);
           break;
         case 'docx':
-          await this.downloadAsWord(activityData, config.fileName);
+          await this.downloadAsWord(dadosReais, config.fileName);
           break;
         case 'png':
-          await this.downloadAsPNG(activityData, config.fileName);
+          await this.downloadAsPNG(dadosReais, config.fileName);
           break;
         case 'json':
-          this.downloadAsJSON(activityData, config.fileName);
+          this.downloadAsJSON(dadosReais, config.fileName);
           break;
         default:
           throw new Error(`Formato ${config.format} não suportado`);
@@ -255,6 +291,21 @@ export class DownloadActivityService {
   private static async downloadAsWord(data: any, fileName: string) {
     console.log('📝 Gerando arquivo Word para:', fileName);
     console.log('📊 Dados recebidos:', data);
+    
+    // Normalizar dados - tentar extrair de diferentes estruturas
+    let dadosNormalizados = data;
+    
+    // Se data tem content, extrair
+    if (data?.content && typeof data.content === 'object') {
+      dadosNormalizados = { ...data, ...data.content };
+    }
+    
+    // Se tem data dentro de data, extrair
+    if (data?.data && typeof data.data === 'object') {
+      dadosNormalizados = { ...dadosNormalizados, ...data.data };
+    }
+    
+    console.log('📊 Dados normalizados:', dadosNormalizados);
 
     // Criar conteúdo HTML estruturado com estilos profissionais
     let htmlContent = `
@@ -262,7 +313,7 @@ export class DownloadActivityService {
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
       <head>
         <meta charset="UTF-8">
-        <title>${data.title || data.titulo || 'Atividade School Power'}</title>
+        <title>${dadosNormalizados.title || dadosNormalizados.titulo || 'Atividade School Power'}</title>
         <style>
           @page { margin: 2cm; }
           body { 
@@ -412,57 +463,57 @@ export class DownloadActivityService {
     `;
 
     // TÍTULO PRINCIPAL
-    htmlContent += `<h1>${data.title || data.titulo || 'Atividade School Power'}</h1>`;
+    htmlContent += `<h1>${dadosNormalizados.title || dadosNormalizados.titulo || 'Atividade School Power'}</h1>`;
 
     // METADADOS GERAIS
     htmlContent += `<div class="metadata">`;
     
-    if (data.disciplina || data.subject) {
-      htmlContent += `<div class="metadata-item"><span class="metadata-label">Disciplina:</span> ${data.disciplina || data.subject}</div>`;
+    if (dadosNormalizados.disciplina || dadosNormalizados.subject) {
+      htmlContent += `<div class="metadata-item"><span class="metadata-label">Disciplina:</span> ${dadosNormalizados.disciplina || dadosNormalizados.subject}</div>`;
     }
-    if (data.tema || data.theme) {
-      htmlContent += `<div class="metadata-item"><span class="metadata-label">Tema:</span> ${data.tema || data.theme}</div>`;
+    if (dadosNormalizados.tema || dadosNormalizados.theme) {
+      htmlContent += `<div class="metadata-item"><span class="metadata-label">Tema:</span> ${dadosNormalizados.tema || dadosNormalizados.theme}</div>`;
     }
-    if (data.anoSerie || data.schoolYear || data.serie) {
-      htmlContent += `<div class="metadata-item"><span class="metadata-label">Ano/Série:</span> ${data.anoSerie || data.schoolYear || data.serie}</div>`;
+    if (dadosNormalizados.anoSerie || dadosNormalizados.schoolYear || dadosNormalizados.serie) {
+      htmlContent += `<div class="metadata-item"><span class="metadata-label">Ano/Série:</span> ${dadosNormalizados.anoSerie || dadosNormalizados.schoolYear || dadosNormalizados.serie}</div>`;
     }
-    if (data.descricao || data.description) {
-      htmlContent += `<div class="metadata-item"><span class="metadata-label">Descrição:</span> ${data.descricao || data.description}</div>`;
+    if (dadosNormalizados.descricao || dadosNormalizados.description) {
+      htmlContent += `<div class="metadata-item"><span class="metadata-label">Descrição:</span> ${dadosNormalizados.descricao || dadosNormalizados.description}</div>`;
     }
-    if (data.tipoQuestoes) {
-      htmlContent += `<div class="metadata-item"><span class="metadata-label">Tipo de Questões:</span> ${data.tipoQuestoes}</div>`;
+    if (dadosNormalizados.tipoQuestoes) {
+      htmlContent += `<div class="metadata-item"><span class="metadata-label">Tipo de Questões:</span> ${dadosNormalizados.tipoQuestoes}</div>`;
     }
-    if (data.numeroQuestoes) {
-      htmlContent += `<div class="metadata-item"><span class="metadata-label">Número de Questões:</span> ${data.numeroQuestoes}</div>`;
+    if (dadosNormalizados.numeroQuestoes) {
+      htmlContent += `<div class="metadata-item"><span class="metadata-label">Número de Questões:</span> ${dadosNormalizados.numeroQuestoes}</div>`;
     }
-    if (data.dificuldade || data.nivelDificuldade) {
-      htmlContent += `<div class="metadata-item"><span class="metadata-label">Dificuldade:</span> ${data.dificuldade || data.nivelDificuldade}</div>`;
+    if (dadosNormalizados.dificuldade || dadosNormalizados.nivelDificuldade) {
+      htmlContent += `<div class="metadata-item"><span class="metadata-label">Dificuldade:</span> ${dadosNormalizados.dificuldade || dadosNormalizados.nivelDificuldade}</div>`;
     }
-    if (data.tempoLimite) {
-      htmlContent += `<div class="metadata-item"><span class="metadata-label">Tempo Limite:</span> ${data.tempoLimite}</div>`;
+    if (dadosNormalizados.tempoLimite) {
+      htmlContent += `<div class="metadata-item"><span class="metadata-label">Tempo Limite:</span> ${dadosNormalizados.tempoLimite}</div>`;
     }
     
     htmlContent += `</div>`;
 
     // LISTA DE EXERCÍCIOS
-    if (data.questoes || data.questions) {
+    if (dadosNormalizados.questoes || dadosNormalizados.questions) {
       htmlContent += `<h2>Questões</h2>`;
       
-      if (data.objetivos) {
+      if (dadosNormalizados.objetivos) {
         htmlContent += `<div class="section">`;
         htmlContent += `<h3>Objetivos de Aprendizagem</h3>`;
-        htmlContent += `<div class="content-block">${data.objetivos}</div>`;
+        htmlContent += `<div class="content-block">${dadosNormalizados.objetivos}</div>`;
         htmlContent += `</div>`;
       }
       
-      if (data.conteudoPrograma) {
+      if (dadosNormalizados.conteudoPrograma) {
         htmlContent += `<div class="section">`;
         htmlContent += `<h3>Conteúdo Programático</h3>`;
-        htmlContent += `<div class="content-block">${data.conteudoPrograma}</div>`;
+        htmlContent += `<div class="content-block">${dadosNormalizados.conteudoPrograma}</div>`;
         htmlContent += `</div>`;
       }
 
-      const questions = data.questoes || data.questions || [];
+      const questions = dadosNormalizados.questoes || dadosNormalizados.questions || [];
       questions.forEach((q: any, i: number) => {
         htmlContent += `<div class="question">`;
         htmlContent += `<div class="question-header">Questão ${i + 1}</div>`;
