@@ -165,3 +165,10 @@ Replit Secrets (auto-configured):
   - Aligned field names with `activityCustomFields.ts` definitions
   - Added robust fallback chain for "topicos" field (required by FlashCardsGenerator)
   - Flash Cards auto-build now completes successfully with proper field validation
+- **Fixed Flash Cards Visual Status & UI Flicker (October 11, 2025)**
+  - **Flash Cards Green Status Fix**: Added `constructedActivities` global localStorage save in `autoBuildService.ts` (both normal and fallback paths)
+  - **UI Flicker Elimination**: Replaced all `refreshActivities()` calls with local React state updates in `ConstructionGrid.tsx`
+  - Created local `activities` state that syncs with `hookActivities` without forcing full reload
+  - Updated `setOnActivityBuilt` callback to use `setActivities()` directly instead of `refreshActivities()`
+  - Removed all reload triggers from buildAll finally block and event listeners
+  - Result: Flash Cards now turn green immediately after construction with ZERO UI flicker or page reloads
