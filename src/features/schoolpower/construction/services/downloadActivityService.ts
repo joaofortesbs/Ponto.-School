@@ -21,40 +21,8 @@ export class DownloadActivityService {
     console.log(`📥 Iniciando download da atividade: ${activityType}`);
     console.log(`📊 Dados recebidos:`, activityData);
     
-    // Extrair dados reais da atividade do localStorage se necessário
-    let dadosReais = activityData;
-    
-    // Tentar múltiplas fontes de dados
-    if (!dadosReais || Object.keys(dadosReais).length === 0) {
-      const storageKey = `constructed_${activityType}_${activityId}`;
-      const storedData = localStorage.getItem(storageKey);
-      
-      if (storedData) {
-        try {
-          const parsed = JSON.parse(storedData);
-          dadosReais = parsed.data || parsed;
-          console.log(`✅ Dados recuperados do localStorage:`, dadosReais);
-        } catch (e) {
-          console.error('Erro ao parsear dados do localStorage:', e);
-        }
-      }
-    }
-    
-    // Se ainda não tiver dados, buscar do content gerado
-    if (!dadosReais?.questoes && !dadosReais?.aulas && !dadosReais?.cards) {
-      const contentKey = `schoolpower_${activityType}_content`;
-      const contentData = localStorage.getItem(contentKey);
-      
-      if (contentData) {
-        try {
-          const parsed = JSON.parse(contentData);
-          dadosReais = { ...dadosReais, ...parsed };
-          console.log(`✅ Dados de conteúdo mesclados:`, dadosReais);
-        } catch (e) {
-          console.error('Erro ao parsear dados de conteúdo:', e);
-        }
-      }
-    }
+    // MAPEAMENTO ESPECÍFICO POR TIPO DE ATIVIDADE NO MOMENTO DO DOWNLOAD
+    let dadosReais = await this.mapActivityData(activityId, activityType, activityData);
     
     const config = this.getDownloadConfig(activityType);
     
@@ -81,6 +49,150 @@ export class DownloadActivityService {
       console.error(`❌ Erro ao baixar atividade:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Mapeia dados específicos de cada tipo de atividade
+   */
+  private static async mapActivityData(activityId: string, activityType: string, initialData: any): Promise<any> {
+    console.log(`🔍 Mapeando dados para ${activityType}...`);
+    
+    // Chaves de busca específicas por tipo
+    const storageKeys = {
+      'lista-exercicios': [
+        `constructed_lista-exercicios_${activityId}`,
+        `activity_${activityId}`,
+        `activity_fields_${activityId}`,
+        'schoolpower_lista-exercicios_content'
+      ],
+      'plano-aula': [
+        `constructed_plano-aula_${activityId}`,
+        `activity_${activityId}`,
+        `activity_fields_${activityId}`,
+        'schoolpower_plano-aula_content'
+      ],
+      'sequencia-didatica': [
+        `constructed_sequencia-didatica_${activityId}`,
+        `activity_${activityId}`,
+        `activity_fields_${activityId}`,
+        'schoolpower_sequencia-didatica_content'
+      ],
+      'quiz-interativo': [
+        `constructed_quiz-interativo_${activityId}`,
+        `activity_${activityId}`,
+        `activity_fields_${activityId}`,
+        'schoolpower_quiz-interativo_content'
+      ],
+      'flash-cards': [
+        `constructed_flash-cards_${activityId}`,
+        `activity_${activityId}`,
+        `activity_fields_${activityId}`,
+        'schoolpower_flash-cards_content'
+      ]
+    };
+
+    let dadosCompletos = { ...initialData };
+    const keys = storageKeys[activityType] || [`constructed_${activityType}_${activityId}`, `activity_${activityId}`];
+
+    // Buscar em todas as chaves possíveis
+    for (const key of keys) {
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          const data = parsed.data || parsed.content || parsed;
+          dadosCompletos = { ...dadosCompletos, ...data };
+          console.log(`✅ Dados encontrados em: ${key}`);
+        } catch (e) {
+          console.warn(`⚠️ Erro ao parsear ${key}:`, e);
+        }
+      }
+    }
+
+    // Mapeamento específico por tipo
+    switch (activityType) {
+      case 'lista-exercicios':
+        return this.mapListaExercicios(dadosCompletos);
+      
+      case 'plano-aula':
+        return this.mapPlanoAula(dadosCompletos);
+      
+      case 'sequencia-didatica':
+        return this.mapSequenciaDidatica(dadosCompletos);
+      
+      case 'quiz-interativo':
+        return this.mapQuizInterativo(dadosCompletos);
+      
+      case 'flash-cards':
+        return this.mapFlashCards(dadosCompletos);
+      
+      default:
+        return dadosCompletos;
+    }
+  }
+
+  private static mapListaExercicios(data: any): any {
+    return {
+      titulo: data.titulo || data.title || 'Lista de Exercícios',
+      descricao: data.descricao || data.description || '',
+      disciplina: data.disciplina || data.subject || '',
+      tema: data.tema || data.theme || '',
+      anoEscolaridade: data.anoEscolaridade || data.schoolYear || '',
+      numeroQuestoes: data.numeroQuestoes || data.numberOfQuestions || '',
+      nivelDificuldade: data.nivelDificuldade || data.difficultyLevel || '',
+      modeloQuestoes: data.modeloQuestoes || data.questionModel || '',
+      questoes: data.questoes || data.questions || [],
+      objetivos: data.objetivos || data.objectives || '',
+      conteudoPrograma: data.conteudoPrograma || data.programContent || '',
+      observacoes: data.observacoes || data.observations || ''
+    };
+  }
+
+  private static mapPlanoAula(data: any): any {
+    return {
+      titulo: data.titulo || data.title || 'Plano de Aula',
+      descricao: data.descricao || data.description || '',
+      visao_geral: data.visao_geral || data.overview || {},
+      objetivos: data.objetivos || data.objectives || [],
+      metodologia: data.metodologia || data.methodology || {},
+      desenvolvimento: data.desenvolvimento || data.development || [],
+      atividades: data.atividades || data.activities || [],
+      avaliacao: data.avaliacao || data.evaluation || {}
+    };
+  }
+
+  private static mapSequenciaDidatica(data: any): any {
+    return {
+      titulo: data.titulo || data.title || 'Sequência Didática',
+      descricaoGeral: data.descricaoGeral || data.generalDescription || '',
+      competenciasBNCC: data.competenciasBNCC || data.bnccCompetencies || '',
+      objetivosGerais: data.objetivosGerais || data.generalObjectives || '',
+      aulas: data.aulas || data.lessons || [],
+      diagnosticos: data.diagnosticos || data.diagnostics || [],
+      avaliacoes: data.avaliacoes || data.evaluations || []
+    };
+  }
+
+  private static mapQuizInterativo(data: any): any {
+    return {
+      titulo: data.titulo || data.title || 'Quiz Interativo',
+      descricao: data.descricao || data.description || '',
+      disciplina: data.disciplina || data.subject || '',
+      tema: data.tema || data.theme || '',
+      nivelDificuldade: data.nivelDificuldade || data.difficultyLevel || '',
+      formato: data.formato || data.format || '',
+      tempoLimite: data.tempoLimite || data.timeLimit || '',
+      questoes: data.questoes || data.questions || []
+    };
+  }
+
+  private static mapFlashCards(data: any): any {
+    return {
+      titulo: data.titulo || data.title || 'Flash Cards',
+      descricao: data.descricao || data.description || '',
+      tema: data.tema || data.theme || '',
+      cards: data.cards || data.flashcards || []
+    };
   }
 
   /**

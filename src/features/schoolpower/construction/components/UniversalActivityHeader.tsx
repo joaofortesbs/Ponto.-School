@@ -510,14 +510,39 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                   try {
                     const { DownloadActivityService } = await import('../services/downloadActivityService');
                     
-                    // Buscar dados da atividade do localStorage
-                    const storageKey = `constructed_${activityType}_${activityId}`;
-                    const storedData = localStorage.getItem(storageKey);
-                    const activityData = storedData ? JSON.parse(storedData) : {};
+                    // Buscar TODAS as fontes possíveis de dados
+                    const storageKeys = [
+                      `constructed_${activityType}_${activityId}`,
+                      `activity_${activityId}`,
+                      `activity_fields_${activityId}`,
+                      `schoolpower_${activityType}_content`,
+                      'constructedActivities'
+                    ];
+                    
+                    let activityData = {};
+                    
+                    for (const key of storageKeys) {
+                      const stored = localStorage.getItem(key);
+                      if (stored) {
+                        try {
+                          const parsed = JSON.parse(stored);
+                          // Mesclar dados de todas as fontes
+                          if (key === 'constructedActivities') {
+                            activityData = { ...activityData, ...(parsed[activityId]?.generatedContent || {}) };
+                          } else {
+                            activityData = { ...activityData, ...(parsed.data || parsed.content || parsed) };
+                          }
+                        } catch (e) {
+                          console.warn(`Erro ao parsear ${key}:`, e);
+                        }
+                      }
+                    }
+                    
+                    console.log('📦 Dados completos para download:', activityData);
                     
                     await DownloadActivityService.downloadActivity(
                       activityId || 'default',
-                      activityData.data || activityData,
+                      activityData,
                       activityType || 'default'
                     );
                     
