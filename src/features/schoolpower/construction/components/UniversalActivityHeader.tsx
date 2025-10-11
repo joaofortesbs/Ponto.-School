@@ -187,36 +187,10 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
   const [showCopySuccess, setShowCopySuccess] = useState<boolean>(false);
   const [showShareButton, setShowShareButton] = useState<boolean>(isSharedActivity);
-  const [neonUserData, setNeonUserData] = useState<{nome: string, avatar_url: string} | null>(null);
 
-  // Buscar dados do usuário do banco Neon
-  useEffect(() => {
-    const fetchNeonUserData = async () => {
-      try {
-        const userEmail = localStorage.getItem('userEmail');
-        if (!userEmail) return;
-
-        const response = await fetch(`/api/perfis?email=${encodeURIComponent(userEmail)}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.data) {
-            setNeonUserData({
-              nome: data.data.nome_completo || data.data.nome_usuario || 'Usuário',
-              avatar_url: data.data.url_avatar || ''
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao buscar dados do Neon:', error);
-      }
-    };
-
-    fetchNeonUserData();
-  }, []);
-
-  // Usar dados do Neon com prioridade, depois props, depois hook
-  const finalUserName = neonUserData?.nome || userName || userInfo.name || 'Usuário';
-  const finalUserAvatar = neonUserData?.avatar_url || userAvatar || userInfo.avatar;
+  // Usar dados do hook se não forem fornecidos via props
+  const finalUserName = userName || userInfo.name || 'Usuário';
+  const finalUserAvatar = userAvatar || userInfo.avatar;
 
   // Função para obter o ícone correto - SINCRONIZADA com CardDeConstrucao.tsx
   const getActivityIcon = () => {
@@ -421,14 +395,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             {/* Linha do Professor */}
             <div className="flex items-center gap-2 mt-1">
               <Avatar className="w-7 h-7 rounded-full border-2 border-orange-400 dark:border-orange-500">
-                <AvatarImage 
-                  src={finalUserAvatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=User"} 
-                  alt={`Prof. ${finalUserName}`}
-                  onError={(e) => {
-                    // Fallback se a imagem falhar ao carregar
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+                <AvatarImage src={finalUserAvatar} alt={`Prof. ${finalUserName}`} />
                 <AvatarFallback className="text-base bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-full">
                   {getUserInitials(finalUserName)}
                 </AvatarFallback>
@@ -440,10 +407,10 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                 }
                 style={isSharedActivity ? { color: '#fb923c' } : {}}
               >
-                {userInfo.isLoading || !neonUserData ? (
+                {userInfo.isLoading ? (
                   <div className="w-24 h-5 bg-orange-200 dark:bg-orange-800 animate-pulse rounded"></div>
                 ) : (
-                  `Prof. ${finalUserName.split(' ')[0]}`
+                  finalUserName.startsWith('Prof.') ? finalUserName : `Prof. ${finalUserName}`
                 )}
               </span>
             </div>
