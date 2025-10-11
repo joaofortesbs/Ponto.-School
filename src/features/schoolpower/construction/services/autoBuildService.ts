@@ -527,6 +527,17 @@ export class AutoBuildService {
           localStorage.setItem(storageKey, JSON.stringify(constructedData));
           localStorage.setItem(`activity_${activity.id}`, JSON.stringify(result));
 
+          // ✅ SALVAR NO constructedActivities GLOBAL (para ConstructionGrid detectar)
+          const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+          constructedActivities[activity.id] = {
+            isBuilt: true,
+            builtAt: new Date().toISOString(),
+            formData: flashCardsData,
+            generatedContent: result
+          };
+          localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+          console.log('✅ [FLASH CARDS] Salvo em constructedActivities global');
+
           activity.isBuilt = true;
           activity.builtAt = new Date().toISOString();
           activity.progress = 100;
@@ -584,6 +595,20 @@ export class AutoBuildService {
           isFallback: true,
           timestamp: new Date().toISOString()
         }));
+
+        localStorage.setItem(`activity_${activity.id}`, JSON.stringify(fallbackResult));
+
+        // ✅ SALVAR NO constructedActivities GLOBAL (para ConstructionGrid detectar)
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+        constructedActivities[activity.id] = {
+          isBuilt: true,
+          builtAt: new Date().toISOString(),
+          formData: { theme: activity.title },
+          generatedContent: fallbackResult,
+          isFallback: true
+        };
+        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+        console.log('✅ [FLASH CARDS FALLBACK] Salvo em constructedActivities global');
 
         activity.isBuilt = true;
         activity.builtAt = new Date().toISOString();

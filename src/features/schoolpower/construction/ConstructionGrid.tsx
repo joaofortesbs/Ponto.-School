@@ -28,12 +28,18 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   console.log('🎯 Atividades aprovadas:', approvedActivities);
   console.log('🎯 ==========================================');
 
-  const { activities, loading, refreshActivities } = useConstructionActivities(approvedActivities);
+  const { activities: hookActivities, loading, refreshActivities } = useConstructionActivities(approvedActivities);
+  const [activities, setActivities] = useState<ConstructionActivity[]>(hookActivities); // Estado local para evitar piscada
   const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
   const { syncActivitiesToNeon } = useAutoSync(); // Hook de sincronização automática
   const [buildProgress, setBuildProgress] = useState<AutoBuildProgress | null>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [isBuilding, setIsBuilding] = useState(false);
+
+  // Sincronizar estado local com o hook quando hookActivities mudar
+  useEffect(() => {
+    setActivities(hookActivities);
+  }, [hookActivities]);
 
   // Novos estados para o modal de visualização
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -351,15 +357,22 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
       autoBuildService.setOnActivityBuilt((activityId) => {
         console.log(`🎯 Atividade construída automaticamente: ${activityId}`);
 
-        // Forçar atualização da interface
-        if (refreshActivities) {
-          refreshActivities();
-        }
-
-        // Disparar evento customizado para atualização
-        window.dispatchEvent(new CustomEvent('activity-built', {
-          detail: { activityId }
+        // ✅ Atualizar estado local DIRETAMENTE (sem refresh que causa piscada)
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+        setActivities(prevActivities => prevActivities.map(activity => {
+          if (activity.id === activityId && constructedActivities[activityId]) {
+            return {
+              ...activity,
+              isBuilt: true,
+              builtAt: constructedActivities[activityId].builtAt,
+              progress: 100,
+              status: 'completed' as const
+            };
+          }
+          return activity;
         }));
+
+        console.log('✅ Atividade atualizada localmente - SEM piscada!');
       });
 
       // Executar construção automática com a MESMA LÓGICA do modal
@@ -387,10 +400,8 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         setShowProgressModal(false);
         setBuildProgress(null);
 
-        // Forçar refresh completo das atividades
-        if (refreshActivities) {
-          refreshActivities();
-        }
+        // ✅ NÃO forçar refresh - o estado local já foi atualizado
+        console.log('✅ Construção completa - estado já atualizado sem reload');
       }, 3000);
     }
   };
@@ -400,10 +411,8 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     const handleActivityBuilt = (event: CustomEvent) => {
       console.log('🎯 Evento de atividade construída recebido:', event.detail);
 
-      // Forçar atualização das atividades
-      if (refreshActivities) {
-        refreshActivities();
-      }
+      // ✅ NÃO forçar refresh - o callback setOnActivityBuilt já atualizou o estado
+      console.log('✅ Evento recebido - estado já foi atualizado no callback');
     };
 
     window.addEventListener('activity-built', handleActivityBuilt as EventListener);
@@ -411,31 +420,42 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     return () => {
       window.removeEventListener('activity-built', handleActivityBuilt as EventListener);
     };
-  }, [refreshActivities]);
+  }, []);
 
   useEffect(() => {
     console.log('🎯 ConstructionGrid - Verificando status das atividades');
 
     // Verificar e atualizar status de atividades construídas do localStorage
     const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-    let hasChanges = false;
-
-    activities.forEach(activity => {
+    
+    // Criar cópia do array para atualizar imutavelmente
+    const updatedActivities = activities.map(activity => {
       if (constructedActivities[activity.id] && !activity.isBuilt) {
         console.log(`📝 Atualizando status da atividade ${activity.id} para construída`);
-        activity.isBuilt = true;
-        activity.builtAt = constructedActivities[activity.id].builtAt;
-        activity.progress = 100;
-        activity.status = 'completed';
-        hasChanges = true;
+        return {
+          ...activity,
+          isBuilt: true,
+          builtAt: constructedActivities[activity.id].builtAt,
+          progress: 100,
+          status: 'completed' as const
+        };
       }
+      return activity;
     });
 
-    if (hasChanges && refreshActivities) {
-      console.log('🔄 Forçando refresh das atividades devido a mudanças');
-      refreshActivities();
+    // ✅ Atualizar estado React diretamente (SEM reload completo)
+    // Compara se realmente houve mudanças antes de setar
+    const hasChanges = updatedActivities.some((act, idx) => 
+      act.isBuilt !== activities[idx].isBuilt || 
+      act.progress !== activities[idx].progress ||
+      act.status !== activities[idx].status
+    );
+
+    if (hasChanges) {
+      console.log('✅ Status atualizado localmente - SEM piscada!');
+      setActivities(updatedActivities);
     }
-  }, [activities, refreshActivities]);
+  }, [activities]);
 
   if (loading) {
     return (
