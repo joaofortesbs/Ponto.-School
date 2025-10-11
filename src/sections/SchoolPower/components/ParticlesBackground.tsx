@@ -707,15 +707,15 @@ const ParticlesBackground: React.FC<ParticlesBackgroundProps> = ({
             minTwinkleSpeed={0.5}
             maxTwinkleSpeed={1}
             className="z-0"
-            starColor="#374151"
+            starColor="#000000"
           />
           <ShootingStars
             minSpeed={10}
             maxSpeed={30}
             minDelay={1200}
             maxDelay={4200}
-            starColor="#4b5563"
-            trailColor="#6b7280"
+            starColor="#000000"
+            trailColor="#1a1a1a"
             starWidth={10}
             starHeight={1}
             className="z-0"

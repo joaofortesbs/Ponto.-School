@@ -10,7 +10,7 @@ interface ParticleProps {
 
 const ParticlesBackground: React.FC<ParticleProps> = ({ 
   paused = false, 
-  color = '#374151', 
+  color = '#000000', 
   opacity = 0.3,
   count = 30
 }) => {
