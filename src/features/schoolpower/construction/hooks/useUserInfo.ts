@@ -9,12 +9,32 @@ interface UserInfo {
 }
 
 export const useUserInfo = (): UserInfo => {
-  const [userInfo, setUserInfo] = useState<UserInfo>({
-    name: 'Usuário',
-    avatar: undefined,
-    displayName: undefined,
-    isLoading: true
-  });
+  // 🚀 CARREGAR CACHE IMEDIATAMENTE (SEM LOADING)
+  const getCachedUserInfo = (): UserInfo => {
+    try {
+      const cachedProfile = localStorage.getItem('userProfile');
+      if (cachedProfile) {
+        const profile = JSON.parse(cachedProfile);
+        return {
+          name: profile.full_name || profile.username || 'Usuário',
+          avatar: profile.avatar_url,
+          displayName: profile.display_name || profile.full_name,
+          isLoading: false
+        };
+      }
+    } catch (e) {
+      console.warn('⚠️ [useUserInfo] Erro ao ler cache:', e);
+    }
+    
+    return {
+      name: 'Usuário',
+      avatar: undefined,
+      displayName: undefined,
+      isLoading: false
+    };
+  };
+
+  const [userInfo, setUserInfo] = useState<UserInfo>(getCachedUserInfo());
 
   useEffect(() => {
     const loadUserInfo = async () => {
@@ -24,16 +44,10 @@ export const useUserInfo = (): UserInfo => {
         
         if (!userId) {
           console.warn('⚠️ [useUserInfo] Usuário não autenticado');
-          setUserInfo({
-            name: 'Usuário',
-            avatar: undefined,
-            displayName: undefined,
-            isLoading: false
-          });
           return;
         }
 
-        console.log('🔍 [useUserInfo] Buscando dados do usuário no Neon:', userId);
+        console.log('🔍 [useUserInfo] Atualizando dados do usuário no Neon:', userId);
 
         // Buscar dados do banco Neon
         const response = await fetch(`/api/perfis?id=${encodeURIComponent(userId)}`, {
@@ -58,7 +72,7 @@ export const useUserInfo = (): UserInfo => {
             isLoading: false
           };
           
-          console.log('✅ [useUserInfo] Dados do usuário carregados do Neon:', userInfoData);
+          console.log('✅ [useUserInfo] Dados do usuário atualizados do Neon:', userInfoData);
           setUserInfo(userInfoData);
           
           // Atualizar cache no localStorage
@@ -70,21 +84,9 @@ export const useUserInfo = (): UserInfo => {
           }));
         } else {
           console.warn('⚠️ [useUserInfo] Dados do usuário não encontrados no Neon');
-          setUserInfo({
-            name: 'Usuário',
-            avatar: undefined,
-            displayName: undefined,
-            isLoading: false
-          });
         }
       } catch (error) {
         console.error('❌ [useUserInfo] Erro ao carregar informações do usuário:', error);
-        setUserInfo({
-          name: 'Usuário',
-          avatar: undefined,
-          displayName: undefined,
-          isLoading: false
-        });
       }
     };
 
