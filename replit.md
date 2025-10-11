@@ -89,11 +89,12 @@ Preferred communication style: Simple, everyday language.
 
 ### Development Workflow
 - **Workflow Name**: App
-- **Command**: `node api/server.js & npm run dev`
+- **Command**: `bash start.sh` (executa backend + frontend automaticamente)
 - **Port Configuration**: 
   - Frontend: Port 5000 (0.0.0.0) - serves the React application
   - Backend: Port 3001 (localhost) - serves the API endpoints
 - **Output Type**: Webview for live preview
+- **Note**: O start.sh detecta o ambiente e inicia ambos os servidores em desenvolvimento
 
 ### Server Configuration
 - **Frontend Server**: Vite dev server configured to:
@@ -151,3 +152,16 @@ Replit Secrets (auto-configured):
   - All School Power activities automatically saved to Neon database
   - Activity history loads from database
   - All data operations affect the real Neon database
+- **Fixed Neon Database Connection (October 11, 2025)**
+  - Identified and resolved backend not starting in development mode
+  - Workflow was executing only `npm run dev` (frontend) instead of `bash start.sh`
+  - Removed conflicting workflow configuration that bypassed start.sh
+  - Recreated App workflow to properly execute `bash start.sh`
+  - Backend now starts correctly on port 3001 with Neon pooled connection
+  - All `/api/*` requests now work correctly (no more ECONNREFUSED errors)
+  - Both frontend (Vite) and backend (Express) run simultaneously in development
+- **Fixed Flash Cards Auto-Build (October 11, 2025)**
+  - Corrected custom field mapping priorities in `autoBuildService.ts`
+  - Aligned field names with `activityCustomFields.ts` definitions
+  - Added robust fallback chain for "topicos" field (required by FlashCardsGenerator)
+  - Flash Cards auto-build now completes successfully with proper field validation
