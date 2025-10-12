@@ -56,7 +56,7 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
           <div
             className={cn(
               "bg-white dark:bg-[#29335C]/20 border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden",
-              isCollapsed ? "w-14 p-2 rounded-xl" : "w-full p-4 rounded-[2rem]",
+              isCollapsed ? "w-14 p-2 rounded-xl" : "w-full p-4 rounded-2xl",
             )}
           >
             {/* Ícone de graduação no canto superior esquerdo quando expandido */}
@@ -212,7 +212,7 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
           <div
             className={cn(
               "bg-white dark:bg-[#29335C]/20 border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden absolute inset-0 rotate-y-180",
-              isCollapsed ? "w-14 p-2 rounded-xl" : "w-full p-4 rounded-[2rem]",
+              isCollapsed ? "w-14 p-2 rounded-xl" : "w-full p-4 rounded-2xl",
             )}
           >
             {/* Ícone de Briefcase no canto superior esquerdo quando expandido */}
