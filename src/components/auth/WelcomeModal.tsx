@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Sparkles, Wand2, GraduationCap, Zap, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,7 +32,7 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
         if (neonUser) {
           const userData = JSON.parse(neonUser);
           const nomeCompleto = userData.nome_completo || userData.nome_usuario || userData.email;
-          
+
           if (nomeCompleto) {
             setFullUserName(nomeCompleto);
           }
@@ -153,6 +152,14 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
             {/* Main Card with premium glass effect */}
             <div className="relative bg-gradient-to-br from-white/60 via-orange-50/50 to-amber-50/60 dark:from-gray-900/60 dark:via-orange-950/50 dark:to-gray-900/60 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-orange-200/50 dark:border-orange-500/30">
 
+              {/* Close Button Removido - modal só pode ser fechado pelos botões de ação */}
+              {/* <button
+                onClick={onClose}
+                className="absolute top-6 right-6 z-20 p-2.5 rounded-xl bg-white/10 dark:bg-gray-800/30 backdrop-blur-md hover:bg-white/20 dark:hover:bg-gray-700/40 transition-all duration-200 group border border-white/20 dark:border-gray-600/30"
+              >
+                <X className="h-5 w-5 text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
+              </button> */}
+
               {/* Content */}
               <div className="p-8 sm:p-10">
                 {/* Icon with premium animation */}
@@ -177,7 +184,7 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
                   >
                     {currentStepData.title}
                   </motion.h2>
-                  
+
                   <motion.p 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -186,7 +193,7 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
                   >
                     {currentStepData.subtitle}
                   </motion.p>
-                  
+
                   <motion.p 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -278,7 +285,7 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
                       </span>
                     )}
                   </Button>
-                  
+
                   {currentStep === steps.length - 1 && (
                     <Button
                       onClick={handleSkip}

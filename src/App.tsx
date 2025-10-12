@@ -71,7 +71,7 @@ function ProtectedRoute({ children }) {
     const checkAuth = async () => {
       try {
         const isAuth = await checkAuthentication();
-        
+
         localStorage.setItem('auth_checked', 'true');
         localStorage.setItem('auth_status', isAuth ? 'authenticated' : 'unauthenticated');
 
@@ -200,7 +200,7 @@ function App() {
         if (isAuthRoute) {
           setShowWelcomeModal(false);
           if (location.pathname === "/login") {
-            sessionStorage.removeItem('welcomeModalShown');
+            localStorage.removeItem('welcomeModalShown');
           }
           restoreScroll();
           return;
