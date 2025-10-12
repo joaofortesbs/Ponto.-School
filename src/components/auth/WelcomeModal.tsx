@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { X, Sparkles, Wand2, GraduationCap, Zap, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface WelcomeModalProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
   userType = 'professor' 
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isClosing, setIsClosing] = useState(false);
+  const navigate = useNavigate();
 
   const isProfessor = userType === 'professor' || userType === 'coordenador';
 
@@ -56,8 +59,21 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      onClose();
+      // Navegar para School Power
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+        navigate('/school-power');
+      }, 300);
     }
+  };
+
+  const handleSkip = () => {
+    // Fechar com animação suave
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 300);
   };
 
   if (!isOpen) return null;
@@ -82,30 +98,36 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <motion.div
               animate={{
-                opacity: [0.05, 0.08, 0.05],
+                opacity: [0.02, 0.04, 0.02],
               }}
               transition={{
                 duration: 6,
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
-              className="absolute -top-32 -right-32 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl"
+              className="absolute -top-32 -right-32 w-48 h-48 bg-orange-400/8 rounded-full blur-3xl"
             />
           </div>
 
           {/* Modal Container */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
+            animate={{ 
+              scale: isClosing ? 0.95 : 1, 
+              opacity: isClosing ? 0 : 1, 
+              y: isClosing ? 10 : 0 
+            }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            transition={{ 
+              type: 'spring', 
+              damping: 25, 
+              stiffness: 300,
+              duration: isClosing ? 0.3 : 0.5
+            }}
             className="relative z-10 w-full max-w-lg"
           >
             {/* Main Card with premium glass effect */}
             <div className="relative bg-gradient-to-br from-white/95 via-orange-50/90 to-amber-50/95 dark:from-gray-900/95 dark:via-orange-950/90 dark:to-gray-900/95 rounded-3xl shadow-2xl overflow-hidden border border-orange-200/50 dark:border-orange-500/30">
-              
-              {/* Top border */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500"></div>
 
               {/* Close Button */}
               <button
@@ -243,7 +265,7 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
                   
                   {currentStep === steps.length - 1 && (
                     <Button
-                      onClick={onClose}
+                      onClick={handleSkip}
                       variant="ghost"
                       className="w-full text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                     >
