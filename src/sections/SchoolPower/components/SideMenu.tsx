@@ -171,7 +171,7 @@ const FloatingDockDesktop = ({ items, className }: any) => {
   );
 };
 
-function IconContainer({ mouseY, title, icon, href }: any) {
+function IconContainer({ mouseY, title, icon, href, onClick }: any) {
   let ref = useRef<HTMLDivElement>(null);
 
   let distance = useTransform(mouseY, (val) => {
@@ -214,8 +214,15 @@ function IconContainer({ mouseY, title, icon, href }: any) {
 
   const [hovered, setHovered] = useState(false);
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
-    <a href={href}>
+    <a href={href} onClick={handleClick}>
       <motion.div
         ref={ref}
         style={{
@@ -262,35 +269,37 @@ function IconContainer({ mouseY, title, icon, href }: any) {
   );
 }
 
-// Dados para o dock
-const dockItems = [
-  {
-    title: "Histórico",
-    icon: <HistoryIcon />,
-    href: "#",
-  },
-  {
-    title: "Sugestões",
-    icon: <SuggestionsIcon />,
-    href: "#",
-  },
-  {
-    title: "Notificações",
-    icon: <NotificationsIcon />,
-    href: "#",
-  },
-  {
-    title: "Configurações",
-    icon: <SettingsIcon />,
-    href: "#",
-  },
-];
-
 interface SideMenuProps {
   className?: string;
+  onHistoricoClick?: () => void;
 }
 
-const SideMenu: React.FC<SideMenuProps> = ({ className }) => {
+const SideMenu: React.FC<SideMenuProps> = ({ className, onHistoricoClick }) => {
+  // Dados para o dock
+  const dockItems = [
+    {
+      title: "Histórico",
+      icon: <HistoryIcon />,
+      href: "#",
+      onClick: onHistoricoClick,
+    },
+    {
+      title: "Sugestões",
+      icon: <SuggestionsIcon />,
+      href: "#",
+    },
+    {
+      title: "Notificações",
+      icon: <NotificationsIcon />,
+      href: "#",
+    },
+    {
+      title: "Configurações",
+      icon: <SettingsIcon />,
+      href: "#",
+    },
+  ];
+
   return (
     <div className={cn("z-40", className)}>
       <FloatingDock
