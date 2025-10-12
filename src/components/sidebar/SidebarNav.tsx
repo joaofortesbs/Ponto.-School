@@ -617,9 +617,12 @@ export function SidebarNav({
           "navigation-menu-container",
           isCollapsed && "sidebar-collapsed",
           isCardFlipped ? "professor-mode" : "aluno-mode",
-          isModeChanging && "mode-changing",
-          isCollapsed ? "px-2" : "px-4"
-        )}>
+          isModeChanging && "mode-changing"
+        )}
+        style={{
+          paddingLeft: isCollapsed ? '0.5rem' : '1rem',
+          paddingRight: isCollapsed ? '0.5rem' : '1rem'
+        }}>
           <nav className={cn(
             "menu-navigation",
             isMenuFlipping && "menu-flipping"
