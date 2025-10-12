@@ -186,3 +186,14 @@ Replit Secrets (auto-configured):
   - Formatação automática e conversão de HTML para texto quando necessário
   - Sistema de validação de dados antes da geração do arquivo
   - Documentação completa em README.md dentro do sistema
+- **Sistema de School Points com Persistência (October 12, 2025)**
+  - **Banco de Dados**: Criada coluna `school_points` (INTEGER DEFAULT 100) na tabela "atividades" do Neon
+  - **Edição de SPs**: Card editável de School Points no cabeçalho do `ActivityViewModal`
+  - **Sincronização**: SPs editados são salvos no localStorage e persistidos no banco Neon
+  - **Carregamento**: Modal carrega SPs do localStorage ou banco de dados ao abrir atividade
+  - **Backend**: `api/atividades.js` aceita e retorna `school_points` em POST/GET
+  - **Frontend**:
+    - `UniversalActivityHeader`: Permite edição in-line de SPs com validação (0-99999)
+    - `ActivityViewModal`: Carrega SPs com prioridade: localStorage → banco → padrão (100)
+    - `ConstructionGrid`: Inclui SPs ao salvar atividades via "Salvar todas as atividades"
+  - **Fluxo Completo**: Editar SPs → salvar no localStorage → persistir no banco → carregar do banco
