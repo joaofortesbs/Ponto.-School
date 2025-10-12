@@ -61,9 +61,39 @@ class AtividadesNeonService {
       }
 
       const result = await response.json();
-      console.log('✅ Atividades carregadas do Neon:', result.data?.length || 0);
       
-      return { success: true, data: result.data };
+      // Processar atividades para garantir estrutura correta
+      const processedActivities = result.data?.map((activity: any) => {
+        // Garantir que id_json seja um objeto
+        if (typeof activity.id_json === 'string') {
+          try {
+            activity.id_json = JSON.parse(activity.id_json);
+          } catch (e) {
+            console.warn('⚠️ Erro ao parsear id_json da atividade:', activity.id);
+          }
+        }
+        
+        // Garantir que campos essenciais existam
+        activity.id_json = activity.id_json || {};
+        
+        // Sincronizar título do campo 'titulo' da tabela para id_json
+        if (activity.titulo && !activity.id_json.titulo && !activity.id_json.title) {
+          activity.id_json.titulo = activity.titulo;
+        }
+        
+        console.log('📦 [NEON] Atividade processada:', {
+          id: activity.id,
+          tipo: activity.tipo,
+          titulo_tabela: activity.titulo,
+          titulo_json: activity.id_json?.titulo || activity.id_json?.title
+        });
+        
+        return activity;
+      }) || [];
+      
+      console.log('✅ Atividades carregadas e processadas do Neon:', processedActivities.length);
+      
+      return { success: true, data: processedActivities };
     } catch (error) {
       console.error('❌ Erro ao buscar atividades do Neon:', error);
       return { 

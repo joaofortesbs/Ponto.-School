@@ -258,84 +258,65 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       activityData: activityData
     });
     
-    // IMPORTANTE: Usar o campo 'tipo' do banco Neon para obter o nome da atividade
+    // ESTRATÉGIA 1: Buscar título DIRETO do banco de dados (id_json)
+    const dbTitle = activityData?.titulo || 
+                   activityData?.title || 
+                   activityData?.nome || 
+                   activityData?.name ||
+                   activityData?.tituloAtividade ||
+                   activityData?.personalizedTitle;
+    
+    // ESTRATÉGIA 2: Obter nome do TIPO da atividade como fallback
     const activityTypeName = getActivityNameById(activity.tipo);
     
-    console.log('🔍 [HISTÓRICO] Nome do tipo de atividade:', {
-      tipo: activity.tipo,
-      activityTypeName: activityTypeName
+    console.log('🔍 [MAPEAMENTO] Dados extraídos:', {
+      dbTitle,
+      activityTypeName,
+      tipo: activity.tipo
     });
     
-    // SINCRONIZAÇÃO INSTANTÂNEA: Verificar localStorage para dados mais recentes
+    // ESTRATÉGIA 3: Verificar localStorage para dados mais recentes
     const localStorageKey = `activity_${activity.id}`;
     const localData = localStorage.getItem(localStorageKey);
-    let syncedData = activityData;
+    let localTitle = null;
     
     if (localData) {
       try {
         const parsedLocalData = JSON.parse(localData);
-        console.log('🔄 [SINCRONIZAÇÃO] Dados do localStorage encontrados:', parsedLocalData);
-        // Mesclar dados do localStorage com dados do banco (localStorage tem prioridade)
-        syncedData = { ...activityData, ...parsedLocalData };
+        localTitle = parsedLocalData?.title || 
+                    parsedLocalData?.titulo || 
+                    parsedLocalData?.nome ||
+                    parsedLocalData?.personalizedTitle;
+        console.log('🔄 [SINCRONIZAÇÃO] Título do localStorage:', localTitle);
       } catch (e) {
         console.warn('⚠️ [SINCRONIZAÇÃO] Erro ao parsear dados do localStorage:', e);
       }
     }
     
-    // Buscar título personalizado em vários campos possíveis (dados sincronizados)
-    const possibleTitleFields = [
-      syncedData?.title,
-      syncedData?.titulo,
-      syncedData?.nome,
-      syncedData?.name,
-      syncedData?.tituloAtividade,
-      syncedData?.['Título'],
-      syncedData?.['Nome da Atividade'],
-      syncedData?.personalizedTitle,
-      syncedData?.tema,
-      syncedData?.subject,
-      syncedData?.assunto,
-      syncedData?.topico
+    // ESTRATÉGIA 4: Priorizar títulos válidos
+    const possibleTitles = [
+      localTitle,           // 1ª prioridade: localStorage (mais recente)
+      dbTitle,             // 2ª prioridade: banco de dados
+      activityTypeName     // 3ª prioridade: nome do tipo (fallback)
     ];
     
-    // Filtrar RIGOROSAMENTE apenas valores válidos (não códigos únicos)
-    const validTitles = possibleTitleFields.filter(title => {
+    // Filtrar apenas títulos válidos (não códigos)
+    const validTitles = possibleTitles.filter(title => {
       if (!title || typeof title !== 'string' || title.trim() === '') return false;
       if (title === activity.id || title.includes(activity.id)) return false;
-      if (title.length > 100) return false; // Muito longo
-      if (title.length < 3) return false; // Muito curto
-      if (isUniqueCode(title)) return false; // É um código único
-      
+      if (title.length > 100 || title.length < 3) return false;
+      if (isUniqueCode(title)) return false;
       return true;
     });
     
-    console.log('🔍 [HISTÓRICO] Títulos válidos encontrados:', validTitles);
+    // SELEÇÃO FINAL: Usar primeiro título válido OU nome do tipo
+    const finalTitle = validTitles[0] || activityTypeName;
     
-    // LÓGICA DE PRIORIZAÇÃO INTELIGENTE COM PROTEÇÃO ABSOLUTA:
-    // SEMPRE usar o nome do tipo da atividade como padrão
-    let finalTitle: string = activityTypeName;
-    
-    // Só substituir se encontrar um título válido e 100% seguro
-    if (validTitles.length > 0) {
-      const safestTitle = validTitles[0];
-      
-      // Tripla verificação de segurança
-      if (!isUniqueCode(safestTitle) && safestTitle !== activity.id) {
-        finalTitle = safestTitle;
-        console.log('✅ [HISTÓRICO] Usando título personalizado validado:', finalTitle);
-      } else {
-        console.warn('⚠️ [HISTÓRICO] Título filtrado parece código, mantendo tipo da atividade');
-      }
-    } else {
-      console.log('✅ [HISTÓRICO] Usando nome do tipo da atividade (sem título personalizado):', finalTitle);
-    }
-    
-    // Log final para debug
-    console.log('📝 [HISTÓRICO] Título final selecionado:', {
+    console.log('✅ [DECISÃO FINAL] Título selecionado:', {
       finalTitle,
-      activityType: activity.tipo,
-      activityTypeName,
-      hadValidTitles: validTitles.length > 0
+      validTitlesCount: validTitles.length,
+      source: validTitles[0] === localTitle ? 'localStorage' : 
+              validTitles[0] === dbTitle ? 'banco' : 'tipo'
     });
     
     return {
@@ -350,7 +331,6 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       builtAt: activity.created_at || new Date().toISOString(),
       criadaEm: activity.created_at || new Date().toISOString(),
       atualizadaEm: activity.updated_at,
-      // Campos adicionais necessários para ConstructionActivity
       categoryId: activity.tipo,
       categoryName: activityTypeName,
       icon: activity.tipo,
@@ -358,9 +338,7 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       difficulty: 'Médio',
       estimatedTime: '30 min',
       originalData: activityData,
-      // Adicionar dados específicos do banco
       userId: activity.id_user,
-      // Identificar origem
       origem: 'banco_neon'
     };
   };

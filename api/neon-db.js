@@ -714,7 +714,16 @@ class NeonDBManager {
   // Buscar atividades do usuário
   async getUserActivities(user_id) {
     const query = `
-      SELECT id, user_id, codigo_unico, tipo, titulo, descricao, conteudo, criado_em, atualizado_em
+      SELECT 
+        id, 
+        user_id, 
+        codigo_unico, 
+        tipo, 
+        titulo, 
+        descricao, 
+        conteudo::text as conteudo,
+        criado_em, 
+        atualizado_em
       FROM activities 
       WHERE user_id = $1 
       ORDER BY atualizado_em DESC
@@ -725,8 +734,24 @@ class NeonDBManager {
       const result = await this.executeQuery(query, [user_id]);
       
       if (result.success) {
-        console.log('✅ Encontradas', result.data.length, 'atividades do usuário');
-        return result;
+        // Parse JSON do conteúdo para garantir formato correto
+        const activitiesWithParsedContent = result.data.map(activity => {
+          try {
+            // Se conteudo é string JSON, fazer parse
+            if (typeof activity.conteudo === 'string') {
+              activity.conteudo = JSON.parse(activity.conteudo);
+            }
+          } catch (e) {
+            console.warn('⚠️ Erro ao parsear conteúdo da atividade:', activity.id);
+          }
+          return activity;
+        });
+        
+        console.log('✅ Encontradas', activitiesWithParsedContent.length, 'atividades do usuário');
+        return {
+          success: true,
+          data: activitiesWithParsedContent
+        };
       } else {
         console.error('❌ Erro ao buscar atividades do usuário:', result.error);
         return result;
