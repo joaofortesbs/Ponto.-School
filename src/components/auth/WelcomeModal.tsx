@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Sparkles, Wand2, GraduationCap, Zap, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -20,14 +20,38 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
+  const [fullUserName, setFullUserName] = useState('Educador');
   const navigate = useNavigate();
 
   const isProfessor = userType === 'professor' || userType === 'coordenador';
 
+  // Buscar nome completo do usuário do Neon DB
+  useEffect(() => {
+    const fetchUserName = () => {
+      try {
+        const neonUser = localStorage.getItem("neon_user");
+        if (neonUser) {
+          const userData = JSON.parse(neonUser);
+          const nomeCompleto = userData.nome_completo || userData.nome_usuario || userData.email;
+          
+          if (nomeCompleto) {
+            setFullUserName(nomeCompleto);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao buscar nome do usuário:", error);
+      }
+    };
+
+    if (isOpen) {
+      fetchUserName();
+    }
+  }, [isOpen]);
+
   const steps = [
     {
       icon: GraduationCap,
-      title: isProfessor ? `Bem-vindo, Professor ${userName}!` : `Bem-vindo à Ponto. School!`,
+      title: isProfessor ? `Bem-vindo, Professor ${fullUserName}!` : `Bem-vindo à Ponto. School!`,
       subtitle: 'Primeiro Agente IA Educacional',
       description: isProfessor 
         ? 'Sua jornada de transformação educacional começa aqui' 
@@ -127,7 +151,7 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
             className="relative z-10 w-full max-w-lg"
           >
             {/* Main Card with premium glass effect */}
-            <div className="relative bg-gradient-to-br from-white/95 via-orange-50/90 to-amber-50/95 dark:from-gray-900/95 dark:via-orange-950/90 dark:to-gray-900/95 rounded-3xl shadow-2xl overflow-hidden border border-orange-200/50 dark:border-orange-500/30">
+            <div className="relative bg-gradient-to-br from-white/60 via-orange-50/50 to-amber-50/60 dark:from-gray-900/60 dark:via-orange-950/50 dark:to-gray-900/60 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-orange-200/50 dark:border-orange-500/30">
 
               {/* Close Button */}
               <button
