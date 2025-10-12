@@ -21,7 +21,25 @@ interface AtividadeHistorico extends ConstructionActivity {
   atualizadaEm?: string;
 }
 
-// Função para obter nome da atividade com mapeamento completo usando o TIPO do banco Neon
+// Função para validar se uma string é um código único/ID
+const isUniqueCode = (str: string): boolean => {
+  if (!str || typeof str !== 'string') return true;
+  
+  // Padrões de códigos únicos que devem ser rejeitados:
+  // 1. Códigos alfanuméricos de 8+ caracteres (ex: 4ThnFUW6, 67a9TF4r)
+  // 2. Códigos com números e letras misturados sem espaços (ex: wv6xqXrH, b9ZZ7qvD)
+  // 3. Códigos em maiúscula/minúscula misturados sem padrão (ex: myQxCcjl, XYd4CH0)
+  const uniqueCodePatterns = [
+    /^[a-zA-Z0-9]{8,}$/, // 8+ caracteres alfanuméricos
+    /^[a-z]+[0-9]+[a-zA-Z0-9]*$/i, // Letras seguidas de números
+    /^[0-9]+[a-z]+[a-zA-Z0-9]*$/i, // Números seguidos de letras
+    /^[a-zA-Z]*[0-9]{3,}[a-zA-Z]*$/, // Contém 3+ números consecutivos
+  ];
+  
+  return uniqueCodePatterns.some(pattern => pattern.test(str));
+};
+
+// Função para obter nome da atividade com mapeamento COMPLETO e validação rigorosa
 const getActivityNameById = (activityType: string): string => {
   console.log('🔍 [MAPEAMENTO] Buscando nome para tipo:', activityType);
   
@@ -33,8 +51,9 @@ const getActivityNameById = (activityType: string): string => {
     return activity.name;
   }
   
-  // Mapeamento manual completo para todos os tipos de atividade
+  // Mapeamento manual ULTRA-COMPLETO para TODOS os tipos de atividade possíveis
   const manualMapping: Record<string, string> = {
+    // Atividades principais do School Power
     'flash-cards': 'Flash Cards',
     'plano-aula': 'Plano de Aula',
     'lista-exercicios': 'Lista de Exercícios',
@@ -42,6 +61,8 @@ const getActivityNameById = (activityType: string): string => {
     'quiz-interativo': 'Quiz Interativo',
     'mapa-mental': 'Mapa Mental',
     'quadro-interativo': 'Quadro Interativo',
+    
+    // Atividades complementares
     'atividade-pratica': 'Atividade Prática',
     'prova': 'Prova/Avaliação',
     'jogo-educativo': 'Jogo Educativo',
@@ -50,21 +71,48 @@ const getActivityNameById = (activityType: string): string => {
     'resumo': 'Resumo',
     'criterios-avaliacao': 'Critérios de Avaliação',
     'exemplos-contextualizados': 'Exemplos Contextualizados',
+    
+    // Tipos genéricos
     'atividade': 'Atividade',
     'exercicio': 'Exercício',
-    'tarefa': 'Tarefa'
+    'exercicios': 'Exercícios',
+    'tarefa': 'Tarefa',
+    'trabalho': 'Trabalho',
+    'projeto': 'Projeto',
+    'pesquisa': 'Pesquisa',
+    'apresentacao': 'Apresentação',
+    'seminario': 'Seminário',
+    'debate': 'Debate',
+    'oficina': 'Oficina',
+    'experimento': 'Experimento',
+    'relatorio': 'Relatório',
+    'resenha': 'Resenha',
+    'artigo': 'Artigo',
+    'ensaio': 'Ensaio',
+    
+    // Variações com underscores (caso existam)
+    'flash_cards': 'Flash Cards',
+    'plano_aula': 'Plano de Aula',
+    'lista_exercicios': 'Lista de Exercícios',
+    'sequencia_didatica': 'Sequência Didática',
+    'quiz_interativo': 'Quiz Interativo',
+    'mapa_mental': 'Mapa Mental',
+    'quadro_interativo': 'Quadro Interativo',
   };
   
+  // Normalizar o tipo (converter para lowercase e remover espaços extras)
+  const normalizedType = activityType.toLowerCase().trim();
+  
   // Retornar do mapeamento manual
-  if (manualMapping[activityType]) {
-    console.log('✅ [MAPEAMENTO] Encontrado no mapeamento manual:', manualMapping[activityType]);
-    return manualMapping[activityType];
+  if (manualMapping[normalizedType]) {
+    console.log('✅ [MAPEAMENTO] Encontrado no mapeamento manual:', manualMapping[normalizedType]);
+    return manualMapping[normalizedType];
   }
   
   // Fallback: formatar o tipo como título legível
   const formattedName = activityType
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .split(/[-_]/) // Split por hífen ou underscore
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
   
   console.log('✅ [MAPEAMENTO] Usando formatação automática:', formattedName);
@@ -231,40 +279,54 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       syncedData?.['Nome da Atividade'],
       syncedData?.personalizedTitle,
       syncedData?.tema,
-      syncedData?.subject
+      syncedData?.subject,
+      syncedData?.assunto,
+      syncedData?.topico
     ];
     
-    // Filtrar apenas valores válidos (não vazios, diferentes do ID e não sejam códigos únicos)
-    const validTitles = possibleTitleFields.filter(title => 
-      title && 
-      typeof title === 'string' && 
-      title.trim() !== '' && 
-      title !== activity.id &&
-      !title.includes(activity.id) && 
-      !title.match(/^[a-zA-Z0-9]{8,}$/) && // Evitar códigos únicos
-      title.length < 100 // Títulos muito longos provavelmente não são títulos
-    );
+    // Filtrar RIGOROSAMENTE apenas valores válidos (não códigos únicos)
+    const validTitles = possibleTitleFields.filter(title => {
+      if (!title || typeof title !== 'string' || title.trim() === '') return false;
+      if (title === activity.id || title.includes(activity.id)) return false;
+      if (title.length > 100) return false; // Muito longo
+      if (title.length < 3) return false; // Muito curto
+      if (isUniqueCode(title)) return false; // É um código único
+      
+      return true;
+    });
     
-    // Prioridade: título personalizado válido > nome do tipo da atividade
+    console.log('🔍 [HISTÓRICO] Títulos válidos encontrados:', validTitles);
+    
+    // LÓGICA DE PRIORIZAÇÃO INTELIGENTE:
+    // 1. Se tem título personalizado válido E não é código → usar título
+    // 2. Se NÃO tem título válido OU título é suspeito → usar nome do tipo
     let finalTitle: string;
     
     if (validTitles.length > 0) {
-      // Tem título personalizado válido
-      finalTitle = validTitles[0];
-      console.log('✅ [HISTÓRICO] Usando título personalizado:', finalTitle);
+      // Pegar o primeiro título válido que não seja suspeito
+      const safestTitle = validTitles[0];
+      
+      // Dupla verificação de segurança
+      if (isUniqueCode(safestTitle)) {
+        console.warn('⚠️ [HISTÓRICO] Título filtrado ainda parece código, usando tipo da atividade');
+        finalTitle = activityTypeName;
+      } else {
+        finalTitle = safestTitle;
+        console.log('✅ [HISTÓRICO] Usando título personalizado validado:', finalTitle);
+      }
     } else {
-      // Usar nome do tipo como título (ex: "Plano de Aula", "Flash Cards", etc.)
+      // SEMPRE usar nome do tipo quando não há título válido
       finalTitle = activityTypeName;
-      console.log('✅ [HISTÓRICO] Usando nome do tipo como título:', finalTitle);
+      console.log('✅ [HISTÓRICO] Usando nome do tipo da atividade:', finalTitle);
     }
     
-    // Validação final: se o título ainda parecer um código, usar nome do tipo
-    if (finalTitle.match(/^[a-zA-Z0-9]{8,}$/) || finalTitle.includes('-') && finalTitle.length > 20) {
-      console.warn('⚠️ [HISTÓRICO] Título parece ser código, usando nome do tipo');
-      finalTitle = activityTypeName;
-    }
-    
-    console.log('✅ [HISTÓRICO] Título final:', finalTitle);
+    // Log final para debug
+    console.log('📝 [HISTÓRICO] Título final selecionado:', {
+      finalTitle,
+      activityType: activity.tipo,
+      activityTypeName,
+      hadValidTitles: validTitles.length > 0
+    });
     
     return {
       id: activity.id,
