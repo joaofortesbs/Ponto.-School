@@ -69,12 +69,12 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          {/* Backdrop with orange glow */}
+          {/* Backdrop with orange glow and medium blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            className="absolute inset-0 bg-black/60 backdrop-blur-lg"
             onClick={onClose}
           />
 
@@ -217,28 +217,40 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
                   ))}
                 </div>
 
-                {/* Action Button */}
-                <Button
-                  onClick={handleNext}
-                  className={`w-full py-6 bg-gradient-to-r ${currentStepData.gradient} hover:opacity-90 text-white shadow-lg hover:shadow-xl rounded-2xl font-bold text-base transition-all duration-300 transform hover:scale-[1.02]`}
-                >
-                  {currentStep < steps.length - 1 ? (
-                    <span className="flex items-center justify-center gap-2">
-                      Continuar
-                      <motion.div
-                        animate={{ x: [0, 5, 0] }}
-                        transition={{ duration: 1, repeat: Infinity }}
-                      >
-                        →
-                      </motion.div>
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <BookOpen className="w-5 h-5" />
-                      Começar Jornada
-                    </span>
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  <Button
+                    onClick={handleNext}
+                    className={`w-full py-6 bg-gradient-to-r ${currentStepData.gradient} hover:opacity-90 text-white shadow-lg hover:shadow-xl rounded-2xl font-bold text-base transition-all duration-300 transform hover:scale-[1.02]`}
+                  >
+                    {currentStep < steps.length - 1 ? (
+                      <span className="flex items-center justify-center gap-2">
+                        Continuar
+                        <motion.div
+                          animate={{ x: [0, 5, 0] }}
+                          transition={{ duration: 1, repeat: Infinity }}
+                        >
+                          →
+                        </motion.div>
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-2">
+                        <BookOpen className="w-5 h-5" />
+                        Criar atividades agora
+                      </span>
+                    )}
+                  </Button>
+                  
+                  {currentStep === steps.length - 1 && (
+                    <Button
+                      onClick={onClose}
+                      variant="ghost"
+                      className="w-full text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                    >
+                      Seguir sozinho
+                    </Button>
                   )}
-                </Button>
+                </div>
               </div>
             </div>
           </motion.div>
