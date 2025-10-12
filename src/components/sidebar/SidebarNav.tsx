@@ -660,11 +660,6 @@ export function SidebarNav({
                           <span className="item-title">{item.label}</span>
                         </div>
                       )}
-                      {item.disabled && !isCollapsed && (
-                        <div className="lock-icon">
-                          <i className="fas fa-lock"></i>
-                        </div>
-                      )}
                       <div className="item-indicator"></div>
                     </div>
                   </div>
