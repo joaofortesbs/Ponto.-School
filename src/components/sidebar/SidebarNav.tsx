@@ -690,7 +690,7 @@ export function SidebarNav({
         }
 
         .navigation-menu-container:not(.sidebar-collapsed) .menu-navigation {
-          width: calc(100% - 1rem);
+          width: calc(100% - 2rem);
           margin: 0 auto;
         }
 
