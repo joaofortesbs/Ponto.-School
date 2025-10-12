@@ -614,15 +614,14 @@ export function SidebarNav({
       >
         {/* Navigation Menu com novo design */}
         <div className={cn(
-          "navigation-menu-container",
+          "navigation-menu-container px-2",
           isCollapsed && "sidebar-collapsed",
           isCardFlipped ? "professor-mode" : "aluno-mode",
           isModeChanging && "mode-changing"
         )}>
           <nav className={cn(
             "menu-navigation",
-            isMenuFlipping && "menu-flipping",
-            isCollapsed ? "px-2" : "px-4"
+            isMenuFlipping && "menu-flipping"
           )}>
             {navItems.map((item, index) => (
               <div
