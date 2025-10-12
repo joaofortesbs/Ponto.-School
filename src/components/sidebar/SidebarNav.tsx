@@ -617,7 +617,8 @@ export function SidebarNav({
           "navigation-menu-container",
           isCollapsed && "sidebar-collapsed",
           isCardFlipped ? "professor-mode" : "aluno-mode",
-          isModeChanging && "mode-changing"
+          isModeChanging && "mode-changing",
+          isCollapsed ? "px-2" : "px-4"
         )}>
           <nav className={cn(
             "menu-navigation",
@@ -628,8 +629,7 @@ export function SidebarNav({
                 key={`${isCardFlipped ? 'professor' : 'aluno'}-${item.path}-${index}`}
                 className={cn(
                   "relative menu-item-wrapper",
-                  isMenuFlipping && "animate-menu-transition",
-                  isCollapsed ? "px-2" : "px-4"
+                  isMenuFlipping && "animate-menu-transition"
                 )}
                 style={{
                   animationDelay: `${index * 80}ms`
