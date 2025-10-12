@@ -684,10 +684,17 @@ export function SidebarNav({
 
         .navigation-menu-container {
           position: relative;
+          width: 100%;
+        }
+
+        .navigation-menu-container:not(.sidebar-collapsed) {
+          max-width: calc(100% - 2rem);
+          margin: 0 auto;
         }
 
         .menu-navigation {
           padding: 16px 0;
+          width: 100%;
         }
 
         .menu-item {
@@ -699,6 +706,11 @@ export function SidebarNav({
           overflow: hidden;
           min-height: 56px !important;
           height: 56px !important;
+          width: 100%;
+        }
+        
+        .navigation-menu-container:not(.sidebar-collapsed) .menu-item {
+          width: 100%;
         }
         
         /* Garantir que os itens do menu tenham a mesma largura do card de perfil */
@@ -736,7 +748,7 @@ export function SidebarNav({
         .item-content {
           display: flex;
           align-items: center;
-          padding: 12px 16px;
+          padding: 12px 1rem;
           gap: 12px;
           position: relative;
           height: 100% !important;
@@ -744,6 +756,7 @@ export function SidebarNav({
           box-sizing: border-box !important;
           flex-wrap: nowrap !important;
           overflow: hidden !important;
+          width: 100%;
         }
 
         .icon-container {
