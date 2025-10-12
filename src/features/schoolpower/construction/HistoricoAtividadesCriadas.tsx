@@ -120,10 +120,21 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
     // activity.id_json contém todos os dados da atividade
     const activityData = activity.id_json;
     
+    // Prioridade para obter o título:
+    // 1. activityData.title (título direto)
+    // 2. activityData.titulo (título em português)
+    // 3. activityData.nome (nome alternativo)
+    // 4. Nome genérico da categoria como último recurso
+    const activityTitle = activityData?.title || 
+                          activityData?.titulo || 
+                          activityData?.nome || 
+                          activityData?.name ||
+                          getActivityNameById(activity.tipo);
+    
     return {
       id: activity.id,
-      title: activityData?.title || getActivityNameById(activity.tipo),
-      description: activityData?.description || 'Atividade criada na plataforma',
+      title: activityTitle,
+      description: activityData?.description || activityData?.descricao || 'Atividade criada na plataforma',
       type: activity.tipo,
       progress: 100,
       status: 'completed',
