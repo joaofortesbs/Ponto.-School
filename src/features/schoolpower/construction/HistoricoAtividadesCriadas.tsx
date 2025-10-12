@@ -67,6 +67,32 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
 
   useEffect(() => {
     carregarHistoricoAtividades();
+    
+    // Listener para sincronização instantânea de títulos
+    const handleTitleUpdate = (event: CustomEvent) => {
+      console.log('🔄 [HISTÓRICO] Evento de atualização de título recebido:', event.detail);
+      
+      // Atualizar apenas a atividade específica no histórico
+      setAtividadesHistorico(prev => {
+        return prev.map(atividade => {
+          if (atividade.id === event.detail.activityId) {
+            console.log('✅ [HISTÓRICO] Atualizando título da atividade:', event.detail.title);
+            return {
+              ...atividade,
+              title: event.detail.title,
+              personalizedTitle: event.detail.title
+            };
+          }
+          return atividade;
+        });
+      });
+    };
+    
+    window.addEventListener('activity-title-updated', handleTitleUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('activity-title-updated', handleTitleUpdate as EventListener);
+    };
   }, []);
 
   const carregarHistoricoAtividades = async () => {
@@ -163,17 +189,34 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       activityData: activityData
     });
     
-    // Buscar título personalizado em vários campos possíveis
+    // SINCRONIZAÇÃO INSTANTÂNEA: Verificar localStorage para dados mais recentes
+    const localStorageKey = `activity_${activity.id}`;
+    const localData = localStorage.getItem(localStorageKey);
+    let syncedData = activityData;
+    
+    if (localData) {
+      try {
+        const parsedLocalData = JSON.parse(localData);
+        console.log('🔄 [SINCRONIZAÇÃO] Dados do localStorage encontrados:', parsedLocalData);
+        // Mesclar dados do localStorage com dados do banco (localStorage tem prioridade)
+        syncedData = { ...activityData, ...parsedLocalData };
+      } catch (e) {
+        console.warn('⚠️ [SINCRONIZAÇÃO] Erro ao parsear dados do localStorage:', e);
+      }
+    }
+    
+    // Buscar título personalizado em vários campos possíveis (dados sincronizados)
     const possibleTitleFields = [
-      activityData?.title,
-      activityData?.titulo,
-      activityData?.nome,
-      activityData?.name,
-      activityData?.tituloAtividade,
-      activityData?.['Título'],
-      activityData?.['Nome da Atividade'],
-      activityData?.tema,
-      activityData?.subject
+      syncedData?.title,
+      syncedData?.titulo,
+      syncedData?.nome,
+      syncedData?.name,
+      syncedData?.tituloAtividade,
+      syncedData?.['Título'],
+      syncedData?.['Nome da Atividade'],
+      syncedData?.personalizedTitle, // Título personalizado do modal
+      syncedData?.tema,
+      syncedData?.subject
     ];
     
     // Filtrar apenas valores válidos (não vazios e diferentes do ID)
@@ -182,16 +225,18 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       typeof title === 'string' && 
       title.trim() !== '' && 
       title !== activity.id &&
-      !title.includes(activity.id) // Evitar títulos que contenham o ID
+      !title.includes(activity.id) && // Evitar títulos que contenham o ID
+      !title.match(/^[a-z0-9]{8,}$/) // Evitar códigos únicos
     );
     
     // Usar o primeiro título válido encontrado, ou o nome do tipo como fallback
     const activityTitle = validTitles.length > 0 ? validTitles[0] : activityTypeName;
     
     console.log('✅ [HISTÓRICO] Título final selecionado:', activityTitle);
+    console.log('✅ [HISTÓRICO] Títulos válidos encontrados:', validTitles);
     
     // Validação final: garantir que o título NUNCA seja um código/ID
-    const finalTitle = activityTitle.includes('-') && activityTitle.length > 20
+    const finalTitle = (activityTitle.includes('-') && activityTitle.length > 20) || activityTitle.match(/^[a-z0-9]{8,}$/)
       ? activityTypeName // Se parece com um código, usar nome do tipo
       : activityTitle;
     

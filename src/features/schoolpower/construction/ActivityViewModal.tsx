@@ -167,6 +167,38 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
       console.log('🔍 ActivityViewModal: Carregando dados para atividade:', activity);
 
+      // SINCRONIZAÇÃO INSTANTÂNEA: Salvar título atual no localStorage
+      const localStorageKey = `activity_${activity.id}`;
+      const currentData = localStorage.getItem(localStorageKey);
+      
+      try {
+        const dataToSave = currentData ? JSON.parse(currentData) : {};
+        
+        // Atualizar com título atual da atividade
+        const updatedData = {
+          ...dataToSave,
+          title: activity.title || activity.personalizedTitle || dataToSave.title,
+          titulo: activity.title || activity.personalizedTitle || dataToSave.titulo,
+          personalizedTitle: activity.personalizedTitle || activity.title || dataToSave.personalizedTitle,
+          name: activity.title || activity.personalizedTitle || dataToSave.name,
+          lastSyncedAt: new Date().toISOString()
+        };
+        
+        localStorage.setItem(localStorageKey, JSON.stringify(updatedData));
+        console.log('🔄 [SINCRONIZAÇÃO] Título atualizado no localStorage:', updatedData.title);
+        
+        // Disparar evento customizado para notificar o histórico
+        window.dispatchEvent(new CustomEvent('activity-title-updated', {
+          detail: { 
+            activityId: activity.id, 
+            title: updatedData.title,
+            timestamp: new Date().toISOString()
+          }
+        }));
+      } catch (e) {
+        console.warn('⚠️ [SINCRONIZAÇÃO] Erro ao salvar título:', e);
+      }
+
       // Se for plano-aula, tentar carregar dados específicos
       if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
         const planoData = loadPlanoAulaData(activity.id);
@@ -180,7 +212,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('📋 Carregando dados de atividade do histórico:', activity.originalData);
       }
     }
-  }, [isOpen, activity?.id]); // Usar apenas activity.id para evitar loops
+  }, [isOpen, activity?.id, activity?.title, activity?.personalizedTitle]); // Incluir title e personalizedTitle
 
   if (!isOpen || !activity) return null;
 
