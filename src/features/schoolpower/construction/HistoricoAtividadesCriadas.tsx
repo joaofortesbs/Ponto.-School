@@ -120,21 +120,38 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
     // activity.id_json contém todos os dados da atividade
     const activityData = activity.id_json;
     
-    // Prioridade para obter o título:
-    // 1. activityData.title (título direto)
+    console.log('🔍 [HISTÓRICO] Convertendo atividade:', {
+      id: activity.id,
+      tipo: activity.tipo,
+      activityData: activityData
+    });
+    
+    // Prioridade para obter o título (verificar TODOS os campos possíveis):
+    // 1. activityData.title (título direto em inglês)
     // 2. activityData.titulo (título em português)
-    // 3. activityData.nome (nome alternativo)
-    // 4. Nome genérico da categoria como último recurso
+    // 3. activityData.nome (nome da atividade)
+    // 4. activityData.name (nome alternativo)
+    // 5. activityData.tituloAtividade (título específico)
+    // 6. activityData.tema (tema da atividade)
+    // 7. activityData.subject (assunto)
+    // 8. Nome genérico da categoria como último recurso
     const activityTitle = activityData?.title || 
                           activityData?.titulo || 
                           activityData?.nome || 
                           activityData?.name ||
+                          activityData?.tituloAtividade ||
+                          activityData?.tema ||
+                          activityData?.subject ||
+                          activityData?.['Título'] ||
+                          activityData?.['Nome da Atividade'] ||
                           getActivityNameById(activity.tipo);
+    
+    console.log('✅ [HISTÓRICO] Título extraído:', activityTitle);
     
     return {
       id: activity.id,
       title: activityTitle,
-      description: activityData?.description || activityData?.descricao || 'Atividade criada na plataforma',
+      description: activityData?.description || activityData?.descricao || activityData?.objetivo || 'Atividade criada na plataforma',
       type: activity.tipo,
       progress: 100,
       status: 'completed',
