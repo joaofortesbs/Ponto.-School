@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import GuiaAvatar from "./GuiaAvatar";
 import {
-  Calendar as CalendarIcon,
   MessageCircle,
   Bell,
   Search,
@@ -28,8 +27,7 @@ import {
   BellRing,
   Brain,
   Reply,
-  Menu,
-  Sparkles
+  Menu
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -71,7 +69,6 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import MessageReplyModal from "@/components/layout/MessageReplyModal";
-import ModoEventosModal from "@/components/layout/ModoEventosModal";
 import LoginDiario from "@/components/logindiario/LoginDiario";
 
 export default function Header() {
@@ -120,7 +117,6 @@ export default function Header() {
     useState(false);
   const [isDark, setIsDark] = useState(false); // Added isDark state
   const [theme, setTheme] = useState("light"); // Added theme state
-  const [isModoEventosModalOpen, setIsModoEventosModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -1305,34 +1301,6 @@ export default function Header() {
           console.log("Login diário realizado!");
         }} />
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative hover:bg-brand-card dark:hover:bg-white/5 group transition-all duration-300"
-                aria-label="Modo Eventos"
-                onClick={() => setIsModoEventosModalOpen(true)}
-              >
-                <div className="relative">
-                  <CalendarIcon className="h-5 w-5 text-brand-black dark:text-white group-hover:text-[#FF6B00] transition-colors duration-300" />
-                  <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-[#FF6B00] opacity-0 group-hover:opacity-100 transition-all duration-300 animate-pulse" />
-                </div>
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white text-xs rounded-full animate-pulse shadow-lg">
-                  2
-                </Badge>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="text-center">
-                <p className="font-semibold">Modo Eventos</p>
-                <p className="text-xs text-muted-foreground">Eventos próximos e atividades</p>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
         <Popover
           open={isNotificationsOpen}
           onOpenChange={setIsNotificationsOpen}
@@ -1685,12 +1653,6 @@ export default function Header() {
         onOpenChange={setIsReplyModalOpen}
         message={selectedMessageForReply}
         onSendReply={handleSendReply}
-      />
-
-      {/* Modo Eventos Modal */}
-      <ModoEventosModal
-        isOpen={isModoEventosModalOpen}
-        onClose={() => setIsModoEventosModalOpen(false)}
       />
     </header>
   );
