@@ -78,32 +78,18 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
             onClick={onClose}
           />
 
-          {/* Glowing orange orbs background */}
+          {/* Subtle background glow */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <motion.div
               animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.3, 0.5, 0.3],
+                opacity: [0.1, 0.15, 0.1],
               }}
               transition={{
-                duration: 4,
+                duration: 6,
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
-              className="absolute -top-32 -right-32 w-96 h-96 bg-orange-500/30 rounded-full blur-3xl"
-            />
-            <motion.div
-              animate={{
-                scale: [1.2, 1, 1.2],
-                opacity: [0.2, 0.4, 0.2],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 1
-              }}
-              className="absolute -bottom-32 -left-32 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl"
+              className="absolute -top-32 -right-32 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"
             />
           </div>
 
@@ -118,20 +104,8 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
             {/* Main Card with premium glass effect */}
             <div className="relative bg-gradient-to-br from-white/95 via-orange-50/90 to-amber-50/95 dark:from-gray-900/95 dark:via-orange-950/90 dark:to-gray-900/95 rounded-3xl shadow-2xl overflow-hidden border border-orange-200/50 dark:border-orange-500/30">
               
-              {/* Animated top border */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-orange-400 to-amber-400"
-                  animate={{
-                    x: ['-100%', '100%'],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "linear"
-                  }}
-                />
-              </div>
+              {/* Top border */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500"></div>
 
               {/* Close Button */}
               <button
@@ -151,21 +125,8 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
                   transition={{ type: 'spring', damping: 20, stiffness: 200 }}
                   className="mb-8 flex justify-center"
                 >
-                  <div className={`relative w-20 h-20 rounded-2xl bg-gradient-to-br ${currentStepData.gradient} flex items-center justify-center shadow-xl`}>
+                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${currentStepData.gradient} flex items-center justify-center shadow-lg`}>
                     <Icon className="w-10 h-10 text-white" />
-                    {/* Pulsing glow */}
-                    <motion.div
-                      animate={{
-                        scale: [1, 1.3, 1],
-                        opacity: [0.5, 0, 0.5],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                      className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${currentStepData.gradient} blur-xl`}
-                    />
                   </div>
                 </motion.div>
 
@@ -278,15 +239,6 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
                     </span>
                   )}
                 </Button>
-              </div>
-
-              {/* Footer with branding */}
-              <div className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 px-8 py-4">
-                <p className="text-sm text-center text-white font-medium flex items-center justify-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  Powered by School Power IA
-                  <Sparkles className="w-4 h-4" />
-                </p>
               </div>
             </div>
           </motion.div>
