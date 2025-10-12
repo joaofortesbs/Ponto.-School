@@ -13,7 +13,6 @@ import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerF
 import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
 import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
-import { HistoricoAtividadesCriadas } from "../../features/schoolpower/construction/HistoricoAtividadesCriadas";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import DebugPanel from './components/DebugPanel';
 import GeminiApiMonitor from './components/GeminiApiMonitor';
@@ -25,7 +24,6 @@ interface SchoolPowerPageProps {
 export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const [isDarkTheme] = useState(true);
   const [isCentralExpanded, setIsCentralExpanded] = useState(false);
-  const [showHistorico, setShowHistorico] = useState(false);
   const isMobile = useIsMobile();
 
   // Hook para gerenciar o fluxo do School Power
@@ -78,21 +76,13 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   // Função para voltar
   const handleBack = () => {
     console.log("🔄 Voltando ao início");
-    setShowHistorico(false);
     handleResetFlowHook();
   };
 
-  // Função para abrir histórico
-  const handleOpenHistorico = () => {
-    console.log("📚 Abrindo histórico de atividades");
-    setShowHistorico(true);
-  };
-
   // Determina se os componentes padrão devem estar visíveis
-  const componentsVisible = flowState === 'idle' && !showHistorico;
+  const componentsVisible = flowState === 'idle';
   console.log('👁️ Componentes padrão visíveis:', componentsVisible);
   console.log('🏗️ Estado atual do fluxo:', flowState);
-  console.log('📚 Mostrar histórico:', showHistorico);
 
   return (
     <div
@@ -110,7 +100,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
           {/* Vertical dock positioned at right side - hidden on mobile quiz mode */}
           {!(isMobile && isQuizMode) && (
             <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-              <SideMenu onHistoricoClick={handleOpenHistorico} />
+              <SideMenu />
             </div>
           )}
 
@@ -166,20 +156,6 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
             </div>
           </div>
         </>
-      )}
-
-      {/* Histórico de Atividades Criadas */}
-      {showHistorico && (
-        <motion.div 
-          className="absolute inset-0 flex items-center justify-center z-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="w-full h-full">
-            <HistoricoAtividadesCriadas onBack={handleBack} />
-          </div>
-        </motion.div>
       )}
 
       {/* Card de Construção unificado - aparece baseado no flowState com fundo estrelado visível */}
