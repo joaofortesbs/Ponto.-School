@@ -21,6 +21,8 @@ const PerfilCabecalho: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDark, setIsDark] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [schoolPoints, setSchoolPoints] = useState<number>(300);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -38,6 +40,51 @@ const PerfilCabecalho: React.FC = () => {
 
     const darkMode = localStorage.getItem("darkMode") === "true";
     setIsDark(darkMode);
+
+    // Carregar imagem de perfil do localStorage (sincronizado com sidebar)
+    const loadProfileImage = () => {
+      const tempPreview = localStorage.getItem("tempAvatarPreview");
+      const cachedAvatar = localStorage.getItem("userAvatarUrl");
+      
+      if (tempPreview) {
+        setProfileImage(tempPreview);
+      } else if (cachedAvatar) {
+        setProfileImage(cachedAvatar);
+      }
+    };
+
+    loadProfileImage();
+
+    // Carregar School Points
+    const savedPoints = localStorage.getItem("schoolPoints");
+    if (savedPoints) {
+      setSchoolPoints(parseInt(savedPoints));
+    }
+
+    // Listener para atualização de avatar
+    const handleAvatarUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail?.avatarUrl) {
+        setProfileImage(customEvent.detail.avatarUrl);
+      }
+    };
+
+    // Listener para atualização de pontos
+    const handlePointsUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail?.points !== undefined) {
+        setSchoolPoints(customEvent.detail.points);
+        localStorage.setItem("schoolPoints", customEvent.detail.points.toString());
+      }
+    };
+
+    document.addEventListener("userAvatarUpdated", handleAvatarUpdate as EventListener);
+    document.addEventListener("schoolPointsUpdated", handlePointsUpdate as EventListener);
+
+    return () => {
+      document.removeEventListener("userAvatarUpdated", handleAvatarUpdate as EventListener);
+      document.removeEventListener("schoolPointsUpdated", handlePointsUpdate as EventListener);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -74,7 +121,7 @@ const PerfilCabecalho: React.FC = () => {
           <div className="relative">
             <Avatar className="w-8 h-8 border-2 border-transparent group-hover:border-[#FF6B00]/20 transition-all duration-300">
               <AvatarImage
-                src={userProfile?.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.username || "user"}`}
+                src={profileImage || userProfile?.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.username || "user"}`}
                 alt={userProfile?.display_name || userProfile?.username || "Usuário"}
               />
               <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white text-xs font-bold">
@@ -87,8 +134,8 @@ const PerfilCabecalho: React.FC = () => {
 
           {/* Valor e Ícone */}
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-[#29335C] dark:text-white">$</span>
-            <span className="text-sm font-semibold text-[#29335C] dark:text-white">0</span>
+            <span className="text-sm font-semibold text-[#FF6B00]">$</span>
+            <span className="text-sm font-semibold text-[#FF6B00]">{schoolPoints}</span>
             <ChevronDown className="h-4 w-4 text-[#64748B] dark:text-white/60 group-hover:text-[#FF6B00] dark:group-hover:text-[#FF6B00] transition-colors duration-300" />
           </div>
         </div>
