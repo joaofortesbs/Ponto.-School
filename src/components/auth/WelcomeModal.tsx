@@ -153,14 +153,6 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
             {/* Main Card with premium glass effect */}
             <div className="relative bg-gradient-to-br from-white/60 via-orange-50/50 to-amber-50/60 dark:from-gray-900/60 dark:via-orange-950/50 dark:to-gray-900/60 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-orange-200/50 dark:border-orange-500/30">
 
-              {/* Close Button */}
-              <button
-                onClick={onClose}
-                className="absolute top-5 right-5 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-orange-100/80 dark:bg-orange-900/30 hover:bg-orange-200 dark:hover:bg-orange-800/50 transition-all duration-300 group backdrop-blur-sm"
-              >
-                <X className="w-5 h-5 text-orange-600 dark:text-orange-400 group-hover:rotate-90 transition-transform duration-300" />
-              </button>
-
               {/* Content */}
               <div className="p-8 sm:p-10">
                 {/* Icon with premium animation */}
