@@ -211,8 +211,18 @@ function App() {
 
           const userLoginKey = `hasLoggedInBefore_${currentUserId}`;
           const sessionKey = `currentSession_${currentUserId}`;
+          const modalShownKey = `welcomeModalShown_${currentUserId}`;
           const userHasLoggedBefore = localStorage.getItem(userLoginKey);
           const currentSession = sessionStorage.getItem(sessionKey);
+          const modalAlreadyShown = sessionStorage.getItem(modalShownKey);
+
+          // Verificar se o modal já foi exibido nesta sessão
+          if (modalAlreadyShown === 'true') {
+            console.log("Modal de Welcome já foi exibido nesta sessão - não mostrar novamente");
+            setShowWelcomeModal(false);
+            restoreScroll();
+            return;
+          }
 
           if (!userHasLoggedBefore) {
             console.log("Primeiro login detectado para esta conta!");
@@ -222,16 +232,14 @@ function App() {
             localStorage.setItem(userLoginKey, 'true');
             localStorage.setItem('hasLoggedInBefore', 'true');
             sessionStorage.setItem(sessionKey, 'active');
-          } else if (!currentSession) {
+            sessionStorage.setItem(modalShownKey, 'true');
+          } else if (!currentSession && !modalAlreadyShown) {
             console.log("Nova sessão detectada - mostrando modal de boas-vindas");
             setIsFirstLogin(false);
             setShowWelcomeModal(true);
             preventScroll();
             sessionStorage.setItem(sessionKey, 'active');
-          } else if (location.pathname === "/") {
-            setIsFirstLogin(false);
-            setShowWelcomeModal(true);
-            preventScroll();
+            sessionStorage.setItem(modalShownKey, 'true');
           } else {
             console.log("Navegação dentro da mesma sessão - modal não será mostrado");
             setShowWelcomeModal(false);
