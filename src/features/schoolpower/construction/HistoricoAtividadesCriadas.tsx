@@ -55,22 +55,36 @@ const getActivityNameById = (activityType: string): string => {
   const manualMapping: Record<string, string> = {
     // Atividades principais do School Power
     'flash-cards': 'Flash Cards',
+    'flashcards': 'Flash Cards',
     'plano-aula': 'Plano de Aula',
+    'planoaula': 'Plano de Aula',
     'lista-exercicios': 'Lista de Exercícios',
+    'listaexercicios': 'Lista de Exercícios',
     'sequencia-didatica': 'Sequência Didática',
+    'sequenciadidatica': 'Sequência Didática',
     'quiz-interativo': 'Quiz Interativo',
+    'quizinterativo': 'Quiz Interativo',
     'mapa-mental': 'Mapa Mental',
+    'mapamental': 'Mapa Mental',
     'quadro-interativo': 'Quadro Interativo',
+    'quadrointerativo': 'Quadro Interativo',
     
     // Atividades complementares
     'atividade-pratica': 'Atividade Prática',
+    'atividadepratica': 'Atividade Prática',
     'prova': 'Prova/Avaliação',
+    'avaliacao': 'Prova/Avaliação',
     'jogo-educativo': 'Jogo Educativo',
+    'jogoeducativo': 'Jogo Educativo',
     'proposta-redacao': 'Proposta de Redação',
+    'propostaredacao': 'Proposta de Redação',
     'texto-apoio': 'Texto de Apoio',
+    'textoapoio': 'Texto de Apoio',
     'resumo': 'Resumo',
     'criterios-avaliacao': 'Critérios de Avaliação',
+    'criteriosavaliacao': 'Critérios de Avaliação',
     'exemplos-contextualizados': 'Exemplos Contextualizados',
+    'exemploscontextualizados': 'Exemplos Contextualizados',
     
     // Tipos genéricos
     'atividade': 'Atividade',
@@ -244,7 +258,7 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       activityData: activityData
     });
     
-    // IMPORTANTE: Usar o campo 'tipo' do banco Neon (NÃO o ID) para obter o nome da atividade
+    // IMPORTANTE: Usar o campo 'tipo' do banco Neon para obter o nome da atividade
     const activityTypeName = getActivityNameById(activity.tipo);
     
     console.log('🔍 [HISTÓRICO] Nome do tipo de atividade:', {
@@ -297,27 +311,23 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
     
     console.log('🔍 [HISTÓRICO] Títulos válidos encontrados:', validTitles);
     
-    // LÓGICA DE PRIORIZAÇÃO INTELIGENTE:
-    // 1. Se tem título personalizado válido E não é código → usar título
-    // 2. Se NÃO tem título válido OU título é suspeito → usar nome do tipo
-    let finalTitle: string;
+    // LÓGICA DE PRIORIZAÇÃO INTELIGENTE COM PROTEÇÃO ABSOLUTA:
+    // SEMPRE usar o nome do tipo da atividade como padrão
+    let finalTitle: string = activityTypeName;
     
+    // Só substituir se encontrar um título válido e 100% seguro
     if (validTitles.length > 0) {
-      // Pegar o primeiro título válido que não seja suspeito
       const safestTitle = validTitles[0];
       
-      // Dupla verificação de segurança
-      if (isUniqueCode(safestTitle)) {
-        console.warn('⚠️ [HISTÓRICO] Título filtrado ainda parece código, usando tipo da atividade');
-        finalTitle = activityTypeName;
-      } else {
+      // Tripla verificação de segurança
+      if (!isUniqueCode(safestTitle) && safestTitle !== activity.id) {
         finalTitle = safestTitle;
         console.log('✅ [HISTÓRICO] Usando título personalizado validado:', finalTitle);
+      } else {
+        console.warn('⚠️ [HISTÓRICO] Título filtrado parece código, mantendo tipo da atividade');
       }
     } else {
-      // SEMPRE usar nome do tipo quando não há título válido
-      finalTitle = activityTypeName;
-      console.log('✅ [HISTÓRICO] Usando nome do tipo da atividade:', finalTitle);
+      console.log('✅ [HISTÓRICO] Usando nome do tipo da atividade (sem título personalizado):', finalTitle);
     }
     
     // Log final para debug
