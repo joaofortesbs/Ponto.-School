@@ -21,10 +21,38 @@ interface AtividadeHistorico extends ConstructionActivity {
   atualizadaEm?: string;
 }
 
-// Função para obter nome da atividade
+// Função para obter nome da atividade com mapeamento completo
 const getActivityNameById = (activityId: string): string => {
   const activity = schoolPowerActivitiesData.find(act => act.id === activityId);
-  return activity ? activity.name : activityId;
+  
+  // Se encontrou no JSON, retorna o nome
+  if (activity) {
+    return activity.name;
+  }
+  
+  // Mapeamento manual para garantir nomes legíveis
+  const manualMapping: Record<string, string> = {
+    'flash-cards': 'Flash Cards',
+    'plano-aula': 'Plano de Aula',
+    'lista-exercicios': 'Lista de Exercícios',
+    'sequencia-didatica': 'Sequência Didática',
+    'quiz-interativo': 'Quiz Interativo',
+    'mapa-mental': 'Mapa Mental',
+    'quadro-interativo': 'Quadro Interativo',
+    'atividade-pratica': 'Atividade Prática',
+    'prova': 'Prova/Avaliação',
+    'jogo-educativo': 'Jogo Educativo',
+    'proposta-redacao': 'Proposta de Redação',
+    'texto-apoio': 'Texto de Apoio',
+    'resumo': 'Resumo',
+    'criterios-avaliacao': 'Critérios de Avaliação',
+    'exemplos-contextualizados': 'Exemplos Contextualizados'
+  };
+  
+  // Retorna do mapeamento manual ou formata o ID como fallback
+  return manualMapping[activityId] || activityId.split('-').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ');
 };
 
 export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriadasProps) {
@@ -126,38 +154,50 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       activityData: activityData
     });
     
-    // Primeiro, obter o nome genérico do tipo de atividade
+    // Obter o nome genérico do tipo de atividade
     const activityTypeName = getActivityNameById(activity.tipo);
     
-    // Prioridade para obter o título personalizado:
-    // 1. activityData.title (título direto em inglês)
-    // 2. activityData.titulo (título em português)
-    // 3. activityData.nome (nome da atividade)
-    // 4. activityData.name (nome alternativo)
-    // 5. activityData.tituloAtividade (título específico)
-    // 6. activityData.tema (tema da atividade)
-    // 7. activityData.subject (assunto)
-    const customTitle = activityData?.title || 
-                        activityData?.titulo || 
-                        activityData?.nome || 
-                        activityData?.name ||
-                        activityData?.tituloAtividade ||
-                        activityData?.tema ||
-                        activityData?.subject ||
-                        activityData?.['Título'] ||
-                        activityData?.['Nome da Atividade'];
+    console.log('🔍 [HISTÓRICO] Dados da atividade:', {
+      tipo: activity.tipo,
+      activityTypeName: activityTypeName,
+      activityData: activityData
+    });
     
-    // Se há título personalizado E é diferente do código único, usar ele
-    // Caso contrário, usar o nome do tipo de atividade
-    const activityTitle = (customTitle && customTitle !== activity.id) 
-                          ? customTitle 
-                          : activityTypeName;
+    // Buscar título personalizado em vários campos possíveis
+    const possibleTitleFields = [
+      activityData?.title,
+      activityData?.titulo,
+      activityData?.nome,
+      activityData?.name,
+      activityData?.tituloAtividade,
+      activityData?.['Título'],
+      activityData?.['Nome da Atividade'],
+      activityData?.tema,
+      activityData?.subject
+    ];
     
-    console.log('✅ [HISTÓRICO] Título final:', activityTitle);
+    // Filtrar apenas valores válidos (não vazios e diferentes do ID)
+    const validTitles = possibleTitleFields.filter(title => 
+      title && 
+      typeof title === 'string' && 
+      title.trim() !== '' && 
+      title !== activity.id &&
+      !title.includes(activity.id) // Evitar títulos que contenham o ID
+    );
+    
+    // Usar o primeiro título válido encontrado, ou o nome do tipo como fallback
+    const activityTitle = validTitles.length > 0 ? validTitles[0] : activityTypeName;
+    
+    console.log('✅ [HISTÓRICO] Título final selecionado:', activityTitle);
+    
+    // Validação final: garantir que o título NUNCA seja um código/ID
+    const finalTitle = activityTitle.includes('-') && activityTitle.length > 20
+      ? activityTypeName // Se parece com um código, usar nome do tipo
+      : activityTitle;
     
     return {
       id: activity.id,
-      title: activityTitle,
+      title: finalTitle,
       description: activityData?.description || activityData?.descricao || activityData?.objetivo || 'Atividade criada na plataforma',
       type: activity.tipo,
       progress: 100,
