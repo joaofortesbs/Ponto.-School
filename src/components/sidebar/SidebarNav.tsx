@@ -832,8 +832,7 @@ export function SidebarNav({
           min-height: 36px !important;
           justify-content: center !important;
           min-width: 0 !important;
-          overflow: visible !important;
-          max-width: calc(100% - 56px);
+          overflow: hidden !important;
         }
 
         .item-title {
@@ -1143,7 +1142,6 @@ export function SidebarNav({
           justify-content: center;
           flex-shrink: 0 !important;
           margin-left: auto;
-          margin-right: 0.25rem;
         }
 
         .lock-icon i {
