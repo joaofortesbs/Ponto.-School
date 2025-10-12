@@ -175,7 +175,7 @@ export default function Sidebar({
       <aside
         className={cn(
           "fixed top-0 left-0 z-30 h-full bg-white dark:bg-[#001427]/90 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out md:relative",
-          sidebarCollapsed ? "w-[70px]" : "w-[280px]",
+          sidebarCollapsed ? "w-[70px]" : "w-[274px]",
           isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           className,
         )}
