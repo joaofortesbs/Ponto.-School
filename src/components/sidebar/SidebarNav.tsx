@@ -75,36 +75,36 @@ export function SidebarNav({
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(isCollapsed);
   const [firstName, setFirstName] = useState<string | null>(null);
-  
+
   // Determinar estado inicial do flip baseado no tipo de conta (otimizado)
   const getInitialFlipState = () => {
     // Prioridade 1: Cache direto (mais rápido)
     const cachedAccountType = localStorage.getItem("userAccountType");
     if (cachedAccountType === 'Professor') return true;
     if (cachedAccountType === 'Aluno' || cachedAccountType === 'Coordenador') return false;
-    
+
     // Prioridade 2: Dados do Neon (fallback)
     const neonUser = localStorage.getItem("neon_user");
     if (neonUser) {
       try {
         const userData = JSON.parse(neonUser);
         const tipoConta = userData.tipo_conta;
-        
+
         // Atualizar cache imediatamente
         if (tipoConta) {
           localStorage.setItem("userAccountType", tipoConta);
         }
-        
+
         return tipoConta === 'Professor';
       } catch (e) {
         console.debug("Erro ao parsear neon_user:", e);
       }
     }
-    
+
     // Default para Aluno (não flipped)
     return false;
   };
-  
+
   const [isCardFlipped, setIsCardFlipped] = useState(getInitialFlipState());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMenuFlipping, setIsMenuFlipping] = useState(false);
@@ -222,16 +222,16 @@ export function SidebarNav({
         // 2. ATUALIZAÇÃO EM BACKGROUND (não bloqueia UI)
         if (cachedData) {
           const userData = JSON.parse(cachedData);
-          
+
           // Buscar atualizações do servidor em background
           requestAnimationFrame(async () => {
             try {
               const response = await fetch(`/api/perfis?email=${encodeURIComponent(userData.email)}`, {
                 priority: 'low' // Baixa prioridade para não bloquear
               });
-              
+
               if (!response.ok) return; // Silenciosamente ignorar erros
-              
+
               const result = await response.json();
 
               if (result.success && result.data) {
@@ -614,7 +614,7 @@ export function SidebarNav({
       >
         {/* Navigation Menu com novo design */}
         <div className={cn(
-          "navigation-menu-container px-2",
+          "navigation-menu-container",
           isCollapsed && "sidebar-collapsed",
           isCardFlipped ? "professor-mode" : "aluno-mode",
           isModeChanging && "mode-changing"
@@ -628,7 +628,8 @@ export function SidebarNav({
                 key={`${isCardFlipped ? 'professor' : 'aluno'}-${item.path}-${index}`}
                 className={cn(
                   "relative menu-item-wrapper",
-                  isMenuFlipping && "animate-menu-transition"
+                  isMenuFlipping && "animate-menu-transition",
+                  isCollapsed ? "px-2" : "px-4"
                 )}
                 style={{
                   animationDelay: `${index * 80}ms`
