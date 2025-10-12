@@ -1142,7 +1142,7 @@ export function SidebarNav({
           justify-content: center;
           flex-shrink: 0 !important;
           margin-left: auto;
-          margin-right: 12px;
+          margin-right: 20px;
         }
 
         .lock-icon i {
