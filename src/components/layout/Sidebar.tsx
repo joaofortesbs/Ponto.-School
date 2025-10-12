@@ -226,18 +226,6 @@ export default function Sidebar({
             )}
           />
 
-          {/* User Profile - só aparece quando não está colapsado */}
-          {!isCollapsed && (
-            <div className="flex items-center space-x-3 px-4 py-3 mb-6 bg-[#29335C]/30 rounded-3xl mx-2 border border-[#FF6B00]/20">
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-white">
-                  Olá, Visitante!
-                </span>
-                <span className="text-xs text-white/70">Bem-vindo(a)!</span>
-              </div>
-            </div>
-          )}
-
           {/* Toggle Button - positioned at bottom when collapsed, at top when expanded */}
           <Button
             variant="outline"
