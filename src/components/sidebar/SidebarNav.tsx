@@ -694,6 +694,11 @@ export function SidebarNav({
           width: 100%;
         }
 
+        .navigation-menu-container:not(.sidebar-collapsed) .menu-navigation {
+          width: calc(100% - 2rem);
+          margin: 0 auto;
+        }
+
         .menu-item {
           margin: 0 0 4px;
           border-radius: 16px;
@@ -704,6 +709,16 @@ export function SidebarNav({
           min-height: 56px !important;
           height: 56px !important;
           width: 100%;
+        }
+
+        .navigation-menu-container:not(.sidebar-collapsed) .menu-item {
+          width: 100%;
+        }
+
+        /* Garantir que os itens do menu tenham a mesma largura do card de perfil */
+        .navigation-menu-container:not(.sidebar-collapsed) .menu-item {
+          margin-left: 0;
+          margin-right: 0;
         }
 
         .menu-item::before {
