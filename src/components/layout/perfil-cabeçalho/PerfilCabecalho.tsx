@@ -124,7 +124,7 @@ const PerfilCabecalho: React.FC = () => {
                 src={profileImage || userProfile?.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.username || "user"}`}
                 alt={userProfile?.display_name || userProfile?.username || "Usuário"}
               />
-              <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white text-sm font-bold">
+              <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white text-xs font-bold">
                 {userProfile?.display_name?.substring(0, 2) ||
                   userProfile?.username?.substring(0, 2) ||
                   "U"}
