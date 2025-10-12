@@ -750,7 +750,7 @@ export function SidebarNav({
         .item-content {
           display: flex;
           align-items: center;
-          padding: 12px 1rem;
+          padding: 12px 0.75rem;
           gap: 12px;
           position: relative;
           height: 100% !important;
@@ -759,6 +759,10 @@ export function SidebarNav({
           flex-wrap: nowrap !important;
           overflow: hidden !important;
           width: 100%;
+        }
+        
+        .navigation-menu-container:not(.sidebar-collapsed) .item-content {
+          padding: 12px 0.75rem;
         }
 
         .icon-container {
