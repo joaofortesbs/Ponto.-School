@@ -614,7 +614,8 @@ export function SidebarNav({
       >
         {/* Navigation Menu com novo design */}
         <div className={cn(
-          "navigation-menu-container px-2",
+          "navigation-menu-container",
+          isCollapsed ? "px-2" : "px-4",
           isCollapsed && "sidebar-collapsed",
           isCardFlipped ? "professor-mode" : "aluno-mode",
           isModeChanging && "mode-changing"
