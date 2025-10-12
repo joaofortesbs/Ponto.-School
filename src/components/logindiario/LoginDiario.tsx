@@ -31,7 +31,7 @@ const LoginDiario: React.FC<LoginDiarioProps> = ({ onClick }) => {
           <Button
             variant="ghost"
             size="icon"
-            className="relative group transition-all duration-300 bg-gradient-to-r from-orange-100/80 to-orange-200/60 dark:from-orange-900/30 dark:to-orange-800/20 hover:from-orange-200/90 hover:to-orange-300/70 dark:hover:from-orange-800/40 dark:hover:to-orange-700/30 border border-orange-200/50 dark:border-orange-700/30 hover:border-orange-300/70 dark:hover:border-orange-600/50 rounded-full backdrop-blur-sm"
+            className="relative group transition-all duration-300 bg-gradient-to-r from-orange-100/80 to-orange-200/60 dark:from-orange-900/30 dark:to-orange-800/20 hover:from-orange-200/90 hover:to-orange-300/70 dark:hover:from-orange-800/40 dark:hover:to-orange-700/30 border border-orange-200/50 dark:border-orange-700/30 hover:border-orange-300/70 dark:hover:border-orange-600/50 rounded-lg backdrop-blur-sm"
             aria-label="Login Diário"
             onClick={handleClick}
           >
