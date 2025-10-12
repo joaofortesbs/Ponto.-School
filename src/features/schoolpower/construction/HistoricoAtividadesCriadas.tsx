@@ -126,7 +126,10 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       activityData: activityData
     });
     
-    // Prioridade para obter o título (verificar TODOS os campos possíveis):
+    // Primeiro, obter o nome genérico do tipo de atividade
+    const activityTypeName = getActivityNameById(activity.tipo);
+    
+    // Prioridade para obter o título personalizado:
     // 1. activityData.title (título direto em inglês)
     // 2. activityData.titulo (título em português)
     // 3. activityData.nome (nome da atividade)
@@ -134,19 +137,23 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
     // 5. activityData.tituloAtividade (título específico)
     // 6. activityData.tema (tema da atividade)
     // 7. activityData.subject (assunto)
-    // 8. Nome genérico da categoria como último recurso
-    const activityTitle = activityData?.title || 
-                          activityData?.titulo || 
-                          activityData?.nome || 
-                          activityData?.name ||
-                          activityData?.tituloAtividade ||
-                          activityData?.tema ||
-                          activityData?.subject ||
-                          activityData?.['Título'] ||
-                          activityData?.['Nome da Atividade'] ||
-                          getActivityNameById(activity.tipo);
+    const customTitle = activityData?.title || 
+                        activityData?.titulo || 
+                        activityData?.nome || 
+                        activityData?.name ||
+                        activityData?.tituloAtividade ||
+                        activityData?.tema ||
+                        activityData?.subject ||
+                        activityData?.['Título'] ||
+                        activityData?.['Nome da Atividade'];
     
-    console.log('✅ [HISTÓRICO] Título extraído:', activityTitle);
+    // Se há título personalizado E é diferente do código único, usar ele
+    // Caso contrário, usar o nome do tipo de atividade
+    const activityTitle = (customTitle && customTitle !== activity.id) 
+                          ? customTitle 
+                          : activityTypeName;
+    
+    console.log('✅ [HISTÓRICO] Título final:', activityTitle);
     
     return {
       id: activity.id,
@@ -162,7 +169,7 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       atualizadaEm: activity.updated_at,
       // Campos adicionais necessários para ConstructionActivity
       categoryId: activity.tipo,
-      categoryName: getActivityNameById(activity.tipo),
+      categoryName: activityTypeName,
       icon: activity.tipo,
       tags: [],
       difficulty: 'Médio',
