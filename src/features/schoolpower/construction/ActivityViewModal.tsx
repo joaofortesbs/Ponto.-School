@@ -62,7 +62,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     if (!activity) return;
 
     const activityType = activity.originalData?.type || activity.categoryId || activity.type || '';
-
+    
     console.log('📥 Iniciando download da atividade:', activityType);
 
     if (!isDownloadSupported(activityType)) {
@@ -132,9 +132,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     console.log('🔍 ActivityViewModal: Carregando dados específicos do Plano de Aula para:', activityId);
 
     const cacheKeys = [
+      `constructed_plano-aula_${activity.id}`, // Use activity.id for specificity
+      `schoolpower_plano-aula_content`,
       `activity_${activity.id}`,
-      `activity_fields_${activity.id}`,
-      `schoolpower_plano-aula_content`
+      `activity_fields_${activity.id}`
     ];
 
     for (const key of cacheKeys) {
@@ -166,38 +167,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
       console.log('🔍 ActivityViewModal: Carregando dados para atividade:', activity);
 
-      // SINCRONIZAÇÃO INSTANTÂNEA: Salvar título atual no localStorage
-      const localStorageKey = `activity_${activity.id}`;
-      const currentData = localStorage.getItem(localStorageKey);
-
-      try {
-        const dataToSave = currentData ? JSON.parse(currentData) : {};
-
-        // Atualizar com título atual da atividade
-        const updatedData = {
-          ...dataToSave,
-          title: activity.title || activity.personalizedTitle || dataToSave.title,
-          titulo: activity.title || activity.personalizedTitle || dataToSave.titulo,
-          personalizedTitle: activity.personalizedTitle || activity.title || dataToSave.personalizedTitle,
-          name: activity.title || activity.personalizedTitle || dataToSave.name,
-          lastSyncedAt: new Date().toISOString()
-        };
-
-        localStorage.setItem(localStorageKey, JSON.stringify(updatedData));
-        console.log('🔄 [SINCRONIZAÇÃO] Título atualizado no localStorage:', updatedData.title);
-
-        // Disparar evento customizado para notificar o histórico
-        window.dispatchEvent(new CustomEvent('activity-title-updated', {
-          detail: {
-            activityId: activity.id,
-            title: updatedData.title,
-            timestamp: new Date().toISOString()
-          }
-        }));
-      } catch (e) {
-        console.warn('⚠️ [SINCRONIZAÇÃO] Erro ao salvar título:', e);
-      }
-
       // Se for plano-aula, tentar carregar dados específicos
       if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
         const planoData = loadPlanoAulaData(activity.id);
@@ -211,7 +180,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('📋 Carregando dados de atividade do histórico:', activity.originalData);
       }
     }
-  }, [isOpen, activity?.id, activity?.title, activity?.personalizedTitle]); // Incluir title e personalizedTitle
+  }, [isOpen, activity?.id]); // Usar apenas activity.id para evitar loops
 
   if (!isOpen || !activity) return null;
 
@@ -296,45 +265,12 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
   // Função para obter o título da atividade
   const getActivityTitle = () => {
-    // Validar se o título é um código único
-    const isUniqueCode = (str: string): boolean => {
-      if (!str || typeof str !== 'string') return true;
-      const uniqueCodePatterns = [
-        /^[a-zA-Z0-9]{8,}$/,
-        /^[a-z]+[0-9]+[a-zA-Z0-9]*$/i,
-        /^[0-9]+[a-z]+[a-zA-Z0-9]*$/i,
-        /^[a-zA-Z]*[0-9]{3,}[a-zA-Z]*$/,
-      ];
-      return uniqueCodePatterns.some(pattern => pattern.test(str));
-    };
-
-    // Obter nome do tipo da atividade
-    const getActivityTypeName = (type: string): string => {
-      const typeMap: Record<string, string> = {
-        'flash-cards': 'Flash Cards',
-        'plano-aula': 'Plano de Aula',
-        'lista-exercicios': 'Lista de Exercícios',
-        'sequencia-didatica': 'Sequência Didática',
-        'quiz-interativo': 'Quiz Interativo',
-        'mapa-mental': 'Mapa Mental',
-        'quadro-interativo': 'Quadro Interativo',
-        'atividade-pratica': 'Atividade Prática',
-        'prova': 'Prova/Avaliação',
-      };
-      return typeMap[type] || type.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    };
-
-    // Selecionar título com validação
-    const rawTitle = activity?.title || activity?.personalizedTitle || '';
-    const typeName = getActivityTypeName(activity?.type || activity?.categoryId || '');
-    const activityTitle = (rawTitle && !isUniqueCode(rawTitle)) ? rawTitle : typeName || 'Atividade';
-
     if (activityType === 'plano-aula') {
-      const planoTitle = localStorage.getItem(`activity_${activity.id}`) ? JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.titulo || JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.title || activityTitle : activityTitle;
+      const planoTitle = localStorage.getItem(`activity_${activity.id}`) ? JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.titulo || JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.title || activity.title || activity.personalizedTitle || 'Plano de Aula' : activity.title || activity.personalizedTitle || 'Plano de Aula';
       const tema = localStorage.getItem(`activity_${activity.id}`) ? JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.tema || JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.['Tema ou Tópico Central'] || '' : '';
       return tema ? `${planoTitle}: ${tema}` : planoTitle;
     }
-    return activityTitle;
+    return activity.title || activity.personalizedTitle || 'Atividade';
   };
 
   // Função para obter informações adicionais do Plano de Aula para o cabeçalho
@@ -537,11 +473,11 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             const parsedData = JSON.parse(data);
             // Verificar se tem estrutura válida de sequência didática
             if (parsedData.sequenciaDidatica ||
-              parsedData.aulas ||
-              parsedData.diagnosticos ||
-              parsedData.avaliacoes ||
-              parsedData.data?.sequenciaDidatica ||
-              parsedData.success) {
+                parsedData.aulas ||
+                parsedData.diagnosticos ||
+                parsedData.avaliacoes ||
+                parsedData.data?.sequenciaDidatica ||
+                parsedData.success) {
               sequenciaContent = parsedData;
               console.log(`✅ Dados da Sequência Didática encontrados em ${key}:`, parsedData);
               break;
@@ -573,13 +509,13 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           id: activity.id,
           type: activityType,
           title: processedData.sequenciaDidatica?.titulo ||
-            processedData.titulo ||
-            processedData.title ||
-            previewData.title,
+                 processedData.titulo ||
+                 processedData.title ||
+                 previewData.title,
           description: processedData.sequenciaDidatica?.descricaoGeral ||
-            processedData.descricaoGeral ||
-            processedData.description ||
-            previewData.description,
+                      processedData.descricaoGeral ||
+                      processedData.description ||
+                      previewData.description,
           // Garantir estrutura completa para visualização
           sequenciaDidatica: processedData.sequenciaDidatica || processedData,
           metadados: processedData.metadados || {
