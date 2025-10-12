@@ -689,19 +689,14 @@ export function SidebarNav({
           justify-content: center;
         }
 
-        .navigation-menu-container:not(.sidebar-collapsed) {
-          padding: 0 1rem;
-        }
-
         .menu-navigation {
           padding: 16px 0;
           width: 100%;
-          max-width: 100%;
         }
 
         .navigation-menu-container:not(.sidebar-collapsed) .menu-navigation {
           width: calc(100% - 2rem);
-          max-width: calc(100% - 2rem);
+          margin: 0 auto;
         }
 
         .menu-item {
@@ -715,11 +710,11 @@ export function SidebarNav({
           height: 56px !important;
           width: 100%;
         }
-        
+
         .navigation-menu-container:not(.sidebar-collapsed) .menu-item {
           width: 100%;
         }
-        
+
         /* Garantir que os itens do menu tenham a mesma largura do card de perfil */
         .navigation-menu-container:not(.sidebar-collapsed) .menu-item {
           margin-left: 0;
@@ -1346,27 +1341,27 @@ export function SidebarNav({
           0% {
             transform: translateX(0) rotateY(0deg) scale(1);
             filter: brightness(1) hue-rotate(0deg);
-            box-shadow: 0 0 0 rgba(37, 99, 235, 0);
+            box-shadow: 0 0 0 rgba(255, 107, 0, 0);
           }
           10% {
             transform: translateX(-8px) rotateY(-20deg) scale(0.98);
             filter: brightness(1.1) hue-rotate(-10deg);
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 2px 8px rgba(255, 107, 0, 0.1);
           }
           25% {
             transform: translateX(-15px) rotateY(-45deg) scale(0.92);
             filter: brightness(1.2) hue-rotate(-30deg);
-            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2);
           }
           40% {
             transform: translateX(-20px) rotateY(-90deg) scale(0.85);
             filter: brightness(1.3) hue-rotate(-60deg);
-            box-shadow: 0 6px 24px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 6px 24px rgba(255, 107, 0, 0.3);
           }
           50% {
             transform: translateX(-15px) rotateY(-135deg) scale(0.8);
             filter: brightness(1.4) hue-rotate(-90deg);
-            box-shadow: 0 8px 32px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 8px 32px rgba(255, 107, 0, 0.4);
           }
           60% {
             transform: translateX(-5px) rotateY(-180deg) scale(0.85);
