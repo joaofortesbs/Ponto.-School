@@ -21,16 +21,19 @@ interface AtividadeHistorico extends ConstructionActivity {
   atualizadaEm?: string;
 }
 
-// Função para obter nome da atividade com mapeamento completo
-const getActivityNameById = (activityId: string): string => {
-  const activity = schoolPowerActivitiesData.find(act => act.id === activityId);
+// Função para obter nome da atividade com mapeamento completo usando o TIPO do banco Neon
+const getActivityNameById = (activityType: string): string => {
+  console.log('🔍 [MAPEAMENTO] Buscando nome para tipo:', activityType);
   
-  // Se encontrou no JSON, retorna o nome
+  // Primeiro, tentar encontrar no JSON de atividades do School Power
+  const activity = schoolPowerActivitiesData.find(act => act.id === activityType);
+  
   if (activity) {
+    console.log('✅ [MAPEAMENTO] Encontrado no JSON:', activity.name);
     return activity.name;
   }
   
-  // Mapeamento manual para garantir nomes legíveis
+  // Mapeamento manual completo para todos os tipos de atividade
   const manualMapping: Record<string, string> = {
     'flash-cards': 'Flash Cards',
     'plano-aula': 'Plano de Aula',
@@ -46,13 +49,26 @@ const getActivityNameById = (activityId: string): string => {
     'texto-apoio': 'Texto de Apoio',
     'resumo': 'Resumo',
     'criterios-avaliacao': 'Critérios de Avaliação',
-    'exemplos-contextualizados': 'Exemplos Contextualizados'
+    'exemplos-contextualizados': 'Exemplos Contextualizados',
+    'atividade': 'Atividade',
+    'exercicio': 'Exercício',
+    'tarefa': 'Tarefa'
   };
   
-  // Retorna do mapeamento manual ou formata o ID como fallback
-  return manualMapping[activityId] || activityId.split('-').map(word => 
-    word.charAt(0).toUpperCase() + word.slice(1)
-  ).join(' ');
+  // Retornar do mapeamento manual
+  if (manualMapping[activityType]) {
+    console.log('✅ [MAPEAMENTO] Encontrado no mapeamento manual:', manualMapping[activityType]);
+    return manualMapping[activityType];
+  }
+  
+  // Fallback: formatar o tipo como título legível
+  const formattedName = activityType
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+  
+  console.log('✅ [MAPEAMENTO] Usando formatação automática:', formattedName);
+  return formattedName;
 };
 
 export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriadasProps) {
@@ -180,13 +196,12 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       activityData: activityData
     });
     
-    // Obter o nome genérico do tipo de atividade
+    // IMPORTANTE: Usar o campo 'tipo' do banco Neon (NÃO o ID) para obter o nome da atividade
     const activityTypeName = getActivityNameById(activity.tipo);
     
-    console.log('🔍 [HISTÓRICO] Dados da atividade:', {
+    console.log('🔍 [HISTÓRICO] Nome do tipo de atividade:', {
       tipo: activity.tipo,
-      activityTypeName: activityTypeName,
-      activityData: activityData
+      activityTypeName: activityTypeName
     });
     
     // SINCRONIZAÇÃO INSTANTÂNEA: Verificar localStorage para dados mais recentes
@@ -214,31 +229,42 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       syncedData?.tituloAtividade,
       syncedData?.['Título'],
       syncedData?.['Nome da Atividade'],
-      syncedData?.personalizedTitle, // Título personalizado do modal
+      syncedData?.personalizedTitle,
       syncedData?.tema,
       syncedData?.subject
     ];
     
-    // Filtrar apenas valores válidos (não vazios e diferentes do ID)
+    // Filtrar apenas valores válidos (não vazios, diferentes do ID e não sejam códigos únicos)
     const validTitles = possibleTitleFields.filter(title => 
       title && 
       typeof title === 'string' && 
       title.trim() !== '' && 
       title !== activity.id &&
-      !title.includes(activity.id) && // Evitar títulos que contenham o ID
-      !title.match(/^[a-z0-9]{8,}$/) // Evitar códigos únicos
+      !title.includes(activity.id) && 
+      !title.match(/^[a-zA-Z0-9]{8,}$/) && // Evitar códigos únicos
+      title.length < 100 // Títulos muito longos provavelmente não são títulos
     );
     
-    // Usar o primeiro título válido encontrado, ou o nome do tipo como fallback
-    const activityTitle = validTitles.length > 0 ? validTitles[0] : activityTypeName;
+    // Prioridade: título personalizado válido > nome do tipo da atividade
+    let finalTitle: string;
     
-    console.log('✅ [HISTÓRICO] Título final selecionado:', activityTitle);
-    console.log('✅ [HISTÓRICO] Títulos válidos encontrados:', validTitles);
+    if (validTitles.length > 0) {
+      // Tem título personalizado válido
+      finalTitle = validTitles[0];
+      console.log('✅ [HISTÓRICO] Usando título personalizado:', finalTitle);
+    } else {
+      // Usar nome do tipo como título (ex: "Plano de Aula", "Flash Cards", etc.)
+      finalTitle = activityTypeName;
+      console.log('✅ [HISTÓRICO] Usando nome do tipo como título:', finalTitle);
+    }
     
-    // Validação final: garantir que o título NUNCA seja um código/ID
-    const finalTitle = (activityTitle.includes('-') && activityTitle.length > 20) || activityTitle.match(/^[a-z0-9]{8,}$/)
-      ? activityTypeName // Se parece com um código, usar nome do tipo
-      : activityTitle;
+    // Validação final: se o título ainda parecer um código, usar nome do tipo
+    if (finalTitle.match(/^[a-zA-Z0-9]{8,}$/) || finalTitle.includes('-') && finalTitle.length > 20) {
+      console.warn('⚠️ [HISTÓRICO] Título parece ser código, usando nome do tipo');
+      finalTitle = activityTypeName;
+    }
+    
+    console.log('✅ [HISTÓRICO] Título final:', finalTitle);
     
     return {
       id: activity.id,
