@@ -82,14 +82,14 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <motion.div
               animate={{
-                opacity: [0.1, 0.15, 0.1],
+                opacity: [0.05, 0.08, 0.05],
               }}
               transition={{
                 duration: 6,
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
-              className="absolute -top-32 -right-32 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"
+              className="absolute -top-32 -right-32 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl"
             />
           </div>
 
