@@ -57,6 +57,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const isLightMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
   const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
   const [flashCardsContent, setFlashCardsContent] = useState<any>(null);
+  const [schoolPoints, setSchoolPoints] = useState<number>(100);
 
   const handleDownload = async () => {
     if (!activity) return;
@@ -166,6 +167,43 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setFlashCardsContent(null);
 
       console.log('🔍 ActivityViewModal: Carregando dados para atividade:', activity);
+
+      // Carregar School Points do localStorage ou banco
+      const loadSchoolPoints = async () => {
+        // Primeiro, tentar do localStorage
+        const spKey = `activity_${activity.id}_schoolpoints`;
+        const localSPs = localStorage.getItem(spKey);
+        
+        if (localSPs) {
+          const points = parseInt(localSPs);
+          console.log(`💰 School Points carregados do localStorage: ${points} SPs`);
+          setSchoolPoints(points);
+        } else {
+          // Se não encontrou no localStorage, tentar do banco Neon
+          const userId = localStorage.getItem('user_id');
+          if (userId && activity.userId === userId) {
+            try {
+              const { atividadesNeonService } = await import('@/services/atividadesNeonService');
+              const result = await atividadesNeonService.buscarAtividade(activity.id);
+              
+              if (result.success && result.data?.school_points) {
+                console.log(`💰 School Points carregados do banco: ${result.data.school_points} SPs`);
+                setSchoolPoints(result.data.school_points);
+              } else {
+                console.log('💰 Usando valor padrão: 100 SPs');
+                setSchoolPoints(100);
+              }
+            } catch (error) {
+              console.warn('⚠️ Erro ao carregar SPs do banco:', error);
+              setSchoolPoints(100);
+            }
+          } else {
+            setSchoolPoints(100);
+          }
+        }
+      };
+
+      loadSchoolPoints();
 
       // Se for plano-aula, tentar carregar dados específicos
       if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
@@ -658,7 +696,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             activityType={activityType}
             userName={userInfo.displayName || userInfo.name}
             userAvatar={userInfo.avatar}
-            schoolPoints={100}
+            schoolPoints={schoolPoints}
+            onSchoolPointsChange={(newSPs) => setSchoolPoints(newSPs)}
             onDownload={handleDownload}
             onMoreOptions={() => {
               console.log('Menu de opções clicado');

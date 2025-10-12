@@ -21,7 +21,7 @@ router.post('/', async (req, res) => {
   const client = getDbClient();
   
   try {
-    const { id, id_user, tipo, id_json } = req.body;
+    const { id, id_user, tipo, id_json, school_points } = req.body;
     
     if (!id || !id_user || !tipo || !id_json) {
       return res.status(400).json({
@@ -31,21 +31,22 @@ router.post('/', async (req, res) => {
     }
     
     await client.connect();
-    console.log('💾 Salvando atividade:', id, 'para usuário:', id_user);
+    console.log('💾 Salvando atividade:', id, 'para usuário:', id_user, 'com', school_points || 100, 'SPs');
     
     // Inserir ou atualizar
     const query = `
-      INSERT INTO atividades (id, id_user, tipo, id_json)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO atividades (id, id_user, tipo, id_json, school_points)
+      VALUES ($1, $2, $3, $4, $5)
       ON CONFLICT (id) 
       DO UPDATE SET 
         tipo = EXCLUDED.tipo,
         id_json = EXCLUDED.id_json,
+        school_points = EXCLUDED.school_points,
         updated_at = NOW()
       RETURNING *;
     `;
     
-    const result = await client.query(query, [id, id_user, tipo, JSON.stringify(id_json)]);
+    const result = await client.query(query, [id, id_user, tipo, JSON.stringify(id_json), school_points || 100]);
     
     console.log('✅ Atividade salva com sucesso:', result.rows[0].id);
     

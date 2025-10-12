@@ -35,6 +35,7 @@ interface UniversalActivityHeaderProps {
   userAvatar?: string;
   onMoreOptions?: () => void;
   schoolPoints?: number;
+  onSchoolPointsChange?: (newSPs: number) => void; // Callback para notificar mudanças nos SPs
   onAddToClass?: () => void;
   onDownload?: () => void;
   onShare?: () => void;
@@ -169,6 +170,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   userAvatar,
   onMoreOptions,
   schoolPoints = 100,
+  onSchoolPointsChange, // Novo callback
   onAddToClass,
   onDownload,
   onShare,
@@ -181,6 +183,12 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   const [isEditingSPs, setIsEditingSPs] = React.useState(false);
   const [currentSPs, setCurrentSPs] = React.useState(schoolPoints);
   const [tempSPs, setTempSPs] = React.useState(schoolPoints.toString());
+
+  // Sincronizar com prop schoolPoints quando mudar
+  React.useEffect(() => {
+    setCurrentSPs(schoolPoints);
+    setTempSPs(schoolPoints.toString());
+  }, [schoolPoints]);
   const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -241,9 +249,21 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   };
 
   const handleSaveSPs = () => {
-    const newSPs = parseInt(tempSPs) || 0;
+    const newSPs = parseInt(tempSPs) || 100;
     setCurrentSPs(newSPs);
     setIsEditingSPs(false);
+    
+    // Salvar no localStorage para sincronização posterior
+    if (activityId) {
+      const spKey = `activity_${activityId}_schoolpoints`;
+      localStorage.setItem(spKey, newSPs.toString());
+      console.log(`💾 School Points salvos localmente para ${activityId}:`, newSPs);
+    }
+    
+    // Notificar componente pai sobre a mudança
+    if (onSchoolPointsChange) {
+      onSchoolPointsChange(newSPs);
+    }
   };
 
   const handleCancelEdit = () => {
