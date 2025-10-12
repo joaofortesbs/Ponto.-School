@@ -869,6 +869,8 @@ export function SidebarNav({
 
         .sidebar-collapsed .menu-item {
           justify-content: center !important;
+          width: 100% !important;
+          margin: 0 0 4px !important;
         }
 
         .sidebar-collapsed .item-content {
@@ -878,6 +880,16 @@ export function SidebarNav({
 
         .sidebar-collapsed .item-indicator {
           display: none !important;
+        }
+
+        .sidebar-collapsed .menu-navigation {
+          width: 100% !important;
+          padding: 16px 0 !important;
+        }
+
+        .sidebar-collapsed .navigation-menu-container {
+          width: 100% !important;
+          padding: 0 !important;
         }
 
         .item-indicator {
