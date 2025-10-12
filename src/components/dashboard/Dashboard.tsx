@@ -100,7 +100,7 @@ export default function Dashboard() {
   const saudacao = getGreeting();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900">
+    <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 space-y-6 transition-colors duration-300">
       {/* Banner com prioridade de renderização */}
       <div className="priority-render max-w-[1192px] mx-auto">
         <PromotionalBanner />
