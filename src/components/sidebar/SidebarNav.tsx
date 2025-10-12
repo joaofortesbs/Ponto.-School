@@ -689,19 +689,14 @@ export function SidebarNav({
           justify-content: center;
         }
 
-        .navigation-menu-container:not(.sidebar-collapsed) {
-          padding: 0 1rem;
-        }
-
         .menu-navigation {
           padding: 16px 0;
           width: 100%;
-          max-width: 100%;
         }
 
         .navigation-menu-container:not(.sidebar-collapsed) .menu-navigation {
           width: calc(100% - 2rem);
-          max-width: calc(100% - 2rem);
+          margin: 0 1rem;
         }
 
         .menu-item {
