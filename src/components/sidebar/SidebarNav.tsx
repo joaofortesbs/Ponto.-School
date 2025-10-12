@@ -685,18 +685,11 @@ export function SidebarNav({
         .navigation-menu-container {
           position: relative;
           width: 100%;
-          display: flex;
-          justify-content: center;
         }
 
         .menu-navigation {
           padding: 16px 0;
           width: 100%;
-        }
-
-        .navigation-menu-container:not(.sidebar-collapsed) .menu-navigation {
-          width: calc(100% - 2rem);
-          margin: 0 auto;
         }
 
         .menu-item {
