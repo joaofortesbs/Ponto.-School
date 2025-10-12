@@ -616,7 +616,7 @@ export function SidebarNav({
             {/* Front Side */}
             <div
               className={cn(
-                "bg-white dark:bg-[#29335C]/20 rounded-3xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden",
+                "bg-white dark:bg-[#29335C]/20 rounded-[2rem] border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden",
                 isCollapsed ? "w-14 p-2" : "w-full p-4",
               )}
             >
@@ -784,7 +784,7 @@ export function SidebarNav({
             {/* Back Side - Idêntico ao front */}
             <div
               className={cn(
-                "bg-white dark:bg-[#29335C]/20 rounded-xl border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden absolute inset-0 rotate-y-180",
+                "bg-white dark:bg-[#29335C]/20 rounded-[2rem] border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden absolute inset-0 rotate-y-180",
                 isCollapsed ? "w-14 p-2" : "w-full p-4",
               )}
             >
