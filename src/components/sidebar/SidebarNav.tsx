@@ -700,6 +700,12 @@ export function SidebarNav({
           min-height: 56px !important;
           height: 56px !important;
         }
+        
+        /* Garantir que os itens do menu tenham a mesma largura do card de perfil */
+        .navigation-menu-container:not(.sidebar-collapsed) .menu-item {
+          margin-left: 0;
+          margin-right: 0;
+        }
 
         .menu-item::before {
           content: '';
@@ -730,7 +736,7 @@ export function SidebarNav({
         .item-content {
           display: flex;
           align-items: center;
-          padding: 12px;
+          padding: 12px 16px;
           gap: 12px;
           position: relative;
           height: 100% !important;
