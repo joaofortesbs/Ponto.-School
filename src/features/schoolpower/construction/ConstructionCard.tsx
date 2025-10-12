@@ -205,8 +205,8 @@ export function ConstructionCard({
   onEdit
 }: ConstructionActivityProps) {
   const isCompleted = status === 'completed' || progress >= 100;
-  const ActivityIcon = getIconByActivityId(id);
-  const activityName = getActivityNameById(id);
+  const ActivityIcon = getIconByActivityId(type);
+  const activityName = getActivityNameById(type);
 
   // Cores baseadas no status - otimizado para modo claro e escuro
   const cardTheme = isCompleted ? {
