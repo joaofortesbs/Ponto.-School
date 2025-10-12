@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { GraduationCap, Briefcase } from "lucide-react";
@@ -56,8 +55,8 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
           {/* Front Side */}
           <div
             className={cn(
-              "bg-white dark:bg-[#29335C]/20 rounded-[2rem] border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden",
-              isCollapsed ? "w-14 p-2" : "w-full p-4",
+              "bg-white dark:bg-[#29335C]/20 border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden",
+              isCollapsed ? "w-14 p-2 rounded-xl" : "w-full p-4 rounded-[2rem]",
             )}
           >
             {/* Ícone de graduação no canto superior esquerdo quando expandido */}
@@ -212,8 +211,8 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
           {/* Back Side - Idêntico ao front */}
           <div
             className={cn(
-              "bg-white dark:bg-[#29335C]/20 rounded-[2rem] border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden absolute inset-0 rotate-y-180",
-              isCollapsed ? "w-14 p-2" : "w-full p-4",
+              "bg-white dark:bg-[#29335C]/20 border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden absolute inset-0 rotate-y-180",
+              isCollapsed ? "w-14 p-2 rounded-xl" : "w-full p-4 rounded-[2rem]",
             )}
           >
             {/* Ícone de Briefcase no canto superior esquerdo quando expandido */}
