@@ -1141,8 +1141,8 @@ export function SidebarNav({
           align-items: center;
           justify-content: center;
           flex-shrink: 0 !important;
-          margin-left: auto;
-          margin-right: 12px;
+          position: absolute;
+          right: 12px;
         }
 
         .lock-icon i {
