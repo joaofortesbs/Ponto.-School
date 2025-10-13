@@ -76,7 +76,7 @@ const MovingBorder = ({
 
 interface ChatInputProps {
   isDarkTheme?: boolean;
-  onSend?: (message: string) => void;
+  onSend?: (message: string, files?: UploadedFile[]) => void;
 }
 
 // Componente AIMessageBox
@@ -98,16 +98,18 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
   };
 
   const handleSend = () => {
-    if (message.trim()) {
+    if (message.trim() || uploadedFiles.length > 0) {
       console.log("Enviando mensagem:", message);
+      console.log("Arquivos anexados:", uploadedFiles.length);
 
-      // Chama a função onSend se fornecida
+      // Chama a função onSend se fornecida, passando mensagem e arquivos
       if (onSend) {
-        onSend(message.trim());
+        onSend(message.trim(), uploadedFiles);
       }
 
-      // Limpa o campo apenas após o envio
+      // Limpa o campo e arquivos após o envio
       setMessage("");
+      setUploadedFiles([]);
       setIsTyping(false);
     }
   };

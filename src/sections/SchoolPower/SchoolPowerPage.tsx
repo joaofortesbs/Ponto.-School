@@ -36,7 +36,11 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     submitContextualization: handleSubmitContextualizationHook,
     approveActionPlan: handleApproveActionPlanHook,
     resetFlow: handleResetFlowHook,
-    isLoading
+    isLoading,
+    currentState,
+    initialMessage,
+    setInitialMessage,
+    generatePersonalizedPlan
   } = useSchoolPowerFlow();
 
   // Log apenas mudanças importantes de estado
@@ -52,10 +56,18 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   };
 
   // Função para enviar mensagem inicial
-  const handleSendMessage = (message: string) => {
-    console.log("📤 Enviando mensagem inicial do SchoolPowerPage:", message);
-    handleSendInitialMessage(message);
+  const handleSendMessage = async (message: string, files?: any[]) => {
+    console.log('📨 Mensagem recebida:', message);
+    console.log('📎 Arquivos recebidos:', files?.length || 0);
+
+    if (currentState === 'initial') {
+      setInitialMessage(message);
+      setUploadedFiles(files || []);
+      setCurrentState('contextualizing');
+    }
   };
+
+  const [uploadedFiles, setUploadedFiles] = React.useState<any[]>([]);
 
   // Função para submeter contextualização
   const handleSubmitContextualization = (data: any) => {
@@ -116,11 +128,11 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
 
           {/* Container Ripple fixo e centralizado no background */}
           <div className={`absolute ${isMobile && isQuizMode ? 'top-[45%]' : 'top-[57%]'} left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none`}>
-            <div 
-              className="relative" 
-              style={{ 
-                width: isMobile && isQuizMode ? "350px" : "900px", 
-                height: isMobile && isQuizMode ? "450px" : "617px" 
+            <div
+              className="relative"
+              style={{
+                width: isMobile && isQuizMode ? "350px" : "900px",
+                height: isMobile && isQuizMode ? "450px" : "617px"
               }}
             >
               {/* TechCircle posicionado no topo do container Ripple */}
@@ -145,21 +157,21 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                   transform: "translate(-50%, -50%)",
                 }}
               >
-                <ProfileSelector 
+                <ProfileSelector
                   isQuizMode={isQuizMode}
                 />
               </div>
 
               {/* Caixa de Mensagem dentro do mesmo container Ripple */}
-              <div 
-                className={`absolute ${isMobile && isQuizMode ? 'bottom-16' : 'bottom-24'} left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto`} 
-                style={{ 
+              <div
+                className={`absolute ${isMobile && isQuizMode ? 'bottom-16' : 'bottom-24'} left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto`}
+                style={{
                   marginTop: isMobile && isQuizMode ? "-80px" : "-150px",
                   width: isMobile && isQuizMode ? "110%" : "auto"
                 }}
               >
-                <ChatInput 
-                  isDarkTheme={isDarkTheme} 
+                <ChatInput
+                  isDarkTheme={isDarkTheme}
                   onSend={handleSendMessage}
                 />
               </div>
@@ -170,7 +182,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
 
       {/* Histórico de Atividades Criadas */}
       {showHistorico && (
-        <motion.div 
+        <motion.div
           className="absolute inset-0 flex items-center justify-center z-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -184,7 +196,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
 
       {/* Card de Construção unificado - aparece baseado no flowState com fundo estrelado visível */}
       {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
-        <motion.div 
+        <motion.div
           className="absolute inset-0 flex items-center justify-center z-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -200,9 +212,9 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                   manualActivities: flowData?.manualActivities || []
                 }}
                 onBack={handleBack}
-                step={flowState === 'contextualizing' ? 'contextualization' : 
-                      flowState === 'actionplan' ? 'actionPlan' : 
-                      flowState === 'generating' ? 'generating' : 
+                step={flowState === 'contextualizing' ? 'contextualization' :
+                      flowState === 'actionplan' ? 'actionPlan' :
+                      flowState === 'generating' ? 'generating' :
                       flowState === 'generatingActivities' ? 'generatingActivities' : 'activities'}
                 contextualizationData={flowData?.contextualizationData || null}
                 actionPlan={(flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : []}
@@ -215,7 +227,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
           </div>
         </motion.div>
       )}
-      
+
       {/* Debug Panel - apenas em desenvolvimento */}
       <DebugPanel />
 

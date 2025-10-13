@@ -42,12 +42,70 @@ interface GeminiActivityResponse {
 }
 
 /**
+ * Interface para arquivos enviados
+ */
+interface UploadedFile {
+  file: File;
+  type: string; // e.g., 'image', 'document'
+}
+
+/**
+ * Converte um arquivo para Base64
+ */
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const base64String = reader.result?.toString().split(',')[1];
+      if (base64String) {
+        resolve(base64String);
+      } else {
+        reject(new Error('Failed to convert file to Base64.'));
+      }
+    };
+    reader.onerror = error => reject(error);
+  });
+}
+
+/**
+ * Obtém o tipo MIME de um arquivo
+ */
+function getFileMimeType(file: File): string {
+  // Lógica para determinar o MimeType baseado na extensão ou tipo do arquivo
+  // Exemplo simplificado:
+  if (file.type) {
+    return file.type;
+  }
+  const extension = file.name.split('.').pop()?.toLowerCase();
+  switch (extension) {
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'gif':
+      return 'image/gif';
+    case 'pdf':
+      return 'application/pdf';
+    case 'doc':
+    case 'docx':
+      return 'application/msword';
+    case 'txt':
+      return 'text/plain';
+    default:
+      return 'application/octet-stream'; // Tipo genérico
+  }
+}
+
+/**
  * Constrói o prompt otimizado para a API Gemini
  */
 function buildGeminiPrompt(
   initialMessage: string,
   contextualizationData: ContextualizationData,
-  allowedActivities: typeof schoolPowerActivities
+  allowedActivities: typeof schoolPowerActivities,
+  uploadedFiles?: UploadedFile[]
 ): string {
   // Simplificar lista de atividades para economizar tokens
   const activitiesIds = allowedActivities
@@ -89,7 +147,7 @@ Os campos obrigatórios são EXATAMENTE:
 USE EXATAMENTE ESTES NOMES DE CAMPOS para plano-aula!`;
 
     // Construir o prompt para a Gemini
-    const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo.
+    let prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo.
 
 Here are the collected information:
 
@@ -100,7 +158,18 @@ DATA:
 - Restrictions: "${contextualizationData?.restrictions || 'undefined'}"
 - Important dates: "${contextualizationData?.dates || 'undefined'}"
 - Observations: ${contextualizationData?.notes || 'None'}
+`;
 
+    // Adiciona informações sobre arquivos enviados, se houver
+    if (uploadedFiles && uploadedFiles.length > 0) {
+      prompt += '\n\nINFORMACÕES DE ARQUIVOS ANEXADOS:\n';
+      uploadedFiles.forEach((fileData, index) => {
+        prompt += `- Arquivo ${index + 1}: Nome: ${fileData.file.name}, Tipo: ${fileData.type}\n`;
+      });
+      prompt += 'Analise estes arquivos e incorpore suas informações no plano de ação.\n';
+    }
+
+    prompt += `
 AVAILABLE ACTIVITIES: ${activitiesString}
 
 CUSTOM FIELDS PER ACTIVITY:
@@ -239,7 +308,7 @@ IMPORTANT:
           "category": "Matemática",
           "type": "activity",
           "Título": "Flash Cards: Funções do 1º Grau",
-          "Descrição": "Criação de flash cards para memorização de conceitos chave sobre funções do 1º grau",
+          "Descrição": "Criação de flash cards para memorização de conceitos chave sobre funções do 1º Grau",
           "Tema": "Funções do 1º Grau",
           "Tópicos": "Definição, Gráfico, Coeficientes, Zero da função",
           "Número de flashcards": "15",
@@ -251,107 +320,117 @@ IMPORTANT:
 }
 
 /**
- * Makes the call to the Gemini API
+ * Calls Gemini API with support for files and images
  */
-async function callGeminiAPI(prompt: string): Promise<string> {
-  console.log('🚀 Making call to Gemini API...');
-  console.log('📤 Sent Prompt (first 300 chars):', prompt.substring(0, 300));
-  console.log('🔑 API Key available:', !!GEMINI_API_KEY);
-  console.log('🌐 API URL:', GEMINI_API_URL);
+async function callGeminiAPI(prompt: string, uploadedFiles?: UploadedFile[]): Promise<string> {
+  const url = `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`;
 
-  // Log detalhado da requisição
-  geminiLogger.info('request', 'Iniciando chamada para API Gemini', {
-    prompt_length: prompt.length,
-    api_key_available: !!GEMINI_API_KEY,
-    api_url: GEMINI_API_URL
+  console.log('📡 Calling Gemini API...');
+
+  // Prepara as partes do conteúdo
+  const parts: any[] = [{ text: prompt }];
+
+  // Adiciona arquivos ao prompt se existirem
+  if (uploadedFiles && uploadedFiles.length > 0) {
+    console.log(`📎 Processing ${uploadedFiles.length} uploaded files...`);
+
+    for (const fileData of uploadedFiles) {
+      try {
+        const base64Data = await fileToBase64(fileData.file);
+        const mimeType = getFileMimeType(fileData.file);
+
+        console.log(`✅ File processed: ${fileData.file.name} (${mimeType})`);
+        console.log(`   Size: ${(fileData.file.size / 1024).toFixed(2)} KB`);
+
+        // Adiciona o arquivo como inline_data
+        parts.push({
+          inline_data: {
+            mime_type: mimeType,
+            data: base64Data
+          }
+        });
+
+        // Adiciona contexto sobre o arquivo para melhor análise
+        const fileContext = fileData.type === 'image'
+          ? `\n\n[Imagem anexada: ${fileData.file.name}]\nAnalise esta imagem cuidadosamente e extraia todas as informações relevantes para criar atividades educacionais apropriadas.`
+          : `\n\n[Documento anexado: ${fileData.file.name}]\nAnalise este documento e incorpore seu conteúdo no plano de ação educacional.`;
+
+        parts.push({ text: fileContext });
+      } catch (error) {
+        console.error(`❌ Error processing file ${fileData.file.name}:`, error);
+      }
+    }
+
+    console.log(`✅ All files processed successfully. Total parts: ${parts.length}`);
+  }
+
+  const requestBody = {
+    contents: [{
+      parts: parts
+    }],
+    generationConfig: {
+      temperature: 0.3, // Reduced for more consistent responses
+      topK: 20,
+      topP: 0.8,
+      maxOutputTokens: 32768, // Significantly increased to support 50+ activities
+    }
+  };
+
+  console.log('📋 Request body:', JSON.stringify(requestBody, null, 2));
+
+  // Log da requisição
+  geminiLogger.logRequest(prompt, requestBody.generationConfig);
+
+  const startTime = Date.now();
+  const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody)
   });
 
-  if (!GEMINI_API_KEY) {
-    geminiLogger.error('error', 'Chave da API Gemini não configurada');
-    throw new Error('Gemini API Key is not configured');
-  }
+  const executionTime = Date.now() - startTime;
 
-  try {
-    const requestBody = {
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.3, // Reduced for more consistent responses
-        topK: 20,
-        topP: 0.8,
-        maxOutputTokens: 32768, // Significantly increased to support 50+ activities
-      }
-    };
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('❌ Error in Gemini API response:', response.status, errorText);
 
-    console.log('📋 Request body:', JSON.stringify(requestBody, null, 2));
-
-    // Log da requisição
-    geminiLogger.logRequest(prompt, requestBody.generationConfig);
-
-    const startTime = Date.now();
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody)
+    // Log do erro HTTP
+    geminiLogger.error('error', `Erro HTTP na API Gemini: ${response.status}`, {
+      status: response.status,
+      statusText: response.statusText,
+      errorText,
+      executionTime
     });
 
-    const executionTime = Date.now() - startTime;
+    throw new Error(`Gemini API Error: ${response.status} - ${errorText}`);
+  }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Error in Gemini API response:', response.status, errorText);
+  const data: GeminiResponse = await response.json();
+  console.log('📥 Raw Gemini response:', data);
 
-      // Log do erro HTTP
-      geminiLogger.error('error', `Erro HTTP na API Gemini: ${response.status}`, {
-        status: response.status,
-        statusText: response.statusText,
-        errorText,
-        executionTime
-      });
+  const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-      throw new Error(`Gemini API Error: ${response.status} - ${errorText}`);
-    }
+  if (!generatedText) {
+    console.error('❌ Empty response from Gemini API');
 
-    const data: GeminiResponse = await response.json();
-    console.log('📥 Raw Gemini response:', data);
-
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!generatedText) {
-      console.error('❌ Empty response from Gemini API');
-
-      // Log resposta vazia
-      geminiLogger.error('response', 'Resposta vazia da API Gemini', {
-        executionTime,
-        responseData: data
-      });
-
-      throw new Error('Empty response from Gemini API');
-    }
-
-    console.log('✅ Text generated by Gemini:', generatedText);
-
-    // Log resposta bem-sucedida
-    geminiLogger.logResponse(data, executionTime);
-
-    return generatedText;
-
-  } catch (error) {
-    console.error('❌ Error calling Gemini API:', error);
-
-    // Log erro geral
-    geminiLogger.logError(error instanceof Error ? error : new Error(String(error)), {
-      prompt_length: prompt.length,
-      api_url: GEMINI_API_URL
+    // Log resposta vazia
+    geminiLogger.error('response', 'Resposta vazia da API Gemini', {
+      executionTime,
+      responseData: data
     });
 
-    throw error;
+    throw new Error('Empty response from Gemini API');
   }
+
+  console.log('✅ Text generated by Gemini:', generatedText);
+
+  // Log resposta bem-sucedida
+  geminiLogger.logResponse(data, executionTime);
+
+  return generatedText;
+
 }
 
 /**
@@ -489,7 +568,8 @@ function generateFallbackPlan(
  */
 export async function generatePersonalizedPlan(
   initialMessage: string,
-  contextualizationData: ContextualizationData
+  contextualizationData: ContextualizationData,
+  uploadedFiles?: UploadedFile[]
 ): Promise<ActionPlanItem[]> {
   console.log('🤖 Starting personalized plan generation...');
   console.log('📝 Input data:', { initialMessage, contextualizationData });
@@ -508,11 +588,11 @@ export async function generatePersonalizedPlan(
     console.log('📚 Available activities:', schoolPowerActivities.length);
 
     // Builds the structured prompt
-    const prompt = buildGeminiPrompt(initialMessage, contextualizationData, schoolPowerActivities);
+    const prompt = buildGeminiPrompt(initialMessage, contextualizationData, schoolPowerActivities, uploadedFiles);
     console.log('📝 Prompt built successfully');
 
     // Calls the Gemini API
-    const geminiResponse = await callGeminiAPI(prompt);
+    const geminiResponse = await callGeminiAPI(prompt, uploadedFiles);
 
     // Processes the response
     const generatedActivities = parseGeminiResponse(geminiResponse);
