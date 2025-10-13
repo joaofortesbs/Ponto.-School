@@ -711,110 +711,109 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           <div className="tech-accent"></div>
           <div className="inner-container">
             <div className="flex flex-col gap-3 relative">
-              <div className="flex-1">
-                <textarea
-                  ref={textareaRef}
-                  value={message}
-                  onChange={handleInputChange}
-                  onKeyPress={handleKeyPress}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  placeholder={isMobile ? "Descreva seu desafio..." : "Digite sua mensagem para a IA..."}
-                  className="textarea-custom"
-                  rows={1}
-                  style={{ fontSize: isMobile ? '14px' : '16px' }}
-                />
-              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <textarea
+                    ref={textareaRef}
+                    value={message}
+                    onChange={handleInputChange}
+                    onKeyPress={handleKeyPress}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    placeholder="Digite sua mensagem..."
+                    className="textarea-custom"
+                    rows={1}
+                  />
+                </div>
 
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  scale: 0.85,
-                  y: 20,
-                  filter: "blur(10px)",
-                }}
-                animate={
-                  isTyping
-                    ? {
-                        opacity: 1,
-                        scale: 1,
-                        y: 0,
-                        filter: "blur(0px)",
-                      }
-                    : {
-                        opacity: 0,
-                        scale: 0.85,
-                        y: 20,
-                        filter: "blur(10px)",
-                      }
-                }
-                transition={{
-                  duration: 0.6,
-                  ease: [0.23, 1, 0.32, 1],
-                  opacity: { duration: 0.4 },
-                  scale: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
-                  y: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
-                  filter: { duration: 0.3 },
-                }}
-                className="expanded-section"
-                style={{
-                  position: "absolute",
-                  top: isMobile ? "-75px" : "-85px",
-                  left: 0,
-                  right: 0,
-                  zIndex: 1000,
-                  pointerEvents: isTyping ? "auto" : "none",
-                }}
-              >
                 <motion.div
-                  className="expanded-card"
-                  initial={{ backdropFilter: "blur(0px)" }}
-                  animate={{ backdropFilter: "blur(20px)" }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
+                  initial={{
+                    opacity: 0,
+                    scale: 0.85,
+                    y: 20,
+                    filter: "blur(10px)",
+                  }}
+                  animate={
+                    isTyping
+                      ? {
+                          opacity: 1,
+                          scale: 1,
+                          y: 0,
+                          filter: "blur(0px)",
+                        }
+                      : {
+                          opacity: 0,
+                          scale: 0.85,
+                          y: 20,
+                          filter: "blur(10px)",
+                        }
+                  }
+                  transition={{
+                    duration: 0.6,
+                    ease: [0.23, 1, 0.32, 1],
+                    opacity: { duration: 0.4 },
+                    scale: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+                    y: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+                    filter: { duration: 0.3 },
+                  }}
+                  className="expanded-section"
+                  style={{
+                    position: "absolute",
+                    top: "-85px",
+                    left: 0,
+                    right: 0,
+                    zIndex: 1000,
+                    pointerEvents: isTyping ? "auto" : "none",
+                  }}
                 >
-                  <div className="thinking-indicator">
-                    <motion.div
-                      className="pulse-dot"
-                      initial={{ scale: 0 }}
-                      animate={isTyping ? { scale: 1 } : { scale: 0 }}
-                      transition={{
-                        duration: 0.4,
-                        delay: 0.3,
-                        ease: [0.68, -0.55, 0.265, 1.55],
-                      }}
-                    />
-                    <motion.div
-                      className="thinking-text"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={
-                        isTyping ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }
-                      }
-                      transition={{
-                        duration: 0.4,
-                        delay: 0.4,
-                        ease: [0.25, 0.1, 0.25, 1],
-                      }}
-                    >
-                      <TextShimmerWave
-                        className='font-mono text-sm text-white'
-                        duration={1.5}
-                        zDistance={8}
-                        xDistance={1.5}
-                        yDistance={-1.5}
-                        scaleDistance={1.08}
-                        rotateYDistance={8}
-                        spread={1.2}
+                  <motion.div
+                    className="expanded-card"
+                    initial={{ backdropFilter: "blur(0px)" }}
+                    animate={{ backdropFilter: "blur(20px)" }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
+                  >
+                    <div className="thinking-indicator">
+                      <motion.div
+                        className="pulse-dot"
+                        initial={{ scale: 0 }}
+                        animate={isTyping ? { scale: 1 } : { scale: 0 }}
+                        transition={{
+                          duration: 0.4,
+                          delay: 0.3,
+                          ease: [0.68, -0.55, 0.265, 1.55],
+                        }}
+                      />
+                      <motion.div
+                        className="thinking-text"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={
+                          isTyping ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }
+                        }
+                        transition={{
+                          duration: 0.4,
+                          delay: 0.4,
+                          ease: [0.25, 0.1, 0.25, 1],
+                        }}
                       >
-                        {selectedMode === "Agente IA"
-                          ? "Seu Agente IA está pensando em uma resposta para isso..."
-                          : "Seu Assistente IA está pensando em uma resposta para isso..."}
-                      </TextShimmerWave>
-                    </motion.div>
-                  </div>
+                        <TextShimmerWave
+                          className='font-mono text-sm text-white'
+                          duration={1.5}
+                          zDistance={8}
+                          xDistance={1.5}
+                          yDistance={-1.5}
+                          scaleDistance={1.08}
+                          rotateYDistance={8}
+                          spread={1.2}
+                        >
+                          {selectedMode === "Agente IA"
+                            ? "Seu Agente IA está pensando em uma resposta para isso..."
+                            : "Seu Assistente IA está pensando em uma resposta para isso..."}
+                        </TextShimmerWave>
+                      </motion.div>
+                    </div>
+                  </motion.div>
                 </motion.div>
-              </motion.div>
 
-              <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'} justify-end`}>
                 <button
                   onClick={handleSend}
                   className="action-button"
@@ -822,8 +821,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   style={{ opacity: message.trim() ? 1 : 0.5 }}
                 >
                   <svg
-                    width={isMobile ? 16 : 20}
-                    height={isMobile ? 16 : 20}
+                    width="20"
+                    height="20"
                     viewBox="0 0 24 24"
                     fill="none"
                   >
