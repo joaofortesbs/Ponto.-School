@@ -149,7 +149,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           transition: all 0.3s ease;
           width: 600px;
           overflow: visible;
-          height: 56px;
+          height: 64px;
         }
 
         @media (max-width: 768px) {
@@ -157,7 +157,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             width: 99%; /* Aumenta ainda mais a largura para telas menores */
             max-width: calc(100vw - 6px); /* Reduz ainda mais as margens laterais */
             border-radius: 16px;
-            height: 52px;
+            height: 60px;
           }
         }
 
@@ -227,6 +227,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           transition: all 0.3s ease;
           display: flex;
           align-items: center;
+          justify-content: space-between;
           height: 100%;
         }
 
@@ -251,8 +252,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           resize: none;
           outline: none;
           width: 100%;
-          min-height: 24px;
-          max-height: 24px;
+          min-height: 32px;
+          max-height: 32px;
           font-family:
             "Inter",
             -apple-system,
@@ -710,132 +711,130 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         <div className="message-container-inner">
           <div className="tech-accent"></div>
           <div className="inner-container">
-            <div className="flex flex-col gap-3 relative">
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <textarea
-                    ref={textareaRef}
-                    value={message}
-                    onChange={handleInputChange}
-                    onKeyPress={handleKeyPress}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
-                    placeholder="Digite sua mensagem..."
-                    className="textarea-custom"
-                    rows={1}
-                  />
-                </div>
-
-                <motion.div
-                  initial={{
-                    opacity: 0,
-                    scale: 0.85,
-                    y: 20,
-                    filter: "blur(10px)",
-                  }}
-                  animate={
-                    isTyping
-                      ? {
-                          opacity: 1,
-                          scale: 1,
-                          y: 0,
-                          filter: "blur(0px)",
-                        }
-                      : {
-                          opacity: 0,
-                          scale: 0.85,
-                          y: 20,
-                          filter: "blur(10px)",
-                        }
-                  }
-                  transition={{
-                    duration: 0.6,
-                    ease: [0.23, 1, 0.32, 1],
-                    opacity: { duration: 0.4 },
-                    scale: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
-                    y: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
-                    filter: { duration: 0.3 },
-                  }}
-                  className="expanded-section"
-                  style={{
-                    position: "absolute",
-                    top: "-85px",
-                    left: 0,
-                    right: 0,
-                    zIndex: 1000,
-                    pointerEvents: isTyping ? "auto" : "none",
-                  }}
-                >
-                  <motion.div
-                    className="expanded-card"
-                    initial={{ backdropFilter: "blur(0px)" }}
-                    animate={{ backdropFilter: "blur(20px)" }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                  >
-                    <div className="thinking-indicator">
-                      <motion.div
-                        className="pulse-dot"
-                        initial={{ scale: 0 }}
-                        animate={isTyping ? { scale: 1 } : { scale: 0 }}
-                        transition={{
-                          duration: 0.4,
-                          delay: 0.3,
-                          ease: [0.68, -0.55, 0.265, 1.55],
-                        }}
-                      />
-                      <motion.div
-                        className="thinking-text"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={
-                          isTyping ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }
-                        }
-                        transition={{
-                          duration: 0.4,
-                          delay: 0.4,
-                          ease: [0.25, 0.1, 0.25, 1],
-                        }}
-                      >
-                        <TextShimmerWave
-                          className='font-mono text-sm text-white'
-                          duration={1.5}
-                          zDistance={8}
-                          xDistance={1.5}
-                          yDistance={-1.5}
-                          scaleDistance={1.08}
-                          rotateYDistance={8}
-                          spread={1.2}
-                        >
-                          {selectedMode === "Agente IA"
-                            ? "Seu Agente IA está pensando em uma resposta para isso..."
-                            : "Seu Assistente IA está pensando em uma resposta para isso..."}
-                        </TextShimmerWave>
-                      </motion.div>
-                    </div>
-                  </motion.div>
-                </motion.div>
-
-                <button
-                  onClick={handleSend}
-                  className="action-button"
-                  disabled={!message.trim()}
-                  style={{ opacity: message.trim() ? 1 : 0.5 }}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <path
-                      d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
+            <div className="flex items-center gap-3 w-full relative">
+              <div className="flex-1">
+                <textarea
+                  ref={textareaRef}
+                  value={message}
+                  onChange={handleInputChange}
+                  onKeyPress={handleKeyPress}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  placeholder="Digite sua mensagem..."
+                  className="textarea-custom"
+                  rows={1}
+                />
               </div>
+
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  scale: 0.85,
+                  y: 20,
+                  filter: "blur(10px)",
+                }}
+                animate={
+                  isTyping
+                    ? {
+                        opacity: 1,
+                        scale: 1,
+                        y: 0,
+                        filter: "blur(0px)",
+                      }
+                    : {
+                        opacity: 0,
+                        scale: 0.85,
+                        y: 20,
+                        filter: "blur(10px)",
+                      }
+                }
+                transition={{
+                  duration: 0.6,
+                  ease: [0.23, 1, 0.32, 1],
+                  opacity: { duration: 0.4 },
+                  scale: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+                  y: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+                  filter: { duration: 0.3 },
+                }}
+                className="expanded-section"
+                style={{
+                  position: "absolute",
+                  top: "-85px",
+                  left: 0,
+                  right: 0,
+                  zIndex: 1000,
+                  pointerEvents: isTyping ? "auto" : "none",
+                }}
+              >
+                <motion.div
+                  className="expanded-card"
+                  initial={{ backdropFilter: "blur(0px)" }}
+                  animate={{ backdropFilter: "blur(20px)" }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                >
+                  <div className="thinking-indicator">
+                    <motion.div
+                      className="pulse-dot"
+                      initial={{ scale: 0 }}
+                      animate={isTyping ? { scale: 1 } : { scale: 0 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: 0.3,
+                        ease: [0.68, -0.55, 0.265, 1.55],
+                      }}
+                    />
+                    <motion.div
+                      className="thinking-text"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={
+                        isTyping ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }
+                      }
+                      transition={{
+                        duration: 0.4,
+                        delay: 0.4,
+                        ease: [0.25, 0.1, 0.25, 1],
+                      }}
+                    >
+                      <TextShimmerWave
+                        className='font-mono text-sm text-white'
+                        duration={1.5}
+                        zDistance={8}
+                        xDistance={1.5}
+                        yDistance={-1.5}
+                        scaleDistance={1.08}
+                        rotateYDistance={8}
+                        spread={1.2}
+                      >
+                        {selectedMode === "Agente IA"
+                          ? "Seu Agente IA está pensando em uma resposta para isso..."
+                          : "Seu Assistente IA está pensando em uma resposta para isso..."}
+                      </TextShimmerWave>
+                    </motion.div>
+                  </div>
+                </motion.div>
+              </motion.div>
+
+              <button
+                onClick={handleSend}
+                className="action-button"
+                disabled={!message.trim()}
+                style={{ opacity: message.trim() ? 1 : 0.5 }}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <path
+                    d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
