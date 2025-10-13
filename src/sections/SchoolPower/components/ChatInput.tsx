@@ -476,7 +476,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             0 4px 8px rgba(0, 0, 0, 0.2),
             0 0 0 1px rgba(255, 107, 53, 0.1),
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
-          z-index: 1000;
+          z-index: 100000;
           backdrop-filter: blur(10px);
           opacity: 0;
           transform: translateY(10px);
@@ -583,9 +583,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         }
 
         .file-preview.is-image {
-          padding: 0;
+          padding: 4px;
           background: transparent;
           border: 1px solid #444;
+          border-radius: 12px;
         }
 
         .file-preview:hover {
@@ -600,11 +601,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         }
 
         .file-preview-image {
-          width: 40px;
-          height: 40px;
+          width: 100%;
+          height: 100%;
+          min-width: 40px;
+          min-height: 40px;
           border-radius: 8px;
           object-fit: cover;
-          border: 1px solid #555;
         }
 
         .file-preview-icon {
