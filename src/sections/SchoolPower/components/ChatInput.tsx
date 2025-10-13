@@ -190,9 +190,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           height: 100%;
           width: 100%;
           box-shadow:
-            0 25px 50px rgba(0, 0, 0, 0.5),
-            0 15px 30px rgba(0, 0, 0, 0.4),
-            0 5px 15px rgba(0, 0, 0, 0.3),
+            0 12px 24px rgba(0, 0, 0, 0.3),
+            0 8px 16px rgba(0, 0, 0, 0.2),
+            0 4px 8px rgba(0, 0, 0, 0.15),
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
           z-index: 3;
         }
@@ -366,8 +366,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           margin-bottom: 12px;
           min-width: 220px;
           box-shadow:
-            0 20px 40px rgba(0, 0, 0, 0.6),
-            0 10px 20px rgba(0, 0, 0, 0.4),
+            0 8px 16px rgba(0, 0, 0, 0.3),
+            0 4px 8px rgba(0, 0, 0, 0.2),
             0 0 0 1px rgba(255, 107, 53, 0.1),
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
           z-index: 1000;
