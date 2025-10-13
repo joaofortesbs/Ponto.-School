@@ -1690,12 +1690,12 @@ export function CardDeConstrucao({
           </div>
           <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
             {step === "generating"
-              ? "🤖 Analisando com IA Gemini"
+              ? "🤖 Analisando com IA do School Power"
               : "🎯 Gerando Atividades"}
           </h3>
           <p className="text-gray-700 dark:text-gray-300 mb-4 max-w-lg text-sm sm:text-base">
             {step === "generating"
-              ? "A IA está processando sua mensagem e contexto para criar um plano de ação personalizado..."
+              ? "A IA do School Power está processando sua mensagem e contexto para criar um plano de ação personalizado..."
               : "As atividades aprovadas estão sendo geradas automaticamente pelo School Power..."}
           </p>
           <div className="bg-gradient-to-r from-[#FF6B00]/10 to-orange-100/20 dark:to-[#29335C]/10 rounded-lg p-3 sm:p-4 mb-4 border border-[#FF6B00]/20 max-w-md w-full">
