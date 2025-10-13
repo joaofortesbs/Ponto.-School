@@ -191,8 +191,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      const scrollHeight = textareaRef.current.scrollHeight;
-      textareaRef.current.style.height = scrollHeight + "px";
+      textareaRef.current.style.height =
+        textareaRef.current.scrollHeight + "px";
     }
   }, [message]);
 
@@ -228,17 +228,16 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           background: transparent;
           border-radius: 40px;
           padding: 2px;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           width: 600px;
           overflow: visible;
-          min-height: 64px;
-          height: auto;
-          max-height: 500px;
+          height: 64px;
           z-index: 1000;
         }
 
         .message-container.has-files {
-          max-height: 500px;
+          height: auto;
+          max-height: 400px;
           border-radius: 24px;
         }
 
@@ -378,20 +377,21 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           border: none;
           color: #e0e0e0;
           font-size: 16px;
-          line-height: 24px;
+          line-height: 32px;
           resize: none;
           outline: none;
           width: 100%;
           min-height: 32px;
-          max-height: 200px;
+          max-height: 32px;
           font-family:
             "Inter",
             -apple-system,
             BlinkMacSystemFont,
             sans-serif;
           caret-color: #ff6b35;
-          overflow-y: auto;
-          display: block;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
         }
 
         .textarea-custom::placeholder {
