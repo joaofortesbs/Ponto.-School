@@ -1098,8 +1098,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
               ))}
             </div>
 
-            <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button className="clip-button" onClick={toggleElementsDropup}>
+            <div className="flex items-center relative" style={{ gap: '8px', width: '100%', flex: '1' }}>
+              <button className="clip-button" onClick={toggleElementsDropup} style={{ flexShrink: 0 }}>
                 <svg
                   width="20"
                   height="20"
@@ -1143,9 +1143,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   Recentes
                 </button>
               </div>
-            </div>
 
-            <div className="flex items-center relative" style={{ gap: '8px', width: uploadedFiles.length > 0 ? '100%' : 'auto', flex: uploadedFiles.length > 0 ? '1' : 'initial' }}>
               <div className="flex-1">
                 <textarea
                   ref={textareaRef}
