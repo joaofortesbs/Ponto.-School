@@ -52,6 +52,7 @@ import MentorAI from "@/components/mentor/MentorAI";
 // import TurmasNav from "./TurmasNav";
 import { useUserName } from "@/hooks/useUserName";
 import { CardPerfilMenuLateral } from "./Card-Perfil-Menu-Lateral";
+import { CardPrimeiroPassos } from "./CardPrimeiroPassos";
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
@@ -662,6 +663,9 @@ export function SidebarNav({
             ))}
           </nav>
         </div>
+
+        {/* Card de Primeiros Passos - abaixo do menu */}
+        <CardPrimeiroPassos isCollapsed={isCollapsed} />
       </ScrollArea>
 
       <style>{`
