@@ -522,7 +522,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
             0 4px 8px rgba(255, 107, 53, 0.4),
             0 2px 4px rgba(255, 107, 53, 0.3),
             inset 0 2px 8px rgba(0, 0, 0, 0.4),
-            inset 0 -1px 2px rgba(255, 255, 255, 0.2);
+            inset 0 -1px 2px rgba(255, 255, 255, 0.1);
         }
 
         .clip-button {
@@ -1513,9 +1513,65 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           </div>
         </div>
       </div>
-
-      </div>
-        {/* Fim do container invisível unificado */}
+      {/* Aqui é onde a caixa de mensagem e os cards estão posicionados juntos */}
+      {/* Caixa de Mensagem dentro do mesmo container Ripple */}
+              <div
+                className={`absolute ${isMobile && isQuizMode ? 'bottom-16' : 'bottom-24'} left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto`}
+                style={{
+                  marginTop: isMobile && isQuizMode ? "-60px" : "-120px",
+                  width: isMobile && isQuizMode ? "110%" : "auto"
+                }}
+              >
+                <ChatInput
+                  isDarkTheme={isDarkTheme}
+                  onSend={handleSendMessage}
+                  externalSelectedCard={selectedCard}
+                  onCardClick={handleCardClick}
+                />
+              </div>
+      {/* Cards retangulares abaixo da caixa de mensagens */}
+      <div className="quick-access-cards" style={{ gap: '12px', marginTop: '10px' }}>
+        <div
+          className={`quick-access-card ${selectedCard === "Plano ENEM" ? "selected" : ""}`}
+          onClick={() => handleCardClick("Plano ENEM")}
+        >
+          <svg className="quick-access-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 17l-10-5 10-5"></path>
+          </svg>
+          <span className="quick-access-card-text">Plano ENEM</span>
+        </div>
+        <div
+          className={`quick-access-card ${selectedCard === "Aula Turbo" ? "selected" : ""}`}
+          onClick={() => handleCardClick("Aula Turbo")}
+        >
+          <svg className="quick-access-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 3l-4 4 4 4M8 12l-4 4 4 4M12 2v12M21 9h-6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h6"></path>
+          </svg>
+          <span className="quick-access-card-text">Aula Turbo</span>
+        </div>
+        <div
+          className={`quick-access-card ${selectedCard === "Criando Gênios" ? "selected" : ""}`}
+          onClick={() => handleCardClick("Criando Gênios")}
+        >
+          <svg className="quick-access-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 17l-10-5 10-5"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          <span className="quick-access-card-text">Criando Gênios</span>
+        </div>
+        <div
+          className={`quick-access-card ${selectedCard === "Escola Viva" ? "selected" : ""}`}
+          onClick={() => handleCardClick("Escola Viva")}
+        >
+          <svg className="quick-access-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22l-8-6 8-6 8 6-8 6z"></path>
+            <path d="M6 18l-3-2.5V12"></path>
+            <path d="M18 18l3-2.5V12"></path>
+            <path d="M12 14l0-3-2-1.5"></path>
+            <path d="M12 14l2-1.5 2 1.5"></path>
+          </svg>
+          <span className="quick-access-card-text">Escola Viva</span>
+        </div>
       </div>
     </div>
   );
