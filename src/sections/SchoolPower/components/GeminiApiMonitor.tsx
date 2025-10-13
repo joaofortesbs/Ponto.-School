@@ -17,6 +17,7 @@ interface LiveApiCall {
 }
 
 export default function GeminiApiMonitor() {
+  const [isDebugActive, setIsDebugActive] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [liveCall, setLiveCall] = useState<LiveApiCall | null>(null);
   const [apiHealth, setApiHealth] = useState<'healthy' | 'warning' | 'error' | 'unknown'>('unknown');
@@ -221,7 +222,21 @@ export default function GeminiApiMonitor() {
     }
   };
 
-  if (process.env.NODE_ENV !== 'development') {
+  // Listener para ativar debug mode
+  useEffect(() => {
+    const handleActivateDebug = () => {
+      setIsDebugActive(true);
+      setIsVisible(true);
+    };
+
+    window.addEventListener('activateDebugMode', handleActivateDebug);
+    
+    return () => {
+      window.removeEventListener('activateDebugMode', handleActivateDebug);
+    };
+  }, []);
+
+  if (process.env.NODE_ENV !== 'development' || !isDebugActive) {
     return null;
   }
 

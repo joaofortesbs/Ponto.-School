@@ -988,6 +988,28 @@ export default function Header() {
   // Handle search submission
   const handleSearchSubmit = () => {
     if (searchQuery.trim()) {
+      // Verificar se é o comando secreto de debug
+      if (searchQuery.trim().toLowerCase() === "debug school power") {
+        // Ativar debug mode
+        const debugEvent = new CustomEvent('activateDebugMode');
+        window.dispatchEvent(debugEvent);
+        
+        // Feedback visual
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-24 right-4 z-[10000] bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg animate-in fade-in slide-in-from-top-2 duration-300';
+        notification.innerHTML = '🔍 Debug Mode Ativado!';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.classList.add('animate-out', 'fade-out', 'slide-out-to-top-2');
+          setTimeout(() => notification.remove(), 300);
+        }, 3000);
+        
+        setSearchQuery('');
+        setIsSearchFocused(false);
+        return;
+      }
+      
       console.log("Searching for:", searchQuery);
       // Implement actual search functionality here
       setIsSearchFocused(false);

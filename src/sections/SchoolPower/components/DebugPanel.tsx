@@ -55,6 +55,7 @@ interface DebugData {
 }
 
 export default function DebugPanel() {
+  const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [debugData, setDebugData] = useState<DebugData>({
     timestamp: '',
@@ -375,7 +376,21 @@ export default function DebugPanel() {
     }
   };
 
-  if (process.env.NODE_ENV !== 'development') {
+  // Listener para ativar debug mode
+  useEffect(() => {
+    const handleActivateDebug = () => {
+      setIsVisible(true);
+      setIsExpanded(true);
+    };
+
+    window.addEventListener('activateDebugMode', handleActivateDebug);
+    
+    return () => {
+      window.removeEventListener('activateDebugMode', handleActivateDebug);
+    };
+  }, []);
+
+  if (process.env.NODE_ENV !== 'development' || !isVisible) {
     return null;
   }
 
