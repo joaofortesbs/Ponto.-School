@@ -1173,7 +1173,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           flex-shrink: 0;
           color: #ff6b35;
           transition: all 0.3s ease;
-          margin-right: 10px;
+          margin-right: 12px;
         }
 
         @media (max-width: 768px) {
