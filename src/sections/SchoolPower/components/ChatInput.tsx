@@ -231,12 +231,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           width: 600px;
           overflow: visible;
-          min-height: 64px;
+          height: 64px;
           z-index: 1000;
         }
 
         .message-container.has-files {
-          min-height: auto;
+          height: auto;
           max-height: 400px;
           border-radius: 24px;
         }
@@ -246,12 +246,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             width: 99%;
             max-width: calc(100vw - 6px);
             border-radius: 35px;
-            min-height: 60px;
+            height: 60px;
             bottom: 15px;
           }
           
           .message-container.has-files {
-            min-height: auto;
             max-height: 350px;
             border-radius: 20px;
           }
