@@ -1140,7 +1140,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           flex: 1;
           display: flex;
           align-items: center;
-          gap: 0px;
+          gap: 12px;
           padding: 10px 18px;
           background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
           border: 1px solid #333;
@@ -1153,7 +1153,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         @media (max-width: 768px) {
           .quick-access-card {
             padding: 10px 12px;
-            gap: 6px;
+            gap: 10px;
             border-radius: 16px;
           }
         }
