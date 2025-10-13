@@ -1121,8 +1121,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           gap: 12px;
           width: 100%;
           max-width: 600px;
-          margin-top: 16px;
+          margin-top: 24px;
           padding: 0 2px;
+          position: absolute;
+          bottom: -80px;
+          left: 50%;
+          transform: translateX(-50%);
         }
 
         @media (max-width: 768px) {
@@ -1130,7 +1134,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             width: 99%;
             max-width: calc(100vw - 6px);
             gap: 8px;
-            margin-top: 12px;
+            margin-top: 16px;
+            bottom: -70px;
           }
         }
 
@@ -1261,25 +1266,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   )}
                 </div>
               ))}
-            </div>
-
-            <div className="quick-access-cards">
-              <div className="quick-access-card" onClick={() => handleCardClick("Plano ENEM")}>
-                <BookOpen className="quick-access-card-icon" />
-                <span className="quick-access-card-text">Plano ENEM</span>
-              </div>
-              <div className="quick-access-card" onClick={() => handleCardClick("Aula Turbo")}>
-                <Zap className="quick-access-card-icon" />
-                <span className="quick-access-card-text">Aula Turbo</span>
-              </div>
-              <div className="quick-access-card" onClick={() => handleCardClick("Criando Gênios")}>
-                <Brain className="quick-access-card-icon" />
-                <span className="quick-access-card-text">Criando Gênios</span>
-              </div>
-              <div className="quick-access-card" onClick={() => handleCardClick("Escola Viva")}>
-                <GraduationCap className="quick-access-card-icon" />
-                <span className="quick-access-card-text">Escola Viva</span>
-              </div>
             </div>
 
             <div className="flex items-center relative" style={{ gap: '8px', width: '100%', flex: '1' }}>
@@ -1457,6 +1443,26 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Cards retangulares abaixo da caixa de mensagens */}
+      <div className="quick-access-cards">
+        <div className="quick-access-card" onClick={() => handleCardClick("Plano ENEM")}>
+          <BookOpen className="quick-access-card-icon" />
+          <span className="quick-access-card-text">Plano ENEM</span>
+        </div>
+        <div className="quick-access-card" onClick={() => handleCardClick("Aula Turbo")}>
+          <Zap className="quick-access-card-icon" />
+          <span className="quick-access-card-text">Aula Turbo</span>
+        </div>
+        <div className="quick-access-card" onClick={() => handleCardClick("Criando Gênios")}>
+          <Brain className="quick-access-card-icon" />
+          <span className="quick-access-card-text">Criando Gênios</span>
+        </div>
+        <div className="quick-access-card" onClick={() => handleCardClick("Escola Viva")}>
+          <GraduationCap className="quick-access-card-icon" />
+          <span className="quick-access-card-text">Escola Viva</span>
         </div>
       </div>
     </div>
