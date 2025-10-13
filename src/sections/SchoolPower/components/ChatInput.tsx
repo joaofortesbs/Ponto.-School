@@ -661,7 +661,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           cursor: pointer;
           transition: all 0.3s ease;
           box-shadow: 0 2px 8px rgba(255, 107, 53, 0.4);
-          z-index: 10002;
+          z-index: 99998;
         }
 
         .file-preview.is-image .file-preview-remove {
