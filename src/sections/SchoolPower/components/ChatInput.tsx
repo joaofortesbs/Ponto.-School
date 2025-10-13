@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, useMotionValue, useTransform, useAnimationFrame, useMotionTemplate } from "framer-motion";
 import { TextShimmerWave } from '@/components/ui/text-shimmer-wave';
 import { useIsMobile } from "../../../hooks/useIsMobile";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBookOpen, faBolt, faBrain, faGraduationCap } from '@fortawesome/free-solid-svg-icons';
 
 interface UploadedFile {
   id: string;
@@ -99,7 +101,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
   const handleSend = () => {
     const trimmedMessage = message.trim();
-    
+
     if (trimmedMessage || uploadedFiles.length > 0) {
       console.log("📤 Enviando mensagem:", trimmedMessage);
       console.log("📎 Arquivos anexados:", uploadedFiles.length);
@@ -113,7 +115,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       setMessage("");
       setUploadedFiles([]);
       setIsTyping(false);
-      
+
       console.log("✅ Mensagem enviada e campos limpos");
     } else {
       console.warn("⚠️ Tentativa de enviar mensagem vazia");
@@ -219,6 +221,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       }
     }
   }, [message]);
+
+  const handleCardClick = (cardName: string) => {
+    setMessage(cardName);
+    setIsTyping(true);
+    textareaRef.current?.focus();
+  };
+
 
   return (
     <div className="w-full h-full flex items-center justify-center">
@@ -1106,6 +1115,94 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
               0 0 32px rgba(255, 107, 53, 0.3);
           }
         }
+
+        /* Cards retangulares abaixo da caixa de mensagens */
+        .quick-access-cards {
+          display: flex;
+          gap: 12px;
+          width: 100%;
+          max-width: 600px;
+          margin-top: 16px;
+          padding: 0 2px;
+        }
+
+        @media (max-width: 768px) {
+          .quick-access-cards {
+            width: 99%;
+            max-width: calc(100vw - 6px);
+            gap: 8px;
+            margin-top: 12px;
+          }
+        }
+
+        .quick-access-card {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 14px;
+          background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+          border: 1px solid #333;
+          border-radius: 20px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+          .quick-access-card {
+            padding: 10px 12px;
+            gap: 6px;
+            border-radius: 16px;
+          }
+        }
+
+        .quick-access-card:hover {
+          background: linear-gradient(145deg, #333, #2a2a2a);
+          border-color: rgba(255, 107, 0, 0.4);
+          box-shadow:
+            0 6px 12px rgba(0, 0, 0, 0.3),
+            0 0 20px rgba(255, 107, 0, 0.15);
+          transform: translateY(-2px);
+        }
+
+        .quick-access-card-icon {
+          width: 24px;
+          height: 24px;
+          flex-shrink: 0;
+          color: #ff6b35;
+          transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+          .quick-access-card-icon {
+            width: 20px;
+            height: 20px;
+          }
+        }
+
+        .quick-access-card:hover .quick-access-card-icon {
+          transform: scale(1.1);
+          filter: drop-shadow(0 0 8px rgba(255, 107, 0, 0.6));
+        }
+
+        .quick-access-card-text {
+          font-size: 13px;
+          font-weight: 500;
+          color: #e0e0e0;
+          white-space: nowrap;
+          transition: color 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+          .quick-access-card-text {
+            font-size: 11px;
+          }
+        }
+
+        .quick-access-card:hover .quick-access-card-text {
+          color: #ff6b35;
+        }
       `}</style>
 
       <div
@@ -1165,6 +1262,25 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   )}
                 </div>
               ))}
+            </div>
+
+            <div className="quick-access-cards">
+              <div className="quick-access-card" onClick={() => handleCardClick("Plano ENEM")}>
+                <FontAwesomeIcon icon={faBookOpen} className="quick-access-card-icon" />
+                <span className="quick-access-card-text">Plano ENEM</span>
+              </div>
+              <div className="quick-access-card" onClick={() => handleCardClick("Aula Turbo")}>
+                <FontAwesomeIcon icon={faBolt} className="quick-access-card-icon" />
+                <span className="quick-access-card-text">Aula Turbo</span>
+              </div>
+              <div className="quick-access-card" onClick={() => handleCardClick("Criando Gênios")}>
+                <FontAwesomeIcon icon={faBrain} className="quick-access-card-icon" />
+                <span className="quick-access-card-text">Criando Gênios</span>
+              </div>
+              <div className="quick-access-card" onClick={() => handleCardClick("Escola Viva")}>
+                <FontAwesomeIcon icon={faGraduationCap} className="quick-access-card-icon" />
+                <span className="quick-access-card-text">Escola Viva</span>
+              </div>
             </div>
 
             <div className="flex items-center relative" style={{ gap: '8px', width: '100%', flex: '1' }}>
