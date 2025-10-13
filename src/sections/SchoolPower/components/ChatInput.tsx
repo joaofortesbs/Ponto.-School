@@ -222,14 +222,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .inner-container {
           background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
           border-radius: 30px;
-          padding: 12px 12px 12px 20px;
+          padding: 12px 8px 12px 12px;
           border: 1px solid #333;
           transition: all 0.3s ease;
           display: flex;
           align-items: center;
           justify-content: space-between;
           height: 100%;
-          gap: 12px;
+          gap: 8px;
         }
 
         @media (max-width: 768px) {
@@ -307,6 +307,30 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             0 2px 4px rgba(255, 107, 53, 0.3),
             inset 0 2px 8px rgba(0, 0, 0, 0.3),
             inset 0 -1px 2px rgba(255, 255, 255, 0.2);
+        }
+
+        .clip-button {
+          background: transparent;
+          border: none;
+          color: #ff6b35;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+
+        .clip-button:hover {
+          background: rgba(255, 107, 53, 0.1);
+          transform: scale(1.1);
+        }
+
+        .clip-button:active {
+          transform: scale(0.95);
         }
 
         .voice-button {
@@ -715,7 +739,21 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         <div className="message-container-inner">
           <div className="tech-accent"></div>
           <div className="inner-container">
-            <div className="flex items-center w-full relative" style={{ gap: '12px' }}>
+            <button className="clip-button">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+              </svg>
+            </button>
+            <div className="flex items-center w-full relative" style={{ gap: '8px' }}>
               <div className="flex-1">
                 <textarea
                   ref={textareaRef}
@@ -824,7 +862,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                 disabled={!message.trim()}
                 style={{ 
                   opacity: message.trim() ? 1 : 0.5,
-                  marginLeft: 'auto',
                   flexShrink: 0
                 }}
               >
