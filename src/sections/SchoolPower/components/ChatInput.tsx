@@ -231,6 +231,22 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
       <style>{`
+        .unified-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 24px;
+          width: 100%;
+          max-width: 800px;
+        }
+
+        @media (max-width: 768px) {
+          .unified-container {
+            gap: 16px;
+            width: 99%;
+            max-width: calc(100vw - 6px);
+          }
+        }
         @keyframes pulseGlow {
           0%,
           100% {
@@ -1122,17 +1138,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           align-items: center;
           gap: 20px;
           width: 100%;
-          max-width: 800px;
-          margin: 24px auto 0;
           padding: 0 2px;
         }
 
         @media (max-width: 768px) {
           .quick-access-cards {
-            width: 99%;
-            max-width: calc(100vw - 6px);
             gap: 8px;
-            margin: 16px auto 0;
           }
         }
 
@@ -1210,9 +1221,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         }
       `}</style>
 
-      <div
-        className={`message-container ${isTyping || isFocused ? "typing" : ""} ${uploadedFiles.length > 0 ? "has-files" : ""} ${textareaRef.current?.classList.contains('expanding') ? 'expanding' : ''} ${isMobile && isQuizMode ? 'mobile-quiz' : ''}`}
-      >
+      <div className="unified-container">
+        <div
+          className={`message-container ${isTyping || isFocused ? "typing" : ""} ${uploadedFiles.length > 0 ? "has-files" : ""} ${textareaRef.current?.classList.contains('expanding') ? 'expanding' : ''} ${isMobile && isQuizMode ? 'mobile-quiz' : ''}`}
+        >
         <div className="moving-border-container">
           <MovingBorder duration={3000} rx="20px" ry="20px">
             <div className="moving-gradient" />
@@ -1448,22 +1460,23 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       </div>
 
       {/* Cards retangulares abaixo da caixa de mensagens */}
-      <div className="quick-access-cards">
-        <div className="quick-access-card" onClick={() => handleCardClick("Plano ENEM")}>
-          <BookOpen className="quick-access-card-icon" />
-          <span className="quick-access-card-text">Plano ENEM</span>
-        </div>
-        <div className="quick-access-card" onClick={() => handleCardClick("Aula Turbo")}>
-          <Zap className="quick-access-card-icon" />
-          <span className="quick-access-card-text">Aula Turbo</span>
-        </div>
-        <div className="quick-access-card" onClick={() => handleCardClick("Criando Gênios")}>
-          <Brain className="quick-access-card-icon" />
-          <span className="quick-access-card-text">Criando Gênios</span>
-        </div>
-        <div className="quick-access-card" onClick={() => handleCardClick("Escola Viva")}>
-          <GraduationCap className="quick-access-card-icon" />
-          <span className="quick-access-card-text">Escola Viva</span>
+        <div className="quick-access-cards">
+          <div className="quick-access-card" onClick={() => handleCardClick("Plano ENEM")}>
+            <BookOpen className="quick-access-card-icon" />
+            <span className="quick-access-card-text">Plano ENEM</span>
+          </div>
+          <div className="quick-access-card" onClick={() => handleCardClick("Aula Turbo")}>
+            <Zap className="quick-access-card-icon" />
+            <span className="quick-access-card-text">Aula Turbo</span>
+          </div>
+          <div className="quick-access-card" onClick={() => handleCardClick("Criando Gênios")}>
+            <Brain className="quick-access-card-icon" />
+            <span className="quick-access-card-text">Criando Gênios</span>
+          </div>
+          <div className="quick-access-card" onClick={() => handleCardClick("Escola Viva")}>
+            <GraduationCap className="quick-access-card-icon" />
+            <span className="quick-access-card-text">Escola Viva</span>
+          </div>
         </div>
       </div>
     </div>
