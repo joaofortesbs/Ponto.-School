@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, useMotionValue, useTransform, useAnimationFrame, useMotionTemplate } from "framer-motion";
 import { TextShimmerWave } from '@/components/ui/text-shimmer-wave';
-import { useIsMobile } from "../../../hooks/useIsMobile";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { BookOpen, Zap, Brain, GraduationCap } from 'lucide-react';
 
 interface UploadedFile {
@@ -230,7 +230,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
-      <style jsx>{`
+      <style>{`
         @keyframes pulseGlow {
           0%,
           100% {
@@ -266,6 +266,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           height: 67px;
           z-index: 1000;
         }
+        
+        .message-container.mobile-quiz {
+          width: 99%;
+          max-width: calc(100vw - 6px);
+          border-radius: 35px;
+          height: 56px;
+          bottom: 0px;
+        }
 
         .message-container.has-files {
           height: auto;
@@ -279,14 +287,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         }
 
         @media (max-width: 768px) {
-          .message-container {
-            width: 99%;
-            max-width: calc(100vw - 6px);
-            border-radius: 35px;
-            height: 56px;
-            bottom: 0px;
-          }
-
           .message-container.has-files {
             max-height: 350px;
             border-radius: 20px;
@@ -1207,7 +1207,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       `}</style>
 
       <div
-        className={`message-container ${isTyping || isFocused ? "typing" : ""} ${uploadedFiles.length > 0 ? "has-files" : ""} ${textareaRef.current?.classList.contains('expanding') ? 'expanding' : ''}`}
+        className={`message-container ${isTyping || isFocused ? "typing" : ""} ${uploadedFiles.length > 0 ? "has-files" : ""} ${textareaRef.current?.classList.contains('expanding') ? 'expanding' : ''} ${isMobile && isQuizMode ? 'mobile-quiz' : ''}`}
       >
         <div className="moving-border-container">
           <MovingBorder duration={3000} rx="20px" ry="20px">

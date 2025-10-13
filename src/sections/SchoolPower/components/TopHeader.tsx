@@ -155,7 +155,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0% {
             transform: translateY(0px) scale(1);
