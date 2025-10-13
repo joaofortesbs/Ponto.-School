@@ -204,7 +204,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
     if (textareaRef.current) {
       const textarea = textareaRef.current;
       const lineHeight = 20; // line-height em pixels
-      const minHeight = 24; // altura mínima (1 linha - reduzida)
+      const minHeight = 20; // altura mínima (1 linha exata)
       const maxLinesBeforeExpand = 1; // número de linhas antes de começar a expandir
       const maxHeight = 200; // altura máxima antes de ativar scroll
       const thresholdHeight = lineHeight * maxLinesBeforeExpand; // 20px para 1 linha
@@ -452,11 +452,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           border: none;
           color: #e0e0e0;
           font-size: 16px;
-          line-height: 20px; /* Ajustado para 20px */
+          line-height: 20px;
           resize: none;
           outline: none;
           width: 100%;
-          min-height: 24px; /* Ajustado para 24px */
+          min-height: 20px;
           max-height: 200px;
           font-family:
             "Inter",
