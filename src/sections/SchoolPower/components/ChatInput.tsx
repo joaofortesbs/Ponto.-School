@@ -301,7 +301,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           width: 600px;
           overflow: visible;
-          height: 52px;
+          height: 68px;
           z-index: 1000;
         }
 
@@ -409,7 +409,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .inner-container {
           background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
           border-radius: 36px;
-          padding: 8px 8px 8px 12px;
+          padding: 7px 8px 7px 12px;
           border: 1px solid #333;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           display: flex;
@@ -492,8 +492,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           border: none;
           border-radius: 50%;
           color: white;
-          width: 36px;
-          height: 36px;
+          width: 47px;
+          height: 47px;
           display: flex;
           align-items: center;
           justify-content: center;
