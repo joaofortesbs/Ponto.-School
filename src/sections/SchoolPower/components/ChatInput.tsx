@@ -229,7 +229,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center" style={{ gap: '20px' }}>
+    <div className="w-full h-full flex flex-col items-center justify-center">
       <style jsx>{`
         @keyframes pulseGlow {
           0%,
@@ -1123,7 +1123,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           gap: 12px;
           width: 100%;
           max-width: 600px;
-          margin: 0 auto;
+          margin: 16px auto 0;
           padding: 0 2px;
         }
 
@@ -1132,7 +1132,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             width: 99%;
             max-width: calc(100vw - 6px);
             gap: 8px;
-            margin: 0 auto;
+            margin-top: 12px;
           }
         }
 
