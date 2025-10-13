@@ -4,6 +4,13 @@ import { motion, useMotionValue, useTransform, useAnimationFrame, useMotionTempl
 import { TextShimmerWave } from '@/components/ui/text-shimmer-wave';
 import { useIsMobile } from "../../../hooks/useIsMobile";
 
+interface UploadedFile {
+  id: string;
+  file: File;
+  preview?: string;
+  type: 'image' | 'document' | 'other';
+}
+
 
 // MovingBorder component
 const MovingBorder = ({
@@ -80,7 +87,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
   const [selectedMode, setSelectedMode] = useState("Agente IA");
   const [showModeDropdown, setShowModeDropdown] = useState(false);
   const [showElementsDropup, setShowElementsDropup] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -113,6 +122,54 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
   const toggleElementsDropup = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowElementsDropup(!showElementsDropup);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newFiles: UploadedFile[] = [];
+    Array.from(files).forEach((file) => {
+      const fileType = file.type.startsWith('image/') ? 'image' : 
+                      file.type.includes('pdf') || file.type.includes('document') ? 'document' : 'other';
+      
+      const fileData: UploadedFile = {
+        id: Math.random().toString(36).substr(2, 9),
+        file,
+        type: fileType
+      };
+
+      // Create preview for images
+      if (fileType === 'image') {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          fileData.preview = reader.result as string;
+          setUploadedFiles(prev => [...prev, fileData]);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        newFiles.push(fileData);
+      }
+    });
+
+    if (newFiles.length > 0) {
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+    }
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setShowElementsDropup(false);
+  };
+
+  const removeFile = (id: string) => {
+    setUploadedFiles(prev => prev.filter(f => f.id !== id));
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+    setShowElementsDropup(false);
   };
 
   useEffect(() => {
@@ -444,6 +501,101 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .elements-option:not(.disabled):hover .elements-option-icon {
           transform: scale(1.1);
+        }
+
+        .uploaded-files-container {
+          display: flex;
+          gap: 8px;
+          padding: 8px 12px;
+          flex-wrap: wrap;
+          max-height: 120px;
+          overflow-y: auto;
+        }
+
+        .file-preview {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+          border: 1px solid #444;
+          border-radius: 12px;
+          transition: all 0.3s ease;
+        }
+
+        .file-preview:hover {
+          background: linear-gradient(145deg, #333, #222);
+          border-color: #ff6b35;
+          transform: translateY(-2px);
+        }
+
+        .file-preview-image {
+          width: 40px;
+          height: 40px;
+          border-radius: 8px;
+          object-fit: cover;
+          border: 1px solid #555;
+        }
+
+        .file-preview-icon {
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(145deg, #444, #666);
+          border-radius: 8px;
+          color: #ff6b35;
+        }
+
+        .file-preview-info {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          max-width: 150px;
+        }
+
+        .file-preview-name {
+          font-size: 12px;
+          color: #e0e0e0;
+          font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .file-preview-size {
+          font-size: 10px;
+          color: #999;
+        }
+
+        .file-preview-remove {
+          position: absolute;
+          top: -6px;
+          right: -6px;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: linear-gradient(145deg, #ff6b35, #f7931e);
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.4);
+        }
+
+        .file-preview-remove:hover {
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.6);
+        }
+
+        .file-preview-remove svg {
+          width: 12px;
+          height: 12px;
+          color: white;
         }
 
         .voice-button {
@@ -852,6 +1004,47 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         <div className="message-container-inner">
           <div className="tech-accent"></div>
           <div className="inner-container">
+            {/* Input oculto para upload de arquivos */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              multiple
+              accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
+              style={{ display: 'none' }}
+            />
+
+            {/* Preview de arquivos enviados */}
+            {uploadedFiles.length > 0 && (
+              <div className="uploaded-files-container">
+                {uploadedFiles.map((fileData) => (
+                  <div key={fileData.id} className="file-preview">
+                    {fileData.type === 'image' && fileData.preview ? (
+                      <img src={fileData.preview} alt={fileData.file.name} className="file-preview-image" />
+                    ) : (
+                      <div className="file-preview-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                          <polyline points="13 2 13 9 20 9"></polyline>
+                        </svg>
+                      </div>
+                    )}
+                    <div className="file-preview-info">
+                      <span className="file-preview-name">{fileData.file.name}</span>
+                      <span className="file-preview-size">
+                        {(fileData.file.size / 1024).toFixed(1)} KB
+                      </span>
+                    </div>
+                    <button className="file-preview-remove" onClick={() => removeFile(fileData.id)}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div style={{ position: 'relative' }}>
               <button className="clip-button" onClick={toggleElementsDropup}>
                 <svg
@@ -869,7 +1062,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
               </button>
               
               <div className={`elements-dropup ${showElementsDropup ? 'show' : ''}`}>
-                <button className="elements-option">
+                <button className="elements-option" onClick={triggerFileInput}>
                   <svg className="elements-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
                     <polyline points="13 2 13 9 20 9"></polyline>
