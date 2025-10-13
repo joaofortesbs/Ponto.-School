@@ -247,9 +247,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           width: 600px;
           overflow: visible;
-          min-height: 64px;
-          height: auto;
-          max-height: 500px;
+          height: 56px;
           z-index: 1000;
         }
 
@@ -269,7 +267,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             width: 99%;
             max-width: calc(100vw - 6px);
             border-radius: 35px;
-            min-height: 60px;
+            height: 56px;
             bottom: 0px;
           }
 
