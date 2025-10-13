@@ -144,7 +144,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .message-container {
           position: relative;
           background: transparent;
-          border-radius: 20px;
+          border-radius: 32px;
           padding: 2px;
           transition: all 0.3s ease;
           width: 600px;
@@ -156,7 +156,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           .message-container {
             width: 99%; /* Aumenta ainda mais a largura para telas menores */
             max-width: calc(100vw - 6px); /* Reduz ainda mais as margens laterais */
-            border-radius: 16px;
+            border-radius: 30px;
             height: 60px;
           }
         }
@@ -164,7 +164,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .message-container-inner {
           position: relative;
           background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
-          border-radius: 18px;
+          border-radius: 30px;
           height: 100%;
           width: 100%;
           box-shadow:
@@ -177,14 +177,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         @media (max-width: 768px) {
           .message-container-inner {
-             border-radius: 14px;
+             border-radius: 28px;
           }
         }
 
         .moving-border-container {
           position: absolute;
           inset: 0;
-          border-radius: 20px;
+          border-radius: 32px;
           opacity: 1;
           transition: opacity 0.3s ease;
           overflow: hidden;
@@ -194,7 +194,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         @media (max-width: 768px) {
           .moving-border-container {
-            border-radius: 16px;
+            border-radius: 30px;
           }
         }
 
@@ -221,7 +221,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .inner-container {
           background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
-          border-radius: 18px;
+          border-radius: 30px;
           padding: 12px 20px;
           border: 1px solid #333;
           transition: all 0.3s ease;
@@ -233,7 +233,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         @media (max-width: 768px) {
           .inner-container {
-            border-radius: 14px;
+            border-radius: 28px;
             padding: 10px 16px;
           }
         }
@@ -759,7 +759,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                 className="expanded-section"
                 style={{
                   position: "absolute",
-                  top: "-85px",
+                  top: "-75px",
                   left: 0,
                   right: 0,
                   zIndex: 1000,
