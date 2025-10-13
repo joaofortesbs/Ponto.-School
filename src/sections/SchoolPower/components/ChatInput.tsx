@@ -254,7 +254,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .message-container {
           position: fixed;
-          bottom: 80px;
+          bottom: 67px;
           left: 50%;
           transform: translateX(-50%);
           background: transparent;
