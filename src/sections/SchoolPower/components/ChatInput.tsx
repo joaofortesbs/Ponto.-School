@@ -561,8 +561,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           overflow-y: auto;
           width: 100%;
           order: -1;
-          position: relative;
-          z-index: 9999;
         }
 
         .message-container:not(.has-files) .uploaded-files-container {
@@ -579,13 +577,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           border: 1px solid #444;
           border-radius: 12px;
           transition: all 0.3s ease;
-          z-index: 10000;
-        }
-
-        .file-preview.image-only {
-          padding: 0;
-          background: transparent;
-          border: none;
         }
 
         .file-preview:hover {
@@ -595,16 +586,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         }
 
         .file-preview-image {
-          width: 80px;
-          height: 80px;
-          border-radius: 12px;
+          width: 40px;
+          height: 40px;
+          border-radius: 8px;
           object-fit: cover;
-          border: 2px solid #555;
-        }
-
-        .file-preview.image-only .file-preview-image {
-          width: 100px;
-          height: 100px;
+          border: 1px solid #555;
         }
 
         .file-preview-icon {
@@ -654,12 +640,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           cursor: pointer;
           transition: all 0.3s ease;
           box-shadow: 0 2px 8px rgba(255, 107, 53, 0.4);
-          z-index: 10001;
-        }
-
-        .file-preview.image-only .file-preview-remove {
-          top: 4px;
-          right: 4px;
         }
 
         .file-preview-remove:hover {
@@ -1092,37 +1072,28 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             {/* Preview de arquivos enviados - sempre renderizado mas oculto quando vazio */}
             <div className="uploaded-files-container">
               {uploadedFiles.map((fileData) => (
-                <div key={fileData.id} className={`file-preview ${fileData.type === 'image' ? 'image-only' : ''}`}>
+                <div key={fileData.id} className="file-preview">
                   {fileData.type === 'image' && fileData.preview ? (
-                    <>
-                      <img src={fileData.preview} alt={fileData.file.name} className="file-preview-image" />
-                      <button className="file-preview-remove" onClick={() => removeFile(fileData.id)}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M18 6L6 18M6 6l12 12"></path>
-                        </svg>
-                      </button>
-                    </>
+                    <img src={fileData.preview} alt={fileData.file.name} className="file-preview-image" />
                   ) : (
-                    <>
-                      <div className="file-preview-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                          <polyline points="13 2 13 9 20 9"></polyline>
-                        </svg>
-                      </div>
-                      <div className="file-preview-info">
-                        <span className="file-preview-name">{fileData.file.name}</span>
-                        <span className="file-preview-size">
-                          {(fileData.file.size / 1024).toFixed(1)} KB
-                        </span>
-                      </div>
-                      <button className="file-preview-remove" onClick={() => removeFile(fileData.id)}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M18 6L6 18M6 6l12 12"></path>
-                        </svg>
-                      </button>
-                    </>
+                    <div className="file-preview-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                        <polyline points="13 2 13 9 20 9"></polyline>
+                      </svg>
+                    </div>
                   )}
+                  <div className="file-preview-info">
+                    <span className="file-preview-name">{fileData.file.name}</span>
+                    <span className="file-preview-size">
+                      {(fileData.file.size / 1024).toFixed(1)} KB
+                    </span>
+                  </div>
+                  <button className="file-preview-remove" onClick={() => removeFile(fileData.id)}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                  </button>
                 </div>
               ))}
             </div>
