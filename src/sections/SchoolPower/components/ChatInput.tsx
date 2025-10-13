@@ -222,13 +222,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .inner-container {
           background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
           border-radius: 30px;
-          padding: 12px 20px;
+          padding: 12px 12px 12px 20px;
           border: 1px solid #333;
           transition: all 0.3s ease;
           display: flex;
           align-items: center;
           justify-content: space-between;
           height: 100%;
+          gap: 12px;
         }
 
         @media (max-width: 768px) {
@@ -248,7 +249,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           border: none;
           color: #e0e0e0;
           font-size: 16px;
-          line-height: 1.5;
+          line-height: 32px;
           resize: none;
           outline: none;
           width: 100%;
@@ -261,11 +262,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             sans-serif;
           caret-color: #ff6b35;
           overflow: hidden;
+          display: flex;
+          align-items: center;
         }
 
         .textarea-custom::placeholder {
           color: #999;
           font-style: italic;
+          line-height: 32px;
         }
 
         .action-button {
@@ -711,7 +715,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         <div className="message-container-inner">
           <div className="tech-accent"></div>
           <div className="inner-container">
-            <div className="flex items-center gap-3 w-full relative">
+            <div className="flex items-center w-full relative" style={{ gap: '12px' }}>
               <div className="flex-1">
                 <textarea
                   ref={textareaRef}
@@ -720,7 +724,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   onKeyPress={handleKeyPress}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  placeholder="Digite sua mensagem..."
+                  placeholder="Digite o que você quer criar..."
                   className="textarea-custom"
                   rows={1}
                 />
@@ -818,7 +822,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                 onClick={handleSend}
                 className="action-button"
                 disabled={!message.trim()}
-                style={{ opacity: message.trim() ? 1 : 0.5 }}
+                style={{ 
+                  opacity: message.trim() ? 1 : 0.5,
+                  marginLeft: 'auto',
+                  flexShrink: 0
+                }}
               >
                 <svg
                   width="20"
