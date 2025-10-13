@@ -93,6 +93,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
+  const isQuizMode = false; // Placeholder for isQuizMode logic
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
@@ -202,11 +203,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
   useEffect(() => {
     if (textareaRef.current) {
       const textarea = textareaRef.current;
-      const lineHeight = 24; // line-height em pixels
-      const minHeight = 32; // altura mínima (1 linha)
+      const lineHeight = 20; // line-height em pixels
+      const minHeight = 24; // altura mínima (1 linha - reduzida)
       const maxLinesBeforeExpand = 1; // número de linhas antes de começar a expandir
-      const maxHeight = 100; // altura máxima antes de ativar scroll
-      const thresholdHeight = lineHeight * maxLinesBeforeExpand; // 24px para 1 linha
+      const maxHeight = 200; // altura máxima antes de ativar scroll
+      const thresholdHeight = lineHeight * maxLinesBeforeExpand; // 20px para 1 linha
 
       // Reseta a altura para calcular o scrollHeight real
       textarea.style.height = "auto";
@@ -237,7 +238,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       "Criando Gênios": "Preciso criar atividades interativas focadas na exploração de habilidades dos estudantes, para a conclusão e trilhagem de novas áreas, sobre o tema:",
       "Escola Viva": "Preciso criar atividades interativas focadas na em engajar o público da minha escola, e criar o senso a cultura viva entre os alunos, sobre o tema:"
     };
-    
+
     setSelectedCard(cardName);
     setMessage(cardTexts[cardName] || cardName);
     setIsTyping(true);
@@ -303,7 +304,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           height: 67px;
           z-index: 1000;
         }
-        
+
         .message-container.mobile-quiz {
           width: 99%;
           max-width: calc(100vw - 6px);
@@ -451,11 +452,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           border: none;
           color: #e0e0e0;
           font-size: 16px;
-          line-height: 24px;
+          line-height: 20px; /* Ajustado para 20px */
           resize: none;
           outline: none;
           width: 100%;
-          min-height: 32px;
+          min-height: 24px; /* Ajustado para 24px */
           max-height: 200px;
           font-family:
             "Inter",
@@ -483,7 +484,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .textarea-custom::placeholder {
           color: #999;
           font-style: italic;
-          line-height: 32px;
+          line-height: 32px; /* Mantido o line-height do placeholder */
         }
 
         .action-button {
