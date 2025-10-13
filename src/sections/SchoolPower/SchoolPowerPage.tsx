@@ -175,7 +175,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
 
               {/* Caixa de Mensagem dentro do mesmo container Ripple */}
               <div
-                className={`absolute ${isMobile && isQuizMode ? 'bottom-16' : 'bottom-24'} left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto`}
+                className={`absolute ${isMobile && isQuizMode ? 'bottom-8' : 'bottom-12'} left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto`}
                 style={{
                   marginTop: isMobile && isQuizMode ? "-30px" : "-60px",
                   width: isMobile && isQuizMode ? "110%" : "auto"
