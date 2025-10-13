@@ -1228,17 +1228,19 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       `}</style>
 
       <div className="unified-container">
-        <div
-          className={`message-container ${isTyping || isFocused ? "typing" : ""} ${uploadedFiles.length > 0 ? "has-files" : ""} ${textareaRef.current?.classList.contains('expanding') ? 'expanding' : ''} ${isMobile && isQuizMode ? 'mobile-quiz' : ''}`}
-        >
-        <div className="moving-border-container">
-          <MovingBorder duration={3000} rx="20px" ry="20px">
-            <div className="moving-gradient" />
-          </MovingBorder>
-        </div>
-        <div className="message-container-inner">
-          <div className="tech-accent"></div>
-          <div className="inner-container">
+        {/* Container invisível unificado - sem espaços */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0', padding: '0', margin: '0' }}>
+          <div
+            className={`message-container ${isTyping || isFocused ? "typing" : ""} ${uploadedFiles.length > 0 ? "has-files" : ""} ${textareaRef.current?.classList.contains('expanding') ? 'expanding' : ''} ${isMobile && isQuizMode ? 'mobile-quiz' : ''}`}
+          >
+          <div className="moving-border-container">
+            <MovingBorder duration={3000} rx="20px" ry="20px">
+              <div className="moving-gradient" />
+            </MovingBorder>
+          </div>
+          <div className="message-container-inner">
+            <div className="tech-accent"></div>
+            <div className="inner-container">
             {/* Input oculto para upload de arquivos */}
             <input
               type="file"
@@ -1466,24 +1468,26 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       </div>
 
       {/* Cards retangulares abaixo da caixa de mensagens */}
-        <div className="quick-access-cards">
-          <div className="quick-access-card" onClick={() => handleCardClick("Plano ENEM")}>
-            <BookOpen className="quick-access-card-icon" />
-            <span className="quick-access-card-text">Plano ENEM</span>
-          </div>
-          <div className="quick-access-card" onClick={() => handleCardClick("Aula Turbo")}>
-            <Zap className="quick-access-card-icon" />
-            <span className="quick-access-card-text">Aula Turbo</span>
-          </div>
-          <div className="quick-access-card" onClick={() => handleCardClick("Criando Gênios")}>
-            <Brain className="quick-access-card-icon" />
-            <span className="quick-access-card-text">Criando Gênios</span>
-          </div>
-          <div className="quick-access-card" onClick={() => handleCardClick("Escola Viva")}>
-            <GraduationCap className="quick-access-card-icon" />
-            <span className="quick-access-card-text">Escola Viva</span>
+          <div className="quick-access-cards">
+            <div className="quick-access-card" onClick={() => handleCardClick("Plano ENEM")}>
+              <BookOpen className="quick-access-card-icon" />
+              <span className="quick-access-card-text">Plano ENEM</span>
+            </div>
+            <div className="quick-access-card" onClick={() => handleCardClick("Aula Turbo")}>
+              <Zap className="quick-access-card-icon" />
+              <span className="quick-access-card-text">Aula Turbo</span>
+            </div>
+            <div className="quick-access-card" onClick={() => handleCardClick("Criando Gênios")}>
+              <Brain className="quick-access-card-icon" />
+              <span className="quick-access-card-text">Criando Gênios</span>
+            </div>
+            <div className="quick-access-card" onClick={() => handleCardClick("Escola Viva")}>
+              <GraduationCap className="quick-access-card-icon" />
+              <span className="quick-access-card-text">Escola Viva</span>
+            </div>
           </div>
         </div>
+        {/* Fim do container invisível unificado */}
       </div>
     </div>
   );
