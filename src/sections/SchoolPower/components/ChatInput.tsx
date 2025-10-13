@@ -205,19 +205,26 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       const lineHeight = 24; // line-height em pixels
       const minHeight = 32; // altura mínima (1 linha)
       const maxLinesBeforeExpand = 2; // número de linhas antes de começar a expandir
+      const maxHeight = 200; // altura máxima antes de ativar scroll
       const thresholdHeight = lineHeight * maxLinesBeforeExpand; // 48px para 2 linhas
 
       // Reseta a altura para calcular o scrollHeight real
       textarea.style.height = "auto";
+      textarea.style.overflowY = "hidden";
       const scrollHeight = textarea.scrollHeight;
 
       // Se o conteúdo é menor ou igual a 2 linhas, mantém altura fixa
       if (scrollHeight <= thresholdHeight) {
         textarea.style.height = minHeight + "px";
         textarea.classList.remove("expanding");
-      } else {
-        // Se passou de 2 linhas, expande para mostrar todo o conteúdo
+      } else if (scrollHeight <= maxHeight) {
+        // Se passou de 2 linhas mas não atingiu o máximo, expande para mostrar todo o conteúdo
         textarea.style.height = scrollHeight + "px";
+        textarea.classList.add("expanding");
+      } else {
+        // Se atingiu o máximo, fixa na altura máxima e ativa scroll
+        textarea.style.height = maxHeight + "px";
+        textarea.style.overflowY = "auto";
         textarea.classList.add("expanding");
       }
     }
@@ -459,6 +466,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           overflow-y: hidden;
           display: block;
           transition: height 0.2s ease;
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE and Edge */
+        }
+
+        .textarea-custom::-webkit-scrollbar {
+          width: 0px;
+          height: 0px;
+          display: none;
         }
 
         .textarea-custom.expanding {
