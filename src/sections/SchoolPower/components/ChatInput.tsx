@@ -233,6 +233,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
   }, [message]);
 
   const handleCardClick = (cardName: string) => {
+    console.log('🎯 Handling card click:', cardName);
+    
     const cardTexts: { [key: string]: string } = {
       "Plano ENEM": "Preciso criar atividades interativas focadas na preparação no ENEM para estudantes, sobre o tema:",
       "Aula Turbo": "Preciso criar atividades interativas focadas na criação de uma aula que engaja meus alunos, conclui habilidades e cumpri os critérios da minha grade, sobre o tema:",
@@ -240,12 +242,23 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
       "Escola Viva": "Preciso criar atividades interativas focadas na em engajar o público da minha escola, e criar o senso a cultura viva entre os alunos, sobre o tema:"
     };
 
+    const text = cardTexts[cardName] || cardName;
+    console.log('📝 Setting message to:', text);
+    
     setSelectedCard(cardName);
-    setMessage(cardTexts[cardName] || cardName);
+    setMessage(text);
     setIsTyping(true);
-    textareaRef.current?.focus();
+    
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 100);
   };
 
+  React.useEffect(() => {
+    if (externalSelectedCard && externalSelectedCard !== selectedCard) {
+      handleCardClick(externalSelectedCard);
+    }
+  }, [externalSelectedCard]);
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">

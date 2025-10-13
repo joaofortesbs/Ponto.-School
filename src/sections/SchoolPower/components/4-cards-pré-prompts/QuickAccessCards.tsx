@@ -9,32 +9,37 @@ interface QuickAccessCardsProps {
 }
 
 export const QuickAccessCards: React.FC<QuickAccessCardsProps> = ({ selectedCard, onCardClick }) => {
+  const handleClick = (cardName: string) => {
+    console.log('📝 Card clicado:', cardName);
+    onCardClick(cardName);
+  };
+
   return (
     <div className="quick-access-cards">
       <div 
         className={`quick-access-card ${selectedCard === "Plano ENEM" ? "selected" : ""}`} 
-        onClick={() => onCardClick("Plano ENEM")}
+        onClick={() => handleClick("Plano ENEM")}
       >
         <BookOpen className="quick-access-card-icon" />
         <span className="quick-access-card-text">Plano ENEM</span>
       </div>
       <div 
         className={`quick-access-card ${selectedCard === "Aula Turbo" ? "selected" : ""}`} 
-        onClick={() => onCardClick("Aula Turbo")}
+        onClick={() => handleClick("Aula Turbo")}
       >
         <Zap className="quick-access-card-icon" />
         <span className="quick-access-card-text">Aula Turbo</span>
       </div>
       <div 
         className={`quick-access-card ${selectedCard === "Criando Gênios" ? "selected" : ""}`} 
-        onClick={() => onCardClick("Criando Gênios")}
+        onClick={() => handleClick("Criando Gênios")}
       >
         <Brain className="quick-access-card-icon" />
         <span className="quick-access-card-text">Criando Gênios</span>
       </div>
       <div 
         className={`quick-access-card ${selectedCard === "Escola Viva" ? "selected" : ""}`} 
-        onClick={() => onCardClick("Escola Viva")}
+        onClick={() => handleClick("Escola Viva")}
       >
         <GraduationCap className="quick-access-card-icon" />
         <span className="quick-access-card-text">Escola Viva</span>
