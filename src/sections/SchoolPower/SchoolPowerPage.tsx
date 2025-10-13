@@ -67,7 +67,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
       if (files && files.length > 0) {
         setUploadedFiles(files);
       }
-      
+
       // Enviar mensagem para o hook
       handleSendInitialMessage(message);
     }
@@ -170,7 +170,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
               <div
                 className={`absolute ${isMobile && isQuizMode ? 'bottom-16' : 'bottom-24'} left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto`}
                 style={{
-                  marginTop: isMobile && isQuizMode ? "-80px" : "-150px",
+                  marginTop: isMobile && isQuizMode ? "-13px" : "-83px",
                   width: isMobile && isQuizMode ? "110%" : "auto"
                 }}
               >
