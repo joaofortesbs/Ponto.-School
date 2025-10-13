@@ -222,7 +222,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .message-container {
           position: fixed;
-          bottom: 10px;
+          bottom: 5px;
           left: 50%;
           transform: translateX(-50%);
           background: transparent;
@@ -247,7 +247,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             max-width: calc(100vw - 6px);
             border-radius: 35px;
             height: 60px;
-            bottom: 8px;
+            bottom: 5px;
           }
           
           .message-container.has-files {
