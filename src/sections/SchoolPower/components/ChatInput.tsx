@@ -130,9 +130,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
     const newFiles: UploadedFile[] = [];
     Array.from(files).forEach((file) => {
-      const fileType = file.type.startsWith('image/') ? 'image' : 
+      const fileType = file.type.startsWith('image/') ? 'image' :
                       file.type.includes('pdf') || file.type.includes('document') ? 'document' : 'other';
-      
+
       const fileData: UploadedFile = {
         id: Math.random().toString(36).substr(2, 9),
         file,
@@ -246,10 +246,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             width: 99%;
             max-width: calc(100vw - 6px);
             border-radius: 35px;
-            height: 60px;
-            bottom: 5px;
+            min-height: 60px;
+            bottom: 2px;
           }
-          
+
           .message-container.has-files {
             max-height: 350px;
             border-radius: 20px;
@@ -279,7 +279,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           .message-container-inner {
              border-radius: 33px;
           }
-          
+
           .message-container.has-files .message-container-inner {
             border-radius: 18px;
           }
@@ -304,7 +304,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           .moving-border-container {
             border-radius: 35px;
           }
-          
+
           .message-container.has-files .moving-border-container {
             border-radius: 20px;
           }
@@ -360,7 +360,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             border-radius: 31px;
             padding: 10px 16px;
           }
-          
+
           .message-container.has-files .inner-container {
             border-radius: 16px;
             padding: 12px;
@@ -1113,7 +1113,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                 </svg>
               </button>
-              
+
               <div className={`elements-dropup ${showElementsDropup ? 'show' : ''}`}>
                 <button className="elements-option" onClick={triggerFileInput}>
                   <svg className="elements-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1122,7 +1122,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   </svg>
                   Adicionar arquivos
                 </button>
-                
+
                 <button className="elements-option">
                   <svg className="elements-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -1133,7 +1133,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   </svg>
                   Adicionar um contexto
                 </button>
-                
+
                 <button className="elements-option disabled">
                   <svg className="elements-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="23 4 23 10 17 10"></polyline>
@@ -1144,7 +1144,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                 </button>
               </div>
             </div>
-            
+
             <div className="flex items-center relative" style={{ gap: '8px', width: uploadedFiles.length > 0 ? '100%' : 'auto', flex: uploadedFiles.length > 0 ? '1' : 'initial' }}>
               <div className="flex-1">
                 <textarea
@@ -1252,7 +1252,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                 onClick={handleSend}
                 className="action-button"
                 disabled={!message.trim()}
-                style={{ 
+                style={{
                   opacity: message.trim() ? 1 : 0.5,
                   flexShrink: 0,
                   marginLeft: 'auto'
