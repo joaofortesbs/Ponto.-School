@@ -177,7 +177,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
               <div
                 className={`absolute ${isMobile && isQuizMode ? 'bottom-16' : 'bottom-24'} left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto`}
                 style={{
-                  marginTop: isMobile && isQuizMode ? "-80px" : "-150px",
+                  marginTop: isMobile && isQuizMode ? "-60px" : "-100px",
                   width: isMobile && isQuizMode ? "110%" : "auto"
                 }}
               >
@@ -193,7 +193,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
               <div
                 className="absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto"
                 style={{
-                  bottom: isMobile && isQuizMode ? '-20px' : '-35px',
+                  bottom: isMobile && isQuizMode ? '0px' : '5px',
                   width: isMobile && isQuizMode ? "110%" : "auto"
                 }}
               >
