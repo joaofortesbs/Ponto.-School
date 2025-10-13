@@ -9,6 +9,7 @@ import {
   SideMenu,
   ParticlesBackground,
 } from "./components";
+import { QuickAccessCards } from "./components/4-cards-pré-prompts";
 import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerFlow";
 import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
 import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
@@ -26,6 +27,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const [isDarkTheme] = useState(true);
   const [isCentralExpanded, setIsCentralExpanded] = useState(false);
   const [showHistorico, setShowHistorico] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
   // Hook para gerenciar o fluxo do School Power
@@ -104,6 +106,11 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     setShowHistorico(true);
   };
 
+  // Função para lidar com clique nos cards
+  const handleCardClick = (cardName: string) => {
+    setSelectedCard(cardName);
+  };
+
   // Determina se os componentes padrão devem estar visíveis
   const componentsVisible = flowState === 'idle' && !showHistorico;
   console.log('👁️ Componentes padrão visíveis:', componentsVisible);
@@ -177,6 +184,22 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 <ChatInput
                   isDarkTheme={isDarkTheme}
                   onSend={handleSendMessage}
+                  externalSelectedCard={selectedCard}
+                  onCardClick={handleCardClick}
+                />
+              </div>
+
+              {/* 4 Cards Retangulares abaixo da caixa de mensagens */}
+              <div
+                className="absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto"
+                style={{
+                  bottom: isMobile && isQuizMode ? '-20px' : '-35px',
+                  width: isMobile && isQuizMode ? "110%" : "auto"
+                }}
+              >
+                <QuickAccessCards
+                  selectedCard={selectedCard}
+                  onCardClick={handleCardClick}
                 />
               </div>
             </div>

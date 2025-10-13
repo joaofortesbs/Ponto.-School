@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, useMotionValue, useTransform, useAnimationFrame, useMotionTemplate } from "framer-motion";
 import { TextShimmerWave } from '@/components/ui/text-shimmer-wave';
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { BookOpen, Zap, Brain, GraduationCap } from 'lucide-react';
 
 interface UploadedFile {
   id: string;
@@ -78,10 +77,12 @@ const MovingBorder = ({
 interface ChatInputProps {
   isDarkTheme?: boolean;
   onSend?: (message: string, files?: UploadedFile[]) => void;
+  externalSelectedCard?: string | null;
+  onCardClick?: (cardName: string) => void;
 }
 
 // Componente AIMessageBox
-const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, externalSelectedCard = null, onCardClick }) => {
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -1513,26 +1514,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         </div>
       </div>
 
-      {/* Cards retangulares abaixo da caixa de mensagens */}
-          <div className="quick-access-cards">
-            <div className={`quick-access-card ${selectedCard === "Plano ENEM" ? "selected" : ""}`} onClick={() => handleCardClick("Plano ENEM")}>
-              <BookOpen className="quick-access-card-icon" />
-              <span className="quick-access-card-text">Plano ENEM</span>
-            </div>
-            <div className={`quick-access-card ${selectedCard === "Aula Turbo" ? "selected" : ""}`} onClick={() => handleCardClick("Aula Turbo")}>
-              <Zap className="quick-access-card-icon" />
-              <span className="quick-access-card-text">Aula Turbo</span>
-            </div>
-            <div className={`quick-access-card ${selectedCard === "Criando Gênios" ? "selected" : ""}`} onClick={() => handleCardClick("Criando Gênios")}>
-              <Brain className="quick-access-card-icon" />
-              <span className="quick-access-card-text">Criando Gênios</span>
-            </div>
-            <div className={`quick-access-card ${selectedCard === "Escola Viva" ? "selected" : ""}`} onClick={() => handleCardClick("Escola Viva")}>
-              <GraduationCap className="quick-access-card-icon" />
-              <span className="quick-access-card-text">Escola Viva</span>
-            </div>
-          </div>
-        </div>
+      </div>
         {/* Fim do container invisível unificado */}
       </div>
     </div>
