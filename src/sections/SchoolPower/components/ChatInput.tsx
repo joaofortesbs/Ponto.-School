@@ -1120,7 +1120,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 16px;
+          gap: 4px;
           width: 100%;
           max-width: 800px;
           margin: 24px auto 0;
@@ -1141,7 +1141,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 14px 18px;
+          padding: 10px 18px;
           background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
           border: 1px solid #333;
           border-radius: 20px;
