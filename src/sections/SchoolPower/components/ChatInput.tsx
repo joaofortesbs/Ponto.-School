@@ -221,29 +221,43 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         }
 
         .message-container {
-          position: relative;
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
           background: transparent;
-          border-radius: 32px;
+          border-radius: 40px;
           padding: 2px;
-          transition: all 0.3s ease;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           width: 600px;
           overflow: visible;
           height: 64px;
+          z-index: 1000;
+        }
+
+        .message-container.has-files {
+          height: auto;
+          border-radius: 24px;
         }
 
         @media (max-width: 768px) {
           .message-container {
-            width: 99%; /* Aumenta ainda mais a largura para telas menores */
-            max-width: calc(100vw - 6px); /* Reduz ainda mais as margens laterais */
-            border-radius: 30px;
+            width: 99%;
+            max-width: calc(100vw - 6px);
+            border-radius: 35px;
             height: 60px;
+            bottom: 15px;
+          }
+          
+          .message-container.has-files {
+            border-radius: 20px;
           }
         }
 
         .message-container-inner {
           position: relative;
           background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
-          border-radius: 30px;
+          border-radius: 38px;
           height: 100%;
           width: 100%;
           box-shadow:
@@ -254,16 +268,24 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           z-index: 3;
         }
 
+        .message-container.has-files .message-container-inner {
+          border-radius: 22px;
+        }
+
         @media (max-width: 768px) {
           .message-container-inner {
-             border-radius: 28px;
+             border-radius: 33px;
+          }
+          
+          .message-container.has-files .message-container-inner {
+            border-radius: 18px;
           }
         }
 
         .moving-border-container {
           position: absolute;
           inset: 0;
-          border-radius: 32px;
+          border-radius: 40px;
           opacity: 1;
           transition: opacity 0.3s ease;
           overflow: hidden;
@@ -271,9 +293,17 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           pointer-events: none;
         }
 
+        .message-container.has-files .moving-border-container {
+          border-radius: 24px;
+        }
+
         @media (max-width: 768px) {
           .moving-border-container {
-            border-radius: 30px;
+            border-radius: 35px;
+          }
+          
+          .message-container.has-files .moving-border-container {
+            border-radius: 20px;
           }
         }
 
@@ -300,7 +330,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .inner-container {
           background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
-          border-radius: 30px;
+          border-radius: 36px;
           padding: 12px 8px 12px 12px;
           border: 1px solid #333;
           transition: all 0.3s ease;
@@ -309,12 +339,26 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           justify-content: space-between;
           height: 100%;
           gap: 8px;
+          flex-direction: column;
+        }
+
+        .message-container:not(.has-files) .inner-container {
+          flex-direction: row;
+        }
+
+        .message-container.has-files .inner-container {
+          border-radius: 20px;
+          align-items: stretch;
         }
 
         @media (max-width: 768px) {
           .inner-container {
-            border-radius: 28px;
+            border-radius: 31px;
             padding: 10px 16px;
+          }
+          
+          .message-container.has-files .inner-container {
+            border-radius: 16px;
           }
         }
 
@@ -506,10 +550,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .uploaded-files-container {
           display: flex;
           gap: 8px;
-          padding: 8px 12px;
+          padding: 12px;
           flex-wrap: wrap;
-          max-height: 120px;
+          max-height: 200px;
           overflow-y: auto;
+          width: 100%;
+          order: -1;
         }
 
         .file-preview {
@@ -994,7 +1040,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       `}</style>
 
       <div
-        className={`message-container ${isTyping || isFocused ? "typing" : ""}`}
+        className={`message-container ${isTyping || isFocused ? "typing" : ""} ${uploadedFiles.length > 0 ? "has-files" : ""}`}
       >
         <div className="moving-border-container">
           <MovingBorder duration={3000} rx="20px" ry="20px">
@@ -1014,7 +1060,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
               style={{ display: 'none' }}
             />
 
-            {/* Preview de arquivos enviados */}
+            {/* Preview de arquivos enviados - agora acima */}
             {uploadedFiles.length > 0 && (
               <div className="uploaded-files-container">
                 {uploadedFiles.map((fileData) => (
@@ -1045,7 +1091,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
               </div>
             )}
 
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button className="clip-button" onClick={toggleElementsDropup}>
                 <svg
                   width="20"
