@@ -89,6 +89,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
   const [showModeDropdown, setShowModeDropdown] = useState(false);
   const [showElementsDropup, setShowElementsDropup] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
@@ -113,6 +114,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       // Limpa o campo e arquivos após o envio
       setMessage("");
       setUploadedFiles([]);
+      setSelectedCard(null);
       setIsTyping(false);
 
       console.log("✅ Mensagem enviada e campos limpos");
@@ -222,7 +224,15 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
   }, [message]);
 
   const handleCardClick = (cardName: string) => {
-    setMessage(cardName);
+    const cardTexts: { [key: string]: string } = {
+      "Plano ENEM": "Preciso criar atividades interativas focadas na preparação no ENEM para estudantes, sobre o tema:",
+      "Aula Turbo": "Preciso criar atividades interativas focadas na criação de uma aula que engaja meus alunos, conclui habilidades e cumpri os critérios da minha grade, sobre o tema:",
+      "Criando Gênios": "Preciso criar atividades interativas focadas na exploração de habilidades dos estudantes, para a conclusão e trilhagem de novas áreas, sobre o tema:",
+      "Escola Viva": "Preciso criar atividades interativas focadas na em engajar o público da minha escola, e criar o senso a cultura viva entre os alunos, sobre o tema:"
+    };
+    
+    setSelectedCard(cardName);
+    setMessage(cardTexts[cardName] || cardName);
     setIsTyping(true);
     textareaRef.current?.focus();
   };
@@ -1225,6 +1235,26 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .quick-access-card:hover .quick-access-card-text {
           color: #ff6b35;
         }
+
+        .quick-access-card.selected {
+          background: linear-gradient(145deg, #ff6b35, #f7931e);
+          border-color: #ff6b35;
+          box-shadow:
+            0 8px 16px rgba(255, 107, 53, 0.4),
+            0 4px 8px rgba(255, 107, 53, 0.3),
+            inset 0 2px 4px rgba(255, 255, 255, 0.2);
+          transform: translateY(-2px);
+        }
+
+        .quick-access-card.selected .quick-access-card-icon {
+          color: white;
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .quick-access-card.selected .quick-access-card-text {
+          color: white;
+          font-weight: 600;
+        }
       `}</style>
 
       <div className="unified-container">
@@ -1469,19 +1499,19 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
       {/* Cards retangulares abaixo da caixa de mensagens */}
           <div className="quick-access-cards">
-            <div className="quick-access-card" onClick={() => handleCardClick("Plano ENEM")}>
+            <div className={`quick-access-card ${selectedCard === "Plano ENEM" ? "selected" : ""}`} onClick={() => handleCardClick("Plano ENEM")}>
               <BookOpen className="quick-access-card-icon" />
               <span className="quick-access-card-text">Plano ENEM</span>
             </div>
-            <div className="quick-access-card" onClick={() => handleCardClick("Aula Turbo")}>
+            <div className={`quick-access-card ${selectedCard === "Aula Turbo" ? "selected" : ""}`} onClick={() => handleCardClick("Aula Turbo")}>
               <Zap className="quick-access-card-icon" />
               <span className="quick-access-card-text">Aula Turbo</span>
             </div>
-            <div className="quick-access-card" onClick={() => handleCardClick("Criando Gênios")}>
+            <div className={`quick-access-card ${selectedCard === "Criando Gênios" ? "selected" : ""}`} onClick={() => handleCardClick("Criando Gênios")}>
               <Brain className="quick-access-card-icon" />
               <span className="quick-access-card-text">Criando Gênios</span>
             </div>
-            <div className="quick-access-card" onClick={() => handleCardClick("Escola Viva")}>
+            <div className={`quick-access-card ${selectedCard === "Escola Viva" ? "selected" : ""}`} onClick={() => handleCardClick("Escola Viva")}>
               <GraduationCap className="quick-access-card-icon" />
               <span className="quick-access-card-text">Escola Viva</span>
             </div>
