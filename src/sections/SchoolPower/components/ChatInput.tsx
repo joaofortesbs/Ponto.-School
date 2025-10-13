@@ -228,8 +228,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           transition: all 0.3s ease;
           width: 600px;
           overflow: visible;
-          min-height: 64px;
-          height: auto;
         }
 
         @media (max-width: 768px) {
@@ -237,7 +235,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             width: 99%;
             max-width: calc(100vw - 6px);
             border-radius: 30px;
-            min-height: 60px;
           }
         }
 
@@ -308,7 +305,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           display: flex;
           flex-direction: column;
           gap: 12px;
-          min-height: 60px;
         }
 
         @media (max-width: 768px) {
@@ -504,31 +500,27 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         }
 
         .uploaded-files-container {
+          position: absolute;
+          bottom: 100%;
+          left: 0;
+          right: 0;
           display: flex;
           gap: 8px;
-          padding: 0;
+          padding: 12px;
           flex-wrap: wrap;
-          max-height: 200px;
-          overflow-y: auto;
           width: 100%;
+          background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+          border: 1px solid #333;
+          border-radius: 30px 30px 0 0;
+          margin-bottom: -1px;
+          max-height: none;
+          overflow-y: visible;
         }
 
-        .uploaded-files-container::-webkit-scrollbar {
-          width: 4px;
-        }
-
-        .uploaded-files-container::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 2px;
-        }
-
-        .uploaded-files-container::-webkit-scrollbar-thumb {
-          background: rgba(255, 107, 53, 0.3);
-          border-radius: 2px;
-        }
-
-        .uploaded-files-container::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 107, 53, 0.5);
+        @media (max-width: 768px) {
+          .uploaded-files-container {
+            border-radius: 28px 28px 0 0;
+          }
         }
 
         .file-preview {
@@ -1028,6 +1020,38 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             <div className="moving-gradient" />
           </MovingBorder>
         </div>
+
+        {/* Preview de arquivos enviados - ACIMA DA CAIXA */}
+        {uploadedFiles.length > 0 && (
+          <div className="uploaded-files-container">
+            {uploadedFiles.map((fileData) => (
+              <div key={fileData.id} className="file-preview">
+                {fileData.type === 'image' && fileData.preview ? (
+                  <img src={fileData.preview} alt={fileData.file.name} className="file-preview-image" />
+                ) : (
+                  <div className="file-preview-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                      <polyline points="13 2 13 9 20 9"></polyline>
+                    </svg>
+                  </div>
+                )}
+                <div className="file-preview-info">
+                  <span className="file-preview-name">{fileData.file.name}</span>
+                  <span className="file-preview-size">
+                    {(fileData.file.size / 1024).toFixed(1)} KB
+                  </span>
+                </div>
+                <button className="file-preview-remove" onClick={() => removeFile(fileData.id)}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="message-container-inner">
           <div className="tech-accent"></div>
           <div className="inner-container">
@@ -1040,37 +1064,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
               accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
               style={{ display: 'none' }}
             />
-
-            {/* Preview de arquivos enviados - ACIMA DO INPUT */}
-            {uploadedFiles.length > 0 && (
-              <div className="uploaded-files-container">
-                {uploadedFiles.map((fileData) => (
-                  <div key={fileData.id} className="file-preview">
-                    {fileData.type === 'image' && fileData.preview ? (
-                      <img src={fileData.preview} alt={fileData.file.name} className="file-preview-image" />
-                    ) : (
-                      <div className="file-preview-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                          <polyline points="13 2 13 9 20 9"></polyline>
-                        </svg>
-                      </div>
-                    )}
-                    <div className="file-preview-info">
-                      <span className="file-preview-name">{fileData.file.name}</span>
-                      <span className="file-preview-size">
-                        {(fileData.file.size / 1024).toFixed(1)} KB
-                      </span>
-                    </div>
-                    <button className="file-preview-remove" onClick={() => removeFile(fileData.id)}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 6L6 18M6 6l12 12"></path>
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
 
             {/* Linha de input com botões */}
             <div className="input-row">
