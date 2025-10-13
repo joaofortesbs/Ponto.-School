@@ -235,16 +235,20 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 24px;
+          gap: 0;
           width: 100%;
           max-width: 800px;
+          padding: 0;
+          margin: 0;
         }
 
         @media (max-width: 768px) {
           .unified-container {
-            gap: 16px;
+            gap: 0;
             width: 99%;
             max-width: calc(100vw - 6px);
+            padding: 0;
+            margin: 0;
           }
         }
         @keyframes pulseGlow {
@@ -1139,11 +1143,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           gap: 20px;
           width: 100%;
           padding: 0 2px;
+          margin: 0;
         }
 
         @media (max-width: 768px) {
           .quick-access-cards {
             gap: 8px;
+            margin: 0;
           }
         }
 
