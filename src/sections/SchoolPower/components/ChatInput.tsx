@@ -190,9 +190,22 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height =
-        textareaRef.current.scrollHeight + "px";
+      const textarea = textareaRef.current;
+      const lineHeight = 24; // line-height em pixels
+      const minHeight = 32; // altura mínima (1 linha)
+      const maxLinesBeforeExpand = 2; // número de linhas antes de começar a expandir
+      const thresholdHeight = lineHeight * maxLinesBeforeExpand; // 48px para 2 linhas
+      
+      // Reseta a altura para calcular o scrollHeight real
+      textarea.style.height = "auto";
+      
+      // Se o conteúdo é menor ou igual a 2 linhas, mantém altura fixa
+      if (textarea.scrollHeight <= thresholdHeight) {
+        textarea.style.height = minHeight + "px";
+      } else {
+        // Se passou de 2 linhas, expande para mostrar todo o conteúdo
+        textarea.style.height = textarea.scrollHeight + "px";
+      }
     }
   }, [message]);
 
@@ -228,16 +241,17 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           background: transparent;
           border-radius: 40px;
           padding: 2px;
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           width: 600px;
           overflow: visible;
-          height: 64px;
+          min-height: 64px;
+          height: auto;
+          max-height: 500px;
           z-index: 1000;
         }
 
         .message-container.has-files {
-          height: auto;
-          max-height: 400px;
+          max-height: 500px;
           border-radius: 24px;
         }
 
@@ -377,21 +391,21 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           border: none;
           color: #e0e0e0;
           font-size: 16px;
-          line-height: 32px;
+          line-height: 24px;
           resize: none;
           outline: none;
           width: 100%;
           min-height: 32px;
-          max-height: 32px;
+          max-height: 200px;
           font-family:
             "Inter",
             -apple-system,
             BlinkMacSystemFont,
             sans-serif;
           caret-color: #ff6b35;
-          overflow: hidden;
-          display: flex;
-          align-items: center;
+          overflow-y: auto;
+          display: block;
+          transition: height 0.2s ease;
         }
 
         .textarea-custom::placeholder {
