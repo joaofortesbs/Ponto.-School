@@ -221,29 +221,45 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         }
 
         .message-container {
-          position: relative;
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
           background: transparent;
-          border-radius: 32px;
+          border-radius: 40px;
           padding: 2px;
-          transition: all 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           width: 600px;
           overflow: visible;
           height: 64px;
+          z-index: 1000;
+        }
+
+        .message-container.has-files {
+          height: auto;
+          max-height: 400px;
+          border-radius: 24px;
         }
 
         @media (max-width: 768px) {
           .message-container {
-            width: 99%; /* Aumenta ainda mais a largura para telas menores */
-            max-width: calc(100vw - 6px); /* Reduz ainda mais as margens laterais */
-            border-radius: 30px;
+            width: 99%;
+            max-width: calc(100vw - 6px);
+            border-radius: 35px;
             height: 60px;
+            bottom: 15px;
+          }
+          
+          .message-container.has-files {
+            max-height: 350px;
+            border-radius: 20px;
           }
         }
 
         .message-container-inner {
           position: relative;
           background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
-          border-radius: 30px;
+          border-radius: 38px;
           height: 100%;
           width: 100%;
           box-shadow:
@@ -252,28 +268,45 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             0 4px 8px rgba(0, 0, 0, 0.15),
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
           z-index: 3;
+          transition: border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .message-container.has-files .message-container-inner {
+          border-radius: 22px;
         }
 
         @media (max-width: 768px) {
           .message-container-inner {
-             border-radius: 28px;
+             border-radius: 33px;
+          }
+          
+          .message-container.has-files .message-container-inner {
+            border-radius: 18px;
           }
         }
 
         .moving-border-container {
           position: absolute;
           inset: 0;
-          border-radius: 32px;
+          border-radius: 40px;
           opacity: 1;
-          transition: opacity 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           overflow: hidden;
           z-index: 2;
           pointer-events: none;
         }
 
+        .message-container.has-files .moving-border-container {
+          border-radius: 24px;
+        }
+
         @media (max-width: 768px) {
           .moving-border-container {
-            border-radius: 30px;
+            border-radius: 35px;
+          }
+          
+          .message-container.has-files .moving-border-container {
+            border-radius: 20px;
           }
         }
 
@@ -300,21 +333,37 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .inner-container {
           background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
-          border-radius: 30px;
+          border-radius: 36px;
           padding: 12px 8px 12px 12px;
           border: 1px solid #333;
-          transition: all 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           display: flex;
           align-items: center;
           justify-content: space-between;
           height: 100%;
           gap: 8px;
+          flex-direction: column;
+        }
+
+        .message-container:not(.has-files) .inner-container {
+          flex-direction: row;
+        }
+
+        .message-container.has-files .inner-container {
+          border-radius: 20px;
+          padding: 16px;
+          align-items: stretch;
         }
 
         @media (max-width: 768px) {
           .inner-container {
-            border-radius: 28px;
+            border-radius: 31px;
             padding: 10px 16px;
+          }
+          
+          .message-container.has-files .inner-container {
+            border-radius: 16px;
+            padding: 12px;
           }
         }
 
@@ -506,10 +555,16 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .uploaded-files-container {
           display: flex;
           gap: 8px;
-          padding: 8px 12px;
+          padding: 0 0 12px 0;
           flex-wrap: wrap;
-          max-height: 120px;
+          max-height: 200px;
           overflow-y: auto;
+          width: 100%;
+          order: -1;
+        }
+
+        .message-container:not(.has-files) .uploaded-files-container {
+          display: none;
         }
 
         .file-preview {
@@ -994,7 +1049,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       `}</style>
 
       <div
-        className={`message-container ${isTyping || isFocused ? "typing" : ""}`}
+        className={`message-container ${isTyping || isFocused ? "typing" : ""} ${uploadedFiles.length > 0 ? "has-files" : ""}`}
       >
         <div className="moving-border-container">
           <MovingBorder duration={3000} rx="20px" ry="20px">
@@ -1014,38 +1069,36 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
               style={{ display: 'none' }}
             />
 
-            {/* Preview de arquivos enviados */}
-            {uploadedFiles.length > 0 && (
-              <div className="uploaded-files-container">
-                {uploadedFiles.map((fileData) => (
-                  <div key={fileData.id} className="file-preview">
-                    {fileData.type === 'image' && fileData.preview ? (
-                      <img src={fileData.preview} alt={fileData.file.name} className="file-preview-image" />
-                    ) : (
-                      <div className="file-preview-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                          <polyline points="13 2 13 9 20 9"></polyline>
-                        </svg>
-                      </div>
-                    )}
-                    <div className="file-preview-info">
-                      <span className="file-preview-name">{fileData.file.name}</span>
-                      <span className="file-preview-size">
-                        {(fileData.file.size / 1024).toFixed(1)} KB
-                      </span>
-                    </div>
-                    <button className="file-preview-remove" onClick={() => removeFile(fileData.id)}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 6L6 18M6 6l12 12"></path>
+            {/* Preview de arquivos enviados - sempre renderizado mas oculto quando vazio */}
+            <div className="uploaded-files-container">
+              {uploadedFiles.map((fileData) => (
+                <div key={fileData.id} className="file-preview">
+                  {fileData.type === 'image' && fileData.preview ? (
+                    <img src={fileData.preview} alt={fileData.file.name} className="file-preview-image" />
+                  ) : (
+                    <div className="file-preview-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                        <polyline points="13 2 13 9 20 9"></polyline>
                       </svg>
-                    </button>
+                    </div>
+                  )}
+                  <div className="file-preview-info">
+                    <span className="file-preview-name">{fileData.file.name}</span>
+                    <span className="file-preview-size">
+                      {(fileData.file.size / 1024).toFixed(1)} KB
+                    </span>
                   </div>
-                ))}
-              </div>
-            )}
+                  <button className="file-preview-remove" onClick={() => removeFile(fileData.id)}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
 
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button className="clip-button" onClick={toggleElementsDropup}>
                 <svg
                   width="20"
@@ -1092,7 +1145,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
               </div>
             </div>
             
-            <div className="flex items-center w-full relative" style={{ gap: '8px' }}>
+            <div className="flex items-center relative" style={{ gap: '8px', width: uploadedFiles.length > 0 ? '100%' : 'auto', flex: uploadedFiles.length > 0 ? '1' : 'initial' }}>
               <div className="flex-1">
                 <textarea
                   ref={textareaRef}
