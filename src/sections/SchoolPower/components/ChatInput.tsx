@@ -1120,7 +1120,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 16px;
+          gap: 20px;
           width: 100%;
           max-width: 800px;
           margin: 24px auto 0;
@@ -1173,14 +1173,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           flex-shrink: 0;
           color: #ff6b35;
           transition: all 0.3s ease;
-          margin-right: 14px;
+          margin-right: 10px;
         }
 
         @media (max-width: 768px) {
           .quick-access-card-icon {
             width: 20px;
             height: 20px;
-            margin-right: 12px;
+            margin-right: 17px;
           }
         }
 
