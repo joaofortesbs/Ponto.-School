@@ -555,7 +555,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .uploaded-files-container {
           display: flex;
           gap: 8px;
-          padding: 0 0 12px 0;
+          padding: 8px 8px 12px 8px;
           flex-wrap: wrap;
           max-height: 200px;
           overflow-y: auto;
@@ -586,7 +586,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           padding: 0;
           background: transparent;
           border: none;
-          overflow: hidden;
+          overflow: visible;
           width: 56px;
           height: 56px;
         }
@@ -648,8 +648,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .file-preview-remove {
           position: absolute;
-          top: -6px;
-          right: -6px;
+          top: -8px;
+          right: -8px;
           width: 20px;
           height: 20px;
           border-radius: 50%;
@@ -661,12 +661,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           cursor: pointer;
           transition: all 0.3s ease;
           box-shadow: 0 2px 8px rgba(255, 107, 53, 0.4);
-          z-index: 99998;
+          z-index: 99999;
         }
 
         .file-preview.is-image .file-preview-remove {
-          top: -6px;
-          right: -6px;
+          top: -8px;
+          right: -8px;
         }
 
         .file-preview-remove:hover {
