@@ -149,6 +149,40 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     setShowHistorico(false);
   };
 
+  const handleResetFlowWithCleanup = () => {
+    console.log('🔄 Resetando fluxo e limpando localStorage de atividades construídas');
+    
+    // Limpar dados de atividades construídas do localStorage
+    try {
+      // Remover marcadores de atividades construídas
+      localStorage.removeItem('constructedActivities');
+      
+      // Remover dados específicos de atividades (activity_*)
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (
+          key.startsWith('activity_') || 
+          key.startsWith('constructed_') ||
+          key.startsWith('auto_activity_data_')
+        )) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      console.log(`✅ Limpeza concluída: ${keysToRemove.length} itens removidos do localStorage`);
+    } catch (error) {
+      console.error('❌ Erro ao limpar localStorage:', error);
+    }
+    
+    // Chamar a função de reset do fluxo
+    if (onResetFlow) {
+      onResetFlow();
+    }
+  };
+
   const handleShare = (id: string) => {
     console.log('📤 Compartilhando atividade:', id);
     // TODO: Implementar funcionalidade de compartilhamento
@@ -568,7 +602,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         <div className="flex items-center gap-2">
           {/* Botão Voltar ao Início */}
           <button
-            onClick={onResetFlow}
+            onClick={handleResetFlowWithCleanup}
             className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
             title="Voltar ao Início"
           >
