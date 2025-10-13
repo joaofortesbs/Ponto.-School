@@ -554,12 +554,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .uploaded-files-container {
           display: flex;
-          gap: 12px;
-          padding: 8px 8px 16px 8px;
+          gap: 8px;
+          padding: 0 0 12px 0;
           flex-wrap: wrap;
           max-height: 200px;
           overflow-y: auto;
-          overflow-x: visible;
           width: 100%;
           order: -1;
           position: relative;
@@ -587,7 +586,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           padding: 0;
           background: transparent;
           border: none;
-          overflow: visible;
+          overflow: hidden;
           width: 56px;
           height: 56px;
         }
@@ -649,26 +648,25 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .file-preview-remove {
           position: absolute;
-          top: -8px;
-          right: -8px;
-          width: 24px;
-          height: 24px;
+          top: -6px;
+          right: -6px;
+          width: 20px;
+          height: 20px;
           border-radius: 50%;
           background: linear-gradient(145deg, #ff6b35, #f7931e);
-          border: 2px solid white;
+          border: none;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
           transition: all 0.3s ease;
-          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.6), 0 0 0 2px rgba(255, 255, 255, 0.3);
-          z-index: 999999;
-          overflow: visible;
+          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.4);
+          z-index: 99998;
         }
 
         .file-preview.is-image .file-preview-remove {
-          top: -8px;
-          right: -8px;
+          top: -6px;
+          right: -6px;
         }
 
         .file-preview-remove:hover {
@@ -677,10 +675,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         }
 
         .file-preview-remove svg {
-          width: 14px;
-          height: 14px;
+          width: 12px;
+          height: 12px;
           color: white;
-          stroke-width: 2.5;
         }
 
         .voice-button {
