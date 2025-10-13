@@ -292,7 +292,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .message-container {
           position: fixed;
-          bottom: 30px;
+          bottom: 67px;
           left: 50%;
           transform: translateX(-50%);
           background: transparent;
@@ -301,7 +301,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           width: 600px;
           overflow: visible;
-          height: 52px;
+          height: 68px;
           z-index: 1000;
         }
 
@@ -521,7 +521,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             0 4px 8px rgba(255, 107, 53, 0.4),
             0 2px 4px rgba(255, 107, 53, 0.3),
             inset 0 2px 8px rgba(0, 0, 0, 0.4),
-            inset 0 -1px 2px rgba(255, 255, 255, 0.1);
+            inset 0 -1px 2px rgba(255, 255, 255, 0.2);
         }
 
         .clip-button {
