@@ -19,10 +19,7 @@ import {
   FileText,
   Edit3,
   Eye,
-  Play,
-  Sparkles,
-  Brain,
-  Zap
+  Play
 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -174,7 +171,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
               {selectedPlan === 'monthly' ? 'Por mês' : 'Por ano'}
             </div>
           </div>
-
+          
           {/* Checklist */}
           <div className="space-y-3 sm:space-y-4">
             {[
@@ -241,12 +238,12 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             <button
               onClick={() => {
                 console.log('🚀 Redirecionando para página de pagamento do plano:', selectedPlan);
-
+                
                 // Define o link baseado no plano selecionado
                 const paymentLink = selectedPlan === 'monthly' 
                   ? 'https://pay.kirvano.com/b52647c0-6c8d-4664-8a6f-3812c96258d5'
                   : 'https://pay.kirvano.com/64d2bc82-bf97-43c0-b5e5-498bd4e0bc64';
-
+                
                 // Redireciona para o link de pagamento
                 window.open(paymentLink, '_blank');
               }}
@@ -1693,7 +1690,7 @@ export function CardDeConstrucao({
           </div>
           <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
             {step === "generating"
-              ? "🤖 Analisando com IA do School Power"
+              ? "🤖 Analisando com IA Gemini"
               : "🎯 Gerando Atividades"}
           </h3>
           <p className="text-gray-700 dark:text-gray-300 mb-4 max-w-lg text-sm sm:text-base">
