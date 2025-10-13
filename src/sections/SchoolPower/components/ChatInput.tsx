@@ -229,7 +229,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="w-full h-full flex flex-col items-center justify-center">
       <style jsx>{`
         @keyframes pulseGlow {
           0%,
@@ -1118,15 +1118,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         /* Cards retangulares abaixo da caixa de mensagens */
         .quick-access-cards {
           display: flex;
+          justify-content: center;
+          align-items: center;
           gap: 12px;
           width: 100%;
           max-width: 600px;
-          margin-top: 24px;
+          margin: 16px auto 0;
           padding: 0 2px;
-          position: absolute;
-          bottom: -80px;
-          left: 50%;
-          transform: translateX(-50%);
         }
 
         @media (max-width: 768px) {
@@ -1134,8 +1132,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             width: 99%;
             max-width: calc(100vw - 6px);
             gap: 8px;
-            margin-top: 16px;
-            bottom: -70px;
+            margin-top: 12px;
           }
         }
 
