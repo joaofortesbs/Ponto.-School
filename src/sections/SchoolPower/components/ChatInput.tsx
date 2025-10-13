@@ -222,7 +222,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .message-container {
           position: fixed;
-          bottom: -27px;
+          bottom: -33px;
           left: 50%;
           transform: translateX(-50%);
           background: transparent;
@@ -587,8 +587,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           background: transparent;
           border: none;
           overflow: hidden;
-          width: 64px;
-          height: 64px;
+          width: 56px;
+          height: 56px;
         }
 
         .file-preview:hover {
@@ -599,20 +599,19 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .file-preview.is-image:hover {
           background: transparent;
-          border-color: #ff6b35;
-        }
-
-        .file-preview-image {
-          width: 64px;
-          height: 64px;
-          border-radius: 8px;
-          object-fit: cover;
-          border: 1px solid #444;
-          transition: border-color 0.3s ease;
         }
 
         .file-preview.is-image:hover .file-preview-image {
           border-color: #ff6b35;
+        }
+
+        .file-preview-image {
+          width: 56px;
+          height: 56px;
+          border-radius: 8px;
+          object-fit: cover;
+          border: 1px solid #444;
+          transition: border-color 0.3s ease;
         }
 
         .file-preview-icon {
@@ -1203,7 +1202,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   filter: "blur(10px)",
                 }}
                 animate={
-                  isTyping
+                  isTyping && uploadedFiles.length === 0
                     ? {
                         opacity: 1,
                         scale: 1,
@@ -1232,7 +1231,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   left: 0,
                   right: 0,
                   zIndex: 1000,
-                  pointerEvents: isTyping ? "auto" : "none",
+                  pointerEvents: isTyping && uploadedFiles.length === 0 ? "auto" : "none",
                 }}
               >
                 <motion.div
