@@ -228,13 +228,15 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           transition: all 0.3s ease;
           width: 600px;
           overflow: visible;
+          height: 64px;
         }
 
         @media (max-width: 768px) {
           .message-container {
-            width: 99%;
-            max-width: calc(100vw - 6px);
+            width: 99%; /* Aumenta ainda mais a largura para telas menores */
+            max-width: calc(100vw - 6px); /* Reduz ainda mais as margens laterais */
             border-radius: 30px;
+            height: 60px;
           }
         }
 
@@ -299,12 +301,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .inner-container {
           background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
           border-radius: 30px;
-          padding: 12px;
+          padding: 12px 8px 12px 12px;
           border: 1px solid #333;
           transition: all 0.3s ease;
           display: flex;
-          flex-direction: column;
-          gap: 12px;
+          align-items: center;
+          justify-content: space-between;
+          height: 100%;
+          gap: 8px;
         }
 
         @media (max-width: 768px) {
@@ -500,27 +504,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         }
 
         .uploaded-files-container {
-          position: absolute;
-          bottom: 100%;
-          left: 0;
-          right: 0;
           display: flex;
           gap: 8px;
-          padding: 12px;
+          padding: 8px 12px;
           flex-wrap: wrap;
-          width: 100%;
-          background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
-          border: 1px solid #333;
-          border-radius: 30px 30px 0 0;
-          margin-bottom: -1px;
-          max-height: none;
-          overflow-y: visible;
-        }
-
-        @media (max-width: 768px) {
-          .uploaded-files-container {
-            border-radius: 28px 28px 0 0;
-          }
+          max-height: 120px;
+          overflow-y: auto;
         }
 
         .file-preview {
@@ -607,14 +596,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           width: 12px;
           height: 12px;
           color: white;
-        }
-
-        .input-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
-          width: 100%;
         }
 
         .voice-button {
@@ -1020,38 +1001,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             <div className="moving-gradient" />
           </MovingBorder>
         </div>
-
-        {/* Preview de arquivos enviados - ACIMA DA CAIXA */}
-        {uploadedFiles.length > 0 && (
-          <div className="uploaded-files-container">
-            {uploadedFiles.map((fileData) => (
-              <div key={fileData.id} className="file-preview">
-                {fileData.type === 'image' && fileData.preview ? (
-                  <img src={fileData.preview} alt={fileData.file.name} className="file-preview-image" />
-                ) : (
-                  <div className="file-preview-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                      <polyline points="13 2 13 9 20 9"></polyline>
-                    </svg>
-                  </div>
-                )}
-                <div className="file-preview-info">
-                  <span className="file-preview-name">{fileData.file.name}</span>
-                  <span className="file-preview-size">
-                    {(fileData.file.size / 1024).toFixed(1)} KB
-                  </span>
-                </div>
-                <button className="file-preview-remove" onClick={() => removeFile(fileData.id)}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 6L6 18M6 6l12 12"></path>
-                  </svg>
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
         <div className="message-container-inner">
           <div className="tech-accent"></div>
           <div className="inner-container">
@@ -1065,56 +1014,85 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
               style={{ display: 'none' }}
             />
 
-            {/* Linha de input com botões */}
-            <div className="input-row">
-              <div style={{ position: 'relative' }}>
-                <button className="clip-button" onClick={toggleElementsDropup}>
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+            {/* Preview de arquivos enviados */}
+            {uploadedFiles.length > 0 && (
+              <div className="uploaded-files-container">
+                {uploadedFiles.map((fileData) => (
+                  <div key={fileData.id} className="file-preview">
+                    {fileData.type === 'image' && fileData.preview ? (
+                      <img src={fileData.preview} alt={fileData.file.name} className="file-preview-image" />
+                    ) : (
+                      <div className="file-preview-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                          <polyline points="13 2 13 9 20 9"></polyline>
+                        </svg>
+                      </div>
+                    )}
+                    <div className="file-preview-info">
+                      <span className="file-preview-name">{fileData.file.name}</span>
+                      <span className="file-preview-size">
+                        {(fileData.file.size / 1024).toFixed(1)} KB
+                      </span>
+                    </div>
+                    <button className="file-preview-remove" onClick={() => removeFile(fileData.id)}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ position: 'relative' }}>
+              <button className="clip-button" onClick={toggleElementsDropup}>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                </svg>
+              </button>
+              
+              <div className={`elements-dropup ${showElementsDropup ? 'show' : ''}`}>
+                <button className="elements-option" onClick={triggerFileInput}>
+                  <svg className="elements-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                    <polyline points="13 2 13 9 20 9"></polyline>
                   </svg>
+                  Adicionar arquivos
                 </button>
                 
-                <div className={`elements-dropup ${showElementsDropup ? 'show' : ''}`}>
-                  <button className="elements-option" onClick={triggerFileInput}>
-                    <svg className="elements-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                      <polyline points="13 2 13 9 20 9"></polyline>
-                    </svg>
-                    Adicionar arquivos
-                  </button>
-                  
-                  <button className="elements-option">
-                    <svg className="elements-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <polyline points="14 2 14 8 20 8"></polyline>
-                      <line x1="16" y1="13" x2="8" y2="13"></line>
-                      <line x1="16" y1="17" x2="8" y2="17"></line>
-                      <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
-                    Adicionar um contexto
-                  </button>
-                  
-                  <button className="elements-option disabled">
-                    <svg className="elements-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="23 4 23 10 17 10"></polyline>
-                      <polyline points="1 20 1 14 7 14"></polyline>
-                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                    </svg>
-                    Recentes
-                  </button>
-                </div>
+                <button className="elements-option">
+                  <svg className="elements-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                  Adicionar um contexto
+                </button>
+                
+                <button className="elements-option disabled">
+                  <svg className="elements-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  </svg>
+                  Recentes
+                </button>
               </div>
+            </div>
             
-              <div className="flex items-center w-full relative" style={{ gap: '8px' }}>
+            <div className="flex items-center w-full relative" style={{ gap: '8px' }}>
               <div className="flex-1">
                 <textarea
                   ref={textareaRef}
@@ -1242,7 +1220,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   />
                 </svg>
               </button>
-              </div>
             </div>
           </div>
         </div>
