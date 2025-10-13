@@ -254,11 +254,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 0;
+          justify-content: center;
           width: 100%;
-          max-width: 800px;
-          padding: 0;
-          margin: 0;
+          margin-top: ${isMobile && isQuizMode ? "-20px" : "-40px"};
         }
 
         @media (max-width: 768px) {
@@ -522,7 +520,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
             0 4px 8px rgba(255, 107, 53, 0.4),
             0 2px 4px rgba(255, 107, 53, 0.3),
             inset 0 2px 8px rgba(0, 0, 0, 0.4),
-            inset 0 -1px 2px rgba(255, 255, 255, 0.2);
+            inset 0 -1px 2px rgba(255, 255, 255, 0.1);
         }
 
         .clip-button {
