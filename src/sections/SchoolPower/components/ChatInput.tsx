@@ -204,21 +204,21 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       const textarea = textareaRef.current;
       const lineHeight = 24; // line-height em pixels
       const minHeight = 32; // altura mínima (1 linha)
-      const maxLinesBeforeExpand = 2; // número de linhas antes de começar a expandir
+      const maxLinesBeforeExpand = 1; // número de linhas antes de começar a expandir
       const maxHeight = 200; // altura máxima antes de ativar scroll
-      const thresholdHeight = lineHeight * maxLinesBeforeExpand; // 48px para 2 linhas
+      const thresholdHeight = lineHeight * maxLinesBeforeExpand; // 24px para 1 linha
 
       // Reseta a altura para calcular o scrollHeight real
       textarea.style.height = "auto";
       textarea.style.overflowY = "hidden";
       const scrollHeight = textarea.scrollHeight;
 
-      // Se o conteúdo é menor ou igual a 2 linhas, mantém altura fixa
+      // Se o conteúdo é menor ou igual a 1 linha, mantém altura fixa
       if (scrollHeight <= thresholdHeight) {
         textarea.style.height = minHeight + "px";
         textarea.classList.remove("expanding");
       } else if (scrollHeight <= maxHeight) {
-        // Se passou de 2 linhas mas não atingiu o máximo, expande para mostrar todo o conteúdo
+        // Se passou de 1 linha mas não atingiu o máximo, expande para mostrar todo o conteúdo
         textarea.style.height = scrollHeight + "px";
         textarea.classList.add("expanding");
       } else {
