@@ -205,7 +205,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       const lineHeight = 24; // line-height em pixels
       const minHeight = 32; // altura mínima (1 linha)
       const maxLinesBeforeExpand = 1; // número de linhas antes de começar a expandir
-      const maxHeight = 200; // altura máxima antes de ativar scroll
+      const maxHeight = 100; // altura máxima antes de ativar scroll
       const thresholdHeight = lineHeight * maxLinesBeforeExpand; // 24px para 1 linha
 
       // Reseta a altura para calcular o scrollHeight real
