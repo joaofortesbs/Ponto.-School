@@ -97,10 +97,16 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   const sendInitialMessage = useCallback((message: string) => {
     console.log('📤 Enviando mensagem inicial para School Power:', message);
 
+    if (!message || !message.trim()) {
+      console.error('❌ Mensagem vazia, cancelando envio');
+      return;
+    }
+
     const newData: SchoolPowerFlowData = {
-      initialMessage: message,
+      initialMessage: message.trim(),
       contextualizationData: null,
       actionPlan: [],
+      manualActivities: [],
       timestamp: Date.now()
     };
 

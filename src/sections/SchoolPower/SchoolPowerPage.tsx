@@ -55,19 +55,23 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     console.log('🔄 Central expanded alterado:', expanded);
   };
 
+  const [uploadedFiles, setUploadedFiles] = React.useState<any[]>([]);
+
   // Função para enviar mensagem inicial
   const handleSendMessage = async (message: string, files?: any[]) => {
     console.log('📨 Mensagem recebida:', message);
     console.log('📎 Arquivos recebidos:', files?.length || 0);
 
-    if (currentState === 'initial') {
-      setInitialMessage(message);
-      setUploadedFiles(files || []);
-      setCurrentState('contextualizing');
+    if (message.trim()) {
+      // Armazenar arquivos se houver
+      if (files && files.length > 0) {
+        setUploadedFiles(files);
+      }
+      
+      // Enviar mensagem para o hook
+      handleSendInitialMessage(message);
     }
   };
-
-  const [uploadedFiles, setUploadedFiles] = React.useState<any[]>([]);
 
   // Função para submeter contextualização
   const handleSubmitContextualization = (data: any) => {

@@ -98,19 +98,25 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
   };
 
   const handleSend = () => {
-    if (message.trim() || uploadedFiles.length > 0) {
-      console.log("Enviando mensagem:", message);
-      console.log("Arquivos anexados:", uploadedFiles.length);
+    const trimmedMessage = message.trim();
+    
+    if (trimmedMessage || uploadedFiles.length > 0) {
+      console.log("📤 Enviando mensagem:", trimmedMessage);
+      console.log("📎 Arquivos anexados:", uploadedFiles.length);
 
       // Chama a função onSend se fornecida, passando mensagem e arquivos
       if (onSend) {
-        onSend(message.trim(), uploadedFiles);
+        onSend(trimmedMessage, uploadedFiles);
       }
 
       // Limpa o campo e arquivos após o envio
       setMessage("");
       setUploadedFiles([]);
       setIsTyping(false);
+      
+      console.log("✅ Mensagem enviada e campos limpos");
+    } else {
+      console.warn("⚠️ Tentativa de enviar mensagem vazia");
     }
   };
 
