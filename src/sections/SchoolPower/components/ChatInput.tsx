@@ -225,10 +225,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           background: transparent;
           border-radius: 32px;
           padding: 2px;
-          transition: all 0.3s ease;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           width: 600px;
           overflow: visible;
           height: 64px;
+        }
+
+        .message-container.has-files {
+          height: auto;
         }
 
         @media (max-width: 768px) {
@@ -244,7 +248,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           position: relative;
           background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
           border-radius: 30px;
-          height: 100%;
+          min-height: 60px;
           width: 100%;
           box-shadow:
             0 12px 24px rgba(0, 0, 0, 0.3),
@@ -252,6 +256,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             0 4px 8px rgba(0, 0, 0, 0.15),
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
           z-index: 3;
+          display: flex;
+          flex-direction: column;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         @media (max-width: 768px) {
@@ -301,13 +308,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .inner-container {
           background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
           border-radius: 30px;
-          padding: 12px 8px 12px 12px;
+          padding: 12px;
           border: 1px solid #333;
           transition: all 0.3s ease;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          height: 100%;
+          min-height: 56px;
           gap: 8px;
         }
 
@@ -506,10 +513,22 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .uploaded-files-container {
           display: flex;
           gap: 8px;
-          padding: 8px 12px;
+          padding: 12px;
+          padding-bottom: 8px;
           flex-wrap: wrap;
-          max-height: 120px;
-          overflow-y: auto;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .file-preview {
@@ -994,7 +1013,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
       `}</style>
 
       <div
-        className={`message-container ${isTyping || isFocused ? "typing" : ""}`}
+        className={`message-container ${isTyping || isFocused ? "typing" : ""} ${uploadedFiles.length > 0 ? "has-files" : ""}`}
       >
         <div className="moving-border-container">
           <MovingBorder duration={3000} rx="20px" ry="20px">
@@ -1003,48 +1022,50 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         </div>
         <div className="message-container-inner">
           <div className="tech-accent"></div>
-          <div className="inner-container">
-            {/* Input oculto para upload de arquivos */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              multiple
-              accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
-              style={{ display: 'none' }}
-            />
+          
+          {/* Input oculto para upload de arquivos */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            multiple
+            accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
+            style={{ display: 'none' }}
+          />
 
-            {/* Preview de arquivos enviados */}
-            {uploadedFiles.length > 0 && (
-              <div className="uploaded-files-container">
-                {uploadedFiles.map((fileData) => (
-                  <div key={fileData.id} className="file-preview">
-                    {fileData.type === 'image' && fileData.preview ? (
-                      <img src={fileData.preview} alt={fileData.file.name} className="file-preview-image" />
-                    ) : (
-                      <div className="file-preview-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                          <polyline points="13 2 13 9 20 9"></polyline>
-                        </svg>
-                      </div>
-                    )}
-                    <div className="file-preview-info">
-                      <span className="file-preview-name">{fileData.file.name}</span>
-                      <span className="file-preview-size">
-                        {(fileData.file.size / 1024).toFixed(1)} KB
-                      </span>
-                    </div>
-                    <button className="file-preview-remove" onClick={() => removeFile(fileData.id)}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 6L6 18M6 6l12 12"></path>
+          {/* Preview de arquivos enviados - ACIMA DO INPUT */}
+          {uploadedFiles.length > 0 && (
+            <div className="uploaded-files-container">
+              {uploadedFiles.map((fileData) => (
+                <div key={fileData.id} className="file-preview">
+                  {fileData.type === 'image' && fileData.preview ? (
+                    <img src={fileData.preview} alt={fileData.file.name} className="file-preview-image" />
+                  ) : (
+                    <div className="file-preview-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                        <polyline points="13 2 13 9 20 9"></polyline>
                       </svg>
-                    </button>
+                    </div>
+                  )}
+                  <div className="file-preview-info">
+                    <span className="file-preview-name">{fileData.file.name}</span>
+                    <span className="file-preview-size">
+                      {(fileData.file.size / 1024).toFixed(1)} KB
+                    </span>
                   </div>
-                ))}
-              </div>
-            )}
+                  <button className="file-preview-remove" onClick={() => removeFile(fileData.id)}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
+          {/* Container do input e botões */}
+          <div className="inner-container">
             <div style={{ position: 'relative' }}>
               <button className="clip-button" onClick={toggleElementsDropup}>
                 <svg
