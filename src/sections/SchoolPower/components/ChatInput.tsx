@@ -149,6 +149,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           transition: all 0.3s ease;
           width: 600px;
           overflow: visible;
+          height: 56px;
         }
 
         @media (max-width: 768px) {
@@ -156,6 +157,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             width: 99%; /* Aumenta ainda mais a largura para telas menores */
             max-width: calc(100vw - 6px); /* Reduz ainda mais as margens laterais */
             border-radius: 16px;
+            height: 52px;
           }
         }
 
@@ -220,15 +222,18 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .inner-container {
           background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
           border-radius: 18px;
-          padding: 20px;
+          padding: 12px 20px;
           border: 1px solid #333;
           transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          height: 100%;
         }
 
         @media (max-width: 768px) {
           .inner-container {
             border-radius: 14px;
-            padding: 16px;
+            padding: 10px 16px;
           }
         }
 
@@ -247,13 +252,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           outline: none;
           width: 100%;
           min-height: 24px;
-          max-height: 200px;
+          max-height: 24px;
           font-family:
             "Inter",
             -apple-system,
             BlinkMacSystemFont,
             sans-serif;
           caret-color: #ff6b35;
+          overflow: hidden;
         }
 
         .textarea-custom::placeholder {
