@@ -499,12 +499,6 @@ export function SidebarNav({
       path: "/conquistas",
       disabled: true,
     },
-    {
-      icon: "fas fa-compass",
-      label: "Explorar",
-      path: "/explorar",
-      disabled: true,
-    },
   ];
 
   const navItemsCoordenador = [
