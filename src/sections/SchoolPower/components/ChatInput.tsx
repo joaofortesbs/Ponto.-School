@@ -144,25 +144,27 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .message-container {
           position: relative;
           background: transparent;
-          border-radius: 20px;
+          border-radius: 50px;
           padding: 2px;
           transition: all 0.3s ease;
           width: 600px;
           overflow: visible;
+          height: 60px;
         }
 
         @media (max-width: 768px) {
           .message-container {
-            width: 99%; /* Aumenta ainda mais a largura para telas menores */
-            max-width: calc(100vw - 6px); /* Reduz ainda mais as margens laterais */
-            border-radius: 16px;
+            width: 99%;
+            max-width: calc(100vw - 6px);
+            border-radius: 50px;
+            height: 56px;
           }
         }
 
         .message-container-inner {
           position: relative;
           background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
-          border-radius: 18px;
+          border-radius: 48px;
           height: 100%;
           width: 100%;
           box-shadow:
@@ -175,14 +177,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         @media (max-width: 768px) {
           .message-container-inner {
-             border-radius: 14px;
+             border-radius: 48px;
           }
         }
 
         .moving-border-container {
           position: absolute;
           inset: 0;
-          border-radius: 20px;
+          border-radius: 50px;
           opacity: 1;
           transition: opacity 0.3s ease;
           overflow: hidden;
@@ -192,7 +194,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         @media (max-width: 768px) {
           .moving-border-container {
-            border-radius: 16px;
+            border-radius: 50px;
           }
         }
 
@@ -219,16 +221,19 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .inner-container {
           background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
-          border-radius: 18px;
-          padding: 20px;
+          border-radius: 48px;
+          padding: 12px 20px;
           border: 1px solid #333;
           transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          height: 100%;
         }
 
         @media (max-width: 768px) {
           .inner-container {
-            border-radius: 14px;
-            padding: 16px;
+            border-radius: 48px;
+            padding: 10px 16px;
           }
         }
 
@@ -247,13 +252,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           outline: none;
           width: 100%;
           min-height: 24px;
-          max-height: 200px;
+          max-height: 24px;
           font-family:
             "Inter",
             -apple-system,
             BlinkMacSystemFont,
             sans-serif;
           caret-color: #ff6b35;
+          overflow: hidden;
         }
 
         .textarea-custom::placeholder {
@@ -266,13 +272,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           border: none;
           border-radius: 50%;
           color: white;
-          width: 48px;
-          height: 48px;
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
           transition: all 0.3s ease;
+          flex-shrink: 0;
           box-shadow:
             0 8px 16px rgba(255, 107, 53, 0.3),
             0 4px 8px rgba(255, 107, 53, 0.2),
