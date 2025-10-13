@@ -3,8 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, useMotionValue, useTransform, useAnimationFrame, useMotionTemplate } from "framer-motion";
 import { TextShimmerWave } from '@/components/ui/text-shimmer-wave';
 import { useIsMobile } from "../../../hooks/useIsMobile";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBookOpen, faBolt, faBrain, faGraduationCap } from '@fortawesome/free-solid-svg-icons';
+import { BookOpen, Zap, Brain, GraduationCap } from 'lucide-react';
 
 interface UploadedFile {
   id: string;
@@ -1266,19 +1265,19 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
             <div className="quick-access-cards">
               <div className="quick-access-card" onClick={() => handleCardClick("Plano ENEM")}>
-                <FontAwesomeIcon icon={faBookOpen} className="quick-access-card-icon" />
+                <BookOpen className="quick-access-card-icon" />
                 <span className="quick-access-card-text">Plano ENEM</span>
               </div>
               <div className="quick-access-card" onClick={() => handleCardClick("Aula Turbo")}>
-                <FontAwesomeIcon icon={faBolt} className="quick-access-card-icon" />
+                <Zap className="quick-access-card-icon" />
                 <span className="quick-access-card-text">Aula Turbo</span>
               </div>
               <div className="quick-access-card" onClick={() => handleCardClick("Criando Gênios")}>
-                <FontAwesomeIcon icon={faBrain} className="quick-access-card-icon" />
+                <Brain className="quick-access-card-icon" />
                 <span className="quick-access-card-text">Criando Gênios</span>
               </div>
               <div className="quick-access-card" onClick={() => handleCardClick("Escola Viva")}>
-                <FontAwesomeIcon icon={faGraduationCap} className="quick-access-card-icon" />
+                <GraduationCap className="quick-access-card-icon" />
                 <span className="quick-access-card-text">Escola Viva</span>
               </div>
             </div>
