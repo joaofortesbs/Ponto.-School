@@ -40,18 +40,11 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
           
           {/* Texto */}
           <div>
-            <h3 className="text-sm font-bold bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent">
+            <h3 className="text-sm font-extrabold bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent">
               Primeiros Passos
             </h3>
           </div>
         </div>
-
-        {/* Indicador visual */}
-        <motion.div
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="w-2 h-2 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg"
-        />
       </div>
 
       {/* Efeito de brilho animado */}
