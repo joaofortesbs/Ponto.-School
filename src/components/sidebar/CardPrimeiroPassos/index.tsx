@@ -27,23 +27,16 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
       
       {/* Conteúdo */}
-      <div className="relative p-4 flex items-center justify-center">
-        {/* Bolinha de notificação no canto esquerdo */}
-        <div className="absolute left-4">
-          <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-2 h-2 rounded-full bg-orange-500 shadow-lg shadow-orange-500/50"
-          />
-        </div>
-
-        {/* Texto centralizado */}
-        <div className="flex items-center gap-2">
+      <div className="relative p-4 flex items-center justify-between">
+        {/* Texto */}
+        <div>
           <h3 className="text-sm font-extrabold bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent">
             Primeiros Passos
           </h3>
-          <ArrowUp className="w-4 h-4 text-orange-500 dark:text-orange-400" />
         </div>
+
+        {/* Ícone simples à direita */}
+        <ArrowUp className="w-4 h-4 text-orange-500 dark:text-orange-400" />
       </div>
 
       {/* Efeito de brilho animado */}
