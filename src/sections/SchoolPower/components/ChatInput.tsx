@@ -585,7 +585,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         .file-preview.is-image {
           padding: 0;
           background: transparent;
-          border: none;
+          border: 1px solid #444;
         }
 
         .file-preview:hover {
@@ -596,7 +596,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
 
         .file-preview.is-image:hover {
           background: transparent;
-          border: none;
+          border-color: #ff6b35;
         }
 
         .file-preview-image {
