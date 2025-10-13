@@ -95,6 +95,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [showModeDropdown, setShowModeDropdown] = useState(false);
   const [showElementsDropup, setShowElementsDropup] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [selectedCard, setSelectedCard] = useState<string | null>(externalSelectedCard);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
@@ -235,6 +236,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
       }
     }
   }, [message]);
+
+  // Sincronizar selectedCard com externalSelectedCard
+  useEffect(() => {
+    setSelectedCard(externalSelectedCard);
+  }, [externalSelectedCard]);
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
