@@ -62,6 +62,12 @@ export const professorSections = {
     path: '/conquistas',
     component: 'Conquistas',
     interface: '/src/pages/conquistas/index.tsx'
+  },
+  
+  explorar: {
+    path: '/explorar',
+    component: 'Explorar',
+    interface: '/src/pages/explorar/index.tsx' // A criar se necessário
   }
 };
 

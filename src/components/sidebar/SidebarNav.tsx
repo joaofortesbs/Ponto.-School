@@ -498,7 +498,10 @@ export function SidebarNav({
       label: "Conquistas",
       path: "/conquistas",
       disabled: true,
-    },ar",
+    },
+    {
+      icon: "fas fa-compass",
+      label: "Explorar",
       path: "/explorar",
       disabled: true,
     },
