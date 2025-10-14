@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactDOM from 'react-dom';
@@ -284,7 +283,7 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
             <div className="space-y-3">
               {checklist.map((item) => {
                 const isExpanded = expandedItem === item.id;
-                
+
                 return (
                   <div
                     key={item.id}
@@ -338,13 +337,13 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
                                 <span>{step}</span>
                               </div>
                             ))}
-                            
+
                             {/* Botão Criar Atividade apenas no item Personalizar perfil */}
                             {item.id === '1' && (
-                              <div className="pt-2">
+                              <div className="pt-2 flex justify-center">
                                 <Button
                                   onClick={handleCriarAtividade}
-                                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-xs py-2 rounded-lg shadow-lg shadow-orange-500/30 transition-all duration-300"
+                                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-[9px] px-2.5 py-0.5 rounded-full shadow-md shadow-orange-500/30 transition-all duration-300 h-5"
                                 >
                                   Criar Atividade
                                 </Button>
