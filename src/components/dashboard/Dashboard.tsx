@@ -101,19 +101,16 @@ export default function Dashboard() {
 
   return (
     <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 space-y-6 transition-colors duration-300">
-      {/* Banner com prioridade de renderização */}
+      {/* Banner com prioridade de renderização - bordas ajustadas para match com card de perfil */}
       <div className="priority-render max-w-[1192px] mx-auto">
-        <PromotionalBanner />
+        <div className="rounded-2xl overflow-hidden">
+          <PromotionalBanner />
+        </div>
       </div>
       <div className="max-w-[1192px] mx-auto">
         <h1 className="text-3xl font-bold text-brand-black dark:text-white flex items-center gap-2">
           <span className="text-2xl">👋</span> {saudacao}, {firstName}!
         </h1>
-
-        {/* Dashboard Interface */}
-        <div className="dashboard-content mt-6">
-          <DashboardInterface />
-        </div>
       </div>
     </div>
   );

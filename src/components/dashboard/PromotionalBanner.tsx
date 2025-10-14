@@ -142,7 +142,7 @@ const PromotionalBanner = () => {
           exit={{ opacity: 0, x: -100 }}
           transition={{ duration: 0.5 }}
           className={`
-            relative w-full rounded-xl overflow-hidden shadow-2xl 
+            relative w-full overflow-hidden shadow-2xl 
             bg-gradient-to-r ${currentBanner.gradientFrom} ${currentBanner.gradientVia} ${currentBanner.gradientTo} 
             border border-blue-500/20 backdrop-blur-sm
             transition-all duration-300 ease-in-out
