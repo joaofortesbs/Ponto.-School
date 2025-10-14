@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
@@ -16,6 +17,8 @@ interface ChecklistItem {
 export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollapsed = false }) => {
   const [showNumber, setShowNumber] = useState(false);
   const [isDropupOpen, setIsDropupOpen] = useState(false);
+  const [dropupPosition, setDropupPosition] = useState({ top: 0, left: 0, width: 0 });
+  const cardRef = useRef<HTMLDivElement>(null);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([
     { id: '1', label: 'Personalizar perfil', completed: false },
     { id: '2', label: 'Criar uma atividade', completed: false },
@@ -44,17 +47,30 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
     );
   };
 
+  const handleCardClick = () => {
+    if (cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      setDropupPosition({
+        top: rect.top - 8,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+    setIsDropupOpen(!isDropupOpen);
+  };
+
   if (isCollapsed) return null;
 
   return (
     <div className="mx-4 mb-4 relative">
       {/* Card Principal Clicável */}
       <motion.div
+        ref={cardRef}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         className="relative overflow-hidden rounded-2xl cursor-pointer"
-        onClick={() => setIsDropupOpen(!isDropupOpen)}
+        onClick={handleCardClick}
       >
         {/* Background com gradiente igual ao WelcomeModal */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-orange-100/50 to-amber-50/60 dark:from-orange-950/30 dark:via-orange-900/20 dark:to-gray-900/40" />
@@ -131,17 +147,23 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
         />
       </motion.div>
 
-      {/* Drop-up com Checklist */}
-      <AnimatePresence>
-        {isDropupOpen && (
+      {/* Drop-up Portal - Renderizado fora do menu lateral */}
+      {isDropupOpen && ReactDOM.createPortal(
+        <AnimatePresence>
           <motion.div
-            initial={{ opacity: 0, y: 10, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: 10, height: 0 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.3 }}
-            className="mt-2 overflow-hidden rounded-2xl"
+            className="fixed z-[9999]"
+            style={{
+              top: `${dropupPosition.top - 320}px`,
+              left: `${dropupPosition.left}px`,
+              width: `${dropupPosition.width}px`
+            }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative bg-gradient-to-br from-orange-50 via-orange-100/50 to-amber-50/60 dark:from-orange-950/30 dark:via-orange-900/20 dark:to-gray-900/40 backdrop-blur-xl border border-orange-200/50 dark:border-orange-500/30 p-4">
+            <div className="relative bg-gradient-to-br from-orange-50 via-orange-100/50 to-amber-50/60 dark:from-orange-950/30 dark:via-orange-900/20 dark:to-gray-900/40 backdrop-blur-xl border border-orange-200/50 dark:border-orange-500/30 p-4 rounded-2xl shadow-2xl">
               {/* Título e Progresso */}
               <div className="mb-4">
                 <h4 className="text-base font-bold text-gray-800 dark:text-white mb-3">
@@ -222,8 +244,9 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
               </div>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };
