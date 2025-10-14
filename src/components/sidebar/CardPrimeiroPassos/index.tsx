@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactDOM from 'react-dom';
@@ -27,9 +26,9 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
   const cardRef = useRef<HTMLDivElement>(null);
 
   const [checklist, setChecklist] = useState<ChecklistItem[]>([
-    { 
-      id: '1', 
-      label: 'Personalizar perfil', 
+    {
+      id: '1',
+      label: 'Personalizar perfil',
       completed: false,
       content: [
         'Adicione uma foto de perfil',
@@ -37,9 +36,9 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
         'Defina suas preferências de estudo'
       ]
     },
-    { 
-      id: '2', 
-      label: 'Criar uma atividade', 
+    {
+      id: '2',
+      label: 'Criar uma atividade',
       completed: false,
       content: [
         'Acesse o School Power',
@@ -47,9 +46,9 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
         'Configure e gere sua atividade'
       ]
     },
-    { 
-      id: '3', 
-      label: 'Criar uma Turma', 
+    {
+      id: '3',
+      label: 'Criar uma Turma',
       completed: false,
       content: [
         'Vá para a seção Turmas',
@@ -57,9 +56,9 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
         'Adicione nome e descrição'
       ]
     },
-    { 
-      id: '4', 
-      label: 'Compartilhar uma atividade', 
+    {
+      id: '4',
+      label: 'Compartilhar uma atividade',
       completed: false,
       content: [
         'Crie ou selecione uma atividade',
@@ -67,9 +66,9 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
         'Envie o link para seus alunos'
       ]
     },
-    { 
-      id: '5', 
-      label: 'Criar uma Trilha School', 
+    {
+      id: '5',
+      label: 'Criar uma Trilha School',
       completed: false,
       content: [
         'Acesse Trilhas School',
@@ -269,8 +268,8 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
             {/* Barra de progresso com contador */}
             <div className="mb-6">
               <div className="flex items-center gap-3">
-                <Progress 
-                  value={progress} 
+                <Progress
+                  value={progress}
                   className="flex-1 h-3 bg-orange-100 dark:bg-orange-950/30 rounded-full"
                   indicatorClassName="bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 shadow-lg shadow-orange-500/30"
                 />
@@ -284,7 +283,7 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
             <div className="space-y-3">
               {checklist.map((item) => {
                 const isExpanded = expandedItem === item.id;
-                
+
                 return (
                   <div
                     key={item.id}
@@ -338,13 +337,13 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
                                 <span>{step}</span>
                               </div>
                             ))}
-                            
-                            {/* Botão Criar Atividade apenas no item Personalizar perfil */}
-                            {item.id === '1' && (
+
+                            {/* Botão Criar Atividade apenas no item Criar uma atividade */}
+                            {item.id === '2' && (
                               <div className="pt-2">
                                 <Button
                                   onClick={handleCriarAtividade}
-                                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-xs py-1 rounded-lg shadow-lg shadow-orange-500/30 transition-all duration-300 h-8"
+                                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-xs py-1 rounded-lg shadow-lg shadow-orange-500/30 transition-all duration-300 h-7"
                                 >
                                   Criar Atividade
                                 </Button>
