@@ -147,6 +147,7 @@ const PromotionalBanner = () => {
             border border-blue-500/20 backdrop-blur-sm
             transition-all duration-300 ease-in-out
             ${isHovered ? "scale-[1.01] shadow-blue-500/20" : ""}
+            max-h-[180px] sm:max-h-[200px] md:max-h-[220px]
           `}
         >
           {/* Animated background elements */}
@@ -157,12 +158,12 @@ const PromotionalBanner = () => {
           </div>
 
           <div className="flex flex-col md:flex-row items-center relative z-10">
-            <div className="p-4 sm:p-6 md:p-8 flex-1 w-full">
+            <div className="p-3 sm:p-4 md:p-5 flex-1 w-full">
               <motion.h2
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.4 }}
-                className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-0"
+                className="text-base sm:text-lg md:text-xl font-bold text-white mb-1.5 flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-0"
               >
                 <span className={`mr-0 sm:mr-2 ${currentBanner.titleColor}`}>
                   {currentBanner.title}
@@ -174,7 +175,7 @@ const PromotionalBanner = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.4 }}
-                className="text-white/80 text-xs sm:text-sm md:text-base mb-3 sm:mb-4"
+                className="text-white/80 text-xs sm:text-sm md:text-base mb-2 sm:mb-3"
               >
                 {currentBanner.description}
               </motion.p>
@@ -224,7 +225,7 @@ const PromotionalBanner = () => {
                 <img
                   src={currentBanner.image}
                   alt={currentBanner.imageAlt}
-                  className="rounded-lg w-full h-auto max-h-[140px] sm:max-h-[160px] md:max-h-[180px] object-cover transition-transform duration-700 ease-in-out hover:scale-110"
+                  className="rounded-lg w-full h-auto max-h-[100px] sm:max-h-[120px] md:max-h-[140px] object-cover transition-transform duration-700 ease-in-out hover:scale-110"
                 />
               </div>
             </motion.div>
