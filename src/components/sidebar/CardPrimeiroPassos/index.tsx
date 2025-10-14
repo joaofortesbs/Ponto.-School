@@ -29,26 +29,20 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
       <div className="relative p-4 flex items-center justify-between">
         {/* Container esquerdo com ícone de notificação */}
         <div className="flex items-center gap-3">
-          {/* Ícone de notificação circular */}
-          <motion.div
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500/20 to-amber-500/20 dark:from-orange-400/20 dark:to-amber-400/20 flex items-center justify-center border border-orange-500/30 dark:border-orange-400/30 shadow-sm"
+          {/* Ícone de notificação */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 text-orange-600 dark:text-orange-400"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 text-orange-600 dark:text-orange-400"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-          </motion.div>
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
 
           {/* Texto */}
           <h3 className="text-sm font-extrabold bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent">
