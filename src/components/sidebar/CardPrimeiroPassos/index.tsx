@@ -124,10 +124,10 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
     setExpandedItem(prev => prev === id ? id : id);
   };
 
-  const markAsCompleted = (id: string) => {
+  const markAsCompleted = (id: string, checked: boolean) => {
     setChecklist(prev =>
       prev.map(item =>
-        item.id === id ? { ...item, completed: !item.completed } : item
+        item.id === id ? { ...item, completed: checked } : item
       )
     );
   };
@@ -289,9 +289,8 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
                     >
                       <Checkbox
                         checked={item.completed}
-                        onCheckedChange={(e) => {
-                          e.stopPropagation();
-                          markAsCompleted(item.id);
+                        onCheckedChange={(checked) => {
+                          markAsCompleted(item.id, checked as boolean);
                         }}
                         onClick={(e) => e.stopPropagation()}
                         className="h-5 w-5 border-orange-400 data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
