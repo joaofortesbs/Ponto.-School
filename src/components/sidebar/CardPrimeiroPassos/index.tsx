@@ -80,6 +80,7 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
 
   const completedCount = checklist.filter(item => item.completed).length;
   const progress = (completedCount / checklist.length) * 100;
+  const pendingCount = checklist.length - completedCount;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -194,7 +195,7 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
                 exit={{ scale: 0 }}
                 className="w-5 h-5 rounded-full bg-orange-600 dark:bg-orange-400 flex items-center justify-center"
               >
-                <span className="text-white text-xs font-bold">4</span>
+                <span className="text-white text-xs font-bold">{pendingCount}</span>
               </motion.div>
             )}
 
