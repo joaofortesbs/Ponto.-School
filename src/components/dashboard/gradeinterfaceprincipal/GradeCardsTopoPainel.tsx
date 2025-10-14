@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, BookOpen, TrendingUp, Trophy, Sparkles } from "lucide-react";
+import { Users, Route, TrendingUp, Trophy, Sparkles } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 
 export default function GradeCardsTopoPainel() {
@@ -20,7 +20,7 @@ export default function GradeCardsTopoPainel() {
       id: 2,
       title: "Trilhas",
       value: "42",
-      icon: BookOpen,
+      icon: Route,
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
     },
