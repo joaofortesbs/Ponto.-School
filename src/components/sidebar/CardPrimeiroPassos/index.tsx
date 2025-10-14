@@ -1,5 +1,4 @@
 import React from 'react';
-import { ArrowUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface CardPrimeiroPassosProps {
@@ -49,9 +48,6 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
             Primeiros Passos
           </h3>
         </div>
-
-        {/* Ícone de seta à direita */}
-        <ArrowUp className="w-4 h-4 text-orange-500 dark:text-orange-400" />
       </div>
 
       {/* Efeito de brilho animado */}
