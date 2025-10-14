@@ -344,7 +344,7 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
                               <div className="pt-2">
                                 <Button
                                   onClick={handleCriarAtividade}
-                                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-xs py-2 rounded-lg shadow-lg shadow-orange-500/30 transition-all duration-300"
+                                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-xs py-1 rounded-lg shadow-lg shadow-orange-500/30 transition-all duration-300 h-7"
                                 >
                                   Criar Atividade
                                 </Button>
