@@ -113,7 +113,7 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
     if (cardRef.current) {
       const rect = cardRef.current.getBoundingClientRect();
       setDropupPosition({
-        top: rect.top - 420, // Aparece bem acima do card
+        top: rect.top - 500, // Aparece ainda mais acima do card
         left: rect.right + 16,
         width: 400
       });
