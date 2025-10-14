@@ -20,9 +20,10 @@ export default function GradeCardsTopoPainel() {
       id: 2,
       title: "Trilhas",
       value: "42",
-      icon: Route,
+      icon: "fas fa-route", // Changed to Font Awesome class
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
+      isFontAwesome: true, // Flag to indicate Font Awesome icon
     },
     {
       id: 3,
@@ -75,7 +76,7 @@ export default function GradeCardsTopoPainel() {
             >
               {/* Subtle gradient accent */}
               <div className={`absolute inset-0 bg-gradient-to-br ${card.accentColor} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-              
+
               {/* Border accent on hover */}
               <div className="absolute inset-0 rounded-2xl border border-orange-500/0 group-hover:border-orange-500/20 transition-all duration-300" />
 
@@ -91,7 +92,12 @@ export default function GradeCardsTopoPainel() {
                       }
                       transition-colors duration-300
                     `}>
-                      <Icon className={`w-5 h-5 ${card.iconColor}`} />
+                      {card.isFontAwesome ? (
+                        <i className={`${card.icon} ${card.iconColor}`} style={{ fontSize: '1.25rem' }}></i>
+                      ) : (
+                        <Icon className={`w-5 h-5 ${card.iconColor}`} />
+                      )}
+                      <div className="icon-glow"></div>
                     </div>
 
                     {/* Content */}
@@ -116,6 +122,7 @@ export default function GradeCardsTopoPainel() {
                       transition-colors duration-300
                     `}>
                       <Icon className={`w-5 h-5 ${card.iconColor} animate-pulse`} />
+                      <div className="icon-glow"></div>
                     </div>
 
                     {/* IA Content */}
