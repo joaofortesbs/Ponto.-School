@@ -13,20 +13,67 @@ interface ChecklistItem {
   id: string;
   label: string;
   completed: boolean;
+  content: string[];
 }
 
 export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollapsed = false }) => {
   const [showNumber, setShowNumber] = useState(false);
   const [isDropupOpen, setIsDropupOpen] = useState(false);
   const [dropupPosition, setDropupPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [expandedItem, setExpandedItem] = useState<string>('1'); // Primeiro item expandido por padrão
   const cardRef = useRef<HTMLDivElement>(null);
 
   const [checklist, setChecklist] = useState<ChecklistItem[]>([
-    { id: '1', label: 'Personalizar perfil', completed: false },
-    { id: '2', label: 'Criar uma atividade', completed: false },
-    { id: '3', label: 'Criar uma Turma', completed: false },
-    { id: '4', label: 'Compartilhar uma atividade', completed: false },
-    { id: '5', label: 'Criar uma Trilha School', completed: false },
+    { 
+      id: '1', 
+      label: 'Personalizar perfil', 
+      completed: false,
+      content: [
+        'Adicione uma foto de perfil',
+        'Preencha suas informações pessoais',
+        'Defina suas preferências de estudo'
+      ]
+    },
+    { 
+      id: '2', 
+      label: 'Criar uma atividade', 
+      completed: false,
+      content: [
+        'Acesse o School Power',
+        'Escolha o tipo de atividade',
+        'Configure e gere sua atividade'
+      ]
+    },
+    { 
+      id: '3', 
+      label: 'Criar uma Turma', 
+      completed: false,
+      content: [
+        'Vá para a seção Turmas',
+        'Clique em "Criar Turma"',
+        'Adicione nome e descrição'
+      ]
+    },
+    { 
+      id: '4', 
+      label: 'Compartilhar uma atividade', 
+      completed: false,
+      content: [
+        'Crie ou selecione uma atividade',
+        'Clique no botão compartilhar',
+        'Envie o link para seus alunos'
+      ]
+    },
+    { 
+      id: '5', 
+      label: 'Criar uma Trilha School', 
+      completed: false,
+      content: [
+        'Acesse Trilhas School',
+        'Organize suas atividades',
+        'Publique sua trilha'
+      ]
+    },
   ]);
 
   const completedCount = checklist.filter(item => item.completed).length;
@@ -72,6 +119,12 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
   };
 
   const toggleChecklistItem = (id: string) => {
+    // Se clicar no item já expandido, não faz nada (mantém expandido)
+    // Se clicar em outro item, expande esse e fecha o anterior
+    setExpandedItem(prev => prev === id ? id : id);
+  };
+
+  const markAsCompleted = (id: string) => {
     setChecklist(prev =>
       prev.map(item =>
         item.id === id ? { ...item, completed: !item.completed } : item
@@ -219,32 +272,72 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
               </div>
             </div>
 
-            {/* Checklist */}
+            {/* Checklist Accordion */}
             <div className="space-y-3">
-              {checklist.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-3 p-3 rounded-xl border-2 border-orange-200 dark:border-orange-800/50 hover:border-orange-400 dark:hover:border-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-all cursor-pointer group"
-                  onClick={() => toggleChecklistItem(item.id)}
-                >
-                  <Checkbox
-                    checked={item.completed}
-                    onCheckedChange={() => toggleChecklistItem(item.id)}
-                    className="h-5 w-5 border-orange-400 data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
-                  />
-                  <span className={`text-sm flex-1 font-medium ${item.completed ? 'line-through text-orange-300 dark:text-orange-600' : 'text-gray-800 dark:text-gray-200'}`}>
-                    {item.label}
-                  </span>
-                  <svg
-                    className="w-4 h-4 text-orange-400 group-hover:text-orange-600 transition-colors"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+              {checklist.map((item) => {
+                const isExpanded = expandedItem === item.id;
+                
+                return (
+                  <div
+                    key={item.id}
+                    className="rounded-xl border-2 border-orange-200 dark:border-orange-800/50 hover:border-orange-400 dark:hover:border-orange-600 transition-all overflow-hidden"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              ))}
+                    {/* Header do Item */}
+                    <div
+                      className="flex items-center gap-3 p-3 cursor-pointer group hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-all"
+                      onClick={() => toggleChecklistItem(item.id)}
+                    >
+                      <Checkbox
+                        checked={item.completed}
+                        onCheckedChange={(e) => {
+                          e.stopPropagation();
+                          markAsCompleted(item.id);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-5 w-5 border-orange-400 data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
+                      />
+                      <span className={`text-sm flex-1 font-medium ${item.completed ? 'line-through text-orange-300 dark:text-orange-600' : 'text-gray-800 dark:text-gray-200'}`}>
+                        {item.label}
+                      </span>
+                      <motion.svg
+                        className="w-4 h-4 text-orange-400 group-hover:text-orange-600 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        animate={{ rotate: isExpanded ? 90 : 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </motion.svg>
+                    </div>
+
+                    {/* Conteúdo Expansível */}
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-3 pb-3 pt-1 space-y-2 border-t border-orange-200 dark:border-orange-800/30">
+                            {item.content.map((step, index) => (
+                              <div
+                                key={index}
+                                className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400"
+                              >
+                                <div className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5 flex-shrink-0" />
+                                <span>{step}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
         </AnimatePresence>,
