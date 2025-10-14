@@ -51,9 +51,9 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
     if (cardRef.current) {
       const rect = cardRef.current.getBoundingClientRect();
       setDropupPosition({
-        top: rect.top - 8,
+        top: rect.bottom + 8,
         left: rect.left,
-        width: rect.width
+        width: 400
       });
     }
     setIsDropupOpen(!isDropupOpen);
@@ -147,17 +147,17 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
         />
       </motion.div>
 
-      {/* Drop-up Portal - Renderizado fora do menu lateral */}
+      {/* Drop-down Portal - Renderizado fora do menu lateral */}
       {isDropupOpen && ReactDOM.createPortal(
         <AnimatePresence>
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
+            exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
             className="fixed z-[9999]"
             style={{
-              top: `${dropupPosition.top - 320}px`,
+              top: `${dropupPosition.top}px`,
               left: `${dropupPosition.left}px`,
               width: `${dropupPosition.width}px`
             }}
