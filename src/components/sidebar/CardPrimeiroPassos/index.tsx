@@ -63,7 +63,7 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
     if (cardRef.current) {
       const rect = cardRef.current.getBoundingClientRect();
       setDropupPosition({
-        top: rect.top,
+        top: rect.top - 420, // Aparece bem acima do card
         left: rect.right + 16,
         width: 400
       });
@@ -182,7 +182,7 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6"
+            className="fixed z-[9999] bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-orange-950/40 dark:via-gray-900 dark:to-gray-900 rounded-2xl shadow-2xl border-2 border-orange-400/50 dark:border-orange-500/40 p-6 backdrop-blur-xl"
             style={{
               top: `${dropupPosition.top}px`,
               left: `${dropupPosition.left}px`,
@@ -191,13 +191,13 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
           >
             {/* Título */}
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Primeiros passos</h3>
+              <h3 className="text-lg font-bold bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent">Primeiros passos</h3>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsDropupOpen(false);
                 }}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -210,10 +210,10 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
               <div className="flex items-center gap-3">
                 <Progress 
                   value={progress} 
-                  className="flex-1 h-2 bg-gray-200 dark:bg-gray-700"
-                  indicatorClassName="bg-gradient-to-r from-orange-600 to-amber-600"
+                  className="flex-1 h-3 bg-orange-100 dark:bg-orange-950/30 rounded-full"
+                  indicatorClassName="bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 shadow-lg shadow-orange-500/30"
                 />
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                <span className="text-sm font-bold text-orange-600 dark:text-orange-400 whitespace-nowrap">
                   {completedCount}/{checklist.length}
                 </span>
               </div>
@@ -224,19 +224,19 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
               {checklist.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  className="flex items-center gap-3 p-3 rounded-xl border-2 border-orange-200 dark:border-orange-800/50 hover:border-orange-400 dark:hover:border-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-all cursor-pointer group"
                   onClick={() => toggleChecklistItem(item.id)}
                 >
                   <Checkbox
                     checked={item.completed}
                     onCheckedChange={() => toggleChecklistItem(item.id)}
-                    className="h-5 w-5"
+                    className="h-5 w-5 border-orange-400 data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500"
                   />
-                  <span className={`text-sm flex-1 ${item.completed ? 'line-through text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                  <span className={`text-sm flex-1 font-medium ${item.completed ? 'line-through text-orange-300 dark:text-orange-600' : 'text-gray-800 dark:text-gray-200'}`}>
                     {item.label}
                   </span>
                   <svg
-                    className="w-4 h-4 text-gray-400"
+                    className="w-4 h-4 text-orange-400 group-hover:text-orange-600 transition-colors"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
