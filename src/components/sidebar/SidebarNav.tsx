@@ -476,13 +476,6 @@ export function SidebarNav({
       disabled: true,
     },
     {
-      icon: "fas fa-brain",
-      label: "Epictus IA",
-      path: "/epictus-ia",
-      isSpecial: true,
-      disabled: true,
-    },
-    {
       icon: "fas fa-globe",
       label: "Portal",
       path: "/portal",
