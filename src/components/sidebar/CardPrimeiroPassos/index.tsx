@@ -2,8 +2,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactDOM from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { Progress } from '../../ui/progress';
 import { Checkbox } from '../../ui/checkbox';
+import { Button } from '../../ui/button';
 
 interface CardPrimeiroPassosProps {
   isCollapsed?: boolean;
@@ -17,6 +19,7 @@ interface ChecklistItem {
 }
 
 export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollapsed = false }) => {
+  const navigate = useNavigate();
   const [showNumber, setShowNumber] = useState(false);
   const [isDropupOpen, setIsDropupOpen] = useState(false);
   const [dropupPosition, setDropupPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -130,6 +133,11 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
         item.id === id ? { ...item, completed: checked } : item
       )
     );
+  };
+
+  const handleCriarAtividade = () => {
+    navigate('/school-power');
+    setIsDropupOpen(false);
   };
 
   if (isCollapsed) return null;
@@ -330,6 +338,18 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
                                 <span>{step}</span>
                               </div>
                             ))}
+                            
+                            {/* Botão Criar Atividade apenas no item Personalizar perfil */}
+                            {item.id === '1' && (
+                              <div className="pt-2">
+                                <Button
+                                  onClick={handleCriarAtividade}
+                                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-xs py-2 rounded-lg shadow-lg shadow-orange-500/30 transition-all duration-300"
+                                >
+                                  Criar Atividade
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       )}
