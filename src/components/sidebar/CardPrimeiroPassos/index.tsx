@@ -341,10 +341,10 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
                             
                             {/* Botão Criar Atividade apenas no item Personalizar perfil */}
                             {item.id === '1' && (
-                              <div className="pt-2 flex justify-center">
+                              <div className="pt-2">
                                 <Button
                                   onClick={handleCriarAtividade}
-                                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-[10px] px-3 py-1 rounded-full shadow-md shadow-orange-500/30 transition-all duration-300"
+                                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-xs py-2 rounded-lg shadow-lg shadow-orange-500/30 transition-all duration-300"
                                 >
                                   Criar Atividade
                                 </Button>
