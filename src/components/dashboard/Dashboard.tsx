@@ -112,6 +112,11 @@ export default function Dashboard() {
           <span className="text-lg sm:text-xl md:text-2xl">👋</span> {saudacao}, {firstName}!
         </h1>
       </div>
+
+      {/* Interface principal do Dashboard com métricas e cards */}
+      <div className="w-full max-w-[98%] sm:max-w-[1600px] mx-auto">
+        <DashboardInterface />
+      </div>
     </div>
   );
 }
