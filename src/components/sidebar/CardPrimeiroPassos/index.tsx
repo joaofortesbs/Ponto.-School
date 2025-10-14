@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 interface CardPrimeiroPassosProps {
@@ -6,6 +6,16 @@ interface CardPrimeiroPassosProps {
 }
 
 export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollapsed = false }) => {
+  const [showNumber, setShowNumber] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowNumber(prev => !prev);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   if (isCollapsed) return null;
 
   return (
@@ -25,23 +35,42 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
 
       {/* Conteúdo */}
-      <div className="relative p-4 flex items-center justify-between">
+      <div className="relative p-3 flex items-center justify-between">
         {/* Container esquerdo com ícone de notificação */}
         <div className="flex items-center gap-3">
-          {/* Ícone de notificação */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-orange-600 dark:text-orange-400"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
+          {/* Ícone de notificação com animação de alarme */}
+          {!showNumber ? (
+            <motion.svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 text-orange-600 dark:text-orange-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              animate={{
+                rotate: [0, -15, 15, -15, 15, 0],
+              }}
+              transition={{
+                duration: 0.5,
+                repeat: Infinity,
+                repeatDelay: 2.5,
+              }}
+            >
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </motion.svg>
+          ) : (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="w-5 h-5 rounded-full bg-orange-600 dark:bg-orange-400 flex items-center justify-center"
+            >
+              <span className="text-white text-xs font-bold">4</span>
+            </motion.div>
+          )}
 
           {/* Texto */}
           <h3 className="text-sm font-extrabold bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent whitespace-nowrap">
