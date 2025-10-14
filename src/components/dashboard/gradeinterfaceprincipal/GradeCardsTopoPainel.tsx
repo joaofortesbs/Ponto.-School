@@ -13,28 +13,32 @@ export default function GradeCardsTopoPainel() {
       title: "Alunos",
       value: "1.234",
       icon: Users,
-      iconColor: "text-blue-500",
+      iconColor: "text-orange-500",
+      accentColor: "from-orange-500/10 to-orange-600/5",
     },
     {
       id: 2,
       title: "Trilhas",
       value: "42",
       icon: BookOpen,
-      iconColor: "text-purple-500",
+      iconColor: "text-orange-500",
+      accentColor: "from-orange-500/10 to-orange-600/5",
     },
     {
       id: 3,
       title: "Engajamento",
       value: "87%",
       icon: TrendingUp,
-      iconColor: "text-emerald-500",
+      iconColor: "text-orange-500",
+      accentColor: "from-orange-500/10 to-orange-600/5",
     },
     {
       id: 4,
       title: "Ranking",
       value: "#3",
       icon: Trophy,
-      iconColor: "text-amber-500",
+      iconColor: "text-orange-500",
+      accentColor: "from-orange-500/10 to-orange-600/5",
     },
     {
       id: 5,
@@ -42,6 +46,7 @@ export default function GradeCardsTopoPainel() {
       description: "Recomendamos focar em atividades práticas de Matemática esta semana.",
       icon: Sparkles,
       iconColor: "text-orange-500",
+      accentColor: "from-orange-500/10 to-orange-600/5",
       isWide: true,
     },
   ];
@@ -57,42 +62,67 @@ export default function GradeCardsTopoPainel() {
               className={`
                 ${card.isWide ? 'lg:col-span-2' : 'lg:col-span-1'}
                 group relative overflow-hidden 
-                border
                 ${isLightMode 
-                  ? 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-md' 
-                  : 'bg-[#001F3F] border-white/10 hover:border-white/20 hover:shadow-lg'
+                  ? 'bg-white border border-orange-100/50 hover:border-orange-200' 
+                  : 'bg-[#001F3F]/50 border border-orange-500/10 hover:border-orange-500/20'
                 }
                 transition-all duration-300
                 rounded-2xl
                 ${!card.isWide ? 'h-[90px]' : 'h-[90px]'}
+                hover:shadow-lg hover:shadow-orange-500/5
+                backdrop-blur-sm
               `}
             >
-              <CardContent className={`p-4 h-full flex items-center ${card.isWide ? 'gap-3' : 'gap-2.5'}`}>
+              {/* Subtle gradient accent */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${card.accentColor} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+              
+              {/* Border accent on hover */}
+              <div className="absolute inset-0 rounded-2xl border border-orange-500/0 group-hover:border-orange-500/20 transition-all duration-300" />
+
+              <CardContent className={`relative p-4 h-full flex items-center ${card.isWide ? 'gap-3' : 'gap-3'}`}>
                 {!card.isWide ? (
                   <>
-                    {/* Ícone pequeno no topo esquerdo */}
-                    <Icon className={`w-5 h-5 ${card.iconColor} flex-shrink-0`} />
+                    {/* Icon with subtle background */}
+                    <div className={`
+                      w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+                      ${isLightMode 
+                        ? 'bg-orange-50 group-hover:bg-orange-100' 
+                        : 'bg-orange-500/10 group-hover:bg-orange-500/20'
+                      }
+                      transition-colors duration-300
+                    `}>
+                      <Icon className={`w-5 h-5 ${card.iconColor}`} />
+                    </div>
 
-                    {/* Nome e valor ao lado */}
+                    {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-medium mb-1 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      <p className={`text-xs font-medium mb-0.5 ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
                         {card.title}
                       </p>
-                      <h3 className={`text-2xl font-bold ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
+                      <h3 className={`text-2xl font-bold tracking-tight ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
                         {card.value}
                       </h3>
                     </div>
                   </>
                 ) : (
                   <>
-                    {/* Ícone IA */}
-                    <Icon className={`w-5 h-5 ${card.iconColor} flex-shrink-0`} />
+                    {/* IA Icon with glow effect */}
+                    <div className={`
+                      w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+                      ${isLightMode 
+                        ? 'bg-orange-50 group-hover:bg-orange-100' 
+                        : 'bg-orange-500/10 group-hover:bg-orange-500/20'
+                      }
+                      transition-colors duration-300
+                    `}>
+                      <Icon className={`w-5 h-5 ${card.iconColor} animate-pulse`} />
+                    </div>
 
-                    {/* Conteúdo IA */}
+                    {/* IA Content */}
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-semibold mb-1 ${isLightMode ? 'text-gray-700' : 'text-gray-300'} flex items-center gap-1`}>
+                      <p className={`text-xs font-semibold mb-1 ${isLightMode ? 'text-orange-600' : 'text-orange-400'} flex items-center gap-1.5`}>
                         {card.title}
-                        <Sparkles className="w-3 h-3 text-orange-500 animate-pulse" />
+                        <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
                       </p>
                       <p className={`text-xs leading-relaxed line-clamp-2 ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
                         {card.description}
