@@ -147,7 +147,7 @@ const PromotionalBanner = () => {
             border border-blue-500/20 backdrop-blur-sm
             transition-all duration-300 ease-in-out
             ${isHovered ? "scale-[1.01] shadow-blue-500/20" : ""}
-            max-h-[180px] sm:max-h-[200px] md:max-h-[220px]
+            max-h-[160px] sm:max-h-[180px] md:max-h-[200px]
           `}
         >
           {/* Animated background elements */}
