@@ -12,42 +12,46 @@ export default function GradeCardsTopoPainel() {
       id: 1,
       title: "Alunos",
       value: "1.234",
-      icon: Users,
+      icon: "fas fa-users",
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
+      isFontAwesome: true,
     },
     {
       id: 2,
       title: "Trilhas",
       value: "42",
-      icon: "fas fa-route", // Changed to Font Awesome class
+      icon: "fas fa-route",
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
-      isFontAwesome: true, // Flag to indicate Font Awesome icon
+      isFontAwesome: true,
     },
     {
       id: 3,
       title: "Engajamento",
       value: "87%",
-      icon: TrendingUp,
+      icon: "fas fa-chart-line",
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
+      isFontAwesome: true,
     },
     {
       id: 4,
       title: "Ranking",
       value: "#3",
-      icon: Trophy,
+      icon: "fas fa-trophy",
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
+      isFontAwesome: true,
     },
     {
       id: 5,
       title: "Sugestão IA",
       description: "Recomendamos focar em atividades práticas de Matemática esta semana.",
-      icon: Sparkles,
+      icon: "fas fa-sparkles",
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
+      isFontAwesome: true,
       isWide: true,
     },
   ];
@@ -121,7 +125,11 @@ export default function GradeCardsTopoPainel() {
                       }
                       transition-colors duration-300
                     `}>
-                      <Icon className={`w-5 h-5 ${card.iconColor} animate-pulse`} />
+                      {card.isFontAwesome ? (
+                        <i className={`${card.icon} ${card.iconColor} animate-pulse`} style={{ fontSize: '1.25rem' }}></i>
+                      ) : (
+                        <Icon className={`w-5 h-5 ${card.iconColor} animate-pulse`} />
+                      )}
                       <div className="icon-glow"></div>
                     </div>
 
