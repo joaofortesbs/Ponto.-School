@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PromotionalBanner from "./PromotionalBanner";
 import DashboardInterface from "./gradeinterfaceprincipal/DashboardInterface";
+import GradeCardsTopoPainel from "./gradeinterfaceprincipal/GradeCardsTopoPainel";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/user-profile";
 
@@ -111,6 +112,11 @@ export default function Dashboard() {
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-brand-black dark:text-white flex items-center gap-2">
           <span className="text-lg sm:text-xl md:text-2xl">👋</span> {saudacao}, {firstName}!
         </h1>
+      </div>
+
+      {/* Grade de Cards Principais do Topo */}
+      <div className="mt-6 sm:mt-8">
+        <GradeCardsTopoPainel />
       </div>
     </div>
   );
