@@ -25,21 +25,6 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
       {/* Brilho sutil no topo */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
 
-      {/* Badge de notificação no canto superior direito com efeito de alarme */}
-      <motion.div
-        animate={{
-          rotate: [0, -10, 10, -10, 10, 0],
-        }}
-        transition={{
-          duration: 0.5,
-          repeat: Infinity,
-          repeatDelay: 2,
-        }}
-        className="absolute top-3 right-3 w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center shadow-lg"
-      >
-        <span className="text-white text-xs font-bold">4</span>
-      </motion.div>
-
       {/* Conteúdo */}
       <div className="relative p-4 flex items-center justify-between">
         {/* Container esquerdo com ícone de notificação */}
@@ -64,6 +49,9 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
             Primeiros Passos
           </h3>
         </div>
+
+        {/* Ícone de seta à direita */}
+        <ArrowUp className="w-4 h-4 text-orange-500 dark:text-orange-400" />
       </div>
 
       {/* Efeito de brilho animado */}
