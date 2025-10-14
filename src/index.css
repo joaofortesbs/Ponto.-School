@@ -206,10 +206,22 @@
 
 .grid-proportional > div {
   height: auto;
-  min-height: 600px;
+  min-height: 400px;
   display: flex;
   flex-direction: column;
   position: relative;
+}
+
+@media (min-width: 640px) {
+  .grid-proportional > div {
+    min-height: 500px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-proportional > div {
+    min-height: 600px;
+  }
 }
 
 .grid-cell {
@@ -231,6 +243,25 @@
 /* Estilos para corrigir problemas de altura em componentes específicos */
 .altura-completa {
   height: 100%;
+}
+
+/* Estilos responsivos para o dashboard */
+@media (max-width: 639px) {
+  .dashboard-card {
+    min-height: 280px;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .dashboard-card {
+    min-height: 320px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-card {
+    min-height: 360px;
+  }
 }
 
 /* Estilo para a barra de rolagem customizada */

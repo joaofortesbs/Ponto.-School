@@ -157,24 +157,24 @@ const PromotionalBanner = () => {
           </div>
 
           <div className="flex flex-col md:flex-row items-center relative z-10">
-            <div className="p-6 md:p-8 flex-1">
+            <div className="p-4 sm:p-6 md:p-8 flex-1 w-full">
               <motion.h2
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.4 }}
-                className="text-xl md:text-2xl font-bold text-white mb-2 flex items-center"
+                className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-0"
               >
-                <span className={`mr-2 ${currentBanner.titleColor}`}>
+                <span className={`mr-0 sm:mr-2 ${currentBanner.titleColor}`}>
                   {currentBanner.title}
                 </span>{" "}
-                {currentBanner.subtitle}
+                <span className="break-words">{currentBanner.subtitle}</span>
               </motion.h2>
 
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.4 }}
-                className="text-white/80 text-sm md:text-base mb-4"
+                className="text-white/80 text-xs sm:text-sm md:text-base mb-3 sm:mb-4"
               >
                 {currentBanner.description}
               </motion.p>
@@ -183,12 +183,12 @@ const PromotionalBanner = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.4 }}
-                className="flex flex-wrap gap-4 mb-2"
+                className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 mb-2"
               >
                 {currentBanner.tags.map((tag, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 bg-[#0c1c33]/50 px-3 py-1.5 rounded-full"
+                    className="flex items-center gap-1.5 sm:gap-2 bg-[#0c1c33]/50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm"
                   >
                     {tag.icon}
                     <span className={tag.color}>{tag.text}</span>
@@ -202,13 +202,13 @@ const PromotionalBanner = () => {
                 transition={{ delay: 0.5, duration: 0.3 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="mt-4 inline-block"
+                className="mt-3 sm:mt-4 inline-block"
               >
                 <Button
-                  className={`bg-gradient-to-r ${currentBanner.buttonGradientFrom} ${currentBanner.buttonGradientTo} ${currentBanner.buttonHoverFrom} ${currentBanner.buttonHoverTo} text-white border-none shadow-lg ${currentBanner.buttonShadow} transition-all duration-300`}
+                  className={`bg-gradient-to-r ${currentBanner.buttonGradientFrom} ${currentBanner.buttonGradientTo} ${currentBanner.buttonHoverFrom} ${currentBanner.buttonHoverTo} text-white border-none shadow-lg ${currentBanner.buttonShadow} transition-all duration-300 text-sm sm:text-base px-3 sm:px-4 py-2`}
                 >
                   {currentBanner.buttonText}{" "}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </motion.div>
             </div>
@@ -217,14 +217,14 @@ const PromotionalBanner = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3, duration: 0.5 }}
-              className="md:w-1/3 p-4 flex justify-center"
+              className="w-full md:w-1/3 p-3 sm:p-4 flex justify-center"
             >
-              <div className="relative overflow-hidden rounded-lg border border-white/10 shadow-2xl">
+              <div className="relative overflow-hidden rounded-lg border border-white/10 shadow-2xl w-full max-w-[280px] sm:max-w-none">
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-purple-500/10 z-10" />
                 <img
                   src={currentBanner.image}
                   alt={currentBanner.imageAlt}
-                  className="rounded-lg max-h-[180px] object-cover transition-transform duration-700 ease-in-out hover:scale-110"
+                  className="rounded-lg w-full h-auto max-h-[140px] sm:max-h-[160px] md:max-h-[180px] object-cover transition-transform duration-700 ease-in-out hover:scale-110"
                 />
               </div>
             </motion.div>
