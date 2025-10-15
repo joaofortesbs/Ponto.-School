@@ -171,7 +171,7 @@ export default function GradeCardsTopoPainel() {
 
                     {/* Enhanced Content */}
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-semibold mb-1 tracking-wide uppercase ${isLightMode ? 'text-gray-500 group-hover:text-orange-600' : 'text-gray-400 group-hover:text-orange-400'} transition-colors duration-500 ease-out`}>
+                      <p className={`text-xs font-semibold mb-1 tracking-wide ${isLightMode ? 'text-gray-500 group-hover:text-orange-600' : 'text-gray-400 group-hover:text-orange-400'} transition-colors duration-500 ease-out`}>
                         {card.title}
                       </p>
                       <div className="relative inline-block">
