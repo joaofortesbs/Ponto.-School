@@ -30,18 +30,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Fonte Alan Sans - força global */
+/* Fonte Alan Sans - Regular 400 */
 @font-face {
   font-family: 'Alan Sans';
   src: local('Alan Sans');
+  font-weight: 400;
+  font-style: normal;
   font-display: swap;
 }
 
-.alan-sans-greeting,
-.alan-sans-greeting * {
+.alan-sans-greeting {
   font-family: "Alan Sans", sans-serif !important;
   font-optical-sizing: auto !important;
-  font-weight: 700 !important;
+  font-weight: 400 !important;
   font-style: normal !important;
   -webkit-font-smoothing: antialiased !important;
   -moz-osx-font-smoothing: grayscale !important;

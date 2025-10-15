@@ -128,8 +128,9 @@ export default function Dashboard() {
         <h1 
           className="text-xl sm:text-2xl md:text-3xl text-brand-black dark:text-white flex items-center gap-2"
           style={{ 
-            fontFamily: '"Alan Sans", sans-serif !important',
-            fontWeight: '700 !important',
+            fontFamily: '"Alan Sans", sans-serif',
+            fontWeight: 400,
+            fontStyle: 'normal',
             fontOpticalSizing: 'auto',
             WebkitFontSmoothing: 'antialiased',
             MozOsxFontSmoothing: 'grayscale'
