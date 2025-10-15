@@ -114,10 +114,10 @@ export default function Dashboard() {
         </h1>
       </div>
 
-      {/* Grade de Cards Principais do Topo */}
+      {/* Interface Completa do Painel */}
       <div className="mt-6 sm:mt-8">
-        <GradeCardsTopoPainel />
-      </div>
+        <DashboardInterface />
+      </divv>
     </div>
   );
 }
