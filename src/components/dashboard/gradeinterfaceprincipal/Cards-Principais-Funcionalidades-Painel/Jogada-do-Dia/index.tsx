@@ -65,7 +65,7 @@ export default function JogadaDoDiaCard() {
             bg-gradient-to-br from-orange-500 to-orange-600
             shadow-lg shadow-orange-500/30
           `}>
-            <Sparkles className="text-white" size={36} strokeWidth={1.5} fill="none" />
+            <Sparkles className="text-white" size={36} strokeWidth={2} fill="none" />
           </div>
 
           {/* Mensagem de Boas-vindas */}
@@ -88,7 +88,7 @@ export default function JogadaDoDiaCard() {
             flex items-center gap-2
             shadow-lg shadow-orange-500/30
           `}>
-            <Sparkles size={18} strokeWidth={1.5} />
+            <Sparkles size={18} strokeWidth={2} fill="none" />
             Descobrir Jogada
           </button>
         </div>

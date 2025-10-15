@@ -64,7 +64,7 @@ export default function ProximaAulaCard() {
             bg-gradient-to-br from-orange-500 to-orange-600
             shadow-lg shadow-orange-500/30
           `}>
-            <Calendar className="text-white" size={36} strokeWidth={1.5} fill="none" />
+            <Calendar className="text-white" size={36} strokeWidth={2} fill="none" />
           </div>
 
           {/* Mensagem de Boas-vindas */}
@@ -87,7 +87,7 @@ export default function ProximaAulaCard() {
             flex items-center gap-2
             shadow-lg shadow-orange-500/30
           `}>
-            <Plus size={18} strokeWidth={1.5} />
+            <Plus size={18} strokeWidth={2} fill="none" />
             Criar Primeira Aula
           </button>
         </div>

@@ -64,7 +64,7 @@ export default function PulsoDaTurmaCard() {
             bg-gradient-to-br from-orange-500 to-orange-600
             shadow-lg shadow-orange-500/30
           `}>
-            <TrendingUp className="text-white" size={36} strokeWidth={1.5} fill="none" />
+            <TrendingUp className="text-white" size={36} strokeWidth={2} fill="none" />
           </div>
 
           {/* Mensagem de Boas-vindas */}
