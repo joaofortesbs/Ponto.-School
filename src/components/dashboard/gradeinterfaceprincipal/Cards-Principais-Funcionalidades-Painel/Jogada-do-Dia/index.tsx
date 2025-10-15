@@ -44,10 +44,11 @@ export default function JogadaDoDiaCard() {
           <div className="flex items-center gap-3">
             <div className={`
               w-10 h-10 rounded-xl flex items-center justify-center
-              bg-gradient-to-br from-orange-500 to-orange-600
-              shadow-lg shadow-orange-500/30
+              border-2 border-orange-500
+              ${isLightMode ? 'bg-white' : 'bg-transparent'}
+              shadow-sm
             `}>
-              <i className="fas fa-bolt text-white text-lg"></i>
+              <i className="fas fa-bolt text-orange-500 text-lg"></i>
             </div>
             <h3 className={`font-bold text-lg uppercase tracking-wide ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
               Jogada do Dia
