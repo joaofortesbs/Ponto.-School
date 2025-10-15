@@ -43,7 +43,8 @@ export const ModoApresentacaoAtividade: React.FC = () => {
         }
 
         // Converter ActivityData para AtividadeDados
-        const activityData: ActivityData = response.data;
+        // Se response.data é array, pega primeiro item, senão usa direto
+        const activityData: ActivityData = Array.isArray(response.data) ? response.data[0] : response.data;
         const atividadeConvertida: AtividadeDados = {
           id: activityData.codigo_unico,
           tipo: activityData.tipo,

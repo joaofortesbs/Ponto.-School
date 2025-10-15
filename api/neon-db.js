@@ -657,7 +657,7 @@ class NeonDBManager {
     } = activityData;
 
     const query = `
-      INSERT INTO activities (user_id, codigo_unico, tipo, titulo, descricao, conteudo)
+      INSERT INTO atividades (user_id, codigo_unico, tipo, titulo, descricao, conteudo)
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING id, user_id, codigo_unico, tipo, titulo, descricao, conteudo, criado_em, atualizado_em
     `;
@@ -686,7 +686,7 @@ class NeonDBManager {
     const { titulo, descricao, conteudo } = updateData;
 
     const query = `
-      UPDATE activities 
+      UPDATE atividades 
       SET titulo = $2, descricao = $3, conteudo = $4, atualizado_em = NOW()
       WHERE codigo_unico = $1
       RETURNING id, user_id, codigo_unico, tipo, titulo, descricao, conteudo, criado_em, atualizado_em
@@ -715,7 +715,7 @@ class NeonDBManager {
   async getUserActivities(user_id) {
     const query = `
       SELECT id, user_id, codigo_unico, tipo, titulo, descricao, conteudo, criado_em, atualizado_em
-      FROM activities 
+      FROM atividades 
       WHERE user_id = $1 
       ORDER BY atualizado_em DESC
     `;
@@ -737,12 +737,18 @@ class NeonDBManager {
     }
   }
 
-  // Buscar atividade por código único
+  // Buscar atividade por código único (adaptado para estrutura antiga)
   async getActivityByCode(codigo_unico) {
     const query = `
-      SELECT id, user_id, codigo_unico, tipo, titulo, descricao, conteudo, criado_em, atualizado_em
-      FROM activities 
-      WHERE codigo_unico = $1
+      SELECT 
+        id as codigo_unico,
+        id_user as user_id,
+        tipo,
+        id_json as conteudo,
+        created_at as criado_em,
+        updated_at as atualizado_em
+      FROM atividades 
+      WHERE id = $1
     `;
 
     try {
@@ -751,8 +757,18 @@ class NeonDBManager {
       
       if (result.success) {
         if (result.data.length > 0) {
-          console.log('✅ Atividade encontrada:', result.data[0].titulo);
-          return result;
+          // Parsear id_json se for string
+          const atividade = result.data[0];
+          if (typeof atividade.conteudo === 'string') {
+            atividade.conteudo = JSON.parse(atividade.conteudo);
+          }
+          
+          // Extrair título e descrição do conteúdo JSON
+          atividade.titulo = atividade.conteudo?.title || atividade.conteudo?.titulo || 'Atividade';
+          atividade.descricao = atividade.conteudo?.description || atividade.conteudo?.descricao || '';
+          
+          console.log('✅ Atividade encontrada:', atividade.titulo);
+          return { success: true, data: [atividade] };
         } else {
           console.log('⚠️ Nenhuma atividade encontrada com esse código');
           return { success: false, error: 'Atividade não encontrada' };
@@ -770,7 +786,7 @@ class NeonDBManager {
   // Deletar atividade
   async deleteActivity(codigo_unico, user_id) {
     const query = `
-      DELETE FROM activities 
+      DELETE FROM atividades 
       WHERE codigo_unico = $1 AND user_id = $2
       RETURNING id, titulo
     `;
