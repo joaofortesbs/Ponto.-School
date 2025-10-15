@@ -62,7 +62,7 @@ export default function GradeCardsTopoPainel() {
     {
       id: 1,
       title: "Alunos",
-      value: "1.234",
+      value: "--",
       icon: "fas fa-users",
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
@@ -72,7 +72,7 @@ export default function GradeCardsTopoPainel() {
     {
       id: 2,
       title: "Trilhas",
-      value: "42",
+      value: "--",
       icon: "fas fa-route",
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
@@ -82,7 +82,7 @@ export default function GradeCardsTopoPainel() {
     {
       id: 3,
       title: "Engajamento",
-      value: "87%",
+      value: "--",
       icon: "fas fa-chart-line",
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
