@@ -82,6 +82,8 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
             avatar: professorAvatar ? 'Disponível' : 'Não disponível'
           });
           
+          console.log('💰 [PÚBLICO] School Points carregados do banco Neon:', atividadeNeon.school_points || 100);
+          
           const atividadeConvertida: AtividadeCompartilhavel = {
             id: atividadeNeon.id,
             titulo: atividadeNeon.id_json?.title || 'Atividade',
@@ -91,7 +93,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
             customFields: atividadeNeon.id_json?.customFields || {},
             professorNome: professorNome,
             professorAvatar: professorAvatar,
-            schoolPoints: atividadeNeon.id_json?.schoolPoints || 100,
+            schoolPoints: atividadeNeon.school_points || 100,
             criadoPor: atividadeNeon.id_user,
             criadoEm: atividadeNeon.created_at || new Date().toISOString(),
             codigoUnico: atividadeNeon.id,
