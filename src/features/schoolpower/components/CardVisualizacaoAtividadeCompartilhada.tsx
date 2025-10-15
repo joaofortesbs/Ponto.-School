@@ -567,7 +567,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         </div>
 
         {/* Botões na base do card - Novo Design Sofisticado */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-8 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 mt-4 justify-center">
           <Button
             onClick={handlePresentarAtividade}
             className="w-full sm:w-64 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white font-bold py-4 px-8 rounded-full transition-all duration-500 transform hover:scale-105 hover:shadow-2xl hover:shadow-orange-500/50 flex items-center justify-center gap-3 border-2 border-orange-400/30 relative overflow-hidden group"
