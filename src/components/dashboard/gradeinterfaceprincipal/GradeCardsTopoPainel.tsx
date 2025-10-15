@@ -110,9 +110,9 @@ export default function GradeCardsTopoPainel() {
                       shadow-sm group-hover:shadow-lg group-hover:shadow-orange-500/25
                     `}>
                       {card.isFontAwesome ? (
-                        <i className={`${card.icon} ${card.iconColor} transition-all duration-300 group-hover:scale-110`} style={{ fontSize: '1.35rem' }}></i>
+                        <i className={`${card.icon} ${card.iconColor} transition-all duration-300 group-hover:scale-110`} style={{ fontSize: '1.1rem' }}></i>
                       ) : (
-                        <Icon className={`w-6 h-6 ${card.iconColor} transition-all duration-300 group-hover:scale-110`} />
+                        <Icon className={`w-5 h-5 ${card.iconColor} transition-all duration-300 group-hover:scale-110`} />
                       )}
                     </div>
 
@@ -144,9 +144,9 @@ export default function GradeCardsTopoPainel() {
                       <div className="absolute inset-0 rounded-xl border-2 border-orange-500/30 animate-ping opacity-0 group-hover:opacity-75" />
                       
                       {card.isFontAwesome ? (
-                        <i className={`${card.icon} ${card.iconColor} animate-pulse transition-all duration-300`} style={{ fontSize: '1.35rem' }}></i>
+                        <i className={`${card.icon} ${card.iconColor} animate-pulse transition-all duration-300`} style={{ fontSize: '1.1rem' }}></i>
                       ) : (
-                        <Icon className={`w-6 h-6 ${card.iconColor} animate-pulse transition-all duration-300`} />
+                        <Icon className={`w-5 h-5 ${card.iconColor} animate-pulse transition-all duration-300`} />
                       )}
                     </div>
 
