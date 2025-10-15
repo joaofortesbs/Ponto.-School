@@ -130,8 +130,8 @@ router.get('/:userId', async (req, res) => {
     // Busca estatísticas gerais
     const statsQuery = `
       SELECT 
-        COUNT(DISTINCT id) as total_visitas,
-        COUNT(DISTINCT CASE WHEN DATE(data_acesso) = CURRENT_DATE THEN id END) as visitas_hoje,
+        COUNT(*) as total_visitas,
+        COUNT(CASE WHEN DATE(data_acesso) = CURRENT_DATE THEN 1 END) as visitas_hoje,
         COUNT(DISTINCT ip_address) as visitantes_unicos
       FROM visitantes_atividades
       WHERE codigo_atividade = ANY($1)
