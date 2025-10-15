@@ -24,7 +24,7 @@ const PromotionalBanner = () => {
           ${isHovered ? "scale-[1.01] shadow-orange-200/50 dark:shadow-orange-800/50" : ""}
           max-h-[140px] sm:max-h-[160px] md:max-h-[180px]
           rounded-2xl
-          dark:opacity-80
+          opacity-20 dark:opacity-80
         `}
       >
         {/* Subtle gradient overlay */}
