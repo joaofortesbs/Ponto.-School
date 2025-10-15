@@ -7,7 +7,6 @@ import { supabase } from '@/lib/supabase';
 import { AtividadeCompartilhavel } from '../services/gerador-link-atividades-schoolpower';
 import { DataSyncService, AtividadeDados } from '../services/data-sync-service';
 import { UniversalActivityHeader } from '../construction/components/UniversalActivityHeader';
-import { ModoApresentacaoAtividade } from './ModoApresentacaoAtividade';
 
 // Import dos previews das atividades
 import ActivityPreview from '../activities/default/ActivityPreview';
@@ -36,9 +35,6 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
   
   // Estado para armazenar a atividade sincronizada
   const [atividadeSincronizada, setAtividadeSincronizada] = useState<AtividadeDados | null>(null);
-  
-  // Estado para controlar o modo apresentação (acessado via botão "Sou Estudante")
-  const [modoApresentacaoAberto, setModoApresentacaoAberto] = useState(false);
 
   // Efeito para sincronizar dados da atividade quando o componente é montado ou a atividade muda
   useEffect(() => {
@@ -309,12 +305,6 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       localStorage.setItem('returnToActivityAfterRegister', fullApresentacaoUrl);
       navigate('/register');
     }
-  };
-
-  // Função para fechar modo apresentação
-  const handleCloseModoApresentacao = () => {
-    console.log('🔒 [APRESENTAÇÃO] Fechando modo apresentação');
-    setModoApresentacaoAberto(false);
   };
 
   // Função para fechar modo fullscreen com animação reversa otimizada
@@ -680,14 +670,6 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         </div>
       )}
 
-      {/* Modo Apresentação - Ativado via botão "Sou Estudante" */}
-      {atividadeSincronizada && (
-        <ModoApresentacaoAtividade
-          atividade={atividadeSincronizada}
-          isOpen={modoApresentacaoAberto}
-          onClose={handleCloseModoApresentacao}
-        />
-      )}
     </div>
   );
 };

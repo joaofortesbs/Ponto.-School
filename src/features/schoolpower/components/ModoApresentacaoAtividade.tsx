@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { AtividadeDados } from '../services/data-sync-service';
-import { atividadesNeonService } from '../services/atividadesNeonService';
+import activitiesApiService, { ActivityData } from '@/services/activitiesApiService';
 
 // Import dos previews das atividades
 import ActivityPreview from '../activities/default/ActivityPreview';
@@ -33,17 +33,28 @@ export const ModoApresentacaoAtividade: React.FC = () => {
       try {
         console.log('🎯 [APRESENTAÇÃO] Carregando atividade:', uniqueCode);
         
-        // Carregar atividade do banco de dados Neon
-        const atividadeCarregada = await atividadesNeonService.buscarAtividadePorCodigoUnico(uniqueCode);
+        // Carregar atividade usando API service
+        const response = await activitiesApiService.getActivityByCode(uniqueCode);
         
-        if (!atividadeCarregada) {
+        if (!response.success || !response.data) {
           setError('Atividade não encontrada');
           setLoading(false);
           return;
         }
 
-        console.log('✅ [APRESENTAÇÃO] Atividade carregada:', atividadeCarregada);
-        setAtividade(atividadeCarregada);
+        // Converter ActivityData para AtividadeDados
+        const activityData: ActivityData = response.data;
+        const atividadeConvertida: AtividadeDados = {
+          id: activityData.codigo_unico,
+          tipo: activityData.tipo,
+          titulo: activityData.titulo || '',
+          descricao: activityData.descricao || '',
+          dados: activityData.conteudo || {},
+          customFields: activityData.conteudo?.customFields || {}
+        };
+
+        console.log('✅ [APRESENTAÇÃO] Atividade carregada:', atividadeConvertida);
+        setAtividade(atividadeConvertida);
         setLoading(false);
       } catch (err) {
         console.error('❌ [APRESENTAÇÃO] Erro ao carregar atividade:', err);
