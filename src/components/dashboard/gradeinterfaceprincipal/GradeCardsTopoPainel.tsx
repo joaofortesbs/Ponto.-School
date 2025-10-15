@@ -73,26 +73,26 @@ export default function GradeCardsTopoPainel() {
                 ${card.isWide ? 'lg:col-span-2' : 'lg:col-span-1'}
                 group relative overflow-hidden 
                 ${isLightMode 
-                  ? 'bg-white/95 border-2 border-orange-100/60 hover:border-orange-300/80' 
-                  : 'bg-[#001F3F]/60 border-2 border-orange-500/15 hover:border-orange-500/35'
+                  ? 'bg-white/95 border-2 border-orange-100/60 hover:border-orange-400/90' 
+                  : 'bg-[#001F3F]/60 border-2 border-orange-500/15 hover:border-orange-500/40'
                 }
-                transition-all duration-500 ease-out
+                transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)]
                 rounded-[1.5rem]
                 ${!card.isWide ? 'h-[90px]' : 'h-[90px]'}
-                hover:shadow-2xl hover:shadow-orange-500/20
-                hover:-translate-y-2
+                hover:shadow-2xl hover:shadow-orange-500/25
+                hover:-translate-y-3 hover:scale-[1.02]
                 backdrop-blur-xl
                 cursor-pointer
               `}
             >
               {/* Animated gradient background */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${card.accentColor} opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out`} />
+              <div className={`absolute inset-0 bg-gradient-to-br ${card.accentColor} opacity-0 group-hover:opacity-100 transition-all duration-1000 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]`} />
               
               {/* Shimmer effect on hover */}
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1500 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
               {/* Glow effect border */}
-              <div className="absolute inset-0 rounded-[1.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out bg-gradient-to-r from-orange-500/0 via-orange-500/20 to-orange-500/0 blur-xl" />
+              <div className="absolute inset-0 rounded-[1.5rem] opacity-0 group-hover:opacity-100 transition-all duration-900 ease-[cubic-bezier(0.34,1.56,0.64,1)] bg-gradient-to-r from-orange-500/0 via-orange-500/30 to-orange-500/0 blur-xl scale-95 group-hover:scale-100" />
 
               <CardContent className={`relative p-4 h-full flex items-center ${card.isWide ? 'gap-3' : 'gap-3'} z-10`}>
                 {!card.isWide ? (
@@ -101,28 +101,28 @@ export default function GradeCardsTopoPainel() {
                     <div className={`
                       w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0
                       ${isLightMode 
-                        ? 'bg-gradient-to-br from-orange-50 to-orange-100/50 group-hover:from-orange-100 group-hover:to-orange-200/60' 
-                        : 'bg-gradient-to-br from-orange-500/10 to-orange-600/5 group-hover:from-orange-500/25 group-hover:to-orange-600/15'
+                        ? 'bg-gradient-to-br from-orange-50 to-orange-100/50 group-hover:from-orange-100 group-hover:to-orange-200/70' 
+                        : 'bg-gradient-to-br from-orange-500/10 to-orange-600/5 group-hover:from-orange-500/30 group-hover:to-orange-600/20'
                       }
-                      transition-all duration-600 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-                      group-hover:scale-110 group-hover:rotate-3
-                      border border-orange-500/20 group-hover:border-orange-500/40
-                      shadow-sm group-hover:shadow-lg group-hover:shadow-orange-500/25
+                      transition-all duration-800 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+                      group-hover:scale-[1.15] group-hover:rotate-6
+                      border border-orange-500/20 group-hover:border-orange-500/50
+                      shadow-sm group-hover:shadow-xl group-hover:shadow-orange-500/30
                     `}>
                       {card.isFontAwesome ? (
-                        <i className={`${card.icon} ${card.iconColor} transition-all duration-500 ease-out group-hover:scale-110`} style={{ fontSize: '1.35rem' }}></i>
+                        <i className={`${card.icon} ${card.iconColor} transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-125 group-hover:rotate-12`} style={{ fontSize: '1.35rem' }}></i>
                       ) : (
-                        <Icon className={`w-6 h-6 ${card.iconColor} transition-all duration-500 ease-out group-hover:scale-110`} />
+                        <Icon className={`w-6 h-6 ${card.iconColor} transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-125 group-hover:rotate-12`} />
                       )}
                     </div>
 
                     {/* Enhanced Content */}
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-semibold mb-1 tracking-wide uppercase ${isLightMode ? 'text-gray-500 group-hover:text-orange-600' : 'text-gray-400 group-hover:text-orange-400'} transition-colors duration-500 ease-out`}>
+                      <p className={`text-xs font-semibold mb-1 tracking-wide uppercase ${isLightMode ? 'text-gray-500 group-hover:text-orange-600' : 'text-gray-400 group-hover:text-orange-400'} transition-colors duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]`}>
                         {card.title}
                       </p>
                       <div className="relative inline-block">
-                        <h3 className={`text-2xl font-bold tracking-tight ${isLightMode ? 'text-gray-900 group-hover:text-orange-600' : 'text-white group-hover:text-orange-400'} transition-all duration-600 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 origin-left`}>
+                        <h3 className={`text-2xl font-bold tracking-tight ${isLightMode ? 'text-gray-900 group-hover:text-orange-600' : 'text-white group-hover:text-orange-400'} transition-all duration-800 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 origin-left`}>
                           {card.value}
                         </h3>
                         <div className="absolute bottom-1 -right-12 rounded-full bg-orange-500/10 px-1.5 py-0.5">
