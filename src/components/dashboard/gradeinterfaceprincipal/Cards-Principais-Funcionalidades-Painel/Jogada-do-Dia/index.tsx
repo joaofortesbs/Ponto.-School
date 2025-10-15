@@ -64,83 +64,72 @@ export default function JogadaDoDiaCard() {
           </div>
         </div>
 
-        {/* Conteúdo do Card */}
-        <div className="flex-1 p-6 space-y-4 overflow-y-auto custom-scrollbar">
-          {/* Card de Recomendação */}
+        {/* Conteúdo do Card - SEM SCROLL */}
+        <div className="flex-1 p-5 flex flex-col justify-between overflow-hidden">
+          {/* Card de Recomendação - Compacto */}
           <div className={`
-            p-5 rounded-xl border-2 border-orange-500
+            p-3.5 rounded-xl border-2 border-orange-500
             ${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100/50' : 'bg-gradient-to-br from-orange-500/10 to-orange-600/5'}
           `}>
-            {/* Título da Ação */}
-            <div className="mb-4 flex items-start gap-3">
-              <i className="fas fa-bullseye text-orange-500 text-2xl mt-1"></i>
-              <h4 className={`text-lg font-bold ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
+            {/* Título da Ação - Compacto */}
+            <div className="mb-2.5 flex items-start gap-2">
+              <i className="fas fa-bullseye text-orange-500 text-lg mt-0.5"></i>
+              <h4 className={`text-sm font-bold leading-tight ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
                 CRIAR RECUPERAÇÃO PARA 7A
               </h4>
             </div>
 
-            {/* Por quê? */}
-            <div className="mb-4">
-              <p className={`text-xs font-bold uppercase mb-2 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+            {/* Por quê? - Compacto */}
+            <div className="mb-2.5">
+              <p className={`text-[10px] font-bold uppercase mb-1 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
                 Por quê?
               </p>
-              <ul className="space-y-1">
-                <li className={`text-sm flex items-start gap-2 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+              <ul className="space-y-0.5">
+                <li className={`text-xs flex items-start gap-1.5 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
                   <span>•</span>
                   <span>15 alunos (65%) erraram Frações</span>
                 </li>
-                <li className={`text-sm flex items-start gap-2 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                <li className={`text-xs flex items-start gap-1.5 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
                   <span>•</span>
-                  <span>Próxima aula é em 2 dias</span>
-                </li>
-                <li className={`text-sm flex items-start gap-2 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  <span>•</span>
-                  <span>Recuperação agora evita defasagem</span>
+                  <span>Próxima aula em 2 dias</span>
                 </li>
               </ul>
             </div>
 
-            {/* O que terá */}
-            <div className="mb-4">
-              <p className={`text-xs font-bold uppercase mb-2 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                O que terá:
-              </p>
-              <div className="space-y-1">
-                <div className={`text-sm flex items-center gap-2 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  <i className="fas fa-check text-green-500 text-xs"></i>
-                  <span>5 atividades gamificadas</span>
-                </div>
-                <div className={`text-sm flex items-center gap-2 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  <i className="fas fa-check text-green-500 text-xs"></i>
-                  <span>Vídeos explicativos curtos</span>
-                </div>
-                <div className={`text-sm flex items-center gap-2 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  <i className="fas fa-check text-green-500 text-xs"></i>
-                  <span>Sistema de pontos motivacional</span>
-                </div>
+            {/* O que terá - Compacto */}
+            <div className="space-y-0.5">
+              <div className={`text-xs flex items-center gap-1.5 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                <i className="fas fa-check text-green-500 text-[10px]"></i>
+                <span>5 atividades gamificadas</span>
+              </div>
+              <div className={`text-xs flex items-center gap-1.5 ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                <i className="fas fa-check text-green-500 text-[10px]"></i>
+                <span>Vídeos explicativos curtos</span>
               </div>
             </div>
+          </div>
 
-            {/* Footer com tempo e impacto */}
+          {/* Footer com tempo e impacto - Compacto */}
+          <div className={`mt-3 p-2.5 rounded-lg ${isLightMode ? 'bg-gray-50' : 'bg-gray-800/30'}`}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <i className="fas fa-clock text-orange-500 text-xs"></i>
                 <span className={`text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
-                  3 min para gerar
+                  3 min
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <i className="fas fa-chart-line text-green-500 text-xs"></i>
                 <span className={`text-xs font-semibold ${isLightMode ? 'text-green-600' : 'text-green-400'}`}>
-                  Impacto +40%
+                  +40% Impacto
                 </span>
               </div>
             </div>
           </div>
 
-          {/* CTA Principal */}
+          {/* CTA Principal - Compacto */}
           <button className={`
-            w-full px-4 py-3 rounded-lg font-bold text-sm
+            mt-3 w-full px-3 py-2.5 rounded-lg font-bold text-xs
             bg-gradient-to-r from-orange-500 via-orange-600 to-yellow-500
             text-white
             hover:from-orange-600 hover:via-orange-700 hover:to-yellow-600
@@ -154,31 +143,31 @@ export default function JogadaDoDiaCard() {
             CRIAR AGORA (3 MIN)
           </button>
 
-          {/* CTAs Secundários */}
-          <div className="grid grid-cols-2 gap-2">
+          {/* CTAs Secundários - Compacto */}
+          <div className="mt-2 grid grid-cols-2 gap-2">
             <button className={`
-              px-3 py-2 rounded-lg font-semibold text-xs
+              px-2 py-1.5 rounded-lg font-semibold text-xs
               ${isLightMode 
                 ? 'border-2 border-orange-500 text-orange-600 hover:bg-orange-50' 
                 : 'border-2 border-orange-500 text-orange-400 hover:bg-orange-500/10'
               }
               transition-all duration-300
-              flex items-center justify-center gap-2
+              flex items-center justify-center gap-1
             `}>
               <i className="fas fa-calendar text-xs"></i>
-              Agendar p/ Amanhã
+              Agendar
             </button>
             <button className={`
-              px-3 py-2 rounded-lg font-semibold text-xs
+              px-2 py-1.5 rounded-lg font-semibold text-xs
               ${isLightMode 
                 ? 'text-gray-600 hover:bg-gray-100' 
                 : 'text-gray-400 hover:bg-gray-700/30'
               }
               transition-all duration-300
-              flex items-center justify-center gap-2
+              flex items-center justify-center gap-1
             `}>
               <i className="fas fa-sync text-xs"></i>
-              Outra Sugestão
+              Outra
             </button>
           </div>
         </div>
