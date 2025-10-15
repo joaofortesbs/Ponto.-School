@@ -57,27 +57,27 @@ export default function PulsoDaTurmaCard() {
         </div>
 
         {/* Conteúdo de Introdução */}
-        <div className="flex-1 p-6 flex flex-col items-center justify-center text-center">
+        <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
           {/* Ícone Central */}
           <div className={`
-            w-20 h-20 rounded-2xl flex items-center justify-center mb-6
+            w-16 h-16 rounded-2xl flex items-center justify-center mb-6
             ${isLightMode ? 'bg-blue-50' : 'bg-blue-500/10'}
-            border-2 border-dashed border-blue-500
+            border-2 border-dashed border-blue-500/40
           `}>
-            <TrendingUp className="text-blue-500" size={40} />
+            <TrendingUp className="text-blue-500" size={32} />
           </div>
 
           {/* Mensagem de Boas-vindas */}
           <h4 className={`text-xl font-bold mb-3 ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
-            Acompanhe em Tempo Real
+            Monitore em Tempo Real
           </h4>
 
-          <p className={`text-sm mb-6 max-w-xs leading-relaxed ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
-            Monitore o desempenho e engajamento da sua turma com análises inteligentes em tempo real
+          <p className={`text-sm mb-8 max-w-xs leading-relaxed ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+            Acompanhe o desempenho e engajamento da sua turma com análises inteligentes
           </p>
 
           {/* Preview de Métricas */}
-          <div className="grid grid-cols-3 gap-3 mb-6 w-full max-w-sm">
+          <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
             <div className={`p-3 rounded-lg ${isLightMode ? 'bg-blue-50' : 'bg-blue-500/10'} border border-blue-500/30`}>
               <div className="text-2xl font-bold text-blue-500">--</div>
               <div className={`text-xs mt-1 ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>Engajamento</div>
@@ -89,22 +89,6 @@ export default function PulsoDaTurmaCard() {
             <div className={`p-3 rounded-lg ${isLightMode ? 'bg-purple-50' : 'bg-purple-500/10'} border border-purple-500/30`}>
               <div className="text-2xl font-bold text-purple-500">--</div>
               <div className={`text-xs mt-1 ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>Alunos</div>
-            </div>
-          </div>
-
-          {/* Benefícios */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <i className="fas fa-check-circle text-green-500"></i>
-              <span>Insights gerados por IA</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <i className="fas fa-check-circle text-green-500"></i>
-              <span>Alertas automáticos</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <i className="fas fa-check-circle text-green-500"></i>
-              <span>Análise preditiva</span>
             </div>
           </div>
         </div>

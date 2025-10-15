@@ -57,23 +57,23 @@ export default function ProximaAulaCard() {
         </div>
 
         {/* Conteúdo de Introdução */}
-        <div className="flex-1 p-6 flex flex-col items-center justify-center text-center">
+        <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
           {/* Ícone Central */}
           <div className={`
-            w-20 h-20 rounded-2xl flex items-center justify-center mb-6
+            w-16 h-16 rounded-2xl flex items-center justify-center mb-6
             ${isLightMode ? 'bg-orange-50' : 'bg-orange-500/10'}
-            border-2 border-dashed border-orange-500
+            border-2 border-dashed border-orange-500/40
           `}>
-            <Calendar className="text-orange-500" size={40} />
+            <Calendar className="text-orange-500" size={32} />
           </div>
 
           {/* Mensagem de Boas-vindas */}
           <h4 className={`text-xl font-bold mb-3 ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
-            Bem-vindo ao seu Planejador!
+            Planeje sua Próxima Aula
           </h4>
 
-          <p className={`text-sm mb-6 max-w-xs leading-relaxed ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
-            Aqui você terá acesso rápido à sua próxima aula com todos os recursos necessários já preparados
+          <p className={`text-sm mb-8 max-w-xs leading-relaxed ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+            Acesso rápido à sua próxima aula com todos os recursos já preparados
           </p>
 
           {/* CTA de Introdução */}
@@ -90,22 +90,6 @@ export default function ProximaAulaCard() {
             <Plus size={18} />
             Criar Primeira Aula
           </button>
-
-          {/* Benefícios */}
-          <div className="mt-6 space-y-2">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <i className="fas fa-check-circle text-green-500"></i>
-              <span>Planos de aula automáticos</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <i className="fas fa-check-circle text-green-500"></i>
-              <span>Materiais gamificados</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <i className="fas fa-check-circle text-green-500"></i>
-              <span>Tudo em um só lugar</span>
-            </div>
-          </div>
         </div>
       </CardContent>
     </Card>
