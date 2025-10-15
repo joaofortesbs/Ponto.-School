@@ -24,6 +24,17 @@ export default function CardTopoEvolucaoCognitiva() {
           return;
         }
 
+        // Chave única para cache do avatar
+        const avatarCacheKey = `avatar_cache_${userEmail}`;
+        
+        // 1. CARREGAMENTO INSTANTÂNEO: Verificar cache primeiro
+        const cachedAvatar = localStorage.getItem(avatarCacheKey);
+        if (cachedAvatar) {
+          setUserAvatar(cachedAvatar);
+          console.log("⚡ Avatar carregado instantaneamente do cache");
+        }
+
+        // 2. ATUALIZAÇÃO EM BACKGROUND: Buscar versão mais recente do servidor
         console.log("🔍 Buscando avatar do usuário:", userEmail);
 
         const response = await fetch(`/api/perfis?email=${encodeURIComponent(userEmail)}`, {
@@ -38,8 +49,13 @@ export default function CardTopoEvolucaoCognitiva() {
         if (result.success && result.data) {
           const avatarUrl = result.data.imagem_avatar;
           if (avatarUrl) {
+            // Atualizar estado
             setUserAvatar(avatarUrl);
-            console.log("✅ Avatar carregado com sucesso");
+            
+            // Salvar no cache para próximas vezes
+            localStorage.setItem(avatarCacheKey, avatarUrl);
+            
+            console.log("✅ Avatar carregado e salvo no cache");
           } else {
             console.log("⚠️ Usuário sem avatar cadastrado");
           }
