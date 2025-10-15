@@ -19,17 +19,13 @@ const PromotionalBanner = () => {
         className={`
           relative w-full overflow-hidden shadow-xl
           bg-gradient-to-br from-orange-100 via-orange-50 to-orange-100
+          dark:bg-[#001B36]
           border border-orange-200/50 dark:border-orange-700/50 backdrop-blur-sm
           transition-all duration-300 ease-in-out
           ${isHovered ? "scale-[1.01] shadow-orange-200/50 dark:shadow-orange-800/50" : ""}
           max-h-[140px] sm:max-h-[160px] md:max-h-[180px]
           rounded-2xl
         `}
-        style={{
-          background: document.documentElement.classList.contains('dark') 
-            ? 'rgba(0, 27, 54, 0.2)' 
-            : undefined
-        }}
       >
         {/* Subtle gradient overlay */}
         <div className="absolute inset-0 overflow-hidden opacity-40 dark:opacity-30">
