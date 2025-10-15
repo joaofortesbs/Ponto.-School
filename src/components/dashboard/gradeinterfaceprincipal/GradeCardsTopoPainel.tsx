@@ -139,13 +139,13 @@ export default function GradeCardsTopoPainel() {
               `}
             >
               {/* Animated gradient background */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${card.accentColor} opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out`} />
+              <div className={`absolute inset-0 bg-gradient-to-br from-orange-500/5 to-orange-600/3 opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out`} />
 
               {/* Shimmer effect on hover */}
               <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
               {/* Glow effect border */}
-              <div className="absolute inset-0 rounded-[1.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out bg-gradient-to-r from-orange-500/0 via-orange-500/20 to-orange-500/0 blur-xl" />
+              <div className="absolute inset-0 rounded-[1.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out bg-gradient-to-r from-orange-500/0 via-orange-500/10 to-orange-500/0 blur-xl" />
 
               <CardContent className={`relative p-4 h-full flex items-center ${card.isWide ? 'gap-3' : 'gap-3'} z-10`}>
                 {!card.isWide ? (
