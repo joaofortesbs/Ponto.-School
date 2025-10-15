@@ -76,7 +76,7 @@ export default function GradeCardsTopoPainel() {
                   ? 'bg-white/95 border-2 border-orange-100/60 hover:border-orange-300/80' 
                   : 'bg-[#001F3F]/60 border-2 border-orange-500/15 hover:border-orange-500/35'
                 }
-                transition-all duration-300
+                transition-all duration-500 ease-out
                 rounded-[1.5rem]
                 ${!card.isWide ? 'h-[90px]' : 'h-[90px]'}
                 hover:shadow-2xl hover:shadow-orange-500/20
