@@ -24,8 +24,10 @@ const PromotionalBanner = () => {
           ${isHovered ? "scale-[1.01] shadow-orange-200/50 dark:shadow-orange-800/50" : ""}
           max-h-[140px] sm:max-h-[160px] md:max-h-[180px]
           rounded-2xl
-          dark:opacity-80
         `}
+        style={{
+          backgroundColor: document.documentElement.classList.contains('dark') ? '#001B36' : undefined
+        }}
       >
         {/* Subtle gradient overlay */}
         <div className="absolute inset-0 overflow-hidden opacity-40 dark:opacity-30">
