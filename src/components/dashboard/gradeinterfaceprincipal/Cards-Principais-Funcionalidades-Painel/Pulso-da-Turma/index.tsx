@@ -48,7 +48,7 @@ export default function PulsoDaTurmaCard() {
               ${isLightMode ? 'bg-white' : 'bg-transparent'}
               shadow-sm
             `}>
-              <Activity className="text-orange-500" size={20} strokeWidth={1.5} fill="none" />
+              <Activity className="text-orange-500" size={20} strokeWidth={2} fill="none" />
             </div>
             <h3 className={`font-bold text-lg uppercase tracking-wide ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
               Pulso da Turma
@@ -77,7 +77,7 @@ export default function PulsoDaTurmaCard() {
           </p>
 
           {/* Preview de Métricas - Design Minimalista */}
-          <div className="flex gap-6 w-full max-w-sm justify-center">
+          <div className="flex gap-6 w-full max-w-sm justify-center -mt-2">
             <div className="flex flex-col items-center">
               <div className={`
                 w-12 h-12 rounded-full flex items-center justify-center mb-2

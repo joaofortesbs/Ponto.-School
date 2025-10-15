@@ -49,7 +49,7 @@ export default function JogadaDoDiaCard() {
               ${isLightMode ? 'bg-white' : 'bg-transparent'}
               shadow-sm
             `}>
-              <Zap className="text-orange-500" size={20} strokeWidth={1.5} fill="none" />
+              <Zap className="text-orange-500" size={20} strokeWidth={2} fill="none" />
             </div>
             <h3 className={`font-bold text-lg uppercase tracking-wide ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
               Jogada do Dia
