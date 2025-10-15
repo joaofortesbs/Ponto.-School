@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BsCalendar2Minus } from 'react-icons/bs';
-import { FiUsers } from 'react-icons/fi';
-import { IoIosArrowUp } from 'react-icons/io';
-import { MdOutlineLocalActivity } from 'react-icons/md';
-import { PiChartLineUp } from 'react-icons/pi';
-import { TbCalendarCheck } from 'react-icons/tb';
-import { LuUserCheck2 } from 'react-icons/lu';
-import { TbUsersGroup } from 'react-icons/tb';
+import { ArrowUp, Users, CalendarCheck, CalendarMinus, Activity, LineChart, UserCheck2, UsersGroup } from 'lucide-react'; // Import icons from lucide-react
 
 const Cards = ({ isLightMode }) => {
   const [estatisticas, setEstatisticas] = useState({
@@ -52,13 +45,13 @@ const Cards = ({ isLightMode }) => {
             w-12 h-12 rounded-full flex items-center justify-center
             ${isLightMode ? 'bg-blue-100' : 'bg-blue-500/10'}
           `}>
-            <PiChartLineUp className="text-blue-500 text-2xl" />
+            <LineChart className="text-blue-500 text-2xl" />
           </div>
           <div className="text-3xl font-bold text-gray-700 dark:text-white">{estatisticas.visitantes}</div>
         </div>
         <div className="flex items-center gap-1 text-sm font-medium">
           <span className="text-green-500">
-            <IoIosArrowUp />
+            <ArrowUp className="w-4 h-4" />
           </span>
           <span className={`
             ${porcentagemCrescimentoVisitantes >= 0
@@ -78,13 +71,13 @@ const Cards = ({ isLightMode }) => {
             w-12 h-12 rounded-full flex items-center justify-center
             ${isLightMode ? 'bg-purple-100' : 'bg-purple-500/10'}
           `}>
-            <BsCalendar2Minus className="text-purple-500 text-2xl" />
+            <CalendarMinus className="text-purple-500 text-2xl" />
           </div>
           <div className="text-3xl font-bold text-gray-700 dark:text-white">{estatisticas.total}</div>
         </div>
         <div className="flex items-center gap-1 text-sm font-medium">
           <span className="text-green-500">
-            <IoIosArrowUp />
+            <ArrowUp className="w-4 h-4" />
           </span>
           <span className="text-green-500">10.5%</span>
           <span>{isLightMode ? 'vs last week' : 'vs semana passada'}</span>
@@ -98,13 +91,13 @@ const Cards = ({ isLightMode }) => {
             w-12 h-12 rounded-full flex items-center justify-center
             ${isLightMode ? 'bg-yellow-100' : 'bg-yellow-500/10'}
           `}>
-            <TbCalendarCheck className="text-yellow-500 text-2xl" />
+            <CalendarCheck className="text-yellow-500 text-2xl" />
           </div>
           <div className="text-3xl font-bold text-gray-700 dark:text-white">{estatisticas.hoje}</div>
         </div>
         <div className="flex items-center gap-1 text-sm font-medium">
           <span className="text-green-500">
-            <IoIosArrowUp />
+            <ArrowUp className="w-4 h-4" />
           </span>
           <span className="text-green-500">8.2%</span>
           <span>{isLightMode ? 'vs last week' : 'vs semana passada'}</span>
@@ -118,13 +111,13 @@ const Cards = ({ isLightMode }) => {
             w-12 h-12 rounded-full flex items-center justify-center
             ${isLightMode ? 'bg-red-50' : 'bg-red-500/10'}
           `}>
-            <FiUsers className="text-red-500 text-2xl" />
+            <Users className="text-red-500 text-2xl" />
           </div>
           <div className="text-3xl font-bold text-gray-700 dark:text-white">1,250</div>
         </div>
         <div className="flex items-center gap-1 text-sm font-medium">
           <span className="text-red-500">
-            <IoIosArrowUp />
+            <ArrowUp className="w-4 h-4" />
           </span>
           <span className="text-red-500">-3.5%</span>
           <span>{isLightMode ? 'vs last week' : 'vs semana passada'}</span>
@@ -141,14 +134,11 @@ const Cards = ({ isLightMode }) => {
           `}>
             <div className="text-lg font-bold text-orange-500">{estatisticas.total}</div>
           </div>
-          {/* O badge de porcentagem foi movido para dentro do bloco 'if' */}
           {(() => {
-            // Calcula a porcentagem de crescimento real com base em estatisticas.hoje e estatisticas.total
-            // Assumindo que 'total' representa a base do dia anterior e 'hoje' o valor atual
-            const baseDoDiaAnterior = estatisticas.total - estatisticas.hoje; // Estimativa da base do dia anterior
+            const baseDoDiaAnterior = estatisticas.total - estatisticas.hoje;
             const crescimento = baseDoDiaAnterior > 0
               ? Math.round(((estatisticas.hoje - baseDoDiaAnterior) / baseDoDiaAnterior) * 100)
-              : 0; // Evita divisão por zero
+              : 0;
 
             return (
               <div className={`
@@ -163,7 +153,7 @@ const Cards = ({ isLightMode }) => {
             );
           })()}
         </div>
-        <div className="text-xs text-gray-500 mt-2">Alunos Totais</div> {/* Texto principal */}
+        <div className="text-xs text-gray-500 mt-2">Alunos Totais</div>
       </div>
 
       {/* Card para Médias */}
@@ -173,13 +163,13 @@ const Cards = ({ isLightMode }) => {
             w-12 h-12 rounded-full flex items-center justify-center
             ${isLightMode ? 'bg-cyan-50' : 'bg-cyan-500/10'}
           `}>
-            <LuUserCheck2 className="text-cyan-500 text-2xl" />
+            <UserCheck2 className="text-cyan-500 text-2xl" />
           </div>
           <div className="text-3xl font-bold text-gray-700 dark:text-white">{estatisticas.hoje}</div>
         </div>
         <div className="flex items-center gap-1 text-sm font-medium">
           <span className="text-green-500">
-            <IoIosArrowUp />
+            <ArrowUp className="w-4 h-4" />
           </span>
           <span className="text-green-500">5.0%</span>
           <span>{isLightMode ? 'vs last week' : 'vs semana passada'}</span>
@@ -194,13 +184,13 @@ const Cards = ({ isLightMode }) => {
             w-12 h-12 rounded-full flex items-center justify-center
             ${isLightMode ? 'bg-indigo-50' : 'bg-indigo-500/10'}
           `}>
-            <TbUsersGroup className="text-indigo-500 text-2xl" />
+            <UsersGroup className="text-indigo-500 text-2xl" />
           </div>
           <div className="text-3xl font-bold text-gray-700 dark:text-white">30</div>
         </div>
         <div className="flex items-center gap-1 text-sm font-medium">
           <span className="text-red-500">
-            <IoIosArrowUp />
+            <ArrowUp className="w-4 h-4" />
           </span>
           <span className="text-red-500">-1.2%</span>
           <span>{isLightMode ? 'vs last week' : 'vs semana passada'}</span>
