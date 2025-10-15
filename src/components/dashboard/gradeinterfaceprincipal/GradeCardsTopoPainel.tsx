@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Route, TrendingUp, Trophy, Sparkles } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -6,6 +6,56 @@ import { useTheme } from "@/components/ThemeProvider";
 export default function GradeCardsTopoPainel() {
   const { theme } = useTheme();
   const isLightMode = theme === "light";
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserAvatar = async () => {
+      try {
+        // Buscar email do usuário do localStorage
+        const neonUser = localStorage.getItem("neon_user");
+        if (!neonUser) {
+          console.log("🔐 Usuário não autenticado");
+          return;
+        }
+
+        const userData = JSON.parse(neonUser);
+        const userEmail = userData.email;
+
+        if (!userEmail) {
+          console.log("❌ Email não encontrado");
+          return;
+        }
+
+        console.log("🔍 Buscando avatar do usuário:", userEmail);
+
+        // Buscar perfil no banco Neon
+        const response = await fetch(`/api/perfis?email=${encodeURIComponent(userEmail)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          const avatarUrl = result.data.imagem_avatar;
+          if (avatarUrl) {
+            setUserAvatar(avatarUrl);
+            console.log("✅ Avatar carregado com sucesso");
+          } else {
+            console.log("⚠️ Usuário sem avatar cadastrado");
+          }
+        } else {
+          console.log("⚠️ Perfil não encontrado no Neon");
+        }
+      } catch (error) {
+        console.error("❌ Erro ao buscar avatar:", error);
+      }
+    };
+
+    fetchUserAvatar();
+  }, []);
 
   const cardData = [
     {
@@ -142,9 +192,18 @@ export default function GradeCardsTopoPainel() {
                   <>
                     {/* Avatar do usuário */}
                     <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden border-2 border-orange-500/20 group-hover:border-orange-500/40 transition-all duration-500">
-                      <div className={`w-full h-full flex items-center justify-center ${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100' : 'bg-gradient-to-br from-orange-500/20 to-orange-600/10'}`}>
-                        <i className="fas fa-user text-orange-500" style={{ fontSize: '1.5rem' }}></i>
-                      </div>
+                      {userAvatar ? (
+                        <img 
+                          src={userAvatar} 
+                          alt="Avatar do usuário" 
+                          className="w-full h-full object-cover"
+                          onError={() => setUserAvatar(null)}
+                        />
+                      ) : (
+                        <div className={`w-full h-full flex items-center justify-center ${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100' : 'bg-gradient-to-br from-orange-500/20 to-orange-600/10'}`}>
+                          <i className="fas fa-user text-orange-500" style={{ fontSize: '1.5rem' }}></i>
+                        </div>
+                      )}
                     </div>
 
                     {/* Barra de progresso e informações */}
