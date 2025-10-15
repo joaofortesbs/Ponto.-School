@@ -3,11 +3,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Users, Route, TrendingUp, Trophy, Sparkles } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import CardTopoEvolucaoCognitiva from "./Card-Topo-Evolução-Cognitiva";
+import { visitantesService } from "@/services/visitantesService";
 
 export default function GradeCardsTopoPainel() {
   const { theme } = useTheme();
   const isLightMode = theme === "light";
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [totalVisitantes, setTotalVisitantes] = useState<number>(0);
+  const [visitantesHoje, setVisitantesHoje] = useState<number>(0);
 
   useEffect(() => {
     const fetchUserAvatar = async () => {
@@ -58,11 +61,49 @@ export default function GradeCardsTopoPainel() {
     fetchUserAvatar();
   }, []);
 
+  // Buscar estatísticas de visitantes
+  useEffect(() => {
+    const fetchVisitantesStats = async () => {
+      try {
+        const neonUser = localStorage.getItem("neon_user");
+        if (!neonUser) {
+          console.log("🔐 Usuário não autenticado - não é possível buscar visitantes");
+          return;
+        }
+
+        const userData = JSON.parse(neonUser);
+        const userId = userData.id;
+
+        if (!userId) {
+          console.log("❌ ID do usuário não encontrado");
+          return;
+        }
+
+        console.log("📊 [DASHBOARD] Buscando estatísticas de visitantes para userId:", userId);
+
+        const stats = await visitantesService.buscarEstatisticas(userId);
+        
+        setTotalVisitantes(stats.visitantesUnicos || 0);
+        setVisitantesHoje(stats.visitasHoje || 0);
+
+        console.log("✅ [DASHBOARD] Estatísticas carregadas:", {
+          total: stats.visitantesUnicos,
+          hoje: stats.visitasHoje
+        });
+      } catch (error) {
+        console.error("❌ [DASHBOARD] Erro ao buscar estatísticas de visitantes:", error);
+      }
+    };
+
+    fetchVisitantesStats();
+  }, []);
+
   const cardData = [
     {
       id: 1,
       title: "Alunos",
-      value: "--",
+      value: totalVisitantes > 0 ? totalVisitantes.toString() : "--",
+      subtitle: visitantesHoje > 0 ? `${visitantesHoje} hoje` : undefined,
       icon: "fas fa-users",
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
@@ -178,6 +219,11 @@ export default function GradeCardsTopoPainel() {
                         <h3 className={`text-2xl font-bold tracking-tight ${card.value === '--' ? (isLightMode ? 'text-gray-400' : 'text-gray-500') : (isLightMode ? 'text-gray-900' : 'text-white')} transition-all duration-600 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 origin-left`}>
                           {card.value}
                         </h3>
+                        {card.subtitle && (
+                          <p className={`text-[10px] mt-0.5 ${isLightMode ? 'text-orange-600' : 'text-orange-400'} font-medium`}>
+                            {card.subtitle}
+                          </p>
+                        )}
                         {card.value !== '--' && (
                           <div className="absolute bottom-1 -right-12 rounded-full bg-orange-500/10 px-1.5 py-0.5">
                             <div className="flex items-center gap-1">

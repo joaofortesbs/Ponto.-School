@@ -148,7 +148,7 @@ router.get('/:userId', async (req, res) => {
         v.email_visitante,
         v.tipo_visitante,
         v.data_acesso,
-        a.id_json->>'title' as titulo_atividade
+        (a.id_json::jsonb)->>'title' as titulo_atividade
       FROM visitantes_atividades v
       LEFT JOIN atividades a ON a.id = v.codigo_atividade
       WHERE v.codigo_atividade = ANY($1)
@@ -162,7 +162,7 @@ router.get('/:userId', async (req, res) => {
     const porAtividadeQuery = `
       SELECT 
         v.codigo_atividade,
-        a.id_json->>'title' as titulo_atividade,
+        (a.id_json::jsonb)->>'title' as titulo_atividade,
         COUNT(*) as total_visitas,
         COUNT(DISTINCT v.ip_address) as visitantes_unicos
       FROM visitantes_atividades v
