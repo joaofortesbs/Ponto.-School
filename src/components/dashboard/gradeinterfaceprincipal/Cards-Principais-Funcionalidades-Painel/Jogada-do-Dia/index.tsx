@@ -43,12 +43,12 @@ export default function JogadaDoDiaCard() {
         `}>
           <div className="flex items-center gap-3">
             <div className={`
-              w-10 h-10 rounded-xl flex items-center justify-center
+              w-12 h-12 rounded-xl flex items-center justify-center
               border-2 border-orange-500
               ${isLightMode ? 'bg-white' : 'bg-transparent'}
               shadow-sm
             `}>
-              <i className="fas fa-bolt text-orange-500 text-lg"></i>
+              <i className="fas fa-bolt text-orange-500 text-xl"></i>
             </div>
             <h3 className={`font-bold text-lg uppercase tracking-wide ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
               Jogada do Dia
