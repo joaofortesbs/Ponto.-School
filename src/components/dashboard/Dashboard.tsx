@@ -109,7 +109,7 @@ export default function Dashboard() {
         </div>
       </div>
       <div className="w-full max-w-[98%] sm:max-w-[1600px] mx-auto pl-0">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-brand-black dark:text-white flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-brand-black dark:text-white flex items-center gap-2 alan-sans-greeting">
           <span className="text-lg sm:text-xl md:text-2xl">👋</span> {saudacao}, {firstName}!
         </h1>
       </div>

@@ -30,6 +30,13 @@
 @tailwind components;
 @tailwind utilities;
 
+.alan-sans-greeting {
+  font-family: "Alan Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
