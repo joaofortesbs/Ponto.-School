@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { AtividadeDados } from '../services/data-sync-service';
+import { atividadesNeonService } from '../services/atividadesNeonService';
 
 // Import dos previews das atividades
 import ActivityPreview from '../activities/default/ActivityPreview';
@@ -13,22 +15,50 @@ import FlashCardsPreview from '../activities/flash-cards/FlashCardsPreview';
 import QuadroInterativoPreview from '../activities/quadro-interativo/QuadroInterativoPreview';
 import MapaMentalPreview from '../activities/mapa-mental/MapaMentalPreview';
 
-interface ModoApresentacaoAtividadeProps {
-  atividade: AtividadeDados;
-  isOpen: boolean;
-  onClose: () => void;
-}
+export const ModoApresentacaoAtividade: React.FC = () => {
+  const { uniqueCode } = useParams<{ uniqueCode: string }>();
+  const navigate = useNavigate();
+  const [atividade, setAtividade] = useState<AtividadeDados | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export const ModoApresentacaoAtividade: React.FC<ModoApresentacaoAtividadeProps> = ({
-  atividade,
-  isOpen,
-  onClose
-}) => {
-  
-  if (!isOpen || !atividade) return null;
+  useEffect(() => {
+    const carregarAtividade = async () => {
+      if (!uniqueCode) {
+        setError('Código da atividade não encontrado');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        console.log('🎯 [APRESENTAÇÃO] Carregando atividade:', uniqueCode);
+        
+        // Carregar atividade do banco de dados Neon
+        const atividadeCarregada = await atividadesNeonService.buscarAtividadePorCodigoUnico(uniqueCode);
+        
+        if (!atividadeCarregada) {
+          setError('Atividade não encontrada');
+          setLoading(false);
+          return;
+        }
+
+        console.log('✅ [APRESENTAÇÃO] Atividade carregada:', atividadeCarregada);
+        setAtividade(atividadeCarregada);
+        setLoading(false);
+      } catch (err) {
+        console.error('❌ [APRESENTAÇÃO] Erro ao carregar atividade:', err);
+        setError('Erro ao carregar atividade');
+        setLoading(false);
+      }
+    };
+
+    carregarAtividade();
+  }, [uniqueCode]);
 
   // Função para renderizar a pré-visualização baseada no tipo da atividade
   const renderActivityPreview = () => {
+    if (!atividade) return null;
+
     const activityType = atividade.tipo;
     const activityData = atividade.dados || {};
 
@@ -115,20 +145,45 @@ export const ModoApresentacaoAtividade: React.FC<ModoApresentacaoAtividadeProps>
     }
   };
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Carregando apresentação...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !atividade) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error || 'Atividade não encontrada'}</p>
+          <Button onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
       className="fixed inset-0 z-[100] bg-white dark:bg-gray-900 overflow-auto"
       style={{ isolation: 'isolate' }}
     >
-      {/* Header com botão de fechar */}
-      <div className="absolute top-4 right-4 z-20">
+      {/* Header com botão de voltar */}
+      <div className="absolute top-4 left-4 z-20">
         <Button
-          onClick={onClose}
+          onClick={() => navigate(-1)}
           variant="ghost"
           size="icon"
           className="w-12 h-12 rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-sm transition-all duration-300 hover:scale-110"
         >
-          <X className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+          <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-gray-300" />
         </Button>
       </div>
 
