@@ -146,11 +146,31 @@ export function RegisterForm() {
         localStorage.setItem("lastRegisteredEmail", formData.email);
         localStorage.setItem("lastRegisteredUsername", formData.nomeUsuario);
         
+        // Verificar se existe URL de retorno para atividade compartilhada
+        const returnToActivity = localStorage.getItem('returnToActivityAfterRegister');
+        
         if (!result.needsManualLogin) {
-          console.log("🎉 Login automático realizado, redirecionando para dashboard...");
-          navigate("/", { replace: true });
+          // Login automático BEM-SUCEDIDO
+          console.log("🎉 Login automático realizado com sucesso!");
+          
+          if (returnToActivity) {
+            console.log("🎯 Redirecionando para atividade compartilhada após cadastro:", returnToActivity);
+            // Limpar o localStorage
+            localStorage.removeItem('returnToActivityAfterRegister');
+            // Adicionar parâmetro para abrir modo apresentação automaticamente
+            const separator = returnToActivity.includes('?') ? '&' : '?';
+            const urlComParametro = `${returnToActivity}${separator}openPresentation=true`;
+            // Redirecionar para a atividade com parâmetro
+            window.location.href = urlComParametro;
+            return;
+          } else {
+            console.log("🏠 Redirecionando para dashboard...");
+            navigate("/", { replace: true });
+          }
         } else {
+          // Login automático FALHOU - usuário precisa fazer login manual
           console.log("⚠️ Login automático falhou, redirecionando para login...");
+          // MANTER returnToActivity no localStorage para usar após login manual
           navigate("/login", { 
             state: { 
               newAccount: true, 

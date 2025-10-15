@@ -132,10 +132,26 @@ export function LoginForm() {
         localStorage.removeItem("lastRegisteredEmail");
         localStorage.removeItem("lastRegisteredUsername");
 
-        // Redirecionar para dashboard
-        setTimeout(() => {
-          navigate("/", { replace: true });
-        }, 1000);
+        // Verificar se existe URL de retorno para atividade compartilhada
+        const returnToActivity = localStorage.getItem('returnToActivityAfterRegister');
+        
+        if (returnToActivity) {
+          console.log("🎯 Redirecionando para atividade compartilhada após login:", returnToActivity);
+          // Limpar o localStorage
+          localStorage.removeItem('returnToActivityAfterRegister');
+          // Adicionar parâmetro para abrir modo apresentação automaticamente
+          const separator = returnToActivity.includes('?') ? '&' : '?';
+          const urlComParametro = `${returnToActivity}${separator}openPresentation=true`;
+          // Redirecionar para a atividade com parâmetro após breve delay para mostrar sucesso
+          setTimeout(() => {
+            window.location.href = urlComParametro;
+          }, 1000);
+        } else {
+          // Redirecionar para dashboard
+          setTimeout(() => {
+            navigate("/", { replace: true });
+          }, 1000);
+        }
       } else {
         console.error("❌ Erro no login:", result.error);
         setInvalidCredentials(true);

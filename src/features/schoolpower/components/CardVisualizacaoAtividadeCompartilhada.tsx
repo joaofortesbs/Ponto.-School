@@ -2,9 +2,12 @@ import React, { useMemo, useEffect, useState, useRef } from 'react'; // Import u
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Download, Eye, ChevronDown, ChevronUp, X } from 'lucide-react'; // Import ChevronDown, ChevronUp and X
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 import { AtividadeCompartilhavel } from '../services/gerador-link-atividades-schoolpower';
 import { DataSyncService, AtividadeDados } from '../services/data-sync-service';
 import { UniversalActivityHeader } from '../construction/components/UniversalActivityHeader';
+import { ModoApresentacaoAtividade } from './ModoApresentacaoAtividade';
 
 // Import dos previews das atividades
 import ActivityPreview from '../activities/default/ActivityPreview';
@@ -29,8 +32,13 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
   onApresentarMaterial,
   onUsarMaterial
 }) => {
+  const navigate = useNavigate();
+  
   // Estado para armazenar a atividade sincronizada
   const [atividadeSincronizada, setAtividadeSincronizada] = useState<AtividadeDados | null>(null);
+  
+  // Estado para controlar o modo apresentação (acessado via botão "Sou Estudante")
+  const [modoApresentacaoAberto, setModoApresentacaoAberto] = useState(false);
 
   // Efeito para sincronizar dados da atividade quando o componente é montado ou a atividade muda
   useEffect(() => {
@@ -97,6 +105,37 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
 
   // Estado para controlar se a descrição está expandida - inicia minimizado
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+  // Efeito para detectar retorno do cadastro e abrir modo apresentação automaticamente
+  useEffect(() => {
+    const verificarRetornoCadastro = async () => {
+      // Verificar se há um parâmetro na URL indicando retorno do cadastro
+      const urlParams = new URLSearchParams(window.location.search);
+      const mostrarApresentacao = urlParams.get('openPresentation');
+      
+      if (mostrarApresentacao === 'true') {
+        console.log('🎓 [RETORNO] Usuário retornou do cadastro, verificando autenticação...');
+        
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (session?.user) {
+            console.log('✅ [RETORNO] Usuário autenticado, abrindo modo apresentação');
+            // Remover parâmetro da URL
+            urlParams.delete('openPresentation');
+            const novaUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+            window.history.replaceState({}, '', novaUrl);
+            // Abrir modo apresentação
+            setModoApresentacaoAberto(true);
+          }
+        } catch (error) {
+          console.error('❌ [RETORNO] Erro ao verificar sessão:', error);
+        }
+      }
+    };
+
+    verificarRetornoCadastro();
+  }, []);
 
   // Estados para Container Transform (Shared Element Transition)
   const [isFullscreenMode, setIsFullscreenMode] = useState(false);
@@ -259,6 +298,45 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
     if (onApresentarMaterial) {
       onApresentarMaterial();
     }
+  };
+
+  // Função para lidar com clique no botão "Sou Estudante"
+  const handleSouEstudante = async () => {
+    console.log('🎓 [ESTUDANTE] Botão "Sou Estudante" clicado');
+    
+    try {
+      // Verificar se o usuário está autenticado
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        // Usuário ESTÁ autenticado - abrir modo apresentação diretamente
+        console.log('✅ [ESTUDANTE] Usuário autenticado, abrindo modo apresentação');
+        setModoApresentacaoAberto(true);
+      } else {
+        // Usuário NÃO está autenticado - redirecionar para cadastro
+        console.log('⚠️ [ESTUDANTE] Usuário não autenticado, redirecionando para cadastro');
+        
+        // Salvar URL atual para retornar após cadastro
+        const currentUrl = window.location.href;
+        localStorage.setItem('returnToActivityAfterRegister', currentUrl);
+        console.log('💾 [ESTUDANTE] URL salva para retorno:', currentUrl);
+        
+        // Redirecionar para página de cadastro
+        navigate('/register');
+      }
+    } catch (error) {
+      console.error('❌ [ESTUDANTE] Erro ao verificar autenticação:', error);
+      // Em caso de erro, redirecionar para cadastro por segurança
+      const currentUrl = window.location.href;
+      localStorage.setItem('returnToActivityAfterRegister', currentUrl);
+      navigate('/register');
+    }
+  };
+
+  // Função para fechar modo apresentação
+  const handleCloseModoApresentacao = () => {
+    console.log('🔒 [APRESENTAÇÃO] Fechando modo apresentação');
+    setModoApresentacaoAberto(false);
   };
 
   // Função para fechar modo fullscreen com animação reversa otimizada
@@ -567,7 +645,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         </div>
 
         {/* Botões na base do card - Novo Design Sofisticado */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 mt-0 justify-center">
           <Button
             onClick={handlePresentarAtividade}
             className="w-full sm:w-64 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white font-bold py-4 px-8 rounded-full transition-all duration-500 transform hover:scale-105 hover:shadow-2xl hover:shadow-orange-500/50 flex items-center justify-center gap-3 border-2 border-orange-400/30 relative overflow-hidden group"
@@ -583,7 +661,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           </Button>
 
           <Button
-            onClick={onUsarMaterial}
+            onClick={handleSouEstudante}
             className="w-full sm:w-64 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white font-bold py-4 px-8 rounded-full transition-all duration-500 transform hover:scale-105 hover:shadow-2xl hover:shadow-orange-500/50 flex items-center justify-center gap-3 border-2 border-orange-400/30 relative overflow-hidden group"
           >
             {/* Efeito de brilho animado */}
@@ -622,6 +700,15 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
             {renderActivityPreview()}
           </div>
         </div>
+      )}
+
+      {/* Modo Apresentação - Ativado via botão "Sou Estudante" */}
+      {atividadeSincronizada && (
+        <ModoApresentacaoAtividade
+          atividade={atividadeSincronizada}
+          isOpen={modoApresentacaoAberto}
+          onClose={handleCloseModoApresentacao}
+        />
       )}
     </div>
   );
