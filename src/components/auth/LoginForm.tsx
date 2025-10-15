@@ -136,15 +136,12 @@ export function LoginForm() {
         const returnToActivity = localStorage.getItem('returnToActivityAfterRegister');
         
         if (returnToActivity) {
-          console.log("🎯 Redirecionando para atividade compartilhada após login:", returnToActivity);
+          console.log("🎯 Redirecionando para modo apresentação após login:", returnToActivity);
           // Limpar o localStorage
           localStorage.removeItem('returnToActivityAfterRegister');
-          // Adicionar parâmetro para abrir modo apresentação automaticamente
-          const separator = returnToActivity.includes('?') ? '&' : '?';
-          const urlComParametro = `${returnToActivity}${separator}openPresentation=true`;
-          // Redirecionar para a atividade com parâmetro após breve delay para mostrar sucesso
+          // Redirecionar diretamente para a URL salva (já é a rota de apresentação)
           setTimeout(() => {
-            window.location.href = urlComParametro;
+            window.location.href = returnToActivity;
           }, 1000);
         } else {
           // Redirecionar para dashboard

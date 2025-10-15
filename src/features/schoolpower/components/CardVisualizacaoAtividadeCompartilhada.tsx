@@ -106,37 +106,6 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
   // Estado para controlar se a descrição está expandida - inicia minimizado
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
-  // Efeito para detectar retorno do cadastro e abrir modo apresentação automaticamente
-  useEffect(() => {
-    const verificarRetornoCadastro = async () => {
-      // Verificar se há um parâmetro na URL indicando retorno do cadastro
-      const urlParams = new URLSearchParams(window.location.search);
-      const mostrarApresentacao = urlParams.get('openPresentation');
-      
-      if (mostrarApresentacao === 'true') {
-        console.log('🎓 [RETORNO] Usuário retornou do cadastro, verificando autenticação...');
-        
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (session?.user) {
-            console.log('✅ [RETORNO] Usuário autenticado, abrindo modo apresentação');
-            // Remover parâmetro da URL
-            urlParams.delete('openPresentation');
-            const novaUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
-            window.history.replaceState({}, '', novaUrl);
-            // Abrir modo apresentação
-            setModoApresentacaoAberto(true);
-          }
-        } catch (error) {
-          console.error('❌ [RETORNO] Erro ao verificar sessão:', error);
-        }
-      }
-    };
-
-    verificarRetornoCadastro();
-  }, []);
-
   // Estados para Container Transform (Shared Element Transition)
   const [isFullscreenMode, setIsFullscreenMode] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);

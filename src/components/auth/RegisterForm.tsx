@@ -154,14 +154,11 @@ export function RegisterForm() {
           console.log("🎉 Login automático realizado com sucesso!");
           
           if (returnToActivity) {
-            console.log("🎯 Redirecionando para atividade compartilhada após cadastro:", returnToActivity);
+            console.log("🎯 Redirecionando para modo apresentação após cadastro:", returnToActivity);
             // Limpar o localStorage
             localStorage.removeItem('returnToActivityAfterRegister');
-            // Adicionar parâmetro para abrir modo apresentação automaticamente
-            const separator = returnToActivity.includes('?') ? '&' : '?';
-            const urlComParametro = `${returnToActivity}${separator}openPresentation=true`;
-            // Redirecionar para a atividade com parâmetro
-            window.location.href = urlComParametro;
+            // Redirecionar diretamente para a URL salva (já é a rota de apresentação)
+            window.location.href = returnToActivity;
             return;
           } else {
             console.log("🏠 Redirecionando para dashboard...");
