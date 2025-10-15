@@ -196,4 +196,6 @@ Replit Secrets (auto-configured):
     - `UniversalActivityHeader`: Permite edição in-line de SPs com validação (0-99999)
     - `ActivityViewModal`: Carrega SPs com prioridade: localStorage → banco → padrão (100)
     - `ConstructionGrid`: Inclui SPs ao salvar atividades via "Salvar todas as atividades"
+    - `InterfaceCompartilharAtividade`: Carrega SPs diretamente do campo `school_points` do banco Neon
   - **Fluxo Completo**: Editar SPs → salvar no localStorage → persistir no banco → carregar do banco
+  - **Página de Compartilhamento**: Sincronizada com banco Neon para exibir SPs corretos (October 15, 2025)
