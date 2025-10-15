@@ -191,7 +191,7 @@ export default function GradeCardsTopoPainel() {
                 ) : card.isProfileCard ? (
                   <>
                     {/* Avatar do usuário */}
-                    <div className="relative w-12 h-12 rounded-full flex-shrink-0 p-[2px] bg-gradient-to-br from-[#FF6000] via-[#FF9319] to-[#FFCC33] group-hover:from-[#FF7A19] group-hover:via-[#FFA54D] group-hover:to-[#FFD966] transition-all duration-500 shadow-lg shadow-orange-500/30">
+                    <div className="relative w-12 h-12 rounded-full flex-shrink-0 p-[2px] bg-gradient-to-br from-[#FF6000] via-[#FF6000] to-[#FFCC33] group-hover:from-[#FF6000] group-hover:via-[#FFA54D] group-hover:to-[#FF6000] transition-all duration-500 shadow-lg shadow-orange-500/30">
                       <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001F3F]">
                         {userAvatar ? (
                           <img 
