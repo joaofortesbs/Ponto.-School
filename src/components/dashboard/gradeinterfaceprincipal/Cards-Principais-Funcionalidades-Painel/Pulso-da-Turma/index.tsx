@@ -101,7 +101,7 @@ export default function PulsoDaTurmaCard() {
               </div>
               <div className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>Aprovação</div>
             </div>
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center relative">
               <div className={`
                 w-12 h-12 rounded-full flex items-center justify-center mb-2
                 ${isLightMode ? 'bg-orange-50' : 'bg-orange-500/10'}
@@ -109,7 +109,15 @@ export default function PulsoDaTurmaCard() {
               `}>
                 <div className="text-lg font-bold text-orange-500">--</div>
               </div>
-              <div className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>Alunos</div>
+              <div className={`
+                absolute -top-1 -right-2 px-2 py-0.5 rounded-full text-xs font-medium
+                ${12 >= 0 
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                }
+              `}>
+                {12 >= 0 ? '+' : ''}{12}%
+              </div>
             </div>
           </div>
         </div>
