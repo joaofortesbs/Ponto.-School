@@ -305,30 +305,39 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
     console.log('🎓 [ESTUDANTE] Botão "Sou Estudante" clicado');
     
     try {
+      // Extrair uniqueCode da URL atual
+      const pathParts = window.location.pathname.split('/');
+      const uniqueCode = pathParts[pathParts.length - 1]; // Último segmento da URL
+      
+      // Construir URL da rota de apresentação
+      const apresentacaoUrl = `/atividade/${uniqueCode}/apresentacao`;
+      
       // Verificar se o usuário está autenticado
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        // Usuário ESTÁ autenticado - abrir modo apresentação diretamente
-        console.log('✅ [ESTUDANTE] Usuário autenticado, abrindo modo apresentação');
-        setModoApresentacaoAberto(true);
+        // Usuário ESTÁ autenticado - redirecionar DIRETO para modo apresentação
+        console.log('✅ [ESTUDANTE] Usuário autenticado, redirecionando para modo apresentação');
+        navigate(apresentacaoUrl);
       } else {
-        // Usuário NÃO está autenticado - redirecionar para cadastro
+        // Usuário NÃO está autenticado - salvar URL de apresentação e redirecionar para cadastro
         console.log('⚠️ [ESTUDANTE] Usuário não autenticado, redirecionando para cadastro');
         
-        // Salvar URL atual para retornar após cadastro
-        const currentUrl = window.location.href;
-        localStorage.setItem('returnToActivityAfterRegister', currentUrl);
-        console.log('💾 [ESTUDANTE] URL salva para retorno:', currentUrl);
+        // Salvar URL de APRESENTAÇÃO para retornar após cadastro
+        const fullApresentacaoUrl = window.location.origin + apresentacaoUrl;
+        localStorage.setItem('returnToActivityAfterRegister', fullApresentacaoUrl);
+        console.log('💾 [ESTUDANTE] URL de apresentação salva para retorno:', fullApresentacaoUrl);
         
         // Redirecionar para página de cadastro
         navigate('/register');
       }
     } catch (error) {
       console.error('❌ [ESTUDANTE] Erro ao verificar autenticação:', error);
-      // Em caso de erro, redirecionar para cadastro por segurança
-      const currentUrl = window.location.href;
-      localStorage.setItem('returnToActivityAfterRegister', currentUrl);
+      // Em caso de erro, salvar URL de apresentação e redirecionar para cadastro por segurança
+      const pathParts = window.location.pathname.split('/');
+      const uniqueCode = pathParts[pathParts.length - 1];
+      const fullApresentacaoUrl = window.location.origin + `/atividade/${uniqueCode}/apresentacao`;
+      localStorage.setItem('returnToActivityAfterRegister', fullApresentacaoUrl);
       navigate('/register');
     }
   };
