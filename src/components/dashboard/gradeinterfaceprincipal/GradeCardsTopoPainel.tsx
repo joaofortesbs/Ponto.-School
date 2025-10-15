@@ -125,7 +125,7 @@ export default function GradeCardsTopoPainel() {
                         <h3 className={`text-2xl font-bold tracking-tight ${isLightMode ? 'text-gray-900 group-hover:text-orange-600' : 'text-white group-hover:text-orange-400'} transition-all duration-600 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 origin-left`}>
                           {card.value}
                         </h3>
-                        <div className="absolute -top-1 -right-12 rounded-full bg-orange-500/10 px-1.5 py-0.5">
+                        <div className="absolute -bottom-1 -right-12 rounded-full bg-orange-500/10 px-1.5 py-0.5">
                           <div className="flex items-center gap-1">
                             <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M4 1L4 7M4 1L1.5 3.5M4 1L6.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500"/>
