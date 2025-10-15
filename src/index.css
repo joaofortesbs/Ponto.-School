@@ -30,9 +30,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Fonte Alan Sans para saudação - aplicada com máxima prioridade */
-.alan-sans-greeting {
-  font-family: "Alan Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+/* Fonte Alan Sans - força global */
+@font-face {
+  font-family: 'Alan Sans';
+  src: local('Alan Sans');
+  font-display: swap;
+}
+
+.alan-sans-greeting,
+.alan-sans-greeting * {
+  font-family: "Alan Sans", sans-serif !important;
   font-optical-sizing: auto !important;
   font-weight: 700 !important;
   font-style: normal !important;
