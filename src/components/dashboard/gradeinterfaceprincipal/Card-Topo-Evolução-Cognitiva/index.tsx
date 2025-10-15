@@ -83,7 +83,7 @@ export default function CardTopoEvolucaoCognitiva() {
           {/* Barra de progresso */}
           <div className="flex-1 h-3 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-[#FF6000] via-[#FF8C40] to-[#FFCC33] transition-all duration-500 ease-out"
+              className="h-full bg-gradient-to-r from-[#FF6000] via-[#FF7300] to-[#FFCC33] transition-all duration-500 ease-out"
               style={{ width: `${progressValue}%` }}
             />
           </div>
