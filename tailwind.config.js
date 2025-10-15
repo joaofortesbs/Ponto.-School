@@ -61,6 +61,7 @@ module.exports = {
         montserrat: ["Montserrat Alternates", "sans-serif"],
         body: ["Poppins", "sans-serif"],
         mono: ["Source Code Pro", "monospace"],
+        alan: ["Alan Sans", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {

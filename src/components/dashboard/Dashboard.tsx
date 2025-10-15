@@ -1,3 +1,25 @@
+
+import React, { useState, useEffect } from "react";
+import PromotionalBanner from "./PromotionalBanner";
+import DashboardInterface from "./gradeinterfaceprincipal/DashboardInterface";
+import GradeCardsTopoPainel from "./gradeinterfaceprincipal/GradeCardsTopoPainel";
+import { profileService } from "@/services/profileService";
+import { UserProfile } from "@/types/user-profile";
+
+// Verificar se a fonte Alan Sans foi carregada
+const checkFontLoaded = async () => {
+  if ('fonts' in document) {
+    try {
+      await document.fonts.load('700 1em "Alan Sans"');
+      console.log('✅ Fonte Alan Sans carregada com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao carregar fonte Alan Sans:', error);
+    }
+  }
+};
+
+export default function Dashboard() {
+
 import React, { useState, useEffect } from "react";
 import PromotionalBanner from "./PromotionalBanner";
 import DashboardInterface from "./gradeinterfaceprincipal/DashboardInterface";
@@ -23,6 +45,9 @@ export default function Dashboard() {
         }
       }
     );
+
+    // Verificar carregamento da fonte Alan Sans
+    checkFontLoaded();
   }, []);
 
   useEffect(() => {
@@ -109,7 +134,14 @@ export default function Dashboard() {
         </div>
       </div>
       <div className="w-full max-w-[98%] sm:max-w-[1600px] mx-auto pl-0">
-        <h1 className="alan-sans-greeting text-xl sm:text-2xl md:text-3xl text-brand-black dark:text-white flex items-center gap-2">
+        <h1 
+          className="alan-sans-greeting text-xl sm:text-2xl md:text-3xl text-brand-black dark:text-white flex items-center gap-2"
+          style={{ 
+            fontFamily: '"Alan Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            fontWeight: 700,
+            fontOpticalSizing: 'auto'
+          }}
+        >
           <span className="text-lg sm:text-xl md:text-2xl">👋</span> {saudacao}, {firstName}!
         </h1>
       </div>
