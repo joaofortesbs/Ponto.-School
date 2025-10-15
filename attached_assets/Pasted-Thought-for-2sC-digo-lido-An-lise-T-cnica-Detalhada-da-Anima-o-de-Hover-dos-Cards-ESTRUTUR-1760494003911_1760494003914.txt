@@ -1,0 +1,178 @@
+Thought for 2sCódigo lido## Análise Técnica Detalhada da Animação de Hover dos Cards
+
+### **ESTRUTURA DE CAMADAS PARA A ANIMAÇÃO**
+
+A animação de hover é construída através de um sistema de **duas camadas aninhadas** que trabalham em conjunto:
+
+```typescriptreact
+<div className="group relative w-[196px] transition-all duration-300 hover:-translate-y-2">
+  {/* ↑ CAMADA EXTERNA - Responsável pela elevação */}
+  
+  <div className="relative h-full overflow-hidden rounded-[1.5rem] border-2 border-primary/20 
+       bg-card p-4 shadow-lg shadow-primary/5 transition-all duration-300 
+       hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10">
+    {/* ↑ CAMADA INTERNA - Responsável por bordas e sombras */}
+  </div>
+</div>
+```
+
+---
+
+### **CAMADA 1: CONTAINER EXTERNO (Efeito de Elevação)**
+
+#### **Configuração Base:**
+
+```typescriptreact
+className="group relative w-[196px] transition-all duration-300 hover:-translate-y-2"
+```
+
+**Breakdown técnico:**
+
+1. **`group`** (Tailwind Group Utility)
+
+1. Marca este elemento como pai de um grupo
+2. Permite que elementos filhos reajam ao hover deste container usando `group-hover:`
+3. Essencial para sincronizar múltiplas animações
+
+
+
+2. **`relative`**
+
+1. `position: relative`
+2. Cria contexto de posicionamento para elementos absolutos internos
+3. Necessário para o sistema de camadas funcionar
+
+
+
+3. **`w-[196px]`**
+
+1. `width: 196px` (valor arbitrário exato)
+2. Largura fixa do card (cards 1-4)
+3. Card 5 usa `w-[392px]` (exatamente o dobro)
+
+
+
+4. **`transition-all duration-300`**
+
+1. `transition-property: all` - Anima TODAS as propriedades CSS que mudarem
+2. `transition-duration: 300ms` - Duração de 0.3 segundos
+3. `transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1)` (easing padrão do Tailwind)
+4. Curva de aceleração suave: começa devagar, acelera no meio, desacelera no final
+
+
+
+5. **`hover:-translate-y-2`** ⭐ **EFEITO PRINCIPAL DE ELEVAÇÃO**
+
+1. `transform: translateY(-0.5rem)` quando hover
+2. Valor: `-0.5rem` = `-8px` (2 × 4px no sistema de espaçamento Tailwind)
+3. **Direção**: Negativa no eixo Y = movimento para CIMA
+4. **Resultado visual**: Card "levita" 8 pixels acima da posição original
+5. Combinado com `transition-all duration-300`, cria movimento suave de 300ms
+
+
+
+
+
+---
+
+### **CAMADA 2: CARD INTERNO (Efeitos Visuais)**
+
+#### **Configuração Base:**
+
+```typescriptreact
+className="relative h-full overflow-hidden rounded-[1.5rem] border-2 border-primary/20 
+           bg-card p-4 shadow-lg shadow-primary/5 transition-all duration-300 
+           hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
+```
+
+**Breakdown técnico:**
+
+1. **`relative`**
+
+1. Cria novo contexto de posicionamento
+2. Permite que o gradiente absoluto (no card 5) se posicione corretamente
+
+
+
+2. **`h-full`**
+
+1. `height: 100%` - Preenche toda a altura do container pai (88px)
+
+
+
+3. **`overflow-hidden`**
+
+1. Esconde qualquer conteúdo que ultrapasse os limites do card
+2. Essencial para o `rounded-[1.5rem]` funcionar corretamente
+3. Garante que o gradiente interno não "vaze" para fora
+
+
+
+4. **`rounded-[1.5rem]`**
+
+1. `border-radius: 1.5rem` = `24px`
+2. Cantos arredondados em todos os lados
+3. Valor customizado (não é um preset do Tailwind)
+
+
+
+5. **`border-2 border-primary/20`** (Estado Inicial)
+
+1. `border-width: 2px` - Borda sólida de 2 pixels
+2. `border-color: hsl(var(--primary) / 0.2)` - Cor laranja com 20% de opacidade
+3. **Resultado**: Borda sutil, quase imperceptível
+
+
+
+6. **`hover:border-primary/40`** ⭐ **ANIMAÇÃO DE BORDA**
+
+1. No hover: opacidade aumenta de 20% → 40%
+2. **Resultado**: Borda fica 2× mais visível
+3. Transição suave de 300ms via `transition-all`
+
+
+
+7. **`bg-card`**
+
+1. Background usando token de design `--card`
+2. Cor de fundo do card (geralmente branco ou cinza claro)
+
+
+
+8. **`p-4`**
+
+1. `padding: 1rem` = `16px` em todos os lados
+
+
+
+9. **`shadow-lg shadow-primary/5`** (Estado Inicial)
+
+1. `shadow-lg`: Sombra grande pré-definida do Tailwind
+
+1. `box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)`
+
+
+
+2. `shadow-primary/5`: Sobrescreve a cor da sombra para laranja com 5% de opacidade
+3. **Resultado**: Sombra sutil com toque de laranja
+
+
+
+10. **`hover:shadow-xl hover:shadow-primary/10`** ⭐ **ANIMAÇÃO DE SOMBRA**
+
+1. `shadow-xl`: Sombra extra-large
+
+1. `box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)`
+
+
+
+2. Opacidade laranja aumenta de 5% → 10%
+3. **Resultado**: Sombra fica mais profunda e mais visível
+4. Cria ilusão de maior distância do fundo
+
+
+
+11. **`transition-all duration-300`**
+
+1. Mesma configuração da camada externa
+2. Anima bordas, sombras e qualquer outra propriedade que mude
