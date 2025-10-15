@@ -126,15 +126,12 @@ export default function Dashboard() {
       </div>
       <div className="w-full max-w-[98%] sm:max-w-[1600px] mx-auto pl-0">
         <h1 
-          className="text-xl sm:text-2xl md:text-3xl text-brand-black dark:text-white flex items-center gap-2"
+          className="alan-sans-greeting text-xl sm:text-2xl md:text-3xl text-brand-black dark:text-white flex items-center gap-2"
           style={{ 
-            fontFamily: '"Alan Sans", sans-serif',
-            fontWeight: 400,
-            fontStyle: 'normal',
-            fontOpticalSizing: 'auto',
-            WebkitFontSmoothing: 'antialiased',
-            MozOsxFontSmoothing: 'grayscale'
-          } as React.CSSProperties}
+            fontFamily: '"Alan Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            fontWeight: 700,
+            fontOpticalSizing: 'auto'
+          }}
         >
           <span className="text-lg sm:text-xl md:text-2xl">👋</span> {saudacao}, {firstName}!
         </h1>
