@@ -32,7 +32,7 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
   return (
     <div
       className={cn(
-        "bg-white/95 dark:bg-[#001F3F]/60 p-4 mb-0 flex flex-col items-center relative group",
+        "bg-white dark:bg-[#001427] p-4 mb-0 flex flex-col items-center relative group",
         isCollapsed ? "mt-6 px-2" : "mt-4",
       )}
     >
@@ -55,7 +55,7 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
           {/* Front Side */}
           <div
             className={cn(
-              "bg-white/95 dark:bg-[#001F3F]/60 border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden",
+              "bg-white dark:bg-[#29335C]/20 border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden",
               isCollapsed ? "w-14 p-2 rounded-xl" : "w-full p-4 rounded-2xl",
             )}
           >
@@ -211,7 +211,7 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
           {/* Back Side - Idêntico ao front */}
           <div
             className={cn(
-              "bg-white/95 dark:bg-[#001F3F]/60 border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden absolute inset-0 rotate-y-180",
+              "bg-white dark:bg-[#29335C]/20 border border-gray-200 dark:border-[#29335C]/30 backdrop-blur-sm relative backface-hidden absolute inset-0 rotate-y-180",
               isCollapsed ? "w-14 p-2 rounded-xl" : "w-full p-4 rounded-2xl",
             )}
           >
