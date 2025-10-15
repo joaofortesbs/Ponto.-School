@@ -117,7 +117,7 @@ export default function Dashboard() {
       {/* Interface Completa do Painel */}
       <div className="mt-6 sm:mt-8">
         <DashboardInterface />
-      </divv>
+      </div>
     </div>
   );
 }
