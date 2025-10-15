@@ -60,15 +60,15 @@ export default function ProximaAulaCard() {
         <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
           {/* Ícone Central */}
           <div className={`
-            w-16 h-16 rounded-2xl flex items-center justify-center mb-6
-            ${isLightMode ? 'bg-orange-50' : 'bg-orange-500/10'}
-            border-2 border-dashed border-orange-500/40
+            w-20 h-20 rounded-2xl flex items-center justify-center mb-6
+            bg-gradient-to-br from-orange-500 to-orange-600
+            shadow-lg shadow-orange-500/30
           `}>
-            <Calendar className="text-orange-500" size={32} />
+            <Calendar className="text-white" size={36} />
           </div>
 
           {/* Mensagem de Boas-vindas */}
-          <h4 className={`text-xl font-bold mb-3 ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
+          <h4 className={`text-xl font-bold mb-3 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent`}>
             Planeje sua Próxima Aula
           </h4>
 

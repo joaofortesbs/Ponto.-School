@@ -56,39 +56,57 @@ export default function PulsoDaTurmaCard() {
           </div>
         </div>
 
-        {/* Conteúdo de Introdução */}
+        {/* Conteúdo de Introdução - Minimalista e Sofisticado */}
         <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
-          {/* Ícone Central */}
+          {/* Ícone Central - Design Minimalista */}
           <div className={`
-            w-16 h-16 rounded-2xl flex items-center justify-center mb-6
-            ${isLightMode ? 'bg-blue-50' : 'bg-blue-500/10'}
-            border-2 border-dashed border-blue-500/40
+            w-20 h-20 rounded-2xl flex items-center justify-center mb-8
+            bg-gradient-to-br from-orange-500 to-orange-600
+            shadow-lg shadow-orange-500/30
           `}>
-            <TrendingUp className="text-blue-500" size={32} />
+            <TrendingUp className="text-white" size={36} />
           </div>
 
           {/* Mensagem de Boas-vindas */}
-          <h4 className={`text-xl font-bold mb-3 ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
+          <h4 className={`text-xl font-bold mb-3 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent`}>
             Monitore em Tempo Real
           </h4>
 
-          <p className={`text-sm mb-8 max-w-xs leading-relaxed ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+          <p className={`text-sm mb-10 max-w-xs leading-relaxed ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
             Acompanhe o desempenho e engajamento da sua turma com análises inteligentes
           </p>
 
-          {/* Preview de Métricas */}
-          <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
-            <div className={`p-3 rounded-lg ${isLightMode ? 'bg-blue-50' : 'bg-blue-500/10'} border border-blue-500/30`}>
-              <div className="text-2xl font-bold text-blue-500">--</div>
-              <div className={`text-xs mt-1 ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>Engajamento</div>
+          {/* Preview de Métricas - Design Minimalista */}
+          <div className="flex gap-6 w-full max-w-sm justify-center">
+            <div className="flex flex-col items-center">
+              <div className={`
+                w-12 h-12 rounded-full flex items-center justify-center mb-2
+                ${isLightMode ? 'bg-orange-50' : 'bg-orange-500/10'}
+                border border-orange-500/20
+              `}>
+                <div className="text-lg font-bold text-orange-500">--</div>
+              </div>
+              <div className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>Engajamento</div>
             </div>
-            <div className={`p-3 rounded-lg ${isLightMode ? 'bg-green-50' : 'bg-green-500/10'} border border-green-500/30`}>
-              <div className="text-2xl font-bold text-green-500">--</div>
-              <div className={`text-xs mt-1 ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>Aprovação</div>
+            <div className="flex flex-col items-center">
+              <div className={`
+                w-12 h-12 rounded-full flex items-center justify-center mb-2
+                ${isLightMode ? 'bg-orange-50' : 'bg-orange-500/10'}
+                border border-orange-500/20
+              `}>
+                <div className="text-lg font-bold text-orange-500">--</div>
+              </div>
+              <div className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>Aprovação</div>
             </div>
-            <div className={`p-3 rounded-lg ${isLightMode ? 'bg-purple-50' : 'bg-purple-500/10'} border border-purple-500/30`}>
-              <div className="text-2xl font-bold text-purple-500">--</div>
-              <div className={`text-xs mt-1 ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>Alunos</div>
+            <div className="flex flex-col items-center">
+              <div className={`
+                w-12 h-12 rounded-full flex items-center justify-center mb-2
+                ${isLightMode ? 'bg-orange-50' : 'bg-orange-500/10'}
+                border border-orange-500/20
+              `}>
+                <div className="text-lg font-bold text-orange-500">--</div>
+              </div>
+              <div className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>Alunos</div>
             </div>
           </div>
         </div>

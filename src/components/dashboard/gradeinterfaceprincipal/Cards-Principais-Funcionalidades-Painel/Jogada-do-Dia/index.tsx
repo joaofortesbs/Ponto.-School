@@ -61,15 +61,15 @@ export default function JogadaDoDiaCard() {
         <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
           {/* Ícone Central */}
           <div className={`
-            w-16 h-16 rounded-2xl flex items-center justify-center mb-6
-            ${isLightMode ? 'bg-purple-50' : 'bg-purple-500/10'}
-            border-2 border-dashed border-purple-500/40
+            w-20 h-20 rounded-2xl flex items-center justify-center mb-6
+            bg-gradient-to-br from-orange-500 to-orange-600
+            shadow-lg shadow-orange-500/30
           `}>
-            <Sparkles className="text-purple-500" size={32} />
+            <Sparkles className="text-white" size={36} />
           </div>
 
           {/* Mensagem de Boas-vindas */}
-          <h4 className={`text-xl font-bold mb-3 ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
+          <h4 className={`text-xl font-bold mb-3 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent`}>
             Sua Jogada Inteligente
           </h4>
 
@@ -80,13 +80,13 @@ export default function JogadaDoDiaCard() {
           {/* CTA de Introdução */}
           <button className={`
             px-6 py-3 rounded-xl font-semibold text-sm
-            bg-gradient-to-r from-purple-500 to-purple-600
+            bg-gradient-to-r from-orange-500 to-orange-600
             text-white
-            hover:from-purple-600 hover:to-purple-700
+            hover:from-orange-600 hover:to-orange-700
             transition-all duration-300
             hover:scale-105
             flex items-center gap-2
-            shadow-lg shadow-purple-500/30
+            shadow-lg shadow-orange-500/30
           `}>
             <Sparkles size={18} />
             Descobrir Jogada
