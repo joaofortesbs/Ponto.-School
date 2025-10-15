@@ -33,7 +33,7 @@ export default function ProximaAulaCard() {
       <CardContent className="relative p-0 h-full flex flex-col z-10">
         {/* Header Padronizado - Altura fixa de 72px */}
         <div className={`
-          h-[72px] px-6 py-4
+          h-[72px] px-4 py-4
           flex items-center justify-between
           border-b-2
           ${isLightMode 
