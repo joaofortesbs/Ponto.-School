@@ -1,0 +1,284 @@
+│  [👁️ Ver Ao Vivo]                              │
+│                                                 │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
+│                                                 │
+│  ✨ DESTAQUE DO DIA:                            │
+│                                                 │
+│  "Maria (7A) completou 1ª trilha e subiu       │ ← Momento de orgulho (80px)
+│   nota em 35%! Ela citou suas aulas 💙"        │
+│                                                 │
+│  ┌───────────────────────────────────────────┐ │
+│  │      📈 Ver Relatório Completo            │ │ ← CTA (48px)
+│  └───────────────────────────────────────────┘ │
+│                                                 │
+└─────────────────────────────────────────────────┘
+COMPONENTES DETALHADOS:
+1. Header (32px)
+
+Ícone 💙 + "PULSO DA TURMA" (fonte 16px, bold)
+
+Cor: Azul #4A90E2
+
+2. Métrica Hero (120px)
+
+Número GIGANTE: 64px, bold, cor gradiente
+
+Emoji 🔥 para emoção
+
+Label "ENGAJAMENTO" abaixo (14px)
+
+Variação vs semana anterior (pequeno, verde se positivo)
+
+Background com gradiente sutil
+
+Centralizado verticalmente e horizontalmente
+
+3. Atividade Ao Vivo (80px)
+
+Header: "🎯 AGORA MESMO:" (12px, uppercase, bold)
+
+Descrição: 2 linhas com nome da atividade e estatística
+
+Mini-botão "Ver Ao Vivo" (secondary)
+
+Pulse animation sutil no ícone 🎯
+
+4. Momento de Orgulho (80px)
+
+Header: "✨ DESTAQUE DO DIA:" (12px, uppercase, bold)
+
+Quote/citação em 3 linhas máximo
+
+Background bege claro
+
+Borda esquerda laranja grossa (4px)
+
+5. CTA Principal (48px)
+
+Botão full-width
+
+"Ver Relatório Completo" com ícone 📈
+
+Primário (laranja)
+
+Altura: 40px
+
+VARIAÇÕES DA MÉTRICA HERO:
+A métrica muda baseada no contexto mais relevante:
+
+87% Engajamento (padrão)
+
++127 Interações Hoje (se professor criou conteúdo recente)
+
+92% Satisfação (se houve feedbacks recentes)
+
+15 Trilhas Ativas (se foco em trilhas)
+
+ESTADOS DO CARD:
+Estado 1: Alta Atividade (mostrado acima)
+Estado 2: Baixa Atividade
+
+text
+Métrica Hero: "23% Engajamento ↘️ -15%"
+Insight: "Últimas 24h com pouca atividade
+         Sugestão: Criar desafio motivacional"
+CTA: [Criar Desafio Rápido]
+Estado 3: Sem Dados
+
+text
+"📊 Comece criando sua primeira atividade
+    para ver o pulso das turmas em tempo real"
+[Botão: Criar Primeira Atividade]
+POR QUE FUNCIONA:
+1 número só: Zero cognitive load​
+
+Validação emocional: "Destaque do dia" dá dopamina
+
+Real-time: Sensação de controle e impacto imediato
+
+Acionável: Sempre tem botão para próxima ação​
+
+🚀 CARD 3: "JOGADA DO DIA" (Recomendação Única e Poderosa)
+OBJETIVO REFINADO:
+Mostrar UMA única ação que o professor deve fazer hoje, com justificativa clara e execução em 1 click. Elimina paralisia de decisão completamente.​​
+
+ESTRUTURA VISUAL (460x420px):
+text
+┌─────────────────────────────────────────────────┐
+│  ⚡ JOGADA DO DIA                       [🤖 IA] │ ← Header (32px)
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  ┌─────────────────────────────────────────┐   │
+│  │                                         │   │
+│  │  🎯 CRIAR RECUPERAÇÃO PARA 7A          │   │ ← Card de Recomendação (240px)
+│  │                                         │   │   VISUAL DESTACADO
+│  │  Por quê?                               │   │
+│  │  • 15 alunos (65%) erraram Frações     │   │
+│  │  • Próxima aula é em 2 dias            │   │
+│  │  • Recuperação agora evita defasagem   │   │
+│  │                                         │   │
+│  │  O que terá:                            │   │
+│  │  ✓ 5 atividades gamificadas            │   │
+│  │  ✓ Vídeos explicativos curtos          │   │
+│  │  ✓ Sistema de pontos motivacional      │   │
+│  │                                         │   │
+│  │  ⏱️ 3 min para gerar | 💪 Impacto +40% │   │
+│  │                                         │   │
+│  └─────────────────────────────────────────┘   │
+│                                                 │
+│  ┌───────────────────────────────────────────┐ │
+│  │      ⚡ CRIAR AGORA (3 MIN)               │ │ ← CTA Principal (48px)
+│  └───────────────────────────────────────────┘ │
+│                                                 │
+│  ┌─────────────────────┐  ┌─────────────────┐  │
+│  │  📅 Agendar p/       │  │  🔄 Outra       │  │ ← CTAs Secundários (48px)
+│  │     Amanhã           │  │    Sugestão     │  │
+│  └─────────────────────┘  └─────────────────┘  │
+│                                                 │
+└─────────────────────────────────────────────────┘
+COMPONENTES DETALHADOS:
+1. Header (32px)
+
+Ícone ⚡ + "JOGADA DO DIA" (fonte 16px, bold)
+
+Badge "🤖 IA" no canto direito (pequeno, sutil)
+
+Cor: Roxo #8B5CF6
+
+2. Card de Recomendação (240px)
+
+Background gradiente roxo claro
+
+Borda grossa laranja (3px)
+
+Padding interno: 16px
+
+Estrutura interna:
+
+Título da ação (18px, bold, emoji grande)
+
+Seção "Por quê?" (3 bullets, fonte 13px)
+
+Separador visual
+
+Seção "O que terá:" (3-4 checkmarks, fonte 13px)
+
+Footer com tempo + impacto (12px, icones)
+
+3. CTA Principal (48px)
+
+Botão full-width GIGANTE
+
+"CRIAR AGORA (3 MIN)" em caps
+
+Background gradiente laranja-amarelo
+
+Ícone ⚡ animado
+
+Altura: 44px
+
+Box-shadow para elevação
+
+4. CTAs Secundários (48px)
+
+2 botões menores lado a lado
+
+"Agendar p/ Amanhã" (outline)
+
+"Outra Sugestão" (ghost)
+
+Altura: 36px
+
+LÓGICA DA RECOMENDAÇÃO:
+A IA escolhe 1 única ação baseada em:
+
+Urgência: Prazo próximo (aula amanhã)
+
+Impacto: Número de alunos afetados
+
+Viabilidade: Tempo de execução baixo
+
+Tipos de Recomendações (sempre 1 por dia):
+
+🎯 Criar recuperação para turma X
+
+📝 Corrigir atividades pendentes (5 alunos esperando)
+
+🎮 Adicionar gamificação em trilha Y (engajamento -20%)
+
+💬 Responder dúvidas de alunos (3 não respondidas há 2 dias)
+
+⭐ Criar desafio bônus (turma Z está motivada, aproveitar momentum)
+
+ESTADOS DO CARD:
+Estado 1: Recomendação Urgente (mostrado acima)
+Estado 2: Recomendação Oportunidade
+
+text
+"🌟 OPORTUNIDADE DETECTADA
+Seus alunos estão 3x mais ativos às 19h
+Sugestão: Postar desafio extra nesse horário"
+Estado 3: Sem Recomendação (raro)
+
+text
+"✨ Tudo em dia!
+Você completou todas as ações prioritárias.
+[Botão: Explorar Novas Funcionalidades]"
+Estado 4: Piloto Automático Ativado
+
+text
+"🤖 IA ESTÁ TRABALHANDO...
+Recuperação sendo criada automaticamente
+Você pode revisar em 5 minutos"
+POR QUE FUNCIONA:
+1 escolha só: Elimina 100% da paralisia​
+
+Justificativa transparente: Professor entende o "por quê"​
+
+Execução imediata: 1 click = feito
+
+Senso de progresso: Cada dia 1 vitória garantida​
+
+🎨 SISTEMA DE DESIGN UNIFICADO DOS 3 CARDS
+Paleta de Cores:
+Card 1 (Próxima Aula): Azul #4A90E2 (confiança, organização)
+
+Card 2 (Pulso da Turma): Verde #10B981 (crescimento, positivo)
+
+Card 3 (Jogada do Dia): Roxo #8B5CF6 (ação, poder)
+
+Backgrounds: Branco #FFFFFF com gradientes sutis
+
+Textos: Cinza escuro #1F2937 (primário), Cinza médio #6B7280 (secundário)
+
+Tipografia:
+Headers: Inter Bold, 16px
+
+Números Hero: Inter Black, 64px
+
+Títulos: Inter SemiBold, 18px
+
+Corpo: Inter Regular, 14px
+
+Labels: Inter Medium, 12px uppercase
+
+Espaçamentos (8px Grid):
+Padding cards: 16px
+
+Gap entre elementos: 12px
+
+Gap entre sections: 24px
+
+Border radius: 12px (cards), 8px (botões)
+
+Interatividade:
+Hover nos cards: Elevação suave (shadow aumenta)
+
+Hover nos botões: Escala 1.02x + saturação +10%
+
+Loading states: Skeleton screens nos 3 cards
+
+Transições: 200ms ease-out (suave mas perceptível)
+
+Responsividade Mobile:
+Em telas <768px, os 3 cards empilham verticalmente mantendo proporção 1:1 (420x420px cada)
