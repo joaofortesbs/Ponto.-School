@@ -70,8 +70,8 @@ export default function CardTopoEvolucaoCognitiva() {
     fetchUserAvatar();
   }, []);
 
-  const progressValue = 65;
-  const materialsCount = 12;
+  const progressValue = 0;
+  const materialsCount = 0;
 
   return (
     <>
@@ -122,7 +122,7 @@ export default function CardTopoEvolucaoCognitiva() {
         <div className="flex items-center gap-1.5 mt-1">
           <i className={`fas fa-book text-xs ${isLightMode ? 'text-gray-400' : 'text-gray-500'}`}></i>
           <span className={`text-xs ${isLightMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            {materialsCount} materiais adicionados
+            {materialsCount > 0 ? `${materialsCount} materiais adicionados` : 'Comece a adicionar materiais'}
           </span>
         </div>
       </div>

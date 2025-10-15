@@ -92,7 +92,7 @@ export default function GradeCardsTopoPainel() {
     {
       id: 4,
       title: "Ranking",
-      value: "#3",
+      value: "--",
       icon: "fas fa-trophy",
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
@@ -140,7 +140,7 @@ export default function GradeCardsTopoPainel() {
             >
               {/* Animated gradient background */}
               <div className={`absolute inset-0 bg-gradient-to-br ${card.accentColor} opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out`} />
-              
+
               {/* Shimmer effect on hover */}
               <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
@@ -175,17 +175,19 @@ export default function GradeCardsTopoPainel() {
                         {card.title}
                       </p>
                       <div className="relative inline-block">
-                        <h3 className={`text-2xl font-bold tracking-tight ${isLightMode ? 'text-gray-900 group-hover:text-orange-600' : 'text-white group-hover:text-orange-400'} transition-all duration-600 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 origin-left`}>
+                        <h3 className={`text-2xl font-bold tracking-tight ${card.value === '--' ? (isLightMode ? 'text-gray-400' : 'text-gray-500') : (isLightMode ? 'text-gray-900' : 'text-white')} transition-all duration-600 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 origin-left`}>
                           {card.value}
                         </h3>
-                        <div className="absolute bottom-1 -right-12 rounded-full bg-orange-500/10 px-1.5 py-0.5">
-                          <div className="flex items-center gap-1">
-                            <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M4 1L4 7M4 1L1.5 3.5M4 1L6.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500"/>
-                            </svg>
-                            <span className="text-[9px] font-semibold text-orange-500">12%</span>
+                        {card.value !== '--' && (
+                          <div className="absolute bottom-1 -right-12 rounded-full bg-orange-500/10 px-1.5 py-0.5">
+                            <div className="flex items-center gap-1">
+                              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 1L4 7M4 1L1.5 3.5M4 1L6.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500"/>
+                              </svg>
+                              <span className="text-[9px] font-semibold text-orange-500">12%</span>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </>
@@ -207,7 +209,7 @@ export default function GradeCardsTopoPainel() {
                     `}>
                       {/* Pulsing ring effect */}
                       <div className="absolute inset-0 rounded-xl border-2 border-orange-500/30 animate-ping opacity-0 group-hover:opacity-75" />
-                      
+
                       {card.isFontAwesome ? (
                         <i className={`${card.icon} ${card.iconColor} animate-pulse transition-all duration-500 ease-out`} style={{ fontSize: '1.35rem' }}></i>
                       ) : (
