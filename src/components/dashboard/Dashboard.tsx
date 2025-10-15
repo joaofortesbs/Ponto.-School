@@ -19,15 +19,6 @@ const checkFontLoaded = async () => {
 };
 
 export default function Dashboard() {
-
-import React, { useState, useEffect } from "react";
-import PromotionalBanner from "./PromotionalBanner";
-import DashboardInterface from "./gradeinterfaceprincipal/DashboardInterface";
-import GradeCardsTopoPainel from "./gradeinterfaceprincipal/GradeCardsTopoPainel";
-import { profileService } from "@/services/profileService";
-import { UserProfile } from "@/types/user-profile";
-
-export default function Dashboard() {
   const [showBanner, setShowBanner] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isMetricsLoading, setIsMetricsLoading] = useState(false); // Inicializado como false para carregar imediatamente
