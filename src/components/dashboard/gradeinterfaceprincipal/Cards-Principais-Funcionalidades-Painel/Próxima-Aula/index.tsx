@@ -1,7 +1,7 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from "@/components/ThemeProvider";
+import { Calendar, Plus } from "lucide-react";
 
 export default function ProximaAulaCard() {
   const { theme } = useTheme();
@@ -11,8 +11,8 @@ export default function ProximaAulaCard() {
     <Card
       className={`
         group relative overflow-hidden
-        ${isLightMode 
-          ? 'bg-white/95 border-2 border-orange-100/60 hover:border-orange-300/80' 
+        ${isLightMode
+          ? 'bg-white/95 border-2 border-orange-100/60 hover:border-orange-300/80'
           : 'bg-[#001F3F]/60 border-2 border-orange-500/15 hover:border-orange-500/35'
         }
         transition-all duration-500 ease-out
@@ -26,7 +26,7 @@ export default function ProximaAulaCard() {
     >
       {/* Background gradiente animado */}
       <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-orange-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out" />
-      
+
       {/* Efeito shimmer */}
       <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
@@ -36,8 +36,8 @@ export default function ProximaAulaCard() {
           h-[72px] px-4 py-4
           flex items-center justify-between
           border-b-2
-          ${isLightMode 
-            ? 'bg-gradient-to-r from-orange-50 to-orange-100/50 border-orange-200/50' 
+          ${isLightMode
+            ? 'bg-gradient-to-r from-orange-50 to-orange-100/50 border-orange-200/50'
             : 'bg-gradient-to-r from-orange-500/10 to-orange-600/5 border-orange-500/20'
           }
         `}>
@@ -48,100 +48,63 @@ export default function ProximaAulaCard() {
               ${isLightMode ? 'bg-white' : 'bg-transparent'}
               shadow-sm
             `}>
-              <i className="fas fa-calendar text-orange-500 text-xl"></i>
+              <Calendar className="text-orange-500" size={20} />
             </div>
             <h3 className={`font-bold text-lg uppercase tracking-wide ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
               Próxima Aula
             </h3>
           </div>
-          <button className={`
-            w-9 h-9 rounded-lg flex items-center justify-center
-            ${isLightMode 
-              ? 'hover:bg-orange-50 text-orange-600' 
-              : 'hover:bg-orange-500/10 text-orange-400'
-            }
-            transition-colors duration-300
-          `}>
-            <i className="fas fa-cog text-sm"></i>
-          </button>
         </div>
 
-        {/* Conteúdo do Card - SEM SCROLL - Layout Compacto */}
-        <div className="flex-1 p-5 flex flex-col justify-between overflow-hidden">
-          {/* Timestamp - Compacto */}
-          <div className={`flex items-center gap-2 pb-2.5 border-b ${isLightMode ? 'border-gray-200' : 'border-gray-700'}`}>
-            <i className="fas fa-clock text-xs text-orange-500"></i>
-            <span className={`text-xs font-medium ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
-              Segunda, 15 Out • 08:00-08:45
-            </span>
+        {/* Conteúdo de Introdução */}
+        <div className="flex-1 p-6 flex flex-col items-center justify-center text-center">
+          {/* Ícone Central */}
+          <div className={`
+            w-20 h-20 rounded-2xl flex items-center justify-center mb-6
+            ${isLightMode ? 'bg-orange-50' : 'bg-orange-500/10'}
+            border-2 border-dashed border-orange-500
+          `}>
+            <Calendar className="text-orange-500" size={40} />
           </div>
 
-          {/* Info Principal - Compacto */}
-          <div className={`mt-3 p-3 rounded-xl ${isLightMode ? 'bg-orange-50' : 'bg-orange-500/10'}`}>
-            <div className="flex items-start gap-2.5">
-              <i className="fas fa-book text-orange-500 text-lg mt-0.5"></i>
-              <div className="flex-1">
-                <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
-                  MATEMÁTICA • TURMA 7A
-                </p>
-                <p className={`text-sm font-medium leading-tight ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  Frações - Soma com Denominadores Diferentes
-                </p>
-              </div>
+          {/* Mensagem de Boas-vindas */}
+          <h4 className={`text-xl font-bold mb-3 ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
+            Bem-vindo ao seu Planejador!
+          </h4>
+
+          <p className={`text-sm mb-6 max-w-xs leading-relaxed ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+            Aqui você terá acesso rápido à sua próxima aula com todos os recursos necessários já preparados
+          </p>
+
+          {/* CTA de Introdução */}
+          <button className={`
+            px-6 py-3 rounded-xl font-semibold text-sm
+            bg-gradient-to-r from-orange-500 to-orange-600
+            text-white
+            hover:from-orange-600 hover:to-orange-700
+            transition-all duration-300
+            hover:scale-105
+            flex items-center gap-2
+            shadow-lg shadow-orange-500/30
+          `}>
+            <Plus size={18} />
+            Criar Primeira Aula
+          </button>
+
+          {/* Benefícios */}
+          <div className="mt-6 space-y-2">
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <i className="fas fa-check-circle text-green-500"></i>
+              <span>Planos de aula automáticos</span>
             </div>
-          </div>
-
-          {/* Status Checklist - Ultra Compacto */}
-          <div className={`mt-3 p-2.5 rounded-xl border-2 border-dashed ${isLightMode ? 'border-green-300 bg-green-50/50' : 'border-green-500/30 bg-green-500/5'}`}>
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5">
-                <i className="fas fa-check-circle text-green-500 text-xs"></i>
-                <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  Plano de Aula Completo
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <i className="fas fa-check-circle text-green-500 text-xs"></i>
-                <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  12 Slides Gamificados
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <i className="fas fa-check-circle text-green-500 text-xs"></i>
-                <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  Atividade Interativa
-                </span>
-              </div>
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <i className="fas fa-check-circle text-green-500"></i>
+              <span>Materiais gamificados</span>
             </div>
-          </div>
-
-          {/* CTAs - Compacto */}
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <button className={`
-              px-3 py-2 rounded-lg font-semibold text-xs
-              bg-gradient-to-r from-orange-500 to-orange-600
-              text-white
-              hover:from-orange-600 hover:to-orange-700
-              transition-all duration-300
-              hover:scale-105
-              flex items-center justify-center gap-1.5
-            `}>
-              <i className="fas fa-book-open text-xs"></i>
-              Ver Plano
-            </button>
-            <button className={`
-              px-3 py-2 rounded-lg font-semibold text-xs
-              ${isLightMode 
-                ? 'border-2 border-orange-500 text-orange-600 hover:bg-orange-50' 
-                : 'border-2 border-orange-500 text-orange-400 hover:bg-orange-500/10'
-              }
-              transition-all duration-300
-              hover:scale-105
-              flex items-center justify-center gap-1.5
-            `}>
-              <i className="fas fa-bolt text-xs"></i>
-              Ajustar
-            </button>
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <i className="fas fa-check-circle text-green-500"></i>
+              <span>Tudo em um só lugar</span>
+            </div>
           </div>
         </div>
       </CardContent>
