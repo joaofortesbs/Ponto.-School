@@ -5,6 +5,20 @@ import { motion } from "framer-motion";
 
 const PromotionalBanner = () => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
+
+  React.useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <motion.div
@@ -19,13 +33,16 @@ const PromotionalBanner = () => {
         className={`
           relative w-full overflow-hidden shadow-xl
           bg-gradient-to-br from-orange-100 via-orange-50 to-orange-100
-          dark:bg-[#001B36]
           border border-orange-200/50 dark:border-orange-700/50 backdrop-blur-sm
           transition-all duration-300 ease-in-out
           ${isHovered ? "scale-[1.01] shadow-orange-200/50 dark:shadow-orange-800/50" : ""}
           max-h-[140px] sm:max-h-[160px] md:max-h-[180px]
           rounded-2xl
         `}
+        style={{
+          backgroundColor: isDark ? '#001B36' : undefined,
+          backgroundImage: isDark ? 'none' : undefined
+        }}
       >
         {/* Subtle gradient overlay */}
         <div className="absolute inset-0 overflow-hidden opacity-40 dark:opacity-30">
