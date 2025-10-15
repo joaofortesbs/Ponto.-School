@@ -49,7 +49,7 @@ export default function JogadaDoDiaCard() {
               ${isLightMode ? 'bg-white' : 'bg-transparent'}
               shadow-sm
             `}>
-              <Zap className="text-orange-500" size={20} />
+              <Zap className="text-orange-500" size={20} strokeWidth={2} />
             </div>
             <h3 className={`font-bold text-lg uppercase tracking-wide ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
               Jogada do Dia
@@ -65,7 +65,7 @@ export default function JogadaDoDiaCard() {
             bg-gradient-to-br from-orange-500 to-orange-600
             shadow-lg shadow-orange-500/30
           `}>
-            <Sparkles className="text-white" size={36} />
+            <Sparkles className="text-white" size={36} strokeWidth={2} />
           </div>
 
           {/* Mensagem de Boas-vindas */}
@@ -88,7 +88,7 @@ export default function JogadaDoDiaCard() {
             flex items-center gap-2
             shadow-lg shadow-orange-500/30
           `}>
-            <Sparkles size={18} />
+            <Sparkles size={18} strokeWidth={2} />
             Descobrir Jogada
           </button>
         </div>

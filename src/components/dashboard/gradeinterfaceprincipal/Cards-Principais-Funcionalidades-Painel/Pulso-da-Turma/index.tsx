@@ -48,7 +48,7 @@ export default function PulsoDaTurmaCard() {
               ${isLightMode ? 'bg-white' : 'bg-transparent'}
               shadow-sm
             `}>
-              <Activity className="text-orange-500" size={20} />
+              <Activity className="text-orange-500" size={20} strokeWidth={2} />
             </div>
             <h3 className={`font-bold text-lg uppercase tracking-wide ${isLightMode ? 'text-gray-900' : 'text-white'}`}>
               Pulso da Turma
@@ -64,7 +64,7 @@ export default function PulsoDaTurmaCard() {
             bg-gradient-to-br from-orange-500 to-orange-600
             shadow-lg shadow-orange-500/30
           `}>
-            <TrendingUp className="text-white" size={36} />
+            <TrendingUp className="text-white" size={36} strokeWidth={2} />
           </div>
 
           {/* Mensagem de Boas-vindas */}
