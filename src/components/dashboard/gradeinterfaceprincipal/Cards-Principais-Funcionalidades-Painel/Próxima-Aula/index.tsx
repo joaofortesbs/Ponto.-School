@@ -65,8 +65,8 @@ export default function ProximaAulaCard() {
           </button>
         </div>
 
-        {/* Conteúdo do Card */}
-        <div className="flex-1 p-6 space-y-4 overflow-y-auto custom-scrollbar">
+        {/* Conteúdo do Card - SEM SCROLL */}
+        <div className="flex-1 p-6 flex flex-col justify-between overflow-hidden">
           {/* Timestamp */}
           <div className={`flex items-center gap-2 pb-3 border-b ${isLightMode ? 'border-gray-200' : 'border-gray-700'}`}>
             <i className="fas fa-clock text-sm text-orange-500"></i>
@@ -76,7 +76,7 @@ export default function ProximaAulaCard() {
           </div>
 
           {/* Info Principal */}
-          <div className={`p-4 rounded-xl ${isLightMode ? 'bg-orange-50' : 'bg-orange-500/10'}`}>
+          <div className={`mt-4 p-4 rounded-xl ${isLightMode ? 'bg-orange-50' : 'bg-orange-500/10'}`}>
             <div className="flex items-start gap-3">
               <i className="fas fa-book text-orange-500 text-xl mt-1"></i>
               <div className="flex-1">
@@ -90,44 +90,34 @@ export default function ProximaAulaCard() {
             </div>
           </div>
 
-          {/* Status Checklist */}
-          <div className={`p-4 rounded-xl border-2 border-dashed ${isLightMode ? 'border-green-300 bg-green-50/50' : 'border-green-500/30 bg-green-500/5'}`}>
-            <div className="space-y-2">
+          {/* Status Checklist - Compacto */}
+          <div className={`mt-4 p-3 rounded-xl border-2 border-dashed ${isLightMode ? 'border-green-300 bg-green-50/50' : 'border-green-500/30 bg-green-500/5'}`}>
+            <div className="space-y-1.5">
               <div className="flex items-center gap-2">
-                <i className="fas fa-check-circle text-green-500 text-sm"></i>
-                <span className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  Plano de Aula Completo Gerado
+                <i className="fas fa-check-circle text-green-500 text-xs"></i>
+                <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                  Plano de Aula Completo
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <i className="fas fa-check-circle text-green-500 text-sm"></i>
-                <span className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  12 Slides Gamificados Prontos
+                <i className="fas fa-check-circle text-green-500 text-xs"></i>
+                <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                  12 Slides Gamificados
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <i className="fas fa-check-circle text-green-500 text-sm"></i>
-                <span className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
-                  Atividade Interativa Configurada
+                <i className="fas fa-check-circle text-green-500 text-xs"></i>
+                <span className={`text-xs ${isLightMode ? 'text-gray-700' : 'text-gray-300'}`}>
+                  Atividade Interativa
                 </span>
               </div>
-            </div>
-          </div>
-
-          {/* Insight IA */}
-          <div className={`p-3 rounded-lg ${isLightMode ? 'bg-yellow-50 border-l-4 border-yellow-500' : 'bg-yellow-500/10 border-l-4 border-yellow-400'}`}>
-            <div className="flex items-start gap-2">
-              <i className="fas fa-exclamation-triangle text-yellow-500 text-sm mt-0.5"></i>
-              <p className={`text-xs ${isLightMode ? 'text-yellow-800' : 'text-yellow-200'}`}>
-                15 alunos erraram este tema - Reforço recomendado
-              </p>
             </div>
           </div>
 
           {/* CTAs */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="mt-4 grid grid-cols-2 gap-2">
             <button className={`
-              px-4 py-2 rounded-lg font-semibold text-sm
+              px-4 py-2.5 rounded-lg font-semibold text-sm
               bg-gradient-to-r from-orange-500 to-orange-600
               text-white
               hover:from-orange-600 hover:to-orange-700
@@ -139,7 +129,7 @@ export default function ProximaAulaCard() {
               Ver Plano
             </button>
             <button className={`
-              px-4 py-2 rounded-lg font-semibold text-sm
+              px-4 py-2.5 rounded-lg font-semibold text-sm
               ${isLightMode 
                 ? 'border-2 border-orange-500 text-orange-600 hover:bg-orange-50' 
                 : 'border-2 border-orange-500 text-orange-400 hover:bg-orange-500/10'
