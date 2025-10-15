@@ -19,12 +19,12 @@ const PromotionalBanner = () => {
         className={`
           relative w-full overflow-hidden shadow-xl
           bg-gradient-to-br from-orange-100 via-orange-50 to-orange-100
-          dark:opacity-80
           border border-orange-200/50 dark:border-orange-700/50 backdrop-blur-sm
           transition-all duration-300 ease-in-out
           ${isHovered ? "scale-[1.01] shadow-orange-200/50 dark:shadow-orange-800/50" : ""}
           max-h-[140px] sm:max-h-[160px] md:max-h-[180px]
           rounded-2xl
+          dark:opacity-80
         `}
       >
         {/* Subtle gradient overlay */}
@@ -33,13 +33,13 @@ const PromotionalBanner = () => {
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-300/30 dark:via-orange-600/30 to-transparent" />
         </div>
 
-        <div className="flex items-center relative z-10 h-full p-6 sm:p-8 md:p-10">
+        <div className="flex items-start relative z-10 h-full p-4 sm:p-5 md:p-6 pt-3 sm:pt-4 md:pt-5">
           <div className="flex-1">
             <motion.h2
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2, duration: 0.4 }}
-              className="text-base sm:text-lg md:text-xl font-bold text-orange-900 dark:text-orange-100 mb-2 leading-tight"
+              className="text-base sm:text-lg md:text-xl font-bold text-orange-900 dark:text-orange-100 mb-1.5 leading-tight"
             >
               Planeje, crie, e analise todas as atividades do próximo semestre em 2 minutos!
             </motion.h2>
@@ -48,7 +48,7 @@ const PromotionalBanner = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3, duration: 0.4 }}
-              className="text-sm sm:text-base text-orange-700 dark:text-orange-300 mb-4 sm:mb-6"
+              className="text-sm sm:text-base text-orange-700 dark:text-orange-300 mb-3 sm:mb-4"
             >
               Entregue uma experiência inesquecível para seus alunos
             </motion.p>
