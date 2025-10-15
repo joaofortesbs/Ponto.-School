@@ -99,7 +99,7 @@ export default function GradeCardsTopoPainel() {
                   <>
                     {/* Enhanced Icon Container */}
                     <div className={`
-                      w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0
+                      w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
                       ${isLightMode 
                         ? 'bg-gradient-to-br from-orange-50 to-orange-100/50 group-hover:from-orange-100 group-hover:to-orange-200/60' 
                         : 'bg-gradient-to-br from-orange-500/10 to-orange-600/5 group-hover:from-orange-500/25 group-hover:to-orange-600/15'
@@ -110,9 +110,9 @@ export default function GradeCardsTopoPainel() {
                       shadow-sm group-hover:shadow-lg group-hover:shadow-orange-500/25
                     `}>
                       {card.isFontAwesome ? (
-                        <i className={`${card.icon} ${card.iconColor} transition-all duration-300 group-hover:scale-110`} style={{ fontSize: '1.1rem' }}></i>
+                        <i className={`${card.icon} ${card.iconColor} transition-all duration-300 group-hover:scale-110`} style={{ fontSize: '0.95rem' }}></i>
                       ) : (
-                        <Icon className={`w-5 h-5 ${card.iconColor} transition-all duration-300 group-hover:scale-110`} />
+                        <Icon className={`w-4 h-4 ${card.iconColor} transition-all duration-300 group-hover:scale-110`} />
                       )}
                     </div>
 
@@ -130,7 +130,7 @@ export default function GradeCardsTopoPainel() {
                   <>
                     {/* Enhanced IA Icon with pulse */}
                     <div className={`
-                      w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 relative
+                      w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 relative
                       ${isLightMode 
                         ? 'bg-gradient-to-br from-orange-50 to-orange-100/50 group-hover:from-orange-100 group-hover:to-orange-200/60' 
                         : 'bg-gradient-to-br from-orange-500/10 to-orange-600/5 group-hover:from-orange-500/25 group-hover:to-orange-600/15'
@@ -144,9 +144,9 @@ export default function GradeCardsTopoPainel() {
                       <div className="absolute inset-0 rounded-xl border-2 border-orange-500/30 animate-ping opacity-0 group-hover:opacity-75" />
                       
                       {card.isFontAwesome ? (
-                        <i className={`${card.icon} ${card.iconColor} animate-pulse transition-all duration-300`} style={{ fontSize: '1.1rem' }}></i>
+                        <i className={`${card.icon} ${card.iconColor} animate-pulse transition-all duration-300`} style={{ fontSize: '0.95rem' }}></i>
                       ) : (
-                        <Icon className={`w-5 h-5 ${card.iconColor} animate-pulse transition-all duration-300`} />
+                        <Icon className={`w-4 h-4 ${card.iconColor} animate-pulse transition-all duration-300`} />
                       )}
                     </div>
 
