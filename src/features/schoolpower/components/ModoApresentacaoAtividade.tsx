@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { AtividadeDados } from '../services/data-sync-service';
 import activitiesApiService, { ActivityData } from '@/services/activitiesApiService';
+import { visitantesService } from '@/services/visitantesService';
 
 // Import dos previews das atividades
 import ActivityPreview from '../activities/default/ActivityPreview';
@@ -66,6 +67,32 @@ export const ModoApresentacaoAtividade: React.FC = () => {
 
     carregarAtividade();
   }, [uniqueCode]);
+
+  // Registrar visita automaticamente quando atividade é carregada
+  useEffect(() => {
+    const registrarVisita = async () => {
+      if (!atividade || !uniqueCode) return;
+
+      try {
+        // Buscar dados do usuário logado (se houver)
+        const userEmail = localStorage.getItem('userEmail');
+        const userId = localStorage.getItem('userId');
+        
+        await visitantesService.registrarVisita({
+          codigo_atividade: uniqueCode,
+          id_usuario_visitante: userId || undefined,
+          tipo_visitante: userId ? 'registrado' : 'anonimo'
+        });
+
+        console.log('✅ [APRESENTAÇÃO] Visita registrada com sucesso');
+      } catch (error) {
+        console.error('⚠️ [APRESENTAÇÃO] Erro ao registrar visita (não crítico):', error);
+        // Não bloquear a exibição da atividade se falhar o registro
+      }
+    };
+
+    registrarVisita();
+  }, [atividade, uniqueCode]);
 
   // Função para renderizar a pré-visualização baseada no tipo da atividade
   const renderActivityPreview = () => {
