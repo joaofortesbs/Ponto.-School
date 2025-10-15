@@ -43,9 +43,12 @@ export default function ProximaAulaCard() {
         `}>
           <div className="flex items-center gap-3">
             <div className={`
-              w-12 h-12 rounded-xl flex items-center justify-center
-              border-2 border-orange-500
-              ${isLightMode ? 'bg-white' : 'bg-transparent'}
+              w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0
+              ${isLightMode 
+                ? 'bg-gradient-to-br from-orange-50 to-orange-100/50' 
+                : 'bg-gradient-to-br from-orange-500/10 to-orange-600/5'
+              }
+              border border-orange-500/20
               shadow-sm
             `}>
               <Calendar className="text-orange-500" size={20} strokeWidth={2} fill="none" />
