@@ -27,8 +27,8 @@ const PromotionalBanner = () => {
         `}
         style={{
           background: document.documentElement.classList.contains('dark') 
-            ? '#001B36' 
-            : 'linear-gradient(to bottom right, rgb(254 215 170), rgb(255 237 213), rgb(254 215 170))'
+            ? 'rgba(0, 27, 54, 0.2)' 
+            : undefined
         }}
       >
         {/* Subtle gradient overlay */}
