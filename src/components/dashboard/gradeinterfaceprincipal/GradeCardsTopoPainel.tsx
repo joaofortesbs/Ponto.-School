@@ -51,13 +51,15 @@ export default function GradeCardsTopoPainel() {
     {
       id: 5,
       title: "Sugestão IA",
-      description: "Recomendamos focar em atividades práticas de Matemática esta semana.",
       icon: "fas fa-sparkles",
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
       gradientHover: "from-orange-500/15 to-orange-600/10",
       isFontAwesome: true,
       isWide: true,
+      isProfileCard: true,
+      progressValue: 65,
+      materialsCount: 12,
     },
   ];
 
@@ -133,6 +135,49 @@ export default function GradeCardsTopoPainel() {
                             <span className="text-[9px] font-semibold text-orange-500">12%</span>
                           </div>
                         </div>
+                      </div>
+                    </div>
+                  </>
+                ) : card.isProfileCard ? (
+                  <>
+                    {/* Avatar do usuário */}
+                    <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden border-2 border-orange-500/20 group-hover:border-orange-500/40 transition-all duration-500">
+                      <div className={`w-full h-full flex items-center justify-center ${isLightMode ? 'bg-gradient-to-br from-orange-50 to-orange-100' : 'bg-gradient-to-br from-orange-500/20 to-orange-600/10'}`}>
+                        <i className="fas fa-user text-orange-500" style={{ fontSize: '1.5rem' }}></i>
+                      </div>
+                    </div>
+
+                    {/* Barra de progresso e informações */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2">
+                        {/* Barra de progresso */}
+                        <div className="flex-1 h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500 ease-out"
+                            style={{ width: `${card.progressValue || 0}%` }}
+                          />
+                        </div>
+                        
+                        {/* Botão adicionar */}
+                        <button className={`
+                          w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                          ${isLightMode 
+                            ? 'bg-orange-50 hover:bg-orange-100 text-orange-600' 
+                            : 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-400'
+                          }
+                          transition-all duration-300 ease-out
+                          hover:scale-110
+                        `}>
+                          <i className="fas fa-plus text-sm"></i>
+                        </button>
+                      </div>
+                      
+                      {/* Contador de materiais */}
+                      <div className="flex items-center gap-1.5">
+                        <i className={`fas fa-book text-xs ${isLightMode ? 'text-gray-400' : 'text-gray-500'}`}></i>
+                        <span className={`text-xs ${isLightMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          {card.materialsCount || 0} materiais adicionados
+                        </span>
                       </div>
                     </div>
                   </>
