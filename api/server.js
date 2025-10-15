@@ -7,7 +7,8 @@ import emailRoutes from './enviar-email.js';
 import neonDB from './neon-db.js';
 import perfilsHandler from './perfis.js';
 import atividadesRoutes from './atividades.js';
-import uploadAvatarRoutes from './upload-avatar.js'; // Importar as novas rotas de upload
+import uploadAvatarRoutes from './upload-avatar.js';
+import visitantesRoutes from './visitantes.js';
 
 dotenv.config();
 
@@ -68,8 +69,9 @@ if (isProduction) {
 // Rotas API
 app.use('/api/enviar-email', emailRoutes);
 app.use('/api/perfis', perfilsHandler);
-app.use('/api/upload-avatar', uploadAvatarRoutes); // Rota para upload de avatar
+app.use('/api/upload-avatar', uploadAvatarRoutes);
 app.use('/api/atividades-neon', atividadesRoutes);
+app.use('/api/visitantes', visitantesRoutes);
 
 // Rota de teste de conexão com banco de dados (simples)
 app.get('/api/test-db-connection', async (req, res) => {
