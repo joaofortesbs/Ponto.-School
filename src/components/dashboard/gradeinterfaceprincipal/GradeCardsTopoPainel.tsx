@@ -94,7 +94,7 @@ export default function GradeCardsTopoPainel() {
               {/* Glow effect border */}
               <div className="absolute inset-0 rounded-[1.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-orange-500/0 via-orange-500/20 to-orange-500/0 blur-xl" />
 
-              <CardContent className={`relative p-4 h-full flex items-center ${card.isWide ? 'gap-3' : 'gap-3'} z-10`}>
+              <CardContent className={`relative p-4 h-full flex items-start ${card.isWide ? 'gap-3' : 'gap-3'} z-10`}>
                 {!card.isWide ? (
                   <>
                     {/* Enhanced Icon Container */}
