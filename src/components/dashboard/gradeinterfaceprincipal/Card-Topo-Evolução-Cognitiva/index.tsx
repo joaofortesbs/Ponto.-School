@@ -79,11 +79,11 @@ export default function CardTopoEvolucaoCognitiva() {
 
       {/* Barra de progresso e informações */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex items-center gap-3 mb-1">
           {/* Barra de progresso */}
-          <div className="flex-1 h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+          <div className="flex-1 h-3 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500 ease-out"
+              className="h-full bg-gradient-to-r from-[#FF6000] via-[#FF8C40] to-[#FFCC33] transition-all duration-500 ease-out"
               style={{ width: `${progressValue}%` }}
             />
           </div>
@@ -103,7 +103,7 @@ export default function CardTopoEvolucaoCognitiva() {
         </div>
         
         {/* Contador de materiais */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 mt-1">
           <i className={`fas fa-book text-xs ${isLightMode ? 'text-gray-400' : 'text-gray-500'}`}></i>
           <span className={`text-xs ${isLightMode ? 'text-gray-400' : 'text-gray-500'}`}>
             {materialsCount} materiais adicionados
