@@ -1,0 +1,1 @@
+<div className="bg-white/95 dark:bg-[#001F3F]/60
