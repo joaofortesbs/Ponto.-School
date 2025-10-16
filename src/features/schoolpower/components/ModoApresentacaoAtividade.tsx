@@ -6,6 +6,7 @@ import { AtividadeDados } from '../services/data-sync-service';
 import activitiesApiService, { ActivityData } from '@/services/activitiesApiService';
 import { visitantesService } from '@/services/visitantesService';
 import { AccessibilityProvider, useAccessibility, Language } from '@/contexts/AccessibilityContext';
+import { useActivityTranslation } from '@/hooks/useActivityTranslation';
 import { Slider } from "@/components/ui/slider";
 import {
   DropdownMenu,
@@ -49,6 +50,9 @@ const ModoApresentacaoContent: React.FC<{
   const { language, fontSize, voiceReading, setLanguage, setFontSize, setVoiceReading } = useAccessibility();
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [showFontSizeMenu, setShowFontSizeMenu] = useState(false);
+  
+  // Traduzir conteúdo da atividade
+  const { translatedContent, isTranslating } = useActivityTranslation(atividade.dados);
 
   const handleVoiceReadingToggle = () => {
     setVoiceReading(!voiceReading);
@@ -69,7 +73,8 @@ const ModoApresentacaoContent: React.FC<{
     if (!atividade) return null;
 
     const activityType = atividade.tipo;
-    const activityData = atividade.dados || {};
+    // Usar conteúdo traduzido se disponível, senão usar original
+    const activityData = translatedContent || atividade.dados || {};
 
     console.log('🎯 [APRESENTAÇÃO] Renderizando atividade:', { 
       tipo: activityType, 
@@ -321,6 +326,13 @@ const ModoApresentacaoContent: React.FC<{
 
       {/* Conteúdo da Atividade em Tela Cheia - Totalmente Funcional */}
       <div className="min-h-screen">
+        {isTranslating && (
+          <div className="flex items-center justify-center p-4 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+            <div className="animate-pulse text-blue-600 dark:text-blue-400">
+              🌐 Traduzindo conteúdo...
+            </div>
+          </div>
+        )}
         {renderActivityPreview()}
       </div>
     </div>
