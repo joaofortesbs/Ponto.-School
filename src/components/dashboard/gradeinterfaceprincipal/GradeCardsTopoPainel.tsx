@@ -241,7 +241,7 @@ export default function GradeCardsTopoPainel() {
                           {card.value}
                         </h3>
                         {card.value !== '--' && (
-                          <div className="absolute bottom-1 -right-12 rounded-full bg-orange-500/10 px-1.5 py-0.5">
+                          <div className="absolute bottom-1 -right-14 rounded-full bg-orange-500/10 px-1.5 py-0.5">
                             <div className="flex items-center gap-1">
                               <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M4 1L4 7M4 1L1.5 3.5M4 1L6.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500"/>
