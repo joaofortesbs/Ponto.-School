@@ -98,12 +98,22 @@ export default function GradeCardsTopoPainel() {
     fetchVisitantesStats();
   }, []);
 
+  // Calcular crescimento percentual real
+  const calcularCrescimento = () => {
+    if (totalVisitantes === 0) return 0;
+    if (visitantesHoje === 0) return 0;
+    
+    // Crescimento baseado nos visitantes de hoje em relação ao total
+    const percentual = Math.round((visitantesHoje / totalVisitantes) * 100);
+    return percentual > 0 ? percentual : 0;
+  };
+
   const cardData = [
     {
       id: 1,
       title: "Alunos",
       value: totalVisitantes > 0 ? totalVisitantes.toString() : "--",
-      subtitle: visitantesHoje > 0 ? `${visitantesHoje} hoje` : undefined,
+      percentual: calcularCrescimento(),
       icon: "fas fa-users",
       iconColor: "text-orange-500",
       accentColor: "from-orange-500/10 to-orange-600/5",
@@ -219,18 +229,13 @@ export default function GradeCardsTopoPainel() {
                         <h3 className={`text-2xl font-bold tracking-tight ${card.value === '--' ? (isLightMode ? 'text-gray-400' : 'text-gray-500') : (isLightMode ? 'text-gray-900' : 'text-white')} transition-all duration-600 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 origin-left`}>
                           {card.value}
                         </h3>
-                        {card.subtitle && (
-                          <p className={`text-[10px] mt-0.5 ${isLightMode ? 'text-orange-600' : 'text-orange-400'} font-medium`}>
-                            {card.subtitle}
-                          </p>
-                        )}
-                        {card.value !== '--' && (
+                        {card.value !== '--' && card.percentual !== undefined && card.percentual > 0 && (
                           <div className="absolute bottom-1 -right-12 rounded-full bg-orange-500/10 px-1.5 py-0.5">
                             <div className="flex items-center gap-1">
                               <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M4 1L4 7M4 1L1.5 3.5M4 1L6.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500"/>
                               </svg>
-                              <span className="text-[9px] font-semibold text-orange-500">12%</span>
+                              <span className="text-[9px] font-semibold text-orange-500">{card.percentual}%</span>
                             </div>
                           </div>
                         )}
