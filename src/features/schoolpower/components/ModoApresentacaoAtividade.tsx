@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Star, LogOut } from 'lucide-react';
+import { ArrowLeft, Star, LogOut, Accessibility, ChevronDown, Languages, Type, Contrast, Volume2 } from 'lucide-react';
 import { AtividadeDados } from '../services/data-sync-service';
 import activitiesApiService, { ActivityData } from '@/services/activitiesApiService';
 import { visitantesService } from '@/services/visitantesService';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 
 // Import dos previews das atividades
 import ActivityPreview from '../activities/default/ActivityPreview';
@@ -25,6 +33,12 @@ export const ModoApresentacaoAtividade: React.FC = () => {
   const [schoolPoints, setSchoolPoints] = useState<number>(100);
   const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
+  
+  // Estados de acessibilidade
+  const [language, setLanguage] = useState<'pt' | 'en' | 'es'>('pt');
+  const [fontSize, setFontSize] = useState<'normal' | 'medium' | 'large'>('normal');
+  const [highContrast, setHighContrast] = useState<boolean>(false);
+  const [voiceReading, setVoiceReading] = useState<boolean>(false);
 
   useEffect(() => {
     const carregarAtividade = async () => {
@@ -105,6 +119,56 @@ export const ModoApresentacaoAtividade: React.FC = () => {
 
     registrarVisita();
   }, [atividade, uniqueCode]);
+
+  // Funções de acessibilidade
+  const handleLanguageChange = (lang: 'pt' | 'en' | 'es') => {
+    setLanguage(lang);
+    console.log(`🌍 [ACESSIBILIDADE] Idioma alterado para: ${lang}`);
+  };
+
+  const handleFontSizeChange = () => {
+    const sizes: Array<'normal' | 'medium' | 'large'> = ['normal', 'medium', 'large'];
+    const currentIndex = sizes.indexOf(fontSize);
+    const nextSize = sizes[(currentIndex + 1) % sizes.length];
+    setFontSize(nextSize);
+    console.log(`📏 [ACESSIBILIDADE] Tamanho de fonte alterado para: ${nextSize}`);
+  };
+
+  const handleHighContrastToggle = () => {
+    setHighContrast(!highContrast);
+    console.log(`🎨 [ACESSIBILIDADE] Alto contraste ${!highContrast ? 'ativado' : 'desativado'}`);
+  };
+
+  const handleVoiceReadingToggle = () => {
+    setVoiceReading(!voiceReading);
+    if (!voiceReading) {
+      // Iniciar leitura por voz
+      const text = atividade?.titulo || 'Atividade carregada';
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = language === 'pt' ? 'pt-BR' : language === 'en' ? 'en-US' : 'es-ES';
+      window.speechSynthesis.speak(utterance);
+      console.log(`🔊 [ACESSIBILIDADE] Leitura por voz iniciada`);
+    } else {
+      // Parar leitura por voz
+      window.speechSynthesis.cancel();
+      console.log(`🔇 [ACESSIBILIDADE] Leitura por voz pausada`);
+    }
+  };
+
+  // Aplicar estilos de acessibilidade
+  const getFontSizeClass = () => {
+    switch (fontSize) {
+      case 'medium': return 'text-lg';
+      case 'large': return 'text-xl';
+      default: return 'text-base';
+    }
+  };
+
+  const getContrastClass = () => {
+    return highContrast 
+      ? 'bg-black text-white' 
+      : 'bg-white dark:bg-gray-900';
+  };
 
   // Função para renderizar a pré-visualização baseada no tipo da atividade
   const renderActivityPreview = () => {
@@ -223,11 +287,11 @@ export const ModoApresentacaoAtividade: React.FC = () => {
 
   return (
     <div 
-      className="fixed inset-0 z-[100] bg-white dark:bg-gray-900 overflow-auto"
+      className={`fixed inset-0 z-[100] overflow-auto ${getContrastClass()} ${getFontSizeClass()}`}
       style={{ isolation: 'isolate' }}
     >
       {/* Cabeçalho Universal do Modo Apresentação */}
-      <div className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+      <div className={`sticky top-0 z-30 backdrop-blur-md border-b ${highContrast ? 'bg-black/90 border-white' : 'bg-white/80 dark:bg-gray-900/80 border-gray-200 dark:border-gray-800'}`}>
         <div className="flex items-center justify-between px-6 py-4">
           {/* Botão de Sair - Canto Esquerdo */}
           <Button
@@ -239,7 +303,7 @@ export const ModoApresentacaoAtividade: React.FC = () => {
             <LogOut className="w-5 h-5" />
           </Button>
 
-          {/* Sistema de Avaliação (5 Estrelas) + School Points - Canto Direito */}
+          {/* Sistema de Avaliação (5 Estrelas) + Acessibilidade + School Points - Canto Direito */}
           <div className="flex items-center gap-4">
             {/* 5 Estrelas de Avaliação */}
             <div className="flex items-center gap-1">
@@ -264,6 +328,62 @@ export const ModoApresentacaoAtividade: React.FC = () => {
                 </button>
               ))}
             </div>
+
+            {/* Botão de Acessibilidade com Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-10 h-10 rounded-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 transition-all duration-300 hover:scale-110"
+                >
+                  <Accessibility className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Configurações de Acessibilidade</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                {/* Opção de Idioma */}
+                <DropdownMenuItem 
+                  onClick={() => {
+                    const nextLang = language === 'pt' ? 'en' : language === 'en' ? 'es' : 'pt';
+                    handleLanguageChange(nextLang);
+                  }}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <Languages className="w-4 h-4" />
+                  <span>Idioma: {language === 'pt' ? 'Português' : language === 'en' ? 'English' : 'Español'}</span>
+                </DropdownMenuItem>
+
+                {/* Opção de Aumentar Fonte */}
+                <DropdownMenuItem 
+                  onClick={handleFontSizeChange}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <Type className="w-4 h-4" />
+                  <span>Tamanho da Fonte: {fontSize === 'normal' ? 'Normal' : fontSize === 'medium' ? 'Médio' : 'Grande'}</span>
+                </DropdownMenuItem>
+
+                {/* Opção de Alto Contraste */}
+                <DropdownMenuItem 
+                  onClick={handleHighContrastToggle}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <Contrast className="w-4 h-4" />
+                  <span>Alto Contraste: {highContrast ? 'Ativado' : 'Desativado'}</span>
+                </DropdownMenuItem>
+
+                {/* Opção de Leitura por Voz */}
+                <DropdownMenuItem 
+                  onClick={handleVoiceReadingToggle}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>Leitura por Voz: {voiceReading ? 'Ativada' : 'Desativada'}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* School Points - Sem ícone de estrela */}
             <div className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 rounded-full shadow-lg">
