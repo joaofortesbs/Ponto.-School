@@ -9,6 +9,7 @@ import perfilsHandler from './perfis.js';
 import atividadesRoutes from './atividades.js';
 import uploadAvatarRoutes from './upload-avatar.js';
 import visitantesRoutes from './visitantes.js';
+import translateRoutes from './translate.js';
 
 dotenv.config();
 
@@ -72,6 +73,7 @@ app.use('/api/perfis', perfilsHandler);
 app.use('/api/upload-avatar', uploadAvatarRoutes);
 app.use('/api/atividades-neon', atividadesRoutes);
 app.use('/api/visitantes', visitantesRoutes);
+app.use('/api/translate', translateRoutes);
 
 // Rota de teste de conexão com banco de dados (simples)
 app.get('/api/test-db-connection', async (req, res) => {
