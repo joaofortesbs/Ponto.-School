@@ -200,7 +200,7 @@ export const ModoApresentacaoAtividade: React.FC = () => {
       <div className="fixed inset-0 z-[100] bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-500 mb-4">{error || 'Atividade não encontrada'}</p>
-          <Button onClick={() => navigate(-1)}>
+          <Button onClick={() => navigate(`/atividade/${uniqueCode}`)}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar
           </Button>
@@ -217,7 +217,7 @@ export const ModoApresentacaoAtividade: React.FC = () => {
       {/* Header com botão de voltar */}
       <div className="absolute top-4 left-4 z-20">
         <Button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(`/atividade/${uniqueCode}`)}
           variant="ghost"
           size="icon"
           className="w-12 h-12 rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-sm transition-all duration-300 hover:scale-110"
