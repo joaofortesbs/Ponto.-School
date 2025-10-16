@@ -145,7 +145,7 @@ class ActivitiesApiService {
   async getActivityByCode(codigo_unico: string): Promise<ApiResponse<ActivityData>> {
     this.debugLog('🔍 Buscando atividade por código:', codigo_unico);
 
-    return this.makeRequest<ActivityData>(`/atividades/${codigo_unico}`);
+    return this.makeRequest<ActivityData>(`/atividades-neon/${codigo_unico}`);
   }
 
   /**

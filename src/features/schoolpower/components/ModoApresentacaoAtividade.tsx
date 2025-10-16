@@ -47,25 +47,27 @@ export const ModoApresentacaoAtividade: React.FC = () => {
         }
 
         // Converter ActivityData para AtividadeDados
-        // Se response.data é array, pega primeiro item, senão usa direto
-        const activityData: ActivityData = Array.isArray(response.data) ? response.data[0] : response.data;
+        const activityData: any = Array.isArray(response.data) ? response.data[0] : response.data;
+        
+        // O backend retorna id_json, precisamos mapear para conteudo
+        const conteudoAtividade = activityData.id_json || activityData.conteudo || {};
+        
         const atividadeConvertida: AtividadeDados = {
-          id: activityData.codigo_unico,
+          id: activityData.id || activityData.codigo_unico,
           tipo: activityData.tipo,
           titulo: activityData.titulo || '',
           descricao: activityData.descricao || '',
-          dados: activityData.conteudo || {},
-          customFields: activityData.conteudo?.customFields || {}
+          dados: conteudoAtividade,
+          customFields: conteudoAtividade?.customFields || {}
         };
 
         console.log('✅ [APRESENTAÇÃO] Atividade carregada:', atividadeConvertida);
         setAtividade(atividadeConvertida);
         
         // Buscar School Points do banco de dados
-        if (activityData.school_points !== undefined) {
-          setSchoolPoints(activityData.school_points);
-          console.log('💰 [APRESENTAÇÃO] School Points carregados:', activityData.school_points);
-        }
+        const sps = activityData.school_points ?? 100;
+        setSchoolPoints(sps);
+        console.log('💰 [APRESENTAÇÃO] School Points carregados do banco:', sps, 'da atividade:', activityData.id || activityData.codigo_unico);
         
         setLoading(false);
       } catch (err) {
@@ -263,11 +265,8 @@ export const ModoApresentacaoAtividade: React.FC = () => {
               ))}
             </div>
 
-            {/* School Points - Mesmo estilo do card de compartilhamento */}
+            {/* School Points - Sem ícone de estrela */}
             <div className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 rounded-full shadow-lg">
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
               <span className="text-white font-bold text-lg">{schoolPoints} SPs</span>
             </div>
           </div>
