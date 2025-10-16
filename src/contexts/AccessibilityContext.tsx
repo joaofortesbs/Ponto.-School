@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export type Language = 'pt' | 'en' | 'es' | 'fr' | 'it' | 'de';
 
@@ -18,6 +18,12 @@ export const AccessibilityProvider: React.FC<{ children: ReactNode }> = ({ child
   const [language, setLanguage] = useState<Language>('pt');
   const [fontSize, setFontSize] = useState<number>(16);
   const [voiceReading, setVoiceReading] = useState<boolean>(false);
+
+  // Aplicar tamanho de fonte como variável CSS global
+  useEffect(() => {
+    document.documentElement.style.setProperty('--accessibility-font-size', `${fontSize}px`);
+    console.log(`📏 [ACESSIBILIDADE] Font size CSS variable atualizada: ${fontSize}px`);
+  }, [fontSize]);
 
   const translateText = async (text: string): Promise<string> => {
     if (!text || language === 'pt') return text;

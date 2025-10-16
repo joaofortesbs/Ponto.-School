@@ -51,8 +51,10 @@ const ModoApresentacaoContent: React.FC<{
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [showFontSizeMenu, setShowFontSizeMenu] = useState(false);
   
-  // Traduzir conteúdo da atividade
-  const { translatedContent, isTranslating } = useActivityTranslation(atividade.dados);
+  // Traduzir conteúdo da atividade com ID único para cache eficiente
+  const { translatedContent, isTranslating } = useActivityTranslation(atividade.dados, {
+    activityId: uniqueCode
+  });
 
   const handleVoiceReadingToggle = () => {
     setVoiceReading(!voiceReading);
@@ -325,7 +327,7 @@ const ModoApresentacaoContent: React.FC<{
       </div>
 
       {/* Conteúdo da Atividade em Tela Cheia - Totalmente Funcional */}
-      <div className="min-h-screen">
+      <div className="min-h-screen" style={{ fontSize: 'var(--accessibility-font-size, 16px)' }}>
         {isTranslating && (
           <div className="flex items-center justify-center p-4 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
             <div className="animate-pulse text-blue-600 dark:text-blue-400">

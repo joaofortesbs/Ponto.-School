@@ -1,201 +1,63 @@
 # Replit.md
 
 ## Overview
-
-Ponto. School is an educational platform that transforms teaching through AI-powered tools. This React + TypeScript application, built with Vite, provides comprehensive educational solutions including an AI assistant (Epictus), study groups, digital notebooks, smart worksheets, interactive quizzes, and the core School Power feature for automated lesson planning. The platform serves both students and teachers with personalized learning experiences and modern educational workflows.
+Ponto. School is an AI-powered educational platform built with React and TypeScript. It offers a suite of tools for students and teachers, including an AI assistant (Epictus), study groups, digital notebooks, smart worksheets, interactive quizzes, and the core "School Power" feature for automated lesson planning. The platform aims to provide personalized learning experiences and streamline educational workflows.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Architecture
-- **Framework**: React 18 with TypeScript, built using Vite for fast development and hot module replacement
-- **Styling**: Tailwind CSS with custom design system using shadcn/ui components for consistent UI patterns
-- **Component Strategy**: Modular component architecture with reusable UI components in shadcn/ui format
-- **Build Tool**: Vite with SWC for fast compilation and modern JavaScript features
-- **State Management**: Zustand stores for global state management (e.g., schoolPowerStore for School Power workflows)
+### UI/UX Decisions
+- **Design System**: Modern glass-morphism effects with blur backgrounds.
+- **Color Scheme**: Primary Orange (#FF6B00), Secondary Blue (#0D00F5), Dark Navy text (#0A2540).
+- **Typography**: Custom typography with responsive font scales.
+- **Animations**: Smooth CSS transitions and micro-interactions.
+- **Responsiveness**: Mobile-first approach with adaptive layouts.
+- **Accessibility**: Comprehensive presentation mode with multi-language translation (via Google Gemini), dynamic font sizing (12px-24px), and voice reading support.
 
-### Core Features Architecture
-- **School Power**: AI-powered lesson planning system with contextualization cards and action plan generation
-- **Study Groups**: Real-time chat system with member management and group settings
-- **Digital Notebooks**: Note-taking system with AI integration for content generation
-- **Smart Worksheets**: Interactive learning materials with AI assistance
-- **Daily Login System**: Gamified experience with streaks and rewards
+### Technical Implementations
+- **Frontend**: React 18 with TypeScript, Vite for development, and Tailwind CSS with shadcn/ui for styling. Zustand for state management.
+- **Backend**: Express.js for API endpoints (email, profiles, activities).
+- **Core Features**:
+    - **School Power**: AI-powered lesson planning with contextualization cards and action plan generation. Supports activity download in .docx and PDF formats.
+    - **Study Groups**: Real-time chat with member management.
+    - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation and interactive materials.
+    - **Daily Login System**: Gamified experience with streaks and rewards.
+    - **School Points**: Persisted school points system for activities, editable and synchronized with the database.
+- **AI Integration**: Primarily uses Google Gemini API for content generation, lesson planning, and the Epictus AI assistant.
+- **Authentication & User Management**: Supabase for authentication, user sessions, role-based access, and profile management.
 
-### AI Integration
-- **Primary AI**: Google Gemini API for content generation, lesson planning, and educational assistance
-- **AI Assistant**: Epictus IA - personalized AI tutor with contextualized responses
-- **Content Generation**: Automated creation of educational materials, quizzes, and lesson plans
-- **Personalization**: AI-driven content adaptation based on user preferences and learning patterns
-
-### Authentication & User Management
-- **Platform**: Supabase for authentication, user sessions, and profile management
-- **Session Handling**: Real-time user status tracking with online/offline indicators
-- **User Roles**: Support for students, teachers, and administrators with role-based access
-
-### Data Architecture
-- **Database Development**: Neon PostgreSQL externo - ep-delicate-bush-acsigqej-pooler.sa-east-1.aws.neon.tech (ATIVO)
-- **Database Production**: Neon PostgreSQL - ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech
-- **Authentication**: Supabase PostgreSQL for user sessions and profile management
-- **Real-time Features**: Supabase Realtime for live chat, user presence, and collaborative features
-- **File Storage**: Supabase Storage for user-generated content, avatars, and educational materials
-- **Local Storage**: Browser storage for temporary data and user preferences
-
-### UI/UX Design System
-- **Design Framework**: Modern glass-morphism effects with blur backgrounds
-- **Color Scheme**: Orange (#FF6B00) primary, blue (#0D00F5) secondary, dark navy (#0A2540) text
-- **Typography**: Custom typography system with responsive font scales
-- **Animations**: Smooth transitions using CSS animations and micro-interactions
-- **Responsive Design**: Mobile-first approach with adaptive layouts
+### System Design Choices
+- **Modular Component Architecture**: Reusable UI components following shadcn/ui patterns.
+- **Data Persistence**: Uses Neon PostgreSQL for primary data, Supabase PostgreSQL for authentication, and Supabase Storage for file assets.
+- **Real-time**: Supabase Realtime for live features like chat and user presence.
+- **Deployment**: Configured for VM deployment, maintaining backend state and supporting real-time database connections.
 
 ## External Dependencies
 
 ### Core Services
-- **Supabase**: Backend-as-a-Service providing PostgreSQL database, authentication, real-time subscriptions, and file storage
-- **Google Gemini AI**: Primary AI service for content generation, lesson planning, and educational assistance
-- **SendGrid**: Email service for notifications and communications (with client-side fallback)
+- **Supabase**: BaaS for PostgreSQL database, authentication, real-time, and file storage.
+- **Google Gemini AI**: Primary AI service for content generation, lesson planning, and educational assistance.
+- **Neon PostgreSQL**: External managed PostgreSQL database.
+- **SendGrid**: Email service for notifications.
 
 ### Development & Build Tools
-- **Vite**: Build tool and development server with fast HMR
-- **TypeScript**: Type safety and enhanced developer experience
-- **Tailwind CSS**: Utility-first CSS framework for rapid styling
-- **PostCSS**: CSS processing with autoprefixer
+- **Vite**: Build tool and development server.
+- **TypeScript**: For type safety.
+- **Tailwind CSS**: Utility-first CSS framework.
+- **PostCSS**: CSS processing.
+- **ESLint**: Code linting.
 
 ### UI Component Libraries
-- **Radix UI**: Unstyled, accessible UI primitives for dialogs, dropdowns, forms, and navigation
-- **shadcn/ui**: Pre-built component library built on Radix UI with Tailwind styling
-- **React Hook Form**: Form handling with validation (@hookform/resolvers)
-- **Lucide React**: Icon library (@radix-ui/react-icons)
+- **Radix UI**: Accessible UI primitives.
+- **shadcn/ui**: Pre-built components based on Radix UI and Tailwind.
+- **React Hook Form**: Form handling and validation.
+- **Lucide React**: Icon library.
 
 ### Specialized Libraries
-- **@dnd-kit**: Drag and drop functionality for interactive UI elements
-- **@tsparticles**: Particle effects and animations for enhanced visual appeal
-- **React Beautiful DnD**: Additional drag-and-drop capabilities for complex interactions
-- **Axios**: HTTP client for API communications
-
-### Development Dependencies
-- **ESLint**: Code linting and quality enforcement
-- **Font Awesome**: Additional icon library for diverse iconography
-- **UUID**: Unique identifier generation for data entities
-
-### Infrastructure
-- **Hosting**: Configured for deployment on various platforms
-- **Environment Management**: Support for multiple environments (development, production)
-- **API Server**: Express.js server for handling email services and API endpoints
-
-## Replit Environment Setup
-
-### Development Workflow
-- **Workflow Name**: App
-- **Command**: `bash start.sh` (executa backend + frontend automaticamente)
-- **Port Configuration**: 
-  - Frontend: Port 5000 (0.0.0.0) - serves the React application
-  - Backend: Port 3001 (localhost) - serves the API endpoints
-- **Output Type**: Webview for live preview
-- **Note**: O start.sh detecta o ambiente e inicia ambos os servidores em desenvolvimento
-
-### Server Configuration
-- **Frontend Server**: Vite dev server configured to:
-  - Bind to 0.0.0.0:5000 for Replit proxy compatibility
-  - Proxy `/api` requests to backend on localhost:3001
-  - Enable HMR (Hot Module Replacement) on port 5000
-- **Backend Server**: Express.js configured to:
-  - Listen on localhost:3001 (internal only)
-  - Handle API routes: email, profiles, activities
-  - Initialize Replit PostgreSQL database connection on startup
-
-### Deployment Configuration
-- **Type**: VM (stateful deployment)
-- **Build Command**: `npm run build`
-- **Run Command**: `node api/server.js & npm run preview`
-- **Reason for VM**: Maintains backend state and supports real-time database connections
-
-### Environment Variables Required
-Located in `.env` file:
-- `VITE_SUPABASE_URL`: Supabase project URL
-- `VITE_SUPABASE_ANON_KEY`: Supabase anonymous/public key
-- `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key (optional)
-- `PORT`: Backend server port (default: 3001)
-- `SENDGRID_API_KEY`: SendGrid API key for emails (optional)
-
-Replit Secrets (auto-configured):
-- `DATABASE_URL`: PostgreSQL connection string (Replit-managed)
-- `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`: PostgreSQL credentials
-
-### Key Files
-- `vite.config.ts`: Vite configuration with proxy setup
-- `api/server.js`: Backend Express server
-- `package.json`: Scripts and dependencies
-- `.env`: Environment variables (not committed to git)
-
-### Recent Changes (October 2025)
-- Configured Vite to use 0.0.0.0:5000 for Replit compatibility
-- Updated backend to bind to localhost:3001
-- Set up combined workflow running both frontend and backend
-- Configured VM deployment for stateful application
-- **Created Replit PostgreSQL native database** (ep-rapid-mountain-ae49pxeq.c-2.us-east-2.aws.neon.tech)
-- Successfully imported 1 profile from JSON backup to native Replit database
-- Database schema: 9 columns (id, full_name, name_user, email, tipo_conta, avatar_url, created_at, updated_at, id_usuario)
-- All data verified with SELECT queries - backend connected successfully
-- **Migrated to external Neon database** (ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech)
-  - App now uses external Neon database directly via DATABASE_URL
-  - Created table "usuarios" with secure password hashing (bcrypt, 12 rounds)
-  - Complete user registration and login system integrated
-  - All passwords stored with irreversible bcrypt hashes
-  - Registration page fully connected to database
-  - Login system authenticates against real database
-  - **Created table "Atividades"** with columns: id, id_user (UUID FK), tipo, id_json (TEXT)
-  - Automatic triggers for updated_at column
-  - Activities now persist in database instead of localStorage
-  - All School Power activities automatically saved to Neon database
-  - Activity history loads from database
-  - All data operations affect the real Neon database
-- **Fixed Neon Database Connection (October 11, 2025)**
-  - Identified and resolved backend not starting in development mode
-  - Workflow was executing only `npm run dev` (frontend) instead of `bash start.sh`
-  - Removed conflicting workflow configuration that bypassed start.sh
-  - Recreated App workflow to properly execute `bash start.sh`
-  - Backend now starts correctly on port 3001 with Neon pooled connection
-  - All `/api/*` requests now work correctly (no more ECONNREFUSED errors)
-  - Both frontend (Vite) and backend (Express) run simultaneously in development
-- **Fixed Flash Cards Auto-Build (October 11, 2025)**
-  - Corrected custom field mapping priorities in `autoBuildService.ts`
-  - Aligned field names with `activityCustomFields.ts` definitions
-  - Added robust fallback chain for "topicos" field (required by FlashCardsGenerator)
-  - Flash Cards auto-build now completes successfully with proper field validation
-- **Fixed Flash Cards Visual Status & UI Flicker (October 11, 2025)**
-  - **Flash Cards Green Status Fix**: Added `constructedActivities` global localStorage save in `autoBuildService.ts` (both normal and fallback paths)
-  - **UI Flicker Elimination**: Replaced all `refreshActivities()` calls with local React state updates in `ConstructionGrid.tsx`
-  - Created local `activities` state that syncs with `hookActivities` without forcing full reload
-  - Updated `setOnActivityBuilt` callback to use `setActivities()` directly instead of `refreshActivities()`
-  - Removed all reload triggers from buildAll finally block and event listeners
-  - Result: Flash Cards now turn green immediately after construction with ZERO UI flicker or page reloads
-- **Sistema de Download de Atividades (October 11, 2025)**
-  - Criado sistema completo de download em `src/features/schoolpower/Sistema-baixar-atividades/`
-  - Suporte para download de atividades em Word (.docx) e PDF:
-    - **Lista de Exercícios**: Word (.docx) com questões, alternativas e gabaritos
-    - **Plano de Aula**: Word (.docx) com objetivos, metodologia e desenvolvimento
-    - **Sequência Didática**: Word (.docx) com todas as aulas estruturadas
-    - **Quiz Interativo**: PDF com questões formatadas profissionalmente
-    - **Flash Cards**: PDF com cards frente/verso em layout visual
-  - Bibliotecas utilizadas: `docx` para Word, `jsPDF` para PDF, `file-saver` para download
-  - Sistema totalmente integrado ao dropdown do modal de visualização (botão "Baixar")
-  - Arquitetura modular com serviços independentes por tipo de atividade
-  - Formatação automática e conversão de HTML para texto quando necessário
-  - Sistema de validação de dados antes da geração do arquivo
-  - Documentação completa em README.md dentro do sistema
-- **Sistema de School Points com Persistência (October 12, 2025)**
-  - **Banco de Dados**: Criada coluna `school_points` (INTEGER DEFAULT 100) na tabela "atividades" do Neon
-  - **Edição de SPs**: Card editável de School Points no cabeçalho do `ActivityViewModal`
-  - **Sincronização**: SPs editados são salvos no localStorage e persistidos no banco Neon
-  - **Carregamento**: Modal carrega SPs do localStorage ou banco de dados ao abrir atividade
-  - **Backend**: `api/atividades.js` aceita e retorna `school_points` em POST/GET
-  - **Frontend**:
-    - `UniversalActivityHeader`: Permite edição in-line de SPs com validação (0-99999)
-    - `ActivityViewModal`: Carrega SPs com prioridade: localStorage → banco → padrão (100)
-    - `ConstructionGrid`: Inclui SPs ao salvar atividades via "Salvar todas as atividades"
-    - `InterfaceCompartilharAtividade`: Carrega SPs diretamente do campo `school_points` do banco Neon
-  - **Fluxo Completo**: Editar SPs → salvar no localStorage → persistir no banco → carregar do banco
-  - **Página de Compartilhamento**: Sincronizada com banco Neon para exibir SPs corretos (October 15, 2025)
+- **@dnd-kit** & **React Beautiful DnD**: Drag and drop functionality.
+- **@tsparticles**: Particle effects.
+- **Axios**: HTTP client for API communication.
+- **docx**, **jsPDF**, **file-saver**: For activity download functionality.
+- **bcrypt**: For password hashing.
