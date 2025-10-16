@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Star, LogOut } from 'lucide-react';
 import { AtividadeDados } from '../services/data-sync-service';
 import activitiesApiService, { ActivityData } from '@/services/activitiesApiService';
 import { visitantesService } from '@/services/visitantesService';
@@ -22,6 +22,9 @@ export const ModoApresentacaoAtividade: React.FC = () => {
   const [atividade, setAtividade] = useState<AtividadeDados | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [schoolPoints, setSchoolPoints] = useState<number>(100);
+  const [rating, setRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
 
   useEffect(() => {
     const carregarAtividade = async () => {
@@ -57,6 +60,13 @@ export const ModoApresentacaoAtividade: React.FC = () => {
 
         console.log('✅ [APRESENTAÇÃO] Atividade carregada:', atividadeConvertida);
         setAtividade(atividadeConvertida);
+        
+        // Buscar School Points do banco de dados
+        if (activityData.school_points !== undefined) {
+          setSchoolPoints(activityData.school_points);
+          console.log('💰 [APRESENTAÇÃO] School Points carregados:', activityData.school_points);
+        }
+        
         setLoading(false);
       } catch (err) {
         console.error('❌ [APRESENTAÇÃO] Erro ao carregar atividade:', err);
@@ -214,20 +224,58 @@ export const ModoApresentacaoAtividade: React.FC = () => {
       className="fixed inset-0 z-[100] bg-white dark:bg-gray-900 overflow-auto"
       style={{ isolation: 'isolate' }}
     >
-      {/* Header com botão de voltar */}
-      <div className="absolute top-4 left-4 z-20">
-        <Button
-          onClick={() => navigate(`/atividade/${uniqueCode}`)}
-          variant="ghost"
-          size="icon"
-          className="w-12 h-12 rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-sm transition-all duration-300 hover:scale-110"
-        >
-          <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-        </Button>
+      {/* Cabeçalho Universal do Modo Apresentação */}
+      <div className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between px-6 py-4">
+          {/* Botão de Sair - Canto Esquerdo */}
+          <Button
+            onClick={() => navigate(`/atividade/${uniqueCode}`)}
+            variant="ghost"
+            size="icon"
+            className="w-10 h-10 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-all duration-300 hover:scale-110"
+          >
+            <LogOut className="w-5 h-5" />
+          </Button>
+
+          {/* Sistema de Avaliação (5 Estrelas) + School Points - Canto Direito */}
+          <div className="flex items-center gap-4">
+            {/* 5 Estrelas de Avaliação */}
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => {
+                    setRating(star);
+                    console.log(`⭐ [AVALIAÇÃO] Usuário avaliou com ${star} estrelas`);
+                  }}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  className="transition-all duration-200 hover:scale-110"
+                >
+                  <Star
+                    className={`w-6 h-6 transition-colors duration-200 ${
+                      star <= (hoverRating || rating)
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'fill-none text-gray-400'
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+
+            {/* School Points - Mesmo estilo do card de compartilhamento */}
+            <div className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 rounded-full shadow-lg">
+              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              <span className="text-white font-bold text-lg">{schoolPoints} SPs</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Conteúdo da Atividade em Tela Cheia - Totalmente Funcional */}
-      <div className="w-full min-h-screen">
+      <div className="w-full min-h-screen pt-4">
         {renderActivityPreview()}
       </div>
     </div>

@@ -11,6 +11,7 @@ export interface ActivityData {
   titulo?: string;
   descricao?: string;
   conteudo: any;
+  school_points?: number;
   criado_em?: string;
   atualizado_em?: string;
 }
