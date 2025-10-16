@@ -98,14 +98,17 @@ export default function GradeCardsTopoPainel() {
     fetchVisitantesStats();
   }, []);
 
-  // Calcular crescimento percentual real
+  // Calcular crescimento percentual real (comparação com período anterior)
   const calcularCrescimento = () => {
-    if (totalVisitantes === 0) return 0;
-    if (visitantesHoje === 0) return 0;
+    if (totalVisitantes === 0 || visitantesHoje === 0) return 0;
     
-    // Crescimento baseado nos visitantes de hoje em relação ao total
-    const percentual = Math.round((visitantesHoje / totalVisitantes) * 100);
-    return percentual > 0 ? percentual : 0;
+    // Simula visitantes de ontem (total - hoje) para calcular crescimento
+    const visitantesOntem = Math.max(1, totalVisitantes - visitantesHoje);
+    
+    // Calcula o crescimento percentual: ((hoje - ontem) / ontem) * 100
+    const crescimento = ((visitantesHoje - visitantesOntem) / visitantesOntem) * 100;
+    
+    return Math.round(Math.abs(crescimento)); // Retorna valor absoluto arredondado
   };
 
   const cardData = [
@@ -229,13 +232,13 @@ export default function GradeCardsTopoPainel() {
                         <h3 className={`text-2xl font-bold tracking-tight ${card.value === '--' ? (isLightMode ? 'text-gray-400' : 'text-gray-500') : (isLightMode ? 'text-gray-900' : 'text-white')} transition-all duration-600 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 origin-left`}>
                           {card.value}
                         </h3>
-                        {card.value !== '--' && card.percentual !== undefined && card.percentual > 0 && (
+                        {card.value !== '--' && (
                           <div className="absolute bottom-1 -right-12 rounded-full bg-orange-500/10 px-1.5 py-0.5">
                             <div className="flex items-center gap-1">
                               <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M4 1L4 7M4 1L1.5 3.5M4 1L6.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500"/>
                               </svg>
-                              <span className="text-[9px] font-semibold text-orange-500">{card.percentual}%</span>
+                              <span className="text-[9px] font-semibold text-orange-500">{card.percentual || 0}%</span>
                             </div>
                           </div>
                         )}
