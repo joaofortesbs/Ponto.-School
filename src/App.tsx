@@ -60,7 +60,7 @@ const TrilhasSchoolAlunoInterface = lazy(() => import('@/pages/trilhas-school/al
 // Aceita apenas o código único como parâmetro
 const AtividadeCompartilhadaPage = lazy(() => import('@/pages/atividade/[activityId]/[uniqueCode]'));
 // Modo Apresentação - rota pública para apresentação de atividades
-const ModoApresentacaoAtividadePage = lazy(() => import('@/features/schoolpower/components/ModoApresentacaoAtividade'));
+const ModoApresentacaoAtividadePage = lazy(() => import('@/features/schoolpower/components/ModoApresentacaoAtividade').then(module => ({ default: module.ModoApresentacaoAtividade })));
 
 
 // Componente para proteger rotas
