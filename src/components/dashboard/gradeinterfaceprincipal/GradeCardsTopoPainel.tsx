@@ -100,15 +100,23 @@ export default function GradeCardsTopoPainel() {
 
   // Calcular crescimento percentual real (comparação com período anterior)
   const calcularCrescimento = () => {
-    if (totalVisitantes === 0 || visitantesHoje === 0) return 0;
+    // Se não tem visitantes hoje, não há crescimento
+    if (visitantesHoje === 0) return 0;
     
-    // Simula visitantes de ontem (total - hoje) para calcular crescimento
-    const visitantesOntem = Math.max(1, totalVisitantes - visitantesHoje);
+    // Visitantes de ontem = total - visitantes de hoje
+    const visitantesOntem = totalVisitantes - visitantesHoje;
     
-    // Calcula o crescimento percentual: ((hoje - ontem) / ontem) * 100
-    const crescimento = ((visitantesHoje - visitantesOntem) / visitantesOntem) * 100;
+    // Se não tinha nenhum visitante ontem e ganhou hoje = 100%
+    if (visitantesOntem === 0 && visitantesHoje > 0) return 100;
     
-    return Math.round(Math.abs(crescimento)); // Retorna valor absoluto arredondado
+    // Se tinha visitantes ontem, calcula o percentual de crescimento
+    // Fórmula: (visitantes_hoje / visitantes_ontem) * 100
+    if (visitantesOntem > 0) {
+      const percentualCrescimento = Math.round((visitantesHoje / visitantesOntem) * 100);
+      return percentualCrescimento;
+    }
+    
+    return 0;
   };
 
   const cardData = [
