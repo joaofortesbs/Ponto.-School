@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Star, LogOut, Accessibility, ChevronDown, Languages, Type, Contrast, Volume2 } from 'lucide-react';
+import { ArrowLeft, Star, LogOut, Accessibility, Globe, Type, Volume2, Check } from 'lucide-react';
 import { AtividadeDados } from '../services/data-sync-service';
 import activitiesApiService, { ActivityData } from '@/services/activitiesApiService';
 import { visitantesService } from '@/services/visitantesService';
+import { AccessibilityProvider, useAccessibility, Language } from '@/contexts/AccessibilityContext';
+import { Slider } from "@/components/ui/slider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,153 +26,45 @@ import FlashCardsPreview from '../activities/flash-cards/FlashCardsPreview';
 import QuadroInterativoPreview from '../activities/quadro-interativo/QuadroInterativoPreview';
 import MapaMentalPreview from '../activities/mapa-mental/MapaMentalPreview';
 
-export const ModoApresentacaoAtividade: React.FC = () => {
-  const { uniqueCode } = useParams<{ uniqueCode: string }>();
-  const navigate = useNavigate();
-  const [atividade, setAtividade] = useState<AtividadeDados | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [schoolPoints, setSchoolPoints] = useState<number>(100);
-  const [rating, setRating] = useState<number>(0);
-  const [hoverRating, setHoverRating] = useState<number>(0);
-  
-  // Estados de acessibilidade
-  const [language, setLanguage] = useState<'pt' | 'en' | 'es'>('pt');
-  const [fontSize, setFontSize] = useState<'normal' | 'medium' | 'large'>('normal');
-  const [highContrast, setHighContrast] = useState<boolean>(false);
-  const [voiceReading, setVoiceReading] = useState<boolean>(false);
+const languageOptions: { code: Language; name: string; flag: string }[] = [
+  { code: 'pt', name: 'Português', flag: '🇧🇷' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+];
 
-  useEffect(() => {
-    const carregarAtividade = async () => {
-      if (!uniqueCode) {
-        setError('Código da atividade não encontrado');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        console.log('🎯 [APRESENTAÇÃO] Carregando atividade:', uniqueCode);
-        
-        // Carregar atividade usando API service
-        const response = await activitiesApiService.getActivityByCode(uniqueCode);
-        
-        if (!response.success || !response.data) {
-          setError('Atividade não encontrada');
-          setLoading(false);
-          return;
-        }
-
-        // Converter ActivityData para AtividadeDados
-        const activityData: any = Array.isArray(response.data) ? response.data[0] : response.data;
-        
-        // O backend retorna id_json, precisamos mapear para conteudo
-        const conteudoAtividade = activityData.id_json || activityData.conteudo || {};
-        
-        const atividadeConvertida: AtividadeDados = {
-          id: activityData.id || activityData.codigo_unico,
-          tipo: activityData.tipo,
-          titulo: activityData.titulo || '',
-          descricao: activityData.descricao || '',
-          dados: conteudoAtividade,
-          customFields: conteudoAtividade?.customFields || {}
-        };
-
-        console.log('✅ [APRESENTAÇÃO] Atividade carregada:', atividadeConvertida);
-        setAtividade(atividadeConvertida);
-        
-        // Buscar School Points do banco de dados
-        const sps = activityData.school_points ?? 100;
-        setSchoolPoints(sps);
-        console.log('💰 [APRESENTAÇÃO] School Points carregados do banco:', sps, 'da atividade:', activityData.id || activityData.codigo_unico);
-        
-        setLoading(false);
-      } catch (err) {
-        console.error('❌ [APRESENTAÇÃO] Erro ao carregar atividade:', err);
-        setError('Erro ao carregar atividade');
-        setLoading(false);
-      }
-    };
-
-    carregarAtividade();
-  }, [uniqueCode]);
-
-  // Registrar visita automaticamente quando atividade é carregada
-  useEffect(() => {
-    const registrarVisita = async () => {
-      if (!atividade || !uniqueCode) return;
-
-      try {
-        // Buscar dados do usuário logado (se houver)
-        const userEmail = localStorage.getItem('userEmail');
-        const userId = localStorage.getItem('userId');
-        
-        await visitantesService.registrarVisita({
-          codigo_atividade: uniqueCode,
-          id_usuario_visitante: userId || undefined,
-          tipo_visitante: userId ? 'registrado' : 'anonimo'
-        });
-
-        console.log('✅ [APRESENTAÇÃO] Visita registrada com sucesso');
-      } catch (error) {
-        console.error('⚠️ [APRESENTAÇÃO] Erro ao registrar visita (não crítico):', error);
-        // Não bloquear a exibição da atividade se falhar o registro
-      }
-    };
-
-    registrarVisita();
-  }, [atividade, uniqueCode]);
-
-  // Funções de acessibilidade
-  const handleLanguageChange = (lang: 'pt' | 'en' | 'es') => {
-    setLanguage(lang);
-    console.log(`🌍 [ACESSIBILIDADE] Idioma alterado para: ${lang}`);
-  };
-
-  const handleFontSizeChange = () => {
-    const sizes: Array<'normal' | 'medium' | 'large'> = ['normal', 'medium', 'large'];
-    const currentIndex = sizes.indexOf(fontSize);
-    const nextSize = sizes[(currentIndex + 1) % sizes.length];
-    setFontSize(nextSize);
-    console.log(`📏 [ACESSIBILIDADE] Tamanho de fonte alterado para: ${nextSize}`);
-  };
-
-  const handleHighContrastToggle = () => {
-    setHighContrast(!highContrast);
-    console.log(`🎨 [ACESSIBILIDADE] Alto contraste ${!highContrast ? 'ativado' : 'desativado'}`);
-  };
+// Componente interno que usa o contexto de acessibilidade
+const ModoApresentacaoContent: React.FC<{
+  atividade: AtividadeDados;
+  uniqueCode: string;
+  schoolPoints: number;
+  rating: number;
+  hoverRating: number;
+  setRating: (rating: number) => void;
+  setHoverRating: (rating: number) => void;
+  navigate: (path: string) => void;
+}> = ({ atividade, uniqueCode, schoolPoints, rating, hoverRating, setRating, setHoverRating, navigate }) => {
+  const { language, fontSize, voiceReading, setLanguage, setFontSize, setVoiceReading } = useAccessibility();
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [showFontSizeMenu, setShowFontSizeMenu] = useState(false);
 
   const handleVoiceReadingToggle = () => {
     setVoiceReading(!voiceReading);
     if (!voiceReading) {
-      // Iniciar leitura por voz
       const text = atividade?.titulo || 'Atividade carregada';
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = language === 'pt' ? 'pt-BR' : language === 'en' ? 'en-US' : 'es-ES';
+      const langCode = language === 'pt' ? 'pt-BR' : language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : language === 'fr' ? 'fr-FR' : language === 'it' ? 'it-IT' : 'de-DE';
+      utterance.lang = langCode;
       window.speechSynthesis.speak(utterance);
       console.log(`🔊 [ACESSIBILIDADE] Leitura por voz iniciada`);
     } else {
-      // Parar leitura por voz
       window.speechSynthesis.cancel();
       console.log(`🔇 [ACESSIBILIDADE] Leitura por voz pausada`);
     }
   };
 
-  // Aplicar estilos de acessibilidade
-  const getFontSizeClass = () => {
-    switch (fontSize) {
-      case 'medium': return 'text-lg';
-      case 'large': return 'text-xl';
-      default: return 'text-base';
-    }
-  };
-
-  const getContrastClass = () => {
-    return highContrast 
-      ? 'bg-black text-white' 
-      : 'bg-white dark:bg-gray-900';
-  };
-
-  // Função para renderizar a pré-visualização baseada no tipo da atividade
   const renderActivityPreview = () => {
     if (!atividade) return null;
 
@@ -260,38 +154,13 @@ export const ModoApresentacaoAtividade: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 z-[100] bg-white dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Carregando apresentação...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !atividade) {
-    return (
-      <div className="fixed inset-0 z-[100] bg-white dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-500 mb-4">{error || 'Atividade não encontrada'}</p>
-          <Button onClick={() => navigate(`/atividade/${uniqueCode}`)}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div 
-      className={`fixed inset-0 z-[100] overflow-auto ${getContrastClass()} ${getFontSizeClass()}`}
-      style={{ isolation: 'isolate' }}
+      className="fixed inset-0 z-[100] overflow-auto bg-white dark:bg-gray-900"
+      style={{ isolation: 'isolate', fontSize: `${fontSize}px` }}
     >
       {/* Cabeçalho Universal do Modo Apresentação */}
-      <div className={`sticky top-0 z-30 backdrop-blur-md border-b ${highContrast ? 'bg-black/90 border-white' : 'bg-white/80 dark:bg-gray-900/80 border-gray-200 dark:border-gray-800'}`}>
+      <div className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-between px-6 py-4">
           {/* Botão de Sair - Canto Esquerdo */}
           <Button
@@ -340,48 +209,105 @@ export const ModoApresentacaoAtividade: React.FC = () => {
                   <Accessibility className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-72">
                 <DropdownMenuLabel>Configurações de Acessibilidade</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 
                 {/* Opção de Idioma */}
-                <DropdownMenuItem 
-                  onClick={() => {
-                    const nextLang = language === 'pt' ? 'en' : language === 'en' ? 'es' : 'pt';
-                    handleLanguageChange(nextLang);
-                  }}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <Languages className="w-4 h-4" />
-                  <span>Idioma: {language === 'pt' ? 'Português' : language === 'en' ? 'English' : 'Español'}</span>
-                </DropdownMenuItem>
+                {!showLanguageMenu && !showFontSizeMenu && (
+                  <>
+                    <DropdownMenuItem 
+                      onClick={() => setShowLanguageMenu(true)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Globe className="w-4 h-4" />
+                      <span>Idioma: {languageOptions.find(l => l.code === language)?.name}</span>
+                    </DropdownMenuItem>
 
-                {/* Opção de Aumentar Fonte */}
-                <DropdownMenuItem 
-                  onClick={handleFontSizeChange}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <Type className="w-4 h-4" />
-                  <span>Tamanho da Fonte: {fontSize === 'normal' ? 'Normal' : fontSize === 'medium' ? 'Médio' : 'Grande'}</span>
-                </DropdownMenuItem>
+                    {/* Opção de Tamanho de Fonte */}
+                    <DropdownMenuItem 
+                      onClick={() => setShowFontSizeMenu(true)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Type className="w-4 h-4" />
+                      <span>Tamanho da Fonte: {fontSize}px</span>
+                    </DropdownMenuItem>
 
-                {/* Opção de Alto Contraste */}
-                <DropdownMenuItem 
-                  onClick={handleHighContrastToggle}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <Contrast className="w-4 h-4" />
-                  <span>Alto Contraste: {highContrast ? 'Ativado' : 'Desativado'}</span>
-                </DropdownMenuItem>
+                    {/* Opção de Leitura por Voz */}
+                    <DropdownMenuItem 
+                      onClick={handleVoiceReadingToggle}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Volume2 className="w-4 h-4" />
+                      <span>Leitura por Voz: {voiceReading ? 'Ativada' : 'Desativada'}</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
 
-                {/* Opção de Leitura por Voz */}
-                <DropdownMenuItem 
-                  onClick={handleVoiceReadingToggle}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <Volume2 className="w-4 h-4" />
-                  <span>Leitura por Voz: {voiceReading ? 'Ativada' : 'Desativada'}</span>
-                </DropdownMenuItem>
+                {/* Menu de Seleção de Idioma */}
+                {showLanguageMenu && (
+                  <>
+                    <DropdownMenuItem 
+                      onClick={() => setShowLanguageMenu(false)}
+                      className="flex items-center gap-2 cursor-pointer font-semibold"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Voltar</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {languageOptions.map((lang) => (
+                      <DropdownMenuItem
+                        key={lang.code}
+                        onClick={() => {
+                          setLanguage(lang.code);
+                          setShowLanguageMenu(false);
+                          console.log(`🌍 [ACESSIBILIDADE] Idioma alterado para: ${lang.name}`);
+                        }}
+                        className="flex items-center justify-between gap-2 cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span>{lang.flag}</span>
+                          <span>{lang.name}</span>
+                        </span>
+                        {language === lang.code && <Check className="w-4 h-4" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
+
+                {/* Menu de Ajuste de Tamanho de Fonte */}
+                {showFontSizeMenu && (
+                  <>
+                    <DropdownMenuItem 
+                      onClick={() => setShowFontSizeMenu(false)}
+                      className="flex items-center gap-2 cursor-pointer font-semibold"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Voltar</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <div className="px-3 py-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Tamanho: {fontSize}px</span>
+                      </div>
+                      <Slider
+                        value={[fontSize]}
+                        onValueChange={(value) => {
+                          setFontSize(value[0]);
+                          console.log(`📏 [ACESSIBILIDADE] Tamanho de fonte alterado para: ${value[0]}px`);
+                        }}
+                        min={12}
+                        max={24}
+                        step={1}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between mt-2 text-xs text-gray-500">
+                        <span>12px</span>
+                        <span>24px</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -394,11 +320,131 @@ export const ModoApresentacaoAtividade: React.FC = () => {
       </div>
 
       {/* Conteúdo da Atividade em Tela Cheia - Totalmente Funcional */}
-      <div className="w-full min-h-screen pt-4">
+      <div className="min-h-screen">
         {renderActivityPreview()}
       </div>
     </div>
   );
 };
 
-export default ModoApresentacaoAtividade;
+export const ModoApresentacaoAtividade: React.FC = () => {
+  const { uniqueCode } = useParams<{ uniqueCode: string }>();
+  const navigate = useNavigate();
+  const [atividade, setAtividade] = useState<AtividadeDados | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [schoolPoints, setSchoolPoints] = useState<number>(100);
+  const [rating, setRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+
+  useEffect(() => {
+    const carregarAtividade = async () => {
+      if (!uniqueCode) {
+        setError('Código da atividade não encontrado');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        console.log('🎯 [APRESENTAÇÃO] Carregando atividade:', uniqueCode);
+        
+        const response = await activitiesApiService.getActivityByCode(uniqueCode);
+        
+        if (!response.success || !response.data) {
+          setError('Atividade não encontrada');
+          setLoading(false);
+          return;
+        }
+
+        const activityData: any = Array.isArray(response.data) ? response.data[0] : response.data;
+        const conteudoAtividade = activityData.id_json || activityData.conteudo || {};
+        
+        const atividadeConvertida: AtividadeDados = {
+          id: activityData.id || activityData.codigo_unico,
+          tipo: activityData.tipo,
+          titulo: activityData.titulo || '',
+          descricao: activityData.descricao || '',
+          dados: conteudoAtividade,
+          customFields: conteudoAtividade?.customFields || {}
+        };
+
+        setAtividade(atividadeConvertida);
+        setSchoolPoints(activityData.school_points || 100);
+
+        console.log('✅ [APRESENTAÇÃO] Atividade carregada:', atividadeConvertida);
+        console.log('💰 [APRESENTAÇÃO] School Points:', activityData.school_points || 100);
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('❌ [APRESENTAÇÃO] Erro ao carregar atividade:', error);
+        setError('Erro ao carregar atividade');
+        setLoading(false);
+      }
+    };
+
+    carregarAtividade();
+  }, [uniqueCode]);
+
+  useEffect(() => {
+    const registrarVisita = async () => {
+      if (!atividade || !uniqueCode) return;
+
+      try {
+        const userEmail = localStorage.getItem('userEmail');
+        const userId = localStorage.getItem('userId');
+        
+        await visitantesService.registrarVisita({
+          codigo_atividade: uniqueCode,
+          id_usuario_visitante: userId || undefined,
+          tipo_visitante: userId ? 'registrado' : 'anonimo'
+        });
+
+        console.log('✅ [APRESENTAÇÃO] Visita registrada com sucesso');
+      } catch (error) {
+        console.error('⚠️ [APRESENTAÇÃO] Erro ao registrar visita (não crítico):', error);
+      }
+    };
+
+    registrarVisita();
+  }, [atividade, uniqueCode]);
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Carregando apresentação...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !atividade) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error || 'Atividade não encontrada'}</p>
+          <Button onClick={() => navigate(`/atividade/${uniqueCode}`)}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <AccessibilityProvider>
+      <ModoApresentacaoContent
+        atividade={atividade}
+        uniqueCode={uniqueCode}
+        schoolPoints={schoolPoints}
+        rating={rating}
+        hoverRating={hoverRating}
+        setRating={setRating}
+        setHoverRating={setHoverRating}
+        navigate={navigate}
+      />
+    </AccessibilityProvider>
+  );
+};
