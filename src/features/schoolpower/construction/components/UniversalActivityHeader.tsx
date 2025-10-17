@@ -473,35 +473,21 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                       <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">SKs</span>
                     </div>
                   ) : (
-                    // Sparks - Com ícone do cache
+                    // Sparks - Com ícone
                     <div className="flex items-center gap-1">
                       <img 
-                        src={(() => {
-                          // Tenta carregar do cache primeiro
-                          try {
-                            const cached = localStorage.getItem('ponto_school_icons_sparks');
-                            if (cached) {
-                              const iconData = JSON.parse(cached);
-                              if (iconData && iconData.base64) {
-                                return iconData.base64;
-                              }
-                            }
-                          } catch (e) {
-                            console.warn('⚠️ Cache de ícone não disponível, usando URL direta');
-                          }
-                          return '/lovable-uploads/icone-sparks.png';
-                        })()}
+                        src="/lovable-uploads/icone-sparks.png"
                         alt="Sparks" 
                         className="w-4 h-4 object-contain flex-shrink-0"
                         style={{ display: 'block' }}
-                        onLoad={() => console.log('✅ Ícone de sparks carregado')}
+                        onLoad={() => console.log('✅ Ícone de sparks carregado com sucesso')}
                         onError={(e) => {
+                          console.error('❌ Erro ao carregar ícone de sparks. Tentando caminho alternativo...');
                           const img = e.currentTarget as HTMLImageElement;
-                          if (img.src.includes('lovable-uploads')) {
-                            console.log('🔄 Tentando caminho alternativo para sparks...');
+                          if (!img.src.includes('attached_assets')) {
                             img.src = '/attached_assets/icone-sparks.png';
-                          } else if (!img.src.includes('data:image')) {
-                            console.warn('⚠️ Ícone sparks não encontrado, ocultando');
+                          } else {
+                            console.error('❌ Imagem não encontrada em nenhum dos caminhos');
                             img.style.display = 'none';
                           }
                         }}
