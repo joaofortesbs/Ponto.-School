@@ -38,7 +38,7 @@ export default function SchoolPointsCard() {
           <div className={`${isLightMode ? 'bg-[#FFD700]/10' : 'bg-[#FFD700]/10'} p-1.5 rounded-lg ${isLightMode ? 'shadow' : 'shadow-inner'} ${isLightMode ? 'border border-[#FFD700]/20' : 'border border-[#FFD700]/20'} mr-2`}>
             <Award className={`h-4 w-4 ${isLightMode ? 'text-[#FFD700]' : 'text-[#FFD700]'}`} />
           </div>
-          <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>School Points</p>
+          <p className={`text-sm ${isLightMode ? 'text-gray-700' : 'text-gray-300'} font-medium`}>Sparks</p>
         </div>
         {pointsData.hasRecentPoints && (
           <span className={`text-xs font-medium bg-[#FFD700]/20 text-[#FFD700] py-0.5 px-2 rounded-full`}>

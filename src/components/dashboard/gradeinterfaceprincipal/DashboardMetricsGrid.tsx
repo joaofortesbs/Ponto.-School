@@ -26,7 +26,7 @@ export default function DashboardMetricsGrid() {
         {/* Posição ranking card */}
         <PosicaoRankingCard theme={theme} />
 
-        {/* School Points card */}
+        {/* Sparks card */}
         <SchoolPointsCard />
       </div>
 

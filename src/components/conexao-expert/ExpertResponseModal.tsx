@@ -457,7 +457,7 @@ const ExpertResponseModal: React.FC<ExpertResponseModalProps> = ({
           {/* Nota para visualizações pagas */}
           {isPaid && (
             <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 italic">
-              Você desbloqueou esta resposta por 5 School Points. Para escolher
+              Você desbloqueou esta resposta por 5 Sparks. Para escolher
               este expert e iniciar um chat, você precisará criar um novo
               pedido.
             </div>

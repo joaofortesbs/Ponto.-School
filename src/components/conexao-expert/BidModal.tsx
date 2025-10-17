@@ -62,13 +62,13 @@ const BidModal: React.FC<BidModalProps> = ({
     // Validate bid amount
     if (request.currentBid && bidAmount <= request.currentBid) {
       setError(
-        `A proposta deve ser maior que a proposta atual (${request.currentBid} School Points)`,
+        `A proposta deve ser maior que a proposta atual (${request.currentBid} Sparks)`,
       );
       return;
     }
 
     if (bidAmount < 5) {
-      setError("A proposta mínima é de 5 School Points");
+      setError("A proposta mínima é de 5 Sparks");
       return;
     }
 
@@ -118,7 +118,7 @@ const BidModal: React.FC<BidModalProps> = ({
               <div className="flex items-center justify-between">
                 <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                   <DollarSign className="h-3 w-3 mr-1" /> Proposta Atual:{" "}
-                  {request.currentBid} School Points
+                  {request.currentBid} Sparks
                 </Badge>
                 {request.timeLeft && (
                   <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
@@ -134,7 +134,7 @@ const BidModal: React.FC<BidModalProps> = ({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="bidAmount" className="text-base font-medium">
-                  Sua Proposta (School Points) *
+                  Sua Proposta (Sparks) *
                 </Label>
                 <TooltipProvider>
                   <Tooltip>
@@ -150,7 +150,7 @@ const BidModal: React.FC<BidModalProps> = ({
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="w-[200px] text-xs">
-                        Este é o valor em School Points que você receberá ao
+                        Este é o valor em Sparks que você receberá ao
                         resolver a dúvida do aluno. Propostas mais baixas têm
                         mais chances de serem escolhidas.
                       </p>

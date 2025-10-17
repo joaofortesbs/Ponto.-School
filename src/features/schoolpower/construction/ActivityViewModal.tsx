@@ -57,7 +57,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const isLightMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
   const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
   const [flashCardsContent, setFlashCardsContent] = useState<any>(null);
-  const [schoolPoints, setSchoolPoints] = useState<number>(100);
+  const [sparks, setSparks] = useState<number>(100);
 
   const handleDownload = async () => {
     if (!activity) return;
@@ -168,16 +168,16 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
       console.log('🔍 ActivityViewModal: Carregando dados para atividade:', activity);
 
-      // Carregar School Points do localStorage ou banco
-      const loadSchoolPoints = async () => {
+      // Carregar Sparks do localStorage ou banco
+      const loadSparks = async () => {
         // Primeiro, tentar do localStorage
-        const spKey = `activity_${activity.id}_schoolpoints`;
-        const localSPs = localStorage.getItem(spKey);
+        const skKey = `activity_${activity.id}_sparks`;
+        const localSKs = localStorage.getItem(skKey);
         
-        if (localSPs) {
-          const points = parseInt(localSPs);
-          console.log(`💰 School Points carregados do localStorage: ${points} SPs`);
-          setSchoolPoints(points);
+        if (localSKs) {
+          const points = parseInt(localSKs);
+          console.log(`💰 Sparks carregados do localStorage: ${points} SKs`);
+          setSparks(points);
         } else {
           // Se não encontrou no localStorage, tentar do banco Neon
           const userId = localStorage.getItem('user_id');
@@ -186,24 +186,24 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
               const { atividadesNeonService } = await import('@/services/atividadesNeonService');
               const result = await atividadesNeonService.buscarAtividade(activity.id);
               
-              if (result.success && result.data?.school_points) {
-                console.log(`💰 School Points carregados do banco: ${result.data.school_points} SPs`);
-                setSchoolPoints(result.data.school_points);
+              if (result.success && result.data?.sparks) {
+                console.log(`💰 Sparks carregados do banco: ${result.data.sparks} SKs`);
+                setSparks(result.data.sparks);
               } else {
-                console.log('💰 Usando valor padrão: 100 SPs');
-                setSchoolPoints(100);
+                console.log('💰 Usando valor padrão: 100 SKs');
+                setSparks(100);
               }
             } catch (error) {
-              console.warn('⚠️ Erro ao carregar SPs do banco:', error);
-              setSchoolPoints(100);
+              console.warn('⚠️ Erro ao carregar SKs do banco:', error);
+              setSparks(100);
             }
           } else {
-            setSchoolPoints(100);
+            setSparks(100);
           }
         }
       };
 
-      loadSchoolPoints();
+      loadSparks();
 
       // Se for plano-aula, tentar carregar dados específicos
       if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
@@ -696,8 +696,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             activityType={activityType}
             userName={userInfo.displayName || userInfo.name}
             userAvatar={userInfo.avatar}
-            schoolPoints={schoolPoints}
-            onSchoolPointsChange={(newSPs) => setSchoolPoints(newSPs)}
+            sparks={sparks}
+            onSparksChange={(newSKs) => setSparks(newSKs)}
             onDownload={handleDownload}
             onMoreOptions={() => {
               console.log('Menu de opções clicado');

@@ -16,7 +16,7 @@ export interface AtividadeCompartilhavel {
   customFields?: any; // Campos customizados sincronizados
   professorNome: string;
   professorAvatar?: string;
-  schoolPoints: number;
+  sparks: number;
   criadoPor: string;
   criadoEm: string;
   codigoUnico: string;
@@ -37,7 +37,7 @@ export interface NovaAtividadeCompartilhavel {
   customFields?: any; // Campos customizados para sincronização
   professorNome?: string;
   professorAvatar?: string;
-  schoolPoints?: number;
+  sparks?: number;
   criadoPor: string;
   disciplina?: string; // Metadados para sincronização
   nivel?: string;
@@ -251,7 +251,7 @@ class GeradorLinkAtividadesSchoolPower {
         customFields: atividadeSincronizada.customFields || {},
         professorNome: atividade.professorNome || 'Professor',
         professorAvatar: atividade.professorAvatar,
-        schoolPoints: atividade.schoolPoints || 100,
+        sparks: atividade.sparks || 100,
         codigoUnico,
         linkPublico,
         criadoPor: atividade.criadoPor,

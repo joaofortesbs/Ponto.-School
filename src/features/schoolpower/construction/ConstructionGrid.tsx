@@ -265,11 +265,11 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
               console.log(`🔑 Usando código único existente para ${activityId}:`, codigoUnico);
             }
 
-            // Buscar School Points do localStorage (padrão 100)
+            // Buscar Sparks do localStorage (padrão 100)
             const spKey = `activity_${activityId}_schoolpoints`;
-            const schoolPoints = parseInt(localStorage.getItem(spKey) || '100');
+            const sparks = parseInt(localStorage.getItem(spKey) || '100');
             
-            console.log(`💾 Salvando atividade com código único: ${codigoUnico} e ${schoolPoints} SPs`);
+            console.log(`💾 Salvando atividade com código único: ${codigoUnico} e ${sparks} SKs`);
 
             // Salvar no banco Neon usando o código único como ID
             const result = await atividadesNeonService.salvarAtividade(
@@ -277,7 +277,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
               userId,
               tipo,
               parsedData,
-              schoolPoints // Incluir School Points
+              sparks // Incluir Sparks
             );
 
             if (result.success) {

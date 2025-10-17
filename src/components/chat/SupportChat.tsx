@@ -146,7 +146,7 @@ const defaultFaqs: FaqItem[] = [
     id: "1",
     question: "Como funciona o sistema de pontos?",
     answer:
-      "O sistema de School Points permite que você acumule pontos ao completar cursos, participar de fóruns e realizar outras atividades na plataforma. Esses pontos podem ser trocados por recompensas como cursos premium, mentorias e materiais exclusivos.",
+      "O sistema de Sparks permite que você acumule pontos ao completar cursos, participar de fóruns e realizar outras atividades na plataforma. Esses pontos podem ser trocados por recompensas como cursos premium, mentorias e materiais exclusivos.",
     category: "Pontos e Recompensas",
   },
   {
@@ -410,7 +410,7 @@ const SupportChat: React.FC = () => {
       lowerMessage.includes("pontos") ||
       lowerMessage.includes("school points")
     ) {
-      return "Os School Points são nossa moeda virtual. Você pode ganhar pontos completando cursos, participando de fóruns e realizando outras atividades. Eles podem ser trocados por recompensas na seção Carteira.";
+      return "Os Sparks são nossa moeda virtual. Você pode ganhar pontos completando cursos, participando de fóruns e realizando outras atividades. Eles podem ser trocados por recompensas na seção Carteira.";
     } else if (
       lowerMessage.includes("curso") ||
       lowerMessage.includes("aula")

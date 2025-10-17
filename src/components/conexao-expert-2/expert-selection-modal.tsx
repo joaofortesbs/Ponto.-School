@@ -135,7 +135,7 @@ export const ExpertSelectionModal: React.FC<ExpertSelectionModalProps> = ({
               <p className="text-sm text-amber-800 dark:text-amber-300">
                 Se você quiser comparar respostas de diferentes experts, você
                 poderá selecionar outro expert posteriormente, utilizando mais
-                School Points.
+                Sparks.
               </p>
             </div>
           </div>

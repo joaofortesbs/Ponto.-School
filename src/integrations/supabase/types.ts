@@ -961,7 +961,7 @@ export type Database = {
           limite_gastos: number | null
           recarga_automatica: boolean | null
           saldo_atual: number | null
-          school_points: number | null
+          sparks: number | null
           updated_at: string | null
           user_id: string
         }
@@ -971,7 +971,7 @@ export type Database = {
           limite_gastos?: number | null
           recarga_automatica?: boolean | null
           saldo_atual?: number | null
-          school_points?: number | null
+          sparks?: number | null
           updated_at?: string | null
           user_id: string
         }
@@ -981,7 +981,7 @@ export type Database = {
           limite_gastos?: number | null
           recarga_automatica?: boolean | null
           saldo_atual?: number | null
-          school_points?: number | null
+          sparks?: number | null
           updated_at?: string | null
           user_id?: string
         }

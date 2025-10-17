@@ -125,7 +125,7 @@ const ExpertSelectionModal: React.FC<ExpertSelectionModalProps> = ({
                   <span>
                     {" "}
                     Se quiser escolher outro expert depois para comparar as
-                    respostas, terá que enviar mais um valor de School Points
+                    respostas, terá que enviar mais um valor de Sparks
                     para ver mais respostas.
                   </span>
                 )}

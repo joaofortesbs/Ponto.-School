@@ -78,7 +78,7 @@ export const BidModal: React.FC<BidModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="bidAmount" className="text-base font-medium">
-                Valor da Proposta (School Points)
+                Valor da Proposta (Sparks)
               </Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />

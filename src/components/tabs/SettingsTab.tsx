@@ -1039,7 +1039,7 @@ export default function SettingsTab({
                 <div className="p-4 bg-white dark:bg-[#0A2540] rounded-lg border">
                   <div className="flex items-center gap-2 mb-2">
                     <Wallet className="h-4 w-4 text-[#FF6B00]" />
-                    <span className="font-medium">School Points</span>
+                    <span className="font-medium">Sparks</span>
                   </div>
                   <p className="text-2xl font-bold text-[#29335C] dark:text-white">
                     {userProfile?.points || 0}

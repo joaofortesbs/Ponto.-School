@@ -40,13 +40,13 @@ const languageOptions: { code: Language; name: string; flag: string }[] = [
 const ModoApresentacaoContent: React.FC<{
   atividade: AtividadeDados;
   uniqueCode: string;
-  schoolPoints: number;
+  sparks: number;
   rating: number;
   hoverRating: number;
   setRating: (rating: number) => void;
   setHoverRating: (rating: number) => void;
   navigate: (path: string) => void;
-}> = ({ atividade, uniqueCode, schoolPoints, rating, hoverRating, setRating, setHoverRating, navigate }) => {
+}> = ({ atividade, uniqueCode, sparks, rating, hoverRating, setRating, setHoverRating, navigate }) => {
   const { language, fontSize, voiceReading, setLanguage, setFontSize, setVoiceReading } = useAccessibility();
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [showFontSizeMenu, setShowFontSizeMenu] = useState(false);
@@ -179,7 +179,7 @@ const ModoApresentacaoContent: React.FC<{
             <LogOut className="w-5 h-5" />
           </Button>
 
-          {/* Sistema de Avaliação (5 Estrelas) + Acessibilidade + School Points - Canto Direito */}
+          {/* Sistema de Avaliação (5 Estrelas) + Acessibilidade + Sparks - Canto Direito */}
           <div className="flex items-center gap-4">
             {/* 5 Estrelas de Avaliação */}
             <div className="flex items-center gap-1">
@@ -318,9 +318,9 @@ const ModoApresentacaoContent: React.FC<{
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* School Points - Sem ícone de estrela */}
+            {/* Sparks - Sem ícone de estrela */}
             <div className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 rounded-full shadow-lg">
-              <span className="text-white font-bold text-lg">{schoolPoints} SPs</span>
+              <span className="text-white font-bold text-lg">{sparks} SKs</span>
             </div>
           </div>
         </div>
@@ -347,7 +347,7 @@ export const ModoApresentacaoAtividade: React.FC = () => {
   const [atividade, setAtividade] = useState<AtividadeDados | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [schoolPoints, setSchoolPoints] = useState<number>(100);
+  const [sparks, setSparks] = useState<number>(100);
   const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
 
@@ -383,10 +383,10 @@ export const ModoApresentacaoAtividade: React.FC = () => {
         };
 
         setAtividade(atividadeConvertida);
-        setSchoolPoints(activityData.school_points || 100);
+        setSparks(activityData.sparks || 100);
 
         console.log('✅ [APRESENTAÇÃO] Atividade carregada:', atividadeConvertida);
-        console.log('💰 [APRESENTAÇÃO] School Points:', activityData.school_points || 100);
+        console.log('💰 [APRESENTAÇÃO] Sparks:', activityData.sparks || 100);
         
         setLoading(false);
       } catch (error) {
@@ -452,7 +452,7 @@ export const ModoApresentacaoAtividade: React.FC = () => {
       <ModoApresentacaoContent
         atividade={atividade}
         uniqueCode={uniqueCode}
-        schoolPoints={schoolPoints}
+        sparks={sparks}
         rating={rating}
         hoverRating={hoverRating}
         setRating={setRating}

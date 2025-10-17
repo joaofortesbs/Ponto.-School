@@ -57,7 +57,7 @@ const ConfirmExpertModal: React.FC<ConfirmExpertModalProps> = ({
               <div>
                 <span className="text-gray-500 dark:text-gray-400">Valor</span>
                 <div className="font-bold text-blue-800 dark:text-blue-300">
-                  25 School Points
+                  25 Sparks
                 </div>
               </div>
               <div>

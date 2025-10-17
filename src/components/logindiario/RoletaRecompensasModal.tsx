@@ -48,16 +48,16 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     // Grupo Inicial (Padrão) - Ordenado por probabilidade (maior para menor)
     [
       { name: "250 XPs", color: "#FFA366", angle: 240, chance: 45 },
-      { name: "100 SPs", color: "#FF9933", angle: 180, chance: 25 },
+      { name: "100 SKs", color: "#FF9933", angle: 180, chance: 25 },
       { name: "Avatar Raro", color: "#FF8C40", angle: 60, chance: 15 },
       { name: "Epictus Turbo", color: "#FF7A1A", angle: 300, chance: 7 },
       { name: "Material Exclusivo", color: "#FFB366", angle: 120, chance: 5 },
-      { name: "999 SPs", color: "#FF6B00", angle: 0, chance: 3 },
+      { name: "999 SKs", color: "#FF6B00", angle: 0, chance: 3 },
     ],
     // Após 1ª Regeneração
     [
       { name: "50 XP", color: "#FF9933", angle: 180, chance: 45 },
-      { name: "99 SPs", color: "#FFA366", angle: 240, chance: 25 },
+      { name: "99 SKs", color: "#FFA366", angle: 240, chance: 25 },
       { name: "+3 Giros Grátis", color: "#FF7A1A", angle: 300, chance: 15 },
       { name: "Giro Especial", color: "#FF6B00", angle: 0, chance: 7 },
       { name: "3 Avatares Raros", color: "#FF8C40", angle: 60, chance: 5 },
@@ -66,7 +66,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     // Após 2ª Regeneração
     [
       { name: "75 XP", color: "#FF9933", angle: 180, chance: 45 },
-      { name: "199 SPs", color: "#FFA366", angle: 240, chance: 25 },
+      { name: "199 SKs", color: "#FFA366", angle: 240, chance: 25 },
       { name: "+3 Giros Grátis", color: "#FF7A1A", angle: 300, chance: 15 },
       { name: "+50% Chance Aumentada", color: "#FF6B00", angle: 0, chance: 7 },
       { name: "15% Desconto Mercado", color: "#FF8C40", angle: 60, chance: 5 },
@@ -74,7 +74,7 @@ const RoletaRecompensasModal: React.FC<RoletaRecompensasModalProps> = ({
     ],
     // Após 3ª Regeneração
     [
-      { name: "299 SPs", color: "#FFA366", angle: 240, chance: 25 },
+      { name: "299 SKs", color: "#FFA366", angle: 240, chance: 25 },
       { name: "150 XP", color: "#FF9933", angle: 180, chance: 45 },
       { name: "Giro Especial", color: "#FF7A1A", angle: 300, chance: 15 },
       { name: "Conquistas Especiais", color: "#FF6B00", angle: 0, chance: 7 },

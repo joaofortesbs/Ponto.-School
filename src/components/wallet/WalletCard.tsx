@@ -172,7 +172,7 @@ const WalletCard = ({
 
   const handleAddFunds = () => {
     setIsAddingFunds(false);
-    alert(`${fundAmount} School Points adicionados com sucesso!`);
+    alert(`${fundAmount} Sparks adicionados com sucesso!`);
   };
 
   return (
@@ -188,7 +188,7 @@ const WalletCard = ({
                 Carteira
               </h3>
               <p className="text-sm text-[#778DA9] dark:text-white/60">
-                Gerencie seus School Points
+                Gerencie seus Sparks
               </p>
             </div>
           </div>
@@ -343,7 +343,7 @@ const WalletCard = ({
                     );
                     if (amount && !isNaN(Number(amount))) {
                       alert(
-                        `${amount} School Points transferidos para ${recipient} com sucesso!`,
+                        `${amount} Sparks transferidos para ${recipient} com sucesso!`,
                       );
                     }
                   }
@@ -445,7 +445,7 @@ const WalletCard = ({
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="bg-white dark:bg-[#0A2540] rounded-xl p-6 max-w-md w-full">
                 <h3 className="text-xl font-semibold text-[#29335C] dark:text-white mb-4">
-                  Adicionar School Points
+                  Adicionar Sparks
                 </h3>
 
                 <div className="space-y-4">
@@ -742,7 +742,7 @@ const WalletCard = ({
                   <Button
                     className="flex-1 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
                     onClick={() => {
-                      const shareText = `Use meu código de indicação ${referralCode} para ganhar 50 School Points ao se cadastrar na Ponto.School!`;
+                      const shareText = `Use meu código de indicação ${referralCode} para ganhar 50 Sparks ao se cadastrar na Ponto.School!`;
                       if (navigator.share) {
                         navigator
                           .share({
@@ -765,7 +765,7 @@ const WalletCard = ({
                     className="flex-1 bg-white text-[#29335C] hover:bg-white/90"
                     onClick={() => {
                       alert(
-                        "Programa de Indicação: Ganhe 50 School Points por cada amigo que se cadastrar usando seu código de indicação!",
+                        "Programa de Indicação: Ganhe 50 Sparks por cada amigo que se cadastrar usando seu código de indicação!",
                       );
                     }}
                   >

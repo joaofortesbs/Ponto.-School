@@ -186,7 +186,7 @@ const defaultFaqs: FaqItem[] = [
     id: "1",
     question: "Como funciona o sistema de pontos?",
     answer:
-      "O sistema de School Points permite que você acumule pontos ao completar cursos, participar de fóruns e realizar outras atividades na plataforma. Esses pontos podem ser trocados por recompensas como cursos premium, mentorias e materiais exclusivos.",
+      "O sistema de Sparks permite que você acumule pontos ao completar cursos, participar de fóruns e realizar outras atividades na plataforma. Esses pontos podem ser trocados por recompensas como cursos premium, mentorias e materiais exclusivos.",
     category: "Pontos e Recompensas",
   },
   {

@@ -131,7 +131,7 @@ const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
         content: replyText,
         timestamp: new Date().toISOString(),
         status: "pending", // Status inicial da proposta
-        price: 25, // Valor padrão da proposta em School Points
+        price: 25, // Valor padrão da proposta em Sparks
         responseTime: "< 1 hora", // Tempo estimado de resposta
       };
 
@@ -455,7 +455,7 @@ const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                         Proposta Atual
                       </span>
                       <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                        {request.auction.currentBid} School Points
+                        {request.auction.currentBid} Sparks
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -760,7 +760,7 @@ const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                           Proposta Atual
                         </span>
                         <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                          {request.auction.currentBid} School Points
+                          {request.auction.currentBid} Sparks
                         </span>
                       </div>
                       <div className="flex flex-col">
@@ -813,7 +813,7 @@ const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                         </div>
                         <div className="text-right">
                           <span className="font-bold text-[#FF6B00]">
-                            25 School Points
+                            25 Sparks
                           </span>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
                             Proposta Atual
@@ -840,7 +840,7 @@ const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                         </div>
                         <div className="text-right">
                           <span className="font-bold text-gray-500 dark:text-gray-400">
-                            20 School Points
+                            20 Sparks
                           </span>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
                             Superado
@@ -867,7 +867,7 @@ const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
                         </div>
                         <div className="text-right">
                           <span className="font-bold text-gray-500 dark:text-gray-400">
-                            15 School Points
+                            15 Sparks
                           </span>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
                             Superado
