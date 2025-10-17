@@ -482,24 +482,26 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                             const cached = localStorage.getItem('ponto_school_icons_sparks');
                             if (cached) {
                               const iconData = JSON.parse(cached);
-                              return iconData.base64;
+                              if (iconData && iconData.base64) {
+                                return iconData.base64;
+                              }
                             }
                           } catch (e) {
-                            console.error('Erro ao carregar ícone do cache:', e);
+                            console.warn('⚠️ Cache de ícone não disponível, usando URL direta');
                           }
                           return '/lovable-uploads/icone-sparks.png';
                         })()}
                         alt="Sparks" 
                         className="w-4 h-4 object-contain flex-shrink-0"
                         style={{ display: 'block' }}
-                        onLoad={() => console.log('✅ Ícone de sparks carregado com sucesso')}
+                        onLoad={() => console.log('✅ Ícone de sparks carregado')}
                         onError={(e) => {
-                          console.error('❌ Erro ao carregar ícone de sparks. Tentando caminho alternativo...');
                           const img = e.currentTarget as HTMLImageElement;
-                          if (!img.src.includes('attached_assets')) {
+                          if (img.src.includes('lovable-uploads')) {
+                            console.log('🔄 Tentando caminho alternativo para sparks...');
                             img.src = '/attached_assets/icone-sparks.png';
-                          } else {
-                            console.error('❌ Imagem não encontrada em nenhum dos caminhos');
+                          } else if (!img.src.includes('data:image')) {
+                            console.warn('⚠️ Ícone sparks não encontrado, ocultando');
                             img.style.display = 'none';
                           }
                         }}

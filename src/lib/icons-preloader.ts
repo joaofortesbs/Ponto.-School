@@ -98,18 +98,18 @@ export async function preloadIcons(): Promise<void> {
   
   console.log('🎨 Iniciando pré-carregamento de ícones...');
   
-  for (const icon of icons) {
+  const loadPromises = icons.map(async (icon) => {
     try {
       // Verifica se já existe no storage
       const existing = getIconFromStorage(icon.name);
       
       if (existing) {
         console.log(`✅ Ícone ${icon.name} já está em cache`);
-        continue;
+        return;
       }
       
       // Converte para Base64
-      console.log(`📥 Carregando ícone ${icon.name}...`);
+      console.log(`📥 Carregando ícone ${icon.name} de ${icon.url}...`);
       const base64 = await imageToBase64(icon.url);
       
       // Salva no localStorage
@@ -118,8 +118,11 @@ export async function preloadIcons(): Promise<void> {
       console.log(`✅ Ícone ${icon.name} pré-carregado com sucesso`);
     } catch (error) {
       console.error(`❌ Erro ao pré-carregar ícone ${icon.name}:`, error);
+      // Não interrompe o carregamento de outros ícones
     }
-  }
+  });
+  
+  await Promise.allSettled(loadPromises);
   
   console.log('🎨 Pré-carregamento de ícones concluído');
 }

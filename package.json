@@ -52,6 +52,8 @@
     "@sendgrid/mail": "^8.1.5",
     "@supabase/supabase-js": "^2.50.2",
     "@tailwindcss/nesting": "^0.0.0-insiders.565cd3e",
+    "@tanstack/react-query": "^5.90.5",
+    "@tanstack/react-query-devtools": "^5.90.2",
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.8.1",
     "@types/bcryptjs": "^2.4.6",
