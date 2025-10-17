@@ -34,8 +34,8 @@ interface UniversalActivityHeaderProps {
   userName?: string;
   userAvatar?: string;
   onMoreOptions?: () => void;
-  schoolPoints?: number;
-  onSchoolPointsChange?: (newSPs: number) => void; // Callback para notificar mudanças nos SPs
+  sparks?: number;
+  onSparksChange?: (newSKs: number) => void; // Callback para notificar mudanças nos SKs
   onAddToClass?: () => void;
   onDownload?: () => void;
   onShare?: () => void;
@@ -169,8 +169,8 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   userName,
   userAvatar,
   onMoreOptions,
-  schoolPoints = 100,
-  onSchoolPointsChange, // Novo callback
+  sparks = 100,
+  onSparksChange, // Novo callback
   onAddToClass,
   onDownload,
   onShare,
@@ -180,15 +180,15 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   isSharedActivity = false // Nova prop com valor padrão
 }) => {
   const userInfo = useUserInfo();
-  const [isEditingSPs, setIsEditingSPs] = React.useState(false);
-  const [currentSPs, setCurrentSPs] = React.useState(schoolPoints);
-  const [tempSPs, setTempSPs] = React.useState(schoolPoints.toString());
+  const [isEditingSKs, setIsEditingSKs] = React.useState(false);
+  const [currentSKs, setCurrentSKs] = React.useState(sparks);
+  const [tempSKs, setTempSKs] = React.useState(sparks.toString());
 
-  // Sincronizar com prop schoolPoints quando mudar
+  // Sincronizar com prop sparks quando mudar
   React.useEffect(() => {
-    setCurrentSPs(schoolPoints);
-    setTempSPs(schoolPoints.toString());
-  }, [schoolPoints]);
+    setCurrentSKs(sparks);
+    setTempSKs(sparks.toString());
+  }, [sparks]);
   const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -242,48 +242,48 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
       .slice(0, 2);
   };
 
-  // Funções para gerenciar edição de SPs
-  const handleEditSPs = () => {
-    setTempSPs(currentSPs.toString());
-    setIsEditingSPs(true);
+  // Funções para gerenciar edição de SKs
+  const handleEditSKs = () => {
+    setTempSKs(currentSKs.toString());
+    setIsEditingSKs(true);
   };
 
-  const handleSaveSPs = () => {
-    const newSPs = parseInt(tempSPs) || 100;
-    setCurrentSPs(newSPs);
-    setIsEditingSPs(false);
+  const handleSaveSKs = () => {
+    const newSKs = parseInt(tempSKs) || 100;
+    setCurrentSKs(newSKs);
+    setIsEditingSKs(false);
     
     // Salvar no localStorage para sincronização posterior
     if (activityId) {
-      const spKey = `activity_${activityId}_schoolpoints`;
-      localStorage.setItem(spKey, newSPs.toString());
-      console.log(`💾 School Points salvos localmente para ${activityId}:`, newSPs);
+      const skKey = `activity_${activityId}_sparks`;
+      localStorage.setItem(skKey, newSKs.toString());
+      console.log(`💾 Sparks salvos localmente para ${activityId}:`, newSKs);
     }
     
     // Notificar componente pai sobre a mudança
-    if (onSchoolPointsChange) {
-      onSchoolPointsChange(newSPs);
+    if (onSparksChange) {
+      onSparksChange(newSKs);
     }
   };
 
   const handleCancelEdit = () => {
-    setTempSPs(currentSPs.toString());
-    setIsEditingSPs(false);
+    setTempSKs(currentSKs.toString());
+    setIsEditingSKs(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSaveSPs();
+      handleSaveSKs();
     } else if (e.key === 'Escape') {
       handleCancelEdit();
     }
   };
 
-  const handleSPsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSKsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Permitir qualquer número positivo até 99999
     if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 99999)) {
-      setTempSPs(value);
+      setTempSKs(value);
     }
   };
 
@@ -443,7 +443,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             </div>
           </div>
 
-          {/* Card de School Points */}
+          {/* Card de Sparks */}
           <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm">
             <div className="flex items-center gap-2">
               {isSharedActivity ? (
@@ -451,33 +451,33 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                 <div className="flex items-center gap-2">
                   <span className="text-orange-600 dark:text-orange-400 text-sm font-bold">$</span>
                   <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">
-                    {currentSPs} SPs
+                    {currentSKs} SKs
                   </span>
                 </div>
               ) : (
                 // Para páginas normais - sem ícone de cifrão
                 <div className="flex items-center gap-2">
-                  {isEditingSPs ? (
+                  {isEditingSKs ? (
                     <div className="flex items-center gap-1">
                       <input
                         type="number"
-                        value={tempSPs}
-                        onChange={handleSPsChange}
+                        value={tempSKs}
+                        onChange={handleSKsChange}
                         onKeyDown={handleKeyPress}
-                        onBlur={handleSaveSPs}
+                        onBlur={handleSaveSKs}
                         min="0"
                         max="99999"
                         className="w-16 text-sm font-semibold text-orange-700 dark:text-orange-400 bg-transparent border-none outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         autoFocus
                       />
-                      <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">SPs</span>
+                      <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">SKs</span>
                     </div>
                   ) : (
                     <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">
-                      {currentSPs} SPs
+                      {currentSKs} SKs
                     </span>
                   )}
-                  <button onClick={handleEditSPs} className="hover:bg-orange-200/50 dark:hover:bg-orange-700/30 p-1 rounded transition-colors">
+                  <button onClick={handleEditSKs} className="hover:bg-orange-200/50 dark:hover:bg-orange-700/30 p-1 rounded transition-colors">
                     <Pencil className="w-3 h-3 text-orange-600 dark:text-orange-400" />
                   </button>
                 </div>
