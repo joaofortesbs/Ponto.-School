@@ -139,6 +139,10 @@ const PerfilCabecalho: React.FC = () => {
               src="/lovable-uploads/icone-powers.png" 
               alt="Sparks" 
               className="w-4 h-4 object-contain"
+              onError={(e) => {
+                console.error('Erro ao carregar imagem de sparks');
+                e.currentTarget.style.display = 'none';
+              }}
             />
             <span className="text-sm font-semibold text-[#FF6B00]">{sparks}</span>
             <ChevronDown className="h-4 w-4 text-[#64748B] dark:text-white/60 group-hover:text-[#FF6B00] dark:group-hover:text-[#FF6B00] transition-colors duration-300" />
