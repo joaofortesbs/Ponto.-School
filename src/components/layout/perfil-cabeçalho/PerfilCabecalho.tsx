@@ -134,7 +134,7 @@ const PerfilCabecalho: React.FC = () => {
           </div>
 
           {/* Valor e Ícone */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-0.5">
             <img 
               src={`/lovable-uploads/icone-powers.png?v=${Date.now()}`}
               alt="Powers" 
