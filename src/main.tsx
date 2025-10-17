@@ -8,8 +8,8 @@ import { StrictMode } from 'react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from "@/components/ui/toaster";
-import { UsernameProvider } from './context/UsernameContext';
-import { ThemeProvider } from './context/ThemeContext';
+import { UsernameProvider } from './components/UsernameProvider';
+import { ThemeProvider } from './components/ThemeProvider';
 import { preInitializeWebNodes } from './lib/web-persistence';
 import { preloadIcons } from './lib/icons-preloader';
 
