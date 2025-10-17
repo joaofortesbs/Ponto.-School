@@ -5,7 +5,7 @@ export interface AtividadeNeon {
   id_user: string;
   tipo: string;
   id_json: any;
-  sparks?: number;
+  stars?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -14,9 +14,9 @@ const API_BASE_URL = '/api/atividades-neon';
 
 class AtividadesNeonService {
   // Salvar atividade no banco Neon
-  async salvarAtividade(id: string, userId: string, tipo: string, dadosAtividade: any, sparks?: number): Promise<{ success: boolean; data?: any; error?: string }> {
+  async salvarAtividade(id: string, userId: string, tipo: string, dadosAtividade: any, stars?: number): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
-      console.log('💾 Salvando atividade no Neon:', { id, userId, tipo, sparks });
+      console.log('💾 Salvando atividade no Neon:', { id, userId, tipo, stars });
       
       const response = await fetch(API_BASE_URL, {
         method: 'POST',
@@ -28,7 +28,7 @@ class AtividadesNeonService {
           id_user: userId,
           tipo,
           id_json: dadosAtividade,
-          sparks: sparks !== undefined ? sparks : 100
+          stars: stars !== undefined ? stars : 100
         })
       });
 

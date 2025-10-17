@@ -34,8 +34,8 @@ interface UniversalActivityHeaderProps {
   userName?: string;
   userAvatar?: string;
   onMoreOptions?: () => void;
-  sparks?: number;
-  onSparksChange?: (newSKs: number) => void; // Callback para notificar mudanças nos SKs
+  stars?: number;
+  onStarsChange?: (newSTs: number) => void; // Callback para notificar mudanças nos STs
   onAddToClass?: () => void;
   onDownload?: () => void;
   onShare?: () => void;
@@ -169,8 +169,8 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   userName,
   userAvatar,
   onMoreOptions,
-  sparks = 100,
-  onSparksChange, // Novo callback
+  stars = 100,
+  onStarsChange, // Novo callback
   onAddToClass,
   onDownload,
   onShare,
@@ -180,15 +180,15 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   isSharedActivity = false // Nova prop com valor padrão
 }) => {
   const userInfo = useUserInfo();
-  const [isEditingSKs, setIsEditingSKs] = React.useState(false);
-  const [currentSKs, setCurrentSKs] = React.useState(sparks);
-  const [tempSKs, setTempSKs] = React.useState(sparks.toString());
+  const [isEditingSTs, setIsEditingSTs] = React.useState(false);
+  const [currentSTs, setCurrentSTs] = React.useState(stars);
+  const [tempSTs, setTempSTs] = React.useState(stars.toString());
 
-  // Sincronizar com prop sparks quando mudar
+  // Sincronizar com prop stars quando mudar
   React.useEffect(() => {
-    setCurrentSKs(sparks);
-    setTempSKs(sparks.toString());
-  }, [sparks]);
+    setCurrentSTs(stars);
+    setTempSTs(stars.toString());
+  }, [stars]);
   const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -242,48 +242,48 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
       .slice(0, 2);
   };
 
-  // Funções para gerenciar edição de SKs
-  const handleEditSKs = () => {
-    setTempSKs(currentSKs.toString());
-    setIsEditingSKs(true);
+  // Funções para gerenciar edição de STs
+  const handleEditSTs = () => {
+    setTempSTs(currentSTs.toString());
+    setIsEditingSTs(true);
   };
 
-  const handleSaveSKs = () => {
-    const newSKs = parseInt(tempSKs) || 100;
-    setCurrentSKs(newSKs);
-    setIsEditingSKs(false);
+  const handleSaveSTs = () => {
+    const newSTs = parseInt(tempSTs) || 100;
+    setCurrentSTs(newSTs);
+    setIsEditingSTs(false);
 
     // Salvar no localStorage para sincronização posterior
     if (activityId) {
-      const skKey = `activity_${activityId}_sparks`;
-      localStorage.setItem(skKey, newSKs.toString());
-      console.log(`💾 Sparks salvos localmente para ${activityId}:`, newSKs);
+      const stKey = `activity_${activityId}_stars`;
+      localStorage.setItem(stKey, newSTs.toString());
+      console.log(`💾 Stars salvos localmente para ${activityId}:`, newSTs);
     }
 
     // Notificar componente pai sobre a mudança
-    if (onSparksChange) {
-      onSparksChange(newSKs);
+    if (onStarsChange) {
+      onStarsChange(newSTs);
     }
   };
 
   const handleCancelEdit = () => {
-    setTempSKs(currentSKs.toString());
-    setIsEditingSKs(false);
+    setTempSTs(currentSTs.toString());
+    setIsEditingSTs(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSaveSKs();
+      handleSaveSTs();
     } else if (e.key === 'Escape') {
       handleCancelEdit();
     }
   };
 
-  const handleSKsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSTsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Permitir qualquer número positivo até 99999
     if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 99999)) {
-      setTempSKs(value);
+      setTempSTs(value);
     }
   };
 
@@ -443,7 +443,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             </div>
           </div>
 
-          {/* Card de Sparks */}
+          {/* Card de Stars */}
           <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm">
             <div className="flex items-center gap-1.5">
               {isSharedActivity ? (
@@ -451,38 +451,38 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                 <div className="flex items-center gap-2">
                   <span className="text-orange-600 dark:text-orange-400 text-sm font-bold">$</span>
                   <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">
-                    {currentSKs} SKs
+                    {currentSTs} STs
                   </span>
                 </div>
               ) : (
                 // Para páginas normais - sem ícone de cifrão
                 <div className="flex items-center gap-2">
-                  {isEditingSKs ? (
+                  {isEditingSTs ? (
                     <div className="flex items-center gap-1">
                       <input
                         type="number"
-                        value={tempSKs}
-                        onChange={handleSKsChange}
+                        value={tempSTs}
+                        onChange={handleSTsChange}
                         onKeyDown={handleKeyPress}
-                        onBlur={handleSaveSKs}
+                        onBlur={handleSaveSTs}
                         min="0"
                         max="99999"
                         className="w-16 text-sm font-semibold text-orange-700 dark:text-orange-400 bg-transparent border-none outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         autoFocus
                       />
-                      <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">SKs</span>
+                      <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">STs</span>
                     </div>
                   ) : (
-                    // Sparks - Com ícone
+                    // Stars - Com ícone
                     <div className="flex items-center gap-1">
                       <img 
                         src="/lovable-uploads/icone-sparks.png"
-                        alt="Sparks" 
+                        alt="Stars" 
                         className="w-4 h-4 object-contain flex-shrink-0"
                         style={{ display: 'block' }}
-                        onLoad={() => console.log('✅ Ícone de sparks carregado com sucesso')}
+                        onLoad={() => console.log('✅ Ícone de stars carregado com sucesso')}
                         onError={(e) => {
-                          console.error('❌ Erro ao carregar ícone de sparks. Tentando caminho alternativo...');
+                          console.error('❌ Erro ao carregar ícone de stars. Tentando caminho alternativo...');
                           const img = e.currentTarget as HTMLImageElement;
                           if (!img.src.includes('attached_assets')) {
                             img.src = '/attached_assets/icone-sparks.png';
@@ -493,11 +493,11 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                         }}
                       />
                       <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">
-                        {currentSKs} SKs
+                        {currentSTs} STs
                       </span>
                     </div>
                   )}
-                  <button onClick={handleEditSKs} className="hover:bg-orange-200/50 dark:hover:bg-orange-700/30 p-1 rounded transition-colors">
+                  <button onClick={handleEditSTs} className="hover:bg-orange-200/50 dark:hover:bg-orange-700/30 p-1 rounded transition-colors">
                     <Pencil className="w-3 h-3 text-orange-600 dark:text-orange-400" />
                   </button>
                 </div>
