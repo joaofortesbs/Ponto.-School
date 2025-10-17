@@ -252,14 +252,14 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
     const newSKs = parseInt(tempSKs) || 100;
     setCurrentSKs(newSKs);
     setIsEditingSKs(false);
-    
+
     // Salvar no localStorage para sincronização posterior
     if (activityId) {
       const skKey = `activity_${activityId}_sparks`;
       localStorage.setItem(skKey, newSKs.toString());
       console.log(`💾 Sparks salvos localmente para ${activityId}:`, newSKs);
     }
-    
+
     // Notificar componente pai sobre a mudança
     if (onSparksChange) {
       onSparksChange(newSKs);
@@ -303,31 +303,31 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   const handleShareActivity = async () => {
     try {
       console.log('🔗 [HEADER] Iniciando geração de link para atividade:', activityId);
-      
+
       // 1. Buscar o código único da atividade do banco Neon
       const userId = localStorage.getItem('user_id');
       let codigoUnico: string | null = null;
       let shareLink = '';
-      
+
       if (userId) {
         console.log('🔍 [HEADER] Buscando código único do banco Neon...');
-        
+
         try {
           // Importar serviço do banco Neon
           const { atividadesNeonService } = await import('@/services/atividadesNeonService');
-          
+
           // Buscar todas as atividades do usuário
           const resultado = await atividadesNeonService.buscarAtividadesUsuario(userId);
-          
+
           if (resultado.success && resultado.data) {
             // Procurar a atividade atual pelo tipo
             const atividadeNoBanco = resultado.data.find(ativ => ativ.tipo === activityId);
-            
+
             if (atividadeNoBanco) {
               // Encontrou no banco! Usar o código único (que está na coluna id)
               codigoUnico = atividadeNoBanco.id;
               console.log('✅ [HEADER] Código único encontrado no banco:', codigoUnico);
-              
+
               // Gerar link com o código único
               shareLink = `${window.location.origin}/atividade/${codigoUnico}`;
             } else {
@@ -338,11 +338,11 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
           console.error('❌ [HEADER] Erro ao buscar do banco:', error);
         }
       }
-      
+
       // 2. Se não encontrou no banco, verificar localStorage como fallback
       if (!codigoUnico) {
         console.log('🔄 [HEADER] Tentando buscar do localStorage...');
-        
+
         // Verificar se há código único salvo no localStorage
         const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
         if (constructedActivities[activityId]?.codigoUnico) {
@@ -351,7 +351,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
           console.log('✅ [HEADER] Código único encontrado no localStorage:', codigoUnico);
         }
       }
-      
+
       // 3. Se ainda não tem código, informar que precisa salvar primeiro
       if (!codigoUnico || !shareLink) {
         console.warn('⚠️ [HEADER] Nenhum código único encontrado. Atividade precisa ser salva!');
@@ -363,10 +363,10 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
       await navigator.clipboard.writeText(shareLink);
       setShowCopySuccess(true);
       setTimeout(() => setShowCopySuccess(false), 2000);
-      
+
       console.log('📋 [HEADER] Link copiado:', shareLink);
       console.log('🔑 [HEADER] Código único usado:', codigoUnico);
-      
+
     } catch (err) {
       console.error('❌ [HEADER] Erro ao copiar link:', err);
       alert('❌ Erro ao gerar link de compartilhamento. Tente novamente.');
@@ -473,9 +473,21 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                       <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">SKs</span>
                     </div>
                   ) : (
-                    <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">
-                      {currentSKs} SKs
-                    </span>
+                    // Sparks - Com ícone
+                    <div className="flex items-center gap-2">
+                      <img 
+                        src="/lovable-uploads/icone-sparks.png"
+                        alt="Sparks" 
+                        className="w-5 h-5 object-contain"
+                        onError={(e) => {
+                          console.error('❌ Erro ao carregar ícone de sparks');
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">
+                        {currentSKs} SKs
+                      </span>
+                    </div>
                   )}
                   <button onClick={handleEditSKs} className="hover:bg-orange-200/50 dark:hover:bg-orange-700/30 p-1 rounded transition-colors">
                     <Pencil className="w-3 h-3 text-orange-600 dark:text-orange-400" />
