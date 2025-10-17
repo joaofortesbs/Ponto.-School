@@ -63,7 +63,7 @@ const CardRecompensasDisponiveis: React.FC<CardRecompensasDisponiveisProps> = ({
           <span className="text-xs" style={{ color: "#FFFFFF" }}>Regenerar recompensas</span>
           <div className="flex items-center gap-1">
             <Coins className="w-3 h-3 text-orange-500" />
-            <span className="text-xs" style={{ color: "#FFFFFF" }}>{userSPs} SKs</span>
+            <span className="text-xs" style={{ color: "#FFFFFF" }}>{userSPs} STs</span>
           </div>
         </div>
         
@@ -79,7 +79,7 @@ const CardRecompensasDisponiveis: React.FC<CardRecompensasDisponiveisProps> = ({
           }`}
         >
           <RefreshCw className="w-3 h-3 mr-1" />
-          {canRegenerate ? `Regenerar (${currentCost} SKs)` : 'Indisponível'}
+          {canRegenerate ? `Regenerar (${currentCost} STs)` : 'Indisponível'}
         </Button>
         
         {regenerationCount > 0 && (

@@ -22,7 +22,7 @@ const PerfilCabecalho: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDark, setIsDark] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [sparks, setSchoolPoints] = useState<number>(300);
+  const [stars, setSchoolPoints] = useState<number>(300);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -55,8 +55,8 @@ const PerfilCabecalho: React.FC = () => {
 
     loadProfileImage();
 
-    // Carregar Sparks
-    const savedPoints = localStorage.getItem("sparks");
+    // Carregar Stars
+    const savedPoints = localStorage.getItem("stars");
     if (savedPoints) {
       setSchoolPoints(parseInt(savedPoints));
     }
@@ -74,7 +74,7 @@ const PerfilCabecalho: React.FC = () => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail?.points !== undefined) {
         setSchoolPoints(customEvent.detail.points);
-        localStorage.setItem("sparks", customEvent.detail.points.toString());
+        localStorage.setItem("stars", customEvent.detail.points.toString());
       }
     };
 
@@ -144,7 +144,7 @@ const PerfilCabecalho: React.FC = () => {
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <span className="text-sm font-semibold text-[#FF6B00]">{sparks}</span>
+            <span className="text-sm font-semibold text-[#FF6B00]">{stars}</span>
             <ChevronDown className="h-4 w-4 text-[#64748B] dark:text-white/60 group-hover:text-[#FF6B00] dark:group-hover:text-[#FF6B00] transition-colors duration-300" />
           </div>
         </div>

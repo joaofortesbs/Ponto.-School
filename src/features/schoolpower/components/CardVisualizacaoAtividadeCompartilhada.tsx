@@ -430,7 +430,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         })()}
         userName={atividade?.professorNome || 'Prof. João'}
         userAvatar={atividade?.professorAvatar}
-        sparks={atividade?.sparks || 100}
+        stars={atividade?.stars || 100}
         onMoreOptions={() => {
           console.log('Menu de opções na atividade compartilhada');
         }}
