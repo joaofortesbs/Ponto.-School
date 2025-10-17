@@ -11,7 +11,7 @@ export interface ActivityData {
   titulo?: string;
   descricao?: string;
   conteudo: any;
-  sparks?: number;
+  stars?: number;
   criado_em?: string;
   atualizado_em?: string;
 }
