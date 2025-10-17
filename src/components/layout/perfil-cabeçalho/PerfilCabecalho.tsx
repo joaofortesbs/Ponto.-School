@@ -119,7 +119,7 @@ const PerfilCabecalho: React.FC = () => {
         <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-full bg-white dark:bg-[#0A2540] border border-[#E0E1DD] dark:border-white/10 hover:border-[#FF6B00]/30 dark:hover:border-[#FF6B00]/30 transition-all duration-300 cursor-pointer group shadow-sm hover:shadow-md">
           {/* Avatar Circular */}
           <div className="relative">
-            <Avatar className="w-10 h-10 border-2 border-transparent group-hover:border-[#FF6B00]/20 transition-all duration-300">
+            <Avatar className="w-8 h-8 border-2 border-transparent group-hover:border-[#FF6B00]/20 transition-all duration-300">
               <AvatarImage
                 src={profileImage || userProfile?.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.username || "user"}`}
                 alt={userProfile?.display_name || userProfile?.username || "Usuário"}
