@@ -135,7 +135,11 @@ const PerfilCabecalho: React.FC = () => {
 
           {/* Valor e Ícone */}
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-[#FF6B00]">$</span>
+            <img 
+              src="/lovable-uploads/icone-sparks.png" 
+              alt="Sparks" 
+              className="w-4 h-4 object-contain"
+            />
             <span className="text-sm font-semibold text-[#FF6B00]">{sparks}</span>
             <ChevronDown className="h-4 w-4 text-[#64748B] dark:text-white/60 group-hover:text-[#FF6B00] dark:group-hover:text-[#FF6B00] transition-colors duration-300" />
           </div>
