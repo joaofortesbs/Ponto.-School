@@ -473,10 +473,22 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                       <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">SKs</span>
                     </div>
                   ) : (
-                    // Sparks - Com ícone
+                    // Sparks - Com ícone do cache
                     <div className="flex items-center gap-1">
                       <img 
-                        src="/lovable-uploads/icone-sparks.png"
+                        src={(() => {
+                          // Tenta carregar do cache primeiro
+                          try {
+                            const cached = localStorage.getItem('ponto_school_icons_sparks');
+                            if (cached) {
+                              const iconData = JSON.parse(cached);
+                              return iconData.base64;
+                            }
+                          } catch (e) {
+                            console.error('Erro ao carregar ícone do cache:', e);
+                          }
+                          return '/lovable-uploads/icone-sparks.png';
+                        })()}
                         alt="Sparks" 
                         className="w-4 h-4 object-contain flex-shrink-0"
                         style={{ display: 'block' }}
