@@ -445,7 +445,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
 
           {/* Card de Sparks */}
           <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {isSharedActivity ? (
                 // Para página de compartilhamento - com ícone de cifrão
                 <div className="flex items-center gap-2">
@@ -474,13 +474,13 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                     </div>
                   ) : (
                     // Sparks - Com ícone
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <img 
                         src="/lovable-uploads/icone-sparks.png"
                         alt="Sparks" 
-                        className="w-5 h-5 object-contain"
+                        className="w-4 h-4 object-contain flex-shrink-0"
                         onError={(e) => {
-                          console.error('❌ Erro ao carregar ícone de sparks');
+                          console.error('❌ Erro ao carregar ícone de sparks:', e);
                           e.currentTarget.style.display = 'none';
                         }}
                       />
