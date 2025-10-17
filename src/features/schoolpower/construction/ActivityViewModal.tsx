@@ -63,7 +63,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     if (!activity) return;
 
     const activityType = activity.originalData?.type || activity.categoryId || activity.type || '';
-    
+
     console.log('📥 Iniciando download da atividade:', activityType);
 
     if (!isDownloadSupported(activityType)) {
@@ -173,7 +173,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         // Primeiro, tentar do localStorage
         const skKey = `activity_${activity.id}_sparks`;
         const localSKs = localStorage.getItem(skKey);
-        
+
         if (localSKs) {
           const points = parseInt(localSKs);
           console.log(`💰 Sparks carregados do localStorage: ${points} SKs`);
@@ -185,7 +185,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             try {
               const { atividadesNeonService } = await import('@/services/atividadesNeonService');
               const result = await atividadesNeonService.buscarAtividade(activity.id);
-              
+
               if (result.success && result.data?.sparks) {
                 console.log(`💰 Sparks carregados do banco: ${result.data.sparks} SKs`);
                 setSparks(result.data.sparks);
