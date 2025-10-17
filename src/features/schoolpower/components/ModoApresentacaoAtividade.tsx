@@ -40,13 +40,13 @@ const languageOptions: { code: Language; name: string; flag: string }[] = [
 const ModoApresentacaoContent: React.FC<{
   atividade: AtividadeDados;
   uniqueCode: string;
-  sparks: number;
+  stars: number;
   rating: number;
   hoverRating: number;
   setRating: (rating: number) => void;
   setHoverRating: (rating: number) => void;
   navigate: (path: string) => void;
-}> = ({ atividade, uniqueCode, sparks, rating, hoverRating, setRating, setHoverRating, navigate }) => {
+}> = ({ atividade, uniqueCode, stars, rating, hoverRating, setRating, setHoverRating, navigate }) => {
   const { language, fontSize, voiceReading, setLanguage, setFontSize, setVoiceReading } = useAccessibility();
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [showFontSizeMenu, setShowFontSizeMenu] = useState(false);
@@ -320,7 +320,7 @@ const ModoApresentacaoContent: React.FC<{
 
             {/* Sparks - Sem ícone de estrela */}
             <div className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 rounded-full shadow-lg">
-              <span className="text-white font-bold text-lg">{sparks} SKs</span>
+              <span className="text-white font-bold text-lg">{stars} STs</span>
             </div>
           </div>
         </div>
@@ -347,7 +347,7 @@ export const ModoApresentacaoAtividade: React.FC = () => {
   const [atividade, setAtividade] = useState<AtividadeDados | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sparks, setSparks] = useState<number>(100);
+  const [stars, setStars] = useState<number>(100);
   const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
 
@@ -383,10 +383,10 @@ export const ModoApresentacaoAtividade: React.FC = () => {
         };
 
         setAtividade(atividadeConvertida);
-        setSparks(activityData.sparks || 100);
+        setStars(activityData.stars || 100);
 
         console.log('✅ [APRESENTAÇÃO] Atividade carregada:', atividadeConvertida);
-        console.log('💰 [APRESENTAÇÃO] Sparks:', activityData.sparks || 100);
+        console.log('💰 [APRESENTAÇÃO] Stars:', activityData.stars || 100);
         
         setLoading(false);
       } catch (error) {
@@ -452,7 +452,7 @@ export const ModoApresentacaoAtividade: React.FC = () => {
       <ModoApresentacaoContent
         atividade={atividade}
         uniqueCode={uniqueCode}
-        sparks={sparks}
+        stars={stars}
         rating={rating}
         hoverRating={hoverRating}
         setRating={setRating}

@@ -57,7 +57,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const isLightMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
   const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
   const [flashCardsContent, setFlashCardsContent] = useState<any>(null);
-  const [sparks, setSparks] = useState<number>(100);
+  const [stars, setStars] = useState<number>(100);
 
   const handleDownload = async () => {
     if (!activity) return;
@@ -168,16 +168,16 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
       console.log('🔍 ActivityViewModal: Carregando dados para atividade:', activity);
 
-      // Carregar Sparks do localStorage ou banco
-      const loadSparks = async () => {
+      // Carregar Stars do localStorage ou banco
+      const loadStars = async () => {
         // Primeiro, tentar do localStorage
-        const skKey = `activity_${activity.id}_sparks`;
-        const localSKs = localStorage.getItem(skKey);
+        const stKey = `activity_${activity.id}_stars`;
+        const localSTs = localStorage.getItem(stKey);
 
-        if (localSKs) {
-          const points = parseInt(localSKs);
-          console.log(`💰 Sparks carregados do localStorage: ${points} SKs`);
-          setSparks(points);
+        if (localSTs) {
+          const points = parseInt(localSTs);
+          console.log(`💰 Stars carregados do localStorage: ${points} STs`);
+          setStars(points);
         } else {
           // Se não encontrou no localStorage, tentar do banco Neon
           const userId = localStorage.getItem('user_id');
@@ -186,24 +186,24 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
               const { atividadesNeonService } = await import('@/services/atividadesNeonService');
               const result = await atividadesNeonService.buscarAtividade(activity.id);
 
-              if (result.success && result.data?.sparks) {
-                console.log(`💰 Sparks carregados do banco: ${result.data.sparks} SKs`);
-                setSparks(result.data.sparks);
+              if (result.success && result.data?.stars) {
+                console.log(`💰 Stars carregados do banco: ${result.data.stars} STs`);
+                setStars(result.data.stars);
               } else {
-                console.log('💰 Usando valor padrão: 100 SKs');
-                setSparks(100);
+                console.log('💰 Usando valor padrão: 100 STs');
+                setStars(100);
               }
             } catch (error) {
-              console.warn('⚠️ Erro ao carregar SKs do banco:', error);
-              setSparks(100);
+              console.warn('⚠️ Erro ao carregar STs do banco:', error);
+              setStars(100);
             }
           } else {
-            setSparks(100);
+            setStars(100);
           }
         }
       };
 
-      loadSparks();
+      loadStars();
 
       // Se for plano-aula, tentar carregar dados específicos
       if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
@@ -696,8 +696,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             activityType={activityType}
             userName={userInfo.displayName || userInfo.name}
             userAvatar={userInfo.avatar}
-            sparks={sparks}
-            onSparksChange={(newSKs) => setSparks(newSKs)}
+            stars={stars}
+            onStarsChange={(newSTs) => setStars(newSTs)}
             onDownload={handleDownload}
             onMoreOptions={() => {
               console.log('Menu de opções clicado');
