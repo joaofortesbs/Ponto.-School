@@ -707,17 +707,44 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
 
       // Armazenar dados específicos para auto-preenchimento
       if (activity.id === 'tese-redacao') {
-        const teseData = extractTeseRedacaoData(activity);
+        console.log('📝 Salvando dados específicos da Tese da Redação para preenchimento automático');
+        
+        const customFields = fullActivity.customFields || {};
         const autoFormData = {
           title: activity.personalizedTitle || activity.title || '',
           description: activity.personalizedDescription || activity.description || '',
-          temaRedacao: teseData.temaRedacao,
-          objetivo: teseData.objetivo,
-          nivelDificuldade: teseData.nivelDificuldade,
-          competenciasENEM: teseData.competenciasENEM,
-          contextoAdicional: teseData.contextoAdicional
+          temaRedacao: customFields['Tema da Redação'] || customFields['temaRedacao'] || activity.title || '',
+          objetivo: customFields['Objetivos'] || customFields['objetivo'] || activity.description || '',
+          nivelDificuldade: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || 'Médio',
+          competenciasENEM: customFields['Competências ENEM'] || customFields['competenciasENEM'] || '',
+          contextoAdicional: customFields['Contexto Adicional'] || customFields['contextoAdicional'] || '',
+          subject: 'Língua Portuguesa',
+          theme: customFields['Tema da Redação'] || customFields['temaRedacao'] || activity.title || '',
+          schoolYear: '3º Ano - Ensino Médio',
+          numberOfQuestions: '1',
+          difficultyLevel: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || 'Médio',
+          questionModel: 'Dissertativa',
+          sources: '',
+          objectives: customFields['Objetivos'] || customFields['objetivo'] || '',
+          materials: '',
+          instructions: '',
+          evaluation: ''
         };
-        storeAutoData(activity, autoFormData, fullActivity.customFields || {}, fullActivity, activity);
+
+        const autoDataKey = `auto_activity_data_${activity.id}`;
+        const autoData = {
+          formData: autoFormData,
+          customFields: customFields,
+          originalActivity: fullActivity,
+          actionPlanActivity: activity,
+          activityType: 'tese-redacao',
+          timestamp: Date.now()
+        };
+
+        localStorage.setItem(autoDataKey, JSON.stringify(autoData));
+        console.log('💾 Dados da Tese da Redação salvos para preenchimento automático:', autoDataKey);
+        console.log('📋 Form data preparado:', autoFormData);
+        console.log('🔧 Custom fields salvos:', customFields);
       } else if (activity.id === 'lista-exercicios') {
         // Mantém a lógica existente para lista-exercicios, se necessário
         // Exemplo:

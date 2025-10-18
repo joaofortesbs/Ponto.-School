@@ -1161,7 +1161,7 @@ const EditActivityModal = ({
       setIsBuilding(false);
       setBuildProgress(0);
     }
-  }, [formData, activity?.id, isBuilding]);
+  }, [formData, activity?.id, isBuilding, toast]);
 
 
   // Chamada genérica de geração (para outros tipos de atividade)
@@ -1425,21 +1425,44 @@ const EditActivityModal = ({
       const sequenciaDidaticaSavedContent = localStorage.getItem(`constructed_sequencia-didatica_${activity.id}`);
       const quadroInterativoSavedContent = localStorage.getItem(`constructed_quadro-interativo_${activity.id}`);
       const quadroInterativoSpecificData = localStorage.getItem(`quadro_interativo_data_${activity.id}`);
-      const quizInterativoSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`); // New: Load Quiz Interativo content
-      const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`); // Load Flash Cards content
 
-      console.log(`🔎 Estado do localStorage:`, {
-        constructedActivities: Object.keys(constructedActivities),
-        hasSavedContent: !!savedContent,
-        hasPlanoAulaSavedContent: !!planoAulaSavedContent,
-        hasSequenciaDidaticaSavedContent: !!sequenciaDidaticaSavedContent,
-        hasQuadroInterativoSavedContent: !!quadroInterativoSavedContent,
-        hasQuadroInterativoSpecificData: !!quadroInterativoSpecificData,
-        hasQuizInterativoSavedContent: !!quizInterativoSavedContent,
-        hasFlashCardsSavedContent: !!flashCardsSavedContent,
-        activityId: activity.id,
-        activityOriginalData: activity.originalData
-      });
+      // Carregar dados específicos da Tese da Redação
+      const teseRedacaoAutoData = localStorage.getItem(`auto_activity_data_tese-redacao`);
+
+      console.log('📦 Dados de auto-preenchimento da Tese da Redação:', teseRedacaoAutoData);
+
+      // Carregar e preencher dados automáticos da Tese da Redação
+      if (activity.id === 'tese-redacao' && teseRedacaoAutoData) {
+        try {
+          const autoData = JSON.parse(teseRedacaoAutoData);
+          console.log('📝 Carregando dados automáticos da Tese da Redação:', autoData);
+
+          if (autoData.formData) {
+            console.log('✅ Preenchendo formulário da Tese da Redação automaticamente');
+            setFormData(prev => ({
+              ...prev,
+              title: autoData.formData.title || prev.title,
+              description: autoData.formData.description || prev.description,
+              temaRedacao: autoData.formData.temaRedacao || '',
+              objetivo: autoData.formData.objetivo || '',
+              nivelDificuldade: autoData.formData.nivelDificuldade || 'Médio',
+              competenciasENEM: autoData.formData.competenciasENEM || '',
+              contextoAdicional: autoData.formData.contextoAdicional || '',
+              subject: autoData.formData.subject || 'Língua Portuguesa',
+              theme: autoData.formData.theme || autoData.formData.temaRedacao || '',
+              schoolYear: autoData.formData.schoolYear || '3º Ano - Ensino Médio',
+              numberOfQuestions: autoData.formData.numberOfQuestions || '1',
+              difficultyLevel: autoData.formData.difficultyLevel || autoData.formData.nivelDificuldade || 'Médio',
+              questionModel: autoData.formData.questionModel || 'Dissertativa',
+              objectives: autoData.formData.objectives || autoData.formData.objetivo || ''
+            }));
+
+            console.log('🎯 Formulário da Tese da Redação preenchido com sucesso');
+          }
+        } catch (error) {
+          console.error('❌ Erro ao carregar dados automáticos da Tese da Redação:', error);
+        }
+      }
 
       let contentToLoad = null;
       if (activity.id === 'sequencia-didatica' && sequenciaDidaticaSavedContent) {
@@ -1827,8 +1850,8 @@ const EditActivityModal = ({
             }
             else {
               enrichedFormData = {
-                title: consolidatedData.title || autoFormData.title || '',
-                description: consolidatedData.description || autoFormData.description || '',
+                title: activityData.title || autoFormData.title || '',
+                description: activityData.description || autoFormData.description || '',
                 subject: consolidatedCustomFields['Disciplina'] || consolidatedCustomFields['disciplina'] || autoFormData.subject || 'Português',
                 theme: consolidatedCustomFields['Tema'] || consolidatedCustomFields['tema'] || consolidatedCustomFields['Tema das Palavras'] || consolidatedCustomFields['Tema do Vocabulário'] || autoFormData.theme || '',
                 schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || consolidatedCustomFields['anoEscolaridade'] || consolidatedCustomFields['ano'] || autoFormData.schoolYear || '',
