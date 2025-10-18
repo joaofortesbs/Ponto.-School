@@ -155,7 +155,7 @@ export default function Header() {
     // 4° Geração de sugestões
     [
       "Como fazer recargas dentro da Ponto. School?",
-      "Como eu posso trocar as minhas Sparks?",
+      "Como eu posso trocar as minhas Stars?",
       "Como eu posso participar da Trilha School?",
     ],
     // 5° Geração de sugestões
@@ -166,7 +166,7 @@ export default function Header() {
     ],
     // 6° Geração de sugestões
     [
-      "Como eu posso ganhar SKs com a Conexão Expert?",
+      "Como eu posso ganhar STs com a Conexão Expert?",
       "Como eu posso participar de um clube do Livro com a Ponto. School?",
       "Como eu posso ver o meu desempenho nas notas escolares?",
     ],
