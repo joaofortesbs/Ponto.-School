@@ -171,7 +171,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
               {selectedPlan === 'monthly' ? 'Por mês' : 'Por ano'}
             </div>
           </div>
-          
+
           {/* Checklist */}
           <div className="space-y-3 sm:space-y-4">
             {[
@@ -238,12 +238,12 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             <button
               onClick={() => {
                 console.log('🚀 Redirecionando para página de pagamento do plano:', selectedPlan);
-                
+
                 // Define o link baseado no plano selecionado
                 const paymentLink = selectedPlan === 'monthly' 
                   ? 'https://pay.kirvano.com/b52647c0-6c8d-4664-8a6f-3812c96258d5'
                   : 'https://pay.kirvano.com/64d2bc82-bf97-43c0-b5e5-498bd4e0bc64';
-                
+
                 // Redireciona para o link de pagamento
                 window.open(paymentLink, '_blank');
               }}
@@ -1417,7 +1417,37 @@ export function CardDeConstrucao({
 
       // Specific processing for different activity types
       let autoFormData;
-      if (activity.id === 'sequencia-didatica') {
+      if (activity.id === 'flash-cards') {
+        const consolidatedData = {
+          personalizedTitle: activity.title,
+          personalizedDescription: activity.description,
+        };
+        autoFormData = {
+          title: consolidatedData.personalizedTitle || consolidatedData.title || activity.title || '',
+          description: consolidatedData.personalizedDescription || consolidatedData.description || activity.description || '',
+          theme: customFields['Tema dos Flash Cards'] || customFields['tema'] || '',
+          topicos: customFields['Tópicos Principais'] || customFields['topicos'] || '',
+          numberOfFlashcards: customFields['Número de Flash Cards'] || customFields['numeroFlashcards'] || '10',
+          context: customFields['Contexto de Uso'] || customFields['contexto'] || ''
+        };
+        storeAutoData(activity, autoFormData, customFields, originalData, actionPlanActivity);
+      } else if (activity?.id === 'tese-redacao') {
+        console.log('📝 Configurando auto-data para Tese da Redação');
+        const consolidatedData = {
+          personalizedTitle: activity.title,
+          personalizedDescription: activity.description,
+        };
+        autoFormData = {
+          title: consolidatedData.personalizedTitle || consolidatedData.title || activity.title || '',
+          description: consolidatedData.personalizedDescription || consolidatedData.description || activity.description || '',
+          temaRedacao: customFields['Tema da Redação'] || customFields['temaRedacao'] || '',
+          objetivo: customFields['Objetivos'] || customFields['objetivo'] || '',
+          nivelDificuldade: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || 'Médio',
+          competenciasENEM: customFields['Competências ENEM'] || customFields['competenciasENEM'] || '',
+          contextoAdicional: customFields['Contexto Adicional'] || customFields['contextoAdicional'] || ''
+        };
+        storeAutoData(activity, autoFormData, customFields, originalData, actionPlanActivity);
+      } else if (activity?.id === 'sequencia-didatica') {
         autoFormData = processSequenciaDidaticaData({
           id: activity.id,
           title: actionPlanActivity?.title || activity.title || originalData?.title || '',

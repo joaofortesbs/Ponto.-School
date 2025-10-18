@@ -518,7 +518,7 @@ const renderTeseRedacaoFields = (customFields: Record<string, string>) => {
 };
 
 
-// Função padrão para renderizar campos customizados não especificados
+// Função para renderizar campos customizados não especificados
 const renderDefaultFields = (customFields: Record<string, string>) => {
   return (
     <div className="flex flex-wrap gap-1">
@@ -636,6 +636,51 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
     window.location.reload();
   };
 
+  // Mapeamento de atividades do School Power (padrão)
+  const schoolPowerActivities = [
+    'lista-exercicios',
+    'plano-aula',
+    'sequencia-didatica',
+    'quiz-interativo',
+    'flash-cards',
+    'tese-redacao'
+  ];
+
+  // Função para extrair dados de Tese da Redação do card
+  const extractTeseRedacaoData = (activity: ActionPlanItem) => {
+    const customFields = activity.customFields || {};
+
+    return {
+      temaRedacao: customFields['Tema da Redação'] || activity.title || '',
+      objetivo: customFields['Objetivos'] || activity.description || '',
+      nivelDificuldade: customFields['Nível de Dificuldade'] || 'Médio',
+      competenciasENEM: customFields['Competências ENEM'] || '',
+      contextoAdicional: customFields['Contexto Adicional'] || ''
+    };
+  };
+
+  // Função auxiliar para salvar dados de auto-preenchimento no localStorage
+  const storeAutoData = (
+    activity: ActionPlanItem,
+    autoFormData: Record<string, any>,
+    customFields: Record<string, string>,
+    originalData: ActionPlanActivity,
+    actionPlanActivity: ActionPlanActivity
+  ) => {
+    const autoDataKey = `auto_activity_data_${activity.id}`;
+    const autoData = {
+      formData: autoFormData,
+      customFields: customFields,
+      originalActivity: originalData,
+      actionPlanActivity: actionPlanActivity,
+      activityType: activity.id,
+      timestamp: Date.now()
+    };
+
+    localStorage.setItem(autoDataKey, JSON.stringify(autoData));
+    console.log(`💾 Dados salvos para preenchimento automático (${activity.id}):`, autoData);
+  };
+
   // Funcao para processar a aprovacao de uma atividade e salvar dados para preenchimento automatico
   const handleApproveActivity = (activity: ActionPlanActivity) => {
       console.log('✅ Aprovando atividade:', activity);
@@ -660,8 +705,27 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
 
       console.log('📊 Atividade aprovada com dados completos:', approvedActivity);
 
-      // Salvar dados específicos para preenchimento automatico
-      if (activity.id === 'plano-aula') {
+      // Armazenar dados específicos para auto-preenchimento
+      if (activity.id === 'tese-redacao') {
+        const teseData = extractTeseRedacaoData(activity);
+        const autoFormData = {
+          title: activity.personalizedTitle || activity.title || '',
+          description: activity.personalizedDescription || activity.description || '',
+          temaRedacao: teseData.temaRedacao,
+          objetivo: teseData.objetivo,
+          nivelDificuldade: teseData.nivelDificuldade,
+          competenciasENEM: teseData.competenciasENEM,
+          contextoAdicional: teseData.contextoAdicional
+        };
+        storeAutoData(activity, autoFormData, fullActivity.customFields || {}, fullActivity, activity);
+      } else if (activity.id === 'lista-exercicios') {
+        // Mantém a lógica existente para lista-exercicios, se necessário
+        // Exemplo:
+        const autoFormDataListaExercicios = {
+          // ... dados específicos para lista-exercicios
+        };
+        storeAutoData(activity, autoFormDataListaExercicios, fullActivity.customFields || {}, fullActivity, activity);
+      } else if (activity.id === 'plano-aula') {
         console.log('📚 Salvando dados específicos do Plano de Aula para preenchimento automático');
 
         const autoDataKey = `auto_activity_data_${activity.id}`;
@@ -690,6 +754,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
         localStorage.setItem(autoDataKey, JSON.stringify(autoData));
         console.log('💾 Dados salvos para preenchimento automático:', autoData);
       }
+
 
       // Salvar no localStorage
       const existingActivities = JSON.parse(localStorage.getItem('approvedActivities') || '[]');

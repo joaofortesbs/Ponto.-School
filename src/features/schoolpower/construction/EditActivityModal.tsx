@@ -718,6 +718,23 @@ const EditActivityModal = ({
       });
 
       return isValid;
+    } else if (activityType === 'tese-redacao') { // Validar campos específicos da Tese da Redação
+      const isValid = formData.title?.trim() &&
+                     formData.temaRedacao?.trim() &&
+                     formData.objetivo?.trim() &&
+                     formData.nivelDificuldade?.trim() &&
+                     formData.competenciasENEM?.trim();
+
+      console.log('🔍 Validação da Tese da Redação:', {
+        title: !!formData.title?.trim(),
+        temaRedacao: !!formData.temaRedacao?.trim(),
+        objetivo: !!formData.objetivo?.trim(),
+        nivelDificuldade: !!formData.nivelDificuldade?.trim(),
+        competenciasENEM: !!formData.competenciasENEM?.trim(),
+        isValid
+      });
+
+      return isValid;
     }
     else {
       return formData.title.trim() &&
@@ -1561,6 +1578,7 @@ const EditActivityModal = ({
               console.log('📚 Processando dados específicos de Plano de Aula');
 
               enrichedFormData = {
+                ...formData,
                 title: consolidatedData.personalizedTitle || consolidatedData.title || activity.personalizedTitle || activity.title || '',
                 description: consolidatedData.personalizedDescription || consolidatedData.description || activity.personalizedDescription || activity.description || '',
                 subject: consolidatedCustomFields['Componente Curricular'] ||
@@ -1720,11 +1738,11 @@ const EditActivityModal = ({
                 // Sobrescrever com dados automáticos se existirem e forem válidos
                 ...(autoFormData.title && { title: autoFormData.title }),
                 ...(autoFormData.description && { description: autoFormData.description }),
-                ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
+                ...(autoFormData.subject && autoFormData.subject !== 'Matemática' && { subject: autoFormData.subject }),
                 ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
                 ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
                 ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
-                ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
+                ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Intermediário' && { difficultyLevel: autoFormData.difficultyLevel }),
                 ...(autoFormData.quadroInterativoCampoEspecifico && { quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico }),
                 ...(autoFormData.materials && { materials: autoFormData.materials }),
                 ...(autoFormData.instructions && { instructions: autoFormData.instructions }),
@@ -1753,8 +1771,8 @@ const EditActivityModal = ({
               console.log('🃏 Processando dados específicos de Flash Cards');
               enrichedFormData = {
                 ...formData,
-                title: consolidatedData.title || autoFormData.title || customFields['Título'] || 'Flash Cards',
-                description: consolidatedData.description || autoFormData.description || customFields['Descrição'] || '',
+                title: activityData.title || autoFormData.title || customFields['Título'] || 'Flash Cards',
+                description: activityData.description || autoFormData.description || customFields['Descrição'] || '',
                 theme: customFields['Tema'] || customFields['tema'] || customFields['Tema dos Flash Cards'] || autoFormData.theme || '',
                 topicos: customFields['Tópicos Principais'] || customFields['Tópicos'] || customFields['topicos'] || customFields['tópicos'] || autoFormData.topicos || '',
                 numberOfFlashcards: customFields['Número de Flash Cards'] || customFields['numeroFlashcards'] || customFields['Quantidade de Flash Cards'] || autoFormData.numberOfFlashcards || '10',
@@ -1767,6 +1785,45 @@ const EditActivityModal = ({
                 evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || 'Avalie o conhecimento através da prática com os cards',
               };
               console.log('🃏 Dados do Flash Cards processados:', enrichedFormData);
+            }
+            else if (activity?.id === 'tese-redacao') {
+              console.log('📝 Processando dados específicos de Tese da Redação');
+
+              // Importar o processador específico
+              const { prepareTeseRedacaoDataForModal } = await import('../activities/tese-redacao/teseRedacaoProcessor');
+
+              // Preparar dados consolidados para o processador
+              const activityForProcessor = {
+                ...activity,
+                ...consolidatedData,
+                customFields: {
+                  ...activity.customFields,
+                  ...consolidatedCustomFields,
+                  ...autoCustomFields
+                }
+              };
+
+              console.log('📋 Dados para processador de Tese da Redação:', activityForProcessor);
+
+              // Usar o processador específico
+              const processedTeseData = prepareTeseRedacaoDataForModal(activityForProcessor);
+
+              // Aplicar dados automáticos por cima se existirem
+              enrichedFormData = {
+                ...processedTeseData,
+
+                // Sobrescrever com dados automáticos se existirem e forem válidos
+                ...(autoFormData.title && { title: autoFormData.title }),
+                ...(autoFormData.description && { description: autoFormData.description }),
+                ...(autoFormData.temaRedacao && { temaRedacao: autoFormData.temaRedacao }),
+                ...(autoFormData.objetivo && { objetivo: autoFormData.objetivo }),
+                ...(autoFormData.nivelDificuldade && { nivelDificuldade: autoFormData.nivelDificuldade }),
+                ...(autoFormData.competenciasENEM && { competenciasENEM: autoFormData.competenciasENEM }),
+                ...(autoFormData.contextoAdicional && { contextoAdicional: autoFormData.contextoAdicional })
+              };
+
+              console.log('✅ Dados finais da Tese da Redação processados:', enrichedFormData);
+
             }
             else {
               enrichedFormData = {
@@ -1903,6 +1960,7 @@ const EditActivityModal = ({
             console.log('📚 Processando dados diretos de Plano de Aula');
 
             directFormData = {
+              ...formData,
               title: activityData.personalizedTitle || activityData.title || '',
               description: activityData.personalizedDescription || activityData.description || '',
               subject: customFields['Componente Curricular'] ||

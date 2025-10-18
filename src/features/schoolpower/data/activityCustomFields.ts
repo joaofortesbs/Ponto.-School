@@ -33,7 +33,7 @@ export function validateQuadroInterativoFields(fields: Record<string, any>): boo
     'Nível de Dificuldade',
     'Atividade mostrada'
   ];
-  
+
   return requiredFields.every(field => 
     fields[field] && typeof fields[field] === 'string' && fields[field].trim().length > 0
   );
@@ -42,38 +42,38 @@ export function validateQuadroInterativoFields(fields: Record<string, any>): boo
 // Função para normalizar campos do Quadro Interativo
 export function normalizeQuadroInterativoFields(fields: Record<string, any>): Record<string, any> {
   const normalized: Record<string, any> = {};
-  
+
   // Mapeamento de aliases para campos padrão
   const fieldAliases: Record<string, string> = {
     'disciplina': 'Disciplina / Área de conhecimento',
     'Disciplina': 'Disciplina / Área de conhecimento',
     'Componente Curricular': 'Disciplina / Área de conhecimento',
     'Matéria': 'Disciplina / Área de conhecimento',
-    
+
     'anoSerie': 'Ano / Série',
     'Ano de Escolaridade': 'Ano / Série',
     'Público-Alvo': 'Ano / Série',
     'Ano': 'Ano / Série',
     'Série': 'Ano / Série',
-    
+
     'tema': 'Tema ou Assunto da aula',
     'Tema': 'Tema ou Assunto da aula',
     'Assunto': 'Tema ou Assunto da aula',
     'Tópico': 'Tema ou Assunto da aula',
     'Tema Central': 'Tema ou Assunto da aula',
-    
+
     'objetivos': 'Objetivo de aprendizagem da aula',
     'Objetivos': 'Objetivo de aprendizagem da aula',
     'Objetivo': 'Objetivo de aprendizagem da aula',
     'Objetivo Principal': 'Objetivo de aprendizagem da aula',
     'Objetivos de Aprendizagem': 'Objetivo de aprendizagem da aula',
-    
+
     'nivelDificuldade': 'Nível de Dificuldade',
     'dificuldade': 'Nível de Dificuldade',
     'Dificuldade': 'Nível de Dificuldade',
     'Nível': 'Nível de Dificuldade',
     'Complexidade': 'Nível de Dificuldade',
-    
+
     'atividadeMostrada': 'Atividade mostrada',
     'quadroInterativoCampoEspecifico': 'Atividade mostrada',
     'Campo Específico do Quadro Interativo': 'Atividade mostrada',
@@ -83,7 +83,7 @@ export function normalizeQuadroInterativoFields(fields: Record<string, any>): Re
     'Interatividade': 'Atividade mostrada',
     'Campo Específico': 'Atividade mostrada'
   };
-  
+
   // Normalizar campos usando aliases
   Object.entries(fields).forEach(([key, value]) => {
     const standardKey = fieldAliases[key] || key;
@@ -91,213 +91,213 @@ export function normalizeQuadroInterativoFields(fields: Record<string, any>): Re
       normalized[standardKey] = value.trim();
     }
   });
-  
+
   return normalized;
 }
 
-export const activityCustomFields: Record<string, string[]> = {
-  "tese-redacao": [
-    "Tema da Redação",
-    "Objetivos",
-    "Nível de Dificuldade",
-    "Competências ENEM",
-    "Contexto Adicional"
+export const activityCustomFields: Record<string, any> = {
+  'tese-redacao': [
+    { key: 'Tema da Redação', label: 'Tema da Redação', type: 'text', required: true },
+    { key: 'Objetivos', label: 'Objetivos', type: 'textarea', required: true },
+    { key: 'Nível de Dificuldade', label: 'Nível de Dificuldade', type: 'select', options: ['Fácil', 'Médio', 'Difícil'], required: true },
+    { key: 'Competências ENEM', label: 'Competências ENEM', type: 'select', options: ['Competência II (compreensão tema)', 'Competência III (argumentação)', 'Competência II e III (compreensão tema e argumentação)'], required: true },
+    { key: 'Contexto Adicional', label: 'Contexto Adicional', type: 'textarea', required: false }
   ],
-  "flash-cards": [
-    "Título",
-    "Descrição", 
-    "Tema",
-    "Tópicos",
-    "Número de flashcards",
-    "Contexto"
+  'flash-cards': [
+    'Título',
+    'Descrição', 
+    'Tema',
+    'Tópicos',
+    'Número de flashcards',
+    'Contexto'
   ],
-  "lista-exercicios": [
-    "tema",
-    "disciplina",
-    "anoEscolaridade",
-    "quantidadeQuestoes",
-    "modeloQuestoes",
-    "fontes"
+  'lista-exercicios': [
+    'tema',
+    'disciplina',
+    'anoEscolaridade',
+    'quantidadeQuestoes',
+    'modeloQuestoes',
+    'fontes'
   ],
-  "prova": [
-    "tema",
-    "disciplina",
-    "anoEscolaridade",
-    "quantidadeQuestoes",
-    "tipoQuestoes",
-    "tempoProva",
-    "criteriosAvaliacao"
+  'prova': [
+    'tema',
+    'disciplina',
+    'anoEscolaridade',
+    'quantidadeQuestoes',
+    'tipoQuestoes',
+    'tempoProva',
+    'criteriosAvaliacao'
   ],
-  "podcast": [
-    "tema",
-    "roteiro",
-    "duracao",
-    "recursosTecnologicos",
-    "papeisAlunos",
-    "formaEntrega"
+  'podcast': [
+    'tema',
+    'roteiro',
+    'duracao',
+    'recursosTecnologicos',
+    'papeisAlunos',
+    'formaEntrega'
   ],
-  "resumo": [
-    "tema",
-    "disciplina",
-    "fonteConteudo",
-    "extensao",
-    "formatoEntrega",
-    "topicosChave"
+  'resumo': [
+    'tema',
+    'disciplina',
+    'fonteConteudo',
+    'extensao',
+    'formatoEntrega',
+    'topicosChave'
   ],
-  "mapa-mental": [
-    "tema",
-    "disciplina",
-    "conceituosChave",
-    "nivelComplexidade",
-    "ferramentasVisuais",
-    "objetivoAprendizagem"
+  'mapa-mental': [
+    'tema',
+    'disciplina',
+    'conceituosChave',
+    'nivelComplexidade',
+    'ferramentasVisuais',
+    'objetivoAprendizagem'
   ],
-  "jogos-educativos": [
-    "tema",
-    "disciplina",
-    "tipoJogo",
-    "numeroJogadores",
-    "materiaisNecessarios",
-    "tempoJogo"
+  'jogos-educativos': [
+    'tema',
+    'disciplina',
+    'tipoJogo',
+    'numeroJogadores',
+    'materiaisNecessarios',
+    'tempoJogo'
   ],
-  "caca-palavras": [
-    "tema",
-    "disciplina",
-    "palavrasChave",
-    "nivelDificuldade",
-    "tamanhoGrade",
-    "orientacoes"
+  'caca-palavras': [
+    'tema',
+    'disciplina',
+    'palavrasChave',
+    'nivelDificuldade',
+    'tamanhoGrade',
+    'orientacoes'
   ],
-  "proposta-redacao": [
-    "tema",
-    "generoTextual",
-    "extensaoTexto",
-    "criteriosAvaliacao",
-    "fontesPesquisa",
-    "prazoEntrega"
+  'proposta-redacao': [
+    'tema',
+    'generoTextual',
+    'extensaoTexto',
+    'criteriosAvaliacao',
+    'fontesPesquisa',
+    'prazoEntrega'
   ],
-  "sequencia-didatica": [
-    "Título do Tema / Assunto",
-    "Ano / Série", 
-    "Disciplina",
-    "BNCC / Competências",
-    "Público-alvo",
-    "Objetivos de Aprendizagem",
-    "Quantidade de Aulas",
-    "Quantidade de Diagnósticos",
-    "Quantidade de Avaliações",
-    "Cronograma"
+  'sequencia-didatica': [
+    'Título do Tema / Assunto',
+    'Ano / Série', 
+    'Disciplina',
+    'BNCC / Competências',
+    'Público-alvo',
+    'Objetivos de Aprendizagem',
+    'Quantidade de Aulas',
+    'Quantidade de Diagnósticos',
+    'Quantidade de Avaliações',
+    'Cronograma'
   ],
-  "plano-aula": [
-    "tema",
-    "disciplina",
-    "duracao",
-    "objetivos",
-    "metodologia",
-    "recursos",
-    "avaliacao"
+  'plano-aula': [
+    'tema',
+    'disciplina',
+    'duracao',
+    'objetivos',
+    'metodologia',
+    'recursos',
+    'avaliacao'
   ],
-  "slides-didaticos": [
-    "tema",
-    "disciplina",
-    "numeroSlides",
-    "recursosVisuais",
-    "interatividade",
-    "publicoAlvo"
+  'slides-didaticos': [
+    'tema',
+    'disciplina',
+    'numeroSlides',
+    'recursosVisuais',
+    'interatividade',
+    'publicoAlvo'
   ],
-  "projeto": [
-    "tema",
-    "disciplina",
-    "tipoProjetoo",
-    "duracaoProjeto",
-    "recursosNecessarios",
-    "entregaveis",
-    "avaliacaoProjeto"
+  'projeto': [
+    'tema',
+    'disciplina',
+    'tipoProjetoo',
+    'duracaoProjeto',
+    'recursosNecessarios',
+    'entregaveis',
+    'avaliacaoProjeto'
   ],
-  "atividades-matematica": [
-    "tema",
-    "conteudoMatematico",
-    "nivelEnsino",
-    "tipoAtividade",
-    "recursosNecessarios",
-    "aplicacaoPratica"
+  'atividades-matematica': [
+    'tema',
+    'conteudoMatematico',
+    'nivelEnsino',
+    'tipoAtividade',
+    'recursosNecessarios',
+    'aplicacaoPratica'
   ],
-  "atividades-ortografia-alfabeto": [
-    "tema",
-    "focusOrtografico",
-    "nivelAlfabetizacao",
-    "tipoAtividade",
-    "recursosVisuais",
-    "metodologiaAplicacao"
+  'atividades-ortografia-alfabeto': [
+    'tema',
+    'focusOrtografico',
+    'nivelAlfabetizacao',
+    'tipoAtividade',
+    'recursosVisuais',
+    'metodologiaAplicacao'
   ],
-  "palavra-cruzada": [
-    "tema",
-    "disciplina",
-    "palavrasChave",
-    "nivelDificuldade",
-    "tamanhoGrade",
-    "dicasIncluidas"
+  'palavra-cruzada': [
+    'tema',
+    'disciplina',
+    'palavrasChave',
+    'nivelDificuldade',
+    'tamanhoGrade',
+    'dicasIncluidas'
   ],
-  "desenho-simetrico": [
-    "tema",
-    "tipoSimetria",
-    "materiaisNecessarios",
-    "nivelComplexidade",
-    "objetivosGeometricos",
-    "aplicacaoArtistica"
+  'desenho-simetrico': [
+    'tema',
+    'tipoSimetria',
+    'materiaisNecessarios',
+    'nivelComplexidade',
+    'objetivosGeometricos',
+    'aplicacaoArtistica'
   ],
-  "atividades-contos-infantis": [
-    "tema",
-    "contoSelecionado",
-    "faixaEtaria",
-    "objetivosLiterarios",
-    "atividadesComplementares",
-    "recursosLudicos"
+  'atividades-contos-infantis': [
+    'tema',
+    'contoSelecionado',
+    'faixaEtaria',
+    'objetivosLiterarios',
+    'atividadesComplementares',
+    'recursosLudicos'
   ],
-  "revisao-guiada": [
-    "tema",
-    "disciplina",
-    "conteudosRevisao",
-    "metodologiaRevisao",
-    "duracaoSessao",
-    "avaliacaoCompreensao"
+  'revisao-guiada': [
+    'tema',
+    'disciplina',
+    'conteudosRevisao',
+    'metodologiaRevisao',
+    'duracaoSessao',
+    'avaliacaoCompreensao'
   ],
-  "pergunte-texto": [
-    "tema",
-    "textoBase",
-    "tipoQuestoes",
-    "nivelCompreensao",
-    "estrategiasLeitura",
-    "avaliacaoTextual"
+  'pergunte-texto': [
+    'tema',
+    'textoBase',
+    'tipoQuestoes',
+    'nivelCompreensao',
+    'estrategiasLeitura',
+    'avaliacaoTextual'
   ],
-  "lista-vocabulario": [
-    "tema",
-    "disciplina",
-    "palavrasIncluidas",
-    "contextosUso",
-    "atividadesFixacao",
-    "avaliacaoVocabulario"
+  'lista-vocabulario': [
+    'tema',
+    'disciplina',
+    'palavrasIncluidas',
+    'contextosUso',
+    'atividadesFixacao',
+    'avaliacaoVocabulario'
   ],
-  "exemplos-contextualizados": [
-    "tema",
-    "disciplina",
-    "contextosAplicacao",
-    "exemplosPraticos",
-    "situacoesReais",
-    "analiseContextual"
+  'exemplos-contextualizados': [
+    'tema',
+    'disciplina',
+    'contextosAplicacao',
+    'exemplosPraticos',
+    'situacoesReais',
+    'analiseContextual'
   ],
-  "quadro-interativo": [
-    "recursos",
-    "conteudo", 
-    "interatividade",
-    "design",
-    "objetivo",
-    "avaliacao",
-    "title",
-    "description",
-    "materials",
-    "instructions",
-    "evaluationCriteria"
+  'quadro-interativo': [
+    'recursos',
+    'conteudo', 
+    'interatividade',
+    'design',
+    'objetivo',
+    'avaliacao',
+    'title',
+    'description',
+    'materials',
+    'instructions',
+    'evaluationCriteria'
   ]
 };
 
@@ -313,6 +313,11 @@ export function getCustomFieldsForActivity(activityId: string): Record<string, a
   // Campos específicos para sequência didática
   if (activityId === 'sequencia-didatica') {
     return getSequenciaDidaticaCustomFields();
+  }
+
+  // Campos específicos para Tese da Redação
+  if (activityId === 'tese-redacao') {
+    return getTeseRedacaoCustomFields();
   }
 }
 
@@ -354,7 +359,7 @@ function getSequenciaDidaticaCustomFields(): Record<string, any> {
     'Objetivos de Aprendizagem': {
       type: 'textarea',
       label: 'Objetivos de Aprendizagem',
-      placeholder: 'Liste os objetivos de aprendizagem da sequência didática...',
+      placeholder: 'Liste os objetivos de aprendizagem da sequência didática...', 
       required: true
     },
     'Quantidade de Aulas': {
@@ -378,7 +383,45 @@ function getSequenciaDidaticaCustomFields(): Record<string, any> {
     'Cronograma': {
       type: 'textarea',
       label: 'Cronograma (opcional)',
-      placeholder: 'Descreva o cronograma das aulas ou ordem sequencial...',
+      placeholder: 'Descreva o cronograma das aulas ou ordem sequencial...', 
+      required: false
+    }
+  };
+}
+
+/**
+ * Obtém os campos personalizados específicos para Tese da Redação
+ */
+function getTeseRedacaoCustomFields(): Record<string, any> {
+  return {
+    'Tema da Redação': {
+      type: 'text',
+      label: 'Tema da Redação',
+      placeholder: 'Digite o tema da redação aqui', 
+      required: true
+    },
+    'Objetivos': {
+      type: 'textarea',
+      label: 'Objetivos',
+      placeholder: 'Descreva os objetivos da redação aqui', 
+      required: true
+    },
+    'Nível de Dificuldade': {
+      type: 'select',
+      label: 'Nível de Dificuldade',
+      options: ['Fácil', 'Médio', 'Difícil'],
+      required: true
+    },
+    'Competências ENEM': {
+      type: 'select',
+      label: 'Competências ENEM',
+      options: ['Competência II (compreensão tema)', 'Competência III (argumentação)', 'Competência II e III (compreensão tema e argumentação)'],
+      required: true
+    },
+    'Contexto Adicional': {
+      type: 'textarea',
+      label: 'Contexto Adicional',
+      placeholder: 'Forneça um contexto adicional para a redação (opcional)',
       required: false
     }
   };

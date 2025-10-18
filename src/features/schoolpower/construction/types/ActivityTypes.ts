@@ -62,6 +62,9 @@ export interface ActivityFormData {
   nivelDificuldade?: string;
   competenciasENEM?: string;
   contextoAdicional?: string;
+  
+  // Campos adicionais para quadro-interativo
+  quadroInterativoCampoEspecifico?: string;
 }
 
 export interface GeneratedActivity {
