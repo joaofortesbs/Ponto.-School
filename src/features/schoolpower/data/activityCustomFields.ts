@@ -99,7 +99,6 @@ export const activityCustomFields: Record<string, string[]> = {
   "tese-redacao": [
     "Tema da Redação",
     "Nível de Dificuldade",
-    "Objetivo",
     "Competências ENEM",
     "Contexto Adicional"
   ],

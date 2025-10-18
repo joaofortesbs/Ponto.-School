@@ -455,53 +455,33 @@ const renderTeseRedacaoFields = (customFields: Record<string, string>) => {
     return String(value);
   };
 
-  // Campos específicos para Tese da Redação
-  const temaRedacao = safeString(customFields['Tema da Redação'] || customFields['Tema'] || '');
-  const nivelDificuldade = safeString(customFields['Nível de Dificuldade'] || customFields['Dificuldade'] || '');
-  const objetivo = safeString(customFields['Objetivo'] || '');
-  const competenciasENEM = safeString(customFields['Competências ENEM'] || customFields['Competências'] || '');
-  const contextoAdicional = safeString(customFields['Contexto Adicional'] || customFields['Contexto'] || '');
+  // Campos específicos para Tese da Redação - EXATAMENTE como solicitado
+  const temaRedacao = safeString(customFields['Tema da Redação'] || '');
+  const nivelDificuldade = safeString(customFields['Nível de Dificuldade'] || '');
+  const competenciasENEM = safeString(customFields['Competências ENEM'] || '');
+  const contextoAdicional = safeString(customFields['Contexto Adicional'] || '');
 
   return (
-    <div className="space-y-3 p-4 border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/50 rounded-lg">
-      {/* Tema da Redação em destaque */}
+    <div className="flex flex-wrap gap-1">
       {temaRedacao && (
-        <div className="w-full">
-          <div className="text-xs font-semibold text-red-700 dark:text-red-300 mb-1">Tema da Redação</div>
-          <div className="text-sm font-medium text-red-900 dark:text-red-100 bg-red-100 dark:bg-red-800 px-3 py-2 rounded-lg border border-red-300 dark:border-red-600">{temaRedacao}</div>
-        </div>
+        <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
+          📝 Tema: {String(temaRedacao).substring(0, 30)}{String(temaRedacao).length > 30 ? '...' : ''}
+        </Badge>
       )}
-
-      {/* Informações básicas */}
-      <div className="grid grid-cols-2 gap-3">
-        {nivelDificuldade && (
-          <div>
-            <div className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">Nível de Dificuldade</div>
-            <div className="text-sm text-red-800 dark:text-red-200 bg-red-200 dark:bg-red-700 px-2 py-1 rounded">{nivelDificuldade}</div>
-          </div>
-        )}
-        {objetivo && (
-          <div>
-            <div className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">Objetivo</div>
-            <div className="text-sm text-red-800 dark:text-red-200 bg-red-200 dark:bg-red-700 px-2 py-1 rounded">{objetivo}</div>
-          </div>
-        )}
-      </div>
-
-      {/* Competências ENEM */}
+      {nivelDificuldade && (
+        <Badge variant="outline" className="text-xs px-2 py-1 bg-orange-50 dark:bg-orange-900/30 border-orange-200 dark:border-orange-700">
+          ⭐ {String(nivelDificuldade)}
+        </Badge>
+      )}
       {competenciasENEM && (
-        <div className="w-full">
-          <div className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">Competências ENEM</div>
-          <div className="text-sm text-red-800 dark:text-red-200 bg-red-200 dark:bg-red-700 px-2 py-1 rounded">{competenciasENEM}</div>
-        </div>
+        <Badge variant="outline" className="text-xs px-2 py-1 bg-purple-50 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700">
+          🎓 {String(competenciasENEM).substring(0, 40)}{String(competenciasENEM).length > 40 ? '...' : ''}
+        </Badge>
       )}
-
-      {/* Contexto Adicional */}
       {contextoAdicional && (
-        <div className="w-full">
-          <div className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">Contexto Adicional</div>
-          <div className="text-sm text-red-800 dark:text-red-200 bg-red-200 dark:bg-red-700 px-2 py-1 rounded italic">{contextoAdicional}</div>
-        </div>
+        <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700">
+          💡 Contexto: {String(contextoAdicional).substring(0, 35)}{String(contextoAdicional).length > 35 ? '...' : ''}
+        </Badge>
       )}
     </div>
   );
