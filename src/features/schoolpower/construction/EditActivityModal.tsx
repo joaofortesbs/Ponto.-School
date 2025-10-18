@@ -1874,6 +1874,20 @@ const EditActivityModal = ({
             };
             console.log('🧠 Dados diretos do Mapa Mental processados:', directFormData);
           }
+          else if (activity?.id === 'tese-redacao') { // Preenchimento direto para Tese de Redação
+              console.log('📝 Processando dados diretos de Tese de Redação');
+              directFormData = {
+                ...formData,
+                title: activityData.title || customFields['Título'] || 'Tese da Redação',
+                description: activityData.description || customFields['Descrição'] || '',
+                temaRedacao: customFields['Tema da Redação'] || customFields['temaRedacao'] || customFields['Tema'] || '',
+                objetivo: customFields['Objetivos'] || customFields['Objetivo'] || customFields['objetivo'] || '',
+                nivelDificuldade: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || 'Médio',
+                competenciasENEM: customFields['Competências ENEM'] || customFields['competenciasENEM'] || customFields['Competências'] || '',
+                contextoAdicional: customFields['Contexto Adicional'] || customFields['contextoAdicional'] || customFields['Contexto'] || '',
+              };
+              console.log('📝 Dados diretos da Tese de Redação processados:', directFormData);
+            }
           else if (activity?.id === 'flash-cards') { // Preenchimento direto para Flash Cards
               console.log('🃏 Processando dados diretos de Flash Cards');
               directFormData = {
