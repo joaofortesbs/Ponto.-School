@@ -4,5 +4,5 @@
   { "id": "sequencia-didatica", "name": "Sequência Didática", "description": "Organiza aulas em sequência com objetivos claros.", "tags": ["planejamento", "didática"], "apiType": "gemini", "enabled": true },
   { "id": "quiz-interativo", "name": "Quiz Interativo", "description": "Gere um Quiz Interativo para testar a capacidade de seus alunos de uma maneira divertida e gamificada!!!!!!!", "tags": ["Quiz", "Perguntas"], "apiType": "gemini", "enabled": true },
   { "id": "flash-cards", "name": "Flash Cards", "description": "Gere Flash Cards gamificados que vão testar o seu conhecimento!", "tags": ["Cards", "Perguntas"], "apiType": "gemini", "enabled": true },
-  { "id": "tese-redação", "name": "Tese da Redação", "description": "Treine suas teses para a construção de uma redação!", "tags": ["ENEM", "Redação", "Teses"], "apiType": "gemini", "enabled": true }
+  { "id": "tese-redacao", "name": "Tese da Redação", "description": "Treine suas teses para a construção de uma redação!", "tags": ["ENEM", "Redação", "Teses"], "apiType": "gemini", "enabled": true }
 ]

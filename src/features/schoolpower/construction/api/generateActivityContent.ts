@@ -28,6 +28,9 @@ export async function generateActivityContent(activityType: string, formData: Ac
       case 'flash-cards':
         return await generateFlashCards(formData);
       
+      case 'tese-redacao':
+        return await generateTeseRedacao(formData);
+      
       case 'mapa-mental':
         return await generateMapaMental(formData);
       
@@ -286,6 +289,78 @@ async function generateFlashCards(formData: ActivityFormData) {
     };
 
     console.log('🛡️ [generateFlashCards] Usando conteúdo de fallback:', fallbackContent);
+
+    return { success: true, data: fallbackContent };
+  }
+}
+
+async function generateTeseRedacao(formData: ActivityFormData) {
+  console.log('📝 [generateTeseRedacao] Iniciando geração com dados:', formData);
+
+  try {
+    const { TeseRedacaoGenerator } = await import('@/features/schoolpower/activities/tese-redacao/TeseRedacaoGenerator');
+
+    const teseData = {
+      title: formData.title || 'Tese da Redação',
+      temaRedacao: formData.temaRedacao || formData.theme || 'Tema da Redação',
+      nivelDificuldade: formData.nivelDificuldade || formData.difficultyLevel || 'Médio',
+      objetivo: formData.objetivo || formData.objectives || 'Elaborar teses consistentes para redação do ENEM',
+      competenciasENEM: formData.competenciasENEM || 'Competência II e III (compreensão tema e argumentação)',
+      contextoAdicional: formData.contextoAdicional || formData.context || ''
+    };
+
+    console.log('📝 Dados estruturados para Gemini:', teseData);
+
+    const generator = new TeseRedacaoGenerator();
+    const generatedContent = await generator.generateTeseRedacaoContent(teseData);
+
+    console.log('✅ Conteúdo gerado pela API Gemini:', generatedContent);
+
+    const finalContent = {
+      ...generatedContent,
+      title: generatedContent.title || formData.title,
+      generatedByAI: true,
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: true,
+      isFallback: generatedContent.isFallback || false,
+      formDataUsed: teseData
+    };
+
+    // Salvar no localStorage
+    const teseStorageKey = `constructed_tese-redacao_${Date.now()}`;
+    localStorage.setItem(teseStorageKey, JSON.stringify({ success: true, data: finalContent }));
+
+    return { success: true, data: finalContent };
+
+  } catch (error) {
+    console.error('❌ Erro ao gerar Tese da Redação:', error);
+
+    // Fallback
+    const fallbackContent = {
+      title: formData.title || 'Tese da Redação',
+      temaRedacao: formData.temaRedacao || formData.theme || 'Tema da Redação',
+      nivelDificuldade: formData.nivelDificuldade || 'Médio',
+      objetivo: formData.objetivo || 'Elaborar teses consistentes',
+      competenciasENEM: formData.competenciasENEM || 'Competência II e III',
+      contextoAdicional: formData.contextoAdicional || '',
+      tesesSugeridas: [
+        {
+          id: 1,
+          tese: 'Tese de exemplo sobre o tema proposto',
+          argumentos: ['Argumento 1', 'Argumento 2', 'Argumento 3'],
+          explicacao: 'Explicação da tese',
+          pontosFortres: ['Clara e objetiva'],
+          pontosMelhorar: ['Adicionar dados']
+        }
+      ],
+      dicasGerais: ['Leia atentamente o tema', 'Desenvolva tese clara'],
+      criteriosAvaliacao: {
+        competenciaII: 'Compreensão do tema',
+        competenciaIII: 'Argumentação consistente'
+      },
+      isFallback: true,
+      generatedAt: new Date().toISOString()
+    };
 
     return { success: true, data: fallbackContent };
   }

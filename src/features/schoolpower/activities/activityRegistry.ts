@@ -87,6 +87,15 @@ export const activityRegistry: ActivityRegistryType = {
     editor: lazy(() => import("./default/EditActivity")),
     preview: lazy(() => import("./quiz-interativo/QuizInterativoPreview")),
   },
+  // Tese da Redação - Atividade específica para propostas de redação com IA
+  "tese-redacao": {
+    editor: lazy(() => import("./default/EditActivity")),
+    preview: lazy(() => import("./tese-redacao/TeseRedacaoPreview")),
+  },
+  "apresentacao-slides": {
+    editor: lazy(() => import("./default/EditActivity")),
+    preview: lazy(() => import("./default/ActivityPreview")),
+  },
 };
 
 export const activityProcessors = {
