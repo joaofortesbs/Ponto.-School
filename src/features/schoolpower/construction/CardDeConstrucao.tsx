@@ -1428,7 +1428,7 @@ export function CardDeConstrucao({
           theme: customFields['Tema dos Flash Cards'] || customFields['tema'] || '',
           topicos: customFields['Tópicos Principais'] || customFields['topicos'] || '',
           numberOfFlashcards: customFields['Número de Flash Cards'] || customFields['numeroFlashcards'] || '10',
-          context: customFields['Contexto de Uso'] || customFields['contexto'] || ''
+          contextoUso: customFields['Contexto de Uso'] || customFields['contexto'] || ''
         };
         storeAutoData(activity, autoFormData, customFields, originalData, actionPlanActivity);
       } else if (activity?.id === 'tese-redacao') {

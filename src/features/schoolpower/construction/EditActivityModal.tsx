@@ -974,7 +974,7 @@ const EditActivityModal = ({
             'Tema dos Flash Cards': formData.theme,
             'Tópicos Principais': formData.topicos,
             'Número de Flash Cards': formData.numberOfFlashcards,
-            'Contexto de Uso': formData.context
+            'Contexto de Uso': formData.contextoUso
           }),
           ...(activity.id === 'mapa-mental' && {
             'Tema Central': formData.centralTheme,
@@ -1883,7 +1883,7 @@ const EditActivityModal = ({
                 theme: customFields['Tema'] || customFields['tema'] || customFields['Tema dos Flash Cards'] || '',
                 topicos: customFields['Tópicos Principais'] || customFields['Tópicos'] || customFields['topicos'] || customFields['tópicos'] || '',
                 numberOfFlashcards: customFields['Número de Flash Cards'] || customFields['numeroFlashcards'] || customFields['Quantidade de Flash Cards'] || '10',
-                context: customFields['Contexto de Uso'] || customFields['Contexto'] || customFields['contexto'] || '',
+                contextoUso: customFields['Contexto de Uso'] || customFields['Contexto'] || customFields['contexto'] || '',
               };
               console.log('🃏 Dados diretos do Flash Cards processados:', directFormData);
             }
