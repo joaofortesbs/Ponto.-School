@@ -34,9 +34,10 @@ export function processTeseRedacaoData(activity: TeseRedacaoActivity): ActivityF
   
   console.log('🔍 [PROCESSOR] Tema da Redação extraído:', temaRedacao);
   
-  const objetivo = customFields['Objetivos'] || 
+  const objetivo = customFields['Objetivo'] || 
                    customFields['objetivo'] || 
-                   customFields['Objetivo'] ||
+                   customFields['Objetivos'] ||
+                   customFields['objetivos'] ||
                    activity.personalizedDescription ||
                    activity.description || '';
   

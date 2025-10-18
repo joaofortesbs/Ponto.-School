@@ -59,6 +59,20 @@ export const getActivityDataFromPlan = (activity: ActionPlanItem): ActivityFormD
       };
     }
 
+    // Mapeamento específico para Tese da Redação
+    if (activity.id === 'tese-redacao') {
+      console.log('🎯 Mapeando dados da Tese da Redação do Plano:', activity.customFields);
+      
+      return {
+        ...baseData,
+        temaRedacao: activity.customFields?.['Tema da Redação'] || activity.customFields?.['temaRedacao'] || '',
+        nivelDificuldade: activity.customFields?.['Nível de Dificuldade'] || activity.customFields?.['nivelDificuldade'] || 'Médio',
+        objetivo: activity.customFields?.['Objetivo'] || activity.customFields?.['objetivo'] || '',
+        competenciasENEM: activity.customFields?.['Competências ENEM'] || activity.customFields?.['competenciasENEM'] || '',
+        contextoAdicional: activity.customFields?.['Contexto Adicional'] || activity.customFields?.['contextoAdicional'] || ''
+      };
+    }
+
     // Para outras atividades, usar dados genéricos
     return {
       ...baseData,

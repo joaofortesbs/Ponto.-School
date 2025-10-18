@@ -379,24 +379,12 @@ const TeseRedacaoEditActivity = ({formData, onFieldChange }: {formData: Activity
   <div className="space-y-4">
     <div>
       <Label htmlFor="temaRedacao" className="text-sm">Tema da Redação *</Label>
-      <Input
+      <Textarea
         id="temaRedacao"
         value={formData.temaRedacao || ''}
         onChange={(e) => onFieldChange('temaRedacao', e.target.value)}
-        placeholder="Ex: Cultura Brasileira e Desafios Contemporâneos"
-        required
-        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-
-    <div>
-      <Label htmlFor="objetivo" className="text-sm">Objetivos *</Label>
-      <Textarea
-        id="objetivo"
-        value={formData.objetivo || ''}
-        onChange={(e) => onFieldChange('objetivo', e.target.value)}
-        placeholder="Descreva os objetivos da atividade..."
-        rows={3}
+        placeholder="Ex: Desafios da Preservação da Cultura Brasileira no século XXI"
+        rows={2}
         required
         className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
       />
@@ -404,30 +392,39 @@ const TeseRedacaoEditActivity = ({formData, onFieldChange }: {formData: Activity
 
     <div>
       <Label htmlFor="nivelDificuldade" className="text-sm">Nível de Dificuldade *</Label>
-      <Select value={formData.nivelDificuldade || 'Médio'} onValueChange={(value) => onFieldChange('nivelDificuldade', value)}>
-        <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-          <SelectValue placeholder="Selecione o nível de dificuldade" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="Fácil">Fácil</SelectItem>
-          <SelectItem value="Médio">Médio</SelectItem>
-          <SelectItem value="Difícil">Difícil</SelectItem>
-        </SelectContent>
-      </Select>
+      <Input
+        id="nivelDificuldade"
+        value={formData.nivelDificuldade || ''}
+        onChange={(e) => onFieldChange('nivelDificuldade', e.target.value)}
+        placeholder="Ex: Fácil, Médio ou Difícil"
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div>
+      <Label htmlFor="objetivo" className="text-sm">Objetivo *</Label>
+      <Textarea
+        id="objetivo"
+        value={formData.objetivo || ''}
+        onChange={(e) => onFieldChange('objetivo', e.target.value)}
+        placeholder="Ex: Elaborar teses claras e argumentativas sobre a preservação cultural brasileira"
+        rows={3}
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
     </div>
 
     <div>
       <Label htmlFor="competenciasENEM" className="text-sm">Competências ENEM *</Label>
-      <Select value={formData.competenciasENEM || ''} onValueChange={(value) => onFieldChange('competenciasENEM', value)}>
-        <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-          <SelectValue placeholder="Selecione a competência" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="Competência II (compreensão tema)">Competência II (compreensão tema)</SelectItem>
-          <SelectItem value="Competência III (argumentação)">Competência III (argumentação)</SelectItem>
-          <SelectItem value="Competência II e III (compreensão tema e argumentação)">Competência II e III (compreensão tema e argumentação)</SelectItem>
-        </SelectContent>
-      </Select>
+      <Input
+        id="competenciasENEM"
+        value={formData.competenciasENEM || ''}
+        onChange={(e) => onFieldChange('competenciasENEM', e.target.value)}
+        placeholder="Ex: Competência II (compreensão tema) ou Competência III (argumentação)"
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
     </div>
 
     <div>
@@ -436,7 +433,7 @@ const TeseRedacaoEditActivity = ({formData, onFieldChange }: {formData: Activity
         id="contextoAdicional"
         value={formData.contextoAdicional || ''}
         onChange={(e) => onFieldChange('contextoAdicional', e.target.value)}
-        placeholder="Informações adicionais sobre o contexto da redação..."
+        placeholder="Ex: Considere aspectos como globalização, políticas públicas culturais e diversidade regional"
         rows={3}
         className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
       />
