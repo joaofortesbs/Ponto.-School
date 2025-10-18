@@ -1441,7 +1441,7 @@ const EditActivityModal = ({
                 theme: customFields['Tema'] || customFields['tema'] || customFields['Tema dos Flash Cards'] || autoFormData.theme || '',
                 topicos: customFields['Tópicos Principais'] || customFields['Tópicos'] || customFields['topicos'] || customFields['tópicos'] || autoFormData.topicos || '',
                 numberOfFlashcards: customFields['Número de Flash Cards'] || customFields['numeroFlashcards'] || customFields['Quantidade de Flash Cards'] || autoFormData.numberOfFlashcards || '10',
-                context: customFields['Contexto de Uso'] || customFields['Contexto'] || customFields['contexto'] || autoFormData.context || '',
+                contextoUso: customFields['Contexto de Uso'] || customFields['Contexto'] || customFields['contexto'] || autoFormData.contextoUso || autoFormData.context || '',
                 subject: consolidatedCustomFields['Disciplina'] || consolidatedCustomFields['disciplina'] || autoFormData.subject || 'Geral',
                 schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || consolidatedCustomFields['anoEscolaridade'] || autoFormData.schoolYear || 'Ensino Médio',
                 difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || consolidatedCustomFields['nivelDificuldade'] || autoFormData.difficultyLevel || 'Médio',
