@@ -678,75 +678,7 @@ const EditActivityModal = ({
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
   const [isInQuestionView, setIsInQuestionView] = useState(false);
 
-  // useEffect CRÍTICO: Recarregar dados SEMPRE que o modal abre
-  useEffect(() => {
-    if (isOpen && activity?.id === 'tese-redacao') {
-      console.log('%c🔄 [TESE REDAÇÃO] MODAL ABERTO - Iniciando carregamento de dados...', 'background: #4CAF50; color: white; font-size: 14px; padding: 5px; border-radius: 3px;');
-
-      // Tentar múltiplas chaves de storage
-      const possibleKeys = [
-        `auto_activity_data_tese-redacao`,
-        `auto_activity_data_${activity.id}`,
-        `tese_redacao_form_data`
-      ];
-
-      console.log('%c📦 [TESE REDAÇÃO] Tentando carregar das seguintes chaves:', 'color: #2196F3; font-weight: bold;', possibleKeys);
-
-      let dadosEncontrados = false;
-
-      for (const key of possibleKeys) {
-        const savedData = localStorage.getItem(key);
-        console.log(`%c🔍 [TESE REDAÇÃO] Verificando chave "${key}":`, 'color: #FF9800;', savedData ? '✅ DADOS ENCONTRADOS!' : '❌ Vazio');
-        
-        if (savedData) {
-          try {
-            const parsed = JSON.parse(savedData);
-            const loadedFormData = parsed.formData || parsed;
-
-            console.log('%c✅ [TESE REDAÇÃO] DADOS CARREGADOS COM SUCESSO!', 'background: #4CAF50; color: white; font-size: 16px; padding: 8px; font-weight: bold; border-radius: 5px;');
-            console.log('%c📋 [TESE REDAÇÃO] Conteúdo dos dados:', 'color: #4CAF50; font-weight: bold;');
-            console.table({
-              'Tema da Redação': loadedFormData.temaRedacao || '(vazio)',
-              'Objetivo': loadedFormData.objetivo || '(vazio)',
-              'Nível de Dificuldade': loadedFormData.nivelDificuldade || '(vazio)',
-              'Competências ENEM': loadedFormData.competenciasENEM || '(vazio)',
-              'Contexto Adicional': loadedFormData.contextoAdicional || '(vazio)'
-            });
-
-            // ATUALIZAR O FORMDATA COM OS DADOS SALVOS
-            setFormData(prev => ({
-              ...prev,
-              title: loadedFormData.title || prev.title,
-              description: loadedFormData.description || prev.description,
-              temaRedacao: loadedFormData.temaRedacao || '',
-              objetivo: loadedFormData.objetivo || '',
-              nivelDificuldade: loadedFormData.nivelDificuldade || 'Médio',
-              competenciasENEM: loadedFormData.competenciasENEM || '',
-              contextoAdicional: loadedFormData.contextoAdicional || '',
-              theme: loadedFormData.temaRedacao || loadedFormData.theme || '',
-              objectives: loadedFormData.objetivo || '',
-              difficultyLevel: loadedFormData.nivelDificuldade || 'Médio'
-            }));
-
-            console.log('%c🎉 [TESE REDAÇÃO] CAMPOS PREENCHIDOS AUTOMATICAMENTE!', 'background: #4CAF50; color: white; font-size: 16px; padding: 10px; font-weight: bold; border-radius: 5px;');
-            dadosEncontrados = true;
-            return; // Parar após encontrar dados válidos
-          } catch (error) {
-            console.error('%c❌ [TESE REDAÇÃO] Erro ao parsear dados da chave:', 'color: red; font-weight: bold;', key, error);
-          }
-        }
-      }
-
-      if (!dadosEncontrados) {
-        console.log('%c⚠️ [TESE REDAÇÃO] ATENÇÃO: Nenhum dado encontrado no localStorage!', 'background: #FF9800; color: white; font-size: 14px; padding: 8px; font-weight: bold; border-radius: 5px;');
-        console.log('%c💡 [TESE REDAÇÃO] IMPORTANTE: Você precisa CLICAR no card da "Tese da Redação" no Plano de Ação ANTES de abrir este modal!', 'color: #FF5722; font-size: 13px; font-weight: bold;');
-        console.log('%c📍 [TESE REDAÇÃO] PASSO A PASSO:', 'color: #2196F3; font-size: 12px; font-weight: bold;');
-        console.log('%c1️⃣ Gere um Plano de Ação com a IA', 'color: #666;');
-        console.log('%c2️⃣ CLIQUE no card "Tese da Redação" no Plano de Ação', 'color: #666;');
-        console.log('%c3️⃣ Depois vá em Construção > Editar Materiais', 'color: #666;');
-      }
-    }
-  }, [isOpen, activity?.id]);
+  // REMOVIDO: useEffect duplicado - o carregamento automático já existe nas linhas 1590-1625
 
   // useEffect para escutar eventos de dados salvos (Tese da Redação)
   useEffect(() => {
@@ -1586,41 +1518,86 @@ const EditActivityModal = ({
       const quadroInterativoSavedContent = localStorage.getItem(`constructed_quadro-interativo_${activity.id}`);
       const quadroInterativoSpecificData = localStorage.getItem(`quadro_interativo_data_${activity.id}`);
 
-      // Carregar dados específicos da Tese da Redação
-      const teseRedacaoAutoData = localStorage.getItem(`auto_activity_data_tese-redacao`);
+      // Carregar dados específicos da Tese da Redação com LOGS COLORIDOS
+      if (activity.id === 'tese-redacao') {
+        console.log('%c🔄 [TESE REDAÇÃO] MODAL ABERTO - Iniciando carregamento...', 'background: #2196F3; color: white; font-size: 14px; padding: 5px; border-radius: 3px;');
 
-      console.log('📦 Dados de auto-preenchimento da Tese da Redação:', teseRedacaoAutoData);
+        // Tentar múltiplas chaves de storage
+        const possibleKeys = [
+          `auto_activity_data_tese-redacao`,
+          `auto_activity_data_${activity.id}`,
+          `tese_redacao_form_data`
+        ];
 
-      // Carregar e preencher dados automáticos da Tese da Redação
-      if (activity.id === 'tese-redacao' && teseRedacaoAutoData) {
-        try {
-          const autoData = JSON.parse(teseRedacaoAutoData);
-          console.log('📝 Carregando dados automáticos da Tese da Redação:', autoData);
+        console.log('%c📦 [TESE REDAÇÃO] Verificando chaves:', 'color: #2196F3; font-weight: bold;', possibleKeys);
 
-          if (autoData.formData) {
-            console.log('✅ Preenchendo formulário da Tese da Redação automaticamente');
-            setFormData(prev => ({
-              ...prev,
-              title: autoData.formData.title || prev.title,
-              description: autoData.formData.description || prev.description,
-              temaRedacao: autoData.formData.temaRedacao || '',
-              objetivo: autoData.formData.objetivo || '',
-              nivelDificuldade: autoData.formData.nivelDificuldade || 'Médio',
-              competenciasENEM: autoData.formData.competenciasENEM || '',
-              contextoAdicional: autoData.formData.contextoAdicional || '',
-              subject: autoData.formData.subject || 'Língua Portuguesa',
-              theme: autoData.formData.theme || autoData.formData.temaRedacao || '',
-              schoolYear: autoData.formData.schoolYear || '3º Ano - Ensino Médio',
-              numberOfQuestions: autoData.formData.numberOfQuestions || '1',
-              difficultyLevel: autoData.formData.difficultyLevel || autoData.formData.nivelDificuldade || 'Médio',
-              questionModel: autoData.formData.questionModel || 'Dissertativa',
-              objectives: autoData.formData.objectives || autoData.formData.objetivo || ''
-            }));
+        let dadosEncontrados = false;
 
-            console.log('🎯 Formulário da Tese da Redação preenchido com sucesso');
+        for (const key of possibleKeys) {
+          const savedData = localStorage.getItem(key);
+          console.log(`%c🔍 Chave "${key}":`, 'color: #FF9800;', savedData ? '✅ TEM DADOS' : '❌ Vazio');
+          
+          if (savedData) {
+            try {
+              const autoData = JSON.parse(savedData);
+              const loadedFormData = autoData.formData || autoData;
+
+              console.log('%c✅ [TESE REDAÇÃO] DADOS ENCONTRADOS!', 'background: #4CAF50; color: white; font-size: 16px; padding: 8px; font-weight: bold; border-radius: 5px;');
+              console.log('%c📋 Conteúdo:', 'color: #4CAF50; font-weight: bold;');
+              console.table({
+                'Tema da Redação': loadedFormData.temaRedacao || '(vazio)',
+                'Objetivo': loadedFormData.objetivo || '(vazio)',
+                'Nível de Dificuldade': loadedFormData.nivelDificuldade || '(vazio)',
+                'Competências ENEM': loadedFormData.competenciasENEM || '(vazio)',
+                'Contexto Adicional': loadedFormData.contextoAdicional || '(vazio)'
+              });
+
+              // ATUALIZAR O FORMDATA COM OS DADOS SALVOS
+              const updatedFormData = {
+                ...formData,
+                title: loadedFormData.title || formData.title,
+                description: loadedFormData.description || formData.description,
+                temaRedacao: loadedFormData.temaRedacao || '',
+                objetivo: loadedFormData.objetivo || '',
+                nivelDificuldade: loadedFormData.nivelDificuldade || 'Médio',
+                competenciasENEM: loadedFormData.competenciasENEM || '',
+                contextoAdicional: loadedFormData.contextoAdicional || '',
+                subject: loadedFormData.subject || 'Língua Portuguesa',
+                theme: loadedFormData.temaRedacao || loadedFormData.theme || '',
+                schoolYear: loadedFormData.schoolYear || '3º Ano - Ensino Médio',
+                numberOfQuestions: loadedFormData.numberOfQuestions || '1',
+                difficultyLevel: loadedFormData.difficultyLevel || loadedFormData.nivelDificuldade || 'Médio',
+                questionModel: loadedFormData.questionModel || 'Dissertativa',
+                objectives: loadedFormData.objectives || loadedFormData.objetivo || ''
+              };
+              
+              setFormData(updatedFormData);
+
+              console.log('%c🎉 [TESE REDAÇÃO] CAMPOS PREENCHIDOS!', 'background: #4CAF50; color: white; font-size: 16px; padding: 10px; font-weight: bold; border-radius: 5px;');
+              console.log('%c📊 formData ATUALIZADO:', 'color: #4CAF50; font-weight: bold;', updatedFormData);
+              console.log('%c🔍 VERIFICAÇÃO DOS CAMPOS:', 'color: #2196F3; font-weight: bold;');
+              console.table({
+                'temaRedacao': updatedFormData.temaRedacao,
+                'objetivo': updatedFormData.objetivo,
+                'nivelDificuldade': updatedFormData.nivelDificuldade,
+                'competenciasENEM': updatedFormData.competenciasENEM,
+                'contextoAdicional': updatedFormData.contextoAdicional
+              });
+              
+              dadosEncontrados = true;
+              break; // Parar após encontrar dados válidos
+            } catch (error) {
+              console.error('%c❌ Erro ao parsear:', 'color: red; font-weight: bold;', key, error);
+            }
           }
-        } catch (error) {
-          console.error('❌ Erro ao carregar dados automáticos da Tese da Redação:', error);
+        }
+
+        if (!dadosEncontrados) {
+          console.log('%c⚠️ [TESE REDAÇÃO] NENHUM DADO ENCONTRADO!', 'background: #FF9800; color: white; font-size: 14px; padding: 8px; font-weight: bold; border-radius: 5px;');
+          console.log('%c💡 PASSO A PASSO:', 'color: #2196F3; font-size: 12px; font-weight: bold;');
+          console.log('%c1️⃣ Gere um Plano de Ação com a IA', 'color: #666;');
+          console.log('%c2️⃣ CLIQUE no card "Tese da Redação"', 'color: #666;');
+          console.log('%c3️⃣ Depois vá em Construção > Editar Materiais', 'color: #666;');
         }
       }
 
