@@ -146,6 +146,19 @@ Os campos obrigatórios são EXATAMENTE:
 
 USE EXATAMENTE ESTES NOMES DE CAMPOS para plano-aula!`;
 
+    // Adicionar informações específicas para tese-redacao
+    const teseRedacaoSpecificInfo = `
+ATENÇÃO ESPECIAL PARA TESE-REDACAO:
+Os campos obrigatórios são EXATAMENTE:
+- Tema da Redação (descrição completa e específica do tema da redação do ENEM)
+- Nível de Dificuldade (opções: Fácil, Médio, Difícil)
+- Objetivo (descrição clara do objetivo da atividade de elaboração de teses)
+- Competências ENEM (opções EXATAS: "Competência II (compreensão tema)" OU "Competência III (argumentação)" OU "Competência II e III (compreensão tema e argumentação)")
+- Contexto Adicional (informações extras relevantes para a elaboração das teses)
+
+USE EXATAMENTE ESTES NOMES DE CAMPOS e OPÇÕES para tese-redacao!
+IMPORTANTE: O campo "Competências ENEM" deve usar uma das três opções listadas acima.`;
+
     // Construir o prompt para a Gemini
     let prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo.
 
@@ -176,6 +189,8 @@ CUSTOM FIELDS PER ACTIVITY:
 ${customFieldsInfo}
 
 ${planoAulaSpecificInfo}
+
+${teseRedacaoSpecificInfo}
 
 INSTRUCTIONS:
 1. Carefully analyze the request and provided information
@@ -217,12 +232,12 @@ EXAMPLE for exercise-list:
   "difficulty": "Medium",
   "category": "Grammar",
   "type": "activity",
-  "Number of Questions": "10 mixed questions involving common and proper nouns, as well as regular verbs",
-  "Theme": "Nouns and Verbs",
-  "Subject": "Portuguese Language",
-  "Grade Level": "6th Grade",
-  "Difficulty Level": "Intermediate",
-  "Question Model": "Objective and essay questions",
+  "Quantidade de Questões": "10 mixed questions involving common and proper nouns, as well as regular verbs",
+  "Tema": "Nouns and Verbs",
+  "Disciplina": "Portuguese Language",
+  "Ano de Escolaridade": "6th Grade",
+  "Nível de Dificuldade": "Intermediate",
+  "Modelo de Questões": "Objective and essay questions",
   "Sources": "Projeto Ápis textbook and site TodaMatéria"
 }
 
@@ -263,6 +278,29 @@ IMPORTANT:
         - "Tópicos": string com os tópicos abordados
         - "Número de flashcards": string com a quantidade de flashcards (ex: "15")
         - "Contexto": string com o contexto de aplicação
+
+        IMPORTANTE: Para atividades do tipo "tese-redacao", use OBRIGATORIAMENTE estes campos específicos:
+        - "Tema da Redação": string com descrição completa do tema da redação ENEM
+        - "Nível de Dificuldade": string (opções: "Fácil", "Médio", "Difícil")
+        - "Objetivo": string com descrição clara do objetivo da atividade
+        - "Competências ENEM": string (opções EXATAS: "Competência II (compreensão tema)" OU "Competência III (argumentação)" OU "Competência II e III (compreensão tema e argumentação)")
+        - "Contexto Adicional": string com informações extras relevantes
+
+        EXEMPLO para tese-redacao:
+        {
+          "id": "tese-redacao",
+          "title": "Tese de Redação: Desafios da Preservação da Cultura Brasileira",
+          "description": "Atividade de elaboração de teses para redações do ENEM sobre os desafios da preservação da cultura brasileira",
+          "duration": "30 min",
+          "difficulty": "Médio",
+          "category": "Redação",
+          "type": "activity",
+          "Tema da Redação": "Desafios da Preservação da Cultura Brasileira no século XXI",
+          "Nível de Dificuldade": "Médio",
+          "Objetivo": "Elaborar teses claras e argumentativas sobre a preservação cultural brasileira",
+          "Competências ENEM": "Competência II e III (compreensão tema e argumentação)",
+          "Contexto Adicional": "Considere aspectos como globalização, políticas públicas culturais e diversidade regional"
+        }
 
         EXEMPLO para quadro-interativo:
         {

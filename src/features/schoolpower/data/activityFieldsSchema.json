@@ -194,5 +194,14 @@
       "Critérios de Avaliação",
       "Prazo de Entrega"
     ]
+  },
+  "tese-redacao": {
+    "fields": [
+      "Tema da Redação",
+      "Nível de Dificuldade",
+      "Objetivo",
+      "Competências ENEM",
+      "Contexto Adicional"
+    ]
   }
 }

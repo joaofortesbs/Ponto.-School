@@ -9,6 +9,7 @@ import { activityTextoApoioFieldMap } from './atividade_texto_apoio';
 import { activityExemplosContextualizadosFieldMap } from './atividade_exemplos_contextualizados';
 import { activityPropostaRedacaoFieldMap } from './atividade_proposta_redacao';
 import { activityCriteriosAvaliacaoFieldMap } from './atividade_criterios_avaliacao';
+import { activityTeseRedacaoFieldMap } from './atividade_tese_redacao';
 
 export interface ActivityFieldMap {
   [key: string]: string;
@@ -25,6 +26,7 @@ const fieldMapsRegistry: { [activityType: string]: ActivityFieldMap } = {
   'exemplos-contextualizados': activityExemplosContextualizadosFieldMap,
   'proposta-redacao': activityPropostaRedacaoFieldMap,
   'criterios-avaliacao': activityCriteriosAvaliacaoFieldMap,
+  'tese-redacao': activityTeseRedacaoFieldMap,
 };
 
 export const getFieldMap = (activityType: string): ActivityFieldMap | null => {

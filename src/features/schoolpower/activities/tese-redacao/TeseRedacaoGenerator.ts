@@ -3,11 +3,11 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface TeseRedacaoData {
   title: string;
-  temaRedacao: string;
-  nivelDificuldade: string;
-  objetivo: string;
-  competenciasENEM: string;
-  contextoAdicional?: string;
+  temaRedacao: string;        // Tema da Redação
+  nivelDificuldade: string;   // Nível de Dificuldade: Fácil, Médio, Difícil
+  objetivo: string;           // Objetivo da atividade
+  competenciasENEM: string;   // Competências ENEM: Competência II / III / II e III
+  contextoAdicional?: string; // Contexto Adicional (opcional)
 }
 
 export class TeseRedacaoGenerator {
