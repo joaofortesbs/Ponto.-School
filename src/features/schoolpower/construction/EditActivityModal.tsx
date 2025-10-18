@@ -678,6 +678,55 @@ const EditActivityModal = ({
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
   const [isInQuestionView, setIsInQuestionView] = useState(false);
 
+  // useEffect CRÍTICO: Recarregar dados SEMPRE que o modal abre
+  useEffect(() => {
+    if (isOpen && activity?.id === 'tese-redacao') {
+      console.log('🔄 [MODAL CRÍTICO] Modal aberto, recarregando dados da Tese da Redação...');
+
+      // Tentar múltiplas chaves de storage
+      const possibleKeys = [
+        `auto_activity_data_tese-redacao`,
+        `auto_activity_data_${activity.id}`,
+        `tese_redacao_form_data`
+      ];
+
+      for (const key of possibleKeys) {
+        const savedData = localStorage.getItem(key);
+        if (savedData) {
+          try {
+            const parsed = JSON.parse(savedData);
+            const loadedFormData = parsed.formData || parsed;
+
+            console.log('✅ [MODAL CRÍTICO] Dados encontrados na chave:', key);
+            console.log('📋 [MODAL CRÍTICO] Dados carregados:', loadedFormData);
+
+            // ATUALIZAR O FORMDATA COM OS DADOS SALVOS
+            setFormData(prev => ({
+              ...prev,
+              title: loadedFormData.title || prev.title,
+              description: loadedFormData.description || prev.description,
+              temaRedacao: loadedFormData.temaRedacao || '',
+              objetivo: loadedFormData.objetivo || '',
+              nivelDificuldade: loadedFormData.nivelDificuldade || 'Médio',
+              competenciasENEM: loadedFormData.competenciasENEM || '',
+              contextoAdicional: loadedFormData.contextoAdicional || '',
+              theme: loadedFormData.temaRedacao || loadedFormData.theme || '',
+              objectives: loadedFormData.objetivo || '',
+              difficultyLevel: loadedFormData.nivelDificuldade || 'Médio'
+            }));
+
+            console.log('🎉 [MODAL CRÍTICO] Todos os campos preenchidos com sucesso!');
+            return; // Parar após encontrar dados válidos
+          } catch (error) {
+            console.error('❌ [MODAL CRÍTICO] Erro ao parsear dados:', error);
+          }
+        }
+      }
+
+      console.log('⚠️ [MODAL CRÍTICO] Nenhum dado salvo encontrado no localStorage');
+    }
+  }, [isOpen, activity?.id]);
+
   // useEffect para escutar eventos de dados salvos (Tese da Redação)
   useEffect(() => {
     if (activity?.id === 'tese-redacao') {
@@ -2393,6 +2442,11 @@ const EditActivityModal = ({
   }, [activity, isOpen]);
 
   const handleInputChange = (field: keyof ActivityFormData, value: string) => {
+    // Log crítico para Tese da Redação
+    if (activity?.id === 'tese-redacao') {
+      console.log(`🔧 [TESE REDAÇÃO] Campo "${field}" alterado para:`, value);
+    }
+    
     setFormData(prev => ({
       ...prev,
       [field]: value
