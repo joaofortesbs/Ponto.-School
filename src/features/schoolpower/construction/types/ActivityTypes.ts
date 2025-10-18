@@ -54,6 +54,7 @@ export interface ActivityFormData {
   // Campos específicos para Flash Cards
   topicos?: string;
   numberOfFlashcards?: string;
+  contextoUso?: string;
 
   // Campos específicos para Tese da Redação
   temaRedacao?: string;
