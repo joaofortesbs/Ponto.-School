@@ -64,6 +64,16 @@ export interface ActivityFormData {
   
   // Campos adicionais para quadro-interativo
   quadroInterativoCampoEspecifico?: string;
+  
+  // Campos específicos para Quiz Interativo
+  format?: string;
+  timePerQuestion?: string;
+  
+  // Campos específicos para Mapa Mental
+  centralTheme?: string;
+  mainCategories?: string;
+  generalObjective?: string;
+  evaluationCriteria?: string;
 }
 
 export interface GeneratedActivity {

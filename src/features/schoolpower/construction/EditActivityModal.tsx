@@ -222,11 +222,30 @@ const EditActivityModal = ({
   useEffect(() => {
     if (autoLoadedData && !isAutoLoading) {
       console.log('%c🔥 [MODAL] Aplicando dados do hook useActivityAutoLoad', 'background: #E91E63; color: white; font-size: 14px; padding: 5px; font-weight: bold; border-radius: 3px;', autoLoadedData);
+      console.log('%c🔍 [MODAL] Estado ANTERIOR do formData:', 'background: #FF9800; color: white; font-size: 12px; padding: 5px;', formData);
       
-      setFormData(prev => ({
-        ...prev,
-        ...autoLoadedData
-      }));
+      setFormData(prev => {
+        const newFormData = {
+          ...prev,
+          ...autoLoadedData
+        };
+        
+        console.log('%c📝 [MODAL] Estado NOVO do formData após merge:', 'background: #2196F3; color: white; font-size: 12px; padding: 5px;', newFormData);
+        
+        // Log específico para Tese de Redação
+        if (activity?.id === 'tese-redacao') {
+          console.log('%c📚 [MODAL - TESE] Campos da Tese de Redação aplicados:', 'background: #9C27B0; color: white; font-size: 14px; padding: 5px; font-weight: bold;');
+          console.table({
+            'Tema da Redação': newFormData.temaRedacao,
+            'Objetivo': newFormData.objetivo,
+            'Nível de Dificuldade': newFormData.nivelDificuldade,
+            'Competências ENEM': newFormData.competenciasENEM,
+            'Contexto Adicional': newFormData.contextoAdicional
+          });
+        }
+        
+        return newFormData;
+      });
       
       console.log('%c✅ [MODAL] formData atualizado com dados auto-carregados!', 'background: #4CAF50; color: white; font-size: 14px; padding: 5px; font-weight: bold; border-radius: 3px;');
     }
@@ -234,7 +253,7 @@ const EditActivityModal = ({
     if (autoLoadError) {
       console.error('%c❌ [MODAL] Erro no auto-load:', 'color: red; font-weight: bold;', autoLoadError);
     }
-  }, [autoLoadedData, isAutoLoading, autoLoadError]);
+  }, [autoLoadedData, isAutoLoading, autoLoadError, activity?.id]);
 
   // --- Estados e Funções para o Modal de Edição ---
   const [showSidebar, setShowSidebar] = useState(false);
@@ -1081,6 +1100,8 @@ const EditActivityModal = ({
       const sequenciaDidaticaSavedContent = localStorage.getItem(`constructed_sequencia-didatica_${activity.id}`);
       const quadroInterativoSavedContent = localStorage.getItem(`constructed_quadro-interativo_${activity.id}`);
       const quadroInterativoSpecificData = localStorage.getItem(`quadro_interativo_data_${activity.id}`);
+      const quizInterativoSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`);
+      const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
 
       // REMOVIDO: Lógica de carregamento da Tese da Redação agora está centralizada no hook useActivityAutoLoad (linhas 616-638)
 
