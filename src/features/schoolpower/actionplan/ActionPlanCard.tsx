@@ -710,9 +710,10 @@ export function ActionPlanCard({ actionPlan, onApprove, onEdit, isLoading = fals
 
       // Armazenar dados específicos para auto-preenchimento
       if (activity.id === 'tese-redacao') {
-        console.log('📝 [TESE REDAÇÃO] Iniciando salvamento de dados para preenchimento automático');
+        console.log('%c💾 [TESE REDAÇÃO] CARD CLICADO - Salvando dados no localStorage...', 'background: #2196F3; color: white; font-size: 16px; padding: 10px; font-weight: bold; border-radius: 5px;');
 
         const customFields = fullActivity.customFields || {};
+        console.log('%c📦 [TESE REDAÇÃO] Custom Fields recebidos:', 'color: #2196F3; font-weight: bold;', customFields);
 
         // Extrair dados dos customFields com todas as possíveis variações de nomes
         const temaRedacao = customFields['Tema da Redação'] ||
@@ -793,13 +794,21 @@ export function ActionPlanCard({ actionPlan, onApprove, onEdit, isLoading = fals
         localStorage.setItem(autoDataKey2, JSON.stringify(autoData));
         localStorage.setItem(autoDataKey3, JSON.stringify(autoFormData));
 
-        console.log('💾 [TESE REDAÇÃO] Dados salvos em múltiplas chaves:', {
-          autoDataKey1,
-          autoDataKey2,
-          autoDataKey3
+        console.log('%c✅ [TESE REDAÇÃO] DADOS SALVOS COM SUCESSO EM 3 CHAVES!', 'background: #4CAF50; color: white; font-size: 16px; padding: 10px; font-weight: bold; border-radius: 5px;');
+        console.log('%c📍 [TESE REDAÇÃO] Chaves do localStorage:', 'color: #4CAF50; font-weight: bold;', {
+          'Chave 1': autoDataKey1,
+          'Chave 2': autoDataKey2,
+          'Chave 3': autoDataKey3
         });
-        console.log('📋 [TESE REDAÇÃO] Form data preparado:', autoFormData);
-        console.log('🔧 [TESE REDAÇÃO] Custom fields salvos:', autoData.customFields);
+        console.log('%c📋 [TESE REDAÇÃO] Dados salvos:', 'color: #4CAF50; font-weight: bold;');
+        console.table({
+          'Tema da Redação': autoFormData.temaRedacao,
+          'Objetivo': autoFormData.objetivo,
+          'Nível de Dificuldade': autoFormData.nivelDificuldade,
+          'Competências ENEM': autoFormData.competenciasENEM,
+          'Contexto Adicional': autoFormData.contextoAdicional
+        });
+        console.log('%c🎯 [TESE REDAÇÃO] Agora você pode abrir o modal de Editar Materiais que os campos serão preenchidos automaticamente!', 'color: #4CAF50; font-size: 13px; font-weight: bold;');
 
         // Disparar evento para notificar que os dados foram salvos
         window.dispatchEvent(new CustomEvent('tese-redacao-data-saved', {

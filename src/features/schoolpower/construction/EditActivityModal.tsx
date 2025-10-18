@@ -681,7 +681,7 @@ const EditActivityModal = ({
   // useEffect CRÍTICO: Recarregar dados SEMPRE que o modal abre
   useEffect(() => {
     if (isOpen && activity?.id === 'tese-redacao') {
-      console.log('🔄 [MODAL CRÍTICO] Modal aberto, recarregando dados da Tese da Redação...');
+      console.log('%c🔄 [TESE REDAÇÃO] MODAL ABERTO - Iniciando carregamento de dados...', 'background: #4CAF50; color: white; font-size: 14px; padding: 5px; border-radius: 3px;');
 
       // Tentar múltiplas chaves de storage
       const possibleKeys = [
@@ -690,15 +690,28 @@ const EditActivityModal = ({
         `tese_redacao_form_data`
       ];
 
+      console.log('%c📦 [TESE REDAÇÃO] Tentando carregar das seguintes chaves:', 'color: #2196F3; font-weight: bold;', possibleKeys);
+
+      let dadosEncontrados = false;
+
       for (const key of possibleKeys) {
         const savedData = localStorage.getItem(key);
+        console.log(`%c🔍 [TESE REDAÇÃO] Verificando chave "${key}":`, 'color: #FF9800;', savedData ? '✅ DADOS ENCONTRADOS!' : '❌ Vazio');
+        
         if (savedData) {
           try {
             const parsed = JSON.parse(savedData);
             const loadedFormData = parsed.formData || parsed;
 
-            console.log('✅ [MODAL CRÍTICO] Dados encontrados na chave:', key);
-            console.log('📋 [MODAL CRÍTICO] Dados carregados:', loadedFormData);
+            console.log('%c✅ [TESE REDAÇÃO] DADOS CARREGADOS COM SUCESSO!', 'background: #4CAF50; color: white; font-size: 16px; padding: 8px; font-weight: bold; border-radius: 5px;');
+            console.log('%c📋 [TESE REDAÇÃO] Conteúdo dos dados:', 'color: #4CAF50; font-weight: bold;');
+            console.table({
+              'Tema da Redação': loadedFormData.temaRedacao || '(vazio)',
+              'Objetivo': loadedFormData.objetivo || '(vazio)',
+              'Nível de Dificuldade': loadedFormData.nivelDificuldade || '(vazio)',
+              'Competências ENEM': loadedFormData.competenciasENEM || '(vazio)',
+              'Contexto Adicional': loadedFormData.contextoAdicional || '(vazio)'
+            });
 
             // ATUALIZAR O FORMDATA COM OS DADOS SALVOS
             setFormData(prev => ({
@@ -715,15 +728,23 @@ const EditActivityModal = ({
               difficultyLevel: loadedFormData.nivelDificuldade || 'Médio'
             }));
 
-            console.log('🎉 [MODAL CRÍTICO] Todos os campos preenchidos com sucesso!');
+            console.log('%c🎉 [TESE REDAÇÃO] CAMPOS PREENCHIDOS AUTOMATICAMENTE!', 'background: #4CAF50; color: white; font-size: 16px; padding: 10px; font-weight: bold; border-radius: 5px;');
+            dadosEncontrados = true;
             return; // Parar após encontrar dados válidos
           } catch (error) {
-            console.error('❌ [MODAL CRÍTICO] Erro ao parsear dados:', error);
+            console.error('%c❌ [TESE REDAÇÃO] Erro ao parsear dados da chave:', 'color: red; font-weight: bold;', key, error);
           }
         }
       }
 
-      console.log('⚠️ [MODAL CRÍTICO] Nenhum dado salvo encontrado no localStorage');
+      if (!dadosEncontrados) {
+        console.log('%c⚠️ [TESE REDAÇÃO] ATENÇÃO: Nenhum dado encontrado no localStorage!', 'background: #FF9800; color: white; font-size: 14px; padding: 8px; font-weight: bold; border-radius: 5px;');
+        console.log('%c💡 [TESE REDAÇÃO] IMPORTANTE: Você precisa CLICAR no card da "Tese da Redação" no Plano de Ação ANTES de abrir este modal!', 'color: #FF5722; font-size: 13px; font-weight: bold;');
+        console.log('%c📍 [TESE REDAÇÃO] PASSO A PASSO:', 'color: #2196F3; font-size: 12px; font-weight: bold;');
+        console.log('%c1️⃣ Gere um Plano de Ação com a IA', 'color: #666;');
+        console.log('%c2️⃣ CLIQUE no card "Tese da Redação" no Plano de Ação', 'color: #666;');
+        console.log('%c3️⃣ Depois vá em Construção > Editar Materiais', 'color: #666;');
+      }
     }
   }, [isOpen, activity?.id]);
 
