@@ -15,6 +15,3 @@ export { TeseRedacaoEditActivity } from './TeseRedacaoEditActivity';
 export { FlashCardsEditActivity } from './FlashCardsEditActivity';
 export { QuizInterativoEditActivity } from './QuizInterativoEditActivity';
 export { QuadroInterativoEditActivity } from './QuadroInterativoEditActivity';
-
-// TeseRedacaoEditActivity está em um local separado
-// e é importado diretamente de @/features/schoolpower/activities/tese-redacao
