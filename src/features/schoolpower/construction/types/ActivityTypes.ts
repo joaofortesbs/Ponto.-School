@@ -55,11 +55,13 @@ export interface ActivityFormData {
   // Campos específicos para Flash Cards
   topicos?: string;
   numberOfFlashcards?: string;
-  // Campos específicos para Mapa Mental
-  centralTheme?: string;
-  mainCategories?: string;
-  generalObjective?: string;
-  evaluationCriteria?: string;
+
+  // Campos específicos para Tese da Redação
+  temaRedacao?: string;
+  objetivo?: string;
+  nivelDificuldade?: string;
+  competenciasENEM?: string;
+  contextoAdicional?: string;
 }
 
 export interface GeneratedActivity {

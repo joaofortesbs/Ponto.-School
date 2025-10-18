@@ -371,6 +371,93 @@ const SequenciaDidaticaEditActivity = ({formData, onFieldChange }: {formData: Ac
   </div>
 );
 
+// Componente específico para Tese da Redação
+const TeseRedacaoEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+  <div className="space-y-4">
+    <div>
+      <Label htmlFor="temaRedacao" className="text-sm">Tema da Redação *</Label>
+      <Input
+        id="temaRedacao"
+        value={formData.temaRedacao || ''}
+        onChange={(e) => onFieldChange('temaRedacao', e.target.value)}
+        placeholder="Ex: Cultura Brasileira e Desafios Contemporâneos"
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div>
+      <Label htmlFor="objetivo" className="text-sm">Objetivos *</Label>
+      <Textarea
+        id="objetivo"
+        value={formData.objetivo || ''}
+        onChange={(e) => onFieldChange('objetivo', e.target.value)}
+        placeholder="Descreva os objetivos da atividade..."
+        rows={3}
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div>
+      <Label htmlFor="nivelDificuldade" className="text-sm">Nível de Dificuldade *</Label>
+      <Select value={formData.nivelDificuldade || 'Médio'} onValueChange={(value) => onFieldChange('nivelDificuldade', value)}>
+        <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+          <SelectValue placeholder="Selecione o nível de dificuldade" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="Fácil">Fácil</SelectItem>
+          <SelectItem value="Médio">Médio</SelectItem>
+          <SelectItem value="Difícil">Difícil</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    <div>
+      <Label htmlFor="competenciasENEM" className="text-sm">Competências ENEM *</Label>
+      <Select value={formData.competenciasENEM || ''} onValueChange={(value) => onFieldChange('competenciasENEM', value)}>
+        <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+          <SelectValue placeholder="Selecione a competência" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="Competência II (compreensão tema)">Competência II (compreensão tema)</SelectItem>
+          <SelectItem value="Competência III (argumentação)">Competência III (argumentação)</SelectItem>
+          <SelectItem value="Competência II e III (compreensão tema e argumentação)">Competência II e III (compreensão tema e argumentação)</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    <div>
+      <Label htmlFor="contextoAdicional" className="text-sm">Contexto Adicional</Label>
+      <Textarea
+        id="contextoAdicional"
+        value={formData.contextoAdicional || ''}
+        onChange={(e) => onFieldChange('contextoAdicional', e.target.value)}
+        placeholder="Informações adicionais sobre o contexto da redação..."
+        rows={3}
+        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+  </div>
+);
+
+// Componente específico para Flash Cards
+const FlashCardsEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+  <div className="space-y-4">
+    <div>
+      <Label htmlFor="theme" className="text-sm">Tema dos Flash Cards *</Label>
+      <Input
+        id="theme"
+        value={formData.theme || ''}
+        onChange={(e) => onFieldChange('theme', e.target.value)}
+        placeholder="Ex: Substantivos Próprios e Verbos"
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+  </div>
+);
+
 // Função para processar dados da lista de exercícios
 const processExerciseListData = (formData: ActivityFormData, generatedContent: any) => {
   return {
@@ -489,6 +576,12 @@ const EditActivityModal = ({
     // Campos específicos para Flash Cards (novo)
     topicos: '',
     numberOfFlashcards: '10',
+    // Campos específicos para Tese da Redação (novo)
+    temaRedacao: '',
+    objetivo: '',
+    nivelDificuldade: '',
+    competenciasENEM: '',
+    contextoAdicional: '',
   });
 
   // Estado para conteúdo gerado
@@ -1196,6 +1289,13 @@ const EditActivityModal = ({
             'Categorias Principais': formData.mainCategories,
             'Objetivo Geral': formData.generalObjective,
             'Critérios de Avaliação': formData.evaluationCriteria
+          }),
+          ...(activity.id === 'tese-redacao' && { // Mapeamento para Tese da Redação
+            'Tema da Redação': formData.temaRedacao,
+            'Objetivos': formData.objetivo,
+            'Nível de Dificuldade': formData.nivelDificuldade,
+            'Competências ENEM': formData.competenciasENEM,
+            'Contexto Adicional': formData.contextoAdicional
           })
         },
         lastModified: new Date().toISOString()
@@ -2483,7 +2583,7 @@ const EditActivityModal = ({
                         return (
                           <>
                             {/* Campos Genéricos */}
-                            {(activityType !== 'sequencia-didatica' && activityType !== 'plano-aula' && activityType !== 'quadro-interativo' && activityType !== 'quiz-interativo' && activityType !== 'mapa-mental' && activityType !== 'flash-cards') && (
+                            {(activityType !== 'sequencia-didatica' && activityType !== 'plano-aula' && activityType !== 'quadro-interativo' && activityType !== 'quiz-interativo' && activityType !== 'mapa-mental' && activityType !== 'flash-cards' && activityType !== 'tese-redacao') && (
                               <DefaultEditActivity formData={formData} onFieldChange={handleInputChange} />
                             )}
 
@@ -2791,55 +2891,12 @@ const EditActivityModal = ({
 
                             {/* Campos Específicos Flash Cards */}
                             {activityType === 'flash-cards' && (
-                              <div className="space-y-4">
-                                <div>
-                                  <Label htmlFor="theme" className="text-sm">Tema dos Flash Cards *</Label>
-                                  <Input
-                                    id="theme"
-                                    value={formData.theme}
-                                    onChange={(e) => handleInputChange('theme', e.target.value)}
-                                    placeholder="Digite o tema principal dos flash cards"
-                                    required
-                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-                                <div>
-                                  <Label htmlFor="topicos" className="text-sm">Tópicos Principais *</Label>
-                                  <Textarea
-                                    id="topicos"
-                                    value={formData.topicos}
-                                    onChange={(e) => handleInputChange('topicos', e.target.value)}
-                                    placeholder="Liste os tópicos importantes (um por linha)..."
-                                    rows={3}
-                                    required
-                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-                                <div>
-                                  <Label htmlFor="numberOfFlashcards" className="text-sm">Número de Flash Cards *</Label>
-                                  <Input
-                                    id="numberOfFlashcards"
-                                    type="number"
-                                    value={formData.numberOfFlashcards}
-                                    onChange={(e) => handleInputChange('numberOfFlashcards', e.target.value)}
-                                    placeholder="Ex: 10, 20, 30"
-                                    min="1"
-                                    required
-                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-                                <div>
-                                  <Label htmlFor="context" className="text-sm">Contexto de Uso</Label>
-                                  <Textarea
-                                    id="context"
-                                    value={formData.context}
-                                    onChange={(e) => handleInputChange('context', e.target.value)}
-                                    placeholder="Descreva o contexto em que os flash cards serão usados (ex: revisão para prova, aprendizado de vocabulário)..."
-                                    rows={2}
-                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-                              </div>
+                              <FlashCardsEditActivity formData={formData} onFieldChange={handleInputChange} />
+                            )}
+
+                            {/* Campos Específicos Tese da Redação */}
+                            {activityType === 'tese-redacao' && (
+                              <TeseRedacaoEditActivity formData={formData} onFieldChange={handleInputChange} />
                             )}
                           </>
                         );
@@ -2939,6 +2996,23 @@ const EditActivityModal = ({
                         content={flashCardsContent || generatedContent}
                         isLoading={isBuilding}
                       />
+                    ) : activity?.id === 'tese-redacao' ? ( // Preview para Tese da Redação
+                      <div className="p-6 flex flex-col items-center justify-center h-full text-center">
+                        <PenTool className="h-16 w-16 text-gray-400 mb-4" />
+                        <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                          Tese da Redação Gerada
+                        </h4>
+                        <div className="text-left space-y-2 text-gray-700 dark:text-gray-300">
+                          <p><strong>Tema:</strong> {formData.temaRedacao}</p>
+                          <p><strong>Objetivos:</strong> {formData.objetivo?.split('\n').map((line: string, i: number) => <span key={i}>{line}<br/></span>)}</p>
+                          <p><strong>Nível de Dificuldade:</strong> {formData.nivelDificuldade}</p>
+                          <p><strong>Competências ENEM:</strong> {formData.competenciasENEM}</p>
+                          <p><strong>Contexto Adicional:</strong> {formData.contextoAdicional}</p>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-4">
+                          Esta é uma pré-visualização dos dados inseridos. A geração do texto da redação em si ocorrerá em outra etapa.
+                        </p>
+                      </div>
                     ) : (
                       <ActivityPreview
                         content={generatedContent || formData}
