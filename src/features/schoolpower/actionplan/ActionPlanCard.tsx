@@ -53,6 +53,8 @@ export interface ActionPlanItem {
   category?: string;
   type?: string;
   isManual?: boolean;
+  personalizedTitle?: string; // Adicionado para refletir o estado do modal
+  personalizedDescription?: string; // Adicionado para refletir o estado do modal
 }
 
 // Function to get the correct activity name from schoolPowerActivities
@@ -561,10 +563,11 @@ const renderCustomFields = (activity: ActionPlanActivity) => {
 interface ActionPlanCardProps {
   actionPlan: ActionPlanItem[];
   onApprove: (approvedItems: ActionPlanItem[]) => void;
+  onEdit?: (activity: ActionPlanItem) => void; // Adicionado para suportar edição
   isLoading?: boolean;
 }
 
-export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: ActionPlanCardProps) {
+export function ActionPlanCard({ actionPlan, onApprove, onEdit, isLoading = false }: ActionPlanCardProps) {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   // Estado local para atividades, usado para o handleApproveActivity
   const [activitiesState, setActivitiesState] = useState<ActionPlanActivity[]>(actionPlan as ActionPlanActivity[]);
@@ -708,34 +711,34 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
       // Armazenar dados específicos para auto-preenchimento
       if (activity.id === 'tese-redacao') {
         console.log('📝 [TESE REDAÇÃO] Iniciando salvamento de dados para preenchimento automático');
-        
+
         const customFields = fullActivity.customFields || {};
-        
+
         // Extrair dados dos customFields com todas as possíveis variações de nomes
-        const temaRedacao = customFields['Tema da Redação'] || 
-                           customFields['temaRedacao'] || 
+        const temaRedacao = customFields['Tema da Redação'] ||
+                           customFields['temaRedacao'] ||
                            customFields['Tema'] ||
-                           activity.personalizedTitle || 
+                           activity.personalizedTitle ||
                            activity.title || '';
-        
-        const objetivo = customFields['Objetivos'] || 
-                        customFields['objetivo'] || 
+
+        const objetivo = customFields['Objetivos'] ||
+                        customFields['objetivo'] ||
                         customFields['Objetivo'] ||
-                        activity.personalizedDescription || 
+                        activity.personalizedDescription ||
                         activity.description || '';
-        
-        const nivelDificuldade = customFields['Nível de Dificuldade'] || 
-                                customFields['nivelDificuldade'] || 
+
+        const nivelDificuldade = customFields['Nível de Dificuldade'] ||
+                                customFields['nivelDificuldade'] ||
                                 customFields['dificuldade'] ||
                                 'Médio';
-        
-        const competenciasENEM = customFields['Competências ENEM'] || 
-                                customFields['competenciasENEM'] || 
+
+        const competenciasENEM = customFields['Competências ENEM'] ||
+                                customFields['competenciasENEM'] ||
                                 customFields['competencias'] ||
                                 '';
-        
-        const contextoAdicional = customFields['Contexto Adicional'] || 
-                                 customFields['contextoAdicional'] || 
+
+        const contextoAdicional = customFields['Contexto Adicional'] ||
+                                 customFields['contextoAdicional'] ||
                                  customFields['contexto'] ||
                                  '';
 
@@ -743,14 +746,14 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
           // Campos obrigatórios do modal
           title: activity.personalizedTitle || activity.title || '',
           description: activity.personalizedDescription || activity.description || '',
-          
+
           // Campos específicos da Tese da Redação (NOMES EXATOS DO MODAL)
           temaRedacao: temaRedacao,
           objetivo: objetivo,
           nivelDificuldade: nivelDificuldade,
           competenciasENEM: competenciasENEM,
           contextoAdicional: contextoAdicional,
-          
+
           // Campos padrão para compatibilidade
           subject: 'Língua Portuguesa',
           theme: temaRedacao,
@@ -769,7 +772,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
         const autoDataKey1 = `auto_activity_data_tese-redacao`;
         const autoDataKey2 = `auto_activity_data_${activity.id}`;
         const autoDataKey3 = `tese_redacao_form_data`;
-        
+
         const autoData = {
           formData: autoFormData,
           customFields: {
@@ -782,7 +785,6 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
           originalActivity: fullActivity,
           actionPlanActivity: activity,
           activityType: 'tese-redacao',
-          activityId: activity.id,
           timestamp: Date.now()
         };
 
@@ -790,7 +792,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
         localStorage.setItem(autoDataKey1, JSON.stringify(autoData));
         localStorage.setItem(autoDataKey2, JSON.stringify(autoData));
         localStorage.setItem(autoDataKey3, JSON.stringify(autoFormData));
-        
+
         console.log('💾 [TESE REDAÇÃO] Dados salvos em múltiplas chaves:', {
           autoDataKey1,
           autoDataKey2,
@@ -798,12 +800,12 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
         });
         console.log('📋 [TESE REDAÇÃO] Form data preparado:', autoFormData);
         console.log('🔧 [TESE REDAÇÃO] Custom fields salvos:', autoData.customFields);
-        
+
         // Disparar evento para notificar que os dados foram salvos
         window.dispatchEvent(new CustomEvent('tese-redacao-data-saved', {
           detail: { autoData, formData: autoFormData }
         }));
-        
+
       } else if (activity.id === 'lista-exercicios') {
         // Mantém a lógica existente para lista-exercicios, se necessário
         // Exemplo:
@@ -899,6 +901,36 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
       newSelected.add(itemId);
     }
     setSelectedItems(newSelected);
+  };
+
+  const handleEditActivity = async (activity: ActionPlanItem) => {
+    console.log('📝 Editando atividade:', activity);
+
+    // Se for Tese da Redação, processar dados antes de editar
+    if (activity.id === 'tese-redacao') {
+      console.log('📝 [ACTION PLAN] Processando Tese da Redação para edição');
+
+      try {
+        const { processTeseRedacaoData } = await import('../activities/tese-redacao/teseRedacaoProcessor');
+
+        const processedData = processTeseRedacaoData({
+          id: activity.id,
+          title: activity.personalizedTitle || activity.title || '',
+          description: activity.personalizedDescription || activity.description || '',
+          customFields: activity.customFields || {},
+          personalizedTitle: activity.personalizedTitle,
+          personalizedDescription: activity.personalizedDescription
+        });
+
+        console.log('✅ [ACTION PLAN] Dados processados:', processedData);
+      } catch (error) {
+        console.error('❌ [ACTION PLAN] Erro ao processar dados:', error);
+      }
+    }
+
+    if (onEdit) {
+      onEdit(activity);
+    }
   };
 
   return (

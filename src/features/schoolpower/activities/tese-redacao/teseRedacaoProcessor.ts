@@ -98,6 +98,19 @@ export function processTeseRedacaoData(activity: TeseRedacaoActivity): ActivityF
     contextoAdicional: !!contextoAdicional
   });
   
+  // Salvar dados processados no localStorage para uso posterior
+  try {
+    const storageKey = `auto_activity_data_tese-redacao`;
+    localStorage.setItem(storageKey, JSON.stringify({
+      formData,
+      timestamp: Date.now(),
+      autoFilled: true
+    }));
+    console.log('💾 [PROCESSOR] Dados salvos no localStorage:', storageKey);
+  } catch (error) {
+    console.error('❌ [PROCESSOR] Erro ao salvar dados no localStorage:', error);
+  }
+  
   return formData;
 }
 

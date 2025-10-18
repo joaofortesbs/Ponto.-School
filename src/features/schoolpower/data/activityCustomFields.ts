@@ -393,38 +393,46 @@ function getSequenciaDidaticaCustomFields(): Record<string, any> {
  * Obtém os campos personalizados específicos para Tese da Redação
  */
 function getTeseRedacaoCustomFields(): Record<string, any> {
-  return {
+  const fields = {
     'Tema da Redação': {
       type: 'text',
       label: 'Tema da Redação',
       placeholder: 'Digite o tema da redação aqui', 
-      required: true
+      required: true,
+      fieldName: 'temaRedacao'
     },
     'Objetivos': {
       type: 'textarea',
       label: 'Objetivos',
       placeholder: 'Descreva os objetivos da redação aqui', 
-      required: true
+      required: true,
+      fieldName: 'objetivo'
     },
     'Nível de Dificuldade': {
       type: 'select',
       label: 'Nível de Dificuldade',
       options: ['Fácil', 'Médio', 'Difícil'],
-      required: true
+      required: true,
+      fieldName: 'nivelDificuldade'
     },
     'Competências ENEM': {
       type: 'select',
       label: 'Competências ENEM',
       options: ['Competência II (compreensão tema)', 'Competência III (argumentação)', 'Competência II e III (compreensão tema e argumentação)'],
-      required: true
+      required: true,
+      fieldName: 'competenciasENEM'
     },
     'Contexto Adicional': {
       type: 'textarea',
       label: 'Contexto Adicional',
       placeholder: 'Forneça um contexto adicional para a redação (opcional)',
-      required: false
+      required: false,
+      fieldName: 'contextoAdicional'
     }
   };
+  
+  console.log('📋 [CUSTOM FIELDS] Campos customizados para Tese da Redação:', fields);
+  return fields;
 }
 
 /**

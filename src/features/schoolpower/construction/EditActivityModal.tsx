@@ -22,6 +22,9 @@ import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-in
 import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-interativo/QuizInterativoPreview';
 import FlashCardsPreview from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
 import { CheckCircle2 } from 'lucide-react';
+import * as profileService from "@/services/profile";
+import * as activitiesApi from "@/services/activities";
+
 
 // --- Componentes de Edição Específicos ---
 
@@ -524,24 +527,24 @@ const EditActivityModal = ({
     // Função para carregar dados salvos da Tese da Redação
     if (activity?.id === 'tese-redacao') {
       console.log('🔍 [MODAL] Carregando dados salvos da Tese da Redação...');
-      
+
       // Tentar múltiplas chaves de storage
       const possibleKeys = [
         `auto_activity_data_tese-redacao`,
         `auto_activity_data_${activity.id}`,
         `tese_redacao_form_data`
       ];
-      
+
       for (const key of possibleKeys) {
         const savedData = localStorage.getItem(key);
         if (savedData) {
           try {
             const parsed = JSON.parse(savedData);
             const loadedFormData = parsed.formData || parsed;
-            
+
             console.log('✅ [MODAL] Dados carregados com sucesso da chave:', key);
             console.log('📋 [MODAL] Form data carregado:', loadedFormData);
-            
+
             return {
               title: loadedFormData.title || activity?.title || '',
               description: loadedFormData.description || activity?.description || '',
@@ -568,10 +571,10 @@ const EditActivityModal = ({
           }
         }
       }
-      
+
       console.log('⚠️ [MODAL] Nenhum dado salvo encontrado, usando valores padrão');
     }
-    
+
     // Valores padrão para outros tipos de atividade
     return {
       title: activity?.title || activity?.personalizedTitle || '',
@@ -672,14 +675,20 @@ const EditActivityModal = ({
     activityType: activity?.id || ''
   });
 
+  // --- Estados e Funções para o Modal de Edição ---
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
+  const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
+  const [isInQuestionView, setIsInQuestionView] = useState(false);
+
   // useEffect para escutar eventos de dados salvos (Tese da Redação)
   useEffect(() => {
     if (activity?.id === 'tese-redacao') {
       const handleDataSaved = (event: CustomEvent) => {
         console.log('🔔 [MODAL] Evento de dados salvos recebido:', event.detail);
-        
+
         const { formData: savedFormData } = event.detail;
-        
+
         if (savedFormData) {
           setFormData(prev => ({
             ...prev,
@@ -689,13 +698,13 @@ const EditActivityModal = ({
             competenciasENEM: savedFormData.competenciasENEM || prev.competenciasENEM,
             contextoAdicional: savedFormData.contextoAdicional || prev.contextoAdicional
           }));
-          
+
           console.log('✅ [MODAL] Form data atualizado com dados do evento');
         }
       };
-      
+
       window.addEventListener('tese-redacao-data-saved', handleDataSaved as EventListener);
-      
+
       return () => {
         window.removeEventListener('tese-redacao-data-saved', handleDataSaved as EventListener);
       };
@@ -1264,7 +1273,7 @@ const EditActivityModal = ({
         setBuildProgress(prev => Math.min(prev + 10, 90));
       }, 200);
 
-      const result = await generateActivityContent(activityType, formData);
+      const result = await generateActivity(formData); // Assuming generateActivity handles generic generation
 
       clearInterval(progressTimer);
       setBuildProgress(100);
@@ -1308,7 +1317,7 @@ const EditActivityModal = ({
   const handleRegenerateContent = async () => {
     if (activity?.id === 'lista-exercicios') {
       try {
-        const newContent = await generateActivity(formData);
+        const newContent = await generateActivity(formData); // Use the hook's generateActivity
         setGeneratedContent(newContent);
       } catch (error) {
         console.error('Erro ao regenerar conteúdo:', error);
@@ -2412,7 +2421,25 @@ const EditActivityModal = ({
       const activityType = activity.type || activity.id || activity.categoryId;
       console.log('🎯 Tipo de atividade determinado:', activityType);
 
-      const result = await generateActivityContent(activityType, formData);
+      // Determine which generation function to call based on activity type
+      let result;
+      if (activityType === 'quiz-interativo') {
+        result = await handleGenerateQuizInterativo();
+      } else if (activityType === 'flash-cards') {
+        result = await handleGenerateFlashCards();
+      } else {
+        // Use the generic generateActivity for other types
+        result = await generateActivity(formData);
+      }
+
+      // Check if generation was successful before proceeding
+      if (result === undefined) {
+         console.warn("Generation function did not return a value, skipping further processing.");
+         // Optionally handle this case, maybe by setting an error or returning early
+         // For now, we'll assume it means an error occurred or it was handled internally
+         throw new Error("Generation process did not complete successfully.");
+      }
+
 
       clearInterval(progressTimer);
       setBuildProgress(100);
@@ -2457,6 +2484,16 @@ const EditActivityModal = ({
 
         console.log('💾 Quiz Interativo processado e salvo:', quizData);
       }
+       // Trigger específico para Flash Cards
+       if (activityType === 'flash-cards') {
+        console.log('🃏 Processamento específico concluído para Flash Cards');
+
+        const flashCardsData = result.data || result;
+        setFlashCardsContent(flashCardsData);
+
+        console.log('💾 Flash Cards processados e salvos:', flashCardsData);
+      }
+
 
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       constructedActivities[activity.id] = {
@@ -2489,7 +2526,7 @@ const EditActivityModal = ({
       setIsBuilding(false);
       setBuildProgress(0);
     }
-  }, [activity, formData, isBuilding, toast]);
+  }, [activity, formData, isBuilding, toast, generateActivity, handleGenerateQuizInterativo, handleGenerateFlashCards]);
 
   // Agente Interno de Execução - Automação da Construção de Atividades
   useEffect(() => {
@@ -2594,22 +2631,7 @@ const EditActivityModal = ({
       console.log('🎯 Acionando construção automática da atividade...');
 
       const timer = setTimeout(async () => {
-          if (isQuizInterativo) {
-            console.log('🎯 Auto-build específico para Quiz Interativo');
-            await handleGenerateQuizInterativo(); // Use the specific function for Quiz
-          } else if (isFlashCards) {
-            console.log('🃏 Auto-build específico para Flash Cards');
-            await handleGenerateFlashCards(); // Use the specific function for Flash Cards
-          } else if (isMapaMental) {
-            console.log('🧠 Auto-build específico para Mapa Mental');
-            // Para Mapa Mental, a construção é mais um salvamento dos dados inseridos
-            // Chama handleBuildActivity que por sua vez chama generateActivityContent
-            await handleBuildActivity();
-          }
-          else {
-            console.log('🏗️ Auto-build genérico para outras atividades');
-            await handleBuildActivity(); // Use the generic build function
-          }
+          await handleBuildActivity(); // This will now call the appropriate handler internally
           console.log('✅ Atividade construída automaticamente pelo agente interno');
         }, isQuizInterativo ? 800 : (isFlashCards ? 800 : (isQuadroInterativo ? 500 : (isMapaMental ? 300 : 300)) )); // Increased delay for Flash Cards for API call
 
@@ -2634,7 +2656,9 @@ const EditActivityModal = ({
     formData.generalObjective,
     formData.evaluationCriteria,
     activity?.preenchidoAutomaticamente,
-    activity?.isBuilt
+    activity?.isBuilt,
+    isFormValidForBuild, // Include dependency
+    handleBuildActivity // Include dependency
   ]);
 
   if (!isOpen) return null;
