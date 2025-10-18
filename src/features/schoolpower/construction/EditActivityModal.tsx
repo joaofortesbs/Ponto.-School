@@ -634,7 +634,8 @@ const EditActivityModal = ({
     objetivo: '',
     nivelDificuldade: '',
     competenciasENEM: '',
-    contextoAdicional: '',
+    contextoAdicional: ''
+  }
   });
 
   // Estado para conteúdo gerado
