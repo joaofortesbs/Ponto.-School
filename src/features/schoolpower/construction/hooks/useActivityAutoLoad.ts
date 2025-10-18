@@ -147,6 +147,32 @@ function processActivityData(activityId: string, data: any): ActivityFormData {
     return processed;
   }
 
+  // Processamento específico para Flash Cards
+  if (activityId === 'flash-cards') {
+    const processed = {
+      ...baseData,
+      theme: data.theme || '',
+      topicos: data.topicos || '',
+      numberOfFlashcards: data.numberOfFlashcards || '',
+      contextoUso: data.contextoUso || data.context || '',
+      // Campos adicionais de compatibilidade
+      subject: data.subject || '',
+      schoolYear: data.schoolYear || '',
+      difficultyLevel: data.difficultyLevel || '',
+      objectives: data.objectives || ''
+    };
+
+    console.log('%c🃏 [PROCESSOR] Flash Cards processado:', 'color: #673AB7;');
+    console.table({
+      'Tema': processed.theme,
+      'Tópicos': processed.topicos,
+      'Número de Cards': processed.numberOfFlashcards,
+      'Contexto de Uso': processed.contextoUso
+    });
+
+    return processed;
+  }
+
   // Processamento para outras atividades (pode ser expandido)
   return {
     ...baseData,
