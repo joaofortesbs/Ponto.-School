@@ -22,8 +22,8 @@ import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-in
 import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-interativo/QuizInterativoPreview';
 import FlashCardsPreview from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
 import { CheckCircle2 } from 'lucide-react';
-import * as profileService from "@/services/profile";
-import * as activitiesApi from "@/services/activities";
+import * as profileService from "@/services/profileService";
+import * as activitiesApi from "@/services/activitiesApiService";
 
 
 // --- Componentes de Edição Específicos ---
