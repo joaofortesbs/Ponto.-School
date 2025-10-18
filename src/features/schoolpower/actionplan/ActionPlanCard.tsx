@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, BookOpen, Target, Trash2, Plus, X } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/toast";
 
 // Dummy types for demonstration, replace with actual types if available
 type ActionPlanActivity = {
@@ -439,6 +439,34 @@ const renderFlashCardFields = (customFields: Record<string, string>) => {
   );
 };
 
+// Função específica para renderizar campos de Tese da Redação
+const renderTeseRedacaoFields = (customFields: Record<string, string>) => {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {customFields['Tema da Redação'] && (
+        <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
+          📝 Tema: {String(customFields['Tema da Redação']).substring(0, 30)}{String(customFields['Tema da Redação']).length > 30 ? '...' : ''}
+        </Badge>
+      )}
+      {customFields['Nível de Dificuldade'] && (
+        <Badge variant="outline" className="text-xs px-2 py-1 bg-orange-50 dark:bg-orange-900/30 border-orange-200 dark:border-orange-700">
+          ⭐ {String(customFields['Nível de Dificuldade'])}
+        </Badge>
+      )}
+      {customFields['Competências ENEM'] && (
+        <Badge variant="outline" className="text-xs px-2 py-1 bg-purple-50 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700">
+          🎓 {String(customFields['Competências ENEM']).substring(0, 40)}{String(customFields['Competências ENEM']).length > 40 ? '...' : ''}
+        </Badge>
+      )}
+      {customFields['Contexto Adicional'] && (
+        <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700">
+          💡 Contexto: {String(customFields['Contexto Adicional']).substring(0, 35)}{String(customFields['Contexto Adicional']).length > 35 ? '...' : ''}
+        </Badge>
+      )}
+    </div>
+  );
+};
+
 
 // Função padrão para renderizar campos customizados não especificados
 const renderDefaultFields = (customFields: Record<string, string>) => {
@@ -466,6 +494,8 @@ const renderCustomFields = (activity: ActionPlanActivity) => {
       return <QuadroInterativoFieldsRenderer customFields={activity.customFields} />;
     case 'flash-cards': // Caso específico para Flash Cards
       return renderFlashCardFields(activity.customFields);
+    case 'tese-redacao': // Caso específico para Tese da Redação
+      return renderTeseRedacaoFields(activity.customFields);
     default:
       return renderDefaultFields(activity.customFields);
   }
