@@ -441,27 +441,67 @@ const renderFlashCardFields = (customFields: Record<string, string>) => {
 
 // Função específica para renderizar campos de Tese da Redação
 const renderTeseRedacaoFields = (customFields: Record<string, string>) => {
+  console.log('📝 [ActionPlanCard] Renderizando campos tese-redacao:', customFields);
+
+  // Helper function para garantir que valores sejam strings
+  const safeString = (value: any, defaultValue = ''): string => {
+    if (value === null || value === undefined) return defaultValue;
+    if (typeof value === 'object') {
+      if (value.nome || value.name) return String(value.nome || value.name);
+      if (value.title) return String(value.title);
+      if (value.description || value.descricao) return String(value.description || value.descricao);
+      return JSON.stringify(value);
+    }
+    return String(value);
+  };
+
+  // Campos específicos para Tese da Redação
+  const temaRedacao = safeString(customFields['Tema da Redação'] || customFields['Tema'] || '');
+  const nivelDificuldade = safeString(customFields['Nível de Dificuldade'] || customFields['Dificuldade'] || '');
+  const objetivo = safeString(customFields['Objetivo'] || '');
+  const competenciasENEM = safeString(customFields['Competências ENEM'] || customFields['Competências'] || '');
+  const contextoAdicional = safeString(customFields['Contexto Adicional'] || customFields['Contexto'] || '');
+
   return (
-    <div className="flex flex-wrap gap-1">
-      {customFields['Tema da Redação'] && (
-        <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
-          📝 Tema: {String(customFields['Tema da Redação']).substring(0, 30)}{String(customFields['Tema da Redação']).length > 30 ? '...' : ''}
-        </Badge>
+    <div className="space-y-3 p-4 border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/50 rounded-lg">
+      {/* Tema da Redação em destaque */}
+      {temaRedacao && (
+        <div className="w-full">
+          <div className="text-xs font-semibold text-red-700 dark:text-red-300 mb-1">Tema da Redação</div>
+          <div className="text-sm font-medium text-red-900 dark:text-red-100 bg-red-100 dark:bg-red-800 px-3 py-2 rounded-lg border border-red-300 dark:border-red-600">{temaRedacao}</div>
+        </div>
       )}
-      {customFields['Nível de Dificuldade'] && (
-        <Badge variant="outline" className="text-xs px-2 py-1 bg-orange-50 dark:bg-orange-900/30 border-orange-200 dark:border-orange-700">
-          ⭐ {String(customFields['Nível de Dificuldade'])}
-        </Badge>
+
+      {/* Informações básicas */}
+      <div className="grid grid-cols-2 gap-3">
+        {nivelDificuldade && (
+          <div>
+            <div className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">Nível de Dificuldade</div>
+            <div className="text-sm text-red-800 dark:text-red-200 bg-red-200 dark:bg-red-700 px-2 py-1 rounded">{nivelDificuldade}</div>
+          </div>
+        )}
+        {objetivo && (
+          <div>
+            <div className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">Objetivo</div>
+            <div className="text-sm text-red-800 dark:text-red-200 bg-red-200 dark:bg-red-700 px-2 py-1 rounded">{objetivo}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Competências ENEM */}
+      {competenciasENEM && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">Competências ENEM</div>
+          <div className="text-sm text-red-800 dark:text-red-200 bg-red-200 dark:bg-red-700 px-2 py-1 rounded">{competenciasENEM}</div>
+        </div>
       )}
-      {customFields['Competências ENEM'] && (
-        <Badge variant="outline" className="text-xs px-2 py-1 bg-purple-50 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700">
-          🎓 {String(customFields['Competências ENEM']).substring(0, 40)}{String(customFields['Competências ENEM']).length > 40 ? '...' : ''}
-        </Badge>
-      )}
-      {customFields['Contexto Adicional'] && (
-        <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700">
-          💡 Contexto: {String(customFields['Contexto Adicional']).substring(0, 35)}{String(customFields['Contexto Adicional']).length > 35 ? '...' : ''}
-        </Badge>
+
+      {/* Contexto Adicional */}
+      {contextoAdicional && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">Contexto Adicional</div>
+          <div className="text-sm text-red-800 dark:text-red-200 bg-red-200 dark:bg-red-700 px-2 py-1 rounded italic">{contextoAdicional}</div>
+        </div>
       )}
     </div>
   );
@@ -484,19 +524,25 @@ const renderDefaultFields = (customFields: Record<string, string>) => {
 // Função principal para renderizar campos customizados baseada no ID da atividade
 const renderCustomFields = (activity: ActionPlanActivity) => {
   if (!activity.customFields) {
+    console.log('⚠️ [ActionPlanCard] Nenhum customFields encontrado para:', activity.id);
     return null;
   }
+
+  console.log('🔍 [ActionPlanCard] Renderizando campos para atividade:', activity.id, activity.customFields);
 
   switch (activity.id) {
     case 'plano-aula':
       return renderPlanoAulaFields(activity.customFields);
+    case 'sequencia-didatica':
+      return renderSequenciaDidaticaFields(activity.customFields);
     case 'quadro-interativo':
       return <QuadroInterativoFieldsRenderer customFields={activity.customFields} />;
-    case 'flash-cards': // Caso específico para Flash Cards
+    case 'flash-cards':
       return renderFlashCardFields(activity.customFields);
-    case 'tese-redacao': // Caso específico para Tese da Redação
+    case 'tese-redacao':
       return renderTeseRedacaoFields(activity.customFields);
     default:
+      console.log('⚠️ [ActionPlanCard] Usando renderização padrão para:', activity.id);
       return renderDefaultFields(activity.customFields);
   }
 };
