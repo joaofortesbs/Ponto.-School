@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ConstructionActivity } from './types';
 import { ActivityFormData } from './types/ActivityTypes';
 import { useGenerateActivity } from './hooks/useGenerateActivity';
+import { useActivityAutoLoad } from './hooks/useActivityAutoLoad';
+import { getActivityCustomFields } from './utils/activityFieldMapping';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
@@ -21,6 +23,7 @@ import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequenci
 import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
 import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-interativo/QuizInterativoPreview';
 import FlashCardsPreview from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
+import { TeseRedacaoEditActivity } from '@/features/schoolpower/activities/tese-redacao';
 import { CheckCircle2 } from 'lucide-react';
 import * as profileService from "@/services/profileService";
 import * as activitiesApi from "@/services/activitiesApiService";
@@ -374,72 +377,7 @@ const SequenciaDidaticaEditActivity = ({formData, onFieldChange }: {formData: Ac
   </div>
 );
 
-// Componente específico para Tese da Redação
-const TeseRedacaoEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
-  <div className="space-y-4">
-    <div>
-      <Label htmlFor="temaRedacao" className="text-sm">Tema da Redação *</Label>
-      <Textarea
-        id="temaRedacao"
-        value={formData.temaRedacao || ''}
-        onChange={(e) => onFieldChange('temaRedacao', e.target.value)}
-        placeholder="Ex: Desafios da Preservação da Cultura Brasileira no século XXI"
-        rows={2}
-        required
-        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-
-    <div>
-      <Label htmlFor="nivelDificuldade" className="text-sm">Nível de Dificuldade *</Label>
-      <Input
-        id="nivelDificuldade"
-        value={formData.nivelDificuldade || ''}
-        onChange={(e) => onFieldChange('nivelDificuldade', e.target.value)}
-        placeholder="Ex: Fácil, Médio ou Difícil"
-        required
-        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-
-    <div>
-      <Label htmlFor="objetivo" className="text-sm">Objetivo *</Label>
-      <Textarea
-        id="objetivo"
-        value={formData.objetivo || ''}
-        onChange={(e) => onFieldChange('objetivo', e.target.value)}
-        placeholder="Ex: Elaborar teses claras e argumentativas sobre a preservação cultural brasileira"
-        rows={3}
-        required
-        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-
-    <div>
-      <Label htmlFor="competenciasENEM" className="text-sm">Competências ENEM *</Label>
-      <Input
-        id="competenciasENEM"
-        value={formData.competenciasENEM || ''}
-        onChange={(e) => onFieldChange('competenciasENEM', e.target.value)}
-        placeholder="Ex: Competência II (compreensão tema) ou Competência III (argumentação)"
-        required
-        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-
-    <div>
-      <Label htmlFor="contextoAdicional" className="text-sm">Contexto Adicional</Label>
-      <Textarea
-        id="contextoAdicional"
-        value={formData.contextoAdicional || ''}
-        onChange={(e) => onFieldChange('contextoAdicional', e.target.value)}
-        placeholder="Ex: Considere aspectos como globalização, políticas públicas culturais e diversidade regional"
-        rows={3}
-        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-  </div>
-);
+// REMOVIDO: TeseRedacaoEditActivity agora está em src/features/schoolpower/activities/tese-redacao/TeseRedacaoEditActivity.tsx
 
 // Componente específico para Flash Cards
 const FlashCardsEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
@@ -672,13 +610,37 @@ const EditActivityModal = ({
     activityType: activity?.id || ''
   });
 
+  // Hook para carregamento automático de dados do localStorage
+  const { formData: autoLoadedData, isLoading: isAutoLoading, error: autoLoadError } = useActivityAutoLoad(
+    activity?.id || null,
+    isOpen
+  );
+
+  // useEffect para aplicar dados carregados automaticamente ao formData
+  useEffect(() => {
+    if (autoLoadedData && !isAutoLoading) {
+      console.log('%c🔥 [MODAL] Aplicando dados do hook useActivityAutoLoad', 'background: #E91E63; color: white; font-size: 14px; padding: 5px; font-weight: bold; border-radius: 3px;', autoLoadedData);
+      
+      setFormData(prev => ({
+        ...prev,
+        ...autoLoadedData
+      }));
+      
+      console.log('%c✅ [MODAL] formData atualizado com dados auto-carregados!', 'background: #4CAF50; color: white; font-size: 14px; padding: 5px; font-weight: bold; border-radius: 3px;');
+    }
+
+    if (autoLoadError) {
+      console.error('%c❌ [MODAL] Erro no auto-load:', 'color: red; font-weight: bold;', autoLoadError);
+    }
+  }, [autoLoadedData, isAutoLoading, autoLoadError]);
+
   // --- Estados e Funções para o Modal de Edição ---
   const [showSidebar, setShowSidebar] = useState(false);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
   const [isInQuestionView, setIsInQuestionView] = useState(false);
 
-  // REMOVIDO: useEffect duplicado - o carregamento automático já existe nas linhas 1590-1625
+  // REMOVIDO: useEffect duplicado - a lógica de carregamento agora está centralizada no hook useActivityAutoLoad
 
   // useEffect para escutar eventos de dados salvos (Tese da Redação)
   useEffect(() => {
@@ -1518,88 +1480,7 @@ const EditActivityModal = ({
       const quadroInterativoSavedContent = localStorage.getItem(`constructed_quadro-interativo_${activity.id}`);
       const quadroInterativoSpecificData = localStorage.getItem(`quadro_interativo_data_${activity.id}`);
 
-      // Carregar dados específicos da Tese da Redação com LOGS COLORIDOS
-      if (activity.id === 'tese-redacao') {
-        console.log('%c🔄 [TESE REDAÇÃO] MODAL ABERTO - Iniciando carregamento...', 'background: #2196F3; color: white; font-size: 14px; padding: 5px; border-radius: 3px;');
-
-        // Tentar múltiplas chaves de storage
-        const possibleKeys = [
-          `auto_activity_data_tese-redacao`,
-          `auto_activity_data_${activity.id}`,
-          `tese_redacao_form_data`
-        ];
-
-        console.log('%c📦 [TESE REDAÇÃO] Verificando chaves:', 'color: #2196F3; font-weight: bold;', possibleKeys);
-
-        let dadosEncontrados = false;
-
-        for (const key of possibleKeys) {
-          const savedData = localStorage.getItem(key);
-          console.log(`%c🔍 Chave "${key}":`, 'color: #FF9800;', savedData ? '✅ TEM DADOS' : '❌ Vazio');
-          
-          if (savedData) {
-            try {
-              const autoData = JSON.parse(savedData);
-              const loadedFormData = autoData.formData || autoData;
-
-              console.log('%c✅ [TESE REDAÇÃO] DADOS ENCONTRADOS!', 'background: #4CAF50; color: white; font-size: 16px; padding: 8px; font-weight: bold; border-radius: 5px;');
-              console.log('%c📋 Conteúdo:', 'color: #4CAF50; font-weight: bold;');
-              console.table({
-                'Tema da Redação': loadedFormData.temaRedacao || '(vazio)',
-                'Objetivo': loadedFormData.objetivo || '(vazio)',
-                'Nível de Dificuldade': loadedFormData.nivelDificuldade || '(vazio)',
-                'Competências ENEM': loadedFormData.competenciasENEM || '(vazio)',
-                'Contexto Adicional': loadedFormData.contextoAdicional || '(vazio)'
-              });
-
-              // ATUALIZAR O FORMDATA COM OS DADOS SALVOS
-              const updatedFormData = {
-                ...formData,
-                title: loadedFormData.title || formData.title,
-                description: loadedFormData.description || formData.description,
-                temaRedacao: loadedFormData.temaRedacao || '',
-                objetivo: loadedFormData.objetivo || '',
-                nivelDificuldade: loadedFormData.nivelDificuldade || 'Médio',
-                competenciasENEM: loadedFormData.competenciasENEM || '',
-                contextoAdicional: loadedFormData.contextoAdicional || '',
-                subject: loadedFormData.subject || 'Língua Portuguesa',
-                theme: loadedFormData.temaRedacao || loadedFormData.theme || '',
-                schoolYear: loadedFormData.schoolYear || '3º Ano - Ensino Médio',
-                numberOfQuestions: loadedFormData.numberOfQuestions || '1',
-                difficultyLevel: loadedFormData.difficultyLevel || loadedFormData.nivelDificuldade || 'Médio',
-                questionModel: loadedFormData.questionModel || 'Dissertativa',
-                objectives: loadedFormData.objectives || loadedFormData.objetivo || ''
-              };
-              
-              setFormData(updatedFormData);
-
-              console.log('%c🎉 [TESE REDAÇÃO] CAMPOS PREENCHIDOS!', 'background: #4CAF50; color: white; font-size: 16px; padding: 10px; font-weight: bold; border-radius: 5px;');
-              console.log('%c📊 formData ATUALIZADO:', 'color: #4CAF50; font-weight: bold;', updatedFormData);
-              console.log('%c🔍 VERIFICAÇÃO DOS CAMPOS:', 'color: #2196F3; font-weight: bold;');
-              console.table({
-                'temaRedacao': updatedFormData.temaRedacao,
-                'objetivo': updatedFormData.objetivo,
-                'nivelDificuldade': updatedFormData.nivelDificuldade,
-                'competenciasENEM': updatedFormData.competenciasENEM,
-                'contextoAdicional': updatedFormData.contextoAdicional
-              });
-              
-              dadosEncontrados = true;
-              break; // Parar após encontrar dados válidos
-            } catch (error) {
-              console.error('%c❌ Erro ao parsear:', 'color: red; font-weight: bold;', key, error);
-            }
-          }
-        }
-
-        if (!dadosEncontrados) {
-          console.log('%c⚠️ [TESE REDAÇÃO] NENHUM DADO ENCONTRADO!', 'background: #FF9800; color: white; font-size: 14px; padding: 8px; font-weight: bold; border-radius: 5px;');
-          console.log('%c💡 PASSO A PASSO:', 'color: #2196F3; font-size: 12px; font-weight: bold;');
-          console.log('%c1️⃣ Gere um Plano de Ação com a IA', 'color: #666;');
-          console.log('%c2️⃣ CLIQUE no card "Tese da Redação"', 'color: #666;');
-          console.log('%c3️⃣ Depois vá em Construção > Editar Materiais', 'color: #666;');
-        }
-      }
+      // REMOVIDO: Lógica de carregamento da Tese da Redação agora está centralizada no hook useActivityAutoLoad (linhas 616-638)
 
       let contentToLoad = null;
       if (activity.id === 'sequencia-didatica' && sequenciaDidaticaSavedContent) {
