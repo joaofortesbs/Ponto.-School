@@ -495,7 +495,7 @@ export class AutoBuildService {
           topicos: topicos,
           numberOfFlashcards: activity.customFields?.['Número de flashcards'] || 
                              activity.customFields?.['numberOfFlashcards'] || '10',
-          context: activity.customFields?.['Contexto'] || activity.customFields?.['context'] || 'Estudos e revisão',
+          contextoUso: activity.customFields?.['Contexto de Uso'] || activity.customFields?.['Contexto'] || activity.customFields?.['contextoUso'] || activity.customFields?.['context'] || 'Estudos e revisão',
           difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || 
                           activity.customFields?.['difficultyLevel'] || 'Médio',
           objectives: activity.customFields?.['Objetivos'] || 

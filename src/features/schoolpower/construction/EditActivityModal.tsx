@@ -675,7 +675,6 @@ const EditActivityModal = ({
           schoolYear: formData.schoolYear?.trim() || 'Ensino Médio',
           topicos: formData.topicos.trim(),
           numberOfFlashcards: numberOfCards.toString(),
-          context: formData.contextoUso?.trim() || formData.context?.trim() || 'Estudos e revisão',
           contextoUso: formData.contextoUso?.trim() || formData.context?.trim() || 'Estudos e revisão',
           difficultyLevel: formData.difficultyLevel?.trim() || 'Médio',
           objectives: formData.objectives?.trim() || `Facilitar o aprendizado sobre ${formData.theme.trim()}`,
