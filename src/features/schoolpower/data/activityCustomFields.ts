@@ -98,6 +98,7 @@ export function normalizeQuadroInterativoFields(fields: Record<string, any>): Re
 export const activityCustomFields: Record<string, string[]> = {
   "tese-redacao": [
     "Tema da Redação",
+    "Objetivos",
     "Nível de Dificuldade",
     "Competências ENEM",
     "Contexto Adicional"

@@ -455,17 +455,23 @@ const renderTeseRedacaoFields = (customFields: Record<string, string>) => {
     return String(value);
   };
 
-  // Campos específicos para Tese da Redação - EXATAMENTE como solicitado
-  const temaRedacao = safeString(customFields['Tema da Redação'] || '');
-  const nivelDificuldade = safeString(customFields['Nível de Dificuldade'] || '');
-  const competenciasENEM = safeString(customFields['Competências ENEM'] || '');
-  const contextoAdicional = safeString(customFields['Contexto Adicional'] || '');
+  // Campos EXATOS solicitados para Tese da Redação
+  const temaRedacao = safeString(customFields['Tema da Redação'] || customFields['Tema'] || '');
+  const objetivos = safeString(customFields['Objetivos'] || customFields['Objetivo'] || '');
+  const nivelDificuldade = safeString(customFields['Nível de Dificuldade'] || customFields['Dificuldade'] || '');
+  const competenciasENEM = safeString(customFields['Competências ENEM'] || customFields['Competências'] || '');
+  const contextoAdicional = safeString(customFields['Contexto Adicional'] || customFields['Contexto'] || '');
 
   return (
     <div className="flex flex-wrap gap-1">
       {temaRedacao && (
         <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
-          📝 Tema: {String(temaRedacao).substring(0, 30)}{String(temaRedacao).length > 30 ? '...' : ''}
+          📝 Tema: {String(temaRedacao).substring(0, 25)}{String(temaRedacao).length > 25 ? '...' : ''}
+        </Badge>
+      )}
+      {objetivos && (
+        <Badge variant="outline" className="text-xs px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700">
+          🎯 Objetivos: {String(objetivos).substring(0, 25)}{String(objetivos).length > 25 ? '...' : ''}
         </Badge>
       )}
       {nivelDificuldade && (
@@ -475,12 +481,12 @@ const renderTeseRedacaoFields = (customFields: Record<string, string>) => {
       )}
       {competenciasENEM && (
         <Badge variant="outline" className="text-xs px-2 py-1 bg-purple-50 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700">
-          🎓 {String(competenciasENEM).substring(0, 40)}{String(competenciasENEM).length > 40 ? '...' : ''}
+          🎓 {String(competenciasENEM).substring(0, 35)}{String(competenciasENEM).length > 35 ? '...' : ''}
         </Badge>
       )}
       {contextoAdicional && (
         <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700">
-          💡 Contexto: {String(contextoAdicional).substring(0, 35)}{String(contextoAdicional).length > 35 ? '...' : ''}
+          💡 Contexto: {String(contextoAdicional).substring(0, 30)}{String(contextoAdicional).length > 30 ? '...' : ''}
         </Badge>
       )}
     </div>
