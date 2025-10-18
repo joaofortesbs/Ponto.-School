@@ -33,7 +33,7 @@ export interface FlashCardsGeneratedContent {
   schoolYear: string;
   topicos: string;
   numberOfFlashcards: number;
-  context: string;
+  contextoUso: string;
   difficultyLevel: string;
   objectives: string;
   instructions: string;
@@ -228,7 +228,7 @@ IMPORTANTE:
         schoolYear: data.schoolYear || 'Ensino Médio',
         topicos: data.topicos,
         numberOfFlashcards: validCards.length,
-        context: data.context || 'Estudos e revisão',
+        contextoUso: data.context || 'Estudos e revisão',
         difficultyLevel: data.difficultyLevel || 'Médio',
         objectives: data.objectives || `Facilitar o aprendizado sobre ${data.theme}`,
         instructions: data.instructions || 'Use os flash cards para estudar e revisar o conteúdo',
@@ -321,7 +321,7 @@ IMPORTANTE:
       schoolYear: data.schoolYear || 'Ensino Médio',
       topicos: data.topicos,
       numberOfFlashcards: fallbackCards.length,
-      context: data.context || 'Estudos e revisão',
+      contextoUso: data.context || 'Estudos e revisão',
       difficultyLevel: data.difficultyLevel || 'Médio',
       objectives: data.objectives || `Facilitar o aprendizado sobre ${data.theme}`,
       instructions: data.instructions || 'Use os flash cards para estudar e revisar o conteúdo',
