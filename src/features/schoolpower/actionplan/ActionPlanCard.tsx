@@ -707,44 +707,103 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
 
       // Armazenar dados específicos para auto-preenchimento
       if (activity.id === 'tese-redacao') {
-        console.log('📝 Salvando dados específicos da Tese da Redação para preenchimento automático');
+        console.log('📝 [TESE REDAÇÃO] Iniciando salvamento de dados para preenchimento automático');
         
         const customFields = fullActivity.customFields || {};
+        
+        // Extrair dados dos customFields com todas as possíveis variações de nomes
+        const temaRedacao = customFields['Tema da Redação'] || 
+                           customFields['temaRedacao'] || 
+                           customFields['Tema'] ||
+                           activity.personalizedTitle || 
+                           activity.title || '';
+        
+        const objetivo = customFields['Objetivos'] || 
+                        customFields['objetivo'] || 
+                        customFields['Objetivo'] ||
+                        activity.personalizedDescription || 
+                        activity.description || '';
+        
+        const nivelDificuldade = customFields['Nível de Dificuldade'] || 
+                                customFields['nivelDificuldade'] || 
+                                customFields['dificuldade'] ||
+                                'Médio';
+        
+        const competenciasENEM = customFields['Competências ENEM'] || 
+                                customFields['competenciasENEM'] || 
+                                customFields['competencias'] ||
+                                '';
+        
+        const contextoAdicional = customFields['Contexto Adicional'] || 
+                                 customFields['contextoAdicional'] || 
+                                 customFields['contexto'] ||
+                                 '';
+
         const autoFormData = {
+          // Campos obrigatórios do modal
           title: activity.personalizedTitle || activity.title || '',
           description: activity.personalizedDescription || activity.description || '',
-          temaRedacao: customFields['Tema da Redação'] || customFields['temaRedacao'] || activity.title || '',
-          objetivo: customFields['Objetivos'] || customFields['objetivo'] || activity.description || '',
-          nivelDificuldade: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || 'Médio',
-          competenciasENEM: customFields['Competências ENEM'] || customFields['competenciasENEM'] || '',
-          contextoAdicional: customFields['Contexto Adicional'] || customFields['contextoAdicional'] || '',
+          
+          // Campos específicos da Tese da Redação (NOMES EXATOS DO MODAL)
+          temaRedacao: temaRedacao,
+          objetivo: objetivo,
+          nivelDificuldade: nivelDificuldade,
+          competenciasENEM: competenciasENEM,
+          contextoAdicional: contextoAdicional,
+          
+          // Campos padrão para compatibilidade
           subject: 'Língua Portuguesa',
-          theme: customFields['Tema da Redação'] || customFields['temaRedacao'] || activity.title || '',
+          theme: temaRedacao,
           schoolYear: '3º Ano - Ensino Médio',
           numberOfQuestions: '1',
-          difficultyLevel: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || 'Médio',
+          difficultyLevel: nivelDificuldade,
           questionModel: 'Dissertativa',
           sources: '',
-          objectives: customFields['Objetivos'] || customFields['objetivo'] || '',
+          objectives: objetivo,
           materials: '',
           instructions: '',
           evaluation: ''
         };
 
-        const autoDataKey = `auto_activity_data_${activity.id}`;
+        // Salvar em MÚLTIPLAS chaves para garantir compatibilidade
+        const autoDataKey1 = `auto_activity_data_tese-redacao`;
+        const autoDataKey2 = `auto_activity_data_${activity.id}`;
+        const autoDataKey3 = `tese_redacao_form_data`;
+        
         const autoData = {
           formData: autoFormData,
-          customFields: customFields,
+          customFields: {
+            'Tema da Redação': temaRedacao,
+            'Objetivos': objetivo,
+            'Nível de Dificuldade': nivelDificuldade,
+            'Competências ENEM': competenciasENEM,
+            'Contexto Adicional': contextoAdicional
+          },
           originalActivity: fullActivity,
           actionPlanActivity: activity,
           activityType: 'tese-redacao',
+          activityId: activity.id,
           timestamp: Date.now()
         };
 
-        localStorage.setItem(autoDataKey, JSON.stringify(autoData));
-        console.log('💾 Dados da Tese da Redação salvos para preenchimento automático:', autoDataKey);
-        console.log('📋 Form data preparado:', autoFormData);
-        console.log('🔧 Custom fields salvos:', customFields);
+        // Salvar em todas as chaves
+        localStorage.setItem(autoDataKey1, JSON.stringify(autoData));
+        localStorage.setItem(autoDataKey2, JSON.stringify(autoData));
+        localStorage.setItem(autoDataKey3, JSON.stringify(autoFormData));
+        
+        console.log('💾 [TESE REDAÇÃO] Dados salvos em múltiplas chaves:', {
+          autoDataKey1,
+          autoDataKey2,
+          autoDataKey3
+        });
+        console.log('📋 [TESE REDAÇÃO] Form data preparado:', autoFormData);
+        console.log('🔧 [TESE REDAÇÃO] Custom fields salvos:', autoData.customFields);
+        
+        // Disparar evento para notificar que os dados foram salvos
+        window.dispatchEvent(new CustomEvent('tese-redacao-data-saved', {
+          detail: { autoData, formData: autoFormData }
+        }));
+        
       } else if (activity.id === 'lista-exercicios') {
         // Mantém a lógica existente para lista-exercicios, se necessário
         // Exemplo:

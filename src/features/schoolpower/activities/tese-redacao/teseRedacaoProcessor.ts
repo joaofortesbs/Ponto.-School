@@ -19,16 +19,20 @@ export interface TeseRedacaoActivity {
  * para o formato do formulário do modal
  */
 export function processTeseRedacaoData(activity: TeseRedacaoActivity): ActivityFormData {
-  console.log('📝 Processando dados da Tese da Redação:', activity);
+  console.log('📝 [PROCESSOR] Processando dados da Tese da Redação:', activity);
+  console.log('📝 [PROCESSOR] Activity ID:', activity.id);
+  console.log('📝 [PROCESSOR] Custom Fields recebidos:', activity.customFields);
 
   const customFields = activity.customFields || {};
   
-  // Tentar múltiplas fontes para cada campo
+  // Tentar múltiplas fontes para cada campo com logs detalhados
   const temaRedacao = customFields['Tema da Redação'] || 
                       customFields['temaRedacao'] || 
                       customFields['tema'] ||
                       activity.personalizedTitle ||
                       activity.title || '';
+  
+  console.log('🔍 [PROCESSOR] Tema da Redação extraído:', temaRedacao);
   
   const objetivo = customFields['Objetivos'] || 
                    customFields['objetivo'] || 
@@ -36,26 +40,34 @@ export function processTeseRedacaoData(activity: TeseRedacaoActivity): ActivityF
                    activity.personalizedDescription ||
                    activity.description || '';
   
+  console.log('🔍 [PROCESSOR] Objetivos extraídos:', objetivo);
+  
   const nivelDificuldade = customFields['Nível de Dificuldade'] || 
                            customFields['nivelDificuldade'] || 
                            customFields['dificuldade'] ||
                            'Médio';
+  
+  console.log('🔍 [PROCESSOR] Nível de Dificuldade extraído:', nivelDificuldade);
   
   const competenciasENEM = customFields['Competências ENEM'] || 
                            customFields['competenciasENEM'] || 
                            customFields['competencias'] ||
                            '';
   
+  console.log('🔍 [PROCESSOR] Competências ENEM extraídas:', competenciasENEM);
+  
   const contextoAdicional = customFields['Contexto Adicional'] || 
                             customFields['contextoAdicional'] || 
                             customFields['contexto'] ||
                             '';
+  
+  console.log('🔍 [PROCESSOR] Contexto Adicional extraído:', contextoAdicional);
 
   const formData: ActivityFormData = {
     title: activity.personalizedTitle || activity.title || '',
     description: activity.personalizedDescription || activity.description || '',
     
-    // Campos específicos de Tese da Redação
+    // Campos específicos de Tese da Redação (NOMES EXATOS)
     temaRedacao: temaRedacao,
     objetivo: objetivo,
     nivelDificuldade: nivelDificuldade,
@@ -76,14 +88,14 @@ export function processTeseRedacaoData(activity: TeseRedacaoActivity): ActivityF
     evaluation: ''
   };
 
-  console.log('✅ Dados da Tese da Redação processados:', formData);
-  console.log('🔍 Custom Fields recebidos:', customFields);
-  console.log('📋 Campos extraídos:', {
-    temaRedacao,
-    objetivo,
-    nivelDificuldade,
-    competenciasENEM,
-    contextoAdicional
+  console.log('✅ [PROCESSOR] Dados da Tese da Redação processados com sucesso');
+  console.log('📋 [PROCESSOR] Form Data final:', formData);
+  console.log('🔧 [PROCESSOR] Campos validados:', {
+    temaRedacao: !!temaRedacao,
+    objetivo: !!objetivo,
+    nivelDificuldade: !!nivelDificuldade,
+    competenciasENEM: !!competenciasENEM,
+    contextoAdicional: !!contextoAdicional
   });
   
   return formData;

@@ -520,20 +520,73 @@ const EditActivityModal = ({
   const [activeTab, setActiveTab] = useState<'editar' | 'preview'>('editar');
 
   // Estados do formulário
-  const [formData, setFormData] = useState<ActivityFormData>({
-    title: activity?.title || activity?.personalizedTitle || '',
-    description: activity?.description || activity?.personalizedDescription || '',
-    subject: activity?.customFields?.disciplina || '',
-    theme: activity?.customFields?.tema || activity?.personalizedTitle || activity?.title || '',
-    schoolYear: activity?.customFields?.anoEscolaridade || '',
-    numberOfQuestions: activity?.customFields?.nivelDificuldade?.toLowerCase() || 'medium',
-    difficultyLevel: activity?.customFields?.tempoLimite || '',
-    questionModel: '',
-    sources: '',
-    objectives: activity?.description || activity?.personalizedDescription || '',
-    materials: activity?.customFields?.fontes || '',
-    instructions: activity?.customFields?.contextoAplicacao || '',
-    evaluation: activity?.customFields?.modeloQuestoes || '',
+  const [formData, setFormData] = useState<ActivityFormData>(() => {
+    // Função para carregar dados salvos da Tese da Redação
+    if (activity?.id === 'tese-redacao') {
+      console.log('🔍 [MODAL] Carregando dados salvos da Tese da Redação...');
+      
+      // Tentar múltiplas chaves de storage
+      const possibleKeys = [
+        `auto_activity_data_tese-redacao`,
+        `auto_activity_data_${activity.id}`,
+        `tese_redacao_form_data`
+      ];
+      
+      for (const key of possibleKeys) {
+        const savedData = localStorage.getItem(key);
+        if (savedData) {
+          try {
+            const parsed = JSON.parse(savedData);
+            const loadedFormData = parsed.formData || parsed;
+            
+            console.log('✅ [MODAL] Dados carregados com sucesso da chave:', key);
+            console.log('📋 [MODAL] Form data carregado:', loadedFormData);
+            
+            return {
+              title: loadedFormData.title || activity?.title || '',
+              description: loadedFormData.description || activity?.description || '',
+              temaRedacao: loadedFormData.temaRedacao || '',
+              objetivo: loadedFormData.objetivo || '',
+              nivelDificuldade: loadedFormData.nivelDificuldade || 'Médio',
+              competenciasENEM: loadedFormData.competenciasENEM || '',
+              contextoAdicional: loadedFormData.contextoAdicional || '',
+              // Campos padrão
+              subject: 'Língua Portuguesa',
+              theme: loadedFormData.temaRedacao || loadedFormData.theme || '',
+              schoolYear: '3º Ano - Ensino Médio',
+              numberOfQuestions: '1',
+              difficultyLevel: loadedFormData.nivelDificuldade || 'Médio',
+              questionModel: 'Dissertativa',
+              sources: '',
+              objectives: loadedFormData.objetivo || '',
+              materials: '',
+              instructions: '',
+              evaluation: ''
+            };
+          } catch (error) {
+            console.error('❌ [MODAL] Erro ao parsear dados da chave:', key, error);
+          }
+        }
+      }
+      
+      console.log('⚠️ [MODAL] Nenhum dado salvo encontrado, usando valores padrão');
+    }
+    
+    // Valores padrão para outros tipos de atividade
+    return {
+      title: activity?.title || activity?.personalizedTitle || '',
+      description: activity?.description || activity?.personalizedDescription || '',
+      subject: activity?.customFields?.disciplina || '',
+      theme: activity?.customFields?.tema || activity?.personalizedTitle || activity?.title || '',
+      schoolYear: activity?.customFields?.anoEscolaridade || '',
+      numberOfQuestions: activity?.customFields?.nivelDificuldade?.toLowerCase() || 'medium',
+      difficultyLevel: activity?.customFields?.tempoLimite || '',
+      questionModel: '',
+      sources: '',
+      objectives: activity?.description || activity?.personalizedDescription || '',
+      materials: activity?.customFields?.fontes || '',
+      instructions: activity?.customFields?.contextoAplicacao || '',
+      evaluation: activity?.customFields?.modeloQuestoes || '',
     timeLimit: '',
     context: '',
     textType: '',
@@ -617,6 +670,36 @@ const EditActivityModal = ({
     activityId: activity?.id || '',
     activityType: activity?.id || ''
   });
+
+  // useEffect para escutar eventos de dados salvos (Tese da Redação)
+  useEffect(() => {
+    if (activity?.id === 'tese-redacao') {
+      const handleDataSaved = (event: CustomEvent) => {
+        console.log('🔔 [MODAL] Evento de dados salvos recebido:', event.detail);
+        
+        const { formData: savedFormData } = event.detail;
+        
+        if (savedFormData) {
+          setFormData(prev => ({
+            ...prev,
+            temaRedacao: savedFormData.temaRedacao || prev.temaRedacao,
+            objetivo: savedFormData.objetivo || prev.objetivo,
+            nivelDificuldade: savedFormData.nivelDificuldade || prev.nivelDificuldade,
+            competenciasENEM: savedFormData.competenciasENEM || prev.competenciasENEM,
+            contextoAdicional: savedFormData.contextoAdicional || prev.contextoAdicional
+          }));
+          
+          console.log('✅ [MODAL] Form data atualizado com dados do evento');
+        }
+      };
+      
+      window.addEventListener('tese-redacao-data-saved', handleDataSaved as EventListener);
+      
+      return () => {
+        window.removeEventListener('tese-redacao-data-saved', handleDataSaved as EventListener);
+      };
+    }
+  }, [activity?.id]);
 
   // Use isGeneratingDefault for the generic generate activity call
   const isGenerating = isGeneratingDefault;
