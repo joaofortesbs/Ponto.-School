@@ -462,6 +462,76 @@ export class AutoBuildService {
     return formData;
   }
 
+  /**
+   * Gera o conteúdo da atividade Tese da Redação usando a API Gemini.
+   */
+  private async generateTeseRedacaoContent(formData: any, activityId: string): Promise<void> {
+    console.log('🤖 [TESE REDAÇÃO] Iniciando geração de conteúdo via Gemini...');
+
+    try {
+      // Importar dinamicamente o gerador
+      const { TeseRedacaoGenerator } = await import('@/features/schoolpower/activities/tese-redacao');
+      const generator = new TeseRedacaoGenerator();
+
+      // Construir os dados de entrada para o gerador
+      const generationData = {
+        title: formData.title || 'Tese da Redação',
+        theme: formData.theme || 'Tema Geral',
+        subject: formData.subject || 'Português',
+        schoolYear: formData.schoolYear || 'Ensino Médio',
+        contextoUso: formData.context || 'Estudos e revisão',
+        difficultyLevel: formData.difficultyLevel || 'Médio',
+        objectives: formData.objectives || `Desenvolver a habilidade de argumentação em redações`,
+        instructions: formData.instructions || 'Siga as instruções para construir sua tese.',
+        evaluation: formData.evaluation || 'Avalie a qualidade da argumentação e coesão.',
+        // Outros campos relevantes para Tese da Redação
+        competencies: formData.competencies || '',
+        knowledgeArea: formData.knowledgeArea || '',
+        complexityLevel: formData.complexityLevel || '',
+        language: formData.language || 'Português'
+      };
+
+      console.log('🤖 [TESE REDAÇÃO] Dados para geração:', generationData);
+
+      // Gerar o conteúdo
+      const result = await generator.generateTeseRedacao(generationData);
+
+      if (result && result.generatedText) {
+        console.log('✅ [TESE REDAÇÃO] Conteúdo gerado com sucesso!');
+
+        // Salvar o conteúdo gerado no localStorage
+        const storageKey = `generated_tese-redacao_${activityId}`; // Chave específica para Tese
+        const generatedContent = {
+          success: true,
+          data: {
+            generatedText: result.generatedText,
+            // Adicionar outros campos relevantes do resultado, se houver
+          },
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem(storageKey, JSON.stringify(generatedContent));
+
+        // Salvar no localStorage 'activity_<id>' para compatibilidade com o modal de visualização
+        localStorage.setItem(`activity_${activityId}`, JSON.stringify({
+          ...result.generatedText, // Assumindo que generatedText contém a estrutura esperada
+          generatedAt: new Date().toISOString(),
+          activityId: activityId,
+          activityType: 'tese-redacao',
+          formData: generationData
+        }));
+
+        console.log(`✅ [TESE REDAÇÃO] Conteúdo salvo em localStorage: ${storageKey}`);
+      } else {
+        console.error('❌ [TESE REDAÇÃO] Resultado inválido ou vazio:', result);
+        throw new Error('Falha na geração do conteúdo da Tese da Redação pela IA');
+      }
+    } catch (error) {
+      console.error('❌ [TESE REDAÇÃO] Erro na geração de conteúdo:', error);
+      throw error; // Rejeita a promessa para que o fluxo de erro seja tratado
+    }
+  }
+
+
   private async buildActivityWithExactModalLogic(activity: ConstructionActivity): Promise<void> {
     console.log(`🎯 [AUTO-BUILD] Construindo: ${activity.title}`);
 
@@ -642,62 +712,103 @@ export class AutoBuildService {
 
     // Lógica para outras atividades...
     try {
-      const formData = await this.prepareFormDataExactlyLikeModal(activity);
-      const { generateActivityContent } = await import('../api/generateActivity');
-      const activityType = activity.type || activity.id || 'lista-exercicios';
+      // ETAPA 2: Processar a atividade com base no tipo
+      if (activity.id === 'tese-redacao') {
+        console.log('📝 [AUTO-BUILD] Processando Tese da Redação');
 
-      console.log(`🤖 [AUTO-BUILD] Chamando generateActivityContent: ${activityType}`);
-      const result = await generateActivityContent(activityType, formData);
+        // Preparar dados da Tese da Redação
+        const teseData = await this.prepareFormDataExactlyLikeModal(activity);
 
-      if (result) {
-        const saveKey = `activity_${activity.id}`;
-        const savedContent = {
-          ...result,
-          generatedAt: new Date().toISOString(),
+        // Gerar conteúdo via API Gemini
+        await this.generateTeseRedacaoContent(teseData, activity.id);
+
+        // Marcar como construída
+        const constructedKey = `constructed_tese-redacao_${activity.id}`;
+        const constructedData = {
           activityId: activity.id,
-          activityType: activityType,
-          formData: formData
+          formData: teseData,
+          status: 'completed',
+          type: 'tese-redacao'
         };
+        localStorage.setItem(constructedKey, JSON.stringify(constructedData));
 
-        localStorage.setItem(saveKey, JSON.stringify(savedContent));
-
-        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-        constructedActivities[activity.id] = {
-          isBuilt: true,
-          builtAt: new Date().toISOString(),
-          formData: formData,
-          generatedContent: result
-        };
-        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-
+        // Atualizar status da atividade
         activity.isBuilt = true;
         activity.builtAt = new Date().toISOString();
         activity.progress = 100;
         activity.status = 'completed';
 
-        // SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS
-        console.log('💾 [AUTO-BUILD] ==========================================');
-        console.log('💾 [AUTO-BUILD] ATIVIDADE CONCLUÍDA - SALVAMENTO AUTOMÁTICO');
-        console.log('💾 [AUTO-BUILD] Título:', activity.title);
-        console.log('💾 [AUTO-BUILD] ID:', activity.id);
-        console.log('💾 [AUTO-BUILD] Status:', activity.status);
-        console.log('💾 [AUTO-BUILD] Progress:', activity.progress);
-        console.log('💾 [AUTO-BUILD] isBuilt:', activity.isBuilt);
-        console.log('💾 [AUTO-BUILD] ==========================================');
+        // Salvamento automático no banco de dados
+        console.log('💾 [TESE REDAÇÃO] Atividade concluída, iniciando salvamento automático...');
+        await this.saveActivityToDatabase(activity);
 
-        try {
-          await this.saveActivityToDatabase(activity);
-        } catch (saveError) {
-          console.error('💥 [AUTO-BUILD] Erro crítico no salvamento automático:', saveError);
-        }
+        console.log('✅ [AUTO-BUILD] Tese da Redação construída com sucesso');
 
-        if (this.onActivityBuilt) {
-          this.onActivityBuilt(activity.id);
-        }
+      } else if (activity.id === 'quadro-interativo') {
+        console.log('🎯 [AUTO-BUILD] Processando Quadro Interativo');
 
-        console.log(`✅ [AUTO-BUILD] Atividade construída: ${activity.title}`);
+        // Preparar dados do Quadro Interativo
+        const quadroData = await this.prepareFormDataExactlyLikeModal(activity);
+        // Lógica para quadro interativo continua aqui...
       } else {
-        throw new Error('Falha na geração do conteúdo pela IA');
+        // Lógica padrão para outras atividades que não sejam Tese da Redação ou Quadro Interativo
+        const formData = await this.prepareFormDataExactlyLikeModal(activity);
+        const { generateActivityContent } = await import('../api/generateActivity');
+        const activityType = activity.type || activity.id || 'lista-exercicios';
+
+        console.log(`🤖 [AUTO-BUILD] Chamando generateActivityContent: ${activityType}`);
+        const result = await generateActivityContent(activityType, formData);
+
+        if (result) {
+          const saveKey = `activity_${activity.id}`;
+          const savedContent = {
+            ...result,
+            generatedAt: new Date().toISOString(),
+            activityId: activity.id,
+            activityType: activityType,
+            formData: formData
+          };
+
+          localStorage.setItem(saveKey, JSON.stringify(savedContent));
+
+          const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+          constructedActivities[activity.id] = {
+            isBuilt: true,
+            builtAt: new Date().toISOString(),
+            formData: formData,
+            generatedContent: result
+          };
+          localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+
+          activity.isBuilt = true;
+          activity.builtAt = new Date().toISOString();
+          activity.progress = 100;
+          activity.status = 'completed';
+
+          // SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS
+          console.log('💾 [AUTO-BUILD] ==========================================');
+          console.log('💾 [AUTO-BUILD] ATIVIDADE CONCLUÍDA - SALVAMENTO AUTOMÁTICO');
+          console.log('💾 [AUTO-BUILD] Título:', activity.title);
+          console.log('💾 [AUTO-BUILD] ID:', activity.id);
+          console.log('💾 [AUTO-BUILD] Status:', activity.status);
+          console.log('💾 [AUTO-BUILD] Progress:', activity.progress);
+          console.log('💾 [AUTO-BUILD] isBuilt:', activity.isBuilt);
+          console.log('💾 [AUTO-BUILD] ==========================================');
+
+          try {
+            await this.saveActivityToDatabase(activity);
+          } catch (saveError) {
+            console.error('💥 [AUTO-BUILD] Erro crítico no salvamento automático:', saveError);
+          }
+
+          if (this.onActivityBuilt) {
+            this.onActivityBuilt(activity.id);
+          }
+
+          console.log(`✅ [AUTO-BUILD] Atividade construída: ${activity.title}`);
+        } else {
+          throw new Error('Falha na geração do conteúdo pela IA');
+        }
       }
     } catch (error) {
       console.error(`❌ [AUTO-BUILD] Erro na construção de ${activity.title}:`, error);
@@ -706,6 +817,7 @@ export class AutoBuildService {
       throw error;
     }
   }
+
 
   /**
    * Sistema exclusivo para construção de Quadro Interativo

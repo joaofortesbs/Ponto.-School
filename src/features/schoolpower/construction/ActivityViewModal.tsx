@@ -380,7 +380,40 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
     // --- Carregamento de Conteúdo Específico por Tipo de Atividade ---
 
-    // 1. Quiz Interativo
+    // 1. Tese da Redação
+    if (activityType === 'tese-redacao') {
+      console.log('📝 ActivityViewModal: Carregando dados para Tese da Redação');
+      // Tentar carregar do localStorage, priorizando caches específicos
+      const teseKeys = [
+        `constructed_tese-redacao_${activity.id}`,
+        `activity_${activity.id}`,
+        `activity_fields_${activity.id}`
+      ];
+      for (const key of teseKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            const parsedData = JSON.parse(data);
+            if (parsedData.tema || parsedData.argumentos || parsedData.proposta) { // Verificações básicas de conteúdo
+              contentToLoad = parsedData;
+              console.log(`✅ Dados da Tese da Redação encontrados em ${key}:`, contentToLoad);
+              break;
+            }
+          } catch (error) {
+            console.warn(`⚠️ Erro ao parsear dados da Tese da Redação de ${key}:`, error);
+          }
+        }
+      }
+      // Se não encontrou nada específico, usar os dados gerais de previewData
+      if (!contentToLoad) {
+        contentToLoad = previewData;
+        console.log('ℹ️ Nenhum conteúdo específico da Tese da Redação encontrado. Usando dados gerais.');
+      }
+      // Renderiza diretamente se encontrou conteúdo
+      return <TeseRedacaoPreview content={contentToLoad} isLoading={false} />;
+    }
+
+    // 2. Quiz Interativo
     if (activityType === 'quiz-interativo') {
       const quizInterativoSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`);
       console.log(`🔍 Quiz Interativo: Verificando conteúdo salvo para ${activity.id}. Existe?`, !!quizInterativoSavedContent);
@@ -417,7 +450,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('ℹ️ Nenhum conteúdo específico encontrado para Quiz Interativo. Usando dados gerais.');
       }
     }
-    // 1.5. Flash Cards
+    // 3. Flash Cards
     else if (activityType === 'flash-cards') {
       const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
       console.log(`🃏 Flash Cards: Verificando conteúdo salvo para ${activity.id}. Existe?`, !!flashCardsSavedContent);
@@ -456,7 +489,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('ℹ️ Nenhum conteúdo específico encontrado para Flash Cards. Usando dados gerais.');
       }
     }
-    // 2. Lista de Exercícios (com filtro de exclusão)
+    // 4. Lista de Exercícios (com filtro de exclusão)
     else if (activityType === 'lista-exercicios') {
       try {
         const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
@@ -492,7 +525,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.warn('⚠️ Erro ao aplicar filtro de exclusões no ActivityViewModal:', error);
       }
     }
-    // 3. Sequência Didática (com carregamento de dados da IA)
+    // 5. Sequência Didática (com carregamento de dados da IA)
     else if (activityType === 'sequencia-didatica') {
       console.log('📚 ActivityViewModal: Processando Sequência Didática');
 
