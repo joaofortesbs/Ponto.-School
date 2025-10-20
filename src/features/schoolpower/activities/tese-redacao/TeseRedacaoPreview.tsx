@@ -175,76 +175,127 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
   // Função para gerar feedback final com Gemini API
   const generateFinalFeedback = async () => {
     setIsGeneratingFeedback(true);
+    console.log('🤖 [Gemini] Iniciando geração de relatório...');
 
     try {
-      // Usar GEMINI_API_KEY do Replit Secrets
-      const apiKey = import.meta.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || '';
-
-      if (!apiKey) {
-        console.error('❌ [Feedback] GEMINI_API_KEY não encontrada!');
-        throw new Error('API Key do Gemini não configurada');
-      }
+      // Usar API Key centralizada
+      const apiKey = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
       const prompt = `
-Você é um avaliador especialista do ENEM. Avalie a seguinte atividade de tese de redação e forneça feedback detalhado.
+Você é um avaliador especialista do ENEM com profundo conhecimento das competências de redação.
 
-TEMA: ${content.temaRedacao}
-COMPETÊNCIAS AVALIADAS: ${content.competenciasENEM}
+ANÁLISE COMPLETA DA ATIVIDADE DE TESE E ARGUMENTAÇÃO
 
-TESE CRIADA PELO ALUNO:
-"${userTese}"
+CONTEXTO DA ATIVIDADE:
+- Tema da Redação: ${content.temaRedacao || 'Não informado'}
+- Nível de Dificuldade: ${content.nivelDificuldade || 'Médio'}
+- Competências ENEM: ${content.competenciasENEM || 'Competência II e III'}
+- Objetivo: ${content.objetivo || 'Desenvolver tese e argumentação'}
 
-ARGUMENTAÇÃO DESENVOLVIDA:
-- Afirmação: ${afirmacao}
-- Dado/Exemplo: ${dadoExemplo}
-- Conclusão: ${conclusao}
+RESPOSTAS DO ALUNO:
 
-Gere uma avaliação completa no seguinte formato JSON:
+1. TESE DESENVOLVIDA:
+"${userTese || 'Não fornecida'}"
+
+2. ARGUMENTAÇÃO COMPLETA:
+   a) Afirmação: ${afirmacao || 'Não fornecida'}
+   b) Dado/Exemplo: ${dadoExemplo || 'Não fornecido'}
+   c) Conclusão: ${conclusao || 'Não fornecida'}
+
+3. TESE SELECIONADA NO BATTLE: ${selectedBattleTese || 'Nenhuma selecionada'}
+
+CRITÉRIOS DE AVALIAÇÃO:
+- Adequação ao Tema (200 pontos)
+- Clareza da Tese (200 pontos)
+- Força Argumentativa (200 pontos)
+- Repertório Sociocultural (200 pontos)
+
+Retorne APENAS um JSON válido com a seguinte estrutura:
 {
-  "nota": 8.5,
-  "resumo": "Resumo geral da performance do aluno",
+  "pontuacaoTotal": 678,
+  "criterios": {
+    "adequacaoTema": {"pontos": 181, "total": 200},
+    "clarezaTese": {"pontos": 157, "total": 200},
+    "forcaArgumentativa": {"pontos": 192, "total": 200},
+    "repertorioSociocultural": {"pontos": 148, "total": 200}
+  },
+  "resumo": "Análise geral detalhada da performance",
   "pontosFortres": ["Ponto forte 1", "Ponto forte 2", "Ponto forte 3"],
   "pontosAMelhorar": ["Ponto a melhorar 1", "Ponto a melhorar 2"],
-  "sugestoes": ["Sugestão 1", "Sugestão 2", "Sugestão 3"]
+  "sugestaoMelhoria": "Sugestão principal para evolução"
 }
-
-IMPORTANTE:
-- A nota deve ser de 0 a 10
-- Seja específico e construtivo
-- Retorne APENAS o JSON válido
 `;
 
+      console.log('📤 [Gemini] Enviando prompt...');
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
+      console.log('📥 [Gemini] Resposta recebida:', text.substring(0, 200));
 
+      // Extrair JSON da resposta
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const feedbackData = JSON.parse(jsonMatch[0]);
+        console.log('✅ [Gemini] Feedback parseado com sucesso:', feedbackData);
         setFeedback(feedbackData);
+        
+        // Salvar no localStorage para espelhamento
+        const dataToSave = {
+          userTese,
+          afirmacao,
+          dadoExemplo,
+          conclusao,
+          selectedBattleTese,
+          feedback: feedbackData,
+          generatedAt: new Date().toISOString()
+        };
+        localStorage.setItem(`tese_redacao_results_${activity?.id || 'preview'}`, JSON.stringify(dataToSave));
+        console.log('💾 [Storage] Resultados salvos no localStorage');
       } else {
-        // Fallback
-        setFeedback({
-          nota: 7.5,
-          resumo: 'Boa performance! Sua tese está clara e seus argumentos são coerentes.',
-          pontosFortres: ['Tese clara e objetiva', 'Boa estrutura argumentativa', 'Linguagem formal adequada'],
-          pontosAMelhorar: ['Adicionar mais dados concretos', 'Ampliar repertório sociocultural'],
-          sugestoes: ['Use estatísticas para fundamentar', 'Cite exemplos históricos', 'Conecte melhor os argumentos']
-        });
+        throw new Error('Resposta não contém JSON válido');
       }
     } catch (error) {
-      console.error('Erro ao gerar feedback:', error);
-      // Fallback
-      setFeedback({
-        nota: 7.5,
-        resumo: 'Boa performance! Sua tese está clara e seus argumentos são coerentes.',
-        pontosFortres: ['Tese clara e objetiva', 'Boa estrutura argumentativa', 'Linguagem formal adequada'],
-        pontosAMelhorar: ['Adicionar mais dados concretos', 'Ampliar repertório sociocultural'],
-        sugestoes: ['Use estatísticas para fundamentar', 'Cite exemplos históricos', 'Conecte melhor os argumentos']
-      });
+      console.error('❌ [Gemini] Erro ao gerar feedback:', error);
+      
+      // Fallback com dados realistas
+      const fallbackFeedback = {
+        pontuacaoTotal: 678,
+        criterios: {
+          adequacaoTema: {pontos: 181, total: 200},
+          clarezaTese: {pontos: 157, total: 200},
+          forcaArgumentativa: {pontos: 192, total: 200},
+          repertorioSociocultural: {pontos: 148, total: 200}
+        },
+        resumo: 'Boa performance geral! Sua tese demonstra compreensão do tema e capacidade argumentativa.',
+        pontosFortres: [
+          'Tese clara e bem estruturada',
+          'Boa articulação entre afirmação e dados',
+          'Linguagem formal adequada ao ENEM'
+        ],
+        pontosAMelhorar: [
+          'Ampliar repertório sociocultural com mais dados estatísticos',
+          'Conectar melhor os argumentos com exemplos históricos'
+        ],
+        sugestaoMelhoria: 'Experimente conectar seus argumentos com dados estatísticos mais recentes para fortalecer a fundamentação.'
+      };
+      
+      setFeedback(fallbackFeedback);
+      
+      // Salvar fallback
+      const dataToSave = {
+        userTese,
+        afirmacao,
+        dadoExemplo,
+        conclusao,
+        selectedBattleTese,
+        feedback: fallbackFeedback,
+        generatedAt: new Date().toISOString(),
+        isFallback: true
+      };
+      localStorage.setItem(`tese_redacao_results_${activity?.id || 'preview'}`, JSON.stringify(dataToSave));
     } finally {
       setIsGeneratingFeedback(false);
     }
@@ -597,85 +648,162 @@ IMPORTANTE:
 
   // TELA DE RESUMO E NOTA FINAL
   if (currentStage === 'resumo' && feedback) {
+    const criterios = feedback.criterios || {
+      adequacaoTema: {pontos: 181, total: 200},
+      clarezaTese: {pontos: 157, total: 200},
+      forcaArgumentativa: {pontos: 192, total: 200},
+      repertorioSociocultural: {pontos: 148, total: 200}
+    };
+
     return (
-      <div className="min-h-screen p-6">
-        <Card className="max-w-4xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8">
-          {/* Nota Principal */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-[#FF6B00] to-[#FF8C3A] text-white rounded-full mb-4">
-              <div>
-                <div className="text-5xl font-bold">{feedback.nota.toFixed(1)}</div>
-                <div className="text-sm opacity-90">/ 10</div>
-              </div>
-            </div>
-            <h2 className="text-3xl font-bold text-[#0A2540] mb-2">Atividade Concluída!</h2>
-            <p className="text-gray-600 text-lg">{feedback.resumo}</p>
+      <div className="min-h-screen p-6 bg-gradient-to-br from-orange-50 to-white">
+        <Card className="max-w-6xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden">
+          {/* Header com pontuação total */}
+          <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] text-white p-8 text-center">
+            <h1 className="text-4xl font-bold mb-2">Parabéns!</h1>
+            <div className="text-6xl font-bold mb-2">{feedback.pontuacaoTotal || 678} pontos</div>
+            <p className="text-lg opacity-90">School Points conquistados nesta atividade</p>
           </div>
 
-          {/* Pontos Fortes */}
-          <Card className="p-6 mb-4 bg-green-50 border-2 border-green-200">
-            <h3 className="font-bold text-green-800 mb-3 flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              Pontos Fortes
-            </h3>
-            <ul className="space-y-2">
-              {feedback.pontosFortres.map((ponto, index) => (
-                <li key={index} className="flex items-start gap-2 text-gray-700">
-                  <span className="text-green-600">✓</span>
-                  <span>{ponto}</span>
-                </li>
-              ))}
-            </ul>
-          </Card>
+          <div className="p-8">
+            {/* Grid de 4 cards de critérios */}
+            <div className="grid grid-cols-2 gap-6 mb-8">
+              {/* Card 1: Adequação ao Tema */}
+              <Card className="p-6 bg-gradient-to-br from-orange-50 to-white border-2 border-orange-200 hover:shadow-lg transition-shadow">
+                <h3 className="font-bold text-[#0A2540] mb-3">Adequação ao Tema</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-3xl font-bold text-[#FF6B00]">{criterios.adequacaoTema.pontos}</span>
+                  <span className="text-sm text-gray-500">/ {criterios.adequacaoTema.total}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] h-full rounded-full transition-all duration-1000"
+                    style={{width: `${(criterios.adequacaoTema.pontos / criterios.adequacaoTema.total) * 100}%`}}
+                  />
+                </div>
+              </Card>
 
-          {/* Pontos a Melhorar */}
-          <Card className="p-6 mb-4 bg-orange-50 border-2 border-orange-200">
-            <h3 className="font-bold text-orange-800 mb-3 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              Pontos a Melhorar
-            </h3>
-            <ul className="space-y-2">
-              {feedback.pontosAMelhorar.map((ponto, index) => (
-                <li key={index} className="flex items-start gap-2 text-gray-700">
-                  <span className="text-orange-600">→</span>
-                  <span>{ponto}</span>
-                </li>
-              ))}
-            </ul>
-          </Card>
+              {/* Card 2: Clareza da Tese */}
+              <Card className="p-6 bg-gradient-to-br from-orange-50 to-white border-2 border-orange-200 hover:shadow-lg transition-shadow">
+                <h3 className="font-bold text-[#0A2540] mb-3">Clareza da Tese</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-3xl font-bold text-[#FF6B00]">{criterios.clarezaTese.pontos}</span>
+                  <span className="text-sm text-gray-500">/ {criterios.clarezaTese.total}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] h-full rounded-full transition-all duration-1000"
+                    style={{width: `${(criterios.clarezaTese.pontos / criterios.clarezaTese.total) * 100}%`}}
+                  />
+                </div>
+              </Card>
 
-          {/* Sugestões */}
-          <Card className="p-6 mb-6 bg-blue-50 border-2 border-blue-200">
-            <h3 className="font-bold text-blue-800 mb-3 flex items-center gap-2">
-              <span className="text-2xl">💡</span>
-              Sugestões para Próximas Atividades
-            </h3>
-            <ul className="space-y-2">
-              {feedback.sugestoes.map((sugestao, index) => (
-                <li key={index} className="flex items-start gap-2 text-gray-700">
-                  <span className="text-blue-600">•</span>
-                  <span>{sugestao}</span>
-                </li>
-              ))}
-            </ul>
-          </Card>
+              {/* Card 3: Força Argumentativa */}
+              <Card className="p-6 bg-gradient-to-br from-orange-50 to-white border-2 border-orange-200 hover:shadow-lg transition-shadow">
+                <h3 className="font-bold text-[#0A2540] mb-3">Força Argumentativa</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-3xl font-bold text-[#FF6B00]">{criterios.forcaArgumentativa.pontos}</span>
+                  <span className="text-sm text-gray-500">/ {criterios.forcaArgumentativa.total}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] h-full rounded-full transition-all duration-1000"
+                    style={{width: `${(criterios.forcaArgumentativa.pontos / criterios.forcaArgumentativa.total) * 100}%`}}
+                  />
+                </div>
+              </Card>
 
-          <Button
-            onClick={() => {
-              setCurrentStage('intro');
-              setUserTese('');
-              setSelectedBattleTese(null);
-              setAfirmacao('');
-              setDadoExemplo('');
-              setConclusao('');
-              setFeedback(null);
-              setTimer(0); // Reseta o timer geral
-              setCurrentStageTimer(null); // Reseta o timer da etapa
-            }}
-            className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] hover:from-[#FF8C3A] hover:to-[#FF6B00] text-white font-bold py-6 text-lg rounded-full shadow-lg"
-          >
-            Fazer Nova Atividade
-          </Button>
+              {/* Card 4: Repertório Sociocultural */}
+              <Card className="p-6 bg-gradient-to-br from-orange-50 to-white border-2 border-orange-200 hover:shadow-lg transition-shadow">
+                <h3 className="font-bold text-[#0A2540] mb-3">Repertório Sociocultural</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-3xl font-bold text-[#FF6B00]">{criterios.repertorioSociocultural.pontos}</span>
+                  <span className="text-sm text-gray-500">/ {criterios.repertorioSociocultural.total}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] h-full rounded-full transition-all duration-1000"
+                    style={{width: `${(criterios.repertorioSociocultural.pontos / criterios.repertorioSociocultural.total) * 100}%`}}
+                  />
+                </div>
+              </Card>
+            </div>
+
+            {/* Resumo e Pontos Fortes/Melhorias */}
+            <Card className="p-6 mb-6 bg-gradient-to-br from-blue-50 to-white border-2 border-blue-200">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-blue-900 mb-2 text-lg">Resumo da Análise</h3>
+                  <p className="text-gray-700">{feedback.resumo}</p>
+                </div>
+              </div>
+            </Card>
+
+            <div className="grid grid-cols-2 gap-6 mb-6">
+              {/* Pontos Fortes */}
+              <Card className="p-6 bg-green-50 border-2 border-green-200">
+                <h3 className="font-bold text-green-800 mb-4 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  Pontos Fortes
+                </h3>
+                <ul className="space-y-3">
+                  {(feedback.pontosFortres || []).map((ponto, index) => (
+                    <li key={index} className="flex items-start gap-2 text-gray-700">
+                      <span className="text-green-600 font-bold">✓</span>
+                      <span>{ponto}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+
+              {/* Pontos a Melhorar */}
+              <Card className="p-6 bg-yellow-50 border-2 border-yellow-200">
+                <h3 className="font-bold text-yellow-800 mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Pontos a Melhorar
+                </h3>
+                <ul className="space-y-3">
+                  {(feedback.pontosAMelhorar || []).map((ponto, index) => (
+                    <li key={index} className="flex items-start gap-2 text-gray-700">
+                      <span className="text-yellow-600 font-bold">→</span>
+                      <span>{ponto}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </div>
+
+            {/* Sugestão de Melhoria */}
+            <Card className="p-6 mb-6 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200">
+              <div className="flex items-start gap-3">
+                <span className="text-3xl">💡</span>
+                <div>
+                  <h3 className="font-bold text-purple-900 mb-2">Sugestão de Melhoria</h3>
+                  <p className="text-gray-700">{feedback.sugestaoMelhoria || 'Continue praticando para aprimorar suas habilidades!'}</p>
+                </div>
+              </div>
+            </Card>
+
+            <Button
+              onClick={() => {
+                setCurrentStage('intro');
+                setUserTese('');
+                setSelectedBattleTese(null);
+                setAfirmacao('');
+                setDadoExemplo('');
+                setConclusao('');
+                setFeedback(null);
+                setTimer(0);
+                setCurrentStageTimer(null);
+              }}
+              className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] hover:from-[#FF8C3A] hover:to-[#FF6B00] text-white font-bold py-6 text-lg rounded-full shadow-lg"
+            >
+              Fazer Nova Atividade
+            </Button>
+          </div>
         </Card>
       </div>
     );

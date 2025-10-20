@@ -384,27 +384,55 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     if (activityType === 'tese-redacao') {
       console.log('📝 ActivityViewModal: Carregando dados para Tese da Redação');
       
-      // PRIORIDADE 1: Tentar carregar do constructed (gerado pela IA)
+      // PRIORIDADE 1: Verificar resultados salvos (se usuário já completou a atividade)
+      const resultsKey = `tese_redacao_results_${activity.id}`;
+      const savedResults = localStorage.getItem(resultsKey);
+      
+      if (savedResults) {
+        try {
+          const results = JSON.parse(savedResults);
+          console.log('✅ Resultados da atividade encontrados:', results);
+          
+          // Carregar dados completos incluindo respostas do usuário
+          contentToLoad = {
+            ...results,
+            title: activity.title || 'Tese da Redação',
+            temaRedacao: activity.customFields?.['Tema da Redação'] || activity.customFields?.temaRedacao || '',
+            objetivo: activity.customFields?.['Objetivos'] || activity.customFields?.objetivo || '',
+            nivelDificuldade: activity.customFields?.['Nível de Dificuldade'] || activity.customFields?.nivelDificuldade || 'Médio',
+            competenciasENEM: activity.customFields?.['Competências ENEM'] || activity.customFields?.competenciasENEM || '',
+            contextoAdicional: activity.customFields?.['Contexto Adicional'] || activity.customFields?.contextoAdicional || ''
+          };
+          
+          console.log('🎯 Conteúdo com resultados para TeseRedacaoPreview:', contentToLoad);
+          return <TeseRedacaoPreview content={contentToLoad} isLoading={false} />;
+        } catch (error) {
+          console.warn('⚠️ Erro ao carregar resultados:', error);
+        }
+      }
+      
+      // PRIORIDADE 2: Tentar carregar do constructed (gerado pela IA)
       const constructedKey = `constructed_tese-redacao_${activity.id}`;
       const constructedData = localStorage.getItem(constructedKey);
       
       if (constructedData) {
         try {
           const parsed = JSON.parse(constructedData);
-          // O conteúdo pode estar em parsed.data ou parsed diretamente
           const teseContent = parsed.data || parsed;
           
-          // Validar estrutura mínima
           if (teseContent.temaRedacao || teseContent.etapas || teseContent.etapa2_battleTeses) {
             console.log(`✅ Dados da Tese encontrados em ${constructedKey}:`, teseContent);
-            contentToLoad = teseContent;
+            contentToLoad = {
+              ...teseContent,
+              title: activity.title || teseContent.title || 'Tese da Redação'
+            };
           }
         } catch (error) {
           console.warn(`⚠️ Erro ao parsear ${constructedKey}:`, error);
         }
       }
       
-      // PRIORIDADE 2: Tentar activity_<id> (campos do formulário)
+      // PRIORIDADE 3: Tentar activity_<id> (campos do formulário)
       if (!contentToLoad) {
         const activityKey = `activity_${activity.id}`;
         const activityData = localStorage.getItem(activityKey);
@@ -429,7 +457,30 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           objetivo: activity.customFields?.['Objetivos'] || activity.customFields?.objetivo || '',
           nivelDificuldade: activity.customFields?.['Nível de Dificuldade'] || activity.customFields?.nivelDificuldade || 'Médio',
           competenciasENEM: activity.customFields?.['Competências ENEM'] || activity.customFields?.competenciasENEM || '',
-          contextoAdicional: activity.customFields?.['Contexto Adicional'] || activity.customFields?.contextoAdicional || ''
+          contextoAdicional: activity.customFields?.['Contexto Adicional'] || activity.customFields?.contextoAdicional || '',
+          etapas: [
+            { id: 1, nome: 'Crie sua tese', tempo: '5:00', descricao: 'Desenvolva uma tese clara' },
+            { id: 2, nome: 'Battle de teses', tempo: '5:00', descricao: 'Vote na melhor tese' },
+            { id: 3, nome: 'Argumentação', tempo: '8:00', descricao: 'Desenvolva argumento completo' }
+          ],
+          etapa1_crieTese: {
+            instrucoes: 'Desenvolva uma tese clara em até 2 linhas sobre o tema proposto',
+            limiteCaracteres: 200,
+            dicas: []
+          },
+          etapa2_battleTeses: {
+            instrucoes: 'Escolha a melhor tese e justifique',
+            tesesParaComparar: []
+          },
+          etapa3_argumentacao: {
+            instrucoes: 'Desenvolva um argumento completo em 3 sentenças',
+            estrutura: {
+              afirmacao: 'Apresente sua afirmação',
+              dadoExemplo: 'Forneça um dado ou exemplo',
+              conclusao: 'Conclua seu argumento'
+            },
+            dicas: []
+          }
         };
       }
       
