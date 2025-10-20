@@ -110,6 +110,8 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
     tesesParaComparar: []
   };
 
+  console.log('⚔️ [Battle] Teses para comparar:', etapa2.tesesParaComparar);
+
   const etapa3 = content.etapa3_argumentacao || {
     instrucoes: 'Desenvolva um argumento completo em 3 sentenças',
     estrutura: {
@@ -194,8 +196,8 @@ IMPORTANTE:
   // TELA INTRODUTÓRIA
   if (currentStage === 'intro') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 p-6">
-        <Card className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden">
+      <div className="min-h-screen p-6">
+        <Card className="max-w-4xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden">
           {/* Header laranja */}
           <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] text-white p-6 relative">
             <div className="flex justify-between items-start">
@@ -263,8 +265,8 @@ IMPORTANTE:
   // ETAPA 1: CRIE SUA TESE
   if (currentStage === 'etapa1') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 p-6">
-        <Card className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden">
+      <div className="min-h-screen p-6">
+        <Card className="max-w-4xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden">
           {/* Header laranja */}
           <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] text-white p-6 relative">
             <div className="flex justify-between items-start">
@@ -350,8 +352,8 @@ IMPORTANTE:
   // ETAPA 2: BATTLE DE TESES
   if (currentStage === 'etapa2') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 p-6">
-        <Card className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl p-8">
+      <div className="min-h-screen p-6">
+        <Card className="max-w-4xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8">
           <div className="flex items-start gap-4 mb-6">
             <div className="w-12 h-12 bg-gradient-to-br from-[#FF6B00] to-[#FF8C3A] text-white rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
               2
@@ -379,32 +381,54 @@ IMPORTANTE:
 
           {/* Teses para comparar */}
           <div className="space-y-3 mb-6">
-            {etapa2.tesesParaComparar.map((teseOption) => (
-              <Card
-                key={teseOption.id}
-                onClick={() => setSelectedBattleTese(teseOption.id)}
-                className={`p-4 cursor-pointer transition-all ${
-                  selectedBattleTese === teseOption.id
-                    ? 'border-2 border-[#FF6B00] bg-orange-50'
-                    : 'border-2 border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-gray-200 text-gray-700 rounded-full flex items-center justify-center font-bold">
-                    {teseOption.id}
+            {etapa2.tesesParaComparar && etapa2.tesesParaComparar.length > 0 ? (
+              etapa2.tesesParaComparar.map((teseOption) => (
+                <Card
+                  key={teseOption.id}
+                  onClick={() => setSelectedBattleTese(teseOption.id)}
+                  className={`p-4 cursor-pointer transition-all ${
+                    selectedBattleTese === teseOption.id
+                      ? 'border-2 border-[#FF6B00] bg-orange-50'
+                      : 'border-2 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    {/* Checkbox visual */}
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
+                      selectedBattleTese === teseOption.id
+                        ? 'border-[#FF6B00] bg-[#FF6B00]'
+                        : 'border-gray-400 bg-white'
+                    }`}>
+                      {selectedBattleTese === teseOption.id && (
+                        <CheckCircle className="w-4 h-4 text-white fill-white" />
+                      )}
+                    </div>
+                    
+                    {/* Badge com letra */}
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B00] to-[#FF8C3A] text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                      {teseOption.id}
+                    </div>
+                    
+                    {/* Conteúdo da tese */}
+                    <div className="flex-1">
+                      <p className={`text-base ${
+                        selectedBattleTese === teseOption.id ? 'text-[#0A2540] font-semibold' : 'text-gray-700'
+                      }`}>{teseOption.tese}</p>
+                      {selectedBattleTese === teseOption.id && (
+                        <div className="flex items-center gap-2 text-sm text-[#FF6B00] mt-2">
+                          <span className="font-semibold">✓ Selecionada</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-gray-700 mb-2">{teseOption.tese}</p>
-                    {selectedBattleTese === teseOption.id && (
-                      <div className="flex items-center gap-2 text-sm text-[#FF6B00]">
-                        <CheckCircle className="w-4 h-4" />
-                        <span className="font-semibold">Selecionada</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">⚠️ Nenhuma tese disponível para comparação</p>
+                <p className="text-sm text-gray-400 mt-2">As teses serão geradas pela IA do Gemini</p>
+              </div>
+            )}
           </div>
 
           <Button
@@ -422,8 +446,8 @@ IMPORTANTE:
   // ETAPA 3: ARGUMENTAÇÃO RELÂMPAGO
   if (currentStage === 'etapa3') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 p-6">
-        <Card className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl p-8">
+      <div className="min-h-screen p-6">
+        <Card className="max-w-4xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8">
           <div className="flex items-start gap-4 mb-6">
             <div className="w-12 h-12 bg-gradient-to-br from-[#FF6B00] to-[#FF8C3A] text-white rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
               3
@@ -514,8 +538,8 @@ IMPORTANTE:
   // TELA DE RESUMO E NOTA FINAL
   if (currentStage === 'resumo' && feedback) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50 p-6">
-        <Card className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl p-8">
+      <div className="min-h-screen p-6">
+        <Card className="max-w-4xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8">
           {/* Nota Principal */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-[#FF6B00] to-[#FF8C3A] text-white rounded-full mb-4">
