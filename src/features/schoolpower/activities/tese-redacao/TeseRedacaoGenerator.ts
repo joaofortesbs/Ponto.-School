@@ -30,6 +30,13 @@ export class TeseRedacaoGenerator {
 
   async generateTeseRedacaoContent(data: TeseRedacaoData): Promise<any> {
     console.log('🎯 [TeseRedacaoGenerator] Gerando conteúdo com dados:', data);
+    console.log('📋 [TeseRedacaoGenerator] Campos recebidos:', {
+      temaRedacao: data.temaRedacao,
+      nivelDificuldade: data.nivelDificuldade,
+      objetivo: data.objetivo,
+      competenciasENEM: data.competenciasENEM,
+      contextoAdicional: data.contextoAdicional || '(nenhum)'
+    });
 
     const prompt = `
 Você é um especialista em redação do ENEM. Gere conteúdo estruturado COMPLETO para uma atividade interativa de treino de teses de redação.
@@ -40,6 +47,9 @@ DADOS DA ATIVIDADE:
 - Objetivo: ${data.objetivo}
 - Competências ENEM: ${data.competenciasENEM}
 ${data.contextoAdicional ? `- Contexto Adicional: ${data.contextoAdicional}` : ''}
+
+⚠️ IMPORTANTE: Você DEVE gerar exatamente 3 TESES DIFERENTES para a etapa "Battle de Teses" (opções A, B e C).
+Cada tese deve ter abordagem ÚNICA sobre o tema "${data.temaRedacao}".
 
 GERE O SEGUINTE CONTEÚDO COMPLETO (RETORNE APENAS UM JSON VÁLIDO):
 {
@@ -127,26 +137,59 @@ IMPORTANTE:
 `;
 
     try {
+      console.log('🚀 [TeseRedacaoGenerator] Enviando prompt para API Gemini...');
+      console.log('📤 [TeseRedacaoGenerator] Tamanho do prompt:', prompt.length, 'caracteres');
+      
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
 
-      console.log('📥 [TeseRedacaoGenerator] Resposta bruta da API:', text);
+      console.log('📥 [TeseRedacaoGenerator] Resposta bruta da API:', text.substring(0, 500) + '...');
+      console.log('📏 [TeseRedacaoGenerator] Tamanho da resposta:', text.length, 'caracteres');
 
       // Extrair JSON da resposta
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
+        console.error('❌ [TeseRedacaoGenerator] Resposta não contém JSON válido!');
         throw new Error('Resposta da API não contém JSON válido');
       }
 
       const content = JSON.parse(jsonMatch[0]);
+      
+      console.log('✅ [TeseRedacaoGenerator] JSON parseado com sucesso');
+      console.log('🔍 [TeseRedacaoGenerator] Verificando teses do Battle...');
+      console.log('📊 [TeseRedacaoGenerator] etapa2_battleTeses:', content.etapa2_battleTeses);
+      console.log('📊 [TeseRedacaoGenerator] Número de teses:', content.etapa2_battleTeses?.tesesParaComparar?.length || 0);
 
-      // Garantir estrutura mínima
-      if (!content.tesesSugeridas || content.tesesSugeridas.length === 0) {
-        content.tesesSugeridas = this.generateFallbackTeses(data);
+      // Garantir estrutura mínima das teses do Battle
+      if (!content.etapa2_battleTeses || !content.etapa2_battleTeses.tesesParaComparar || content.etapa2_battleTeses.tesesParaComparar.length === 0) {
+        console.warn('⚠️ [TeseRedacaoGenerator] Teses do Battle não geradas pela IA! Usando fallback...');
+        content.etapa2_battleTeses = {
+          instrucoes: 'Vote na melhor tese e justifique sua escolha',
+          tesesParaComparar: [
+            {
+              id: 'A',
+              tese: `A ${data.temaRedacao} representa um desafio fundamental para a sociedade brasileira contemporânea, exigindo ações integradas entre poder público e sociedade civil.`,
+              pontosFortres: ['Clara e objetiva', 'Bem posicionada', 'Propõe integração']
+            },
+            {
+              id: 'B',
+              tese: `Os problemas relacionados a ${data.temaRedacao} refletem décadas de políticas insuficientes, demandando uma revisão profunda das estratégias adotadas.`,
+              pontosFortres: ['Crítica fundamentada', 'Contextualizada historicamente', 'Propositiva']
+            },
+            {
+              id: 'C',
+              tese: `Para superar os desafios de ${data.temaRedacao}, é essencial promover conscientização social aliada a investimentos em infraestrutura e educação.`,
+              pontosFortres: ['Abrangente', 'Propositiva', 'Multi-dimensional']
+            }
+          ]
+        };
+      } else {
+        console.log('✅ [TeseRedacaoGenerator] Teses geradas pela IA com sucesso!');
+        console.log('📝 [TeseRedacaoGenerator] Teses:', content.etapa2_battleTeses.tesesParaComparar.map((t: any) => ({ id: t.id, tese: t.tese.substring(0, 80) + '...' })));
       }
 
-      console.log('✅ [TeseRedacaoGenerator] Conteúdo gerado com sucesso:', content);
+      console.log('✅ [TeseRedacaoGenerator] Conteúdo final gerado com sucesso!');
       return content;
 
     } catch (error) {
