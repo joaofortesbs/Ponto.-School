@@ -82,7 +82,7 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
   const [streak, setStreak] = useState(2);
 
   // Armazenar ID da atividade globalmente para acesso no feedback
-  React.useEffect(() => {
+  useEffect(() => {
     if (content && (content as any).id) {
       (window as any).currentActivityId = (content as any).id;
       console.log('📋 [TeseRedacao] ID da atividade armazenado:', (content as any).id);

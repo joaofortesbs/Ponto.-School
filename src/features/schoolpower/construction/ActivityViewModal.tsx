@@ -69,15 +69,17 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       if (latestData) {
         try {
           const parsed = JSON.parse(latestData);
-          if (parsed.lastUpdate) {
+          if (parsed.lastUpdate && parsed.lastUpdate !== (activity as any).lastUpdate) {
             console.log('🔄 [AUTO-RELOAD] Detectada atualização, recarregando dados...');
-            window.location.reload();
+            // Forçar re-render ao invés de reload completo
+            setGeneratedContent(parsed);
+            setIsContentLoaded(true);
           }
         } catch (e) {
           console.warn('⚠️ Erro ao verificar atualizações:', e);
         }
       }
-    }, 1000); // Verificar a cada 1 segundo
+    }, 500); // Verificar a cada 500ms para ser mais responsivo
 
     return () => clearInterval(checkForUpdates);
   }, [activity?.id, isOpen]);

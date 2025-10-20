@@ -222,14 +222,20 @@ const EditActivityModal = ({
 
   // useEffect para aplicar dados carregados automaticamente ao formData
   useEffect(() => {
-    if (autoLoadedData && !isAutoLoading) {
+    if (autoLoadedData && !isAutoLoading && Object.keys(autoLoadedData).length > 0) {
       console.log('%c🔥 [MODAL] Aplicando dados do hook useActivityAutoLoad', 'background: #E91E63; color: white; font-size: 14px; padding: 5px; font-weight: bold; border-radius: 3px;', autoLoadedData);
       console.log('%c🔍 [MODAL] Estado ANTERIOR do formData:', 'background: #FF9800; color: white; font-size: 12px; padding: 5px;', formData);
       
       setFormData(prev => {
         const newFormData = {
           ...prev,
-          ...autoLoadedData
+          ...autoLoadedData,
+          // Garantir que campos vazios sejam sobrescritos
+          ...(autoLoadedData.temaRedacao && { temaRedacao: autoLoadedData.temaRedacao }),
+          ...(autoLoadedData.objetivo && { objetivo: autoLoadedData.objetivo }),
+          ...(autoLoadedData.nivelDificuldade && { nivelDificuldade: autoLoadedData.nivelDificuldade }),
+          ...(autoLoadedData.competenciasENEM && { competenciasENEM: autoLoadedData.competenciasENEM }),
+          ...(autoLoadedData.contextoAdicional && { contextoAdicional: autoLoadedData.contextoAdicional })
         };
         
         console.log('%c📝 [MODAL] Estado NOVO do formData após merge:', 'background: #2196F3; color: white; font-size: 12px; padding: 5px;', newFormData);
