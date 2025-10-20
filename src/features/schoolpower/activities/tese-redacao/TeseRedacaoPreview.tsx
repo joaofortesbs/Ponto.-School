@@ -71,6 +71,8 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
   } | null>(null);
   const [streak, setStreak] = useState(2);
 
+  console.log('📝 [TeseRedacaoPreview] Conteúdo recebido:', content);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -78,6 +80,45 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
       </div>
     );
   }
+
+  // Verificar se o conteúdo existe e tem as propriedades necessárias
+  if (!content) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-gray-600">Nenhum conteúdo disponível</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Valores padrão para campos opcionais
+  const etapas = content.etapas || [
+    { id: 1, nome: 'Crie sua tese', tempo: '5 min', descricao: 'Desenvolva uma tese clara' },
+    { id: 2, nome: 'Battle de teses', tempo: '5 min', descricao: 'Vote na melhor tese' },
+    { id: 3, nome: 'Argumentação', tempo: '8 min', descricao: 'Desenvolva argumento completo' }
+  ];
+
+  const etapa1 = content.etapa1_crieTese || {
+    instrucoes: 'Desenvolva uma tese clara em até 2 linhas sobre o tema proposto',
+    limiteCaracteres: 200,
+    dicas: []
+  };
+
+  const etapa2 = content.etapa2_battleTeses || {
+    instrucoes: 'Vote na melhor tese e justifique sua escolha',
+    tesesParaComparar: []
+  };
+
+  const etapa3 = content.etapa3_argumentacao || {
+    instrucoes: 'Desenvolva um argumento completo em 3 sentenças',
+    estrutura: {
+      afirmacao: 'Apresente sua afirmação',
+      dadoExemplo: 'Forneça um dado ou exemplo',
+      conclusao: 'Conclua seu argumento'
+    },
+    dicas: []
+  };
 
   // Função para gerar feedback final com Gemini API
   const generateFinalFeedback = async () => {
@@ -188,7 +229,7 @@ IMPORTANTE:
 
             {/* Cards das 3 etapas */}
             <div className="grid grid-cols-3 gap-4 mb-8">
-              {content.etapas.map((etapa, index) => (
+              {etapas.map((etapa, index) => (
                 <Card key={etapa.id} className="p-4 border-2 border-gray-200 hover:border-[#FF6B00] transition-all">
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B00] to-[#FF8C3A] text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">
@@ -256,7 +297,7 @@ IMPORTANTE:
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-[#0A2540] mb-1">Crie sua Tese</h2>
-                <p className="text-gray-600">{content.etapa1_crieTese.instrucoes}</p>
+                <p className="text-gray-600">{etapa1.instrucoes}</p>
               </div>
             </div>
 
@@ -276,11 +317,11 @@ IMPORTANTE:
                 value={userTese}
                 onChange={(e) => setUserTese(e.target.value)}
                 placeholder="Digite sua tese aqui..."
-                maxLength={content.etapa1_crieTese.limiteCaracteres}
+                maxLength={etapa1.limiteCaracteres}
                 className="min-h-[120px] text-base border-2 focus:border-[#FF6B00]"
               />
               <p className="text-sm text-gray-500 mt-1">
-                {userTese.length}/{content.etapa1_crieTese.limiteCaracteres} caracteres
+                {userTese.length}/{etapa1.limiteCaracteres} caracteres
               </p>
             </div>
 
@@ -317,7 +358,7 @@ IMPORTANTE:
             </div>
             <div>
               <h2 className="text-2xl font-bold text-[#0A2540] mb-1">Battle de Teses</h2>
-              <p className="text-gray-600">{content.etapa2_battleTeses.instrucoes}</p>
+              <p className="text-gray-600">{etapa2.instrucoes}</p>
             </div>
           </div>
 
@@ -338,7 +379,7 @@ IMPORTANTE:
 
           {/* Teses para comparar */}
           <div className="space-y-3 mb-6">
-            {content.etapa2_battleTeses.tesesParaComparar.map((teseOption) => (
+            {etapa2.tesesParaComparar.map((teseOption) => (
               <Card
                 key={teseOption.id}
                 onClick={() => setSelectedBattleTese(teseOption.id)}
@@ -389,7 +430,7 @@ IMPORTANTE:
             </div>
             <div>
               <h2 className="text-2xl font-bold text-[#0A2540] mb-1">Argumentação Relâmpago</h2>
-              <p className="text-gray-600">{content.etapa3_argumentacao.instrucoes}</p>
+              <p className="text-gray-600">{etapa3.instrucoes}</p>
             </div>
           </div>
 
