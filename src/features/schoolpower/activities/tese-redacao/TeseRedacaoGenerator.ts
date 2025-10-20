@@ -24,7 +24,7 @@ export class TeseRedacaoGenerator {
     console.log('🎯 [TeseRedacaoGenerator] Gerando conteúdo com dados:', data);
 
     const prompt = `
-Você é um especialista em redação do ENEM. Gere conteúdo estruturado para treino de teses de redação.
+Você é um especialista em redação do ENEM. Gere conteúdo estruturado COMPLETO para uma atividade interativa de treino de teses de redação.
 
 DADOS DA ATIVIDADE:
 - Tema da Redação: ${data.temaRedacao}
@@ -33,7 +33,7 @@ DADOS DA ATIVIDADE:
 - Competências ENEM: ${data.competenciasENEM}
 ${data.contextoAdicional ? `- Contexto Adicional: ${data.contextoAdicional}` : ''}
 
-GERE O SEGUINTE CONTEÚDO (RETORNE APENAS UM JSON VÁLIDO):
+GERE O SEGUINTE CONTEÚDO COMPLETO (RETORNE APENAS UM JSON VÁLIDO):
 {
   "title": "${data.title}",
   "temaRedacao": "${data.temaRedacao}",
@@ -41,28 +41,81 @@ GERE O SEGUINTE CONTEÚDO (RETORNE APENAS UM JSON VÁLIDO):
   "objetivo": "${data.objetivo}",
   "competenciasENEM": "${data.competenciasENEM}",
   "contextoAdicional": "${data.contextoAdicional || ''}",
-  "tesesSugeridas": [
+  
+  "tempoEstimado": "15-20 minutos",
+  "etapas": [
     {
       "id": 1,
-      "tese": "Tese completa e bem fundamentada",
-      "argumentos": ["Argumento 1", "Argumento 2", "Argumento 3"],
-      "explicacao": "Explicação detalhada da tese",
-      "pontosFortres": ["Ponto forte 1", "Ponto forte 2"],
-      "pontosMelhorar": ["Sugestão de melhoria 1"]
+      "nome": "Crie sua tese",
+      "tempo": "5 min",
+      "descricao": "Desenvolva uma tese clara em até 2 linhas"
+    },
+    {
+      "id": 2,
+      "nome": "Battle de teses",
+      "tempo": "5 min",
+      "descricao": "Vote na melhor tese e justifique"
+    },
+    {
+      "id": 3,
+      "nome": "Argumentação",
+      "tempo": "8 min",
+      "descricao": "Desenvolva argumento completo"
     }
   ],
-  "dicasGerais": ["Dica 1", "Dica 2", "Dica 3"],
+  
+  "etapa1_crieTese": {
+    "instrucoes": "Desenvolva uma tese clara em até 2 linhas sobre o tema proposto",
+    "limiteCaracteres": 200,
+    "dicas": ["Seja claro e objetivo", "Posicione-se sobre o tema", "Use linguagem formal"]
+  },
+  
+  "etapa2_battleTeses": {
+    "instrucoes": "Vote na melhor tese e justifique sua escolha",
+    "tesesParaComparar": [
+      {
+        "id": "A",
+        "tese": "Primeira tese bem fundamentada sobre o tema",
+        "pontosFortres": ["Clara", "Objetiva", "Bem posicionada"]
+      },
+      {
+        "id": "B",
+        "tese": "Segunda tese com abordagem diferente sobre o tema",
+        "pontosFortres": ["Propositiva", "Crítica", "Contextualizada"]
+      },
+      {
+        "id": "C",
+        "tese": "Terceira tese com outra perspectiva sobre o tema",
+        "pontosFortres": ["Abrangente", "Reflexiva", "Fundamentada"]
+      }
+    ]
+  },
+  
+  "etapa3_argumentacao": {
+    "instrucoes": "Desenvolva um argumento completo em 3 sentenças",
+    "estrutura": {
+      "afirmacao": "Apresente sua afirmação principal",
+      "dadoExemplo": "Forneça um dado ou exemplo concreto",
+      "conclusao": "Conclua seu argumento"
+    },
+    "dicas": ["Use dados reais", "Cite exemplos concretos", "Mantenha coerência"]
+  },
+  
   "criteriosAvaliacao": {
-    "competenciaII": "Critérios para Competência II",
-    "competenciaIII": "Critérios para Competência III"
-  }
+    "competenciaII": "Compreensão do tema e não fuga à proposta",
+    "competenciaIII": "Seleção, relação, organização e interpretação de argumentos",
+    "pontosAvaliados": ["Clareza da tese", "Qualidade dos argumentos", "Coerência textual", "Repertório sociocultural"]
+  },
+  
+  "dicasGerais": ["Leia atentamente o tema", "Desenvolva tese clara", "Use argumentos consistentes", "Mantenha coerência", "Revise antes de finalizar"]
 }
 
 IMPORTANTE:
-- Retorne APENAS o JSON, sem texto adicional
-- Gere pelo menos 3 teses sugeridas diferentes
-- Cada tese deve ser completa e bem argumentada
+- Retorne APENAS o JSON válido, sem texto adicional
+- Gere 3 teses DIFERENTES e BEM FUNDAMENTADAS para o Battle (etapa 2)
+- Cada tese deve ter abordagem única sobre o tema: ${data.temaRedacao}
 - Adapte ao nível de dificuldade: ${data.nivelDificuldade}
+- As teses devem ser realistas e aplicáveis ao ENEM
 `;
 
     try {
@@ -143,7 +196,72 @@ IMPORTANTE:
       objetivo: data.objetivo,
       competenciasENEM: data.competenciasENEM,
       contextoAdicional: data.contextoAdicional || '',
-      tesesSugeridas: this.generateFallbackTeses(data),
+      
+      tempoEstimado: '15-20 minutos',
+      etapas: [
+        {
+          id: 1,
+          nome: 'Crie sua tese',
+          tempo: '5 min',
+          descricao: 'Desenvolva uma tese clara em até 2 linhas'
+        },
+        {
+          id: 2,
+          nome: 'Battle de teses',
+          tempo: '5 min',
+          descricao: 'Vote na melhor tese e justifique'
+        },
+        {
+          id: 3,
+          nome: 'Argumentação',
+          tempo: '8 min',
+          descricao: 'Desenvolva argumento completo'
+        }
+      ],
+      
+      etapa1_crieTese: {
+        instrucoes: 'Desenvolva uma tese clara em até 2 linhas sobre o tema proposto',
+        limiteCaracteres: 200,
+        dicas: ['Seja claro e objetivo', 'Posicione-se sobre o tema', 'Use linguagem formal']
+      },
+      
+      etapa2_battleTeses: {
+        instrucoes: 'Vote na melhor tese e justifique sua escolha',
+        tesesParaComparar: [
+          {
+            id: 'A',
+            tese: `A mobilidade urbana brasileira enfrenta desafios estruturais que demandam investimento em transporte público e planejamento integrado.`,
+            pontosFortres: ['Clara e objetiva', 'Bem posicionada']
+          },
+          {
+            id: 'B',
+            tese: `Os problemas de mobilidade no Brasil refletem décadas de políticas priorizando automóveis em detrimento do transporte coletivo.`,
+            pontosFortres: ['Crítica', 'Contextualizada historicamente']
+          },
+          {
+            id: 'C',
+            tese: `Para superar os desafios da mobilidade urbana, é necessário promover conscientização e modernizar a infraestrutura das cidades.`,
+            pontosFortres: ['Propositiva', 'Abrangente']
+          }
+        ]
+      },
+      
+      etapa3_argumentacao: {
+        instrucoes: 'Desenvolva um argumento completo em 3 sentenças',
+        estrutura: {
+          afirmacao: 'Apresente sua afirmação principal',
+          dadoExemplo: 'Forneça um dado ou exemplo concreto',
+          conclusao: 'Conclua seu argumento'
+        },
+        dicas: ['Use dados reais', 'Cite exemplos concretos', 'Mantenha coerência']
+      },
+      
+      criteriosAvaliacao: {
+        competenciaII: 'Compreensão do tema e não fuga à proposta',
+        competenciaIII: 'Seleção, relação, organização e interpretação de argumentos',
+        pontosAvaliados: ['Clareza da tese', 'Qualidade dos argumentos', 'Coerência textual', 'Repertório sociocultural']
+      },
+      
       dicasGerais: [
         'Sempre leia atentamente o tema proposto',
         'Desenvolva uma tese clara e objetiva',
@@ -151,10 +269,7 @@ IMPORTANTE:
         'Mantenha a coerência textual',
         'Revise sua redação antes de finalizar'
       ],
-      criteriosAvaliacao: {
-        competenciaII: 'Compreensão do tema e não fuga à proposta',
-        competenciaIII: 'Seleção, relação, organização e interpretação de argumentos'
-      },
+      
       isFallback: true,
       generatedAt: new Date().toISOString()
     };
