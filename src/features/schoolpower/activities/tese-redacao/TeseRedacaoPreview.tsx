@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, Award, CheckCircle, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -54,6 +54,13 @@ interface TeseRedacaoPreviewProps {
   isLoading?: boolean;
 }
 
+// Função auxiliar para formatar o tempo
+const formatTime = (time: number) => {
+  const minutes = Math.floor(time / 60);
+  const seconds = time % 60;
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+};
+
 export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPreviewProps) {
   const [currentStage, setCurrentStage] = useState<'intro' | 'etapa1' | 'etapa2' | 'etapa3' | 'resumo'>('intro');
   const [userTese, setUserTese] = useState('');
@@ -70,6 +77,49 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
     sugestoes: string[];
   } | null>(null);
   const [streak, setStreak] = useState(2);
+
+  // Gerenciamento do cronômetro
+  const [timer, setTimer] = useState(0);
+  const [currentStageTimer, setCurrentStageTimer] = useState<number | null>(null); // Tempo em segundos para a etapa atual
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    if (currentStage !== 'intro' && currentStageTimer !== null && currentStageTimer > 0) {
+      interval = setInterval(() => {
+        setTimer(prevTimer => prevTimer - 1);
+      }, 1000);
+    } else if (currentStageTimer === 0) {
+      // Tempo esgotado para a etapa atual
+      // Lógica para avançar ou exibir alerta pode ser adicionada aqui
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [currentStage, currentStageTimer]);
+
+  // Atualiza o cronômetro quando a etapa muda
+  useEffect(() => {
+    if (content && content.etapas) {
+      const etapaAtual = content.etapas.find(etapa => {
+        switch (currentStage) {
+          case 'etapa1': return etapa.id === 1;
+          case 'etapa2': return etapa.id === 2;
+          case 'etapa3': return etapa.id === 3;
+          default: return false;
+        }
+      });
+
+      if (etapaAtual) {
+        // Converte o tempo da etapa (ex: '5 min') para segundos
+        const [minutes, seconds] = etapaAtual.tempo.split(':').map(Number);
+        const totalSeconds = (minutes || 0) * 60 + (seconds || 0);
+        setCurrentStageTimer(totalSeconds);
+        setTimer(totalSeconds); // Reinicia o timer para a nova etapa
+      }
+    }
+  }, [currentStage, content]);
 
   console.log('📝 [TeseRedacaoPreview] Conteúdo recebido:', content);
 
@@ -125,16 +175,16 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
   // Função para gerar feedback final com Gemini API
   const generateFinalFeedback = async () => {
     setIsGeneratingFeedback(true);
-    
+
     try {
       // Usar GEMINI_API_KEY do Replit Secrets
       const apiKey = import.meta.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || '';
-      
+
       if (!apiKey) {
         console.error('❌ [Feedback] GEMINI_API_KEY não encontrada!');
         throw new Error('API Key do Gemini não configurada');
       }
-      
+
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
@@ -217,7 +267,7 @@ IMPORTANTE:
                   <Clock className="w-5 h-5" />
                   <div>
                     <div className="text-xs opacity-90">TEMPO</div>
-                    <div className="text-2xl font-bold">0:00</div>
+                    <div className="text-2xl font-bold">{formatTime(timer)}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 bg-white/20 rounded-full px-3 py-1">
@@ -289,7 +339,7 @@ IMPORTANTE:
                   <Clock className="w-5 h-5" />
                   <div>
                     <div className="text-xs opacity-90">TEMPO</div>
-                    <div className="text-2xl font-bold">0:46</div>
+                    <div className="text-2xl font-bold">{formatTime(timer)}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 bg-white/20 rounded-full px-3 py-1 mt-2">
@@ -413,12 +463,12 @@ IMPORTANTE:
                         <CheckCircle className="w-4 h-4 text-white fill-white" />
                       )}
                     </div>
-                    
+
                     {/* Badge com letra */}
                     <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B00] to-[#FF8C3A] text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">
                       {teseOption.id}
                     </div>
-                    
+
                     {/* Conteúdo da tese */}
                     <div className="flex-1">
                       <p className={`text-base ${
@@ -619,6 +669,8 @@ IMPORTANTE:
               setDadoExemplo('');
               setConclusao('');
               setFeedback(null);
+              setTimer(0); // Reseta o timer geral
+              setCurrentStageTimer(null); // Reseta o timer da etapa
             }}
             className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] hover:from-[#FF8C3A] hover:to-[#FF6B00] text-white font-bold py-6 text-lg rounded-full shadow-lg"
           >
