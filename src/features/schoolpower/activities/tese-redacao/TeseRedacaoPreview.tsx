@@ -231,16 +231,12 @@ IMPORTANTE:
 
           {/* Conteúdo */}
           <div className="p-8">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-[#0A2540] mb-2">{content.temaRedacao}</h2>
-              <p className="text-gray-600">{content.objetivo}</p>
-            </div>
-
-            {/* Título do Tema - Destacado acima dos cards */}
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-[#0A2540] text-center bg-gradient-to-r from-orange-100 to-blue-100 rounded-lg py-3 px-6 border-2 border-[#FF6B00]">
-                📝 {content.temaRedacao}
-              </h3>
+            {/* Título do Tema - Destacado ACIMA de tudo */}
+            <div className="mb-8">
+              <div className="text-center mb-4">
+                <h2 className="text-4xl font-bold text-[#0A2540] mb-3">{content.temaRedacao}</h2>
+                <p className="text-lg text-gray-600">{content.objetivo}</p>
+              </div>
             </div>
 
             {/* Cards das 3 etapas */}

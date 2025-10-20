@@ -29,14 +29,17 @@ export class TeseRedacaoGenerator {
   }
 
   async generateTeseRedacaoContent(data: TeseRedacaoData): Promise<any> {
-    console.log('🎯 [TeseRedacaoGenerator] Gerando conteúdo com dados:', data);
-    console.log('📋 [TeseRedacaoGenerator] Campos recebidos:', {
-      temaRedacao: data.temaRedacao,
-      nivelDificuldade: data.nivelDificuldade,
-      objetivo: data.objetivo,
-      competenciasENEM: data.competenciasENEM,
-      contextoAdicional: data.contextoAdicional || '(nenhum)'
-    });
+    console.log('=====================================');
+    console.log('🎯 [TeseRedacaoGenerator] INICIANDO GERAÇÃO');
+    console.log('=====================================');
+    console.log('📊 [TeseRedacaoGenerator] Dados completos recebidos:', JSON.stringify(data, null, 2));
+    console.log('📋 [TeseRedacaoGenerator] Validação de campos:');
+    console.log('  ✓ Tema da Redação:', data.temaRedacao);
+    console.log('  ✓ Nível de Dificuldade:', data.nivelDificuldade);
+    console.log('  ✓ Objetivo:', data.objetivo);
+    console.log('  ✓ Competências ENEM:', data.competenciasENEM);
+    console.log('  ✓ Contexto Adicional:', data.contextoAdicional || '(não fornecido)');
+    console.log('=====================================');
 
     const prompt = `
 Você é um especialista em redação do ENEM. Gere conteúdo estruturado COMPLETO para uma atividade interativa de treino de teses de redação.
@@ -156,14 +159,28 @@ IMPORTANTE:
 
       const content = JSON.parse(jsonMatch[0]);
       
-      console.log('✅ [TeseRedacaoGenerator] JSON parseado com sucesso');
-      console.log('🔍 [TeseRedacaoGenerator] Verificando teses do Battle...');
-      console.log('📊 [TeseRedacaoGenerator] etapa2_battleTeses:', content.etapa2_battleTeses);
-      console.log('📊 [TeseRedacaoGenerator] Número de teses:', content.etapa2_battleTeses?.tesesParaComparar?.length || 0);
+      console.log('=====================================');
+      console.log('✅ [TeseRedacaoGenerator] JSON parseado com sucesso!');
+      console.log('=====================================');
+      console.log('🔍 [TeseRedacaoGenerator] Verificando conteúdo gerado:');
+      console.log('  📌 Título:', content.title);
+      console.log('  📌 Tema:', content.temaRedacao);
+      console.log('  📌 Etapas:', content.etapas?.length || 0);
+      console.log('');
+      console.log('🔍 [TeseRedacaoGenerator] Verificando TESES DO BATTLE:');
+      console.log('  📊 Objeto etapa2_battleTeses existe?', !!content.etapa2_battleTeses);
+      console.log('  📊 Array tesesParaComparar existe?', !!content.etapa2_battleTeses?.tesesParaComparar);
+      console.log('  📊 Número de teses geradas:', content.etapa2_battleTeses?.tesesParaComparar?.length || 0);
+      console.log('=====================================');
 
       // Garantir estrutura mínima das teses do Battle
       if (!content.etapa2_battleTeses || !content.etapa2_battleTeses.tesesParaComparar || content.etapa2_battleTeses.tesesParaComparar.length === 0) {
-        console.warn('⚠️ [TeseRedacaoGenerator] Teses do Battle não geradas pela IA! Usando fallback...');
+        console.warn('=====================================');
+        console.warn('⚠️  [TeseRedacaoGenerator] TESES NÃO GERADAS PELA IA!');
+        console.warn('=====================================');
+        console.warn('🔧 [TeseRedacaoGenerator] Gerando teses de fallback baseadas no tema...');
+        console.warn('📝 Tema usado para fallback:', data.temaRedacao);
+        
         content.etapa2_battleTeses = {
           instrucoes: 'Vote na melhor tese e justifique sua escolha',
           tesesParaComparar: [
@@ -184,9 +201,20 @@ IMPORTANTE:
             }
           ]
         };
+        
+        console.warn('✅ [TeseRedacaoGenerator] Teses de fallback geradas');
+        console.warn('=====================================');
       } else {
-        console.log('✅ [TeseRedacaoGenerator] Teses geradas pela IA com sucesso!');
-        console.log('📝 [TeseRedacaoGenerator] Teses:', content.etapa2_battleTeses.tesesParaComparar.map((t: any) => ({ id: t.id, tese: t.tese.substring(0, 80) + '...' })));
+        console.log('=====================================');
+        console.log('✅✅✅ [TeseRedacaoGenerator] TESES GERADAS PELA IA GEMINI COM SUCESSO! ✅✅✅');
+        console.log('=====================================');
+        console.log('📝 [TeseRedacaoGenerator] Detalhes das teses geradas:');
+        content.etapa2_battleTeses.tesesParaComparar.forEach((tese: any, index: number) => {
+          console.log(`\n  🔹 Tese ${index + 1} (ID: ${tese.id}):`);
+          console.log(`     Conteúdo: "${tese.tese.substring(0, 100)}..."`);
+          console.log(`     Pontos fortes: ${tese.pontosFortres?.join(', ') || 'N/A'}`);
+        });
+        console.log('=====================================');
       }
 
       console.log('✅ [TeseRedacaoGenerator] Conteúdo final gerado com sucesso!');

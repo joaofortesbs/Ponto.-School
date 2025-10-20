@@ -295,10 +295,17 @@ async function generateFlashCards(formData: ActivityFormData) {
 }
 
 async function generateTeseRedacao(formData: ActivityFormData) {
-  console.log('📝 [generateTeseRedacao] Iniciando geração com dados:', formData);
+  console.log('=====================================');
+  console.log('📝 [generateTeseRedacao] FUNÇÃO CHAMADA!');
+  console.log('=====================================');
+  console.log('📥 [generateTeseRedacao] FormData COMPLETO recebido:');
+  console.log(JSON.stringify(formData, null, 2));
+  console.log('=====================================');
 
   try {
+    console.log('📦 [generateTeseRedacao] Importando TeseRedacaoGenerator...');
     const { TeseRedacaoGenerator } = await import('@/features/schoolpower/activities/tese-redacao/TeseRedacaoGenerator');
+    console.log('✅ [generateTeseRedacao] TeseRedacaoGenerator importado com sucesso');
 
     const teseData = {
       title: formData.title || 'Tese da Redação',
@@ -309,12 +316,23 @@ async function generateTeseRedacao(formData: ActivityFormData) {
       contextoAdicional: formData.contextoAdicional || formData.context || ''
     };
 
-    console.log('📝 Dados estruturados para Gemini:', teseData);
+    console.log('=====================================');
+    console.log('📝 [generateTeseRedacao] Dados estruturados para o Generator:');
+    console.log(JSON.stringify(teseData, null, 2));
+    console.log('=====================================');
 
+    console.log('🚀 [generateTeseRedacao] Criando instância do Generator...');
     const generator = new TeseRedacaoGenerator();
+    
+    console.log('🚀 [generateTeseRedacao] Chamando generateTeseRedacaoContent...');
     const generatedContent = await generator.generateTeseRedacaoContent(teseData);
 
-    console.log('✅ Conteúdo gerado pela API Gemini:', generatedContent);
+    console.log('=====================================');
+    console.log('✅✅✅ [generateTeseRedacao] CONTEÚDO GERADO COM SUCESSO!');
+    console.log('=====================================');
+    console.log('📦 [generateTeseRedacao] Conteúdo gerado pela API Gemini:');
+    console.log(JSON.stringify(generatedContent, null, 2).substring(0, 1000) + '...');
+    console.log('=====================================');
 
     const finalContent = {
       ...generatedContent,
