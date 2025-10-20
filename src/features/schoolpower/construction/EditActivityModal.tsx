@@ -23,6 +23,7 @@ import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequenci
 import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
 import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-interativo/QuizInterativoPreview';
 import FlashCardsPreview from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
+import TeseRedacaoPreview from '@/features/schoolpower/activities/tese-redacao/TeseRedacaoPreview';
 import { CheckCircle2 } from 'lucide-react';
 import * as profileService from "@/services/profileService";
 import * as activitiesApi from "@/services/activitiesApiService";
@@ -182,6 +183,7 @@ const EditActivityModal = ({
   const [generatedContent, setGeneratedContent] = useState<any>(null);
   const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
   const [flashCardsContent, setFlashCardsContent] = useState<any>(null); // New state for Flash Cards content
+  const [teseRedacaoContent, setTeseRedacaoContent] = useState<any>(null); // New state for Tese de Redação content
   const [isContentLoaded, setIsContentLoaded] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
@@ -998,7 +1000,8 @@ const EditActivityModal = ({
         ...updatedActivity,
         ...(generatedContent && { generatedContent }),
         ...(quizInterativoContent && { quizInterativoContent }),
-        ...(flashCardsContent && { flashCardsContent })
+        ...(flashCardsContent && { flashCardsContent }),
+        ...(teseRedacaoContent && { teseRedacaoContent })
       };
 
       // NOVA FUNCIONALIDADE: Salvar diretamente no banco Neon
@@ -1102,8 +1105,7 @@ const EditActivityModal = ({
       const quadroInterativoSpecificData = localStorage.getItem(`quadro_interativo_data_${activity.id}`);
       const quizInterativoSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`);
       const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
-
-      // REMOVIDO: Lógica de carregamento da Tese da Redação agora está centralizada no hook useActivityAutoLoad (linhas 616-638)
+      const teseRedacaoSavedContent = localStorage.getItem(`constructed_tese-redacao_${activity.id}`);
 
       let contentToLoad = null;
       if (activity.id === 'sequencia-didatica' && sequenciaDidaticaSavedContent) {
@@ -1182,6 +1184,29 @@ const EditActivityModal = ({
           }
         } catch (error) {
           console.error('❌ Erro ao parsear conteúdo específico de Flash Cards:', error);
+          contentToLoad = null;
+        }
+      } else if (activity.id === 'tese-redacao' && teseRedacaoSavedContent) { // Check for Tese de Redação content
+        try {
+          const parsedContent = JSON.parse(teseRedacaoSavedContent);
+          contentToLoad = parsedContent.data || parsedContent;
+
+          console.log('📝 Tese de Redação - Conteúdo parseado:', contentToLoad);
+
+          // Validar se o conteúdo tem a estrutura esperada
+          const hasValidContent = contentToLoad &&
+                                 (contentToLoad.temaRedacao || contentToLoad.etapa1_intro);
+
+          if (hasValidContent) {
+            console.log(`✅ Conteúdo específico da Tese de Redação encontrado para: ${activity.id}`, contentToLoad);
+            setTeseRedacaoContent(contentToLoad); // Set the specific state for Tese de Redação
+            setIsContentLoaded(true);
+          } else {
+            console.warn('⚠️ Conteúdo da Tese de Redação encontrado mas sem estrutura válida:', contentToLoad);
+            contentToLoad = null;
+          }
+        } catch (error) {
+          console.error('❌ Erro ao parsear conteúdo específico da Tese de Redação:', error);
           contentToLoad = null;
         }
       } else if (constructedActivities[activity.id]?.generatedContent) {
@@ -2061,6 +2086,17 @@ const EditActivityModal = ({
         console.log('💾 Flash Cards processados e salvos:', flashCardsData);
       }
 
+      // Trigger específico para Tese de Redação
+      if (activityType === 'tese-redacao') {
+        console.log('📝 Processamento específico concluído para Tese de Redação');
+
+        const teseRedacaoData = result.data || result;
+        setTeseRedacaoContent(teseRedacaoData);
+        setIsContentLoaded(true);
+
+        console.log('💾 Tese de Redação processada e salva:', teseRedacaoData);
+      }
+
 
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       constructedActivities[activity.id] = {
@@ -2478,7 +2514,7 @@ const EditActivityModal = ({
             {activeTab === 'preview' && (
               <div className="h-full">
                 <div className="border rounded-lg h-full overflow-hidden bg-white dark:bg-gray-800">
-                  {(isContentLoaded && (generatedContent || quizInterativoContent || flashCardsContent)) ? (
+                  {(isContentLoaded && (generatedContent || quizInterativoContent || flashCardsContent || teseRedacaoContent)) ? (
                     activity?.id === 'plano-aula' ? (
                       <PlanoAulaPreview
                         data={generatedContent}
@@ -2529,22 +2565,10 @@ const EditActivityModal = ({
                         isLoading={isBuilding}
                       />
                     ) : activity?.id === 'tese-redacao' ? ( // Preview para Tese da Redação
-                      <div className="p-6 flex flex-col items-center justify-center h-full text-center">
-                        <PenTool className="h-16 w-16 text-gray-400 mb-4" />
-                        <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                          Tese da Redação Gerada
-                        </h4>
-                        <div className="text-left space-y-2 text-gray-700 dark:text-gray-300">
-                          <p><strong>Tema:</strong> {formData.temaRedacao}</p>
-                          <p><strong>Objetivos:</strong> {formData.objetivo?.split('\n').map((line: string, i: number) => <span key={i}>{line}<br/></span>)}</p>
-                          <p><strong>Nível de Dificuldade:</strong> {formData.nivelDificuldade}</p>
-                          <p><strong>Competências ENEM:</strong> {formData.competenciasENEM}</p>
-                          <p><strong>Contexto Adicional:</strong> {formData.contextoAdicional}</p>
-                        </div>
-                        <p className="text-sm text-gray-500 mt-4">
-                          Esta é uma pré-visualização dos dados inseridos. A geração do texto da redação em si ocorrerá em outra etapa.
-                        </p>
-                      </div>
+                      <TeseRedacaoPreview // Use the specific preview component for Tese de Redação
+                        content={teseRedacaoContent || generatedContent}
+                        isLoading={isBuilding}
+                      />
                     ) : (
                       <ActivityPreview
                         content={generatedContent || formData}
@@ -2585,12 +2609,12 @@ const EditActivityModal = ({
             <X className="w-4 h-4 mr-2" />
             Fechar
           </Button>
-            {(generatedContent || quizInterativoContent || flashCardsContent) && (
+            {(generatedContent || quizInterativoContent || flashCardsContent || teseRedacaoContent) && (
                 <>
                   <Button
                     variant="outline"
                     onClick={() => {
-                      const contentToCopy = flashCardsContent || quizInterativoContent || generatedContent;
+                      const contentToCopy = teseRedacaoContent || flashCardsContent || quizInterativoContent || generatedContent;
                       navigator.clipboard.writeText(JSON.stringify(contentToCopy, null, 2));
                       toast({
                         title: "Conteúdo copiado!",
@@ -2603,13 +2627,14 @@ const EditActivityModal = ({
                   </Button>
                 </>
               )}
-             {(generatedContent || quizInterativoContent || flashCardsContent) && (
+             {(generatedContent || quizInterativoContent || flashCardsContent || teseRedacaoContent) && (
               <Button
                 variant="outline"
                 onClick={() => {
                   clearContent(); // Clear generic content
                   setQuizInterativoContent(null); // Clear specific quiz content
                   setFlashCardsContent(null); // Clear specific flashcards content
+                  setTeseRedacaoContent(null); // Clear specific tese redação content
                   setIsContentLoaded(false); // Reset content loaded state
                   toast({
                     title: "Conteúdo Limpo",

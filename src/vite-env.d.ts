@@ -18,6 +18,8 @@ interface Window {
 
 interface ImportMetaEnv {
   readonly VITE_SENDGRID_API_KEY: string;
+  readonly GEMINI_API_KEY: string;
+  readonly VITE_GEMINI_API_KEY: string;
   readonly MODE: string;
   readonly DEV: boolean;
   readonly PROD: boolean;
