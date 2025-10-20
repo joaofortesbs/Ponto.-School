@@ -462,74 +462,7 @@ export class AutoBuildService {
     return formData;
   }
 
-  /**
-   * Gera o conteúdo da atividade Tese da Redação usando a API Gemini.
-   */
-  private async generateTeseRedacaoContent(formData: any, activityId: string): Promise<void> {
-    console.log('🤖 [TESE REDAÇÃO] Iniciando geração de conteúdo via Gemini...');
-
-    try {
-      // Importar dinamicamente o gerador
-      const { TeseRedacaoGenerator } = await import('@/features/schoolpower/activities/tese-redacao');
-      const generator = new TeseRedacaoGenerator();
-
-      // Construir os dados de entrada para o gerador
-      const generationData = {
-        title: formData.title || 'Tese da Redação',
-        theme: formData.theme || 'Tema Geral',
-        subject: formData.subject || 'Português',
-        schoolYear: formData.schoolYear || 'Ensino Médio',
-        contextoUso: formData.context || 'Estudos e revisão',
-        difficultyLevel: formData.difficultyLevel || 'Médio',
-        objectives: formData.objectives || `Desenvolver a habilidade de argumentação em redações`,
-        instructions: formData.instructions || 'Siga as instruções para construir sua tese.',
-        evaluation: formData.evaluation || 'Avalie a qualidade da argumentação e coesão.',
-        // Outros campos relevantes para Tese da Redação
-        competencies: formData.competencies || '',
-        knowledgeArea: formData.knowledgeArea || '',
-        complexityLevel: formData.complexityLevel || '',
-        language: formData.language || 'Português'
-      };
-
-      console.log('🤖 [TESE REDAÇÃO] Dados para geração:', generationData);
-
-      // Gerar o conteúdo
-      const result = await generator.generateTeseRedacao(generationData);
-
-      if (result && result.generatedText) {
-        console.log('✅ [TESE REDAÇÃO] Conteúdo gerado com sucesso!');
-
-        // Salvar o conteúdo gerado no localStorage
-        const storageKey = `generated_tese-redacao_${activityId}`; // Chave específica para Tese
-        const generatedContent = {
-          success: true,
-          data: {
-            generatedText: result.generatedText,
-            // Adicionar outros campos relevantes do resultado, se houver
-          },
-          timestamp: new Date().toISOString()
-        };
-        localStorage.setItem(storageKey, JSON.stringify(generatedContent));
-
-        // Salvar no localStorage 'activity_<id>' para compatibilidade com o modal de visualização
-        localStorage.setItem(`activity_${activityId}`, JSON.stringify({
-          ...result.generatedText, // Assumindo que generatedText contém a estrutura esperada
-          generatedAt: new Date().toISOString(),
-          activityId: activityId,
-          activityType: 'tese-redacao',
-          formData: generationData
-        }));
-
-        console.log(`✅ [TESE REDAÇÃO] Conteúdo salvo em localStorage: ${storageKey}`);
-      } else {
-        console.error('❌ [TESE REDAÇÃO] Resultado inválido ou vazio:', result);
-        throw new Error('Falha na geração do conteúdo da Tese da Redação pela IA');
-      }
-    } catch (error) {
-      console.error('❌ [TESE REDAÇÃO] Erro na geração de conteúdo:', error);
-      throw error; // Rejeita a promessa para que o fluxo de erro seja tratado
-    }
-  }
+  
 
 
   private async buildActivityWithExactModalLogic(activity: ConstructionActivity): Promise<void> {
@@ -716,34 +649,68 @@ export class AutoBuildService {
       if (activity.id === 'tese-redacao') {
         console.log('📝 [AUTO-BUILD] Processando Tese da Redação');
 
-        // Preparar dados da Tese da Redação
-        const teseData = await this.prepareFormDataExactlyLikeModal(activity);
-
-        // Gerar conteúdo via API Gemini
-        await this.generateTeseRedacaoContent(teseData, activity.id);
-
-        // Marcar como construída
-        const constructedKey = `constructed_tese-redacao_${activity.id}`;
-        const constructedData = {
-          activityId: activity.id,
-          formData: teseData,
-          status: 'completed',
-          type: 'tese-redacao'
+        // Preparar dados da Tese da Redação com campos corretos
+        const teseFormData = {
+          title: activity.title || 'Tese da Redação',
+          temaRedacao: activity.customFields?.['Tema da Redação'] || activity.customFields?.temaRedacao || activity.title || 'Tema da Redação',
+          objetivo: activity.customFields?.['Objetivos'] || activity.customFields?.objetivo || activity.description || 'Desenvolver habilidades argumentativas',
+          nivelDificuldade: activity.customFields?.['Nível de Dificuldade'] || activity.customFields?.nivelDificuldade || 'Médio',
+          competenciasENEM: activity.customFields?.['Competências ENEM'] || activity.customFields?.competenciasENEM || 'Competência II e III',
+          contextoAdicional: activity.customFields?.['Contexto Adicional'] || activity.customFields?.contextoAdicional || ''
         };
-        localStorage.setItem(constructedKey, JSON.stringify(constructedData));
 
-        // Atualizar status da atividade
-        activity.isBuilt = true;
-        activity.builtAt = new Date().toISOString();
-        activity.progress = 100;
-        activity.status = 'completed';
+        console.log('📋 [TESE REDAÇÃO] Dados preparados para geração:', teseFormData);
 
-        // Salvamento automático no banco de dados
-        console.log('💾 [TESE REDAÇÃO] Atividade concluída, iniciando salvamento automático...');
-        await this.saveActivityToDatabase(activity);
+        try {
+          // Importar o gerador
+          const { TeseRedacaoGenerator } = await import('@/features/schoolpower/activities/tese-redacao');
+          const generator = new TeseRedacaoGenerator();
 
-        console.log('✅ [AUTO-BUILD] Tese da Redação construída com sucesso');
+          // Gerar conteúdo via Gemini
+          const generatedContent = await generator.generateTeseRedacaoContent(teseFormData);
 
+          console.log('✅ [TESE REDAÇÃO] Conteúdo gerado pela IA:', generatedContent);
+
+          // Salvar no localStorage com ESTRUTURA CORRETA
+          const constructedKey = `constructed_tese-redacao_${activity.id}`;
+          const constructedData = {
+            success: true,
+            data: generatedContent, // Conteúdo completo da IA
+            timestamp: new Date().toISOString(),
+            activityId: activity.id,
+            formData: teseFormData
+          };
+          localStorage.setItem(constructedKey, JSON.stringify(constructedData));
+          console.log(`💾 [TESE REDAÇÃO] Salvo em ${constructedKey}`);
+
+          // TAMBÉM salvar em activity_<id> para compatibilidade
+          localStorage.setItem(`activity_${activity.id}`, JSON.stringify(generatedContent));
+
+          // Marcar no constructedActivities GLOBAL
+          const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+          constructedActivities[activity.id] = {
+            isBuilt: true,
+            builtAt: new Date().toISOString(),
+            formData: teseFormData,
+            generatedContent: generatedContent
+          };
+          localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+
+          // Atualizar status da atividade
+          activity.isBuilt = true;
+          activity.builtAt = new Date().toISOString();
+          activity.progress = 100;
+          activity.status = 'completed';
+
+          // Salvamento automático no banco
+          await this.saveActivityToDatabase(activity);
+
+          console.log('✅ [AUTO-BUILD] Tese da Redação construída com sucesso');
+
+        } catch (error) {
+          console.error('❌ [TESE REDAÇÃO] Erro na geração:', error);
+          throw error;
+        }
       } else if (activity.id === 'quadro-interativo') {
         console.log('🎯 [AUTO-BUILD] Processando Quadro Interativo');
 

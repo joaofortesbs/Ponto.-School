@@ -383,33 +383,57 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     // 1. Tese da Redação
     if (activityType === 'tese-redacao') {
       console.log('📝 ActivityViewModal: Carregando dados para Tese da Redação');
-      // Tentar carregar do localStorage, priorizando caches específicos
-      const teseKeys = [
-        `constructed_tese-redacao_${activity.id}`,
-        `activity_${activity.id}`,
-        `activity_fields_${activity.id}`
-      ];
-      for (const key of teseKeys) {
-        const data = localStorage.getItem(key);
-        if (data) {
+      
+      // PRIORIDADE 1: Tentar carregar do constructed (gerado pela IA)
+      const constructedKey = `constructed_tese-redacao_${activity.id}`;
+      const constructedData = localStorage.getItem(constructedKey);
+      
+      if (constructedData) {
+        try {
+          const parsed = JSON.parse(constructedData);
+          // O conteúdo pode estar em parsed.data ou parsed diretamente
+          const teseContent = parsed.data || parsed;
+          
+          // Validar estrutura mínima
+          if (teseContent.temaRedacao || teseContent.etapas || teseContent.etapa2_battleTeses) {
+            console.log(`✅ Dados da Tese encontrados em ${constructedKey}:`, teseContent);
+            contentToLoad = teseContent;
+          }
+        } catch (error) {
+          console.warn(`⚠️ Erro ao parsear ${constructedKey}:`, error);
+        }
+      }
+      
+      // PRIORIDADE 2: Tentar activity_<id> (campos do formulário)
+      if (!contentToLoad) {
+        const activityKey = `activity_${activity.id}`;
+        const activityData = localStorage.getItem(activityKey);
+        
+        if (activityData) {
           try {
-            const parsedData = JSON.parse(data);
-            if (parsedData.tema || parsedData.argumentos || parsedData.proposta) { // Verificações básicas de conteúdo
-              contentToLoad = parsedData;
-              console.log(`✅ Dados da Tese da Redação encontrados em ${key}:`, contentToLoad);
-              break;
-            }
+            const parsed = JSON.parse(activityData);
+            console.log(`✅ Dados encontrados em ${activityKey}:`, parsed);
+            contentToLoad = parsed;
           } catch (error) {
-            console.warn(`⚠️ Erro ao parsear dados da Tese da Redação de ${key}:`, error);
+            console.warn(`⚠️ Erro ao parsear ${activityKey}:`, error);
           }
         }
       }
-      // Se não encontrou nada específico, usar os dados gerais de previewData
+      
+      // FALLBACK: Usar campos customizados da atividade
       if (!contentToLoad) {
-        contentToLoad = previewData;
-        console.log('ℹ️ Nenhum conteúdo específico da Tese da Redação encontrado. Usando dados gerais.');
+        console.log('⚠️ Nenhum cache específico encontrado. Usando customFields da atividade.');
+        contentToLoad = {
+          title: activity.title || 'Tese da Redação',
+          temaRedacao: activity.customFields?.['Tema da Redação'] || activity.customFields?.temaRedacao || '',
+          objetivo: activity.customFields?.['Objetivos'] || activity.customFields?.objetivo || '',
+          nivelDificuldade: activity.customFields?.['Nível de Dificuldade'] || activity.customFields?.nivelDificuldade || 'Médio',
+          competenciasENEM: activity.customFields?.['Competências ENEM'] || activity.customFields?.competenciasENEM || '',
+          contextoAdicional: activity.customFields?.['Contexto Adicional'] || activity.customFields?.contextoAdicional || ''
+        };
       }
-      // Renderiza diretamente se encontrou conteúdo
+      
+      console.log('🎯 Conteúdo final para TeseRedacaoPreview:', contentToLoad);
       return <TeseRedacaoPreview content={contentToLoad} isLoading={false} />;
     }
 
