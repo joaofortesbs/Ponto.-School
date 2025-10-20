@@ -914,6 +914,62 @@ const EditActivityModal = ({
     }
   };
 
+  // Função para sincronizar dados instantaneamente
+  const syncDataToStorage = useCallback((activityId: string, data: any) => {
+    console.log('🔄 [SYNC] Sincronizando dados para:', activityId);
+    
+    // Salvar em múltiplas chaves para garantir acesso
+    const storageKeys = [
+      `activity_${activityId}`,
+      `activity_${activityId}_fields`,
+      `constructed_${activityId.split('_')[0]}_${activityId}`,
+      `constructedActivities`
+    ];
+
+    storageKeys.forEach(key => {
+      if (key === 'constructedActivities') {
+        const existing = JSON.parse(localStorage.getItem(key) || '{}');
+        existing[activityId] = {
+          ...existing[activityId],
+          ...data,
+          lastSync: new Date().toISOString()
+        };
+        localStorage.setItem(key, JSON.stringify(existing));
+      } else {
+        localStorage.setItem(key, JSON.stringify(data));
+      }
+    });
+
+    // Disparar evento para notificar outros componentes
+    window.dispatchEvent(new CustomEvent('activity-data-updated', {
+      detail: { activityId, data }
+    }));
+
+    console.log('✅ [SYNC] Dados sincronizados com sucesso');
+  }, []);
+
+  // Sincronizar dados a cada alteração no formData
+  useEffect(() => {
+    if (!activity?.id || !isOpen) return;
+
+    const syncTimeout = setTimeout(() => {
+      const dataToSync = {
+        title: formData.title,
+        description: formData.description,
+        customFields: {
+          ...activity.customFields,
+          ...formData
+        },
+        formData,
+        lastUpdate: new Date().toISOString()
+      };
+
+      syncDataToStorage(activity.id, dataToSync);
+    }, 300); // Debounce de 300ms
+
+    return () => clearTimeout(syncTimeout);
+  }, [formData, activity?.id, isOpen, syncDataToStorage]);
+
   // Função para salvar alterações
   const handleSave = async () => {
     if (!activity) return;

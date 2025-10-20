@@ -60,6 +60,63 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [flashCardsContent, setFlashCardsContent] = useState<any>(null);
   const [stars, setStars] = useState<number>(100);
 
+  // Auto-reload ao detectar mudanças no localStorage
+  useEffect(() => {
+    if (!activity?.id || !isOpen) return;
+
+    const checkForUpdates = setInterval(() => {
+      const latestData = localStorage.getItem(`activity_${activity.id}`);
+      if (latestData) {
+        try {
+          const parsed = JSON.parse(latestData);
+          if (parsed.lastUpdate) {
+            console.log('🔄 [AUTO-RELOAD] Detectada atualização, recarregando dados...');
+            window.location.reload();
+          }
+        } catch (e) {
+          console.warn('⚠️ Erro ao verificar atualizações:', e);
+        }
+      }
+    }, 1000); // Verificar a cada 1 segundo
+
+    return () => clearInterval(checkForUpdates);
+  }, [activity?.id, isOpen]);
+
+  // Carregar conteúdo construído quando o modal abrir
+  useEffect(() => {
+    if (activity && isOpen) {
+      console.log(`🔍 Verificando conteúdo construído para atividade: ${activity.id}`);
+      console.log(`📋 Dados da atividade recebida:`, activity);
+
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      const savedContent = localStorage.getItem(`activity_${activity.id}`);
+
+      // Tentar carregar dados diretamente do localStorage se disponíveis
+      if (savedContent) {
+        try {
+          const parsedContent = JSON.parse(savedContent);
+          console.log(`✅ Conteúdo encontrado no localStorage para ${activity.id}:`, parsedContent);
+
+          // Apenas para tipos específicos que precisam de um estado dedicado
+          if (activity.type === 'quiz-interativo') {
+            setQuizInterativoContent(parsedContent);
+          }
+          if (activity.type === 'flash-cards') {
+            setFlashCardsContent(parsedContent);
+          }
+        } catch (error) {
+          console.warn(`⚠️ Erro ao parsear conteúdo do localStorage para ${activity.id}:`, error);
+        }
+      } else if (constructedActivities[activity.id]) {
+        console.log(`✅ Conteúdo construído encontrado para ${activity.id}:`, constructedActivities[activity.id]);
+        // Similarmente, carregar para tipos específicos se necessário
+      } else {
+        console.log(`ℹ️ Nenhum conteúdo construído ou salvo encontrado para ${activity.id}. Usando dados originais.`);
+      }
+    }
+  }, [isOpen, activity?.id]); // Dependências: reexecuta quando o modal abre ou a atividade muda
+
+
   const handleDownload = async () => {
     if (!activity) return;
 
@@ -383,14 +440,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     // 1. Tese da Redação
     if (activityType === 'tese-redacao') {
       console.log('📝 ActivityViewModal: Carregando dados para Tese da Redação');
-      
+
       // PRIORIDADE 1: Verificar resultados salvos em múltiplas chaves
       const resultKeys = [
         `tese_redacao_results_${activity.id}`,
         `activity_${activity.id}_results`,
         `tese_redacao_latest_results`
       ];
-      
+
       let savedResults = null;
       for (const key of resultKeys) {
         const data = localStorage.getItem(key);
@@ -404,7 +461,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           }
         }
       }
-      
+
       if (savedResults && savedResults.feedback) {
         // Usuário já completou a atividade - carregar com resultados
         contentToLoad = {
@@ -423,20 +480,20 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             { id: 3, nome: 'Argumentação', tempo: '8:00', descricao: 'Desenvolva argumento completo' }
           ]
         };
-        
+
         console.log('🎯 Conteúdo com resultados completos para TeseRedacaoPreview:', contentToLoad);
         return <TeseRedacaoPreview content={contentToLoad} isLoading={false} />;
       }
-      
+
       // PRIORIDADE 2: Tentar carregar do constructed (gerado pela IA)
       const constructedKey = `constructed_tese-redacao_${activity.id}`;
       const constructedData = localStorage.getItem(constructedKey);
-      
+
       if (constructedData) {
         try {
           const parsed = JSON.parse(constructedData);
           const teseContent = parsed.data || parsed;
-          
+
           if (teseContent.temaRedacao || teseContent.etapas || teseContent.etapa2_battleTeses) {
             console.log(`✅ Dados da Tese encontrados em ${constructedKey}:`, teseContent);
             contentToLoad = {
@@ -448,12 +505,12 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           console.warn(`⚠️ Erro ao parsear ${constructedKey}:`, error);
         }
       }
-      
+
       // PRIORIDADE 3: Tentar activity_<id> (campos do formulário)
       if (!contentToLoad) {
         const activityKey = `activity_${activity.id}`;
         const activityData = localStorage.getItem(activityKey);
-        
+
         if (activityData) {
           try {
             const parsed = JSON.parse(activityData);
@@ -464,7 +521,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           }
         }
       }
-      
+
       // FALLBACK: Usar campos customizados da atividade
       if (!contentToLoad) {
         console.log('⚠️ Nenhum cache específico encontrado. Usando customFields da atividade.');
@@ -500,7 +557,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           }
         };
       }
-      
+
       console.log('🎯 Conteúdo final para TeseRedacaoPreview:', contentToLoad);
       return <TeseRedacaoPreview content={contentToLoad} isLoading={false} />;
     }
