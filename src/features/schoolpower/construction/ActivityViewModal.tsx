@@ -12,6 +12,7 @@ import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/Plano
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-interativo/QuizInterativoPreview';
 import FlashCardsPreview from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
+import TeseRedacaoPreview from '@/features/schoolpower/activities/tese-redacao/TeseRedacaoPreview';
 import { UniversalActivityHeader } from './components/UniversalActivityHeader';
 import { useUserInfo } from './hooks/useUserInfo';
 import { downloadActivity, isDownloadSupported, getDownloadFormatLabel } from '../Sistema-baixar-atividades';
@@ -646,6 +647,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('🃏 Renderizando FlashCardsPreview com dados:', previewData);
         return (
           <FlashCardsPreview
+            content={previewData}
+            isLoading={false}
+          />
+        );
+
+      case 'tese-redacao':
+        console.log('📝 Renderizando TeseRedacaoPreview com dados:', previewData);
+        return (
+          <TeseRedacaoPreview
             content={previewData}
             isLoading={false}
           />
