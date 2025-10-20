@@ -252,7 +252,7 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
 
       // Limpar markdown se existir
       let cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      
+
       // Tentar parsear diretamente
       let feedbackData;
       try {
@@ -268,17 +268,17 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
       }
 
       console.log('✅ [Gemini] Feedback parseado com sucesso:', feedbackData);
-      
+
       // Validar estrutura do feedback
       if (!feedbackData.pontuacaoTotal || !feedbackData.criterios) {
         throw new Error('Estrutura de feedback inválida');
       }
 
       setFeedback(feedbackData);
-      
+
       // Obter ID da atividade
       const activityId = (window as any).currentActivityId || 'preview';
-      
+
       // Salvar dados completos no localStorage
       const dataToSave = {
         userTese,
@@ -292,18 +292,18 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
         temaRedacao: content.temaRedacao,
         isFallback: false
       };
-      
+
       // Salvar em múltiplas chaves para garantir persistência
       localStorage.setItem(`tese_redacao_results_${activityId}`, JSON.stringify(dataToSave));
       localStorage.setItem(`activity_${activityId}_results`, JSON.stringify(dataToSave));
       localStorage.setItem(`tese_redacao_latest_results`, JSON.stringify(dataToSave));
-      
+
       console.log('💾 [Storage] Resultados salvos com sucesso em 3 chaves diferentes');
       console.log('📊 [Storage] Pontuação total:', feedbackData.pontuacaoTotal);
 
     } catch (error) {
       console.error('❌ [Gemini] Erro ao gerar feedback:', error);
-      
+
       // Fallback com dados realistas baseados nas respostas do usuário
       const calculateScore = (text: string, maxScore: number) => {
         if (!text || text.trim() === '') return Math.floor(maxScore * 0.3);
@@ -339,12 +339,12 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
         ],
         sugestaoMelhoria: 'Pratique conectando seus argumentos com dados estatísticos e exemplos do mundo real. Leia mais sobre o tema para enriquecer seu repertório sociocultural.'
       };
-      
+
       setFeedback(fallbackFeedback);
-      
+
       // Obter ID da atividade
       const activityId = (window as any).currentActivityId || 'preview';
-      
+
       // Salvar fallback
       const dataToSave = {
         userTese,
@@ -359,12 +359,12 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
         isFallback: true,
         errorMessage: error instanceof Error ? error.message : 'Erro desconhecido'
       };
-      
+
       // Salvar em múltiplas chaves
       localStorage.setItem(`tese_redacao_results_${activityId}`, JSON.stringify(dataToSave));
       localStorage.setItem(`activity_${activityId}_results`, JSON.stringify(dataToSave));
       localStorage.setItem(`tese_redacao_latest_results`, JSON.stringify(dataToSave));
-      
+
       console.log('💾 [Storage] Fallback salvo com sucesso');
     } finally {
       setIsGeneratingFeedback(false);
