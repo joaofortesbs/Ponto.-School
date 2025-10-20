@@ -384,31 +384,48 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     if (activityType === 'tese-redacao') {
       console.log('📝 ActivityViewModal: Carregando dados para Tese da Redação');
       
-      // PRIORIDADE 1: Verificar resultados salvos (se usuário já completou a atividade)
-      const resultsKey = `tese_redacao_results_${activity.id}`;
-      const savedResults = localStorage.getItem(resultsKey);
+      // PRIORIDADE 1: Verificar resultados salvos em múltiplas chaves
+      const resultKeys = [
+        `tese_redacao_results_${activity.id}`,
+        `activity_${activity.id}_results`,
+        `tese_redacao_latest_results`
+      ];
       
-      if (savedResults) {
-        try {
-          const results = JSON.parse(savedResults);
-          console.log('✅ Resultados da atividade encontrados:', results);
-          
-          // Carregar dados completos incluindo respostas do usuário
-          contentToLoad = {
-            ...results,
-            title: activity.title || 'Tese da Redação',
-            temaRedacao: activity.customFields?.['Tema da Redação'] || activity.customFields?.temaRedacao || '',
-            objetivo: activity.customFields?.['Objetivos'] || activity.customFields?.objetivo || '',
-            nivelDificuldade: activity.customFields?.['Nível de Dificuldade'] || activity.customFields?.nivelDificuldade || 'Médio',
-            competenciasENEM: activity.customFields?.['Competências ENEM'] || activity.customFields?.competenciasENEM || '',
-            contextoAdicional: activity.customFields?.['Contexto Adicional'] || activity.customFields?.contextoAdicional || ''
-          };
-          
-          console.log('🎯 Conteúdo com resultados para TeseRedacaoPreview:', contentToLoad);
-          return <TeseRedacaoPreview content={contentToLoad} isLoading={false} />;
-        } catch (error) {
-          console.warn('⚠️ Erro ao carregar resultados:', error);
+      let savedResults = null;
+      for (const key of resultKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            savedResults = JSON.parse(data);
+            console.log(`✅ Resultados encontrados em ${key}:`, savedResults);
+            break;
+          } catch (error) {
+            console.warn(`⚠️ Erro ao parsear ${key}:`, error);
+          }
         }
+      }
+      
+      if (savedResults && savedResults.feedback) {
+        // Usuário já completou a atividade - carregar com resultados
+        contentToLoad = {
+          ...savedResults,
+          id: activity.id,
+          title: activity.title || savedResults.temaRedacao || 'Tese da Redação',
+          temaRedacao: savedResults.temaRedacao || activity.customFields?.['Tema da Redação'] || activity.customFields?.temaRedacao || '',
+          objetivo: activity.customFields?.['Objetivos'] || activity.customFields?.objetivo || '',
+          nivelDificuldade: activity.customFields?.['Nível de Dificuldade'] || activity.customFields?.nivelDificuldade || 'Médio',
+          competenciasENEM: activity.customFields?.['Competências ENEM'] || activity.customFields?.competenciasENEM || '',
+          contextoAdicional: activity.customFields?.['Contexto Adicional'] || activity.customFields?.contextoAdicional || '',
+          // Incluir etapas padrão caso não existam
+          etapas: savedResults.etapas || [
+            { id: 1, nome: 'Crie sua tese', tempo: '5:00', descricao: 'Desenvolva uma tese clara' },
+            { id: 2, nome: 'Battle de teses', tempo: '5:00', descricao: 'Vote na melhor tese' },
+            { id: 3, nome: 'Argumentação', tempo: '8:00', descricao: 'Desenvolva argumento completo' }
+          ]
+        };
+        
+        console.log('🎯 Conteúdo com resultados completos para TeseRedacaoPreview:', contentToLoad);
+        return <TeseRedacaoPreview content={contentToLoad} isLoading={false} />;
       }
       
       // PRIORIDADE 2: Tentar carregar do constructed (gerado pela IA)
