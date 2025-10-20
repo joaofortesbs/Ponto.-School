@@ -127,7 +127,14 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
     setIsGeneratingFeedback(true);
     
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+      // Usar GEMINI_API_KEY do Replit Secrets
+      const apiKey = import.meta.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || '';
+      
+      if (!apiKey) {
+        console.error('❌ [Feedback] GEMINI_API_KEY não encontrada!');
+        throw new Error('API Key do Gemini não configurada');
+      }
+      
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
@@ -227,6 +234,13 @@ IMPORTANTE:
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-[#0A2540] mb-2">{content.temaRedacao}</h2>
               <p className="text-gray-600">{content.objetivo}</p>
+            </div>
+
+            {/* Título do Tema - Destacado acima dos cards */}
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-[#0A2540] text-center bg-gradient-to-r from-orange-100 to-blue-100 rounded-lg py-3 px-6 border-2 border-[#FF6B00]">
+                📝 {content.temaRedacao}
+              </h3>
             </div>
 
             {/* Cards das 3 etapas */}

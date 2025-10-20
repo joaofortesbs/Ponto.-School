@@ -15,7 +15,15 @@ export class TeseRedacaoGenerator {
   private model: any;
 
   constructor() {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+    // Usar GEMINI_API_KEY do Replit Secrets
+    const apiKey = import.meta.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || '';
+    
+    if (!apiKey) {
+      console.error('❌ [TeseRedacaoGenerator] GEMINI_API_KEY não encontrada nos Secrets!');
+    } else {
+      console.log('✅ [TeseRedacaoGenerator] API Key do Gemini encontrada');
+    }
+    
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
   }
