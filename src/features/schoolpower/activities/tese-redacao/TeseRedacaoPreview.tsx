@@ -374,69 +374,85 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
   // TELA INTRODUTÓRIA
   if (currentStage === 'intro') {
     return (
-      <div className="min-h-screen p-6">
-        <Card className="max-w-4xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden">
-          {/* Header laranja */}
-          <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] text-white p-6 relative">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-2xl font-bold mb-1">Tese & Argumentação</h1>
-                <p className="text-sm opacity-90">{content.competenciasENEM}</p>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-5 h-5" />
-                  <div>
-                    <div className="text-xs opacity-90">TEMPO</div>
-                    <div className="text-2xl font-bold">{formatTime(timer)}</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 bg-white/20 rounded-full px-3 py-1">
-                  <Award className="w-4 h-4" />
-                  <span className="text-sm font-semibold">{streak} dias</span>
-                  <span className="text-xs opacity-90">STREAK</span>
-                </div>
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 flex items-start justify-center p-4 pt-8">
+        <Card className="max-w-4xl w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border-2 border-orange-200/50 dark:border-orange-800/30">
+          {/* Header Premium com Gradiente */}
+          <div className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 dark:from-orange-600 dark:via-orange-700 dark:to-orange-800 text-white p-8 relative overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 bg-grid-pattern"></div>
+            </div>
+            
+            <div className="relative z-10">
+              <div className="text-center mb-6">
+                <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-white to-orange-100 bg-clip-text text-transparent">
+                  Tese & Argumentação
+                </h1>
+                <p className="text-lg opacity-90">{content.competenciasENEM}</p>
               </div>
             </div>
           </div>
 
           {/* Conteúdo */}
           <div className="p-8">
-            {/* Título do Tema - Destacado ACIMA de tudo */}
-            <div className="mb-8">
-              <div className="text-center mb-4">
-                <h2 className="text-4xl font-bold text-[#0A2540] mb-3">{content.temaRedacao}</h2>
-                <p className="text-lg text-gray-600">{content.objetivo}</p>
+            {/* Título do Tema - Destacado */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <div className="text-center mb-6">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent mb-3">
+                  {content.temaRedacao}
+                </h2>
+                <p className="text-lg text-gray-600 dark:text-gray-300">{content.objetivo}</p>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Cards das 3 etapas */}
-            <div className="grid grid-cols-3 gap-4 mb-8">
+            {/* Cards das 3 etapas com animação */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {etapas.map((etapa, index) => (
-                <Card key={etapa.id} className="p-4 border-2 border-gray-200 hover:border-[#FF6B00] transition-all">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B00] to-[#FF8C3A] text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-[#0A2540] mb-1">{etapa.nome}</h3>
-                      <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
-                        <Clock className="w-3 h-3" />
-                        <span>{etapa.tempo}</span>
+                <motion.div
+                  key={etapa.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02, y: -4 }}
+                  className="group"
+                >
+                  <Card className="p-6 bg-gradient-to-br from-white via-orange-50/30 to-orange-100/50 dark:from-gray-800 dark:via-gray-700 dark:to-orange-900/20 border-2 border-orange-200/60 dark:border-orange-700/50 hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-xl transition-all duration-300 rounded-2xl">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg flex-shrink-0 group-hover:scale-110 transition-transform">
+                        {index + 1}
                       </div>
-                      <p className="text-xs text-gray-500">{etapa.descricao}</p>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-gray-800 dark:text-white mb-2 text-lg">{etapa.nome}</h3>
+                        <div className="flex items-center gap-2 text-sm text-orange-600 dark:text-orange-400 mb-2">
+                          <Clock className="w-4 h-4" />
+                          <span className="font-semibold">{etapa.tempo}</span>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{etapa.descricao}</p>
+                      </div>
                     </div>
-                  </div>
-                </Card>
+                  </Card>
+                </motion.div>
               ))}
             </div>
 
-            <Button
-              onClick={() => setCurrentStage('etapa1')}
-              className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] hover:from-[#FF8C3A] hover:to-[#FF6B00] text-white font-bold py-6 text-lg rounded-full shadow-lg"
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              Começar minha tese →
-            </Button>
+              <Button
+                onClick={() => setCurrentStage('etapa1')}
+                className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white font-bold py-6 text-lg rounded-2xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-300"
+              >
+                Começar minha tese →
+              </Button>
+            </motion.div>
           </div>
         </Card>
       </div>
@@ -446,27 +462,24 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
   // ETAPA 1: CRIE SUA TESE
   if (currentStage === 'etapa1') {
     return (
-      <div className="min-h-screen p-6">
-        <Card className="max-w-4xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden">
-          {/* Header laranja */}
-          <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] text-white p-6 relative">
-            <div className="flex justify-between items-start">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 flex items-start justify-center p-4 pt-8">
+        <Card className="max-w-4xl w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border-2 border-orange-200/50 dark:border-orange-800/30">
+          {/* Header Premium */}
+          <div className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 dark:from-orange-600 dark:via-orange-700 dark:to-orange-800 text-white p-6 relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 bg-grid-pattern"></div>
+            </div>
+            
+            <div className="relative z-10 flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold mb-1">Tese & Argumentação</h1>
                 <p className="text-sm opacity-90">{content.competenciasENEM}</p>
               </div>
-              <div className="text-right">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  <div>
-                    <div className="text-xs opacity-90">TEMPO</div>
-                    <div className="text-2xl font-bold">{formatTime(timer)}</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 bg-white/20 rounded-full px-3 py-1 mt-2">
-                  <Award className="w-4 h-4" />
-                  <span className="text-sm font-semibold">{streak} dias</span>
-                  <span className="text-xs opacity-90">STREAK</span>
+              <div className="flex items-center gap-3 bg-white/20 backdrop-blur-sm rounded-2xl px-4 py-2">
+                <Clock className="w-5 h-5" />
+                <div>
+                  <div className="text-xs opacity-90">TEMPO</div>
+                  <div className="text-2xl font-bold">{formatTime(timer)}</div>
                 </div>
               </div>
             </div>
@@ -474,25 +487,37 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
 
           {/* Conteúdo */}
           <div className="p-8">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#FF6B00] to-[#FF8C3A] text-white rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start gap-4 mb-6"
+            >
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl flex items-center justify-center font-bold text-2xl shadow-lg flex-shrink-0">
                 1
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-[#0A2540] mb-1">Crie sua Tese</h2>
-                <p className="text-gray-600">{etapa1.instrucoes}</p>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent mb-2">
+                  Crie sua Tese
+                </h2>
+                <p className="text-gray-600 dark:text-gray-300 text-lg">{etapa1.instrucoes}</p>
               </div>
-            </div>
+            </motion.div>
 
-            <Card className="p-4 bg-orange-50 border-2 border-orange-200 mb-6">
-              <div className="flex items-start gap-2">
-                <span className="text-2xl">📋</span>
-                <div>
-                  <p className="font-semibold text-[#0A2540] mb-1">Tema:</p>
-                  <p className="text-gray-700">{content.temaRedacao}</p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/30 border-2 border-orange-200 dark:border-orange-700 mb-6 rounded-2xl shadow-lg">
+                <div className="flex items-start gap-3">
+                  <div className="text-3xl">📋</div>
+                  <div className="flex-1">
+                    <p className="font-bold text-orange-900 dark:text-orange-100 mb-2 text-lg">Tema:</p>
+                    <p className="text-gray-800 dark:text-gray-200 text-lg leading-relaxed">{content.temaRedacao}</p>
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </motion.div>
 
             <div className="mb-2">
               <label className="block text-sm font-semibold text-[#0A2540] mb-2">Sua tese:</label>
@@ -508,22 +533,38 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
               </p>
             </div>
 
-            <div className="flex gap-3 mt-6">
-              <Button
-                onClick={() => setCurrentStage('etapa2')}
-                disabled={!userTese.trim()}
-                className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] hover:from-[#FF8C3A] hover:to-[#FF6B00] text-white font-bold py-6 text-lg rounded-full shadow-lg disabled:opacity-50"
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex gap-4 mt-6"
+            >
+              <motion.div 
+                className="flex-1"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                Submeter Tese →
-              </Button>
-              <Button
-                onClick={() => setCurrentStage('etapa2')}
-                variant="outline"
-                className="px-8 py-6 text-[#FF6B00] border-2 border-[#FF6B00] font-semibold rounded-full"
+                <Button
+                  onClick={() => setCurrentStage('etapa2')}
+                  disabled={!userTese.trim()}
+                  className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white font-bold py-6 text-lg rounded-2xl shadow-xl hover:shadow-orange-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Submeter Tese →
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Pular
-              </Button>
-            </div>
+                <Button
+                  onClick={() => setCurrentStage('etapa2')}
+                  variant="outline"
+                  className="px-8 py-6 text-orange-600 dark:text-orange-400 border-2 border-orange-500 dark:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 font-semibold rounded-2xl transition-all duration-300"
+                >
+                  Pular
+                </Button>
+              </motion.div>
+            </motion.div>
           </div>
         </Card>
       </div>
@@ -533,17 +574,23 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
   // ETAPA 2: BATTLE DE TESES
   if (currentStage === 'etapa2') {
     return (
-      <div className="min-h-screen p-6">
-        <Card className="max-w-4xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#FF6B00] to-[#FF8C3A] text-white rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 flex items-start justify-center p-4 pt-8">
+        <Card className="max-w-4xl w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-3xl shadow-2xl border-2 border-orange-200/50 dark:border-orange-800/30 p-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-start gap-4 mb-6"
+          >
+            <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl flex items-center justify-center font-bold text-2xl shadow-lg flex-shrink-0">
               2
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-[#0A2540] mb-1">Battle de Teses</h2>
-              <p className="text-gray-600">{etapa2.instrucoes}</p>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent mb-2">
+                Battle de Teses
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 text-lg">{etapa2.instrucoes}</p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Tese do usuário */}
           {userTese && (
@@ -612,13 +659,21 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
             )}
           </div>
 
-          <Button
-            onClick={() => setCurrentStage('etapa3')}
-            disabled={!selectedBattleTese}
-            className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] hover:from-[#FF8C3A] hover:to-[#FF6B00] text-white font-bold py-6 text-lg rounded-full shadow-lg disabled:opacity-50"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            Continuar →
-          </Button>
+            <Button
+              onClick={() => setCurrentStage('etapa3')}
+              disabled={!selectedBattleTese}
+              className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white font-bold py-6 text-lg rounded-2xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Continuar →
+            </Button>
+          </motion.div>
         </Card>
       </div>
     );
@@ -627,17 +682,23 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
   // ETAPA 3: ARGUMENTAÇÃO RELÂMPAGO
   if (currentStage === 'etapa3') {
     return (
-      <div className="min-h-screen p-6">
-        <Card className="max-w-4xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#FF6B00] to-[#FF8C3A] text-white rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 flex items-start justify-center p-4 pt-8">
+        <Card className="max-w-4xl w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-3xl shadow-2xl border-2 border-orange-200/50 dark:border-orange-800/30 p-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-start gap-4 mb-6"
+          >
+            <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl flex items-center justify-center font-bold text-2xl shadow-lg flex-shrink-0">
               3
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-[#0A2540] mb-1">Argumentação Relâmpago</h2>
-              <p className="text-gray-600">{etapa3.instrucoes}</p>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent mb-2">
+                Argumentação Relâmpago
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 text-lg">{etapa3.instrucoes}</p>
             </div>
-          </div>
+          </motion.div>
 
           <div className="space-y-4 mb-6">
             {/* Campo 1: Afirmação */}
@@ -689,28 +750,44 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <Button
-              onClick={async () => {
-                await generateFinalFeedback();
-                setCurrentStage('resumo');
-              }}
-              disabled={!afirmacao.trim() || !dadoExemplo.trim() || !conclusao.trim() || isGeneratingFeedback}
-              className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] hover:from-[#FF8C3A] hover:to-[#FF6B00] text-white font-bold py-6 text-lg rounded-full shadow-lg disabled:opacity-50"
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="flex gap-4"
+          >
+            <motion.div 
+              className="flex-1"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              {isGeneratingFeedback ? 'Gerando Avaliação...' : 'Finalizar Atividade →'}
-            </Button>
-            <Button
-              onClick={async () => {
-                await generateFinalFeedback();
-                setCurrentStage('resumo');
-              }}
-              variant="outline"
-              className="px-8 py-6 text-[#FF6B00] border-2 border-[#FF6B00] font-semibold rounded-full"
+              <Button
+                onClick={async () => {
+                  await generateFinalFeedback();
+                  setCurrentStage('resumo');
+                }}
+                disabled={!afirmacao.trim() || !dadoExemplo.trim() || !conclusao.trim() || isGeneratingFeedback}
+                className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white font-bold py-6 text-lg rounded-2xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGeneratingFeedback ? 'Gerando Avaliação...' : 'Finalizar Atividade →'}
+              </Button>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              Pular
-            </Button>
-          </div>
+              <Button
+                onClick={async () => {
+                  await generateFinalFeedback();
+                  setCurrentStage('resumo');
+                }}
+                variant="outline"
+                className="px-8 py-6 text-orange-600 dark:text-orange-400 border-2 border-orange-500 dark:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 font-semibold rounded-2xl transition-all duration-300"
+              >
+                Pular
+              </Button>
+            </motion.div>
+          </motion.div>
         </Card>
       </div>
     );
@@ -857,22 +934,30 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
               </div>
             </Card>
 
-            <Button
-              onClick={() => {
-                setCurrentStage('intro');
-                setUserTese('');
-                setSelectedBattleTese(null);
-                setAfirmacao('');
-                setDadoExemplo('');
-                setConclusao('');
-                setFeedback(null);
-                setTimer(0);
-                setCurrentStageTimer(null);
-              }}
-              className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C3A] hover:from-[#FF8C3A] hover:to-[#FF6B00] text-white font-bold py-6 text-lg rounded-full shadow-lg"
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.4 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              Fazer Nova Atividade
-            </Button>
+              <Button
+                onClick={() => {
+                  setCurrentStage('intro');
+                  setUserTese('');
+                  setSelectedBattleTese(null);
+                  setAfirmacao('');
+                  setDadoExemplo('');
+                  setConclusao('');
+                  setFeedback(null);
+                  setTimer(0);
+                  setCurrentStageTimer(null);
+                }}
+                className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white font-bold py-6 text-lg rounded-2xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-300"
+              >
+                Fazer Nova Atividade
+              </Button>
+            </motion.div>
           </div>
         </Card>
       </div>
