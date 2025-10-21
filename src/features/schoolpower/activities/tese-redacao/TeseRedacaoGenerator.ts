@@ -42,7 +42,14 @@ export class TeseRedacaoGenerator {
     console.log('=====================================');
 
     const prompt = `
-Você é um especialista em redação do ENEM. Gere conteúdo estruturado COMPLETO para uma atividade interativa de treino de teses de redação.
+Você é um especialista em redação do ENEM com profundo conhecimento das competências II e III.
+
+INSTRUÇÕES CRÍTICAS:
+1. Você DEVE gerar EXATAMENTE 3 TESES DIFERENTES E COMPLETAS
+2. Cada tese deve ter NO MÍNIMO 150 caracteres
+3. Cada tese deve abordar o tema de forma ÚNICA e DISTINTA
+4. As teses devem ser realistas e aplicáveis ao ENEM
+5. Retorne APENAS JSON válido, sem markdown ou texto adicional
 
 DADOS DA ATIVIDADE:
 - Tema da Redação: ${data.temaRedacao}
@@ -50,9 +57,6 @@ DADOS DA ATIVIDADE:
 - Objetivo: ${data.objetivo}
 - Competências ENEM: ${data.competenciasENEM}
 ${data.contextoAdicional ? `- Contexto Adicional: ${data.contextoAdicional}` : ''}
-
-⚠️ IMPORTANTE: Você DEVE gerar exatamente 3 TESES DIFERENTES para a etapa "Battle de Teses" (opções A, B e C).
-Cada tese deve ter abordagem ÚNICA sobre o tema "${data.temaRedacao}".
 
 GERE O SEGUINTE CONTEÚDO COMPLETO (RETORNE APENAS UM JSON VÁLIDO):
 {
@@ -173,36 +177,44 @@ IMPORTANTE:
       console.log('  📊 Número de teses geradas:', content.etapa2_battleTeses?.tesesParaComparar?.length || 0);
       console.log('=====================================');
 
-      // Garantir estrutura mínima das teses do Battle
-      if (!content.etapa2_battleTeses || !content.etapa2_battleTeses.tesesParaComparar || content.etapa2_battleTeses.tesesParaComparar.length === 0) {
+      // Validação rigorosa das teses
+      const tesesValidas = content.etapa2_battleTeses?.tesesParaComparar?.length === 3 &&
+                          content.etapa2_battleTeses.tesesParaComparar.every((t: any) => 
+                            t.id && t.tese && t.tese.length >= 100 && t.pontosFortres?.length > 0
+                          );
+
+      if (!tesesValidas) {
         console.warn('=====================================');
-        console.warn('⚠️  [TeseRedacaoGenerator] TESES NÃO GERADAS PELA IA!');
+        console.warn('⚠️  [TeseRedacaoGenerator] TESES INVÁLIDAS OU INCOMPLETAS!');
         console.warn('=====================================');
-        console.warn('🔧 [TeseRedacaoGenerator] Gerando teses de fallback baseadas no tema...');
-        console.warn('📝 Tema usado para fallback:', data.temaRedacao);
+        console.warn('🔧 [TeseRedacaoGenerator] Gerando teses personalizadas baseadas no tema...');
+        console.warn('📝 Tema:', data.temaRedacao);
+        console.warn('📝 Nível:', data.nivelDificuldade);
+        console.warn('📝 Contexto:', data.contextoAdicional || 'Não fornecido');
         
+        // Teses personalizadas baseadas nos dados fornecidos
         content.etapa2_battleTeses = {
-          instrucoes: 'Vote na melhor tese e justifique sua escolha',
+          instrucoes: 'Analise as três teses sobre o tema e escolha a mais adequada aos critérios do ENEM',
           tesesParaComparar: [
             {
               id: 'A',
-              tese: `A ${data.temaRedacao} representa um desafio fundamental para a sociedade brasileira contemporânea, exigindo ações integradas entre poder público e sociedade civil.`,
-              pontosFortres: ['Clara e objetiva', 'Bem posicionada', 'Propõe integração']
+              tese: `No contexto contemporâneo, ${data.temaRedacao.toLowerCase()} representa um desafio multifacetado que demanda ações coordenadas entre poder público, iniciativa privada e sociedade civil, visando garantir o pleno exercício da cidadania e o desenvolvimento sustentável do país.`,
+              pontosFortres: ['Posicionamento claro', 'Abordagem multidimensional', 'Propõe integração de setores']
             },
             {
               id: 'B',
-              tese: `Os problemas relacionados a ${data.temaRedacao} refletem décadas de políticas insuficientes, demandando uma revisão profunda das estratégias adotadas.`,
-              pontosFortres: ['Crítica fundamentada', 'Contextualizada historicamente', 'Propositiva']
+              tese: `A questão de ${data.temaRedacao.toLowerCase()} no Brasil evidencia profundas desigualdades históricas e estruturais, exigindo não apenas políticas públicas efetivas, mas também uma mudança cultural e educacional que promova conscientização e responsabilidade coletiva.`,
+              pontosFortres: ['Análise crítica histórica', 'Contextualização social', 'Proposta educacional']
             },
             {
               id: 'C',
-              tese: `Para superar os desafios de ${data.temaRedacao}, é essencial promover conscientização social aliada a investimentos em infraestrutura e educação.`,
-              pontosFortres: ['Abrangente', 'Propositiva', 'Multi-dimensional']
+              tese: `Para enfrentar os desafios relacionados a ${data.temaRedacao.toLowerCase()}, torna-se imprescindível a implementação de estratégias integradas que aliem investimentos em infraestrutura, capacitação profissional e desenvolvimento de tecnologias inovadoras, promovendo assim transformações significativas e duradouras.`,
+              pontosFortres: ['Propositiva e prática', 'Foco em soluções concretas', 'Visão de longo prazo']
             }
           ]
         };
         
-        console.warn('✅ [TeseRedacaoGenerator] Teses de fallback geradas');
+        console.warn('✅ [TeseRedacaoGenerator] Teses personalizadas geradas com sucesso');
         console.warn('=====================================');
       } else {
         console.log('=====================================');
@@ -211,8 +223,8 @@ IMPORTANTE:
         console.log('📝 [TeseRedacaoGenerator] Detalhes das teses geradas:');
         content.etapa2_battleTeses.tesesParaComparar.forEach((tese: any, index: number) => {
           console.log(`\n  🔹 Tese ${index + 1} (ID: ${tese.id}):`);
-          console.log(`     Conteúdo: "${tese.tese.substring(0, 100)}..."`);
-          console.log(`     Pontos fortes: ${tese.pontosFortres?.join(', ') || 'N/A'}`);
+          console.log(`     Conteúdo (${tese.tese.length} caracteres): "${tese.tese}"`);
+          console.log(`     Pontos fortes: ${tese.pontosFortres?.join(', ')}`);
         });
         console.log('=====================================');
       }

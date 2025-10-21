@@ -629,52 +629,83 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
           {/* Teses para comparar */}
           <div className="space-y-3 mb-6">
             {etapa2.tesesParaComparar && etapa2.tesesParaComparar.length > 0 ? (
-              etapa2.tesesParaComparar.map((teseOption) => (
-                <Card
+              etapa2.tesesParaComparar.map((teseOption, index) => (
+                <motion.div
                   key={teseOption.id}
-                  onClick={() => setSelectedBattleTese(teseOption.id)}
-                  className={`p-4 cursor-pointer transition-all ${
-                    selectedBattleTese === teseOption.id
-                      ? 'border-2 border-[#FF6B00] bg-orange-50'
-                      : 'border-2 border-gray-200 hover:border-gray-300'
-                  }`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 + 0.2 }}
                 >
-                  <div className="flex items-start gap-4">
-                    {/* Checkbox visual */}
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
+                  <Card
+                    onClick={() => setSelectedBattleTese(teseOption.id)}
+                    className={`p-5 cursor-pointer transition-all duration-300 ${
                       selectedBattleTese === teseOption.id
-                        ? 'border-[#FF6B00] bg-[#FF6B00]'
-                        : 'border-gray-400 bg-white'
-                    }`}>
-                      {selectedBattleTese === teseOption.id && (
-                        <CheckCircle className="w-4 h-4 text-white fill-white" />
-                      )}
-                    </div>
+                        ? 'border-2 border-[#FF6B00] bg-gradient-to-r from-orange-50 to-orange-100 shadow-lg scale-[1.02]'
+                        : 'border-2 border-gray-200 hover:border-orange-300 hover:shadow-md hover:scale-[1.01]'
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      {/* Checkbox visual */}
+                      <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 transition-all ${
+                        selectedBattleTese === teseOption.id
+                          ? 'border-[#FF6B00] bg-[#FF6B00] scale-110'
+                          : 'border-gray-400 bg-white'
+                      }`}>
+                        {selectedBattleTese === teseOption.id && (
+                          <CheckCircle className="w-5 h-5 text-white fill-white" />
+                        )}
+                      </div>
 
-                    {/* Badge com letra */}
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B00] to-[#FF8C3A] text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">
-                      {teseOption.id}
-                    </div>
+                      {/* Badge com letra */}
+                      <div className={`w-12 h-12 bg-gradient-to-br from-[#FF6B00] to-[#FF8C3A] text-white rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-md transition-transform ${
+                        selectedBattleTese === teseOption.id ? 'scale-110' : ''
+                      }`}>
+                        {teseOption.id}
+                      </div>
 
-                    {/* Conteúdo da tese */}
-                    <div className="flex-1">
-                      <p className={`text-base ${
-                        selectedBattleTese === teseOption.id ? 'text-[#0A2540] font-semibold' : 'text-gray-700'
-                      }`}>{teseOption.tese}</p>
-                      {selectedBattleTese === teseOption.id && (
-                        <div className="flex items-center gap-2 text-sm text-[#FF6B00] mt-2">
-                          <span className="font-semibold">✓ Selecionada</span>
-                        </div>
-                      )}
+                      {/* Conteúdo da tese */}
+                      <div className="flex-1">
+                        <p className={`text-base leading-relaxed ${
+                          selectedBattleTese === teseOption.id ? 'text-[#0A2540] font-semibold' : 'text-gray-700'
+                        }`}>{teseOption.tese}</p>
+
+                        {/* Pontos fortes */}
+                        {teseOption.pontosFortres && teseOption.pontosFortres.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {teseOption.pontosFortres.map((ponto: string, i: number) => (
+                              <span key={i} className="text-xs bg-white border border-orange-200 text-orange-700 px-2 py-1 rounded-full">
+                                {ponto}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {selectedBattleTese === teseOption.id && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex items-center gap-2 text-sm text-[#FF6B00] mt-3 font-semibold"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            <span>Tese selecionada</span>
+                          </motion.div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </Card>
+                  </Card>
+                </motion.div>
               ))
             ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500">⚠️ Nenhuma tese disponível para comparação</p>
-                <p className="text-sm text-gray-400 mt-2">As teses serão geradas pela IA do Gemini</p>
-              </div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300"
+              >
+                <div className="text-6xl mb-4">⚠️</div>
+                <p className="text-gray-600 text-lg font-semibold mb-2">Teses não disponíveis</p>
+                <p className="text-sm text-gray-500">As teses devem ser geradas pela IA do Gemini</p>
+                <p className="text-xs text-gray-400 mt-2">Tema: {content.temaRedacao}</p>
+              </motion.div>
             )}
           </div>
 

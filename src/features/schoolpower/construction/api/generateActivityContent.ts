@@ -344,9 +344,30 @@ async function generateTeseRedacao(formData: ActivityFormData) {
       formDataUsed: teseData
     };
 
-    // Salvar no localStorage
-    const teseStorageKey = `constructed_tese-redacao_${Date.now()}`;
-    localStorage.setItem(teseStorageKey, JSON.stringify({ success: true, data: finalContent }));
+    // Validar que as teses foram geradas
+    if (!finalContent.etapa2_battleTeses?.tesesParaComparar || finalContent.etapa2_battleTeses.tesesParaComparar.length < 3) {
+      console.error('❌ [generateActivityContent] Teses não geradas corretamente!');
+      console.error('📊 Teses recebidas:', finalContent.etapa2_battleTeses);
+    } else {
+      console.log('✅ [generateActivityContent] Teses validadas:', finalContent.etapa2_battleTeses.tesesParaComparar.length);
+    }
+
+    // Salvar no localStorage com múltiplas chaves para garantir persistência
+    const timestamp = Date.now();
+    const storageKeys = [
+      `constructed_tese-redacao_${timestamp}`,
+      `tese_redacao_content_${timestamp}`,
+      'latest_tese_redacao_activity'
+    ];
+
+    storageKeys.forEach(key => {
+      try {
+        localStorage.setItem(key, JSON.stringify({ success: true, data: finalContent }));
+        console.log(`💾 [generateActivityContent] Salvo em: ${key}`);
+      } catch (error) {
+        console.error(`❌ [generateActivityContent] Erro ao salvar em ${key}:`, error);
+      }
+    });
 
     return { success: true, data: finalContent };
 
