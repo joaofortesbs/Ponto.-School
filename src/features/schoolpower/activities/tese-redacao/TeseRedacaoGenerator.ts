@@ -217,6 +217,21 @@ IMPORTANTE:
         console.log('=====================================');
       }
 
+      // Salvar teses geradas em cache adicional
+      if (content.etapa2_battleTeses && content.etapa2_battleTeses.tesesParaComparar) {
+        const cacheKey = `gemini_teses_cache_${Date.now()}`;
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({
+            teses: content.etapa2_battleTeses.tesesParaComparar,
+            generatedAt: new Date().toISOString(),
+            tema: data.temaRedacao
+          }));
+          console.log('💾 [TeseRedacaoGenerator] Teses salvas em cache adicional');
+        } catch (error) {
+          console.error('❌ [TeseRedacaoGenerator] Erro ao salvar cache:', error);
+        }
+      }
+      
       console.log('✅ [TeseRedacaoGenerator] Conteúdo final gerado com sucesso!');
       return content;
 

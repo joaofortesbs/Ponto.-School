@@ -383,7 +383,7 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
             <div className="absolute inset-0 opacity-10">
               <div className="absolute inset-0 bg-grid-pattern"></div>
             </div>
-            
+
             <div className="relative z-10">
               <div className="text-center mb-6">
                 <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-white to-orange-100 bg-clip-text text-transparent">
@@ -470,7 +470,7 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
             <div className="absolute inset-0 opacity-10">
               <div className="absolute inset-0 bg-grid-pattern"></div>
             </div>
-            
+
             <div className="relative z-10 flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold mb-1">Tese & Argumentação</h1>
@@ -546,7 +546,25 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
                 whileTap={{ scale: 0.98 }}
               >
                 <Button
-                  onClick={() => setCurrentStage('etapa2')}
+                  onClick={() => {
+                    // Salvar tese do usuário
+                    const activityId = (window as any).currentActivityId || 'preview';
+                    const progressKey = `tese_redacao_progress_${activityId}`;
+
+                    try {
+                      const progressData = {
+                        userTese,
+                        etapa: 'etapa1',
+                        savedAt: new Date().toISOString()
+                      };
+                      localStorage.setItem(progressKey, JSON.stringify(progressData));
+                      console.log('💾 [TeseRedacao] Tese do usuário salva');
+                    } catch (error) {
+                      console.error('❌ [TeseRedacao] Erro ao salvar progresso:', error);
+                    }
+
+                    setCurrentStage('etapa2');
+                  }}
                   disabled={!userTese.trim()}
                   className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white font-bold py-6 text-lg rounded-2xl shadow-xl hover:shadow-orange-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
