@@ -337,6 +337,7 @@ async function generateTeseRedacao(formData: ActivityFormData) {
     const finalContent = {
       ...generatedContent,
       title: generatedContent.title || formData.title,
+      temaRedacao: generatedContent.temaRedacao || formData.temaRedacao,
       generatedByAI: true,
       generatedAt: new Date().toISOString(),
       isGeneratedByAI: true,
@@ -345,29 +346,57 @@ async function generateTeseRedacao(formData: ActivityFormData) {
     };
 
     // Validar que as teses foram geradas
+    console.log('=====================================');
+    console.log('🔍 [generateActivityContent] VALIDANDO TESES GERADAS');
+    console.log('=====================================');
+    
     if (!finalContent.etapa2_battleTeses?.tesesParaComparar || finalContent.etapa2_battleTeses.tesesParaComparar.length < 3) {
-      console.error('❌ [generateActivityContent] Teses não geradas corretamente!');
+      console.error('❌ [generateActivityContent] ERRO: Teses não geradas corretamente!');
       console.error('📊 Teses recebidas:', finalContent.etapa2_battleTeses);
+      console.error('🔧 Quantidade de teses:', finalContent.etapa2_battleTeses?.tesesParaComparar?.length || 0);
     } else {
-      console.log('✅ [generateActivityContent] Teses validadas:', finalContent.etapa2_battleTeses.tesesParaComparar.length);
+      console.log('✅ [generateActivityContent] Teses validadas com sucesso!');
+      console.log('📊 Quantidade:', finalContent.etapa2_battleTeses.tesesParaComparar.length);
+      finalContent.etapa2_battleTeses.tesesParaComparar.forEach((tese: any, i: number) => {
+        console.log(`  ✓ Tese ${i + 1}: ID=${tese.id}, ${tese.tese.length} caracteres`);
+      });
     }
+    console.log('=====================================');
 
     // Salvar no localStorage com múltiplas chaves para garantir persistência
     const timestamp = Date.now();
+    const activityId = `tese_redacao_${timestamp}`;
     const storageKeys = [
-      `constructed_tese-redacao_${timestamp}`,
-      `tese_redacao_content_${timestamp}`,
-      'latest_tese_redacao_activity'
+      `constructed_tese-redacao_${activityId}`,
+      `activity_${activityId}`,
+      'latest_tese_redacao_activity',
+      'tese_redacao_current'
     ];
 
+    console.log('💾 [generateActivityContent] Salvando em múltiplas chaves do localStorage...');
     storageKeys.forEach(key => {
       try {
-        localStorage.setItem(key, JSON.stringify({ success: true, data: finalContent }));
-        console.log(`💾 [generateActivityContent] Salvo em: ${key}`);
+        const dataToSave = { success: true, data: finalContent, timestamp, activityId };
+        localStorage.setItem(key, JSON.stringify(dataToSave));
+        console.log(`  ✓ Salvo em: ${key}`);
       } catch (error) {
-        console.error(`❌ [generateActivityContent] Erro ao salvar em ${key}:`, error);
+        console.error(`  ❌ Erro ao salvar em ${key}:`, error);
       }
     });
+
+    // Salvar também com o ID da atividade se existir
+    if ((window as any).currentActivityId) {
+      const currentActivityKey = `constructed_tese-redacao_${(window as any).currentActivityId}`;
+      try {
+        localStorage.setItem(currentActivityKey, JSON.stringify({ success: true, data: finalContent }));
+        console.log(`  ✓ Salvo com ID da atividade: ${currentActivityKey}`);
+      } catch (error) {
+        console.error(`  ❌ Erro ao salvar com ID da atividade:`, error);
+      }
+    }
+
+    console.log('✅ [generateActivityContent] Conteúdo salvo com sucesso em todas as chaves!');
+    console.log('=====================================');
 
     return { success: true, data: finalContent };
 

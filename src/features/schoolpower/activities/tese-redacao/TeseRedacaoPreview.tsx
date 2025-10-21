@@ -82,6 +82,20 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
   } | null>(null);
   const [streak, setStreak] = useState(2);
 
+  // Log de debug ao receber content
+  React.useEffect(() => {
+    console.log('=====================================');
+    console.log('📝 [TeseRedacaoPreview] Conteúdo recebido:', content);
+    console.log('📊 [TeseRedacaoPreview] Verificando teses:', content?.etapa2_battleTeses?.tesesParaComparar);
+    console.log('📋 [TeseRedacaoPreview] Número de teses:', content?.etapa2_battleTeses?.tesesParaComparar?.length || 0);
+    if (content?.etapa2_battleTeses?.tesesParaComparar) {
+      content.etapa2_battleTeses.tesesParaComparar.forEach((tese: any, i: number) => {
+        console.log(`  Tese ${i + 1}: ID=${tese.id}, Tamanho=${tese.tese?.length || 0}, Texto="${tese.tese?.substring(0, 50)}..."`);
+      });
+    }
+    console.log('=====================================');
+  }, [content]);
+
   // Armazenar ID da atividade globalmente para acesso no feedback
   React.useEffect(() => {
     if (content && (content as any).id) {
