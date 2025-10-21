@@ -58,9 +58,48 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const isLightMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
   const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
   const [flashCardsContent, setFlashCardsContent] = useState<any>(null);
+  const [generatedContent, setGeneratedContent] = useState<any>(null);
+  const [isContentLoaded, setIsContentLoaded] = useState<boolean>(false);
   const [stars, setStars] = useState<number>(100);
 
-  // Auto-reload ao detectar mudanças no localStorage
+  // Listener para sincronização instantânea via eventos customizados
+  useEffect(() => {
+    if (!activity?.id || !isOpen) return;
+
+    const handleDataSync = (event: CustomEvent) => {
+      const { activityId, data, timestamp } = event.detail;
+      
+      if (activityId === activity.id) {
+        console.log('⚡ [INSTANT-SYNC] Dados recebidos do modal de edição:', data);
+        
+        // Atualizar estados instantaneamente
+        if (data.generatedContent) {
+          setGeneratedContent(data.generatedContent);
+          
+          // Atualizar conteúdos específicos
+          if (activity.type === 'quiz-interativo' || activity.id === 'quiz-interativo') {
+            setQuizInterativoContent(data.generatedContent);
+          }
+          if (activity.type === 'flash-cards' || activity.id === 'flash-cards') {
+            setFlashCardsContent(data.generatedContent);
+          }
+        }
+        
+        setIsContentLoaded(true);
+        
+        console.log('✅ [INSTANT-SYNC] Modal de visualização atualizado instantaneamente!');
+      }
+    };
+
+    // Adicionar listener para eventos de sincronização
+    window.addEventListener('activity-data-sync', handleDataSync as EventListener);
+
+    return () => {
+      window.removeEventListener('activity-data-sync', handleDataSync as EventListener);
+    };
+  }, [activity?.id, activity?.type, isOpen]);
+
+  // Auto-reload ao detectar mudanças no localStorage (fallback)
   useEffect(() => {
     if (!activity?.id || !isOpen) return;
 
@@ -72,7 +111,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           if (parsed.lastUpdate && parsed.lastUpdate !== (activity as any).lastUpdate) {
             console.log('🔄 [AUTO-RELOAD] Detectada atualização, recarregando dados...');
             // Forçar re-render ao invés de reload completo
-            setGeneratedContent(parsed);
+            setGeneratedContent(parsed.generatedContent || parsed);
             setIsContentLoaded(true);
           }
         } catch (e) {

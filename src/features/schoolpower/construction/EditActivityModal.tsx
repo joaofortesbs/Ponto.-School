@@ -976,6 +976,52 @@ const EditActivityModal = ({
     return () => clearTimeout(syncTimeout);
   }, [formData, activity?.id, isOpen, syncDataToStorage]);
 
+  // Função para sincronizar dados instantaneamente com o modal de visualização
+  const syncToViewModal = useCallback((data: any) => {
+    const storageKey = `activity_${activity?.id}`;
+    const viewSyncKey = `activity_view_sync_${activity?.id}`;
+    
+    // Salvar dados no localStorage
+    localStorage.setItem(storageKey, JSON.stringify({
+      ...data,
+      lastSync: new Date().toISOString()
+    }));
+    
+    // Disparar evento customizado para sincronização instantânea
+    window.dispatchEvent(new CustomEvent('activity-data-sync', {
+      detail: {
+        activityId: activity?.id,
+        data: data,
+        timestamp: Date.now()
+      }
+    }));
+    
+    console.log('🔄 [SYNC] Dados sincronizados instantaneamente para modal de visualização');
+  }, [activity?.id]);
+
+  // Sincronizar dados sempre que formData ou conteúdo gerado mudar
+  useEffect(() => {
+    if (!activity?.id || !isOpen) return;
+
+    const syncTimeout = setTimeout(() => {
+      const dataToSync = {
+        title: formData.title,
+        description: formData.description,
+        customFields: {
+          ...activity.customFields,
+          ...formData
+        },
+        generatedContent: generatedContent || quizInterativoContent || flashCardsContent || teseRedacaoContent,
+        formData,
+        lastUpdate: new Date().toISOString()
+      };
+
+      syncToViewModal(dataToSync);
+    }, 300); // Debounce de 300ms
+
+    return () => clearTimeout(syncTimeout);
+  }, [formData, generatedContent, quizInterativoContent, flashCardsContent, teseRedacaoContent, activity?.id, isOpen, syncToViewModal]);
+
   // Função para salvar alterações
   const handleSave = async () => {
     if (!activity) return;
@@ -2172,6 +2218,16 @@ const EditActivityModal = ({
       setBuiltContent(result);
       setIsContentLoaded(true);
       setActiveTab('preview');
+
+      // Sincronizar dados instantaneamente após construção
+      syncToViewModal({
+        title: formData.title,
+        description: formData.description,
+        generatedContent: result,
+        customFields: { ...activity.customFields, ...formData },
+        isBuilt: true,
+        lastUpdate: new Date().toISOString()
+      });
 
       toast({
         title: "Atividade construída!",
