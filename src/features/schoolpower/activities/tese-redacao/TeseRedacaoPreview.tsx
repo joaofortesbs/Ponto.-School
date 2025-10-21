@@ -82,7 +82,7 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
   const [streak, setStreak] = useState(2);
 
   // Armazenar ID da atividade globalmente para acesso no feedback
-  useEffect(() => {
+  React.useEffect(() => {
     if (content && (content as any).id) {
       (window as any).currentActivityId = (content as any).id;
       console.log('📋 [TeseRedacao] ID da atividade armazenado:', (content as any).id);
@@ -93,7 +93,7 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
   const [timer, setTimer] = useState(0);
   const [currentStageTimer, setCurrentStageTimer] = useState<number | null>(null); // Tempo em segundos para a etapa atual
 
-  useEffect(() => {
+  React.useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
     if (currentStage !== 'intro' && currentStageTimer !== null && currentStageTimer > 0) {
@@ -111,7 +111,7 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
   }, [currentStage, currentStageTimer]);
 
   // Atualiza o cronômetro quando a etapa muda
-  useEffect(() => {
+  React.useEffect(() => {
     if (content && content.etapas) {
       const etapaAtual = content.etapas.find(etapa => {
         switch (currentStage) {
