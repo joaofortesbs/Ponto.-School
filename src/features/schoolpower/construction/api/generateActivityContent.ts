@@ -309,12 +309,14 @@ async function generateTeseRedacao(formData: ActivityFormData) {
 
     const teseData = {
       title: formData.title || 'Tese da Redação',
-      temaRedacao: formData.temaRedacao || formData.theme || 'Tema da Redação',
-      nivelDificuldade: formData.nivelDificuldade || formData.difficultyLevel || 'Médio',
-      objetivo: formData.objetivo || formData.objectives || 'Elaborar teses consistentes para redação do ENEM',
-      competenciasENEM: formData.competenciasENEM || 'Competência II e III (compreensão tema e argumentação)',
-      contextoAdicional: formData.contextoAdicional || formData.context || ''
+      temaRedacao: formData.temaRedacao || formData.theme || formData['Tema da Redação'] || 'Tema da Redação',
+      nivelDificuldade: formData.nivelDificuldade || formData.difficultyLevel || formData['Nível de Dificuldade'] || 'Médio',
+      objetivo: formData.objetivo || formData.objectives || formData['Objetivos'] || 'Elaborar teses consistentes para redação do ENEM',
+      competenciasENEM: formData.competenciasENEM || formData['Competências ENEM'] || 'Competência II e III (compreensão tema e argumentação)',
+      contextoAdicional: formData.contextoAdicional || formData.context || formData['Contexto Adicional'] || ''
     };
+
+    console.log('📊 [TeseRedacao] Dados completos enviados ao gerador:', teseData);
 
     console.log('=====================================');
     console.log('📝 [generateTeseRedacao] Dados estruturados para o Generator:');

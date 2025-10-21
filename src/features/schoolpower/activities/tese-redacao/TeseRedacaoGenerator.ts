@@ -51,24 +51,23 @@ export class TeseRedacaoGenerator {
     const prompt = `
 Você é um especialista em redação do ENEM com profundo conhecimento das competências II e III.
 
-INSTRUÇÕES CRÍTICAS - VOCÊ DEVE SEGUIR EXATAMENTE:
-1. Você DEVE gerar EXATAMENTE 3 TESES DIFERENTES, COMPLETAS E BEM ELABORADAS
-2. Cada tese deve ter NO MÍNIMO 200 caracteres e NO MÁXIMO 400 caracteres
-3. Cada tese deve abordar o tema "${data.temaRedacao}" de forma ÚNICA, DISTINTA e CRIATIVA
-4. As teses devem ser REALISTAS, APLICÁVEIS AO ENEM e ADEQUADAS ao nível ${data.nivelDificuldade}
-5. Retorne APENAS um objeto JSON válido, SEM markdown, SEM \`\`\`json, SEM texto adicional
-6. NÃO use teses genéricas - personalize para o tema específico: "${data.temaRedacao}"
-
-DADOS DA ATIVIDADE:
-- Tema da Redação: ${data.temaRedacao}
+DADOS COMPLETOS DA ATIVIDADE:
+- Tema da Redação: "${data.temaRedacao}"
 - Nível de Dificuldade: ${data.nivelDificuldade}
 - Objetivo: ${data.objetivo}
 - Competências ENEM: ${data.competenciasENEM}
 ${data.contextoAdicional ? `- Contexto Adicional: ${data.contextoAdicional}` : ''}
 
-ATENÇÃO: As 3 teses DEVEM ser SOBRE O TEMA "${data.temaRedacao}" especificamente!
+INSTRUÇÕES CRÍTICAS - SIGA EXATAMENTE:
 
-GERE O SEGUINTE CONTEÚDO COMPLETO (RETORNE APENAS UM JSON VÁLIDO SEM MARKDOWN):
+1. GERE 3 TESES ÚNICAS E PERSONALIZADAS sobre "${data.temaRedacao}"
+2. Cada tese DEVE ter entre 200-400 caracteres
+3. Adapte ao nível ${data.nivelDificuldade}
+4. Considere ${data.competenciasENEM}
+5. Use o objetivo: ${data.objetivo}
+${data.contextoAdicional ? `6. Considere o contexto: ${data.contextoAdicional}` : ''}
+
+RETORNE APENAS JSON VÁLIDO (SEM \`\`\`json, SEM MARKDOWN):
 {
   "title": "${data.title}",
   "temaRedacao": "${data.temaRedacao}",
@@ -200,30 +199,36 @@ IMPORTANTE:
         console.warn('🔧 [TeseRedacaoGenerator] Gerando teses PERSONALIZADAS baseadas no tema...');
         console.warn('📝 Tema:', data.temaRedacao);
         console.warn('📝 Nível:', data.nivelDificuldade);
+        console.warn('📝 Objetivo:', data.objetivo);
+        console.warn('📝 Competências:', data.competenciasENEM);
         console.warn('📝 Contexto:', data.contextoAdicional || 'Não fornecido');
         
-        // Gerar teses PERSONALIZADAS para o tema específico
-        const temaLower = data.temaRedacao.toLowerCase();
-        const temaPalavras = data.temaRedacao.split(' ');
-        const palavraChave = temaPalavras.length > 3 ? temaPalavras.slice(-3).join(' ').toLowerCase() : temaLower;
+        // Gerar teses ALTAMENTE PERSONALIZADAS
+        const tema = data.temaRedacao;
+        const nivel = data.nivelDificuldade.toLowerCase();
+        const objetivo = data.objetivo;
+        
+        // Extrair palavras-chave do tema
+        const palavrasChave = tema.split(' ').filter(p => p.length > 3);
+        const contexto = data.contextoAdicional || 'realidade brasileira';
         
         content.etapa2_battleTeses = {
-          instrucoes: `Analise as três teses sobre "${data.temaRedacao}" e escolha a mais adequada aos critérios do ENEM`,
+          instrucoes: `Analise as três teses sobre "${tema}" considerando ${data.competenciasENEM} e escolha a mais adequada`,
           tesesParaComparar: [
             {
               id: 'A',
-              tese: `No contexto contemporâneo brasileiro, ${temaLower} constitui um desafio multifacetado que demanda ações coordenadas entre poder público, iniciativa privada e sociedade civil, visando garantir avanços efetivos na área e promover o desenvolvimento social sustentável do país.`,
-              pontosFortres: ['Posicionamento claro sobre o tema', 'Abordagem multidimensional', 'Propõe integração de diferentes setores']
+              tese: `Diante dos desafios contemporâneos relacionados a ${tema}, observa-se a necessidade urgente de uma abordagem integrada que envolva políticas públicas efetivas, participação social ativa e investimentos estratégicos, considerando ${contexto} para promover transformações significativas e sustentáveis na sociedade brasileira.`,
+              pontosFortres: ['Abordagem contextualizada ao tema', `Adequada ao nível ${nivel}`, 'Propositiva e fundamentada']
             },
             {
               id: 'B',
-              tese: `A problemática relacionada a ${palavraChave} no Brasil evidencia profundas desigualdades históricas e estruturais, exigindo não apenas políticas públicas efetivas, mas também uma transformação cultural e educacional que promova conscientização crítica e responsabilidade coletiva na sociedade.`,
-              pontosFortres: ['Análise crítica e histórica', 'Contextualização social brasileira', 'Proposta educacional e cultural']
+              tese: `A questão de ${tema} no Brasil reflete desigualdades estruturais e históricas que demandam não apenas soluções pontuais, mas uma reformulação profunda das bases sociais, culturais e econômicas, alinhada com ${objetivo}, visando construir uma sociedade mais justa, equitativa e preparada para os desafios futuros.`,
+              pontosFortres: ['Análise crítica contextualizada', 'Alinhada ao objetivo proposto', 'Perspectiva histórico-social']
             },
             {
               id: 'C',
-              tese: `Para enfrentar efetivamente os desafios apresentados por ${temaLower}, torna-se imprescindível a implementação de estratégias integradas que aliem investimentos em infraestrutura adequada, capacitação profissional especializada e desenvolvimento de tecnologias inovadoras, promovendo transformações significativas e sustentáveis.`,
-              pontosFortres: ['Propositiva e prática', 'Foco em soluções concretas e viáveis', 'Visão de longo prazo']
+              tese: `Para alcançar avanços efetivos em ${tema}, é fundamental implementar estratégias multidimensionais que articulem educação de qualidade, desenvolvimento tecnológico, conscientização coletiva e políticas públicas inclusivas, considerando ${contexto} e ${objetivo} como eixos norteadores para transformações concretas e duradouras.`,
+              pontosFortres: ['Propositiva e pragmática', 'Multidimensional', `Adaptada ao nível ${nivel}`]
             }
           ]
         };

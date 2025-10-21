@@ -106,44 +106,65 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
 
   // Gerenciamento do cronômetro
   const [timer, setTimer] = useState(0);
-  const [currentStageTimer, setCurrentStageTimer] = useState<number | null>(null); // Tempo em segundos para a etapa atual
+  const [currentStageTimer, setCurrentStageTimer] = useState<number | null>(null);
+  const [isTimerActive, setIsTimerActive] = useState(false);
 
+  // Efeito principal do cronômetro
   React.useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
-    if (currentStage !== 'intro' && currentStageTimer !== null && currentStageTimer > 0) {
+    if (isTimerActive && timer > 0 && currentStage !== 'intro' && currentStage !== 'resumo') {
       interval = setInterval(() => {
-        setTimer(prevTimer => prevTimer - 1);
+        setTimer(prevTimer => {
+          if (prevTimer <= 1) {
+            setIsTimerActive(false);
+            return 0;
+          }
+          return prevTimer - 1;
+        });
       }, 1000);
-    } else if (currentStageTimer === 0) {
-      // Tempo esgotado para a etapa atual
-      // Lógica para avançar ou exibir alerta pode ser adicionada aqui
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [currentStage, currentStageTimer]);
+  }, [isTimerActive, timer, currentStage]);
 
   // Atualiza o cronômetro quando a etapa muda
   React.useEffect(() => {
-    if (content && content.etapas) {
-      const etapaAtual = content.etapas.find(etapa => {
-        switch (currentStage) {
-          case 'etapa1': return etapa.id === 1;
-          case 'etapa2': return etapa.id === 2;
-          case 'etapa3': return etapa.id === 3;
-          default: return false;
-        }
-      });
+    if (content && content.etapas && currentStage !== 'intro' && currentStage !== 'resumo') {
+      const etapaMap: { [key: string]: number } = {
+        'etapa1': 1,
+        'etapa2': 2,
+        'etapa3': 3
+      };
 
-      if (etapaAtual) {
-        // Converte o tempo da etapa (ex: '5 min') para segundos
-        const [minutes, seconds] = etapaAtual.tempo.split(':').map(Number);
-        const totalSeconds = (minutes || 0) * 60 + (seconds || 0);
-        setCurrentStageTimer(totalSeconds);
-        setTimer(totalSeconds); // Reinicia o timer para a nova etapa
+      const etapaId = etapaMap[currentStage];
+      if (etapaId) {
+        const etapaAtual = content.etapas.find(etapa => etapa.id === etapaId);
+
+        if (etapaAtual && etapaAtual.tempo) {
+          // Parse do tempo (formato: "5 min" ou "5:00")
+          let totalSeconds = 0;
+          
+          if (etapaAtual.tempo.includes(':')) {
+            const [minutes, seconds] = etapaAtual.tempo.split(':').map(Number);
+            totalSeconds = (minutes || 0) * 60 + (seconds || 0);
+          } else if (etapaAtual.tempo.includes('min')) {
+            const minutes = parseInt(etapaAtual.tempo.replace(/\D/g, ''));
+            totalSeconds = minutes * 60;
+          }
+
+          setCurrentStageTimer(totalSeconds);
+          setTimer(totalSeconds);
+          setIsTimerActive(true);
+          
+          console.log(`⏱️ Cronômetro iniciado para ${currentStage}: ${totalSeconds}s (${etapaAtual.tempo})`);
+        }
       }
+    } else if (currentStage === 'intro' || currentStage === 'resumo') {
+      setIsTimerActive(false);
+      setTimer(0);
     }
   }, [currentStage, content]);
 
