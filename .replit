@@ -1,11 +1,11 @@
-modules = ["nodejs-20", "web", "python-3.11", "postgresql-16"]
+modules = ["nodejs-20", "web", "python-3.11"]
 run = "npm run dev"
 
 [nix]
 channel = "stable-25_05"
 
 [deployment]
-run = ["bash", "start.sh"]
+run = ["npm", "run", "start"]
 deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 
@@ -20,10 +20,6 @@ externalPort = 8000
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 5177
-externalPort = 3003
 
 [[ports]]
 localPort = 5178
@@ -44,6 +40,10 @@ externalPort = 8080
 [[ports]]
 localPort = 8081
 externalPort = 8081
+
+[[ports]]
+localPort = 33745
+externalPort = 3003
 
 [[ports]]
 localPort = 36323
