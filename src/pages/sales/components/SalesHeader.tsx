@@ -96,8 +96,8 @@ export function SalesHeader() {
             </div>
           </motion.div>
 
-          {/* Botões e controles - Canto Direito */}
-          <div className="ml-auto pl-8 md:pl-12 flex items-center gap-3">
+          {/* Container Centralizado com Botões */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
             {/* Dropdown do Botão Professor */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -109,17 +109,21 @@ export function SalesHeader() {
                     className="
                       relative overflow-hidden
                       px-6 md:px-6 py-2 md:py-3
-                      bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]
-                      hover:from-[#FF8C40] hover:to-[#FF6B00]
+                      bg-[#0A1628]/40
+                      hover:bg-[#0A1628]/60
                       text-white font-bold text-base md:text-lg
                       rounded-3xl
-                      shadow-lg shadow-[#FF6B00]/30
-                      hover:shadow-xl hover:shadow-[#FF6B00]/40
+                      shadow-lg shadow-[#FF6B00]/20
+                      hover:shadow-xl hover:shadow-[#FF6B00]/30
                       transition-all duration-300
-                      border border-white/10
                       group
                       focus:outline-none focus-visible:ring-0
                     "
+                    style={{
+                      borderWidth: '2px',
+                      borderStyle: 'solid',
+                      borderImage: 'linear-gradient(135deg, #FF6B00, #FF8C40, #FF6B00) 1'
+                    }}
                   >
                     {/* Efeito de brilho no hover */}
                     <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
@@ -158,7 +162,10 @@ export function SalesHeader() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          </div>
 
+          {/* Controles - Canto Direito */}
+          <div className="ml-auto flex items-center gap-3">
             {/* Dropdown de Seleção de Idiomas */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
