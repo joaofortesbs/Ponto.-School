@@ -32,28 +32,40 @@ export default function SalesPage() {
           </motion.div>
 
           {/* Conteúdo de Texto - Centro/Direita */}
-          <div className="text-center lg:text-left">
-            <motion.h1
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-5xl md:text-7xl font-bold text-white mb-6"
+          <div className="text-center lg:text-left flex items-center gap-8">
+            <div>
+              <motion.h1
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="text-5xl md:text-7xl font-bold text-white mb-6"
+              >
+                Bem-vindo ao
+                <br />
+                <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent">
+                  Ponto School
+                </span>
+              </motion.h1>
+              
+              <motion.p
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto lg:mx-0"
+              >
+                A plataforma educacional mais avançada para transformar o ensino e aprendizado
+              </motion.p>
+            </div>
+
+            {/* Cards Sobrepostos Duplicados - Lado Direito */}
+            <motion.div
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="flex-shrink-0 hidden lg:block"
             >
-              Bem-vindo ao
-              <br />
-              <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent">
-                Ponto School
-              </span>
-            </motion.h1>
-            
-            <motion.p
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto lg:mx-0"
-            >
-              A plataforma educacional mais avançada para transformar o ensino e aprendizado
-            </motion.p>
+              <StackedCards />
+            </motion.div>
           </div>
         </div>
       </motion.div>
