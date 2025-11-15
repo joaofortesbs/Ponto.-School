@@ -32,7 +32,7 @@ export default function SalesPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="relative z-10 flex min-h-screen items-center justify-center px-4 pt-24 pb-12"
+        className="relative z-10 flex min-h-screen items-end justify-center px-4 pt-24 pb-32"
       >
         <div className="relative w-full max-w-[1800px] mx-auto">
           <div className="flex items-start justify-between w-full">
@@ -65,13 +65,13 @@ export default function SalesPage() {
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
-                className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto"
+                className="text-xl md:text-2xl text-gray-300 mb-20 max-w-3xl mx-auto"
               >
                 A plataforma educacional mais avançada para transformar o ensino e aprendizado
               </motion.p>
 
               {/* Container Unificado: Caixa de Mensagens + Cards Retangulares */}
-              <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 items-center justify-center">
+              <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 items-center justify-center mt-8">
                 {/* Caixa de Enviar Mensagens */}
                 <motion.div
                   initial={{ y: 30, opacity: 0 }}
