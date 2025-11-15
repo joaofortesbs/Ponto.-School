@@ -103,7 +103,7 @@ export default function SalesPage() {
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="text-5xl md:text-7xl font-bold text-white mb-12 mt-8"
+                className="text-5xl md:text-7xl font-bold text-white mb-12 mt-16"
               >
                 Bem-vindo ao
                 <br />
