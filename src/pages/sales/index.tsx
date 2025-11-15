@@ -21,6 +21,16 @@ export default function SalesPage() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-[#0A1628] via-[#0D1B2A] to-[#1B263B]">
+      <style>{`
+        .sales-page-cards .quick-access-cards {
+          max-width: 600px;
+          margin: 0 auto;
+        }
+        .sales-page-cards .quick-access-card {
+          max-width: 140px;
+        }
+      `}</style>
+      
       {/* Fundo de Partículas */}
       <ParticlesBackground isDarkTheme={true} className="z-0" />
 
@@ -106,7 +116,7 @@ export default function SalesPage() {
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 1.0 }}
-          className="w-full"
+          className="w-full sales-page-cards"
         >
           <QuickAccessCards
             selectedCard={selectedCard}
