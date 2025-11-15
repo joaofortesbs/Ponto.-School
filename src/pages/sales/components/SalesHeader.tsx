@@ -81,7 +81,7 @@ export function SalesHeader() {
             </div>
           </motion.div>
 
-          {/* Botão "Comece Já" - Canto Direito */}
+          {/* Botão "Comece Já" e Botão "Professor" - Canto Direito */}
           <div className="ml-auto pl-8 md:pl-12 flex items-center gap-3">
             {/* Dropdown de Seleção de Idiomas */}
             <DropdownMenu>
@@ -164,6 +164,66 @@ export function SalesHeader() {
                 >
                   <img src="/images/bandeira-alemanha.png" alt="Deutschland" className="w-6 h-6 object-cover rounded" />
                   <span className="font-medium">Deutsch</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Dropdown do Botão Professor */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    className="
+                      relative overflow-hidden
+                      px-6 md:px-6 py-2 md:py-3
+                      bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]
+                      hover:from-[#FF8C40] hover:to-[#FF6B00]
+                      text-white font-bold text-base md:text-lg
+                      rounded-3xl
+                      shadow-lg shadow-[#FF6B00]/30
+                      hover:shadow-xl hover:shadow-[#FF6B00]/40
+                      transition-all duration-300
+                      border border-white/10
+                      group
+                    "
+                  >
+                    {/* Efeito de brilho no hover */}
+                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+
+                    {/* Texto */}
+                    <span className="relative z-10 flex items-center justify-center">
+                      Professor
+                    </span>
+                  </Button>
+                </motion.div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="bottom"
+                align="end"
+                className="bg-[#0A1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 min-w-[180px]"
+              >
+                <DropdownMenuItem
+                  onClick={() => navigate('/register?type=professor')}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer bg-white/10 hover:bg-white/20 transition-colors text-white"
+                >
+                  <span className="font-medium">Professores</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => navigate('/register?type=aluno')}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white"
+                >
+                  <span className="font-medium">Alunos</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => navigate('/register?type=escola')}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white"
+                >
+                  <span className="font-medium">Escolas</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
