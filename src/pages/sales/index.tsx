@@ -32,7 +32,7 @@ export default function SalesPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="relative z-10 flex min-h-screen items-end justify-center px-4 pt-24 pb-20"
+        className="relative z-10 flex min-h-screen items-center justify-center px-4 pt-24 pb-12"
       >
         <div className="relative w-full max-w-[1800px] mx-auto">
           <div className="flex items-start justify-between w-full">
@@ -71,7 +71,7 @@ export default function SalesPage() {
               </motion.p>
 
               {/* Container Unificado: Caixa de Mensagens + Cards Retangulares */}
-              <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 items-center justify-center mt-20">
+              <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 items-center justify-center">
                 {/* Caixa de Enviar Mensagens */}
                 <motion.div
                   initial={{ y: 30, opacity: 0 }}
