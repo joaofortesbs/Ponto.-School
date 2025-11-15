@@ -123,11 +123,11 @@ export function SalesHeader() {
                       backgroundClip: 'border-box'
                     }}
                   >
-                    {/* Camada de fundo interno com opacidade reduzida */}
+                    {/* Camada de fundo interno com opacidade de 30% */}
                     <span
                       className="absolute inset-[1.5px] rounded-[calc(1.5rem-1.5px)] z-0"
                       style={{
-                        background: 'linear-gradient(to right, rgba(255, 107, 0, 0.5), rgba(255, 140, 64, 0.5))'
+                        background: 'rgba(255, 107, 0, 0.3)'
                       }}
                     ></span>
 
@@ -318,19 +318,30 @@ export function SalesHeader() {
               className="
                 relative overflow-hidden
                 px-6 md:px-6 py-2 md:py-3
-                bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]
-                hover:from-[#FF8C40] hover:to-[#FF6B00]
                 text-white font-bold text-base md:text-lg
                 rounded-3xl
                 shadow-lg shadow-[#FF6B00]/30
                 hover:shadow-xl hover:shadow-[#FF6B00]/40
                 transition-all duration-300
-                border border-white/10
                 group
               "
+              style={{
+                border: '1.5px solid transparent',
+                backgroundImage: 'linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
+                backgroundOrigin: 'border-box',
+                backgroundClip: 'border-box'
+              }}
             >
+              {/* Camada de fundo interno com opacidade de 30% */}
+              <span 
+                className="absolute inset-[1.5px] rounded-[calc(1.5rem-1.5px)] z-0"
+                style={{
+                  background: 'rgba(255, 107, 0, 0.3)'
+                }}
+              ></span>
+
               {/* Efeito de brilho no hover */}
-              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-3xl z-[1]"></span>
 
               {/* Texto */}
               <span className="relative z-10 flex items-center justify-center">
