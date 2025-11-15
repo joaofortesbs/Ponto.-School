@@ -5,6 +5,7 @@ import { SalesHeader } from "./components/SalesHeader";
 import StackedCardsLeft from './components/StackedCardsLeft';
 import StackedCardsRight from './components/StackedCardsRight';
 import ChatInput from '@/sections/SchoolPower/components/ChatInput';
+import { QuickAccessCards } from '@/sections/SchoolPower/components/4-cards-pré-prompts';
 
 export default function SalesPage() {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
@@ -75,12 +76,25 @@ export default function SalesPage() {
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
-                className="w-full max-w-4xl mx-auto"
+                className="w-full max-w-4xl mx-auto mb-6"
               >
                 <ChatInput
                   isDarkTheme={true}
                   onSend={handleSendMessage}
                   externalSelectedCard={selectedCard}
+                  onCardClick={handleCardClick}
+                />
+              </motion.div>
+
+              {/* Cards Retangulares de Acesso Rápido */}
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 1.0 }}
+                className="w-full max-w-4xl mx-auto"
+              >
+                <QuickAccessCards
+                  selectedCard={selectedCard}
                   onCardClick={handleCardClick}
                 />
               </motion.div>
