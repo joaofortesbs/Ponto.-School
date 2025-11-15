@@ -1,25 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import ParticlesBackground from "@/sections/SchoolPower/components/ParticlesBackground";
 import { SalesHeader } from "./components/SalesHeader";
 import StackedCardsLeft from './components/StackedCardsLeft';
 import StackedCardsRight from './components/StackedCardsRight';
-import ChatInput from '@/sections/SchoolPower/components/ChatInput';
-import { QuickAccessCards } from '@/sections/SchoolPower/components/4-cards-pré-prompts';
 
 export default function SalesPage() {
-  const [selectedCard, setSelectedCard] = useState<string | null>(null);
-
-  const handleSendMessage = (message: string, files?: any[]) => {
-    console.log('📨 Mensagem enviada na página de vendas:', message);
-    console.log('📎 Arquivos anexados:', files?.length || 0);
-  };
-
-  const handleCardClick = (cardName: string) => {
-    console.log('🎯 Card clicado na página de vendas:', cardName);
-    setSelectedCard(cardName);
-  };
-
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-[#0A1628] via-[#0D1B2A] to-[#1B263B]">
       {/* Fundo de Partículas */}
@@ -33,7 +19,7 @@ export default function SalesPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="relative z-10 flex min-h-screen items-center justify-center px-4 pt-24 pb-12"
+        className="relative z-10 flex min-h-screen items-start justify-center px-4 pt-24"
       >
         <div className="relative w-full max-w-[1800px] mx-auto">
           <div className="flex items-start justify-between w-full">
@@ -70,36 +56,6 @@ export default function SalesPage() {
               >
                 A plataforma educacional mais avançada para transformar o ensino e aprendizado
               </motion.p>
-
-              {/* Caixa de Mensagens do School Power */}
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
-                className="w-full max-w-4xl mx-auto"
-                style={{ marginBottom: '0' }}
-              >
-                <ChatInput
-                  isDarkTheme={true}
-                  onSend={handleSendMessage}
-                  externalSelectedCard={selectedCard}
-                  onCardClick={handleCardClick}
-                />
-              </motion.div>
-
-              {/* Cards Retangulares de Acesso Rápido */}
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 1.0 }}
-                className="w-full max-w-4xl mx-auto"
-                style={{ marginTop: '-68px' }}
-              >
-                <QuickAccessCards
-                  selectedCard={selectedCard}
-                  onCardClick={handleCardClick}
-                />
-              </motion.div>
             </div>
 
             {/* Cards Sobrepostos Duplicados - Canto Direito Extremo */}
