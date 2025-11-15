@@ -82,38 +82,38 @@ export default function SalesPage() {
             </motion.div>
           </div>
         </div>
-
-        {/* Container Separado: Caixa de Mensagens + Cards Retangulares */}
-        <div className="relative w-full max-w-4xl mx-auto mt-16 px-4">
-          {/* Caixa de Enviar Mensagens */}
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            className="w-full mb-6"
-          >
-            <ChatInput
-              isDarkTheme={true}
-              onSend={handleSendMessage}
-              externalSelectedCard={selectedCard}
-              onCardClick={handleCardClick}
-            />
-          </motion.div>
-
-          {/* Cards Retangulares de Prompts Rápidos */}
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 1.0 }}
-            className="w-full"
-          >
-            <QuickAccessCards
-              selectedCard={selectedCard}
-              onCardClick={handleCardClick}
-            />
-          </motion.div>
-        </div>
       </motion.div>
+
+      {/* Container Separado: Caixa de Mensagens + Cards Retangulares - ABAIXO DE TODO O CONTEÚDO */}
+      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 pb-20">
+        {/* Caixa de Enviar Mensagens */}
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="w-full mb-6"
+        >
+          <ChatInput
+            isDarkTheme={true}
+            onSend={handleSendMessage}
+            externalSelectedCard={selectedCard}
+            onCardClick={handleCardClick}
+          />
+        </motion.div>
+
+        {/* Cards Retangulares de Prompts Rápidos */}
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 1.0 }}
+          className="w-full"
+        >
+          <QuickAccessCards
+            selectedCard={selectedCard}
+            onCardClick={handleCardClick}
+          />
+        </motion.div>
+      </div>
     </div>
   );
 }
