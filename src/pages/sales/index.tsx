@@ -71,12 +71,13 @@ export default function SalesPage() {
               </motion.p>
 
               {/* Container Unificado: Caixa de Mensagens + Cards Retangulares */}
-              <div className="w-full max-w-4xl mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '0', margin: '0 auto' }}>
+              <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 items-center justify-center">
                 {/* Caixa de Enviar Mensagens */}
                 <motion.div
                   initial={{ y: 30, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.8 }}
+                  className="w-full"
                 >
                   <ChatInput
                     isDarkTheme={true}
@@ -91,6 +92,7 @@ export default function SalesPage() {
                   initial={{ y: 30, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.6, delay: 1.0 }}
+                  className="w-full"
                 >
                   <QuickAccessCards
                     selectedCard={selectedCard}

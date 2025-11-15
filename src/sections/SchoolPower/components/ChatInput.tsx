@@ -303,10 +303,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
         }
 
         .message-container {
-          position: fixed;
-          bottom: 67px;
-          left: 50%;
-          transform: translateX(-50%);
+          position: relative;
           background: transparent;
           border-radius: 40px;
           padding: 2px;
@@ -315,6 +312,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           overflow: visible;
           height: 68px;
           z-index: 1000;
+          margin: 0 auto;
         }
 
         .message-container.mobile-quiz {
