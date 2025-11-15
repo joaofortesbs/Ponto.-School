@@ -76,7 +76,8 @@ export default function SalesPage() {
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
-                className="w-full max-w-4xl mx-auto mb-6"
+                className="w-full max-w-4xl mx-auto"
+                style={{ marginBottom: '0' }}
               >
                 <ChatInput
                   isDarkTheme={true}
@@ -92,6 +93,7 @@ export default function SalesPage() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 1.0 }}
                 className="w-full max-w-4xl mx-auto"
+                style={{ marginTop: '-68px' }}
               >
                 <QuickAccessCards
                   selectedCard={selectedCard}
