@@ -109,6 +109,8 @@ export function SalesHeader() {
                     className="
                       relative overflow-hidden
                       px-6 md:px-6 py-2 md:py-3
+                      bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]
+                      hover:from-[#FF8C40] hover:to-[#FF6B00]
                       text-white font-bold text-base md:text-lg
                       rounded-3xl
                       shadow-lg shadow-[#FF6B00]/30
@@ -118,7 +120,7 @@ export function SalesHeader() {
                     "
                     style={{
                       border: '1.5px solid transparent',
-                      background: 'linear-gradient(to right, rgba(255, 107, 0, 0.7), rgba(255, 140, 64, 0.7)), linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
+                      backgroundImage: 'linear-gradient(to right, #FF6B00, #FF8C40), linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
                       backgroundOrigin: 'border-box',
                       backgroundClip: 'padding-box, border-box'
                     }}
