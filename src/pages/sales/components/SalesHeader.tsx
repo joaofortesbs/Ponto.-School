@@ -103,9 +103,12 @@ export function SalesHeader() {
               <span className="relative z-10 flex items-center gap-2">
                 Comece já
                 <svg 
-                  className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300" 
+                  className="w-5 h-5 transform group-hover:scale-110 transition-transform duration-300" 
+                  viewBox="0 0 24 24"
+                  fill="white"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <path d="M18 16.5C18 17.88 16.88 19 15.5 19C14.12 19 13 17.88 13 16.5V12H11V18C11 19.1 10.1 20 9 20C7.9 20 7 19.1 7 18V13H6C4.9 13 4 12.1 4 11C4 9.9 4.9 9 6 9H7V7C7 5.9 7.9 5 9 5C10.1 5 11 5.9 11 7V9H13V5.5C13 4.12 14.12 3 15.5 3C16.88 3 18 4.12 18 5.5V9H19C20.1 9 21 9.9 21 11C21 12.1 20.1 13 19 13H18V16.5Z"/>
                 </svg>
               </span>
             </Button>
