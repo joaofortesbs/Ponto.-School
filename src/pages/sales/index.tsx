@@ -70,6 +70,19 @@ export default function SalesPage() {
           </div>
         </div>
       </motion.div>
+
+      {/* Cards Section - Left and Right */}
+      <div className="absolute inset-0 flex items-start justify-between px-8 pt-16 pointer-events-none">
+        {/* Left Cards */}
+        <div className="pointer-events-auto">
+          <StackedCardsLeft />
+        </div>
+
+        {/* Right Cards */}
+        <div className="pointer-events-auto">
+          <StackedCardsRight />
+        </div>
+      </div>
     </div>
   );
 }
