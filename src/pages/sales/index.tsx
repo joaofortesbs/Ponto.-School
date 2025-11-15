@@ -123,6 +123,39 @@ export default function SalesPage() {
             onCardClick={handleCardClick}
           />
         </motion.div>
+
+        {/* Componente de Professores Transformados */}
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 1.2 }}
+          className="w-full mt-12 flex items-center justify-center"
+        >
+          <div className="flex items-center gap-4 px-6 py-4 rounded-full bg-gradient-to-r from-orange-50/80 via-amber-50/80 to-orange-50/80 backdrop-blur-sm">
+            {/* Círculos Sobrepostos */}
+            <div className="flex items-center -space-x-3">
+              <div className="w-12 h-12 rounded-full border-4 border-[#FF6B00] bg-[#FFF5E6] flex items-center justify-center shadow-md">
+                <span className="text-[#FF6B00] font-bold text-sm">P</span>
+              </div>
+              <div className="w-12 h-12 rounded-full border-4 border-[#FF6B00] bg-[#FFF5E6] flex items-center justify-center shadow-md">
+                <span className="text-[#FF6B00] font-bold text-sm">S</span>
+              </div>
+              <div className="w-12 h-12 rounded-full border-4 border-[#FF6B00] bg-[#FFF5E6] flex items-center justify-center shadow-md">
+                <span className="text-[#FF6B00] font-bold text-sm">5</span>
+              </div>
+              <div className="w-12 h-12 rounded-full border-4 border-[#FF6B00] bg-[#FFF5E6] flex items-center justify-center shadow-md">
+                <span className="text-[#FF6B00] font-bold text-sm">K</span>
+              </div>
+            </div>
+
+            {/* Texto */}
+            <div className="flex items-center">
+              <p className="text-gray-900 font-semibold text-base md:text-lg whitespace-nowrap">
+                Mais de 5 mil professores transformados
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
