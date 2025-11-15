@@ -16,7 +16,7 @@ export function SalesHeader() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -36,15 +36,15 @@ export function SalesHeader() {
       >
         {/* Brilho de fundo com gradiente */}
         <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00]/20 via-[#FF8C40]/20 to-[#FF6B00]/20 rounded-3xl blur-xl opacity-75"></div>
-        
+
         {/* Container Principal do Header */}
         <div 
           className={`
             relative flex items-center justify-between
-            px-6 md:px-8 py-2
+            px-4 md:px-6 py-3
             bg-[#0A1628]/80 backdrop-blur-2xl
             border border-white/10
-            rounded-3xl
+            rounded-[2rem]
             shadow-2xl shadow-black/50
             transition-all duration-300
             ${isScrolled ? 'bg-[#0A1628]/95 border-white/20' : ''}
@@ -64,7 +64,7 @@ export function SalesHeader() {
             <div className="relative">
               {/* Brilho atrás do logo */}
               <div className="absolute -inset-2 bg-gradient-to-r from-[#FF6B00]/30 to-[#FF8C40]/30 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
+
               {/* Logo */}
               <img
                 src="/lovable-uploads/Logo-Ponto. School.png"
@@ -97,10 +97,10 @@ export function SalesHeader() {
             >
               {/* Efeito de brilho no hover */}
               <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-              
+
               {/* Texto */}
               <span className="relative z-10 flex items-center gap-2">
-                Comece Já
+                Comece já
                 <svg 
                   className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300" 
                   fill="none" 
