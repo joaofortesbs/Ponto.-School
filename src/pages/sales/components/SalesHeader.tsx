@@ -78,8 +78,12 @@ export function SalesHeader() {
           <div className="ml-auto pl-8 md:pl-12 flex items-center gap-3">
             {/* Ícone de Globo com Gradiente */}
             <motion.div
-              whileHover={{ scale: 1.1, rotate: 5 }}
+              whileHover={{ scale: 1.15, rotate: 360 }}
               whileTap={{ scale: 0.95 }}
+              transition={{ 
+                duration: 0.6, 
+                ease: "easeInOut" 
+              }}
               className="relative"
             >
               <svg 
@@ -89,8 +93,8 @@ export function SalesHeader() {
               >
                 <defs>
                   <linearGradient id="globeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: '#FF6B00', stopOpacity: 1 }} />
-                    <stop offset="100%" style={{ stopColor: '#FF8C40', stopOpacity: 1 }} />
+                    <stop offset="0%" style={{ stopColor: '#FF9933', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#FFB366', stopOpacity: 1 }} />
                   </linearGradient>
                 </defs>
                 <path 
