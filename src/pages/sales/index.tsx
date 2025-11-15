@@ -85,7 +85,7 @@ export default function SalesPage() {
       </motion.div>
 
       {/* Container Separado: Caixa de Mensagens + Cards Retangulares - ABAIXO DE TODO O CONTEÚDO */}
-      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 pb-20">
+      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 pb-20 -mt-32">
         {/* Caixa de Enviar Mensagens */}
         <motion.div
           initial={{ y: 30, opacity: 0 }}
