@@ -81,8 +81,69 @@ export function SalesHeader() {
             </div>
           </motion.div>
 
-          {/* Botão "Comece Já" e Botão "Professor" - Canto Direito */}
+          {/* Botões e controles - Canto Direito */}
           <div className="ml-auto pl-8 md:pl-12 flex items-center gap-3">
+            {/* Dropdown do Botão Professor */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    className="
+                      relative overflow-hidden
+                      px-6 md:px-6 py-2 md:py-3
+                      bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]
+                      hover:from-[#FF8C40] hover:to-[#FF6B00]
+                      text-white font-bold text-base md:text-lg
+                      rounded-3xl
+                      shadow-lg shadow-[#FF6B00]/30
+                      hover:shadow-xl hover:shadow-[#FF6B00]/40
+                      transition-all duration-300
+                      border border-white/10
+                      group
+                      focus:outline-none focus-visible:ring-0
+                    "
+                  >
+                    {/* Efeito de brilho no hover */}
+                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+
+                    {/* Texto */}
+                    <span className="relative z-10 flex items-center justify-center">
+                      Professor
+                    </span>
+                  </Button>
+                </motion.div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="bottom"
+                align="end"
+                className="bg-[#0A1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 min-w-[180px]"
+              >
+                <DropdownMenuItem
+                  onClick={() => navigate('/register?type=professor')}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
+                >
+                  <span className="font-medium">Professores</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => navigate('/register?type=aluno')}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
+                >
+                  <span className="font-medium">Alunos</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => navigate('/register?type=escola')}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
+                >
+                  <span className="font-medium">Escolas</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {/* Dropdown de Seleção de Idiomas */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -93,7 +154,7 @@ export function SalesHeader() {
                     duration: 0.6,
                     ease: "easeInOut"
                   }}
-                  className="relative bg-transparent border-none cursor-pointer focus:outline-none"
+                  className="relative bg-transparent border-none cursor-pointer focus:outline-none focus-visible:outline-none focus-visible:ring-0"
                 >
                   <svg
                     className="w-7 h-7"
@@ -120,7 +181,7 @@ export function SalesHeader() {
               >
                 <DropdownMenuItem
                   onClick={() => setSelectedLanguage("pt-BR")}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
                 >
                   <img src="/images/bandeira-brasil.png" alt="Brasil" className="w-6 h-6 object-cover rounded" />
                   <span className="font-medium">Português Brasil</span>
@@ -128,7 +189,7 @@ export function SalesHeader() {
 
                 <DropdownMenuItem
                   onClick={() => setSelectedLanguage("en-US")}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
                 >
                   <img src="/images/bandeira-estados-unidos.png" alt="USA" className="w-6 h-6 object-cover rounded" />
                   <span className="font-medium">English</span>
@@ -136,7 +197,7 @@ export function SalesHeader() {
 
                 <DropdownMenuItem
                   onClick={() => setSelectedLanguage("es-ES")}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
                 >
                   <img src="/images/bandeira-espanha.png" alt="España" className="w-6 h-6 object-cover rounded" />
                   <span className="font-medium">Español</span>
@@ -144,7 +205,7 @@ export function SalesHeader() {
 
                 <DropdownMenuItem
                   onClick={() => setSelectedLanguage("fr-FR")}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
                 >
                   <img src="/images/bandeira-franca.png" alt="France" className="w-6 h-6 object-cover rounded" />
                   <span className="font-medium">Français</span>
@@ -152,7 +213,7 @@ export function SalesHeader() {
 
                 <DropdownMenuItem
                   onClick={() => setSelectedLanguage("ja-JP")}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
                 >
                   <img src="/images/bandeira-japao.png" alt="日本" className="w-6 h-6 object-cover rounded" />
                   <span className="font-medium">日本語</span>
@@ -160,70 +221,10 @@ export function SalesHeader() {
 
                 <DropdownMenuItem
                   onClick={() => setSelectedLanguage("de-DE")}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
                 >
                   <img src="/images/bandeira-alemanha.png" alt="Deutschland" className="w-6 h-6 object-cover rounded" />
                   <span className="font-medium">Deutsch</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Dropdown do Botão Professor */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button
-                    className="
-                      relative overflow-hidden
-                      px-6 md:px-6 py-2 md:py-3
-                      bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]
-                      hover:from-[#FF8C40] hover:to-[#FF6B00]
-                      text-white font-bold text-base md:text-lg
-                      rounded-3xl
-                      shadow-lg shadow-[#FF6B00]/30
-                      hover:shadow-xl hover:shadow-[#FF6B00]/40
-                      transition-all duration-300
-                      border border-white/10
-                      group
-                    "
-                  >
-                    {/* Efeito de brilho no hover */}
-                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-
-                    {/* Texto */}
-                    <span className="relative z-10 flex items-center justify-center">
-                      Professor
-                    </span>
-                  </Button>
-                </motion.div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="bottom"
-                align="end"
-                className="bg-[#0A1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 min-w-[180px]"
-              >
-                <DropdownMenuItem
-                  onClick={() => navigate('/register?type=professor')}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer bg-white/10 hover:bg-white/20 transition-colors text-white"
-                >
-                  <span className="font-medium">Professores</span>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  onClick={() => navigate('/register?type=aluno')}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white"
-                >
-                  <span className="font-medium">Alunos</span>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  onClick={() => navigate('/register?type=escola')}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white"
-                >
-                  <span className="font-medium">Escolas</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
