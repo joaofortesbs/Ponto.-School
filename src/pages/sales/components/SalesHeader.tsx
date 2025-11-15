@@ -69,7 +69,7 @@ export function SalesHeader() {
               <img
                 src="/lovable-uploads/Logo-Ponto. School.png"
                 alt="Ponto School"
-                className="h-14 md:h-16 w-auto object-contain relative z-10 drop-shadow-2xl"
+                className="h-12 md:h-14 w-auto object-contain relative z-10 drop-shadow-2xl"
               />
             </div>
           </motion.div>
