@@ -35,7 +35,7 @@ export function SalesHeader() {
         className="relative"
       >
         {/* Brilho de fundo com gradiente */}
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00]/20 via-[#FF8C40]/20 to-[#FF6B00]/20 rounded-2xl blur-xl opacity-75"></div>
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00]/20 via-[#FF8C40]/20 to-[#FF6B00]/20 rounded-3xl blur-xl opacity-75"></div>
         
         {/* Container Principal do Header */}
         <div 
@@ -44,7 +44,7 @@ export function SalesHeader() {
             px-6 md:px-8 py-4
             bg-[#0A1628]/80 backdrop-blur-2xl
             border border-white/10
-            rounded-2xl
+            rounded-3xl
             shadow-2xl shadow-black/50
             transition-all duration-300
             ${isScrolled ? 'bg-[#0A1628]/95 border-white/20' : ''}
@@ -69,7 +69,7 @@ export function SalesHeader() {
               <img
                 src="/lovable-uploads/Logo-Ponto. School.png"
                 alt="Ponto School"
-                className="h-12 md:h-14 w-auto object-contain relative z-10 drop-shadow-2xl"
+                className="h-14 md:h-16 w-auto object-contain relative z-10 drop-shadow-2xl"
               />
             </div>
           </motion.div>
@@ -87,7 +87,7 @@ export function SalesHeader() {
                 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]
                 hover:from-[#FF8C40] hover:to-[#FF6B00]
                 text-white font-bold text-base md:text-lg
-                rounded-xl
+                rounded-2xl
                 shadow-lg shadow-[#FF6B00]/50
                 hover:shadow-xl hover:shadow-[#FF6B00]/70
                 transition-all duration-300
