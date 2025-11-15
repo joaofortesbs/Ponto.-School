@@ -92,7 +92,7 @@ export default function SalesPage() {
 
                   {/* Texto */}
                   <div className="flex items-center">
-                    <p className="text-gray-400 font-normal text-sm md:text-base whitespace-nowrap">
+                    <p className="text-gray-300 font-normal text-sm md:text-base whitespace-nowrap">
                       Mais de 5 mil professores transformados
                     </p>
                   </div>
