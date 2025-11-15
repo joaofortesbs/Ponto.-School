@@ -75,22 +75,36 @@ export function SalesHeader() {
           </motion.div>
 
           {/* Botão "Comece Já" - Canto Direito */}
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="ml-auto pl-8 md:pl-12 flex items-center gap-3"
-          >
-            {/* Ícone de Globo */}
-            <svg 
-              className="w-6 h-6" 
-              viewBox="0 0 24 24" 
-              fill="white"
-              xmlns="http://www.w3.org/2000/svg"
+          <div className="ml-auto pl-8 md:pl-12 flex items-center gap-3">
+            {/* Ícone de Globo com Gradiente */}
+            <motion.div
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative"
             >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-            </svg>
+              <svg 
+                className="w-6 h-6" 
+                viewBox="0 0 24 24" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <defs>
+                  <linearGradient id="globeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#FF6B00', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#FF8C40', stopOpacity: 1 }} />
+                  </linearGradient>
+                </defs>
+                <path 
+                  fill="url(#globeGradient)" 
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
+                />
+              </svg>
+            </motion.div>
 
-            <Button
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
               onClick={() => navigate('/register')}
               className="
                 relative overflow-hidden
@@ -114,7 +128,8 @@ export function SalesHeader() {
                 Comece já
               </span>
             </Button>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
 
         {/* Linha decorativa inferior */}
