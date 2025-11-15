@@ -4,9 +4,6 @@ import React from 'react';
 export default function StackedCards() {
   return (
     <div className="relative w-80 h-96 p-4">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-orange-300 to-orange-200 rounded-lg"></div>
-      
       {/* Container for cards */}
       <div className="relative w-full h-full flex items-center justify-center">
         
