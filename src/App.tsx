@@ -162,24 +162,6 @@ function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkRootRoute = async () => {
-      if (location.pathname === "/") {
-        const isAuth = await checkAuthentication();
-        if (!isAuth) {
-          navigate('/login', { replace: true });
-        } else {
-          // Se está autenticado e na rota raiz, garantir que está no dashboard
-          if (location.pathname === "/") {
-            console.log("✅ Usuário autenticado, redirecionando para dashboard");
-          }
-        }
-      }
-    };
-
-    checkRootRoute();
-  }, [location.pathname, navigate]);
-
-  useEffect(() => {
     const preventScroll = () => {
       document.body.classList.add('modal-open');
     };
@@ -350,7 +332,7 @@ function App() {
                   <Route path="conquistas" element={<AlunoUnderConstruction />} />
                   <Route path="explorar" element={<AlunoUnderConstruction />} />
                   <Route path="epictus-ia" element={<AlunoUnderConstruction />} />
-                  <Route path="/school-power" element={<SchoolPowerPageIndex />} />
+                  <Route path="school-power" element={<SchoolPowerPageIndex />} />
                   <Route path="trilhas-school" element={<TrilhasSchoolProfessorInterface />} />
                   <Route path="trilhas-school/professores" element={<TrilhasSchoolProfessorInterface />} />
                   <Route path="agenda" element={<Agenda />} />
