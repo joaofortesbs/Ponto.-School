@@ -120,9 +120,9 @@ export function SalesHeader() {
                       focus:outline-none focus-visible:ring-0
                     "
                   >
-                    {/* Borda com gradiente arredondada mais intensa */}
-                    <span className="absolute inset-0 rounded-3xl p-[3px] bg-gradient-to-r from-[#FF6B00] via-[#FFB366] to-[#FF6B00] -z-10"></span>
-                    <span className="absolute inset-[3px] rounded-3xl bg-[#0A1628]/40 group-hover:bg-[#0A1628]/60 transition-all duration-300 -z-10"></span>
+                    {/* Borda com gradiente arredondada */}
+                    <span className="absolute inset-0 rounded-3xl p-[2px] bg-gradient-to-r from-[#FF6B00] via-[#FF8C40] to-[#FF6B00] -z-10"></span>
+                    <span className="absolute inset-[2px] rounded-3xl bg-[#0A1628]/40 group-hover:bg-[#0A1628]/60 transition-all duration-300 -z-10"></span>
 
                     {/* Efeito de brilho no hover */}
                     <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-3xl"></span>
