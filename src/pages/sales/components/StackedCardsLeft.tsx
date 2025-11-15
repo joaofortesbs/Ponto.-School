@@ -3,7 +3,7 @@ import React from 'react';
 
 export default function StackedCardsLeft() {
   return (
-    <div className="relative w-80 h-96 p-4">
+    <div className="relative w-80 h-[450px] p-4">
       {/* Container for cards */}
       <div className="relative w-full h-full flex items-center justify-center">
         
@@ -13,7 +13,7 @@ export default function StackedCardsLeft() {
           style={{
             width: '240px',
             height: '180px',
-            top: '10px',
+            top: '0px',
             right: '10px',
             transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
             border: '2px solid transparent',
@@ -42,7 +42,7 @@ export default function StackedCardsLeft() {
           style={{
             width: '240px',
             height: '180px',
-            bottom: '10px',
+            bottom: '0px',
             left: '10px',
             transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
             border: '2px solid transparent',
