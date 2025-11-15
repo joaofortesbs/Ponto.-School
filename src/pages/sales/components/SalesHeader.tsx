@@ -14,6 +14,7 @@ export function SalesHeader() {
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("pt-BR"); // Estado para a linguagem selecionada
+  const [selectedUserType, setSelectedUserType] = useState("professor"); // Estado para o tipo de usuário selecionado
 
   // Transformar o scroll em valores para animações
   const headerOpacity = useTransform(scrollY, [0, 100], [0.95, 1]);
@@ -27,6 +28,20 @@ export function SalesHeader() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Função para obter o texto do botão baseado no tipo selecionado
+  const getUserTypeLabel = () => {
+    switch (selectedUserType) {
+      case "professor":
+        return "Professor";
+      case "aluno":
+        return "Alunos";
+      case "escola":
+        return "Escolas";
+      default:
+        return "Professor";
+    }
+  };
 
   return (
     <motion.header
@@ -111,7 +126,7 @@ export function SalesHeader() {
 
                     {/* Texto */}
                     <span className="relative z-10 flex items-center justify-center">
-                      Professor
+                      {getUserTypeLabel()}
                     </span>
                   </Button>
                 </motion.div>
@@ -122,22 +137,22 @@ export function SalesHeader() {
                 className="bg-[#0A1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 min-w-[180px]"
               >
                 <DropdownMenuItem
-                  onClick={() => navigate('/register?type=professor')}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
+                  onClick={() => setSelectedUserType("professor")}
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none ${selectedUserType === "professor" ? "bg-white/10" : ""}`}
                 >
                   <span className="font-medium">Professores</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
-                  onClick={() => navigate('/register?type=aluno')}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
+                  onClick={() => setSelectedUserType("aluno")}
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none ${selectedUserType === "aluno" ? "bg-white/10" : ""}`}
                 >
                   <span className="font-medium">Alunos</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
-                  onClick={() => navigate('/register?type=escola')}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
+                  onClick={() => setSelectedUserType("escola")}
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none ${selectedUserType === "escola" ? "bg-white/10" : ""}`}
                 >
                   <span className="font-medium">Escolas</span>
                 </DropdownMenuItem>
