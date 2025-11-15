@@ -124,7 +124,7 @@ export function SalesHeader() {
                     }}
                   >
                     {/* Camada de fundo interno com opacidade reduzida */}
-                    <span 
+                    <span
                       className="absolute inset-[1.5px] rounded-[calc(1.5rem-1.5px)] z-0"
                       style={{
                         background: 'linear-gradient(to right, rgba(255, 107, 0, 0.5), rgba(255, 140, 64, 0.5))'
@@ -168,6 +168,37 @@ export function SalesHeader() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Botão Modelos - Configuração Independente */}
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
+                className="
+                  relative overflow-hidden
+                  px-6 md:px-6 py-2 md:py-3
+                  text-white font-bold text-base md:text-lg
+                  rounded-3xl
+                  shadow-lg shadow-[#FF6B00]/30
+                  hover:shadow-xl hover:shadow-[#FF6B00]/40
+                  transition-all duration-300
+                  group
+                "
+                style={{
+                  border: '1.5px solid rgba(255, 107, 0, 1)',
+                  background: 'rgba(255, 107, 0, 0.5)'
+                }}
+              >
+                {/* Efeito de brilho no hover */}
+                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-3xl"></span>
+
+                {/* Texto */}
+                <span className="relative z-10 flex items-center justify-center">
+                  Modelos
+                </span>
+              </Button>
+            </motion.div>
           </div>
 
           {/* Controles - Canto Direito */}
