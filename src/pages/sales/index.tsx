@@ -131,7 +131,7 @@ export default function SalesPage() {
           transition={{ duration: 0.6, delay: 1.2 }}
           className="w-full mt-12 flex items-center justify-center"
         >
-          <div className="flex items-center gap-4 px-6 py-4 rounded-full bg-gradient-to-r from-orange-50/80 via-amber-50/80 to-orange-50/80 backdrop-blur-sm">
+          <div className="flex items-center gap-4">
             {/* Círculos Sobrepostos */}
             <div className="flex items-center -space-x-3">
               <div className="w-12 h-12 rounded-full border-4 border-[#FF6B00] bg-[#FFF5E6] flex items-center justify-center shadow-md">
@@ -150,7 +150,7 @@ export default function SalesPage() {
 
             {/* Texto */}
             <div className="flex items-center">
-              <p className="text-gray-900 font-semibold text-base md:text-lg whitespace-nowrap">
+              <p className="text-white font-normal text-base md:text-lg whitespace-nowrap">
                 Mais de 5 mil professores transformados
               </p>
             </div>
