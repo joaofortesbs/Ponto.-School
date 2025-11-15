@@ -87,7 +87,7 @@ export function SalesHeader() {
                 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]
                 hover:from-[#FF8C40] hover:to-[#FF6B00]
                 text-white font-bold text-base md:text-lg
-                rounded-2xl
+                rounded-3xl
                 shadow-lg shadow-[#FF6B00]/50
                 hover:shadow-xl hover:shadow-[#FF6B00]/70
                 transition-all duration-300
