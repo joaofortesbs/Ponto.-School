@@ -9,7 +9,7 @@ export default function StackedCardsRight() {
 
         {/* Top card - "Planejamento Semestral" */}
         <div
-          className="absolute bg-orange-50 border-4 border-orange-500 rounded-[40px] shadow-lg flex items-center justify-center p-6 transform rotate-12 z-10 hover:z-30 hover:scale-110 hover:rotate-6 cursor-pointer"
+          className="absolute bg-orange-50 border-4 border-orange-500 rounded-[40px] shadow-lg flex items-center justify-center p-6 transform -rotate-12 z-10 hover:z-30 hover:scale-110 hover:-rotate-6 cursor-pointer"
           style={{
             width: '240px',
             height: '180px',
@@ -25,7 +25,7 @@ export default function StackedCardsRight() {
 
         {/* Bottom card - "Atividades Online" */}
         <div
-          className="absolute bg-orange-50 border-4 border-orange-500 rounded-[40px] shadow-lg flex items-center justify-center p-6 transform -rotate-12 z-20 hover:z-30 hover:scale-110 hover:-rotate-6 cursor-pointer"
+          className="absolute bg-orange-50 border-4 border-orange-500 rounded-[40px] shadow-lg flex items-center justify-center p-6 transform rotate-12 z-20 hover:z-30 hover:scale-110 hover:rotate-6 cursor-pointer"
           style={{
             width: '240px',
             height: '180px',
