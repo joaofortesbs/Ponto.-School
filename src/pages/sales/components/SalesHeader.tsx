@@ -87,14 +87,14 @@ export function SalesHeader() {
               className="relative"
             >
               <svg 
-                className="w-6 h-6" 
+                className="w-7 h-7" 
                 viewBox="0 0 24 24" 
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <defs>
                   <linearGradient id="globeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: '#FF9933', stopOpacity: 1 }} />
-                    <stop offset="100%" style={{ stopColor: '#FFB366', stopOpacity: 1 }} />
+                    <stop offset="0%" style={{ stopColor: '#FF6B00', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#FF8C40', stopOpacity: 1 }} />
                   </linearGradient>
                 </defs>
                 <path 
