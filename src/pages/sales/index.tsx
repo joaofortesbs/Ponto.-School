@@ -134,16 +134,16 @@ export default function SalesPage() {
           <div className="flex items-center gap-4">
             {/* Círculos Sobrepostos */}
             <div className="flex items-center -space-x-3">
-              <div className="w-12 h-12 rounded-full border-4 border-[#FF6B00] bg-[#FFF5E6] flex items-center justify-center shadow-md">
+              <div className="w-12 h-12 rounded-full border-2 bg-[#FFF5E6] flex items-center justify-center shadow-md" style={{ borderImage: 'linear-gradient(135deg, #FF6B00, #FF8C40) 1' }}>
                 <span className="text-[#FF6B00] font-bold text-sm">P</span>
               </div>
-              <div className="w-12 h-12 rounded-full border-4 border-[#FF6B00] bg-[#FFF5E6] flex items-center justify-center shadow-md">
+              <div className="w-12 h-12 rounded-full border-2 bg-[#FFF5E6] flex items-center justify-center shadow-md" style={{ borderImage: 'linear-gradient(135deg, #FF6B00, #FF8C40) 1' }}>
                 <span className="text-[#FF6B00] font-bold text-sm">S</span>
               </div>
-              <div className="w-12 h-12 rounded-full border-4 border-[#FF6B00] bg-[#FFF5E6] flex items-center justify-center shadow-md">
+              <div className="w-12 h-12 rounded-full border-2 bg-[#FFF5E6] flex items-center justify-center shadow-md" style={{ borderImage: 'linear-gradient(135deg, #FF6B00, #FF8C40) 1' }}>
                 <span className="text-[#FF6B00] font-bold text-sm">5</span>
               </div>
-              <div className="w-12 h-12 rounded-full border-4 border-[#FF6B00] bg-[#FFF5E6] flex items-center justify-center shadow-md">
+              <div className="w-12 h-12 rounded-full border-2 bg-[#FFF5E6] flex items-center justify-center shadow-md" style={{ borderImage: 'linear-gradient(135deg, #FF6B00, #FF8C40) 1' }}>
                 <span className="text-[#FF6B00] font-bold text-sm">K</span>
               </div>
             </div>
