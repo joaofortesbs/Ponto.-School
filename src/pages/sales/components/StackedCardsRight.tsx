@@ -9,13 +9,17 @@ export default function StackedCardsRight() {
 
         {/* Top card - "Planejamento Semestral" */}
         <div
-          className="absolute bg-orange-50 border-4 border-orange-500 rounded-[40px] shadow-lg overflow-hidden transform -rotate-12 z-10 hover:z-30 hover:scale-110 hover:-rotate-6 cursor-pointer"
+          className="group absolute rounded-[40px] shadow-lg overflow-hidden transform -rotate-12 z-10 hover:z-30 hover:scale-110 hover:-rotate-6 cursor-pointer"
           style={{
             width: '240px',
             height: '180px',
             top: '10px',
             right: '10px',
-            transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            border: '2px solid transparent',
+            backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
+            backgroundOrigin: 'border-box',
+            backgroundClip: 'padding-box, border-box'
           }}
         >
           <div className="relative w-full h-full">
@@ -24,7 +28,7 @@ export default function StackedCardsRight() {
               alt="Planejamento Semestral" 
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end justify-center p-4">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end justify-center p-4 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
               <h3 className="text-lg font-bold text-white text-center leading-tight drop-shadow-lg">
                 Planejamento<br />Semestral
               </h3>
@@ -34,13 +38,17 @@ export default function StackedCardsRight() {
 
         {/* Bottom card - "Atividades Online" */}
         <div
-          className="absolute bg-orange-50 border-4 border-orange-500 rounded-[40px] shadow-lg overflow-hidden transform rotate-12 z-20 hover:z-30 hover:scale-110 hover:rotate-6 cursor-pointer"
+          className="group absolute rounded-[40px] shadow-lg overflow-hidden transform rotate-12 z-20 hover:z-30 hover:scale-110 hover:rotate-6 cursor-pointer"
           style={{
             width: '240px',
             height: '180px',
             bottom: '10px',
             left: '10px',
-            transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            border: '2px solid transparent',
+            backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
+            backgroundOrigin: 'border-box',
+            backgroundClip: 'padding-box, border-box'
           }}
         >
           <div className="relative w-full h-full">
@@ -49,7 +57,7 @@ export default function StackedCardsRight() {
               alt="Atividades Online" 
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end justify-center p-4">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end justify-center p-4 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
               <h3 className="text-lg font-bold text-white text-center leading-tight drop-shadow-lg">
                 Atividades<br />Online
               </h3>
