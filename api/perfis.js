@@ -206,6 +206,10 @@ router.post('/login', async (req, res) => {
     // Verificar senha
     console.log('🔒 Verificando senha...');
     console.log('🔒 Senha fornecida:', senha ? 'Presente' : 'Ausente');
+    console.log('🔒 Senha (comprimento):', senha?.length);
+    console.log('🔒 Senha (primeiros 3 chars):', senha ? senha.substring(0, 3) : 'N/A');
+    console.log('🔒 Senha (últimos 3 chars):', senha ? senha.substring(senha.length - 3) : 'N/A');
+    console.log('🔒 Senha (tem espaços):', senha ? (senha.trim() !== senha) : 'N/A');
     console.log('🔒 Hash armazenado:', profile.senha_hash ? 'Presente' : 'Ausente');
     
     const senhaValida = await bcrypt.compare(senha, profile.senha_hash);
