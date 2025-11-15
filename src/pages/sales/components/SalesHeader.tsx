@@ -109,24 +109,19 @@ export function SalesHeader() {
                     className="
                       relative overflow-hidden
                       px-6 md:px-6 py-2 md:py-3
-                      bg-[#0A1628]/40
-                      hover:bg-[#0A1628]/60
+                      bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]
+                      hover:from-[#FF8C40] hover:to-[#FF6B00]
                       text-white font-bold text-base md:text-lg
                       rounded-3xl
-                      shadow-lg shadow-[#FF6B00]/20
-                      hover:shadow-xl hover:shadow-[#FF6B00]/30
+                      shadow-lg shadow-[#FF6B00]/30
+                      hover:shadow-xl hover:shadow-[#FF6B00]/40
                       transition-all duration-300
+                      border border-white/10
                       group
-                      focus:outline-none focus-visible:ring-0
-                      overflow-hidden
                     "
                   >
-                    {/* Borda com gradiente arredondada */}
-                    <span className="absolute inset-0 rounded-3xl p-[2px] bg-gradient-to-r from-[#FF6B00] via-[#FFD700] to-[#FF6B00]"></span>
-                    <span className="absolute inset-[2px] rounded-3xl bg-[#0A1628]/40 group-hover:bg-[#0A1628]/60 transition-all duration-300"></span>
-                    
                     {/* Efeito de brilho no hover */}
-                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-3xl"></span>
+                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
 
                     {/* Texto */}
                     <span className="relative z-10 flex items-center justify-center">
