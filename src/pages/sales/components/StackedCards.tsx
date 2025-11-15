@@ -25,9 +25,6 @@ export function StackedCards() {
       >
         <p 
           className="text-center font-bold text-xl text-[#29335C] px-8"
-          style={{ 
-            transform: 'rotate(9.188deg)'
-          }}
         >
           Atividades para<br />ENEM
         </p>
