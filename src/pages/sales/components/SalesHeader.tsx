@@ -127,7 +127,7 @@ export function SalesHeader() {
                     <span 
                       className="absolute inset-[1.5px] rounded-[calc(1.5rem-1.5px)] z-0"
                       style={{
-                        background: 'linear-gradient(to right, rgba(255, 107, 0, 0.6), rgba(255, 140, 64, 0.6))'
+                        background: 'linear-gradient(to right, rgba(255, 107, 0, 0.5), rgba(255, 140, 64, 0.5))'
                       }}
                     ></span>
 
