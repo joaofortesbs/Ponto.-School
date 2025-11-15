@@ -118,13 +118,21 @@ export function SalesHeader() {
                     "
                     style={{
                       border: '1.5px solid transparent',
-                      background: 'linear-gradient(to right, rgba(255, 107, 0, 0.6), rgba(255, 140, 64, 0.6)), linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
+                      backgroundImage: 'linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
                       backgroundOrigin: 'border-box',
-                      backgroundClip: 'padding-box, border-box'
+                      backgroundClip: 'border-box'
                     }}
                   >
+                    {/* Camada de fundo interno com opacidade reduzida */}
+                    <span 
+                      className="absolute inset-[1.5px] rounded-[calc(1.5rem-1.5px)] z-0"
+                      style={{
+                        background: 'linear-gradient(to right, rgba(255, 107, 0, 0.6), rgba(255, 140, 64, 0.6))'
+                      }}
+                    ></span>
+
                     {/* Efeito de brilho no hover */}
-                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-3xl"></span>
+                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-3xl z-[1]"></span>
 
                     {/* Texto */}
                     <span className="relative z-10 flex items-center justify-center">
