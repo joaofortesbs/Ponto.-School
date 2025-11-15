@@ -78,7 +78,7 @@ export function SalesHeader() {
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="ml-auto"
+            className="ml-auto pl-8 md:pl-12"
           >
             <Button
               onClick={() => navigate('/register')}
