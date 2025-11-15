@@ -53,6 +53,7 @@ import SchoolPowerPageIndex from "./pages/school-power";
 import MentorIAPage from "./pages/mentor-ia";
 import QuizPage from '@/pages/quiz';
 import TrilhasSchoolProfessorInterface from '@/pages/trilhas-school/professores/interface';
+import SalesPage from '@/pages/sales';
 
 const TrilhasSchoolAlunoInterface = lazy(() => import('@/pages/trilhas-school/alunos/interface'));
 
@@ -314,6 +315,9 @@ function App() {
           <ErrorBoundary>
             <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
               <Routes>
+                {/* Página de Vendas - Rota Principal Pública */}
+                <Route path="/" element={<SalesPage />} />
+
                 {/* Auth Routes - Públicas */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
@@ -327,7 +331,7 @@ function App() {
                  <Route path="/quiz" element={<QuizPage />} />
 
                 {/* Main App Routes - Protegidas */}
-                <Route path="/" element={
+                <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Home />
                   </ProtectedRoute>
