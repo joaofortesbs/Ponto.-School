@@ -84,7 +84,7 @@ export function SalesHeader() {
               onClick={() => navigate('/register')}
               className="
                 relative overflow-hidden
-                px-6 md:px-8 py-3 md:py-6
+                px-6 md:px-8 py-2 md:py-3
                 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]
                 hover:from-[#FF8C40] hover:to-[#FF6B00]
                 text-white font-bold text-base md:text-lg
