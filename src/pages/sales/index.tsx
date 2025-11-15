@@ -58,11 +58,52 @@ export default function SalesPage() {
 
             {/* Conteúdo de Texto - Centro */}
             <div className="text-center flex-1 px-8">
+              {/* Componente de Professores Transformados */}
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="w-full mb-8 flex items-center justify-center"
+              >
+                <div className="flex items-center gap-4">
+                  {/* Círculos Sobrepostos */}
+                  <div className="flex items-center -space-x-3">
+                    <div className="w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
+                      <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
+                        <span className="text-[#FF6B00] font-bold text-sm">P</span>
+                      </div>
+                    </div>
+                    <div className="w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
+                      <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
+                        <span className="text-[#FF6B00] font-bold text-sm">S</span>
+                      </div>
+                    </div>
+                    <div className="w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
+                      <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
+                        <span className="text-[#FF6B00] font-bold text-sm">5</span>
+                      </div>
+                    </div>
+                    <div className="w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
+                      <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
+                        <span className="text-[#FF6B00] font-bold text-sm">K</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Texto */}
+                  <div className="flex items-center">
+                    <p className="text-white font-normal text-base md:text-lg whitespace-nowrap">
+                      Mais de 5 mil professores transformados
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
               <motion.h1
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="text-5xl md:text-7xl font-bold text-white mb-6"
+                className="text-5xl md:text-7xl font-bold text-white mb-12"
               >
                 Bem-vindo ao
                 <br />
@@ -70,15 +111,6 @@ export default function SalesPage() {
                   Ponto School
                 </span>
               </motion.h1>
-
-              <motion.p
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto"
-              >
-                A plataforma educacional mais avançada para transformar o ensino e aprendizado
-              </motion.p>
             </div>
 
             {/* Cards Sobrepostos Duplicados - Canto Direito Extremo */}
@@ -122,47 +154,6 @@ export default function SalesPage() {
             selectedCard={selectedCard}
             onCardClick={handleCardClick}
           />
-        </motion.div>
-
-        {/* Componente de Professores Transformados */}
-        <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 1.2 }}
-          className="w-full mt-12 flex items-center justify-center"
-        >
-          <div className="flex items-center gap-4">
-            {/* Círculos Sobrepostos */}
-            <div className="flex items-center -space-x-3">
-              <div className="w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
-                <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
-                  <span className="text-[#FF6B00] font-bold text-sm">P</span>
-                </div>
-              </div>
-              <div className="w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
-                <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
-                  <span className="text-[#FF6B00] font-bold text-sm">S</span>
-                </div>
-              </div>
-              <div className="w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
-                <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
-                  <span className="text-[#FF6B00] font-bold text-sm">5</span>
-                </div>
-              </div>
-              <div className="w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
-                <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
-                  <span className="text-[#FF6B00] font-bold text-sm">K</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Texto */}
-            <div className="flex items-center">
-              <p className="text-white font-normal text-base md:text-lg whitespace-nowrap">
-                Mais de 5 mil professores transformados
-              </p>
-            </div>
-          </div>
         </motion.div>
       </div>
     </div>
