@@ -84,13 +84,13 @@ export function SalesHeader() {
               onClick={() => navigate('/register')}
               className="
                 relative overflow-hidden
-                px-6 md:px-8 py-2 md:py-3
+                px-6 md:px-6 py-2 md:py-3
                 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]
                 hover:from-[#FF8C40] hover:to-[#FF6B00]
                 text-white font-bold text-base md:text-lg
                 rounded-3xl
-                shadow-lg shadow-[#FF6B00]/50
-                hover:shadow-xl hover:shadow-[#FF6B00]/70
+                shadow-lg shadow-[#FF6B00]/30
+                hover:shadow-xl hover:shadow-[#FF6B00]/40
                 transition-all duration-300
                 border border-white/10
                 group
@@ -104,9 +104,6 @@ export function SalesHeader() {
                 Comece já
                 <svg 
                   className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
