@@ -119,14 +119,13 @@ export function SalesHeader() {
                       group
                       focus:outline-none focus-visible:ring-0
                     "
-                    style={{
-                      borderWidth: '2px',
-                      borderStyle: 'solid',
-                      borderImage: 'linear-gradient(135deg, #FF6B00, #FF8C40, #FF6B00) 1'
-                    }}
                   >
+                    {/* Borda com gradiente arredondada */}
+                    <span className="absolute inset-0 rounded-3xl p-[2px] bg-gradient-to-r from-[#FF6B00] via-[#FF8C40] to-[#FF6B00] -z-10"></span>
+                    <span className="absolute inset-[2px] rounded-3xl bg-[#0A1628]/40 group-hover:bg-[#0A1628]/60 transition-all duration-300 -z-10"></span>
+
                     {/* Efeito de brilho no hover */}
-                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-3xl"></span>
 
                     {/* Texto */}
                     <span className="relative z-10 flex items-center justify-center">
