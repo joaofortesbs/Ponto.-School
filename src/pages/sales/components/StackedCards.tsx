@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 export function StackedCards() {
   return (
     <div className="relative w-[280px] h-[400px] hidden lg:block">
-      {/* Card Superior - "Atividades para ENEM" - Inclinado 30° para esquerda */}
+      {/* Card Superior - "Atividades para ENEM" */}
+      {/* CONFIGURAÇÃO INDIVIDUAL: Rotação de -30° (30 graus para esquerda) */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -26,6 +27,7 @@ export function StackedCards() {
       </motion.div>
 
       {/* Card Inferior - "Planos de Aula" */}
+      {/* CONFIGURAÇÃO PADRÃO: Mantém rotação original */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
