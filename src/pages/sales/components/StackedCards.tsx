@@ -23,9 +23,7 @@ export function StackedCards() {
           zIndex: 2
         }}
       >
-        <p 
-          className="text-center font-bold text-xl text-[#29335C] px-8"
-        >
+        <p className="text-center font-bold text-xl text-[#29335C] px-8">
           Atividades para<br />ENEM
         </p>
       </motion.div>
