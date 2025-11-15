@@ -12,7 +12,7 @@ export function StackedCards() {
         transition={{ duration: 0.6, delay: 0.3 }}
         className="absolute top-0 left-0 w-[272px] h-[230px] bg-[#FFF2E9] border-[7px] border-[#F97316] rounded-[57px] flex items-center justify-center shadow-2xl"
         style={{
-          transform: 'rotate(-6.978deg)',
+          transform: 'rotate(-30deg)',
           zIndex: 2
         }}
       >
