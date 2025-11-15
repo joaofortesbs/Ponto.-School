@@ -162,7 +162,7 @@ export function RegisterForm() {
             return;
           } else {
             console.log("🏠 Redirecionando para dashboard...");
-            navigate("/", { replace: true });
+            navigate("/dashboard", { replace: true });
           }
         } else {
           // Login automático FALHOU - usuário precisa fazer login manual

@@ -146,7 +146,7 @@ export function LoginForm() {
         } else {
           // Redirecionar para dashboard
           setTimeout(() => {
-            navigate("/", { replace: true });
+            navigate("/dashboard", { replace: true });
           }, 1000);
         }
       } else {
