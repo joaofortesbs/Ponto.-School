@@ -66,26 +66,42 @@ export default function SalesPage() {
                 className="w-full mb-4 flex items-center justify-center"
               >
                 <div className="flex items-center gap-3">
-                  {/* Círculos Sobrepostos */}
+                  {/* Círculos Sobrepostos com Imagens */}
                   <div className="flex items-center -space-x-2">
                     <div className="w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
-                      <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
-                        <span className="text-[#FF6B00] font-bold text-xs">P</span>
+                      <div className="w-full h-full rounded-full bg-[#FFF5E6] overflow-hidden flex items-center justify-center">
+                        <img 
+                          src="/depoimento-circulo-pv1.webp" 
+                          alt="Depoimento 1"
+                          className="w-full h-full object-cover rounded-full"
+                        />
                       </div>
                     </div>
                     <div className="w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
-                      <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
-                        <span className="text-[#FF6B00] font-bold text-xs">S</span>
+                      <div className="w-full h-full rounded-full bg-[#FFF5E6] overflow-hidden flex items-center justify-center">
+                        <img 
+                          src="/depoimento-circulo-pv2.webp" 
+                          alt="Depoimento 2"
+                          className="w-full h-full object-cover rounded-full"
+                        />
                       </div>
                     </div>
                     <div className="w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
-                      <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
-                        <span className="text-[#FF6B00] font-bold text-xs">5</span>
+                      <div className="w-full h-full rounded-full bg-[#FFF5E6] overflow-hidden flex items-center justify-center">
+                        <img 
+                          src="/depoimento-circulo-pv3.webp" 
+                          alt="Depoimento 3"
+                          className="w-full h-full object-cover rounded-full"
+                        />
                       </div>
                     </div>
                     <div className="w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
-                      <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
-                        <span className="text-[#FF6B00] font-bold text-xs">K</span>
+                      <div className="w-full h-full rounded-full bg-[#FFF5E6] overflow-hidden flex items-center justify-center">
+                        <img 
+                          src="/depoimento-circulo-pv4.webp" 
+                          alt="Depoimento 4"
+                          className="w-full h-full object-cover rounded-full"
+                        />
                       </div>
                     </div>
                   </div>
