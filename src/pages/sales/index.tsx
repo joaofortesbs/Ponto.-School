@@ -70,32 +70,31 @@ export default function SalesPage() {
                 A plataforma educacional mais avançada para transformar o ensino e aprendizado
               </motion.p>
 
-              {/* Caixa de Enviar Mensagens */}
+              {/* Container Unificado: Caixa de Mensagens + Cards Retangulares */}
               <motion.div
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
-                className="w-full max-w-4xl mx-auto mb-6"
-              >
-                <ChatInput
-                  isDarkTheme={true}
-                  onSend={handleSendMessage}
-                  externalSelectedCard={selectedCard}
-                  onCardClick={handleCardClick}
-                />
-              </motion.div>
-
-              {/* Cards Retangulares de Prompts Rápidos */}
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 1.0 }}
                 className="w-full max-w-4xl mx-auto"
+                style={{ display: 'flex', flexDirection: 'column', gap: '0', padding: '0', margin: '0 auto' }}
               >
-                <QuickAccessCards
-                  selectedCard={selectedCard}
-                  onCardClick={handleCardClick}
-                />
+                {/* Caixa de Enviar Mensagens */}
+                <div style={{ marginBottom: '20px' }}>
+                  <ChatInput
+                    isDarkTheme={true}
+                    onSend={handleSendMessage}
+                    externalSelectedCard={selectedCard}
+                    onCardClick={handleCardClick}
+                  />
+                </div>
+
+                {/* Cards Retangulares de Prompts Rápidos - Logo Abaixo */}
+                <div>
+                  <QuickAccessCards
+                    selectedCard={selectedCard}
+                    onCardClick={handleCardClick}
+                  />
+                </div>
               </motion.div>
             </div>
 
