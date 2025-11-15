@@ -116,12 +116,17 @@ export function SalesHeader() {
                       shadow-lg shadow-[#FF6B00]/30
                       hover:shadow-xl hover:shadow-[#FF6B00]/40
                       transition-all duration-300
-                      border border-white/10
                       group
                     "
+                    style={{
+                      border: '1.5px solid transparent',
+                      backgroundImage: 'linear-gradient(to right, #FF6B00, #FF8C40), linear-gradient(135deg, #FFD700, #FF8C40, #FF6B00)',
+                      backgroundOrigin: 'border-box',
+                      backgroundClip: 'padding-box, border-box'
+                    }}
                   >
                     {/* Efeito de brilho no hover */}
-                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-3xl"></span>
 
                     {/* Texto */}
                     <span className="relative z-10 flex items-center justify-center">
