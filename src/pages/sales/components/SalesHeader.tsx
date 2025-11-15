@@ -41,7 +41,7 @@ export function SalesHeader() {
         <div 
           className={`
             relative flex items-center justify-between
-            px-6 md:px-8 py-3
+            px-6 md:px-8 py-2
             bg-[#0A1628]/80 backdrop-blur-2xl
             border border-white/10
             rounded-3xl
