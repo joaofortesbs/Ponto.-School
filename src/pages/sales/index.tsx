@@ -69,37 +69,6 @@ export default function SalesPage() {
               >
                 A plataforma educacional mais avançada para transformar o ensino e aprendizado
               </motion.p>
-
-              {/* Container Unificado: Caixa de Mensagens + Cards Retangulares */}
-              <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 items-center justify-center">
-                {/* Caixa de Enviar Mensagens */}
-                <motion.div
-                  initial={{ y: 30, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.8 }}
-                  className="w-full"
-                >
-                  <ChatInput
-                    isDarkTheme={true}
-                    onSend={handleSendMessage}
-                    externalSelectedCard={selectedCard}
-                    onCardClick={handleCardClick}
-                  />
-                </motion.div>
-
-                {/* Cards Retangulares de Prompts Rápidos - Logo Abaixo */}
-                <motion.div
-                  initial={{ y: 30, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 1.0 }}
-                  className="w-full"
-                >
-                  <QuickAccessCards
-                    selectedCard={selectedCard}
-                    onCardClick={handleCardClick}
-                  />
-                </motion.div>
-              </div>
             </div>
 
             {/* Cards Sobrepostos Duplicados - Canto Direito Extremo */}
@@ -112,6 +81,37 @@ export default function SalesPage() {
               <StackedCardsRight />
             </motion.div>
           </div>
+        </div>
+
+        {/* Container Separado: Caixa de Mensagens + Cards Retangulares */}
+        <div className="relative w-full max-w-4xl mx-auto mt-16 px-4">
+          {/* Caixa de Enviar Mensagens */}
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="w-full mb-6"
+          >
+            <ChatInput
+              isDarkTheme={true}
+              onSend={handleSendMessage}
+              externalSelectedCard={selectedCard}
+              onCardClick={handleCardClick}
+            />
+          </motion.div>
+
+          {/* Cards Retangulares de Prompts Rápidos */}
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1.0 }}
+            className="w-full"
+          >
+            <QuickAccessCards
+              selectedCard={selectedCard}
+              onCardClick={handleCardClick}
+            />
+          </motion.div>
         </div>
       </motion.div>
     </div>
