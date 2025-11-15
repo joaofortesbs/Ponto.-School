@@ -2,17 +2,18 @@ import React from "react";
 import { motion } from "framer-motion";
 import ParticlesBackground from "@/sections/SchoolPower/components/ParticlesBackground";
 import { SalesHeader } from "./components/SalesHeader";
-import StackedCards from "./components/StackedCards";
+import StackedCardsLeft from './components/StackedCardsLeft';
+import StackedCardsRight from './components/StackedCardsRight';
 
 export default function SalesPage() {
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-[#0A1628] via-[#0D1B2A] to-[#1B263B]">
       {/* Fundo de Partículas */}
       <ParticlesBackground isDarkTheme={true} className="z-0" />
-      
+
       {/* Cabeçalho Flutuante */}
       <SalesHeader />
-      
+
       {/* Conteúdo Principal */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -29,7 +30,7 @@ export default function SalesPage() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="hidden lg:block flex-shrink-0"
             >
-              <StackedCards />
+              <StackedCardsLeft />
             </motion.div>
 
             {/* Conteúdo de Texto - Centro */}
@@ -46,7 +47,7 @@ export default function SalesPage() {
                   Ponto School
                 </span>
               </motion.h1>
-              
+
               <motion.p
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -64,7 +65,7 @@ export default function SalesPage() {
               transition={{ duration: 0.6, delay: 0.5 }}
               className="hidden lg:block flex-shrink-0"
             >
-              <StackedCards />
+              <StackedCardsRight />
             </motion.div>
           </div>
         </div>
