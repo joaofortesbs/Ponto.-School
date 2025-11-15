@@ -5,27 +5,28 @@ import { motion } from "framer-motion";
 export function StackedCards() {
   return (
     <div className="relative w-[280px] h-[400px] hidden lg:block">
-      {/* Card Superior - "Atividades para ENEM" - INCLINADO 30° PARA ESQUERDA */}
+      {/* Card Superior - "Atividades para ENEM" - Rotação -9.188deg conforme Figma */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3 }}
-        className="absolute top-0 left-0 w-[272px] h-[230px] bg-[#FFF2E9] border-[7px] border-[#F97316] rounded-[57px] flex items-center justify-center shadow-2xl"
+        className="absolute top-0 left-0 flex items-center justify-center shadow-2xl"
         style={{
+          boxSizing: 'border-box',
+          background: '#FFF2E9',
+          border: '7px solid #F97316',
+          borderRadius: '57px',
+          width: '272.383px',
+          height: '229.915px',
           transform: 'rotate(-9.188deg)',
           transformOrigin: 'center center',
-          WebkitTransform: 'rotate(-9.188deg)',
-          MozTransform: 'rotate(-9.188deg)',
-          msTransform: 'rotate(-9.188deg)',
-          OTransform: 'rotate(-9.188deg)',
-          zIndex: 2,
-          willChange: 'transform'
+          zIndex: 2
         }}
       >
         <p 
           className="text-center font-bold text-xl text-[#29335C] px-8"
           style={{ 
-            transform: 'rotate(0deg)',
+            transform: 'rotate(9.188deg)',
             transformOrigin: 'center center'
           }}
         >
