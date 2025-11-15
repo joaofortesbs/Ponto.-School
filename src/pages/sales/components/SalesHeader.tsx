@@ -120,7 +120,7 @@ export function SalesHeader() {
                     "
                     style={{
                       border: '1.5px solid transparent',
-                      backgroundImage: 'linear-gradient(to right, #FF6B00, #FF8C40), linear-gradient(135deg, #FFD700, #FF8C40, #FF6B00)',
+                      backgroundImage: 'linear-gradient(to right, #FF6B00, #FF8C40), linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
                       backgroundOrigin: 'border-box',
                       backgroundClip: 'padding-box, border-box'
                     }}
