@@ -63,36 +63,36 @@ export default function SalesPage() {
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="w-full mb-8 flex items-center justify-center"
+                className="w-full mb-4 flex items-center justify-center"
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   {/* Círculos Sobrepostos */}
-                  <div className="flex items-center -space-x-3">
-                    <div className="w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
+                  <div className="flex items-center -space-x-2">
+                    <div className="w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
                       <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
-                        <span className="text-[#FF6B00] font-bold text-sm">P</span>
+                        <span className="text-[#FF6B00] font-bold text-xs">P</span>
                       </div>
                     </div>
-                    <div className="w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
+                    <div className="w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
                       <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
-                        <span className="text-[#FF6B00] font-bold text-sm">S</span>
+                        <span className="text-[#FF6B00] font-bold text-xs">S</span>
                       </div>
                     </div>
-                    <div className="w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
+                    <div className="w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
                       <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
-                        <span className="text-[#FF6B00] font-bold text-sm">5</span>
+                        <span className="text-[#FF6B00] font-bold text-xs">5</span>
                       </div>
                     </div>
-                    <div className="w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
+                    <div className="w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
                       <div className="w-full h-full rounded-full bg-[#FFF5E6] flex items-center justify-center">
-                        <span className="text-[#FF6B00] font-bold text-sm">K</span>
+                        <span className="text-[#FF6B00] font-bold text-xs">K</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Texto */}
                   <div className="flex items-center">
-                    <p className="text-white font-normal text-base md:text-lg whitespace-nowrap">
+                    <p className="text-white font-normal text-sm md:text-base whitespace-nowrap">
                       Mais de 5 mil professores transformados
                     </p>
                   </div>
