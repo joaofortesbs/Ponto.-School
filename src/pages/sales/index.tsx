@@ -19,7 +19,7 @@ export default function SalesPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="relative z-10 flex min-h-screen items-center justify-center px-4 pt-32"
+        className="relative z-10 flex min-h-screen items-start justify-center px-4 pt-24"
       >
         <div className="relative w-full max-w-[1800px] mx-auto">
           <div className="flex items-start justify-between w-full">
