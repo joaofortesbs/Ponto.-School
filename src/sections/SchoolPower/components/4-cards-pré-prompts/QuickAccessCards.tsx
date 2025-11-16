@@ -1,4 +1,3 @@
-
 "use client";
 import React from "react";
 import { BookOpen, Zap, Brain, GraduationCap } from 'lucide-react';
@@ -16,29 +15,29 @@ export const QuickAccessCards: React.FC<QuickAccessCardsProps> = ({ selectedCard
 
   return (
     <div className="quick-access-cards">
-      <div 
-        className={`quick-access-card ${selectedCard === "Plano ENEM" ? "selected" : ""}`} 
+      <div
+        className={`quick-access-card ${selectedCard === "Plano ENEM" ? "selected" : ""}`}
         onClick={() => handleClick("Plano ENEM")}
       >
         <BookOpen className="quick-access-card-icon" />
         <span className="quick-access-card-text">Plano ENEM</span>
       </div>
-      <div 
-        className={`quick-access-card ${selectedCard === "Aula Turbo" ? "selected" : ""}`} 
+      <div
+        className={`quick-access-card ${selectedCard === "Aula Turbo" ? "selected" : ""}`}
         onClick={() => handleClick("Aula Turbo")}
       >
         <Zap className="quick-access-card-icon" />
         <span className="quick-access-card-text">Aula Turbo</span>
       </div>
-      <div 
-        className={`quick-access-card ${selectedCard === "Criando Gênios" ? "selected" : ""}`} 
-        onClick={() => handleClick("Criando Gênios")}
+      <div
+        className={`quick-access-card ${selectedCard === "Novos Gênios" ? "selected" : ""}`}
+        onClick={() => handleClick("Novos Gênios")}
       >
         <Brain className="quick-access-card-icon" />
-        <span className="quick-access-card-text">Criando Gênios</span>
+        <span className="quick-access-card-text">Novos Gênios</span>
       </div>
-      <div 
-        className={`quick-access-card ${selectedCard === "Escola Viva" ? "selected" : ""}`} 
+      <div
+        className={`quick-access-card ${selectedCard === "Escola Viva" ? "selected" : ""}`}
         onClick={() => handleClick("Escola Viva")}
       >
         <GraduationCap className="quick-access-card-icon" />
