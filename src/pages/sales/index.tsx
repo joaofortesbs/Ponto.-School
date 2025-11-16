@@ -179,28 +179,19 @@ export default function SalesPage() {
           transition={{ duration: 0.6, delay: 1.2 }}
           className="w-full flex justify-center mt-12 px-4"
         >
-          <div className="relative max-w-[800px] w-full">
-            <img 
-              src="/titulo-pv.png" 
-              alt="Título PV" 
-              className="max-w-full h-auto object-contain w-full"
-              onError={(e) => {
-                console.error('❌ Erro ao carregar imagem titulo-pv.png - Arquivo não encontrado em /public/');
-                const parent = e.currentTarget.parentElement;
-                if (parent) {
-                  parent.innerHTML = `
-                    <div class="w-full bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-2 border-dashed border-orange-500/30 rounded-xl p-8 text-center">
-                      <p class="text-orange-400 font-semibold text-lg mb-2">📸 Imagem Não Encontrada</p>
-                      <p class="text-gray-400 text-sm">Por favor, adicione o arquivo <code class="bg-gray-800 px-2 py-1 rounded">titulo-pv.png</code> na pasta <code class="bg-gray-800 px-2 py-1 rounded">public/</code></p>
-                    </div>
-                  `;
-                }
-              }}
-              onLoad={() => {
-                console.log('✅ Imagem titulo-pv.png carregada com sucesso!');
-              }}
-            />
-          </div>
+          <img 
+            src="/titulo-pv.png" 
+            alt="Título PV" 
+            className="max-w-full h-auto object-contain"
+            style={{ maxWidth: '800px' }}
+            onError={(e) => {
+              console.error('❌ Erro ao carregar imagem titulo-pv.png');
+              e.currentTarget.style.display = 'none';
+            }}
+            onLoad={() => {
+              console.log('✅ Imagem titulo-pv.png carregada com sucesso!');
+            }}
+          />
         </motion.div>
       </div>
     </div>
