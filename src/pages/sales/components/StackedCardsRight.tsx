@@ -14,7 +14,7 @@ export default function StackedCardsRight() {
             width: '240px',
             height: '180px',
             top: '0px',
-            right: '10px',
+            right: '40px',
             transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
             border: '2px solid transparent',
             backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
