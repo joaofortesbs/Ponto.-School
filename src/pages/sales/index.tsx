@@ -171,6 +171,20 @@ export default function SalesPage() {
             onCardClick={handleCardClick}
           />
         </motion.div>
+
+        {/* Imagem Titulo PV */}
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 1.2 }}
+          className="w-full flex justify-center mt-12"
+        >
+          <img 
+            src="/titulo-pv.png" 
+            alt="Título PV" 
+            className="max-w-full h-auto"
+          />
+        </motion.div>
       </div>
     </div>
   );
