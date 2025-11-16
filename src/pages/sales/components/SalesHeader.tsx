@@ -64,16 +64,16 @@ export function SalesHeader() {
           className={`
             relative flex items-center justify-between
             px-3 md:px-4 py-1
+            bg-[#0A1628]/80 backdrop-blur-2xl
             border border-white/10
             rounded-[2rem]
             shadow-2xl shadow-black/50
             transition-all duration-300
-            ${isScrolled ? 'border-white/20' : ''}
+            ${isScrolled ? 'bg-[#0A1628]/95 border-white/20' : ''}
           `}
           style={{
-            background: 'rgba(10, 22, 40, 0.4)',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            backdropFilter: `blur(${headerBlur}px)`,
+            WebkitBackdropFilter: `blur(${headerBlur}px)`,
           }}
         >
           {/* Logo - Canto Esquerdo */}
