@@ -20,7 +20,7 @@ export default function SalesPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-[#0A1628] via-[#0D1B2A] to-[#1B263B]">
+    <div className="relative min-h-screen w-full overflow-hidden" style={{ backgroundColor: '#000822' }}>
       <style>{`
         .sales-page-cards .quick-access-cards {
           max-width: 600px;
