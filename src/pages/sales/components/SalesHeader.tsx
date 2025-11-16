@@ -67,19 +67,19 @@ export function SalesHeader() {
             rounded-[2rem]
             shadow-2xl shadow-black/50
             transition-all duration-300
-            ${isScrolled ? 'border-white/30' : 'border-white/20'}
+            ${isScrolled ? 'border-white/20' : 'border-white/10'}
           `}
           style={{
             background: isScrolled 
-              ? 'rgba(10, 22, 40, 0.4)'
-              : 'rgba(10, 22, 40, 0.3)',
-            backdropFilter: 'blur(20px) saturate(200%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(200%)',
-            border: `1.5px solid ${isScrolled ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.15)'}`,
+              ? 'linear-gradient(135deg, rgba(10, 22, 40, 0.7) 0%, rgba(10, 22, 40, 0.5) 100%)'
+              : 'linear-gradient(135deg, rgba(10, 22, 40, 0.6) 0%, rgba(10, 22, 40, 0.4) 100%)',
+            backdropFilter: `blur(${headerBlur}px) saturate(180%)`,
+            WebkitBackdropFilter: `blur(${headerBlur}px) saturate(180%)`,
+            border: `1px solid ${isScrolled ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)'}`,
             boxShadow: `
-              0 8px 32px rgba(0, 0, 0, 0.4),
-              inset 0 1px 0 rgba(255, 255, 255, 0.15),
-              0 0 0 1px rgba(255, 107, 0, 0.15)
+              0 8px 32px rgba(0, 0, 0, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1),
+              0 0 0 1px rgba(255, 107, 0, 0.1)
             `,
           }}
         >
