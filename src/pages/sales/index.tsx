@@ -177,12 +177,20 @@ export default function SalesPage() {
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 1.2 }}
-          className="w-full flex justify-center mt-12"
+          className="w-full flex justify-center mt-12 px-4"
         >
           <img 
             src="/titulo-pv.png" 
             alt="Título PV" 
-            className="max-w-full h-auto"
+            className="max-w-full h-auto object-contain"
+            style={{ maxWidth: '800px' }}
+            onError={(e) => {
+              console.error('❌ Erro ao carregar imagem titulo-pv.png');
+              e.currentTarget.style.display = 'none';
+            }}
+            onLoad={() => {
+              console.log('✅ Imagem titulo-pv.png carregada com sucesso!');
+            }}
           />
         </motion.div>
       </div>
