@@ -46,12 +46,12 @@ export default function SalesPage() {
       >
         <div className="relative w-full max-w-[1800px] mx-auto">
           <div className="flex items-start justify-between w-full">
-            {/* Cards Sobrepostos - Canto Esquerdo Extremo */}
+            {/* Cards Sobrepostos - Canto Esquerdo */}
             <motion.div
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="hidden lg:block flex-shrink-0"
+              className="hidden lg:block flex-shrink-0 ml-12"
             >
               <StackedCardsLeft />
             </motion.div>
@@ -129,12 +129,12 @@ export default function SalesPage() {
               </motion.h1>
             </div>
 
-            {/* Cards Sobrepostos Duplicados - Canto Direito Extremo */}
+            {/* Cards Sobrepostos Duplicados - Canto Direito */}
             <motion.div
               initial={{ x: 50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="hidden lg:block flex-shrink-0"
+              className="hidden lg:block flex-shrink-0 mr-12"
             >
               <StackedCardsRight />
             </motion.div>
