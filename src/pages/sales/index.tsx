@@ -184,9 +184,10 @@ export default function SalesPage() {
             alt="Título PV" 
             className="max-w-full h-auto object-contain"
             style={{ maxWidth: '800px' }}
+            loading="eager"
             onError={(e) => {
               console.error('❌ Erro ao carregar imagem titulo-pv.png');
-              e.currentTarget.style.display = 'none';
+              console.error('Caminho tentado:', e.currentTarget.src);
             }}
             onLoad={() => {
               console.log('✅ Imagem titulo-pv.png carregada com sucesso!');
