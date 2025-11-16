@@ -177,7 +177,7 @@ export default function SalesPage() {
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 1.2 }}
-          className="w-full flex justify-center mt-12 px-4"
+          className="w-full flex justify-center mt-24 px-4"
         >
           <img 
             src="/titulo-pv.png" 
