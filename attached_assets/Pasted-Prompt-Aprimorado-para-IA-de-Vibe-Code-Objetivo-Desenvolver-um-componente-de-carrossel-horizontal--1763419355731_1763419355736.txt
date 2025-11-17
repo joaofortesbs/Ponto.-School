@@ -1,0 +1,166 @@
+Prompt Aprimorado para IA de Vibe Code
+Objetivo: Desenvolver um componente de carrossel horizontal interativo de círculos flutuantes chamado "Carrossel de Agentes", com identidade visual em tons de laranja, design moderno, elegante e sofisticado, perspectiva 3D, destaque no círculo central ampliado, e visualização limitada a 5 círculos simultâneos (1 central + 2 em cada lado).
+
+Especificações Técnicas Detalhadas
+1. Estrutura e Layout
+
+Componente flutuante centralizado em interface vazia (fundo neutro ou gradiente suave)
+
+Nome: AgentCarouselComponent ou FloatingAgentCarousel
+
+Tecnologia: React/TypeScript + Tailwind CSS ou Framer Motion
+
+Visualização limitada: exibir apenas 5 círculos por vez (central + 2 à esquerda + 2 à direita)
+
+Círculos adicionais ficam ocultos fora da viewport; usuário navega para visualizá-los
+
+2. Hierarquia Visual e Escala
+
+Círculo Central (Destaque Principal):
+
+Escala: 1.5x a 1.8x do tamanho base (significativamente ampliado)
+
+Opacidade: 1.0 (totalmente visível)
+
+Z-index: mais alto (aparece na frente)
+
+Borda/sombra sutil para reforçar destaque
+
+Círculos Laterais Imediatos (posições -1 e +1):
+
+Escala: 0.75x a 0.85x do tamanho base
+
+Opacidade: 0.8
+
+translateZ(-50px a -80px) para simular distância
+
+Rotação sutil: rotateY(±10deg a ±15deg)
+
+Círculos Laterais Extremos (posições -2 e +2):
+
+Escala: 0.5x a 0.65x do tamanho base
+
+Opacidade: 0.5 a 0.6
+
+translateZ(-120px a -150px) para maior profundidade
+
+Rotação: rotateY(±20deg a ±25deg)
+
+Aplicar filter: blur(1px a 2px) para acentuar distância
+
+3. Identidade Visual: Laranja Sofisticado
+
+Paleta de Cores:
+
+Laranja principal: #FF6B35, #FF8C42, #F4A261 (tons quentes e vibrantes)
+
+Laranja escuro (accent): #D84315, #BF360C
+
+Gradientes: círculos com gradiente radial (ex: radial-gradient(circle, #FF8C42, #FF6B35))
+
+Fundo: cinza escuro neutro (#1A1A1D, #2E2E30) ou gradiente sutil (linear-gradient(135deg, #1A1A1D, #3C3C40))
+
+Iluminação: sombras em laranja suave (box-shadow: 0 8px 24px rgba(255, 107, 53, 0.3))
+
+Design Moderno e Sofisticado:
+
+Círculos com bordas suaves (border-radius: 50%)
+
+Acabamento: efeito glass morphism ou brilho sutil (opcional: backdrop-filter: blur(10px))
+
+Animações fluidas e orgânicas (cubic-bezier(0.25, 0.46, 0.45, 0.94))
+
+Sem elementos adicionais: apenas os círculos flutuantes (sem fundo decorativo, sem textos permanentes)
+
+4. Interações Avançadas
+
+Hover (Mouse sobre círculo):
+
+Exibir tooltip/label acima do círculo com nome do agente (ex: "Agente Analista")
+
+Animação: opacity: 0 → 1 + translateY(-15px) em 200ms
+
+Círculo aumenta ligeiramente (scale: 1.08) com brilho intensificado
+
+Tooltip com fundo laranja escuro (#D84315) e texto branco
+
+Navegação por Arrastar (Drag):
+
+Implementar drag horizontal com inércia física (momentum)
+
+Cursor: grab (disponível) / grabbing (arrastando)
+
+Snap automático: ao soltar, o círculo mais próximo se centraliza suavemente (300ms)
+
+Limitar arrasto nas extremidades (sem loop infinito)
+
+Scroll do Mouse:
+
+Capturar onWheel (scroll vertical ou horizontal)
+
+Cada scroll avança/retrocede 1 agente por vez
+
+Throttle de 300-400ms para evitar scroll acelerado demais
+
+Navegação por Teclado (Acessibilidade):
+
+Setas esquerda/direita: avançam 1 agente
+
+Transição suave (500ms)
+
+5. Perspectiva 3D e Animações
+
+Container: perspective: 1200px a 1500px
+
+Círculos laterais: transform: translateZ() rotateY()
+
+Transições: transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)
+
+Animação de entrada: círculos surgem com fade-in + scale (stagger de 100ms)
+
+6. Dados de Exemplo
+
+typescript
+const agents = [
+  { id: 1, name: "Agente Criativo", color: "#FF6B35", icon: "🎨" },
+  { id: 2, name: "Agente Analista", color: "#FF8C42", icon: "📊" },
+  { id: 3, name: "Agente Executor", color: "#F4A261", icon: "⚙️" },
+  { id: 4, name: "Agente Estrategista", color: "#D84315", icon: "🎯" },
+  { id: 5, name: "Agente Inovador", color: "#FF6B35", icon: "💡" },
+  { id: 6, name: "Agente Comunicador", color: "#FF8C42", icon: "📢" },
+  { id: 7, name: "Agente Técnico", color: "#BF360C", icon: "🔧" },
+  // Adicionar mais conforme necessário
+];
+7. Acessibilidade e Responsividade
+
+ARIA: role="listbox", aria-label="Carrossel de Agentes Autônomos"
+
+Focus visível (outline laranja) no círculo ativo
+
+Mobile: suporte a swipe touch (biblioteca: React Touch Gestures)
+
+Tablet/Desktop: manter especificações completas
+
+Breakpoints: 640px (mobile), 1024px (desktop)
+
+8. Performance e Otimização
+
+useMemo para cálculos de posição e escala
+
+React.memo para evitar re-renders desnecessários
+
+Lazy load de ícones/imagens se aplicável
+
+Preload de recursos visuais para transições suaves
+
+Melhorias Opcionais (Pós-MVP)
+Indicadores de navegação (dots ou setas discretas em laranja)
+
+Micro-animações de partículas ao redor do círculo central
+
+Efeito de luz ambiente (glow) que responde ao hover
+
+Modo "auto-play" que rota automaticamente entre agentes
+
+Resultado Esperado
+Um carrossel de agentes visualmente impactante, com forte identidade em laranja, física de movimento natural, perspectiva 3D convincente, e UX fluida para seleção de agentes em uma plataforma digital moderna e sofisticada. Apenas os círculos devem estar visíveis, sem elementos visuais extras.
