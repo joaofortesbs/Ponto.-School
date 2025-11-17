@@ -57,30 +57,23 @@ export function SalesHeader() {
         className="relative"
       >
         {/* Brilho de fundo com gradiente */}
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00]/20 via-[#FF8C40]/30 to-[#FF6B00]/20 rounded-3xl blur-xl opacity-60"></div>
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00]/20 via-[#FF8C40]/20 to-[#FF6B00]/20 rounded-3xl blur-xl opacity-75"></div>
 
         {/* Container Principal do Header */}
         <div
           className={`
             relative flex items-center justify-between
             px-3 md:px-4 py-1
+            bg-[#0A1628]/80 backdrop-blur-2xl
+            border border-white/10
             rounded-[2rem]
             shadow-2xl shadow-black/50
             transition-all duration-300
-            ${isScrolled ? 'border-white/20' : 'border-white/10'}
+            ${isScrolled ? 'bg-[#0A1628]/95 border-white/20' : ''}
           `}
           style={{
-            background: isScrolled 
-              ? 'linear-gradient(135deg, rgba(10, 22, 40, 0.7) 0%, rgba(10, 22, 40, 0.5) 100%)'
-              : 'linear-gradient(135deg, rgba(10, 22, 40, 0.6) 0%, rgba(10, 22, 40, 0.4) 100%)',
-            backdropFilter: 'blur(24px) saturate(200%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(200%)',
-            border: `1px solid ${isScrolled ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)'}`,
-            boxShadow: `
-              0 8px 32px rgba(0, 0, 0, 0.3),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1),
-              0 0 0 1px rgba(255, 107, 0, 0.1)
-            `,
+            backdropFilter: `blur(${headerBlur}px)`,
+            WebkitBackdropFilter: `blur(${headerBlur}px)`,
           }}
         >
           {/* Logo - Canto Esquerdo */}
