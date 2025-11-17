@@ -30,7 +30,7 @@ export default function SalesPage() {
           max-width: 140px;
         }
       `}</style>
-      
+
       {/* Fundo de Partículas */}
       <ParticlesBackground isDarkTheme={true} className="z-0" />
 
@@ -57,41 +57,7 @@ export default function SalesPage() {
             </motion.div>
 
             {/* Conteúdo de Texto - Centro */}
-            <div className="text-center flex-1 px-8">ulo-pv2.webp" 
-                          alt="Depoimento 2"
-                          className="w-full h-full object-cover rounded-full"
-                        />
-                      </div>
-                    </div>
-                    <div className="w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
-                      <div className="w-full h-full rounded-full bg-[#FFF5E6] overflow-hidden flex items-center justify-center">
-                        <img 
-                          src="/depoimento-circulo-pv3.webp" 
-                          alt="Depoimento 3"
-                          className="w-full h-full object-cover rounded-full"
-                        />
-                      </div>
-                    </div>
-                    <div className="w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] shadow-md">
-                      <div className="w-full h-full rounded-full bg-[#FFF5E6] overflow-hidden flex items-center justify-center">
-                        <img 
-                          src="/depoimento-circulo-pv4.webp" 
-                          alt="Depoimento 4"
-                          className="w-full h-full object-cover rounded-full"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Texto */}
-                  <div className="flex items-center">
-                    <p className="text-gray-300 font-normal text-sm md:text-base whitespace-nowrap">
-                      Mais de 5 mil professores transformados
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-
+            <div className="text-center flex-1 px-8">
               <motion.h1
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
