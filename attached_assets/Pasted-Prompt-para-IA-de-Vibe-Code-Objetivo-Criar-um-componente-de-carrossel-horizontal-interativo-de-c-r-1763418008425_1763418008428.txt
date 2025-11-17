@@ -1,0 +1,124 @@
+Prompt para IA de Vibe Code
+Objetivo: Criar um componente de carrossel horizontal interativo de círculos flutuantes, chamado "Carrossel de Agentes", com perspectiva 3D, destaque central, e interação por arrastar ou scroll.
+
+Especificações Técnicas
+1. Estrutura do Componente
+
+Componente flutuante centralizado em uma interface vazia
+
+Nome: AgentCarousel ou FloatingAgentCarousel
+
+Tecnologia: React/TypeScript com CSS3 ou Tailwind CSS
+
+Bibliotecas recomendadas: Framer Motion (animações), React Spring (física), ou CSS puro com transforms
+
+2. Elementos Visuais
+
+Círculos:
+
+Renderizar de 5 a 7 círculos flutuantes dispostos horizontalmente
+
+Cada círculo representa um "agente" com ID único
+
+Círculo central: escala 1.2x (120% do tamanho base)
+
+Círculos laterais: escala gradual decrescente (esquerda/direita: 0.9x, extremos: 0.7x)
+
+Aplicar blur progressivo nos círculos mais distantes (filter: blur(2-4px))
+
+Espaçamento horizontal: 80-120px entre centros
+
+Perspectiva 3D:
+
+Aplicar transform: perspective(1000px) no container
+
+Círculos laterais com translateZ(-100px a -200px) para simular profundidade
+
+Rotação sutil em Y: círculos da esquerda rotateY(15deg), direita rotateY(-15deg)
+
+3. Interações
+
+Hover:
+
+Ao passar o mouse sobre qualquer círculo, exibir tooltip/label acima dele
+
+Label: nome do agente (ex: "Agente 1", "Agente Analista", etc.)
+
+Animação de fade-in (200ms) com opacity e translateY(-10px)
+
+Aumento de 5% no círculo sob hover (scale: 1.05)
+
+Navegação por Arrastar (Drag):
+
+Implementar drag horizontal com inércia/momentum
+
+Limitar drag às bordas do carrossel (sem wrap infinito)
+
+Snap suave ao círculo mais próximo ao soltar (easing: cubic-bezier(0.25, 0.46, 0.45, 0.94))
+
+Feedback visual: cursor grab quando disponível, grabbing durante o drag
+
+Scroll do Mouse:
+
+Capturar eventos onWheel
+
+Scroll vertical/horizontal avança/retrocede 1 agente por vez
+
+Throttle de 300ms para evitar scroll excessivo
+
+4. Estados e Lógica
+
+Estado ativo: índice do círculo central destacado
+
+Transições suaves entre estados (300-500ms)
+
+Círculos inativos: opacidade reduzida (0.6-0.7)
+
+Preload de imagens/ícones dos agentes para evitar flicker
+
+5. Acessibilidade
+
+Suporte a navegação por teclado (setas esquerda/direita)
+
+ARIA labels: role="listbox", aria-label="Carrossel de Agentes"
+
+Focus visível no círculo ativo
+
+6. Responsividade
+
+Mobile: reduzir espaçamento e escala, habilitar swipe touch
+
+Tablet/Desktop: manter especificações completas
+
+Breakpoints: 640px (mobile), 1024px (desktop)
+
+7. Exemplo de Dados
+
+typescript
+const agents = [
+  { id: 1, name: "Agente Analista", color: "#3B82F6", icon: "📊" },
+  { id: 2, name: "Agente Criativo", color: "#8B5CF6", icon: "🎨" },
+  { id: 3, name: "Agente Executor", color: "#10B981", icon: "⚙️" },
+  // ...
+];
+8. Melhorias Opcionais
+
+Modo loop infinito (círculos se repetem)
+
+Indicadores de paginação (dots) abaixo do carrossel
+
+Animação de partículas ao redor do círculo ativo
+
+Sons de UI ao trocar de agente (opcional, com toggle)
+
+Diretrizes de Código
+Componente modular e reutilizável
+
+Props customizáveis: agents[], initialIndex, onAgentChange()
+
+Performance: usar useMemo para cálculos pesados, React.memo para otimizar re-renders
+
+Testes: garantir que drag, scroll e keyboard navigation funcionem corretamente
+
+Resultado Esperado
+Um carrossel visualmente polido e fluido, com física natural de movimento, perspectiva 3D convincente e UX intuitiva para seleção de agentes em uma interface moderna.
