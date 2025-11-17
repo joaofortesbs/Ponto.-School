@@ -58,11 +58,43 @@ export default function SalesPage() {
 
             {/* Conteúdo de Texto - Centro */}
             <div className="text-center flex-1 px-8">
+              {/* Círculo Laranja Animado */}
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="flex justify-center mb-8"
+              >
+                <motion.div
+                  whileHover={{ scale: 1.3 }}
+                  transition={{ duration: 0.4, ease: "easeInOut" }}
+                  className="w-16 h-16 rounded-full relative"
+                  style={{
+                    background: 'linear-gradient(135deg, #FF6B00 0%, #FF8C40 100%)',
+                    border: '2px solid transparent',
+                    backgroundImage: `
+                      linear-gradient(#000822, #000822),
+                      linear-gradient(135deg, #FFD05A 0%, #FF6800 50%, #FF5100 100%)
+                    `,
+                    backgroundOrigin: 'border-box',
+                    backgroundClip: 'padding-box, border-box'
+                  }}
+                >
+                  {/* Efeito de brilho interno */}
+                  <div 
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3) 0%, transparent 60%)'
+                    }}
+                  />
+                </motion.div>
+              </motion.div>
+
               <motion.h1
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="text-5xl md:text-7xl font-bold text-white mb-12 mt-24"
+                className="text-5xl md:text-7xl font-bold text-white mb-12"
               >
                 Bem-vindo ao
                 <br />
