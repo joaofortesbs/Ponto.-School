@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import ParticlesBackground from "@/sections/SchoolPower/components/ParticlesBackground";
 import { SalesHeader } from "./components/SalesHeader";
-import { AgentCarousel } from "./components/AgentCarousel";
 import StackedCardsLeft from './components/StackedCardsLeft';
 import StackedCardsRight from './components/StackedCardsRight';
 import ChatInput from '@/sections/SchoolPower/components/ChatInput';
@@ -59,21 +58,11 @@ export default function SalesPage() {
 
             {/* Conteúdo de Texto - Centro */}
             <div className="text-center flex-1 px-8">
-              {/* Carrossel de Agentes */}
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="mb-8"
-              >
-                <AgentCarousel />
-              </motion.div>
-
               <motion.h1
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="text-5xl md:text-7xl font-bold text-white mb-12"
+                className="text-5xl md:text-7xl font-bold text-white mb-12 mt-24"
               >
                 Bem-vindo ao
                 <br />
