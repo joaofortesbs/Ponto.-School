@@ -186,36 +186,70 @@ export default function SalesPage() {
           transition={{ duration: 0.6, delay: 1.4 }}
           className="w-full flex justify-start mt-12 px-4"
         >
-          <div className="relative">
-            <img 
-              src="/img-topico1-pv.png" 
-              alt="Tópico 1 - Página de Vendas" 
-              className="max-w-full h-auto object-contain shadow-2xl rounded-2xl border-2 border-[#FF6B00]/20"
-              style={{ maxWidth: '600px' }}
-              loading="eager"
-              onError={(e) => {
-                const target = e.currentTarget;
-                console.error('❌ Erro ao carregar:', target.src);
-                
-                // Lista de fallbacks
-                const fallbacks = [
-                  '/imagem-1topico-pv_1763760702356.png',
-                  '/images/placeholder.png',
-                  'https://via.placeholder.com/600x400/FF6B00/FFFFFF?text=Topico+1'
-                ];
-                
-                const currentIndex = fallbacks.indexOf(target.src.split('/').pop() || '');
-                if (currentIndex < fallbacks.length - 1) {
-                  console.log('🔄 Tentando fallback:', fallbacks[currentIndex + 1]);
-                  target.src = fallbacks[currentIndex + 1];
-                } else {
-                  console.log('✅ Usando imagem de placeholder final');
-                }
-              }}
-              onLoad={(e) => {
-                console.log('✅ Imagem carregada:', e.currentTarget.src);
-              }}
-            />
+          <div className="relative max-w-[600px] w-full">
+            <div 
+              className="w-full bg-gradient-to-br from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-2xl border-2 border-[#FF6B00]/20 shadow-2xl overflow-hidden"
+              style={{ aspectRatio: '3/2' }}
+            >
+              <div className="w-full h-full flex items-center justify-center p-8">
+                <svg 
+                  viewBox="0 0 600 400" 
+                  className="w-full h-full"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {/* Background gradient */}
+                  <defs>
+                    <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style={{ stopColor: '#FF6B00', stopOpacity: 0.1 }} />
+                      <stop offset="100%" style={{ stopColor: '#FF8C40', stopOpacity: 0.2 }} />
+                    </linearGradient>
+                  </defs>
+                  
+                  <rect width="600" height="400" fill="url(#cardGradient)" />
+                  
+                  {/* Icon */}
+                  <circle cx="300" cy="150" r="50" fill="#FF6B00" opacity="0.2" />
+                  <path 
+                    d="M 275 150 L 300 125 L 325 150 L 300 175 Z" 
+                    fill="#FF6B00" 
+                    opacity="0.8"
+                  />
+                  
+                  {/* Text */}
+                  <text 
+                    x="300" 
+                    y="250" 
+                    textAnchor="middle" 
+                    fontSize="28" 
+                    fontWeight="bold" 
+                    fill="#FF6B00"
+                  >
+                    Tópico 1
+                  </text>
+                  
+                  <text 
+                    x="300" 
+                    y="285" 
+                    textAnchor="middle" 
+                    fontSize="18" 
+                    fill="#FF6B00" 
+                    opacity="0.7"
+                  >
+                    Adicione sua imagem personalizada
+                  </text>
+                  
+                  <text 
+                    x="300" 
+                    y="315" 
+                    textAnchor="middle" 
+                    fontSize="14" 
+                    fill="#666"
+                  >
+                    Faça upload de img-topico1-pv.png na pasta public/
+                  </text>
+                </svg>
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>
