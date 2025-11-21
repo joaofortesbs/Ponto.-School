@@ -186,32 +186,37 @@ export default function SalesPage() {
           transition={{ duration: 0.6, delay: 1.4 }}
           className="w-full flex justify-start mt-12 px-4"
         >
-          <img 
-            src="/img-topico1-pv.png" 
-            alt="Tópico 1 - Página de Vendas" 
-            className="max-w-full h-auto object-contain shadow-lg rounded-lg"
-            style={{ maxWidth: '600px' }}
-            loading="eager"
-            fetchpriority="high"
-            onError={(e) => {
-              console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
-              console.error('Caminho completo:', window.location.origin + e.currentTarget.src);
-              console.error('Verifique se o arquivo existe em: public/img-topico1-pv.png');
-              
-              // Tentar caminho alternativo
-              if (!e.currentTarget.src.includes('imagem-1topico-pv')) {
-                console.log('🔄 Tentando caminho alternativo...');
-                e.currentTarget.src = '/imagem-1topico-pv_1763760702356.png';
-              } else {
-                e.currentTarget.style.display = 'none';
-                console.error('❌ Nenhum arquivo de imagem encontrado. Por favor, adicione img-topico1-pv.png na pasta public/');
-              }
-            }}
-            onLoad={() => {
-              console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
-              console.log('Caminho usado:', window.location.origin + '/img-topico1-pv.png');
-            }}
-          />
+          <div className="relative">
+            <img 
+              src="/img-topico1-pv.png" 
+              alt="Tópico 1 - Página de Vendas" 
+              className="max-w-full h-auto object-contain shadow-2xl rounded-2xl border-2 border-[#FF6B00]/20"
+              style={{ maxWidth: '600px' }}
+              loading="eager"
+              onError={(e) => {
+                const target = e.currentTarget;
+                console.error('❌ Erro ao carregar:', target.src);
+                
+                // Lista de fallbacks
+                const fallbacks = [
+                  '/imagem-1topico-pv_1763760702356.png',
+                  '/images/placeholder.png',
+                  'https://via.placeholder.com/600x400/FF6B00/FFFFFF?text=Topico+1'
+                ];
+                
+                const currentIndex = fallbacks.indexOf(target.src.split('/').pop() || '');
+                if (currentIndex < fallbacks.length - 1) {
+                  console.log('🔄 Tentando fallback:', fallbacks[currentIndex + 1]);
+                  target.src = fallbacks[currentIndex + 1];
+                } else {
+                  console.log('✅ Usando imagem de placeholder final');
+                }
+              }}
+              onLoad={(e) => {
+                console.log('✅ Imagem carregada:', e.currentTarget.src);
+              }}
+            />
+          </div>
         </motion.div>
       </div>
     </div>
