@@ -155,17 +155,17 @@ export default function SalesPage() {
           className="w-full flex justify-center mt-24 px-4"
         >
           <img 
-            src="/titulo-pv.png" 
+            src="/titulo1-pv.png" 
             alt="Título PV" 
             className="max-w-full h-auto object-contain"
             style={{ maxWidth: '800px' }}
             loading="eager"
             onError={(e) => {
-              console.error('❌ Erro ao carregar imagem titulo-pv.png');
+              console.error('❌ Erro ao carregar imagem titulo1-pv.png');
               console.error('Caminho tentado:', e.currentTarget.src);
             }}
             onLoad={() => {
-              console.log('✅ Imagem titulo-pv.png carregada com sucesso!');
+              console.log('✅ Imagem titulo1-pv.png carregada com sucesso!');
             }}
           />
         </motion.div>
