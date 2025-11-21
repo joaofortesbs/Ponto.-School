@@ -188,17 +188,28 @@ export default function SalesPage() {
         >
           <img 
             src="/img-topico1-pv.png" 
-            alt="Tópico 1 PV" 
-            className="max-w-full h-auto object-contain"
+            alt="Tópico 1 - Página de Vendas" 
+            className="max-w-full h-auto object-contain shadow-lg rounded-lg"
             style={{ maxWidth: '600px' }}
-            loading="lazy"
+            loading="eager"
+            fetchpriority="high"
             onError={(e) => {
               console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
-              console.error('Caminho tentado:', e.currentTarget.src);
-              e.currentTarget.style.display = 'none';
+              console.error('Caminho completo:', window.location.origin + e.currentTarget.src);
+              console.error('Verifique se o arquivo existe em: public/img-topico1-pv.png');
+              
+              // Tentar caminho alternativo
+              if (!e.currentTarget.src.includes('imagem-1topico-pv')) {
+                console.log('🔄 Tentando caminho alternativo...');
+                e.currentTarget.src = '/imagem-1topico-pv_1763760702356.png';
+              } else {
+                e.currentTarget.style.display = 'none';
+                console.error('❌ Nenhum arquivo de imagem encontrado. Por favor, adicione img-topico1-pv.png na pasta public/');
+              }
             }}
             onLoad={() => {
               console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
+              console.log('Caminho usado:', window.location.origin + '/img-topico1-pv.png');
             }}
           />
         </motion.div>
