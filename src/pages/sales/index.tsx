@@ -184,13 +184,13 @@ export default function SalesPage() {
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="w-full mt-6"
+          className="w-full mt-6 -ml-8"
         >
           <img 
             src="/img-topico1-pv.png" 
             alt="Tópico 1 PV" 
             className="h-auto object-contain"
-            style={{ maxWidth: '600px', marginLeft: '0' }}
+            style={{ maxWidth: '600px' }}
             loading="eager"
             onError={(e) => {
               console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
