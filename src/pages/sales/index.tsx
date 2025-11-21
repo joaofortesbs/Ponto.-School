@@ -178,6 +178,30 @@ export default function SalesPage() {
             }}
           />
         </motion.div>
+
+        {/* Imagem img-topico1-pv.png no canto esquerdo */}
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="w-full flex justify-start mt-12 px-4"
+        >
+          <img 
+            src="/img-topico1-pv.png" 
+            alt="Tópico 1 PV" 
+            className="max-w-full h-auto object-contain"
+            style={{ maxWidth: '600px' }}
+            loading="eager"
+            onError={(e) => {
+              console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
+              console.error('Caminho tentado:', e.currentTarget.src);
+              e.currentTarget.style.display = 'none';
+            }}
+            onLoad={() => {
+              console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
+            }}
+          />
+        </motion.div>
       </div>
     </div>
   );
