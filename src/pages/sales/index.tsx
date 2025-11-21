@@ -163,9 +163,18 @@ export default function SalesPage() {
             onError={(e) => {
               console.error('❌ Erro ao carregar imagem titulo1-pv.png');
               console.error('Caminho tentado:', e.currentTarget.src);
+              // Tentar fallback para titulo-pv.png
+              if (e.currentTarget.src.includes('titulo1-pv.png')) {
+                console.log('🔄 Tentando carregar titulo-pv.png como fallback...');
+                e.currentTarget.src = '/titulo-pv.png';
+              } else {
+                // Se o fallback também falhar, ocultar a imagem
+                e.currentTarget.style.display = 'none';
+                console.error('❌ Fallback também falhou. Imagem ocultada.');
+              }
             }}
             onLoad={() => {
-              console.log('✅ Imagem titulo1-pv.png carregada com sucesso!');
+              console.log('✅ Imagem carregada com sucesso!');
             }}
           />
         </motion.div>
