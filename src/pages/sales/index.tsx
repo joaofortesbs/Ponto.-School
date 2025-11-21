@@ -192,15 +192,11 @@ export default function SalesPage() {
             className="max-w-full h-auto object-contain"
             style={{ maxWidth: '600px' }}
             loading="eager"
-            fetchpriority="high"
             onError={(e) => {
               console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
-              console.error('Caminho completo:', window.location.origin + e.currentTarget.src);
-              console.error('Status da imagem:', e.currentTarget.complete, e.currentTarget.naturalHeight);
             }}
             onLoad={() => {
               console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
-              console.log('Dimensões:', document.querySelector('img[alt="Tópico 1 PV"]')?.naturalWidth, 'x', document.querySelector('img[alt="Tópico 1 PV"]')?.naturalHeight);
             }}
           />
         </motion.div>
