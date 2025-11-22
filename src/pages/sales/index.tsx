@@ -179,27 +179,52 @@ export default function SalesPage() {
           />
         </motion.div>
 
-        {/* Imagem img-topico1-pv.png no canto esquerdo */}
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="w-full mt-12 -ml-72"
-        >
-          <img 
-            src="/img-topico1-pv.png" 
-            alt="Tópico 1 PV" 
-            className="h-auto object-contain"
-            style={{ maxWidth: '700px' }}
-            loading="eager"
-            onError={(e) => {
-              console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
-            }}
-            onLoad={() => {
-              console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
-            }}
-          />
-        </motion.div>
+        {/* Container com as duas imagens */}
+        <div className="w-full mt-12 flex items-start gap-8">
+          {/* Imagem img-topico1-pv.png no canto esquerdo */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="-ml-72 flex-shrink-0"
+          >
+            <img 
+              src="/img-topico1-pv.png" 
+              alt="Tópico 1 PV" 
+              className="h-auto object-contain"
+              style={{ maxWidth: '700px' }}
+              loading="eager"
+              onError={(e) => {
+                console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
+              }}
+              onLoad={() => {
+                console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
+              }}
+            />
+          </motion.div>
+
+          {/* Imagem titulo-topico1-pv.png ao lado direito */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="flex-shrink-0"
+          >
+            <img 
+              src="/titulo-topico1-pv.png" 
+              alt="Título Tópico 1 PV" 
+              className="h-auto object-contain"
+              style={{ maxWidth: '500px' }}
+              loading="eager"
+              onError={(e) => {
+                console.error('❌ Erro ao carregar imagem titulo-topico1-pv.png');
+              }}
+              onLoad={() => {
+                console.log('✅ Imagem titulo-topico1-pv.png carregada com sucesso!');
+              }}
+            />
+          </motion.div>
+        </div>
       </div>
     </div>
   );
