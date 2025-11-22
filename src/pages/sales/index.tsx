@@ -179,55 +179,52 @@ export default function SalesPage() {
           />
         </motion.div>
 
-        {/* Container com as duas imagens */}
-        <div className="w-full mt-12 flex items-start gap-8">
-          {/* Imagem img-topico1-pv.png no canto esquerdo */}
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="-ml-72 flex-shrink-0"
-          >
-            <img 
-              src="/img-topico1-pv.png" 
-              alt="Tópico 1 PV" 
-              className="h-auto object-contain"
-              style={{ maxWidth: '700px' }}
-              loading="eager"
-              onError={(e) => {
-                console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
-              }}
-              onLoad={() => {
-                console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
-              }}
-            />
-          </motion.div>
+        {/* Imagem img-topico1-pv.png */}
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="w-full flex justify-start -ml-72 mt-12"
+        >
+          <img 
+            src="/img-topico1-pv.png" 
+            alt="Tópico 1 PV" 
+            className="h-auto object-contain"
+            style={{ maxWidth: '700px' }}
+            loading="eager"
+            onError={(e) => {
+              console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
+            }}
+            onLoad={() => {
+              console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
+            }}
+          />
+        </motion.div>
 
-          {/* Imagem oficial-titulo-1topico.png ao lado direito */}
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            className="flex-shrink-0"
-          >
-            <img 
-              src="/images/oficial-titulo-1topico.png" 
-              alt="Título Tópico 1 PV" 
-              className="h-auto object-contain"
-              style={{ maxWidth: '500px' }}
-              loading="eager"
-              onError={(e) => {
-                console.error('❌ Erro ao carregar imagem oficial-titulo-1topico.png');
-                console.error('Caminho tentado:', e.currentTarget.src);
-                console.error('Verifique se o arquivo existe em: public/images/oficial-titulo-1topico.png');
-              }}
-              onLoad={() => {
-                console.log('✅ Imagem oficial-titulo-1topico.png carregada com sucesso!');
-                console.log('Caminho usado:', '/images/oficial-titulo-1topico.png');
-              }}
-            />
-          </motion.div>
-        </div>
+        {/* Imagem oficial-titulo-1topico.png abaixo */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="w-full flex justify-center mt-12"
+        >
+          <img 
+            src="/images/oficial-titulo-1topico.png" 
+            alt="Título Tópico 1 PV" 
+            className="h-auto object-contain"
+            style={{ maxWidth: '500px' }}
+            loading="eager"
+            onError={(e) => {
+              console.error('❌ Erro ao carregar imagem oficial-titulo-1topico.png');
+              console.error('Caminho tentado:', e.currentTarget.src);
+              console.error('Verifique se o arquivo existe em: public/images/oficial-titulo-1topico.png');
+            }}
+            onLoad={() => {
+              console.log('✅ Imagem oficial-titulo-1topico.png carregada com sucesso!');
+              console.log('Caminho usado:', '/images/oficial-titulo-1topico.png');
+            }}
+          />
+        </motion.div>
       </div>
     </div>
   );
