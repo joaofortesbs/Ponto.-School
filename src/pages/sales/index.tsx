@@ -203,7 +203,7 @@ export default function SalesPage() {
             />
           </motion.div>
 
-          {/* Imagem titulo-topico1-pv.png ao lado direito */}
+          {/* Imagem oficial-titulo-1topico.png ao lado direito */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -211,16 +211,17 @@ export default function SalesPage() {
             className="flex-shrink-0"
           >
             <img 
-              src="/titulo-topico1-pv.png" 
+              src="/oficial-titulo-1topico.png" 
               alt="Título Tópico 1 PV" 
               className="h-auto object-contain"
               style={{ maxWidth: '500px' }}
               loading="eager"
               onError={(e) => {
-                console.error('❌ Erro ao carregar imagem titulo-topico1-pv.png');
+                console.error('❌ Erro ao carregar imagem oficial-titulo-1topico.png');
+                console.error('Caminho tentado:', e.currentTarget.src);
               }}
               onLoad={() => {
-                console.log('✅ Imagem titulo-topico1-pv.png carregada com sucesso!');
+                console.log('✅ Imagem oficial-titulo-1topico.png carregada com sucesso!');
               }}
             />
           </motion.div>
