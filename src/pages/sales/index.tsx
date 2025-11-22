@@ -226,10 +226,10 @@ export default function SalesPage() {
                 console.log('Caminho usado:', '/images/oficial-titulo-1topico.png');
               }}
             />
-            
+
             {/* Texto explicativo */}
-            <p className="text-gray-300 text-sm leading-relaxed max-w-md">
-              Aqui, tudo o que você cria ganha vida de um jeito diferente. Suas atividades se transformam em experiências gamificadas que seus alunos realmente querem completar, com rankings, modedas virtuais e desafios que conectam turmas inteiras. E o melhor, quanto mais você compartilha e quanto mais impacto você gera, mais você cresce como referência na plataforma! Abrindo portas para que seu conhecimento alcance outros professores e até gere retornos para você. É simples, natural e feito para valorizar quem ensina de verdade.
+            <p className="text-gray-300 text-sm leading-relaxed max-w-md text-center">
+              Aqui, tudo o que você cria ganha vida de um jeito diferente. Suas atividades se transformam automaticamente em experiências gamificadas que seus alunos realmente querem completar, com rankings, School Points e desafios que conectam turmas inteiras. E o melhor: quanto mais você compartilha e quanto mais impacto você gera, mais você cresce como referência na plataforma — abrindo portas para que seu conhecimento alcance outros professores e até gere retornos para você. É simples, natural e feito para valorizar quem ensina de verdade.
             </p>
           </motion.div>
         </div>
