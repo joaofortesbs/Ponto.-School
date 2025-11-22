@@ -228,8 +228,8 @@ export default function SalesPage() {
             />
 
             {/* Texto explicativo */}
-            <p className="text-gray-300 text-base leading-relaxed max-w-md text-center">
-              Aqui, tudo o que você cria <strong className="text-white font-semibold">ganha vida de um jeito diferente</strong>. Suas atividades se transformam automaticamente em <strong className="text-white font-semibold">experiências gamificadas</strong> que seus alunos realmente querem completar, com <strong className="text-orange-400 font-semibold">rankings, School Points e desafios</strong> que conectam turmas inteiras. E o melhor: quanto mais você compartilha e quanto mais impacto você gera, <strong className="text-white font-semibold">mais você cresce como referência na plataforma</strong> — abrindo portas para que seu conhecimento alcance outros professores e até <strong className="text-orange-400 font-semibold">gere retornos para você</strong>. É simples, natural e feito para <strong className="text-white font-semibold">valorizar quem ensina de verdade</strong>.
+            <p className="text-gray-300 text-base leading-relaxed max-w-md">
+              Aqui, tudo o que você cria <strong className="text-white font-semibold">ganha vida de um jeito diferente</strong>. Suas atividades se transformam em <strong className="text-white font-semibold">experiências gamificadas</strong> que seus alunos realmente querem completar, com <strong className="text-orange-400 font-semibold">rankings, moedas virtuais e desafios</strong> que conectam turmas inteiras. E o melhor: quanto mais você compartilha e quanto mais impacto você gera, <strong className="text-white font-semibold">mais você cresce como referência</strong>! Abrindo portas para que seu conhecimento alcance alunos e professores e até <strong className="text-orange-400 font-semibold">gere retornos para você</strong>. É simples, natural e feito para <strong className="text-white font-semibold">valorizar quem ensina de verdade</strong>.
             </p>
           </motion.div>
         </div>
