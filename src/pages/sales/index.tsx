@@ -208,7 +208,7 @@ export default function SalesPage() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
-            className="flex-shrink-0 mt-24 ml-10"
+            className="flex-shrink-0 mt-24 ml-7"
           >
             <img 
               src="/images/ofc-titulo-1topico.png" 
@@ -228,8 +228,8 @@ export default function SalesPage() {
             />
 
             {/* Texto explicativo */}
-            <p className="text-gray-300 text-lg leading-relaxed max-w-2xl ml-8">
-              Aqui, tudo o que você cria <strong className="text-white font-semibold">ganha vida de um jeito diferente</strong>. Suas atividades se transformam em <strong className="text-white font-semibold">experiências gamificadas</strong> com <strong className="text-orange-400 font-semibold">rankings, moedas virtuais e desafios</strong> que seus alunos realmente querem completar. Quanto mais você compartilha e gera impacto, <strong className="text-white font-semibold">mais você cresce como referência</strong> — abrindo portas para <strong className="text-orange-400 font-semibold">novos retornos</strong> e valorizando quem ensina de verdade.
+            <p className="text-gray-300 text-lg leading-relaxed max-w-2xl ml-4">
+              Aqui, tudo o que você cria <strong className="text-white font-semibold">ganha vida de um jeito diferente</strong>. Suas atividades se transformam em <strong className="text-white font-semibold">experiências gamificadas</strong> com <strong className="text-orange-400 font-semibold">rankings, moedas virtuais e desafios</strong> que seus alunos realmente querem completar. Quanto mais você compartilha e gera impacto, <strong className="text-white font-semibold">mais você cresce como referência</strong>, abrindo portas para <strong className="text-orange-400 font-semibold">novos retornos</strong> e valorizando quem ensina de verdade.
 
             </p>
           </motion.div>
