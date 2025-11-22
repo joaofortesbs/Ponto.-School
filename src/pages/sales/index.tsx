@@ -90,18 +90,43 @@ export default function SalesPage() {
                 </motion.div>
               </motion.div>
 
-              <motion.h1
+              <motion.div
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="text-5xl md:text-7xl font-bold text-white mb-12 mt-16"
+                className="flex justify-center mb-12 mt-16 px-4"
               >
-                Bem-vindo ao
-                <br />
-                <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent">
-                  Ponto School
-                </span>
-              </motion.h1>
+                <img 
+                  src="/images/titulo-principal-pv.png" 
+                  alt="Bem-vindo ao Ponto School" 
+                  className="max-w-full h-auto object-contain drop-shadow-2xl"
+                  style={{ maxWidth: '900px', width: '100%' }}
+                  loading="eager"
+                  onError={(e) => {
+                    console.error('❌ Erro ao carregar imagem titulo-principal-pv.png');
+                    console.error('Caminho tentado:', e.currentTarget.src);
+                    
+                    // Sistema de fallback em cascata
+                    if (e.currentTarget.src.includes('/images/titulo-principal-pv.png')) {
+                      console.log('🔄 Tentando /titulo-principal-pv.png...');
+                      e.currentTarget.src = '/titulo-principal-pv.png';
+                    } else if (e.currentTarget.src.includes('/titulo-principal-pv.png')) {
+                      console.log('🔄 Tentando /titulo1-pv.png como fallback...');
+                      e.currentTarget.src = '/titulo1-pv.png';
+                    } else if (e.currentTarget.src.includes('/titulo1-pv.png')) {
+                      console.log('🔄 Tentando /titulo-pv.png como último fallback...');
+                      e.currentTarget.src = '/titulo-pv.png';
+                    } else {
+                      console.error('❌ Todos os fallbacks falharam. Imagem ocultada.');
+                      e.currentTarget.style.display = 'none';
+                    }
+                  }}
+                  onLoad={() => {
+                    console.log('✅ Imagem de título carregada com sucesso!');
+                    console.log('📍 Caminho usado:', document.querySelector('img[alt="Bem-vindo ao Ponto School"]')?.getAttribute('src'));
+                  }}
+                />
+              </motion.div>
             </div>
 
             {/* Cards Sobrepostos Duplicados - Canto Direito Extremo */}
