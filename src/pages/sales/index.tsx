@@ -190,7 +190,7 @@ export default function SalesPage() {
             src="/img-topico1-pv.png" 
             alt="Tópico 1 PV" 
             className="h-auto object-contain"
-            style={{ maxWidth: '900px' }}
+            style={{ maxWidth: '700px' }}
             loading="eager"
             onError={(e) => {
               console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
