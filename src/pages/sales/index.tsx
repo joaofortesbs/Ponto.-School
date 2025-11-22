@@ -211,7 +211,7 @@ export default function SalesPage() {
             className="flex-shrink-0"
           >
             <img 
-              src="/oficial-titulo-1topico.png" 
+              src="/images/oficial-titulo-1topico.png" 
               alt="Título Tópico 1 PV" 
               className="h-auto object-contain"
               style={{ maxWidth: '500px' }}
@@ -219,9 +219,11 @@ export default function SalesPage() {
               onError={(e) => {
                 console.error('❌ Erro ao carregar imagem oficial-titulo-1topico.png');
                 console.error('Caminho tentado:', e.currentTarget.src);
+                console.error('Verifique se o arquivo existe em: public/images/oficial-titulo-1topico.png');
               }}
               onLoad={() => {
                 console.log('✅ Imagem oficial-titulo-1topico.png carregada com sucesso!');
+                console.log('Caminho usado:', '/images/oficial-titulo-1topico.png');
               }}
             />
           </motion.div>
