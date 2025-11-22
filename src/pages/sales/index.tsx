@@ -180,64 +180,55 @@ export default function SalesPage() {
         </motion.div>
 
         {/* Container com as duas imagens - posicionamento relativo */}
-        <div className="w-full mt-12 relative" style={{ minHeight: '600px' }}>
-          <div className="relative w-full flex justify-center">
-            {/* Imagem img-topico1-pv.png */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              className="relative"
-              style={{ zIndex: 1 }}
-            >
-              <img 
-                src="/img-topico1-pv.png" 
-                alt="Tópico 1 PV" 
-                className="w-auto h-auto object-contain"
-                style={{ maxWidth: '900px', display: 'block' }}
-                loading="eager"
-                onError={(e) => {
-                  console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
-                  e.currentTarget.style.display = 'none';
-                }}
-                onLoad={() => {
-                  console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
-                }}
-              />
-            </motion.div>
-
-            {/* Imagem titulo-topico1-pv.png ao lado direito superior */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              className="absolute"
-              style={{ 
-                top: '0',
-                right: '0',
-                zIndex: 2,
-                marginRight: '10%'
+        <div className="w-full mt-12 relative min-h-[500px]">
+          {/* Imagem img-topico1-pv.png no canto esquerdo */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="absolute left-0"
+            style={{ marginLeft: '-288px' }}
+          >
+            <img 
+              src="/img-topico1-pv.png" 
+              alt="Tópico 1 PV" 
+              className="w-auto h-auto object-contain"
+              style={{ maxWidth: '700px', display: 'block' }}
+              loading="eager"
+              onError={(e) => {
+                console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
+                e.currentTarget.style.display = 'none';
               }}
-            >
-              <img 
-                src="/titulo-topico1-pv.png" 
-                alt="Título Tópico 1 PV" 
-                className="w-auto h-auto object-contain"
-                style={{ maxWidth: '400px', display: 'block' }}
-                loading="eager"
-                onError={(e) => {
-                  console.error('❌ Erro ao carregar imagem titulo-topico1-pv.png');
-                  console.error('Caminho completo:', e.currentTarget.src);
-                  console.error('Verifique se o arquivo existe em public/titulo-topico1-pv.png');
-                  e.currentTarget.style.display = 'none';
-                }}
-                onLoad={(e) => {
-                  console.log('✅ Imagem titulo-topico1-pv.png carregada com sucesso!');
-                  console.log('Dimensões:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
-                }}
-              />
-            </motion.div>
-          </div>
+              onLoad={() => {
+                console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
+              }}
+            />
+          </motion.div>
+
+          {/* Imagem titulo-topico1-pv.png ao lado direito superior */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="absolute top-0"
+            style={{ left: '420px' }}
+          >
+            <img 
+              src="/titulo-topico1-pv.png" 
+              alt="Título Tópico 1 PV" 
+              className="w-auto h-auto object-contain"
+              style={{ maxWidth: '500px', display: 'block' }}
+              loading="eager"
+              onError={(e) => {
+                console.error('❌ Erro ao carregar imagem titulo-topico1-pv.png');
+                console.error('Caminho da imagem:', e.currentTarget.src);
+                e.currentTarget.style.display = 'none';
+              }}
+              onLoad={() => {
+                console.log('✅ Imagem titulo-topico1-pv.png carregada com sucesso!');
+              }}
+            />
+          </motion.div>
         </div>
       </div>
     </div>
