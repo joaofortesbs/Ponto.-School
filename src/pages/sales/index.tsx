@@ -214,7 +214,7 @@ export default function SalesPage() {
               src="/images/ofc-titulo-1topico.png" 
               alt="Título Tópico 1 PV" 
               className="h-auto object-contain mb-6"
-              style={{ maxWidth: '500px' }}
+              style={{ maxWidth: '650px' }}
               loading="eager"
               onError={(e) => {
                 console.error('❌ Erro ao carregar imagem oficial-titulo-1topico.png');
