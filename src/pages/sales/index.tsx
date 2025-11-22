@@ -229,7 +229,8 @@ export default function SalesPage() {
 
             {/* Texto explicativo */}
             <p className="text-gray-300 text-lg leading-relaxed max-w-2xl">
-              Aqui, tudo o que você cria <strong className="text-white font-semibold">ganha vida de um jeito diferente</strong>. Suas atividades se transformam em <strong className="text-white font-semibold">experiências gamificadas</strong> que seus alunos realmente querem completar, com <strong className="text-orange-400 font-semibold">rankings, moedas virtuais e desafios</strong> que conectam turmas inteiras. E o melhor: quanto mais você compartilha e quanto mais impacto você gera, <strong className="text-white font-semibold">mais você cresce como referência</strong>! Abrindo portas para que seu conhecimento alcance alunos e professores e até <strong className="text-orange-400 font-semibold">gere retornos para você</strong>. É simples, natural e feito para <strong className="text-white font-semibold">valorizar quem ensina de verdade</strong>.
+              Aqui, tudo o que você cria <strong className="text-white font-semibold">ganha vida de um jeito diferente</strong>. Suas atividades se transformam em <strong className="text-white font-semibold">experiências gamificadas</strong> com <strong className="text-orange-400 font-semibold">rankings, moedas virtuais e desafios</strong> que seus alunos realmente querem completar. Quanto mais você compartilha e gera impacto, <strong className="text-white font-semibold">mais você cresce como referência</strong> — abrindo portas para <strong className="text-orange-400 font-semibold">novos retornos</strong> e valorizando quem ensina de verdade.
+
             </p>
           </motion.div>
         </div>
