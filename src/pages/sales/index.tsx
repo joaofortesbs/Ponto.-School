@@ -208,10 +208,10 @@ export default function SalesPage() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
-            className="flex-shrink-0 mt-24 ml-16"
+            className="flex-shrink-0 mt-24 ml-12"
           >
             <img 
-              src="/images/oficial-titulo-1topico.png" 
+              src="/images/ofc-titulo-1topico.png" 
               alt="Título Tópico 1 PV" 
               className="h-auto object-contain mb-6"
               style={{ maxWidth: '500px' }}
@@ -229,7 +229,7 @@ export default function SalesPage() {
             
             {/* Texto explicativo */}
             <p className="text-gray-300 text-sm leading-relaxed max-w-md">
-              Aqui, tudo o que você cria ganha vida de um jeito diferente. Suas atividades se transformam automaticamente em experiências gamificadas que seus alunos realmente querem completar, com rankings, School Points e desafios que conectam turmas inteiras. E o melhor: quanto mais você compartilha e quanto mais impacto você gera, mais você cresce como referência na plataforma — abrindo portas para que seu conhecimento alcance outros professores e até gere retornos para você. É simples, natural e feito para valorizar quem ensina de verdade.
+              Aqui, tudo o que você cria ganha vida de um jeito diferente. Suas atividades se transformam automaticamente em experiências gamificadas que seus alunos realmente querem completar, com rankings, moedas virtuais e desafios que conectam turmas inteiras. E o melhor, quanto mais você compartilha e quanto mais impacto você gera, mais você cresce como referência na plataforma! Abrindo portas para que seu conhecimento alcance outros professores e até gere retornos para você. É simples, natural e feito para valorizar quem ensina de verdade.
             </p>
           </motion.div>
         </div>
