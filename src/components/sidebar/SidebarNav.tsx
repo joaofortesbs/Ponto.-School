@@ -401,7 +401,15 @@ export function SidebarNav({
     if (path === "/mentor-ia") {
       return showMentorAI;
     }
-    return location.pathname === path;
+    
+    // Para o Painel (/dashboard), verificar se estamos exatamente em /dashboard
+    if (path === "/dashboard") {
+      return location.pathname === "/dashboard" || location.pathname === "/dashboard/";
+    }
+    
+    // Para outras rotas, verificar se o pathname começa com o path
+    // Isso permite que /dashboard/school-power seja ativo quando path é /dashboard/school-power
+    return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
   const toggleSection = (section: string) => {
@@ -412,43 +420,43 @@ export function SidebarNav({
     {
       icon: "fas fa-home",
       label: "Painel",
-      path: "/",
+      path: "/dashboard",
     },
     {
       icon: "fas fa-user-graduate",
       label: "Minhas Turmas",
-      path: "/turmas",
+      path: "/dashboard/turmas",
     },
     {
       icon: "fas fa-route",
       label: "Trilhas School",
-      path: "/trilhas-school/alunos",
+      path: "/dashboard/trilhas-school/alunos",
     },
     {
       icon: "fas fa-project-diagram",
       label: "School Planner",
-      path: "/school-planner",
+      path: "/dashboard/school-planner",
     },
     {
       icon: "fas fa-brain",
       label: "Epictus IA",
-      path: "/epictus-ia",
+      path: "/dashboard/epictus-ia",
       isSpecial: true,
     },
     {
       icon: "fas fa-users",
       label: "Comunidades",
-      path: "/comunidades",
+      path: "/dashboard/comunidades",
     },
     {
       icon: "fas fa-trophy",
       label: "Conquistas",
-      path: "/conquistas",
+      path: "/dashboard/conquistas",
     },
     {
       icon: "fas fa-compass",
       label: "Explorar",
-      path: "/explorar",
+      path: "/dashboard/explorar",
     },
   ];
 
@@ -456,41 +464,41 @@ export function SidebarNav({
     {
       icon: "fas fa-home",
       label: "Painel",
-      path: "/",
+      path: "/dashboard",
     },
     {
       icon: "fas fa-rocket",
       label: "School Power",
-      path: "/school-power",
+      path: "/dashboard/school-power",
     },
     {
       icon: "fas fa-chalkboard-teacher",
       label: "Minhas Turmas",
-      path: "/turmas",
+      path: "/dashboard/turmas",
       disabled: true,
     },
     {
       icon: "fas fa-route",
       label: "Trilhas School",
-      path: "/trilhas-school/professores",
+      path: "/dashboard/trilhas-school/professores",
       disabled: true,
     },
     {
       icon: "fas fa-globe",
       label: "Portal",
-      path: "/portal",
+      path: "/dashboard/portal",
       disabled: true,
     },
     {
       icon: "fas fa-users",
       label: "Comunidades",
-      path: "/comunidades",
+      path: "/dashboard/comunidades",
       disabled: true,
     },
     {
       icon: "fas fa-trophy",
       label: "Conquistas",
-      path: "/conquistas",
+      path: "/dashboard/conquistas",
       disabled: true,
     },
   ];
@@ -499,43 +507,43 @@ export function SidebarNav({
     {
       icon: "fas fa-home",
       label: "Painel",
-      path: "/",
+      path: "/dashboard",
     },
     {
       icon: "fas fa-users-cog",
       label: "Gestão",
-      path: "/gestao",
+      path: "/dashboard/gestao",
       disabled: true,
     },
     {
       icon: "fas fa-chalkboard-teacher",
       label: "Turmas",
-      path: "/turmas",
+      path: "/dashboard/turmas",
       disabled: true,
     },
     {
       icon: "fas fa-route",
       label: "Trilhas School",
-      path: "/trilhas-school/coordenador",
+      path: "/dashboard/trilhas-school/coordenador",
       disabled: true,
     },
     {
       icon: "fas fa-brain",
       label: "Epictus IA",
-      path: "/epictus-ia",
+      path: "/dashboard/epictus-ia",
       isSpecial: true,
       disabled: true,
     },
     {
       icon: "fas fa-chart-line",
       label: "Relatórios",
-      path: "/relatorios",
+      path: "/dashboard/relatorios",
       disabled: true,
     },
     {
       icon: "fas fa-book-open",
       label: "Biblioteca",
-      path: "/biblioteca",
+      path: "/dashboard/biblioteca",
       disabled: true,
     },
   ];
