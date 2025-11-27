@@ -89,7 +89,7 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({
       document.body.classList.remove('modal-open');
       setTimeout(() => {
         onClose();
-        navigate('/school-power');
+        navigate('/dashboard/school-power');
       }, 300);
     }
   };

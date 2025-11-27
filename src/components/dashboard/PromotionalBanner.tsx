@@ -78,7 +78,7 @@ const PromotionalBanner = () => {
               transition={{ delay: 0.4, duration: 0.3 }}
             >
               <Button
-                onClick={() => navigate('/school-power')}
+                onClick={() => navigate('/dashboard/school-power')}
                 className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-2 border-orange-400 dark:border-orange-500 shadow-lg shadow-orange-500/30 dark:shadow-orange-900/30 transition-all duration-300 rounded-full px-6 py-2 sm:px-8 sm:py-2 text-sm sm:text-base font-semibold flex items-center gap-2 hover:scale-105 active:scale-95"
               >
                 <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />

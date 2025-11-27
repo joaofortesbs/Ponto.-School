@@ -136,7 +136,7 @@ export const CardPrimeiroPassos: React.FC<CardPrimeiroPassosProps> = ({ isCollap
   };
 
   const handleCriarAtividade = () => {
-    navigate('/school-power');
+    navigate('/dashboard/school-power');
     setIsDropupOpen(false);
   };
 

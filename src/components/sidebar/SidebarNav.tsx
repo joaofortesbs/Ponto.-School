@@ -386,7 +386,7 @@ export function SidebarNav({
 
   const handleNavigation = (path: string, isSpecial?: boolean, disabled?: boolean) => {
     if (disabled) {
-      return; // Não navega se o item estiver desabilitado
+      return;
     }
 
     if (path === "/mentor-ia") {
