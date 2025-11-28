@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import ParticlesBackground from "@/sections/SchoolPower/components/ParticlesBackground";
 import { SalesHeader } from "./components/SalesHeader";
@@ -6,6 +6,35 @@ import StackedCardsLeft from './components/StackedCardsLeft';
 import StackedCardsRight from './components/StackedCardsRight';
 import ChatInput from '@/sections/SchoolPower/components/ChatInput';
 import { QuickAccessCards } from '@/sections/SchoolPower/components/4-cards-pré-prompts';
+
+const CountdownTimer: React.FC<{ initialTime: number }> = ({ initialTime }) => {
+  const [timeLeft, setTimeLeft] = useState(initialTime);
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+
+  return (
+    <span className="text-white font-bold text-xl">
+      {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+    </span>
+  );
+};
 
 export default function SalesPage() {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
@@ -226,6 +255,42 @@ export default function SalesPage() {
                 console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
               }}
             />
+
+            {/* Card com Cronômetro e Badge de Pontos */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+              className="mt-6 w-full max-w-[280px] bg-white/5 backdrop-blur-sm rounded-2xl border border-orange-500/30 p-6"
+            >
+              {/* Card Horizontal com Cronômetro e Badge */}
+              <div className="bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-xl p-4 flex items-center justify-between">
+                {/* Cronômetro */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                    <svg 
+                      className="w-6 h-6 text-white" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
+                      />
+                    </svg>
+                  </div>
+                  <CountdownTimer initialTime={150} />
+                </div>
+
+                {/* Badge de Pontos */}
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 rounded-full shadow-lg">
+                  <span className="text-white font-bold text-sm">+50 pts</span>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Imagem oficial-titulo-1topico.png à direita e mais abaixo */}
