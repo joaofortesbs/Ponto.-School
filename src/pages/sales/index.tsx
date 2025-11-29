@@ -263,7 +263,7 @@ export default function SalesPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.0 }}
-              className="mt-8 ml-4"
+              className="mt-16 ml-4"
             >
               <img 
                 src="/images/img-topico2-pv.png" 
