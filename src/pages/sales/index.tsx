@@ -267,25 +267,29 @@ export default function SalesPage() {
             >
               <img 
                 src="/img-topico2-pv.png" 
-                alt="Tópico 2 PV" 
-                className="h-auto object-contain"
-                style={{ maxWidth: '650px' }}
+                alt="Tópico 2 - Ponto School" 
+                className="h-auto object-contain drop-shadow-lg"
+                style={{ maxWidth: '650px', width: '100%' }}
                 loading="eager"
                 onError={(e) => {
                   console.error('❌ Erro ao carregar imagem img-topico2-pv.png');
-                  console.error('Caminho tentado:', e.currentTarget.src);
-                  // Tentar fallback para /images/img-topico2-pv.png
-                  if (e.currentTarget.src.includes('/img-topico2-pv.png') && !e.currentTarget.src.includes('/images/')) {
-                    console.log('🔄 Tentando carregar /images/img-topico2-pv.png como fallback...');
-                    e.currentTarget.src = '/images/img-topico2-pv.png';
-                  } else {
-                    // Se o fallback também falhar, ocultar a imagem
-                    e.currentTarget.style.display = 'none';
-                    console.error('❌ Fallback também falhou. Imagem ocultada.');
+                  console.error('Caminho completo tentado:', e.currentTarget.src);
+                  console.error('Verifique se o arquivo existe em: public/img-topico2-pv.png');
+                  
+                  // Adicionar placeholder visual em caso de erro
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    parent.innerHTML = `
+                      <div style="max-width: 650px; width: 100%; padding: 2rem; background: rgba(255, 107, 0, 0.1); border: 2px dashed rgba(255, 107, 0, 0.3); border-radius: 12px; text-align: center;">
+                        <p style="color: rgba(255, 107, 0, 0.8); font-size: 14px;">⚠️ Imagem img-topico2-pv.png não encontrada</p>
+                        <p style="color: rgba(255, 255, 255, 0.6); font-size: 12px; margin-top: 8px;">Verifique se o arquivo está em: public/img-topico2-pv.png</p>
+                      </div>
+                    `;
                   }
                 }}
                 onLoad={() => {
                   console.log('✅ Imagem img-topico2-pv.png carregada com sucesso!');
+                  console.log('📍 Caminho usado:', '/img-topico2-pv.png');
                 }}
               />
             </motion.div>
