@@ -312,31 +312,60 @@ export default function SalesPage() {
               />
             </motion.div>
 
-            {/* Imagem img-topico3-pv.png abaixo de img-topico2-pv.png */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.4 }}
-              className="flex-shrink-0 mt-[407px] ml-[-667px]"
-            >
-              <img 
-                src="/images/img-topico3-pv.png" 
-                alt="Tópico 3 - Ponto School" 
-                className="h-auto object-contain drop-shadow-lg"
-                style={{ maxWidth: '547px', width: '100%' }}
-                loading="eager"
-                onError={(e) => {
-                  console.error('❌ Erro ao carregar imagem img-topico3-pv.png');
-                  console.error('Caminho completo tentado:', e.currentTarget.src);
-                  console.error('Verifique se o arquivo existe em: public/images/img-topico3-pv.png');
-                  e.currentTarget.style.display = 'none';
-                }}
-                onLoad={() => {
-                  console.log('✅ Imagem img-topico3-pv.png carregada com sucesso!');
-                  console.log('📍 Caminho usado:', '/images/img-topico3-pv.png');
-                }}
-              />
-            </motion.div>
+            {/* Container com img-topico3-pv.png e ofc-titulo-3topico.png */}
+            <div className="flex items-start gap-8 mt-[407px] ml-[-667px]">
+              {/* Imagem img-topico3-pv.png à esquerda */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.4 }}
+                className="flex-shrink-0"
+              >
+                <img 
+                  src="/images/img-topico3-pv.png" 
+                  alt="Tópico 3 - Ponto School" 
+                  className="h-auto object-contain drop-shadow-lg"
+                  style={{ maxWidth: '547px', width: '100%' }}
+                  loading="eager"
+                  onError={(e) => {
+                    console.error('❌ Erro ao carregar imagem img-topico3-pv.png');
+                    console.error('Caminho completo tentado:', e.currentTarget.src);
+                    console.error('Verifique se o arquivo existe em: public/images/img-topico3-pv.png');
+                    e.currentTarget.style.display = 'none';
+                  }}
+                  onLoad={() => {
+                    console.log('✅ Imagem img-topico3-pv.png carregada com sucesso!');
+                    console.log('📍 Caminho usado:', '/images/img-topico3-pv.png');
+                  }}
+                />
+              </motion.div>
+
+              {/* Imagem ofc-titulo-3topico.png à direita */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 1.6 }}
+                className="flex-shrink-0"
+              >
+                <img 
+                  src="/images/ofc-titulo-3topico.png" 
+                  alt="Título Tópico 3 - Ponto School" 
+                  className="h-auto object-contain drop-shadow-lg"
+                  style={{ maxWidth: '650px', width: '100%' }}
+                  loading="eager"
+                  onError={(e) => {
+                    console.error('❌ Erro ao carregar imagem ofc-titulo-3topico.png');
+                    console.error('Caminho completo tentado:', e.currentTarget.src);
+                    console.error('Verifique se o arquivo existe em: public/images/ofc-titulo-3topico.png');
+                    e.currentTarget.style.display = 'none';
+                  }}
+                  onLoad={() => {
+                    console.log('✅ Imagem ofc-titulo-3topico.png carregada com sucesso!');
+                    console.log('📍 Caminho usado:', '/images/ofc-titulo-3topico.png');
+                  }}
+                />
+              </motion.div>
+            </div>
           </motion.div>
         </div>
       </div>
