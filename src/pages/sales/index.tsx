@@ -105,7 +105,7 @@ export default function SalesPage() {
                   onError={(e) => {
                     console.error('❌ Erro ao carregar imagem titulo-principal-pv.png');
                     console.error('Caminho tentado:', e.currentTarget.src);
-                    
+
                     // Sistema de fallback em cascata
                     if (e.currentTarget.src.includes('/images/titulo-principal-pv.png')) {
                       console.log('🔄 Tentando /titulo-principal-pv.png...');
@@ -263,7 +263,7 @@ export default function SalesPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.0 }}
-              className="mt-32 ml-4"
+              className="mt-16 -ml-12"
             >
               <img 
                 src="/images/img-topico2-pv.png" 
