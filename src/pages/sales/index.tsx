@@ -214,16 +214,18 @@ export default function SalesPage() {
             className="-ml-72 flex-shrink-0"
           >
             <img 
-              src="/img-topico1-pv.png" 
+              src="/images/img-topico1-pv.png" 
               alt="Tópico 1 PV" 
               className="h-auto object-contain"
               style={{ maxWidth: '700px' }}
               loading="eager"
               onError={(e) => {
                 console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
+                console.error('📍 Caminho tentado:', e.currentTarget.src);
               }}
               onLoad={() => {
                 console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
+                console.log('📍 Caminho usado:', '/images/img-topico1-pv.png');
               }}
             />
           </motion.div>
