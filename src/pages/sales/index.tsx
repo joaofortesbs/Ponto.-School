@@ -255,7 +255,18 @@ export default function SalesPage() {
             />
 
             {/* Texto explicativo */}
-            <p className="text-gray-300 text-lg leading-relaxed max-w-2xl ml-4">
+            <p 
+              className="text-gray-300 text-lg leading-relaxed ml-4" 
+              style={{ 
+                fontFamily: "'Poppins', 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                fontWeight: 500,
+                letterSpacing: '0.01em',
+                lineHeight: '1.7',
+                maxWidth: '650px',
+                width: '100%',
+                marginLeft: '8px'
+              }}
+            >
               Aqui, tudo o que você cria <strong className="text-white font-semibold">ganha vida de um jeito diferente</strong>. Suas atividades se transformam em <strong className="text-white font-semibold">experiências gamificadas</strong> com <strong className="text-orange-400 font-semibold">rankings, moedas virtuais e desafios</strong> que seus alunos realmente querem completar. Quanto mais você compartilha e gera impacto, <strong className="text-white font-semibold">mais você cresce como referência</strong>, abrindo portas para <strong className="text-orange-400 font-semibold">novos retornos</strong> e valorizando quem ensina de verdade.
 
             </p>
