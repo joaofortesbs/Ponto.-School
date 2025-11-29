@@ -312,7 +312,7 @@ export default function SalesPage() {
               />
 
               {/* Texto explicativo abaixo da imagem ofc-titulo-2topico.png */}
-              <p className="text-gray-300 text-lg leading-relaxed max-w-2xl mt-6 text-left">
+              <p className="text-gray-300 text-lg leading-relaxed max-w-2xl mt-6 text-left font-body" style={{ fontFamily: "'Poppins', 'Nunito', sans-serif", fontWeight: 500 }}>
                 Esqueça modelos prontos que limitam sua criatividade. Aqui, você descreve qualquer tipo de atividade que imaginou, do seu jeito, e nossa IA programa, ajusta e publica tudo automaticamente. E o melhor, salva como template reutilizável para usar com outros temas sempre que quiser. Cada atividade que você cria vira parte da sua identidade como professor, escalável para qualquer conteúdo.
               </p>
             </motion.div>
