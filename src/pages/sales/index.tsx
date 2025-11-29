@@ -311,6 +311,32 @@ export default function SalesPage() {
                 }}
               />
             </motion.div>
+
+            {/* Imagem img-topico3-pv.png abaixo de img-topico2-pv.png */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.4 }}
+              className="mt-12"
+            >
+              <img 
+                src="/images/img-topico3-pv.png" 
+                alt="Tópico 3 - Ponto School" 
+                className="h-auto object-contain drop-shadow-lg"
+                style={{ maxWidth: '650px', width: '100%' }}
+                loading="eager"
+                onError={(e) => {
+                  console.error('❌ Erro ao carregar imagem img-topico3-pv.png');
+                  console.error('Caminho completo tentado:', e.currentTarget.src);
+                  console.error('Verifique se o arquivo existe em: public/images/img-topico3-pv.png');
+                  e.currentTarget.style.display = 'none';
+                }}
+                onLoad={() => {
+                  console.log('✅ Imagem img-topico3-pv.png carregada com sucesso!');
+                  console.log('📍 Caminho usado:', '/images/img-topico3-pv.png');
+                }}
+              />
+            </motion.div>
           </motion.div>
         </div>
       </div>
