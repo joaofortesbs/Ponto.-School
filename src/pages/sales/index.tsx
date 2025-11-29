@@ -263,7 +263,7 @@ export default function SalesPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.0 }}
-              className="mt-16 -ml-12"
+              className="mt-[153px] -ml-[-17px]"
             >
               <img 
                 src="/images/img-topico2-pv.png" 
@@ -289,7 +289,7 @@ export default function SalesPage() {
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 1.2 }}
-              className="-mt-96 -ml-[673px]"
+              className="-mt-[427px] -ml-[673px]"
             >
               <img 
                 src="/images/ofc-titulo-2topico.png" 
