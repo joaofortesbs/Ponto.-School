@@ -214,28 +214,16 @@ export default function SalesPage() {
             className="-ml-72 flex-shrink-0"
           >
             <img 
-              src="/images/img-topico1-pv.png" 
+              src="/img-topico1-pv.png" 
               alt="Tópico 1 PV" 
               className="h-auto object-contain"
               style={{ maxWidth: '700px' }}
               loading="eager"
               onError={(e) => {
                 console.error('❌ Erro ao carregar imagem img-topico1-pv.png');
-                console.error('Caminho tentado:', e.currentTarget.src);
-                console.error('Verifique se o arquivo existe em: public/images/img-topico1-pv.png');
-                
-                // Tentar fallback para raiz do public
-                if (e.currentTarget.src.includes('/images/img-topico1-pv.png')) {
-                  console.log('🔄 Tentando carregar de /img-topico1-pv.png...');
-                  e.currentTarget.src = '/img-topico1-pv.png';
-                } else {
-                  e.currentTarget.style.display = 'none';
-                  console.error('❌ Fallback também falhou. Imagem ocultada.');
-                }
               }}
               onLoad={() => {
                 console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
-                console.log('📍 Caminho usado:', '/images/img-topico1-pv.png');
               }}
             />
           </motion.div>
