@@ -6,6 +6,7 @@ import StackedCardsLeft from './components/StackedCardsLeft';
 import StackedCardsRight from './components/StackedCardsRight';
 import ChatInput from '@/sections/SchoolPower/components/ChatInput';
 import { QuickAccessCards } from '@/sections/SchoolPower/components/4-cards-pré-prompts';
+import { Button } from "@/components/ui/button";
 
 export default function SalesPage() {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
@@ -271,20 +272,60 @@ export default function SalesPage() {
             </p>
 
             {/* Botão Criar atividades */}
-            <motion.button
+            <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="mt-6 px-6 py-2.5 rounded-full font-semibold transition-all duration-300 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:shadow-lg hover:scale-105"
               style={{
                 marginLeft: '15px',
-              }}
-              onClick={() => {
-                console.log('Botão Criar atividades clicado');
-                // Aqui você pode adicionar a navegação ou ação desejada
+                marginTop: '24px'
               }}
             >
-              Criar atividades
-            </motion.button>
+              <Button
+                className="
+                  relative overflow-hidden
+                  px-4 md:px-5 py-2 md:py-3
+                  text-white font-bold text-base md:text-lg
+                  rounded-3xl
+                  shadow-lg shadow-[#FF6B00]/30
+                  hover:shadow-xl hover:shadow-[#FF6B00]/40
+                  transition-all duration-300
+                  group
+                "
+                style={{
+                  border: '1.5px solid transparent',
+                  backgroundImage: 'linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
+                  backgroundOrigin: 'border-box',
+                  backgroundClip: 'border-box'
+                }}
+                onClick={() => {
+                  console.log('Botão Criar atividades clicado');
+                  // Aqui você pode adicionar a navegação ou ação desejada
+                }}
+              >
+                {/* Camada de fundo interno com opacidade de 30% */}
+                <span 
+                  className="absolute inset-[1.5px] rounded-[calc(1.5rem-1.5px)] z-0"
+                  style={{
+                    background: 'rgba(255, 107, 0, 0.3)'
+                  }}
+                ></span>
+
+                {/* Efeito de brilho no hover */}
+                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-3xl z-[1]"></span>
+
+                {/* Texto com ícone */}
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                  </svg>
+                  Criar atividades
+                </span>
+              </Button>
+            </motion.div>
 
             {/* Imagem img-topico2-pv.png */}
             <motion.div
