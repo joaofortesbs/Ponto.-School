@@ -323,7 +323,7 @@ export default function SalesPage() {
                 src="/images/img-topico3-pv.png" 
                 alt="Tópico 3 - Ponto School" 
                 className="h-auto object-contain drop-shadow-lg"
-                style={{ maxWidth: '650px', width: '100%' }}
+                style={{ maxWidth: '547px', width: '100%' }}
                 loading="eager"
                 onError={(e) => {
                   console.error('❌ Erro ao carregar imagem img-topico3-pv.png');
