@@ -264,10 +264,10 @@ export default function SalesPage() {
                 lineHeight: '1.7',
                 maxWidth: '650px',
                 width: '100%',
-                marginLeft: '8px'
+                marginLeft: '15px'
               }}
             >
-              Aqui, tudo o que você cria <strong className="text-white font-semibold">ganha vida de um jeito diferente</strong>. Suas atividades se transformam em <strong className="text-white font-semibold">experiências gamificadas</strong> com <strong className="text-orange-400 font-semibold">rankings, moedas virtuais e desafios</strong> que seus alunos realmente querem completar. Quanto mais você compartilha e gera impacto, <strong className="text-white font-semibold">mais você cresce como referência</strong>, abrindo portas para <strong className="text-orange-400 font-semibold">novos retornos</strong> e valorizando quem ensina de verdade.
+              Aqui, tudo o que você cria ganha vida de um jeito diferente. Suas atividades se transformam em <strong className="text-orange-400 font-semibold"> experiências gamificadas com rankings, moedas virtuais e desafios</strong> que seus alunos realmente querem completar. Quanto mais você compartilha e gera impacto, mais você cresce como referência abrindo portas para novos retornos e valorizando quem ensina de verdade.
 
             </p>
 
@@ -335,7 +335,7 @@ export default function SalesPage() {
                   marginLeft: '8px'
                 }}
               >
-                Esqueça modelos prontos que limitam sua criatividade. Aqui, você descreve qualquer tipo de atividade que imaginou, do seu jeito, e nossa IA programa, ajusta e publica tudo automaticamente. E o melhor, salva como template reutilizável para usar com outros temas sempre que quiser. Cada atividade que você cria vira parte da sua identidade como professor, escalável para qualquer conteúdo.
+                Esqueça modelos prontos que limitam sua criatividade. Aqui, você descreve qualquer tipo de atividade que imaginou, do seu jeito, e nossa IA <strong className="text-orange-400 font-semibold"> programa, ajusta e publica tudo automaticamente</strong>. E o melhor, salva como template reutilizável para usar com outros temas sempre que quiser. Cada atividade que você cria vira parte da sua identidade como professor, escalável para qualquer conteúdo.
               </p>
             </motion.div>
 
