@@ -258,60 +258,57 @@ export default function SalesPage() {
 
             </p>
 
-            {/* Container com as duas imagens do tópico 2 lado a lado */}
-            <div className="flex items-start gap-8 mt-16 -ml-12">
-              {/* Imagem ofc-titulo-2topico.png à esquerda */}
-              <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 1.0 }}
-                className="flex-shrink-0"
-              >
-                <img 
-                  src="/images/ofc-titulo-2topico.png" 
-                  alt="Título Tópico 2 - Ponto School" 
-                  className="h-auto object-contain drop-shadow-lg"
-                  style={{ maxWidth: '500px', width: '100%' }}
-                  loading="eager"
-                  onError={(e) => {
-                    console.error('❌ Erro ao carregar imagem ofc-titulo-2topico.png');
-                    console.error('Caminho completo tentado:', e.currentTarget.src);
-                    console.error('Verifique se o arquivo existe em: public/images/ofc-titulo-2topico.png');
-                    e.currentTarget.style.display = 'none';
-                  }}
-                  onLoad={() => {
-                    console.log('✅ Imagem ofc-titulo-2topico.png carregada com sucesso!');
-                    console.log('📍 Caminho usado:', '/images/ofc-titulo-2topico.png');
-                  }}
-                />
-              </motion.div>
+            {/* Imagem img-topico2-pv.png */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.0 }}
+              className="mt-16 -ml-12"
+            >
+              <img 
+                src="/images/img-topico2-pv.png" 
+                alt="Tópico 2 - Ponto School" 
+                className="h-auto object-contain drop-shadow-lg"
+                style={{ maxWidth: '650px', width: '100%' }}
+                loading="eager"
+                onError={(e) => {
+                  console.error('❌ Erro ao carregar imagem img-topico2-pv.png');
+                  console.error('Caminho completo tentado:', e.currentTarget.src);
+                  console.error('Verifique se o arquivo existe em: public/images/img-topico2-pv.png');
+                  e.currentTarget.style.display = 'none';
+                }}
+                onLoad={() => {
+                  console.log('✅ Imagem img-topico2-pv.png carregada com sucesso!');
+                  console.log('📍 Caminho usado:', '/images/img-topico2-pv.png');
+                }}
+              />
+            </motion.div>
 
-              {/* Imagem img-topico2-pv.png à direita */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 1.2 }}
-                className="flex-shrink-0"
-              >
-                <img 
-                  src="/images/img-topico2-pv.png" 
-                  alt="Tópico 2 - Ponto School" 
-                  className="h-auto object-contain drop-shadow-lg"
-                  style={{ maxWidth: '650px', width: '100%' }}
-                  loading="eager"
-                  onError={(e) => {
-                    console.error('❌ Erro ao carregar imagem img-topico2-pv.png');
-                    console.error('Caminho completo tentado:', e.currentTarget.src);
-                    console.error('Verifique se o arquivo existe em: public/images/img-topico2-pv.png');
-                    e.currentTarget.style.display = 'none';
-                  }}
-                  onLoad={() => {
-                    console.log('✅ Imagem img-topico2-pv.png carregada com sucesso!');
-                    console.log('📍 Caminho usado:', '/images/img-topico2-pv.png');
-                  }}
-                />
-              </motion.div>
-            </div>
+            {/* Imagem ofc-titulo-2topico.png mais abaixo e à esquerda */}
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 1.2 }}
+              className="mt-24 -ml-32"
+            >
+              <img 
+                src="/images/ofc-titulo-2topico.png" 
+                alt="Título Tópico 2 - Ponto School" 
+                className="h-auto object-contain drop-shadow-lg"
+                style={{ maxWidth: '650px', width: '100%' }}
+                loading="eager"
+                onError={(e) => {
+                  console.error('❌ Erro ao carregar imagem ofc-titulo-2topico.png');
+                  console.error('Caminho completo tentado:', e.currentTarget.src);
+                  console.error('Verifique se o arquivo existe em: public/images/ofc-titulo-2topico.png');
+                  e.currentTarget.style.display = 'none';
+                }}
+                onLoad={() => {
+                  console.log('✅ Imagem ofc-titulo-2topico.png carregada com sucesso!');
+                  console.log('📍 Caminho usado:', '/images/ofc-titulo-2topico.png');
+                }}
+              />
+            </motion.div>
           </motion.div>
         </div>
       </div>
