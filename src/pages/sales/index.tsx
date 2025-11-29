@@ -271,11 +271,11 @@ export default function SalesPage() {
               Aqui, tudo o que você cria ganha vida de um jeito diferente. Suas atividades se transformam em <strong className="text-orange-400 font-semibold"> experiências gamificadas com rankings, moedas virtuais e desafios</strong> que seus alunos realmente querem completar. Quanto mais você compartilha e gera impacto, mais você cresce como referência abrindo portas para novos retornos e valorizando quem ensina de verdade.
             </p>
 
-            {/* Botão Criar atividades */}
+            {/* Botão Experimentar grátis */}
             <motion.div
               style={{
-                marginLeft: '15px',
-                marginTop: '24px'
+                marginLeft: '17px',
+                marginTop: '34px'
               }}
             >
               <Button
@@ -284,8 +284,8 @@ export default function SalesPage() {
                   px-4 md:px-5 py-2 md:py-3
                   text-white font-bold text-base md:text-lg
                   rounded-3xl
-                  shadow-lg shadow-[#FF6B00]/30
-                  hover:shadow-xl hover:shadow-[#FF6B00]/40
+                  shadow-lg shadow-[#FF6B00]/20
+                  hover:shadow-xl hover:shadow-[#FF6B00]/30
                   transition-all duration-300
                   group
                 "
@@ -296,7 +296,7 @@ export default function SalesPage() {
                   backgroundClip: 'border-box'
                 }}
                 onClick={() => {
-                  console.log('Botão Criar atividades clicado');
+                  console.log('Botão Experimentar grátis clicado');
                   // Aqui você pode adicionar a navegação ou ação desejada
                 }}
               >
@@ -313,7 +313,7 @@ export default function SalesPage() {
 
                 {/* Texto */}
                 <span className="relative z-10 flex items-center justify-center">
-                  Criar atividades
+                  Experimentar grátis
                 </span>
               </Button>
             </motion.div>
@@ -323,7 +323,7 @@ export default function SalesPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.0 }}
-              className="mt-[223px] -ml-[-17px]"
+              className="mt-[127px] -ml-[-17px]"
             >
               <img 
                 src="/images/img-topico2-pv.png" 
@@ -385,16 +385,62 @@ export default function SalesPage() {
               >
                 Esqueça modelos prontos que limitam sua criatividade. Aqui, você descreve qualquer tipo de atividade que imaginou, do seu jeito, e nossa IA <strong className="text-orange-400 font-semibold"> programa, ajusta e publica tudo automaticamente</strong>. E o melhor, salva como template reutilizável para usar com outros temas sempre que quiser. Cada atividade que você cria vira parte da sua identidade como professor, escalável para qualquer conteúdo.
               </p>
+              {/* Botão Criar atividades */}
+              <motion.div
+                style={{
+                  marginLeft: '9px',
+                  marginTop: '34px'
+                }}
+              >
+                <Button
+                  className="
+                    relative overflow-hidden
+                    px-4 md:px-5 py-2 md:py-3
+                    text-white font-bold text-base md:text-lg
+                    rounded-3xl
+                    shadow-lg shadow-[#FF6B00]/20
+                    hover:shadow-xl hover:shadow-[#FF6B00]/30
+                    transition-all duration-300
+                    group
+                  "
+                  style={{
+                    border: '1.5px solid transparent',
+                    backgroundImage: 'linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
+                    backgroundOrigin: 'border-box',
+                    backgroundClip: 'border-box'
+                  }}
+                  onClick={() => {
+                    console.log('Botão Criar atividades clicado');
+                    // Aqui você pode adicionar a navegação ou ação desejada
+                  }}
+                >
+                  {/* Camada de fundo interno com opacidade de 30% */}
+                  <span 
+                    className="absolute inset-[1.5px] rounded-[calc(1.5rem-1.5px)] z-0"
+                    style={{
+                      background: 'rgba(255, 107, 0, 0.3)'
+                    }}
+                  ></span>
+
+                  {/* Efeito de brilho no hover */}
+                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-3xl z-[1]"></span>
+
+                  {/* Texto */}
+                  <span className="relative z-10 flex items-center justify-center">
+                    Criar atividades
+                  </span>
+                </Button>
+              </motion.div>
             </motion.div>
 
             {/* Container com img-topico3-pv.png e ofc-titulo-3topico.png */}
-            <div className="flex items-start gap-8 mt-[407px] ml-[-667px]">
+            <div className="flex items-start gap-8 mt-[127px] ml-[-667px]">
               {/* Imagem img-topico3-pv.png à esquerda */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 1.4 }}
-                className="flex-shrink-0 mt-[37px] ml-[7px]"
+                className="flex-shrink-0 mt-[20px] ml-[7px]"
               >
                 <img 
                   src="/images/img-topico3-pv.png" 
@@ -439,6 +485,68 @@ export default function SalesPage() {
                     console.log('📍 Caminho usado:', '/images/ofc-titulo-3topico.png');
                   }}
                 />
+                {/* Texto explicativo abaixo da imagem ofc-titulo-2topico.png */}
+                <p 
+                  className="text-gray-300 text-lg leading-relaxed text-left" 
+                  style={{ 
+                    fontFamily: "'Poppins', 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                    fontWeight: 500,
+                    letterSpacing: '0.01em',
+                    lineHeight: '1.7',
+                    maxWidth: '650px',
+                    width: '100%',
+                    marginLeft: '25px',
+                    marginTop: '30px'
+                  }}
+                >
+                  Imagine reunir todo o seu trabalho em um único app que leva o seu nome, reflete o seu estilo e oferece uma experiência completa para seus alunos. Aqui, você transforma seu repertório em uma marca <strong className="text-orange-400 font-semibold"> educacional, organizada, gamificada e totalmente sua</strong>. E o melhor, seus alunos reconhecem você como a referência que é. Não é só sobre ensinar, é sobre ser visto e valorizado pelo que você faz!
+                </p>
+                {/* Botão Receber meu App */}
+                <motion.div
+                  style={{
+                    marginLeft: '25px',
+                    marginTop: '34px'
+                  }}
+                >
+                  <Button
+                    className="
+                      relative overflow-hidden
+                      px-4 md:px-5 py-2 md:py-3
+                      text-white font-bold text-base md:text-lg
+                      rounded-3xl
+                      shadow-lg shadow-[#FF6B00]/20
+                      hover:shadow-xl hover:shadow-[#FF6B00]/30
+                      transition-all duration-300
+                      group
+                    "
+                    style={{
+                      border: '1.5px solid transparent',
+                      backgroundImage: 'linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
+                      backgroundOrigin: 'border-box',
+                      backgroundClip: 'border-box'
+                    }}
+                    onClick={() => {
+                      console.log('Botão Receber meu App clicado');
+                      // Aqui você pode adicionar a navegação ou ação desejada
+                    }}
+                  >
+                    {/* Camada de fundo interno com opacidade de 30% */}
+                    <span 
+                      className="absolute inset-[1.5px] rounded-[calc(1.5rem-1.5px)] z-0"
+                      style={{
+                        background: 'rgba(255, 107, 0, 0.3)'
+                      }}
+                    ></span>
+
+                    {/* Efeito de brilho no hover */}
+                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-3xl z-[1]"></span>
+
+                    {/* Texto */}
+                    <span className="relative z-10 flex items-center justify-center">
+                      Receber meu App
+                    </span>
+                  </Button>
+                </motion.div>
               </motion.div>
             </div>
           </motion.div>
