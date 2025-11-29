@@ -289,7 +289,7 @@ export default function SalesPage() {
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 1.2 }}
-              className="mt-24 -ml-32"
+              className="mt-24 -ml-48"
             >
               <img 
                 src="/images/ofc-titulo-2topico.png" 
