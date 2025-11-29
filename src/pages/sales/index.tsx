@@ -345,7 +345,7 @@ export default function SalesPage() {
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 1.6 }}
-                className="flex-shrink-0"
+                className="flex-shrink-0 mt-[50px]"
               >
                 <img 
                   src="/images/ofc-titulo-3topico.png" 
