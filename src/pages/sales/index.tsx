@@ -274,11 +274,9 @@ export default function SalesPage() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="mt-6 px-6 py-3 rounded-full font-semibold text-white transition-all duration-300"
+              className="mt-6 px-6 py-2.5 rounded-full font-semibold transition-all duration-300 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 hover:shadow-lg hover:scale-105"
               style={{
                 marginLeft: '15px',
-                background: 'linear-gradient(135deg, #FF6B00 0%, #FF8C40 100%)',
-                boxShadow: '0 4px 15px rgba(255, 107, 0, 0.3)',
               }}
               onClick={() => {
                 console.log('Botão Criar atividades clicado');
