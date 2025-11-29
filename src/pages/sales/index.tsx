@@ -268,8 +268,25 @@ export default function SalesPage() {
               }}
             >
               Aqui, tudo o que você cria ganha vida de um jeito diferente. Suas atividades se transformam em <strong className="text-orange-400 font-semibold"> experiências gamificadas com rankings, moedas virtuais e desafios</strong> que seus alunos realmente querem completar. Quanto mais você compartilha e gera impacto, mais você cresce como referência abrindo portas para novos retornos e valorizando quem ensina de verdade.
-
             </p>
+
+            {/* Botão Criar atividades */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="mt-6 px-6 py-3 rounded-full font-semibold text-white transition-all duration-300"
+              style={{
+                marginLeft: '15px',
+                background: 'linear-gradient(135deg, #FF6B00 0%, #FF8C40 100%)',
+                boxShadow: '0 4px 15px rgba(255, 107, 0, 0.3)',
+              }}
+              onClick={() => {
+                console.log('Botão Criar atividades clicado');
+                // Aqui você pode adicionar a navegação ou ação desejada
+              }}
+            >
+              Criar atividades
+            </motion.button>
 
             {/* Imagem img-topico2-pv.png */}
             <motion.div
