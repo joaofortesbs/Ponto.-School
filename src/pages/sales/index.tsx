@@ -440,7 +440,7 @@ export default function SalesPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 1.4 }}
-                className="flex-shrink-0 mt-[20px] ml-[7px]"
+                className="flex-shrink-0 mt-[15px] ml-[7px]"
               >
                 <img 
                   src="/images/img-topico3-pv.png" 
@@ -466,7 +466,7 @@ export default function SalesPage() {
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 1.6 }}
-                className="flex-shrink-0 mt-[43px] -ml-[-73px]"
+                className="flex-shrink-0 mt-[57px] -ml-[-73px]"
               >
                 <img 
                   src="/images/ofc-titulo-3topico.png" 
