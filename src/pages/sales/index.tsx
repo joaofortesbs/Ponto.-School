@@ -310,64 +310,62 @@ export default function SalesPage() {
                   console.log('📍 Caminho usado:', '/images/ofc-titulo-2topico.png');
                 }}
               />
-
-              {/* Texto explicativo abaixo da imagem ofc-titulo-2topico.png */}
-              <p className="text-gray-300 text-lg leading-relaxed max-w-2xl mt-6 text-left">
-                Esqueça modelos prontos que limitam sua criatividade. Aqui, você descreve qualquer tipo de atividade que imaginou, do seu jeito, e nossa IA programa, ajusta e publica tudo automaticamente. E o melhor, salva como template reutilizável para usar com outros temas sempre que quiser. Cada atividade que você cria vira parte da sua identidade como professor, escalável para qualquer conteúdo.
-              </p>
             </motion.div>
 
-            {/* Imagem img-topico3-pv.png abaixo de img-topico2-pv.png */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.4 }}
-              className="flex-shrink-0 mt-[407px] ml-[-667px]"
-            >
-              <img 
-                src="/images/img-topico3-pv.png" 
-                alt="Tópico 3 - Ponto School" 
-                className="h-auto object-contain drop-shadow-lg"
-                style={{ maxWidth: '547px', width: '100%' }}
-                loading="eager"
-                onError={(e) => {
-                  console.error('❌ Erro ao carregar imagem img-topico3-pv.png');
-                  console.error('Caminho completo tentado:', e.currentTarget.src);
-                  console.error('Verifique se o arquivo existe em: public/images/img-topico3-pv.png');
-                  e.currentTarget.style.display = 'none';
-                }}
-                onLoad={() => {
-                  console.log('✅ Imagem img-topico3-pv.png carregada com sucesso!');
-                  console.log('📍 Caminho usado:', '/images/img-topico3-pv.png');
-                }}
-              />
-            </motion.div>
+            {/* Container com img-topico3-pv.png e ofc-titulo-3topico.png */}
+            <div className="flex items-start gap-8 mt-[407px] ml-[-667px]">
+              {/* Imagem img-topico3-pv.png à esquerda */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.4 }}
+                className="flex-shrink-0 mt-[37px] ml-[7px]"
+              >
+                <img 
+                  src="/images/img-topico3-pv.png" 
+                  alt="Tópico 3 - Ponto School" 
+                  className="h-auto object-contain drop-shadow-lg"
+                  style={{ maxWidth: '547px', width: '100%' }}
+                  loading="eager"
+                  onError={(e) => {
+                    console.error('❌ Erro ao carregar imagem img-topico3-pv.png');
+                    console.error('Caminho completo tentado:', e.currentTarget.src);
+                    console.error('Verifique se o arquivo existe em: public/images/img-topico3-pv.png');
+                    e.currentTarget.style.display = 'none';
+                  }}
+                  onLoad={() => {
+                    console.log('✅ Imagem img-topico3-pv.png carregada com sucesso!');
+                    console.log('📍 Caminho usado:', '/images/img-topico3-pv.png');
+                  }}
+                />
+              </motion.div>
 
-            {/* Imagem ofc-titulo-3topico.png ao lado direito */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 1.6 }}
-              className="flex-shrink-0 mt-[50px]"
-            >
-              <img 
-                src="/images/ofc-titulo-3topico.png" 
-                alt="Título Tópico 3 - Ponto School" 
-                className="h-auto object-contain drop-shadow-lg"
-                style={{ maxWidth: '650px', width: '100%' }}
-                loading="eager"
-                onError={(e) => {
-                  console.error('❌ Erro ao carregar imagem ofc-titulo-3topico.png');
-                  console.error('Caminho completo tentado:', e.currentTarget.src);
-                  console.error('Verifique se o arquivo existe em: public/images/ofc-titulo-3topico.png');
-                  e.currentTarget.style.display = 'none';
-                }}
-                onLoad={() => {
-                  console.log('✅ Imagem ofc-titulo-3topico.png carregada com sucesso!');
-                  console.log('📍 Caminho usado:', '/images/ofc-titulo-3topico.png');
-                }}
-              />
-            </motion.div>
+              {/* Imagem ofc-titulo-3topico.png à direita */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 1.6 }}
+                className="flex-shrink-0 mt-[43px] -ml-[-73px]"
+              >
+                <img 
+                  src="/images/ofc-titulo-3topico.png" 
+                  alt="Título Tópico 3 - Ponto School" 
+                  className="h-auto object-contain drop-shadow-lg"
+                  style={{ maxWidth: '650px', width: '100%' }}
+                  loading="eager"
+                  onError={(e) => {
+                    console.error('❌ Erro ao carregar imagem ofc-titulo-3topico.png');
+                    console.error('Caminho completo tentado:', e.currentTarget.src);
+                    console.error('Verifique se o arquivo existe em: public/images/ofc-titulo-3topico.png');
+                    e.currentTarget.style.display = 'none';
+                  }}
+                  onLoad={() => {
+                    console.log('✅ Imagem ofc-titulo-3topico.png carregada com sucesso!');
+                    console.log('📍 Caminho usado:', '/images/ofc-titulo-3topico.png');
+                  }}
+                />
+              </motion.div>
+            </div>
           </motion.div>
         </div>
       </div>
