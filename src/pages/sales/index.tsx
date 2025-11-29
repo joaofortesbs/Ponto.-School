@@ -211,7 +211,7 @@ export default function SalesPage() {
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="-ml-72 flex-shrink-0"
+            className="flex-shrink-0 mt-[37px] ml-[-300px]"
           >
             <img 
               src="/images/img-topico1-pv.png" 
@@ -235,7 +235,7 @@ export default function SalesPage() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
-            className="flex-shrink-0 mt-24 ml-7"
+            className="flex-shrink-0 mt-[83px] ml-7"
           >
             <img 
               src="/images/ofc-titulo-1topico.png" 
@@ -265,7 +265,7 @@ export default function SalesPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.0 }}
-              className="mt-[153px] -ml-[-17px]"
+              className="mt-[223px] -ml-[-17px]"
             >
               <img 
                 src="/images/img-topico2-pv.png" 
@@ -291,7 +291,7 @@ export default function SalesPage() {
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 1.2 }}
-              className="-mt-[427px] -ml-[673px]"
+              className="-mt-[437px] -ml-[673px]"
             >
               <img 
                 src="/images/ofc-titulo-2topico.png" 
