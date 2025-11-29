@@ -257,6 +257,38 @@ export default function SalesPage() {
               Aqui, tudo o que você cria <strong className="text-white font-semibold">ganha vida de um jeito diferente</strong>. Suas atividades se transformam em <strong className="text-white font-semibold">experiências gamificadas</strong> com <strong className="text-orange-400 font-semibold">rankings, moedas virtuais e desafios</strong> que seus alunos realmente querem completar. Quanto mais você compartilha e gera impacto, <strong className="text-white font-semibold">mais você cresce como referência</strong>, abrindo portas para <strong className="text-orange-400 font-semibold">novos retornos</strong> e valorizando quem ensina de verdade.
 
             </p>
+
+            {/* Imagem img-topico2-pv.png */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.0 }}
+              className="mt-8 ml-4"
+            >
+              <img 
+                src="/img-topico2-pv.png" 
+                alt="Tópico 2 PV" 
+                className="h-auto object-contain"
+                style={{ maxWidth: '650px' }}
+                loading="eager"
+                onError={(e) => {
+                  console.error('❌ Erro ao carregar imagem img-topico2-pv.png');
+                  console.error('Caminho tentado:', e.currentTarget.src);
+                  // Tentar fallback para /images/img-topico2-pv.png
+                  if (e.currentTarget.src.includes('/img-topico2-pv.png') && !e.currentTarget.src.includes('/images/')) {
+                    console.log('🔄 Tentando carregar /images/img-topico2-pv.png como fallback...');
+                    e.currentTarget.src = '/images/img-topico2-pv.png';
+                  } else {
+                    // Se o fallback também falhar, ocultar a imagem
+                    e.currentTarget.style.display = 'none';
+                    console.error('❌ Fallback também falhou. Imagem ocultada.');
+                  }
+                }}
+                onLoad={() => {
+                  console.log('✅ Imagem img-topico2-pv.png carregada com sucesso!');
+                }}
+              />
+            </motion.div>
           </motion.div>
         </div>
       </div>
