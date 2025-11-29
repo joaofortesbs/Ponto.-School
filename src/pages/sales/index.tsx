@@ -310,6 +310,11 @@ export default function SalesPage() {
                   console.log('📍 Caminho usado:', '/images/ofc-titulo-2topico.png');
                 }}
               />
+
+              {/* Texto explicativo abaixo da imagem ofc-titulo-2topico.png */}
+              <p className="text-gray-300 text-lg leading-relaxed max-w-2xl mt-6 text-left">
+                Esqueça modelos prontos que limitam sua criatividade. Aqui, você descreve qualquer tipo de atividade que imaginou, do seu jeito, e nossa IA programa, ajusta e publica tudo automaticamente. E o melhor, salva como template reutilizável para usar com outros temas sempre que quiser. Cada atividade que você cria vira parte da sua identidade como professor, escalável para qualquer conteúdo.
+              </p>
             </motion.div>
 
             {/* Container com img-topico3-pv.png e ofc-titulo-3topico.png */}
