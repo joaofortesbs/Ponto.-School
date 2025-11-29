@@ -320,7 +320,8 @@ export default function SalesPage() {
                   letterSpacing: '0.01em',
                   lineHeight: '1.7',
                   maxWidth: '650px',
-                  width: '100%'
+                  width: '100%',
+                  marginLeft: '20px'
                 }}
               >
                 Esqueça modelos prontos que limitam sua criatividade. Aqui, você descreve qualquer tipo de atividade que imaginou, do seu jeito, e nossa IA programa, ajusta e publica tudo automaticamente. E o melhor, salva como template reutilizável para usar com outros temas sempre que quiser. Cada atividade que você cria vira parte da sua identidade como professor, escalável para qualquer conteúdo.
