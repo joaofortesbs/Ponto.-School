@@ -324,7 +324,7 @@ export default function SalesPage() {
 
               {/* Texto explicativo abaixo da imagem ofc-titulo-2topico.png */}
               <p 
-                className="text-gray-300 text-lg leading-relaxed mt-6 text-left" 
+                className="text-gray-300 text-lg leading-relaxed text-left" 
                 style={{ 
                   fontFamily: "'Poppins', 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                   fontWeight: 500,
@@ -332,7 +332,8 @@ export default function SalesPage() {
                   lineHeight: '1.7',
                   maxWidth: '650px',
                   width: '100%',
-                  marginLeft: '8px'
+                  marginLeft: '8px',
+                  marginTop: '30px'
                 }}
               >
                 Esqueça modelos prontos que limitam sua criatividade. Aqui, você descreve qualquer tipo de atividade que imaginou, do seu jeito, e nossa IA <strong className="text-orange-400 font-semibold"> programa, ajusta e publica tudo automaticamente</strong>. E o melhor, salva como template reutilizável para usar com outros temas sempre que quiser. Cada atividade que você cria vira parte da sua identidade como professor, escalável para qualquer conteúdo.
