@@ -259,19 +259,19 @@ export default function SalesPage() {
             </p>
 
             {/* Container com as duas imagens do tópico 2 lado a lado */}
-            <div className="flex items-start gap-8 mt-16">
+            <div className="flex items-start gap-8 mt-16 -ml-12">
               {/* Imagem ofc-titulo-2topico.png à esquerda */}
               <motion.div
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 1.0 }}
-                className="-ml-12 flex-shrink-0"
+                className="flex-shrink-0"
               >
                 <img 
                   src="/images/ofc-titulo-2topico.png" 
                   alt="Título Tópico 2 - Ponto School" 
                   className="h-auto object-contain drop-shadow-lg"
-                  style={{ maxWidth: '650px', width: '100%' }}
+                  style={{ maxWidth: '500px', width: '100%' }}
                   loading="eager"
                   onError={(e) => {
                     console.error('❌ Erro ao carregar imagem ofc-titulo-2topico.png');
