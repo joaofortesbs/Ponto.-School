@@ -319,7 +319,7 @@ export default function SalesPage() {
                   fontWeight: 500,
                   letterSpacing: '0.01em',
                   lineHeight: '1.7',
-                  maxWidth: '600px',
+                  maxWidth: '650px',
                   width: '100%'
                 }}
               >
