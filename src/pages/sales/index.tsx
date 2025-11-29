@@ -349,7 +349,7 @@ export default function SalesPage() {
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 1.2 }}
-              className="-mt-[437px] -ml-[673px]"
+              className="-mt-[437px] -ml-[687px]"
             >
               <img 
                 src="/images/ofc-titulo-2topico.png" 
@@ -434,7 +434,7 @@ export default function SalesPage() {
             </motion.div>
 
             {/* Container com img-topico3-pv.png e ofc-titulo-3topico.png */}
-            <div className="flex items-start gap-8 mt-[127px] ml-[-667px]">
+            <div className="flex items-start gap-8 mt-[127px] ml-[-693px]">
               {/* Imagem img-topico3-pv.png à esquerda */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
