@@ -143,7 +143,7 @@ export default function SalesPage() {
       </motion.div>
 
       {/* Container Separado: Caixa de Mensagens + Cards Retangulares - ABAIXO DE TODO O CONTEÚDO */}
-      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 pb-20 -mt-32">
+      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 pb-96 -mt-32">
         {/* Caixa de Enviar Mensagens */}
         <motion.div
           initial={{ y: 30, opacity: 0 }}
@@ -205,7 +205,7 @@ export default function SalesPage() {
         </motion.div>
 
         {/* Container com as duas imagens lado a lado */}
-        <div className="w-full mt-12 flex items-start gap-8">
+        <div className="w-full mt-12 mb-32 flex items-start gap-8">
           {/* Imagem img-topico1-pv.png à esquerda */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
