@@ -83,25 +83,39 @@ export default function SalesPage() {
                 .dollItem:hover {
                   transform: translateY(-4px) scale(1.1);
                   z-index: 10 !important;
+                }
+
+                .dollItem:hover .dollName {
+                  opacity: 1;
+                  transform: translateX(-50%) translateY(0);
+                }
+
+                .bg-mike:hover {
                   border: 3px solid transparent;
+                  background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF6F32, #FF8C5A, #FFB088);
                   background-origin: border-box;
                   background-clip: padding-box, border-box;
                 }
 
-                .bg-mike:hover {
-                  background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF6F32, #FF8C5A, #FFB088);
-                }
-
                 .bg-alex:hover {
+                  border: 3px solid transparent;
                   background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #4386ca, #5C9DD6, #75B4E2);
+                  background-origin: border-box;
+                  background-clip: padding-box, border-box;
                 }
 
                 .bg-emma:hover {
+                  border: 3px solid transparent;
                   background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #a75ab8, #B973C5, #CB8CD2);
+                  background-origin: border-box;
+                  background-clip: padding-box, border-box;
                 }
 
                 .bg-david:hover {
+                  border: 3px solid transparent;
                   background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #60b65f, #78C477, #90D28F);
+                  background-origin: border-box;
+                  background-clip: padding-box, border-box;
                 }
 
                 .dollName {
