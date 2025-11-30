@@ -130,8 +130,8 @@ export default function SalesPage() {
                   top: 50%;
                   left: 50%;
                   transform: translate(-50%, -50%);
-                  width: 120%;
-                  height: 120%;
+                  width: 100%;
+                  height: 100%;
                   object-fit: cover;
                   object-position: center;
                   border-radius: 50%;
