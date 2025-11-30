@@ -168,53 +168,90 @@ export function SalesHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Botão Modelos - Configuração Independente */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button
-                className="
-                  relative overflow-hidden
-                  px-4 md:px-5 py-2 md:py-3
-                  text-white font-bold text-base md:text-lg
-                  rounded-3xl
-                  shadow-lg shadow-[#FF6B00]/30
-                  hover:shadow-xl hover:shadow-[#FF6B00]/40
-                  transition-all duration-300
-                  group
-                "
-                style={{
-                  border: '1.5px solid transparent',
-                  backgroundImage: 'linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
-                  backgroundOrigin: 'border-box',
-                  backgroundClip: 'border-box'
-                }}
+            {/* Dropdown do Botão Modelos */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    className="
+                      relative overflow-hidden
+                      px-4 md:px-5 py-2 md:py-3
+                      text-white font-bold text-base md:text-lg
+                      rounded-3xl
+                      shadow-lg shadow-[#FF6B00]/30
+                      hover:shadow-xl hover:shadow-[#FF6B00]/40
+                      transition-all duration-300
+                      group
+                    "
+                    style={{
+                      border: '1.5px solid transparent',
+                      backgroundImage: 'linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
+                      backgroundOrigin: 'border-box',
+                      backgroundClip: 'border-box'
+                    }}
+                  >
+                    {/* Camada de fundo interno com opacidade de 30% */}
+                    <span 
+                      className="absolute inset-[1.5px] rounded-[calc(1.5rem-1.5px)] z-0"
+                      style={{
+                        background: 'rgba(255, 107, 0, 0.3)'
+                      }}
+                    ></span>
+
+                    {/* Efeito de brilho no hover */}
+                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-3xl z-[1]"></span>
+
+                    {/* Texto com ícone */}
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                      </svg>
+                      Modelos
+                    </span>
+                  </Button>
+                </motion.div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="bottom"
+                align="center"
+                className="bg-[#0A1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 min-w-[200px]"
               >
-                {/* Camada de fundo interno com opacidade de 30% */}
-                <span 
-                  className="absolute inset-[1.5px] rounded-[calc(1.5rem-1.5px)] z-0"
-                  style={{
-                    background: 'rgba(255, 107, 0, 0.3)'
-                  }}
-                ></span>
+                <DropdownMenuItem
+                  onClick={() => navigate('/school-power')}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
+                >
+                  <span className="font-medium">School Power</span>
+                </DropdownMenuItem>
 
-                {/* Efeito de brilho no hover */}
-                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 rounded-3xl z-[1]"></span>
+                <DropdownMenuItem
+                  onClick={() => navigate('/agentes-school')}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
+                >
+                  <span className="font-medium">Agentes School</span>
+                </DropdownMenuItem>
 
-                {/* Texto com ícone */}
-                <span className="relative z-10 flex items-center justify-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/>
-                    <line x1="16" y1="17" x2="8" y2="17"/>
-                    <polyline points="10 9 9 9 8 9"/>
-                  </svg>
-                  Modelos
-                </span>
-              </Button>
-            </motion.div>
+                <DropdownMenuItem
+                  onClick={() => navigate('/trilhas-school')}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
+                >
+                  <span className="font-medium">Trilhas School</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => navigate('/teacher-app')}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
+                >
+                  <span className="font-medium">Teacher App</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Controles - Canto Direito */}
