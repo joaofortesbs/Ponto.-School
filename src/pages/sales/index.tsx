@@ -129,7 +129,7 @@ export default function SalesPage() {
                   position: absolute;
                   top: 50%;
                   left: 50%;
-                  transform: translate(-50%, -50%);
+                  transform: translate(-50%, -50%) scale(1.3);
                   width: 100%;
                   height: 100%;
                   object-fit: cover;
