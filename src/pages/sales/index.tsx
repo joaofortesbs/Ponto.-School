@@ -471,7 +471,7 @@ export default function SalesPage() {
                     src="/images/img.10x.engajamento.pv.png" 
                     alt="10x Engajamento - Ponto School" 
                     className="h-auto object-contain drop-shadow-lg"
-                    style={{ maxWidth: '547px', width: '100%' }}
+                    style={{ maxWidth: '1337px', width: '100%' }}
                     loading="eager"
                     onError={(e) => {
                       console.error('❌ Erro ao carregar imagem img.10x.engajamento.pv.png');
@@ -497,7 +497,7 @@ export default function SalesPage() {
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 1.6 }}
-                className="flex-shrink-0 mt-[57px] -ml-[-73px]"
+                className="flex-shrink-0 mt-[57px] -ml-[733px]"
               >
                 <img 
                   src="/images/ofc-titulo-3topico.png" 
