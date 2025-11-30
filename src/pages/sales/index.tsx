@@ -204,7 +204,7 @@ export default function SalesPage() {
               
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                animate={{ scale: 1.0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="flex justify-center items-center mb-8"
               >
