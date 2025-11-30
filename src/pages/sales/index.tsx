@@ -62,8 +62,8 @@ export default function SalesPage() {
               {/* Avatares Circulares Sobrepostos */}
               <style>{`
                 .dollItem {
-                  width: 48px;
-                  height: 48px;
+                  width: 53px;
+                  height: 53px;
                   border-radius: 50%;
                   overflow: visible;
                   margin-left: -15px;
