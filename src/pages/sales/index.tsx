@@ -65,12 +65,15 @@ export default function SalesPage() {
                   width: 60px;
                   height: 60px;
                   border-radius: 50%;
-                  overflow: visible;
+                  overflow: hidden;
                   margin-left: -15px;
                   border: 4px solid #000822;
                   transition: transform 0.2s, z-index 0.2s, opacity 0.2s, border 0.2s;
                   cursor: pointer;
                   position: relative;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
                 }
                 
                 .dollItem:first-child {
@@ -84,6 +87,7 @@ export default function SalesPage() {
                   background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF4800, #F97316, #FFD05A);
                   background-origin: border-box;
                   background-clip: padding-box, border-box;
+                  overflow: visible;
                 }
                 
                 .dollName {
@@ -129,7 +133,9 @@ export default function SalesPage() {
                   width: 100%;
                   height: 100%;
                   object-fit: cover;
+                  object-position: center center;
                   border-radius: 50%;
+                  display: block;
                 }
                 
                 .bg-mike { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
