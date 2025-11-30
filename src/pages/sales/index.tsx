@@ -65,7 +65,7 @@ export default function SalesPage() {
                   width: 60px;
                   height: 60px;
                   border-radius: 50%;
-                  overflow: hidden;
+                  overflow: visible;
                   margin-left: -15px;
                   border: 4px solid #000822;
                   transition: transform 0.2s, z-index 0.2s, opacity 0.2s, border 0.2s;
@@ -148,6 +148,7 @@ export default function SalesPage() {
                   height: 100%;
                   object-fit: cover;
                   border-radius: 50%;
+                  clip-path: circle(50% at center);
                   display: block;
                   transform: translateY(2px);
                 }

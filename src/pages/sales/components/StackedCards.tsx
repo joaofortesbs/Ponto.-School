@@ -40,22 +40,7 @@ export default function StackedCardsLeft() {
         </div>
       </div>
 
-      {/* Mobile responsive adjustments */}
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .relative.w-80 {
-            width: 280px;
-            height: 320px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .relative.w-80 {
-            width: 240px;
-            height: 280px;
-          }
-        }
-      `}</style>
+      {/* Mobile responsive adjustments - using Tailwind responsive classes instead */}
     </div>
   );
 }

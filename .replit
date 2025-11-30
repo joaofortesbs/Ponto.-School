@@ -22,10 +22,6 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 5178
-externalPort = 4200
-
-[[ports]]
 localPort = 5180
 externalPort = 5173
 
@@ -56,6 +52,10 @@ externalPort = 5000
 [[ports]]
 localPort = 36691
 externalPort = 3000
+
+[[ports]]
+localPort = 40297
+externalPort = 4200
 
 [[ports]]
 localPort = 41181
@@ -274,13 +274,13 @@ args = "App"
 name = "App"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "bash start.sh"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000
 
 [auth]
 pageEnabled = false
