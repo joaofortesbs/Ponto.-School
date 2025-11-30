@@ -188,12 +188,14 @@ export function SalesHeader() {
                       hover:shadow-xl hover:shadow-[#FF6B00]/40
                       transition-all duration-300
                       group
+                      focus:outline-none focus-visible:outline-none focus-visible:ring-0
                     "
                     style={{
                       border: '1.5px solid transparent',
                       backgroundImage: 'linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
                       backgroundOrigin: 'border-box',
-                      backgroundClip: 'border-box'
+                      backgroundClip: 'border-box',
+                      outline: 'none'
                     }}
                   >
                     {/* Camada de fundo interno com opacidade de 30% */}
