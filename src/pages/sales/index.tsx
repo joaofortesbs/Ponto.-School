@@ -65,7 +65,7 @@ export default function SalesPage() {
                   width: 60px;
                   height: 60px;
                   border-radius: 50%;
-                  overflow: hidden;
+                  overflow: visible;
                   margin-left: -15px;
                   border: 4px solid #000822;
                   transition: transform 0.2s, z-index 0.2s, opacity 0.2s, border 0.2s;
@@ -126,15 +126,10 @@ export default function SalesPage() {
                 }
                 
                 .dollItem img {
-                  position: absolute;
-                  top: 0;
-                  left: 0;
                   width: 100%;
                   height: 100%;
                   object-fit: cover;
-                  object-position: center;
                   border-radius: 50%;
-                  display: block;
                 }
                 
                 .bg-mike { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
