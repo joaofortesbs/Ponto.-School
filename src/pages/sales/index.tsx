@@ -130,10 +130,13 @@ export default function SalesPage() {
                 }
                 
                 .dollItem img {
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
                   width: 100%;
                   height: 100%;
                   object-fit: cover;
-                  object-position: center center;
                   border-radius: 50%;
                   display: block;
                 }
