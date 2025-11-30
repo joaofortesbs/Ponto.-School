@@ -162,27 +162,24 @@ export default function SalesPage() {
                 className="flex justify-center items-center mb-8"
               >
                 <div className="flex items-center justify-center gap-0">
-                  <div className="dollItem bg-mike" style={{ zIndex: 5 }}>
-                    <span className="dollName">Jota é o <span style={{ color: '#103a4a' }}>líder de equipe</span></span>
+                  <div className="dollItem bg-mike" style={{ zIndex: 4 }}>
+                    <span className="dollName">Jota é o <span style={{ color: '#FF6B00' }}>líder de equipe</span></span>
                     <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Mike-TeamLeader-Avatar.BVQZLCeX.png" alt="Jota" />
                   </div>
-                  <div className="dollItem bg-alex" style={{ zIndex: 4 }}>
-                    <span className="dollName">Felix é o <span style={{ color: '#103a4a' }}>gerador de atividades</span></span>
+                  <div className="dollItem bg-alex" style={{ zIndex: 3 }}>
+                    <span className="dollName">Felix é o <span style={{ color: '#FF6B00' }}>gerador de atividades</span></span>
                     <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Alex-Engineer-Avatar.DMF78Ta0.png" alt="Felix" />
                   </div>
-                  <div className="dollItem bg-emma" style={{ zIndex: 3 }}>
-                    <span className="dollName">Adrian é o <span style={{ color: '#103a4a' }}>gerente de atividades</span></span>
+                  <div className="dollItem bg-emma" style={{ zIndex: 2 }}>
+                    <span className="dollName">Adrian é o <span style={{ color: '#FF6B00' }}>gerente de atividades</span></span>
                     <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Emma-ProductManager-Avatar.DAgh_sAa.png" alt="Adrian" />
                   </div>
-                  <div className="dollItem bg-david" style={{ zIndex: 2 }}>
-                    <span className="dollName">Sam é o <span style={{ color: '#103a4a' }}>analista de dados</span></span>
+                  <div className="dollItem bg-david" style={{ zIndex: 1 }}>
+                    <span className="dollName">Sam é o <span style={{ color: '#FF6B00' }}>analista de dados</span></span>
                     <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/David-DataAnalyst-Avatar.JI1m4RZ8.png" alt="Sam" />
                   </div>
-                  <div className="dollItem bg-bob" style={{ zIndex: 1 }}>
-                    <span className="dollName">Bob</span>
-                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Bob-Architect-Avatar.Dwg49-6j.png" alt="Bob" />
-                  </div>
                   <div className="plus-button">
+                    <span className="dollName">Mais agentes em breve</span>
                     <svg viewBox="0 0 16 16" style={{ width: '16px', height: '16px', fill: 'currentColor' }}>
                       <path d="M8 3a.5.5 0 0 1 .5.5v4h4a.5.5 0 0 1 0 1h-4v4a.5.5 0 0 1-1 0v-4h-4a.5.5 0 0 1 0-1h4v-4A.5.5 0 0 1 8 3z"/>
                     </svg>
