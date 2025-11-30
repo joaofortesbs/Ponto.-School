@@ -485,6 +485,11 @@ export default function SalesPage() {
                     }}
                   />
                 </motion.div>
+
+                {/* Container vazio abaixo da imagem */}
+                <div className="mt-8">
+                  {/* Container vazio - pronto para receber conteúdo */}
+                </div>
               </motion.div>
 
               {/* Imagem ofc-titulo-3topico.png à direita */}
