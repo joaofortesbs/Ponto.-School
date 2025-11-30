@@ -68,7 +68,7 @@ export default function SalesPage() {
                   overflow: visible;
                   margin-left: -10px;
                   border: 3px solid #000822;
-                  transition: transform 0.2s, z-index 0.2s, opacity 0.2s;
+                  transition: transform 0.2s, z-index 0.2s, opacity 0.2s, border 0.2s;
                   cursor: pointer;
                   position: relative;
                 }
@@ -80,6 +80,10 @@ export default function SalesPage() {
                 .dollItem:hover {
                   transform: translateY(-4px) scale(1.1);
                   z-index: 10 !important;
+                  border: 3px solid transparent;
+                  background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF4800, #F97316, #FFD05A);
+                  background-origin: border-box;
+                  background-clip: padding-box, border-box;
                 }
                 
                 .dollName {
@@ -146,12 +150,53 @@ export default function SalesPage() {
                   margin-left: -10px;
                   cursor: pointer;
                   transition: all 0.2s;
+                  position: relative;
                 }
                 
                 .plus-button:hover {
                   background: rgba(255, 255, 255, 0.08);
                   border-color: rgba(255, 255, 255, 0.2);
-                  transform: scale(1.05);
+                  transform: translateY(-4px) scale(1.05);
+                  z-index: 10 !important;
+                }
+                
+                .plus-button .dollName {
+                  position: absolute;
+                  bottom: 100%;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  background: white;
+                  color: #103a4a;
+                  padding: 8px 14px;
+                  border-radius: 12px;
+                  font-size: 13px;
+                  font-weight: 400;
+                  white-space: nowrap;
+                  opacity: 0;
+                  pointer-events: none;
+                  transition: opacity 0.2s ease, transform 0.2s ease;
+                  transform: translateX(-50%) translateY(4px);
+                  margin-bottom: 8px;
+                  z-index: 20;
+                  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                }
+                
+                .plus-button .dollName::after {
+                  content: '';
+                  position: absolute;
+                  bottom: -6px;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  width: 0;
+                  height: 0;
+                  border-left: 6px solid transparent;
+                  border-right: 6px solid transparent;
+                  border-top: 6px solid white;
+                }
+                
+                .plus-button:hover .dollName {
+                  opacity: 1;
+                  transform: translateX(-50%) translateY(0);
                 }
               `}</style>
               
