@@ -487,17 +487,76 @@ export default function SalesPage() {
                 </motion.div>
 
                 {/* Imagem rodape-pv.png abaixo de img.10x.engajamento.pv.png */}
+                {/* 
+                  🎯 CONTROLES AVANÇADOS DE POSICIONAMENTO E TAMANHO:
+                  
+                  LARGURA (width):
+                  - Ajuste em pixels: ex: '800px', '1000px', '1200px'
+                  - Ajuste em porcentagem: ex: '50%', '75%', '100%'
+                  - Ajuste em viewport: ex: '50vw', '80vw'
+                  
+                  ALTURA (height):
+                  - 'auto' (mantém proporção)
+                  - Ajuste em pixels: ex: '200px', '300px', '400px'
+                  
+                  POSICIONAMENTO HORIZONTAL (marginLeft):
+                  - Valores negativos movem para ESQUERDA: ex: '-100px', '-50px'
+                  - Valores positivos movem para DIREITA: ex: '50px', '100px'
+                  - '0px' = centralizado
+                  
+                  POSICIONAMENTO VERTICAL (marginTop):
+                  - Valores negativos movem para CIMA: ex: '-50px', '-100px'
+                  - Valores positivos movem para BAIXO: ex: '50px', '100px'
+                  
+                  ESCALA (transform: scale):
+                  - Menor que 1 = diminui: ex: 'scale(0.5)', 'scale(0.7)'
+                  - Igual a 1 = tamanho original: 'scale(1)'
+                  - Maior que 1 = aumenta: ex: 'scale(1.2)', 'scale(1.5)'
+                */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 1.8 }}
-                className="mt-12"
+                style={{
+                  marginTop: '48px',        // 📏 AJUSTE VERTICAL: distância do elemento acima
+                  marginLeft: '0px',        // 📏 AJUSTE HORIZONTAL: movimentação lateral
+                  marginRight: '0px',       // 📏 AJUSTE HORIZONTAL DIREITO
+                  paddingLeft: '0px',       // 📏 PADDING INTERNO ESQUERDO
+                  paddingRight: '0px',      // 📏 PADDING INTERNO DIREITO
+                  display: 'flex',
+                  justifyContent: 'center', // Mantém centralizado (mude para 'flex-start' ou 'flex-end' se quiser)
+                  alignItems: 'center'
+                }}
               >
                 <img 
                   src="/images/rodape-pv.png" 
                   alt="Rodapé - Ponto School" 
                   className="h-auto object-contain drop-shadow-lg"
-                  style={{ maxWidth: '100%', width: '100%' }}
+                  style={{ 
+                    // 🎨 CONTROLES PRINCIPAIS DE TAMANHO E POSIÇÃO:
+                    width: '600px',           // 📐 LARGURA: ajuste o valor aqui (ex: '400px', '800px', '50%')
+                    maxWidth: '100%',         // 📐 LARGURA MÁXIMA: evita quebra em telas pequenas
+                    height: 'auto',           // 📐 ALTURA: mantém proporção (ou defina em px)
+                    
+                    // 🔄 TRANSFORMAÇÕES AVANÇADAS:
+                    transform: 'scale(0.6)',  // 🔍 ESCALA: 0.6 = 60% do tamanho (ajuste de 0.1 a 2.0)
+                    transformOrigin: 'center', // 🎯 PONTO DE ORIGEM DA ESCALA
+                    
+                    // 📍 POSICIONAMENTO FINO:
+                    position: 'relative',     // Permite ajustes com top/left
+                    top: '0px',               // ⬆️ MOVE VERTICAL: negativo=cima, positivo=baixo
+                    left: '0px',              // ⬅️ MOVE HORIZONTAL: negativo=esquerda, positivo=direita
+                    
+                    // 🎭 EFEITOS VISUAIS:
+                    opacity: 1,               // 👁️ OPACIDADE: 0 a 1 (0=invisível, 1=opaco)
+                    filter: 'none',           // 🎨 FILTROS: ex: 'brightness(1.1)', 'contrast(1.2)'
+                    
+                    // 📦 MARGENS EXTRAS (se necessário):
+                    marginTop: '0px',         // ⬆️ MARGEM SUPERIOR EXTRA
+                    marginBottom: '0px',      // ⬇️ MARGEM INFERIOR EXTRA
+                    marginLeft: '0px',        // ⬅️ MARGEM ESQUERDA EXTRA
+                    marginRight: '0px'        // ➡️ MARGEM DIREITA EXTRA
+                  }}
                   loading="eager"
                   onError={(e) => {
                     console.error('❌ Erro ao carregar imagem rodape-pv.png');
