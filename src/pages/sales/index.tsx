@@ -251,7 +251,7 @@ export default function SalesPage() {
               }}
               onLoad={() => {
                 console.log('✅ Imagem oficial-titulo-1topico.png carregada com sucesso!');
-                console.log('Caminho usado:', '/images/oficial-titulo-1topico.png');
+                console.log('Caminho usado:', '/images/ofc-titulo-1topico.png');
               }}
             />
 
@@ -459,32 +459,32 @@ export default function SalesPage() {
                     console.log('📍 Caminho usado:', '/images/img-topico3-pv.png');
                   }}
                 />
+              </motion.div>
 
-                {/* Imagem img.10x.engajamento.pv.png abaixo de img-topico3-pv.png */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 1.6 }}
-                  className="mt-8"
-                >
-                  <img 
-                    src="/images/img.10x.engajamento.pv.png" 
-                    alt="10x Engajamento - Ponto School" 
-                    className="h-auto object-contain drop-shadow-lg"
-                    style={{ maxWidth: '547px', width: '100%' }}
-                    loading="eager"
-                    onError={(e) => {
-                      console.error('❌ Erro ao carregar imagem img.10x.engajamento.pv.png');
-                      console.error('Caminho completo tentado:', e.currentTarget.src);
-                      console.error('Verifique se o arquivo existe em: public/images/img.10x.engajamento.pv.png');
-                      e.currentTarget.style.display = 'none';
-                    }}
-                    onLoad={() => {
-                      console.log('✅ Imagem img.10x.engajamento.pv.png carregada com sucesso!');
-                      console.log('📍 Caminho usado:', '/images/img.10x.engajamento.pv.png');
-                    }}
-                  />
-                </motion.div>
+              {/* Container separado para imagem img.10x.engajamento.pv.png */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.6 }}
+                className="mt-8 ml-[7px]"
+              >
+                <img 
+                  src="/images/img.10x.engajamento.pv.png" 
+                  alt="10x Engajamento - Ponto School" 
+                  className="h-auto object-contain drop-shadow-lg"
+                  style={{ maxWidth: '547px', width: '100%' }}
+                  loading="eager"
+                  onError={(e) => {
+                    console.error('❌ Erro ao carregar imagem img.10x.engajamento.pv.png');
+                    console.error('Caminho completo tentado:', e.currentTarget.src);
+                    console.error('Verifique se o arquivo existe em: public/images/img.10x.engajamento.pv.png');
+                    e.currentTarget.style.display = 'none';
+                  }}
+                  onLoad={() => {
+                    console.log('✅ Imagem img.10x.engajamento.pv.png carregada com sucesso!');
+                    console.log('📍 Caminho usado:', '/images/img.10x.engajamento.pv.png');
+                  }}
+                />
               </motion.div>
 
               {/* Imagem ofc-titulo-3topico.png à direita */}
