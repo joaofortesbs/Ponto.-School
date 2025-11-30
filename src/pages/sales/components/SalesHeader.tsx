@@ -102,7 +102,15 @@ export function SalesHeader() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onMouseEnter={() => setIsProfessorDropdownOpen(true)}
-                  onMouseLeave={() => setIsProfessorDropdownOpen(false)}
+                  onMouseLeave={(e) => {
+                    // Pequeno delay para permitir que o usuário mova o cursor para o dropdown
+                    setTimeout(() => {
+                      const dropdown = document.querySelector('[data-dropdown-professor]');
+                      if (dropdown && !dropdown.matches(':hover')) {
+                        setIsProfessorDropdownOpen(false);
+                      }
+                    }, 100);
+                  }}
                 >
                   <Button
                     className="
@@ -152,6 +160,8 @@ export function SalesHeader() {
                 sideOffset={20}
                 className="bg-[#0A1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 min-w-[180px]"
                 style={{ zIndex: 9998 }}
+                data-dropdown-professor
+                onMouseLeave={() => setIsProfessorDropdownOpen(false)}
               >
                 <DropdownMenuItem
                   onClick={() => setSelectedUserType("professor")}
@@ -183,7 +193,15 @@ export function SalesHeader() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onMouseEnter={() => setIsModelosDropdownOpen(true)}
-                  onMouseLeave={() => setIsModelosDropdownOpen(false)}
+                  onMouseLeave={(e) => {
+                    // Pequeno delay para permitir que o usuário mova o cursor para o dropdown
+                    setTimeout(() => {
+                      const dropdown = document.querySelector('[data-dropdown-solucoes]');
+                      if (dropdown && !dropdown.matches(':hover')) {
+                        setIsModelosDropdownOpen(false);
+                      }
+                    }, 100);
+                  }}
                 >
                   <Button
                     className="
@@ -236,6 +254,8 @@ export function SalesHeader() {
                 sideOffset={20}
                 className="bg-[#0A1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 min-w-[200px]"
                 style={{ zIndex: 9998 }}
+                data-dropdown-solucoes
+                onMouseLeave={() => setIsModelosDropdownOpen(false)}
               >
                 <DropdownMenuItem
                   onClick={() => navigate('/school-power')}
