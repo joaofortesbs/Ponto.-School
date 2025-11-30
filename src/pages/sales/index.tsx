@@ -74,9 +74,6 @@ export default function SalesPage() {
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                  padding: 0;
-                  line-height: 0;
-                  font-size: 0;
                 }
                 
                 .dollItem:first-child {
@@ -90,7 +87,6 @@ export default function SalesPage() {
                   background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF4800, #F97316, #FFD05A);
                   background-origin: border-box;
                   background-clip: padding-box, border-box;
-                  overflow: visible;
                 }
                 
                 .dollName {
@@ -136,11 +132,9 @@ export default function SalesPage() {
                   width: 100%;
                   height: 100%;
                   object-fit: cover;
-                  object-position: center center;
                   border-radius: 50%;
                   display: block;
-                  flex-shrink: 0;
-                  margin: auto;
+                  transform: translateY(1px);
                 }
                 
                 .bg-mike { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
@@ -215,7 +209,7 @@ export default function SalesPage() {
               
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1.0, opacity: 1 }}
+                animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="flex justify-center items-center mb-8"
               >
