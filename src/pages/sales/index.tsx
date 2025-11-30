@@ -518,7 +518,7 @@ export default function SalesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 1.8 }}
                 style={{
-                  marginTop: '48px',        // 📏 AJUSTE VERTICAL: distância do elemento acima
+                  marginTop: '0px',        // 📏 AJUSTE VERTICAL: distância do elemento acima
                   marginLeft: '0px',        // 📏 AJUSTE HORIZONTAL: movimentação lateral
                   marginRight: '0px',       // 📏 AJUSTE HORIZONTAL DIREITO
                   paddingLeft: '0px',       // 📏 PADDING INTERNO ESQUERDO
@@ -534,7 +534,7 @@ export default function SalesPage() {
                   className="h-auto object-contain drop-shadow-lg"
                   style={{ 
                     // 🎨 CONTROLES PRINCIPAIS DE TAMANHO E POSIÇÃO:
-                    width: '600px',           // 📐 LARGURA: ajuste o valor aqui (ex: '400px', '800px', '50%')
+                    width: '2127px',           // 📐 LARGURA: ajuste o valor aqui (ex: '400px', '800px', '50%')
                     maxWidth: '100%',         // 📐 LARGURA MÁXIMA: evita quebra em telas pequenas
                     height: 'auto',           // 📐 ALTURA: mantém proporção (ou defina em px)
                     
@@ -544,8 +544,8 @@ export default function SalesPage() {
                     
                     // 📍 POSICIONAMENTO FINO:
                     position: 'relative',     // Permite ajustes com top/left
-                    top: '0px',               // ⬆️ MOVE VERTICAL: negativo=cima, positivo=baixo
-                    left: '0px',              // ⬅️ MOVE HORIZONTAL: negativo=esquerda, positivo=direita
+                    top: '-297px',               // ⬆️ MOVE VERTICAL: negativo=cima, positivo=baixo
+                    left: '-407px',              // ⬅️ MOVE HORIZONTAL: negativo=esquerda, positivo=direita
                     
                     // 🎭 EFEITOS VISUAIS:
                     opacity: 1,               // 👁️ OPACIDADE: 0 a 1 (0=invisível, 1=opaco)
@@ -553,7 +553,7 @@ export default function SalesPage() {
                     
                     // 📦 MARGENS EXTRAS (se necessário):
                     marginTop: '0px',         // ⬆️ MARGEM SUPERIOR EXTRA
-                    marginBottom: '0px',      // ⬇️ MARGEM INFERIOR EXTRA
+                    marginBottom: '-997px',      // ⬇️ MARGEM INFERIOR EXTRA
                     marginLeft: '0px',        // ⬅️ MARGEM ESQUERDA EXTRA
                     marginRight: '0px'        // ➡️ MARGEM DIREITA EXTRA
                   }}
@@ -584,7 +584,7 @@ export default function SalesPage() {
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 1.6 }}
-                className="flex-shrink-0 mt-[57px] -ml-[733px]"
+                className="flex-shrink-0 mt-[57px] -ml-[1477px]"
               >
                 <img 
                   src="/images/ofc-titulo-3topico.png" 
