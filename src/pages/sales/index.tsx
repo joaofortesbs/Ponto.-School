@@ -80,7 +80,7 @@ export default function SalesPage() {
                 .dollItem:hover {
                   transform: translateY(-4px) scale(1.1);
                   z-index: 10 !important;
-                  border: 3px solid transparent;
+                  border: 4px solid transparent;
                   background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF4800, #F97316, #FFD05A);
                   background-origin: border-box;
                   background-clip: padding-box, border-box;
@@ -143,7 +143,7 @@ export default function SalesPage() {
                   height: 60px;
                   border-radius: 50%;
                   background: rgba(255, 255, 255, 0.04);
-                  border: 2px dashed rgba(255, 255, 255, 0.12);
+                  border: 4px solid #000822;
                   display: flex;
                   align-items: center;
                   justify-content: center;
@@ -155,9 +155,12 @@ export default function SalesPage() {
                 
                 .plus-button:hover {
                   background: rgba(255, 255, 255, 0.08);
-                  border-color: rgba(255, 255, 255, 0.2);
-                  transform: translateY(-4px) scale(1.05);
+                  transform: translateY(-4px) scale(1.1);
                   z-index: 10 !important;
+                  border: 4px solid transparent;
+                  background-image: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08)), linear-gradient(135deg, #FF4800, #F97316, #FFD05A);
+                  background-origin: border-box;
+                  background-clip: padding-box, border-box;
                 }
                 
                 .plus-button .dollName {
