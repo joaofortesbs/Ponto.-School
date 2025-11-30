@@ -95,7 +95,7 @@ export function SalesHeader() {
           {/* Container Centralizado com Botões */}
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
             {/* Dropdown do Botão Professor */}
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -170,7 +170,7 @@ export function SalesHeader() {
             </DropdownMenu>
 
             {/* Dropdown do Botão Modelos */}
-            <DropdownMenu open={isModelosDropdownOpen} onOpenChange={setIsModelosDropdownOpen}>
+            <DropdownMenu modal={false} open={isModelosDropdownOpen} onOpenChange={setIsModelosDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -261,7 +261,7 @@ export function SalesHeader() {
           {/* Controles - Canto Direito */}
           <div className="ml-auto flex items-center gap-3">
             {/* Dropdown de Seleção de Idiomas */}
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <motion.button
                   whileHover={{ scale: 1.15, rotate: 360 }}
