@@ -59,36 +59,121 @@ export default function SalesPage() {
 
             {/* Conteúdo de Texto - Centro */}
             <div className="text-center flex-1 px-8">
-              {/* Círculo Laranja Animado */}
+              {/* Avatares Circulares Sobrepostos */}
+              <style>{`
+                .dollItem {
+                  width: 45px;
+                  height: 45px;
+                  border-radius: 50%;
+                  overflow: visible;
+                  margin-left: -10px;
+                  border: 3px solid #1a1a1a;
+                  transition: transform 0.2s, z-index 0.2s, opacity 0.2s;
+                  cursor: pointer;
+                  position: relative;
+                }
+                
+                .dollItem:first-child {
+                  margin-left: 0;
+                }
+                
+                .dollItem:hover {
+                  transform: translateY(-4px) scale(1.1);
+                  z-index: 10 !important;
+                }
+                
+                .dollName {
+                  position: absolute;
+                  bottom: 100%;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  background: rgba(0, 0, 0, 0.8);
+                  color: rgba(255, 255, 255, 0.95);
+                  padding: 6px 12px;
+                  border-radius: 8px;
+                  font-size: 12px;
+                  font-weight: 500;
+                  white-space: nowrap;
+                  opacity: 0;
+                  pointer-events: none;
+                  transition: opacity 0.2s ease, transform 0.2s ease;
+                  transform: translateX(-50%) translateY(4px);
+                  margin-bottom: 8px;
+                  z-index: 20;
+                }
+                
+                .dollItem:hover .dollName {
+                  opacity: 1;
+                  transform: translateX(-50%) translateY(0);
+                }
+                
+                .dollItem img {
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                  border-radius: 50%;
+                }
+                
+                .bg-mike { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+                .bg-alex { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+                .bg-emma { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+                .bg-david { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+                .bg-bob { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+                
+                .plus-button {
+                  width: 45px;
+                  height: 45px;
+                  border-radius: 50%;
+                  background: rgba(255, 255, 255, 0.04);
+                  border: 2px dashed rgba(255, 255, 255, 0.12);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  margin-left: -10px;
+                  cursor: pointer;
+                  transition: all 0.2s;
+                }
+                
+                .plus-button:hover {
+                  background: rgba(255, 255, 255, 0.08);
+                  border-color: rgba(255, 255, 255, 0.2);
+                  transform: scale(1.05);
+                }
+              `}</style>
+              
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="flex justify-center mb-8"
+                className="flex justify-center items-center mb-8"
               >
-                <motion.div
-                  whileHover={{ scale: 1.3 }}
-                  transition={{ duration: 0.4, ease: "easeInOut" }}
-                  className="w-16 h-16 rounded-full relative"
-                  style={{
-                    background: 'linear-gradient(135deg, #FF6B00 0%, #FF8C40 100%)',
-                    border: '2px solid transparent',
-                    backgroundImage: `
-                      linear-gradient(#000822, #000822),
-                      linear-gradient(135deg, #FFD05A 0%, #FF6800 50%, #FF5100 100%)
-                    `,
-                    backgroundOrigin: 'border-box',
-                    backgroundClip: 'padding-box, border-box'
-                  }}
-                >
-                  {/* Efeito de brilho interno */}
-                  <div 
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background: 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3) 0%, transparent 60%)'
-                    }}
-                  />
-                </motion.div>
+                <div className="flex items-center justify-center gap-0">
+                  <div className="dollItem bg-mike" style={{ zIndex: 5 }}>
+                    <span className="dollName">Mike</span>
+                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Mike-TeamLeader-Avatar.BVQZLCeX.png" alt="Mike" />
+                  </div>
+                  <div className="dollItem bg-alex" style={{ zIndex: 4 }}>
+                    <span className="dollName">Alex</span>
+                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Alex-Engineer-Avatar.DMF78Ta0.png" alt="Alex" />
+                  </div>
+                  <div className="dollItem bg-emma" style={{ zIndex: 3 }}>
+                    <span className="dollName">Emma</span>
+                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Emma-ProductManager-Avatar.DAgh_sAa.png" alt="Emma" />
+                  </div>
+                  <div className="dollItem bg-david" style={{ zIndex: 2 }}>
+                    <span className="dollName">David</span>
+                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/David-DataAnalyst-Avatar.JI1m4RZ8.png" alt="David" />
+                  </div>
+                  <div className="dollItem bg-bob" style={{ zIndex: 1 }}>
+                    <span className="dollName">Bob</span>
+                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Bob-Architect-Avatar.Dwg49-6j.png" alt="Bob" />
+                  </div>
+                  <div className="plus-button">
+                    <svg viewBox="0 0 16 16" style={{ width: '16px', height: '16px', fill: 'currentColor' }}>
+                      <path d="M8 3a.5.5 0 0 1 .5.5v4h4a.5.5 0 0 1 0 1h-4v4a.5.5 0 0 1-1 0v-4h-4a.5.5 0 0 1 0-1h4v-4A.5.5 0 0 1 8 3z"/>
+                    </svg>
+                  </div>
+                </div>
               </motion.div>
 
               <motion.div
