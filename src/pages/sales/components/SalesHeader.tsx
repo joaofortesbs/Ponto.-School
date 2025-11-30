@@ -60,11 +60,11 @@ export function SalesHeader() {
         <div
           className="relative flex items-center justify-between px-3 md:px-4 py-1 rounded-[2rem]"
           style={{
-            background: 'rgba(255, 255, 255, 0.1)',
+            background: 'rgba(0, 8, 34, 0.75)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
             transform: 'translate3d(0, 0, 0)',
             WebkitTransform: 'translate3d(0, 0, 0)',
             willChange: 'backdrop-filter',
