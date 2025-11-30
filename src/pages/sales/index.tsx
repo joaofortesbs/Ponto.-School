@@ -75,6 +75,7 @@ export default function SalesPage() {
                   align-items: center;
                   justify-content: center;
                   padding: 0;
+                  line-height: 0;
                 }
                 
                 .dollItem:first-child {
@@ -131,15 +132,14 @@ export default function SalesPage() {
                 }
                 
                 .dollItem img {
-                  position: absolute;
-                  top: 50%;
-                  left: 50%;
-                  transform: translate(-50%, -50%);
-                  width: calc(100% - 0px);
-                  height: calc(100% - 0px);
+                  width: 100%;
+                  height: 100%;
                   object-fit: cover;
+                  object-position: center center;
                   border-radius: 50%;
                   display: block;
+                  flex-shrink: 0;
+                  vertical-align: middle;
                 }
                 
                 .bg-mike { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
