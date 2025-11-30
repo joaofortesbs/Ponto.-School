@@ -158,16 +158,20 @@
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
+  z-index: 999999999 !important;
+  position: relative !important;
 }
 
 ::-webkit-scrollbar-track {
   background: transparent;
+  z-index: 999999999 !important;
 }
 
 ::-webkit-scrollbar-thumb {
   background-color: rgba(156, 163, 175, 0.5);
   border-radius: 9999px;
   border: 1px solid transparent;
+  z-index: 999999999 !important;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -180,6 +184,43 @@
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(75, 85, 99, 0.8);
+}
+
+/* Garantir que a scrollbar da página principal esteja sempre visível */
+body::-webkit-scrollbar,
+html::-webkit-scrollbar {
+  width: 8px !important;
+  z-index: 999999999 !important;
+  position: relative !important;
+  display: block !important;
+}
+
+body::-webkit-scrollbar-track,
+html::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  z-index: 999999999 !important;
+}
+
+body::-webkit-scrollbar-thumb,
+html::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.6);
+  border-radius: 9999px;
+  z-index: 999999999 !important;
+}
+
+body::-webkit-scrollbar-thumb:hover,
+html::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.9);
+}
+
+.dark body::-webkit-scrollbar-thumb,
+.dark html::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.6);
+}
+
+.dark body::-webkit-scrollbar-thumb:hover,
+.dark html::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(75, 85, 99, 0.9);
 }
 
 /* Flip Card Styles */

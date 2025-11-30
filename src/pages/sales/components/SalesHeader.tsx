@@ -225,6 +225,7 @@ export function SalesHeader() {
                 side="bottom"
                 align="center"
                 className="bg-[#0A1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 min-w-[200px]"
+                style={{ zIndex: 9998 }}
               >
                 <DropdownMenuItem
                   onClick={() => navigate('/school-power')}
