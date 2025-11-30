@@ -235,15 +235,15 @@ export default function SalesPage() {
                     <img src="/images/avatar11-sobreposto-pv.png" alt="Jota" />
                   </div>
                   <div className="dollItem bg-alex" style={{ zIndex: 3 }}>
-                    <span className="dollName">Felix é o <span style={{ color: '#FF6B00' }}>gerador de atividades</span></span>
+                    <span className="dollName">Felix é o <span style={{ color: '#4387c8' }}>gerador de atividades</span></span>
                     <img src="/images/avatar2-sobreposto-pv.png" alt="Felix" />
                   </div>
                   <div className="dollItem bg-emma" style={{ zIndex: 2 }}>
-                    <span className="dollName">Adrian é o <span style={{ color: '#FF6B00' }}>gerente pedagógico</span></span>
+                    <span className="dollName">Adrian é o <span style={{ color: '#a659b7' }}>gerente pedagógico</span></span>
                     <img src="/images/avatar3-sobreposto-pv.png" alt="Adrian" />
                   </div>
                   <div className="dollItem bg-david" style={{ zIndex: 1 }}>
-                    <span className="dollName">Sam é o <span style={{ color: '#FF6B00' }}>analista de dados</span></span>
+                    <span className="dollName">Sam é o <span style={{ color: '#61b35e' }}>analista de dados</span></span>
                     <img src="/images/avatar4-sobreposto-pv.png" alt="Sam" />
                   </div>
                   <div className="plus-button">

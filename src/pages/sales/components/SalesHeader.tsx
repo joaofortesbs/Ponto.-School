@@ -56,24 +56,21 @@ export function SalesHeader() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="relative"
       >
-        {/* Brilho de fundo com gradiente */}
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00]/20 via-[#FF8C40]/20 to-[#FF6B00]/20 rounded-3xl blur-xl opacity-75"></div>
-
-        {/* Container Principal do Header */}
+        {/* Container Principal do Header - Efeito de vidro fosco */}
         <div
           className={`
             relative flex items-center justify-between
             px-3 md:px-4 py-1
-            bg-[#0A1628]/80 backdrop-blur-2xl
-            border border-white/10
+            bg-white/10
+            border border-white/20
             rounded-[2rem]
-            shadow-2xl shadow-black/50
+            shadow-2xl shadow-black/30
             transition-all duration-300
-            ${isScrolled ? 'bg-[#0A1628]/95 border-white/20' : ''}
+            ${isScrolled ? 'bg-white/15 border-white/25' : ''}
           `}
           style={{
-            backdropFilter: `blur(${headerBlur}px)`,
-            WebkitBackdropFilter: `blur(${headerBlur}px)`,
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           }}
         >
           {/* Logo - Canto Esquerdo */}
