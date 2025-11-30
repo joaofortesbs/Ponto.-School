@@ -76,6 +76,7 @@ export default function SalesPage() {
                   justify-content: center;
                   padding: 0;
                   line-height: 0;
+                  font-size: 0;
                 }
                 
                 .dollItem:first-child {
@@ -139,7 +140,7 @@ export default function SalesPage() {
                   border-radius: 50%;
                   display: block;
                   flex-shrink: 0;
-                  vertical-align: middle;
+                  margin: auto;
                 }
                 
                 .bg-mike { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
