@@ -15,6 +15,7 @@ export function SalesHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("pt-BR"); // Estado para a linguagem selecionada
   const [selectedUserType, setSelectedUserType] = useState("professor"); // Estado para o tipo de usuário selecionado
+  const [isModelosDropdownOpen, setIsModelosDropdownOpen] = useState(false); // Estado para controlar a abertura do dropdown de Modelos
 
   // Transformar o scroll em valores para animações
   const headerOpacity = useTransform(scrollY, [0, 100], [0.95, 1]);
@@ -169,11 +170,13 @@ export function SalesHeader() {
             </DropdownMenu>
 
             {/* Dropdown do Botão Modelos */}
-            <DropdownMenu>
+            <DropdownMenu open={isModelosDropdownOpen} onOpenChange={setIsModelosDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onMouseEnter={() => setIsModelosDropdownOpen(true)}
+                  onMouseLeave={() => setIsModelosDropdownOpen(false)}
                 >
                   <Button
                     className="
