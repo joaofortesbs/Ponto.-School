@@ -84,9 +84,24 @@ export default function SalesPage() {
                   transform: translateY(-4px) scale(1.1);
                   z-index: 10 !important;
                   border: 3px solid transparent;
-                  background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF4800, #F97316, #FFD05A);
                   background-origin: border-box;
                   background-clip: padding-box, border-box;
+                }
+                
+                .bg-mike:hover {
+                  background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF6F32, #FF8C5A, #FFB088);
+                }
+                
+                .bg-alex:hover {
+                  background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #4386ca, #5C9DD6, #75B4E2);
+                }
+                
+                .bg-emma:hover {
+                  background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #a75ab8, #B973C5, #CB8CD2);
+                }
+                
+                .bg-david:hover {
+                  background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #60b65f, #78C477, #90D28F);
                 }
                 
                 .dollName {
@@ -134,13 +149,13 @@ export default function SalesPage() {
                   object-fit: cover;
                   border-radius: 50%;
                   display: block;
-                  transform: translateY(1px);
+                  transform: translateY(2px);
                 }
                 
-                .bg-mike { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-                .bg-alex { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-                .bg-emma { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-                .bg-david { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+                .bg-mike { background: #FF6F32; }
+                .bg-alex { background: #4386ca; }
+                .bg-emma { background: #a75ab8; }
+                .bg-david { background: #60b65f; }
                 .bg-bob { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
                 
                 .plus-button {
