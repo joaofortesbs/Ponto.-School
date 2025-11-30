@@ -75,11 +75,11 @@ export default function SalesPage() {
                   align-items: center;
                   justify-content: center;
                 }
-                
+
                 .dollItem:first-child {
                   margin-left: 0;
                 }
-                
+
                 .dollItem:hover {
                   transform: translateY(-4px) scale(1.1);
                   z-index: 10 !important;
@@ -87,23 +87,23 @@ export default function SalesPage() {
                   background-origin: border-box;
                   background-clip: padding-box, border-box;
                 }
-                
+
                 .bg-mike:hover {
                   background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF6F32, #FF8C5A, #FFB088);
                 }
-                
+
                 .bg-alex:hover {
                   background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #4386ca, #5C9DD6, #75B4E2);
                 }
-                
+
                 .bg-emma:hover {
                   background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #a75ab8, #B973C5, #CB8CD2);
                 }
-                
+
                 .bg-david:hover {
                   background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #60b65f, #78C477, #90D28F);
                 }
-                
+
                 .dollName {
                   position: absolute;
                   bottom: 100%;
@@ -124,7 +124,7 @@ export default function SalesPage() {
                   z-index: 20;
                   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
                 }
-                
+
                 .dollName::after {
                   content: '';
                   position: absolute;
@@ -137,27 +137,38 @@ export default function SalesPage() {
                   border-right: 6px solid transparent;
                   border-top: 6px solid white;
                 }
-                
+
                 .dollItem:hover .dollName {
                   opacity: 1;
                   transform: translateX(-50%) translateY(0);
                 }
-                
+
+                .dollItem::before {
+                  content: '';
+                  position: absolute;
+                  inset: 0;
+                  border-radius: 50%;
+                  overflow: hidden;
+                  z-index: 0;
+                }
+
                 .dollItem img {
                   width: 100%;
                   height: 100%;
                   object-fit: cover;
                   border-radius: 50%;
                   display: block;
-                  transform: translateY(2px);
+                  transform: translateY(1px);
+                  position: relative;
+                  z-index: 1;
                 }
-                
+
                 .bg-mike { background: #FF6F32; }
                 .bg-alex { background: #4386ca; }
                 .bg-emma { background: #a75ab8; }
                 .bg-david { background: #60b65f; }
                 .bg-bob { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
-                
+
                 .plus-button {
                   width: 55px !important;
                   height: 55px !important;
@@ -174,14 +185,14 @@ export default function SalesPage() {
                   transition: all 0.2s;
                   position: relative;
                 }
-                
+
                 .plus-button:hover {
                   background: rgba(255, 255, 255, 0.08);
                   border-color: rgba(255, 255, 255, 0.2);
                   transform: translateY(-4px) scale(1.05);
                   z-index: 10 !important;
                 }
-                
+
                 .plus-button .dollName {
                   position: absolute;
                   bottom: 100%;
@@ -202,7 +213,7 @@ export default function SalesPage() {
                   z-index: 20;
                   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
                 }
-                
+
                 .plus-button .dollName::after {
                   content: '';
                   position: absolute;
@@ -215,13 +226,13 @@ export default function SalesPage() {
                   border-right: 6px solid transparent;
                   border-top: 6px solid white;
                 }
-                
+
                 .plus-button:hover .dollName {
                   opacity: 1;
                   transform: translateX(-50%) translateY(0);
                 }
               `}</style>
-              
+
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -652,25 +663,25 @@ export default function SalesPage() {
                 {/* Imagem rodape-pv.png abaixo de img.10x.engajamento.pv.png */}
                 {/* 
                   🎯 CONTROLES AVANÇADOS DE POSICIONAMENTO E TAMANHO:
-                  
+
                   LARGURA (width):
                   - Ajuste em pixels: ex: '800px', '1000px', '1200px'
                   - Ajuste em porcentagem: ex: '50%', '75%', '100%'
                   - Ajuste em viewport: ex: '50vw', '80vw'
-                  
+
                   ALTURA (height):
                   - 'auto' (mantém proporção)
                   - Ajuste em pixels: ex: '200px', '300px', '400px'
-                  
+
                   POSICIONAMENTO HORIZONTAL (marginLeft):
                   - Valores negativos movem para ESQUERDA: ex: '-100px', '-50px'
                   - Valores positivos movem para DIREITA: ex: '50px', '100px'
                   - '0px' = centralizado
-                  
+
                   POSICIONAMENTO VERTICAL (marginTop):
                   - Valores negativos movem para CIMA: ex: '-50px', '-100px'
                   - Valores positivos movem para BAIXO: ex: '50px', '100px'
-                  
+
                   ESCALA (transform: scale):
                   - Menor que 1 = diminui: ex: 'scale(0.5)', 'scale(0.7)'
                   - Igual a 1 = tamanho original: 'scale(1)'
@@ -700,20 +711,20 @@ export default function SalesPage() {
                     width: '2127px',           // 📐 LARGURA: ajuste o valor aqui (ex: '400px', '800px', '50%')
                     maxWidth: '100%',         // 📐 LARGURA MÁXIMA: evita quebra em telas pequenas
                     height: 'auto',           // 📐 ALTURA: mantém proporção (ou defina em px)
-                    
+
                     // 🔄 TRANSFORMAÇÕES AVANÇADAS:
                     transform: 'scale(0.6)',  // 🔍 ESCALA: 0.6 = 60% do tamanho (ajuste de 0.1 a 2.0)
                     transformOrigin: 'center', // 🎯 PONTO DE ORIGEM DA ESCALA
-                    
+
                     // 📍 POSICIONAMENTO FINO:
                     position: 'relative',     // Permite ajustes com top/left
                     top: '-297px',               // ⬆️ MOVE VERTICAL: negativo=cima, positivo=baixo
                     left: '-407px',              // ⬅️ MOVE HORIZONTAL: negativo=esquerda, positivo=direita
-                    
+
                     // 🎭 EFEITOS VISUAIS:
                     opacity: 1,               // 👁️ OPACIDADE: 0 a 1 (0=invisível, 1=opaco)
                     filter: 'none',           // 🎨 FILTROS: ex: 'brightness(1.1)', 'contrast(1.2)'
-                    
+
                     // 📦 MARGENS EXTRAS (se necessário):
                     marginTop: '0px',         // ⬆️ MARGEM SUPERIOR EXTRA
                     marginBottom: '-997px',      // ⬇️ MARGEM INFERIOR EXTRA
@@ -724,7 +735,7 @@ export default function SalesPage() {
                   onError={(e) => {
                     console.error('❌ Erro ao carregar imagem rodape-pv.png');
                     console.error('Caminho completo tentado:', e.currentTarget.src);
-                    
+
                     // Tentar fallback para a raiz do public
                     if (e.currentTarget.src.includes('/images/rodape-pv.png')) {
                       console.log('🔄 Tentando carregar /rodape-pv.png como fallback...');
