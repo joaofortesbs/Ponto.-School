@@ -131,16 +131,15 @@ export default function SalesPage() {
                 }
                 
                 .dollItem img {
-                  position: relative;
-                  width: 100%;
-                  height: 100%;
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  width: calc(100% - 0px);
+                  height: calc(100% - 0px);
                   object-fit: cover;
-                  object-position: center center;
                   border-radius: 50%;
                   display: block;
-                  margin: 0;
-                  padding: 0;
-                  flex-shrink: 0;
                 }
                 
                 .bg-mike { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
