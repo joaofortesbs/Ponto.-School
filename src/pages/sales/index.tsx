@@ -211,19 +211,19 @@ export default function SalesPage() {
                 <div className="flex items-center justify-center gap-0">
                   <div className="dollItem bg-mike" style={{ zIndex: 4 }}>
                     <span className="dollName">Jota é o <span style={{ color: '#FF6B00' }}>líder de equipe</span></span>
-                    <img src="/images/avatar1-sobreposto-pv.png" alt="Jota" />
+                    <img src="/images/avatar11-sobreposto-pv.png" alt="Jota" />
                   </div>
                   <div className="dollItem bg-alex" style={{ zIndex: 3 }}>
                     <span className="dollName">Felix é o <span style={{ color: '#FF6B00' }}>gerador de atividades</span></span>
-                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Alex-Engineer-Avatar.DMF78Ta0.png" alt="Felix" />
+                    <img src="/images/avatar2-sobreposto-pv.png" alt="Felix" />
                   </div>
                   <div className="dollItem bg-emma" style={{ zIndex: 2 }}>
                     <span className="dollName">Adrian é o <span style={{ color: '#FF6B00' }}>gerente pedagógico</span></span>
-                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Emma-ProductManager-Avatar.DAgh_sAa.png" alt="Adrian" />
+                    <img src="/images/avatar3-sobreposto-pv.png" alt="Adrian" />
                   </div>
                   <div className="dollItem bg-david" style={{ zIndex: 1 }}>
                     <span className="dollName">Sam é o <span style={{ color: '#FF6B00' }}>analista de dados</span></span>
-                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/David-DataAnalyst-Avatar.JI1m4RZ8.png" alt="Sam" />
+                    <img src="/images/avatar4-sobreposto-pv.png" alt="Sam" />
                   </div>
                   <div className="plus-button">
                     <span className="dollName">Mais agentes em breve</span>
