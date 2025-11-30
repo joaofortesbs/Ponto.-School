@@ -80,10 +80,9 @@ export default function SalesPage() {
                 .dollItem:hover {
                   transform: translateY(-4px) scale(1.1);
                   z-index: 10 !important;
-                  border: 3px solid transparent;
-                  background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF4800, #F97316, #FFD05A);
-                  background-origin: border-box;
-                  background-clip: padding-box, border-box;
+                  border: 4px solid transparent;
+                  background: linear-gradient(#000822, #000822) padding-box, 
+                              linear-gradient(135deg, #FF4800, #F97316, #FFD05A) border-box;
                 }
 
                 .dollName {
