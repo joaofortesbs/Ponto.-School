@@ -459,24 +459,19 @@ export default function SalesPage() {
                     console.log('📍 Caminho usado:', '/images/img-topico3-pv.png');
                   }}
                 />
-              </motion.div>
 
-              {/* Container separado e isolado para imagem img.10x.engajamento.pv.png */}
-              <div className="w-full flex justify-start mt-8 ml-[7px]">
+                {/* Imagem img.10x.engajamento.pv.png abaixo de img-topico3-pv.png */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 1.6 }}
-                  className="relative"
-                  style={{
-                    maxWidth: '547px',
-                    width: '100%'
-                  }}
+                  className="mt-8"
                 >
                   <img 
                     src="/images/img.10x.engajamento.pv.png" 
                     alt="10x Engajamento - Ponto School" 
-                    className="w-full h-auto object-contain drop-shadow-lg"
+                    className="h-auto object-contain drop-shadow-lg"
+                    style={{ maxWidth: '547px', width: '100%' }}
                     loading="eager"
                     onError={(e) => {
                       console.error('❌ Erro ao carregar imagem img.10x.engajamento.pv.png');
@@ -490,7 +485,7 @@ export default function SalesPage() {
                     }}
                   />
                 </motion.div>
-              </div>
+              </motion.div>
 
               {/* Imagem ofc-titulo-3topico.png à direita */}
               <motion.div
