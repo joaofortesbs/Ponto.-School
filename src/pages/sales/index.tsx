@@ -117,7 +117,7 @@ export default function SalesPage() {
                   position: absolute;
                   bottom: 100%;
                   left: 50%;
-                  transform: translateX(-50%);
+                  transform: translateX(-50%) translateY(4px);
                   background: white;
                   color: #103a4a;
                   padding: 8px 14px;
@@ -126,12 +126,13 @@ export default function SalesPage() {
                   font-weight: 400;
                   white-space: nowrap;
                   opacity: 0;
+                  visibility: hidden;
                   pointer-events: none;
-                  transition: opacity 0.2s ease, transform 0.2s ease;
-                  transform: translateX(-50%) translateY(4px);
+                  transition: all 0.2s ease;
                   margin-bottom: 8px;
-                  z-index: 20;
+                  z-index: 200;
                   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                  display: block;
                 }
 
                 .dollName::after {
@@ -149,9 +150,10 @@ export default function SalesPage() {
 
                 .dollItem:hover .dollName {
                   opacity: 1 !important;
-                  transform: translateX(-50%) translateY(0) !important;
                   visibility: visible !important;
+                  transform: translateX(-50%) translateY(0) !important;
                   pointer-events: auto !important;
+                  display: block !important;
                 }
 
                 .dollItem::before {
@@ -208,7 +210,7 @@ export default function SalesPage() {
                   position: absolute;
                   bottom: 100%;
                   left: 50%;
-                  transform: translateX(-50%);
+                  transform: translateX(-50%) translateY(4px);
                   background: white;
                   color: #103a4a;
                   padding: 8px 14px;
@@ -217,12 +219,13 @@ export default function SalesPage() {
                   font-weight: 400;
                   white-space: nowrap;
                   opacity: 0;
+                  visibility: hidden;
                   pointer-events: none;
-                  transition: opacity 0.2s ease, transform 0.2s ease;
-                  transform: translateX(-50%) translateY(4px);
+                  transition: all 0.2s ease;
                   margin-bottom: 8px;
-                  z-index: 20;
+                  z-index: 200;
                   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                  display: block;
                 }
 
                 .plus-button .dollName::after {
@@ -239,8 +242,11 @@ export default function SalesPage() {
                 }
 
                 .plus-button:hover .dollName {
-                  opacity: 1;
-                  transform: translateX(-50%) translateY(0);
+                  opacity: 1 !important;
+                  visibility: visible !important;
+                  transform: translateX(-50%) translateY(0) !important;
+                  pointer-events: auto !important;
+                  display: block !important;
                 }
               `}</style>
 
