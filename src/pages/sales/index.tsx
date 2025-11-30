@@ -486,10 +486,31 @@ export default function SalesPage() {
                   />
                 </motion.div>
 
-                {/* Container vazio abaixo da imagem */}
-                <div className="mt-8">
-                  {/* Container vazio - pronto para receber conteúdo */}
-                </div>
+                {/* Imagem rodape-pv.png abaixo de img.10x.engajamento.pv.png */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 1.8 }}
+                  className="mt-8"
+                >
+                  <img 
+                    src="/rodape-pv.png" 
+                    alt="Rodapé - Ponto School" 
+                    className="h-auto object-contain drop-shadow-lg"
+                    style={{ maxWidth: '100%', width: '100%' }}
+                    loading="eager"
+                    onError={(e) => {
+                      console.error('❌ Erro ao carregar imagem rodape-pv.png');
+                      console.error('Caminho completo tentado:', e.currentTarget.src);
+                      console.error('Verifique se o arquivo existe em: public/rodape-pv.png');
+                      e.currentTarget.style.display = 'none';
+                    }}
+                    onLoad={() => {
+                      console.log('✅ Imagem rodape-pv.png carregada com sucesso!');
+                      console.log('📍 Caminho usado:', '/rodape-pv.png');
+                    }}
+                  />
+                </motion.div>
               </motion.div>
 
               {/* Imagem ofc-titulo-3topico.png à direita */}
