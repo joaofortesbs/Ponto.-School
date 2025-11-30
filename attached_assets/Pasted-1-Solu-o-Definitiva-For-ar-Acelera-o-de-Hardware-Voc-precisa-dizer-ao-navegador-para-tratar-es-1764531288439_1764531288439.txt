@@ -1,0 +1,39 @@
+1. Solução Definitiva: Forçar Aceleração de Hardware
+Você precisa dizer ao navegador para tratar esse menu como uma "camada composta" separada. Adicione estas duas linhas ao seu .glass-menu. Isso resolve o "delay" e o problema de "piscar" no Safari/Chrome.​
+
+css
+.glass-menu {
+  /* Suas propriedades existentes... */
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  /* ADICIONE ISSO PARA CORRIGIR O LAG: */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  will-change: backdrop-filter;
+}
+Por que funciona: O translate3d(0,0,0) é um "hack" conhecido que ativa a aceleração de hardware da GPU para aquele elemento específico, impedindo que o navegador tente renderizá-lo via CPU (o que causa a lentidão).​
+
+will-change: Avisa ao navegador que essa propriedade vai mudar ou é complexa, preparando-o antecipadamente.​
+
+2. Verifique o "Stacking Context" (Ordem das Camadas)
+O efeito backdrop-filter só funciona se houver algo atrás dele para borrar. Se o seu menu flutuante estiver "sozinho" em uma camada ou se o fundo do site (body) for uma cor sólida e lisa, o efeito não será visível.
+
+Certifique-se de que o z-index do menu seja maior que o do conteúdo.
+
+Importante: Se o fundo do site for branco sólido e o menu for branco transparente, blur de branco em cima de branco é invisível. O efeito só aparece quando você rola sobre imagens, textos ou cores contrastantes.
+
+3. Ajuste para Safari (Webkit)
+O Safari é o navegador mais "chato" com esse efeito. Às vezes, ele precisa de um border-radius ou clip-path explícito para entender onde o blur termina, senão ele desativa o efeito para evitar vazamento de memória.
+Se o problema persistir no iPhone/Mac, adicione:
+
+css
+.glass-menu {
+  /* Força o recorte do blur no Safari */
+  -webkit-mask-image: -webkit-radial-gradient(white, black); 
+  /* OU simplesmente garanta que tenha border-radius se for um botão */
+  border-radius: 16px; 
+}
+Resumo Técnico
+O efeito não está "demorando para carregar" o código; ele está demorando para pintar (paint) os pixels na tela. O código com translate3d deve resolver essa sensação de atraso instantaneamente.
