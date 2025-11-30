@@ -80,7 +80,7 @@ export default function SalesPage() {
                 .dollItem:hover {
                   transform: translateY(-4px) scale(1.1);
                   z-index: 10 !important;
-                  border: 4px solid transparent;
+                  border: 3px solid transparent;
                   background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF4800, #F97316, #FFD05A);
                   background-origin: border-box;
                   background-clip: padding-box, border-box;
@@ -216,7 +216,7 @@ export default function SalesPage() {
                     <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Alex-Engineer-Avatar.DMF78Ta0.png" alt="Felix" />
                   </div>
                   <div className="dollItem bg-emma" style={{ zIndex: 2 }}>
-                    <span className="dollName">Adrian é o <span style={{ color: '#FF6B00' }}>gerente de atividades</span></span>
+                    <span className="dollName">Adrian é o <span style={{ color: '#FF6B00' }}>gerente pedagógico</span></span>
                     <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Emma-ProductManager-Avatar.DAgh_sAa.png" alt="Adrian" />
                   </div>
                   <div className="dollItem bg-david" style={{ zIndex: 1 }}>
