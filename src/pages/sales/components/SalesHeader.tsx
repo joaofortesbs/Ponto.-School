@@ -56,21 +56,15 @@ export function SalesHeader() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="relative"
       >
-        {/* Container Principal do Header - Efeito de vidro fosco */}
+        {/* Container Principal do Header - Efeito de vidro fosco (glassmorphism) */}
         <div
-          className={`
-            relative flex items-center justify-between
-            px-3 md:px-4 py-1
-            bg-white/10
-            border border-white/20
-            rounded-[2rem]
-            shadow-2xl shadow-black/30
-            transition-all duration-300
-            ${isScrolled ? 'bg-white/15 border-white/25' : ''}
-          `}
+          className="relative flex items-center justify-between px-3 md:px-4 py-1 rounded-[2rem] transition-all duration-300"
           style={{
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
           }}
         >
           {/* Logo - Canto Esquerdo */}
