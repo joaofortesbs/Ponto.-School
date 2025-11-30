@@ -167,6 +167,10 @@ export function SalesHeader() {
                   onClick={() => setSelectedUserType("professor")}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none ${selectedUserType === "professor" ? "bg-white/10" : ""}`}
                 >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                  </svg>
                   <span className="font-medium">Professores</span>
                 </DropdownMenuItem>
 
@@ -174,6 +178,10 @@ export function SalesHeader() {
                   onClick={() => setSelectedUserType("aluno")}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none ${selectedUserType === "aluno" ? "bg-white/10" : ""}`}
                 >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
                   <span className="font-medium">Alunos</span>
                 </DropdownMenuItem>
 
@@ -181,6 +189,10 @@ export function SalesHeader() {
                   onClick={() => setSelectedUserType("escola")}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none ${selectedUserType === "escola" ? "bg-white/10" : ""}`}
                 >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  </svg>
                   <span className="font-medium">Escolas</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
