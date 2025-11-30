@@ -227,42 +227,26 @@ html::-webkit-scrollbar-thumb:hover {
 /* Impedir que Radix UI esconda a scrollbar ao abrir dropdowns/popovers */
 html,
 body {
-  overflow-y: auto !important;
+  overflow-y: scroll !important;
   overflow-x: hidden !important;
-  scrollbar-gutter: stable !important;
 }
 
 /* Garantir que body nunca tenha overflow hidden quando dropdowns estão abertos */
 body[data-scroll-locked],
 html[data-scroll-locked] {
-  overflow-y: scroll !important;
+  overflow: scroll !important;
   padding-right: 0 !important;
   margin-right: 0 !important;
-}
-
-/* Prevenir que o Radix UI manipule o scroll do body */
-[data-radix-popper-content-wrapper] ~ body,
-body:has([data-radix-popper-content-wrapper]),
-body:has([data-state="open"]) {
-  overflow-y: scroll !important;
-  padding-right: 0 !important;
-}
-
-/* Forçar scrollbar visível mesmo com elementos Radix abertos */
-html:has([data-radix-popper-content-wrapper]),
-html:has([data-state="open"]) {
-  overflow-y: scroll !important;
-}
-
-/* Garantir que dropdowns não afetem o scroll da página */
-[data-radix-scroll-area-viewport] {
-  scrollbar-gutter: stable !important;
+  position: static !important;
+  width: 100% !important;
 }
 
 /* Impedir qualquer manipulação de overflow pelo Radix */
 body[style*="overflow: hidden"],
-body[style*="overflow:hidden"] {
-  overflow-y: scroll !important;
+body[style*="overflow:hidden"],
+body[style*="padding-right"] {
+  overflow: scroll !important;
+  padding-right: 0 !important;
 }
 /* ========== FIM DA CORREÇÃO ========== */
 
