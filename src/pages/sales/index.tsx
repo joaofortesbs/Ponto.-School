@@ -494,7 +494,7 @@ export default function SalesPage() {
                   className="mt-8"
                 >
                   <img 
-                    src="/rodape-pv.png" 
+                    src="/images/rodape-pv.png" 
                     alt="Rodapé - Ponto School" 
                     className="h-auto object-contain drop-shadow-lg"
                     style={{ maxWidth: '100%', width: '100%' }}
@@ -502,12 +502,19 @@ export default function SalesPage() {
                     onError={(e) => {
                       console.error('❌ Erro ao carregar imagem rodape-pv.png');
                       console.error('Caminho completo tentado:', e.currentTarget.src);
-                      console.error('Verifique se o arquivo existe em: public/rodape-pv.png');
-                      e.currentTarget.style.display = 'none';
+                      
+                      // Tentar fallback para a raiz do public
+                      if (e.currentTarget.src.includes('/images/rodape-pv.png')) {
+                        console.log('🔄 Tentando carregar /rodape-pv.png como fallback...');
+                        e.currentTarget.src = '/rodape-pv.png';
+                      } else {
+                        console.error('❌ Fallback também falhou. Verifique se o arquivo existe em: public/images/rodape-pv.png ou public/rodape-pv.png');
+                        e.currentTarget.style.display = 'none';
+                      }
                     }}
                     onLoad={() => {
                       console.log('✅ Imagem rodape-pv.png carregada com sucesso!');
-                      console.log('📍 Caminho usado:', '/rodape-pv.png');
+                      console.log('📍 Caminho usado:', '/images/rodape-pv.png');
                     }}
                   />
                 </motion.div>
