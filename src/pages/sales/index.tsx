@@ -133,8 +133,6 @@ export default function SalesPage() {
                   height: 100%;
                   object-fit: cover;
                   border-radius: 50%;
-                  display: block;
-                  transform: translateY(1px);
                 }
                 
                 .bg-mike { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
