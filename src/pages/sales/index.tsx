@@ -62,12 +62,12 @@ export default function SalesPage() {
               {/* Avatares Circulares Sobrepostos */}
               <style>{`
                 .dollItem {
-                  width: 45px;
-                  height: 45px;
+                  width: 60px;
+                  height: 60px;
                   border-radius: 50%;
                   overflow: visible;
-                  margin-left: -10px;
-                  border: 3px solid #000822;
+                  margin-left: -15px;
+                  border: 4px solid #000822;
                   transition: transform 0.2s, z-index 0.2s, opacity 0.2s, border 0.2s;
                   cursor: pointer;
                   position: relative;
@@ -80,7 +80,7 @@ export default function SalesPage() {
                 .dollItem:hover {
                   transform: translateY(-4px) scale(1.1);
                   z-index: 10 !important;
-                  border: 3px solid transparent;
+                  border: 4px solid transparent;
                   background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF4800, #F97316, #FFD05A);
                   background-origin: border-box;
                   background-clip: padding-box, border-box;
@@ -139,15 +139,15 @@ export default function SalesPage() {
                 .bg-bob { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
                 
                 .plus-button {
-                  width: 45px;
-                  height: 45px;
+                  width: 60px;
+                  height: 60px;
                   border-radius: 50%;
                   background: rgba(255, 255, 255, 0.04);
                   border: 2px dashed rgba(255, 255, 255, 0.12);
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                  margin-left: -10px;
+                  margin-left: -15px;
                   cursor: pointer;
                   transition: all 0.2s;
                   position: relative;
@@ -225,7 +225,7 @@ export default function SalesPage() {
                   </div>
                   <div className="plus-button">
                     <span className="dollName">Mais agentes em breve</span>
-                    <svg viewBox="0 0 16 16" style={{ width: '16px', height: '16px', fill: 'currentColor' }}>
+                    <svg viewBox="0 0 16 16" style={{ width: '22px', height: '22px', fill: 'currentColor' }}>
                       <path d="M8 3a.5.5 0 0 1 .5.5v4h4a.5.5 0 0 1 0 1h-4v4a.5.5 0 0 1-1 0v-4h-4a.5.5 0 0 1 0-1h4v-4A.5.5 0 0 1 8 3z"/>
                     </svg>
                   </div>
