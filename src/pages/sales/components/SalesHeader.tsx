@@ -16,6 +16,7 @@ export function SalesHeader() {
   const [selectedLanguage, setSelectedLanguage] = useState("pt-BR"); // Estado para a linguagem selecionada
   const [selectedUserType, setSelectedUserType] = useState("professor"); // Estado para o tipo de usuário selecionado
   const [isModelosDropdownOpen, setIsModelosDropdownOpen] = useState(false); // Estado para controlar a abertura do dropdown de Modelos
+  const [isProfessorDropdownOpen, setIsProfessorDropdownOpen] = useState(false); // Estado para controlar a abertura do dropdown de Professor
 
   // Transformar o scroll em valores para animações
   const headerOpacity = useTransform(scrollY, [0, 100], [0.95, 1]);
@@ -95,11 +96,13 @@ export function SalesHeader() {
           {/* Container Centralizado com Botões */}
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
             {/* Dropdown do Botão Professor */}
-            <DropdownMenu modal={false}>
+            <DropdownMenu modal={false} open={isProfessorDropdownOpen} onOpenChange={setIsProfessorDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onMouseEnter={() => setIsProfessorDropdownOpen(true)}
+                  onMouseLeave={() => setIsProfessorDropdownOpen(false)}
                 >
                   <Button
                     className="
@@ -111,12 +114,14 @@ export function SalesHeader() {
                       hover:shadow-xl hover:shadow-[#FF6B00]/40
                       transition-all duration-300
                       group
+                      focus:outline-none focus-visible:outline-none focus-visible:ring-0
                     "
                     style={{
                       border: '1.5px solid transparent',
                       backgroundImage: 'linear-gradient(135deg, #FFD05A, #FF6800, #FF5100)',
                       backgroundOrigin: 'border-box',
-                      backgroundClip: 'border-box'
+                      backgroundClip: 'border-box',
+                      outline: 'none'
                     }}
                   >
                     {/* Camada de fundo interno com opacidade de 30% */}
@@ -143,8 +148,10 @@ export function SalesHeader() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 side="bottom"
-                align="end"
+                align="center"
+                sideOffset={20}
                 className="bg-[#0A1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 min-w-[180px]"
+                style={{ zIndex: 9998 }}
               >
                 <DropdownMenuItem
                   onClick={() => setSelectedUserType("professor")}
