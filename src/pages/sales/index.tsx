@@ -85,11 +85,6 @@ export default function SalesPage() {
                   z-index: 10 !important;
                 }
 
-                .dollItem:hover .dollName {
-                  opacity: 1;
-                  transform: translateX(-50%) translateY(0);
-                }
-
                 .bg-mike:hover {
                   border: 3px solid transparent;
                   background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF6F32, #FF8C5A, #FFB088);
@@ -153,8 +148,10 @@ export default function SalesPage() {
                 }
 
                 .dollItem:hover .dollName {
-                  opacity: 1;
-                  transform: translateX(-50%) translateY(0);
+                  opacity: 1 !important;
+                  transform: translateX(-50%) translateY(0) !important;
+                  visibility: visible !important;
+                  pointer-events: auto !important;
                 }
 
                 .dollItem::before {
