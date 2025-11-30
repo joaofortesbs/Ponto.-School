@@ -17,6 +17,7 @@ export function SalesHeader() {
   const [selectedUserType, setSelectedUserType] = useState("professor"); // Estado para o tipo de usuário selecionado
   const [isModelosDropdownOpen, setIsModelosDropdownOpen] = useState(false); // Estado para controlar a abertura do dropdown de Modelos
   const [isProfessorDropdownOpen, setIsProfessorDropdownOpen] = useState(false); // Estado para controlar a abertura do dropdown de Professor
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false); // Estado para controlar a abertura do dropdown de Idiomas
 
   // Transformar o scroll em valores para animações
   const headerOpacity = useTransform(scrollY, [0, 100], [0.95, 1]);
@@ -333,40 +334,54 @@ export function SalesHeader() {
 
           {/* Controles - Canto Direito */}
           <div className="ml-auto flex items-center gap-3">
-            {/* Dropdown de Seleção de Idiomas */}
-            <DropdownMenu modal={false}>
+            {/* Dropdown de Seleção de Idiomas com Hover */}
+            <DropdownMenu modal={false} open={isLanguageDropdownOpen} onOpenChange={setIsLanguageDropdownOpen}>
               <DropdownMenuTrigger asChild>
-                <motion.button
+                <motion.div
                   whileHover={{ scale: 1.15, rotate: 360 }}
                   whileTap={{ scale: 0.95 }}
                   transition={{
                     duration: 0.6,
                     ease: "easeInOut"
                   }}
-                  className="relative bg-transparent border-none cursor-pointer focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+                  onMouseEnter={() => setIsLanguageDropdownOpen(true)}
+                  onMouseLeave={(e) => {
+                    setTimeout(() => {
+                      const dropdown = document.querySelector('[data-dropdown-language]');
+                      if (dropdown && !dropdown.matches(':hover')) {
+                        setIsLanguageDropdownOpen(false);
+                      }
+                    }, 100);
+                  }}
                 >
-                  <svg
-                    className="w-7 h-7"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <defs>
-                      <linearGradient id="globeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style={{ stopColor: '#FF6B00', stopOpacity: 1 }} />
-                        <stop offset="100%" style={{ stopColor: '#FF8C40', stopOpacity: 1 }} />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      fill="url(#globeGradient)"
-                      d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
-                    />
-                  </svg>
-                </motion.button>
+                  <button className="relative bg-transparent border-none cursor-pointer focus:outline-none focus-visible:outline-none focus-visible:ring-0">
+                    <svg
+                      className="w-7 h-7"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <defs>
+                        <linearGradient id="globeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" style={{ stopColor: '#FF6B00', stopOpacity: 1 }} />
+                          <stop offset="100%" style={{ stopColor: '#FF8C40', stopOpacity: 1 }} />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        fill="url(#globeGradient)"
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
+                      />
+                    </svg>
+                  </button>
+                </motion.div>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                side="top"
+                side="bottom"
                 align="center"
+                sideOffset={20}
                 className="bg-[#0A1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 min-w-[200px]"
+                style={{ zIndex: 9998 }}
+                data-dropdown-language
+                onMouseLeave={() => setIsLanguageDropdownOpen(false)}
               >
                 <DropdownMenuItem
                   onClick={() => setSelectedLanguage("pt-BR")}
