@@ -65,12 +65,15 @@ export default function SalesPage() {
                   width: 60px;
                   height: 60px;
                   border-radius: 50%;
-                  overflow: visible;
+                  overflow: hidden;
                   margin-left: -15px;
                   border: 4px solid #000822;
                   transition: transform 0.2s, z-index 0.2s, opacity 0.2s, border 0.2s;
                   cursor: pointer;
                   position: relative;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
                 }
                 
                 .dollItem:first-child {
@@ -130,6 +133,11 @@ export default function SalesPage() {
                   height: 100%;
                   object-fit: cover;
                   border-radius: 50%;
+                  display: block;
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
                 }
                 
                 .bg-mike { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
