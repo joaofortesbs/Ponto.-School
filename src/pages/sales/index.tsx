@@ -211,7 +211,7 @@ export default function SalesPage() {
                 <div className="flex items-center justify-center gap-0">
                   <div className="dollItem bg-mike" style={{ zIndex: 4 }}>
                     <span className="dollName">Jota é o <span style={{ color: '#FF6B00' }}>líder de equipe</span></span>
-                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Mike-TeamLeader-Avatar.BVQZLCeX.png" alt="Jota" />
+                    <img src="/images/avatar1-sobreposto-pv.png" alt="Jota" />
                   </div>
                   <div className="dollItem bg-alex" style={{ zIndex: 3 }}>
                     <span className="dollName">Felix é o <span style={{ color: '#FF6B00' }}>gerador de atividades</span></span>
