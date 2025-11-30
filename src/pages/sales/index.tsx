@@ -62,8 +62,8 @@ export default function SalesPage() {
               {/* Avatares Circulares Sobrepostos */}
               <style>{`
                 .dollItem {
-                  width: 60px;
-                  height: 60px;
+                  width: 50px;
+                  height: 50px;
                   border-radius: 50%;
                   overflow: visible;
                   margin-left: -15px;
@@ -145,10 +145,10 @@ export default function SalesPage() {
                 .bg-bob { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
 
                 .plus-button {
-                  width: 55px !important;
-                  height: 55px !important;
-                  min-width: 50px !important;
-                  min-height: 50px !important;
+                  width: 48px !important;
+                  height: 48px !important;
+                  min-width: 48px !important;
+                  min-height: 48px !important;
                   border-radius: 50%;
                   background: rgba(255, 255, 255, 0.04);
                   border: 2px dashed rgba(255, 255, 255, 0.12);
