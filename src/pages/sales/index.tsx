@@ -67,7 +67,7 @@ export default function SalesPage() {
                   border-radius: 50%;
                   overflow: visible;
                   margin-left: -10px;
-                  border: 3px solid #1a1a1a;
+                  border: 3px solid #000822;
                   transition: transform 0.2s, z-index 0.2s, opacity 0.2s;
                   cursor: pointer;
                   position: relative;
@@ -87,12 +87,12 @@ export default function SalesPage() {
                   bottom: 100%;
                   left: 50%;
                   transform: translateX(-50%);
-                  background: rgba(0, 0, 0, 0.8);
-                  color: rgba(255, 255, 255, 0.95);
-                  padding: 6px 12px;
-                  border-radius: 8px;
-                  font-size: 12px;
-                  font-weight: 500;
+                  background: white;
+                  color: #103a4a;
+                  padding: 8px 14px;
+                  border-radius: 12px;
+                  font-size: 13px;
+                  font-weight: 400;
                   white-space: nowrap;
                   opacity: 0;
                   pointer-events: none;
@@ -100,6 +100,20 @@ export default function SalesPage() {
                   transform: translateX(-50%) translateY(4px);
                   margin-bottom: 8px;
                   z-index: 20;
+                  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                }
+                
+                .dollName::after {
+                  content: '';
+                  position: absolute;
+                  bottom: -6px;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  width: 0;
+                  height: 0;
+                  border-left: 6px solid transparent;
+                  border-right: 6px solid transparent;
+                  border-top: 6px solid white;
                 }
                 
                 .dollItem:hover .dollName {
@@ -149,20 +163,20 @@ export default function SalesPage() {
               >
                 <div className="flex items-center justify-center gap-0">
                   <div className="dollItem bg-mike" style={{ zIndex: 5 }}>
-                    <span className="dollName">Mike</span>
-                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Mike-TeamLeader-Avatar.BVQZLCeX.png" alt="Mike" />
+                    <span className="dollName">Jota é o <span style={{ color: '#103a4a' }}>líder de equipe</span></span>
+                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Mike-TeamLeader-Avatar.BVQZLCeX.png" alt="Jota" />
                   </div>
                   <div className="dollItem bg-alex" style={{ zIndex: 4 }}>
-                    <span className="dollName">Alex</span>
-                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Alex-Engineer-Avatar.DMF78Ta0.png" alt="Alex" />
+                    <span className="dollName">Felix é o <span style={{ color: '#103a4a' }}>gerador de atividades</span></span>
+                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Alex-Engineer-Avatar.DMF78Ta0.png" alt="Felix" />
                   </div>
                   <div className="dollItem bg-emma" style={{ zIndex: 3 }}>
-                    <span className="dollName">Emma</span>
-                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Emma-ProductManager-Avatar.DAgh_sAa.png" alt="Emma" />
+                    <span className="dollName">Adrian é o <span style={{ color: '#103a4a' }}>gerente de atividades</span></span>
+                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/Emma-ProductManager-Avatar.DAgh_sAa.png" alt="Adrian" />
                   </div>
                   <div className="dollItem bg-david" style={{ zIndex: 2 }}>
-                    <span className="dollName">David</span>
-                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/David-DataAnalyst-Avatar.JI1m4RZ8.png" alt="David" />
+                    <span className="dollName">Sam é o <span style={{ color: '#103a4a' }}>analista de dados</span></span>
+                    <img src="https://public-frontend-cos.metadl.com/nuxt-mgx/prod/assets/David-DataAnalyst-Avatar.JI1m4RZ8.png" alt="Sam" />
                   </div>
                   <div className="dollItem bg-bob" style={{ zIndex: 1 }}>
                     <span className="dollName">Bob</span>
