@@ -12,14 +12,14 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 // CONFIGURAÇÃO DE LARGURA DO SIDEBAR
 // Deve ser igual ao valor em Sidebar.tsx
 // ========================================
-const SIDEBAR_WIDTH_EXPANDED = 260; // Largura quando expandido (em pixels)
+const SIDEBAR_WIDTH_EXPANDED = 270; // Largura quando expandido (em pixels)
 const SIDEBAR_WIDTH_COLLAPSED = 72; // Largura quando colapsado (em pixels)
 
 // ========================================
 // CONFIGURAÇÃO DE POSIÇÃO DA SETA EXPANSÍVEL
 // Ajuste este valor para controle milimétrico da posição
 // ========================================
-const EXPAND_ICON_MARGIN_LEFT = 2; // Margem esquerda da seta (em pixels) - Padrão: 8px, agora: 2px
+const EXPAND_ICON_MARGIN_LEFT = -5; // Margem esquerda da seta (em pixels) - Padrão: 8px, agora: 2px
 
 import {
   Home,
