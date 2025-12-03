@@ -1223,6 +1223,20 @@ export function SidebarNav({
           cursor: pointer;
         }
 
+        /* Garantir que o texto em itens expansíveis não seja cortado */
+        .expandable-item .item-text {
+          overflow: visible !important;
+          min-width: auto !important;
+          flex-shrink: 0 !important;
+          flex: 0 0 auto !important;
+        }
+
+        .expandable-item .item-title {
+          overflow: visible !important;
+          text-overflow: unset !important;
+          white-space: nowrap !important;
+        }
+
         .expand-icon {
           width: 20px;
           height: 20px;
@@ -1230,8 +1244,9 @@ export function SidebarNav({
           align-items: center;
           justify-content: center;
           transition: transform 0.3s ease;
-          margin-left: auto;
+          margin-left: 8px;
           margin-right: 8px;
+          flex-shrink: 0;
         }
 
         .expand-icon i {
