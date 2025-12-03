@@ -19,7 +19,7 @@ const SIDEBAR_WIDTH_COLLAPSED = 72; // Largura quando colapsado (em pixels)
 // CONFIGURAÇÃO DE POSIÇÃO DA SETA EXPANSÍVEL
 // Ajuste este valor para controle milimétrico da posição
 // ========================================
-const EXPAND_ICON_MARGIN_LEFT = 4; // Margem esquerda da seta (em pixels) - Padrão: 8px, agora: 4px
+const EXPAND_ICON_MARGIN_LEFT = 2; // Margem esquerda da seta (em pixels) - Padrão: 8px, agora: 2px
 
 import {
   Home,
