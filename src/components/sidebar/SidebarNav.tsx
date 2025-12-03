@@ -1276,9 +1276,9 @@ export function SidebarNav({
           border-radius: 0 0 16px 16px;
           margin-top: -4px;
           margin-bottom: 4px;
-          padding: 8px 0 8px 16px;
+          padding: 8px 0 8px 0;
           border-left: 2px solid rgba(255, 107, 0, 0.3);
-          margin-left: 18px;
+          margin-left: 0;
           animation: slideDown 0.3s ease;
         }
 
@@ -1306,12 +1306,12 @@ export function SidebarNav({
         .sub-item {
           min-height: 44px !important;
           height: 44px !important;
-          margin: 0 0 2px !important;
+          margin: 0 8px 2px 8px !important;
           border-radius: 12px !important;
         }
 
         .sub-item .item-content {
-          padding: 8px 12px !important;
+          padding: 8px 0.75rem !important;
           min-height: 44px !important;
         }
 
