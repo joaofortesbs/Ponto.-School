@@ -19,6 +19,11 @@ export default function Sidebar({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isCollapsed);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  
+  // Variável para controle milimétrico da largura do sidebar
+  // Altere este valor para ajustar a largura (em pixels)
+  const SIDEBAR_WIDTH_EXPANDED = 300; // Largura quando expandido (padrão: 274px, agora: 300px)
+  const SIDEBAR_WIDTH_COLLAPSED = 70; // Largura quando colapsado
 
   useEffect(() => {
     // Obter a imagem padrão da configuração global ou usar o valor padrão
@@ -175,10 +180,12 @@ export default function Sidebar({
       <aside
         className={cn(
           "fixed top-0 left-0 z-30 h-full bg-white dark:bg-[#001427]/90 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out md:relative",
-          sidebarCollapsed ? "w-[70px]" : "w-[274px]",
           isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           className,
         )}
+        style={{
+          width: sidebarCollapsed ? `${SIDEBAR_WIDTH_COLLAPSED}px` : `${SIDEBAR_WIDTH_EXPANDED}px`
+        }}
         key="sidebar-container"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}

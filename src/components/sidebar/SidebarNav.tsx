@@ -69,6 +69,9 @@ export function SidebarNav({
   const location = useLocation();
   const [showMentorAI, setShowMentorAI] = useState(false);
   const { userName } = useUserName();
+  
+  // Largura do sidebar (deve corresponder ao valor em Sidebar.tsx)
+  const SIDEBAR_WIDTH_EXPANDED = 300; // Ajuste este valor conforme necessário
 
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
