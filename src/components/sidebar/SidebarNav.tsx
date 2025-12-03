@@ -7,6 +7,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/user-profile";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
+// ========================================
+// CONFIGURAÇÃO DE LARGURA DO SIDEBAR
+// Deve ser igual ao valor em Sidebar.tsx
+// ========================================
+const SIDEBAR_WIDTH_EXPANDED = 260; // Largura quando expandido (em pixels)
+const SIDEBAR_WIDTH_COLLAPSED = 72; // Largura quando colapsado (em pixels)
 import {
   Home,
   BookOpen,
@@ -69,9 +76,6 @@ export function SidebarNav({
   const location = useLocation();
   const [showMentorAI, setShowMentorAI] = useState(false);
   const { userName } = useUserName();
-  
-  // Largura do sidebar (deve corresponder ao valor em Sidebar.tsx)
-  const SIDEBAR_WIDTH_EXPANDED = 300; // Ajuste este valor conforme necessário
 
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);

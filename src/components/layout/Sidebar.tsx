@@ -4,6 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
 
+// ========================================
+// CONFIGURAÇÃO DE LARGURA DO SIDEBAR
+// Ajuste estes valores para controle milimétrico da largura
+// ========================================
+const SIDEBAR_WIDTH_EXPANDED = 260; // Largura quando expandido (em pixels) - Ajustado de 300 para 260
+const SIDEBAR_WIDTH_COLLAPSED = 72; // Largura quando colapsado (em pixels)
+
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -19,11 +26,6 @@ export default function Sidebar({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isCollapsed);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
-  
-  // Variável para controle milimétrico da largura do sidebar
-  // Altere este valor para ajustar a largura (em pixels)
-  const SIDEBAR_WIDTH_EXPANDED = 300; // Largura quando expandido (padrão: 274px, agora: 300px)
-  const SIDEBAR_WIDTH_COLLAPSED = 70; // Largura quando colapsado
 
   useEffect(() => {
     // Obter a imagem padrão da configuração global ou usar o valor padrão
