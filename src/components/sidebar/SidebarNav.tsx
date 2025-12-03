@@ -401,12 +401,12 @@ export function SidebarNav({
     if (path === "/mentor-ia") {
       return showMentorAI;
     }
-    
+
     // Para o Painel (/dashboard), verificar se estamos exatamente em /dashboard
     if (path === "/dashboard") {
       return location.pathname === "/dashboard" || location.pathname === "/dashboard/";
     }
-    
+
     // Para outras rotas, verificar se o pathname começa com o path
     // Isso permite que /dashboard/school-power seja ativo quando path é /dashboard/school-power
     return location.pathname === path || location.pathname.startsWith(path + "/");
@@ -645,6 +645,22 @@ export function SidebarNav({
                 style={{
                   animationDelay: `${index * 80}ms`
                 }}
+                onMouseEnter={() => {
+                  if (item.isExpandable && expandedSection === item.label) {
+                    const submenu = document.querySelector(`[data-submenu="${item.label}"]`) as HTMLElement;
+                    if (submenu) {
+                      submenu.style.transform = 'translateX(6px)';
+                    }
+                  }
+                }}
+                onMouseLeave={() => {
+                  if (item.isExpandable && expandedSection === item.label) {
+                    const submenu = document.querySelector(`[data-submenu="${item.label}"]`) as HTMLElement;
+                    if (submenu) {
+                      submenu.style.transform = 'translateX(0)';
+                    }
+                  }
+                }}
               >
                 {item.label === "Agenda" && !isCollapsed ? (
                   <div className="text-sm text-gray-400 px-4 py-2">Agenda em desenvolvimento</div>
@@ -678,7 +694,7 @@ export function SidebarNav({
                       </div>
                     </div>
                     {!isCollapsed && expandedSection === item.label && item.subItems && (
-                      <div className="sub-menu">
+                      <div className="sub-menu" data-submenu={item.label}>
                         {item.subItems.map((subItem, subIndex) => (
                           <div
                             key={`sub-${subItem.path}-${subIndex}`}
@@ -832,7 +848,7 @@ export function SidebarNav({
           overflow: hidden !important;
           width: 100%;
         }
-        
+
         .navigation-menu-container:not(.sidebar-collapsed) .item-content {
           padding: 12px 0.75rem;
         }
