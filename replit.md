@@ -61,3 +61,13 @@ Preferred communication style: Simple, everyday language.
 - **Axios**: HTTP client for API communication.
 - **docx**, **jsPDF**, **file-saver**: For activity download functionality.
 - **bcrypt**: For password hashing.
+
+## Recent Changes
+
+### December 2024 - Sidebar Menu Reorganization
+- **Minhas Criações**: Added new expandable section for Professor users below "School Power" containing:
+  - Atividades (disabled/locked)
+  - Trilhas School (disabled/locked)
+  - Teacher App (disabled/locked)
+- **Portal → Agente School**: Renamed "Portal" to "Agente School" throughout the codebase, including routes, navigation, and components
+- **Conquistas Removed**: Removed the Conquistas (achievements) section from the sidebar menu and deleted associated files
