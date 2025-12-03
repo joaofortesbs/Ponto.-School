@@ -14,6 +14,13 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 // ========================================
 const SIDEBAR_WIDTH_EXPANDED = 260; // Largura quando expandido (em pixels)
 const SIDEBAR_WIDTH_COLLAPSED = 72; // Largura quando colapsado (em pixels)
+
+// ========================================
+// CONFIGURAÇÃO DE POSIÇÃO DA SETA EXPANSÍVEL
+// Ajuste este valor para controle milimétrico da posição
+// ========================================
+const EXPAND_ICON_MARGIN_LEFT = 4; // Margem esquerda da seta (em pixels) - Padrão: 8px, agora: 4px
+
 import {
   Home,
   BookOpen,
@@ -1248,7 +1255,7 @@ export function SidebarNav({
           align-items: center;
           justify-content: center;
           transition: transform 0.3s ease;
-          margin-left: 8px;
+          margin-left: ${EXPAND_ICON_MARGIN_LEFT}px;
           margin-right: 8px;
           flex-shrink: 0;
         }
