@@ -817,11 +817,11 @@ export function SidebarNav({
           padding: 12px 0.75rem;
           gap: 12px;
           position: relative;
-          height: 100% !important;
+          height: auto !important;
           min-height: 56px !important;
           box-sizing: border-box !important;
           flex-wrap: nowrap !important;
-          overflow: hidden !important;
+          overflow: visible !important;
           width: 100%;
         }
 
@@ -896,7 +896,7 @@ export function SidebarNav({
           min-height: 36px !important;
           justify-content: center !important;
           min-width: 0 !important;
-          overflow: hidden !important;
+          overflow: visible !important;
         }
 
         .item-title {
@@ -906,11 +906,11 @@ export function SidebarNav({
           transition: color 0.3s ease;
           line-height: 1.4 !important;
           margin: 0 !important;
-          white-space: nowrap !important;
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
+          white-space: normal !important;
+          overflow: visible !important;
           display: block !important;
           width: 100% !important;
+          word-wrap: break-word !important;
         }
 
         .dark .item-title {
@@ -1226,12 +1226,13 @@ export function SidebarNav({
         .expand-icon {
           width: 20px;
           height: 20px;
+          min-width: 20px;
           display: flex;
           align-items: center;
           justify-content: center;
           transition: transform 0.3s ease;
-          margin-left: auto;
-          margin-right: 8px;
+          margin-left: 8px;
+          flex-shrink: 0;
         }
 
         .expand-icon i {
