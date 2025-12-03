@@ -1,0 +1,206 @@
+OBJECTIVE: Increase PageSpeed Insights Performance Score from 31 to 75+
+
+BASELINE METRICS TO BEAT:
+- Current LCP: 21.8s → Target: <3s
+- Current FCP: 10.5s → Target: <1.8s
+- Current Speed Index: 13.1s → Target: <4s
+- Current TBT: 610ms → Target: <100ms
+- Performance Score: 31 → Target: 75+
+
+TOP ISSUES TO FIX (by impact):
+1. Image Delivery (2.157 KiB savings): Missing width/height attributes, no lazy loading
+2. Unused JavaScript (12.760 KiB): Remove dead code & code-splitting
+3. Duplicate JavaScript (97 KiB): Deduplicate dependencies
+4. Unused CSS (124 KiB): Remove unused styles
+5. Long Main Thread Tasks (7 found): Optimize task execution
+
+IMPLEMENTATION PLAN:
+
+## FASE 1: CRITICAL IMAGE OPTIMIZATION (HIGH IMPACT)
+
+### Step 1.1 - Audit All Images
+- Find all HTML files in /public, /src, /views, /templates
+- Scan for <img>, <picture>, <Image>, <img /> tags
+- Create inventory of images missing width/height attributes
+- Identify images that could benefit from lazy loading (below the fold)
+
+### Step 1.2 - Add Missing Attributes
+Automatically add to ALL image tags:
+- width="[actual-width]" 
+- height="[actual-height]"
+- loading="lazy" (for images below fold)
+- alt="[meaningful-description]" (if missing)
+
+Example transformation:
+❌ <img src="logo.webp" alt="Logo">
+✅ <img src="logo.webp" alt="Logo" width="200" height="100" loading="lazy">
+
+### Step 1.3 - Implement Picture Element with WebP Fallback
+For ALL images, wrap with <picture> for browser optimization:
+<picture> <source srcset="image.webp" type="image/webp"> <img src="image.png" alt="description" width="400" height="300" loading="lazy"> </picture> ```
+Step 1.4 - Identify Above-the-Fold Images
+Remove loading="lazy" from:
+
+Hero images
+
+Logo
+
+Any image visible in initial viewport (first 1200px)
+
+FASE 2: JAVASCRIPT OPTIMIZATION (HIGHEST SAVINGS)
+Step 2.1 - Bundle Analysis
+Run: npm ls --depth=0
+
+Create list of all npm dependencies
+
+Identify packages used vs unused
+
+Check for duplicate versions of same package
+
+Step 2.2 - Remove Unused Dependencies
+Scan all .js/.jsx/.ts/.tsx files
+
+Cross-reference with package.json imports
+
+Flag dependencies not found in codebase
+
+Create removal list (don't delete yet, just list)
+
+Step 2.3 - Code Splitting Strategy
+Identify heavy components/pages (>50KB)
+
+Convert to dynamic imports:
+
+text
+// ❌ BEFORE
+import HeavyComponent from './HeavyComponent'
+
+// ✅ AFTER
+const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
+  loading: () => <p>Loading...</p>
+})
+Step 2.4 - Remove Duplicate Imports
+Search for same library imported in multiple ways
+
+Consolidate to single import point
+
+Use tree-shaking compatible syntax:
+
+text
+// ✅ GOOD - enables tree-shaking
+import { specificFunction } from 'library'
+
+// ❌ BAD - includes everything
+import * as Library from 'library'
+Step 2.5 - Minify & Compress JavaScript
+Ensure build process includes uglification
+
+Set up Gzip compression on server
+
+Add to package.json build: terser plugin configuration
+
+FASE 3: CSS OPTIMIZATION
+Step 3.1 - CSS Purging
+Install if not present: npm install -D purgecss
+
+Scan all .html, .jsx, .js, .tsx files for CSS classes
+
+Remove CSS rules not matching any selectors in codebase
+
+Target: Remove 124+ KiB unused CSS
+
+Step 3.2 - CSS Code Splitting
+Extract critical CSS (above-fold styles)
+
+Inline critical CSS in <head>
+
+Defer non-critical CSS with media queries
+
+Step 3.3 - CSS Minification
+Ensure build includes cssnano or similar
+
+Remove all whitespace/comments from production CSS
+
+FASE 4: NETWORK & CACHING
+Step 4.1 - Add Cache Headers
+For static assets (/public):
+
+text
+Cache-Control: public, max-age=31536000, immutable
+For HTML files:
+
+text
+Cache-Control: public, max-age=3600
+Step 4.2 - Enable Gzip/Brotli Compression
+Server configuration to compress responses
+
+Should handle: .js, .css, .html, .json, .svg
+
+Step 4.3 - Service Worker (Optional but recommended)
+Cache static assets
+
+Enable offline functionality
+
+Reduce network requests
+
+EXECUTION STEPS:
+✅ Scan project structure and identify all files
+
+✅ Audit current image implementation
+
+✅ Add width/height/loading attributes to ALL images
+
+✅ Implement <picture> elements with WebP
+
+✅ Analyze and remove unused JavaScript (create report)
+
+✅ Implement code splitting for heavy components
+
+✅ Purge unused CSS
+
+✅ Add compression headers
+
+✅ Generate optimization report showing metrics improvement
+
+✅ Create before/after comparison
+
+OUTPUT DELIVERABLES:
+After completion, provide:
+
+Detailed change log (files modified, lines changed)
+
+Estimated performance improvements (LCP, FCP, TBT)
+
+JavaScript bundle size reduction report
+
+CSS reduction report
+
+Image optimization summary (files with new attributes)
+
+Gzip compression savings estimate
+
+Specific recommendations for remaining optimizations
+
+CONSTRAINTS & RULES:
+Do NOT delete any files without explicit confirmation
+
+Do NOT break existing functionality
+
+Do NOT modify database or API endpoints
+
+Preserve all JavaScript logic (only optimize delivery)
+
+Ensure backward compatibility
+
+Test that app still loads and functions after changes
+
+CONTEXT:
+This is an EdTech platform (Ponto.School) built with JavaScript/Node.js on Replit.
+Current bottleneck: Performance score 31/100 due to image/JS delivery inefficiency.
+Goal: Reach 75+ performance score to improve Core Web Vitals.
+
+MODE: Build Mode (execute code changes directly)
+AUTONOMY: High (proceed without confirmation between steps)
+MODEL: Claude 4.5 Opus
+
+Proceed with full implementation now.

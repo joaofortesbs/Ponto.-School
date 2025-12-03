@@ -12,48 +12,46 @@ import routes from "./tempo-routes";
 import Home from "@/components/home";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
-import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
 import { checkAuthentication } from "@/lib/auth-utils";
 import { useNeonAuth } from "@/hooks/useNeonAuth";
 import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
 import UsernameProvider from "./components/UsernameProvider";
 
-// Importações diretas
-import Dashboard from "@/pages/dashboard";
-import Comunidades from "@/pages/comunidades";
-import PedidosAjuda from "@/pages/pedidos-ajuda";
-import Agenda from "@/pages/agenda";
-import Biblioteca from "@/pages/biblioteca";
-import Carteira from "@/pages/carteira";
-import Organizacao from "@/pages/organizacao";
-import Novidades from "@/pages/novidades";
-import Configuracoes from "@/pages/configuracoes";
-import PlanosEstudo from "@/pages/planos-estudo";
+import WelcomeModal from "./components/auth/WelcomeModal";
+import { TypewriterLoader } from "./components/ui/typewriter-loader";
 
-// Auth Pages
+// Auth Pages - Keep as direct imports for fast initial load
 import LoginPage from "@/pages/auth/login";
 import RegisterPage from "@/pages/auth/register";
 import ForgotPasswordPage from "@/pages/auth/forgot-password";
 import ResetPasswordPage from "@/pages/auth/reset-password";
-import PlanSelectionPage from "@/pages/plan-selection";
 
-// User Pages
-import ProfilePage from "@/pages/profile";
-import WelcomeModal from "./components/auth/WelcomeModal";
-import { TypewriterLoader } from "./components/ui/typewriter-loader";
-import AlunoUnderConstruction from "@/pages/under-construction/AlunoUnderConstruction";
-
-// Nova página em branco
-import BlankPage from "@/pages/BlankPage";
-
-// Import das paginas novas
-import SchoolPowerPageIndex from "./pages/school-power";
-import MentorIAPage from "./pages/mentor-ia";
-import QuizPage from '@/pages/quiz';
-import TrilhasSchoolProfessorInterface from '@/pages/trilhas-school/professores/interface';
+// Sales page - Keep as direct import for landing page performance
 import SalesPage from '@/pages/sales';
 
+// Lazy loaded pages for code splitting - Reduces initial bundle size
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Comunidades = lazy(() => import("@/pages/comunidades"));
+const PedidosAjuda = lazy(() => import("@/pages/pedidos-ajuda"));
+const Agenda = lazy(() => import("@/pages/agenda"));
+const Biblioteca = lazy(() => import("@/pages/biblioteca"));
+const Carteira = lazy(() => import("@/pages/carteira"));
+const Organizacao = lazy(() => import("@/pages/organizacao"));
+const Novidades = lazy(() => import("@/pages/novidades"));
+const Configuracoes = lazy(() => import("@/pages/configuracoes"));
+const PlanosEstudo = lazy(() => import("@/pages/planos-estudo"));
+const PlanSelectionPage = lazy(() => import("@/pages/plan-selection"));
+const ProfilePage = lazy(() => import("@/pages/profile"));
+const AlunoUnderConstruction = lazy(() => import("@/pages/under-construction/AlunoUnderConstruction"));
+const BlankPage = lazy(() => import("@/pages/BlankPage"));
+const SchoolPowerPageIndex = lazy(() => import("./pages/school-power"));
+const MentorIAPage = lazy(() => import("./pages/mentor-ia"));
+const QuizPage = lazy(() => import('@/pages/quiz'));
+const TrilhasSchoolProfessorInterface = lazy(() => import('@/pages/trilhas-school/professores/interface'));
 const TrilhasSchoolAlunoInterface = lazy(() => import('@/pages/trilhas-school/alunos/interface'));
+
+// Lazy load floating chat to reduce initial bundle
+const FloatingChatSupport = lazy(() => import("@/components/chat/FloatingChatSupport"));
 
 // Public activity page (no authentication required)
 // Aceita apenas o código único como parâmetro
@@ -370,7 +368,11 @@ function App() {
               </Routes>
 
               {/* Floating Chat Support - Excluído explicitamente das rotas de auth e quiz */}
-              {!isAuthRoute && !isQuizRoute && location.pathname !== '/quiz' && <FloatingChatSupport />}
+              {!isAuthRoute && !isQuizRoute && location.pathname !== '/quiz' && (
+                <Suspense fallback={null}>
+                  <FloatingChatSupport />
+                </Suspense>
+              )}
 
               {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
               {!isAuthRoute &&

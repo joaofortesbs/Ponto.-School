@@ -61,11 +61,45 @@ app.use((err, req, res, next) => {
   next();
 });
 
-// Em produção, servir arquivos estáticos do build
+// Middleware de cache para assets estáticos
+const cacheMiddleware = (req, res, next) => {
+  const ext = path.extname(req.path).toLowerCase();
+  const staticExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg', '.woff', '.woff2', '.ttf', '.eot'];
+  
+  if (staticExtensions.includes(ext)) {
+    // Assets com hash no nome: cache agressivo (1 ano)
+    if (req.path.includes('-') && /\.[a-f0-9]{8,}\./.test(req.path)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else {
+      // Assets sem hash: cache moderado (1 dia)
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  } else if (ext === '.html' || req.path === '/') {
+    // HTML: sem cache ou cache muito curto
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  }
+  next();
+};
+
+// Middleware de compressão headers
+const compressionHeaders = (req, res, next) => {
+  // Vary header para CDN e proxy caching
+  res.setHeader('Vary', 'Accept-Encoding');
+  next();
+};
+
+// Em produção, servir arquivos estáticos do build com cache otimizado
 if (isProduction) {
   const distPath = path.join(__dirname, '..', 'dist');
   console.log(`📁 Servindo arquivos estáticos de: ${distPath}`);
-  app.use(express.static(distPath));
+  
+  app.use(compressionHeaders);
+  app.use(cacheMiddleware);
+  app.use(express.static(distPath, {
+    maxAge: '1d',
+    etag: true,
+    lastModified: true
+  }));
 }
 
 // Rotas API

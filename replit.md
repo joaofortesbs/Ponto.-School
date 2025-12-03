@@ -64,6 +64,27 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### December 2024 - Performance Optimization (PageSpeed)
+- **Code Splitting & Lazy Loading**: Implemented React.lazy() for 15+ pages/components
+  - Dashboard, Agenda, Biblioteca, SchoolPower, etc. lazy-loaded on demand
+  - Reduces initial bundle size significantly
+- **Vendor Chunking**: Optimized Vite build configuration with manual chunks
+  - vendor-react, vendor-ui, vendor-motion, vendor-utils, vendor-dnd, vendor-charts, vendor-pdf
+  - Better caching for third-party libraries
+- **Image Optimization Attributes**: Added width, height, loading="lazy", decoding="async" to key images
+  - Sales page avatars, flags, stacked cards images
+  - Chat component logos
+  - Prevents Cumulative Layout Shift (CLS)
+  - Enables native lazy loading for below-fold images
+- **Critical CSS Inlining**: index.html includes inline critical CSS for faster FCP
+- **Resource Hints**: Added DNS prefetch, preconnect, and preload for critical resources
+- **Cache Headers**: Configured server with optimized cache-control headers
+  - Hashed assets: 1 year immutable cache
+  - Static assets: 1 day cache
+  - HTML: no-cache for fresh content
+- **Font Loading Optimization**: Non-blocking font loading with print media query trick
+- **Performance Report Script**: Added `scripts/performance-report.js` for metrics analysis
+
 ### December 2024 - Image Optimization (PNG to WebP Conversion)
 - **Automated PNG to WebP Conversion**: Added `scripts/convert-images-to-webp.js` script for bulk image conversion
   - Converts all PNG images in `/public/images/` and `/public/lovable-uploads/` to WebP format

@@ -27,6 +27,10 @@ export default function StackedCardsRight() {
               src="/planejamento-semestral.webp" 
               alt="Planejamento Semestral" 
               className="w-full h-full object-cover"
+              width={240}
+              height={180}
+              loading="lazy"
+              decoding="async"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end justify-center p-4 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
               <h3 className="text-lg font-bold text-white text-center leading-tight drop-shadow-lg">
@@ -56,6 +60,10 @@ export default function StackedCardsRight() {
               src="/card-atividades-online.webp" 
               alt="Atividades Online" 
               className="w-full h-full object-cover"
+              width={240}
+              height={180}
+              loading="lazy"
+              decoding="async"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end justify-center p-4 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
               <h3 className="text-lg font-bold text-white text-center leading-tight drop-shadow-lg">

@@ -525,7 +525,7 @@ const ModernSupportChat: React.FC = () => {
       <div className="p-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
-            <img src="/vite.svg" alt="Logo" className="w-4 h-4" />
+            <img src="/vite.svg" alt="Logo" className="w-4 h-4" width={16} height={16} loading="lazy" decoding="async" />
           </div>
           <span className="text-white font-semibold text-sm">Ponto.School</span>
         </div>

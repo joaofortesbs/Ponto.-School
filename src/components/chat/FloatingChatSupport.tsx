@@ -1742,7 +1742,7 @@ Exemplo de formato da resposta:
       <div className="p-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
-            <img src="/vite.svg" alt="Logo" className="w-4 h-4" />
+            <img src="/vite.svg" alt="Logo" className="w-4 h-4" width={16} height={16} loading="lazy" decoding="async" />
           </div>
           <span className="text-white font-semibold text-sm">Ponto.School</span>
           <div className="flex items-center bg-purple-600 text-white text-xs py-0.5 px-2 rounded-full ml-1">

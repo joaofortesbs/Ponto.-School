@@ -232,19 +232,19 @@ export default function SalesPage() {
                 <div className="flex items-center justify-center gap-0">
                   <div className="dollItem bg-mike" style={{ zIndex: 4 }}>
                     <span className="dollName">Jota é o <span style={{ color: '#FF6B00' }}>líder de equipe</span></span>
-                    <img src="/images/avatar11-sobreposto-pv.webp" alt="Jota" />
+                    <img src="/images/avatar11-sobreposto-pv.webp" alt="Jota" width={60} height={60} loading="eager" decoding="async" />
                   </div>
                   <div className="dollItem bg-alex" style={{ zIndex: 3 }}>
                     <span className="dollName">Felix é o <span style={{ color: '#4387c8' }}>gerador de atividades</span></span>
-                    <img src="/images/avatar2-sobreposto-pv.webp" alt="Felix" />
+                    <img src="/images/avatar2-sobreposto-pv.webp" alt="Felix" width={60} height={60} loading="eager" decoding="async" />
                   </div>
                   <div className="dollItem bg-emma" style={{ zIndex: 2 }}>
                     <span className="dollName">Adrian é o <span style={{ color: '#a659b7' }}>gerente pedagógico</span></span>
-                    <img src="/images/avatar3-sobreposto-pv.webp" alt="Adrian" />
+                    <img src="/images/avatar3-sobreposto-pv.webp" alt="Adrian" width={60} height={60} loading="eager" decoding="async" />
                   </div>
                   <div className="dollItem bg-david" style={{ zIndex: 1 }}>
                     <span className="dollName">Sam é o <span style={{ color: '#61b35e' }}>analista de dados</span></span>
-                    <img src="/images/avatar4-sobreposto-pv.webp" alt="Sam" />
+                    <img src="/images/avatar4-sobreposto-pv.webp" alt="Sam" width={60} height={60} loading="eager" decoding="async" />
                   </div>
                   <div className="plus-button">
                     <span className="dollName">Mais agentes em breve</span>
