@@ -10,7 +10,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-export default function PortalNav() {
+export default function AgenteSchoolNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
@@ -27,12 +27,12 @@ export default function PortalNav() {
         variant="ghost"
         className={cn(
           "flex items-center gap-3 rounded-lg px-3 py-2 text-start w-full justify-between",
-          pathname === "/portal" && !view
+          pathname === "/agente-school" && !view
             ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-white"
             : "text-[#001427] hover:bg-[#001427]/10 dark:text-white dark:hover:bg-[#001427]/20",
           "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
         )}
-        onClick={() => navigate("/portal")}
+        onClick={() => navigate("/agente-school")}
       >
         <div className="flex items-center gap-3">
           <Home className="h-4 w-4 text-[#29335C]" />
@@ -50,7 +50,7 @@ export default function PortalNav() {
             : "text-[#001427] hover:bg-[#001427]/10 dark:text-white dark:hover:bg-[#001427]/20",
           "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
         )}
-        onClick={() => navigate("/portal?view=minhas-turmas")}
+        onClick={() => navigate("/agente-school?view=minhas-turmas")}
       >
         <div className="flex items-center gap-3">
           <BookOpen className="h-4 w-4 text-[#29335C]" />
@@ -68,7 +68,7 @@ export default function PortalNav() {
             : "text-[#001427] hover:bg-[#001427]/10 dark:text-white dark:hover:bg-[#001427]/20",
           "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
         )}
-        onClick={() => navigate("/portal?view=disciplinas")}
+        onClick={() => navigate("/agente-school?view=disciplinas")}
       >
         <div className="flex items-center gap-3">
           <FolderKanban className="h-4 w-4 text-[#29335C]" />
@@ -86,7 +86,7 @@ export default function PortalNav() {
             : "text-[#001427] hover:bg-[#001427]/10 dark:text-white dark:hover:bg-[#001427]/20",
           "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
         )}
-        onClick={() => navigate("/portal?view=favoritos")}
+        onClick={() => navigate("/agente-school?view=favoritos")}
       >
         <div className="flex items-center gap-3">
           <Heart className="h-4 w-4 text-[#29335C]" />
@@ -104,7 +104,7 @@ export default function PortalNav() {
             : "text-[#001427] hover:bg-[#001427]/10 dark:text-white dark:hover:bg-[#001427]/20",
           "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
         )}
-        onClick={() => navigate("/portal?view=trilhas")}
+        onClick={() => navigate("/agente-school?view=trilhas")}
       >
         <div className="flex items-center gap-3">
           <Rocket className="h-4 w-4 text-[#29335C]" />

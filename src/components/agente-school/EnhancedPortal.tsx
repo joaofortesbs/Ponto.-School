@@ -1186,9 +1186,9 @@ export const EnhancedPortal = () => {
   // Update the URL when tab changes
   useEffect(() => {
     if (activeTab === "visao-geral") {
-      navigate("/portal", { replace: true });
+      navigate("/agente-school", { replace: true });
     } else {
-      navigate(`/portal?view=${activeTab}`, { replace: true });
+      navigate(`/agente-school?view=${activeTab}`, { replace: true });
     }
   }, [activeTab, navigate]);
 

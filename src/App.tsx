@@ -24,13 +24,12 @@ import Comunidades from "@/pages/comunidades";
 import PedidosAjuda from "@/pages/pedidos-ajuda";
 import Agenda from "@/pages/agenda";
 import Biblioteca from "@/pages/biblioteca";
-import Conquistas from "@/pages/conquistas";
 import Carteira from "@/pages/carteira";
 import Organizacao from "@/pages/organizacao";
 import Novidades from "@/pages/novidades";
 import Configuracoes from "@/pages/configuracoes";
 import PlanosEstudo from "@/pages/planos-estudo";
-import Portal from "@/pages/portal";
+import AgenteSchool from "@/pages/agente-school";
 
 // Auth Pages
 import LoginPage from "@/pages/auth/login";
@@ -329,7 +328,6 @@ function App() {
                   <Route path="trilhas-school/alunos" element={<AlunoUnderConstruction />} />
                   <Route path="school-planner" element={<AlunoUnderConstruction />} />
                   <Route path="agenda" element={<AlunoUnderConstruction />} />
-                  <Route path="conquistas" element={<AlunoUnderConstruction />} />
                   <Route path="explorar" element={<AlunoUnderConstruction />} />
                   <Route path="epictus-ia" element={<AlunoUnderConstruction />} />
                   <Route path="school-power" element={<SchoolPowerPageIndex />} />
@@ -337,13 +335,12 @@ function App() {
                   <Route path="trilhas-school/professores" element={<TrilhasSchoolProfessorInterface />} />
                   <Route path="agenda" element={<Agenda />} />
                   <Route path="biblioteca" element={<Biblioteca />} />
-                  <Route path="conquistas" element={<Conquistas />} />
                   <Route path="carteira" element={<Carteira />} />
                   <Route path="organizacao" element={<Organizacao />} />
                   <Route path="novidades" element={<Novidades />} />
                   <Route path="configuracoes" element={<Configuracoes />} />
                   <Route path="planos-estudo" element={<PlanosEstudo />} />
-                  <Route path="portal" element={<Portal />} />
+                  <Route path="agente-school" element={<AgenteSchool />} />
                 </Route>
 
                 {/* User Profile - Protegida */}

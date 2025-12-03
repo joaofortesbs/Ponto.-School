@@ -1,10 +1,9 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BellPlus, BellRing, Clock, Construction, BookMarked } from "lucide-react";
+import { BellPlus, BellRing, Clock, Construction, Bot } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function PortalPage() {
+export default function AgenteSchoolPage() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   const toggleNotifications = () => {
@@ -26,18 +25,18 @@ export default function PortalPage() {
           <div className="absolute -bottom-16 -right-16 w-64 h-64 bg-white/10 rounded-full"></div>
           <div className="absolute -top-8 -left-8 w-32 h-32 bg-white/10 rounded-full"></div>
           <div className="absolute top-1/2 right-6 transform -translate-y-1/2 bg-white/20 p-3 rounded-full">
-            <BookMarked className="h-8 w-8 text-white" />
+            <Bot className="h-8 w-8 text-white" />
           </div>
         </div>
 
         <div className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Construction className="h-5 w-5 text-[#FF6B00]" />
-            <h2 className="text-xl font-bold text-[#29335C] dark:text-white">Portal em Desenvolvimento</h2>
+            <h2 className="text-xl font-bold text-[#29335C] dark:text-white">Agente School em Desenvolvimento</h2>
           </div>
 
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Estamos trabalhando para criar um espaço onde você poderá organizar todo o seu conhecimento, materiais educacionais e recursos exclusivos para impulsionar seus estudos.
+            Estamos trabalhando para criar o Agente School, um assistente inteligente que irá revolucionar sua experiência de aprendizado com recursos avançados de IA.
           </p>
 
           <div className="bg-[#F8F9FA] dark:bg-[#051a33] rounded-lg p-4 mb-6 border border-gray-100 dark:border-gray-800">
@@ -79,7 +78,7 @@ export default function PortalPage() {
               animate={{ opacity: 1, height: "auto" }}
               className="text-xs text-center text-green-600 dark:text-green-400 mt-2"
             >
-              Você receberá um aviso quando o Portal estiver disponível!
+              Você receberá um aviso quando o Agente School estiver disponível!
             </motion.p>
           )}
         </div>

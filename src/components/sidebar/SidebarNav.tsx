@@ -449,11 +449,6 @@ export function SidebarNav({
       path: "/dashboard/comunidades",
     },
     {
-      icon: "fas fa-trophy",
-      label: "Conquistas",
-      path: "/dashboard/conquistas",
-    },
-    {
       icon: "fas fa-compass",
       label: "Explorar",
       path: "/dashboard/explorar",
@@ -472,33 +467,47 @@ export function SidebarNav({
       path: "/dashboard/school-power",
     },
     {
+      icon: "fas fa-palette",
+      label: "Minhas Criações",
+      path: "",
+      isExpandable: true,
+      subItems: [
+        {
+          icon: "fas fa-tasks",
+          label: "Atividades",
+          path: "/dashboard/minhas-criacoes/atividades",
+          disabled: true,
+        },
+        {
+          icon: "fas fa-route",
+          label: "Trilhas School",
+          path: "/dashboard/trilhas-school/professores",
+          disabled: true,
+        },
+        {
+          icon: "fas fa-chalkboard",
+          label: "Teacher App",
+          path: "/dashboard/minhas-criacoes/teacher-app",
+          disabled: true,
+        },
+      ],
+    },
+    {
       icon: "fas fa-chalkboard-teacher",
       label: "Minhas Turmas",
       path: "/dashboard/turmas",
       disabled: true,
     },
     {
-      icon: "fas fa-route",
-      label: "Trilhas School",
-      path: "/dashboard/trilhas-school/professores",
-      disabled: true,
-    },
-    {
-      icon: "fas fa-globe",
-      label: "Portal",
-      path: "/dashboard/portal",
+      icon: "fas fa-robot",
+      label: "Agente School",
+      path: "/dashboard/agente-school",
       disabled: true,
     },
     {
       icon: "fas fa-users",
       label: "Comunidades",
       path: "/dashboard/comunidades",
-      disabled: true,
-    },
-    {
-      icon: "fas fa-trophy",
-      label: "Conquistas",
-      path: "/dashboard/conquistas",
       disabled: true,
     },
   ];
@@ -544,6 +553,12 @@ export function SidebarNav({
       icon: "fas fa-book-open",
       label: "Biblioteca",
       path: "/dashboard/biblioteca",
+      disabled: true,
+    },
+    {
+      icon: "fas fa-robot",
+      label: "Agente School",
+      path: "/dashboard/agente-school",
       disabled: true,
     },
   ];
@@ -622,7 +637,7 @@ export function SidebarNav({
           )}>
             {navItems.map((item, index) => (
               <div
-                key={`${isCardFlipped ? 'professor' : 'aluno'}-${item.path}-${index}`}
+                key={`${isCardFlipped ? 'professor' : 'aluno'}-${item.path || item.label}-${index}`}
                 className={cn(
                   "relative menu-item-wrapper",
                   isMenuFlipping && "animate-menu-transition"
@@ -633,6 +648,69 @@ export function SidebarNav({
               >
                 {item.label === "Agenda" && !isCollapsed ? (
                   <div className="text-sm text-gray-400 px-4 py-2">Agenda em desenvolvimento</div>
+                ) : item.isExpandable ? (
+                  <>
+                    <div
+                      className={cn(
+                        "menu-item expandable-item",
+                        expandedSection === item.label ? "expanded" : ""
+                      )}
+                      onClick={() => toggleSection(item.label)}
+                    >
+                      <div className="item-content">
+                        <div className="icon-container">
+                          <i className={item.icon}></i>
+                          <div className="icon-glow"></div>
+                        </div>
+                        {!isCollapsed && (
+                          <>
+                            <div className="item-text">
+                              <span className="item-title">{item.label}</span>
+                            </div>
+                            <div className="expand-icon">
+                              <i className={cn(
+                                "fas fa-chevron-down",
+                                expandedSection === item.label && "rotated"
+                              )}></i>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {!isCollapsed && expandedSection === item.label && item.subItems && (
+                      <div className="sub-menu">
+                        {item.subItems.map((subItem, subIndex) => (
+                          <div
+                            key={`sub-${subItem.path}-${subIndex}`}
+                            className={cn(
+                              "menu-item sub-item",
+                              isActive(subItem.path) ? "active" : "",
+                              subItem.disabled ? "disabled" : ""
+                            )}
+                            onClick={() => handleNavigation(subItem.path, false, subItem.disabled)}
+                          >
+                            <div className="item-content">
+                              <div className={cn(
+                                "icon-container sub-icon",
+                                isActive(subItem.path) ? "active" : "",
+                                subItem.disabled ? "disabled" : ""
+                              )}>
+                                <i className={subItem.icon}></i>
+                              </div>
+                              <div className="item-text">
+                                <span className="item-title">{subItem.label}</span>
+                              </div>
+                              {subItem.disabled && (
+                                <div className="lock-icon">
+                                  <i className="fas fa-lock"></i>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div
                     className={cn(
@@ -1146,6 +1224,119 @@ export function SidebarNav({
 
         .dark .lock-icon i {
           color: #6b7280 !important;
+        }
+
+        /* Estilos para menu expansível */
+        .expandable-item {
+          cursor: pointer;
+        }
+
+        .expand-icon {
+          width: 20px;
+          height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.3s ease;
+          margin-left: auto;
+          margin-right: 8px;
+        }
+
+        .expand-icon i {
+          font-size: 12px;
+          color: #6b7280 !important;
+          transition: transform 0.3s ease;
+        }
+
+        .expand-icon i.rotated {
+          transform: rotate(180deg);
+        }
+
+        .professor-mode .expand-icon i {
+          color: #FF6B00 !important;
+        }
+
+        .aluno-mode .expand-icon i {
+          color: #2563eb !important;
+        }
+
+        .expandable-item.expanded {
+          background: linear-gradient(135deg, rgba(255, 107, 0, 0.1), rgba(255, 107, 0, 0.05)) !important;
+          border-bottom-left-radius: 0 !important;
+          border-bottom-right-radius: 0 !important;
+        }
+
+        .aluno-mode .expandable-item.expanded {
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(37, 99, 235, 0.05)) !important;
+        }
+
+        /* Sub-menu estilos */
+        .sub-menu {
+          background: rgba(0, 0, 0, 0.02);
+          border-radius: 0 0 16px 16px;
+          margin-top: -4px;
+          margin-bottom: 4px;
+          padding: 8px 0 8px 16px;
+          border-left: 2px solid rgba(255, 107, 0, 0.3);
+          margin-left: 18px;
+          animation: slideDown 0.3s ease;
+        }
+
+        .aluno-mode .sub-menu {
+          border-left-color: rgba(37, 99, 235, 0.3);
+        }
+
+        .dark .sub-menu {
+          background: rgba(255, 255, 255, 0.02);
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            max-height: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            max-height: 300px;
+            transform: translateY(0);
+          }
+        }
+
+        .sub-item {
+          min-height: 44px !important;
+          height: 44px !important;
+          margin: 0 0 2px !important;
+          border-radius: 12px !important;
+        }
+
+        .sub-item .item-content {
+          padding: 8px 12px !important;
+          min-height: 44px !important;
+        }
+
+        .sub-item .icon-container {
+          width: 28px !important;
+          height: 28px !important;
+          min-width: 28px !important;
+          min-height: 28px !important;
+          border-radius: 8px !important;
+        }
+
+        .sub-item .icon-container i {
+          font-size: 12px !important;
+        }
+
+        .sub-item .item-title {
+          font-size: 13px !important;
+        }
+
+        .sub-item .lock-icon {
+          margin-right: 4px;
+        }
+
+        .sub-item .lock-icon i {
+          font-size: 10px;
         }
 
         @keyframes cascadeWaveOrange {

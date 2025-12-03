@@ -631,7 +631,7 @@ const PortalContent = () => {
                       variant="ghost"
                       size="sm"
                       className="w-full text-[#FF6B00] hover:text-[#FF6B00] hover:bg-[#FF6B00]/10"
-                      onClick={() => navigate("/portal?view=minhas-turmas")}
+                      onClick={() => navigate("/agente-school?view=minhas-turmas")}
                     >
                       Ver todas as turmas
                       <ChevronRight className="h-4 w-4 ml-1" />
@@ -683,7 +683,7 @@ const PortalContent = () => {
                       variant="ghost"
                       size="sm"
                       className="w-full text-[#FF6B00] hover:text-[#FF6B00] hover:bg-[#FF6B00]/10"
-                      onClick={() => navigate("/portal?view=minhas-turmas")}
+                      onClick={() => navigate("/agente-school?view=minhas-turmas")}
                     >
                       Ver todas as turmas
                       <ChevronRight className="h-4 w-4 ml-1" />
