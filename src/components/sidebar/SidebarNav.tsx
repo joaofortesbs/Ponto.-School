@@ -645,22 +645,7 @@ export function SidebarNav({
                 style={{
                   animationDelay: `${index * 80}ms`
                 }}
-                onMouseEnter={() => {
-                  if (item.isExpandable && expandedSection === item.label) {
-                    const submenu = document.querySelector(`[data-submenu="${item.label}"]`) as HTMLElement;
-                    if (submenu) {
-                      submenu.style.transform = 'translateX(6px)';
-                    }
-                  }
-                }}
-                onMouseLeave={() => {
-                  if (item.isExpandable && expandedSection === item.label) {
-                    const submenu = document.querySelector(`[data-submenu="${item.label}"]`) as HTMLElement;
-                    if (submenu) {
-                      submenu.style.transform = 'translateX(0)';
-                    }
-                  }
-                }}
+                data-expandable-section={item.isExpandable ? item.label : undefined}
               >
                 {item.label === "Agenda" && !isCollapsed ? (
                   <div className="text-sm text-gray-400 px-4 py-2">Agenda em desenvolvimento</div>
@@ -1296,6 +1281,12 @@ export function SidebarNav({
           border-left: 2px solid rgba(255, 107, 0, 0.3);
           margin-left: 0;
           animation: slideDown 0.3s ease;
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Movimento sincronizado: quando o item expansível recebe hover, o submenu se move junto */
+        .menu-item-wrapper[data-expandable-section]:hover .sub-menu {
+          transform: translateX(6px);
         }
 
         .aluno-mode .sub-menu {
@@ -1310,13 +1301,18 @@ export function SidebarNav({
           from {
             opacity: 0;
             max-height: 0;
-            transform: translateY(-10px);
+            transform: translateY(-10px) translateX(0);
           }
           to {
             opacity: 1;
             max-height: 300px;
-            transform: translateY(0);
+            transform: translateY(0) translateX(0);
           }
+        }
+        
+        /* Quando expandido e com hover, ambos se movem como uma unidade */
+        .menu-item-wrapper[data-expandable-section]:hover .expandable-item {
+          transform: translateX(6px);
         }
 
         .sub-item {
