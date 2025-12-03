@@ -499,12 +499,6 @@ export function SidebarNav({
       disabled: true,
     },
     {
-      icon: "fas fa-robot",
-      label: "Agente School",
-      path: "/dashboard/agente-school",
-      disabled: true,
-    },
-    {
       icon: "fas fa-users",
       label: "Comunidades",
       path: "/dashboard/comunidades",
@@ -553,12 +547,6 @@ export function SidebarNav({
       icon: "fas fa-book-open",
       label: "Biblioteca",
       path: "/dashboard/biblioteca",
-      disabled: true,
-    },
-    {
-      icon: "fas fa-robot",
-      label: "Agente School",
-      path: "/dashboard/agente-school",
       disabled: true,
     },
   ];

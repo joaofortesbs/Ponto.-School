@@ -29,7 +29,6 @@ import Organizacao from "@/pages/organizacao";
 import Novidades from "@/pages/novidades";
 import Configuracoes from "@/pages/configuracoes";
 import PlanosEstudo from "@/pages/planos-estudo";
-import AgenteSchool from "@/pages/agente-school";
 
 // Auth Pages
 import LoginPage from "@/pages/auth/login";
@@ -340,7 +339,6 @@ function App() {
                   <Route path="novidades" element={<Novidades />} />
                   <Route path="configuracoes" element={<Configuracoes />} />
                   <Route path="planos-estudo" element={<PlanosEstudo />} />
-                  <Route path="agente-school" element={<AgenteSchool />} />
                 </Route>
 
                 {/* User Profile - Protegida */}

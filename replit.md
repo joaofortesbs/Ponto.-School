@@ -64,10 +64,10 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### December 2024 - Sidebar Menu Reorganization
+### December 2024 - Sidebar Menu Reorganization (FINAL)
 - **Minhas Criações**: Added new expandable section for Professor users below "School Power" containing:
   - Atividades (disabled/locked)
   - Trilhas School (disabled/locked)
   - Teacher App (disabled/locked)
-- **Portal → Agente School**: Renamed "Portal" to "Agente School" throughout the codebase, including routes, navigation, and components
+- **Agente School Removed**: Completely removed "Agente School" from sidebar navigation and deleted all related files (pages, components, routes)
 - **Conquistas Removed**: Removed the Conquistas (achievements) section from the sidebar menu and deleted associated files
