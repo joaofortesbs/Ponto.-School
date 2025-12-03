@@ -817,11 +817,11 @@ export function SidebarNav({
           padding: 12px 0.75rem;
           gap: 12px;
           position: relative;
-          height: auto !important;
+          height: 56px !important;
           min-height: 56px !important;
           box-sizing: border-box !important;
           flex-wrap: nowrap !important;
-          overflow: visible !important;
+          overflow: hidden !important;
           width: 100%;
         }
 
@@ -896,7 +896,8 @@ export function SidebarNav({
           min-height: 36px !important;
           justify-content: center !important;
           min-width: 0 !important;
-          overflow: visible !important;
+          overflow: hidden !important;
+          max-width: calc(100% - 80px) !important;
         }
 
         .item-title {
@@ -906,11 +907,11 @@ export function SidebarNav({
           transition: color 0.3s ease;
           line-height: 1.4 !important;
           margin: 0 !important;
-          white-space: normal !important;
-          overflow: visible !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
           display: block !important;
           width: 100% !important;
-          word-wrap: break-word !important;
         }
 
         .dark .item-title {
