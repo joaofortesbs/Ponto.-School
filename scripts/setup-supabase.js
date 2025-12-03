@@ -154,7 +154,7 @@ async function main() {
         
         -- Inserir valores padrão se tabela estiver vazia
         INSERT INTO platform_settings (id, logo_url, brand_name)
-        SELECT 1, '/images/ponto-school-logo.png', 'Ponto School'
+        SELECT 1, '/images/ponto-school-logo.webp', 'Ponto School'
         WHERE NOT EXISTS (SELECT 1 FROM platform_settings WHERE id = 1);
       `
     });

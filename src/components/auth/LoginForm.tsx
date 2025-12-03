@@ -199,7 +199,7 @@ export function LoginForm() {
       <div className="text-center space-y-2">
         <div className="flex justify-center mb-4">
           <img
-            src="/lovable-uploads/Logo-Ponto. School.png"
+            src="/lovable-uploads/Logo-Ponto. School.webp"
             alt="Ponto School Logo"
             className="w-73 h-73 object-contain"
           />

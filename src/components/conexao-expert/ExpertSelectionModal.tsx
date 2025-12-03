@@ -314,7 +314,7 @@ const ExpertSelectionModal: React.FC<ExpertSelectionModalProps> = ({
                       <p>Obrigado pela resposta! Ficou muito claro.</p>
                     </div>
                     <Avatar className="h-8 w-8 mt-1">
-                      <AvatarImage src="/images/tempo-image-20250305T080643776Z.png" />
+                      <AvatarImage src="/images/tempo-image-20250305T080643776Z.webp" />
                       <AvatarFallback>U</AvatarFallback>
                     </Avatar>
                   </div>

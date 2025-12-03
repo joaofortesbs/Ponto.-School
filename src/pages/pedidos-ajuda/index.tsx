@@ -506,7 +506,7 @@ export default function ConexaoExpertPage() {
       description: formData.description,
       user: {
         name: "João Silva", // Current user
-        avatar: "/images/tempo-image-20250305T080643776Z.png",
+        avatar: "/images/tempo-image-20250305T080643776Z.webp",
       },
       time: "Agora mesmo",
       responses: 0,

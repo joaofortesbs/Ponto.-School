@@ -64,6 +64,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### December 2024 - Image Optimization (PNG to WebP Conversion)
+- **Automated PNG to WebP Conversion**: Added `scripts/convert-images-to-webp.js` script for bulk image conversion
+  - Converts all PNG images in `/public/images/` and `/public/lovable-uploads/` to WebP format
+  - Achieves ~77% size reduction (15MB → 3.4MB total)
+  - Quality setting: 82% for optimal balance between size and quality
+- **API Endpoints** (development only, blocked in production):
+  - `GET /api/image-conversion-status` - Check conversion status
+  - `POST /api/convert-images` - Trigger image conversion
+  - `DELETE /api/delete-png-originals` - Remove original PNG files after verification
+- **Sharp Library**: Added for high-performance image processing
+- **Updated References**: All source files (.tsx, .jsx, .js, .css, .html) updated to use .webp extensions
+
 ### December 2024 - Sidebar Menu Reorganization (FINAL)
 - **Minhas Criações**: Added new expandable section for Professor users below "School Power" containing:
   - Atividades (disabled/locked)

@@ -10,6 +10,7 @@ import atividadesRoutes from './atividades.js';
 import uploadAvatarRoutes from './upload-avatar.js';
 import visitantesRoutes from './visitantes.js';
 import translateRoutes from './translate.js';
+import { runConversion, getConversionStats, deletePngFiles } from '../scripts/convert-images-to-webp.js';
 
 dotenv.config();
 
@@ -476,6 +477,76 @@ app.get('/', (req, res) => {
 // Rota de teste
 app.get('/api/status', (req, res) => {
   res.json({ status: 'Servidor de API funcionando corretamente!' });
+});
+
+// ========================================
+// ROTAS DE CONVERSÃO DE IMAGENS PNG → WebP
+// ========================================
+
+app.get('/api/image-conversion-status', (req, res) => {
+  try {
+    const stats = getConversionStats();
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('❌ Erro ao obter status de conversão:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.post('/api/convert-images', async (req, res) => {
+  if (isProduction) {
+    return res.status(403).json({
+      success: false,
+      error: 'Esta operação não é permitida em produção'
+    });
+  }
+  
+  try {
+    console.log('🖼️ Iniciando conversão de imagens PNG → WebP...');
+    const stats = await runConversion();
+    res.json({
+      success: true,
+      message: 'Conversão concluída com sucesso!',
+      data: stats
+    });
+  } catch (error) {
+    console.error('❌ Erro durante conversão de imagens:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.delete('/api/delete-png-originals', async (req, res) => {
+  if (isProduction) {
+    return res.status(403).json({
+      success: false,
+      error: 'Esta operação não é permitida em produção'
+    });
+  }
+  
+  try {
+    console.log('🗑️ Deletando arquivos PNG originais...');
+    const deletedCount = await deletePngFiles();
+    res.json({
+      success: true,
+      message: `${deletedCount} arquivos PNG deletados com sucesso!`,
+      deletedCount
+    });
+  } catch (error) {
+    console.error('❌ Erro ao deletar arquivos PNG:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 });
 
 // Rotas de atividades foram registradas com sucesso na função registerActivityRoutes()

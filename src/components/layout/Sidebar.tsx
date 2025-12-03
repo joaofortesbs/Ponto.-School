@@ -31,7 +31,7 @@ export default function Sidebar({
     // Obter a imagem padrão da configuração global ou usar o valor padrão
     const defaultLogo =
       window.PONTO_SCHOOL_CONFIG?.defaultLogo ||
-      "/images/ponto-school-logo.png";
+      "/images/ponto-school-logo.webp";
 
     setCustomLogo(defaultLogo);
 
@@ -203,7 +203,7 @@ export default function Sidebar({
           >
             <div className="h-16 flex items-center justify-center w-full">
               <img
-                src={sidebarCollapsed ? "/lovable-uploads/Logo-Ponto.School-Icone.png" : "/lovable-uploads/Logo-Ponto. School.png"}
+                src={sidebarCollapsed ? "/lovable-uploads/Logo-Ponto.School-Icone.webp" : "/lovable-uploads/Logo-Ponto. School.webp"}
                 alt="Ponto School Logo"
                 className={cn(
                   "object-contain mx-auto transition-all duration-300",

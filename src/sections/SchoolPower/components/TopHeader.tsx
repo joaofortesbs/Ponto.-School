@@ -122,7 +122,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
           <div className={`w-full h-full flex items-center justify-center p-3 ${isMobile ? 'p-2' : ''}`}>
             <div className={`${isMobile ? 'w-10 h-10' : 'w-14 h-14'} overflow-hidden pointer-events-none select-none`}>
               <img
-                src="/lovable-uploads/Logo-Ponto.School-Icone.png"
+                src="/lovable-uploads/Logo-Ponto.School-Icone.webp"
                 alt="Logo Ponto School"
                 className="w-full h-full object-contain"
                 style={{

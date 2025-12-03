@@ -121,7 +121,7 @@ export function SalesHeader() {
 
               {/* Logo */}
               <img
-                src="/lovable-uploads/Logo-Ponto. School.png"
+                src="/lovable-uploads/Logo-Ponto. School.webp"
                 alt="Ponto School"
                 className="h-12 md:h-14 w-auto object-contain relative z-10 drop-shadow-2xl"
               />
@@ -387,7 +387,7 @@ export function SalesHeader() {
                   onClick={() => setSelectedLanguage("pt-BR")}
                   className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
                 >
-                  <img src="/images/bandeira-brasil.png" alt="Brasil" className="w-6 h-6 object-cover rounded" />
+                  <img src="/images/bandeira-brasil.webp" alt="Brasil" className="w-6 h-6 object-cover rounded" />
                   <span className="font-medium">Português Brasil</span>
                 </DropdownMenuItem>
 
@@ -395,7 +395,7 @@ export function SalesHeader() {
                   onClick={() => setSelectedLanguage("en-US")}
                   className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
                 >
-                  <img src="/images/bandeira-estados-unidos.png" alt="USA" className="w-6 h-6 object-cover rounded" />
+                  <img src="/images/bandeira-estados-unidos.webp" alt="USA" className="w-6 h-6 object-cover rounded" />
                   <span className="font-medium">English</span>
                 </DropdownMenuItem>
 
@@ -403,7 +403,7 @@ export function SalesHeader() {
                   onClick={() => setSelectedLanguage("es-ES")}
                   className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
                 >
-                  <img src="/images/bandeira-espanha.png" alt="España" className="w-6 h-6 object-cover rounded" />
+                  <img src="/images/bandeira-espanha.webp" alt="España" className="w-6 h-6 object-cover rounded" />
                   <span className="font-medium">Español</span>
                 </DropdownMenuItem>
 
@@ -411,7 +411,7 @@ export function SalesHeader() {
                   onClick={() => setSelectedLanguage("fr-FR")}
                   className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
                 >
-                  <img src="/images/bandeira-franca.png" alt="France" className="w-6 h-6 object-cover rounded" />
+                  <img src="/images/bandeira-franca.webp" alt="France" className="w-6 h-6 object-cover rounded" />
                   <span className="font-medium">Français</span>
                 </DropdownMenuItem>
 
@@ -419,7 +419,7 @@ export function SalesHeader() {
                   onClick={() => setSelectedLanguage("ja-JP")}
                   className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
                 >
-                  <img src="/images/bandeira-japao.png" alt="日本" className="w-6 h-6 object-cover rounded" />
+                  <img src="/images/bandeira-japao.webp" alt="日本" className="w-6 h-6 object-cover rounded" />
                   <span className="font-medium">日本語</span>
                 </DropdownMenuItem>
 
@@ -427,7 +427,7 @@ export function SalesHeader() {
                   onClick={() => setSelectedLanguage("de-DE")}
                   className="flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors text-white focus:bg-white/10 focus:text-white outline-none"
                 >
-                  <img src="/images/bandeira-alemanha.png" alt="Deutschland" className="w-6 h-6 object-cover rounded" />
+                  <img src="/images/bandeira-alemanha.webp" alt="Deutschland" className="w-6 h-6 object-cover rounded" />
                   <span className="font-medium">Deutsch</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

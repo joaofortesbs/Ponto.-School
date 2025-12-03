@@ -476,7 +476,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                     // Stars - Com ícone
                     <div className="flex items-center gap-1">
                       <img 
-                        src="/lovable-uploads/icone-sparks.png"
+                        src="/lovable-uploads/icone-sparks.webp"
                         alt="Stars" 
                         className="w-4 h-4 object-contain flex-shrink-0"
                         style={{ display: 'block' }}

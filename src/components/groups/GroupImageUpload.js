@@ -279,13 +279,13 @@ export const loadGroupImages = async (groupId, retries = 3, delay = 1000) => {
     // Atualizar imagens na interface
     const bannerImg = document.getElementById('group-banner');
     if (bannerImg) {
-      bannerImg.src = bannerUrl || '/default-banner.png';
+      bannerImg.src = bannerUrl || '/default-banner.webp';
       console.log(`Banner carregado: ${bannerUrl || 'padrão'}`);
     }
     
     const photoImg = document.getElementById('group-photo');
     if (photoImg) {
-      photoImg.src = photoUrl || '/default-photo.png';
+      photoImg.src = photoUrl || '/default-photo.webp';
       console.log(`Foto carregada: ${photoUrl || 'padrão'}`);
     }
     

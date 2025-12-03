@@ -254,7 +254,7 @@ const ChatIAInterface = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 bg-[#FF6B00]/20">
-              <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" />
+              <AvatarImage src="/images/tempo-image-20250329T044440497Z.webp" />
               <AvatarFallback className="bg-[#FF6B00]/20 text-[#FF6B00]">
                 <Bot size={18} />
               </AvatarFallback>
@@ -303,7 +303,7 @@ const ChatIAInterface = () => {
               <div className="flex gap-3 max-w-[80%]">
                 {message.sender === "ai" && (
                   <Avatar className="h-8 w-8 mt-1 bg-[#FF6B00]/20">
-                    <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" />
+                    <AvatarImage src="/images/tempo-image-20250329T044440497Z.webp" />
                     <AvatarFallback className="bg-[#FF6B00]/20 text-[#FF6B00]">
                       <Bot size={16} />
                     </AvatarFallback>
@@ -384,7 +384,7 @@ const ChatIAInterface = () => {
             <div className="flex justify-start">
               <div className="flex gap-3 max-w-[80%]">
                 <Avatar className="h-8 w-8 mt-1 bg-[#FF6B00]/20">
-                  <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" />
+                  <AvatarImage src="/images/tempo-image-20250329T044440497Z.webp" />
                   <AvatarFallback className="bg-[#FF6B00]/20 text-[#FF6B00]">
                     <Bot size={16} />
                   </AvatarFallback>

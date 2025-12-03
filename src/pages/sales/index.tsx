@@ -232,19 +232,19 @@ export default function SalesPage() {
                 <div className="flex items-center justify-center gap-0">
                   <div className="dollItem bg-mike" style={{ zIndex: 4 }}>
                     <span className="dollName">Jota é o <span style={{ color: '#FF6B00' }}>líder de equipe</span></span>
-                    <img src="/images/avatar11-sobreposto-pv.png" alt="Jota" />
+                    <img src="/images/avatar11-sobreposto-pv.webp" alt="Jota" />
                   </div>
                   <div className="dollItem bg-alex" style={{ zIndex: 3 }}>
                     <span className="dollName">Felix é o <span style={{ color: '#4387c8' }}>gerador de atividades</span></span>
-                    <img src="/images/avatar2-sobreposto-pv.png" alt="Felix" />
+                    <img src="/images/avatar2-sobreposto-pv.webp" alt="Felix" />
                   </div>
                   <div className="dollItem bg-emma" style={{ zIndex: 2 }}>
                     <span className="dollName">Adrian é o <span style={{ color: '#a659b7' }}>gerente pedagógico</span></span>
-                    <img src="/images/avatar3-sobreposto-pv.png" alt="Adrian" />
+                    <img src="/images/avatar3-sobreposto-pv.webp" alt="Adrian" />
                   </div>
                   <div className="dollItem bg-david" style={{ zIndex: 1 }}>
                     <span className="dollName">Sam é o <span style={{ color: '#61b35e' }}>analista de dados</span></span>
-                    <img src="/images/avatar4-sobreposto-pv.png" alt="Sam" />
+                    <img src="/images/avatar4-sobreposto-pv.webp" alt="Sam" />
                   </div>
                   <div className="plus-button">
                     <span className="dollName">Mais agentes em breve</span>
@@ -262,7 +262,7 @@ export default function SalesPage() {
                 className="flex justify-center mb-12 mt-16 px-4"
               >
                 <img 
-                  src="/images/titulo-principal-pv.png" 
+                  src="/images/titulo-principal-pv.webp" 
                   alt="Bem-vindo ao Ponto School" 
                   className="max-w-full h-auto object-contain drop-shadow-2xl"
                   style={{ maxWidth: '900px', width: '100%' }}
@@ -272,15 +272,9 @@ export default function SalesPage() {
                     console.error('Caminho tentado:', e.currentTarget.src);
 
                     // Sistema de fallback em cascata
-                    if (e.currentTarget.src.includes('/images/titulo-principal-pv.png')) {
-                      console.log('🔄 Tentando /titulo-principal-pv.png...');
-                      e.currentTarget.src = '/titulo-principal-pv.png';
-                    } else if (e.currentTarget.src.includes('/titulo-principal-pv.png')) {
-                      console.log('🔄 Tentando /titulo1-pv.png como fallback...');
-                      e.currentTarget.src = '/titulo1-pv.png';
-                    } else if (e.currentTarget.src.includes('/titulo1-pv.png')) {
-                      console.log('🔄 Tentando /titulo-pv.png como último fallback...');
-                      e.currentTarget.src = '/titulo-pv.png';
+                    if (e.currentTarget.src.includes('/images/titulo-principal-pv.webp')) {
+                      console.log('🔄 Tentando /titulo-pv.webp como fallback...');
+                      e.currentTarget.src = '/titulo-pv.webp';
                     } else {
                       console.error('❌ Todos os fallbacks falharam. Imagem ocultada.');
                       e.currentTarget.style.display = 'none';
@@ -345,23 +339,16 @@ export default function SalesPage() {
           className="w-full flex justify-center mt-24 px-4"
         >
           <img 
-            src="/titulo1-pv.png" 
+            src="/titulo-pv.webp" 
             alt="Título PV" 
             className="max-w-full h-auto object-contain"
             style={{ maxWidth: '800px' }}
             loading="eager"
             onError={(e) => {
-              console.error('❌ Erro ao carregar imagem titulo1-pv.png');
+              console.error('❌ Erro ao carregar imagem titulo-pv.webp');
               console.error('Caminho tentado:', e.currentTarget.src);
-              // Tentar fallback para titulo-pv.png
-              if (e.currentTarget.src.includes('titulo1-pv.png')) {
-                console.log('🔄 Tentando carregar titulo-pv.png como fallback...');
-                e.currentTarget.src = '/titulo-pv.png';
-              } else {
-                // Se o fallback também falhar, ocultar a imagem
-                e.currentTarget.style.display = 'none';
-                console.error('❌ Fallback também falhou. Imagem ocultada.');
-              }
+              e.currentTarget.style.display = 'none';
+              console.error('❌ Imagem ocultada.');
             }}
             onLoad={() => {
               console.log('✅ Imagem carregada com sucesso!');
@@ -379,7 +366,7 @@ export default function SalesPage() {
             className="flex-shrink-0 mt-[37px] ml-[-300px]"
           >
             <img 
-              src="/images/img-topico1-pv.png" 
+              src="/images/img-topico1-pv.webp" 
               alt="Tópico 1 PV" 
               className="h-auto object-contain"
               style={{ maxWidth: '700px' }}
@@ -390,7 +377,7 @@ export default function SalesPage() {
               }}
               onLoad={() => {
                 console.log('✅ Imagem img-topico1-pv.png carregada com sucesso!');
-                console.log('📍 Caminho usado:', '/images/img-topico1-pv.png');
+                console.log('📍 Caminho usado:', '/images/img-topico1-pv.webp');
               }}
             />
           </motion.div>
@@ -403,7 +390,7 @@ export default function SalesPage() {
             className="flex-shrink-0 mt-[83px] ml-7"
           >
             <img 
-              src="/images/ofc-titulo-1topico.png" 
+              src="/images/ofc-titulo-1topico.webp" 
               alt="Título Tópico 1 PV" 
               className="h-auto object-contain mb-6"
               style={{ maxWidth: '650px' }}
@@ -411,11 +398,11 @@ export default function SalesPage() {
               onError={(e) => {
                 console.error('❌ Erro ao carregar imagem oficial-titulo-1topico.png');
                 console.error('Caminho tentado:', e.currentTarget.src);
-                console.error('Verifique se o arquivo existe em: public/images/oficial-titulo-1topico.png');
+                console.error('Verifique se o arquivo existe em: public/images/oficial-titulo-1topico.webp');
               }}
               onLoad={() => {
                 console.log('✅ Imagem oficial-titulo-1topico.png carregada com sucesso!');
-                console.log('Caminho usado:', '/images/oficial-titulo-1topico.png');
+                console.log('Caminho usado:', '/images/oficial-titulo-1topico.webp');
               }}
             />
 
@@ -490,7 +477,7 @@ export default function SalesPage() {
               className="mt-[127px] -ml-[-17px]"
             >
               <img 
-                src="/images/img-topico2-pv.png" 
+                src="/images/img-topico2-pv.webp" 
                 alt="Tópico 2 - Ponto School" 
                 className="h-auto object-contain drop-shadow-lg"
                 style={{ maxWidth: '650px', width: '100%' }}
@@ -498,12 +485,12 @@ export default function SalesPage() {
                 onError={(e) => {
                   console.error('❌ Erro ao carregar imagem img-topico2-pv.png');
                   console.error('Caminho completo tentado:', e.currentTarget.src);
-                  console.error('Verifique se o arquivo existe em: public/images/img-topico2-pv.png');
+                  console.error('Verifique se o arquivo existe em: public/images/img-topico2-pv.webp');
                   e.currentTarget.style.display = 'none';
                 }}
                 onLoad={() => {
                   console.log('✅ Imagem img-topico2-pv.png carregada com sucesso!');
-                  console.log('📍 Caminho usado:', '/images/img-topico2-pv.png');
+                  console.log('📍 Caminho usado:', '/images/img-topico2-pv.webp');
                 }}
               />
             </motion.div>
@@ -516,7 +503,7 @@ export default function SalesPage() {
               className="-mt-[437px] -ml-[687px]"
             >
               <img 
-                src="/images/ofc-titulo-2topico.png" 
+                src="/images/ofc-titulo-2topico.webp" 
                 alt="Título Tópico 2 - Ponto School" 
                 className="h-auto object-contain drop-shadow-lg"
                 style={{ maxWidth: '650px', width: '100%' }}
@@ -524,12 +511,12 @@ export default function SalesPage() {
                 onError={(e) => {
                   console.error('❌ Erro ao carregar imagem ofc-titulo-2topico.png');
                   console.error('Caminho completo tentado:', e.currentTarget.src);
-                  console.error('Verifique se o arquivo existe em: public/images/ofc-titulo-2topico.png');
+                  console.error('Verifique se o arquivo existe em: public/images/ofc-titulo-2topico.webp');
                   e.currentTarget.style.display = 'none';
                 }}
                 onLoad={() => {
                   console.log('✅ Imagem ofc-titulo-2topico.png carregada com sucesso!');
-                  console.log('📍 Caminho usado:', '/images/ofc-titulo-2topico.png');
+                  console.log('📍 Caminho usado:', '/images/ofc-titulo-2topico.webp');
                 }}
               />
 
@@ -607,7 +594,7 @@ export default function SalesPage() {
                 className="flex-shrink-0 mt-[15px] ml-[7px]"
               >
                 <img 
-                  src="/images/img-topico3-pv.png" 
+                  src="/images/img-topico3-pv.webp" 
                   alt="Tópico 3 - Ponto School" 
                   className="h-auto object-contain drop-shadow-lg"
                   style={{ maxWidth: '547px', width: '100%' }}
@@ -615,12 +602,12 @@ export default function SalesPage() {
                   onError={(e) => {
                     console.error('❌ Erro ao carregar imagem img-topico3-pv.png');
                     console.error('Caminho completo tentado:', e.currentTarget.src);
-                    console.error('Verifique se o arquivo existe em: public/images/img-topico3-pv.png');
+                    console.error('Verifique se o arquivo existe em: public/images/img-topico3-pv.webp');
                     e.currentTarget.style.display = 'none';
                   }}
                   onLoad={() => {
                     console.log('✅ Imagem img-topico3-pv.png carregada com sucesso!');
-                    console.log('📍 Caminho usado:', '/images/img-topico3-pv.png');
+                    console.log('📍 Caminho usado:', '/images/img-topico3-pv.webp');
                   }}
                 />
 
@@ -632,7 +619,7 @@ export default function SalesPage() {
                   className="mt-8"
                 >
                   <img 
-                    src="/images/img.10x.engajamento.pv.png" 
+                    src="/images/img.10x.engajamento.pv.webp" 
                     alt="10x Engajamento - Ponto School" 
                     className="h-auto object-contain drop-shadow-lg"
                     style={{ maxWidth: '1337px', width: '100%' }}
@@ -640,12 +627,12 @@ export default function SalesPage() {
                     onError={(e) => {
                       console.error('❌ Erro ao carregar imagem img.10x.engajamento.pv.png');
                       console.error('Caminho completo tentado:', e.currentTarget.src);
-                      console.error('Verifique se o arquivo existe em: public/images/img.10x.engajamento.pv.png');
+                      console.error('Verifique se o arquivo existe em: public/images/img.10x.engajamento.pv.webp');
                       e.currentTarget.style.display = 'none';
                     }}
                     onLoad={() => {
                       console.log('✅ Imagem img.10x.engajamento.pv.png carregada com sucesso!');
-                      console.log('📍 Caminho usado:', '/images/img.10x.engajamento.pv.png');
+                      console.log('📍 Caminho usado:', '/images/img.10x.engajamento.pv.webp');
                     }}
                   />
                 </motion.div>
@@ -693,7 +680,7 @@ export default function SalesPage() {
                 }}
               >
                 <img 
-                  src="/images/rodape-pv.png" 
+                  src="/images/rodape-pv.webp" 
                   alt="Rodapé - Ponto School" 
                   className="h-auto object-contain drop-shadow-lg"
                   style={{ 
@@ -727,17 +714,17 @@ export default function SalesPage() {
                     console.error('Caminho completo tentado:', e.currentTarget.src);
                     
                     // Tentar fallback para a raiz do public
-                    if (e.currentTarget.src.includes('/images/rodape-pv.png')) {
+                    if (e.currentTarget.src.includes('/images/rodape-pv.webp')) {
                       console.log('🔄 Tentando carregar /rodape-pv.png como fallback...');
-                      e.currentTarget.src = '/rodape-pv.png';
+                      e.currentTarget.src = '/rodape-pv.webp';
                     } else {
-                      console.error('❌ Fallback também falhou. Verifique se o arquivo existe em: public/images/rodape-pv.png ou public/rodape-pv.png');
+                      console.error('❌ Fallback também falhou. Verifique se o arquivo existe em: public/images/rodape-pv.png ou public/rodape-pv.webp');
                       e.currentTarget.style.display = 'none';
                     }
                   }}
                   onLoad={() => {
                     console.log('✅ Imagem rodape-pv.png carregada com sucesso!');
-                    console.log('📍 Caminho usado:', '/images/rodape-pv.png');
+                    console.log('📍 Caminho usado:', '/images/rodape-pv.webp');
                   }}
                 />
               </motion.div>
@@ -751,7 +738,7 @@ export default function SalesPage() {
                 className="flex-shrink-0 mt-[57px] -ml-[1477px]"
               >
                 <img 
-                  src="/images/ofc-titulo-3topico.png" 
+                  src="/images/ofc-titulo-3topico.webp" 
                   alt="Título Tópico 3 - Ponto School" 
                   className="h-auto object-contain drop-shadow-lg"
                   style={{ maxWidth: '650px', width: '100%' }}
@@ -759,12 +746,12 @@ export default function SalesPage() {
                   onError={(e) => {
                     console.error('❌ Erro ao carregar imagem ofc-titulo-3topico.png');
                     console.error('Caminho completo tentado:', e.currentTarget.src);
-                    console.error('Verifique se o arquivo existe em: public/images/ofc-titulo-3topico.png');
+                    console.error('Verifique se o arquivo existe em: public/images/ofc-titulo-3topico.webp');
                     e.currentTarget.style.display = 'none';
                   }}
                   onLoad={() => {
                     console.log('✅ Imagem ofc-titulo-3topico.png carregada com sucesso!');
-                    console.log('📍 Caminho usado:', '/images/ofc-titulo-3topico.png');
+                    console.log('📍 Caminho usado:', '/images/ofc-titulo-3topico.webp');
                   }}
                 />
                 {/* Texto explicativo abaixo da imagem ofc-titulo-2topico.png */}

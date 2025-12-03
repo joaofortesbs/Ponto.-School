@@ -607,7 +607,7 @@ export default function Header() {
     // Obter a imagem padrão da configuração global ou usar o valor padrão
     const defaultLogo =
       window.PONTO_SCHOOL_CONFIG?.defaultLogo ||
-      "/images/ponto-school-logo.png";
+      "/images/ponto-school-logo.webp";
 
     // Definir logo imediatamente para evitar atraso na renderização
     setCustomLogo(defaultLogo);
