@@ -817,7 +817,7 @@ export function SidebarNav({
           padding: 12px 0.75rem;
           gap: 12px;
           position: relative;
-          height: 56px !important;
+          height: 100% !important;
           min-height: 56px !important;
           box-sizing: border-box !important;
           flex-wrap: nowrap !important;
@@ -897,7 +897,6 @@ export function SidebarNav({
           justify-content: center !important;
           min-width: 0 !important;
           overflow: hidden !important;
-          max-width: calc(100% - 80px) !important;
         }
 
         .item-title {
@@ -1227,13 +1226,12 @@ export function SidebarNav({
         .expand-icon {
           width: 20px;
           height: 20px;
-          min-width: 20px;
           display: flex;
           align-items: center;
           justify-content: center;
           transition: transform 0.3s ease;
-          margin-left: 8px;
-          flex-shrink: 0;
+          margin-left: auto;
+          margin-right: 8px;
         }
 
         .expand-icon i {
