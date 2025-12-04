@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Suspense, lazy } from "react";
+import React, { useEffect, useState, Suspense, lazy, useTransition } from "react";
 import {
   Routes,
   Route,
@@ -113,6 +113,7 @@ function App() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const isPublicRoute = useIsPublicRoute();
+  const [isPending, startTransition] = useTransition();
 
 
   useEffect(() => {
@@ -292,80 +293,211 @@ function App() {
         <StudyGoalProvider>
           <ErrorBoundary>
             <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
-              <Routes>
-                {/* Página de Vendas - Rota Principal Pública */}
-                <Route path="/" element={<SalesPage />} />
+              <Suspense fallback={
+                <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Carregando...</p>
+                  </div>
+                </div>
+              }>
+                <Routes>
+                  {/* Página de Vendas - Rota Principal Pública */}
+                  <Route path="/" element={<SalesPage />} />
 
-                {/* Auth Routes - Públicas */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/select-plan" element={<PlanSelectionPage />} />
+                  {/* Auth Routes - Públicas */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
+                  <Route path="/select-plan" element={<PlanSelectionPage />} />
 
-                {/* Página em branco - Pública para teste */}
-                <Route path="/blank" element={<BlankPage />} />
-                 {/* Rota pública para quiz */}
-                 <Route path="/quiz" element={<QuizPage />} />
+                  {/* Página em branco - Pública para teste */}
+                  <Route path="/blank" element={<BlankPage />} />
+                   {/* Rota pública para quiz */}
+                   <Route path="/quiz" element={
+                    <Suspense fallback={
+                      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                          <p className="text-gray-600">Carregando Quiz...</p>
+                        </div>
+                      </div>
+                    }>
+                      <QuizPage />
+                    </Suspense>
+                  } />
 
-                {/* Main App Routes - Protegidas */}
-                <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <Home />
-                  </ProtectedRoute>
-                }>
-                  <Route index element={<Dashboard />} />
-                  <Route path="turmas" element={<AlunoUnderConstruction />} />
-                  <Route path="turmas/:id" element={<AlunoUnderConstruction />} />
-                  <Route path="turmas/grupos2" element={<AlunoUnderConstruction />} />
-                  <Route path="turmas/grupos" element={<AlunoUnderConstruction />} />
-                  <Route path="turmas/grupos/:id" element={<AlunoUnderConstruction />} />
-                  <Route path="comunidades" element={<AlunoUnderConstruction />} />
-                  <Route path="pedidos-ajuda" element={<AlunoUnderConstruction />} />
-                  <Route path="trilhas-school/alunos" element={<AlunoUnderConstruction />} />
-                  <Route path="school-planner" element={<AlunoUnderConstruction />} />
-                  <Route path="agenda" element={<AlunoUnderConstruction />} />
-                  <Route path="explorar" element={<AlunoUnderConstruction />} />
-                  <Route path="epictus-ia" element={<AlunoUnderConstruction />} />
-                  <Route path="school-power" element={<SchoolPowerPageIndex />} />
-                  <Route path="trilhas-school" element={<TrilhasSchoolProfessorInterface />} />
-                  <Route path="trilhas-school/professores" element={<TrilhasSchoolProfessorInterface />} />
-                  <Route path="agenda" element={<Agenda />} />
-                  <Route path="biblioteca" element={<Biblioteca />} />
-                  <Route path="carteira" element={<Carteira />} />
-                  <Route path="organizacao" element={<Organizacao />} />
-                  <Route path="novidades" element={<Novidades />} />
-                  <Route path="configuracoes" element={<Configuracoes />} />
-                  <Route path="planos-estudo" element={<PlanosEstudo />} />
-                </Route>
+                  {/* Main App Routes - Protegidas */}
+                  <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                      <Home />
+                    </ProtectedRoute>
+                  }>
+                    <Route index element={
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <Dashboard />
+                      </Suspense>
+                    } />
+                    <Route path="turmas" element={<AlunoUnderConstruction />} />
+                    <Route path="turmas/:id" element={<AlunoUnderConstruction />} />
+                    <Route path="turmas/grupos2" element={<AlunoUnderConstruction />} />
+                    <Route path="turmas/grupos" element={<AlunoUnderConstruction />} />
+                    <Route path="turmas/grupos/:id" element={<AlunoUnderConstruction />} />
+                    <Route path="comunidades" element={<AlunoUnderConstruction />} />
+                    <Route path="pedidos-ajuda" element={<AlunoUnderConstruction />} />
+                    <Route path="trilhas-school/alunos" element={<AlunoUnderConstruction />} />
+                    <Route path="school-planner" element={<AlunoUnderConstruction />} />
+                    <Route path="agenda" element={
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <Agenda />
+                      </Suspense>
+                    } />
+                    <Route path="explorar" element={<AlunoUnderConstruction />} />
+                    <Route path="epictus-ia" element={<AlunoUnderConstruction />} />
+                    <Route path="school-power" element={
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <SchoolPowerPageIndex />
+                      </Suspense>
+                    } />
+                    <Route path="trilhas-school" element={
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <TrilhasSchoolProfessorInterface />
+                      </Suspense>
+                    } />
+                    <Route path="trilhas-school/professores" element={
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <TrilhasSchoolProfessorInterface />
+                      </Suspense>
+                    } />
+                    <Route path="biblioteca" element={
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <Biblioteca />
+                      </Suspense>
+                    } />
+                    <Route path="carteira" element={
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <Carteira />
+                      </Suspense>
+                    } />
+                    <Route path="organizacao" element={
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <Organizacao />
+                      </Suspense>
+                    } />
+                    <Route path="novidades" element={
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <Novidades />
+                      </Suspense>
+                    } />
+                    <Route path="configuracoes" element={
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <Configuracoes />
+                      </Suspense>
+                    } />
+                    <Route path="planos-estudo" element={
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <PlanosEstudo />
+                      </Suspense>
+                    } />
+                  </Route>
 
-                {/* User Profile - Protegida */}
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                } />
-                <Route path="profile" element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                } />
+                  {/* User Profile - Protegida */}
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <ProfilePage />
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="profile" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <ProfilePage />
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
 
-                {/* Agenda standalone - Protegida */}
-                <Route path="/agenda-preview" element={
-                  <ProtectedRoute>
-                    <Agenda />
-                  </ProtectedRoute>
-                } />
-                <Route path="/agenda-standalone" element={
-                  <ProtectedRoute>
-                    <Agenda />
-                  </ProtectedRoute>
-                } />
+                  {/* Agenda standalone - Protegida */}
+                  <Route path="/agenda-preview" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <Agenda />
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/agenda-standalone" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                      }>
+                        <Agenda />
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
 
-                {/* Fallback Route - Redireciona para login */}
-                <Route path="*" element={<Navigate to="/login" />} />
-              </Routes>
+                  {/* Fallback Route - Redireciona para login */}
+                  <Route path="*" element={<Navigate to="/login" />} />
+                </Routes>
+              </Suspense>
 
               {/* Floating Chat Support - Excluído explicitamente das rotas de auth e quiz */}
               {!isAuthRoute && !isQuizRoute && location.pathname !== '/quiz' && (
