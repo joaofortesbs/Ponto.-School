@@ -18,7 +18,7 @@ import { motion } from "framer-motion";
  * 4. Palavras rotam a cada 2s
  */
 export function JotaAvatar() {
-  const words = ["Construir", "Programar", "Montar", "Desenvolver", "Projetar"];
+  const words = ["Construir?", "Programar?", "Montar?", "Desenvolver?", "Projetar?"];
   
   const [isHoverActive, setIsHoverActive] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
@@ -214,7 +214,6 @@ export function JotaAvatar() {
               {displayedText.length < currentWord.length && <span className="typewriter-cursor" />}
             </span>
             {displayedText.length === currentWord.length && <span className="typewriter-cursor" />}
-            {" hoje?"}
           </span>
 
           {/* Imagem do avatar */}

@@ -69,7 +69,7 @@ Preferred communication style: Simple, everyday language.
   - **Avatar Visibility**: Appears INSTANTLY (no hover on load) - scale 0.8→1, opacity 0→1 (0.4s, no delay)
   - **Auto-Hover**: Activated after 600ms delay, providing visual feedback before user interacts
   - **Hover State**: FIXED while user is in School Power section
-  - **Text Rotation**: "O que vamos [rotating word] hoje?" with 5 words: Construir, Programar, Montar, Desenvolver, Projetar
+  - **Text Rotation**: "O que vamos [rotating word?]" with 5 words: Construir?, Programar?, Montar?, Desenvolver?, Projetar?
   - **Typewriter Effect**: Characters animate in sequentially (80ms per character) as word changes
   - **Word Rotation**: Changes every 2.5s (2s display + 0.5s transition)
   - **Cursor Animation**: Blinking cursor (0.7s cycle) shows while typing
