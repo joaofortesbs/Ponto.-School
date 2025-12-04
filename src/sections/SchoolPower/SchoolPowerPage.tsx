@@ -168,7 +168,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
           )}
 
           {/* Container Ripple fixo e centralizado no background */}
-          <div className={`absolute ${isMobile && isQuizMode ? 'top-[45%]' : 'top-[57%]'} left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none`}>
+          <div className={`absolute ${isMobile && isQuizMode ? 'top-[42%]' : 'top-[48%]'} left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none`}>
             <div
               className="relative"
               style={{
@@ -179,7 +179,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
               {/* TechCircle posicionado no topo do container Ripple */}
               <div
                 className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full z-30 pointer-events-none"
-                style={{ marginTop: isMobile && isQuizMode ? "4px" : "7px" }}
+                style={{ marginTop: isMobile && isQuizMode ? "2px" : "3px" }}
               >
                 <TopHeader isDarkTheme={isDarkTheme} isQuizMode={isQuizMode} />
               </div>
@@ -201,38 +201,34 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 <JotaAvatar />
               </div>
 
-              {/* Container que agrupa Caixa de Mensagem e 4 Cards */}
+              {/* Caixa de Mensagem dentro do mesmo container Ripple - ACIMA dos 4 cards */}
               <div
-                className="absolute left-1/2 transform -translate-x-1/2 z-40"
+                className={`absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto`}
                 style={{
-                  bottom: isMobile && isQuizMode ? "10px" : "25px",
+                  bottom: isMobile && isQuizMode ? "95px" : "90px",
                   width: isMobile && isQuizMode ? "110%" : "auto"
                 }}
               >
-                {/* Caixa de Mensagem dentro do container wrapper */}
-                <div
-                  className="pointer-events-auto"
-                  style={{
-                    marginBottom: isMobile && isQuizMode ? "65px" : "65px"
-                  }}
-                >
-                  <ChatInput
-                    isDarkTheme={isDarkTheme}
-                    onSend={handleSendMessage}
-                    externalSelectedCard={selectedCard}
-                    onCardClick={handleCardClick}
-                  />
-                </div>
+                <ChatInput
+                  isDarkTheme={isDarkTheme}
+                  onSend={handleSendMessage}
+                  externalSelectedCard={selectedCard}
+                  onCardClick={handleCardClick}
+                />
+              </div>
 
-                {/* 4 Cards Retangulares abaixo da caixa de mensagens */}
-                <div
-                  className="pointer-events-auto"
-                >
-                  <QuickAccessCards
-                    selectedCard={selectedCard}
-                    onCardClick={handleCardClick}
-                  />
-                </div>
+              {/* 4 Cards Retangulares abaixo da caixa de mensagens */}
+              <div
+                className="absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto"
+                style={{
+                  bottom: isMobile && isQuizMode ? '10px' : '25px',
+                  width: isMobile && isQuizMode ? "110%" : "auto"
+                }}
+              >
+                <QuickAccessCards
+                  selectedCard={selectedCard}
+                  onCardClick={handleCardClick}
+                />
               </div>
             </div>
           </div>
