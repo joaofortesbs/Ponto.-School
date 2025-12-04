@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   TopHeader,
@@ -18,6 +18,11 @@ import { HistoricoAtividadesCriadas } from "../../features/schoolpower/construct
 import { useIsMobile } from "../../hooks/useIsMobile";
 import DebugPanel from './components/DebugPanel';
 import GeminiApiMonitor from './components/GeminiApiMonitor';
+import { 
+  getPendingMessage, 
+  clearPendingMessage, 
+  clearRedirectToSchoolPower 
+} from "../../lib/message-sync";
 
 interface SchoolPowerPageProps {
   isQuizMode?: boolean;
@@ -29,6 +34,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const [showHistorico, setShowHistorico] = useState(false);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const isMobile = useIsMobile();
+  const pendingMessageProcessed = useRef(false);
 
   // Hook para gerenciar o fluxo do School Power
   const {
@@ -45,8 +51,32 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     generatePersonalizedPlan
   } = useSchoolPowerFlow();
 
+  // Verificar e processar mensagem pendente da página de vendas
+  useEffect(() => {
+    if (pendingMessageProcessed.current) return;
+    
+    const pendingMessage = getPendingMessage();
+    
+    if (pendingMessage && pendingMessage.message) {
+      console.log('📨 Processando mensagem pendente da página de vendas:', pendingMessage.message);
+      
+      // Marcar como processado para evitar duplicação
+      pendingMessageProcessed.current = true;
+      
+      // Limpar dados de sincronização
+      clearPendingMessage();
+      clearRedirectToSchoolPower();
+      
+      // Enviar a mensagem automaticamente com um pequeno delay para garantir que a UI esteja pronta
+      setTimeout(() => {
+        handleSendInitialMessage(pendingMessage.message);
+        console.log('✅ Mensagem pendente enviada automaticamente!');
+      }, 500);
+    }
+  }, [handleSendInitialMessage]);
+
   // Log apenas mudanças importantes de estado
-  React.useEffect(() => {
+  useEffect(() => {
     if (flowState !== 'idle') {
       console.log('🔄 School Power - Estado alterado:', flowState);
     }
