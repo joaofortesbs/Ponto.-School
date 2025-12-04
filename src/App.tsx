@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Suspense, lazy, useTransition } from "react";
+import React, { useEffect, useState, Suspense, lazy } from "react";
 import {
   Routes,
   Route,
@@ -20,43 +20,43 @@ import UsernameProvider from "./components/UsernameProvider";
 import WelcomeModal from "./components/auth/WelcomeModal";
 import { TypewriterLoader } from "./components/ui/typewriter-loader";
 
-// Auth Pages - Keep as direct imports for fast initial load
+// Auth Pages - Direct imports for fast initial load
 import LoginPage from "@/pages/auth/login";
 import RegisterPage from "@/pages/auth/register";
 import ForgotPasswordPage from "@/pages/auth/forgot-password";
 import ResetPasswordPage from "@/pages/auth/reset-password";
 
-// Sales page - Keep as direct import for landing page performance
+// Sales page - Direct import for landing page performance
 import SalesPage from '@/pages/sales';
 
-// Lazy loaded pages for code splitting - Reduces initial bundle size
-const Dashboard = lazy(() => import("@/pages/dashboard"));
+// Dashboard pages - Direct imports for INSTANT navigation (no lazy loading)
+import Dashboard from "@/pages/dashboard";
+import Agenda from "@/pages/agenda";
+import Biblioteca from "@/pages/biblioteca";
+import Carteira from "@/pages/carteira";
+import Organizacao from "@/pages/organizacao";
+import Novidades from "@/pages/novidades";
+import Configuracoes from "@/pages/configuracoes";
+import PlanosEstudo from "@/pages/planos-estudo";
+import ProfilePage from "@/pages/profile";
+import SchoolPowerPageIndex from "./pages/school-power";
+import AlunoUnderConstruction from "@/pages/under-construction/AlunoUnderConstruction";
+import TrilhasSchoolProfessorInterface from '@/pages/trilhas-school/professores/interface';
+
+// Less frequently used pages - Keep lazy for bundle optimization
 const Comunidades = lazy(() => import("@/pages/comunidades"));
 const PedidosAjuda = lazy(() => import("@/pages/pedidos-ajuda"));
-const Agenda = lazy(() => import("@/pages/agenda"));
-const Biblioteca = lazy(() => import("@/pages/biblioteca"));
-const Carteira = lazy(() => import("@/pages/carteira"));
-const Organizacao = lazy(() => import("@/pages/organizacao"));
-const Novidades = lazy(() => import("@/pages/novidades"));
-const Configuracoes = lazy(() => import("@/pages/configuracoes"));
-const PlanosEstudo = lazy(() => import("@/pages/planos-estudo"));
 const PlanSelectionPage = lazy(() => import("@/pages/plan-selection"));
-const ProfilePage = lazy(() => import("@/pages/profile"));
-const AlunoUnderConstruction = lazy(() => import("@/pages/under-construction/AlunoUnderConstruction"));
 const BlankPage = lazy(() => import("@/pages/BlankPage"));
-const SchoolPowerPageIndex = lazy(() => import("./pages/school-power"));
 const MentorIAPage = lazy(() => import("./pages/mentor-ia"));
 const QuizPage = lazy(() => import('@/pages/quiz'));
-const TrilhasSchoolProfessorInterface = lazy(() => import('@/pages/trilhas-school/professores/interface'));
 const TrilhasSchoolAlunoInterface = lazy(() => import('@/pages/trilhas-school/alunos/interface'));
 
 // Lazy load floating chat to reduce initial bundle
 const FloatingChatSupport = lazy(() => import("@/components/chat/FloatingChatSupport"));
 
 // Public activity page (no authentication required)
-// Aceita apenas o código único como parâmetro
 const AtividadeCompartilhadaPage = lazy(() => import('@/pages/atividade/[activityId]/[uniqueCode]'));
-// Modo Apresentação - rota pública para apresentação de atividades
 const ModoApresentacaoAtividadePage = lazy(() => import('@/features/schoolpower/components/ModoApresentacaoAtividade').then(module => ({ default: module.ModoApresentacaoAtividade })));
 
 
@@ -138,7 +138,6 @@ function App() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const isPublicRoute = useIsPublicRoute();
-  const [isPending, startTransition] = useTransition();
 
 
   useEffect(() => {
@@ -424,7 +423,6 @@ function App() {
                 <WelcomeModal
                   isOpen={showWelcomeModal}
                   onClose={() => setShowWelcomeModal(false)}
-                  isFirstLogin={isFirstLogin}
                 />
               }
             </div>

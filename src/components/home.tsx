@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React from "react";
 import { Outlet } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
@@ -10,9 +10,7 @@ const Home: React.FC = () => {
       <div className="flex h-full w-full flex-col">
         <Header />
         <main className="flex-1 overflow-y-auto px-4 py-4">
-          <Suspense fallback={null}>
-            <Outlet />
-          </Suspense>
+          <Outlet />
         </main>
       </div>
     </div>
