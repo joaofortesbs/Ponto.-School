@@ -97,15 +97,18 @@ Preferred communication style: Simple, everyday language.
 - **Sharp Library**: Added for high-performance image processing
 - **Updated References**: All source files (.tsx, .jsx, .js, .css, .html) updated to use .webp extensions
 
-### December 2024 - Navigation Performance Optimization
+### December 2024 - Navigation Performance Optimization (FINAL)
+- **Removed Lazy Loading for Core Pages**: Dashboard pages now use direct imports for INSTANT navigation
+  - Dashboard, Agenda, Biblioteca, SchoolPower, Carteira, Organizacao, Novidades, Configuracoes, PlanosEstudo, ProfilePage, TrilhasSchoolProfessorInterface - all eagerly loaded
+  - Only infrequently used pages (Comunidades, PedidosAjuda, Quiz, etc.) remain lazy-loaded
+  - Eliminates chunk download delay when navigating between sections
 - **ProtectedRoute Optimization**: Implemented optimistic rendering with background revalidation
   - Uses localStorage cache (auth_token, user_id, auth_status) for instant initial render
   - Always performs background auth revalidation to ensure security
   - Clears stale tokens and redirects to login if revalidation fails
-- **Removed Redundant Suspense Boundaries**: Collapsed 15+ individual route Suspense wrappers
-  - Routes now rely on single Suspense in Home.tsx
-  - Eliminates "waterfall" loading animations between sections
-  - Faster perceived navigation within dashboard
+- **Removed All Suspense from Dashboard Routes**: Home.tsx now renders Outlet directly
+  - No loading fallbacks between section navigations
+  - Truly instant section switching
 - **Message Sync System**: Seamless message synchronization between sales page and School Power
   - `src/lib/message-sync.ts` handles localStorage-based message persistence with 24h expiry
   - Sales page saves messages and redirects based on login status
