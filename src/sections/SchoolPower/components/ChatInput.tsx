@@ -234,7 +234,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
 
   const handleCardClick = (cardName: string) => {
     console.log('🎯 Handling card click:', cardName);
-    
+
     const cardTexts: { [key: string]: string } = {
       "Plano ENEM": "Preciso criar atividades interativas focadas na preparação no ENEM para estudantes, sobre o tema:",
       "Aula Turbo": "Preciso criar atividades interativas focadas na criação de uma aula que engaja meus alunos, conclui habilidades e cumpri os critérios da minha grade, sobre o tema:",
@@ -244,11 +244,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
 
     const text = cardTexts[cardName] || cardName;
     console.log('📝 Setting message to:', text);
-    
+
     setSelectedCard(cardName);
     setMessage(text);
     setIsTyping(true);
-    
+
     setTimeout(() => {
       textareaRef.current?.focus();
     }, 100);
