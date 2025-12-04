@@ -60,14 +60,28 @@ const AtividadeCompartilhadaPage = lazy(() => import('@/pages/atividade/[activit
 const ModoApresentacaoAtividadePage = lazy(() => import('@/features/schoolpower/components/ModoApresentacaoAtividade').then(module => ({ default: module.ModoApresentacaoAtividade })));
 
 
-// Componente para proteger rotas
+// Componente para proteger rotas - OTIMIZADO para evitar loading desnecessário
 function ProtectedRoute({ children }) {
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  
+  // Verificar cache para renderização inicial rápida
+  const getCachedAuth = () => {
+    const cachedStatus = localStorage.getItem('auth_status');
+    const authToken = localStorage.getItem('auth_token');
+    const userId = localStorage.getItem('user_id');
+    
+    // Retorna true temporariamente se temos credenciais em cache
+    return !!(authToken && userId && cachedStatus === 'authenticated');
+  };
+  
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(() => {
+    return getCachedAuth() ? true : null;
+  });
+  const [hasRevalidated, setHasRevalidated] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    // Sempre revalidar em segundo plano, mesmo se temos cache
+    const revalidateAuth = async () => {
       try {
         const isAuth = await checkAuthentication();
         
@@ -75,8 +89,13 @@ function ProtectedRoute({ children }) {
         localStorage.setItem('auth_status', isAuth ? 'authenticated' : 'unauthenticated');
 
         setIsAuthenticated(isAuth);
+        setHasRevalidated(true);
 
         if (!isAuth) {
+          // Limpar cache se autenticação falhou
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user_id');
+          localStorage.removeItem('auth_status');
           console.log("Usuário não autenticado, redirecionando para login");
           navigate('/login', { replace: true });
         }
@@ -84,20 +103,26 @@ function ProtectedRoute({ children }) {
         console.error("Erro ao verificar autenticação:", error);
         localStorage.removeItem('auth_checked');
         localStorage.removeItem('auth_status');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_id');
         navigate('/login', { replace: true });
-      } finally {
-        setIsCheckingAuth(false);
       }
     };
 
-    checkAuth();
+    revalidateAuth();
   }, [navigate]);
 
-  if (isCheckingAuth) {
+  // Se temos cache, renderiza imediatamente (revalidação acontece em segundo plano)
+  if (isAuthenticated === true) {
+    return children;
+  }
+
+  // Apenas mostra loading se não temos cache
+  if (isAuthenticated === null) {
     return <TypewriterLoader />;
   }
 
-  return isAuthenticated ? children : null;
+  return null;
 }
 
 // Component to check if current route is public
@@ -334,15 +359,7 @@ function App() {
                       <Home />
                     </ProtectedRoute>
                   }>
-                    <Route index element={
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <Dashboard />
-                      </Suspense>
-                    } />
+                    <Route index element={<Dashboard />} />
                     <Route path="turmas" element={<AlunoUnderConstruction />} />
                     <Route path="turmas/:id" element={<AlunoUnderConstruction />} />
                     <Route path="turmas/grupos2" element={<AlunoUnderConstruction />} />
@@ -352,145 +369,41 @@ function App() {
                     <Route path="pedidos-ajuda" element={<AlunoUnderConstruction />} />
                     <Route path="trilhas-school/alunos" element={<AlunoUnderConstruction />} />
                     <Route path="school-planner" element={<AlunoUnderConstruction />} />
-                    <Route path="agenda" element={
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <Agenda />
-                      </Suspense>
-                    } />
+                    <Route path="agenda" element={<Agenda />} />
                     <Route path="explorar" element={<AlunoUnderConstruction />} />
                     <Route path="epictus-ia" element={<AlunoUnderConstruction />} />
-                    <Route path="school-power" element={
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <SchoolPowerPageIndex />
-                      </Suspense>
-                    } />
-                    <Route path="trilhas-school" element={
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <TrilhasSchoolProfessorInterface />
-                      </Suspense>
-                    } />
-                    <Route path="trilhas-school/professores" element={
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <TrilhasSchoolProfessorInterface />
-                      </Suspense>
-                    } />
-                    <Route path="biblioteca" element={
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <Biblioteca />
-                      </Suspense>
-                    } />
-                    <Route path="carteira" element={
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <Carteira />
-                      </Suspense>
-                    } />
-                    <Route path="organizacao" element={
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <Organizacao />
-                      </Suspense>
-                    } />
-                    <Route path="novidades" element={
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <Novidades />
-                      </Suspense>
-                    } />
-                    <Route path="configuracoes" element={
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <Configuracoes />
-                      </Suspense>
-                    } />
-                    <Route path="planos-estudo" element={
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <PlanosEstudo />
-                      </Suspense>
-                    } />
+                    <Route path="school-power" element={<SchoolPowerPageIndex />} />
+                    <Route path="trilhas-school" element={<TrilhasSchoolProfessorInterface />} />
+                    <Route path="trilhas-school/professores" element={<TrilhasSchoolProfessorInterface />} />
+                    <Route path="biblioteca" element={<Biblioteca />} />
+                    <Route path="carteira" element={<Carteira />} />
+                    <Route path="organizacao" element={<Organizacao />} />
+                    <Route path="novidades" element={<Novidades />} />
+                    <Route path="configuracoes" element={<Configuracoes />} />
+                    <Route path="planos-estudo" element={<PlanosEstudo />} />
                   </Route>
 
                   {/* User Profile - Protegida */}
                   <Route path="/profile" element={
                     <ProtectedRoute>
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <ProfilePage />
-                      </Suspense>
+                      <ProfilePage />
                     </ProtectedRoute>
                   } />
                   <Route path="profile" element={
                     <ProtectedRoute>
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <ProfilePage />
-                      </Suspense>
+                      <ProfilePage />
                     </ProtectedRoute>
                   } />
 
                   {/* Agenda standalone - Protegida */}
                   <Route path="/agenda-preview" element={
                     <ProtectedRoute>
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <Agenda />
-                      </Suspense>
+                      <Agenda />
                     </ProtectedRoute>
                   } />
                   <Route path="/agenda-standalone" element={
                     <ProtectedRoute>
-                      <Suspense fallback={
-                        <div className="flex items-center justify-center min-h-screen">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                        </div>
-                      }>
-                        <Agenda />
-                      </Suspense>
+                      <Agenda />
                     </ProtectedRoute>
                   } />
 
