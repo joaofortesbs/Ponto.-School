@@ -214,6 +214,7 @@ export function JotaAvatar() {
               {displayedText.length < currentWord.length && <span className="typewriter-cursor" />}
             </span>
             {displayedText.length === currentWord.length && <span className="typewriter-cursor" />}
+            {" hoje?"}
           </span>
 
           {/* Imagem do avatar */}
