@@ -176,18 +176,14 @@ export function ProfileSelector({ onProfileSelect, selectedProfile, isQuizMode }
   return (
     <div className="relative">
       <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
         className="relative select-none"
-        onClick={handleAvatarClick}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
         style={{
-          cursor: "pointer",
+          cursor: "default",
           userSelect: "none",
           WebkitUserSelect: "none",
           MozUserSelect: "none",
           msUserSelect: "none",
+          pointerEvents: "none",
         }}
       >
         <div
@@ -197,8 +193,8 @@ export function ProfileSelector({ onProfileSelect, selectedProfile, isQuizMode }
             height: "80px",
             zIndex: 1000,
             position: "relative",
-            cursor: "pointer",
-            pointerEvents: "all",
+            cursor: "default",
+            pointerEvents: "none",
           }}
         >
           <img
