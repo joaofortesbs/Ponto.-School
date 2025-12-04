@@ -191,7 +191,7 @@ export function ProfileSelector({ onProfileSelect, selectedProfile, isQuizMode }
         }}
       >
         <div
-          className="flex items-center justify-center rounded-full bg-orange-500 shadow-lg border-4 border-orange-300 transition-all duration-200"
+          className="flex items-center justify-center rounded-full bg-orange-500 shadow-lg border-4 border-orange-300 transition-all duration-200 overflow-hidden"
           style={{
             width: "80px",
             height: "80px",
@@ -201,34 +201,12 @@ export function ProfileSelector({ onProfileSelect, selectedProfile, isQuizMode }
             pointerEvents: "all",
           }}
         >
-          <div className="text-white pointer-events-none">
-            {currentProfile.icon || <StudentIcon />}
-          </div>
+          <img
+            src="/images/avatar11-sobreposto-pv.webp"
+            alt="Avatar"
+            className="w-full h-full object-cover pointer-events-none"
+          />
         </div>
-
-        <motion.div
-          animate={{ rotate: isExpanded ? 45 : 0 }}
-          className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full shadow-md flex items-center justify-center border-2 transition-all duration-200 bg-white border-orange-200"
-          style={{
-            zIndex: 1001,
-            cursor: "pointer",
-            pointerEvents: "none",
-          }}
-        >
-          <svg
-            className="w-3 h-3 text-orange-500 pointer-events-none"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-            />
-          </svg>
-        </motion.div>
       </motion.div>
 
       <AnimatePresence>
