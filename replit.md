@@ -97,6 +97,21 @@ Preferred communication style: Simple, everyday language.
 - **Sharp Library**: Added for high-performance image processing
 - **Updated References**: All source files (.tsx, .jsx, .js, .css, .html) updated to use .webp extensions
 
+### December 2024 - Navigation Performance Optimization
+- **ProtectedRoute Optimization**: Implemented optimistic rendering with background revalidation
+  - Uses localStorage cache (auth_token, user_id, auth_status) for instant initial render
+  - Always performs background auth revalidation to ensure security
+  - Clears stale tokens and redirects to login if revalidation fails
+- **Removed Redundant Suspense Boundaries**: Collapsed 15+ individual route Suspense wrappers
+  - Routes now rely on single Suspense in Home.tsx
+  - Eliminates "waterfall" loading animations between sections
+  - Faster perceived navigation within dashboard
+- **Message Sync System**: Seamless message synchronization between sales page and School Power
+  - `src/lib/message-sync.ts` handles localStorage-based message persistence with 24h expiry
+  - Sales page saves messages and redirects based on login status
+  - LoginForm checks for pending messages post-login
+  - SchoolPowerPage auto-sends saved messages on load
+
 ### December 2024 - Sidebar Menu Reorganization (FINAL)
 - **Minhas Criações**: Added new expandable section for Professor users below "School Power" containing:
   - Atividades (disabled/locked)
