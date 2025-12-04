@@ -173,11 +173,11 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 />
               </div>
 
-              {/* Caixa de Mensagem dentro do mesmo container Ripple */}
+              {/* Caixa de Mensagem dentro do mesmo container Ripple - ACIMA dos 4 cards */}
               <div
-                className={`absolute ${isMobile && isQuizMode ? 'bottom-4' : 'bottom-6'} left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto`}
+                className={`absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto`}
                 style={{
-                  marginTop: isMobile && isQuizMode ? "-120px" : "-180px",
+                  bottom: isMobile && isQuizMode ? "130px" : "200px",
                   width: isMobile && isQuizMode ? "110%" : "auto"
                 }}
               >
