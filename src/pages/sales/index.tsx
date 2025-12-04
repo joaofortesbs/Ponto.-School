@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import ParticlesBackground from "@/sections/SchoolPower/components/ParticlesBackground";
 import { SalesHeader } from "./components/SalesHeader";
 import StackedCardsLeft from './components/StackedCardsLeft';
@@ -7,13 +8,24 @@ import StackedCardsRight from './components/StackedCardsRight';
 import ChatInput from '@/sections/SchoolPower/components/ChatInput';
 import { QuickAccessCards } from '@/sections/SchoolPower/components/4-cards-pré-prompts';
 import { Button } from "@/components/ui/button";
+import { processMessageFromSalesPage } from "@/lib/message-sync";
 
 export default function SalesPage() {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleSendMessage = (message: string, files?: any[]) => {
     console.log('📨 Mensagem enviada na página de vendas:', message);
     console.log('📎 Arquivos:', files?.length || 0);
+    
+    if (!message.trim()) return;
+    
+    // Processar mensagem e obter redirecionamento
+    const result = processMessageFromSalesPage(message, files);
+    console.log('🔄 Resultado do processamento:', result);
+    
+    // Redirecionar baseado no resultado
+    navigate(result.path);
   };
 
   const handleCardClick = (cardName: string) => {

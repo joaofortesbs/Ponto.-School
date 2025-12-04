@@ -5,6 +5,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, CheckCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useNeonAuth } from "@/hooks/useNeonAuth";
+import { 
+  getPostLoginRedirectPath, 
+  markUserHasLoggedIn,
+  hasPendingMessage 
+} from "@/lib/message-sync";
 
 interface FormData {
   email: string;
@@ -128,6 +133,9 @@ export function LoginForm() {
         console.log("✅ Login realizado com sucesso!");
         setSuccess(true);
 
+        // Marcar que usuário já fez login
+        markUserHasLoggedIn();
+
         // Limpar dados de registro
         localStorage.removeItem("lastRegisteredEmail");
         localStorage.removeItem("lastRegisteredUsername");
@@ -137,16 +145,21 @@ export function LoginForm() {
         
         if (returnToActivity) {
           console.log("🎯 Redirecionando para modo apresentação após login:", returnToActivity);
-          // Limpar o localStorage
           localStorage.removeItem('returnToActivityAfterRegister');
-          // Redirecionar diretamente para a URL salva (já é a rota de apresentação)
           setTimeout(() => {
             window.location.href = returnToActivity;
           }, 1000);
         } else {
-          // Redirecionar para dashboard
+          // Verificar se há mensagem pendente da página de vendas
+          const redirectPath = getPostLoginRedirectPath();
+          console.log("🎯 Caminho de redirecionamento pós-login:", redirectPath);
+          
+          if (hasPendingMessage()) {
+            console.log("📨 Mensagem pendente encontrada - redirecionando para School Power");
+          }
+          
           setTimeout(() => {
-            navigate("/dashboard", { replace: true });
+            navigate(redirectPath, { replace: true });
           }, 1000);
         }
       } else {
