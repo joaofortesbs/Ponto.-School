@@ -150,12 +150,6 @@ interface ProfileSelectorProps {
 export function ProfileSelector({ onProfileSelect, selectedProfile, isQuizMode }: ProfileSelectorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentProfile, setCurrentProfile] = useState(profiles[0]);
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleAvatarClick = () => {
-    const newExpandedState = !isExpanded;
-    setIsExpanded(newExpandedState);
-  };
 
   const handleProfileSelect = (profile: any) => {
     setCurrentProfile(profile);
@@ -165,42 +159,98 @@ export function ProfileSelector({ onProfileSelect, selectedProfile, isQuizMode }
     }
   };
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
-
   return (
     <div className="relative">
+      <style>{`
+        .jota-dollItem {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          overflow: visible;
+          border: 4px solid #000822;
+          transition: transform 0.2s, z-index 0.2s, opacity 0.2s, border 0.2s;
+          cursor: pointer;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #FF6F32;
+        }
+        
+        .jota-dollItem:hover {
+          transform: translateY(-4px) scale(1.1);
+          z-index: 10 !important;
+          border: 3px solid transparent;
+          background-origin: border-box;
+          background-clip: padding-box, border-box;
+          background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF6F32, #FF8C5A, #FFB088);
+        }
+        
+        .jota-dollName {
+          position: absolute;
+          bottom: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          background: white;
+          color: #103a4a;
+          padding: 8px 14px;
+          border-radius: 12px;
+          font-size: 13px;
+          font-weight: 400;
+          white-space: nowrap;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.2s ease, transform 0.2s ease;
+          transform: translateX(-50%) translateY(4px);
+          margin-bottom: 8px;
+          z-index: 20;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .jota-dollName::after {
+          content: '';
+          position: absolute;
+          bottom: -6px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 0;
+          height: 0;
+          border-left: 6px solid transparent;
+          border-right: 6px solid transparent;
+          border-top: 6px solid white;
+        }
+        
+        .jota-dollItem:hover .jota-dollName {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+        
+        .jota-dollItem img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 50%;
+          clip-path: circle(50% at center);
+          display: block;
+          transform: translateY(2px);
+        }
+      `}</style>
+      
       <motion.div
-        className="relative select-none"
-        style={{
-          cursor: "default",
-          userSelect: "none",
-          WebkitUserSelect: "none",
-          MozUserSelect: "none",
-          msUserSelect: "none",
-          pointerEvents: "none",
-        }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="flex justify-center items-center"
       >
-        <div
-          className="flex items-center justify-center rounded-full bg-orange-500 shadow-lg border-4 border-orange-300 transition-all duration-200 overflow-hidden"
-          style={{
-            width: "80px",
-            height: "80px",
-            zIndex: 1000,
-            position: "relative",
-            cursor: "default",
-            pointerEvents: "none",
-          }}
-        >
-          <img
-            src="/images/avatar11-sobreposto-pv.webp"
-            alt="Avatar"
-            className="w-full h-full object-cover pointer-events-none"
+        <div className="jota-dollItem" style={{ zIndex: 4 }}>
+          <span className="jota-dollName">Jota é o <span style={{ color: '#FF6B00' }}>líder de equipe</span></span>
+          <img 
+            src="/images/avatar11-sobreposto-pv.webp" 
+            alt="Jota" 
+            width={60} 
+            height={60} 
+            loading="eager" 
+            decoding="async" 
           />
         </div>
       </motion.div>
