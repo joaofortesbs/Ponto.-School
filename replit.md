@@ -64,6 +64,22 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### December 2024 - Component Separation & Avatar Auto-Trigger
+- **New Component: JotaAvatar.tsx** - Dedicated avatar component for School Power section
+  - Completely independent from sales page avatar
+  - Auto-triggered hover animation on page load (300ms delay)
+  - Hover state remains FIXED while user is in School Power section
+  - Separated CSS classes: `.jota-avatar-item`, `.jota-avatar-label`, `.is-hover-active`
+  - Framer Motion entrance animation: scale 0→1, opacity 0→1 (0.5s duration, 0.3s delay)
+- **Component Isolation Benefits**:
+  - Modifications to School Power avatar only affect JotaAvatar.tsx
+  - Sales page avatar (ProfileSelector.tsx) remains completely independent
+  - Each component can be independently styled, animated, or modified
+- **Architecture**:
+  - `src/sections/SchoolPower/components/JotaAvatar.tsx` - New dedicated component
+  - `src/sections/SchoolPower/SchoolPowerPage.tsx` - Updated to use JotaAvatar instead of ProfileSelector
+  - `src/sections/SchoolPower/components/index.ts` - Added JotaAvatar export
+
 ### December 2024 - Performance Optimization (PageSpeed)
 - **Code Splitting & Lazy Loading**: Implemented React.lazy() for 15+ pages/components
   - Dashboard, Agenda, Biblioteca, SchoolPower, etc. lazy-loaded on demand

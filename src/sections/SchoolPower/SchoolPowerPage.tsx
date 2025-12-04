@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   TopHeader,
-  ProfileSelector,
+  JotaAvatar,
   ChatInput,
   Particles3D,
   SideMenu,
@@ -198,9 +198,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                   transform: "translate(-50%, -50%)",
                 }}
               >
-                <ProfileSelector
-                  isQuizMode={isQuizMode}
-                />
+                <JotaAvatar />
               </div>
 
               {/* Caixa de Mensagem dentro do mesmo container Ripple - ACIMA dos 4 cards */}
