@@ -150,8 +150,26 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   return (
     <div
       className={`relative flex ${isMobile && isQuizMode ? 'h-screen min-h-screen' : 'h-[90vh] min-h-[650px]'} w-full flex-col items-center justify-center overflow-hidden rounded-lg`}
-      style={{ backgroundColor: "transparent" }}
+      style={{ 
+        backgroundColor: "transparent",
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none'
+      }}
     >
+      <style>{`
+        div:has(> *)::-webkit-scrollbar {
+          display: none;
+        }
+        html, body {
+          overflow-x: hidden;
+          overflow-y: hidden;
+          scrollbar-width: none;
+        }
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
       {/* Background de estrelas - SEMPRE visível em todos os estados */}
       <div className="absolute inset-0 z-0">
         <ParticlesBackground isDarkTheme={isDarkTheme} />

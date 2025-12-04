@@ -160,3 +160,8 @@ Preferred communication style: Simple, everyday language.
   - Adjusted container position from top-[57%] to top-[48%] (desktop), top-[45%] to top-[42%] (mobile)
   - Reduced TopHeader margin from 7px to 3px (desktop), 4px to 2px (mobile)
   - Result: More compact interface with less empty space at the top
+- **Scrollbar Removal**: Completely hidden scrollbar from interface
+  - Added CSS to remove ::-webkit-scrollbar display
+  - Set scrollbar-width: none for Firefox compatibility
+  - Set ms-overflow-style: none for IE/Edge compatibility
+  - Ensures no shadowed space at bottom of interface
