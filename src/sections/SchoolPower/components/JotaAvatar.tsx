@@ -6,34 +6,64 @@ import { motion } from "framer-motion";
  * Componente JotaAvatar - Avatar de Jota específico para School Power
  * 
  * Características:
- * - Auto-triggered hover animation ao entrar na página
- * - Hover state fixo enquanto usuário está na seção
- * - Componente independente para modificações isoladas
+ * - Avatar VISÍVEL imediatamente ao entrar na página (sem hover inicial)
+ * - Hover ativado automaticamente após um breve delay
+ * - Hover state FIXO enquanto usuário está na seção
+ * - Texto rotativo com efeito typewriter
  * 
- * Comportamento:
- * 1. Ao montar, inicia animação que simula um hover (0.6s)
- * 2. Após animação, mantém hover state FIXO
- * 3. Hover effect permanece enquanto na seção
+ * Fluxo:
+ * 1. Avatar aparece IMEDIATAMENTE (visível, sem hover)
+ * 2. Após ~600ms, hover é ativado (avatar sobe e gradiente ativa)
+ * 3. Label com texto rotativo + typewriter aparece
+ * 4. Palavras rotam a cada 2s
  */
 export function JotaAvatar() {
+  const words = ["Construir", "Programar", "Montar", "Desenvolver", "Projetar"];
+  
   const [isHoverActive, setIsHoverActive] = useState(false);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [displayedText, setDisplayedText] = useState("");
+  const currentWord = words[currentWordIndex];
 
+  // Efeito 1: Ativar hover após um delay
   useEffect(() => {
-    // Auto-trigger hover animation ao montar o componente
     const hoverTimer = setTimeout(() => {
       setIsHoverActive(true);
-    }, 300); // Delay para sincronizar com animação de entrada do motion.div
+    }, 600); // Avatar fica visível por 600ms ANTES do hover ativar
 
     return () => clearTimeout(hoverTimer);
   }, []);
+
+  // Efeito 2: Rotação de palavras (muda a cada 2 segundos)
+  useEffect(() => {
+    const wordTimer = setInterval(() => {
+      setCurrentWordIndex((prev) => (prev + 1) % words.length);
+      setDisplayedText(""); // Reset typewriter quando muda palavra
+    }, 2500); // 2.5s: 2s de exibição + 0.5s de transição
+
+    return () => clearInterval(wordTimer);
+  }, []);
+
+  // Efeito 3: Typewriter effect (anima os caracteres da palavra)
+  useEffect(() => {
+    if (displayedText.length < currentWord.length) {
+      const typeTimer = setTimeout(() => {
+        setDisplayedText(currentWord.slice(0, displayedText.length + 1));
+      }, 80); // Velocidade do typewriter: 80ms por caractere
+
+      return () => clearTimeout(typeTimer);
+    }
+  }, [displayedText, currentWord]);
 
   return (
     <div className="jota-avatar-container">
       <style>{`
         .jota-avatar-container {
           display: flex;
+          flex-direction: column;
           justify-content: center;
           align-items: center;
+          gap: 16px;
         }
 
         /* Componente circular do avatar */
@@ -49,11 +79,10 @@ export function JotaAvatar() {
           align-items: center;
           justify-content: center;
           background: #FF6F32;
-        }
-
-        /* Estado padrão - sem hover */
-        .jota-avatar-item {
-          transition: transform 0.2s, z-index 0.2s, opacity 0.2s, border 0.2s;
+          transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                      z-index 0.3s, 
+                      border 0.3s, 
+                      box-shadow 0.3s;
         }
 
         /* Estado ATIVO (hover fixo ou hover simulado) */
@@ -64,9 +93,10 @@ export function JotaAvatar() {
           background-origin: border-box;
           background-clip: padding-box, border-box;
           background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF6F32, #FF8C5A, #FFB088);
+          box-shadow: 0 8px 16px rgba(255, 111, 50, 0.3);
         }
 
-        /* Tooltip - Label "Jota é o líder de equipe" */
+        /* Tooltip - Label "O que vamos [Palavra]" */
         .jota-avatar-label {
           position: absolute;
           bottom: 100%;
@@ -74,18 +104,19 @@ export function JotaAvatar() {
           transform: translateX(-50%);
           background: white;
           color: #103a4a;
-          padding: 8px 14px;
+          padding: 10px 16px;
           border-radius: 12px;
           font-size: 13px;
-          font-weight: 400;
+          font-weight: 500;
           white-space: nowrap;
           opacity: 0;
           pointer-events: none;
-          transition: opacity 0.2s ease, transform 0.2s ease;
-          transform: translateX(-50%) translateY(4px);
+          transition: opacity 0.3s ease, transform 0.3s ease;
+          transform: translateX(-50%) translateY(8px);
           margin-bottom: 8px;
           z-index: 20;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          letter-spacing: 0.3px;
         }
 
         /* Seta do tooltip (triângulo branco) */
@@ -127,29 +158,62 @@ export function JotaAvatar() {
           background-origin: border-box;
           background-clip: padding-box, border-box;
           background-image: linear-gradient(#000822, #000822), linear-gradient(135deg, #FF6F32, #FF8C5A, #FFB088);
+          box-shadow: 0 8px 16px rgba(255, 111, 50, 0.3);
         }
 
         .jota-avatar-item:hover .jota-avatar-label {
           opacity: 1;
           transform: translateX(-50%) translateY(0);
         }
+
+        /* Texto rotativo com typewriter */
+        .rotating-word {
+          display: inline;
+          color: #FF6B00;
+          font-weight: 600;
+          min-width: 60px;
+        }
+
+        /* Cursor do typewriter */
+        .typewriter-cursor {
+          display: inline-block;
+          width: 2px;
+          height: 1em;
+          background-color: #FF6B00;
+          margin-left: 2px;
+          animation: blink 0.7s infinite;
+        }
+
+        @keyframes blink {
+          0%, 49% {
+            opacity: 1;
+          }
+          50%, 100% {
+            opacity: 0;
+          }
+        }
       `}</style>
 
-      {/* Animação de entrada + container */}
+      {/* Animação de entrada IMEDIATA + container */}
       <motion.div
-        initial={{ scale: 0, opacity: 0 }}
+        initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="flex justify-center items-center"
+        transition={{ duration: 0.4, delay: 0 }} // Sem delay: aparece IMEDIATAMENTE
+        className="flex justify-center items-center flex-col"
       >
         {/* Avatar circular de Jota */}
         <div 
           className={`jota-avatar-item ${isHoverActive ? 'is-hover-active' : ''}`}
           style={{ zIndex: 4 }}
         >
-          {/* Tooltip label */}
+          {/* Tooltip label com texto rotativo */}
           <span className="jota-avatar-label">
-            Jota é o <span style={{ color: '#FF6B00' }}>líder de equipe</span>
+            O que vamos{" "}
+            <span className="rotating-word">
+              {displayedText}
+              {displayedText.length < currentWord.length && <span className="typewriter-cursor" />}
+            </span>
+            {displayedText.length === currentWord.length && <span className="typewriter-cursor" />}
           </span>
 
           {/* Imagem do avatar */}

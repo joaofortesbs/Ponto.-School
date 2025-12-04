@@ -64,21 +64,30 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### December 2024 - Component Separation & Avatar Auto-Trigger
-- **New Component: JotaAvatar.tsx** - Dedicated avatar component for School Power section
-  - Completely independent from sales page avatar
-  - Auto-triggered hover animation on page load (300ms delay)
-  - Hover state remains FIXED while user is in School Power section
-  - Separated CSS classes: `.jota-avatar-item`, `.jota-avatar-label`, `.is-hover-active`
-  - Framer Motion entrance animation: scale 0→1, opacity 0→1 (0.5s duration, 0.3s delay)
-- **Component Isolation Benefits**:
-  - Modifications to School Power avatar only affect JotaAvatar.tsx
+### December 2024 - Enhanced Avatar Animation with Typewriter Effect
+- **Improved JotaAvatar.tsx Component** - Avatar now appears immediately with delayed hover + rotating text
+  - **Avatar Visibility**: Appears INSTANTLY (no hover on load) - scale 0.8→1, opacity 0→1 (0.4s, no delay)
+  - **Auto-Hover**: Activated after 600ms delay, providing visual feedback before user interacts
+  - **Hover State**: FIXED while user is in School Power section
+  - **Text Rotation**: "O que vamos [rotating word]" with 5 words: Construir, Programar, Montar, Desenvolver, Projetar
+  - **Typewriter Effect**: Characters animate in sequentially (80ms per character) as word changes
+  - **Word Rotation**: Changes every 2.5s (2s display + 0.5s transition)
+  - **Cursor Animation**: Blinking cursor (0.7s cycle) shows while typing
+- **CSS Enhancements**:
+  - Cubic-bezier easing for smooth hover transitions: `cubic-bezier(0.34, 1.56, 0.64, 1)`
+  - Box-shadow glow effect on hover: `0 8px 16px rgba(255, 111, 50, 0.3)`
+  - Separated CSS classes: `.jota-avatar-item`, `.jota-avatar-label`, `.rotating-word`, `.typewriter-cursor`
+- **Animation Sequence**:
+  1. Avatar enters immediately (0.4s scale animation)
+  2. After 600ms, hover effect activates (elevation + gradient)
+  3. Label appears with rotating text
+  4. Text typing effect starts (80ms per character)
+  5. After 2s display time, word rotates and typewriter resets
+  6. Cycle repeats infinitely
+- **Component Isolation**:
+  - Modifications to School Power avatar ONLY affect JotaAvatar.tsx
   - Sales page avatar (ProfileSelector.tsx) remains completely independent
-  - Each component can be independently styled, animated, or modified
-- **Architecture**:
-  - `src/sections/SchoolPower/components/JotaAvatar.tsx` - New dedicated component
-  - `src/sections/SchoolPower/SchoolPowerPage.tsx` - Updated to use JotaAvatar instead of ProfileSelector
-  - `src/sections/SchoolPower/components/index.ts` - Added JotaAvatar export
+  - Each component independently styled, animated, and modified
 
 ### December 2024 - Performance Optimization (PageSpeed)
 - **Code Splitting & Lazy Loading**: Implemented React.lazy() for 15+ pages/components
