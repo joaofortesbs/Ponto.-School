@@ -147,3 +147,12 @@ Preferred communication style: Simple, everyday language.
   - Teacher App (disabled/locked)
 - **Agente School Removed**: Completely removed "Agente School" from sidebar navigation and deleted all related files (pages, components, routes)
 - **Conquistas Removed**: Removed the Conquistas (achievements) section from the sidebar menu and deleted associated files
+
+### December 2024 - Avatar Text & Container Structure Updates
+- **Avatar Text Refinement**: Updated rotating text to "O que vamos [word?]" with "?" integrated in orange (#FF6B00) for each word
+  - Words: Construir?, Programar?, Montar?, Desenvolver?, Projetar?
+  - Removed "hoje?" from text to keep it concise and focused
+- **Unified Container Structure**: Created wrapper container grouping ChatInput and QuickAccessCards
+  - Maintains exact positioning, spacing, and sizing of child components
+  - Enables future styling/manipulation of message + cards group as single unit
+  - Structure: Parent div (absolute, bottom: 25px) contains ChatInput (marginBottom: 65px) + QuickAccessCards

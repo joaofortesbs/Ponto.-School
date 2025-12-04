@@ -201,34 +201,38 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 <JotaAvatar />
               </div>
 
-              {/* Caixa de Mensagem dentro do mesmo container Ripple - ACIMA dos 4 cards */}
+              {/* Container que agrupa Caixa de Mensagem e 4 Cards */}
               <div
-                className={`absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto`}
+                className="absolute left-1/2 transform -translate-x-1/2 z-40"
                 style={{
-                  bottom: isMobile && isQuizMode ? "95px" : "90px",
+                  bottom: isMobile && isQuizMode ? "10px" : "25px",
                   width: isMobile && isQuizMode ? "110%" : "auto"
                 }}
               >
-                <ChatInput
-                  isDarkTheme={isDarkTheme}
-                  onSend={handleSendMessage}
-                  externalSelectedCard={selectedCard}
-                  onCardClick={handleCardClick}
-                />
-              </div>
+                {/* Caixa de Mensagem dentro do container wrapper */}
+                <div
+                  className="pointer-events-auto"
+                  style={{
+                    marginBottom: isMobile && isQuizMode ? "65px" : "65px"
+                  }}
+                >
+                  <ChatInput
+                    isDarkTheme={isDarkTheme}
+                    onSend={handleSendMessage}
+                    externalSelectedCard={selectedCard}
+                    onCardClick={handleCardClick}
+                  />
+                </div>
 
-              {/* 4 Cards Retangulares abaixo da caixa de mensagens */}
-              <div
-                className="absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto"
-                style={{
-                  bottom: isMobile && isQuizMode ? '10px' : '25px',
-                  width: isMobile && isQuizMode ? "110%" : "auto"
-                }}
-              >
-                <QuickAccessCards
-                  selectedCard={selectedCard}
-                  onCardClick={handleCardClick}
-                />
+                {/* 4 Cards Retangulares abaixo da caixa de mensagens */}
+                <div
+                  className="pointer-events-auto"
+                >
+                  <QuickAccessCards
+                    selectedCard={selectedCard}
+                    onCardClick={handleCardClick}
+                  />
+                </div>
               </div>
             </div>
           </div>
