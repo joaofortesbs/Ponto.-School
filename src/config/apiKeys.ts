@@ -1,9 +1,15 @@
 
 // Configuração centralizada das chaves de API
+// As chaves são lidas das variáveis de ambiente para maior segurança
 export const API_KEYS = {
-  GEMINI: 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs',
+  GEMINI: import.meta.env.VITE_GEMINI_API_KEY || '',
   CLAUDE: '', // Adicionar quando disponível
 } as const;
+
+// Função para obter a chave do Gemini de forma segura
+export const getGeminiApiKey = (): string => {
+  return import.meta.env.VITE_GEMINI_API_KEY || '';
+};
 
 // URLs base das APIs
 export const API_URLS = {

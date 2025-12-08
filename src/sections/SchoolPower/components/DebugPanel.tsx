@@ -291,8 +291,8 @@ export default function DebugPanel() {
     };
 
     try {
-      // Verificar se a chave da API Gemini está disponível
-      const geminiKey = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
+      // Verificar se a chave da API Gemini está disponível via variável de ambiente
+      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
       if (geminiKey) {
         status.gemini = 'active';
       } else {
@@ -598,7 +598,8 @@ export default function DebugPanel() {
                 onClick={async () => {
                   try {
                     const testPrompt = 'Teste de conectividade: responda apenas "OK" se você recebeu esta mensagem.';
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyBHSqe2PLstOR-M9pBn45DQFcuAN3msYmw`, {
+                    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiKey}`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
