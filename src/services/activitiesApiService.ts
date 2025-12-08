@@ -320,3 +320,11 @@ class ActivitiesApiService {
 // Exportar instância singleton
 export const activitiesApi = new ActivitiesApiService();
 export default activitiesApi;
+
+// Exportar métodos individuais para compatibilidade com imports existentes
+export const getUserActivities = (user_id: string) => activitiesApi.getUserActivities(user_id);
+export const updateActivity = (codigo_unico: string, updateData: Pick<ActivityData, 'titulo' | 'descricao' | 'conteudo'>) => activitiesApi.updateActivity(codigo_unico, updateData);
+export const createActivity = (activityData: Omit<ActivityData, 'id' | 'criado_em' | 'atualizado_em'>) => activitiesApi.createActivity(activityData);
+export const getActivityByCode = (codigo_unico: string) => activitiesApi.getActivityByCode(codigo_unico);
+export const deleteActivity = (codigo_unico: string, user_id: string) => activitiesApi.deleteActivity(codigo_unico, user_id);
+export const generateUniqueCode = () => activitiesApi.generateUniqueCode();

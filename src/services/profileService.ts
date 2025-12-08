@@ -1,7 +1,7 @@
 // Serviço para gerenciamento de perfis de usuário
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types/user-profile';
-import { generateUserId, generateSimpleUserId, generateUserIdByPlan, isValidUserId } from '@/lib/generate-user-id';
+import { generateUserId, generateUserIdByPlan, isValidUserId } from '@/lib/generate-user-id';
 
 /**
  * Cria um perfil de usuário com ID automático baseado na UF e tipo de plano
@@ -593,3 +593,9 @@ class ProfileService {
 
 // Exportar uma instância única do serviço
 export const profileService = new ProfileService();
+
+// Exportar métodos individuais para compatibilidade com imports existentes
+export const getCurrentUserProfile = () => profileService.getCurrentUserProfile();
+export const updateUserProfile = (profileData: Partial<UserProfile>) => profileService.updateUserProfile(profileData);
+export const getUserDisplayName = () => profileService.getUserDisplayName();
+export const ensureUserHasId = () => profileService.ensureUserHasId();
