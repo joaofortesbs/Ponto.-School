@@ -151,21 +151,23 @@ Retorne um objeto JSON com a seguinte estrutura:
   ]
 }`;
 
-    // Fazer requisição para a API Gemini
-    const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
+    // Fazer requisição para a API Mistral via HuggingFace
+    const response = await fetch(`${HUGGINGFACE_API_URL}/${MISTRAL_MODEL}`, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
+        inputs: prompt,
+        parameters: {
           temperature: 0.2,
-          topP: 0.8,
-          topK: 40,
-          maxOutputTokens: 2048
+          top_p: 0.8,
+          max_new_tokens: 2048,
+          return_full_text: false,
+        },
+        options: {
+          wait_for_model: true,
         }
       })
     });
@@ -175,7 +177,7 @@ Retorne um objeto JSON com a seguinte estrutura:
     }
 
     const data = await response.json();
-    const aiResponse = data.candidates[0].content.parts[0].text;
+    const aiResponse = Array.isArray(data) ? data[0]?.generated_text || '' : data.generated_text || '';
 
     // Tentar converter a resposta em JSON
     try {
@@ -324,32 +326,27 @@ ${historyContext}
 Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
     }
 
-    // Configuração do Gemini para análise de dados ou chat normal
-    const generationConfig = isDataAnalysisRequest 
-      ? {
-          temperature: 0.2, // Menor temperatura para resultados mais precisos em análise de dados
-          topP: 0.9,
-          topK: 40,
-          maxOutputTokens: 2048
-        }
-      : {
-          temperature: 0.7,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 2048
-        };
+    // Configuração do Mistral para análise de dados ou chat normal
+    const temperature = isDataAnalysisRequest ? 0.2 : 0.7;
 
-    // Fazer a requisição para a API Gemini
-    const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
+    // Fazer a requisição para a API Mistral via HuggingFace
+    const response = await fetch(`${HUGGINGFACE_API_URL}/${MISTRAL_MODEL}`, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig
+        inputs: prompt,
+        parameters: {
+          temperature,
+          top_p: 0.9,
+          max_new_tokens: 2048,
+          return_full_text: false,
+        },
+        options: {
+          wait_for_model: true,
+        }
       })
     });
 
@@ -359,8 +356,8 @@ Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
 
     const data = await response.json();
 
-    // Extrair a resposta da IA
-    let aiResponse = data.candidates[0].content.parts[0].text;
+    // Extrair a resposta da IA (HuggingFace retorna array)
+    let aiResponse = Array.isArray(data) ? data[0]?.generated_text || '' : data.generated_text || '';
 
     // Para solicitações JSON, retornar a resposta sem modificações
     if (isDataAnalysisRequest) {
