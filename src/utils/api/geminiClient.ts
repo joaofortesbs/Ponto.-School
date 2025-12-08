@@ -23,7 +23,7 @@ export class GeminiClient {
   private baseUrl: string;
 
   constructor() {
-    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+    this.apiKey = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
     this.baseUrl = API_URLS.GEMINI;
   }
 
