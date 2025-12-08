@@ -9,10 +9,10 @@ import { sequenciaDidaticaPrompt } from '../prompts/sequenciaDidaticaPrompt';
 import { validateSequenciaDidaticaData } from './sequenciaDidaticaValidator';
 import { geminiLogger } from '../../../utils/geminiDebugLogger';
 
-// Usar API Key centralizada via variável de ambiente
-import { getGeminiApiKey, API_URLS } from '@/config/apiKeys';
+// Usar API Key centralizada
+import { API_KEYS, API_URLS } from '@/config/apiKeys';
 
-const GEMINI_API_KEY = getGeminiApiKey();
+const GEMINI_API_KEY = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
 const GEMINI_API_URL = API_URLS.GEMINI;
 
 interface GeminiResponse {

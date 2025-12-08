@@ -19,9 +19,8 @@ export interface ActionPlanActivity {
   approved: boolean;
 }
 
-// Chave da API Gemini para School Power via variável de ambiente
-import { getGeminiApiKey } from '@/config/apiKeys';
-export const GEMINI_API_KEY = getGeminiApiKey();
+// Chave da API Gemini para School Power
+export const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
 
 /**
  * Encontra uma atividade do School Power pelo ID

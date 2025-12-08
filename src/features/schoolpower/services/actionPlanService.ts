@@ -1,6 +1,5 @@
 
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
-import { getGeminiApiKey } from '@/config/apiKeys';
 
 export interface ActionPlanActivity {
   id: string;
@@ -16,7 +15,7 @@ export interface GenerateActionPlanParams {
   contextualizationData: ContextualizationData;
 }
 
-const GEMINI_API_KEY = getGeminiApiKey();
+const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
 
 export async function generateActionPlan(params: GenerateActionPlanParams): Promise<ActionPlanActivity[]> {
   const { initialMessage, contextualizationData } = params;
