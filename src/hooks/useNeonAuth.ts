@@ -41,44 +41,9 @@ export function useNeonAuth() {
 
       const userId = localStorage.getItem('user_id');
       if (userId) {
-        // Usar proxy do Vite para conectar ao backend
-        const backendUrls = [
-          `/api/perfis?id=${userId}`
-        ];
-
-        let response;
-        let lastError;
-
-        for (const url of backendUrls) {
-          try {
-            response = await fetch(url, {
-              method: 'GET',
-              headers: { 'Content-Type': 'application/json' },
-              signal: AbortSignal.timeout(3000)
-            });
-
-            if (response.ok) {
-              console.log("✅ Conexão estabelecida com:", url);
-              break;
-            }
-          } catch (error) {
-            lastError = error;
-            console.log("Tentando próxima URL...", error.message);
-            continue;
-          }
-        }
-
-        if (!response || !response.ok) {
-          throw lastError || new Error("Nenhuma URL de backend respondeu");
-        }
-
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          console.error("Resposta não é JSON:", await response.text());
-          throw new Error("Resposta inválida do servidor");
-        }
-
-        const result = await response.json();
+        // Usar API centralizada com deduplicação
+        const { fetchProfileById } = await import('@/lib/profile-api');
+        const result = await fetchProfileById(userId);
 
         if (result.success) {
           setAuthState({

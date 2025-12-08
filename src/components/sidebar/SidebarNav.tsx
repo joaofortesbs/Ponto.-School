@@ -241,13 +241,10 @@ export function SidebarNav({
           // Buscar atualizações do servidor em background
           requestAnimationFrame(async () => {
             try {
-              const response = await fetch(`/api/perfis?email=${encodeURIComponent(userData.email)}`, {
-                priority: 'low' // Baixa prioridade para não bloquear
-              });
+              const { fetchProfileByEmail } = await import('@/lib/profile-api');
+              const result = await fetchProfileByEmail(userData.email);
 
-              if (!response.ok) return; // Silenciosamente ignorar erros
-
-              const result = await response.json();
+              if (!result.success) return; // Silenciosamente ignorar erros
 
               if (result.success && result.data) {
                 const profile = result.data;

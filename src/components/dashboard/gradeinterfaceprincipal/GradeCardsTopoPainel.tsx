@@ -32,15 +32,9 @@ export default function GradeCardsTopoPainel() {
 
         console.log("🔍 Buscando avatar do usuário:", userEmail);
 
-        // Buscar perfil no banco Neon
-        const response = await fetch(`/api/perfis?email=${encodeURIComponent(userEmail)}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-
-        const result = await response.json();
+        // Buscar perfil no banco Neon (com deduplicação)
+        const { fetchProfileByEmail } = await import('@/lib/profile-api');
+        const result = await fetchProfileByEmail(userEmail);
 
         if (result.success && result.data) {
           const avatarUrl = result.data.imagem_avatar;
