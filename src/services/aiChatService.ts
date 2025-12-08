@@ -1,13 +1,14 @@
 import axios from 'axios';
 
 // Chaves de API
-const XAI_API_KEY = 'xai-PGLSB6snVtQm82k7xEmfCSo3RjkO41ICX4dUagAp5bz2GY02NTVqO6XWEXuNK5HCYWpYBYuz7WP2ENFP';
-// Usar a chave da API do Gemini
-const GEMINI_API_KEY = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
+const XAI_API_KEY = import.meta.env.VITE_XAI_API_KEY || 'xai-PGLSB6snVtQm82k7xEmfCSo3RjkO41ICX4dUagAp5bz2GY02NTVqO6XWEXuNK5HCYWpYBYuz7WP2ENFP';
+// Migrado para Mistral via HuggingFace (backup/fallback)
+const HUGGINGFACE_API_KEY = import.meta.env.VITE_HUGGINGFACE_API_KEY || '';
+const HUGGINGFACE_API_URL = 'https://api-inference.huggingface.co/models';
+const MISTRAL_MODEL = 'mistralai/Mistral-Nemo-Instruct-2407';
 
 // URLs base
 const XAI_BASE_URL = 'https://api.x.ai/v1/chat/completions';
-const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Interface para mensagens
 export interface ChatMessage {

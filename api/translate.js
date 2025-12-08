@@ -1,11 +1,15 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// Migrado de Google Gemini para Mistral via HuggingFace
 import express from 'express';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const router = express.Router();
-const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY);
+
+// HuggingFace/Mistral configuration
+const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY || '';
+const HUGGINGFACE_API_URL = 'https://api-inference.huggingface.co/models';
+const MISTRAL_MODEL = 'mistralai/Mistral-Nemo-Instruct-2407';
 
 const languageNames = {
   'pt': 'Português',
@@ -18,13 +22,10 @@ const languageNames = {
 
 async function translateText(text, targetLanguage, isBatch = false) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    
     const targetLangName = languageNames[targetLanguage] || targetLanguage;
     
     let prompt;
     if (isBatch) {
-      // Tradução em lote - texto é um JSON array
       prompt = `Traduza TODOS os textos do array JSON abaixo para ${targetLangName}. 
 Retorne um array JSON com as traduções na MESMA ORDEM, sem explicações adicionais.
 Mantenha a estrutura JSON exata.
@@ -32,13 +33,45 @@ Mantenha a estrutura JSON exata.
 Array de textos:
 ${text}`;
     } else {
-      // Tradução individual
       prompt = `Traduza o seguinte texto para ${targetLangName}. Retorne APENAS a tradução, sem explicações adicionais:\n\n${text}`;
     }
     
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const translatedText = response.text().trim();
+    const response = await fetch(`${HUGGINGFACE_API_URL}/${MISTRAL_MODEL}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        inputs: prompt,
+        parameters: {
+          temperature: 0.3,
+          max_new_tokens: 2048,
+          return_full_text: false,
+        },
+        options: {
+          wait_for_model: true,
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HuggingFace API Error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    let translatedText = '';
+    
+    if (Array.isArray(data)) {
+      translatedText = data[0]?.generated_text || '';
+    } else if (data.generated_text) {
+      translatedText = data.generated_text;
+    } else if (data.error) {
+      throw new Error(`Model error: ${data.error}`);
+    }
+
+    translatedText = translatedText.trim();
     
     if (isBatch) {
       console.log(`✅ [TRADUÇÃO LOTE] Traduzidos ${JSON.parse(text).length} textos para ${targetLanguage}`);

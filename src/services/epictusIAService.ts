@@ -68,9 +68,11 @@ export const clearChatHistory = (sessionId: string): void => {
   }
 };
 
-// Chave da API Gemini
-const GEMINI_API_KEY = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
-const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+// Migrado para Mistral via HuggingFace
+import { mistralClient } from '@/utils/api/mistralClient';
+const HUGGINGFACE_API_KEY = import.meta.env.VITE_HUGGINGFACE_API_KEY || '';
+const HUGGINGFACE_API_URL = 'https://api-inference.huggingface.co/models';
+const MISTRAL_MODEL = 'mistralai/Mistral-Nemo-Instruct-2407';
 
 // Função para gerar sugestões de foco com base no perfil do usuário e dados da agenda
 export const generateFocusSuggestions = async (userId: string, focusData?: any): Promise<any> => {
