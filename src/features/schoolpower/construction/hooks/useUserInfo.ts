@@ -49,9 +49,15 @@ export const useUserInfo = (): UserInfo => {
 
         console.log('🔍 [useUserInfo] Atualizando dados do usuário no Neon:', userId);
 
-        // Buscar dados do banco Neon (com deduplicação)
-        const { fetchProfileById } = await import('@/lib/profile-api');
-        const result = await fetchProfileById(userId);
+        // Buscar dados do banco Neon
+        const response = await fetch(`/api/perfis?id=${encodeURIComponent(userId)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        const result = await response.json();
 
         if (result.success && result.data) {
           // result.data pode ser um array ou um objeto direto

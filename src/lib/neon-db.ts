@@ -39,10 +39,21 @@ export async function tableExists(tableName: string): Promise<boolean> {
   return result.success && result.data?.[0]?.exists;
 }
 
-// Funções específicas para perfis (com deduplicação centralizada)
+// Funções específicas para perfis
 export async function findProfileByEmail(email: string) {
-  const { fetchProfileByEmail } = await import('@/lib/profile-api');
-  return fetchProfileByEmail(email);
+  try {
+    const response = await fetch(`/api/perfis?email=${encodeURIComponent(email)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('❌ Erro ao buscar perfil por email:', error);
+    return { success: false, error: 'Erro ao buscar perfil' };
+  }
 }
 
 export async function findProfileByUsername(username: string) {
@@ -62,8 +73,19 @@ export async function findProfileByUsername(username: string) {
 }
 
 export async function findProfileById(id: string) {
-  const { fetchProfileById } = await import('@/lib/profile-api');
-  return fetchProfileById(id);
+  try {
+    const response = await fetch(`/api/perfis?id=${encodeURIComponent(id)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('❌ Erro ao buscar perfil por ID:', error);
+    return { success: false, error: 'Erro ao buscar perfil' };
+  }
 }
 
 export async function createProfile(profileData: {

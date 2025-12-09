@@ -65,27 +65,10 @@ export async function getUserProfileById(userId: string): Promise<UserProfile | 
 }
 
 class ProfileService {
-  private inFlightRequest: Promise<UserProfile | null> | null = null;
-  
   /**
    * Obter o perfil do usuário atual
    */
   async getCurrentUserProfile(): Promise<UserProfile | null> {
-    if (this.inFlightRequest) {
-      return this.inFlightRequest;
-    }
-    
-    this.inFlightRequest = this._fetchCurrentUserProfile();
-    
-    try {
-      const result = await this.inFlightRequest;
-      return result;
-    } finally {
-      this.inFlightRequest = null;
-    }
-  }
-  
-  private async _fetchCurrentUserProfile(): Promise<UserProfile | null> {
     try {
       // Verificar cache primeiro para retorno instantâneo
       const cachedProfile = localStorage.getItem('userProfile');

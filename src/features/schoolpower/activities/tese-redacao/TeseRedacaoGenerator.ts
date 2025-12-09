@@ -1,6 +1,5 @@
 
-// Migrado de Google Gemini para Mistral via HuggingFace
-import { mistralClient } from '@/utils/api/mistralClient';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface TeseRedacaoData {
   title: string;
@@ -12,13 +11,26 @@ interface TeseRedacaoData {
 }
 
 export class TeseRedacaoGenerator {
+  private genAI: GoogleGenerativeAI;
+  private model: any;
+
   constructor() {
-    console.log('✅ [TeseRedacaoGenerator] Inicializado com Mistral/HuggingFace API');
+    // Usar GEMINI_API_KEY do Replit Secrets
+    const apiKey = import.meta.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || '';
+    
+    if (!apiKey) {
+      console.error('❌ [TeseRedacaoGenerator] GEMINI_API_KEY não encontrada nos Secrets!');
+    } else {
+      console.log('✅ [TeseRedacaoGenerator] API Key do Gemini encontrada');
+    }
+    
+    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
   }
 
   async generateTeseRedacaoContent(data: TeseRedacaoData): Promise<any> {
     console.log('=====================================');
-    console.log('🎯 [TeseRedacaoGenerator] INICIANDO GERAÇÃO COM MISTRAL');
+    console.log('🎯 [TeseRedacaoGenerator] INICIANDO GERAÇÃO');
     console.log('=====================================');
     console.log('📊 [TeseRedacaoGenerator] Dados completos recebidos:', JSON.stringify(data, null, 2));
     
@@ -55,7 +67,7 @@ INSTRUÇÕES CRÍTICAS - SIGA EXATAMENTE:
 5. Use o objetivo: ${data.objetivo}
 ${data.contextoAdicional ? `6. Considere o contexto: ${data.contextoAdicional}` : ''}
 
-RETORNE APENAS JSON VÁLIDO (SEM markdown):
+RETORNE APENAS JSON VÁLIDO (SEM \`\`\`json, SEM MARKDOWN):
 {
   "title": "${data.title}",
   "temaRedacao": "${data.temaRedacao}",
@@ -97,17 +109,17 @@ RETORNE APENAS JSON VÁLIDO (SEM markdown):
     "tesesParaComparar": [
       {
         "id": "A",
-        "tese": "Primeira tese bem fundamentada sobre o tema (200-400 caracteres)",
+        "tese": "Primeira tese bem fundamentada sobre o tema",
         "pontosFortres": ["Clara", "Objetiva", "Bem posicionada"]
       },
       {
         "id": "B",
-        "tese": "Segunda tese com abordagem diferente sobre o tema (200-400 caracteres)",
+        "tese": "Segunda tese com abordagem diferente sobre o tema",
         "pontosFortres": ["Propositiva", "Crítica", "Contextualizada"]
       },
       {
         "id": "C",
-        "tese": "Terceira tese com outra perspectiva sobre o tema (200-400 caracteres)",
+        "tese": "Terceira tese com outra perspectiva sobre o tema",
         "pontosFortres": ["Abrangente", "Reflexiva", "Fundamentada"]
       }
     ]
@@ -141,10 +153,12 @@ IMPORTANTE:
 `;
 
     try {
-      console.log('🚀 [TeseRedacaoGenerator] Enviando prompt para API Mistral...');
+      console.log('🚀 [TeseRedacaoGenerator] Enviando prompt para API Gemini...');
       console.log('📤 [TeseRedacaoGenerator] Tamanho do prompt:', prompt.length, 'caracteres');
       
-      const text = await mistralClient.generateContent(prompt);
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
 
       console.log('📥 [TeseRedacaoGenerator] Resposta bruta da API:', text.substring(0, 500) + '...');
       console.log('📏 [TeseRedacaoGenerator] Tamanho da resposta:', text.length, 'caracteres');
@@ -175,7 +189,7 @@ IMPORTANTE:
       // Validação rigorosa das teses
       const tesesValidas = content.etapa2_battleTeses?.tesesParaComparar?.length === 3 &&
                           content.etapa2_battleTeses.tesesParaComparar.every((t: any) => 
-                            t.id && t.tese && t.tese.length >= 100 && t.pontosFortres?.length > 0
+                            t.id && t.tese && t.tese.length >= 150 && t.pontosFortres?.length > 0
                           );
 
       if (!tesesValidas) {
@@ -183,11 +197,19 @@ IMPORTANTE:
         console.warn('⚠️  [TeseRedacaoGenerator] TESES INVÁLIDAS OU INCOMPLETAS DA IA!');
         console.warn('=====================================');
         console.warn('🔧 [TeseRedacaoGenerator] Gerando teses PERSONALIZADAS baseadas no tema...');
+        console.warn('📝 Tema:', data.temaRedacao);
+        console.warn('📝 Nível:', data.nivelDificuldade);
+        console.warn('📝 Objetivo:', data.objetivo);
+        console.warn('📝 Competências:', data.competenciasENEM);
+        console.warn('📝 Contexto:', data.contextoAdicional || 'Não fornecido');
         
         // Gerar teses ALTAMENTE PERSONALIZADAS
         const tema = data.temaRedacao;
         const nivel = data.nivelDificuldade.toLowerCase();
         const objetivo = data.objetivo;
+        
+        // Extrair palavras-chave do tema
+        const palavrasChave = tema.split(' ').filter(p => p.length > 3);
         const contexto = data.contextoAdicional || 'realidade brasileira';
         
         content.etapa2_battleTeses = {
@@ -212,15 +234,27 @@ IMPORTANTE:
         };
         
         console.warn('✅ [TeseRedacaoGenerator] Teses PERSONALIZADAS geradas para o tema:', data.temaRedacao);
+        console.warn('📊 [TeseRedacaoGenerator] Teses geradas:');
+        content.etapa2_battleTeses.tesesParaComparar.forEach((t: any, i: number) => {
+          console.warn(`  ${i + 1}. [${t.id}] (${t.tese.length} caracteres): "${t.tese.substring(0, 80)}..."`);
+        });
+        console.warn('=====================================');
       } else {
         console.log('=====================================');
-        console.log('✅✅✅ [TeseRedacaoGenerator] TESES GERADAS PELA IA MISTRAL COM SUCESSO! ✅✅✅');
+        console.log('✅✅✅ [TeseRedacaoGenerator] TESES GERADAS PELA IA GEMINI COM SUCESSO! ✅✅✅');
+        console.log('=====================================');
+        console.log('📝 [TeseRedacaoGenerator] Detalhes das teses geradas:');
+        content.etapa2_battleTeses.tesesParaComparar.forEach((tese: any, index: number) => {
+          console.log(`\n  🔹 Tese ${index + 1} (ID: ${tese.id}):`);
+          console.log(`     Conteúdo (${tese.tese.length} caracteres): "${tese.tese}"`);
+          console.log(`     Pontos fortes: ${tese.pontosFortres?.join(', ')}`);
+        });
         console.log('=====================================');
       }
 
       // Salvar teses geradas em cache adicional
       if (content.etapa2_battleTeses && content.etapa2_battleTeses.tesesParaComparar) {
-        const cacheKey = `mistral_teses_cache_${Date.now()}`;
+        const cacheKey = `gemini_teses_cache_${Date.now()}`;
         try {
           localStorage.setItem(cacheKey, JSON.stringify({
             teses: content.etapa2_battleTeses.tesesParaComparar,
@@ -242,12 +276,48 @@ IMPORTANTE:
     }
   }
 
-  private generateFallbackContent(data: TeseRedacaoData) {
-    const tema = data.temaRedacao;
-    const nivel = data.nivelDificuldade.toLowerCase();
-    const objetivo = data.objetivo;
-    const contexto = data.contextoAdicional || 'realidade brasileira';
+  private generateFallbackTeses(data: TeseRedacaoData) {
+    return [
+      {
+        id: 1,
+        tese: `Tese 1: ${data.temaRedacao} é um tema crucial para a sociedade brasileira`,
+        argumentos: [
+          'Impacto social significativo',
+          'Necessidade de debate público',
+          'Relevância para políticas públicas'
+        ],
+        explicacao: 'Esta tese aborda a importância do tema proposto.',
+        pontosFortres: ['Clara e objetiva', 'Argumentos sólidos'],
+        pontosMelhorar: ['Adicionar dados estatísticos']
+      },
+      {
+        id: 2,
+        tese: `Tese 2: A solução para ${data.temaRedacao} requer ação conjunta`,
+        argumentos: [
+          'Cooperação entre diferentes setores',
+          'Participação da sociedade civil',
+          'Políticas públicas efetivas'
+        ],
+        explicacao: 'Esta tese propõe uma abordagem colaborativa.',
+        pontosFortres: ['Propositiva', 'Abrangente'],
+        pontosMelhorar: ['Especificar mais as ações']
+      },
+      {
+        id: 3,
+        tese: `Tese 3: ${data.temaRedacao} demanda reflexão crítica urgente`,
+        argumentos: [
+          'Impactos atuais na sociedade',
+          'Projeções futuras preocupantes',
+          'Exemplos históricos relevantes'
+        ],
+        explicacao: 'Esta tese enfatiza a urgência do tema.',
+        pontosFortres: ['Crítica e reflexiva', 'Contextualizada'],
+        pontosMelhorar: ['Ampliar repertório sociocultural']
+      }
+    ];
+  }
 
+  private generateFallbackContent(data: TeseRedacaoData) {
     return {
       title: data.title,
       temaRedacao: data.temaRedacao,
@@ -285,22 +355,22 @@ IMPORTANTE:
       },
       
       etapa2_battleTeses: {
-        instrucoes: `Analise as três teses sobre "${tema}" e escolha a mais adequada`,
+        instrucoes: 'Vote na melhor tese e justifique sua escolha',
         tesesParaComparar: [
           {
             id: 'A',
-            tese: `Diante dos desafios contemporâneos relacionados a ${tema}, observa-se a necessidade urgente de uma abordagem integrada que envolva políticas públicas efetivas, participação social ativa e investimentos estratégicos, considerando ${contexto} para promover transformações significativas e sustentáveis na sociedade brasileira.`,
-            pontosFortres: ['Abordagem contextualizada ao tema', `Adequada ao nível ${nivel}`, 'Propositiva e fundamentada']
+            tese: `A mobilidade urbana brasileira enfrenta desafios estruturais que demandam investimento em transporte público e planejamento integrado.`,
+            pontosFortres: ['Clara e objetiva', 'Bem posicionada']
           },
           {
             id: 'B',
-            tese: `A questão de ${tema} no Brasil reflete desigualdades estruturais e históricas que demandam não apenas soluções pontuais, mas uma reformulação profunda das bases sociais, culturais e econômicas, alinhada com ${objetivo}, visando construir uma sociedade mais justa e equitativa.`,
-            pontosFortres: ['Análise crítica contextualizada', 'Alinhada ao objetivo proposto', 'Perspectiva histórico-social']
+            tese: `Os problemas de mobilidade no Brasil refletem décadas de políticas priorizando automóveis em detrimento do transporte coletivo.`,
+            pontosFortres: ['Crítica', 'Contextualizada historicamente']
           },
           {
             id: 'C',
-            tese: `Para alcançar avanços efetivos em ${tema}, é fundamental implementar estratégias multidimensionais que articulem educação de qualidade, desenvolvimento tecnológico, conscientização coletiva e políticas públicas inclusivas para transformações concretas e duradouras.`,
-            pontosFortres: ['Propositiva e pragmática', 'Multidimensional', `Adaptada ao nível ${nivel}`]
+            tese: `Para superar os desafios da mobilidade urbana, é necessário promover conscientização e modernizar a infraestrutura das cidades.`,
+            pontosFortres: ['Propositiva', 'Abrangente']
           }
         ]
       },

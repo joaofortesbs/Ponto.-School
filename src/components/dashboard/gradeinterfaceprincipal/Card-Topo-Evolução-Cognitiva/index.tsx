@@ -34,11 +34,17 @@ export default function CardTopoEvolucaoCognitiva() {
           console.log("⚡ Avatar carregado instantaneamente do cache");
         }
 
-        // 2. ATUALIZAÇÃO EM BACKGROUND: Buscar versão mais recente do servidor (com deduplicação)
+        // 2. ATUALIZAÇÃO EM BACKGROUND: Buscar versão mais recente do servidor
         console.log("🔍 Buscando avatar do usuário:", userEmail);
 
-        const { fetchProfileByEmail } = await import('@/lib/profile-api');
-        const result = await fetchProfileByEmail(userEmail);
+        const response = await fetch(`/api/perfis?email=${encodeURIComponent(userEmail)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        const result = await response.json();
 
         if (result.success && result.data) {
           const avatarUrl = result.data.imagem_avatar;

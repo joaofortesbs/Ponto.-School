@@ -9,13 +9,11 @@ import { sequenciaDidaticaPrompt } from '../prompts/sequenciaDidaticaPrompt';
 import { validateSequenciaDidaticaData } from './sequenciaDidaticaValidator';
 import { geminiLogger } from '../../../utils/geminiDebugLogger';
 
-// Migrado para Mistral via HuggingFace
-import { API_KEYS, API_URLS, AI_MODELS } from '@/config/apiKeys';
-import { mistralClient } from '@/utils/api/mistralClient';
+// Usar API Key centralizada
+import { API_KEYS, API_URLS } from '@/config/apiKeys';
 
-const HUGGINGFACE_API_KEY = API_KEYS.HUGGINGFACE || import.meta.env.VITE_HUGGINGFACE_API_KEY || '';
-const HUGGINGFACE_API_URL = API_URLS.HUGGINGFACE;
-const MISTRAL_MODEL = AI_MODELS.MISTRAL_NEMO;
+const GEMINI_API_KEY = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
+const GEMINI_API_URL = API_URLS.GEMINI;
 
 interface GeminiResponse {
   candidates?: {
