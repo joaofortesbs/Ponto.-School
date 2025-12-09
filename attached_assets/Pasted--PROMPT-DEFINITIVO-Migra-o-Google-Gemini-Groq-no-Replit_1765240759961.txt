@@ -1,0 +1,764 @@
+# PROMPT DEFINITIVO: Migração Google Gemini → Groq no Replit Agent
+
+---
+
+## 🎯 OBJETIVO PRINCIPAL
+
+Realizar migração COMPLETA e SEM ERROS da integração de API do Google Gemini para Groq (llama-3.3-70b-versatile) na plataforma EdTech **Ponto.School**.
+
+Usar esta chave API exatamente: `gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp`
+
+---
+
+## 📋 ETAPA 1: DESCOBERTA E MAPEAMENTO DE ARQUIVOS
+
+### Ação Imediata:
+Procure e mapeie todos os arquivos que contêm referências ao Google Gemini, seguindo EXATAMENTE esta ordem:
+
+```
+1. .env (variáveis de ambiente)
+   - Procure por: GOOGLE_API_KEY, GEMINI_API_KEY, GOOGLE_GEMINI_KEY
+
+2. .env.local (ambiente local)
+   - Procure pelos mesmos padrões
+
+3. .env.example (template de variáveis)
+   - Procure pelos mesmos padrões
+
+4. package.json (dependências)
+   - Procure por: @google/generative-ai, google-generativeai
+
+5. Arquivos de configuração:
+   - config.js, config.ts
+   - .replit (configurações do Replit)
+   - replit.nix (dependências Nix)
+   - environment.json (se existir)
+
+6. Diretório /src (código-fonte)
+   - Procure em TODOS os arquivos .js, .ts, .jsx, .tsx
+   - Padrões de busca:
+     * "GoogleGenerativeAI"
+     * "google/generative-ai"
+     * "Gemini"
+     * "models/gemini"
+     * "gemini-pro"
+     * "GOOGLE_API_KEY"
+
+7. Diretório /lib (bibliotecas utilitárias)
+   - Procure em TODOS os arquivos .js, .ts
+
+8. Diretório /api (rotas/endpoints)
+   - Procure em TODOS os arquivos de API, webhooks, funções serverless
+
+9. Diretório /utils (funções auxiliares)
+   - Procure em TODOS os arquivos
+
+10. Diretório /models (modelos de dados)
+    - Procure em TODOS os arquivos
+
+11. Diretório /services (serviços)
+    - Procure em TODOS os arquivos
+
+12. Diretório /middleware (middleware)
+    - Procure em TODOS os arquivos
+
+13. Arquivos raiz:
+    - server.js, app.js, index.js, main.js, start.js
+    - server.ts, app.ts, index.ts, main.ts
+
+14. Documentação/Comentários:
+    - README.md (para atualizar documentação)
+```
+
+### Saída esperada:
+Uma lista completa como:
+```
+ARQUIVOS COM GOOGLE GEMINI ENCONTRADOS:
+1. .env (linha X)
+2. src/services/ai.js (linhas X, Y, Z)
+3. src/api/chat.js (linhas X, Y)
+...
+```
+
+---
+
+## 📝 ETAPA 2: SUBSTITUIÇÃO EM VARIÁVEIS DE AMBIENTE
+
+### Ação 2.1: Atualizar .env
+
+**ORIGINAL (.env):**
+```env
+GOOGLE_API_KEY=your-google-gemini-key
+GEMINI_MODEL=gemini-pro
+GEMINI_MAX_TOKENS=2048
+```
+
+**NOVO (.env):**
+```env
+GROQ_API_KEY=gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp
+GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_MAX_TOKENS=2048
+```
+
+**Ação:** Faça EXATAMENTE isto:
+- Remova ou comente a linha `GOOGLE_API_KEY`
+- Remova ou comente a linha `GEMINI_MODEL`
+- Adicione as linhas Groq com a chave fornecida
+
+### Ação 2.2: Atualizar .env.local (se existir)
+
+Repita o mesmo processo para `.env.local`
+
+### Ação 2.3: Atualizar .env.example
+
+**ORIGINAL (.env.example):**
+```env
+GOOGLE_API_KEY=your-google-api-key-here
+GEMINI_MODEL=gemini-pro
+```
+
+**NOVO (.env.example):**
+```env
+GROQ_API_KEY=your-groq-api-key-here
+GROQ_MODEL=llama-3.3-70b-versatile
+```
+
+---
+
+## 📦 ETAPA 3: ATUALIZAR DEPENDÊNCIAS
+
+### Ação 3.1: Verificar package.json
+
+**REMOVER:**
+```bash
+npm uninstall @google/generative-ai
+npm uninstall google-generativeai
+```
+
+**INSTALAR:**
+```bash
+npm install openai
+npm install dotenv
+```
+
+**ATUALIZAR package.json:**
+
+**ORIGINAL:**
+```json
+{
+  "dependencies": {
+    "@google/generative-ai": "^0.3.0",
+    "express": "^4.18.2",
+    "dotenv": "^16.0.0"
+  }
+}
+```
+
+**NOVO:**
+```json
+{
+  "dependencies": {
+    "openai": "^4.28.0",
+    "express": "^4.18.2",
+    "dotenv": "^16.0.0"
+  }
+}
+```
+
+---
+
+## 🔧 ETAPA 4: MIGRAÇÃO DE CÓDIGO - PADRÕES DE SUBSTITUIÇÃO
+
+### Padrão 1: Importações e Inicialização
+
+**ORIGINAL (Google Gemini):**
+```javascript
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+```
+
+**NOVO (Groq + OpenAI SDK):**
+```javascript
+import OpenAI from "openai";
+
+const groq = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
+});
+```
+
+---
+
+### Padrão 2: Envio de Mensagens Simples
+
+**ORIGINAL (Google Gemini):**
+```javascript
+async function generateContent(prompt) {
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  return response.text();
+}
+```
+
+**NOVO (Groq):**
+```javascript
+async function generateContent(prompt) {
+  const message = await groq.chat.completions.create({
+    model: process.env.GROQ_MODEL,
+    messages: [{ role: "user", content: prompt }],
+    max_tokens: parseInt(process.env.GROQ_MAX_TOKENS) || 2048,
+    temperature: 0.7,
+  });
+  return message.choices[0].message.content;
+}
+```
+
+---
+
+### Padrão 3: Chat com Histórico
+
+**ORIGINAL (Google Gemini):**
+```javascript
+async function chatWithHistory(messages) {
+  const chat = model.startChat({
+    history: messages.map(msg => ({
+      role: msg.role,
+      parts: [{ text: msg.content }],
+    })),
+  });
+  
+  const result = await chat.sendMessage(userMessage);
+  return result.response.text();
+}
+```
+
+**NOVO (Groq):**
+```javascript
+async function chatWithHistory(messages) {
+  const chatMessages = messages.map(msg => ({
+    role: msg.role === "user" ? "user" : "assistant",
+    content: msg.content,
+  }));
+  
+  const response = await groq.chat.completions.create({
+    model: process.env.GROQ_MODEL,
+    messages: chatMessages,
+    max_tokens: parseInt(process.env.GROQ_MAX_TOKENS) || 2048,
+    temperature: 0.7,
+  });
+  
+  return response.choices[0].message.content;
+}
+```
+
+---
+
+### Padrão 4: Streaming (Se Usar)
+
+**ORIGINAL (Google Gemini):**
+```javascript
+async function streamContent(prompt) {
+  const result = await model.generateContentStream(prompt);
+  for await (const chunk of result.stream) {
+    const text = chunk.text();
+    console.log(text);
+  }
+}
+```
+
+**NOVO (Groq):**
+```javascript
+async function streamContent(prompt, onChunk) {
+  const stream = await groq.chat.completions.create({
+    model: process.env.GROQ_MODEL,
+    messages: [{ role: "user", content: prompt }],
+    stream: true,
+    max_tokens: parseInt(process.env.GROQ_MAX_TOKENS) || 2048,
+  });
+  
+  for await (const chunk of stream) {
+    const content = chunk.choices[0]?.delta?.content || "";
+    if (content) {
+      onChunk(content);
+    }
+  }
+}
+```
+
+---
+
+## 🛡️ ETAPA 5: IMPLEMENTAÇÃO COMPLETA COM TRATAMENTO DE ERROS
+
+### Arquivo: `src/services/groqService.js`
+
+Crie este arquivo NOVO com a implementação completa:
+
+```javascript
+import OpenAI from "openai";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+// Validação de configuração
+if (!process.env.GROQ_API_KEY) {
+  throw new Error("ERRO: GROQ_API_KEY não está definida em .env");
+}
+
+if (!process.env.GROQ_MODEL) {
+  throw new Error("ERRO: GROQ_MODEL não está definida em .env");
+}
+
+// Inicializar cliente Groq
+const groq = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
+});
+
+// Função: Validar mensagens
+function validateMessages(messages) {
+  if (!Array.isArray(messages)) {
+    throw new Error("Messages deve ser um array");
+  }
+  
+  if (messages.length === 0) {
+    throw new Error("Messages array não pode estar vazio");
+  }
+  
+  return messages.map(msg => {
+    if (!msg.role || !msg.content) {
+      throw new Error("Cada mensagem deve ter 'role' e 'content'");
+    }
+    
+    const validRoles = ["user", "assistant", "system"];
+    if (!validRoles.includes(msg.role)) {
+      throw new Error(`Role inválido: ${msg.role}`);
+    }
+    
+    return {
+      role: msg.role,
+      content: String(msg.content),
+    };
+  });
+}
+
+// Função 1: Completamento simples
+export async function generateText(prompt, options = {}) {
+  try {
+    if (!prompt || typeof prompt !== "string") {
+      throw new Error("Prompt deve ser uma string não-vazia");
+    }
+
+    const messages = [
+      { role: "user", content: prompt }
+    ];
+
+    const response = await groq.chat.completions.create({
+      model: process.env.GROQ_MODEL,
+      messages: validateMessages(messages),
+      max_tokens: options.maxTokens || parseInt(process.env.GROQ_MAX_TOKENS) || 2048,
+      temperature: options.temperature || 0.7,
+      top_p: options.topP || 1,
+      presence_penalty: options.presencePenalty || 0,
+      frequency_penalty: options.frequencyPenalty || 0,
+    });
+
+    return {
+      success: true,
+      content: response.choices[0].message.content,
+      usage: response.usage,
+      model: response.model,
+    };
+  } catch (error) {
+    console.error("Erro em generateText:", error.message);
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    };
+  }
+}
+
+// Função 2: Chat com histórico
+export async function chatComHistorico(messages, options = {}) {
+  try {
+    const validatedMessages = validateMessages(messages);
+
+    const response = await groq.chat.completions.create({
+      model: process.env.GROQ_MODEL,
+      messages: validatedMessages,
+      max_tokens: options.maxTokens || parseInt(process.env.GROQ_MAX_TOKENS) || 2048,
+      temperature: options.temperature || 0.7,
+      top_p: options.topP || 1,
+    });
+
+    return {
+      success: true,
+      content: response.choices[0].message.content,
+      usage: response.usage,
+      model: response.model,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("Erro em chatComHistorico:", error.message);
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    };
+  }
+}
+
+// Função 3: Análise de conteúdo educacional
+export async function analisarConteudoEducacional(conteudo, tipo = "resumo", options = {}) {
+  try {
+    if (!conteudo) {
+      throw new Error("Conteúdo não pode estar vazio");
+    }
+
+    const prompts = {
+      resumo: `Resuma este conteúdo educacional de forma clara e concisa:\n\n${conteudo}`,
+      quiz: `Crie 5 perguntas de múltipla escolha baseadas neste conteúdo:\n\n${conteudo}`,
+      explicacao: `Explique este conceito de forma simples e acessível:\n\n${conteudo}`,
+      exemplos: `Forneça 3 exemplos práticos para este conceito:\n\n${conteudo}`,
+    };
+
+    const prompt = prompts[tipo] || prompts.resumo;
+
+    const response = await groq.chat.completions.create({
+      model: process.env.GROQ_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: options.maxTokens || 2048,
+      temperature: options.temperature || 0.7,
+    });
+
+    return {
+      success: true,
+      type: tipo,
+      content: response.choices[0].message.content,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("Erro em analisarConteudoEducacional:", error.message);
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    };
+  }
+}
+
+// Função 4: Streaming (para tempo real)
+export async function streamContent(prompt, onChunk, options = {}) {
+  try {
+    if (!prompt || typeof prompt !== "string") {
+      throw new Error("Prompt deve ser uma string não-vazia");
+    }
+
+    if (typeof onChunk !== "function") {
+      throw new Error("onChunk deve ser uma função");
+    }
+
+    const stream = await groq.chat.completions.create({
+      model: process.env.GROQ_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      stream: true,
+      max_tokens: options.maxTokens || 2048,
+      temperature: options.temperature || 0.7,
+    });
+
+    let fullContent = "";
+
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || "";
+      if (content) {
+        fullContent += content;
+        onChunk(content);
+      }
+    }
+
+    return {
+      success: true,
+      fullContent: fullContent,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("Erro em streamContent:", error.message);
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    };
+  }
+}
+
+// Função 5: Verificar status da API
+export async function verificarStatusAPI() {
+  try {
+    const response = await groq.chat.completions.create({
+      model: process.env.GROQ_MODEL,
+      messages: [{ role: "user", content: "Teste rápido" }],
+      max_tokens: 10,
+    });
+
+    return {
+      success: true,
+      apiStatus: "OPERACIONAL",
+      model: response.model,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      apiStatus: "FALHA",
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    };
+  }
+}
+
+export default groq;
+```
+
+---
+
+## 🧪 ETAPA 6: TESTES DE VERIFICAÇÃO
+
+### Arquivo: `tests/groq-migration.test.js`
+
+```javascript
+import { 
+  generateText, 
+  chatComHistorico, 
+  analisarConteudoEducacional,
+  verificarStatusAPI 
+} from "../src/services/groqService.js";
+
+console.log("═══════════════════════════════════════════");
+console.log("🧪 TESTES DE MIGRAÇÃO GROQ - PONTO.SCHOOL");
+console.log("═══════════════════════════════════════════\n");
+
+// Teste 1: Verificar Status da API
+async function teste1_StatusAPI() {
+  console.log("📡 TESTE 1: Verificar Status da API Groq");
+  const resultado = await verificarStatusAPI();
+  console.log(resultado);
+  console.log(`Status: ${resultado.success ? "✅ PASSOU" : "❌ FALHOU"}\n`);
+  return resultado.success;
+}
+
+// Teste 2: Geração de Texto Simples
+async function teste2_GeracaoSimples() {
+  console.log("📝 TESTE 2: Geração de Texto Simples");
+  const resultado = await generateText("Qual é a capital do Brasil?");
+  console.log(`Resposta: ${resultado.content}`);
+  console.log(`Status: ${resultado.success ? "✅ PASSOU" : "❌ FALHOU"}\n`);
+  return resultado.success;
+}
+
+// Teste 3: Chat com Histórico
+async function teste3_ChatHistorico() {
+  console.log("💬 TESTE 3: Chat com Histórico");
+  const messages = [
+    { role: "user", content: "Meu nome é João" },
+    { role: "assistant", content: "Prazer em conhecê-lo, João!" },
+    { role: "user", content: "Qual é meu nome?" },
+  ];
+  const resultado = await chatComHistorico(messages);
+  console.log(`Resposta: ${resultado.content}`);
+  console.log(`Status: ${resultado.success ? "✅ PASSOU" : "❌ FALHOU"}\n`);
+  return resultado.success;
+}
+
+// Teste 4: Análise Educacional
+async function teste4_AnaliseEducacional() {
+  console.log("📚 TESTE 4: Análise de Conteúdo Educacional");
+  const conteudo = "Python é uma linguagem de programação de alto nível, interpretada e orientada a objetos. Criada por Guido van Rossum em 1991.";
+  const resultado = await analisarConteudoEducacional(conteudo, "resumo");
+  console.log(`Resumo: ${resultado.content}`);
+  console.log(`Status: ${resultado.success ? "✅ PASSOU" : "❌ FALHOU"}\n`);
+  return resultado.success;
+}
+
+// Teste 5: Verificar Variáveis de Ambiente
+async function teste5_VariaveisAmbiente() {
+  console.log("⚙️  TESTE 5: Verificar Variáveis de Ambiente");
+  const checks = {
+    "GROQ_API_KEY definida": !!process.env.GROQ_API_KEY,
+    "GROQ_MODEL definida": !!process.env.GROQ_MODEL,
+    "GROQ_API_KEY começa com 'gsk_'": process.env.GROQ_API_KEY?.startsWith("gsk_"),
+    "GROQ_MODEL é 'llama-3.3-70b-versatile'": process.env.GROQ_MODEL === "llama-3.3-70b-versatile",
+  };
+  
+  let allPassed = true;
+  for (const [check, result] of Object.entries(checks)) {
+    console.log(`${result ? "✅" : "❌"} ${check}`);
+    if (!result) allPassed = false;
+  }
+  console.log(`Status: ${allPassed ? "✅ PASSOU" : "❌ FALHOU"}\n`);
+  return allPassed;
+}
+
+// Executar todos os testes
+async function executarTodosTestes() {
+  try {
+    const resultados = [];
+    
+    resultados.push(await teste5_VariaveisAmbiente());
+    resultados.push(await teste1_StatusAPI());
+    resultados.push(await teste2_GeracaoSimples());
+    resultados.push(await teste3_ChatHistorico());
+    resultados.push(await teste4_AnaliseEducacional());
+
+    console.log("═══════════════════════════════════════════");
+    console.log("📊 RESUMO DOS TESTES");
+    console.log("═══════════════════════════════════════════");
+    const passados = resultados.filter(r => r).length;
+    const total = resultados.length;
+    console.log(`✅ Testes Passados: ${passados}/${total}`);
+    console.log(`${passados === total ? "🎉 MIGRAÇÃO CONCLUÍDA COM SUCESSO!" : "⚠️  Verifique os erros acima"}\n`);
+
+  } catch (error) {
+    console.error("❌ Erro ao executar testes:", error.message);
+  }
+}
+
+// Executar
+executarTodosTestes();
+```
+
+### Para rodar os testes:
+
+```bash
+node tests/groq-migration.test.js
+```
+
+---
+
+## 📋 ETAPA 7: CHECKLIST FINAL DE VERIFICAÇÃO
+
+**Execute este checklist APÓS a migração:**
+
+- [ ] **Variáveis de Ambiente**
+  - [ ] `GROQ_API_KEY` está definida em `.env`
+  - [ ] `GROQ_API_KEY` começa com `gsk_`
+  - [ ] `GROQ_MODEL` é `llama-3.3-70b-versatile`
+  - [ ] `GOOGLE_API_KEY` foi removida ou comentada
+  - [ ] Nenhuma referência a `GEMINI_*` permanece
+
+- [ ] **Dependências**
+  - [ ] `@google/generative-ai` foi removida do `package.json`
+  - [ ] `openai` foi adicionada ao `package.json`
+  - [ ] `npm install` foi executado com sucesso
+  - [ ] Nenhuma erro de dependência
+
+- [ ] **Código-Fonte**
+  - [ ] Nenhuma referência a `GoogleGenerativeAI` permanece
+  - [ ] Nenhuma referência a `@google/generative-ai` permanece
+  - [ ] Nenhuma referência a `gemini-pro` permanece
+  - [ ] Novo arquivo `src/services/groqService.js` foi criado
+  - [ ] Todas as funções antigas foram substituídas pelas novas
+
+- [ ] **Importações**
+  - [ ] Todos os arquivos que usavam Gemini agora usam `groqService`
+  - [ ] Importações estão corretas: `import { generateText, chatComHistorico } from "..."`
+
+- [ ] **Testes Funcionais**
+  - [ ] Teste 1: Status da API Groq - ✅ PASSOU
+  - [ ] Teste 2: Geração de Texto Simples - ✅ PASSOU
+  - [ ] Teste 3: Chat com Histórico - ✅ PASSOU
+  - [ ] Teste 4: Análise Educacional - ✅ PASSOU
+  - [ ] Teste 5: Variáveis de Ambiente - ✅ PASSOU
+
+- [ ] **Documentação**
+  - [ ] README.md foi atualizado com instruções Groq
+  - [ ] Seção de "Setup" menciona Groq ao invés de Gemini
+
+- [ ] **Deployment**
+  - [ ] Arquivo `.env` foi atualizado em produção
+  - [ ] Aplicação foi reiniciada após atualização
+  - [ ] Nenhum erro em logs após reinicialização
+
+- [ ] **Performance**
+  - [ ] Respostas da API estão rápidas (< 2 segundos típico)
+  - [ ] Nenhum timeout de API
+  - [ ] Qualidade de respostas é aceitável
+
+---
+
+## 🚀 COMANDO FINAL PARA O REPLIT AGENT
+
+Depois que tudo estiver completo, execute:
+
+```bash
+# 1. Instalar dependências
+npm install
+
+# 2. Rodar testes
+node tests/groq-migration.test.js
+
+# 3. Se tudo passar, reiniciar a aplicação
+npm start
+```
+
+---
+
+## 🆘 TROUBLESHOOTING RÁPIDO
+
+| Problema | Solução |
+|----------|---------|
+| `GROQ_API_KEY não definida` | Verifique `.env` - certifique-se que a chave está lá |
+| `API Key inválida` | Confirme que usou a chave fornecida: `gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp` |
+| `modelo não encontrado` | Verifique que `GROQ_MODEL=llama-3.3-70b-versatile` exatamente |
+| `ECONNREFUSED` | Groq API pode estar fora. Teste com: `curl https://api.groq.com/openai/v1/models` |
+| Respostas lentas | Normal. Llama-70b é grande - primeira requisição pode levar 5s |
+| `Module not found: openai` | Execute: `npm install openai` |
+
+---
+
+## 📞 COMANDOS ÚTEIS
+
+```bash
+# Verificar se openai está instalada
+npm ls openai
+
+# Limpar cache npm
+npm cache clean --force
+
+# Reinstalar tudo
+rm -rf node_modules package-lock.json && npm install
+
+# Verificar variáveis de ambiente
+echo $GROQ_API_KEY
+echo $GROQ_MODEL
+
+# Rodar aplicação com logs
+DEBUG=* npm start
+```
+
+---
+
+## ✅ RESUMO DA MIGRAÇÃO
+
+**De:** Google Gemini API (`@google/generative-ai`)
+**Para:** Groq API com OpenAI SDK (`openai`)
+**Modelo:** `llama-3.3-70b-versatile` (70B parameters - mais potente gratuito)
+**Chave API:** `gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp`
+
+**Benefícios:**
+- ✅ Modelo 70B mais poderoso que Gemini Pro
+- ✅ Velocidade de inferência excelente
+- ✅ Totalmente gratuito
+- ✅ Compatível com OpenAI SDK
+- ✅ Suporta contexto de 8K tokens
+
+**Próximos passos após migração:**
+1. Monitor de uso de API
+2. Testes A/B de qualidade vs Gemini
+3. Otimização de prompts para Llama 3.3-70b
+4. Implementação de caching de respostas frequentes
+
+---
+
+**🎯 Fim do Prompt - Pronto para Replit Agent executar!**
