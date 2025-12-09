@@ -11,6 +11,7 @@ import uploadAvatarRoutes from './upload-avatar.js';
 import visitantesRoutes from './visitantes.js';
 import translateRoutes from './translate.js';
 import { runConversion, getConversionStats, deletePngFiles } from '../scripts/convert-images-to-webp.js';
+import groqService from './groq.js';
 
 dotenv.config();
 
@@ -109,6 +110,167 @@ app.use('/api/upload-avatar', uploadAvatarRoutes);
 app.use('/api/atividades-neon', atividadesRoutes);
 app.use('/api/visitantes', visitantesRoutes);
 app.use('/api/translate', translateRoutes);
+
+// ========================================
+// ROTAS DE IA GROQ
+// ========================================
+
+app.get('/api/groq/test', async (req, res) => {
+  try {
+    console.log('🧪 Testando conexão com Groq...');
+    const result = await groqService.testGroqConnection();
+    res.json(result);
+  } catch (error) {
+    console.error('❌ Erro ao testar conexão Groq:', error);
+    res.status(500).json({
+      success: false,
+      message: `❌ Erro: ${error.message}`
+    });
+  }
+});
+
+app.post('/api/groq/generate', async (req, res) => {
+  try {
+    const { prompt, activityType } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campo obrigatório: prompt'
+      });
+    }
+    
+    console.log(`🤖 Processando prompt: "${prompt.substring(0, 50)}..." (tipo: ${activityType || 'auto'})`);
+    
+    const result = await groqService.processUserPrompt(prompt, activityType);
+    
+    console.log(`✅ Resposta gerada: tipo=${result.type}, sucesso=${result.success}`);
+    
+    res.json(result);
+  } catch (error) {
+    console.error('❌ Erro ao gerar conteúdo:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Erro interno do servidor'
+    });
+  }
+});
+
+app.post('/api/groq/flashcards', async (req, res) => {
+  try {
+    const { topic, quantity = 5 } = req.body;
+    
+    if (!topic) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campo obrigatório: topic'
+      });
+    }
+    
+    console.log(`📚 Gerando ${quantity} flashcards sobre: "${topic}"`);
+    
+    const flashcards = await groqService.generateFlashcards(topic, quantity);
+    
+    res.json({
+      success: true,
+      type: 'flashcards',
+      data: flashcards
+    });
+  } catch (error) {
+    console.error('❌ Erro ao gerar flashcards:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Erro interno do servidor'
+    });
+  }
+});
+
+app.post('/api/groq/quiz', async (req, res) => {
+  try {
+    const { topic, questions = 5 } = req.body;
+    
+    if (!topic) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campo obrigatório: topic'
+      });
+    }
+    
+    console.log(`🧠 Gerando quiz com ${questions} questões sobre: "${topic}"`);
+    
+    const quiz = await groqService.generateQuiz(topic, questions);
+    
+    res.json({
+      success: true,
+      type: 'quiz',
+      data: quiz
+    });
+  } catch (error) {
+    console.error('❌ Erro ao gerar quiz:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Erro interno do servidor'
+    });
+  }
+});
+
+app.post('/api/groq/test', async (req, res) => {
+  try {
+    const { topic, questions = 10, difficulty = 'médio' } = req.body;
+    
+    if (!topic) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campo obrigatório: topic'
+      });
+    }
+    
+    console.log(`📝 Gerando prova com ${questions} questões (${difficulty}) sobre: "${topic}"`);
+    
+    const test = await groqService.generateTest(topic, questions, difficulty);
+    
+    res.json({
+      success: true,
+      type: 'test',
+      data: test
+    });
+  } catch (error) {
+    console.error('❌ Erro ao gerar prova:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Erro interno do servidor'
+    });
+  }
+});
+
+app.post('/api/groq/chat', async (req, res) => {
+  try {
+    const { message, conversationHistory = [] } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campo obrigatório: message'
+      });
+    }
+    
+    console.log(`💬 Chat: "${message.substring(0, 50)}..."`);
+    
+    const response = await groqService.chat(message, conversationHistory);
+    
+    res.json({
+      success: true,
+      type: 'chat',
+      data: response
+    });
+  } catch (error) {
+    console.error('❌ Erro no chat:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Erro interno do servidor'
+    });
+  }
+});
 
 // Rota de teste de conexão com banco de dados (simples)
 app.get('/api/test-db-connection', async (req, res) => {

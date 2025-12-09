@@ -1,0 +1,242 @@
+ a integração Groq:
+
+texto
+🎯 IMPLEMENTAÇÃO REAL: Criar Arquivos de Integração Groq (NÃO apenas salvar prompts)
+===================================================================================
+
+⚠️ AÇÃO IMEDIATA: Este prompt vai criar os ARQUIVOS REAIS de código que faltaram!
+
+PASSO 1: CRIAR /src/services/groqService.js
+==========================================
+
+Crie um novo arquivo em /src/services/groqService.js com EXATAMENTE este conteúdo:
+
+Importe Groq de 'groq-sdk';
+
+// Validação imediata da chave API
+const apiKey = process.env.GROQ_API_KEY?.trim();
+if (!apiKey || !apiKey.startsWith('gsk_')) {
+throw new Error('❌ GROQ_API_KEY inválida! Verifique a variável de ambiente.');
+}
+
+const groq = new Groq({
+apiKey: apiKey,
+baseURL: ' https://api.groq.com/openai/v1 ',
+timeout: 120.0,
+maxRetries: 3
+});
+
+// Tentar novamente com backoff exponencial
+async function withRetryAndTimeout(asyncFn, maxRetries = 3) {
+let lastError;
+for (let attempt = 0; attempt < maxRetries; attempt++) {
+try {
+return await asyncFn();
+} catch (err) {
+lastError = err;
+if (err.status === 429 && attempt < maxRetries - 1) {
+const waitTime = Math.pow(2, attempt) * 1000;
+console.warn( ⏳ Rate limited. Waiting ${waitTime}ms...);
+await new Promise(r => setTimeout(r, waitTime));
+} else if (err.code === 'ECONNREFUSED' && attempt < maxRetries - 1) {
+const waitTime = (attempt + 1) * 2000;
+console.warn( ⏳ Connection refused. Retrying in ${waitTime}ms...);
+await new Promise(r => setTimeout(r, waitTime));
+} else {
+throw err;
+}
+}
+}
+lançar últimoErro;
+}
+
+// Função 1: Gerar Flashcards
+export async function generateFlashcards(topic, amount = 5) {
+return withRetryAndTimeout(async () => {
+const response = await groq.chat.completions.create({
+model: 'llama-3.3-70b-versatile',
+messages: [
+{
+role: 'system',
+content: 'Você é especialista em educação. RESPONDA APENAS EM JSON VÁLIDO.'
+},
+{
+role: 'usuário',
+conteúdo: Crie ${quantity} flashcards sobre "${topic}". Formato: [{"pergunta": "...", "resposta": "..."}]
+}
+],
+temperatura: 0,5,
+max_tokens: 2000,
+top_p: 0,9
+});
+
+texto
+const content = response.choices?.message?.content;
+if (!content || content.trim() === '') {
+  console.warn('⚠️ Empty response from model');
+  return [];
+}
+
+try {
+  const jsonStr = content.replace(/```json\n?/g, '').replace(/```
+  return JSON.parse(jsonStr);
+} catch (err) {
+  console.error('❌ JSON parse error:', err.message);
+  return [];
+}
+});
+}
+
+// Função 2: Gerar Quiz
+export async function generateQuiz(topic, questions = 5) {
+return withRetryAndTimeout(async () => {
+const response = await groq.chat.completions.create({
+model: 'llama-3.3-70b-versatile',
+messages: [
+{
+role: 'system',
+content: 'Você cria quizzes educativos. RESPONDA APENAS EM JSON VÁLIDO.'
+},
+{
+role: 'usuário',
+conteúdo: Gere ${questions} questões sobre "${topic}". Formato: [{"pergunta": "...", "opcoes": ["a", "b", "c", "d"], "resposta": "..."}]
+}
+],
+temperatura: 0,3,
+max_tokens: 2000,
+top_p: 0,9
+});
+
+texto
+const content = response.choices?.message?.content;
+if (!content || content.trim() === '') return [];
+
+try {
+  const jsonStr = content.replace(/```json\n?/g, '').replace(/```
+  return JSON.parse(jsonStr);
+} catch (err) {
+  console.error('❌ JSON parse error:', err.message);
+  return [];
+}
+});
+}
+
+// Função 3: Gerar Teste
+export async function generateTest(topic, questions = 10, difficulty = 'médio') {
+return withRetryAndTimeout(async () => {
+const response = await groq.chat.completions.create({
+model: 'llama-3.3-70b-versatile',
+messages: [
+{
+role: 'system',
+content: Você é professor. Crie prova com nível: ${difficulty}
+},
+{
+role: 'user',
+content: Crie uma prova com ${questions} questões sobre "${topic}". Inclua gabarito.
+}
+],
+temperature: 0.2,
+max_tokens: 3000,
+top_p: 0.9
+});
+
+texto
+const content = response.choices?.message?.content;
+return content || 'Erro ao gerar teste.';
+});
+}
+
+// Função 4: Chat
+export async function chat(userMessage, conversationHistory = []) {
+return withRetryAndTimeout(async () => {
+const messages = [...conversationHistory, { role: 'user', content: userMessage }];
+const response = await groq.chat.completions.create({
+model: 'llama-3.3-70b-versatile',
+messages: messages,
+temperature: 0.7,
+max_tokens: 1024,
+top_p: 0.9
+});
+
+texto
+const content = response.choices?.message?.content;
+return content || 'Desculpe, não consegui processar sua mensagem.';
+});
+}
+
+texto
+
+PASSO 2: LOCALIZAR E ATUALIZAR O ARQUIVO QUE CHAMA A IA
+========================================================
+
+1. Procure por um arquivo que contém a lógica da School Power (provavelmente em /src/api/ ou /server/)
+2. Este arquivo DEVE ter uma rota tipo:
+   - /api/generate-activity
+   - /api/generate-content
+   - /api/school-power
+   - OU similar
+
+3. ENCONTRE A LINHA QUE CHAMA A API DE IA (provavelmente está usando Google Gemini ou está faltando)
+
+4. SUBSTITUA ela por:
+
+// NO TOPO DO ARQUIVO, ADICIONE:
+import { generateFlashcards, generateQuiz, generateTest, chat } from '../services/groqService.js';
+
+// NA FUNÇÃO QUE PROCESSA O PROMPT DO USUÁRIO, ADICIONE LÓGICA COMO:
+
+função assíncrona processUserPrompt(userPrompt, activityType) {
+tente {
+deixe resultado;
+
+texto
+if (activityType === 'flashcards' || userPrompt.includes('flashcard')) {
+  result = await generateFlashcards(userPrompt, 5);
+} else if (activityType === 'quiz' || userPrompt.includes('quiz')) {
+  result = await generateQuiz(userPrompt, 5);
+} else if (activityType === 'test' || userPrompt.includes('teste')) {
+  result = await generateTest(userPrompt, 10, 'médio');
+} else {
+  result = await chat(userPrompt, []);
+}
+
+return result;
+} catch (err) {
+console.error('Erro ao processar prompt:', err);
+lançar errar;
+}
+}
+
+texto
+
+PASSO 3: TESTES IMEDIATOS
+==========================
+
+Após fazer as alterações acima:
+
+1. Salve todos os arquivos
+2. Reinicie a aplicação (Replit vai fazer rebuild automaticamente)
+3. Vá para a plataforma Ponto.School e teste novamente:
+   - Digite: "Crie 5 flashcards sobre Fotossíntese"
+   - Deve retornar JSON com flashcards (NÃO um formulário genérico)
+
+PASSO 4: VERIFICAÇÃO NO CONSOLE
+
+1. Abra o Console do Replit
+2. Procure por logs tipo:
+   - "✅ Conexão com Groq: OK"
+   - "Resposta do modelo: ..."
+3. Se ver erro tipo "Cannot find module 'groq-sdk'":
+   - Execute: npm install groq-sdk
+   - Re-run a aplicação
+
+PASSO 5: SE AINDA NÃO FUNCIONAR
+
+1. Verifique se os SECRETS estão configurados:
+   - GROQ_API_KEY deve estar em Secrets
+   - VITE_GROQ_API_KEY também deve estar configurado
+
+2. Procure pelo arquivo que chama a IA (pode ser em /server, /api, ou /routes)
+
+3. Se não encontrar, mencione o nome dos arquivos que fazem a chamada da IA e vou indicar exatamente onde colocar o código.

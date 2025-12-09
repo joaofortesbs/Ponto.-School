@@ -74,6 +74,7 @@
     "express": "^5.1.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^11.18.2",
+    "groq-sdk": "^0.37.0",
     "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.3",
