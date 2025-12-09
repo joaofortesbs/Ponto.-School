@@ -1,5 +1,5 @@
 
-import { API_KEYS, API_URLS, API_CONFIG, TOKEN_COSTS } from '@/config/apiKeys';
+import { API_KEYS, API_URLS, API_CONFIG, TOKEN_COSTS, API_MODELS } from '@/config/apiKeys';
 
 export interface GeminiRequest {
   prompt: string;
@@ -18,59 +18,57 @@ export interface GeminiResponse {
   error?: string;
 }
 
+// Chave Groq API
+const GROQ_API_KEY = 'gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp';
+
 export class GeminiClient {
   private apiKey: string;
   private baseUrl: string;
 
   constructor() {
-    this.apiKey = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
-    this.baseUrl = API_URLS.GEMINI;
+    this.apiKey = GROQ_API_KEY;
+    this.baseUrl = API_URLS.GROQ;
   }
 
-  /**
-   * Faz requisição para a API Gemini
-   */
   async generate(request: GeminiRequest): Promise<GeminiResponse> {
     const startTime = Date.now();
     
     try {
       if (!this.apiKey) {
-        throw new Error('Chave da API Gemini não configurada');
+        throw new Error('Chave da API Groq não configurada');
       }
 
-      const response = await fetch(`${this.baseUrl}?key=${this.apiKey}`, {
+      const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
-          contents: [{
-            parts: [{ text: request.prompt }]
-          }],
-          generationConfig: {
-            temperature: request.temperature || 0.7,
-            topP: request.topP || 0.8,
-            topK: request.topK || 40,
-            maxOutputTokens: request.maxTokens || 2048,
-          }
+          model: API_MODELS.GROQ,
+          messages: [{ role: 'user', content: request.prompt }],
+          temperature: request.temperature || 0.7,
+          top_p: request.topP || 0.8,
+          max_tokens: request.maxTokens || API_CONFIG.maxTokens,
         }),
         signal: AbortSignal.timeout(API_CONFIG.timeout)
       });
 
       if (!response.ok) {
-        throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Erro na API Groq: ${response.status} ${response.statusText} - ${errorData.error?.message || ''}`);
       }
 
       const data = await response.json();
       const executionTime = Date.now() - startTime;
 
-      if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-        throw new Error('Resposta inválida da API Gemini');
+      if (!data.choices || !data.choices[0]?.message?.content) {
+        throw new Error('Resposta inválida da API Groq');
       }
 
-      const responseText = data.candidates[0].content.parts[0].text;
+      const responseText = data.choices[0].message.content;
       const estimatedTokens = this.estimateTokens(request.prompt + responseText);
-      const estimatedPowerCost = estimatedTokens * TOKEN_COSTS.GEMINI;
+      const estimatedPowerCost = estimatedTokens * TOKEN_COSTS.GROQ;
 
       return {
         success: true,
@@ -94,23 +92,14 @@ export class GeminiClient {
     }
   }
 
-  /**
-   * Estimativa básica de tokens (aproximadamente 4 caracteres por token)
-   */
   private estimateTokens(text: string): number {
     return Math.ceil(text.length / 4);
   }
 
-  /**
-   * Atualiza a chave da API
-   */
   updateApiKey(newKey: string): void {
     this.apiKey = newKey;
   }
 
-  /**
-   * Método compatível com chamadas generateContent
-   */
   async generateContent(prompt: string): Promise<string> {
     const result = await this.generate({ prompt });
     
@@ -122,5 +111,4 @@ export class GeminiClient {
   }
 }
 
-// Instância padrão para importação
 export const geminiClient = new GeminiClient();

@@ -1,11 +1,16 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import express from 'express';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const router = express.Router();
-const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY);
+
+// Groq API configuration
+const groq = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY || 'gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp',
+  baseURL: "https://api.groq.com/openai/v1",
+});
 
 const languageNames = {
   'pt': 'Português',
@@ -18,13 +23,10 @@ const languageNames = {
 
 async function translateText(text, targetLanguage, isBatch = false) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    
     const targetLangName = languageNames[targetLanguage] || targetLanguage;
     
     let prompt;
     if (isBatch) {
-      // Tradução em lote - texto é um JSON array
       prompt = `Traduza TODOS os textos do array JSON abaixo para ${targetLangName}. 
 Retorne um array JSON com as traduções na MESMA ORDEM, sem explicações adicionais.
 Mantenha a estrutura JSON exata.
@@ -32,13 +34,17 @@ Mantenha a estrutura JSON exata.
 Array de textos:
 ${text}`;
     } else {
-      // Tradução individual
       prompt = `Traduza o seguinte texto para ${targetLangName}. Retorne APENAS a tradução, sem explicações adicionais:\n\n${text}`;
     }
     
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const translatedText = response.text().trim();
+    const response = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 2048,
+      temperature: 0.3,
+    });
+    
+    const translatedText = response.choices[0].message.content.trim();
     
     if (isBatch) {
       console.log(`✅ [TRADUÇÃO LOTE] Traduzidos ${JSON.parse(text).length} textos para ${targetLanguage}`);

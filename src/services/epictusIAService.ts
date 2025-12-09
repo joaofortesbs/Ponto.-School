@@ -68,9 +68,10 @@ export const clearChatHistory = (sessionId: string): void => {
   }
 };
 
-// Chave da API Gemini
-const GEMINI_API_KEY = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
-const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+// Groq API Configuration
+const GROQ_API_KEY = 'gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp';
+const GROQ_BASE_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 // Função para gerar sugestões de foco com base no perfil do usuário e dados da agenda
 export const generateFocusSuggestions = async (userId: string, focusData?: any): Promise<any> => {
@@ -149,22 +150,19 @@ Retorne um objeto JSON com a seguinte estrutura:
   ]
 }`;
 
-    // Fazer requisição para a API Gemini
-    const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
+    // Fazer requisição para a API Groq
+    const response = await fetch(GROQ_BASE_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.2,
-          topP: 0.8,
-          topK: 40,
-          maxOutputTokens: 2048
-        }
+        model: GROQ_MODEL,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.2,
+        max_tokens: 2048,
+        top_p: 0.8
       })
     });
 
@@ -173,7 +171,7 @@ Retorne um objeto JSON com a seguinte estrutura:
     }
 
     const data = await response.json();
-    const aiResponse = data.candidates[0].content.parts[0].text;
+    const aiResponse = data.choices[0].message.content;
 
     // Tentar converter a resposta em JSON
     try {
@@ -322,32 +320,22 @@ ${historyContext}
 Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
     }
 
-    // Configuração do Gemini para análise de dados ou chat normal
-    const generationConfig = isDataAnalysisRequest 
-      ? {
-          temperature: 0.2, // Menor temperatura para resultados mais precisos em análise de dados
-          topP: 0.9,
-          topK: 40,
-          maxOutputTokens: 2048
-        }
-      : {
-          temperature: 0.7,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 2048
-        };
+    // Configuração para análise de dados ou chat normal
+    const temperature = isDataAnalysisRequest ? 0.2 : 0.7;
 
-    // Fazer a requisição para a API Gemini
-    const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
+    // Fazer a requisição para a API Groq
+    const response = await fetch(GROQ_BASE_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig
+        model: GROQ_MODEL,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: temperature,
+        max_tokens: 2048,
+        top_p: 0.95
       })
     });
 
@@ -358,7 +346,7 @@ Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
     const data = await response.json();
 
     // Extrair a resposta da IA
-    let aiResponse = data.candidates[0].content.parts[0].text;
+    let aiResponse = data.choices[0].message.content;
 
     // Para solicitações JSON, retornar a resposta sem modificações
     if (isDataAnalysisRequest) {
@@ -379,7 +367,7 @@ Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
 
     return aiResponse;
   } catch (error) {
-    console.error("Erro ao gerar resposta da IA com Gemini:", error);
+    console.error("Erro ao gerar resposta da IA com Groq:", error);
 
     // Usar respostas de fallback em caso de erro
     return useFallbackResponse(message);
