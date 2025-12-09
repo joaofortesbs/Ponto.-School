@@ -6,9 +6,9 @@ dotenv.config();
 
 const router = express.Router();
 
-// Groq API configuration
+// Groq API configuration - uses environment variable only (no hardcoded fallback)
 const groq = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY || 'gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp',
+  apiKey: process.env.GROQ_API_KEY,
   baseURL: "https://api.groq.com/openai/v1",
 });
 

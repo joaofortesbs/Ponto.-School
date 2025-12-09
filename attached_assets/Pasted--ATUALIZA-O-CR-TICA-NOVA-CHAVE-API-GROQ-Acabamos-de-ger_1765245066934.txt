@@ -1,0 +1,44 @@
+🔑 ATUALIZAÇÃO CRÍTICA: NOVA CHAVE API GROQ
+
+Acabamos de gerar uma NOVA chave API do Groq porque a anterior estava retornando erro "Invalid API Key".
+
+✅ STATUS ATUAL:
+- Secrets já foram atualizados manualmente no Replit:
+  • GROQ_API_KEY = nova chave válida
+  • VITE_GROQ_API_KEY = nova chave válida
+- Aplicação reiniciada e rodando
+- Server API na porta 3001 OK
+- Vite frontend na porta 5000 OK
+
+⚠️ PROBLEMA A RESOLVER:
+Durante os testes anteriores, a integração Groq retornou "Invalid API Key" (erro 401). 
+Agora com a nova chave válida configurada, precisamos garantir que:
+
+1. TODOS os endpoints `/api/groq/*` estejam usando corretamente as variáveis de ambiente
+2. O groqService.js ou qualquer arquivo relacionado NÃO tenha chaves hardcoded antigas
+3. A lógica de retry e error handling esteja funcionando
+4. Os testes de conexão GET /api/groq/test retornem sucesso
+
+🎯 AÇÕES NECESSÁRIAS:
+
+1. **VERIFICAR** se há alguma referência à chave antiga no código (buscar por "gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabc")
+
+2. **TESTAR** a conexão Groq executando uma chamada de teste simples com o modelo `llama-3.3-70b-versatile`
+
+3. **VALIDAR** que as rotas do School Power (`/api/groq/flashcards`, `/api/groq/quiz`, etc.) estejam recebendo e processando corretamente as requisições
+
+4. **CONFIRMAR** que o frontend (`src/services/groqService.js` ou similar) está fazendo chamadas corretas aos endpoints
+
+5. **EXECUTAR** um teste end-to-end completo:
+   - Chamar POST /api/groq/generate com payload de teste
+   - Verificar logs do console para confirmar sucesso
+   - Retornar o resultado do teste
+
+📊 RESULTADO ESPERADO:
+Após suas ações, forneça:
+- ✅ Status de cada verificação
+- 📝 Log de um teste bem-sucedido da API Groq
+- 🐛 Qualquer problema encontrado e corrigido
+- 🎉 Confirmação de que a integração está 100% funcional
+
+Não faça alterações estruturais grandes. Apenas garanta que a nova chave está sendo usada corretamente em TODOS os lugares necessários.
