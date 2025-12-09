@@ -42,6 +42,7 @@ import ProfilePage from "@/pages/profile";
 import SchoolPowerPageIndex from "./pages/school-power";
 import AlunoUnderConstruction from "@/pages/under-construction/AlunoUnderConstruction";
 import TrilhasSchoolProfessorInterface from '@/pages/trilhas-school/professores/interface';
+import AtividadesInterface from '@/pages/minhas-criacoes/atividades/interface';
 
 // Less frequently used pages - Keep lazy for bundle optimization
 const Comunidades = lazy(() => import("@/pages/comunidades"));
@@ -374,6 +375,7 @@ function App() {
                     <Route path="school-power" element={<SchoolPowerPageIndex />} />
                     <Route path="trilhas-school" element={<TrilhasSchoolProfessorInterface />} />
                     <Route path="trilhas-school/professores" element={<TrilhasSchoolProfessorInterface />} />
+                    <Route path="minhas-criacoes/atividades" element={<AtividadesInterface />} />
                     <Route path="biblioteca" element={<Biblioteca />} />
                     <Route path="carteira" element={<Carteira />} />
                     <Route path="organizacao" element={<Organizacao />} />

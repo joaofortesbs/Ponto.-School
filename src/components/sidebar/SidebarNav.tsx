@@ -490,7 +490,6 @@ export function SidebarNav({
           icon: "fas fa-tasks",
           label: "Atividades",
           path: "/dashboard/minhas-criacoes/atividades",
-          disabled: true,
         },
         {
           icon: "fas fa-route",
