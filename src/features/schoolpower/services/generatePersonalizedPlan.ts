@@ -10,17 +10,15 @@ import { validateSequenciaDidaticaData } from './sequenciaDidaticaValidator';
 import { geminiLogger } from '../../../utils/geminiDebugLogger';
 
 // Usar API Key centralizada
-import { API_KEYS, API_URLS } from '@/config/apiKeys';
+import { API_KEYS, API_URLS, API_MODELS } from '@/config/apiKeys';
 
-const GEMINI_API_KEY = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
-const GEMINI_API_URL = API_URLS.GEMINI;
+const GROQ_API_KEY = API_KEYS.GROQ || 'gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp';
+const GROQ_API_URL = API_URLS.GROQ;
 
-interface GeminiResponse {
-  candidates?: {
-    content?: {
-      parts?: {
-        text?: string;
-      }[];
+interface GroqResponse {
+  choices: {
+    message: {
+      content: string;
     };
   }[];
 }
@@ -358,72 +356,52 @@ IMPORTANT:
 }
 
 /**
- * Calls Gemini API with support for files and images
+ * Calls Groq API with OpenAI-compatible format
  */
-async function callGeminiAPI(prompt: string, uploadedFiles?: UploadedFile[]): Promise<string> {
-  const url = `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`;
+async function callGroqAPI(prompt: string, uploadedFiles?: UploadedFile[]): Promise<string> {
+  console.log('📡 Calling Groq API...');
 
-  console.log('📡 Calling Gemini API...');
+  let fullPrompt = prompt;
 
-  // Prepara as partes do conteúdo
-  const parts: any[] = [{ text: prompt }];
-
-  // Adiciona arquivos ao prompt se existirem
   if (uploadedFiles && uploadedFiles.length > 0) {
     console.log(`📎 Processing ${uploadedFiles.length} uploaded files...`);
 
     for (const fileData of uploadedFiles) {
-      try {
-        const base64Data = await fileToBase64(fileData.file);
-        const mimeType = getFileMimeType(fileData.file);
+      console.log(`✅ File noted: ${fileData.file.name}`);
+      console.log(`   Size: ${(fileData.file.size / 1024).toFixed(2)} KB`);
 
-        console.log(`✅ File processed: ${fileData.file.name} (${mimeType})`);
-        console.log(`   Size: ${(fileData.file.size / 1024).toFixed(2)} KB`);
+      const fileContext = fileData.type === 'image'
+        ? `\n\n[Imagem anexada: ${fileData.file.name}]\nAnalise esta imagem cuidadosamente e extraia todas as informações relevantes para criar atividades educacionais apropriadas.`
+        : `\n\n[Documento anexado: ${fileData.file.name}]\nAnalise este documento e incorpore seu conteúdo no plano de ação educacional.`;
 
-        // Adiciona o arquivo como inline_data
-        parts.push({
-          inline_data: {
-            mime_type: mimeType,
-            data: base64Data
-          }
-        });
-
-        // Adiciona contexto sobre o arquivo para melhor análise
-        const fileContext = fileData.type === 'image'
-          ? `\n\n[Imagem anexada: ${fileData.file.name}]\nAnalise esta imagem cuidadosamente e extraia todas as informações relevantes para criar atividades educacionais apropriadas.`
-          : `\n\n[Documento anexado: ${fileData.file.name}]\nAnalise este documento e incorpore seu conteúdo no plano de ação educacional.`;
-
-        parts.push({ text: fileContext });
-      } catch (error) {
-        console.error(`❌ Error processing file ${fileData.file.name}:`, error);
-      }
+      fullPrompt += fileContext;
     }
 
-    console.log(`✅ All files processed successfully. Total parts: ${parts.length}`);
+    console.log(`✅ All files processed successfully.`);
   }
 
   const requestBody = {
-    contents: [{
-      parts: parts
-    }],
-    generationConfig: {
-      temperature: 0.3, // Reduced for more consistent responses
-      topK: 20,
-      topP: 0.8,
-      maxOutputTokens: 32768, // Significantly increased to support 50+ activities
-    }
+    model: API_MODELS.GROQ,
+    messages: [
+      {
+        role: 'user',
+        content: fullPrompt
+      }
+    ],
+    temperature: 0.3,
+    max_tokens: 32768,
   };
 
-  console.log('📋 Request body:', JSON.stringify(requestBody, null, 2));
+  console.log('📋 Request body:', JSON.stringify({ ...requestBody, messages: ['[PROMPT TRUNCATED]'] }, null, 2));
 
-  // Log da requisição
-  geminiLogger.logRequest(prompt, requestBody.generationConfig);
+  geminiLogger.logRequest(fullPrompt, { temperature: 0.3, max_tokens: 32768 });
 
   const startTime = Date.now();
-  const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+  const response = await fetch(GROQ_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify(requestBody)
   });
@@ -432,43 +410,39 @@ async function callGeminiAPI(prompt: string, uploadedFiles?: UploadedFile[]): Pr
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('❌ Error in Gemini API response:', response.status, errorText);
+    console.error('❌ Error in Groq API response:', response.status, errorText);
 
-    // Log do erro HTTP
-    geminiLogger.error('error', `Erro HTTP na API Gemini: ${response.status}`, {
+    geminiLogger.error('error', `Erro HTTP na API Groq: ${response.status}`, {
       status: response.status,
       statusText: response.statusText,
       errorText,
       executionTime
     });
 
-    throw new Error(`Gemini API Error: ${response.status} - ${errorText}`);
+    throw new Error(`Groq API Error: ${response.status} - ${errorText}`);
   }
 
-  const data: GeminiResponse = await response.json();
-  console.log('📥 Raw Gemini response:', data);
+  const data: GroqResponse = await response.json();
+  console.log('📥 Raw Groq response:', data);
 
-  const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  const generatedText = data.choices?.[0]?.message?.content;
 
   if (!generatedText) {
-    console.error('❌ Empty response from Gemini API');
+    console.error('❌ Empty response from Groq API');
 
-    // Log resposta vazia
-    geminiLogger.error('response', 'Resposta vazia da API Gemini', {
+    geminiLogger.error('response', 'Resposta vazia da API Groq', {
       executionTime,
       responseData: data
     });
 
-    throw new Error('Empty response from Gemini API');
+    throw new Error('Empty response from Groq API');
   }
 
-  console.log('✅ Text generated by Gemini:', generatedText);
+  console.log('✅ Text generated by Groq:', generatedText);
 
-  // Log resposta bem-sucedida
   geminiLogger.logResponse(data, executionTime);
 
   return generatedText;
-
 }
 
 /**
@@ -629,8 +603,8 @@ export async function generatePersonalizedPlan(
     const prompt = buildGeminiPrompt(initialMessage, contextualizationData, schoolPowerActivities, uploadedFiles);
     console.log('📝 Prompt built successfully');
 
-    // Calls the Gemini API
-    const geminiResponse = await callGeminiAPI(prompt, uploadedFiles);
+    // Calls the Groq API
+    const geminiResponse = await callGroqAPI(prompt, uploadedFiles);
 
     // Processes the response
     const generatedActivities = parseGeminiResponse(geminiResponse);
