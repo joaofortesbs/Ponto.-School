@@ -1,11 +1,8 @@
 import axios from 'axios';
 
-// Chaves de API
-const XAI_API_KEY = 'xai-PGLSB6snVtQm82k7xEmfCSo3RjkO41ICX4dUagAp5bz2GY02NTVqO6XWEXuNK5HCYWpYBYuz7WP2ENFP';
-// Groq API Key
-const GROQ_API_KEY = 'gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp';
+const XAI_API_KEY = (import.meta.env.VITE_XAI_API_KEY || '').trim();
+const GROQ_API_KEY = (import.meta.env.VITE_GROQ_API_KEY || '').trim();
 
-// URLs base
 const XAI_BASE_URL = 'https://api.x.ai/v1/chat/completions';
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';

@@ -68,8 +68,7 @@ export const clearChatHistory = (sessionId: string): void => {
   }
 };
 
-// Groq API Configuration
-const GROQ_API_KEY = 'gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp';
+const GROQ_API_KEY = (import.meta.env.VITE_GROQ_API_KEY || '').trim();
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 

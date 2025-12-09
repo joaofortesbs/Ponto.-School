@@ -18,15 +18,12 @@ export interface GeminiResponse {
   error?: string;
 }
 
-// Chave Groq API
-const GROQ_API_KEY = 'gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp';
-
 export class GeminiClient {
   private apiKey: string;
   private baseUrl: string;
 
   constructor() {
-    this.apiKey = GROQ_API_KEY;
+    this.apiKey = (API_KEYS.GROQ || '').trim();
     this.baseUrl = API_URLS.GROQ;
   }
 
