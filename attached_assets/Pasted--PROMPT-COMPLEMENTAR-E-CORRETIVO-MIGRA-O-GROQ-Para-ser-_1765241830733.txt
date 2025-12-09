@@ -1,0 +1,282 @@
+🔧 PROMPT COMPLEMENTAR E CORRETIVO - MIGRAÇÃO GROQ
+Para ser enviado APÓS o primeiro prompt ao Replit Agent
+text
+🎯 AGENT CORRETIVO: Validar, Debugar e Corrigir Erros da Migração Groq
+=====================================================================
+
+CONTEXTO: O prompt anterior foi executado, mas a integração Groq ainda não está funcionando perfeitamente. 
+Este prompt COMPLEMENTA e CORRIGE os problemas identificados.
+
+⚠️ FASE 1: VALIDAÇÃO E DIAGNÓSTICO
+
+1. VERIFICAR ARQUIVO .env
+   ☐ Confirmar se GROQ_API_KEY está presente
+   ☐ IMPORTANTE: API key deve iniciar com 'gsk_'
+   ☐ Validar se não tem espaços extras (usar .trim())
+   ☐ Exemplo correto: GROQ_API_KEY=gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp
+   
+2. VERIFICAR BaseURL em groqService.js
+   ☐ Deve ser: 'https://api.groq.com/openai/v1' (SEM /chat/completions no final!)
+   ☐ Procurar por qualquer 'https://api.groq.com/chat/completions' e REMOVER
+   ☐ Procurar por 'https://api.groq.com/v1' (falta /openai) e CORRIGIR
+   ☐ Verificar se baseURL está sendo passado corretamente ao inicializar Groq
+
+3. VERIFICAR NOME DO MODELO
+   ☐ Procurar por 'llama3', 'gemini', 'gpt-4' ou nomes incorretos
+   ☐ SUBSTITUIR TODOS por: 'llama-3.3-70b-versatile'
+   ☐ Alternativas válidas: 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'
+   ☐ Validar em TODAS as funções: generateFlashcards, generateQuiz, generateTest, chat
+
+4. VERIFICAR max_tokens
+   ☐ Para 'llama-3.3-70b-versatile': max é 8000 (não mais!)
+   ☐ Se vê max_tokens: 10000 ou maior → REDUZIR para 7000 ou menos
+   ☐ Verificar em TODAS as chamadas à API
+
+5. VERIFICAR AUTENTICAÇÃO
+   ☐ API key deve ter .trim() para remover espaços
+   ☐ Exemplo: apiKey: process.env.GROQ_API_KEY?.trim()
+   ☐ Procurar por apiKey sem .trim() e ADICIONAR
+
+
+⚠️ FASE 2: ADICIONAR TRATAMENTO DE ERROS ROBUSTO
+
+1. ENVOLVER TODAS AS CHAMADAS COM try-catch
+   ☐ Cada função (generateFlashcards, generateQuiz, etc) deve ter:
+      try {
+        const completion = await groq.chat.completions.create({...});
+        // processar resposta
+      } catch (err) {
+        if (err instanceof Groq.AuthenticationError) {
+          console.error('❌ API key inválida ou expirada');
+        } else if (err.status === 429) {
+          console.error('❌ Rate limit atingido');
+        } else {
+          console.error('❌ Erro:', err.message);
+        }
+        throw err;
+      }
+
+2. IMPLEMENTAR VALIDAÇÃO DE RESPOSTA
+   ☐ Adicionar em CADA função:
+      const content = response.choices[0]?.message?.content;
+      if (!content || content.trim() === '') {
+        console.warn('⚠️ Resposta vazia do modelo');
+        return [];  // ou fallback apropriado
+      }
+
+3. ADICIONAR PARSING JSON SEGURO
+   ☐ Quando usar JSON.parse(), fazer com try-catch:
+      try {
+        const jsonStr = content.replace(/``````\n?/g, '').trim();
+        return JSON.parse(jsonStr);
+      } catch (err) {
+        console.error('❌ Erro ao parsear JSON:', err.message);
+        return [];  // fallback para array vazio
+      }
+
+4. IMPLEMENTAR RETRY COM BACKOFF EXPONENCIAL
+   ☐ Criar função genérica:
+      async function withRetry(asyncFn, maxRetries = 3) {
+        let lastError;
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+          try {
+            return await asyncFn();
+          } catch (err) {
+            lastError = err;
+            if (err.status === 429 && attempt < maxRetries - 1) {
+              const waitTime = Math.pow(2, attempt) * 1000;
+              console.log(`⏳ Rate limited. Aguardando ${waitTime}ms...`);
+              await new Promise(r => setTimeout(r, waitTime));
+            } else if (err.code === 'ECONNREFUSED' && attempt < maxRetries - 1) {
+              const waitTime = (attempt + 1) * 2000;
+              console.log(`⏳ Conexão recusada. Tentando em ${waitTime}ms...`);
+              await new Promise(r => setTimeout(r, waitTime));
+            } else {
+              throw err;
+            }
+          }
+        }
+        throw lastError;
+      }
+   
+   ☐ Envolver todas as chamadas groq.chat.completions.create():
+      return withRetry(async () => {
+        const completion = await groq.chat.completions.create({...});
+        // processar
+      });
+
+5. ADICIONAR VALIDAÇÃO INICIAL DO CLIENTE GROQ
+   ☐ No início de groqService.js:
+      const apiKey = process.env.GROQ_API_KEY?.trim();
+      if (!apiKey || !apiKey.startsWith('gsk_')) {
+        throw new Error('❌ GROQ_API_KEY inválida! Verifique .env');
+      }
+      
+      if (!apiKey.includes('gsk_')) {
+        throw new Error('❌ Chave deve iniciar com "gsk_"');
+      }
+
+
+⚠️ FASE 3: CORRIGIR ESTRUTURA DAS FUNÇÕES
+
+1. generateFlashcards() - VALIDAÇÕES:
+   ☐ Verificar se role está correto: 'user', 'assistant', 'system' (nunca 'bot')
+   ☐ Verificar se temperature está entre 0 e 2.0
+   ☐ Verificar se top_p está entre 0 e 1.0
+   ☐ Validar que messages array não está vazio
+   ☐ Adicionar fallback se content vazio:
+      if (!content || content.trim() === '') return [];
+
+2. generateQuiz() - MESMAS VALIDAÇÕES
+
+3. generateTest() - MESMAS VALIDAÇÕES
+
+4. chat() - VALIDAÇÕES EXTRAS:
+   ☐ Verificar conversationHistory é array
+   ☐ Validar que userMessage não está vazio
+   ☐ Implementar limite de histórico (últimas 10 mensagens, exemplo)
+   ☐ Adicionar fallback se content vazio:
+      if (!content || content.trim() === '') {
+        return 'Desculpe, não consegui processar. Tente novamente.';
+      }
+
+
+⚠️ FASE 4: TESTES DE VALIDAÇÃO
+
+Executar os testes abaixo sequencialmente e reportar CADA resultado:
+
+// TEST 1: Validar conexão
+async function testConnection() {
+try {
+const models = await groq.models.list();
+console.log('✅ Conexão com Groq: OK');
+console.log('📋 Modelos disponíveis:', models.data.map(m => m.id));
+return true;
+} catch (err) {
+console.error('❌ Conexão falhou:', err.message);
+return false;
+}
+}
+
+// TEST 2: Testar flashcards
+async function testFlashcards() {
+try {
+const result = await generateFlashcards('Teste', 2);
+if (Array.isArray(result) && result.length > 0) {
+console.log('✅ generateFlashcards: OK');
+return true;
+} else {
+console.warn('⚠️ generateFlashcards retornou array vazio');
+return false;
+}
+} catch (err) {
+console.error('❌ generateFlashcards falhou:', err.message);
+return false;
+}
+}
+
+// TEST 3: Testar quiz
+async function testQuiz() {
+try {
+const result = await generateQuiz('Teste', 2);
+if (Array.isArray(result) && result.length > 0) {
+console.log('✅ generateQuiz: OK');
+return true;
+} else {
+console.warn('⚠️ generateQuiz retornou array vazio');
+return false;
+}
+} catch (err) {
+console.error('❌ generateQuiz falhou:', err.message);
+return false;
+}
+}
+
+// TEST 4: Testar teste/prova
+async function testTest() {
+try {
+const result = await generateTest('Teste', 3, 'fácil');
+if (typeof result === 'string' && result.length > 10) {
+console.log('✅ generateTest: OK');
+return true;
+} else {
+console.warn('⚠️ generateTest retornou resposta inválida');
+return false;
+}
+} catch (err) {
+console.error('❌ generateTest falhou:', err.message);
+return false;
+}
+}
+
+// TEST 5: Testar chat
+async function testChat() {
+try {
+const result = await chat('Olá, como você está?', []);
+if (typeof result === 'string' && result.length > 5) {
+console.log('✅ chat: OK');
+return true;
+} else {
+console.warn('⚠️ chat retornou resposta inválida');
+return false;
+}
+} catch (err) {
+console.error('❌ chat falhou:', err.message);
+return false;
+}
+}
+
+// EXECUTAR TODOS OS TESTES
+async function runAllTests() {
+console.log('🧪 INICIANDO TESTES DE VALIDAÇÃO...\n');
+
+const test1 = await testConnection();
+const test2 = await testFlashcards();
+const test3 = await testQuiz();
+const test4 = await testTest();
+const test5 = await testChat();
+
+const totalPassed = [test1, test2, test3, test4, test5].filter(t => t).length;
+console.log( \n📊 RESULTADO: ${totalPassed}/5 testes passaram);
+
+if (totalPassed === 5) {
+console.log('✨ MIGRAÇÃO GROQ: 100% FUNCIONAL!');
+} else {
+console.log('⚠️ Ainda há problemas. Verifique os erros acima.');
+}
+}
+
+// Executor
+runAllTests();
+
+texto
+
+
+⚠️ FASE 5: CHECKLIST FINAL DE VERIFICAÇÃO
+
+Antes de considerar pronto, verificar:
+
+[ ] .env tem GROQ_API_KEY correta
+[ ] groqService.js importa dotenv e executa dotenv.config()
+[ ] Todas as funções usam 'llama-3.3-70b-versatile'
+[ ] Todas as funções têm baseURL: 'https://api.groq.com/openai/v1'
+[ ] max_tokens está <= 8000
+[ ] API key tem .trim()
+[ ] Todas as funções têm try-catch
+[ ] JSON parsing tem try-catch
+[ ] Retry com backoff implementado
+[ ] Validação de resposta vazia implementada
+[ ] Testes passam 5/5
+[ ] Nenhuma mensagem de erro no console
+[ ] Responses não estão vazias ou null
+
+
+⚠️ SE AINDA TIVER ERROS, REPORTAR:
+
+1. QUAL TESTE FALHOU? (1, 2, 3, 4 ou 5)
+2. QUAL FOI A MENSAGEM DE ERRO EXATA?
+3. QUAL FOI O STACK TRACE?
+4. O arquivo groqService.js está estruturado corretamente?
+5. O .env tem a chave correta?
+
+Depois farei uma investigação profunda e nova correção.
