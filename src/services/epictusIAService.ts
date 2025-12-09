@@ -68,9 +68,11 @@ export const clearChatHistory = (sessionId: string): void => {
   }
 };
 
-const GROQ_API_KEY = (import.meta.env.VITE_GROQ_API_KEY || '').trim();
-const GROQ_BASE_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
+import { API_KEYS, API_URLS, API_MODELS, API_CONFIG, validateGroqApiKey, fetchWithRetry } from '@/config/apiKeys';
+
+const GROQ_API_KEY = (API_KEYS.GROQ || '').trim();
+const GROQ_BASE_URL = API_URLS.GROQ;
+const GROQ_MODEL = API_MODELS.GROQ;
 
 // Função para gerar sugestões de foco com base no perfil do usuário e dados da agenda
 export const generateFocusSuggestions = async (userId: string, focusData?: any): Promise<any> => {
@@ -149,8 +151,11 @@ Retorne um objeto JSON com a seguinte estrutura:
   ]
 }`;
 
-    // Fazer requisição para a API Groq
-    const response = await fetch(GROQ_BASE_URL, {
+    if (!validateGroqApiKey(GROQ_API_KEY)) {
+      throw new Error('Chave da API Groq inválida ou não configurada');
+    }
+
+    const response = await fetchWithRetry(GROQ_BASE_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -160,7 +165,7 @@ Retorne um objeto JSON com a seguinte estrutura:
         model: GROQ_MODEL,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
-        max_tokens: 2048,
+        max_tokens: Math.min(2048, API_CONFIG.maxTokens),
         top_p: 0.8
       })
     });
@@ -322,8 +327,11 @@ Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
     // Configuração para análise de dados ou chat normal
     const temperature = isDataAnalysisRequest ? 0.2 : 0.7;
 
-    // Fazer a requisição para a API Groq
-    const response = await fetch(GROQ_BASE_URL, {
+    if (!validateGroqApiKey(GROQ_API_KEY)) {
+      throw new Error('Chave da API Groq inválida ou não configurada');
+    }
+
+    const response = await fetchWithRetry(GROQ_BASE_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -333,7 +341,7 @@ Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
         model: GROQ_MODEL,
         messages: [{ role: 'user', content: prompt }],
         temperature: temperature,
-        max_tokens: 2048,
+        max_tokens: Math.min(2048, API_CONFIG.maxTokens),
         top_p: 0.95
       })
     });

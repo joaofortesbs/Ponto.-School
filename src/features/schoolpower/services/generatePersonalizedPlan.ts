@@ -9,10 +9,9 @@ import { sequenciaDidaticaPrompt } from '../prompts/sequenciaDidaticaPrompt';
 import { validateSequenciaDidaticaData } from './sequenciaDidaticaValidator';
 import { geminiLogger } from '../../../utils/geminiDebugLogger';
 
-// Usar API Key centralizada
-import { API_KEYS, API_URLS, API_MODELS } from '@/config/apiKeys';
+import { API_KEYS, API_URLS, API_MODELS, API_CONFIG, validateGroqApiKey, fetchWithRetry } from '@/config/apiKeys';
 
-const GROQ_API_KEY = API_KEYS.GROQ || 'gsk_AIhyJ2qnSsKXvLnf0ckWGdyb3fYmoabcU7UuswKz9OsWuJmzdJp';
+const GROQ_API_KEY = (API_KEYS.GROQ || '').trim();
 const GROQ_API_URL = API_URLS.GROQ;
 
 interface GroqResponse {
@@ -380,6 +379,11 @@ async function callGroqAPI(prompt: string, uploadedFiles?: UploadedFile[]): Prom
     console.log(`✅ All files processed successfully.`);
   }
 
+  if (!validateGroqApiKey(GROQ_API_KEY)) {
+    throw new Error('Chave da API Groq inválida ou não configurada');
+  }
+
+  const maxTokens = Math.min(7000, API_CONFIG.maxTokens);
   const requestBody = {
     model: API_MODELS.GROQ,
     messages: [
@@ -389,15 +393,15 @@ async function callGroqAPI(prompt: string, uploadedFiles?: UploadedFile[]): Prom
       }
     ],
     temperature: 0.3,
-    max_tokens: 32768,
+    max_tokens: maxTokens,
   };
 
   console.log('📋 Request body:', JSON.stringify({ ...requestBody, messages: ['[PROMPT TRUNCATED]'] }, null, 2));
 
-  geminiLogger.logRequest(fullPrompt, { temperature: 0.3, max_tokens: 32768 });
+  geminiLogger.logRequest(fullPrompt, { temperature: 0.3, max_tokens: maxTokens });
 
   const startTime = Date.now();
-  const response = await fetch(GROQ_API_URL, {
+  const response = await fetchWithRetry(GROQ_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -1,5 +1,5 @@
 
-import { API_KEYS, API_URLS, API_CONFIG, TOKEN_COSTS, API_MODELS } from '@/config/apiKeys';
+import { API_KEYS, API_URLS, API_CONFIG, TOKEN_COSTS, API_MODELS, validateGroqApiKey, fetchWithRetry } from '@/config/apiKeys';
 
 export interface GeminiRequest {
   prompt: string;
@@ -35,7 +35,13 @@ export class GeminiClient {
         throw new Error('Chave da API Groq não configurada');
       }
 
-      const response = await fetch(this.baseUrl, {
+      if (!validateGroqApiKey(this.apiKey)) {
+        throw new Error('Chave da API Groq inválida. A chave deve começar com "gsk_"');
+      }
+
+      const maxTokens = Math.min(request.maxTokens || API_CONFIG.maxTokens, 7000);
+
+      const response = await fetchWithRetry(this.baseUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,9 +52,8 @@ export class GeminiClient {
           messages: [{ role: 'user', content: request.prompt }],
           temperature: request.temperature || 0.7,
           top_p: request.topP || 0.8,
-          max_tokens: request.maxTokens || API_CONFIG.maxTokens,
+          max_tokens: maxTokens,
         }),
-        signal: AbortSignal.timeout(API_CONFIG.timeout)
       });
 
       if (!response.ok) {
@@ -77,6 +82,7 @@ export class GeminiClient {
 
     } catch (error) {
       const executionTime = Date.now() - startTime;
+      console.error('Erro na API Groq:', error);
       
       return {
         success: false,
