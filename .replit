@@ -66,6 +66,10 @@ localPort = 42671
 externalPort = 8099
 
 [[ports]]
+localPort = 43011
+externalPort = 9000
+
+[[ports]]
 localPort = 43869
 externalPort = 8000
 
@@ -113,13 +117,13 @@ name = "API Server"
 author = "agent"
 mode = "sequential"
 
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node api/server.js"
 waitForPort = 3001
-
-[workflows.workflow.metadata]
-outputType = "console"
 
 [[workflows.workflow]]
 name = "Aplicar Migrações"

@@ -6,11 +6,18 @@ dotenv.config();
 
 const router = express.Router();
 
-// Groq API configuration - uses environment variable only (no hardcoded fallback)
-const groq = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: "https://api.groq.com/openai/v1",
-});
+// Groq API configuration - lazy initialization to avoid startup errors
+let groq = null;
+
+function getGroqClient() {
+  if (!groq && process.env.GROQ_API_KEY) {
+    groq = new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: "https://api.groq.com/openai/v1",
+    });
+  }
+  return groq;
+}
 
 const languageNames = {
   'pt': 'Português',
@@ -23,6 +30,11 @@ const languageNames = {
 
 async function translateText(text, targetLanguage, isBatch = false) {
   try {
+    const client = getGroqClient();
+    if (!client) {
+      throw new Error('GROQ_API_KEY não configurada. Serviço de tradução indisponível.');
+    }
+    
     const targetLangName = languageNames[targetLanguage] || targetLanguage;
     
     let prompt;
@@ -37,7 +49,7 @@ ${text}`;
       prompt = `Traduza o seguinte texto para ${targetLangName}. Retorne APENAS a tradução, sem explicações adicionais:\n\n${text}`;
     }
     
-    const response = await groq.chat.completions.create({
+    const response = await client.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 2048,
