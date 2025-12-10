@@ -117,8 +117,12 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             stiffness: 300,
             mass: 0.8
           }}
-          className="absolute inset-0 z-40 flex flex-col"
+          className="absolute z-40 flex flex-col"
           style={{ 
+            top: '24px',
+            left: '24px',
+            right: '24px',
+            bottom: '24px',
             background: 'linear-gradient(180deg, #0D1B2A 0%, #1A2B3C 100%)',
             borderRadius: '24px',
             border: '1px solid rgba(255, 107, 0, 0.2)'
