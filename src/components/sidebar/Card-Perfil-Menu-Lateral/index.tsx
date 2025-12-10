@@ -33,7 +33,7 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
     <div
       className={cn(
         "bg-white dark:bg-[#001427] p-4 mb-0 flex flex-col items-center relative group",
-        isCollapsed ? "mt-3 px-2" : "mt-4",
+        isCollapsed ? "-mt-4 px-2" : "-mt-3",
       )}
     >
       {/* Card wrapper com bordas arredondadas e flip effect */}
