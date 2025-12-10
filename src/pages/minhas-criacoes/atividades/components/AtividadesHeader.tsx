@@ -89,28 +89,25 @@ const AtividadesHeader: React.FC<AtividadesHeaderProps> = ({
         />
       </motion.div>
 
-      {/* Calendar Card - Figma: 207×57px */}
+      {/* Calendar Card - Same height & colors as search bar */}
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className="flex items-center gap-3 px-4 cursor-pointer flex-shrink-0"
+        className="flex items-center gap-3 px-4 cursor-pointer flex-shrink-0 bg-[#1A2B3C] border border-[#FF6B00]/30 rounded-full"
         style={{
           width: '207px',
-          height: '57px',
-          borderRadius: '47px',
-          background: 'rgba(249, 115, 22, 0.09)',
-          boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)'
+          height: '40px'
         }}
       >
         {/* Calendar Icon - Simple outline style like GridSelector */}
-        <Calendar className="w-5 h-5 text-[#FF6B00] flex-shrink-0" />
+        <Calendar className="w-4 h-4 text-[#FF6B00] flex-shrink-0" />
         
         {/* Calendário Text - Gradient effect */}
         <span
-          className="text-sm font-black whitespace-nowrap"
+          className="text-xs font-black whitespace-nowrap"
           style={{
             background: 'linear-gradient(199.96deg, rgba(255, 255, 255, 0.91) 29.65%, rgba(204, 204, 204, 0.91) 62.54%)',
             WebkitBackgroundClip: 'text',
