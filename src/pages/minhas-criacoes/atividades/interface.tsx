@@ -50,13 +50,15 @@ const AtividadesInterface: React.FC = () => {
           height: 0;
         }
       `}</style>
-      <div className="atividades-scroll-container flex-1 overflow-y-auto py-6 px-6 space-y-6">
-        <AtividadesHeader 
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-        />
+      <div className="atividades-scroll-container flex-1 overflow-y-auto py-6 px-0 space-y-6">
+        <div className="px-6">
+          <AtividadesHeader 
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+          />
+        </div>
         
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between px-6">
           <GridSelector 
             activeGrid={activeGrid}
             onGridChange={setActiveGrid}
@@ -90,7 +92,7 @@ const AtividadesInterface: React.FC = () => {
           </div>
         </div>
         
-        <div key={activeGrid}>
+        <div key={activeGrid} className="px-6">
           {renderGrid()}
         </div>
       </div>

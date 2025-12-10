@@ -232,7 +232,12 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
       'current_activity_id',
       'activity_in_progress',
       'schoolpower_chat_messages',
-      'schoolpower_generated_content'
+      'schoolpower_generated_content',
+      'schoolpower_conversation',
+      'schoolpower_messages',
+      'sp_current_step',
+      'sp_activity_type',
+      'sp_form_values'
     ];
     
     schoolPowerKeys.forEach(key => {
@@ -247,7 +252,7 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
     <div
       onClick={handleCreateActivity}
       className="flex flex-col items-center justify-center border-2 border-dashed border-[#FF6B00]/40 rounded-2xl hover:border-[#FF6B00] hover:bg-[#FF6B00]/5 transition-all duration-300 cursor-pointer group hover:scale-[1.02]"
-      style={{ width: 208, height: 260 }}
+      style={{ width: 208, height: 260, flexShrink: 0 }}
     >
       <div className="w-14 h-14 rounded-full border-2 border-dashed border-[#FF6B00]/40 flex items-center justify-center mb-3 group-hover:border-[#FF6B00] group-hover:bg-[#FF6B00]/10 transition-all duration-300">
         <Sparkles className="w-6 h-6 text-[#FF6B00]/60 group-hover:text-[#FF6B00]" />
@@ -259,6 +264,7 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
   const AtividadeCard = ({ atividade }: { atividade: Atividade }) => {
     const isHovered = hoveredCard === atividade.id;
     const isMenuOpen = activeMenu === atividade.id;
+    const showMenu = isHovered || isMenuOpen;
     
     return (
       <div
@@ -269,13 +275,13 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
           }
         }}
         className={`bg-[#1A2B3C] rounded-2xl overflow-hidden transition-all duration-300 relative cursor-pointer ${
-          isHovered ? 'border border-[#FF6B00]/60 scale-[1.02]' : 'border border-[#FF6B00]/20'
+          isHovered ? 'border border-[#FF6B00]/50 scale-[1.02] shadow-lg shadow-[#FF6B00]/10' : 'border border-[#FF6B00]/15'
         }`}
-        style={{ width: 208, height: 260 }}
+        style={{ width: 208, height: 260, flexShrink: 0 }}
       >
         <div 
-          className={`absolute top-3 right-3 z-10 transition-opacity duration-200 ${
-            isHovered || isMenuOpen ? 'opacity-100' : 'opacity-0'
+          className={`absolute top-3 right-3 z-10 transition-all duration-200 ${
+            showMenu ? 'opacity-100 visible' : 'opacity-0 invisible'
           }`}
         >
           <button
@@ -283,7 +289,7 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
               e.stopPropagation();
               setActiveMenu(isMenuOpen ? null : atividade.id);
             }}
-            className="w-8 h-8 rounded-full bg-[#0D1B2A]/80 flex items-center justify-center text-white/60 hover:text-white transition-colors"
+            className="w-8 h-8 rounded-full bg-[#0D1B2A]/90 flex items-center justify-center text-white/70 hover:text-white hover:bg-[#0D1B2A] transition-colors"
           >
             <MoreVertical className="w-4 h-4" />
           </button>
@@ -338,14 +344,14 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
   };
 
   const LoadingState = () => (
-    <div className="col-span-full flex flex-col items-center justify-center py-12">
+    <div className="w-full flex flex-col items-center justify-center py-12">
       <Loader2 className="w-8 h-8 text-[#FF6B00] animate-spin mb-4" />
       <p className="text-white/60 text-sm">Carregando atividades...</p>
     </div>
   );
 
   const ErrorState = () => (
-    <div className="col-span-full flex flex-col items-center justify-center py-12">
+    <div className="w-full flex flex-col items-center justify-center py-12">
       <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
         <FileText className="w-8 h-8 text-red-400" />
       </div>
@@ -362,7 +368,7 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
   return (
     <>
       <div className="space-y-6">
-        <div className="flex flex-wrap gap-4 justify-start">
+        <div className="grid grid-cols-[repeat(auto-fill,208px)] gap-4 justify-start w-full">
           {loading ? (
             <LoadingState />
           ) : error ? (
@@ -398,12 +404,12 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4 justify-start">
+          <div className="grid grid-cols-[repeat(auto-fill,208px)] gap-4 justify-start w-full">
             {[0, 1, 2, 3].map((index) => (
               <div
                 key={`template-${index}`}
                 className="flex flex-col items-center justify-center border border-dashed border-[#FF6B00]/20 rounded-2xl hover:border-[#FF6B00]/40 hover:scale-[1.02] transition-all duration-300 cursor-pointer group"
-                style={{ width: 208, height: 260 }}
+                style={{ width: 208, height: 260, flexShrink: 0 }}
               >
                 <div className="w-12 h-12 rounded-full border-2 border-dashed border-[#FF6B00]/30 flex items-center justify-center mb-3 group-hover:border-[#FF6B00]/50 transition-colors">
                   <Plus className="w-6 h-6 text-[#FF6B00]/40 group-hover:text-[#FF6B00]/60" />
