@@ -94,7 +94,8 @@ const GridSelector: React.FC<GridSelectorProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full left-0 mt-2 w-48 bg-[#1A2B3C] border border-[#FF6B00]/30 rounded-xl shadow-xl overflow-hidden z-50"
+            className="absolute top-full left-0 mt-2 bg-[#1A2B3C] border border-[#FF6B00]/30 rounded-xl shadow-xl overflow-hidden z-50"
+            style={{ width: 208 }}
           >
             {gridOptions.map((option, index) => {
               const OptionIcon = option.icon;
@@ -109,18 +110,20 @@ const GridSelector: React.FC<GridSelectorProps> = ({
                   transition={{ delay: index * 0.05 }}
                   onClick={() => handleSelect(option.id)}
                   className={`
-                    w-full flex items-center gap-3 px-4 py-3
-                    text-left transition-colors
+                    w-full flex items-center px-3 py-2.5
+                    text-left transition-colors justify-between
                     ${isActive 
                       ? 'bg-[#FF6B00]/20 text-[#FF6B00]' 
                       : 'text-white/80 hover:bg-[#FF6B00]/10 hover:text-[#FF6B00]'
                     }
                   `}
                 >
-                  <OptionIcon className="w-4 h-4" />
-                  <span className="font-medium text-sm">{option.label}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <OptionIcon className="w-4 h-4 flex-shrink-0" />
+                    <span className="font-medium text-sm truncate">{option.label}</span>
+                  </div>
                   {optionCount !== undefined && optionCount > 0 && (
-                    <span className={`ml-auto px-2 py-0.5 text-xs font-bold rounded-full min-w-[20px] text-center ${
+                    <span className={`px-1.5 py-0.5 text-xs font-bold rounded-full min-w-[20px] text-center flex-shrink-0 ml-2 ${
                       isActive 
                         ? 'bg-[#FF6B00] text-white' 
                         : 'bg-white/10 text-white/60'
@@ -131,7 +134,7 @@ const GridSelector: React.FC<GridSelectorProps> = ({
                   {isActive && !optionCount && (
                     <motion.div
                       layoutId="activeIndicator"
-                      className="ml-auto w-2 h-2 rounded-full bg-[#FF6B00]"
+                      className="w-2 h-2 rounded-full bg-[#FF6B00] flex-shrink-0 ml-2"
                     />
                   )}
                 </motion.button>
