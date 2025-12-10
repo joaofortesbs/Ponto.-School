@@ -4,29 +4,25 @@ import { ChevronDown } from "lucide-react";
 
 interface CardSelecaoPerfilTopoMenuProps {
   isCollapsed: boolean;
-  customLogo?: string | null;
 }
 
 export const CardSelecaoPerfilTopoMenu: React.FC<CardSelecaoPerfilTopoMenuProps> = ({
   isCollapsed,
-  customLogo,
 }) => {
-  const collapsedLogoSrc = "/lovable-uploads/Logo-Ponto.School-Icone.webp";
-  const expandedLogoSrc = customLogo || "/lovable-uploads/Logo-Ponto.School.webp";
-
   return (
     <div
       className={cn(
         "flex items-center justify-center transition-all duration-300",
-        isCollapsed ? "px-2" : "px-3"
+        isCollapsed ? "px-2 mb-3" : "px-4 mb-4"
       )}
     >
       <div
         className={cn(
-          "flex items-center justify-between bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-300 shadow-lg",
+          "flex items-center justify-between border border-gray-200 dark:border-gray-800/50 rounded-2xl transition-all duration-300 backdrop-blur-sm",
+          "bg-white dark:bg-[#29335C]/20",
           isCollapsed 
             ? "w-12 h-12 p-1 justify-center" 
-            : "w-full h-11 px-4"
+            : "w-full h-auto py-3 px-4"
         )}
       >
         <div className={cn(
@@ -34,19 +30,19 @@ export const CardSelecaoPerfilTopoMenu: React.FC<CardSelecaoPerfilTopoMenuProps>
           isCollapsed ? "w-full" : "flex-1"
         )}>
           <img
-            src={isCollapsed ? collapsedLogoSrc : expandedLogoSrc}
+            src="/lovable-uploads/Logo-Ponto. School.webp"
             alt="Ponto School Logo"
             className={cn(
               "object-contain transition-all duration-300",
-              isCollapsed ? "h-8 w-8" : "h-7 w-auto"
+              isCollapsed ? "h-8 w-8" : "h-6 w-auto"
             )}
             loading="eager"
             onError={(e) => {
               console.error("Erro ao renderizar logo no CardSelecaoPerfilTopoMenu");
               e.currentTarget.style.display = "none";
               const fallbackText = document.createElement("span");
-              fallbackText.className = "font-bold text-sm text-white";
-              fallbackText.innerHTML = 'Ponto<span class="text-white">.</span><span class="text-white">School</span>';
+              fallbackText.className = "font-bold text-xs text-[#001427] dark:text-white";
+              fallbackText.innerHTML = 'Ponto<span class="text-[#FF6B00]">.</span>School';
               e.currentTarget.parentNode?.appendChild(fallbackText);
             }}
           />
@@ -54,7 +50,7 @@ export const CardSelecaoPerfilTopoMenu: React.FC<CardSelecaoPerfilTopoMenuProps>
         
         {!isCollapsed && (
           <div className="flex items-center justify-center ml-2">
-            <ChevronDown className="h-4 w-4 text-white" strokeWidth={2.5} />
+            <ChevronDown className="h-4 w-4 text-[#FF6B00]" strokeWidth={2.5} />
           </div>
         )}
       </div>

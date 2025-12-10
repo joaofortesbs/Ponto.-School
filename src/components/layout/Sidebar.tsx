@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar/SidebarNav";
-import { CardSelecaoPerfilTopoMenu } from "@/components/sidebar/card-selecao-perfil-topo-menu";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
@@ -23,111 +22,9 @@ export default function Sidebar({
 }: SidebarProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isCollapsed);
-  const [customLogo, setCustomLogo] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    const defaultLogo =
-      window.PONTO_SCHOOL_CONFIG?.defaultLogo ||
-      "/images/ponto-school-logo.webp";
-
-    setCustomLogo(defaultLogo);
-
-    const loadAndConfigureLogo = (logoUrl: string | null = null) => {
-      try {
-        if (logoUrl) {
-          setCustomLogo(logoUrl);
-          return;
-        }
-
-        const pontoSchoolLogo = localStorage.getItem("pontoSchoolLogo");
-        if (
-          pontoSchoolLogo &&
-          pontoSchoolLogo !== "null" &&
-          pontoSchoolLogo !== "undefined"
-        ) {
-          setCustomLogo(pontoSchoolLogo);
-          if (window.PONTO_SCHOOL_CONFIG) {
-            window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
-            window.PONTO_SCHOOL_CONFIG.defaultLogo = pontoSchoolLogo;
-          }
-          return;
-        }
-
-        const savedLogo = localStorage.getItem("sidebarCustomLogo");
-        if (savedLogo && savedLogo !== "null" && savedLogo !== "undefined") {
-          setCustomLogo(savedLogo);
-          if (window.PONTO_SCHOOL_CONFIG) {
-            window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
-          }
-        } else {
-          setCustomLogo(defaultLogo);
-          localStorage.setItem("sidebarCustomLogo", defaultLogo);
-          localStorage.setItem("pontoSchoolLogo", defaultLogo);
-          localStorage.setItem("logoPreloaded", "true");
-        }
-      } catch (e) {
-        console.warn("Erro ao acessar localStorage no Sidebar", e);
-        setCustomLogo(defaultLogo);
-      }
-    };
-
-    const preloadImg = new Image();
-    preloadImg.src = defaultLogo;
-    preloadImg.fetchPriority = "high";
-    preloadImg.crossOrigin = "anonymous";
-
-    preloadImg.onload = () => {
-      console.log("Logo carregada com sucesso no Sidebar");
-      loadAndConfigureLogo();
-      document.dispatchEvent(
-        new CustomEvent("logoLoaded", { detail: defaultLogo }),
-      );
-    };
-
-    preloadImg.onerror = () => {
-      console.error("Erro ao carregar logo no Sidebar, tentando novamente...");
-
-      setTimeout(() => {
-        const retryImg = new Image();
-        retryImg.src = defaultLogo + "?retry=" + Date.now();
-        retryImg.fetchPriority = "high";
-
-        retryImg.onload = () => {
-          console.log("Logo carregada com sucesso após retry no Sidebar");
-          setCustomLogo(retryImg.src);
-          localStorage.setItem("sidebarCustomLogo", retryImg.src);
-          localStorage.setItem("pontoSchoolLogo", retryImg.src);
-          localStorage.setItem("logoPreloaded", "true");
-          document.dispatchEvent(
-            new CustomEvent("logoLoaded", { detail: retryImg.src }),
-          );
-        };
-
-        retryImg.onerror = () => {
-          console.error("Falha definitiva ao carregar logo no Sidebar");
-          setCustomLogo(null);
-          document.dispatchEvent(new CustomEvent("logoLoadFailed"));
-        };
-      }, 1000);
-    };
-
-    if (window.PONTO_SCHOOL_CONFIG?.logoLoaded) {
-      loadAndConfigureLogo(window.PONTO_SCHOOL_CONFIG.defaultLogo);
-    }
-
-    const handleLogoLoaded = (event: CustomEvent) => {
-      console.log("Logo loaded event received in Sidebar", event.detail);
-      loadAndConfigureLogo(event.detail);
-    };
-
-    const handleLogoLoadFailed = () => {
-      console.log("Logo load failed event received in Sidebar");
-      setCustomLogo(null);
-    };
-
-    document.addEventListener("logoLoaded", handleLogoLoaded as EventListener);
-    document.addEventListener("logoLoadFailed", handleLogoLoadFailed);
 
     const handleResize = () => {
       if (window.innerWidth < 1024) {
@@ -139,8 +36,6 @@ export default function Sidebar({
     window.addEventListener("resize", handleResize);
 
     return () => {
-      document.removeEventListener("logoLoaded", handleLogoLoaded as EventListener);
-      document.removeEventListener("logoLoadFailed", handleLogoLoadFailed);
       window.removeEventListener("resize", handleResize);
     };
   }, []);
@@ -191,23 +86,6 @@ export default function Sidebar({
         }}
         {...props}
       >
-        {/* Card do Logo flutuante no topo */}
-        <div
-          className={cn(
-            "flex-shrink-0 transition-all duration-300",
-            sidebarCollapsed ? "mb-3" : "mb-4"
-          )}
-          style={{
-            marginLeft: sidebarCollapsed ? '4px' : '0px',
-            marginRight: sidebarCollapsed ? '4px' : '8px',
-          }}
-        >
-          <CardSelecaoPerfilTopoMenu
-            isCollapsed={sidebarCollapsed}
-            customLogo={customLogo}
-          />
-        </div>
-
         {/* Card principal do menu lateral */}
         <aside
           className={cn(

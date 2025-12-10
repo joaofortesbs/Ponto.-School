@@ -67,6 +67,7 @@ import MentorAI from "@/components/mentor/MentorAI";
 import { useUserName } from "@/hooks/useUserName";
 import { CardPerfilMenuLateral } from "./Card-Perfil-Menu-Lateral";
 import { CardPrimeiroPassos } from "./CardPrimeiroPassos";
+import { CardSelecaoPerfilTopoMenu } from "./card-selecao-perfil-topo-menu";
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
@@ -602,6 +603,11 @@ export function SidebarNav({
           </div>
         </div>
       )}
+
+      {/* Logo Card - Top of sidebar */}
+      <CardSelecaoPerfilTopoMenu
+        isCollapsed={isCollapsed}
+      />
 
       {/* User Profile Component - Greeting and progress section */}
       <CardPerfilMenuLateral
