@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { LayoutGrid, Sliders, Mouse } from 'lucide-react';
 import AtividadesHeader from './components/AtividadesHeader';
 import GridSelector from './components/GridSelector';
 import AtividadesGrid from './components/grids/AtividadesGrid';
@@ -70,24 +71,27 @@ const AtividadesInterface: React.FC = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="w-10 h-10 rounded-full border-2 border-[#FF6B00] flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-colors"
+              title="Visualizar como blocos"
             >
-              <i className="fas fa-users text-sm"></i>
+              <LayoutGrid className="w-5 h-5" />
             </motion.button>
             
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="w-10 h-10 rounded-full border-2 border-[#FF6B00] flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-colors"
+              title="Filtrar atividades"
             >
-              <i className="fas fa-filter text-sm"></i>
+              <Sliders className="w-5 h-5" />
             </motion.button>
             
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="w-10 h-10 rounded-full border-2 border-[#FF6B00] flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-colors"
+              title="Cursor de mouse"
             >
-              <i className="fas fa-arrow-up-right-from-square text-sm"></i>
+              <Mouse className="w-5 h-5" />
             </motion.button>
           </div>
         </div>
