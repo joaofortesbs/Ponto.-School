@@ -626,7 +626,7 @@ export function SidebarNav({
 
       <ScrollArea
         className={cn(
-          "py-2",
+          "py-2 mt-1",
           isCollapsed ? "h-[calc(100%-180px)]" : "h-[calc(100%-300px)]",
         )}
       >
