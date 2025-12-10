@@ -60,27 +60,31 @@ const GridSelector: React.FC<GridSelectorProps> = ({
         whileTap={{ scale: 0.98 }}
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          flex items-center gap-2 px-4 py-2.5 rounded-full 
+          flex items-center px-3 py-2.5 rounded-full 
           border-2 border-[#FF6B00] bg-transparent
           text-[#FF6B00] font-medium text-sm
           hover:bg-[#FF6B00]/10 transition-all
           ${isOpen ? 'bg-[#FF6B00]/10' : ''}
         `}
-        style={{ width: 208 }}
+        style={{ width: 208, justifyContent: 'space-between' }}
       >
-        <IconComponent className="w-4 h-4" />
-        <span>{activeOption.label}</span>
-        {activeCount !== undefined && activeCount > 0 && (
-          <span className="px-2 py-0.5 bg-[#FF6B00] text-white text-xs font-bold rounded-full min-w-[20px] text-center">
-            {activeCount}
-          </span>
-        )}
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <ChevronDown className="w-4 h-4" />
-        </motion.div>
+        <div className="flex items-center gap-1.5">
+          <IconComponent className="w-4 h-4 flex-shrink-0" />
+          <span>{activeOption.label}</span>
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {activeCount !== undefined && activeCount > 0 && (
+            <span className="px-1.5 py-0.5 bg-[#FF6B00] text-white text-xs font-bold rounded-full min-w-[20px] text-center">
+              {activeCount}
+            </span>
+          )}
+          <motion.div
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronDown className="w-4 h-4" />
+          </motion.div>
+        </div>
       </motion.button>
 
       <AnimatePresence>

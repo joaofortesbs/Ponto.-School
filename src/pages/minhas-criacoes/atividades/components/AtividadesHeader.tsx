@@ -17,7 +17,8 @@ const AtividadesHeader: React.FC<AtividadesHeaderProps> = ({
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex items-center bg-[#1A2B3C] border border-[#FF6B00]/30 rounded-full px-2 py-1.5 hover:border-[#FF6B00] transition-colors cursor-pointer group"
+        className="flex items-center bg-[#1A2B3C] border border-[#FF6B00]/30 rounded-full px-3 py-2.5 hover:border-[#FF6B00] transition-colors cursor-pointer group"
+        style={{ width: 208 }}
       >
         <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#FF6B00] flex-shrink-0">
           <img 
@@ -26,7 +27,7 @@ const AtividadesHeader: React.FC<AtividadesHeaderProps> = ({
             className="w-full h-full object-cover"
           />
         </div>
-        <span className="text-white/80 text-sm font-medium ml-2 mr-3 group-hover:text-[#FF6B00] transition-colors hidden sm:block">
+        <span className="text-white/80 text-sm font-medium ml-2 group-hover:text-[#FF6B00] transition-colors flex-1 truncate">
           Agente Felix
         </span>
       </motion.div>
