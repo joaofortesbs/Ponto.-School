@@ -60,13 +60,13 @@ const GridSelector: React.FC<GridSelectorProps> = ({
         whileTap={{ scale: 0.98 }}
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          flex items-center px-3 py-2.5 rounded-full 
+          flex items-center px-3 rounded-full 
           border-2 border-[#FF6B00] bg-transparent
           text-[#FF6B00] font-medium text-sm
           hover:bg-[#FF6B00]/10 transition-all
           ${isOpen ? 'bg-[#FF6B00]/10' : ''}
         `}
-        style={{ width: 208, justifyContent: 'space-between' }}
+        style={{ width: 208, height: '40px', justifyContent: 'space-between' }}
       >
         <div className="flex items-center gap-1.5">
           <IconComponent className="w-4 h-4 flex-shrink-0" />
