@@ -102,15 +102,13 @@ const AtividadesHeader: React.FC<AtividadesHeaderProps> = ({
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
-        className={`flex items-center gap-3 px-6 py-2.5 rounded-full border-2 border-[#FF6B00] cursor-pointer group hover:border-[#FF6B00] transition-colors ${
+        className={`flex items-center gap-2 px-3 py-2.5 rounded-full border-2 border-[#FF6B00] cursor-pointer group hover:border-[#FF6B00] transition-colors text-[#FF6B00] ${
           isDark ? 'bg-[#1A2B3C]' : 'bg-white'
         }`}
         style={{ width: '208px' }}
       >
-        {/* Calendar Icon with filled background */}
-        <div className="flex-shrink-0 w-8 h-8 rounded-md bg-[#FF6B00] flex items-center justify-center">
-          <Calendar className="w-5 h-5 text-[#1A2B3C]" />
-        </div>
+        {/* Calendar Icon - Simple style like GridSelector */}
+        <Calendar className="w-4 h-4 flex-shrink-0" />
 
         {/* Calendar Text */}
         <span className={`text-sm font-medium whitespace-nowrap group-hover:text-[#FF6B00] transition-colors flex-1 ${

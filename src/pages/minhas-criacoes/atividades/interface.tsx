@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { LayoutGrid, Sliders, Mouse } from 'lucide-react';
+import { LayoutGrid, Filter, Mouse } from 'lucide-react';
 import AtividadesHeader from './components/AtividadesHeader';
 import GridSelector from './components/GridSelector';
 import AtividadesGrid from './components/grids/AtividadesGrid';
@@ -82,7 +82,7 @@ const AtividadesInterface: React.FC = () => {
               className="w-10 h-10 rounded-full border-2 border-[#FF6B00] flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-colors"
               title="Filtrar atividades"
             >
-              <Sliders className="w-5 h-5" />
+              <Filter className="w-5 h-5" />
             </motion.button>
             
             <motion.button
