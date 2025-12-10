@@ -264,7 +264,7 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
     });
     
     console.log('🧹 LocalStorage do School Power limpo para nova atividade');
-    navigate('/professor/school-power');
+    navigate('/dashboard/school-power');
   };
 
   const CreateActivityCard = ({ index }: { index: number }) => (
