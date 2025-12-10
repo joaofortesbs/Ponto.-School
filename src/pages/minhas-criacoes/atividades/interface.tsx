@@ -66,7 +66,7 @@ const AtividadesInterface: React.FC = () => {
             counts={counts}
           />
           
-          {/* Figma: Icon Circles - Line 2: 57px × 57px each, border-radius 47px */}
+          {/* Figma: Icon Circles - 57×57px each, r:28.5px */}
           <div className="flex items-center gap-3">
             <motion.button
               whileHover={{ scale: 1.05 }}

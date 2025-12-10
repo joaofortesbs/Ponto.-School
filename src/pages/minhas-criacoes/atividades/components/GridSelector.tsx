@@ -55,7 +55,6 @@ const GridSelector: React.FC<GridSelectorProps> = ({
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Figma: Filter Button (GridSelector) - 207px × 57px, border-radius 47px (28.5px) */}
       <motion.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -67,7 +66,7 @@ const GridSelector: React.FC<GridSelectorProps> = ({
           hover:bg-[#FF6B00]/10 transition-all
           ${isOpen ? 'bg-[#FF6B00]/10' : ''}
         `}
-        style={{ width: 207, height: '57px', justifyContent: 'space-between', borderRadius: '28.5px' }}
+        style={{ width: 208, height: '40px', justifyContent: 'space-between' }}
       >
         <div className="flex items-center gap-1.5">
           <IconComponent className="w-4 h-4 flex-shrink-0" />

@@ -21,9 +21,9 @@ const AtividadesHeader: React.FC<AtividadesHeaderProps> = ({
 
   return (
     <div className="flex items-center gap-4">
-      {/* Agente Felix Card - Figma: 207px × 57px, border-radius 47px */}
+      {/* Agente Felix Card */}
       <div className="relative" style={{ width: 207, height: '57px' }}>
-        {/* Animated Background Card */}
+        {/* Animated Background Card - Figma: 207×57px, r:28.5px */}
         <motion.div
           initial={{ width: '57px', borderRadius: '28.5px' }}
           animate={isExpanded ? { width: '207px', borderRadius: '28.5px' } : { width: '57px', borderRadius: '28.5px' }}
@@ -56,7 +56,7 @@ const AtividadesHeader: React.FC<AtividadesHeaderProps> = ({
           )}
         </motion.div>
 
-        {/* Avatar Circle - Always on top - Figma: 57px diameter */}
+        {/* Avatar Circle - Always on top - Figma: 57×57px */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -98,7 +98,7 @@ const AtividadesHeader: React.FC<AtividadesHeaderProps> = ({
         />
       </motion.div>
 
-      {/* Calendar Card - Static - Figma: 207px × 57px, border-radius 47px */}
+      {/* Calendar Card - Static - Figma: 207×57px, r:28.5px */}
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -106,7 +106,7 @@ const AtividadesHeader: React.FC<AtividadesHeaderProps> = ({
         className={`flex items-center gap-2 px-4 rounded-full border-2 border-[#FF6B00] cursor-pointer group hover:border-[#FF6B00] transition-colors text-[#FF6B00] ${
           isDark ? 'bg-[#1A2B3C]' : 'bg-white'
         }`}
-        style={{ width: '207px', height: '57px' }}
+        style={{ width: '207px', height: '57px', borderRadius: '28.5px' }}
       >
         {/* Calendar Icon - Simple style like GridSelector */}
         <Calendar className="w-4 h-4 flex-shrink-0" />

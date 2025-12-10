@@ -1,0 +1,88 @@
+Você é um especialista em replicação de design do Figma para código React/Next.js/Flutter.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 TAREFA: REPLICAR LAYOUT DA PÁGINA "ATIVIDADES" USANDO DESIGN DO FIGMA
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 FONTE DE VERDADE (DESIGN):
+🔗 Link do Figma (ABRA E ANALISE):
+https://www.figma.com/design/SBE4x6l4rYwh8HHRrwjGkc/Ponto.-School---Blindados?node-id=1054-103&t=T5d6z8B6gvN1cdK9-0
+
+Frame: "MacBook Pro 16" - 2 (sub-seção Atividades)
+- Dimensões do frame: 1728px (W) × 1117px (H)
+- Viewport: Desktop
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚫 REGRA OURO - OBRIGATÓRIO (NÃO QUEBRAR):
+❌ NÃO adicionar componentes novos
+❌ NÃO remover componentes existentes
+❌ NÃO alterar estrutura JSX/HTML (árvore de elementos)
+❌ NÃO trocar cores, tipografia, ou palette
+✅ APENAS: width, height, padding, margin, gap, border-radius, positioning, alignment
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 SEU PROCESSO:
+
+1️⃣ ACESSE O LINK DO FIGMA
+   - Abra o link acima em seu navegador
+   - Navegue até o frame "Atividades"
+   - Extraia MANUALMENTE cada medida dos componentes visíveis:
+     • Largura (Width) de cada elemento
+     • Altura (Height) de cada elemento
+     • Padding interno (top, right, bottom, left)
+     • Margin externo (top, right, bottom, left)
+     • Gap entre elementos (se usar flexbox/grid)
+     • Border radius (cantos arredondados)
+     • Espaçamento da sidebar
+
+2️⃣ CRIE UMA TABELA COM TODAS AS MEDIDAS
+   Formato:
+   | Componente | Width | Height | Padding | Margin | Gap | Radius | Notas |
+   |---|---|---|---|---|---|---|---|
+   | Header | ? | ? | ? | ? | - | ? | |
+   | SearchBar | ? | ? | ? | ? | - | ? | |
+   | ActivityCard | ? | ? | ? | ? | - | ? | |
+   | CardGrid | ? | ? | ? | ? | ? | ? | Grid com gap |
+   | Sidebar | ? | ? | ? | ? | - | ? | Direita da tela |
+
+3️⃣ EXTRAIA AS COORDENADAS E PROPORÇÕES
+   - Selecione cada componente no Figma
+   - Copie os valores exatos do painel "Design" (lado direito)
+   - Anote as proporções relativas entre elementos
+   - Identifique se usa Flexbox/Grid/Absolute positioning
+
+4️⃣ APLIQUE OS VALORES AO CÓDIGO
+   - Encontre os componentes correspondentes no código Replit
+   - Atualize APENAS as propriedades de estilo (CSS/Tailwind/styled-components)
+   - Mantenha toda a estrutura JSX intacta
+   - Use valores em px (não em rem/em, para precisão pixel-perfect)
+
+5️⃣ TESTE E COMPARE
+   - Screenshot do seu resultado lado a lado com o Figma
+   - Ajuste micro-espaçamentos até ficar 100% idêntico
+   - Valide que:
+     ✅ Nenhum componente foi adicionado/removido
+     ✅ Todos os espaçamentos batem
+     ✅ Alinhamentos estão corretos
+     ✅ Layout responsivo mantido (se aplicável)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 PRÓXIMOS PASSOS:
+
+1. Cole o código ATUAL da sub-seção "Atividades" aqui
+2. Cole screenshots do Figma mostrando cada componente (ou descreva a estrutura)
+3. Comece com: "Comece analisando as medidas do header. Me mostre a tabela de dimensões antes de aplicar."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ SE ALGO NÃO BATER:
+- Pergunte qual componente do código corresponde a qual no Figma
+- Peça confirmação antes de fazer mudanças estruturais
+- Sugira ajustes incrementais pequenos
+- Nunca assuma correspondências sem validar
+
