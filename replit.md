@@ -165,3 +165,21 @@ Preferred communication style: Simple, everyday language.
   - Set scrollbar-width: none for Firefox compatibility
   - Set ms-overflow-style: none for IE/Edge compatibility
   - Ensures no shadowed space at bottom of interface
+
+### December 2024 - Sidebar Menu Card Restructuring
+- **New Sidebar Container Structure**: Transformed sidebar into a card-based design
+  - Sidebar now wrapped in vertical container with 16px top/bottom margins
+  - Main menu is now a card with rounded corners only on right side (20px radius)
+  - Left corners remain flat and fixed to the left edge of the screen
+  - Added shadow and backdrop blur for modern glass-morphism effect
+- **CardSelecaoPerfilTopoMenu Component**: New floating logo card component
+  - Location: `src/components/sidebar/card-selecao-perfil-topo-menu/index.tsx`
+  - Orange gradient background (from #FF6B00 to #FF8C40)
+  - Fully rounded borders (rounded-full)
+  - ChevronDown icon on the right side when expanded
+  - Responsive sizing for collapsed/expanded states
+  - Accepts customLogo prop for dynamic logo customization
+- **Visual Consistency**: Maintained proper spacing and alignment
+  - Logo card floats above the main menu card
+  - Consistent margins between components
+  - Smooth transitions on collapse/expand
