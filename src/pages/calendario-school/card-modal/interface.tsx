@@ -122,13 +122,16 @@ const CalendarioSchoolModal: React.FC<CalendarioSchoolModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-[520px]"
+            className="fixed inset-0 flex items-center justify-center z-50 p-6"
+            style={{ pointerEvents: 'none' }}
           >
             <div 
-              className="bg-[#0D1B2A] border border-[#FF6B00]/30 shadow-2xl overflow-hidden"
+              className="bg-[#0D1B2A] border border-[#FF6B00]/30 shadow-2xl overflow-hidden w-full"
               style={{ 
                 borderRadius: '24px',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 107, 0, 0.1)'
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 107, 0, 0.1)',
+                maxWidth: '680px',
+                pointerEvents: 'auto'
               }}
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-[#FF6B00]/20">
@@ -168,8 +171,8 @@ const CalendarioSchoolModal: React.FC<CalendarioSchoolModalProps> = ({
                 </div>
               </div>
               
-              <div className="px-6 py-4">
-                <div className="flex items-center justify-between mb-6">
+              <div className="px-8 py-6">
+                <div className="flex items-center justify-between mb-8">
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
@@ -193,18 +196,18 @@ const CalendarioSchoolModal: React.FC<CalendarioSchoolModalProps> = ({
                   </motion.button>
                 </div>
                 
-                <div className="grid grid-cols-7 gap-2 mb-3">
+                <div className="grid grid-cols-7 gap-3 mb-4">
                   {WEEKDAYS.map((day) => (
                     <div 
                       key={day} 
-                      className="h-8 flex items-center justify-center text-[#FF6B00]/70 text-xs font-semibold uppercase tracking-wide"
+                      className="h-10 flex items-center justify-center text-[#FF6B00]/70 text-sm font-semibold uppercase tracking-wide"
                     >
                       {day}
                     </div>
                   ))}
                 </div>
                 
-                <div className="grid grid-cols-7 gap-2">
+                <div className="grid grid-cols-7 gap-3">
                   {calendarDays.map((dayData, index) => {
                     const isSelected = selectedDay === dayData.day && dayData.isCurrentMonth;
                     
@@ -216,7 +219,7 @@ const CalendarioSchoolModal: React.FC<CalendarioSchoolModalProps> = ({
                         onClick={() => handleDayClick(dayData)}
                         disabled={!dayData.isCurrentMonth}
                         className={`
-                          relative h-12 flex flex-col items-center justify-center transition-all duration-200
+                          relative h-14 flex flex-col items-center justify-center transition-all duration-200
                           ${dayData.isCurrentMonth 
                             ? 'cursor-pointer' 
                             : 'cursor-default opacity-30'
