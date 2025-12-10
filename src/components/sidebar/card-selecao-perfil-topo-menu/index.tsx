@@ -13,12 +13,12 @@ export const CardSelecaoPerfilTopoMenu: React.FC<CardSelecaoPerfilTopoMenuProps>
     <div
       className={cn(
         "flex items-center justify-center transition-all duration-300",
-        isCollapsed ? "px-2 mb-3" : "px-4 mb-4"
+        isCollapsed ? "px-2 mb-6" : "px-4 mb-6"
       )}
     >
       <div
         className={cn(
-          "flex items-center justify-between border border-gray-200 dark:border-gray-800/50 rounded-2xl transition-all duration-300 backdrop-blur-sm",
+          "flex items-center justify-between border border-gray-200 dark:border-gray-800/50 rounded-full transition-all duration-300 backdrop-blur-sm",
           "bg-white dark:bg-[#29335C]/20",
           isCollapsed 
             ? "w-12 h-12 p-1 justify-center" 
@@ -34,7 +34,7 @@ export const CardSelecaoPerfilTopoMenu: React.FC<CardSelecaoPerfilTopoMenuProps>
             alt="Ponto School Logo"
             className={cn(
               "object-contain transition-all duration-300",
-              isCollapsed ? "h-8 w-8" : "h-6 w-auto"
+              isCollapsed ? "h-8 w-8" : "h-9 w-auto"
             )}
             loading="eager"
             onError={(e) => {
