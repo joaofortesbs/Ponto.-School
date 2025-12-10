@@ -28,8 +28,20 @@ const AtividadesInterface: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full bg-[#0D1B2A] overflow-auto">
-      <div className="p-6 space-y-6">
+    <div 
+      className="w-full h-full overflow-auto"
+      style={{ 
+        backgroundColor: 'transparent',
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none'
+      }}
+    >
+      <style>{`
+        .atividades-container::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+      <div className="atividades-container w-full h-full p-6 space-y-6">
         <AtividadesHeader 
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
