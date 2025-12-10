@@ -288,11 +288,10 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
             setHoveredCard(null);
           }
         }}
-        className={`bg-[#1A2B3C] rounded-2xl overflow-hidden transition-all duration-300 relative cursor-pointer ${
+        className={`bg-[#1A2B3C] rounded-2xl overflow-hidden transition-all duration-300 relative cursor-pointer hover:scale-[1.02] ${
           isHovered ? 'border border-[#FF6B00]/50 shadow-lg shadow-[#FF6B00]/10' : 'border border-[#FF6B00]/15'
         }`}
         style={{ width: 208, height: 260, flexShrink: 0 }}
-        whileHover={{ scale: 1.02 }}
       >
         <div 
           className={`absolute top-3 right-3 z-10 transition-all duration-200 ${
@@ -389,9 +388,8 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
       initial={shouldAnimate ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={shouldAnimate ? { duration: 0.3, delay: index * 0.1 } : { duration: 0 }}
-      className="flex flex-col items-center justify-center border border-dashed border-[#FF6B00]/20 rounded-2xl hover:border-[#FF6B00]/40 transition-all duration-300 cursor-pointer group"
+      className="flex flex-col items-center justify-center border border-dashed border-[#FF6B00]/20 rounded-2xl hover:border-[#FF6B00]/40 hover:scale-[1.02] transition-all duration-300 cursor-pointer group"
       style={{ width: 208, height: 260, flexShrink: 0 }}
-      whileHover={{ scale: 1.02 }}
     >
       <div className="w-12 h-12 rounded-full border-2 border-dashed border-[#FF6B00]/30 flex items-center justify-center mb-3 group-hover:border-[#FF6B00]/50 transition-colors">
         <Plus className="w-6 h-6 text-[#FF6B00]/40 group-hover:text-[#FF6B00]/60" />
