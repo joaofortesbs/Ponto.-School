@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { LayoutGrid, Filter, Mouse } from 'lucide-react';
 import AtividadesHeader from './components/AtividadesHeader';
 import GridSelector from './components/GridSelector';
 import AtividadesGrid from './components/grids/AtividadesGrid';
@@ -66,36 +65,29 @@ const AtividadesInterface: React.FC = () => {
             counts={counts}
           />
           
-          {/* Figma: Icon Circles - 57×57px each, r:28.5px */}
           <div className="flex items-center gap-3">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="border-2 border-[#FF6B00] flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-colors"
-              style={{ width: '57px', height: '57px', borderRadius: '28.5px' }}
-              title="Visualizar como blocos"
+              className="w-10 h-10 rounded-full border-2 border-[#FF6B00] flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-colors"
             >
-              <LayoutGrid className="w-5 h-5" />
+              <i className="fas fa-users text-sm"></i>
             </motion.button>
             
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="border-2 border-[#FF6B00] flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-colors"
-              style={{ width: '57px', height: '57px', borderRadius: '28.5px' }}
-              title="Filtrar atividades"
+              className="w-10 h-10 rounded-full border-2 border-[#FF6B00] flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-colors"
             >
-              <Filter className="w-5 h-5" />
+              <i className="fas fa-filter text-sm"></i>
             </motion.button>
             
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="border-2 border-[#FF6B00] flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-colors"
-              style={{ width: '57px', height: '57px', borderRadius: '28.5px' }}
-              title="Cursor de mouse"
+              className="w-10 h-10 rounded-full border-2 border-[#FF6B00] flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-colors"
             >
-              <Mouse className="w-5 h-5" />
+              <i className="fas fa-arrow-up-right-from-square text-sm"></i>
             </motion.button>
           </div>
         </div>
