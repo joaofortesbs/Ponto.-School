@@ -32,7 +32,7 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
   return (
     <div
       className={cn(
-        "bg-white dark:bg-[#001427] p-4 -mb-4.5 flex flex-col items-center relative group",
+        "bg-white dark:bg-[#001427] p-4 -mb-6 flex flex-col items-center relative group",
         isCollapsed ? "-mt-4 px-2" : "-mt-3",
       )}
     >
