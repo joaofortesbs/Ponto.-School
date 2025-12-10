@@ -6,6 +6,11 @@ import type { GridType } from '../interface';
 interface GridSelectorProps {
   activeGrid: GridType;
   onGridChange: (grid: GridType) => void;
+  counts?: {
+    atividades?: number;
+    aulas?: number;
+    colecoes?: number;
+  };
 }
 
 interface GridOption {
@@ -22,13 +27,15 @@ const gridOptions: GridOption[] = [
 
 const GridSelector: React.FC<GridSelectorProps> = ({
   activeGrid,
-  onGridChange
+  onGridChange,
+  counts = {}
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const activeOption = gridOptions.find(opt => opt.id === activeGrid) || gridOptions[0];
   const IconComponent = activeOption.icon;
+  const activeCount = counts[activeGrid];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -62,6 +69,11 @@ const GridSelector: React.FC<GridSelectorProps> = ({
       >
         <IconComponent className="w-4 h-4" />
         <span>{activeOption.label}</span>
+        {activeCount !== undefined && activeCount > 0 && (
+          <span className="px-2 py-0.5 bg-[#FF6B00] text-white text-xs font-bold rounded-full min-w-[20px] text-center">
+            {activeCount}
+          </span>
+        )}
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
@@ -82,6 +94,7 @@ const GridSelector: React.FC<GridSelectorProps> = ({
             {gridOptions.map((option, index) => {
               const OptionIcon = option.icon;
               const isActive = option.id === activeGrid;
+              const optionCount = counts[option.id];
               
               return (
                 <motion.button
@@ -101,7 +114,16 @@ const GridSelector: React.FC<GridSelectorProps> = ({
                 >
                   <OptionIcon className="w-4 h-4" />
                   <span className="font-medium text-sm">{option.label}</span>
-                  {isActive && (
+                  {optionCount !== undefined && optionCount > 0 && (
+                    <span className={`ml-auto px-2 py-0.5 text-xs font-bold rounded-full min-w-[20px] text-center ${
+                      isActive 
+                        ? 'bg-[#FF6B00] text-white' 
+                        : 'bg-white/10 text-white/60'
+                    }`}>
+                      {optionCount}
+                    </span>
+                  )}
+                  {isActive && !optionCount && (
                     <motion.div
                       layoutId="activeIndicator"
                       className="ml-auto w-2 h-2 rounded-full bg-[#FF6B00]"

@@ -11,19 +11,22 @@ export type GridType = 'atividades' | 'aulas' | 'colecoes';
 const AtividadesInterface: React.FC = () => {
   const [activeGrid, setActiveGrid] = useState<GridType>('atividades');
   const [searchTerm, setSearchTerm] = useState('');
+  const [counts, setCounts] = useState<{ atividades?: number; aulas?: number; colecoes?: number }>({});
+
+  const handleAtividadesCountChange = (count: number) => {
+    setCounts(prev => ({ ...prev, atividades: count }));
+  };
 
   const renderGrid = () => {
-    const gridProps = { searchTerm };
-    
     switch (activeGrid) {
       case 'atividades':
-        return <AtividadesGrid {...gridProps} />;
+        return <AtividadesGrid searchTerm={searchTerm} onCountChange={handleAtividadesCountChange} />;
       case 'aulas':
-        return <AulasGrid {...gridProps} />;
+        return <AulasGrid searchTerm={searchTerm} />;
       case 'colecoes':
-        return <ColecoesGrid {...gridProps} />;
+        return <ColecoesGrid searchTerm={searchTerm} />;
       default:
-        return <AtividadesGrid {...gridProps} />;
+        return <AtividadesGrid searchTerm={searchTerm} onCountChange={handleAtividadesCountChange} />;
     }
   };
 
@@ -57,6 +60,7 @@ const AtividadesInterface: React.FC = () => {
           <GridSelector 
             activeGrid={activeGrid}
             onGridChange={setActiveGrid}
+            counts={counts}
           />
           
           <div className="flex items-center gap-3">
@@ -86,14 +90,9 @@ const AtividadesInterface: React.FC = () => {
           </div>
         </div>
         
-        <motion.div
-          key={activeGrid}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
+        <div key={activeGrid}>
           {renderGrid()}
-        </motion.div>
+        </div>
       </div>
     </div>
   );
