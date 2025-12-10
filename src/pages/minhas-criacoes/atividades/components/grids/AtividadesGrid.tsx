@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Plus, FileText, Clock, MoreVertical, Eye, Edit2, Trash2, Share2, Loader2, ChevronDown, Sparkles } from 'lucide-react';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
 import schoolPowerActivitiesData from '@/features/schoolpower/data/schoolPowerActivities.json';
@@ -248,8 +249,11 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
     navigate('/professor/school-power');
   };
 
-  const CreateActivityCard = () => (
-    <div
+  const CreateActivityCard = ({ index }: { index: number }) => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3, delay: index * 0.1 }}
       onClick={handleCreateActivity}
       className="flex flex-col items-center justify-center border-2 border-dashed border-[#FF6B00]/40 rounded-2xl hover:border-[#FF6B00] hover:bg-[#FF6B00]/5 transition-all duration-300 cursor-pointer group hover:scale-[1.02]"
       style={{ width: 208, height: 260, flexShrink: 0 }}
@@ -258,16 +262,19 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
         <Sparkles className="w-6 h-6 text-[#FF6B00]/60 group-hover:text-[#FF6B00]" />
       </div>
       <p className="text-[#FF6B00]/60 text-sm font-medium group-hover:text-[#FF6B00]">Gerar Atividade</p>
-    </div>
+    </motion.div>
   );
 
-  const AtividadeCard = ({ atividade }: { atividade: Atividade }) => {
+  const AtividadeCard = ({ atividade, index }: { atividade: Atividade; index: number }) => {
     const isHovered = hoveredCard === atividade.id;
     const isMenuOpen = activeMenu === atividade.id;
     const showMenu = isHovered || isMenuOpen;
     
     return (
-      <div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, delay: (index + 1) * 0.1 }}
         onMouseEnter={() => setHoveredCard(atividade.id)}
         onMouseLeave={() => {
           if (!isMenuOpen) {
@@ -275,9 +282,10 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
           }
         }}
         className={`bg-[#1A2B3C] rounded-2xl overflow-hidden transition-all duration-300 relative cursor-pointer ${
-          isHovered ? 'border border-[#FF6B00]/50 scale-[1.02] shadow-lg shadow-[#FF6B00]/10' : 'border border-[#FF6B00]/15'
+          isHovered ? 'border border-[#FF6B00]/50 shadow-lg shadow-[#FF6B00]/10' : 'border border-[#FF6B00]/15'
         }`}
         style={{ width: 208, height: 260, flexShrink: 0 }}
+        whileHover={{ scale: 1.02 }}
       >
         <div 
           className={`absolute top-3 right-3 z-10 transition-all duration-200 ${
@@ -295,7 +303,11 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
           </button>
           
           {isMenuOpen && (
-            <div className="absolute right-0 top-10 w-36 bg-[#0D1B2A] border border-[#FF6B00]/30 rounded-xl shadow-xl overflow-hidden z-20">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="absolute right-0 top-10 w-36 bg-[#0D1B2A] border border-[#FF6B00]/30 rounded-xl shadow-xl overflow-hidden z-20"
+            >
               <button 
                 onClick={() => handleViewActivity(atividade)}
                 className="w-full flex items-center gap-2 px-3 py-2 text-white/80 hover:bg-[#FF6B00]/10 text-sm"
@@ -320,7 +332,7 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
               >
                 <Trash2 className="w-4 h-4" /> Excluir
               </button>
-            </div>
+            </motion.div>
           )}
         </div>
 
@@ -339,7 +351,7 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
             <span>{formatDate(atividade.criadoEm)}</span>
           </div>
         </div>
-      </div>
+      </motion.div>
     );
   };
 
@@ -365,6 +377,22 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
     </div>
   );
 
+  const EmptyTemplateCard = ({ index }: { index: number }) => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3, delay: index * 0.1 }}
+      className="flex flex-col items-center justify-center border border-dashed border-[#FF6B00]/20 rounded-2xl hover:border-[#FF6B00]/40 transition-all duration-300 cursor-pointer group"
+      style={{ width: 208, height: 260, flexShrink: 0 }}
+      whileHover={{ scale: 1.02 }}
+    >
+      <div className="w-12 h-12 rounded-full border-2 border-dashed border-[#FF6B00]/30 flex items-center justify-center mb-3 group-hover:border-[#FF6B00]/50 transition-colors">
+        <Plus className="w-6 h-6 text-[#FF6B00]/40 group-hover:text-[#FF6B00]/60" />
+      </div>
+      <p className="text-white/30 text-sm group-hover:text-white/50">Vazio</p>
+    </motion.div>
+  );
+
   return (
     <>
       <div className="space-y-6">
@@ -375,16 +403,21 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
             <ErrorState />
           ) : (
             <>
-              <CreateActivityCard />
-              {visibleAtividades.map((atividade) => (
-                <AtividadeCard key={atividade.id} atividade={atividade} />
+              <CreateActivityCard index={0} />
+              {visibleAtividades.map((atividade, index) => (
+                <AtividadeCard key={atividade.id} atividade={atividade} index={index} />
               ))}
             </>
           )}
         </div>
 
         {!loading && !error && hasMoreToShow && (
-          <div className="flex justify-center mt-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+            className="flex justify-center mt-6"
+          >
             <button
               onClick={handleShowMore}
               className="flex items-center gap-2 px-6 py-2.5 bg-[#1A2B3C] border border-[#FF6B00]/30 text-[#FF6B00] rounded-full hover:bg-[#FF6B00]/10 hover:border-[#FF6B00] transition-all font-medium text-sm"
@@ -392,30 +425,26 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
               <span>Visualizar mais</span>
               <ChevronDown className="w-4 h-4" />
             </button>
-          </div>
+          </motion.div>
         )}
 
         <div className="mt-8">
-          <div className="flex items-center gap-3 mb-4">
+          <motion.div 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.3 }}
+            className="flex items-center gap-3 mb-4"
+          >
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-[#FF6B00] text-[#FF6B00] font-medium text-sm">
               <FileText className="w-4 h-4" />
               <span>Meus Templates</span>
               <ChevronDown className="w-4 h-4" />
             </div>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-[repeat(auto-fill,208px)] gap-4 justify-start w-full">
             {[0, 1, 2, 3].map((index) => (
-              <div
-                key={`template-${index}`}
-                className="flex flex-col items-center justify-center border border-dashed border-[#FF6B00]/20 rounded-2xl hover:border-[#FF6B00]/40 hover:scale-[1.02] transition-all duration-300 cursor-pointer group"
-                style={{ width: 208, height: 260, flexShrink: 0 }}
-              >
-                <div className="w-12 h-12 rounded-full border-2 border-dashed border-[#FF6B00]/30 flex items-center justify-center mb-3 group-hover:border-[#FF6B00]/50 transition-colors">
-                  <Plus className="w-6 h-6 text-[#FF6B00]/40 group-hover:text-[#FF6B00]/60" />
-                </div>
-                <p className="text-white/30 text-sm group-hover:text-white/50">Vazio</p>
-              </div>
+              <EmptyTemplateCard key={`template-${index}`} index={index} />
             ))}
           </div>
         </div>
