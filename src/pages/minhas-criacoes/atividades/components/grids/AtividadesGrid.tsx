@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, FileText, Clock, MoreVertical, Eye, Edit2, Trash2, Share2, Loader2, ChevronDown, Sparkles } from 'lucide-react';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
@@ -48,6 +48,7 @@ const formatDate = (dateString: string): string => {
 
 const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChange }) => {
   const navigate = useNavigate();
+  const isFirstMountRef = useRef(true);
   const [atividades, setAtividades] = useState<Atividade[]>([]);
   const [filteredAtividades, setFilteredAtividades] = useState<Atividade[]>([]);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -55,6 +56,7 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [visibleRows, setVisibleRows] = useState(INITIAL_ROWS);
+  const [shouldAnimate, setShouldAnimate] = useState(false);
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -123,7 +125,11 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
   };
 
   useEffect(() => {
-    carregarAtividades();
+    if (isFirstMountRef.current) {
+      isFirstMountRef.current = false;
+      setShouldAnimate(true);
+      carregarAtividades();
+    }
   }, []);
 
   useEffect(() => {
@@ -213,6 +219,7 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
 
   const handleSaveActivity = async (activityData: any) => {
     try {
+      setShouldAnimate(false);
       await carregarAtividades();
       setIsEditModalOpen(false);
       setSelectedActivity(null);
@@ -251,9 +258,9 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
 
   const CreateActivityCard = ({ index }: { index: number }) => (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
+      initial={shouldAnimate ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3, delay: index * 0.1 }}
+      transition={shouldAnimate ? { duration: 0.3, delay: index * 0.1 } : { duration: 0 }}
       onClick={handleCreateActivity}
       className="flex flex-col items-center justify-center border-2 border-dashed border-[#FF6B00]/40 rounded-2xl hover:border-[#FF6B00] hover:bg-[#FF6B00]/5 transition-all duration-300 cursor-pointer group hover:scale-[1.02]"
       style={{ width: 208, height: 260, flexShrink: 0 }}
@@ -272,9 +279,9 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
     
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={shouldAnimate ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, delay: (index + 1) * 0.1 }}
+        transition={shouldAnimate ? { duration: 0.3, delay: (index + 1) * 0.1 } : { duration: 0 }}
         onMouseEnter={() => setHoveredCard(atividade.id)}
         onMouseLeave={() => {
           if (!isMenuOpen) {
@@ -379,9 +386,9 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
 
   const EmptyTemplateCard = ({ index }: { index: number }) => (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
+      initial={shouldAnimate ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3, delay: index * 0.1 }}
+      transition={shouldAnimate ? { duration: 0.3, delay: index * 0.1 } : { duration: 0 }}
       className="flex flex-col items-center justify-center border border-dashed border-[#FF6B00]/20 rounded-2xl hover:border-[#FF6B00]/40 transition-all duration-300 cursor-pointer group"
       style={{ width: 208, height: 260, flexShrink: 0 }}
       whileHover={{ scale: 1.02 }}
@@ -396,7 +403,7 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
   return (
     <>
       <div className="space-y-6">
-        <div className="grid grid-cols-[repeat(auto-fill,208px)] gap-4 justify-start w-full">
+        <div className="grid grid-cols-[repeat(auto-fill,208px)] gap-6 justify-start w-full">
           {loading ? (
             <LoadingState />
           ) : error ? (
@@ -442,7 +449,7 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-[repeat(auto-fill,208px)] gap-4 justify-start w-full">
+          <div className="grid grid-cols-[repeat(auto-fill,208px)] gap-6 justify-start w-full">
             {[0, 1, 2, 3].map((index) => (
               <EmptyTemplateCard key={`template-${index}`} index={index} />
             ))}
