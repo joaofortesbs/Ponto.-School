@@ -48,7 +48,7 @@ const formatDate = (dateString: string): string => {
 
 const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChange }) => {
   const navigate = useNavigate();
-  const isFirstMountRef = useRef(true);
+  const hasAnimatedRef = useRef(false);
   const [atividades, setAtividades] = useState<Atividade[]>([]);
   const [filteredAtividades, setFilteredAtividades] = useState<Atividade[]>([]);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -125,12 +125,23 @@ const AtividadesGrid: React.FC<AtividadesGridProps> = ({ searchTerm, onCountChan
   };
 
   useEffect(() => {
-    if (isFirstMountRef.current) {
-      isFirstMountRef.current = false;
-      setShouldAnimate(true);
-      carregarAtividades();
-    }
+    carregarAtividades();
   }, []);
+
+  useEffect(() => {
+    // Ativa animação quando as atividades carregam pela primeira vez
+    if (!loading && atividades.length > 0 && !hasAnimatedRef.current) {
+      hasAnimatedRef.current = true;
+      setShouldAnimate(true);
+      
+      // Desativa animação após completar (tempo suficiente para animar todos os cards)
+      const timer = setTimeout(() => {
+        setShouldAnimate(false);
+      }, 1200);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loading, atividades.length]);
 
   useEffect(() => {
     if (searchTerm.trim() === '') {
