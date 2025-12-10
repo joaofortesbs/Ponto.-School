@@ -29,19 +29,25 @@ const AtividadesInterface: React.FC = () => {
 
   return (
     <div 
-      className="w-full h-full overflow-auto"
+      className="atividades-root relative flex flex-col w-full h-full overflow-hidden"
       style={{ 
-        backgroundColor: 'transparent',
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none'
+        backgroundColor: 'transparent'
       }}
     >
       <style>{`
-        .atividades-container::-webkit-scrollbar {
+        .atividades-root,
+        .atividades-scroll-container {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .atividades-root::-webkit-scrollbar,
+        .atividades-scroll-container::-webkit-scrollbar {
           display: none;
+          width: 0;
+          height: 0;
         }
       `}</style>
-      <div className="atividades-container w-full h-full p-6 space-y-6">
+      <div className="atividades-scroll-container flex-1 overflow-y-auto py-6 px-6 space-y-6">
         <AtividadesHeader 
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
