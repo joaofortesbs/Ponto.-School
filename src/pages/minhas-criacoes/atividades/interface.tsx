@@ -5,6 +5,7 @@ import GridSelector from './components/GridSelector';
 import AtividadesGrid from './components/grids/AtividadesGrid';
 import AulasGrid from './components/grids/AulasGrid';
 import ColecoesGrid from './components/grids/ColecoesGrid';
+import CalendarioSchoolPanel from '@/pages/calendario-school/card-modal/interface';
 
 export type GridType = 'atividades' | 'aulas' | 'colecoes';
 
@@ -12,9 +13,20 @@ const AtividadesInterface: React.FC = () => {
   const [activeGrid, setActiveGrid] = useState<GridType>('atividades');
   const [searchTerm, setSearchTerm] = useState('');
   const [counts, setCounts] = useState<{ atividades?: number; aulas?: number; colecoes?: number }>({});
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleAtividadesCountChange = (count: number) => {
     setCounts(prev => ({ ...prev, atividades: count }));
+  };
+
+  const handleOpenCalendar = () => {
+    console.log('📅 Abrindo Calendário School (slide-up)');
+    setIsCalendarOpen(true);
+  };
+
+  const handleCloseCalendar = () => {
+    console.log('📅 Fechando Calendário School');
+    setIsCalendarOpen(false);
   };
 
   const renderGrid = () => {
@@ -50,11 +62,13 @@ const AtividadesInterface: React.FC = () => {
           height: 0;
         }
       `}</style>
+      
       <div className="atividades-scroll-container flex-1 overflow-y-auto py-6 px-0 space-y-6">
         <div className="px-6">
           <AtividadesHeader 
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
+            onCalendarClick={handleOpenCalendar}
           />
         </div>
         
@@ -96,6 +110,11 @@ const AtividadesInterface: React.FC = () => {
           {renderGrid()}
         </div>
       </div>
+
+      <CalendarioSchoolPanel 
+        isOpen={isCalendarOpen}
+        onClose={handleCloseCalendar}
+      />
     </div>
   );
 };
