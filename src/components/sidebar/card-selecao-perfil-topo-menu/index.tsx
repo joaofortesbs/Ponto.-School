@@ -13,7 +13,7 @@ export const CardSelecaoPerfilTopoMenu: React.FC<CardSelecaoPerfilTopoMenuProps>
     <div
       className={cn(
         "flex items-center justify-center transition-all duration-300 relative z-20",
-        isCollapsed ? "px-2 mt-3 mb-3" : "px-4 mt-4 mb-3"
+        isCollapsed ? "px-2 mt-3 mb-3.5" : "px-4 mt-4 mb-3.5"
       )}
     >
       <div
