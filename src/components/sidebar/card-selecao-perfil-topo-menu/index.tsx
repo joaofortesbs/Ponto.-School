@@ -12,13 +12,13 @@ export const CardSelecaoPerfilTopoMenu: React.FC<CardSelecaoPerfilTopoMenuProps>
   return (
     <div
       className={cn(
-        "flex items-center justify-center transition-all duration-300",
+        "flex items-center justify-center transition-all duration-300 relative z-20",
         isCollapsed ? "px-2 mt-3 mb-2" : "px-4 mt-4 mb-2"
       )}
     >
       <div
         className={cn(
-          "flex items-center justify-between border border-gray-200 dark:border-gray-800/50 rounded-full transition-all duration-300 backdrop-blur-sm",
+          "flex items-center justify-between border border-gray-200 dark:border-gray-800/50 rounded-full transition-all duration-300 backdrop-blur-sm relative z-20",
           "bg-white dark:bg-[#29335C]/20",
           isCollapsed 
             ? "w-12 h-12 p-1 justify-center" 
