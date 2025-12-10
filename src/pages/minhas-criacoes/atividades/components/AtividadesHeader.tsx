@@ -21,12 +21,12 @@ const AtividadesHeader: React.FC<AtividadesHeaderProps> = ({
 
   return (
     <div className="flex items-center gap-4">
-      {/* Agente Felix Card */}
-      <div className="relative" style={{ width: 208, height: '40px' }}>
+      {/* Agente Felix Card - Figma: 207px × 57px, border-radius 47px */}
+      <div className="relative" style={{ width: 207, height: '57px' }}>
         {/* Animated Background Card */}
         <motion.div
-          initial={{ width: '40px', borderRadius: '50%' }}
-          animate={isExpanded ? { width: '208px', borderRadius: '50px' } : { width: '40px', borderRadius: '50%' }}
+          initial={{ width: '57px', borderRadius: '28.5px' }}
+          animate={isExpanded ? { width: '207px', borderRadius: '28.5px' } : { width: '57px', borderRadius: '28.5px' }}
           transition={{
             duration: 0.8,
             ease: [0.23, 1, 0.320, 1],
@@ -56,12 +56,12 @@ const AtividadesHeader: React.FC<AtividadesHeaderProps> = ({
           )}
         </motion.div>
 
-        {/* Avatar Circle - Always on top */}
+        {/* Avatar Circle - Always on top - Figma: 57px diameter */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className={`absolute left-0 top-0 w-10 h-10 rounded-full overflow-hidden border-2 border-[#FF6B00] flex-shrink-0 z-10 ${isDark ? 'bg-[#1A2B3C]' : 'bg-gray-100'}`}
+          className={`absolute left-0 top-0 w-14 h-14 rounded-full overflow-hidden border-2 border-[#FF6B00] flex-shrink-0 z-10 ${isDark ? 'bg-[#1A2B3C]' : 'bg-gray-100'}`}
           style={{ 
             boxShadow: '0 0 12px rgba(255, 107, 0, 0.3)'
           }}
@@ -89,23 +89,24 @@ const AtividadesHeader: React.FC<AtividadesHeaderProps> = ({
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Pesquisar atividades"
-          className={`w-full border rounded-full py-2.5 pl-11 pr-4 focus:outline-none transition-colors text-sm ${
+          className={`w-full border rounded-full py-4 pl-11 pr-4 focus:outline-none transition-colors text-sm ${
             isDark 
               ? 'bg-[#1A2B3C] border-[#FF6B00]/30 text-white placeholder-white/40 focus:border-[#FF6B00]'
               : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-[#FF6B00]'
           }`}
+          style={{ height: '57px' }}
         />
       </motion.div>
 
-      {/* Calendar Card - Static */}
+      {/* Calendar Card - Static - Figma: 207px × 57px, border-radius 47px */}
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
-        className={`flex items-center gap-2 px-3 py-2.5 rounded-full border-2 border-[#FF6B00] cursor-pointer group hover:border-[#FF6B00] transition-colors text-[#FF6B00] ${
+        className={`flex items-center gap-2 px-4 rounded-full border-2 border-[#FF6B00] cursor-pointer group hover:border-[#FF6B00] transition-colors text-[#FF6B00] ${
           isDark ? 'bg-[#1A2B3C]' : 'bg-white'
         }`}
-        style={{ width: '208px' }}
+        style={{ width: '207px', height: '57px' }}
       >
         {/* Calendar Icon - Simple style like GridSelector */}
         <Calendar className="w-4 h-4 flex-shrink-0" />

@@ -1,0 +1,114 @@
+🔥 TAREFA CRÍTICA: Replicar Layout Exato do Figma na Sub-Seção "Atividades"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 FONTE DE VERDADE - FIGMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+URL: https://www.figma.com/design/SBE4x6l4rYwh8HHRrwjGkc/Ponto.-School---Blindados?node-id=1054-103
+Frame: MacBook Pro 16" - 2 (Desktop - Atividades)
+Dimensões Totais: 1728px × 1117px
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚫 REGRAS OBRIGATÓRIAS - NÃO QUEBRE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ PROIBIDO:
+  - Criar novos componentes
+  - Remover componentes existentes
+  - Alterar estrutura JSX/HTML
+  - Mudar tipografia ou cores
+  - Adicionar ou remover elementos
+
+✅ PERMITIDO (SOMENTE):
+  - Width, Height (dimensões)
+  - Padding, Margin (espaçamentos)
+  - Gap (espaço entre itens)
+  - Border-radius (cantos)
+  - Posicionamento (flex/grid)
+  - Alinhamentos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 TABELA COMPLETA DE MEDIDAS (Extraídas do Figma)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LINHA 1 - COMPONENTES DE FILTRO/BUSCA (Topo):
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Componente      │ Width │ Height │ X Position │ Y Position │ Border Radius │
+├────────────────────────────────────────────────────────────────────────────┤
+│ Filter Button 1 │ 207px │  57px  │    305px   │    131px   │     47px      │
+│ Search Bar      │ 704px │  57px  │    552px   │    131px   │     47px      │
+│ Filter Button 2 │ 207px │  57px  │   1296px   │    131px   │     47px      │
+└────────────────────────────────────────────────────────────────────────────┘
+
+LINHA 2 - ÍCONES/INDICADORES (Secundários):
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Componente      │ Width │ Height │ X Position │ Y Position │ Border Radius │
+├────────────────────────────────────────────────────────────────────────────┤
+│ Filter Button 3 │ 207px │  57px  │    307px   │    245px   │     47px      │
+│ Icon Circle 1   │  57px │  57px  │   1297px   │    245px   │     47px      │
+│ Icon Circle 2   │  57px │  57px  │   1372px   │    245px   │     47px      │
+│ Icon Circle 3   │  57px │  57px  │   1447px   │    245px   │     47px      │
+└────────────────────────────────────────────────────────────────────────────┘
+
+LINHA 3 - CARDS DE ATIVIDADES (Principal):
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Componente      │ Width │ Height │ X Position │ Y Position │ Border Radius │
+├────────────────────────────────────────────────────────────────────────────┤
+│ Activity Card 1 │ 208px │ 260px  │    306px   │    330px   │     33px      │
+│ Activity Card 2 │ 208px │ 260px  │    554px   │    330px   │     33px      │
+│ Activity Card 3 │ 207px │ 260px  │    802px   │    330px   │     33px      │
+│ Activity Card 4 │ 208px │ 260px  │   1049px   │    330px   │     33px      │
+│ Activity Card 5 │ 207px │ 260px  │   1297px   │    330px   │     33px      │
+└────────────────────────────────────────────────────────────────────────────┘
+
+ESPAÇAMENTOS CALCULADOS:
+  • Gap Horizontal (entre cards): ~248px (diferença entre X positions)
+  • Gap Vertical (Linha 1 → Linha 2): 114px
+  • Gap Vertical (Linha 2 → Linha 3): 85px
+  • All Border Radius (Buttons/Search): 47px (50% do height 57px)
+  • All Border Radius (Cards): 33px
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 INSTRUÇÕES DE EXECUÇÃO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ PRIMEIRO - Identifique os componentes:
+   Mostre-me quais componentes do seu código correspondem a:
+   - FilterButtonContainer (Filter Button 1, 2, 3)
+   - SearchBarContainer (Search Bar)
+   - IconsContainer (Icon Circle 1, 2, 3)
+   - ActivityCardsGrid (Activity Card 1-5)
+
+2️⃣ SEGUNDO - Aplique as medidas (APENAS CSS/ESTILO):
+   Para CADA componente listado acima:
+   a) Comente a medida do Figma no código
+   b) Atualize SOMENTE as propriedades de width, height, padding, margin, gap, border-radius
+   c) Não altere nenhum JSX/HTML
+
+3️⃣ TERCEIRO - Formato de resposta obrigatório:
+
+   📋 RESUMO DE MUDANÇAS:
+   - [Componente A] ajustado: width 200px → 207px, height 50px → 57px
+   - [Componente B] ajustado: border-radius 0px → 47px
+   - ...
+
+   💻 CÓDIGO ATUALIZADO:
+   (cole o trecho CSS/classes modificadas)
+
+   ✅ CHECKLIST:
+   ☑ Nenhum componente JSX foi criado/removido
+   ☑ Nenhum JSX foi alterado
+   ☑ Somente CSS/estilo foi modificado
+   ☑ Todas as medidas batem com a tabela acima
+
+4️⃣ TRATAMENTO DE DÚVIDAS:
+   Se algo não corresponder exatamente:
+   → Pergunte antes de alterar
+   → Sugira adaptações micro (5px de diferença é OK)
+   → Mantenha proporções relativas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
