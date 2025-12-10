@@ -66,6 +66,7 @@ const GridSelector: React.FC<GridSelectorProps> = ({
           hover:bg-[#FF6B00]/10 transition-all
           ${isOpen ? 'bg-[#FF6B00]/10' : ''}
         `}
+        style={{ width: 208 }}
       >
         <IconComponent className="w-4 h-4" />
         <span>{activeOption.label}</span>
