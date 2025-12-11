@@ -64,15 +64,10 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### December 2024 - Floating Header Redesign with Millimetric Precision
-- **CabecalhoFlutuante Component**: Refactored with exact structure matching PromotionalBanner
+### December 2024 - Floating Header Redesign with Millimetric Precision (FINAL)
+- **CabecalhoFlutuante Component**: Pure header element returning only `<header>` tag
   - Location: `src/components/layout/cabeçalho-flutuante-ficial-plataforma/index.tsx`
   - **Height**: Reduced from 72px to **56px** (aligned with sidebar profile card height)
-  - **Width**: Constrained to **1600px max-width** (matches PromotionalBanner in Dashboard/Painel)
-  - **Structure**: Exactly matches Dashboard layout:
-    - Outer div with responsive padding: `p-3 sm:p-4 md:p-6`
-    - Container with max-width: `max-w-[98%] sm:max-w-[1600px] mx-auto`
-    - Header element with `w-full` inside container
   - **Padding**: Horizontal padding set to 20px (internal header padding)
   - **Border Radius**: 9999px (fully rounded corners)
   - **All constants documented** with millimetric precision:
@@ -80,15 +75,19 @@ Preferred communication style: Simple, everyday language.
     - `HEADER_MARGIN_TOP = 16`
     - `HEADER_PADDING_HORIZONTAL = 20`
     - `HEADER_BORDER_RADIUS = 9999`
+- **Home.tsx Structure**: Wraps CabecalhoFlutuante with container matching Dashboard layout
+  - Outer div with responsive padding: `p-3 sm:p-4 md:p-6` + `paddingTop: 16px`
+  - Inner container with max-width: `max-w-[98%] sm:max-w-[1600px] mx-auto`
+  - Header component inside container for unified width control
 - **Bug Fixes**:
-  - Corrected "require is not defined" error by converting to ESM import
-  - Fixed layout structure to match Dashboard's PromotionalBanner pattern
-  - Removed redundant flex and styling that caused incorrect width behavior
-- **Visual Harmony**: Header and banner now have unified design language
+  - Corrected "require is not defined" error by converting CommonJS to ESM import
+  - Fixed layout structure: moved padding/max-width from Header to Home.tsx
+  - Removed redundant wrapper divs that caused incorrect width behavior
+- **Visual Harmony**: Header and banner now have identical design language
   - Same max-width (1600px)
-  - Identical responsive behavior
-  - Consistent margin/padding treatment
-  - Seamless visual alignment
+  - Identical responsive behavior (p-3 sm:p-4 md:p-6)
+  - Consistent margin/padding treatment (16px top margin)
+  - Seamless visual alignment across all pages
 
 ### December 2024 - Enhanced Avatar Animation with Typewriter Effect
 - **Improved JotaAvatar.tsx Component** - Avatar now appears immediately with delayed hover + rotating text

@@ -828,22 +828,15 @@ export default function CabecalhoFlutuante() {
   const isLightMode = theme === 'light' || (!isDark && theme !== 'dark');
 
   return (
-    <div
-      className="w-full bg-[#f7f9fa] dark:bg-[#001427] p-3 sm:p-4 md:p-6"
+    <header
+      className="w-full bg-white dark:bg-[#0A2540] border border-gray-200 dark:border-white/10 flex items-center justify-between shadow-lg backdrop-blur-sm"
       style={{
-        paddingTop: `${HEADER_MARGIN_TOP}px`,
+        height: `${HEADER_HEIGHT}px`,
+        borderRadius: `${HEADER_BORDER_RADIUS}px`,
+        paddingLeft: `${HEADER_PADDING_HORIZONTAL}px`,
+        paddingRight: `${HEADER_PADDING_HORIZONTAL}px`,
       }}
     >
-      <div className="w-full max-w-[98%] sm:max-w-[1600px] mx-auto">
-        <header
-          className="w-full bg-white dark:bg-[#0A2540] border border-gray-200 dark:border-white/10 flex items-center justify-between shadow-lg backdrop-blur-sm"
-          style={{
-            height: `${HEADER_HEIGHT}px`,
-            borderRadius: `${HEADER_BORDER_RADIUS}px`,
-            paddingLeft: `${HEADER_PADDING_HORIZONTAL}px`,
-            paddingRight: `${HEADER_PADDING_HORIZONTAL}px`,
-          }}
-        >
           <audio ref={audioRef} src="/message-sound.mp3" preload="auto" />
 
         <Dialog open={isSilenceDialogOpen} onOpenChange={setIsSilenceDialogOpen}>
@@ -1301,7 +1294,5 @@ export default function CabecalhoFlutuante() {
           onSendReply={handleSendReply}
         />
       </header>
-      </div>
-    </div>
   );
 }
