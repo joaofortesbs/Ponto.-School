@@ -6,7 +6,7 @@ interface AddEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDay: number | null;
-  onAddEvent: (title: string, day: number) => void;
+  onAddEvent: (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }) => void;
 }
 
 interface Label {
@@ -149,7 +149,11 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
   const handleAddClick = () => {
     if (title.trim() && selectedDay) {
-      onAddEvent(title, selectedDay);
+      const labelData: { [key: string]: { name: string; color: string } } = {};
+      labels.forEach(label => {
+        labelData[label.id] = { name: label.name, color: label.color };
+      });
+      onAddEvent(title, selectedDay, selectedIcon, selectedLabels, labelData);
       onClose();
     }
   };

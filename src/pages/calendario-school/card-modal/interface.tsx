@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, ChevronLeft, ChevronRight, X, Clock, MoreVertical, Users2, ChevronDown, Plus, Sparkles } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, X, Clock, MoreVertical, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star } from 'lucide-react';
 import CalendarViewSelector from './calendar-view-selector';
 import AddEventModal from './add-event-modal';
 
@@ -14,6 +14,8 @@ interface Event {
   title: string;
   day: number;
   icon: string;
+  selectedLabels: string[];
+  labelColors: { [key: string]: string };
 }
 
 interface DayData {
@@ -37,6 +39,17 @@ const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ];
+
+// Função auxiliar para obter o ícone correto
+const getIconComponent = (iconId: string) => {
+  const iconMap: { [key: string]: typeof Pencil } = {
+    'pencil': Pencil,
+    'camera': Camera,
+    'check': Check,
+    'star': Star,
+  };
+  return iconMap[iconId] || Pencil;
+};
 
 const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   isOpen,
@@ -133,15 +146,24 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     setIsAddEventModalOpen(true);
   };
 
-  const handleAddEvent = (title: string, day: number) => {
+  const handleAddEvent = (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }) => {
+    const labelColors: { [key: string]: string } = {};
+    selectedLabels.forEach(labelId => {
+      if (labelData[labelId]) {
+        labelColors[labelId] = labelData[labelId].color;
+      }
+    });
+
     const newEvent: Event = {
       id: `event-${Date.now()}`,
       title,
       day,
-      icon: 'pencil'
+      icon: selectedIcon,
+      selectedLabels,
+      labelColors
     };
     setEvents([...events, newEvent]);
-    console.log('📅 Novo evento adicionado:', { title, day, month: MONTHS[currentMonth], year: currentYear });
+    console.log('📅 Novo evento adicionado:', { title, day, month: MONTHS[currentMonth], year: currentYear, icon: selectedIcon, labels: selectedLabels });
   };
 
   return (
@@ -340,21 +362,33 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                     {/* Eventos do dia */}
                     {dayData.hasActivities && dayData.isCurrentMonth && (
                       <div className="flex-1 w-full px-1 mt-1 flex flex-col gap-1">
-                        {events.filter(e => e.day === dayData.day).slice(0, 2).map((event) => (
-                          <div
-                            key={event.id}
-                            className="w-full text-xs font-medium text-white truncate px-1 py-0.5 rounded"
-                            style={{
-                              background: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 107, 0, 0.15)',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}
-                            title={event.title}
-                          >
-                            {event.title}
-                          </div>
-                        ))}
+                        {events.filter(e => e.day === dayData.day).slice(0, 2).map((event) => {
+                          const IconComponent = getIconComponent(event.icon);
+                          const labelColor = event.selectedLabels.length > 0 && event.labelColors[event.selectedLabels[0]] 
+                            ? event.labelColors[event.selectedLabels[0]]
+                            : '#999999';
+                          
+                          return (
+                            <div
+                              key={event.id}
+                              className="w-full text-xs font-medium text-white truncate px-1 py-0.5 rounded flex items-center justify-between"
+                              style={{
+                                background: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 107, 0, 0.15)',
+                                overflow: 'hidden'
+                              }}
+                              title={event.title}
+                            >
+                              <div className="flex items-center gap-1 min-w-0 flex-1">
+                                <IconComponent className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{event.title}</span>
+                              </div>
+                              <div 
+                                className="w-2 h-2 rounded-full flex-shrink-0 ml-1"
+                                style={{ background: labelColor }}
+                              />
+                            </div>
+                          );
+                        })}
                         {dayData.activitiesCount > 2 && (
                           <div className="text-xs text-white/60 px-1">
                             +{dayData.activitiesCount - 2}
