@@ -65,32 +65,30 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### December 2024 - Floating Header Redesign with Millimetric Precision
-- **CabecalhoFlutuante Component**: Refactored with exact height matching CardSelecaoPerfilTopoMenu
+- **CabecalhoFlutuante Component**: Refactored with exact structure matching PromotionalBanner
   - Location: `src/components/layout/cabeçalho-flutuante-ficial-plataforma/index.tsx`
   - **Height**: Reduced from 72px to **56px** (aligned with sidebar profile card height)
   - **Width**: Constrained to **1600px max-width** (matches PromotionalBanner in Dashboard/Painel)
-  - **Margins**: 
-    - Top: 16px (matches sidebar top margin)
-    - Right: 24px (increased from 16px for more spacing)
-    - Left: 24px (new, ensures symmetry)
-  - **Padding**: Horizontal padding set to 20px (reduced from 24px for narrower width)
-  - **Border Radius**: 9999px (fully rounded corners, matching modern glass-morphism design)
-  - **All constants documented** with millimetric precision comments for future adjustments:
+  - **Structure**: Exactly matches Dashboard layout:
+    - Outer div with responsive padding: `p-3 sm:p-4 md:p-6`
+    - Container with max-width: `max-w-[98%] sm:max-w-[1600px] mx-auto`
+    - Header element with `w-full` inside container
+  - **Padding**: Horizontal padding set to 20px (internal header padding)
+  - **Border Radius**: 9999px (fully rounded corners)
+  - **All constants documented** with millimetric precision:
     - `HEADER_HEIGHT = 56`
     - `HEADER_MARGIN_TOP = 16`
-    - `HEADER_MARGIN_RIGHT = 24`
-    - `HEADER_MARGIN_LEFT = 24`
     - `HEADER_PADDING_HORIZONTAL = 20`
     - `HEADER_BORDER_RADIUS = 9999`
-    - `HEADER_MAX_WIDTH = 1600`
-- **Bug Fix**: Corrected "require is not defined" error by converting CommonJS require() to ESM import
-  - Changed: `const { supabase } = require("@/integrations/supabase/client");`
-  - To: `import { supabase } from "@/integrations/supabase/client";` (at top of file)
-- **Visual Harmony**: Header and profile card now have unified design language
-  - Same vertical spacing (16px top margin)
-  - Consistent rounded card styling with backdrop blur
-  - Proportional sizing for cohesive UI
-  - Header width now matches dashboard banner width for visual consistency
+- **Bug Fixes**:
+  - Corrected "require is not defined" error by converting to ESM import
+  - Fixed layout structure to match Dashboard's PromotionalBanner pattern
+  - Removed redundant flex and styling that caused incorrect width behavior
+- **Visual Harmony**: Header and banner now have unified design language
+  - Same max-width (1600px)
+  - Identical responsive behavior
+  - Consistent margin/padding treatment
+  - Seamless visual alignment
 
 ### December 2024 - Enhanced Avatar Animation with Typewriter Effect
 - **Improved JotaAvatar.tsx Component** - Avatar now appears immediately with delayed hover + rotating text

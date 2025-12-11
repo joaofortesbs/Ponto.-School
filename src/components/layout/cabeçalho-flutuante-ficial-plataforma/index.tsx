@@ -73,14 +73,12 @@ import MessageReplyModal from "@/components/layout/MessageReplyModal";
 import LoginDiario from "@/components/logindiario/LoginDiario";
 import { supabase } from "@/integrations/supabase/client";
 
-// Configuração milimétrica do cabeçalho flutuante
+// Configuração milimétrica do cabeçalho flutuante - matching PromotionalBanner
 const HEADER_HEIGHT = 56; // Altura reduzida para 56px (compatível com CardSelecaoPerfilTopoMenu)
 const HEADER_MARGIN_TOP = 16; // Margem superior (igual ao sidebar)
-const HEADER_MARGIN_RIGHT = 24; // Margem direita aumentada para 24px
-const HEADER_MARGIN_LEFT = 24; // Margem esquerda para simetria
-const HEADER_PADDING_HORIZONTAL = 20; // Padding horizontal interno (reduzido de 24px do px-6)
+const HEADER_PADDING_HORIZONTAL = 20; // Padding horizontal interno
 const HEADER_BORDER_RADIUS = 9999; // Bordas completamente arredondadas
-const HEADER_MAX_WIDTH = 1600; // Largura máxima igual ao banner do Painel
+// Max width is controlled by container: max-w-[98%] sm:max-w-[1600px]
 
 export default function CabecalhoFlutuante() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -831,22 +829,19 @@ export default function CabecalhoFlutuante() {
 
   return (
     <div
-      className="w-full flex justify-end px-3 sm:px-4 md:px-6"
+      className="w-full bg-[#f7f9fa] dark:bg-[#001427] p-3 sm:p-4 md:p-6"
       style={{
         paddingTop: `${HEADER_MARGIN_TOP}px`,
       }}
     >
-      <div
-        className="w-full max-w-[98%] sm:max-w-[1600px] mx-auto flex justify-end"
-      >
+      <div className="w-full max-w-[98%] sm:max-w-[1600px] mx-auto">
         <header
-          className="flex-1 bg-white dark:bg-[#0A2540] border border-gray-200 dark:border-white/10 flex items-center justify-between shadow-lg backdrop-blur-sm"
+          className="w-full bg-white dark:bg-[#0A2540] border border-gray-200 dark:border-white/10 flex items-center justify-between shadow-lg backdrop-blur-sm"
           style={{
             height: `${HEADER_HEIGHT}px`,
             borderRadius: `${HEADER_BORDER_RADIUS}px`,
             paddingLeft: `${HEADER_PADDING_HORIZONTAL}px`,
             paddingRight: `${HEADER_PADDING_HORIZONTAL}px`,
-            maxWidth: `${HEADER_MAX_WIDTH}px`,
           }}
         >
           <audio ref={audioRef} src="/message-sound.mp3" preload="auto" />
