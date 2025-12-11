@@ -171,7 +171,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="relative flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-semibold transition-all"
+                className="relative flex items-center px-4 py-2 rounded-full text-white text-sm font-semibold transition-all"
                 style={{
                   background: 'rgba(255, 107, 0, 0.1)',
                   border: '1px solid rgba(255, 107, 0, 0.3)',
@@ -188,8 +188,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                 >
                   <Users2 className="w-4 h-4" />
                 </div>
-                <span>1° Ano</span>
-                <ChevronDown className="w-4 h-4" />
+                <span style={{ marginLeft: '12px' }}>1° Ano</span>
+                <ChevronDown className="w-4 h-4" style={{ marginLeft: '6px' }} />
               </motion.button>
               
               <motion.button
