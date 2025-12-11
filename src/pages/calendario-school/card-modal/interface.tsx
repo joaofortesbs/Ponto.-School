@@ -68,8 +68,10 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
   const [viewAllEventsDay, setViewAllEventsDay] = useState<number | null>(null);
-  const [userClasses, setUserClasses] = useState<string[]>(['1° Ano', '2° Ano', '3° Ano']);
+  const [userClasses, setUserClasses] = useState<string[]>([]);
   const [selectedClass, setSelectedClass] = useState('Todas');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = React.useRef<HTMLDivElement>(null);
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -146,6 +148,20 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const handlePlanClick = () => {
     console.log('🗓️ Planejar clicked - Selected day:', selectedDay);
   };
+
+  // Fechar menu ao clicar fora
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isMenuOpen]);
 
   const handleAddIconClick = (e: React.MouseEvent, day: number) => {
     e.stopPropagation(); // Prevenir seleção do dia
@@ -271,13 +287,53 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             </div>
             
             <div className="flex items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
-              >
-                <MoreVertical className="w-5 h-5" />
-              </motion.button>
+              <div ref={menuRef} style={{ position: 'relative' }}>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </motion.button>
+
+                {/* Menu Dropdown */}
+                <AnimatePresence>
+                  {isMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full right-0 mt-2 w-48 rounded-xl overflow-hidden shadow-lg"
+                      style={{
+                        background: '#0a1434',
+                        border: '1px solid rgba(255, 107, 0, 0.3)',
+                        zIndex: 10000
+                      }}
+                    >
+                      {['Compartilhar', 'Exportar', 'Integrações'].map((option) => (
+                        <motion.button
+                          key={option}
+                          onClick={() => {
+                            console.log(`📋 ${option} clicked`);
+                            setIsMenuOpen(false);
+                          }}
+                          whileHover={{ x: 4 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-white/70 hover:text-white transition-all"
+                          style={{
+                            background: 'transparent',
+                            borderLeft: '3px solid transparent'
+                          }}
+                        >
+                          <span>{option}</span>
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -458,7 +514,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                               e.stopPropagation();
                               setViewAllEventsDay(dayData.day);
                             }}
-                            className="w-full h-6 text-xs font-semibold text-[#FF6B00] px-2 rounded-full cursor-pointer hover:opacity-80 transition-all flex items-center justify-center"
+                            className="w-full h-6 text-xs font-semibold text-white px-2 rounded-full cursor-pointer hover:opacity-80 transition-all flex items-center justify-center"
                             style={{
                               background: 'rgba(255, 107, 0, 0.2)',
                               border: '1px solid rgba(255, 107, 0, 0.4)'
