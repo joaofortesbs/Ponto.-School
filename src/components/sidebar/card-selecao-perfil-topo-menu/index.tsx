@@ -34,7 +34,7 @@ export const CardSelecaoPerfilTopoMenu: React.FC<CardSelecaoPerfilTopoMenuProps>
             alt="Ponto School Logo"
             className={cn(
               "object-contain transition-all duration-300",
-              isCollapsed ? "h-8 w-8" : "h-9 w-auto"
+              isCollapsed ? "h-12 w-12" : "h-14 w-auto"
             )}
             loading="eager"
             onError={(e) => {
