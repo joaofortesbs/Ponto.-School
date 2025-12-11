@@ -707,7 +707,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-gradient-to-br rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-gradient-to-br rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             style={{
               background: 'linear-gradient(135deg, rgba(3, 12, 42, 0.95) 0%, rgba(10, 21, 52, 0.95) 100%)',
               border: '1px solid rgba(255, 107, 0, 0.2)'
@@ -715,7 +715,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
-              <h2 className="text-2xl font-bold text-white">Planejamento</h2>
+              <h2 className="text-2xl font-bold text-white">Escolha seu planejamento:</h2>
               <motion.button
                 whileHover={{ rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
@@ -748,9 +748,12 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
               </div>
             </motion.div>
 
+            {/* Templates - Título */}
+            <h3 className="text-lg font-bold text-white mb-4">Templates</h3>
+
             {/* Filtros de Categoria */}
             <div className="mb-6">
-              <h3 className="text-sm font-semibold text-white/80 mb-3">Filtrar por Categoria:</h3>
+              <h4 className="text-sm font-semibold text-white/80 mb-3">Filtrar por Categoria:</h4>
               <div className="flex flex-wrap gap-2">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -810,8 +813,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                   }}
                 >
                   <h4 className="font-semibold text-white mb-1">{template.title}</h4>
-                  <p className="text-xs text-white/70 mb-2">{template.category}</p>
-                  <p className="text-xs text-white/60">{template.description}</p>
+                  <p className="text-xs text-white/70">{template.category}</p>
                 </motion.div>
               ))}
             </div>
