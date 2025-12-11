@@ -136,7 +136,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             maxWidth: `calc(100% - ${CALENDAR_PADDING_HORIZONTAL * 2}px)`
           }}
         >
-          <div className="flex items-center justify-between border-b border-[#FF6B00]/20 flex-shrink-0 relative" style={{ padding: `${CALENDAR_HEADER_PADDING}px ${CALENDAR_PADDING_HORIZONTAL}px`, background: '#0a1434', borderRadius: `${CALENDAR_HEADER_BORDER_RADIUS}px ${CALENDAR_HEADER_BORDER_RADIUS}px 0 0` }}>
+          <div className="flex items-center justify-between border-b border-[#FF6B00]/20 flex-shrink-0 relative z-50" style={{ padding: `${CALENDAR_HEADER_PADDING}px ${CALENDAR_PADDING_HORIZONTAL}px`, background: '#0a1434', borderRadius: `${CALENDAR_HEADER_BORDER_RADIUS}px ${CALENDAR_HEADER_BORDER_RADIUS}px 0 0` }}>
             <div className="flex items-center gap-3">
               <div 
                 className="w-10 h-10 rounded-xl flex items-center justify-center"
