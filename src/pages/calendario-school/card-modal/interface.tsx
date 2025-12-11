@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Sparkles, ChevronLeft, ChevronRight, X, Clock, MoreVertical } from 'lucide-react';
+import { Calendar, Sparkles, ChevronLeft, ChevronRight, X, Clock, MoreVertical, Users2, ChevronDown } from 'lucide-react';
 import CalendarViewSelector from './calendar-view-selector';
 
 interface CalendarioSchoolPanelProps {
@@ -180,6 +180,30 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Planejar</span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="relative flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-semibold transition-all"
+                style={{
+                  background: 'rgba(255, 107, 0, 0.1)',
+                  border: '1px solid rgba(255, 107, 0, 0.3)',
+                  paddingLeft: '40px'
+                }}
+              >
+                <div 
+                  className="absolute left-0 w-9 h-9 rounded-full flex items-center justify-center text-white"
+                  style={{
+                    background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+                    zIndex: 10,
+                    boxShadow: '0 4px 15px rgba(255, 107, 0, 0.3)'
+                  }}
+                >
+                  <Users2 className="w-4 h-4" />
+                </div>
+                <span>1° Ano</span>
+                <ChevronDown className="w-4 h-4" />
               </motion.button>
               
               <motion.button
