@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Calendar, Zap, Clock, Grid3x3 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar, Zap, Clock, Grid3x3, ChevronDown } from 'lucide-react';
 
 type ViewMode = 'day' | 'week' | 'month' | 'year';
 
@@ -13,6 +13,9 @@ const CalendarViewSelector: React.FC<CalendarViewSelectorProps> = ({
   activeView,
   onViewChange
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const views: { mode: ViewMode; label: string; icon: React.ReactNode }[] = [
     {
       mode: 'day',
@@ -36,41 +39,97 @@ const CalendarViewSelector: React.FC<CalendarViewSelectorProps> = ({
     }
   ];
 
+  const currentView = views.find(v => v.mode === activeView) || views[2]; // Default to 'Mês'
+
+  // Fechar dropdown ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
+
+  const handleSelectView = (mode: ViewMode) => {
+    onViewChange(mode);
+    setIsOpen(false);
+  };
+
   return (
-    <div
-      className="flex items-center gap-2 px-3 py-2"
-      style={{
-        background: 'rgba(255, 107, 0, 0.1)',
-        borderRadius: '9999px',
-        border: '1px solid rgba(255, 107, 0, 0.2)'
-      }}
-    >
-      {views.map((view) => (
-        <motion.button
-          key={view.mode}
-          onClick={() => onViewChange(view.mode)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
-            activeView === view.mode
-              ? 'text-white shadow-lg'
-              : 'text-white/60 hover:text-white/80'
-          }`}
+    <div ref={dropdownRef} className="relative">
+      {/* Botão Principal */}
+      <motion.button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-semibold transition-all"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        style={{
+          background: 'rgba(255, 107, 0, 0.1)',
+          border: '1px solid rgba(255, 107, 0, 0.3)',
+          minWidth: '120px',
+          justifyContent: 'space-between'
+        }}
+      >
+        <div className="flex items-center gap-2">
+          {currentView.icon}
+          <span>{currentView.label}</span>
+        </div>
+        <ChevronDown
+          className="w-4 h-4 transition-transform"
           style={{
-            background:
-              activeView === view.mode
-                ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
-                : 'transparent',
-            boxShadow:
-              activeView === view.mode
-                ? '0 4px 12px rgba(255, 107, 0, 0.3)'
-                : 'none'
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
           }}
-        >
-          {view.icon}
-          <span>{view.label}</span>
-        </motion.button>
-      ))}
+        />
+      </motion.button>
+
+      {/* Dropdown */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-full left-0 mt-2 w-full rounded-xl overflow-hidden shadow-lg z-50"
+            style={{
+              background: '#0a1434',
+              border: '1px solid rgba(255, 107, 0, 0.3)'
+            }}
+          >
+            {views.map((view) => (
+              <motion.button
+                key={view.mode}
+                onClick={() => handleSelectView(view.mode)}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-all ${
+                  activeView === view.mode
+                    ? 'text-white'
+                    : 'text-white/70 hover:text-white'
+                }`}
+                style={{
+                  background:
+                    activeView === view.mode
+                      ? 'linear-gradient(135deg, rgba(255, 107, 0, 0.3) 0%, rgba(255, 133, 51, 0.2) 100%)'
+                      : 'transparent',
+                  borderLeft:
+                    activeView === view.mode
+                      ? '3px solid #FF6B00'
+                      : '3px solid transparent'
+                }}
+              >
+                {view.icon}
+                <span>{view.label}</span>
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
