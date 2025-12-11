@@ -1,12 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Sparkles, ChevronLeft, ChevronRight, X, Clock, MoreVertical, Users2, ChevronDown, Plus } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, X, Clock, MoreVertical, Users2, ChevronDown, Plus, Sparkles } from 'lucide-react';
 import CalendarViewSelector from './calendar-view-selector';
 import AddEventModal from './add-event-modal';
 
 interface CalendarioSchoolPanelProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface Event {
+  id: string;
+  title: string;
+  day: number;
+  icon: string;
 }
 
 interface DayData {
@@ -42,6 +49,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const [hoveredDay, setHoveredDay] = useState<number | null>(null);
   const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const [modalSelectedDay, setModalSelectedDay] = useState<number | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -72,8 +80,9 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
         currentMonth === today.getMonth() && 
         currentYear === today.getFullYear();
       
-      const hasActivities = [3, 7, 12, 15, 18, 22, 28].includes(day);
-      const activitiesCount = hasActivities ? Math.floor(Math.random() * 3) + 1 : 0;
+      const dayEvents = events.filter(e => e.day === day);
+      const hasActivities = dayEvents.length > 0;
+      const activitiesCount = dayEvents.length;
       
       days.push({
         day,
@@ -96,7 +105,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     }
     
     return days;
-  }, [currentMonth, currentYear, today]);
+  }, [currentMonth, currentYear, today, events]);
 
   const goToPreviousMonth = () => {
     setCurrentDate(new Date(currentYear, currentMonth - 1, 1));
@@ -125,8 +134,14 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   };
 
   const handleAddEvent = (title: string, day: number) => {
+    const newEvent: Event = {
+      id: `event-${Date.now()}`,
+      title,
+      day,
+      icon: 'pencil'
+    };
+    setEvents([...events, newEvent]);
     console.log('📅 Novo evento adicionado:', { title, day, month: MONTHS[currentMonth], year: currentYear });
-    // Aqui você pode adicionar a lógica para salvar o evento
   };
 
   return (
@@ -322,16 +337,29 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                       {dayData.day}
                     </span>
                     
+                    {/* Eventos do dia */}
                     {dayData.hasActivities && dayData.isCurrentMonth && (
-                      <div className="flex gap-0.5 mt-0.5">
-                        {Array.from({ length: Math.min(dayData.activitiesCount, 3) }).map((_, i) => (
-                          <div 
-                            key={i}
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              isSelected ? 'bg-white/80' : 'bg-[#FF6B00]'
-                            }`}
-                          />
+                      <div className="flex-1 w-full px-1 mt-1 flex flex-col gap-1">
+                        {events.filter(e => e.day === dayData.day).slice(0, 2).map((event) => (
+                          <div
+                            key={event.id}
+                            className="w-full text-xs font-medium text-white truncate px-1 py-0.5 rounded"
+                            style={{
+                              background: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 107, 0, 0.15)',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                            title={event.title}
+                          >
+                            {event.title}
+                          </div>
                         ))}
+                        {dayData.activitiesCount > 2 && (
+                          <div className="text-xs text-white/60 px-1">
+                            +{dayData.activitiesCount - 2}
+                          </div>
+                        )}
                       </div>
                     )}
                   </motion.button>

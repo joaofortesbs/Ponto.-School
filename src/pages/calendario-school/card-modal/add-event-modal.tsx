@@ -217,26 +217,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           </span>
         </div>
         
-        {/* Ícones do header: Lápis, Ampulheta, Etiquetas, X */}
+        {/* Ícones do header: Etiquetas, X */}
         <div className="flex items-center gap-2">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onMouseDown={(e) => e.stopPropagation()}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white/60 hover:text-[#FF6B00] hover:bg-white/10 transition-all"
-          >
-            <Pencil className="w-4 h-4" />
-          </motion.button>
-          
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onMouseDown={(e) => e.stopPropagation()}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white/60 hover:text-[#FF6B00] hover:bg-white/10 transition-all"
-          >
-            <Hourglass className="w-4 h-4" />
-          </motion.button>
-          
           {/* Botão de Etiquetas */}
           <div ref={labelDropdownRef} className="relative">
             <motion.button
@@ -459,7 +441,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           </div>
         )}
 
-        {/* Cards de ação: Adicionar atividade e Adicionar aula */}
+        {/* Cards de ação: Atividades e Aulas */}
         <div className="flex gap-3 mt-4">
           <motion.button
             whileHover={{ scale: 1.02, y: -2 }}
@@ -470,8 +452,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
               border: '1px solid rgba(255, 107, 0, 0.3)'
             }}
           >
-            <Sparkles className="w-4 h-4 text-[#FF6B00]" />
-            <span>Adicionar atividade</span>
+            <Plus className="w-4 h-4 text-[#FF6B00]" />
+            <span>Atividades</span>
           </motion.button>
 
           <motion.button
@@ -483,8 +465,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
               border: '1px solid rgba(255, 107, 0, 0.3)'
             }}
           >
-            <BookOpen className="w-4 h-4 text-[#FF6B00]" />
-            <span>Adicionar aula</span>
+            <Plus className="w-4 h-4 text-[#FF6B00]" />
+            <span>Aulas</span>
           </motion.button>
         </div>
 
