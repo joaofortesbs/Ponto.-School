@@ -178,30 +178,6 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
           </div>
           
           <div className="flex-1 overflow-auto" style={{ padding: `${CALENDAR_PADDING_VERTICAL_TOP}px ${CALENDAR_PADDING_HORIZONTAL}px` }}>
-            <div className="flex items-center justify-between mb-6">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={goToPreviousMonth}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </motion.button>
-              
-              <h3 className="text-white font-semibold text-lg">
-                {MONTHS[currentMonth]} {currentYear}
-              </h3>
-              
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={goToNextMonth}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </motion.button>
-            </div>
-            
             <div className="grid grid-cols-7 gap-3 mb-4">
               {WEEKDAYS.map((day) => (
                 <div 
