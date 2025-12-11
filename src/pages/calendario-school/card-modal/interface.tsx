@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, ChevronLeft, ChevronRight, X, Clock, Settings, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star, Share2, Download, Plug, FileText, Zap, BookOpen, Users, Presentation, Search } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, X, Clock, Settings, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star, Share2, Download, Plug, FileText, Zap, BookOpen, Users, Presentation, Search, Filter, GraduationCap, Brain, Target, Shield } from 'lucide-react';
 import CalendarViewSelector from './calendar-view-selector';
 import ClassSelector from './class-selector';
 import AddEventModal from './add-event-modal';
@@ -73,6 +73,18 @@ const getIconComponent = (iconId: string) => {
   return iconMap[iconId] || Pencil;
 };
 
+// Função para obter ícone representativo por categoria
+const getCategoryIcon = (category: string) => {
+  const categoryIconMap: { [key: string]: typeof GraduationCap } = {
+    'Ensino Fundamental': GraduationCap,
+    'Ensino Médio': Brain,
+    'ENEM & Vestibulares': Target,
+    'Gestão de Sala': Shield,
+    'Meus templates': FileText,
+  };
+  return categoryIconMap[category] || BookOpen;
+};
+
 const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   isOpen,
   onClose
@@ -95,7 +107,9 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const [isPlanningModalOpen, setIsPlanningModalOpen] = useState(false);
   const [selectedPlanningCategory, setSelectedPlanningCategory] = useState<string | null>(null);
   const [templateSearch, setTemplateSearch] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const filterRef = React.useRef<HTMLDivElement>(null);
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -186,13 +200,16 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
       }
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setIsFilterOpen(false);
+      }
     };
 
-    if (isMenuOpen) {
+    if (isMenuOpen || isFilterOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [isMenuOpen]);
+  }, [isMenuOpen, isFilterOpen]);
 
   const handleAddIconClick = (e: React.MouseEvent, day: number) => {
     e.stopPropagation(); // Prevenir seleção do dia
@@ -758,8 +775,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
               <h3 className="text-2xl font-bold text-white">Templates</h3>
             </div>
 
-            {/* Barra de Pesquisa */}
-            <div className="mb-6">
+            {/* Barra de Pesquisa + Filtro */}
+            <div className="mb-6" ref={filterRef}>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
                 <input
@@ -767,73 +784,101 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                   placeholder="Pesquisar templates..."
                   value={templateSearch}
                   onChange={(e) => setTemplateSearch(e.target.value)}
-                  className="w-full px-4 py-2 pl-10 rounded-full text-sm text-white transition-all"
+                  className="w-full px-4 py-2 pl-10 pr-12 rounded-full text-sm text-white transition-all"
                   style={{
                     background: 'rgba(255, 107, 0, 0.15)',
                     border: '1px solid rgba(255, 107, 0, 0.3)',
                     color: 'white'
                   }}
                 />
-              </div>
-            </div>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 rounded-lg transition-colors hover:bg-white/10"
+                >
+                  <Filter className="w-4 h-4 text-[#FF6B00]" />
+                </motion.button>
 
-            {/* Filtros de Categoria */}
-            <div className="mb-6">
-              <div className="flex flex-wrap gap-2">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedPlanningCategory(null)}
-                  className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
-                  style={{
-                    background: selectedPlanningCategory === null 
-                      ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
-                      : 'rgba(255, 107, 0, 0.2)',
-                    color: 'white',
-                    border: selectedPlanningCategory === null 
-                      ? '1px solid #FF6B00'
-                      : '1px solid rgba(255, 107, 0, 0.3)'
-                  }}
-                >
-                  Todos
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedPlanningCategory('Meus templates')}
-                  className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
-                  style={{
-                    background: selectedPlanningCategory === 'Meus templates' 
-                      ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
-                      : 'rgba(255, 107, 0, 0.2)',
-                    color: 'white',
-                    border: selectedPlanningCategory === 'Meus templates' 
-                      ? '1px solid #FF6B00'
-                      : '1px solid rgba(255, 107, 0, 0.3)'
-                  }}
-                >
-                  Meus templates
-                </motion.button>
-                {CATEGORIES.map((category) => (
-                  <motion.button
-                    key={category}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setSelectedPlanningCategory(category)}
-                    className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
-                    style={{
-                      background: selectedPlanningCategory === category 
-                        ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
-                        : 'rgba(255, 107, 0, 0.2)',
-                      color: 'white',
-                      border: selectedPlanningCategory === category 
-                        ? '1px solid #FF6B00'
-                        : '1px solid rgba(255, 107, 0, 0.3)'
-                    }}
-                  >
-                    {category}
-                  </motion.button>
-                ))}
+                {/* Dropdown de Categorias */}
+                <AnimatePresence>
+                  {isFilterOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute right-0 top-full mt-2 rounded-xl shadow-xl z-50 min-w-max"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(3, 12, 42, 0.98) 0%, rgba(10, 21, 52, 0.98) 100%)',
+                        border: '1px solid rgba(255, 107, 0, 0.3)',
+                        backdropFilter: 'blur(10px)'
+                      }}
+                    >
+                      {/* Todos */}
+                      <motion.button
+                        whileHover={{ x: 4 }}
+                        onClick={() => {
+                          setSelectedPlanningCategory(null);
+                          setIsFilterOpen(false);
+                        }}
+                        className="w-full px-4 py-3 text-sm text-white text-left flex items-center gap-3 hover:bg-white/5 transition-colors border-b border-white/10"
+                        style={{
+                          background: selectedPlanningCategory === null 
+                            ? 'rgba(255, 107, 0, 0.2)'
+                            : 'transparent'
+                        }}
+                      >
+                        <Calendar className="w-4 h-4 text-[#FF6B00]" />
+                        Todos
+                      </motion.button>
+
+                      {/* Meus templates */}
+                      <motion.button
+                        whileHover={{ x: 4 }}
+                        onClick={() => {
+                          setSelectedPlanningCategory('Meus templates');
+                          setIsFilterOpen(false);
+                        }}
+                        className="w-full px-4 py-3 text-sm text-white text-left flex items-center gap-3 hover:bg-white/5 transition-colors border-b border-white/10"
+                        style={{
+                          background: selectedPlanningCategory === 'Meus templates' 
+                            ? 'rgba(255, 107, 0, 0.2)'
+                            : 'transparent'
+                        }}
+                      >
+                        <FileText className="w-4 h-4 text-[#FF6B00]" />
+                        Meus templates
+                      </motion.button>
+
+                      {/* Categorias */}
+                      {CATEGORIES.map((category) => {
+                        const IconComponent = getCategoryIcon(category);
+                        return (
+                          <motion.button
+                            key={category}
+                            whileHover={{ x: 4 }}
+                            onClick={() => {
+                              setSelectedPlanningCategory(category);
+                              setIsFilterOpen(false);
+                            }}
+                            className="w-full px-4 py-3 text-sm text-white text-left flex items-center gap-3 hover:bg-white/5 transition-colors"
+                            style={{
+                              background: selectedPlanningCategory === category 
+                                ? 'rgba(255, 107, 0, 0.2)'
+                                : 'transparent',
+                              borderBottom: category !== CATEGORIES[CATEGORIES.length - 1] 
+                                ? '1px solid rgba(255, 255, 255, 0.1)'
+                                : 'none'
+                            }}
+                          >
+                            <IconComponent className="w-4 h-4 text-[#FF6B00]" />
+                            {category}
+                          </motion.button>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
