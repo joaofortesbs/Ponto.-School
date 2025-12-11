@@ -201,7 +201,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                     onClick={() => handleDayClick(dayData)}
                     disabled={!dayData.isCurrentMonth}
                     className={`
-                      relative h-14 flex flex-col items-center justify-center transition-all duration-200
+                      relative h-24 flex flex-col items-center justify-start pt-2 transition-all duration-200
                       ${dayData.isCurrentMonth 
                         ? 'cursor-pointer' 
                         : 'cursor-default opacity-30'
