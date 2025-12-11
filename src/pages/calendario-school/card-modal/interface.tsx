@@ -776,28 +776,37 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             </div>
 
             {/* Barra de Pesquisa + Filtro */}
-            <div className="mb-6" ref={filterRef}>
-              <div className="relative">
+            <div className="mb-6 flex items-center gap-3" ref={filterRef}>
+              {/* Input de Pesquisa */}
+              <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
                 <input
                   type="text"
                   placeholder="Pesquisar templates..."
                   value={templateSearch}
                   onChange={(e) => setTemplateSearch(e.target.value)}
-                  className="w-full px-4 py-2 pl-10 pr-12 rounded-full text-sm text-white transition-all"
+                  className="w-full px-4 py-2 pl-10 rounded-full text-sm text-white transition-all"
                   style={{
                     background: 'rgba(255, 107, 0, 0.15)',
                     border: '1px solid rgba(255, 107, 0, 0.3)',
                     color: 'white'
                   }}
                 />
+              </div>
+
+              {/* Botão Filtro Circular */}
+              <div className="relative">
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 rounded-lg transition-colors hover:bg-white/10"
+                  className="flex items-center justify-center w-10 h-10 rounded-full transition-colors"
+                  style={{
+                    background: 'rgba(255, 107, 0, 0.15)',
+                    border: '1px solid rgba(255, 107, 0, 0.3)'
+                  }}
                 >
-                  <Filter className="w-4 h-4 text-[#FF6B00]" />
+                  <Filter className="w-5 h-5 text-[#FF6B00]" />
                 </motion.button>
 
                 {/* Dropdown de Categorias */}
