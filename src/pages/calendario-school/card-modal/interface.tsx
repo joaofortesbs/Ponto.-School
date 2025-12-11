@@ -66,6 +66,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const [isEditEventModalOpen, setIsEditEventModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
+  const [viewAllEventsDay, setViewAllEventsDay] = useState<number | null>(null);
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -439,7 +440,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                               draggable
                               onDragStart={(e) => handleEventDragStart(e, event)}
                               onClick={() => handleEditEvent(event.id)}
-                              className="w-full text-xs font-medium text-white truncate px-1 py-0.5 rounded flex items-center justify-between cursor-grab active:cursor-grabbing hover:opacity-80 transition-all"
+                              className="w-full text-xs font-medium text-white truncate px-2 py-1 rounded-full flex items-center justify-between cursor-grab active:cursor-grabbing hover:opacity-80 transition-all"
                               style={{
                                 background: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 107, 0, 0.15)',
                                 overflow: 'hidden',
@@ -459,9 +460,21 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                           );
                         })}
                         {dayData.activitiesCount > 2 && (
-                          <div className="text-xs text-white/60 px-1">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setViewAllEventsDay(dayData.day);
+                            }}
+                            className="text-xs font-semibold text-[#FF6B00] px-2 py-1 rounded-full cursor-pointer hover:opacity-80 transition-all"
+                            style={{
+                              background: 'rgba(255, 107, 0, 0.2)',
+                              border: '1px solid rgba(255, 107, 0, 0.4)'
+                            }}
+                          >
                             +{dayData.activitiesCount - 2}
-                          </div>
+                          </motion.button>
                         )}
                       </div>
                     )}
@@ -498,6 +511,92 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                   onUpdateEvent={handleUpdateEvent}
                   onDeleteEvent={handleDeleteEvent}
                 />
+              )}
+            </AnimatePresence>
+
+            {/* Modal de visualizar todos os eventos do dia */}
+            <AnimatePresence>
+              {viewAllEventsDay !== null && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setViewAllEventsDay(null)}
+                  className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="bg-gradient-to-br rounded-3xl p-6 max-w-lg w-full max-h-96 overflow-y-auto shadow-2xl"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(3, 12, 42, 0.95) 0%, rgba(10, 21, 52, 0.95) 100%)',
+                      border: '1px solid rgba(255, 107, 0, 0.2)'
+                    }}
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10">
+                      <h2 className="text-xl font-bold text-white">
+                        Compromissos do dia {viewAllEventsDay}
+                      </h2>
+                      <motion.button
+                        whileHover={{ rotate: 90 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setViewAllEventsDay(null)}
+                        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                      >
+                        <X className="w-5 h-5 text-white" />
+                      </motion.button>
+                    </div>
+
+                    {/* Lista de eventos */}
+                    <div className="flex flex-col gap-3">
+                      {events.filter(e => e.day === viewAllEventsDay).map((event) => {
+                        const IconComponent = getIconComponent(event.icon);
+                        const labelColor = event.selectedLabels.length > 0 && event.labelColors[event.selectedLabels[0]] 
+                          ? event.labelColors[event.selectedLabels[0]]
+                          : '#999999';
+
+                        return (
+                          <motion.div
+                            key={event.id}
+                            whileHover={{ x: 4 }}
+                            draggable
+                            onDragStart={(e) => handleEventDragStart(e, event)}
+                            onClick={() => {
+                              handleEditEvent(event.id);
+                              setViewAllEventsDay(null);
+                            }}
+                            className="w-full text-sm font-medium text-white px-3 py-2 rounded-full flex items-center justify-between cursor-grab active:cursor-grabbing hover:opacity-90 transition-all"
+                            style={{
+                              background: 'rgba(255, 107, 0, 0.2)',
+                              border: '1px solid rgba(255, 107, 0, 0.3)',
+                              opacity: draggedEvent?.id === event.id ? 0.5 : 1
+                            }}
+                            title={`${event.title} - Clique para editar, arraste para mover`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <IconComponent className="w-4 h-4 flex-shrink-0" />
+                              <span className="truncate">{event.title}</span>
+                            </div>
+                            <div 
+                              className="w-3 h-3 rounded-full flex-shrink-0 ml-2"
+                              style={{ background: labelColor }}
+                            />
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Footer info */}
+                    <div className="mt-4 pt-4 border-t border-white/10 text-center">
+                      <p className="text-xs text-white/60">
+                        Total: {events.filter(e => e.day === viewAllEventsDay).length} compromisso(s)
+                      </p>
+                    </div>
+                  </motion.div>
+                </motion.div>
               )}
             </AnimatePresence>
           </div>
