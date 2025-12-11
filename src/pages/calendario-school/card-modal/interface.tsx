@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, ChevronLeft, ChevronRight, X, Clock, MoreVertical, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star } from 'lucide-react';
 import CalendarViewSelector from './calendar-view-selector';
+import ClassSelector from './class-selector';
 import AddEventModal from './add-event-modal';
 
 interface CalendarioSchoolPanelProps {
@@ -67,6 +68,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
   const [viewAllEventsDay, setViewAllEventsDay] = useState<number | null>(null);
+  const [userClasses, setUserClasses] = useState<string[]>(['1° Ano', '2° Ano', '3° Ano']);
+  const [selectedClass, setSelectedClass] = useState('Todas');
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -284,29 +287,17 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                 <Clock className="w-5 h-5" />
               </motion.button>
               
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="relative flex items-center px-4 py-2 rounded-full text-white text-sm font-semibold transition-all"
-                style={{
-                  background: 'rgba(255, 107, 0, 0.1)',
-                  border: '1px solid rgba(255, 107, 0, 0.3)',
-                  paddingLeft: '40px'
+              <ClassSelector
+                selectedClass={selectedClass}
+                onClassChange={setSelectedClass}
+                classes={userClasses}
+                onAddClass={() => {
+                  const newClass = prompt('Nome da turma:');
+                  if (newClass && newClass.trim()) {
+                    setUserClasses([...userClasses, newClass.trim()]);
+                  }
                 }}
-              >
-                <div 
-                  className="absolute left-0 w-9 h-9 rounded-full flex items-center justify-center text-white"
-                  style={{
-                    background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
-                    zIndex: 10,
-                    boxShadow: '0 4px 15px rgba(255, 107, 0, 0.3)'
-                  }}
-                >
-                  <Users2 className="w-4 h-4" />
-                </div>
-                <span style={{ marginLeft: '12px' }}>1° Ano</span>
-                <ChevronDown className="w-4 h-4" style={{ marginLeft: '6px' }} />
-              </motion.button>
+              />
               
               <motion.button
                 whileHover={{ scale: 1.02 }}
