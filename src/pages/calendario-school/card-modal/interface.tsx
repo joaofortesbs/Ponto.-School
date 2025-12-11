@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, ChevronLeft, ChevronRight, X, Clock, Settings, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star, Share2, Download, Plug, FileText, Zap, BookOpen, Users, Presentation } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, X, Clock, Settings, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star, Share2, Download, Plug, FileText, Zap, BookOpen, Users, Presentation, Search } from 'lucide-react';
 import CalendarViewSelector from './calendar-view-selector';
 import ClassSelector from './class-selector';
 import AddEventModal from './add-event-modal';
@@ -59,9 +59,7 @@ const CATEGORIES = [
   'Ensino Fundamental',
   'Ensino Médio',
   'ENEM & Vestibulares',
-  'Projetos Interdisciplinares',
-  'Gestão de Sala',
-  'Matérias'
+  'Gestão de Sala'
 ];
 
 // Função auxiliar para obter o ícone correto
@@ -751,21 +749,26 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
               </div>
             </motion.div>
 
-            {/* Templates - Título + Barra de Pesquisa */}
-            <div className="flex items-center justify-between mb-6 gap-4">
-              <h3 className="text-2xl font-bold text-white">Templates</h3>
-              <input
-                type="text"
-                placeholder="Pesquisar templates..."
-                value={templateSearch}
-                onChange={(e) => setTemplateSearch(e.target.value)}
-                className="flex-1 max-w-xs px-4 py-2 rounded-full text-sm text-white transition-all"
-                style={{
-                  background: 'rgba(255, 107, 0, 0.15)',
-                  border: '1px solid rgba(255, 107, 0, 0.3)',
-                  color: 'white'
-                }}
-              />
+            {/* Templates - Título */}
+            <h3 className="text-2xl font-bold text-white mb-4">Templates</h3>
+
+            {/* Barra de Pesquisa */}
+            <div className="mb-6">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
+                <input
+                  type="text"
+                  placeholder="Pesquisar templates..."
+                  value={templateSearch}
+                  onChange={(e) => setTemplateSearch(e.target.value)}
+                  className="w-full px-4 py-2 pl-10 rounded-full text-sm text-white transition-all"
+                  style={{
+                    background: 'rgba(255, 107, 0, 0.15)',
+                    border: '1px solid rgba(255, 107, 0, 0.3)',
+                    color: 'white'
+                  }}
+                />
+              </div>
             </div>
 
             {/* Filtros de Categoria */}
@@ -787,6 +790,23 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                   }}
                 >
                   Todos
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedPlanningCategory('Meus templates')}
+                  className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
+                  style={{
+                    background: selectedPlanningCategory === 'Meus templates' 
+                      ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
+                      : 'rgba(255, 107, 0, 0.2)',
+                    color: 'white',
+                    border: selectedPlanningCategory === 'Meus templates' 
+                      ? '1px solid #FF6B00'
+                      : '1px solid rgba(255, 107, 0, 0.3)'
+                  }}
+                >
+                  Meus templates
                 </motion.button>
                 {CATEGORIES.map((category) => (
                   <motion.button
