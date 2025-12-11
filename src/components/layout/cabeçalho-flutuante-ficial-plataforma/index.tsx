@@ -80,6 +80,7 @@ const HEADER_MARGIN_RIGHT = 24; // Margem direita aumentada para 24px
 const HEADER_MARGIN_LEFT = 24; // Margem esquerda para simetria
 const HEADER_PADDING_HORIZONTAL = 20; // Padding horizontal interno (reduzido de 24px do px-6)
 const HEADER_BORDER_RADIUS = 9999; // Bordas completamente arredondadas
+const HEADER_MAX_WIDTH = 1600; // Largura máxima igual ao banner do Painel
 
 export default function CabecalhoFlutuante() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -830,23 +831,25 @@ export default function CabecalhoFlutuante() {
 
   return (
     <div
-      className="w-full flex justify-end"
+      className="w-full flex justify-end px-3 sm:px-4 md:px-6"
       style={{
         paddingTop: `${HEADER_MARGIN_TOP}px`,
-        paddingRight: `${HEADER_MARGIN_RIGHT}px`,
       }}
     >
-      <header
-        className="flex-1 bg-white dark:bg-[#0A2540] border border-gray-200 dark:border-white/10 flex items-center justify-between shadow-lg backdrop-blur-sm"
-        style={{
-          height: `${HEADER_HEIGHT}px`,
-          borderRadius: `${HEADER_BORDER_RADIUS}px`,
-          marginLeft: `${HEADER_MARGIN_LEFT}px`,
-          paddingLeft: `${HEADER_PADDING_HORIZONTAL}px`,
-          paddingRight: `${HEADER_PADDING_HORIZONTAL}px`,
-        }}
+      <div
+        className="w-full max-w-[98%] sm:max-w-[1600px] mx-auto flex justify-end"
       >
-        <audio ref={audioRef} src="/message-sound.mp3" preload="auto" />
+        <header
+          className="flex-1 bg-white dark:bg-[#0A2540] border border-gray-200 dark:border-white/10 flex items-center justify-between shadow-lg backdrop-blur-sm"
+          style={{
+            height: `${HEADER_HEIGHT}px`,
+            borderRadius: `${HEADER_BORDER_RADIUS}px`,
+            paddingLeft: `${HEADER_PADDING_HORIZONTAL}px`,
+            paddingRight: `${HEADER_PADDING_HORIZONTAL}px`,
+            maxWidth: `${HEADER_MAX_WIDTH}px`,
+          }}
+        >
+          <audio ref={audioRef} src="/message-sound.mp3" preload="auto" />
 
         <Dialog open={isSilenceDialogOpen} onOpenChange={setIsSilenceDialogOpen}>
           <DialogContent className="sm:max-w-md backdrop-blur-md bg-white/90 dark:bg-[#0A2540]/90 border border-[#FF6B00]/30 shadow-lg">
@@ -1303,6 +1306,7 @@ export default function CabecalhoFlutuante() {
           onSendReply={handleSendReply}
         />
       </header>
+      </div>
     </div>
   );
 }
