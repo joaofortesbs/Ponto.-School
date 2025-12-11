@@ -21,6 +21,7 @@ const CALENDAR_PADDING_VERTICAL_TOP = 16; // px - Padding vertical superior
 const CALENDAR_PADDING_VERTICAL_BOTTOM = 16; // px - Padding vertical inferior
 const CALENDAR_BORDER_RADIUS = 24; // px - Raio das bordas
 const CALENDAR_HEADER_PADDING = 16; // px - Padding do header
+const CALENDAR_HEADER_BORDER_RADIUS = 24; // px - Raio das bordas do header
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const MONTHS = [
@@ -133,7 +134,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             maxWidth: `calc(100% - ${CALENDAR_PADDING_HORIZONTAL * 2}px)`
           }}
         >
-          <div className="flex items-center justify-between border-b border-[#FF6B00]/20 flex-shrink-0" style={{ padding: `${CALENDAR_HEADER_PADDING}px ${CALENDAR_PADDING_HORIZONTAL}px`, background: '#0a1434' }}>
+          <div className="flex items-center justify-between border-b border-[#FF6B00]/20 flex-shrink-0" style={{ padding: `${CALENDAR_HEADER_PADDING}px ${CALENDAR_PADDING_HORIZONTAL}px`, background: '#0a1434', borderRadius: `${CALENDAR_HEADER_BORDER_RADIUS}px ${CALENDAR_HEADER_BORDER_RADIUS}px 0 0` }}>
             <div className="flex items-center gap-3">
               <div 
                 className="w-10 h-10 rounded-xl flex items-center justify-center"
