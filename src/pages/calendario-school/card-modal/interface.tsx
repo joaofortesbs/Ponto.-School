@@ -171,20 +171,6 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={handlePlanClick}
-                className="flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-semibold transition-all"
-                style={{
-                  background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
-                  boxShadow: '0 4px 15px rgba(255, 107, 0, 0.3)'
-                }}
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Planejar</span>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 className="relative flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-semibold transition-all"
                 style={{
                   background: 'rgba(255, 107, 0, 0.1)',
@@ -204,6 +190,20 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                 </div>
                 <span>1° Ano</span>
                 <ChevronDown className="w-4 h-4" />
+              </motion.button>
+              
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handlePlanClick}
+                className="flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-semibold transition-all"
+                style={{
+                  background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+                  boxShadow: '0 4px 15px rgba(255, 107, 0, 0.3)'
+                }}
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Planejar</span>
               </motion.button>
               
               <motion.button
