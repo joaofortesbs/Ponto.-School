@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Sparkles, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import CalendarViewSelector from './calendar-view-selector';
 
 interface CalendarioSchoolPanelProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState<number | null>(today.getDate());
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -144,6 +146,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
               </div>
               <h2 className="text-lg font-bold text-white">Calendário School</h2>
             </div>
+            
+            <CalendarViewSelector activeView={viewMode} onViewChange={setViewMode} />
             
             <div className="flex items-center gap-3">
               <motion.button
