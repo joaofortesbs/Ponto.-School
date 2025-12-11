@@ -63,6 +63,9 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const [modalSelectedDay, setModalSelectedDay] = useState<number | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
+  const [isEditEventModalOpen, setIsEditEventModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -164,6 +167,66 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     };
     setEvents([...events, newEvent]);
     console.log('📅 Novo evento adicionado:', { title, day, month: MONTHS[currentMonth], year: currentYear, icon: selectedIcon, labels: selectedLabels });
+  };
+
+  const handleEditEvent = (eventId: string) => {
+    const event = events.find(e => e.id === eventId);
+    if (event) {
+      setEditingEvent(event);
+      setIsEditEventModalOpen(true);
+    }
+  };
+
+  const handleUpdateEvent = (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }) => {
+    if (!editingEvent) return;
+
+    const labelColors: { [key: string]: string } = {};
+    selectedLabels.forEach(labelId => {
+      if (labelData[labelId]) {
+        labelColors[labelId] = labelData[labelId].color;
+      }
+    });
+
+    const updatedEvent: Event = {
+      ...editingEvent,
+      title,
+      icon: selectedIcon,
+      selectedLabels,
+      labelColors
+    };
+
+    setEvents(events.map(e => e.id === editingEvent.id ? updatedEvent : e));
+    setIsEditEventModalOpen(false);
+    setEditingEvent(null);
+    console.log('📝 Evento atualizado:', { title, icon: selectedIcon, labels: selectedLabels });
+  };
+
+  const handleDeleteEvent = (eventId: string) => {
+    setEvents(events.filter(e => e.id !== eventId));
+    setIsEditEventModalOpen(false);
+    setEditingEvent(null);
+    console.log('🗑️ Evento deletado');
+  };
+
+  const handleEventDragStart = (e: React.DragEvent, event: Event) => {
+    setDraggedEvent(event);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleEventDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleEventDrop = (e: React.DragEvent, newDay: number) => {
+    e.preventDefault();
+    if (!draggedEvent || !draggedEvent) return;
+
+    setEvents(events.map(ev => 
+      ev.id === draggedEvent.id ? { ...ev, day: newDay } : ev
+    ));
+    setDraggedEvent(null);
+    console.log('➡️ Evento movido para dia:', newDay);
   };
 
   return (
@@ -294,6 +357,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                     onClick={() => handleDayClick(dayData)}
                     onMouseEnter={() => dayData.isCurrentMonth && setHoveredDay(dayData.day)}
                     onMouseLeave={() => setHoveredDay(null)}
+                    onDragOver={(e) => handleEventDragOver(e)}
+                    onDrop={(e) => handleEventDrop(e, dayData.day)}
                     disabled={!dayData.isCurrentMonth}
                     className={`
                       relative h-24 flex flex-col items-center justify-start pt-2 transition-all duration-200
@@ -371,12 +436,16 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                           return (
                             <div
                               key={event.id}
-                              className="w-full text-xs font-medium text-white truncate px-1 py-0.5 rounded flex items-center justify-between"
+                              draggable
+                              onDragStart={(e) => handleEventDragStart(e, event)}
+                              onClick={() => handleEditEvent(event.id)}
+                              className="w-full text-xs font-medium text-white truncate px-1 py-0.5 rounded flex items-center justify-between cursor-grab active:cursor-grabbing hover:opacity-80 transition-all"
                               style={{
                                 background: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 107, 0, 0.15)',
-                                overflow: 'hidden'
+                                overflow: 'hidden',
+                                opacity: draggedEvent?.id === event.id ? 0.5 : 1
                               }}
-                              title={event.title}
+                              title={`${event.title} - Clique para editar, arraste para mover`}
                             >
                               <div className="flex items-center gap-1 min-w-0 flex-1">
                                 <IconComponent className="w-3 h-3 flex-shrink-0" />
@@ -409,6 +478,25 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                   onClose={() => setIsAddEventModalOpen(false)}
                   selectedDay={modalSelectedDay}
                   onAddEvent={handleAddEvent}
+                />
+              )}
+            </AnimatePresence>
+
+            {/* Modal de editar evento */}
+            <AnimatePresence>
+              {isEditEventModalOpen && editingEvent && (
+                <AddEventModal
+                  isOpen={isEditEventModalOpen}
+                  onClose={() => {
+                    setIsEditEventModalOpen(false);
+                    setEditingEvent(null);
+                  }}
+                  selectedDay={editingEvent.day}
+                  onAddEvent={handleAddEvent}
+                  isEditing={true}
+                  editingEvent={editingEvent}
+                  onUpdateEvent={handleUpdateEvent}
+                  onDeleteEvent={handleDeleteEvent}
                 />
               )}
             </AnimatePresence>

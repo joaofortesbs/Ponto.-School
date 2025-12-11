@@ -2,11 +2,24 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tag, Hourglass, Pencil, Sparkles, BookOpen, GripHorizontal, X, Camera, Check, Star, Plus } from 'lucide-react';
 
+interface Event {
+  id: string;
+  title: string;
+  day: number;
+  icon: string;
+  selectedLabels: string[];
+  labelColors: { [key: string]: string };
+}
+
 interface AddEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDay: number | null;
   onAddEvent: (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }) => void;
+  isEditing?: boolean;
+  editingEvent?: Event | null;
+  onUpdateEvent?: (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }) => void;
+  onDeleteEvent?: (eventId: string) => void;
 }
 
 interface Label {
@@ -38,7 +51,11 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   isOpen,
   onClose,
   selectedDay,
-  onAddEvent
+  onAddEvent,
+  isEditing = false,
+  editingEvent = null,
+  onUpdateEvent,
+  onDeleteEvent
 }) => {
   const [title, setTitle] = useState('');
   const [position, setPosition] = useState({ x: 100, y: 100 });
@@ -62,18 +79,24 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   const [newLabelColor, setNewLabelColor] = useState(LABEL_COLORS[0]);
   const labelDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Reset quando modal abre
+  // Reset/pré-preenchimento quando modal abre
   useEffect(() => {
     if (isOpen) {
-      setTitle('');
-      setSelectedIcon('pencil');
-      setSelectedLabels([]);
+      if (isEditing && editingEvent) {
+        setTitle(editingEvent.title);
+        setSelectedIcon(editingEvent.icon);
+        setSelectedLabels(editingEvent.selectedLabels);
+      } else {
+        setTitle('');
+        setSelectedIcon('pencil');
+        setSelectedLabels([]);
+      }
       setIsIconDropdownOpen(false);
       setIsLabelDropdownOpen(false);
       setIsCreatingLabel(false);
       setPosition({ x: 150, y: 80 });
     }
-  }, [isOpen]);
+  }, [isOpen, isEditing, editingEvent]);
 
   // Obter referência do container pai
   useEffect(() => {
@@ -153,8 +176,21 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       labels.forEach(label => {
         labelData[label.id] = { name: label.name, color: label.color };
       });
-      onAddEvent(title, selectedDay, selectedIcon, selectedLabels, labelData);
+      
+      if (isEditing && onUpdateEvent) {
+        onUpdateEvent(title, selectedIcon, selectedLabels, labelData);
+      } else {
+        onAddEvent(title, selectedDay, selectedIcon, selectedLabels, labelData);
+      }
       onClose();
+    }
+  };
+
+  const handleDelete = () => {
+    if (isEditing && editingEvent && onDeleteEvent) {
+      if (confirm('Tem certeza que deseja deletar este evento?')) {
+        onDeleteEvent(editingEvent.id);
+      }
     }
   };
 
@@ -474,8 +510,22 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           </motion.button>
         </div>
 
-        {/* Botão Adicionar */}
-        <div className="flex justify-end mt-4">
+        {/* Botão Adicionar/Atualizar + Deletar */}
+        <div className="flex gap-2 justify-end mt-4">
+          {isEditing && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleDelete}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full text-white text-sm font-semibold transition-all"
+              style={{
+                background: 'rgba(239, 68, 68, 0.3)',
+                border: '1px solid rgba(239, 68, 68, 0.5)',
+              }}
+            >
+              <span>Deletar</span>
+            </motion.button>
+          )}
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -491,7 +541,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                 : 'none'
             }}
           >
-            <span>Adicionar</span>
+            <span>{isEditing ? 'Atualizar' : 'Adicionar'}</span>
           </motion.button>
         </div>
       </div>
