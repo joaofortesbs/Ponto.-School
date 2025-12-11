@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Zap, Clock } from 'lucide-react';
+import { Calendar, Zap, Clock, Grid3x3 } from 'lucide-react';
 
-type ViewMode = 'day' | 'week' | 'month';
+type ViewMode = 'day' | 'week' | 'month' | 'year';
 
 interface CalendarViewSelectorProps {
   activeView: ViewMode;
@@ -28,6 +28,11 @@ const CalendarViewSelector: React.FC<CalendarViewSelectorProps> = ({
       mode: 'month',
       label: 'Mês',
       icon: <Calendar className="w-4 h-4" />
+    },
+    {
+      mode: 'year',
+      label: 'Ano',
+      icon: <Grid3x3 className="w-4 h-4" />
     }
   ];
 

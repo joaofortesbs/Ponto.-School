@@ -37,7 +37,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState<number | null>(today.getDate());
-  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'year'>('month');
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
