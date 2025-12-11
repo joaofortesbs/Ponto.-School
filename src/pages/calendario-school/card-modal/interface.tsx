@@ -448,7 +448,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                               }}
                               title={`${event.title} - Clique para editar, arraste para mover`}
                             >
-                              <div className="flex items-center gap-1 min-w-0 flex-1">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
                                 <IconComponent className="w-3 h-3 flex-shrink-0" />
                                 <span className="truncate">{event.title}</span>
                               </div>
