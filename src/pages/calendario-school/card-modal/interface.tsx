@@ -708,7 +708,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-gradient-to-br rounded-3xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-gradient-to-br rounded-3xl p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             style={{
               background: 'linear-gradient(135deg, rgba(3, 12, 42, 0.95) 0%, rgba(10, 21, 52, 0.95) 100%)',
               border: '1px solid rgba(255, 107, 0, 0.2)'
@@ -716,7 +716,10 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
-              <h2 className="text-2xl font-bold text-white">Escolha seu planejamento:</h2>
+              <div className="flex items-center gap-3">
+                <Calendar className="w-6 h-6 text-[#FF6B00]" />
+                <h2 className="text-2xl font-bold text-white">Escolha seu planejamento:</h2>
+              </div>
               <motion.button
                 whileHover={{ rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
@@ -750,7 +753,10 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             </motion.div>
 
             {/* Templates - Título */}
-            <h3 className="text-2xl font-bold text-white mb-4">Templates</h3>
+            <div className="flex items-center gap-3 mb-4">
+              <FileText className="w-6 h-6 text-[#FF6B00]" />
+              <h3 className="text-2xl font-bold text-white">Templates</h3>
+            </div>
 
             {/* Barra de Pesquisa */}
             <div className="mb-6">
