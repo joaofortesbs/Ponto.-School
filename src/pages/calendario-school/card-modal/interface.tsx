@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, ChevronLeft, ChevronRight, X, Clock, MoreVertical, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, X, Clock, MoreVertical, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star, Share2, Download, Plug, FileText } from 'lucide-react';
 import CalendarViewSelector from './calendar-view-selector';
 import ClassSelector from './class-selector';
 import AddEventModal from './add-event-modal';
@@ -312,11 +312,16 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                         zIndex: 10000
                       }}
                     >
-                      {['Compartilhar', 'Exportar', 'Integrações'].map((option) => (
+                      {[
+                        { label: 'Compartilhar', icon: Share2 },
+                        { label: 'Exportar', icon: Download },
+                        { label: 'Integrações', icon: Plug },
+                        { label: 'Templates', icon: FileText }
+                      ].map((option) => (
                         <motion.button
-                          key={option}
+                          key={option.label}
                           onClick={() => {
-                            console.log(`📋 ${option} clicked`);
+                            console.log(`📋 ${option.label} clicked`);
                             setIsMenuOpen(false);
                           }}
                           whileHover={{ x: 4 }}
@@ -327,7 +332,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                             borderLeft: '3px solid transparent'
                           }}
                         >
-                          <span>{option}</span>
+                          <option.icon className="w-4 h-4" />
+                          <span>{option.label}</span>
                         </motion.button>
                       ))}
                     </motion.div>
@@ -338,6 +344,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
+                onClick={() => setIsMenuOpen(false)}
                 className="w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
               >
                 <Clock className="w-5 h-5" />
@@ -348,6 +355,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                 onClassChange={setSelectedClass}
                 classes={userClasses}
                 onAddClass={() => {
+                  setIsMenuOpen(false);
                   const newClass = prompt('Nome da turma:');
                   if (newClass && newClass.trim()) {
                     setUserClasses([...userClasses, newClass.trim()]);
@@ -358,7 +366,10 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={handlePlanClick}
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handlePlanClick();
+                }}
                 className="flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-semibold transition-all"
                 style={{
                   background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
