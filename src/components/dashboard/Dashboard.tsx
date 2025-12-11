@@ -117,7 +117,7 @@ export default function Dashboard() {
   const saudacao = getGreeting();
 
   return (
-    <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 transition-colors duration-300">
+    <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#000822] p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 transition-colors duration-300">
       {/* Banner com prioridade de renderização - bordas ajustadas para match com card de perfil */}
       <div className="priority-render w-full max-w-[98%] sm:max-w-[1600px] mx-auto">
         <div className="rounded-xl sm:rounded-2xl overflow-hidden">

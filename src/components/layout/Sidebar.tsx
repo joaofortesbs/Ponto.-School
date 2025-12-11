@@ -89,7 +89,7 @@ export default function Sidebar({
         {/* Card principal do menu lateral */}
         <aside
           className={cn(
-            "flex-1 flex flex-col bg-white dark:bg-[#001427]/95 border border-gray-200 dark:border-gray-800/50 transition-all duration-300 ease-in-out overflow-hidden backdrop-blur-sm shadow-lg"
+            "flex-1 flex flex-col bg-white dark:bg-[#030C2A] border border-gray-200 dark:border-gray-800/50 transition-all duration-300 ease-in-out overflow-hidden backdrop-blur-sm shadow-lg"
           )}
           style={{
             borderTopRightRadius: `${SIDEBAR_BORDER_RADIUS}px`,
