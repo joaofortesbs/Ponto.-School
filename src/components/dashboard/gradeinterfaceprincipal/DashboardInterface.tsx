@@ -5,7 +5,7 @@ import CardsPrincipaisFuncionalidadesPainel from "./Cards-Principais-Funcionalid
 
 export default function DashboardInterface() {
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-6 bg-[#f7f9fa] dark:bg-[#000821]">
       {/* Grade de Cards do Topo do Painel */}
       <GradeCardsTopoPainel />
       

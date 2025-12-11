@@ -32,7 +32,7 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
   return (
     <div
       className={cn(
-        "bg-white dark:bg-[#001427] p-4 -mb-5 flex flex-col items-center relative group",
+        "bg-white dark:bg-[#030C2A] p-4 -mb-5 flex flex-col items-center relative group",
         isCollapsed ? "-mt-4 px-2" : "-mt-3",
       )}
     >
@@ -84,7 +84,7 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
                 )}
                 onClick={() => fileInputRef.current?.click()}
               >
-                <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#030C2A] flex items-center justify-center">
                   {profileImage ? (
                     <img
                       src={profileImage}
@@ -163,12 +163,12 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
             )}
 
             {!isCollapsed && (
-              <div className="text-[#001427] dark:text-white text-center w-full">
+              <div className="text-[#030C2A] dark:text-white text-center w-full">
                 <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
                   <span className="mr-1">👋</span> Olá, {userName}
                 </h3>
                 <div className="flex flex-col items-center mt-1">
-                  <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
+                  <p className="text-xs text-[#030C2A]/70 dark:text-white/70 mb-0.5">
                     Nível {userProfile?.level || 1}
                   </p>
                   <div className="flex justify-center">
@@ -244,7 +244,7 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
                 )}
                 onClick={() => fileInputRef.current?.click()}
               >
-                <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#001427] flex items-center justify-center">
+                <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#030C2A] flex items-center justify-center">
                   {profileImage ? (
                     <img
                       src={profileImage}
@@ -314,12 +314,12 @@ export const CardPerfilMenuLateral: React.FC<CardPerfilMenuLateralProps> = ({
             )}
 
             {!isCollapsed && (
-              <div className="text-[#001427] dark:text-white text-center w-full">
+              <div className="text-[#030C2A] dark:text-white text-center w-full">
                 <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
                   <span className="mr-1">👋</span> Olá, {userName}
                 </h3>
                 <div className="flex flex-col items-center mt-1">
-                  <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
+                  <p className="text-xs text-[#030C2A]/70 dark:text-white/70 mb-0.5">
                     Nível {userProfile?.level || 1}
                   </p>
                   <div className="flex justify-center">
