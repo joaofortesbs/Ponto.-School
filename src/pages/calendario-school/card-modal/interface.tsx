@@ -16,7 +16,7 @@ interface DayData {
 }
 
 // Configuração milimétrica do card de Calendário School
-const CALENDAR_PADDING_HORIZONTAL = 20; // px - Padding horizontal interno
+const CALENDAR_PADDING_HORIZONTAL = 13; // px - Padding horizontal interno
 const CALENDAR_PADDING_VERTICAL_TOP = 16; // px - Padding vertical superior
 const CALENDAR_PADDING_VERTICAL_BOTTOM = 16; // px - Padding vertical inferior
 const CALENDAR_BORDER_RADIUS = 24; // px - Raio das bordas
@@ -126,14 +126,14 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
           }}
           className="absolute inset-0 z-40 flex flex-col"
           style={{ 
-            background: 'linear-gradient(180deg, #0D1B2A 0%, #1A2B3C 100%)',
+            background: '#030C2A',
             borderRadius: `${CALENDAR_BORDER_RADIUS}px`,
             border: '1px solid rgba(255, 107, 0, 0.2)',
             margin: `0 ${CALENDAR_PADDING_HORIZONTAL}px`,
             maxWidth: `calc(100% - ${CALENDAR_PADDING_HORIZONTAL * 2}px)`
           }}
         >
-          <div className="flex items-center justify-between border-b border-[#FF6B00]/20 flex-shrink-0" style={{ padding: `${CALENDAR_HEADER_PADDING}px ${CALENDAR_PADDING_HORIZONTAL}px` }}>
+          <div className="flex items-center justify-between border-b border-[#FF6B00]/20 flex-shrink-0" style={{ padding: `${CALENDAR_HEADER_PADDING}px ${CALENDAR_PADDING_HORIZONTAL}px`, background: '#0a1434' }}>
             <div className="flex items-center gap-3">
               <div 
                 className="w-10 h-10 rounded-xl flex items-center justify-center"
