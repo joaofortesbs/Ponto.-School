@@ -813,10 +813,10 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                 <AnimatePresence>
                   {isFilterOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: -10 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute right-0 top-full mt-2 rounded-xl shadow-xl z-50 min-w-max"
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 bottom-full mb-2 rounded-xl shadow-xl z-50 min-w-max"
                       style={{
                         background: 'linear-gradient(135deg, rgba(3, 12, 42, 0.98) 0%, rgba(10, 21, 52, 0.98) 100%)',
                         border: '1px solid rgba(255, 107, 0, 0.3)',
@@ -834,7 +834,10 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                         style={{
                           background: selectedPlanningCategory === null 
                             ? 'rgba(255, 107, 0, 0.2)'
-                            : 'transparent'
+                            : 'transparent',
+                          borderLeft: selectedPlanningCategory === null
+                            ? '3px solid #FF6B00'
+                            : '3px solid transparent'
                         }}
                       >
                         <Calendar className="w-4 h-4 text-[#FF6B00]" />
