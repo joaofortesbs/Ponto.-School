@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, ChevronLeft, ChevronRight, X, Clock, Settings, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star, Share2, Download, Plug, FileText } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, X, Clock, Settings, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star, Share2, Download, Plug, FileText, Zap, BookOpen, Users, Presentation } from 'lucide-react';
 import CalendarViewSelector from './calendar-view-selector';
 import ClassSelector from './class-selector';
 import AddEventModal from './add-event-modal';
@@ -41,6 +41,29 @@ const MONTHS = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ];
 
+// Templates de planejamento fictícios
+const PLANNING_TEMPLATES = [
+  { id: 1, title: '🔥 ENEM 2026 - Matemática Completa', category: 'ENEM & Vestibulares', description: 'Preparação completa para ENEM com foco em matemática' },
+  { id: 2, title: '📐 Geometria Básica - Fund. I', category: 'Ensino Fundamental', description: 'Introdução aos conceitos de geometria' },
+  { id: 3, title: '🌍 Biologia Humana Integrada', category: 'Ensino Médio', description: 'Sistema corporal e funções biológicas' },
+  { id: 4, title: '⚗️ Química Orgânica - Vestibular', category: 'ENEM & Vestibulares', description: 'Preparação avançada em química' },
+  { id: 5, title: '🎨 Projeto Arte & Cultura', category: 'Projetos Interdisciplinares', description: 'Integração de arte com história e culturas' },
+  { id: 6, title: '📊 Gestão de Sala - Comportamento', category: 'Gestão de Sala', description: 'Técnicas de manejo de turma e disciplina' },
+  { id: 7, title: '💻 Programação Básica', category: 'Matérias', description: 'Introdução à programação com Python' },
+  { id: 8, title: '🚀 Projeto STEAM Integrado', category: 'Projetos Interdisciplinares', description: 'Ciência, tecnologia, engenharia e arte combinados' },
+  { id: 9, title: '📚 Literatura Brasileira - Clássicos', category: 'Matérias', description: 'Estudo dos clássicos da literatura' },
+  { id: 10, title: '✨ Gestão Positiva - Inclusão', category: 'Gestão de Sala', description: 'Estratégias inclusivas e diversidade' },
+];
+
+const CATEGORIES = [
+  'Ensino Fundamental',
+  'Ensino Médio',
+  'ENEM & Vestibulares',
+  'Projetos Interdisciplinares',
+  'Gestão de Sala',
+  'Matérias'
+];
+
 // Função auxiliar para obter o ícone correto
 const getIconComponent = (iconId: string) => {
   const iconMap: { [key: string]: typeof Pencil } = {
@@ -71,6 +94,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const [userClasses, setUserClasses] = useState<string[]>([]);
   const [selectedClass, setSelectedClass] = useState('Todas');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isPlanningModalOpen, setIsPlanningModalOpen] = useState(false);
+  const [selectedPlanningCategory, setSelectedPlanningCategory] = useState<string | null>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   const currentMonth = currentDate.getMonth();
@@ -147,7 +172,12 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
 
   const handlePlanClick = () => {
     console.log('🗓️ Planejar clicked - Selected day:', selectedDay);
+    setIsPlanningModalOpen(true);
   };
+
+  const filteredTemplates = selectedPlanningCategory 
+    ? PLANNING_TEMPLATES.filter(t => t.category === selectedPlanningCategory)
+    : PLANNING_TEMPLATES;
 
   // Fechar menu ao clicar fora
   React.useEffect(() => {
@@ -228,19 +258,23 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     console.log('🗑️ Evento deletado');
   };
 
-  const handleEventDragStart = (e: React.DragEvent, event: Event) => {
+  const handleEventDragStart = (e: React.DragEvent<HTMLDivElement>, event: Event) => {
     setDraggedEvent(event);
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleEventDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+  const handleEventDragOver = (e: React.DragEvent<HTMLButtonElement> | React.MouseEvent) => {
+    if ('preventDefault' in e && 'dataTransfer' in e) {
+      (e as React.DragEvent<HTMLButtonElement>).preventDefault();
+      (e as React.DragEvent<HTMLButtonElement>).dataTransfer.dropEffect = 'move';
+    } else {
+      e.preventDefault();
+    }
   };
 
-  const handleEventDrop = (e: React.DragEvent, newDay: number) => {
-    e.preventDefault();
-    if (!draggedEvent || !draggedEvent) return;
+  const handleEventDrop = (e: React.DragEvent<HTMLButtonElement> | React.MouseEvent, newDay: number) => {
+    e.preventDefault?.();
+    if (!draggedEvent) return;
 
     setEvents(events.map(ev => 
       ev.id === draggedEvent.id ? { ...ev, day: newDay } : ev
@@ -413,8 +447,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                     onClick={() => handleDayClick(dayData)}
                     onMouseEnter={() => dayData.isCurrentMonth && setHoveredDay(dayData.day)}
                     onMouseLeave={() => setHoveredDay(null)}
-                    onDragOver={(e) => handleEventDragOver(e)}
-                    onDrop={(e) => handleEventDrop(e, dayData.day)}
+                    onDragOver={(e: any) => handleEventDragOver(e)}
+                    onDrop={(e: any) => handleEventDrop(e, dayData.day)}
                     disabled={!dayData.isCurrentMonth}
                     className={`
                       relative h-32 flex flex-col items-center justify-start pt-2 transition-all duration-200
@@ -657,6 +691,141 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
           </div>
         </motion.div>
       )}
+
+      {/* Modal de Planejamento */}
+      <AnimatePresence>
+        {isPlanningModalOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setIsPlanningModalOpen(false)}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-gradient-to-br rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(3, 12, 42, 0.95) 0%, rgba(10, 21, 52, 0.95) 100%)',
+              border: '1px solid rgba(255, 107, 0, 0.2)'
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+              <h2 className="text-2xl font-bold text-white">Planejamento</h2>
+              <motion.button
+                whileHover={{ rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => {
+                  setIsPlanningModalOpen(false);
+                  setSelectedPlanningCategory(null);
+                }}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-white" />
+              </motion.button>
+            </div>
+
+            {/* Card Gerar Planejamento Max */}
+            <motion.div
+              whileHover={{ y: -4 }}
+              className="mb-6 p-5 rounded-2xl cursor-pointer"
+              style={{
+                background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+                boxShadow: '0 8px 24px rgba(255, 107, 0, 0.3)'
+              }}
+              onClick={() => console.log('Gerar Planejamento Max clicked')}
+            >
+              <div className="flex items-center gap-3">
+                <Zap className="w-6 h-6 text-white flex-shrink-0" />
+                <div>
+                  <h3 className="text-lg font-bold text-white">Gerar Planejamento Max</h3>
+                  <p className="text-sm text-white/90">IA realiza planejamento completo com contexto</p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Filtros de Categoria */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-white/80 mb-3">Filtrar por Categoria:</h3>
+              <div className="flex flex-wrap gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedPlanningCategory(null)}
+                  className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
+                  style={{
+                    background: selectedPlanningCategory === null 
+                      ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
+                      : 'rgba(255, 107, 0, 0.2)',
+                    color: 'white',
+                    border: selectedPlanningCategory === null 
+                      ? '1px solid #FF6B00'
+                      : '1px solid rgba(255, 107, 0, 0.3)'
+                  }}
+                >
+                  Todos
+                </motion.button>
+                {CATEGORIES.map((category) => (
+                  <motion.button
+                    key={category}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setSelectedPlanningCategory(category)}
+                    className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
+                    style={{
+                      background: selectedPlanningCategory === category 
+                        ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
+                        : 'rgba(255, 107, 0, 0.2)',
+                      color: 'white',
+                      border: selectedPlanningCategory === category 
+                        ? '1px solid #FF6B00'
+                        : '1px solid rgba(255, 107, 0, 0.3)'
+                    }}
+                  >
+                    {category}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* Templates Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {filteredTemplates.map((template, index) => (
+                <motion.div
+                  key={template.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -2, boxShadow: '0 8px 20px rgba(255, 107, 0, 0.2)' }}
+                  onClick={() => console.log('Template selecionado:', template.title)}
+                  className="p-4 rounded-xl cursor-pointer transition-all"
+                  style={{
+                    background: 'rgba(255, 107, 0, 0.08)',
+                    border: '1px solid rgba(255, 107, 0, 0.2)',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+                  }}
+                >
+                  <h4 className="font-semibold text-white mb-1">{template.title}</h4>
+                  <p className="text-xs text-white/70 mb-2">{template.category}</p>
+                  <p className="text-xs text-white/60">{template.description}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Info Footer */}
+            <div className="mt-6 pt-4 border-t border-white/10 text-center">
+              <p className="text-xs text-white/60">
+                {filteredTemplates.length} template(s) disponível(is)
+              </p>
+            </div>
+          </motion.div>
+        </motion.div>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 };
