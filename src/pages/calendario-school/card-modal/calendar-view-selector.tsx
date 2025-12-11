@@ -95,10 +95,11 @@ const CalendarViewSelector: React.FC<CalendarViewSelectorProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full left-0 mt-2 w-full rounded-xl overflow-hidden shadow-lg z-50"
+            className="absolute top-full left-0 mt-2 w-full rounded-xl overflow-hidden shadow-lg"
             style={{
               background: '#0a1434',
-              border: '1px solid rgba(255, 107, 0, 0.3)'
+              border: '1px solid rgba(255, 107, 0, 0.3)',
+              zIndex: 9999
             }}
           >
             {views.map((view) => (
