@@ -15,6 +15,13 @@ interface DayData {
   activitiesCount: number;
 }
 
+// Configuração milimétrica do card de Calendário School
+const CALENDAR_PADDING_HORIZONTAL = 20; // px - Padding horizontal interno
+const CALENDAR_PADDING_VERTICAL_TOP = 16; // px - Padding vertical superior
+const CALENDAR_PADDING_VERTICAL_BOTTOM = 16; // px - Padding vertical inferior
+const CALENDAR_BORDER_RADIUS = 24; // px - Raio das bordas
+const CALENDAR_HEADER_PADDING = 16; // px - Padding do header
+
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -120,11 +127,13 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
           className="absolute inset-0 z-40 flex flex-col"
           style={{ 
             background: 'linear-gradient(180deg, #0D1B2A 0%, #1A2B3C 100%)',
-            borderRadius: '24px',
-            border: '1px solid rgba(255, 107, 0, 0.2)'
+            borderRadius: `${CALENDAR_BORDER_RADIUS}px`,
+            border: '1px solid rgba(255, 107, 0, 0.2)',
+            margin: `0 ${CALENDAR_PADDING_HORIZONTAL}px`,
+            maxWidth: `calc(100% - ${CALENDAR_PADDING_HORIZONTAL * 2}px)`
           }}
         >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#FF6B00]/20 flex-shrink-0">
+          <div className="flex items-center justify-between border-b border-[#FF6B00]/20 flex-shrink-0" style={{ padding: `${CALENDAR_HEADER_PADDING}px ${CALENDAR_PADDING_HORIZONTAL}px` }}>
             <div className="flex items-center gap-3">
               <div 
                 className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -161,7 +170,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             </div>
           </div>
           
-          <div className="flex-1 overflow-auto px-6 py-6">
+          <div className="flex-1 overflow-auto" style={{ padding: `${CALENDAR_PADDING_VERTICAL_TOP}px ${CALENDAR_PADDING_HORIZONTAL}px` }}>
             <div className="flex items-center justify-between mb-6">
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -266,7 +275,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             </div>
           </div>
           
-          <div className="px-6 py-4 border-t border-[#FF6B00]/10 flex-shrink-0">
+          <div className="border-t border-[#FF6B00]/10 flex-shrink-0" style={{ padding: `${CALENDAR_PADDING_VERTICAL_BOTTOM}px ${CALENDAR_PADDING_HORIZONTAL}px` }}>
             <div className="flex items-center justify-center gap-6">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-[#1A2B3C] border border-[#FF6B00]/30" />
