@@ -362,7 +362,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                     onDrop={(e) => handleEventDrop(e, dayData.day)}
                     disabled={!dayData.isCurrentMonth}
                     className={`
-                      relative h-24 flex flex-col items-center justify-start pt-2 transition-all duration-200
+                      relative h-32 flex flex-col items-center justify-start pt-2 transition-all duration-200
                       ${dayData.isCurrentMonth 
                         ? 'cursor-pointer' 
                         : 'cursor-default opacity-30'
@@ -427,7 +427,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                     
                     {/* Eventos do dia */}
                     {dayData.hasActivities && dayData.isCurrentMonth && (
-                      <div className="flex-1 w-full px-1 mt-1 flex flex-col gap-1">
+                      <div className="flex-1 w-full px-1 mt-1 flex flex-col gap-1 overflow-hidden">
                         {events.filter(e => e.day === dayData.day).slice(0, 2).map((event) => {
                           const IconComponent = getIconComponent(event.icon);
                           const labelColor = event.selectedLabels.length > 0 && event.labelColors[event.selectedLabels[0]] 
@@ -440,7 +440,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                               draggable
                               onDragStart={(e) => handleEventDragStart(e, event)}
                               onClick={() => handleEditEvent(event.id)}
-                              className="w-full text-xs font-medium text-white truncate px-2 py-1 rounded-full flex items-center justify-between cursor-grab active:cursor-grabbing hover:opacity-80 transition-all"
+                              className="w-full h-6 text-xs font-medium text-white truncate px-2 rounded-full flex items-center justify-between cursor-grab active:cursor-grabbing hover:opacity-80 transition-all"
                               style={{
                                 background: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 107, 0, 0.15)',
                                 overflow: 'hidden',
@@ -467,7 +467,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                               e.stopPropagation();
                               setViewAllEventsDay(dayData.day);
                             }}
-                            className="text-xs font-semibold text-[#FF6B00] px-2 py-1 rounded-full cursor-pointer hover:opacity-80 transition-all"
+                            className="w-full h-6 text-xs font-semibold text-[#FF6B00] px-2 rounded-full cursor-pointer hover:opacity-80 transition-all flex items-center justify-center"
                             style={{
                               background: 'rgba(255, 107, 0, 0.2)',
                               border: '1px solid rgba(255, 107, 0, 0.4)'
