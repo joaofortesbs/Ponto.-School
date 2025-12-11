@@ -71,6 +71,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import MessageReplyModal from "@/components/layout/MessageReplyModal";
 import LoginDiario from "@/components/logindiario/LoginDiario";
+import { supabase } from "@/integrations/supabase/client";
 
 const HEADER_MARGIN_TOP = 16;
 const HEADER_MARGIN_RIGHT = 16;
@@ -797,8 +798,6 @@ export default function CabecalhoFlutuante() {
     handleSearch(suggestion);
     setIsSearchFocused(false);
   };
-
-  const { supabase } = require("@/integrations/supabase/client");
 
   const handleLogout = async () => {
     try {
