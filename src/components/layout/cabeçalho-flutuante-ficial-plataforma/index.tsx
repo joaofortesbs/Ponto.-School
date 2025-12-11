@@ -829,7 +829,7 @@ export default function CabecalhoFlutuante() {
 
   return (
     <header
-      className="w-full bg-white dark:bg-[#0A2540] border border-gray-200 dark:border-white/10 flex items-center justify-between shadow-lg backdrop-blur-sm"
+      className="w-full bg-white dark:bg-[#030C2A] border border-gray-200 dark:border-white/10 flex items-center justify-between shadow-lg backdrop-blur-sm"
       style={{
         height: `${HEADER_HEIGHT}px`,
         borderRadius: `${HEADER_BORDER_RADIUS}px`,
@@ -840,7 +840,7 @@ export default function CabecalhoFlutuante() {
           <audio ref={audioRef} src="/message-sound.mp3" preload="auto" />
 
         <Dialog open={isSilenceDialogOpen} onOpenChange={setIsSilenceDialogOpen}>
-          <DialogContent className="sm:max-w-md backdrop-blur-md bg-white/90 dark:bg-[#0A2540]/90 border border-[#FF6B00]/30 shadow-lg">
+          <DialogContent className="sm:max-w-md backdrop-blur-md bg-white/90 dark:bg-[#030C2A]/90 border border-[#FF6B00]/30 shadow-lg">
             <DialogHeader>
               <DialogTitle>
                 {silenceType === "all" && "Silenciar Todas as Notificações"}
@@ -930,7 +930,7 @@ export default function CabecalhoFlutuante() {
             {isSearchFocused && (
               <div
                 ref={suggestionsDropdownRef}
-                className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#0A2540] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden"
+                className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#030C2A] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden"
               >
                 <div className="p-2">
                   <p className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1">

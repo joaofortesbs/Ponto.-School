@@ -317,7 +317,7 @@ function App() {
       <UsernameProvider>
         <StudyGoalProvider>
           <ErrorBoundary>
-            <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
+            <div className="min-h-screen bg-background font-body antialiased dark:bg-[#000822]">
               <Suspense fallback={
                 <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center">
                   <div className="text-center">

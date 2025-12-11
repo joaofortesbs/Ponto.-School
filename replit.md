@@ -64,6 +64,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### December 2024 - Dark Color Scheme Update
+- **Platform Background**: Changed from #001427 to **#000822** (darker navy blue)
+- **Header Card Background**: Changed from #0A2540 to **#030C2A** (dark blue)
+- **Sidebar Card Background**: Changed from #001B36 to **#030C2A** (dark blue)
+- **Dashboard Components**: All components using #001B36 changed to **#030C2A**
+- **Affected Files**: 100+ files updated across the entire codebase
+- **Color Consistency**: All platform components now use unified dark color scheme
+
 ### December 2024 - Floating Header Redesign with Millimetric Precision (FINAL)
 - **CabecalhoFlutuante Component**: Pure header element returning only `<header>` tag
   - Location: `src/components/layout/cabeçalho-flutuante-ficial-plataforma/index.tsx`

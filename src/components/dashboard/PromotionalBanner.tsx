@@ -42,7 +42,7 @@ const PromotionalBanner = () => {
           rounded-2xl
         `}
         style={{
-          backgroundColor: isDark ? '#001B36' : undefined,
+          backgroundColor: isDark ? '#030C2A' : undefined,
           backgroundImage: isDark ? 'none' : undefined
         }}
       >
