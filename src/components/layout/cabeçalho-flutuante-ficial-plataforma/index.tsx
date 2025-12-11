@@ -73,10 +73,13 @@ import MessageReplyModal from "@/components/layout/MessageReplyModal";
 import LoginDiario from "@/components/logindiario/LoginDiario";
 import { supabase } from "@/integrations/supabase/client";
 
-const HEADER_MARGIN_TOP = 16;
-const HEADER_MARGIN_RIGHT = 16;
-const HEADER_HEIGHT = 72;
-const HEADER_BORDER_RADIUS = 9999;
+// Configuração milimétrica do cabeçalho flutuante
+const HEADER_HEIGHT = 56; // Altura reduzida para 56px (compatível com CardSelecaoPerfilTopoMenu)
+const HEADER_MARGIN_TOP = 16; // Margem superior (igual ao sidebar)
+const HEADER_MARGIN_RIGHT = 24; // Margem direita aumentada para 24px
+const HEADER_MARGIN_LEFT = 24; // Margem esquerda para simetria
+const HEADER_PADDING_HORIZONTAL = 20; // Padding horizontal interno (reduzido de 24px do px-6)
+const HEADER_BORDER_RADIUS = 9999; // Bordas completamente arredondadas
 
 export default function CabecalhoFlutuante() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -834,11 +837,13 @@ export default function CabecalhoFlutuante() {
       }}
     >
       <header
-        className="flex-1 px-6 bg-white dark:bg-[#0A2540] border border-gray-200 dark:border-white/10 flex items-center justify-between shadow-lg backdrop-blur-sm"
+        className="flex-1 bg-white dark:bg-[#0A2540] border border-gray-200 dark:border-white/10 flex items-center justify-between shadow-lg backdrop-blur-sm"
         style={{
           height: `${HEADER_HEIGHT}px`,
           borderRadius: `${HEADER_BORDER_RADIUS}px`,
-          marginLeft: `${HEADER_MARGIN_RIGHT}px`,
+          marginLeft: `${HEADER_MARGIN_LEFT}px`,
+          paddingLeft: `${HEADER_PADDING_HORIZONTAL}px`,
+          paddingRight: `${HEADER_PADDING_HORIZONTAL}px`,
         }}
       >
         <audio ref={audioRef} src="/message-sound.mp3" preload="auto" />

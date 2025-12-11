@@ -64,6 +64,25 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### December 2024 - Floating Header Redesign with Millimetric Precision
+- **CabecalhoFlutuante Component**: Refactored with exact height matching CardSelecaoPerfilTopoMenu
+  - Location: `src/components/layout/cabeçalho-flutuante-ficial-plataforma/index.tsx`
+  - **Height**: Reduced from 72px to **56px** (aligned with sidebar profile card height)
+  - **Margins**: 
+    - Top: 16px (matches sidebar top margin)
+    - Right: 24px (increased from 16px for more spacing)
+    - Left: 24px (new, ensures symmetry)
+  - **Padding**: Horizontal padding set to 20px (reduced from 24px for narrower width)
+  - **Border Radius**: 9999px (fully rounded corners, matching modern glass-morphism design)
+  - **All constants documented** with millimetric precision comments for future adjustments
+- **Bug Fix**: Corrected "require is not defined" error by converting CommonJS require() to ESM import
+  - Changed: `const { supabase } = require("@/integrations/supabase/client");`
+  - To: `import { supabase } from "@/integrations/supabase/client";` (at top of file)
+- **Visual Harmony**: Header and profile card now have unified design language
+  - Same vertical spacing (16px top margin)
+  - Consistent rounded card styling with backdrop blur
+  - Proportional sizing for cohesive UI
+
 ### December 2024 - Enhanced Avatar Animation with Typewriter Effect
 - **Improved JotaAvatar.tsx Component** - Avatar now appears immediately with delayed hover + rotating text
   - **Avatar Visibility**: Appears INSTANTLY (no hover on load) - scale 0.8→1, opacity 0→1 (0.4s, no delay)
