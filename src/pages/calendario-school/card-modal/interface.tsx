@@ -80,7 +80,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
       });
     }
     
-    const remainingSlots = 42 - days.length;
+    const remainingSlots = 35 - days.length;
     for (let day = 1; day <= remainingSlots; day++) {
       days.push({
         day,
@@ -255,26 +255,6 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                   </motion.button>
                 );
               })}
-            </div>
-          </div>
-          
-          <div className="border-t border-[#FF6B00]/10 flex-shrink-0" style={{ padding: `${CALENDAR_PADDING_VERTICAL_BOTTOM}px ${CALENDAR_PADDING_HORIZONTAL}px` }}>
-            <div className="flex items-center justify-center gap-6">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#1A2B3C] border border-[#FF6B00]/30" />
-                <span className="text-white/50 text-xs">Disponível</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#FF6B00]/20 border-2 border-[#FF6B00]/50" />
-                <span className="text-white/50 text-xs">Hoje</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex gap-0.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B00]" />
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B00]" />
-                </div>
-                <span className="text-white/50 text-xs">Atividades</span>
-              </div>
             </div>
           </div>
         </motion.div>
