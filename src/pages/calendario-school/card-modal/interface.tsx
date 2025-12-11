@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Sparkles, ChevronLeft, ChevronRight, X, Clock, MoreVertical, Users2, ChevronDown } from 'lucide-react';
+import { Calendar, Sparkles, ChevronLeft, ChevronRight, X, Clock, MoreVertical, Users2, ChevronDown, Plus } from 'lucide-react';
 import CalendarViewSelector from './calendar-view-selector';
+import AddEventModal from './add-event-modal';
 
 interface CalendarioSchoolPanelProps {
   isOpen: boolean;
@@ -38,6 +39,9 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState<number | null>(today.getDate());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'year'>('month');
+  const [hoveredDay, setHoveredDay] = useState<number | null>(null);
+  const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
+  const [modalSelectedDay, setModalSelectedDay] = useState<number | null>(null);
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -114,6 +118,17 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     console.log('🗓️ Planejar clicked - Selected day:', selectedDay);
   };
 
+  const handleAddIconClick = (e: React.MouseEvent, day: number) => {
+    e.stopPropagation(); // Prevenir seleção do dia
+    setModalSelectedDay(day);
+    setIsAddEventModalOpen(true);
+  };
+
+  const handleAddEvent = (title: string, day: number) => {
+    console.log('📅 Novo evento adicionado:', { title, day, month: MONTHS[currentMonth], year: currentYear });
+    // Aqui você pode adicionar a lógica para salvar o evento
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -127,7 +142,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             stiffness: 300,
             mass: 0.8
           }}
-          className="absolute inset-0 z-40 flex flex-col"
+          className="absolute inset-0 z-40 flex flex-col calendar-container"
           style={{ 
             background: '#030C2A',
             borderRadius: `${CALENDAR_BORDER_RADIUS}px`,
@@ -217,7 +232,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             </div>
           </div>
           
-          <div className="flex-1 overflow-auto" style={{ padding: `${CALENDAR_PADDING_VERTICAL_TOP}px ${CALENDAR_PADDING_HORIZONTAL}px` }}>
+          <div className="flex-1 overflow-auto relative" style={{ padding: `${CALENDAR_PADDING_VERTICAL_TOP}px ${CALENDAR_PADDING_HORIZONTAL}px` }}>
             <div className="grid grid-cols-7 gap-3 mb-4">
               {WEEKDAYS.map((day) => (
                 <div 
@@ -232,6 +247,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             <div className="grid grid-cols-7 gap-3">
               {calendarDays.map((dayData, index) => {
                 const isSelected = selectedDay === dayData.day && dayData.isCurrentMonth;
+                const isHovered = hoveredDay === dayData.day && dayData.isCurrentMonth;
                 
                 return (
                   <motion.button
@@ -239,6 +255,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                     whileHover={{ scale: dayData.isCurrentMonth ? 1.05 : 1 }}
                     whileTap={{ scale: dayData.isCurrentMonth ? 0.95 : 1 }}
                     onClick={() => handleDayClick(dayData)}
+                    onMouseEnter={() => dayData.isCurrentMonth && setHoveredDay(dayData.day)}
+                    onMouseLeave={() => setHoveredDay(null)}
                     disabled={!dayData.isCurrentMonth}
                     className={`
                       relative h-24 flex flex-col items-center justify-start pt-2 transition-all duration-200
@@ -264,6 +282,30 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                         : 'none'
                     }}
                   >
+                    {/* Ícone de Adicionar (+) - aparece no hover */}
+                    <AnimatePresence>
+                      {isHovered && dayData.isCurrentMonth && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.5 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute top-1 right-1 z-10"
+                          onClick={(e) => handleAddIconClick(e, dayData.day)}
+                        >
+                          <div 
+                            className="w-6 h-6 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
+                            style={{
+                              background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+                              boxShadow: '0 2px 8px rgba(255, 107, 0, 0.4)'
+                            }}
+                          >
+                            <Plus className="w-3.5 h-3.5 text-white" />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     <span 
                       className={`
                         text-sm font-medium
@@ -296,6 +338,18 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                 );
               })}
             </div>
+
+            {/* Modal de adicionar evento */}
+            <AnimatePresence>
+              {isAddEventModalOpen && (
+                <AddEventModal
+                  isOpen={isAddEventModalOpen}
+                  onClose={() => setIsAddEventModalOpen(false)}
+                  selectedDay={modalSelectedDay}
+                  onAddEvent={handleAddEvent}
+                />
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
       )}
