@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, ChevronLeft, ChevronRight, X, Clock, MoreVertical, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star, Share2, Download, Plug, FileText } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, X, Clock, Settings, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star, Share2, Download, Plug, FileText } from 'lucide-react';
 import CalendarViewSelector from './calendar-view-selector';
 import ClassSelector from './class-selector';
 import AddEventModal from './add-event-modal';
@@ -280,9 +280,6 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                 <Calendar className="w-5 h-5 text-[#FF6B00]" />
               </div>
               <h2 className="text-lg font-bold text-white">Calendário School</h2>
-            </div>
-            
-            <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
               <CalendarViewSelector activeView={viewMode} onViewChange={setViewMode} />
             </div>
             
@@ -294,7 +291,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
                 >
-                  <MoreVertical className="w-5 h-5" />
+                  <Settings className="w-5 h-5" />
                 </motion.button>
 
                 {/* Menu Dropdown */}
