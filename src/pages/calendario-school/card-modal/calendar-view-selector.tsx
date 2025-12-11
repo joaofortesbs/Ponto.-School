@@ -15,6 +15,8 @@ const CalendarViewSelector: React.FC<CalendarViewSelectorProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   const views: { mode: ViewMode; label: string; icon: React.ReactNode }[] = [
     {
@@ -45,7 +47,9 @@ const CalendarViewSelector: React.FC<CalendarViewSelectorProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        if (buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
+          setIsOpen(false);
+        }
       }
     };
 
@@ -55,15 +59,28 @@ const CalendarViewSelector: React.FC<CalendarViewSelectorProps> = ({
     }
   }, [isOpen]);
 
+  // Calcular posição do dropdown quando abrir
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    }
+  }, [isOpen]);
+
   const handleSelectView = (mode: ViewMode) => {
     onViewChange(mode);
     setIsOpen(false);
   };
 
   return (
-    <div ref={dropdownRef} className="relative">
+    <div>
       {/* Botão Principal */}
       <motion.button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-semibold transition-all"
         whileHover={{ scale: 1.02 }}
@@ -91,15 +108,19 @@ const CalendarViewSelector: React.FC<CalendarViewSelectorProps> = ({
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={dropdownRef}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full left-0 mt-2 w-full rounded-xl overflow-hidden shadow-lg"
+            className="fixed rounded-xl overflow-hidden shadow-lg"
             style={{
               background: '#0a1434',
               border: '1px solid rgba(255, 107, 0, 0.3)',
-              zIndex: 9999
+              zIndex: 9999,
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${dropdownPosition.width}px`
             }}
           >
             {views.map((view) => (
