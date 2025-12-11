@@ -74,7 +74,7 @@ import LoginDiario from "@/components/logindiario/LoginDiario";
 import { supabase } from "@/integrations/supabase/client";
 
 // Configuração milimétrica do cabeçalho flutuante - matching PromotionalBanner
-const HEADER_HEIGHT = 56; // Altura reduzida para 56px (compatível com CardSelecaoPerfilTopoMenu)
+const HEADER_HEIGHT = 64; // Altura aumentada para 64px (8px a mais para melhor proporção)
 const HEADER_MARGIN_TOP = 16; // Margem superior (igual ao sidebar)
 const HEADER_PADDING_HORIZONTAL = 20; // Padding horizontal interno
 const HEADER_BORDER_RADIUS = 9999; // Bordas completamente arredondadas
