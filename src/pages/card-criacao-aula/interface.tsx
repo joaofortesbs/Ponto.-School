@@ -5,6 +5,7 @@ import AgenteProfessorCard from './components/AgenteProfessorCard';
 import PersonalizationStepCard from './components/PersonalizationStepCard';
 import SchoolToolsContent from './components/SchoolToolsContent';
 import StyleDefinitionContent from './components/StyleDefinitionContent';
+import { Template } from './components/TemplateDropdown';
 
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('Professor');
   const [expandedCard, setExpandedCard] = useState<number>(1);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -180,6 +182,9 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                     animationDelay={0.25}
                     showUserAvatar={false}
                     customIcon={LayoutGrid}
+                    isTemplateCard={true}
+                    selectedTemplate={selectedTemplate}
+                    onSelectTemplate={setSelectedTemplate}
                   />
                 </div>
               </PersonalizationStepCard>

@@ -1,0 +1,13 @@
+Agora precisamos adicionar um sistema para o usuário conseguir configurar um tamplate para conseguir gerar a sua aula, e ele vai fazer essa escolha quando clicar no card retangular de "Add. um Tamplate", o fluxo vai ser o seguinte:
+
+- Quando o usuário clicar no card de "Add. um Tamplate", vai aparecer um drop-dow (Porém ao lado esquerdo do card de "Add. um Tamplate"), e esse drop-dow vai ter a proporção de em média (369 x 431)! E esse drop-dow vai ser composto por um titulo de "Escolha seu tamplate" no topo, alinhado a esquerda, e no canto superior direito vai ter um icone de "+"! Na interface desse drop-dow vai ter 5 opções de tamplates:
+
+- "Aula Ativa" (Descrição: "Os alunos participam ativamente, realizando atividades práticas e projetos colaborativos.")
+- "Aula Expositiva" (Descrição: "O professor apresenta o conteúdo de forma direta, enquanto os alunos assimilam e fazem anotações.")
+- "Aula Socioemocional" (Descrição: "Combina conteúdo escolar com habilidades socioemocionais, como empatia e trabalho em equipe.")
+- "Aula Técnica") (Descrição: "Mostra como o conteúdo se aplica a profissões reais, preparando para desafios do mercado.")
+- "Aula SE") (Descrição: "Integra recursos digitais e interatividade, aproximando o conteúdo da realidade dos alunos.")
+
+E esses tamplates vão aparecer dentro da interface do drop-dow com somente os nomes, mas as descrições vão estar minimizadas! E cada card que representa os respectivos tamplates vão ser clicaveis/selecionaveis, e ao lado esquerdo de cada card vai ter um icone representativo (Que represente de maneira bem clara o respectivo tamplate)!!!!!!!
+
+Quando o usuário selecionar o seu tamplate, o drop-dow será fechado e o icone do respectivo tamplate vai aparecer dentro do componente circular que está dentro do card de "Add. seu Tamplate"! E o texto de "Add. seu Tamplate" vai ser substituido pelo respectivo nome do tamplate! Não cometa erros ou bugs dentro da plataforma, e não altere cosiass fora de contexto, e também não prejudique funcionalidades já existentes e funcionais!!!!!!!
