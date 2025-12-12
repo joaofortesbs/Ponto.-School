@@ -137,12 +137,24 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 title="Personalize o estilo da sua aula:"
                 animationDelay={0.1}
               >
-                <AgenteProfessorCard 
-                  userAvatar={userAvatar}
-                  cardHeight={CARD_HEIGHT}
-                  cardMaxWidth={CARD_MAX_WIDTH}
-                  animationDelay={0.15}
-                />
+                <div className="flex items-center justify-center gap-6">
+                  <AgenteProfessorCard 
+                    userAvatar={userAvatar}
+                    cardHeight={CARD_HEIGHT}
+                    cardMaxWidth={CARD_MAX_WIDTH}
+                    cardTitle="Agente Professor"
+                    animationDelay={0.15}
+                    showUserAvatar={true}
+                  />
+                  
+                  <AgenteProfessorCard 
+                    cardHeight={CARD_HEIGHT}
+                    cardMaxWidth={CARD_MAX_WIDTH}
+                    cardTitle="Add. uma Turma"
+                    animationDelay={0.2}
+                    showUserAvatar={false}
+                  />
+                </div>
               </PersonalizationStepCard>
 
               <motion.div

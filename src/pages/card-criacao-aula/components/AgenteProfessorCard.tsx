@@ -1,19 +1,23 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { User } from 'lucide-react';
+import { User, Plus } from 'lucide-react';
 
 interface AgenteProfessorCardProps {
-  userAvatar: string | null;
+  userAvatar?: string | null;
   cardHeight: number;
   cardMaxWidth: number;
+  cardTitle: string;
   animationDelay?: number;
+  showUserAvatar?: boolean;
 }
 
 const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
   userAvatar,
   cardHeight,
   cardMaxWidth,
-  animationDelay = 0.1
+  cardTitle,
+  animationDelay = 0.1,
+  showUserAvatar = true
 }) => {
   return (
     <motion.div
@@ -29,7 +33,7 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
         style={{
           height: `${cardHeight}px`,
           width: '100%',
-          minWidth: '280px',
+          minWidth: '240px',
           background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
           borderRadius: `${cardHeight}px`,
           border: '1px solid rgba(255, 107, 0, 0.3)',
@@ -44,24 +48,26 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
           style={{ 
             width: `${cardHeight}px`,
             height: `${cardHeight}px`,
-            background: userAvatar ? 'transparent' : 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+            background: showUserAvatar && userAvatar ? 'transparent' : 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
             border: '3px solid #FF6B00',
             boxShadow: '0 4px 12px rgba(255, 107, 0, 0.4)'
           }}
         >
-          {userAvatar ? (
+          {showUserAvatar && userAvatar ? (
             <img 
               src={userAvatar} 
               alt="Avatar do Professor"
               className="w-full h-full object-cover"
             />
-          ) : (
+          ) : showUserAvatar ? (
             <User className="w-4 h-4 text-white" />
+          ) : (
+            <Plus className="w-5 h-5 text-white" />
           )}
         </div>
 
         <span className="text-white font-semibold text-base whitespace-nowrap">
-          Agente Professor
+          {cardTitle}
         </span>
       </div>
     </motion.div>
