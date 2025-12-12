@@ -35,6 +35,9 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
         className="rounded-2xl overflow-hidden cursor-pointer"
         onClick={handleCardClick}
         style={{
+          width: '100%',
+          maxWidth: '1000px',
+          margin: '0 auto',
           background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, rgba(255, 107, 0, 0.05) 100%)',
           border: '1px solid rgba(255, 107, 0, 0.25)',
           boxShadow: '0 4px 16px rgba(255, 107, 0, 0.1)'
