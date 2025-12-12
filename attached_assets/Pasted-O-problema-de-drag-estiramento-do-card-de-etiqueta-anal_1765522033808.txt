@@ -1,0 +1,96 @@
+O problema é de drag/estiramento do card de etiqueta (analytics) com Framer Motion: você quer que ele estique pela base, sem subir, sem seguir o cursor depois da “puxada” e sempre volte exatamente para a posição original, trocando apenas o tema e ícone.​
+
+Prompt técnico (versão final)
+Você é um agente especialista em React + TypeScript + Framer Motion, trabalhando no arquivo AulaResultadoContent.tsx do meu projeto Ponto.School.
+
+No layout de resultado de aula, existe um card de etiqueta de análise (analytics tag card) com ícone de análise, posicionado abaixo do card de Resumo da aula. Esse card já está configurado com drag e um sistema de troca de tema/modo (laranja ↔ roxo) usando themeMode e themeColors. Também existe um dragY baseado em useMotionValue/useTransform e um efeito de “stretch” (scaleY) que precisa ser aplicado corretamente.​
+
+Quero que você corrija e refine completamente esse comportamento com os seguintes requisitos precisos:
+
+Card correto e posição inicial fixa
+
+Garanta que apenas o card de etiqueta de análise (o card menor com ícone de analytics, não o card de “Resumo da aula”) tenha o comportamento de drag/stretch.
+
+O card deve ter uma posição inicial bem definida (mesmo top/marginTop/translateY) e sempre voltar exatamente para essa posição após a interação, independente de quanto o usuário arrastar.
+
+Drag somente para baixo, sem seguir o cursor ao soltar
+
+Configure o drag do card para:
+
+Permitir movimento apenas no eixo Y e somente para baixo (dragConstraints ou lógica equivalente), impedindo completamente qualquer movimento para cima (top: 0).
+
+Durante o drag, use um MotionValue (dragY) para controlar a deformação/estiramento visual, mas não deixar o card “grudar” na ponta do cursor; o movimento deve ser suavizado e limitado.
+
+Quando o usuário soltar o mouse, o card deve:
+
+Animar de volta para a posição original (mesmo Y inicial).
+
+Zerar o dragY ou qualquer offset interno usado (por exemplo, dragY.set(0)), garantindo que nenhuma posição residual permaneça.​
+
+Efeito de esticar fixando o topo
+
+O visual precisa ser de que o topo do card está fixo e apenas a base + ícone estão sendo puxados para baixo, como se o card estivesse sendo esticado.
+
+Para isso, configure:
+
+transformOrigin: 'top' no elemento correto (container que estica).
+
+Um scaleY derivado de dragY via useTransform, aplicado no estilo (style={{ scaleY: cardScaleY }}) do container do card, e não em animate.​
+
+A posição visual do topo do card não pode se mover; apenas a altura aumenta durante o drag, mantendo o topo ancorado.
+
+Remover a interferência do cursor após a “puxada”
+
+Depois que o usuário puxar e soltar o card, o cursor não pode mais influenciar a posição do card.
+
+Isso significa que:
+
+O drag termina com uma animação controlada (por exemplo via animate/transition no dragY).
+
+Após o onDragEnd, o card retorna para o estado visual original de posição, mantendo apenas o estado lógico de modo/tema alterado.​
+
+Comportamento de troca de tema/modo sincronizado com a “puxada”
+
+Quando o usuário puxar o card de etiqueta até um limiar (por exemplo, dragY ou info.offset.y > threshold), o sistema deve:
+
+Alternar themeMode entre 'orange' e 'purple'.
+
+Renderizar um novo card retangular no lugar do card de “Resumo da aula”, com as mesmas proporções e layout do card original, porém com identidade visual roxa (modo análise).
+
+Sincronizar a identidade visual do próprio card de etiqueta com o modo atual (laranja ↔ roxo), incluindo gradientes, bordas e sombras, conforme o objeto themeColors.​
+
+Animação do ícone ao entrar no modo análise (roxo)
+
+No modo laranja (padrão), o card de etiqueta usa o ícone atual de análise (por exemplo BarChart3).
+
+Quando themeMode mudar para 'purple' (modo análise), o ícone dentro do card de etiqueta deve:
+
+Passar por uma animação suave de transição (por exemplo fade + rotate 360° ou scale + fade), com duração ~0.3–0.5s e easing easeOut.
+
+Trocar visualmente para um ícone de Aula/Sala de aula (por exemplo GraduationCap do Lucide) apenas no modo roxo.
+
+Garantir que a animação seja determinística: sempre que o modo alternar laranja ↔ roxo, a transição do ícone aconteça de forma suave e consistente.​
+
+Manter layout e proporções atuais intactos
+
+Não alterar as proporções originais dos cards (Resumo da aula + card de etiqueta) na posição de repouso.
+
+Não quebrar o layout existente do fluxo de criação de aula.
+
+Todo o efeito de esticar/drag deve ser reversível e só atuar durante a interação, voltando ao layout exato de repouso após o onDragEnd.​
+
+Entrega esperada
+
+Atualize o código em AulaResultadoContent.tsx com:
+
+Uso correto de useMotionValue, useTransform e style para scaleY.
+
+drag, dragConstraints e onDragEnd configurados para o card de etiqueta.
+
+Lógica de alternância de themeMode baseada no deslocamento vertical da “puxada”.
+
+Renderização condicional do card de resumo (laranja) vs card de análise (roxo) com mesmas dimensões.
+
+Animação de transição de ícone sincronizada com themeMode.
+
+O resultado deve entregar exatamente o efeito: card de etiqueta estica pela base, topo fixo, não sobe, volta para a posição original ao soltar, troca de tema e ícone apenas pela “puxada”.​

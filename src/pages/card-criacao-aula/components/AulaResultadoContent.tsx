@@ -150,15 +150,14 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         <motion.div
           drag="y"
           dragConstraints={{ top: 0, bottom: 80 }}
-          dragElastic={0.3}
+          dragElastic={0.2}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 1 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.6, duration: 0.4, ease: "easeOut" }}
           className="absolute z-10 cursor-grab active:cursor-grabbing"
           style={{ 
-            y: dragY,
             right: '47px',
             top: '113.5px',
             zIndex: 5
@@ -173,12 +172,12 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 : `0 4px 12px ${theme.shadowLight}`
             }}
             transition={{ duration: 0.2 }}
-            className="flex items-end justify-center select-none"
+            className="flex items-end justify-center select-none origin-top"
             style={{
               opacity: dragOpacity,
               scaleY: cardScaleY,
               width: '47px',
-              height: '77px',
+              minHeight: '77px',
               background: theme.analyticsBg,
               border: `1px solid ${theme.analyticsBorder}`,
               borderRadius: '0 0 12px 12px',
