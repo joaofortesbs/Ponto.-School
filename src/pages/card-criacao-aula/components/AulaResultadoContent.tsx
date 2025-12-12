@@ -67,6 +67,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
 
   const dragY = useMotionValue(0);
   const dragOpacity = useTransform(dragY, [0, 60], [1, 0.7]);
+  const cardScaleY = useTransform(dragY, [0, 80], [1, 1.18]);
 
   const theme = themeColors[themeMode];
 
@@ -159,7 +160,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           style={{ 
             y: dragY,
             right: '47px',
-            top: '20px',
+            top: '113.5px',
             zIndex: 5
           }}
           title="Arraste para baixo para trocar o tema"
@@ -208,8 +209,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             borderColor: theme.border
           }}
           transition={{ duration: 0.4 }}
-          className="rounded-2xl p-5 flex items-center justify-between relative z-20"
+          className="rounded-2xl p-5 flex items-center justify-between relative z-20 origin-top"
           style={{
+            scaleY: cardScaleY,
+            transformOrigin: 'top',
             background: theme.bgGradient,
             border: `1px solid ${theme.border}`,
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
