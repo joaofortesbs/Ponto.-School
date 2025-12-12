@@ -5,7 +5,6 @@ import AgenteProfessorCard from './components/AgenteProfessorCard';
 import PersonalizationStepCard from './components/PersonalizationStepCard';
 import SchoolToolsContent from './components/SchoolToolsContent';
 import StyleDefinitionContent from './components/StyleDefinitionContent';
-import StepIndicator from './components/StepIndicator';
 
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
@@ -134,14 +133,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
           </div>
           
           <div className="flex-1 overflow-auto p-6 flex flex-col items-center">
-            <div className="flex gap-6 w-full" style={{ maxWidth: '1100px', margin: '0 auto' }}>
-              {/* Step Indicator - Bolinhas e Linhas */}
-              <div className="flex-shrink-0">
-                <StepIndicator steps={3} />
-              </div>
-
-              {/* Cards */}
-              <div className="space-y-6 flex-1">
+            <div className="space-y-6 w-full" style={{ maxWidth: '1100px', margin: '0 auto' }}>
               <PersonalizationStepCard
                 stepNumber={1}
                 title="Personalize o estilo da sua aula:"
@@ -191,7 +183,6 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
               >
                 <StyleDefinitionContent />
               </PersonalizationStepCard>
-              </div>
             </div>
           </div>
         </motion.div>
