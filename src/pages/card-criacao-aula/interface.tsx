@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen, Sparkles } from 'lucide-react';
+import { X, BookOpen, Sparkles, User } from 'lucide-react';
 
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
@@ -12,10 +12,55 @@ const PANEL_BORDER_RADIUS = 24;
 const PANEL_HEADER_PADDING = 16;
 const PANEL_HEADER_BORDER_RADIUS = 24;
 
+const CARD_HEIGHT = 56;
+
 const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   isOpen,
   onClose
 }) => {
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>('Professor');
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const cachedAvatar = localStorage.getItem('userAvatarUrl');
+        const cachedName = localStorage.getItem('userFirstName');
+        
+        if (cachedAvatar) {
+          setUserAvatar(cachedAvatar);
+        }
+        if (cachedName) {
+          setUserName(cachedName);
+        }
+
+        const userId = localStorage.getItem('user_id');
+        if (userId) {
+          const response = await fetch(`/api/perfis?id=${userId}`);
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.data) {
+              if (result.data.imagem_avatar) {
+                setUserAvatar(result.data.imagem_avatar);
+                localStorage.setItem('userAvatarUrl', result.data.imagem_avatar);
+              }
+              if (result.data.nome_completo) {
+                const firstName = result.data.nome_completo.split(' ')[0];
+                setUserName(firstName);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao buscar perfil do usuário:', error);
+      }
+    };
+
+    if (isOpen) {
+      fetchUserProfile();
+    }
+  }, [isOpen]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -82,44 +127,62 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
           </div>
           
           <div className="flex-1 overflow-auto p-6">
-            <div className="flex flex-col items-center justify-center h-full">
+            <div className="space-y-4">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-center max-w-md"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1, duration: 0.3 }}
+                className="relative"
+                style={{ paddingLeft: `${CARD_HEIGHT / 2}px` }}
               >
                 <div 
-                  className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6"
-                  style={{ background: 'rgba(255, 107, 0, 0.15)' }}
-                >
-                  <BookOpen className="w-10 h-10 text-[#FF6B00]" />
-                </div>
-                
-                <h3 className="text-2xl font-bold text-white mb-3">
-                  Crie sua aula personalizada
-                </h3>
-                
-                <p className="text-white/60 text-sm mb-8">
-                  Configure todos os detalhes da sua aula: tema, objetivos, 
-                  materiais didáticos e muito mais. Use a IA para gerar 
-                  conteúdo automaticamente.
-                </p>
-                
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 rounded-2xl text-white font-semibold transition-all"
-                  style={{
-                    background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
-                    boxShadow: '0 8px 24px rgba(255, 107, 0, 0.4)'
+                  className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full overflow-hidden flex items-center justify-center"
+                  style={{ 
+                    width: `${CARD_HEIGHT}px`,
+                    height: `${CARD_HEIGHT}px`,
+                    zIndex: 10,
+                    background: userAvatar ? 'transparent' : 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+                    border: '3px solid #FF6B00',
+                    boxShadow: '0 4px 12px rgba(255, 107, 0, 0.4)'
                   }}
                 >
-                  <div className="flex items-center gap-3">
-                    <Sparkles className="w-5 h-5" />
-                    <span>Começar a criar</span>
-                  </div>
-                </motion.button>
+                  {userAvatar ? (
+                    <img 
+                      src={userAvatar} 
+                      alt="Avatar do Professor"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-6 h-6 text-white" />
+                  )}
+                </div>
+
+                <div 
+                  className="flex items-center"
+                  style={{
+                    height: `${CARD_HEIGHT}px`,
+                    background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
+                    borderRadius: `${CARD_HEIGHT}px`,
+                    border: '1px solid rgba(255, 107, 0, 0.3)',
+                    paddingLeft: `${CARD_HEIGHT / 2 + 16}px`,
+                    paddingRight: '24px'
+                  }}
+                >
+                  <span className="text-white font-semibold text-base">
+                    Agente Professor
+                  </span>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+                className="flex items-center justify-center py-8"
+              >
+                <div className="text-center text-white/40">
+                  <p className="text-sm">Cards 2 e 3 em desenvolvimento...</p>
+                </div>
               </motion.div>
             </div>
           </div>
