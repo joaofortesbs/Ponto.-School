@@ -5,7 +5,6 @@ import AgenteProfessorCard from './components/AgenteProfessorCard';
 import PersonalizationStepCard from './components/PersonalizationStepCard';
 import SchoolToolsContent from './components/SchoolToolsContent';
 import StyleDefinitionContent from './components/StyleDefinitionContent';
-import TimelineStepsContainer from './components/TimelineStepsContainer';
 
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
@@ -134,59 +133,60 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
           </div>
           
           <div className="flex-1 overflow-auto p-6 flex flex-col items-center">
-            <TimelineStepsContainer>
-              <div className="space-y-6" style={{ width: '100%' }}>
-                <PersonalizationStepCard
-                  stepNumber={1}
-                  title="Personalize o estilo da sua aula:"
-                  animationDelay={0.1}
-                >
-                  <div className="flex items-center justify-center gap-6">
-                    <AgenteProfessorCard 
-                      userAvatar={userAvatar}
-                      cardHeight={CARD_HEIGHT}
-                      cardMaxWidth={CARD_MAX_WIDTH}
-                      cardTitle="Agente Professor"
-                      animationDelay={0.15}
-                      showUserAvatar={true}
-                    />
-                    
-                    <AgenteProfessorCard 
-                      cardHeight={CARD_HEIGHT}
-                      cardMaxWidth={CARD_MAX_WIDTH}
-                      cardTitle="Add. uma Turma"
-                      animationDelay={0.2}
-                      showUserAvatar={false}
-                    />
+            <div className="space-y-6" style={{ width: '100%', position: 'relative', marginLeft: '40px' }}>
+              <PersonalizationStepCard
+                stepNumber={1}
+                title="Personalize o estilo da sua aula:"
+                animationDelay={0.1}
+                isLast={false}
+              >
+                <div className="flex items-center justify-center gap-6">
+                  <AgenteProfessorCard 
+                    userAvatar={userAvatar}
+                    cardHeight={CARD_HEIGHT}
+                    cardMaxWidth={CARD_MAX_WIDTH}
+                    cardTitle="Agente Professor"
+                    animationDelay={0.15}
+                    showUserAvatar={true}
+                  />
+                  
+                  <AgenteProfessorCard 
+                    cardHeight={CARD_HEIGHT}
+                    cardMaxWidth={CARD_MAX_WIDTH}
+                    cardTitle="Add. uma Turma"
+                    animationDelay={0.2}
+                    showUserAvatar={false}
+                  />
 
-                    <AgenteProfessorCard 
-                      cardHeight={CARD_HEIGHT}
-                      cardMaxWidth={CARD_MAX_WIDTH}
-                      cardTitle="Add. um Template"
-                      animationDelay={0.25}
-                      showUserAvatar={false}
-                      customIcon={LayoutGrid}
-                    />
-                  </div>
-                </PersonalizationStepCard>
+                  <AgenteProfessorCard 
+                    cardHeight={CARD_HEIGHT}
+                    cardMaxWidth={CARD_MAX_WIDTH}
+                    cardTitle="Add. um Template"
+                    animationDelay={0.25}
+                    showUserAvatar={false}
+                    customIcon={LayoutGrid}
+                  />
+                </div>
+              </PersonalizationStepCard>
 
-                <PersonalizationStepCard
-                  stepNumber={2}
-                  title="Configure as suas School Tools:"
-                  animationDelay={0.35}
-                >
-                  <SchoolToolsContent />
-                </PersonalizationStepCard>
+              <PersonalizationStepCard
+                stepNumber={2}
+                title="Configure as suas School Tools:"
+                animationDelay={0.35}
+                isLast={false}
+              >
+                <SchoolToolsContent />
+              </PersonalizationStepCard>
 
-                <PersonalizationStepCard
-                  stepNumber={3}
-                  title="Defina como vai ser o estilo da sua aula"
-                  animationDelay={0.4}
-                >
-                  <StyleDefinitionContent />
-                </PersonalizationStepCard>
-              </div>
-            </TimelineStepsContainer>
+              <PersonalizationStepCard
+                stepNumber={3}
+                title="Defina como vai ser o estilo da sua aula"
+                animationDelay={0.4}
+                isLast={true}
+              >
+                <StyleDefinitionContent />
+              </PersonalizationStepCard>
+            </div>
           </div>
         </motion.div>
       )}
