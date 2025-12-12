@@ -374,46 +374,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, x: 10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.55, duration: 0.4 }}
-        className="absolute top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
-        style={{ right: '-20px' }}
-      >
-        <svg
-          width="32"
-          height="48"
-          viewBox="0 0 32 48"
-          style={{ filter: 'drop-shadow(0 2px 8px rgba(255, 107, 0, 0.3))' }}
-        >
-          <defs>
-            <linearGradient id="tagGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: '#FF8533', stopOpacity: 1 }} />
-              <stop offset="100%" style={{ stopColor: '#FF6B00', stopOpacity: 1 }} />
-            </linearGradient>
-          </defs>
-          
-          {/* Bookmark shape */}
-          <path
-            d="M 4 0 L 28 0 Q 32 0 32 4 L 32 32 Q 32 36 28 36 L 4 36 Q 0 36 0 32 L 0 4 Q 0 0 4 0"
-            fill="url(#tagGradient)"
-            strokeWidth="0"
-          />
-          
-          {/* Bookmark fold cut-out */}
-          <circle cx="12" cy="4" r="3" fill="#030C2A" />
-          <circle cx="20" cy="4" r="3" fill="#030C2A" />
-          
-          {/* Bottom point of bookmark */}
-          <polygon
-            points="16,36 8,44 24,44"
-            fill="url(#tagGradient)"
-            strokeWidth="0"
-          />
-        </svg>
-      </motion.div>
-
       <div className="flex-1 mt-6">
       </div>
     </div>
