@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Zap, BookOpen, Heart, Briefcase, Monitor } from 'lucide-react';
+import { Plus, Zap, BookOpen, Heart, Briefcase, Monitor, LayoutGrid } from 'lucide-react';
 
 export interface Template {
   id: string;
@@ -106,18 +106,29 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 border-b border-[#FF6B00]/20">
-              <h3 className="text-white font-semibold text-base">Escolha seu template</h3>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#FF6B00]/20">
+              <div className="flex items-center gap-2">
+                <LayoutGrid className="w-5 h-5 text-[#FF6B00]" />
+                <h3 className="text-white font-semibold text-base">Escolha seu template</h3>
+              </div>
               <motion.button
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
               </motion.button>
             </div>
 
-            <div className="p-3 space-y-2 overflow-y-auto" style={{ maxHeight: '370px' }}>
+            <div 
+              className="px-3 py-2 space-y-1.5 overflow-y-auto hide-scrollbar"
+              style={{ 
+                maxHeight: '380px',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+              }}
+            >
+              <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
               {TEMPLATES.map((template) => {
                 const IconComponent = template.icon;
                 const isSelected = selectedTemplate?.id === template.id;
@@ -125,10 +136,10 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                 return (
                   <motion.div
                     key={template.id}
-                    whileHover={{ scale: 1.02, x: 4 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01, x: 2 }}
+                    whileTap={{ scale: 0.99 }}
                     onClick={() => handleSelectTemplate(template)}
-                    className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all"
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all"
                     style={{
                       background: isSelected 
                         ? 'linear-gradient(135deg, rgba(255, 107, 0, 0.25) 0%, rgba(255, 107, 0, 0.1) 100%)'
@@ -139,7 +150,7 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                     }}
                   >
                     <div 
-                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{
                         background: isSelected 
                           ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
@@ -148,13 +159,13 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                     >
                       <IconComponent 
                         className={isSelected ? 'text-white' : 'text-[#FF6B00]'} 
-                        style={{ width: '20px', height: '20px' }}
+                        style={{ width: '18px', height: '18px' }}
                       />
                     </div>
                     
                     <div className="flex-1 min-w-0">
                       <h4 className="text-white font-medium text-sm">{template.name}</h4>
-                      <p className="text-white/50 text-xs line-clamp-2 mt-0.5">
+                      <p className="text-white/50 text-xs line-clamp-1 mt-0.5">
                         {template.description}
                       </p>
                     </div>
