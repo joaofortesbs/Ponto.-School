@@ -441,29 +441,33 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
           </div>
           
           <div className="flex-1 overflow-auto relative" style={{ padding: `${CALENDAR_PADDING_VERTICAL_TOP}px ${CALENDAR_PADDING_HORIZONTAL}px` }}>
-            {events.length === 0 ? (
-              <div className="grid grid-cols-1 gap-4">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="aspect-[3/4] bg-[#1A2B3C]/50 border-2 border-[#FF6B00]/20 rounded-2xl flex items-center justify-center hover:border-[#FF6B00]/40 transition-colors cursor-pointer group"
-                  onClick={() => {
-                    setModalSelectedDay(1);
-                    setIsAddEventModalOpen(true);
-                  }}
-                >
-                  <div className="text-center">
-                    <div className="w-12 h-12 rounded-full border-2 border-dashed border-[#FF6B00]/30 flex items-center justify-center mx-auto mb-3 group-hover:border-[#FF6B00]/50 transition-colors">
-                      <Plus className="w-6 h-6 text-[#FF6B00]/40 group-hover:text-[#FF6B00]/60" />
-                    </div>
-                    <p className="text-white/30 text-sm group-hover:text-white/50 transition-colors">Criar Aula</p>
-                  </div>
-                </motion.div>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-7 gap-3 mb-4">
+            {/* Navegação do Mês */}
+            <div className="flex items-center justify-between mb-4">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={goToPreviousMonth}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </motion.button>
+              
+              <h3 className="text-white font-bold text-lg">
+                {MONTHS[currentMonth]} {currentYear}
+              </h3>
+              
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={goToNextMonth}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </motion.button>
+            </div>
+
+            {/* Grid de Dias da Semana */}
+            <div className="grid grid-cols-7 gap-3 mb-4">
                   {WEEKDAYS.map((day) => (
                     <div 
                       key={day} 
@@ -626,8 +630,6 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                 );
               })}
                 </div>
-              </>
-            )}
 
             {/* Modal de adicionar evento */}
             <AnimatePresence>
