@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3 } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 
 interface AulaResultadoContentProps {
@@ -371,6 +371,28 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
             </div>
           </motion.div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.4 }}
+        className="flex-shrink-0 mt-4"
+      >
+        <div
+          className="flex items-end justify-center"
+          style={{
+            width: '73px',
+            height: '117px',
+            background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.08) 100%)',
+            border: '1px solid rgba(255, 107, 0, 0.3)',
+            borderRadius: '0 0 12px 12px',
+            padding: '12px',
+            boxShadow: '0 4px 12px rgba(255, 107, 0, 0.1)'
+          }}
+        >
+          <BarChart3 className="w-6 h-6 text-[#FF6B00]" />
         </div>
       </motion.div>
 
