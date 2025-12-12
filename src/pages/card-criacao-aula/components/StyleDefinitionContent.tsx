@@ -1,17 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, Upload, Link } from 'lucide-react';
+import { Paperclip, Upload, Link, Zap } from 'lucide-react';
 
 const StyleDefinitionContent: React.FC = () => {
   const [assunto, setAssunto] = useState('');
   const [contexto, setContexto] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isSourcesDropdownOpen, setIsSourcesDropdownOpen] = useState(false);
+  const [isIntegrationsDropdownOpen, setIsIntegrationsDropdownOpen] = useState(false);
+  const sourcesDropdownRef = useRef<HTMLDivElement>(null);
+  const integrationsDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
+      if (sourcesDropdownRef.current && !sourcesDropdownRef.current.contains(event.target as Node)) {
+        setIsSourcesDropdownOpen(false);
+      }
+      if (integrationsDropdownRef.current && !integrationsDropdownRef.current.contains(event.target as Node)) {
+        setIsIntegrationsDropdownOpen(false);
       }
     };
 
@@ -19,9 +24,14 @@ const StyleDefinitionContent: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleOptionClick = (option: string) => {
-    console.log(`Selecionado: ${option}`);
-    setIsDropdownOpen(false);
+  const handleSourcesOptionClick = (option: string) => {
+    console.log(`Selecionado (Fontes e Recursos): ${option}`);
+    setIsSourcesDropdownOpen(false);
+  };
+
+  const handleIntegrationsOptionClick = (option: string) => {
+    console.log(`Selecionado (Integrações): ${option}`);
+    setIsIntegrationsDropdownOpen(false);
   };
 
   return (
@@ -64,75 +74,168 @@ const StyleDefinitionContent: React.FC = () => {
         />
       </motion.div>
 
-      {/* Card Fontes e Recursos com Dropdown */}
-      <motion.div
-        ref={dropdownRef}
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.3 }}
-        className="relative w-fit"
-      >
-        {/* Dropdown Menu */}
-        <AnimatePresence>
-          {isDropdownOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="absolute bottom-full left-0 mb-2 rounded-xl overflow-hidden shadow-lg"
-              style={{
-                background: '#0a1434',
-                border: '1px solid rgba(255, 107, 0, 0.3)',
-                zIndex: 9999,
-                width: '220px'
-              }}
-              onMouseDown={(e) => e.stopPropagation()}
-            >
-              <div className="p-2 flex flex-col gap-1">
-                {/* Adicionar arquivos */}
-                <motion.button
-                  whileHover={{ x: 4 }}
-                  onClick={() => handleOptionClick('Adicionar arquivos')}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-white/90 hover:text-white hover:bg-white/5 transition-colors rounded-lg"
-                >
-                  <Upload className="w-4 h-4 text-[#FF6B00]" />
-                  <span className="text-sm font-medium">Adicionar arquivos</span>
-                </motion.button>
-
-                {/* Adicionar links */}
-                <motion.button
-                  whileHover={{ x: 4 }}
-                  onClick={() => handleOptionClick('Adicionar links')}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-white/90 hover:text-white hover:bg-white/5 transition-colors rounded-lg"
-                >
-                  <Link className="w-4 h-4 text-[#FF6B00]" />
-                  <span className="text-sm font-medium">Adicionar links</span>
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Card Button - Reduzida em largura */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all"
-          style={{
-            background: isDropdownOpen
-              ? 'rgba(255, 107, 0, 0.15)'
-              : 'rgba(255, 107, 0, 0.08)',
-            border: '1px solid rgba(255, 107, 0, 0.3)',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap'
-          }}
+      {/* Cards de Ações: Fontes e Recursos + Integrações */}
+      <div className="flex gap-3">
+        {/* Card Fontes e Recursos com Dropdown */}
+        <motion.div
+          ref={sourcesDropdownRef}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+          className="relative w-fit"
         >
-          <Paperclip className="w-4 h-4 text-[#FF6B00]" />
-          <span className="text-sm font-medium text-white">Fontes e Recursos</span>
-        </motion.button>
-      </motion.div>
+          {/* Dropdown Menu */}
+          <AnimatePresence>
+            {isSourcesDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="absolute bottom-full left-0 mb-2 rounded-xl overflow-hidden shadow-lg"
+                style={{
+                  background: '#0a1434',
+                  border: '1px solid rgba(255, 107, 0, 0.3)',
+                  zIndex: 9999,
+                  width: '220px'
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <div className="p-2 flex flex-col gap-1">
+                  {/* Adicionar arquivos */}
+                  <motion.button
+                    whileHover={{ x: 4 }}
+                    onClick={() => handleSourcesOptionClick('Adicionar arquivos')}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-white/90 hover:text-white hover:bg-white/5 transition-colors rounded-lg"
+                  >
+                    <Upload className="w-4 h-4 text-[#FF6B00]" />
+                    <span className="text-sm font-medium">Adicionar arquivos</span>
+                  </motion.button>
+
+                  {/* Adicionar links */}
+                  <motion.button
+                    whileHover={{ x: 4 }}
+                    onClick={() => handleSourcesOptionClick('Adicionar links')}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-white/90 hover:text-white hover:bg-white/5 transition-colors rounded-lg"
+                  >
+                    <Link className="w-4 h-4 text-[#FF6B00]" />
+                    <span className="text-sm font-medium">Adicionar links</span>
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Card Button - Fontes e Recursos */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsSourcesDropdownOpen(!isSourcesDropdownOpen)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all"
+            style={{
+              background: isSourcesDropdownOpen
+                ? 'rgba(255, 107, 0, 0.15)'
+                : 'rgba(255, 107, 0, 0.08)',
+              border: '1px solid rgba(255, 107, 0, 0.3)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <Paperclip className="w-4 h-4 text-[#FF6B00]" />
+            <span className="text-sm font-medium text-white">Fontes e Recursos</span>
+          </motion.button>
+        </motion.div>
+
+        {/* Card Integrações com Dropdown */}
+        <motion.div
+          ref={integrationsDropdownRef}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.3 }}
+          className="relative w-fit"
+        >
+          {/* Dropdown Menu */}
+          <AnimatePresence>
+            {isIntegrationsDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="absolute bottom-full left-0 mb-2 rounded-xl overflow-hidden shadow-lg"
+                style={{
+                  background: '#0a1434',
+                  border: '1px solid rgba(255, 107, 0, 0.3)',
+                  zIndex: 9999,
+                  width: '220px'
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <div className="p-2 flex flex-col gap-1">
+                  {/* Notion */}
+                  <motion.button
+                    whileHover={{ x: 4 }}
+                    onClick={() => handleIntegrationsOptionClick('Notion')}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-white/90 hover:text-white hover:bg-white/5 transition-colors rounded-lg"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-[#FF6B00]" />
+                    <span className="text-sm font-medium">Notion</span>
+                  </motion.button>
+
+                  {/* Google Drive */}
+                  <motion.button
+                    whileHover={{ x: 4 }}
+                    onClick={() => handleIntegrationsOptionClick('Google Drive')}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-white/90 hover:text-white hover:bg-white/5 transition-colors rounded-lg"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-[#FF6B00]" />
+                    <span className="text-sm font-medium">Google Drive</span>
+                  </motion.button>
+
+                  {/* Gmail */}
+                  <motion.button
+                    whileHover={{ x: 4 }}
+                    onClick={() => handleIntegrationsOptionClick('Gmail')}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-white/90 hover:text-white hover:bg-white/5 transition-colors rounded-lg"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-[#FF6B00]" />
+                    <span className="text-sm font-medium">Gmail</span>
+                  </motion.button>
+
+                  {/* Outlook */}
+                  <motion.button
+                    whileHover={{ x: 4 }}
+                    onClick={() => handleIntegrationsOptionClick('Outlook')}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-white/90 hover:text-white hover:bg-white/5 transition-colors rounded-lg"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-[#FF6B00]" />
+                    <span className="text-sm font-medium">Outlook</span>
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Card Button - Integrações */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsIntegrationsDropdownOpen(!isIntegrationsDropdownOpen)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all"
+            style={{
+              background: isIntegrationsDropdownOpen
+                ? 'rgba(255, 107, 0, 0.15)'
+                : 'rgba(255, 107, 0, 0.08)',
+              border: '1px solid rgba(255, 107, 0, 0.3)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <Zap className="w-4 h-4 text-[#FF6B00]" />
+            <span className="text-sm font-medium text-white">Integrações</span>
+          </motion.button>
+        </motion.div>
+      </div>
     </div>
   );
 };
