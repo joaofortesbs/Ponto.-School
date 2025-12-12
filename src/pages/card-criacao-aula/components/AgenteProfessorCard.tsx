@@ -5,12 +5,14 @@ import { User } from 'lucide-react';
 interface AgenteProfessorCardProps {
   userAvatar: string | null;
   cardHeight: number;
+  cardMaxWidth: number;
   animationDelay?: number;
 }
 
 const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
   userAvatar,
   cardHeight,
+  cardMaxWidth,
   animationDelay = 0.1
 }) => {
   return (
@@ -19,7 +21,7 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: animationDelay, duration: 0.3 }}
       className="relative w-fit"
-      style={{ maxWidth: '420px' }}
+      style={{ maxWidth: `${cardMaxWidth}px` }}
     >
       {/* Componente Circular com Imagem de Perfil */}
       <div 
