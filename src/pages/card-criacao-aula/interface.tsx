@@ -9,6 +9,7 @@ import StyleDefinitionContent from './components/StyleDefinitionContent';
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  onGerarAula: () => void;
 }
 
 const PANEL_PADDING_HORIZONTAL = 13;
@@ -22,7 +23,8 @@ const TEXT_PADDING_LEFT = 50; // Distância do texto "Agente Professor" a partir
 
 const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   isOpen,
-  onClose
+  onClose,
+  onGerarAula
 }) => {
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('Professor');
@@ -67,28 +69,49 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
     }
   }, [isOpen]);
 
+  const handleGerarAula = () => {
+    console.log('🎯 Gerando aula...');
+    onGerarAula();
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          exit={{ y: '100%' }}
-          transition={{ 
-            type: 'spring',
-            damping: 30,
-            stiffness: 300,
-            mass: 0.8
-          }}
-          className="absolute inset-0 z-40 flex flex-col"
-          style={{ 
-            background: '#030C2A',
-            borderRadius: `${PANEL_BORDER_RADIUS}px`,
-            border: '1px solid rgba(255, 107, 0, 0.2)',
-            margin: `0 ${PANEL_PADDING_HORIZONTAL}px`,
-            maxWidth: `calc(100% - ${PANEL_PADDING_HORIZONTAL * 2}px)`
-          }}
-        >
+        <>
+          {/* Overlay escuro */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          
+          {/* Modal centralizado */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ 
+              type: 'spring',
+              damping: 25,
+              stiffness: 300,
+              mass: 0.8
+            }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none"
+          >
+            <div 
+              className="flex flex-col max-h-[90vh] w-full pointer-events-auto"
+              style={{ 
+                background: '#030C2A',
+                borderRadius: `${PANEL_BORDER_RADIUS}px`,
+                border: '1px solid rgba(255, 107, 0, 0.3)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 107, 0, 0.1)',
+                maxWidth: '1200px'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
           <div 
             className="flex items-center justify-between border-b border-[#FF6B00]/20 flex-shrink-0 relative z-50" 
             style={{ 
@@ -184,11 +207,13 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 animationDelay={0.4}
                 icon={<PenTool className="w-5 h-5" />}
               >
-                <StyleDefinitionContent />
+                <StyleDefinitionContent onGerarAula={handleGerarAula} />
               </PersonalizationStepCard>
             </div>
           </div>
-        </motion.div>
+            </div>
+          </motion.div>
+        </>
       )}
     </AnimatePresence>
   );
