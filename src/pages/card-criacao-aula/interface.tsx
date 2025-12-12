@@ -16,6 +16,9 @@ const CARD_HEIGHT = 56;
 const CARD_MAX_WIDTH = 250; // Largura máxima do card de personalização (em pixels)
 const TEXT_PADDING_LEFT = 40; // Distância do texto "Agente Professor" a partir da esquerda (em pixels)
 
+const WRAPPER_CARD_PADDING = 20; // Padding interno do card wrapper (em pixels)
+const WRAPPER_CARD_RADIUS = 20; // Border radius do card wrapper (em pixels)
+
 const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   isOpen,
   onClose
@@ -129,47 +132,59 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
           </div>
           
           <div className="flex-1 overflow-auto p-6">
-            <div className="space-y-4" style={{ maxWidth: `${CARD_MAX_WIDTH}px` }}>
+            <div className="space-y-4">
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1, duration: 0.3 }}
-                className="relative"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, rgba(255, 107, 0, 0.05) 100%)',
+                  border: '1px solid rgba(255, 107, 0, 0.2)',
+                  borderRadius: `${WRAPPER_CARD_RADIUS}px`,
+                  padding: `${WRAPPER_CARD_PADDING}px`
+                }}
               >
-                <div 
-                  className="absolute -left-4 top-1/2 -translate-y-1/2 rounded-full overflow-hidden flex items-center justify-center"
-                  style={{ 
-                    width: `${CARD_HEIGHT}px`,
-                    height: `${CARD_HEIGHT}px`,
-                    zIndex: 10,
-                    background: userAvatar ? 'transparent' : 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
-                    border: '3px solid #FF6B00',
-                    boxShadow: '0 4px 12px rgba(255, 107, 0, 0.4)'
-                  }}
-                >
-                  {userAvatar ? (
-                    <img 
-                      src={userAvatar} 
-                      alt="Avatar do Professor"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-6 h-6 text-white" />
-                  )}
-                </div>
+                <h3 className="text-white font-bold text-sm mb-4">
+                  1°: Personalize o estilo da sua aula:
+                </h3>
 
-                <div 
-                  className="flex items-center justify-center"
-                  style={{
-                    height: `${CARD_HEIGHT}px`,
-                    background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
-                    borderRadius: `${CARD_HEIGHT}px`,
-                    border: '1px solid rgba(255, 107, 0, 0.3)'
-                  }}
-                >
-                  <span className="text-white font-semibold text-base">
-                    Agente Professor
-                  </span>
+                <div className="relative" style={{ paddingLeft: `${CARD_MAX_WIDTH + 20}px` }}>
+                  <div 
+                    className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full overflow-hidden flex items-center justify-center"
+                    style={{ 
+                      width: `${CARD_HEIGHT}px`,
+                      height: `${CARD_HEIGHT}px`,
+                      zIndex: 10,
+                      background: userAvatar ? 'transparent' : 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+                      border: '3px solid #FF6B00',
+                      boxShadow: '0 4px 12px rgba(255, 107, 0, 0.4)'
+                    }}
+                  >
+                    {userAvatar ? (
+                      <img 
+                        src={userAvatar} 
+                        alt="Avatar do Professor"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-white" />
+                    )}
+                  </div>
+
+                  <div 
+                    className="flex items-center justify-center"
+                    style={{
+                      height: `${CARD_HEIGHT}px`,
+                      width: `${CARD_MAX_WIDTH}px`,
+                      background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
+                      borderRadius: `${CARD_HEIGHT}px`,
+                      border: '1px solid rgba(255, 107, 0, 0.3)'
+                    }}
+                  >
+                    <span className="text-white font-semibold text-base">
+                      Agente Professor
+                    </span>
+                  </div>
                 </div>
               </motion.div>
 
