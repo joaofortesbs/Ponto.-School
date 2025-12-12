@@ -10,7 +10,7 @@ import { Template } from './components/TemplateDropdown';
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  onGerarAula: () => void;
+  onGerarAula: (template: Template | null) => void;
 }
 
 const PANEL_PADDING_HORIZONTAL = 13;
@@ -79,7 +79,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
 
   const handleGerarAula = () => {
     console.log('🎯 Gerando aula...');
-    onGerarAula();
+    onGerarAula(selectedTemplate);
   };
 
   const handleTemplateChange = (template: Template | null) => {

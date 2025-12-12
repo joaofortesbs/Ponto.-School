@@ -8,6 +8,7 @@ import ColecoesGrid from './components/grids/ColecoesGrid';
 import CalendarioSchoolPanel from '@/pages/calendario-school/card-modal/interface';
 import CriacaoAulaPanel from '@/pages/card-criacao-aula/interface';
 import ConstrucaoAulaPanel from '@/pages/card-criacao-aula/ConstrucaoAulaPanel';
+import { Template } from '@/pages/card-criacao-aula/components/TemplateDropdown';
 
 export type GridType = 'atividades' | 'aulas' | 'colecoes';
 
@@ -18,6 +19,7 @@ const AtividadesInterface: React.FC = () => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isPersonalizacaoModalOpen, setIsPersonalizacaoModalOpen] = useState(false);
   const [isConstrucaoAulaOpen, setIsConstrucaoAulaOpen] = useState(false);
+  const [selectedAulaTemplate, setSelectedAulaTemplate] = useState<Template | null>(null);
 
   const handleAtividadesCountChange = (count: number) => {
     setCounts(prev => ({ ...prev, atividades: count }));
@@ -43,8 +45,9 @@ const AtividadesInterface: React.FC = () => {
     setIsPersonalizacaoModalOpen(false);
   };
 
-  const handleGerarAula = () => {
-    console.log('🎯 Gerando aula - fechando modal e abrindo card de construção');
+  const handleGerarAula = (template: Template | null) => {
+    console.log('🎯 Gerando aula - fechando modal e abrindo card de construção', template);
+    setSelectedAulaTemplate(template);
     setIsPersonalizacaoModalOpen(false);
     setIsConstrucaoAulaOpen(true);
   };
@@ -150,6 +153,8 @@ const AtividadesInterface: React.FC = () => {
       <ConstrucaoAulaPanel 
         isOpen={isConstrucaoAulaOpen}
         onClose={handleCloseConstrucaoAula}
+        aulaName="Minha Nova Aula"
+        selectedTemplate={selectedAulaTemplate}
       />
     </div>
   );
