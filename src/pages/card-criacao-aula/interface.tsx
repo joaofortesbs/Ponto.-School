@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen, Sparkles, User } from 'lucide-react';
+import { X, BookOpen, Sparkles } from 'lucide-react';
+import AgenteProfessorCard from './components/AgenteProfessorCard';
 
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
@@ -130,48 +131,11 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
           
           <div className="flex-1 overflow-auto p-6">
             <div className="space-y-4" style={{ maxWidth: `${CARD_MAX_WIDTH}px` }}>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1, duration: 0.3 }}
-                className="relative"
-              >
-                <div 
-                  className="absolute -left-4 top-1/2 -translate-y-1/2 rounded-full overflow-hidden flex items-center justify-center"
-                  style={{ 
-                    width: `${CARD_HEIGHT}px`,
-                    height: `${CARD_HEIGHT}px`,
-                    zIndex: 10,
-                    background: userAvatar ? 'transparent' : 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
-                    border: '3px solid #FF6B00',
-                    boxShadow: '0 4px 12px rgba(255, 107, 0, 0.4)'
-                  }}
-                >
-                  {userAvatar ? (
-                    <img 
-                      src={userAvatar} 
-                      alt="Avatar do Professor"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-6 h-6 text-white" />
-                  )}
-                </div>
-
-                <div 
-                  className="flex items-center justify-center"
-                  style={{
-                    height: `${CARD_HEIGHT}px`,
-                    background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
-                    borderRadius: `${CARD_HEIGHT}px`,
-                    border: '1px solid rgba(255, 107, 0, 0.3)'
-                  }}
-                >
-                  <span className="text-white font-semibold text-base">
-                    Agente Professor
-                  </span>
-                </div>
-              </motion.div>
+              <AgenteProfessorCard 
+                userAvatar={userAvatar}
+                cardHeight={CARD_HEIGHT}
+                animationDelay={0.1}
+              />
 
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
