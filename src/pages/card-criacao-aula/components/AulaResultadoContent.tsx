@@ -125,6 +125,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     if (info.offset.y > 50) {
       setThemeMode(prev => prev === 'orange' ? 'purple' : 'orange');
     }
+    dragY.set(0);
   };
 
   const handleDragStart = () => {
@@ -151,20 +152,19 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           dragElastic={0.3}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
-          style={{ y: dragY }}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.4, ease: "easeOut" }}
           className="absolute z-10 cursor-grab active:cursor-grabbing"
           style={{ 
+            y: dragY,
             right: '47px',
-            top: '-10px',
+            top: '20px',
             zIndex: 5
           }}
           title="Arraste para baixo para trocar o tema"
         >
           <motion.div
-            style={{ opacity: dragOpacity }}
             animate={{
               scale: isDragging ? 1.05 : 1,
               boxShadow: isDragging 
@@ -174,6 +174,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             transition={{ duration: 0.2 }}
             className="flex items-end justify-center select-none"
             style={{
+              opacity: dragOpacity,
               width: '47px',
               height: '77px',
               background: theme.analyticsBg,
@@ -444,7 +445,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute right-0 top-full mt-2 rounded-xl overflow-hidden z-50"
+                    className="absolute right-0 top-full mt-4 rounded-xl overflow-hidden z-50"  // Changed mt-2 to mt-4 to move down
                     style={{
                       background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
                       border: `1px solid ${theme.menuBorder}`,
