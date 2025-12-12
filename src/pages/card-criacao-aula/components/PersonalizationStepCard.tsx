@@ -21,21 +21,26 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
       transition={{ delay: animationDelay, duration: 0.3 }}
       className="w-full"
     >
-      {/* Título da Seção */}
-      <h3 className="text-white font-semibold text-sm mb-4">
-        <span className="text-[#FF6B00]">{stepNumber}°:</span> {title}
-      </h3>
-
       {/* Card Container */}
       <div 
-        className="p-6 rounded-2xl"
+        className="rounded-2xl"
         style={{
           background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, rgba(255, 107, 0, 0.05) 100%)',
           border: '1px solid rgba(255, 107, 0, 0.25)',
           boxShadow: '0 4px 16px rgba(255, 107, 0, 0.1)'
         }}
       >
-        {children}
+        {/* Título dentro do Card */}
+        <div className="px-6 pt-6 pb-4 border-b border-[#FF6B00]/15">
+          <h3 className="text-white font-bold text-lg">
+            <span className="text-[#FF6B00]">{stepNumber}°:</span> {title}
+          </h3>
+        </div>
+
+        {/* Conteúdo dentro do Card */}
+        <div className="p-6">
+          {children}
+        </div>
       </div>
     </motion.div>
   );
