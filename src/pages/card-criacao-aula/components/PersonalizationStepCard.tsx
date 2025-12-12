@@ -59,9 +59,9 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
           style={{
             position: 'absolute',
             left: '11px',
-            top: '48px',
+            top: '12px',
             width: '2px',
-            height: '56px',
+            height: 'calc(100% + 24px)',
             background: 'linear-gradient(180deg, rgba(255, 107, 0, 0.5) 0%, rgba(255, 107, 0, 0.3) 100%)',
             zIndex: 0
           }}
