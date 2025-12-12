@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Zap, BookOpen, Heart, Briefcase, Monitor, LayoutGrid } from 'lucide-react';
+import { Plus, Zap, BookOpen, Heart, Briefcase, Monitor, LayoutGrid, ChevronLeft, Check } from 'lucide-react';
+
+// Lista de ícones disponíveis para templates
+const AVAILABLE_ICONS = [
+  { name: 'Zap', icon: Zap },
+  { name: 'BookOpen', icon: BookOpen },
+  { name: 'Heart', icon: Heart },
+  { name: 'Briefcase', icon: Briefcase },
+  { name: 'Monitor', icon: Monitor },
+];
 
 export interface Template {
   id: string;
@@ -59,6 +68,11 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
   anchorRef
 }) => {
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [isCreating, setIsCreating] = useState(false);
+  const [customTemplates, setCustomTemplates] = useState<Template[]>([]);
+  const [templateName, setTemplateName] = useState('');
+  const [templateInstructions, setTemplateInstructions] = useState('');
+  const [selectedIconIndex, setSelectedIconIndex] = useState(0);
 
   useEffect(() => {
     if (isOpen && anchorRef.current) {
@@ -77,6 +91,34 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
     onSelectTemplate(template);
     onClose();
   };
+
+  const handleCreateTemplate = () => {
+    if (templateName.trim() === '' || templateInstructions.trim() === '') {
+      return;
+    }
+
+    const newTemplate: Template = {
+      id: `custom-${Date.now()}`,
+      name: templateName,
+      description: templateInstructions,
+      icon: AVAILABLE_ICONS[selectedIconIndex].icon
+    };
+
+    setCustomTemplates(prev => [newTemplate, ...prev]);
+    setTemplateName('');
+    setTemplateInstructions('');
+    setSelectedIconIndex(0);
+    setIsCreating(false);
+  };
+
+  const handleBackFromCreation = () => {
+    setIsCreating(false);
+    setTemplateName('');
+    setTemplateInstructions('');
+    setSelectedIconIndex(0);
+  };
+
+  const allTemplates = [...customTemplates, ...TEMPLATES];
 
   const dropdownContent = (
     <AnimatePresence>
@@ -106,73 +148,250 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#FF6B00]/20">
-              <div className="flex items-center gap-2">
-                <LayoutGrid className="w-5 h-5 text-[#FF6B00]" />
-                <h3 className="text-white font-semibold text-base">Escolha seu template</h3>
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.1, rotate: 90 }}
-                whileTap={{ scale: 0.9 }}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-              </motion.button>
-            </div>
-
-            <div 
-              className="px-3 py-2 space-y-1.5 overflow-y-auto hide-scrollbar"
-              style={{ 
-                maxHeight: '380px',
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none'
-              }}
-            >
-              <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
-              {TEMPLATES.map((template) => {
-                const IconComponent = template.icon;
-                const isSelected = selectedTemplate?.id === template.id;
-                
-                return (
-                  <motion.div
-                    key={template.id}
-                    whileHover={{ scale: 1.01, x: 2 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => handleSelectTemplate(template)}
-                    className="flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all"
-                    style={{
-                      background: isSelected 
-                        ? 'linear-gradient(135deg, rgba(255, 107, 0, 0.25) 0%, rgba(255, 107, 0, 0.1) 100%)'
-                        : 'rgba(255, 255, 255, 0.03)',
-                      border: isSelected 
-                        ? '1px solid rgba(255, 107, 0, 0.5)'
-                        : '1px solid rgba(255, 255, 255, 0.08)'
-                    }}
-                  >
-                    <div 
-                      className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{
-                        background: isSelected 
-                          ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
-                          : 'rgba(255, 107, 0, 0.15)'
-                      }}
+            <AnimatePresence mode="wait">
+              {isCreating ? (
+                <motion.div
+                  key="creation-mode"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col h-full"
+                >
+                  {/* Header */}
+                  <div className="flex items-center gap-3 px-4 py-3 border-b border-[#FF6B00]/20">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleBackFromCreation}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all"
                     >
-                      <IconComponent 
-                        className={isSelected ? 'text-white' : 'text-[#FF6B00]'} 
-                        style={{ width: '18px', height: '18px' }}
+                      <ChevronLeft className="w-5 h-5" />
+                    </motion.button>
+                    <h3 className="text-white font-semibold text-base">Criar template</h3>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 hide-scrollbar">
+                    <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+                    
+                    {/* Nome e Ícone na mesma linha */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-white/70 uppercase tracking-wide">Nome</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={templateName}
+                          onChange={(e) => setTemplateName(e.target.value)}
+                          placeholder="Ex: Meu Template"
+                          className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:border-[#FF6B00] focus:outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Seletor de Ícone */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-white/70 uppercase tracking-wide">Ícone</label>
+                      <div className="flex gap-2">
+                        {AVAILABLE_ICONS.map((item, index) => {
+                          const IconComponent = item.icon;
+                          const isSelected = selectedIconIndex === index;
+                          return (
+                            <motion.button
+                              key={index}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => setSelectedIconIndex(index)}
+                              className="w-10 h-10 rounded-lg flex items-center justify-center transition-all flex-shrink-0"
+                              style={{
+                                background: isSelected
+                                  ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
+                                  : 'rgba(255, 107, 0, 0.15)',
+                                border: isSelected
+                                  ? '1px solid #FF6B00'
+                                  : '1px solid rgba(255, 107, 0, 0.3)'
+                              }}
+                            >
+                              <IconComponent 
+                                className={isSelected ? 'text-white' : 'text-[#FF6B00]'} 
+                                style={{ width: '18px', height: '18px' }}
+                              />
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Instruções */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-white/70 uppercase tracking-wide">Instruções</label>
+                      <textarea
+                        value={templateInstructions}
+                        onChange={(e) => setTemplateInstructions(e.target.value)}
+                        placeholder="Descreva como este template funciona..."
+                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:border-[#FF6B00] focus:outline-none transition-all resize-none"
+                        rows={4}
                       />
                     </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-white font-medium text-sm">{template.name}</h4>
-                      <p className="text-white/50 text-xs line-clamp-1 mt-0.5">
-                        {template.description}
-                      </p>
+                  </div>
+
+                  {/* Botão Adicionar */}
+                  <div className="px-4 py-3 border-t border-[#FF6B00]/20 bg-black/20">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleCreateTemplate}
+                      disabled={!templateName.trim() || !templateInstructions.trim()}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-white transition-all"
+                      style={{
+                        background: templateName.trim() && templateInstructions.trim()
+                          ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
+                          : 'rgba(255, 107, 0, 0.3)',
+                        cursor: templateName.trim() && templateInstructions.trim() ? 'pointer' : 'not-allowed',
+                        opacity: templateName.trim() && templateInstructions.trim() ? 1 : 0.6
+                      }}
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Adicionar</span>
+                    </motion.button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="selection-mode"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col h-full"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-[#FF6B00]/20">
+                    <div className="flex items-center gap-2">
+                      <LayoutGrid className="w-5 h-5 text-[#FF6B00]" />
+                      <h3 className="text-white font-semibold text-base">Escolha seu template</h3>
                     </div>
-                  </motion.div>
-                );
-              })}
-            </div>
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setIsCreating(true)}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </motion.button>
+                  </div>
+
+                  {/* Content */}
+                  <div 
+                    className="px-3 py-2 space-y-1.5 overflow-y-auto hide-scrollbar flex-1 flex flex-col"
+                    style={{ 
+                      maxHeight: '380px',
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none'
+                    }}
+                  >
+                    <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+                    
+                    {/* Templates Customizados */}
+                    {customTemplates.length > 0 && (
+                      <>
+                        {customTemplates.map((template) => {
+                          const IconComponent = template.icon;
+                          const isSelected = selectedTemplate?.id === template.id;
+                          
+                          return (
+                            <motion.div
+                              key={template.id}
+                              whileHover={{ scale: 1.01, x: 2 }}
+                              whileTap={{ scale: 0.99 }}
+                              onClick={() => handleSelectTemplate(template)}
+                              className="flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all"
+                              style={{
+                                background: isSelected 
+                                  ? 'linear-gradient(135deg, rgba(255, 107, 0, 0.25) 0%, rgba(255, 107, 0, 0.1) 100%)'
+                                  : 'rgba(255, 255, 255, 0.03)',
+                                border: isSelected 
+                                  ? '1px solid rgba(255, 107, 0, 0.5)'
+                                  : '1px solid rgba(255, 255, 255, 0.08)'
+                              }}
+                            >
+                              <div 
+                                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{
+                                  background: isSelected 
+                                    ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
+                                    : 'rgba(255, 107, 0, 0.15)'
+                                }}
+                              >
+                                <IconComponent 
+                                  className={isSelected ? 'text-white' : 'text-[#FF6B00]'} 
+                                  style={{ width: '18px', height: '18px' }}
+                                />
+                              </div>
+                              
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-white font-medium text-sm">{template.name}</h4>
+                                <p className="text-white/50 text-xs line-clamp-1 mt-0.5">
+                                  {template.description}
+                                </p>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                        
+                        {/* Linha separadora */}
+                        <div className="h-px bg-gradient-to-r from-transparent via-[#FF6B00]/30 to-transparent my-2" />
+                      </>
+                    )}
+
+                    {/* Templates Padrão */}
+                    {TEMPLATES.map((template) => {
+                      const IconComponent = template.icon;
+                      const isSelected = selectedTemplate?.id === template.id;
+                      
+                      return (
+                        <motion.div
+                          key={template.id}
+                          whileHover={{ scale: 1.01, x: 2 }}
+                          whileTap={{ scale: 0.99 }}
+                          onClick={() => handleSelectTemplate(template)}
+                          className="flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all"
+                          style={{
+                            background: isSelected 
+                              ? 'linear-gradient(135deg, rgba(255, 107, 0, 0.25) 0%, rgba(255, 107, 0, 0.1) 100%)'
+                              : 'rgba(255, 255, 255, 0.03)',
+                            border: isSelected 
+                              ? '1px solid rgba(255, 107, 0, 0.5)'
+                              : '1px solid rgba(255, 255, 255, 0.08)'
+                          }}
+                        >
+                          <div 
+                            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{
+                              background: isSelected 
+                                ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
+                                : 'rgba(255, 107, 0, 0.15)'
+                            }}
+                          >
+                            <IconComponent 
+                              className={isSelected ? 'text-white' : 'text-[#FF6B00]'} 
+                              style={{ width: '18px', height: '18px' }}
+                            />
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-white font-medium text-sm">{template.name}</h4>
+                            <p className="text-white/50 text-xs line-clamp-1 mt-0.5">
+                              {template.description}
+                            </p>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </>
       )}
