@@ -20,16 +20,15 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: animationDelay, duration: 0.3 }}
-      className="relative w-fit"
-      style={{ maxWidth: `${cardMaxWidth}px` }}
+      className="flex items-center gap-0"
+      style={{ maxWidth: `${cardMaxWidth}px`, marginLeft: '12px' }}
     >
       {/* Componente Circular com Imagem de Perfil */}
       <div 
-        className="absolute -left-4 top-1/2 -translate-y-1/2 rounded-full overflow-hidden flex items-center justify-center"
+        className="flex-shrink-0 rounded-full overflow-hidden flex items-center justify-center"
         style={{ 
           width: `${cardHeight}px`,
           height: `${cardHeight}px`,
-          zIndex: 10,
           background: userAvatar ? 'transparent' : 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
           border: '3px solid #FF6B00',
           boxShadow: '0 4px 12px rgba(255, 107, 0, 0.4)'
@@ -52,11 +51,12 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
         style={{
           height: `${cardHeight}px`,
           width: '100%',
-          minWidth: '280px',
+          minWidth: '220px',
+          marginLeft: '-20px',
           background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
           borderRadius: `${cardHeight}px`,
           border: '1px solid rgba(255, 107, 0, 0.3)',
-          paddingLeft: '60px',
+          paddingLeft: '50px',
           paddingRight: '32px'
         }}
       >
