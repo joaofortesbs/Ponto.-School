@@ -20,7 +20,7 @@ const PANEL_HEADER_BORDER_RADIUS = 24;
 // Dimensões escaladas proporcionalmente para modal de 900px (redução de 25% do tamanho original)
 const CARD_HEIGHT = 42; // Reduzido de 56px (75% do original)
 const CARD_MAX_WIDTH = 310; // Reduzido de 450px para 310px (melhor proporção para 3 cards)
-const CARD_GAP = '8px'; // Gap muito pequeno entre cards internos (consistente com nova largura)
+const CARD_GAP = '16px'; // Gap entre cards internos
 const TEXT_PADDING_LEFT = 50; // Distância do texto "Agente Professor" a partir da esquerda (em pixels)
 
 const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
@@ -134,19 +134,6 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
             </div>
             
             <div className="flex items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-semibold transition-all"
-                style={{
-                  background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
-                  boxShadow: '0 4px 15px rgba(255, 107, 0, 0.3)'
-                }}
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Criar com IA</span>
-              </motion.button>
-              
               <motion.button
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
