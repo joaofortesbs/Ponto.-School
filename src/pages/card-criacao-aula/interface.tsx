@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, BookOpen, Sparkles, LayoutGrid } from 'lucide-react';
 import AgenteProfessorCard from './components/AgenteProfessorCard';
 import PersonalizationStepCard from './components/PersonalizationStepCard';
+import SchoolToolsContent from './components/SchoolToolsContent';
 
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
@@ -171,9 +172,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 title="Configure as suas School Tools"
                 animationDelay={0.35}
               >
-                <div className="flex items-center justify-center">
-                  {/* Conteúdo vazio para preenchimento futuro */}
-                </div>
+                <SchoolToolsContent />
               </PersonalizationStepCard>
             </div>
           </div>
