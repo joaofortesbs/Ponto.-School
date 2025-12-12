@@ -33,6 +33,9 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   const [userName, setUserName] = useState<string>('Professor');
   const [expandedCard, setExpandedCard] = useState<number>(1);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [isTemplateCompleted, setIsTemplateCompleted] = useState(false);
+  const [isSchoolToolsCompleted, setIsSchoolToolsCompleted] = useState(false);
+  const [isStyleCompleted, setIsStyleCompleted] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -77,6 +80,11 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   const handleGerarAula = () => {
     console.log('🎯 Gerando aula...');
     onGerarAula();
+  };
+
+  const handleTemplateChange = (template: Template | null) => {
+    setSelectedTemplate(template);
+    setIsTemplateCompleted(template !== null);
   };
 
   return (
@@ -156,6 +164,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 icon={<Palette className="w-5 h-5" />}
                 isOpen={expandedCard === 1}
                 onToggle={() => setExpandedCard(1)}
+                isCompleted={isTemplateCompleted}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: CARD_GAP }}>
                   <AgenteProfessorCard 
@@ -184,7 +193,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                     customIcon={LayoutGrid}
                     isTemplateCard={true}
                     selectedTemplate={selectedTemplate}
-                    onSelectTemplate={setSelectedTemplate}
+                    onSelectTemplate={handleTemplateChange}
                   />
                 </div>
               </PersonalizationStepCard>
@@ -196,19 +205,21 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 icon={<Settings className="w-5 h-5" />}
                 isOpen={expandedCard === 2}
                 onToggle={() => setExpandedCard(2)}
+                isCompleted={isSchoolToolsCompleted}
               >
-                <SchoolToolsContent />
+                <SchoolToolsContent onCompletionChange={setIsSchoolToolsCompleted} />
               </PersonalizationStepCard>
 
               <PersonalizationStepCard
                 stepNumber={3}
-                title="Defina como vai ser o estilo da sua aula:"
+                title="Defina qual é o objetivo da sua aula:"
                 animationDelay={0.4}
                 icon={<PenTool className="w-5 h-5" />}
                 isOpen={expandedCard === 3}
                 onToggle={() => setExpandedCard(3)}
+                isCompleted={isStyleCompleted}
               >
-                <StyleDefinitionContent />
+                <StyleDefinitionContent onCompletionChange={setIsStyleCompleted} />
               </PersonalizationStepCard>
 
               {/* Botão Gerar Aula - Fora dos cards */}

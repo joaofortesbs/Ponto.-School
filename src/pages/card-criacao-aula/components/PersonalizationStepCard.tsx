@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 
 interface PersonalizationStepCardProps {
   stepNumber: number;
@@ -10,6 +10,7 @@ interface PersonalizationStepCardProps {
   icon: React.ReactNode;
   isOpen: boolean;
   onToggle: () => void;
+  isCompleted?: boolean;
 }
 
 const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
@@ -19,7 +20,8 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
   animationDelay = 0,
   icon,
   isOpen,
-  onToggle
+  onToggle,
+  isCompleted = false
 }) => {
   const handleHeaderClick = () => {
     onToggle();
@@ -43,16 +45,29 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
           minWidth: '24px'
         }}
       >
-        <div
-          className="rounded-full"
+        <motion.div
+          animate={{
+            backgroundColor: isCompleted ? '#FF6B00' : 'rgba(255, 107, 0, 0.1)'
+          }}
+          transition={{ duration: 0.3 }}
+          className="rounded-full flex items-center justify-center"
           style={{
             width: '24px',
             height: '24px',
             border: '2px solid #FF6B00',
-            background: 'rgba(255, 107, 0, 0.1)',
             zIndex: 10
           }}
-        />
+        >
+          {isCompleted && (
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ duration: 0.3, type: 'spring', stiffness: 200 }}
+            >
+              <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+            </motion.div>
+          )}
+        </motion.div>
       </motion.div>
 
       {/* Card Container */}

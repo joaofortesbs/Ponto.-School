@@ -7,7 +7,11 @@ interface SchoolTool {
   name: string;
 }
 
-const SchoolToolsContent: React.FC = () => {
+interface SchoolToolsContentProps {
+  onCompletionChange?: (isComplete: boolean) => void;
+}
+
+const SchoolToolsContent: React.FC<SchoolToolsContentProps> = ({ onCompletionChange }) => {
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
 
   const tools: SchoolTool[] = [
@@ -17,11 +21,13 @@ const SchoolToolsContent: React.FC = () => {
   ];
 
   const toggleTool = (toolId: string) => {
-    setSelectedTools(prev => 
-      prev.includes(toolId) 
+    setSelectedTools(prev => {
+      const updated = prev.includes(toolId) 
         ? prev.filter(id => id !== toolId)
-        : [...prev, toolId]
-    );
+        : [...prev, toolId];
+      onCompletionChange?.(updated.length > 0);
+      return updated;
+    });
   };
 
   return (
