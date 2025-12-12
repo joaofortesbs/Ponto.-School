@@ -130,8 +130,8 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
             </div>
           </div>
           
-          <div className="flex-1 overflow-auto p-6">
-            <div className="space-y-6" style={{ maxWidth: `calc(100% - 48px)` }}>
+          <div className="flex-1 overflow-auto p-6 flex flex-col items-center">
+            <div className="space-y-6" style={{ width: '100%' }}>
               <PersonalizationStepCard
                 stepNumber={1}
                 title="Personalize o estilo da sua aula:"
