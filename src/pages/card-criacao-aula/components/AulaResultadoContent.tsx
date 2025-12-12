@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3 } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, GraduationCap } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 
 interface AulaResultadoContentProps {
@@ -176,16 +176,30 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             className="flex items-end justify-center select-none"
             style={{
               opacity: dragOpacity,
+              scaleY: cardScaleY,
               width: '47px',
               height: '77px',
               background: theme.analyticsBg,
               border: `1px solid ${theme.analyticsBorder}`,
               borderRadius: '0 0 12px 12px',
               padding: '12px',
-              boxShadow: `0 4px 12px ${theme.shadowLight}`
+              boxShadow: `0 4px 12px ${theme.shadowLight}`,
+              transformOrigin: 'top'
             }}
           >
-            <BarChart3 className="w-6 h-6" style={{ color: theme.primary }} />
+            <motion.div
+              key={themeMode}
+              initial={{ opacity: 0, scale: 0.8, rotate: -180 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 0.8, rotate: 180 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+              {themeMode === 'orange' ? (
+                <BarChart3 className="w-6 h-6" style={{ color: theme.primary }} />
+              ) : (
+                <GraduationCap className="w-6 h-6" style={{ color: theme.primary }} />
+              )}
+            </motion.div>
           </motion.div>
           
           <motion.div
@@ -209,10 +223,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             borderColor: theme.border
           }}
           transition={{ duration: 0.4 }}
-          className="rounded-2xl p-5 flex items-center justify-between relative z-20 origin-top"
+          className="rounded-2xl p-5 flex items-center justify-between relative z-20"
           style={{
-            scaleY: cardScaleY,
-            transformOrigin: 'top',
             background: theme.bgGradient,
             border: `1px solid ${theme.border}`,
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
