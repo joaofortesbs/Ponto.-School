@@ -4,6 +4,7 @@ import { X, BookOpen, Sparkles, LayoutGrid } from 'lucide-react';
 import AgenteProfessorCard from './components/AgenteProfessorCard';
 import PersonalizationStepCard from './components/PersonalizationStepCard';
 import SchoolToolsContent from './components/SchoolToolsContent';
+import StyleDefinitionContent from './components/StyleDefinitionContent';
 
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
@@ -173,6 +174,14 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 animationDelay={0.35}
               >
                 <SchoolToolsContent />
+              </PersonalizationStepCard>
+
+              <PersonalizationStepCard
+                stepNumber={3}
+                title="Defina como vai ser o estilo da sua aula"
+                animationDelay={0.4}
+              >
+                <StyleDefinitionContent />
               </PersonalizationStepCard>
             </div>
           </div>
