@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { User, Plus } from 'lucide-react';
+import { User, Plus, LayoutGrid, LucideIcon } from 'lucide-react';
 
 interface AgenteProfessorCardProps {
   userAvatar?: string | null;
@@ -9,6 +9,7 @@ interface AgenteProfessorCardProps {
   cardTitle: string;
   animationDelay?: number;
   showUserAvatar?: boolean;
+  customIcon?: LucideIcon;
 }
 
 const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
@@ -17,7 +18,8 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
   cardMaxWidth,
   cardTitle,
   animationDelay = 0.1,
-  showUserAvatar = true
+  showUserAvatar = true,
+  customIcon: CustomIcon
 }) => {
   return (
     <motion.div
@@ -59,6 +61,8 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
               alt="Avatar do Professor"
               className="w-full h-full object-cover"
             />
+          ) : CustomIcon ? (
+            <CustomIcon className="w-5 h-5 text-white" />
           ) : showUserAvatar ? (
             <User className="w-4 h-4 text-white" />
           ) : (

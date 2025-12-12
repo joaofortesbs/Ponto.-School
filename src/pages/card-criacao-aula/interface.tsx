@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen, Sparkles } from 'lucide-react';
+import { X, BookOpen, Sparkles, LayoutGrid } from 'lucide-react';
 import AgenteProfessorCard from './components/AgenteProfessorCard';
 import PersonalizationStepCard from './components/PersonalizationStepCard';
 
@@ -153,6 +153,15 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                     cardTitle="Add. uma Turma"
                     animationDelay={0.2}
                     showUserAvatar={false}
+                  />
+
+                  <AgenteProfessorCard 
+                    cardHeight={CARD_HEIGHT}
+                    cardMaxWidth={CARD_MAX_WIDTH}
+                    cardTitle="Add. um Template"
+                    animationDelay={0.25}
+                    showUserAvatar={false}
+                    customIcon={LayoutGrid}
                   />
                 </div>
               </PersonalizationStepCard>
