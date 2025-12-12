@@ -166,16 +166,15 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 </div>
               </PersonalizationStepCard>
 
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3, duration: 0.3 }}
-                className="flex items-center justify-center py-8"
+              <PersonalizationStepCard
+                stepNumber={2}
+                title="Configure as suas School Tools"
+                animationDelay={0.35}
               >
-                <div className="text-center text-white/40">
-                  <p className="text-sm">Cards 2 e 3 em desenvolvimento...</p>
+                <div className="flex items-center justify-center">
+                  {/* Conteúdo vazio para preenchimento futuro */}
                 </div>
-              </motion.div>
+              </PersonalizationStepCard>
             </div>
           </div>
         </motion.div>
