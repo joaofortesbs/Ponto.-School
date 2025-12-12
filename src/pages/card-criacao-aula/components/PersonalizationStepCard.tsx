@@ -28,31 +28,16 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: animationDelay, duration: 0.3 }}
-      className="w-full flex gap-3 items-center justify-center"
+      className="w-full"
     >
-      {/* Círculo ao lado esquerdo - alinhado com o header */}
-      <motion.div
-        initial={{ opacity: 0, x: -15 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: animationDelay + 0.1, duration: 0.3 }}
-        className="flex-shrink-0 rounded-full"
-        style={{
-          width: '24px',
-          height: '24px',
-          minWidth: '24px',
-          minHeight: '24px',
-          border: '2px solid #FF6B00',
-          background: 'rgba(255, 107, 0, 0.1)'
-        }}
-      />
-
       {/* Card Container */}
       <div 
-        className="rounded-2xl overflow-hidden cursor-pointer flex-1"
+        className="rounded-2xl overflow-hidden cursor-pointer"
         onClick={handleCardClick}
         style={{
           width: '100%',
           maxWidth: '1000px',
+          margin: '0 auto',
           background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, rgba(255, 107, 0, 0.05) 100%)',
           border: '1px solid rgba(255, 107, 0, 0.25)',
           boxShadow: '0 4px 16px rgba(255, 107, 0, 0.1)'
