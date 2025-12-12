@@ -1,6 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, Upload, Link, Zap } from 'lucide-react';
+import { Paperclip, Upload, Link, Zap, Users } from 'lucide-react';
+
+interface UserAvatar {
+  id: string;
+  name: string;
+  avatar?: string;
+  color: string;
+}
 
 const StyleDefinitionContent: React.FC = () => {
   const [assunto, setAssunto] = useState('');
@@ -9,6 +16,14 @@ const StyleDefinitionContent: React.FC = () => {
   const [isIntegrationsDropdownOpen, setIsIntegrationsDropdownOpen] = useState(false);
   const sourcesDropdownRef = useRef<HTMLDivElement>(null);
   const integrationsDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Avatares de exemplo - em produção viriam de dados reais
+  const [userAvatars] = useState<UserAvatar[]>([
+    { id: '1', name: 'Professor', color: '#FF6B00' },
+    { id: '2', name: 'Aluno 1', color: '#3B82F6' },
+    { id: '3', name: 'Aluno 2', color: '#10B981' },
+    { id: '4', name: 'Aluno 3', color: '#8B5CF6' }
+  ]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -74,8 +89,41 @@ const StyleDefinitionContent: React.FC = () => {
         />
       </motion.div>
 
-      {/* Cards de Ações: Fontes e Recursos + Integrações */}
-      <div className="flex gap-3">
+      {/* Cards de Ações com Avatares ao lado: Fontes e Recursos + Integrações */}
+      <div className="flex gap-4 items-start">
+        {/* Bolinhas de Avatares ao lado esquerdo */}
+        <div className="flex flex-col gap-2 pt-0.5">
+          {userAvatars.map((user, index) => (
+            <motion.div
+              key={user.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 + index * 0.05, duration: 0.3 }}
+              className="relative group"
+            >
+              <motion.div
+                whileHover={{ scale: 1.15 }}
+                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer transition-all"
+                style={{
+                  background: user.color,
+                  border: '2px solid rgba(255, 255, 255, 0.2)',
+                  boxShadow: '0 2px 8px rgba(255, 107, 0, 0.2)'
+                }}
+              >
+                <Users className="w-3.5 h-3.5 text-white" />
+              </motion.div>
+              {/* Tooltip ao hover */}
+              <div className="absolute left-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="px-2 py-1 bg-black/80 text-white text-xs rounded whitespace-nowrap">
+                  {user.name}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Cards de Ações */}
+        <div className="flex gap-3">
         {/* Card Fontes e Recursos com Dropdown */}
         <motion.div
           ref={sourcesDropdownRef}
@@ -235,6 +283,7 @@ const StyleDefinitionContent: React.FC = () => {
             <span className="text-sm font-medium text-white">Integrações</span>
           </motion.button>
         </motion.div>
+        </div>
       </div>
     </div>
   );
