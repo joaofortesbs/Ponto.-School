@@ -1,15 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen, Sparkles, LayoutGrid } from 'lucide-react';
+import { X, BookOpen, Sparkles, LayoutGrid, Palette, Settings, PenTool } from 'lucide-react';
 import AgenteProfessorCard from './components/AgenteProfessorCard';
 import PersonalizationStepCard from './components/PersonalizationStepCard';
 import SchoolToolsContent from './components/SchoolToolsContent';
 import StyleDefinitionContent from './components/StyleDefinitionContent';
-
-interface ConnectorLine {
-  top: number;
-  height: number;
-}
 
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
@@ -31,63 +26,6 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
 }) => {
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('Professor');
-  const [connectorLines, setConnectorLines] = useState<ConnectorLine[]>([]);
-  const indicatorRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const handleIndicatorRef = useCallback((ref: HTMLDivElement | null, stepNumber: number) => {
-    if (ref) {
-      indicatorRefs.current.set(stepNumber, ref);
-    } else {
-      indicatorRefs.current.delete(stepNumber);
-    }
-  }, []);
-
-  const calculateConnectorLines = useCallback(() => {
-    if (!containerRef.current) return;
-    
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const lines: ConnectorLine[] = [];
-    
-    const indicator1 = indicatorRefs.current.get(1);
-    const indicator2 = indicatorRefs.current.get(2);
-    const indicator3 = indicatorRefs.current.get(3);
-    
-    if (indicator1 && indicator2) {
-      const rect1 = indicator1.getBoundingClientRect();
-      const rect2 = indicator2.getBoundingClientRect();
-      const bottomOfFirst = rect1.bottom - containerRect.top;
-      const topOfSecond = rect2.top - containerRect.top;
-      lines.push({
-        top: bottomOfFirst,
-        height: topOfSecond - bottomOfFirst
-      });
-    }
-    
-    if (indicator2 && indicator3) {
-      const rect2 = indicator2.getBoundingClientRect();
-      const rect3 = indicator3.getBoundingClientRect();
-      const bottomOfSecond = rect2.bottom - containerRect.top;
-      const topOfThird = rect3.top - containerRect.top;
-      lines.push({
-        top: bottomOfSecond,
-        height: topOfThird - bottomOfSecond
-      });
-    }
-    
-    setConnectorLines(lines);
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      const timer = setTimeout(calculateConnectorLines, 500);
-      window.addEventListener('resize', calculateConnectorLines);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener('resize', calculateConnectorLines);
-      };
-    }
-  }, [isOpen, calculateConnectorLines]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -195,32 +133,12 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
           </div>
           
           <div className="flex-1 overflow-auto p-6 flex flex-col items-center">
-            <div 
-              ref={containerRef}
-              className="space-y-6 w-full relative" 
-              style={{ maxWidth: '1100px', margin: '0 auto' }}
-            >
-              {/* Linhas conectoras entre bolinhas */}
-              {connectorLines.map((line, index) => (
-                <div
-                  key={index}
-                  style={{
-                    position: 'absolute',
-                    left: '11px',
-                    top: `${line.top}px`,
-                    width: '2px',
-                    height: `${line.height}px`,
-                    background: 'linear-gradient(180deg, rgba(255, 107, 0, 0.6) 0%, rgba(255, 107, 0, 0.4) 100%)',
-                    zIndex: 5
-                  }}
-                />
-              ))}
-
+            <div className="space-y-6 w-full" style={{ maxWidth: '1100px', margin: '0 auto' }}>
               <PersonalizationStepCard
                 stepNumber={1}
                 title="Personalize o estilo da sua aula:"
                 animationDelay={0.1}
-                onIndicatorRef={handleIndicatorRef}
+                icon={<Palette className="w-5 h-5" />}
               >
                 <div className="flex items-center justify-center gap-6">
                   <AgenteProfessorCard 
@@ -255,7 +173,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 stepNumber={2}
                 title="Configure as suas School Tools:"
                 animationDelay={0.35}
-                onIndicatorRef={handleIndicatorRef}
+                icon={<Settings className="w-5 h-5" />}
               >
                 <SchoolToolsContent />
               </PersonalizationStepCard>
@@ -264,7 +182,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 stepNumber={3}
                 title="Defina como vai ser o estilo da sua aula"
                 animationDelay={0.4}
-                onIndicatorRef={handleIndicatorRef}
+                icon={<PenTool className="w-5 h-5" />}
               >
                 <StyleDefinitionContent />
               </PersonalizationStepCard>

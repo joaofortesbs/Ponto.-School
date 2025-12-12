@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 
@@ -7,7 +7,7 @@ interface PersonalizationStepCardProps {
   title: string;
   children: React.ReactNode;
   animationDelay?: number;
-  onIndicatorRef?: (ref: HTMLDivElement | null, stepNumber: number) => void;
+  icon: React.ReactNode;
 }
 
 const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
@@ -15,16 +15,9 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
   title,
   children,
   animationDelay = 0,
-  onIndicatorRef
+  icon
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const indicatorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (onIndicatorRef && indicatorRef.current) {
-      onIndicatorRef(indicatorRef.current, stepNumber);
-    }
-  }, [onIndicatorRef, stepNumber]);
 
   const handleCardClick = () => {
     if (!isExpanded) {
@@ -51,7 +44,6 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
         }}
       >
         <div
-          ref={indicatorRef}
           className="rounded-full"
           style={{
             width: '24px',
@@ -79,9 +71,14 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
       >
         {/* Título dentro do Card com Botão de Minimizar */}
         <div className="px-6 py-4 border-b border-[#FF6B00]/15 flex items-center justify-between gap-4">
-          <h3 className="text-white font-bold text-lg flex-1">
-            {title}
-          </h3>
+          <div className="flex items-center gap-3 flex-1">
+            <div className="text-[#FF6B00] flex-shrink-0">
+              {icon}
+            </div>
+            <h3 className="text-white font-bold text-lg">
+              {title}
+            </h3>
+          </div>
           
           <motion.button
             onClick={(e) => {
