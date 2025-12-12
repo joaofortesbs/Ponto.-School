@@ -113,11 +113,7 @@ const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm }) => {
             <AulaCard key={aula.id} aula={aula} index={index} />
           ))
         ) : (
-          <>
-            {[0, 1, 2, 3].map((index) => (
-              <EmptyCard key={index} index={index} />
-            ))}
-          </>
+          <EmptyCard key={0} index={0} />
         )}
       </div>
 
