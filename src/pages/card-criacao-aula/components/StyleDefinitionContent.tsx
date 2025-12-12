@@ -70,7 +70,7 @@ const StyleDefinitionContent: React.FC = () => {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.3 }}
-        className="relative"
+        className="relative w-fit"
       >
         {/* Dropdown Menu */}
         <AnimatePresence>
@@ -80,50 +80,53 @@ const StyleDefinitionContent: React.FC = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="absolute bottom-full left-0 right-0 mb-2 rounded-lg overflow-hidden z-50"
+              className="absolute bottom-full left-0 mb-2 rounded-xl overflow-hidden shadow-lg"
               style={{
-                background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
+                background: '#0a1434',
                 border: '1px solid rgba(255, 107, 0, 0.3)',
-                boxShadow: '0 4px 16px rgba(255, 107, 0, 0.2)'
+                zIndex: 9999,
+                width: '220px'
               }}
+              onMouseDown={(e) => e.stopPropagation()}
             >
-              {/* Adicionar arquivos */}
-              <motion.button
-                whileHover={{ backgroundColor: 'rgba(255, 107, 0, 0.15)' }}
-                onClick={() => handleOptionClick('Adicionar arquivos')}
-                className="w-full flex items-center gap-3 px-4 py-3 text-white/90 hover:text-white transition-colors border-b border-white/5 last:border-b-0"
-              >
-                <Upload className="w-4 h-4 text-[#FF6B00]" />
-                <span className="text-sm font-medium">Adicionar arquivos</span>
-              </motion.button>
+              <div className="p-2 flex flex-col gap-1">
+                {/* Adicionar arquivos */}
+                <motion.button
+                  whileHover={{ x: 4 }}
+                  onClick={() => handleOptionClick('Adicionar arquivos')}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-white/90 hover:text-white hover:bg-white/5 transition-colors rounded-lg"
+                >
+                  <Upload className="w-4 h-4 text-[#FF6B00]" />
+                  <span className="text-sm font-medium">Adicionar arquivos</span>
+                </motion.button>
 
-              {/* Adicionar links */}
-              <motion.button
-                whileHover={{ backgroundColor: 'rgba(255, 107, 0, 0.15)' }}
-                onClick={() => handleOptionClick('Adicionar links')}
-                className="w-full flex items-center gap-3 px-4 py-3 text-white/90 hover:text-white transition-colors"
-              >
-                <Link className="w-4 h-4 text-[#FF6B00]" />
-                <span className="text-sm font-medium">Adicionar links</span>
-              </motion.button>
+                {/* Adicionar links */}
+                <motion.button
+                  whileHover={{ x: 4 }}
+                  onClick={() => handleOptionClick('Adicionar links')}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-white/90 hover:text-white hover:bg-white/5 transition-colors rounded-lg"
+                >
+                  <Link className="w-4 h-4 text-[#FF6B00]" />
+                  <span className="text-sm font-medium">Adicionar links</span>
+                </motion.button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Card Button */}
+        {/* Card Button - Reduzida em largura */}
         <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all"
           style={{
             background: isDropdownOpen
               ? 'rgba(255, 107, 0, 0.15)'
-              : 'rgba(255, 107, 0, 0.05)',
-            border: isDropdownOpen
-              ? '2px solid #FF6B00'
-              : '2px solid rgba(255, 107, 0, 0.2)',
-            cursor: 'pointer'
+              : 'rgba(255, 107, 0, 0.08)',
+            border: '1px solid rgba(255, 107, 0, 0.3)',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
           }}
         >
           <Paperclip className="w-4 h-4 text-[#FF6B00]" />
