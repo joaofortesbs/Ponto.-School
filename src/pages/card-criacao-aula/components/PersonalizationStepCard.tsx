@@ -28,7 +28,7 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: animationDelay, duration: 0.3 }}
-      className="w-full flex gap-3 items-start justify-center"
+      className="w-full flex gap-3 items-center justify-center"
     >
       {/* Círculo ao lado esquerdo - alinhado com o header */}
       <motion.div
@@ -41,7 +41,6 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
           height: '24px',
           minWidth: '24px',
           minHeight: '24px',
-          marginTop: '8px',
           border: '2px solid #FF6B00',
           background: 'rgba(255, 107, 0, 0.1)'
         }}
