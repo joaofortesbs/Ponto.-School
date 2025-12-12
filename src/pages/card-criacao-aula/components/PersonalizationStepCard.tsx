@@ -45,17 +45,6 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
       >
         {/* Título dentro do Card com Botão de Minimizar */}
         <div className="px-6 py-4 border-b border-[#FF6B00]/15 flex items-center justify-between gap-4">
-          {/* Círculo com borda laranja */}
-          <div
-            className="flex-shrink-0 rounded-full"
-            style={{
-              width: '24px',
-              height: '24px',
-              border: '2px solid #FF6B00',
-              background: 'rgba(255, 107, 0, 0.1)'
-            }}
-          />
-          
           <h3 className="text-white font-bold text-lg flex-1">
             {title}
           </h3>
