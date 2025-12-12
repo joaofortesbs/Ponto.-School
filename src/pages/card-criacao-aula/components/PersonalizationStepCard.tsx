@@ -7,17 +7,13 @@ interface PersonalizationStepCardProps {
   title: string;
   children: React.ReactNode;
   animationDelay?: number;
-  isLast?: boolean;
 }
-
-const STEP_HEIGHT = 180;
 
 const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
   stepNumber,
   title,
   children,
-  animationDelay = 0,
-  isLast = false
+  animationDelay = 0
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -32,26 +28,8 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: animationDelay, duration: 0.3 }}
-      className="w-full relative"
+      className="w-full"
     >
-      {/* Linha tracejada para cima (conectando à bolinha anterior) */}
-      {!isLast && (
-        <motion.div
-          initial={{ opacity: 0, scaleY: 0 }}
-          animate={{ opacity: 1, scaleY: 1 }}
-          transition={{ delay: animationDelay + 0.2, duration: 0.4 }}
-          className="absolute"
-          style={{
-            width: '2px',
-            height: `${STEP_HEIGHT - 40}px`,
-            left: '-28px',
-            top: '-156px',
-            backgroundImage: 'repeating-linear-gradient(to bottom, #FF6B00 0px, #FF6B00 6px, transparent 6px, transparent 12px)',
-            opacity: 0.5
-          }}
-        />
-      )}
-
       {/* Card Container */}
       <div 
         className="rounded-2xl overflow-hidden cursor-pointer"
@@ -66,21 +44,15 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
         }}
       >
         {/* Título dentro do Card com Botão de Minimizar */}
-        <div className="px-6 py-4 border-b border-[#FF6B00]/15 flex items-center justify-between gap-4 relative">
-          {/* Bolinha ao lado esquerdo do título */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: animationDelay, duration: 0.3 }}
-            className="absolute rounded-full flex-shrink-0"
+        <div className="px-6 py-4 border-b border-[#FF6B00]/15 flex items-center justify-between gap-4">
+          {/* Círculo com borda laranja */}
+          <div
+            className="flex-shrink-0 rounded-full"
             style={{
               width: '24px',
               height: '24px',
               border: '2px solid #FF6B00',
-              background: 'rgba(255, 107, 0, 0.1)',
-              left: '-40px',
-              top: '50%',
-              transform: 'translateY(-50%)'
+              background: 'rgba(255, 107, 0, 0.1)'
             }}
           />
           

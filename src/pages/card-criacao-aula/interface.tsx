@@ -133,12 +133,11 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
           </div>
           
           <div className="flex-1 overflow-auto p-6 flex flex-col items-center">
-            <div className="space-y-6" style={{ width: '100%', position: 'relative', marginLeft: '40px' }}>
+            <div className="space-y-6" style={{ width: '100%' }}>
               <PersonalizationStepCard
                 stepNumber={1}
                 title="Personalize o estilo da sua aula:"
                 animationDelay={0.1}
-                isLast={false}
               >
                 <div className="flex items-center justify-center gap-6">
                   <AgenteProfessorCard 
@@ -173,7 +172,6 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 stepNumber={2}
                 title="Configure as suas School Tools:"
                 animationDelay={0.35}
-                isLast={false}
               >
                 <SchoolToolsContent />
               </PersonalizationStepCard>
@@ -182,7 +180,6 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 stepNumber={3}
                 title="Defina como vai ser o estilo da sua aula"
                 animationDelay={0.4}
-                isLast={true}
               >
                 <StyleDefinitionContent />
               </PersonalizationStepCard>
