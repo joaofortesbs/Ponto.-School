@@ -286,7 +286,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   border: '2px solid rgba(255, 107, 0, 0.4)'
                 }}
               >
-                <MoreVertical className="w-5 h-5 text-[#FF6B00]" />
+                <MoreVertical className="w-6 h-6 text-[#FF6B00]" />
               </div>
             </motion.div>
 
@@ -375,30 +375,32 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
+        initial={{ opacity: 0, x: 10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.55, duration: 0.4 }}
-        className="absolute -right-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
+        className="absolute top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
+        style={{ right: '-32px' }}
       >
         <div 
-          className="rounded-xl p-4 flex flex-col items-center justify-center"
+          className="rounded-lg flex flex-col items-center justify-center"
           style={{
             background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
             border: '1px solid rgba(255, 107, 0, 0.3)',
-            width: '64px',
-            height: '140px'
+            width: '44px',
+            height: '80px',
+            padding: '6px'
           }}
         >
           <div 
             className="w-0 h-0"
             style={{
-              borderLeft: '12px solid transparent',
-              borderRight: '12px solid transparent',
-              borderTop: '16px solid #FF6B00',
-              marginBottom: '8px'
+              borderLeft: '8px solid transparent',
+              borderRight: '8px solid transparent',
+              borderTop: '10px solid #FF6B00',
+              marginBottom: '4px'
             }}
           />
-          <span className="text-white/60 text-xs font-medium text-center">Etiqueta</span>
+          <span className="text-white/60 text-xs font-medium text-center leading-tight">Tag</span>
         </div>
       </motion.div>
 
