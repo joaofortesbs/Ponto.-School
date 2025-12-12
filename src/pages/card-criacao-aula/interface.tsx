@@ -17,8 +17,10 @@ const PANEL_BORDER_RADIUS = 24;
 const PANEL_HEADER_PADDING = 16;
 const PANEL_HEADER_BORDER_RADIUS = 24;
 
-const CARD_HEIGHT = 56;
-const CARD_MAX_WIDTH = 450; // Largura máxima do card de personalização (em pixels)
+// Dimensões escaladas proporcionalmente para modal de 900px (redução de 25% do tamanho original)
+const CARD_HEIGHT = 42; // Reduzido de 56px (75% do original)
+const CARD_MAX_WIDTH = 338; // Reduzido de 450px (75% do original)
+const CARD_GAP = 4; // Gap entre cards interno
 const TEXT_PADDING_LEFT = 50; // Distância do texto "Agente Professor" a partir da esquerda (em pixels)
 
 const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
@@ -166,7 +168,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 isOpen={expandedCard === 1}
                 onToggle={() => setExpandedCard(1)}
               >
-                <div className="flex items-center justify-center gap-6">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${CARD_GAP * 1.5}rem` }}>
                   <AgenteProfessorCard 
                     userAvatar={userAvatar}
                     cardHeight={CARD_HEIGHT}
