@@ -48,14 +48,16 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
 
       {/* Card Retangular com Texto */}
       <div 
-        className="flex items-center justify-center"
+        className="flex items-center justify-center flex-1"
         style={{
           height: `${cardHeight}px`,
+          width: '100%',
+          minWidth: '280px',
           background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
           borderRadius: `${cardHeight}px`,
           border: '1px solid rgba(255, 107, 0, 0.3)',
-          paddingLeft: '24px',
-          paddingRight: '24px'
+          paddingLeft: '60px',
+          paddingRight: '32px'
         }}
       >
         <span className="text-white font-semibold text-base whitespace-nowrap">

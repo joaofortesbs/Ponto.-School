@@ -16,7 +16,7 @@ const PANEL_HEADER_BORDER_RADIUS = 24;
 
 const CARD_HEIGHT = 56;
 const CARD_MAX_WIDTH = 450; // Largura máxima do card de personalização (em pixels)
-const TEXT_PADDING_LEFT = 40; // Distância do texto "Agente Professor" a partir da esquerda (em pixels)
+const TEXT_PADDING_LEFT = 50; // Distância do texto "Agente Professor" a partir da esquerda (em pixels)
 
 const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   isOpen,
