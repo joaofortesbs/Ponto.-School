@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Zap, BookOpen, Heart, Briefcase, Monitor } from 'lucide-react';
 
@@ -47,25 +48,43 @@ interface TemplateDropdownProps {
   onClose: () => void;
   onSelectTemplate: (template: Template) => void;
   selectedTemplate: Template | null;
+  anchorRef: React.RefObject<HTMLDivElement>;
 }
 
 const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
   isOpen,
   onClose,
   onSelectTemplate,
-  selectedTemplate
+  selectedTemplate,
+  anchorRef
 }) => {
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (isOpen && anchorRef.current) {
+      const rect = anchorRef.current.getBoundingClientRect();
+      const dropdownWidth = 369;
+      const dropdownHeight = 431;
+      
+      setPosition({
+        top: rect.top + (rect.height / 2) - (dropdownHeight / 2),
+        left: rect.left - dropdownWidth - 12
+      });
+    }
+  }, [isOpen, anchorRef]);
+
   const handleSelectTemplate = (template: Template) => {
     onSelectTemplate(template);
     onClose();
   };
 
-  return (
+  const dropdownContent = (
     <AnimatePresence>
       {isOpen && (
         <>
           <div 
-            className="fixed inset-0 z-[60]"
+            className="fixed inset-0"
+            style={{ zIndex: 9998 }}
             onClick={onClose}
           />
           <motion.div
@@ -73,8 +92,11 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="absolute z-[70] right-full mr-3 top-1/2 -translate-y-1/2"
+            className="fixed"
             style={{
+              zIndex: 9999,
+              top: `${position.top}px`,
+              left: `${position.left}px`,
               width: '369px',
               maxHeight: '431px',
               background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
@@ -145,6 +167,8 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
       )}
     </AnimatePresence>
   );
+
+  return createPortal(dropdownContent, document.body);
 };
 
 export default TemplateDropdown;

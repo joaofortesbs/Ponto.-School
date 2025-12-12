@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { User, Plus, LayoutGrid, LucideIcon } from 'lucide-react';
+import { User, Plus, LucideIcon } from 'lucide-react';
 import TemplateDropdown, { Template } from './TemplateDropdown';
 
 interface AgenteProfessorCardProps {
@@ -29,6 +29,7 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
   onSelectTemplate
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const handleCardClick = () => {
     if (isTemplateCard) {
@@ -48,6 +49,7 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
 
   return (
     <motion.div
+      ref={cardRef}
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: animationDelay, duration: 0.3 }}
@@ -132,6 +134,7 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
           onClose={() => setIsDropdownOpen(false)}
           onSelectTemplate={handleSelectTemplate}
           selectedTemplate={selectedTemplate || null}
+          anchorRef={cardRef}
         />
       )}
     </motion.div>
