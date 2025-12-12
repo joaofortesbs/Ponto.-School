@@ -19,6 +19,7 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: animationDelay, duration: 0.3 }}
       className="relative w-fit"
+      style={{ maxWidth: '420px' }}
     >
       {/* Componente Circular com Imagem de Perfil */}
       <div 
