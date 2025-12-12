@@ -13,7 +13,7 @@ const PANEL_HEADER_PADDING = 16;
 const PANEL_HEADER_BORDER_RADIUS = 24;
 
 const CARD_HEIGHT = 56;
-const CARD_MAX_WIDTH = 280; // Largura máxima do card de personalização (em pixels)
+const CARD_MAX_WIDTH = 250; // Largura máxima do card de personalização (em pixels)
 const TEXT_PADDING_LEFT = 40; // Distância do texto "Agente Professor" a partir da esquerda (em pixels)
 
 const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
@@ -159,13 +159,12 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 </div>
 
                 <div 
-                  className="flex items-center pr-8"
+                  className="flex items-center justify-center"
                   style={{
                     height: `${CARD_HEIGHT}px`,
                     background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
                     borderRadius: `${CARD_HEIGHT}px`,
-                    border: '1px solid rgba(255, 107, 0, 0.3)',
-                    paddingLeft: `${TEXT_PADDING_LEFT}px`
+                    border: '1px solid rgba(255, 107, 0, 0.3)'
                   }}
                 >
                   <span className="text-white font-semibold text-base">
