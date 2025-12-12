@@ -20,7 +20,7 @@ const PANEL_HEADER_BORDER_RADIUS = 24;
 // Dimensões escaladas proporcionalmente para modal de 900px (redução de 25% do tamanho original)
 const CARD_HEIGHT = 42; // Reduzido de 56px (75% do original)
 const CARD_MAX_WIDTH = 310; // Reduzido de 450px para 310px (melhor proporção para 3 cards)
-const CARD_GAP = '16px'; // Gap entre cards internos
+const CARD_GAP = '24px'; // Gap entre cards internos
 const TEXT_PADDING_LEFT = 50; // Distância do texto "Agente Professor" a partir da esquerda (em pixels)
 
 const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
