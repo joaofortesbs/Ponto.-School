@@ -34,7 +34,7 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
         }}
       >
         {/* Título dentro do Card com Botão de Minimizar */}
-        <div className="px-6 pt-6 pb-4 border-b border-[#FF6B00]/15 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-[#FF6B00]/15 flex items-center justify-between">
           <h3 className="text-white font-bold text-lg">
             <span className="text-[#FF6B00]">{stepNumber}°:</span> {title}
           </h3>
