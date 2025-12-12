@@ -379,29 +379,39 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.55, duration: 0.4 }}
         className="absolute top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
-        style={{ right: '-32px' }}
+        style={{ right: '-20px' }}
       >
-        <div 
-          className="rounded-lg flex flex-col items-center justify-center"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
-            border: '1px solid rgba(255, 107, 0, 0.3)',
-            width: '44px',
-            height: '80px',
-            padding: '6px'
-          }}
+        <svg
+          width="32"
+          height="48"
+          viewBox="0 0 32 48"
+          style={{ filter: 'drop-shadow(0 2px 8px rgba(255, 107, 0, 0.3))' }}
         >
-          <div 
-            className="w-0 h-0"
-            style={{
-              borderLeft: '8px solid transparent',
-              borderRight: '8px solid transparent',
-              borderTop: '10px solid #FF6B00',
-              marginBottom: '4px'
-            }}
+          <defs>
+            <linearGradient id="tagGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: '#FF8533', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#FF6B00', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          
+          {/* Bookmark shape */}
+          <path
+            d="M 4 0 L 28 0 Q 32 0 32 4 L 32 32 Q 32 36 28 36 L 4 36 Q 0 36 0 32 L 0 4 Q 0 0 4 0"
+            fill="url(#tagGradient)"
+            strokeWidth="0"
           />
-          <span className="text-white/60 text-xs font-medium text-center leading-tight">Tag</span>
-        </div>
+          
+          {/* Bookmark fold cut-out */}
+          <circle cx="12" cy="4" r="3" fill="#030C2A" />
+          <circle cx="20" cy="4" r="3" fill="#030C2A" />
+          
+          {/* Bottom point of bookmark */}
+          <polygon
+            points="16,36 8,44 24,44"
+            fill="url(#tagGradient)"
+            strokeWidth="0"
+          />
+        </svg>
       </motion.div>
 
       <div className="flex-1 mt-6">
