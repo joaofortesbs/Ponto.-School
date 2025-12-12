@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, GraduationCap } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 
@@ -68,6 +68,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const dragY = useMotionValue(0);
   const dragOpacity = useTransform(dragY, [0, 60], [1, 0.7]);
   const cardScaleY = useTransform(dragY, [0, 80], [1, 1.18]);
+  const startYRef = useRef<number | null>(null);
+  const analyticsCardRef = useRef<HTMLDivElement>(null);
 
   const theme = themeColors[themeMode];
 
@@ -121,17 +123,48 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     setIsMenuOpen(false);
   };
 
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    setIsDragging(false);
-    if (info.offset.y > 50) {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    startYRef.current = e.clientY;
+    setIsDragging(true);
+    
+    const element = analyticsCardRef.current;
+    if (element) {
+      element.setPointerCapture(e.pointerId);
+    }
+  }, []);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (startYRef.current === null) return;
+    
+    const deltaY = e.clientY - startYRef.current;
+    const clampedDelta = Math.max(0, Math.min(80, deltaY));
+    dragY.set(clampedDelta);
+  }, [dragY]);
+
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (startYRef.current === null) return;
+    
+    const deltaY = e.clientY - startYRef.current;
+    
+    if (deltaY > 50) {
       setThemeMode(prev => prev === 'orange' ? 'purple' : 'orange');
     }
-    dragY.set(0);
-  };
-
-  const handleDragStart = () => {
-    setIsDragging(true);
-  };
+    
+    startYRef.current = null;
+    setIsDragging(false);
+    
+    animate(dragY, 0, {
+      type: 'spring',
+      stiffness: 400,
+      damping: 30
+    });
+    
+    const element = analyticsCardRef.current;
+    if (element) {
+      element.releasePointerCapture(e.pointerId);
+    }
+  }, [dragY]);
 
   const CIRCLE_SIZE = 72;
   const ACTION_CIRCLE_SIZE = 48;
@@ -147,16 +180,17 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       />
 
       <div className="relative">
+        {/* Analytics Tag Card - Fixed position, only stretches visually */}
         <motion.div
-          drag="y"
-          dragConstraints={{ top: 0, bottom: 80 }}
-          dragElastic={0.2}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          initial={{ opacity: 0, scale: 1 }}
-          animate={{ opacity: 1, scale: 1 }}
+          ref={analyticsCardRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.4, ease: "easeOut" }}
-          className="absolute z-10 cursor-grab active:cursor-grabbing"
+          className="absolute z-10 cursor-grab active:cursor-grabbing touch-none"
           style={{ 
             right: '47px',
             top: '113.5px',
@@ -166,18 +200,17 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         >
           <motion.div
             animate={{
-              scale: isDragging ? 1.05 : 1,
               boxShadow: isDragging 
                 ? `0 8px 24px ${theme.shadow}` 
                 : `0 4px 12px ${theme.shadowLight}`
             }}
             transition={{ duration: 0.2 }}
-            className="flex items-end justify-center select-none origin-top"
+            className="flex items-end justify-center select-none"
             style={{
               opacity: dragOpacity,
               scaleY: cardScaleY,
               width: '47px',
-              minHeight: '77px',
+              height: '77px',
               background: theme.analyticsBg,
               border: `1px solid ${theme.analyticsBorder}`,
               borderRadius: '0 0 12px 12px',
@@ -186,25 +219,28 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               transformOrigin: 'top'
             }}
           >
-            <motion.div
-              key={themeMode}
-              initial={{ opacity: 0, scale: 0.8, rotate: -180 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              exit={{ opacity: 0, scale: 0.8, rotate: 180 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            >
-              {themeMode === 'orange' ? (
-                <BarChart3 className="w-6 h-6" style={{ color: theme.primary }} />
-              ) : (
-                <GraduationCap className="w-6 h-6" style={{ color: theme.primary }} />
-              )}
-            </motion.div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={themeMode}
+                initial={{ opacity: 0, scale: 0.8, rotate: -180 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.8, rotate: 180 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                {themeMode === 'orange' ? (
+                  <BarChart3 className="w-6 h-6" style={{ color: theme.primary }} />
+                ) : (
+                  <GraduationCap className="w-6 h-6" style={{ color: theme.primary }} />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </motion.div>
           
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: isDragging ? 1 : 0 }}
-            className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap"
+            transition={{ duration: 0.15 }}
+            className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap pointer-events-none"
           >
             <span className="text-[10px] text-white/50">
               {themeMode === 'orange' ? '↓ Modo Roxo' : '↓ Modo Laranja'}
