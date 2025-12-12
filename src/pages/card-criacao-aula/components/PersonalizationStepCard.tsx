@@ -26,7 +26,8 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
     >
       {/* Card Container */}
       <div 
-        className="rounded-2xl overflow-hidden"
+        className="rounded-2xl overflow-hidden cursor-pointer"
+        onClick={() => !isExpanded && setIsExpanded(true)}
         style={{
           background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, rgba(255, 107, 0, 0.05) 100%)',
           border: '1px solid rgba(255, 107, 0, 0.25)',
@@ -34,7 +35,7 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
         }}
       >
         {/* Título dentro do Card com Botão de Minimizar */}
-        <div className="px-6 py-4 border-b border-[#FF6B00]/15 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-[#FF6B00]/15 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
           <h3 className="text-white font-bold text-lg">
             <span className="text-[#FF6B00]">{stepNumber}°:</span> {title}
           </h3>
