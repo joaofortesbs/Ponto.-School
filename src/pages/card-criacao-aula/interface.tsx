@@ -180,7 +180,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
 
               <PersonalizationStepCard
                 stepNumber={3}
-                title="Defina como vai ser o estilo da sua aula"
+                title="Defina como vai ser o estilo da sua aula:"
                 animationDelay={0.4}
                 icon={<PenTool className="w-5 h-5" />}
               >

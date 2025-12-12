@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, Upload, Link, Zap } from 'lucide-react';
+import { Paperclip, Upload, Link, Zap, Sparkles } from 'lucide-react';
 
 const StyleDefinitionContent: React.FC = () => {
   const [assunto, setAssunto] = useState('');
@@ -74,16 +74,17 @@ const StyleDefinitionContent: React.FC = () => {
         />
       </motion.div>
 
-      {/* Cards de Ações: Fontes e Recursos + Integrações */}
-      <div className="flex gap-3">
-        {/* Card Fontes e Recursos com Dropdown */}
-        <motion.div
-          ref={sourcesDropdownRef}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.3 }}
-          className="relative w-fit"
-        >
+      {/* Cards de Ações: Fontes e Recursos + Integrações + Botão Gerar Aula */}
+      <div className="flex gap-3 justify-between items-end">
+        <div className="flex gap-3">
+          {/* Card Fontes e Recursos com Dropdown */}
+          <motion.div
+            ref={sourcesDropdownRef}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
+            className="relative w-fit"
+          >
           {/* Dropdown Menu */}
           <AnimatePresence>
             {isSourcesDropdownOpen && (
@@ -235,6 +236,24 @@ const StyleDefinitionContent: React.FC = () => {
             <span className="text-sm font-medium text-white">Integrações</span>
           </motion.button>
         </motion.div>
+        </div>
+
+        {/* Botão Gerar Aula */}
+        <motion.button
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.3 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 px-6 py-2 rounded-xl font-medium text-white transition-all"
+          style={{
+            background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+            boxShadow: '0 4px 15px rgba(255, 107, 0, 0.3)'
+          }}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span className="text-sm font-semibold">Gerar aula</span>
+        </motion.button>
       </div>
     </div>
   );
