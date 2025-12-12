@@ -15,7 +15,7 @@ const PANEL_HEADER_PADDING = 16;
 const PANEL_HEADER_BORDER_RADIUS = 24;
 
 const CARD_HEIGHT = 56;
-const CARD_MAX_WIDTH = 650; // Largura máxima do card de personalização (em pixels)
+const CARD_MAX_WIDTH = 450; // Largura máxima do card de personalização (em pixels)
 const TEXT_PADDING_LEFT = 50; // Distância do texto "Agente Professor" a partir da esquerda (em pixels)
 
 const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
@@ -137,11 +137,11 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 title="Personalize o estilo da sua aula:"
                 animationDelay={0.1}
               >
-                <div className="flex items-center justify-center gap-8 flex-wrap">
+                <div className="flex items-center justify-center gap-6">
                   <AgenteProfessorCard 
                     userAvatar={userAvatar}
                     cardHeight={CARD_HEIGHT}
-                    cardMaxWidth={CARD_MAX_WIDTH / 3 - 16}
+                    cardMaxWidth={CARD_MAX_WIDTH}
                     cardTitle="Agente Professor"
                     animationDelay={0.15}
                     showUserAvatar={true}
@@ -149,7 +149,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                   
                   <AgenteProfessorCard 
                     cardHeight={CARD_HEIGHT}
-                    cardMaxWidth={CARD_MAX_WIDTH / 3 - 16}
+                    cardMaxWidth={CARD_MAX_WIDTH}
                     cardTitle="Add. uma Turma"
                     animationDelay={0.2}
                     showUserAvatar={false}
@@ -157,7 +157,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
 
                   <AgenteProfessorCard 
                     cardHeight={CARD_HEIGHT}
-                    cardMaxWidth={CARD_MAX_WIDTH / 3 - 16}
+                    cardMaxWidth={CARD_MAX_WIDTH}
                     cardTitle="Add. um Template"
                     animationDelay={0.25}
                     showUserAvatar={false}
