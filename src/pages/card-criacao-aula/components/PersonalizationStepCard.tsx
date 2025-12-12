@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 
@@ -7,15 +7,24 @@ interface PersonalizationStepCardProps {
   title: string;
   children: React.ReactNode;
   animationDelay?: number;
+  onIndicatorRef?: (ref: HTMLDivElement | null, stepNumber: number) => void;
 }
 
 const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
   stepNumber,
   title,
   children,
-  animationDelay = 0
+  animationDelay = 0,
+  onIndicatorRef
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const indicatorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (onIndicatorRef && indicatorRef.current) {
+      onIndicatorRef(indicatorRef.current, stepNumber);
+    }
+  }, [onIndicatorRef, stepNumber]);
 
   const handleCardClick = () => {
     if (!isExpanded) {
@@ -42,6 +51,7 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
         }}
       >
         <div
+          ref={indicatorRef}
           className="rounded-full"
           style={{
             width: '24px',
@@ -52,21 +62,6 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
           }}
         />
       </motion.div>
-
-      {/* Linha vertical connecting to next card - se não for o último */}
-      {stepNumber < 3 && (
-        <div
-          style={{
-            position: 'absolute',
-            left: '11px',
-            top: '12px',
-            width: '2px',
-            height: 'calc(100% + 24px)',
-            background: 'linear-gradient(180deg, rgba(255, 107, 0, 0.5) 0%, rgba(255, 107, 0, 0.3) 100%)',
-            zIndex: 0
-          }}
-        />
-      )}
 
       {/* Card Container */}
       <div 
