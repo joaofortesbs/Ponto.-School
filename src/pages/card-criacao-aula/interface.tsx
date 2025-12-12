@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, BookOpen, Sparkles } from 'lucide-react';
 import AgenteProfessorCard from './components/AgenteProfessorCard';
+import PersonalizationStepCard from './components/PersonalizationStepCard';
 
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
@@ -130,17 +131,23 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
           </div>
           
           <div className="flex-1 overflow-auto p-6">
-            <div className="space-y-4" style={{ maxWidth: `${CARD_MAX_WIDTH}px` }}>
-              <AgenteProfessorCard 
-                userAvatar={userAvatar}
-                cardHeight={CARD_HEIGHT}
+            <div className="space-y-6" style={{ maxWidth: `${CARD_MAX_WIDTH + 100}px` }}>
+              <PersonalizationStepCard
+                stepNumber={1}
+                title="Personalize o estilo da sua aula:"
                 animationDelay={0.1}
-              />
+              >
+                <AgenteProfessorCard 
+                  userAvatar={userAvatar}
+                  cardHeight={CARD_HEIGHT}
+                  animationDelay={0.15}
+                />
+              </PersonalizationStepCard>
 
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2, duration: 0.3 }}
+                transition={{ delay: 0.3, duration: 0.3 }}
                 className="flex items-center justify-center py-8"
               >
                 <div className="text-center text-white/40">
