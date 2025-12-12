@@ -28,6 +28,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
 }) => {
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('Professor');
+  const [expandedCard, setExpandedCard] = useState<number>(1);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -108,7 +109,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 borderRadius: `${PANEL_BORDER_RADIUS}px`,
                 border: '1px solid rgba(255, 107, 0, 0.3)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 107, 0, 0.1)',
-                maxWidth: '1200px'
+                maxWidth: '900px'
               }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -156,12 +157,14 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
           </div>
           
           <div className="flex-1 overflow-auto p-6 flex flex-col items-center">
-            <div className="space-y-6 w-full" style={{ maxWidth: '1100px', margin: '0 auto' }}>
+            <div className="space-y-6 w-full" style={{ maxWidth: '800px', margin: '0 auto' }}>
               <PersonalizationStepCard
                 stepNumber={1}
                 title="Personalize o estilo da sua aula:"
                 animationDelay={0.1}
                 icon={<Palette className="w-5 h-5" />}
+                isOpen={expandedCard === 1}
+                onToggle={() => setExpandedCard(1)}
               >
                 <div className="flex items-center justify-center gap-6">
                   <AgenteProfessorCard 
@@ -197,6 +200,8 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 title="Configure as suas School Tools:"
                 animationDelay={0.35}
                 icon={<Settings className="w-5 h-5" />}
+                isOpen={expandedCard === 2}
+                onToggle={() => setExpandedCard(2)}
               >
                 <SchoolToolsContent />
               </PersonalizationStepCard>
@@ -206,9 +211,33 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 title="Defina como vai ser o estilo da sua aula:"
                 animationDelay={0.4}
                 icon={<PenTool className="w-5 h-5" />}
+                isOpen={expandedCard === 3}
+                onToggle={() => setExpandedCard(3)}
               >
-                <StyleDefinitionContent onGerarAula={handleGerarAula} />
+                <StyleDefinitionContent />
               </PersonalizationStepCard>
+
+              {/* Botão Gerar Aula - Fora dos cards */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.3 }}
+                className="flex justify-end pt-4"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleGerarAula}
+                  className="flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-white transition-all"
+                  style={{
+                    background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+                    boxShadow: '0 4px 15px rgba(255, 107, 0, 0.3)'
+                  }}
+                >
+                  <Sparkles className="w-5 h-5" />
+                  <span>Gerar aula</span>
+                </motion.button>
+              </motion.div>
             </div>
           </div>
             </div>

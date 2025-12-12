@@ -8,6 +8,8 @@ interface PersonalizationStepCardProps {
   children: React.ReactNode;
   animationDelay?: number;
   icon: React.ReactNode;
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
 const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
@@ -15,14 +17,12 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
   title,
   children,
   animationDelay = 0,
-  icon
+  icon,
+  isOpen,
+  onToggle
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
-
-  const handleCardClick = () => {
-    if (!isExpanded) {
-      setIsExpanded(true);
-    }
+  const handleHeaderClick = () => {
+    onToggle();
   };
 
   return (
@@ -57,8 +57,7 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
 
       {/* Card Container */}
       <div 
-        className="rounded-2xl overflow-hidden cursor-pointer flex-1"
-        onClick={handleCardClick}
+        className="rounded-2xl overflow-hidden flex-1"
         style={{
           width: '100%',
           maxWidth: '1000px',
@@ -69,9 +68,15 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
           zIndex: 1
         }}
       >
-        {/* Título dentro do Card com Botão de Minimizar */}
-        <div className="px-6 py-4 border-b border-[#FF6B00]/15 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1">
+        {/* Título dentro do Card - TODO O CABEÇALHO É CLICÁVEL */}
+        <button
+          onClick={handleHeaderClick}
+          className="w-full px-6 py-4 border-b border-[#FF6B00]/15 flex items-center justify-between gap-4 hover:bg-white/5 transition-colors cursor-pointer"
+          style={{
+            background: 'transparent'
+          }}
+        >
+          <div className="flex items-center gap-3 flex-1 text-left">
             <div className="text-[#FF6B00] flex-shrink-0">
               {icon}
             </div>
@@ -80,34 +85,25 @@ const PersonalizationStepCard: React.FC<PersonalizationStepCardProps> = ({
             </h3>
           </div>
           
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsExpanded(!isExpanded);
-            }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-2 rounded-lg transition-colors"
+          <motion.div
+            animate={{ rotate: isOpen ? 0 : 180 }}
+            transition={{ duration: 0.3 }}
+            className="flex-shrink-0 p-2 rounded-lg"
             style={{
               background: 'rgba(255, 107, 0, 0.15)',
               color: '#FF6B00'
             }}
           >
-            <motion.div
-              animate={{ rotate: isExpanded ? 0 : 180 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronDown className="w-5 h-5" />
-            </motion.div>
-          </motion.button>
-        </div>
+            <ChevronDown className="w-5 h-5" />
+          </motion.div>
+        </button>
 
         {/* Conteúdo dentro do Card com Animação de Minimização */}
         <motion.div
           initial={{ opacity: 1, height: 'auto' }}
           animate={{ 
-            opacity: isExpanded ? 1 : 0,
-            height: isExpanded ? 'auto' : 0
+            opacity: isOpen ? 1 : 0,
+            height: isOpen ? 'auto' : 0
           }}
           transition={{ duration: 0.3 }}
           className="overflow-hidden"
