@@ -169,7 +169,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
 
               <PersonalizationStepCard
                 stepNumber={2}
-                title="Configure as suas School Tools"
+                title="Configure as suas School Tools:"
                 animationDelay={0.35}
               >
                 <SchoolToolsContent />

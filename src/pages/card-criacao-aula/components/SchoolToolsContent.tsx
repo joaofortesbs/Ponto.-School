@@ -25,12 +25,8 @@ const SchoolToolsContent: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <h4 className="text-sm font-semibold text-white/80 pl-4">
-        Selecione as ferramentas que deseja usar:
-      </h4>
-      
-      <div className="space-y-3">
+    <div className="space-y-2">
+      <div className="space-y-2">
         {tools.map((tool, index) => (
           <motion.button
             key={tool.id}
@@ -38,7 +34,7 @@ const SchoolToolsContent: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 + index * 0.05, duration: 0.3 }}
             onClick={() => toggleTool(tool.id)}
-            className="w-full flex items-center gap-4 p-4 rounded-lg transition-all hover:bg-white/5"
+            className="w-full flex items-center gap-4 px-4 py-2 rounded-lg transition-all hover:bg-white/5"
             style={{
               background: selectedTools.includes(tool.id) 
                 ? 'rgba(255, 107, 0, 0.1)'
