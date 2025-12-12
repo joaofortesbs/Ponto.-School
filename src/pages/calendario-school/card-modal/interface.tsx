@@ -460,6 +460,9 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                 return (
                   <motion.button
                     key={`${dayData.day}-${index}`}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
                     whileHover={{ scale: dayData.isCurrentMonth ? 1.05 : 1 }}
                     whileTap={{ scale: dayData.isCurrentMonth ? 0.95 : 1 }}
                     onClick={() => handleDayClick(dayData)}
@@ -469,52 +472,64 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                     onDrop={(e: any) => handleEventDrop(e, dayData.day)}
                     disabled={!dayData.isCurrentMonth}
                     className={`
-                      relative h-32 flex flex-col items-center justify-start pt-2 transition-all duration-200
+                      relative h-32 flex flex-col items-center justify-start pt-2 transition-all duration-200 rounded-2xl
                       ${dayData.isCurrentMonth 
                         ? 'cursor-pointer' 
                         : 'cursor-default opacity-30'
                       }
                     `}
                     style={{
-                      borderRadius: '12px',
+                      borderRadius: '16px',
                       background: isSelected 
                         ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
                         : dayData.isToday 
                           ? 'rgba(255, 107, 0, 0.15)'
-                          : '#0A1434',
+                          : 'rgba(26, 43, 60, 0.5)',
                       border: dayData.isToday && !isSelected
                         ? '2px solid rgba(255, 107, 0, 0.5)'
                         : dayData.isCurrentMonth 
-                          ? '1px solid rgba(255, 107, 0, 0.2)'
+                          ? '2px solid rgba(255, 107, 0, 0.2)'
                           : '1px solid rgba(255, 107, 0, 0.05)',
                       boxShadow: isSelected 
                         ? '0 4px 15px rgba(255, 107, 0, 0.4)'
-                        : 'none'
+                        : 'none',
+                      transition: 'all 0.2s ease'
                     }}
                   >
-                    {/* Ícone de Adicionar (+) - aparece no hover */}
-                    <AnimatePresence>
-                      {isHovered && dayData.isCurrentMonth && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.5 }}
-                          transition={{ duration: 0.15 }}
-                          className="absolute top-1 right-1 z-10"
-                          onClick={(e) => handleAddIconClick(e, dayData.day)}
-                        >
-                          <div 
-                            className="w-6 h-6 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
-                            style={{
-                              background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
-                              boxShadow: '0 2px 8px rgba(255, 107, 0, 0.4)'
-                            }}
+                    {/* Ícone de Adicionar - Mostrar sempre quando não há dias do mês*/}
+                    {!dayData.isCurrentMonth ? (
+                      <motion.div
+                        className="flex flex-col items-center justify-center h-full gap-2"
+                      >
+                        <div className="w-12 h-12 rounded-full border-2 border-dashed border-[#FF6B00]/30 flex items-center justify-center hover:border-[#FF6B00]/50 transition-colors">
+                          <Plus className="w-6 h-6 text-[#FF6B00]/40 hover:text-[#FF6B00]/60" />
+                        </div>
+                        <p className="text-white/30 text-sm">Criar Aula</p>
+                      </motion.div>
+                    ) : (
+                      <AnimatePresence>
+                        {isHovered && dayData.isCurrentMonth && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.5 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute top-1 right-1 z-10"
+                            onClick={(e) => handleAddIconClick(e, dayData.day)}
                           >
-                            <Plus className="w-3.5 h-3.5 text-white" />
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                            <div 
+                              className="w-6 h-6 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
+                              style={{
+                                background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+                                boxShadow: '0 2px 8px rgba(255, 107, 0, 0.4)'
+                              }}
+                            >
+                              <Plus className="w-3.5 h-3.5 text-white" />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    )}
 
                     <span 
                       className={`
