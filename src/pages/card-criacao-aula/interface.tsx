@@ -135,7 +135,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 className="relative"
               >
                 <div 
-                  className="absolute -right-4 top-1/2 -translate-y-1/2 rounded-full overflow-hidden flex items-center justify-center"
+                  className="absolute -left-4 top-1/2 -translate-y-1/2 rounded-full overflow-hidden flex items-center justify-center"
                   style={{ 
                     width: `${CARD_HEIGHT}px`,
                     height: `${CARD_HEIGHT}px`,
