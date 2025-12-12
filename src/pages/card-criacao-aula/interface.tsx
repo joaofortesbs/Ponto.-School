@@ -13,6 +13,8 @@ const PANEL_HEADER_PADDING = 16;
 const PANEL_HEADER_BORDER_RADIUS = 24;
 
 const CARD_HEIGHT = 56;
+const CARD_MAX_WIDTH = 200; // Largura máxima do card de personalização (em pixels)
+const TEXT_PADDING_LEFT = 40; // Distância do texto "Agente Professor" a partir da esquerda (em pixels)
 
 const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   isOpen,
@@ -127,7 +129,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
           </div>
           
           <div className="flex-1 overflow-auto p-6">
-            <div className="space-y-4 max-w-xs">
+            <div className="space-y-4" style={{ maxWidth: `${CARD_MAX_WIDTH}px` }}>
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -163,7 +165,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                     background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
                     borderRadius: `${CARD_HEIGHT}px`,
                     border: '1px solid rgba(255, 107, 0, 0.3)',
-                    paddingLeft: '24px'
+                    paddingLeft: `${TEXT_PADDING_LEFT}px`
                   }}
                 >
                   <span className="text-white font-semibold text-base">
