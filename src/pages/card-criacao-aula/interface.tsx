@@ -127,16 +127,15 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
           </div>
           
           <div className="flex-1 overflow-auto p-6">
-            <div className="space-y-4">
+            <div className="space-y-4 max-w-xs">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1, duration: 0.3 }}
                 className="relative"
-                style={{ paddingLeft: `${CARD_HEIGHT / 2}px` }}
               >
                 <div 
-                  className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full overflow-hidden flex items-center justify-center"
+                  className="absolute -right-4 top-1/2 -translate-y-1/2 rounded-full overflow-hidden flex items-center justify-center"
                   style={{ 
                     width: `${CARD_HEIGHT}px`,
                     height: `${CARD_HEIGHT}px`,
@@ -158,14 +157,13 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 </div>
 
                 <div 
-                  className="flex items-center"
+                  className="flex items-center pr-8"
                   style={{
                     height: `${CARD_HEIGHT}px`,
                     background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
                     borderRadius: `${CARD_HEIGHT}px`,
                     border: '1px solid rgba(255, 107, 0, 0.3)',
-                    paddingLeft: `${CARD_HEIGHT / 2 + 16}px`,
-                    paddingRight: '24px'
+                    paddingLeft: '24px'
                   }}
                 >
                   <span className="text-white font-semibold text-base">
