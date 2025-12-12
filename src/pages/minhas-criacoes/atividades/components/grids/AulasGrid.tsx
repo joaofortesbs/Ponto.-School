@@ -4,6 +4,7 @@ import { Plus, BookOpen, Clock, MoreVertical, Eye, Edit2, Trash2, Share2 } from 
 
 interface AulasGridProps {
   searchTerm: string;
+  onCreateAula?: () => void;
 }
 
 interface Aula {
@@ -17,7 +18,7 @@ interface Aula {
 
 const mockAulas: Aula[] = [];
 
-const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm }) => {
+const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm, onCreateAula }) => {
   const [aulas, setAulas] = useState<Aula[]>(mockAulas);
   const [filteredAulas, setFilteredAulas] = useState<Aula[]>(mockAulas);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -39,6 +40,7 @@ const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm }) => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
+      onClick={() => onCreateAula?.()}
       className="aspect-[3/4] bg-[#1A2B3C]/50 border-2 border-[#FF6B00]/20 rounded-2xl flex items-center justify-center hover:border-[#FF6B00]/40 transition-colors cursor-pointer group"
     >
       <div className="text-center">

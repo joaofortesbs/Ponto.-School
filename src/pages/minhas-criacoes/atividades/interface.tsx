@@ -6,6 +6,7 @@ import AtividadesGrid from './components/grids/AtividadesGrid';
 import AulasGrid from './components/grids/AulasGrid';
 import ColecoesGrid from './components/grids/ColecoesGrid';
 import CalendarioSchoolPanel from '@/pages/calendario-school/card-modal/interface';
+import CriacaoAulaPanel from '@/pages/card-criacao-aula/interface';
 
 export type GridType = 'atividades' | 'aulas' | 'colecoes';
 
@@ -14,6 +15,7 @@ const AtividadesInterface: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [counts, setCounts] = useState<{ atividades?: number; aulas?: number; colecoes?: number }>({});
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isCriacaoAulaOpen, setIsCriacaoAulaOpen] = useState(false);
 
   const handleAtividadesCountChange = (count: number) => {
     setCounts(prev => ({ ...prev, atividades: count }));
@@ -29,12 +31,22 @@ const AtividadesInterface: React.FC = () => {
     setIsCalendarOpen(false);
   };
 
+  const handleOpenCriacaoAula = () => {
+    console.log('📚 Abrindo Card de Criação de Aula');
+    setIsCriacaoAulaOpen(true);
+  };
+
+  const handleCloseCriacaoAula = () => {
+    console.log('📚 Fechando Card de Criação de Aula');
+    setIsCriacaoAulaOpen(false);
+  };
+
   const renderGrid = () => {
     switch (activeGrid) {
       case 'atividades':
         return <AtividadesGrid searchTerm={searchTerm} onCountChange={handleAtividadesCountChange} />;
       case 'aulas':
-        return <AulasGrid searchTerm={searchTerm} />;
+        return <AulasGrid searchTerm={searchTerm} onCreateAula={handleOpenCriacaoAula} />;
       case 'colecoes':
         return <ColecoesGrid searchTerm={searchTerm} />;
       default:
@@ -114,6 +126,11 @@ const AtividadesInterface: React.FC = () => {
       <CalendarioSchoolPanel 
         isOpen={isCalendarOpen}
         onClose={handleCloseCalendar}
+      />
+
+      <CriacaoAulaPanel 
+        isOpen={isCriacaoAulaOpen}
+        onClose={handleCloseCriacaoAula}
       />
     </div>
   );
