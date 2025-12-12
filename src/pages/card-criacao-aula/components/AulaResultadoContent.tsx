@@ -375,16 +375,18 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6, duration: 0.4 }}
-        className="flex-shrink-0 mt-4"
+        transition={{ delay: 0.6, duration: 0.4, ease: "easeOut" }}
+        className="flex-shrink-0 -mt-1.2"
+        style={{ marginLeft: '1278px' }}
+
       >
         <div
           className="flex items-end justify-center"
           style={{
-            width: '73px',
-            height: '117px',
+            width: '47px',
+            height: '77px',
             background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.08) 100%)',
             border: '1px solid rgba(255, 107, 0, 0.3)',
             borderRadius: '0 0 12px 12px',
