@@ -263,33 +263,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.45, duration: 0.3 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex-shrink-0 cursor-pointer"
-            title="Modo Apresentação de atividade"
-          >
-            <div
-              className="rounded-full flex items-center justify-center"
-              style={{
-                width: `${ACTION_CIRCLE_SIZE}px`,
-                height: `${ACTION_CIRCLE_SIZE}px`,
-                background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
-                border: '2px solid rgba(255, 107, 0, 0.6)',
-                boxShadow: '0 4px 12px rgba(255, 107, 0, 0.4)'
-              }}
-            >
-              <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
-            </div>
-          </motion.div>
-
-          <motion.div
             ref={menuRef}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, duration: 0.3 }}
+            transition={{ delay: 0.45, duration: 0.3 }}
             className="relative flex-shrink-0"
           >
             <motion.div
@@ -301,8 +278,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               <div
                 className="rounded-full flex items-center justify-center"
                 style={{
-                  width: `${ACTION_CIRCLE_SIZE}px`,
-                  height: `${ACTION_CIRCLE_SIZE}px`,
+                  width: `${CIRCLE_SIZE}px`,
+                  height: `${CIRCLE_SIZE}px`,
                   background: isMenuOpen 
                     ? 'rgba(255, 107, 0, 0.3)'
                     : 'rgba(255, 107, 0, 0.15)',
@@ -353,7 +330,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-white/90 hover:text-white transition-colors"
                     >
                       <Calendar className="w-4 h-4 text-[#FF6B00]" />
-                      <span className="text-sm font-medium">Adicionar ao calendário</span>
+                      <span className="text-sm font-medium">Add. ao calendário</span>
                     </motion.button>
 
                     <div className="h-px bg-gradient-to-r from-transparent via-[#FF6B00]/20 to-transparent mx-3 my-1" />
@@ -371,6 +348,57 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               )}
             </AnimatePresence>
           </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.3 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex-shrink-0 cursor-pointer"
+            title="Modo Apresentação de atividade"
+          >
+            <div
+              className="rounded-full flex items-center justify-center"
+              style={{
+                width: `${CIRCLE_SIZE}px`,
+                height: `${CIRCLE_SIZE}px`,
+                background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+                border: '2px solid rgba(255, 107, 0, 0.6)',
+                boxShadow: '0 4px 12px rgba(255, 107, 0, 0.4)'
+              }}
+            >
+              <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.55, duration: 0.4 }}
+        className="absolute -right-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
+      >
+        <div 
+          className="rounded-xl p-4 flex flex-col items-center justify-center"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 107, 0, 0.05) 100%)',
+            border: '1px solid rgba(255, 107, 0, 0.3)',
+            width: '64px',
+            height: '140px'
+          }}
+        >
+          <div 
+            className="w-0 h-0"
+            style={{
+              borderLeft: '12px solid transparent',
+              borderRight: '12px solid transparent',
+              borderTop: '16px solid #FF6B00',
+              marginBottom: '8px'
+            }}
+          />
+          <span className="text-white/60 text-xs font-medium text-center">Etiqueta</span>
         </div>
       </motion.div>
 
