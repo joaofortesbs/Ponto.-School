@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
 
@@ -134,38 +134,64 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const loadUserActivities = async () => {
     setLoadingActivities(true);
     try {
+      // Tentar obter o ID do usuário de várias fontes comuns no projeto
       const userId = localStorage.getItem('user_id') || 
                      localStorage.getItem('userId') || 
                      localStorage.getItem('supabase_user_id') || 
                      localStorage.getItem('neon_user_id');
-      console.log('🔍 [MyActivitiesPanel] Buscando atividades para userId:', userId);
-      console.log('🔍 [MyActivitiesPanel] localStorage user_id:', localStorage.getItem('user_id'));
       
-      if (userId) {
-        const result = await atividadesNeonService.buscarAtividadesUsuario(userId);
-        console.log('📋 [MyActivitiesPanel] Resultado da busca:', result);
-        if (result.success && result.data) {
-          console.log('✅ [MyActivitiesPanel] Atividades carregadas:', result.data.length);
-          setUserActivities(result.data);
-        } else {
-          console.log('⚠️ [MyActivitiesPanel] Nenhuma atividade encontrada ou erro:', result.error);
-        }
-      } else {
+      console.log('🔍 [MyActivitiesPanel] Buscando atividades para userId:', userId);
+      
+      if (!userId) {
         console.log('⚠️ [MyActivitiesPanel] userId não encontrado no localStorage');
+        // Tentar buscar do perfil se não houver ID direto
+        const userProfileStr = localStorage.getItem('user_profile');
+        if (userProfileStr) {
+          const profile = JSON.parse(userProfileStr);
+          if (profile.id) {
+            console.log('✅ [MyActivitiesPanel] ID encontrado no perfil:', profile.id);
+            const result = await atividadesNeonService.buscarAtividadesUsuario(profile.id);
+            if (result.success && result.data) {
+              setUserActivities(result.data);
+            }
+            return;
+          }
+        }
+        setLoadingActivities(false);
+        return;
+      }
+
+      const result = await atividadesNeonService.buscarAtividadesUsuario(userId);
+      console.log('📋 [MyActivitiesPanel] Resultado da busca:', result);
+      
+      if (result.success && result.data) {
+        console.log('✅ [MyActivitiesPanel] Atividades carregadas:', result.data.length);
+        setUserActivities(result.data);
+      } else {
+        console.log('⚠️ [MyActivitiesPanel] Nenhuma atividade encontrada ou erro:', result.error);
+        setUserActivities([]); // Garante que a lista não fique undefined
       }
     } catch (error) {
       console.error('❌ [MyActivitiesPanel] Erro ao carregar atividades:', error);
+      setUserActivities([]);
     } finally {
       setLoadingActivities(false);
     }
   };
 
   // Filtrar atividades
-  const filteredActivities = userActivities.filter(activity => {
+  const filteredActivities = (userActivities || []).filter(activity => {
+    if (!activity) return false;
+    
+    const titulo = activity.id_json?.titulo || activity.id_json?.title || '';
+    const tipo = activity.tipo || '';
+    
     const matchesSearch = activitySearchTerm === '' || 
-      activity.id_json?.titulo?.toLowerCase().includes(activitySearchTerm.toLowerCase()) ||
-      activity.tipo?.toLowerCase().includes(activitySearchTerm.toLowerCase());
+      titulo.toLowerCase().includes(activitySearchTerm.toLowerCase()) ||
+      tipo.toLowerCase().includes(activitySearchTerm.toLowerCase());
+      
     const matchesType = activityTypeFilter === 'all' || activity.tipo === activityTypeFilter;
+    
     return matchesSearch && matchesType;
   });
 
