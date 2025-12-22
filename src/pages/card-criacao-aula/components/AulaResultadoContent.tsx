@@ -50,6 +50,29 @@ const themeColors = {
   }
 };
 
+// Componente de TextArea com redimensionamento automático otimizado para evitar travamentos
+const AutoResizeTextarea = React.memo(({ value, onChange, placeholder }: { value: string, onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void, placeholder: string }) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [value]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="w-full bg-transparent border-0 text-white/90 placeholder-white/30 focus:outline-none resize-none overflow-hidden min-h-[100px] py-2"
+      style={{ lineHeight: '1.6' }}
+    />
+  );
+});
+
 const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   aulaName = 'Minha Nova Aula',
   selectedTemplate = null,
@@ -917,54 +940,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       </motion.div>
     );
   };
-
-  // Estilo base para os textareas de auto-resize
-  const textAreaStyle = {
-    minHeight: '100px',
-    height: 'auto',
-    overflowY: 'hidden' as const
-  };
-
-  // Função para ajustar altura do textarea dinamicamente
-  const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>, setter: (val: string) => void) => {
-    setter(e.target.value);
-    e.target.style.height = 'auto';
-    e.target.style.height = `${e.target.scrollHeight}px`;
-  };
-
-  // Hook para inicializar a altura correta ao carregar/expandir
-  const AutoResizeTextarea = ({ value, onChange, placeholder }: { value: string, onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void, placeholder: string }) => {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-    
-    useEffect(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-      }
-    }, [value]);
-
-    return (
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
-        style={textAreaStyle}
-      />
-    );
-  };
-  useEffect(() => {
-    const cachedAvatar = localStorage.getItem('userAvatarUrl');
-    const cachedName = localStorage.getItem('userFirstName');
-    
-    if (cachedAvatar) {
-      setUserAvatar(cachedAvatar);
-    }
-    if (cachedName) {
-      setUserName(cachedName);
-    }
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
