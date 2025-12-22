@@ -913,9 +913,42 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     );
   };
 
-  const theme = themeColors[themeMode];
+  // Estilo base para os textareas de auto-resize
+  const textAreaStyle = {
+    minHeight: '100px',
+    height: 'auto',
+    overflowY: 'hidden' as const
+  };
 
-  useEffect(() => {
+  // Função para ajustar altura do textarea dinamicamente
+  const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>, setter: (val: string) => void) => {
+    setter(e.target.value);
+    e.target.style.height = 'auto';
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  };
+
+  // Hook para inicializar a altura correta ao carregar/expandir
+  const AutoResizeTextarea = ({ value, onChange, placeholder }: { value: string, onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void, placeholder: string }) => {
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    
+    useEffect(() => {
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      }
+    }, [value]);
+
+    return (
+      <textarea
+        ref={textareaRef}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
+        style={textAreaStyle}
+      />
+    );
+  };
     const cachedAvatar = localStorage.getItem('userAvatarUrl');
     const cachedName = localStorage.getItem('userFirstName');
     
@@ -1096,12 +1129,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             {section.isExpanded && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
                 <div className="px-4 pb-4">
-                  <textarea 
+                  <AutoResizeTextarea 
                     value={section.text} 
                     onChange={(e) => updateCustomSectionText(section.id, e.target.value)} 
                     placeholder="Escreva o conteúdo desta seção..." 
-                    className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" 
-                    style={{ minHeight: '100px' }} 
                   />
                   <SectionActivitiesGrid sectionId={section.id} />
                   <div className="flex items-center gap-3 mt-3">
@@ -1690,14 +1721,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-4 pb-4">
-                <textarea
+                <AutoResizeTextarea
                   value={objectiveText}
                   onChange={(e) => setObjectiveText(e.target.value)}
                   placeholder="Escreva o objetivo da aula..."
-                  className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
-                  style={{
-                    minHeight: '100px',
-                  }}
                 />
 
                 <SectionActivitiesGrid sectionId="objetivo" />
@@ -1832,12 +1859,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-4 pb-4">
-                <textarea
+                <AutoResizeTextarea
                   value={preEstudoText}
                   onChange={(e) => setPreEstudoText(e.target.value)}
                   placeholder="Descreva as atividades de pré-estudo..."
-                  className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
-                  style={{ minHeight: '100px' }}
                 />
                 <SectionActivitiesGrid sectionId="pre-estudo" />
                 <div className="flex items-center gap-3 mt-3">
@@ -1911,7 +1936,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           {isIntroducaoExpanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
-                <textarea value={introducaoText} onChange={(e) => setIntroducaoText(e.target.value)} placeholder="Descreva a introdução da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <AutoResizeTextarea value={introducaoText} onChange={(e) => setIntroducaoText(e.target.value)} placeholder="Descreva a introdução da aula..." />
                 <SectionActivitiesGrid sectionId="introducao" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="introducao" />
@@ -1975,7 +2000,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           {isDesenvolvimentoExpanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
-                <textarea value={desenvolvimentoText} onChange={(e) => setDesenvolvimentoText(e.target.value)} placeholder="Descreva o desenvolvimento da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <AutoResizeTextarea value={desenvolvimentoText} onChange={(e) => setDesenvolvimentoText(e.target.value)} placeholder="Descreva o desenvolvimento da aula..." />
                 <SectionActivitiesGrid sectionId="desenvolvimento" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="desenvolvimento" />
@@ -2039,7 +2064,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           {isEncerramentoExpanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
-                <textarea value={encerramentoText} onChange={(e) => setEncerramentoText(e.target.value)} placeholder="Descreva o encerramento da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <AutoResizeTextarea value={encerramentoText} onChange={(e) => setEncerramentoText(e.target.value)} placeholder="Descreva o encerramento da aula..." />
                 <SectionActivitiesGrid sectionId="encerramento" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="encerramento" />
@@ -2103,7 +2128,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           {isMateriaisExpanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
-                <textarea value={materiaisText} onChange={(e) => setMateriaisText(e.target.value)} placeholder="Liste os materiais complementares..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <AutoResizeTextarea value={materiaisText} onChange={(e) => setMateriaisText(e.target.value)} placeholder="Liste os materiais complementares..." />
                 <SectionActivitiesGrid sectionId="materiais" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="materiais" />
@@ -2167,7 +2192,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           {isObservacoesExpanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
-                <textarea value={observacoesText} onChange={(e) => setObservacoesText(e.target.value)} placeholder="Adicione suas observações..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <AutoResizeTextarea value={observacoesText} onChange={(e) => setObservacoesText(e.target.value)} placeholder="Adicione suas observações..." />
                 <SectionActivitiesGrid sectionId="observacoes" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="observacoes" />
@@ -2231,7 +2256,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           {isBnccExpanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
-                <textarea value={bnccText} onChange={(e) => setBnccText(e.target.value)} placeholder="Descreva os critérios da BNCC..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <AutoResizeTextarea value={bnccText} onChange={(e) => setBnccText(e.target.value)} placeholder="Descreva os critérios da BNCC..." />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="bncc" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - BNCC'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
