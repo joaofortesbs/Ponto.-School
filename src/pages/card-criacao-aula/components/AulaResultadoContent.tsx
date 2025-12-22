@@ -76,6 +76,16 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [isMateriaisExpanded, setIsMateriaisExpanded] = useState(true);
   const [isObservacoesExpanded, setIsObservacoesExpanded] = useState(true);
   const [isBnccExpanded, setIsBnccExpanded] = useState(true);
+
+  // Estados de visibilidade para seções padrão (para exclusão completa)
+  const [isObjectiveVisible, setIsObjectiveVisible] = useState(true);
+  const [isPreEstudoVisible, setIsPreEstudoVisible] = useState(true);
+  const [isIntroducaoVisible, setIsIntroducaoVisible] = useState(true);
+  const [isDesenvolvimentoVisible, setIsDesenvolvimentoVisible] = useState(true);
+  const [isEncerramentoVisible, setIsEncerramentoVisible] = useState(true);
+  const [isMateriaisVisible, setIsMateriaisVisible] = useState(true);
+  const [isObservacoesVisible, setIsObservacoesVisible] = useState(true);
+  const [isBnccVisible, setIsBnccVisible] = useState(true);
   
   // Estado para seções personalizadas adicionadas pelo usuário
   interface CustomSection {
@@ -498,20 +508,19 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       ];
       
       if (defaultSections.includes(sectionId)) {
-        // Para seções padrão, apenas "escondemos" limpando o texto ou poderíamos ter um estado de visibilidade
-        // Por enquanto, vamos apenas limpar o texto como uma forma de "remover" o conteúdo
+        // Para seções padrão, escondemos completamente o card
         switch (sectionId) {
-          case 'objective': setObjectiveText(''); break;
-          case 'preEstudo': setPreEstudoText(''); break;
-          case 'introducao': setIntroducaoText(''); break;
-          case 'desenvolvimento': setDesenvolvimentoText(''); break;
-          case 'encerramento': setEncerramentoText(''); break;
-          case 'materiais': setMateriaisText(''); break;
-          case 'observacoes': setObservacoesText(''); break;
-          case 'bncc': setBnccText(''); break;
+          case 'objective': setIsObjectiveVisible(false); break;
+          case 'preEstudo': setIsPreEstudoVisible(false); break;
+          case 'introducao': setIsIntroducaoVisible(false); break;
+          case 'desenvolvimento': setIsDesenvolvimentoVisible(false); break;
+          case 'encerramento': setIsEncerramentoVisible(false); break;
+          case 'materiais': setIsMateriaisVisible(false); break;
+          case 'observacoes': setIsObservacoesVisible(false); break;
+          case 'bncc': setIsBnccVisible(false); break;
         }
       } else {
-        // Seção personalizada
+        // Seção personalizada - remove completamente
         deleteCustomSection(sectionId);
       }
     } else if (action === 'duplicar') {
@@ -1120,6 +1129,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       {renderCustomSectionsForDivider(0)}
 
       {/* Card Pré-estudo */}
+      <AnimatePresence>
+      {isPreEstudoVisible && (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ 
@@ -1128,6 +1139,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           background: theme.bgGradient,
           borderColor: theme.border
         }}
+        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.55, duration: 0.4 }}
         className="rounded-2xl relative z-10 cursor-pointer"
         style={{
@@ -1157,7 +1169,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <SectionMenu 
                     sectionId="pre-estudo" 
                     onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => console.log(`${action} - Pré-estudo`)}
+                    onAction={(action) => handleSectionAction('preEstudo', action)}
                   />
                 )}
               </AnimatePresence>
@@ -1212,15 +1224,20 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+      )}
+      </AnimatePresence>
 
       {/* Divider 1 - Após Pré-estudo */}
       <AddSectionDivider index={1} onAdd={() => addCustomSection(1)} />
       {renderCustomSectionsForDivider(1)}
 
       {/* Card Introdução */}
+      <AnimatePresence>
+      {isIntroducaoVisible && (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
+        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.6, duration: 0.4 }}
         className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
@@ -1246,7 +1263,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <SectionMenu 
                     sectionId="introducao" 
                     onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => console.log(`${action} - Introdução`)}
+                    onAction={(action) => handleSectionAction('introducao', action)}
                   />
                 )}
               </AnimatePresence>
@@ -1270,15 +1287,20 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+      )}
+      </AnimatePresence>
 
       {/* Divider 2 - Após Introdução */}
       <AddSectionDivider index={2} onAdd={() => addCustomSection(2)} />
       {renderCustomSectionsForDivider(2)}
 
       {/* Card Desenvolvimento */}
+      <AnimatePresence>
+      {isDesenvolvimentoVisible && (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
+        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.65, duration: 0.4 }}
         className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
@@ -1304,7 +1326,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <SectionMenu 
                     sectionId="desenvolvimento" 
                     onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => console.log(`${action} - Desenvolvimento`)}
+                    onAction={(action) => handleSectionAction('desenvolvimento', action)}
                   />
                 )}
               </AnimatePresence>
@@ -1328,15 +1350,20 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+      )}
+      </AnimatePresence>
 
       {/* Divider 3 - Após Desenvolvimento */}
       <AddSectionDivider index={3} onAdd={() => addCustomSection(3)} />
       {renderCustomSectionsForDivider(3)}
 
       {/* Card Encerramento */}
+      <AnimatePresence>
+      {isEncerramentoVisible && (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
+        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.7, duration: 0.4 }}
         className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
@@ -1362,7 +1389,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <SectionMenu 
                     sectionId="encerramento" 
                     onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => console.log(`${action} - Encerramento`)}
+                    onAction={(action) => handleSectionAction('encerramento', action)}
                   />
                 )}
               </AnimatePresence>
@@ -1386,15 +1413,20 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+      )}
+      </AnimatePresence>
 
       {/* Divider 4 - Após Encerramento */}
       <AddSectionDivider index={4} onAdd={() => addCustomSection(4)} />
       {renderCustomSectionsForDivider(4)}
 
       {/* Card Materiais Complementares */}
+      <AnimatePresence>
+      {isMateriaisVisible && (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
+        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.75, duration: 0.4 }}
         className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
@@ -1420,7 +1452,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <SectionMenu 
                     sectionId="materiais" 
                     onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => console.log(`${action} - Materiais`)}
+                    onAction={(action) => handleSectionAction('materiais', action)}
                   />
                 )}
               </AnimatePresence>
@@ -1444,15 +1476,20 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+      )}
+      </AnimatePresence>
 
       {/* Divider 5 - Após Materiais Complementares */}
       <AddSectionDivider index={5} onAdd={() => addCustomSection(5)} />
       {renderCustomSectionsForDivider(5)}
 
       {/* Card Observações do Professor */}
+      <AnimatePresence>
+      {isObservacoesVisible && (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
+        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.8, duration: 0.4 }}
         className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
@@ -1478,7 +1515,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <SectionMenu 
                     sectionId="observacoes" 
                     onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => console.log(`${action} - Observações`)}
+                    onAction={(action) => handleSectionAction('observacoes', action)}
                   />
                 )}
               </AnimatePresence>
@@ -1502,15 +1539,20 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+      )}
+      </AnimatePresence>
 
       {/* Divider 6 - Após Observações */}
       <AddSectionDivider index={6} onAdd={() => addCustomSection(6)} />
       {renderCustomSectionsForDivider(6)}
 
       {/* Card Critérios BNCC */}
+      <AnimatePresence>
+      {isBnccVisible && (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
+        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.85, duration: 0.4 }}
         className="mb-6 rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
@@ -1536,7 +1578,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <SectionMenu 
                     sectionId="bncc" 
                     onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => console.log(`${action} - BNCC`)}
+                    onAction={(action) => handleSectionAction('bncc', action)}
                   />
                 )}
               </AnimatePresence>
@@ -1560,6 +1602,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+      )}
+      </AnimatePresence>
     </div>
   );
 };
