@@ -69,13 +69,23 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [materiaisText, setMateriaisText] = useState('');
   const [observacoesText, setObservacoesText] = useState('');
   const [bnccText, setBnccText] = useState('');
-  const [isPreEstudoExpanded, setIsPreEstudoExpanded] = useState(false);
-  const [isIntroducaoExpanded, setIsIntroducaoExpanded] = useState(false);
-  const [isDesenvolvimentoExpanded, setIsDesenvolvimentoExpanded] = useState(false);
-  const [isEncerramentoExpanded, setIsEncerramentoExpanded] = useState(false);
-  const [isMateriaisExpanded, setIsMateriaisExpanded] = useState(false);
-  const [isObservacoesExpanded, setIsObservacoesExpanded] = useState(false);
-  const [isBnccExpanded, setIsBnccExpanded] = useState(false);
+  const [isPreEstudoExpanded, setIsPreEstudoExpanded] = useState(true);
+  const [isIntroducaoExpanded, setIsIntroducaoExpanded] = useState(true);
+  const [isDesenvolvimentoExpanded, setIsDesenvolvimentoExpanded] = useState(true);
+  const [isEncerramentoExpanded, setIsEncerramentoExpanded] = useState(true);
+  const [isMateriaisExpanded, setIsMateriaisExpanded] = useState(true);
+  const [isObservacoesExpanded, setIsObservacoesExpanded] = useState(true);
+  const [isBnccExpanded, setIsBnccExpanded] = useState(true);
+  
+  // Estado para seções personalizadas adicionadas pelo usuário
+  interface CustomSection {
+    id: string;
+    title: string;
+    text: string;
+    isExpanded: boolean;
+  }
+  const [customSections, setCustomSections] = useState<CustomSection[]>([]);
+  const [hoveredDividerIndex, setHoveredDividerIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const summaryCardRef = useRef<HTMLDivElement>(null);
