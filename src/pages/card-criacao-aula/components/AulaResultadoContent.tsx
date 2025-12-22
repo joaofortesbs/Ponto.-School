@@ -217,8 +217,79 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Estado para o modal de visualização de atividade
+  // Estados para o modal de visualização de atividade
   const [viewingActivity, setViewingActivity] = useState<AtividadeNeon | null>(null);
+
+  // Sistema de Persistência Robust
+  const STORAGE_KEY = useMemo(() => `aula_data_${aulaName.replace(/\s+/g, '_').toLowerCase()}`, [aulaName]);
+
+  // Carrega dados salvos ao iniciar
+  useEffect(() => {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const data = JSON.parse(savedData);
+        if (data.objectiveText) setObjectiveText(data.objectiveText);
+        if (data.preEstudoText) setPreEstudoText(data.preEstudoText);
+        if (data.introducaoText) setIntroducaoText(data.introducaoText);
+        if (data.desenvolvimentoText) setDesenvolvimentoText(data.desenvolvimentoText);
+        if (data.encerramentoText) setEncerramentoText(data.encerramentoText);
+        if (data.materiaisText) setMateriaisText(data.materiaisText);
+        if (data.observacoesText) setObservacoesText(data.observacoesText);
+        if (data.bnccText) setBnccText(data.bnccText);
+        if (data.sectionOrder) setSectionOrder(data.sectionOrder);
+        if (data.customSections) setCustomSections(data.customSections);
+        if (data.sectionActivities) setSectionActivities(data.sectionActivities);
+        if (data.preEstudoTime) setPreEstudoTime(data.preEstudoTime);
+        if (data.introducaoTime) setIntroducaoTime(data.introducaoTime);
+        if (data.desenvolvimentoTime) setDesenvolvimentoTime(data.desenvolvimentoTime);
+        if (data.encerramentoTime) setEncerramentoTime(data.encerramentoTime);
+        if (data.materiaisTime) setMateriaisTime(data.materiaisTime);
+        if (data.observacoesTime) setObservacoesTime(data.observacoesTime);
+        if (data.bnccTime) setBnccTime(data.bnccTime);
+        
+        console.log('✅ [Persistence] Dados da aula restaurados com sucesso!');
+      } catch (error) {
+        console.error('❌ [Persistence] Erro ao carregar dados salvos:', error);
+      }
+    }
+  }, [STORAGE_KEY]);
+
+  // Salva dados automaticamente quando houver mudanças
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const dataToSave = {
+        objectiveText,
+        preEstudoText,
+        introducaoText,
+        desenvolvimentoText,
+        encerramentoText,
+        materiaisText,
+        observacoesText,
+        bnccText,
+        sectionOrder,
+        customSections,
+        sectionActivities,
+        preEstudoTime,
+        introducaoTime,
+        desenvolvimentoTime,
+        encerramentoTime,
+        materiaisTime,
+        observacoesTime,
+        bnccTime
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    }, 1000); // Debounce de 1 segundo para o localStorage
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    objectiveText, preEstudoText, introducaoText, desenvolvimentoText, 
+    encerramentoText, materiaisText, observacoesText, bnccText,
+    sectionOrder, customSections, sectionActivities,
+    preEstudoTime, introducaoTime, desenvolvimentoTime, 
+    encerramentoTime, materiaisTime, observacoesTime, bnccTime,
+    STORAGE_KEY
+  ]);
 
   // Interface para atividades adicionadas às seções
   interface SectionActivity {
