@@ -120,6 +120,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [activitySearchTerm, setActivitySearchTerm] = useState('');
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Interface para atividades adicionadas às seções
   interface SectionActivity {
@@ -359,10 +360,34 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               </select>
               <Filter className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: theme.primary }} />
             </div>
+
+            {/* Alternância de Visualização */}
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-white/5 border border-white/10">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/60'}`}
+                style={{ color: viewMode === 'grid' ? theme.primary : undefined }}
+                title="Visualização em Blocos"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/60'}`}
+                style={{ color: viewMode === 'list' ? theme.primary : undefined }}
+                title="Visualização em Lista"
+              >
+                <List className="w-4 h-4" />
+              </motion.button>
+            </div>
           </div>
 
           {/* Activities List */}
-          <div className="overflow-y-auto p-4 space-y-2" style={{ maxHeight: 'calc(80vh - 180px)' }}>
+          <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(80vh - 180px)' }}>
             {loadingActivities ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin w-8 h-8 border-2 border-white/20 border-t-white rounded-full" />
@@ -376,61 +401,145 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                     : 'Nenhuma atividade encontrada com esses filtros'}
                 </p>
               </div>
-            ) : (
-              filteredActivities.map(activity => {
-                const isSelected = selectedActivities.includes(activity.id);
-                const title = activity.id_json?.titulo || activity.id_json?.title || activity.tipo || 'Atividade sem título';
-                
-                return (
-                  <motion.div
-                    key={activity.id}
-                    whileHover={{ scale: 1.01 }}
-                    onClick={() => {
-                      setSelectedActivities(prev => 
-                        isSelected 
-                          ? prev.filter(id => id !== activity.id)
-                          : [...prev, activity.id]
-                      );
-                    }}
-                    className="p-3 rounded-xl cursor-pointer transition-all"
-                    style={{
-                      background: isSelected ? `${theme.primary}20` : 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${isSelected ? theme.primary : 'rgba(255,255,255,0.08)'}`,
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
+            ) : viewMode === 'grid' ? (
+              /* Grid View (Blocos) */
+              <div className="grid grid-cols-2 gap-4">
+                {filteredActivities.map(activity => {
+                  const isSelected = selectedActivities.includes(activity.id);
+                  const title = activity.id_json?.titulo || activity.id_json?.title || activity.tipo || 'Atividade sem título';
+                  const type = activity.tipo || 'Geral';
+                  
+                  return (
+                    <motion.div
+                      key={activity.id}
+                      whileHover={{ y: -4, scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setSelectedActivities(prev => 
+                          isSelected 
+                            ? prev.filter(id => id !== activity.id)
+                            : [...prev, activity.id]
+                        );
+                      }}
+                      className="relative flex flex-col h-36 rounded-2xl cursor-pointer overflow-hidden transition-all group"
+                      style={{
+                        background: 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                        border: `1px solid ${isSelected ? theme.primary : 'rgba(255,255,255,0.08)'}`,
+                        boxShadow: isSelected ? `0 8px 20px ${theme.shadow}44` : 'none'
+                      }}
+                    >
+                      {/* Borda decorativa lateral baseada no tipo */}
                       <div 
-                        className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5"
-                        style={{
-                          background: isSelected ? theme.primary : 'transparent',
-                          border: `2px solid ${isSelected ? theme.primary : 'rgba(255,255,255,0.3)'}`
-                        }}
-                      >
-                        {isSelected && <Check className="w-3 h-3 text-white" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-white font-medium text-sm truncate">{title}</h4>
-                        <div className="flex items-center gap-2 mt-1">
+                        className="absolute left-0 top-0 bottom-0 w-1" 
+                        style={{ background: theme.primary }}
+                      />
+
+                      {/* Conteúdo do Card */}
+                      <div className="p-3 flex flex-col h-full">
+                        <div className="flex justify-between items-start mb-2">
+                          <div 
+                            className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
+                            style={{
+                              background: isSelected ? theme.primary : 'rgba(255,255,255,0.05)',
+                              border: `1.5px solid ${isSelected ? theme.primary : 'rgba(255,255,255,0.2)'}`
+                            }}
+                          >
+                            {isSelected && <Check className="w-3 h-3 text-white" />}
+                          </div>
                           <span 
-                            className="px-2 py-0.5 rounded-full text-xs"
+                            className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
                             style={{ background: `${theme.primary}20`, color: theme.primary }}
                           >
-                            {activity.tipo || 'Geral'}
+                            {type}
                           </span>
-                          {activity.stars && (
-                            <span className="text-xs text-white/40">{activity.stars} estrelas</span>
-                          )}
+                        </div>
+
+                        <h4 className="text-white font-bold text-xs line-clamp-2 mb-auto group-hover:text-primary-orange transition-colors">
+                          {title}
+                        </h4>
+
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
+                          {activity.stars ? (
+                            <div className="flex items-center gap-0.5">
+                              <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                              <span className="text-[10px] text-white/50">{activity.stars}</span>
+                            </div>
+                          ) : <div />}
+                          
                           {activity.created_at && (
-                            <span className="text-xs text-white/40">
-                              {new Date(activity.created_at).toLocaleDateString('pt-BR')}
+                            <span className="text-[10px] text-white/30">
+                              {new Date(activity.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                             </span>
                           )}
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                );
-              })
+
+                      {/* Overlay de Seleção */}
+                      {isSelected && (
+                        <div className="absolute inset-0 bg-primary-orange/5 pointer-events-none" />
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
+            ) : (
+              /* List View (Lista) */
+              <div className="space-y-2">
+                {filteredActivities.map(activity => {
+                  const isSelected = selectedActivities.includes(activity.id);
+                  const title = activity.id_json?.titulo || activity.id_json?.title || activity.tipo || 'Atividade sem título';
+                  
+                  return (
+                    <motion.div
+                      key={activity.id}
+                      whileHover={{ scale: 1.01, x: 4 }}
+                      onClick={() => {
+                        setSelectedActivities(prev => 
+                          isSelected 
+                            ? prev.filter(id => id !== activity.id)
+                            : [...prev, activity.id]
+                        );
+                      }}
+                      className="p-3 rounded-xl cursor-pointer transition-all"
+                      style={{
+                        background: isSelected ? `${theme.primary}20` : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${isSelected ? theme.primary : 'rgba(255,255,255,0.08)'}`,
+                      }}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div 
+                          className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5"
+                          style={{
+                            background: isSelected ? theme.primary : 'transparent',
+                            border: `2px solid ${isSelected ? theme.primary : 'rgba(255,255,255,0.3)'}`
+                          }}
+                        >
+                          {isSelected && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-white font-medium text-sm truncate">{title}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span 
+                              className="px-2 py-0.5 rounded-full text-xs"
+                              style={{ background: `${theme.primary}20`, color: theme.primary }}
+                            >
+                              {activity.tipo || 'Geral'}
+                            </span>
+                            {activity.stars && (
+                              <span className="text-xs text-white/40">{activity.stars} estrelas</span>
+                            )}
+                            {activity.created_at && (
+                              <span className="text-xs text-white/40">
+                                {new Date(activity.created_at).toLocaleDateString('pt-BR')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
             )}
           </div>
 
