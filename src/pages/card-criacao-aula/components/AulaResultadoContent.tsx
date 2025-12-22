@@ -828,7 +828,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       </motion.div>
 
       {/* Divider 0 - Após Objetivo da Aula */}
-      <div className="relative flex items-center justify-center">
+      <div className="relative flex items-center justify-center mt-6">
         <AddSectionDivider index={0} onAdd={() => addCustomSection(0)} />
         
         <div className="absolute right-0 z-30">
