@@ -258,27 +258,26 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   };
 
   const AddSectionDivider = ({ index, onAdd }: { index: number; onAdd: () => void }) => (
-    <div className="flex items-center justify-center -my-3 relative z-20">
+    <div className="flex items-center justify-center -my-3 relative z-20 px-4">
       <motion.button
         onClick={(e) => {
           e.stopPropagation();
           onAdd();
         }}
-        className="flex items-center gap-2 px-6 py-2.5 rounded-full cursor-pointer transition-all duration-200"
+        className="flex items-center justify-center gap-3 w-full max-w-md py-4 cursor-pointer transition-all duration-200"
         style={{
-          background: `${theme.primary}15`,
-          border: `1px dashed ${theme.primary}50`,
-          backdropFilter: 'blur(4px)'
+          background: 'rgba(26, 31, 44, 0.95)',
+          border: `2px dashed ${theme.primary}`,
+          borderRadius: '16px',
         }}
         whileHover={{ 
-          scale: 1.05,
-          background: `${theme.primary}25`,
-          borderColor: theme.primary
+          scale: 1.02,
+          background: 'rgba(26, 31, 44, 1)',
         }}
-        whileTap={{ scale: 0.95 }}
+        whileTap={{ scale: 0.98 }}
       >
         <Plus className="w-5 h-5" style={{ color: theme.primary }} />
-        <span className="text-sm font-medium" style={{ color: theme.primary }}>
+        <span className="text-base font-medium" style={{ color: theme.primary }}>
           Adicionar seção
         </span>
       </motion.button>
