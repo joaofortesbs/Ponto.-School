@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star } from 'lucide-react';
 import { Template } from './TemplateDropdown';
@@ -156,6 +156,16 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     activityData: AtividadeNeon;
   }
   const [sectionActivities, setSectionActivities] = useState<SectionActivity[]>([]);
+
+  // Handlers memoizados para os campos de texto (performance)
+  const handleObjectiveChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setObjectiveText(e.target.value), []);
+  const handlePreEstudoChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setPreEstudoText(e.target.value), []);
+  const handleIntroducaoChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setIntroducaoText(e.target.value), []);
+  const handleDesenvolvimentoChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDesenvolvimentoText(e.target.value), []);
+  const handleEncerramentoChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setEncerramentoText(e.target.value), []);
+  const handleMateriaisChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setMateriaisText(e.target.value), []);
+  const handleObservacoesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setObservacoesText(e.target.value), []);
+  const handleBnccChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setBnccText(e.target.value), []);
 
   // Carregar atividades do usuário
   const loadUserActivities = async () => {
@@ -1706,7 +1716,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               <div className="px-4 pb-4">
                 <AutoResizeTextarea
                   value={objectiveText}
-                  onChange={(e) => setObjectiveText(e.target.value)}
+                  onChange={handleObjectiveChange}
                   placeholder="Escreva o objetivo da aula..."
                 />
 
@@ -1844,7 +1854,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               <div className="px-4 pb-4">
                 <AutoResizeTextarea
                   value={preEstudoText}
-                  onChange={(e) => setPreEstudoText(e.target.value)}
+                  onChange={handlePreEstudoChange}
                   placeholder="Descreva as atividades de pré-estudo..."
                 />
                 <SectionActivitiesGrid sectionId="pre-estudo" />
@@ -1919,7 +1929,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           {isIntroducaoExpanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
-                <AutoResizeTextarea value={introducaoText} onChange={(e) => setIntroducaoText(e.target.value)} placeholder="Descreva a introdução da aula..." />
+                <AutoResizeTextarea value={introducaoText} onChange={handleIntroducaoChange} placeholder="Descreva a introdução da aula..." />
                 <SectionActivitiesGrid sectionId="introducao" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="introducao" />
@@ -1983,7 +1993,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           {isDesenvolvimentoExpanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
-                <AutoResizeTextarea value={desenvolvimentoText} onChange={(e) => setDesenvolvimentoText(e.target.value)} placeholder="Descreva o desenvolvimento da aula..." />
+                <AutoResizeTextarea value={desenvolvimentoText} onChange={handleDesenvolvimentoChange} placeholder="Descreva o desenvolvimento da aula..." />
                 <SectionActivitiesGrid sectionId="desenvolvimento" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="desenvolvimento" />
@@ -2047,7 +2057,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           {isEncerramentoExpanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
-                <AutoResizeTextarea value={encerramentoText} onChange={(e) => setEncerramentoText(e.target.value)} placeholder="Descreva o encerramento da aula..." />
+                <AutoResizeTextarea value={encerramentoText} onChange={handleEncerramentoChange} placeholder="Descreva o encerramento da aula..." />
                 <SectionActivitiesGrid sectionId="encerramento" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="encerramento" />
@@ -2111,7 +2121,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           {isMateriaisExpanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
-                <AutoResizeTextarea value={materiaisText} onChange={(e) => setMateriaisText(e.target.value)} placeholder="Liste os materiais complementares..." />
+                <AutoResizeTextarea value={materiaisText} onChange={handleMateriaisChange} placeholder="Liste os materiais complementares..." />
                 <SectionActivitiesGrid sectionId="materiais" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="materiais" />
@@ -2175,7 +2185,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           {isObservacoesExpanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
-                <AutoResizeTextarea value={observacoesText} onChange={(e) => setObservacoesText(e.target.value)} placeholder="Adicione suas observações..." />
+                <AutoResizeTextarea value={observacoesText} onChange={handleObservacoesChange} placeholder="Adicione suas observações..." />
                 <SectionActivitiesGrid sectionId="observacoes" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="observacoes" />
@@ -2239,7 +2249,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           {isBnccExpanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
-                <AutoResizeTextarea value={bnccText} onChange={(e) => setBnccText(e.target.value)} placeholder="Descreva os critérios da BNCC..." />
+                <AutoResizeTextarea value={bnccText} onChange={handleBnccChange} placeholder="Descreva os critérios da BNCC..." />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="bncc" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - BNCC'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
