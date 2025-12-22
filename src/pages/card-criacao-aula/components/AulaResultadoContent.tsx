@@ -258,23 +258,24 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   };
 
   const AddSectionDivider = ({ index, onAdd }: { index: number; onAdd: () => void }) => (
-    <div className="py-2 flex items-center justify-center">
+    <div className="flex items-center justify-center -my-3 relative z-20">
       <motion.button
         onClick={(e) => {
           e.stopPropagation();
           onAdd();
         }}
-        className="flex items-center gap-2 px-6 py-3 rounded-full cursor-pointer transition-all duration-200"
+        className="flex items-center gap-2 px-6 py-2.5 rounded-full cursor-pointer transition-all duration-200"
         style={{
           background: `${theme.primary}15`,
           border: `1px dashed ${theme.primary}50`,
+          backdropFilter: 'blur(4px)'
         }}
         whileHover={{ 
-          scale: 1.02,
+          scale: 1.05,
           background: `${theme.primary}25`,
           borderColor: theme.primary
         }}
-        whileTap={{ scale: 0.98 }}
+        whileTap={{ scale: 0.95 }}
       >
         <Plus className="w-5 h-5" style={{ color: theme.primary }} />
         <span className="text-sm font-medium" style={{ color: theme.primary }}>
