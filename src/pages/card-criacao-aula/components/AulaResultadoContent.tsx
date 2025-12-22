@@ -1,28 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star, GripVertical } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
 import { ActivityViewModal } from '@/features/schoolpower/construction/ActivityViewModal';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  DragStartEvent,
-  DragOverlay,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
 interface AulaResultadoContentProps {
   aulaName?: string;
@@ -175,85 +156,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     activityData: AtividadeNeon;
   }
   const [sectionActivities, setSectionActivities] = useState<SectionActivity[]>([]);
-
-  // Estado de ordem das seções para drag and drop
-  const [sectionOrder, setSectionOrder] = useState<string[]>([
-    'objective', 'preEstudo', 'introducao', 'desenvolvimento', 
-    'encerramento', 'materiais', 'observacoes', 'bncc'
-  ]);
-
-  // Estado de arraste ativo
-  const [activeDragId, setActiveDragId] = useState<string | null>(null);
-
-  // Sensors com delay para pressão prolongada (250ms)
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  // Handlers de drag
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    setActiveDragId(event.active.id as string);
-  }, []);
-
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveDragId(null);
-    
-    if (over && active.id !== over.id) {
-      setSectionOrder((items) => {
-        const oldIndex = items.indexOf(active.id as string);
-        const newIndex = items.indexOf(over.id as string);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  }, []);
-
-  // Componente wrapper para seções sortáveis
-  const SortableSectionWrapper = ({ id, children }: { id: string; children: React.ReactNode }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id });
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.5 : 1,
-      zIndex: isDragging ? 1000 : 1,
-      scale: isDragging ? 1.02 : 1,
-    };
-
-    return (
-      <div 
-        ref={setNodeRef} 
-        style={style}
-        className={`relative ${isDragging ? 'shadow-2xl' : ''}`}
-      >
-        {/* Handle de arraste */}
-        <div
-          {...attributes}
-          {...listeners}
-          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-2 cursor-grab active:cursor-grabbing opacity-0 hover:opacity-100 transition-opacity z-50"
-          style={{ touchAction: 'none' }}
-        >
-          <GripVertical className="w-5 h-5 text-white/40 hover:text-white/70" />
-        </div>
-        {children}
-      </div>
-    );
-  };
 
   // Handlers memoizados para os campos de texto (performance)
   const handleObjectiveChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setObjectiveText(e.target.value), []);
@@ -1768,92 +1670,83 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </motion.div>
       </div>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ 
+          opacity: 1, 
+          y: 0,
+          background: theme.bgGradient,
+          borderColor: theme.border
+        }}
+        transition={{ delay: 0.5, duration: 0.4 }}
+        className="mt-[18px] rounded-2xl relative z-10 cursor-pointer"
+        style={{
+          background: theme.bgGradient,
+          border: `1px solid ${theme.border}`,
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+        }}
+        onClick={() => setIsObjectiveExpanded(!isObjectiveExpanded)}
       >
-        <SortableContext items={sectionOrder} strategy={verticalListSortingStrategy}>
-          <SortableSectionWrapper id="objective">
+        <div 
+          className="p-4 flex items-center justify-between"
+          style={{ height: '62px' }}
+        >
+          <div className="flex items-center gap-3">
+            <Target className="w-5 h-5" style={{ color: theme.primary }} />
+            <span className="text-white font-bold text-lg">Objetivo da Aula</span>
+          </div>
+          <motion.div
+            animate={{ rotate: isObjectiveExpanded ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+          </motion.div>
+        </div>
+
+        <AnimatePresence>
+          {isObjectiveExpanded && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ 
-                opacity: 1, 
-                y: 0,
-                background: theme.bgGradient,
-                borderColor: theme.border
-              }}
-              transition={{ delay: 0.5, duration: 0.4 }}
-              className="mt-[18px] rounded-2xl relative z-10"
-              style={{
-                background: theme.bgGradient,
-                border: `1px solid ${theme.border}`,
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-              }}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div 
-                className="p-4 flex items-center justify-between"
-                style={{ height: '62px' }}
-              >
-                <div className="flex items-center gap-3">
-                  <Target className="w-5 h-5" style={{ color: theme.primary }} />
-                  <span className="text-white font-bold text-lg">Objetivo da Aula</span>
-                </div>
-                <motion.div
-                  animate={{ rotate: isObjectiveExpanded ? 180 : 0 }}
-                  transition={{ duration: 0.3 }}
-                  onClick={() => setIsObjectiveExpanded(!isObjectiveExpanded)}
-                  className="cursor-pointer p-1 rounded-full hover:bg-white/10 transition-colors"
-                >
-                  <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-                </motion.div>
-              </div>
+              <div className="px-4 pb-4">
+                <AutoResizeTextarea
+                  value={objectiveText}
+                  onChange={handleObjectiveChange}
+                  placeholder="Escreva o objetivo da aula..."
+                />
 
-              <AnimatePresence>
-                {isObjectiveExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
+                <SectionActivitiesGrid sectionId="objetivo" />
+
+                <div className="flex items-center gap-3 mt-3">
+                  <AddActivityButton sectionId="objetivo" />
+
+                  <motion.button
+                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
+                    style={{
+                      background: `${theme.primary}1A`,
+                      border: `1px solid ${theme.primary}33`,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('Tools clicado');
+                    }}
                   >
-                    <div className="px-4 pb-4">
-                      <AutoResizeTextarea
-                        value={objectiveText}
-                        onChange={handleObjectiveChange}
-                        placeholder="Escreva o objetivo da aula..."
-                      />
-
-                      <SectionActivitiesGrid sectionId="objetivo" />
-
-                      <div className="flex items-center gap-3 mt-3">
-                        <AddActivityButton sectionId="objetivo" />
-
-                        <motion.button
-                          whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-                          whileTap={{ scale: 0.98 }}
-                          className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
-                          style={{
-                            background: `${theme.primary}1A`,
-                            border: `1px solid ${theme.primary}33`,
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            console.log('Tools clicado');
-                          }}
-                        >
-                          <Wrench className="w-4 h-4" />
-                          <span>Tools</span>
-                        </motion.button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <Wrench className="w-4 h-4" />
+                    <span>Tools</span>
+                  </motion.button>
+                </div>
+              </div>
             </motion.div>
-          </SortableSectionWrapper>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
       {/* Espaçador e Botões de Ação - Após Objetivo da Aula */}
       <div className="relative flex items-center justify-between mt-16 mb-4 h-12">
@@ -1900,7 +1793,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       {/* Card Pré-estudo */}
       <AnimatePresence>
       {isPreEstudoVisible && (
-      <SortableSectionWrapper id="preEstudo">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ 
@@ -1911,12 +1803,13 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         }}
         exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.55, duration: 0.4 }}
-        className="rounded-2xl relative z-10"
+        className="rounded-2xl relative z-10 cursor-pointer"
         style={{
           background: theme.bgGradient,
           border: `1px solid ${theme.border}`,
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
         }}
+        onClick={() => setIsPreEstudoExpanded(!isPreEstudoExpanded)}
       >
         <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
           <div className="flex items-center gap-3">
@@ -1943,12 +1836,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 )}
               </AnimatePresence>
             </div>
-            <motion.div 
-              animate={{ rotate: isPreEstudoExpanded ? 180 : 0 }} 
-              transition={{ duration: 0.3 }}
-              onClick={() => setIsPreEstudoExpanded(!isPreEstudoExpanded)}
-              className="cursor-pointer p-1 rounded-full hover:bg-white/10 transition-colors"
-            >
+            <motion.div animate={{ rotate: isPreEstudoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
           </div>
@@ -1988,7 +1876,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
-      </SortableSectionWrapper>
       )}
       </AnimatePresence>
 
@@ -1999,14 +1886,14 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       {/* Card Introdução */}
       <AnimatePresence>
       {isIntroducaoVisible && (
-      <SortableSectionWrapper id="introducao">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.6, duration: 0.4 }}
-        className="rounded-2xl relative z-10"
+        className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        onClick={() => setIsIntroducaoExpanded(!isIntroducaoExpanded)}
       >
         <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
           <div className="flex items-center gap-3">
@@ -2033,12 +1920,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 )}
               </AnimatePresence>
             </div>
-            <motion.div 
-              animate={{ rotate: isIntroducaoExpanded ? 180 : 0 }} 
-              transition={{ duration: 0.3 }}
-              onClick={() => setIsIntroducaoExpanded(!isIntroducaoExpanded)}
-              className="cursor-pointer p-1 rounded-full hover:bg-white/10 transition-colors"
-            >
+            <motion.div animate={{ rotate: isIntroducaoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
           </div>
@@ -2058,7 +1940,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
-      </SortableSectionWrapper>
       )}
       </AnimatePresence>
 
@@ -2069,14 +1950,14 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       {/* Card Desenvolvimento */}
       <AnimatePresence>
       {isDesenvolvimentoVisible && (
-      <SortableSectionWrapper id="desenvolvimento">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.65, duration: 0.4 }}
-        className="rounded-2xl relative z-10"
+        className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        onClick={() => setIsDesenvolvimentoExpanded(!isDesenvolvimentoExpanded)}
       >
         <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
           <div className="flex items-center gap-3">
@@ -2103,12 +1984,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 )}
               </AnimatePresence>
             </div>
-            <motion.div 
-              animate={{ rotate: isDesenvolvimentoExpanded ? 180 : 0 }} 
-              transition={{ duration: 0.3 }}
-              onClick={() => setIsDesenvolvimentoExpanded(!isDesenvolvimentoExpanded)}
-              className="cursor-pointer p-1 rounded-full hover:bg-white/10 transition-colors"
-            >
+            <motion.div animate={{ rotate: isDesenvolvimentoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
           </div>
@@ -2128,7 +2004,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
-      </SortableSectionWrapper>
       )}
       </AnimatePresence>
 
@@ -2139,14 +2014,14 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       {/* Card Encerramento */}
       <AnimatePresence>
       {isEncerramentoVisible && (
-      <SortableSectionWrapper id="encerramento">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.7, duration: 0.4 }}
-        className="rounded-2xl relative z-10"
+        className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        onClick={() => setIsEncerramentoExpanded(!isEncerramentoExpanded)}
       >
         <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
           <div className="flex items-center gap-3">
@@ -2173,12 +2048,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 )}
               </AnimatePresence>
             </div>
-            <motion.div 
-              animate={{ rotate: isEncerramentoExpanded ? 180 : 0 }} 
-              transition={{ duration: 0.3 }}
-              onClick={() => setIsEncerramentoExpanded(!isEncerramentoExpanded)}
-              className="cursor-pointer p-1 rounded-full hover:bg-white/10 transition-colors"
-            >
+            <motion.div animate={{ rotate: isEncerramentoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
           </div>
@@ -2198,7 +2068,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
-      </SortableSectionWrapper>
       )}
       </AnimatePresence>
 
@@ -2209,14 +2078,14 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       {/* Card Materiais Complementares */}
       <AnimatePresence>
       {isMateriaisVisible && (
-      <SortableSectionWrapper id="materiais">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.75, duration: 0.4 }}
-        className="rounded-2xl relative z-10"
+        className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        onClick={() => setIsMateriaisExpanded(!isMateriaisExpanded)}
       >
         <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
           <div className="flex items-center gap-3">
@@ -2243,12 +2112,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 )}
               </AnimatePresence>
             </div>
-            <motion.div 
-              animate={{ rotate: isMateriaisExpanded ? 180 : 0 }} 
-              transition={{ duration: 0.3 }}
-              onClick={() => setIsMateriaisExpanded(!isMateriaisExpanded)}
-              className="cursor-pointer p-1 rounded-full hover:bg-white/10 transition-colors"
-            >
+            <motion.div animate={{ rotate: isMateriaisExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
           </div>
@@ -2268,7 +2132,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
-      </SortableSectionWrapper>
       )}
       </AnimatePresence>
 
@@ -2279,14 +2142,14 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       {/* Card Observações do Professor */}
       <AnimatePresence>
       {isObservacoesVisible && (
-      <SortableSectionWrapper id="observacoes">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.8, duration: 0.4 }}
-        className="rounded-2xl relative z-10"
+        className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        onClick={() => setIsObservacoesExpanded(!isObservacoesExpanded)}
       >
         <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
           <div className="flex items-center gap-3">
@@ -2313,12 +2176,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 )}
               </AnimatePresence>
             </div>
-            <motion.div 
-              animate={{ rotate: isObservacoesExpanded ? 180 : 0 }} 
-              transition={{ duration: 0.3 }}
-              onClick={() => setIsObservacoesExpanded(!isObservacoesExpanded)}
-              className="cursor-pointer p-1 rounded-full hover:bg-white/10 transition-colors"
-            >
+            <motion.div animate={{ rotate: isObservacoesExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
           </div>
@@ -2338,7 +2196,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
-      </SortableSectionWrapper>
       )}
       </AnimatePresence>
 
@@ -2349,14 +2206,14 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       {/* Card Critérios BNCC */}
       <AnimatePresence>
       {isBnccVisible && (
-      <SortableSectionWrapper id="bncc">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         exit={{ opacity: 0, height: 0, marginBottom: 0 }}
         transition={{ delay: 0.85, duration: 0.4 }}
-        className="mb-6 rounded-2xl relative z-10"
+        className="mb-6 rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        onClick={() => setIsBnccExpanded(!isBnccExpanded)}
       >
         <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
           <div className="flex items-center gap-3">
@@ -2383,12 +2240,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 )}
               </AnimatePresence>
             </div>
-            <motion.div 
-              animate={{ rotate: isBnccExpanded ? 180 : 0 }} 
-              transition={{ duration: 0.3 }}
-              onClick={() => setIsBnccExpanded(!isBnccExpanded)}
-              className="cursor-pointer p-1 rounded-full hover:bg-white/10 transition-colors"
-            >
+            <motion.div animate={{ rotate: isBnccExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
           </div>
@@ -2407,7 +2259,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
-      </SortableSectionWrapper>
       )}
       </AnimatePresence>
 
@@ -2439,8 +2290,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           />
         )}
       </AnimatePresence>
-        </SortableContext>
-      </DndContext>
     </div>
   );
 };
