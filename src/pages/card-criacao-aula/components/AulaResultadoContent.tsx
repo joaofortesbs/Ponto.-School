@@ -376,24 +376,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       />
 
       <div className="relative">
-        {/* Botão de Templates de Blocos */}
-        <div className="flex justify-end mb-4">
-          <motion.button
-            whileHover={{ scale: 1.05, background: `${theme.primary}20` }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200"
-            style={{ 
-              background: `${theme.primary}10`,
-              border: `1px solid ${theme.primary}33`,
-              color: theme.primary
-            }}
-            onClick={() => console.log('Templates de blocos clicado')}
-          >
-            <Layout className="w-4 h-4" />
-            <span className="text-xs font-semibold uppercase tracking-wider">Edição de blocos - Templates</span>
-          </motion.button>
-        </div>
-
         <motion.div
           ref={summaryCardRef}
           initial={{ opacity: 0, y: 20 }}
@@ -846,7 +828,26 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       </motion.div>
 
       {/* Divider 0 - Após Objetivo da Aula */}
-      <AddSectionDivider index={0} onAdd={() => addCustomSection(0)} />
+      <div className="relative">
+        <div className="absolute right-0 -top-2 z-30">
+          <motion.button
+            whileHover={{ scale: 1.1, background: `${theme.primary}20` }}
+            whileTap={{ scale: 0.9 }}
+            className="flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 shadow-lg"
+            style={{ 
+              background: `${theme.primary}15`,
+              border: `1px solid ${theme.primary}40`,
+              color: theme.primary,
+              backdropFilter: 'blur(8px)'
+            }}
+            onClick={() => console.log('Templates de blocos clicado')}
+            title="Edição de blocos - Templates"
+          >
+            <Layout className="w-5 h-5" />
+          </motion.button>
+        </div>
+        <AddSectionDivider index={0} onAdd={() => addCustomSection(0)} />
+      </div>
       {renderCustomSectionsForDivider(0)}
 
       {/* Card Pré-estudo */}
