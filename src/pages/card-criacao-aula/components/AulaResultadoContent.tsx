@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2 } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check } from 'lucide-react';
 import { Template } from './TemplateDropdown';
+import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
 
 interface AulaResultadoContentProps {
   aulaName?: string;
@@ -109,6 +110,386 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [materiaisTime, setMateriaisTime] = useState('10 min');
   const [observacoesTime, setObservacoesTime] = useState('10 min');
   const [bnccTime, setBnccTime] = useState('10 min');
+
+  // Estados para o dropdown de atividades
+  const [activeActivityDropdown, setActiveActivityDropdown] = useState<string | null>(null);
+  const [showMyActivitiesPanel, setShowMyActivitiesPanel] = useState(false);
+  const [myActivitiesSectionId, setMyActivitiesSectionId] = useState<string | null>(null);
+  const [userActivities, setUserActivities] = useState<AtividadeNeon[]>([]);
+  const [loadingActivities, setLoadingActivities] = useState(false);
+  const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
+  const [activitySearchTerm, setActivitySearchTerm] = useState('');
+  const [activityTypeFilter, setActivityTypeFilter] = useState<string>('all');
+
+  // Interface para atividades adicionadas às seções
+  interface SectionActivity {
+    sectionId: string;
+    activityId: string;
+    activityData: AtividadeNeon;
+  }
+  const [sectionActivities, setSectionActivities] = useState<SectionActivity[]>([]);
+
+  // Carregar atividades do usuário
+  const loadUserActivities = async () => {
+    setLoadingActivities(true);
+    try {
+      const userId = localStorage.getItem('userId') || localStorage.getItem('supabase_user_id');
+      if (userId) {
+        const result = await atividadesNeonService.buscarAtividadesUsuario(userId);
+        if (result.success && result.data) {
+          setUserActivities(result.data);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar atividades:', error);
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
+
+  // Filtrar atividades
+  const filteredActivities = userActivities.filter(activity => {
+    const matchesSearch = activitySearchTerm === '' || 
+      activity.id_json?.titulo?.toLowerCase().includes(activitySearchTerm.toLowerCase()) ||
+      activity.tipo?.toLowerCase().includes(activitySearchTerm.toLowerCase());
+    const matchesType = activityTypeFilter === 'all' || activity.tipo === activityTypeFilter;
+    return matchesSearch && matchesType;
+  });
+
+  // Adicionar atividades selecionadas a uma seção
+  const addActivitiesToSection = (sectionId: string) => {
+    const newActivities = selectedActivities.map(actId => {
+      const activity = userActivities.find(a => a.id === actId);
+      return {
+        sectionId,
+        activityId: actId,
+        activityData: activity!
+      };
+    }).filter(a => a.activityData);
+    
+    setSectionActivities(prev => [...prev, ...newActivities]);
+    setSelectedActivities([]);
+    setShowMyActivitiesPanel(false);
+    setMyActivitiesSectionId(null);
+  };
+
+  // Componente ActivityDropdown - Dropdown para cima com as 4 opções
+  const ActivityDropdown = ({ sectionId, onClose }: { sectionId: string; onClose: () => void }) => {
+    const dropdownOptions = [
+      { id: 'minhas', icon: FolderOpen, label: 'Minhas atividades', color: theme.primary },
+      { id: 'gerar', icon: Wand2, label: 'Gerar nova', color: '#10B981' },
+      { id: 'comunidade', icon: Globe, label: 'Comunidade', color: '#3B82F6' },
+      { id: 'subir', icon: Upload, label: 'Subir materiais', color: '#8B5CF6' }
+    ];
+
+    const handleOptionClick = (optionId: string) => {
+      if (optionId === 'minhas') {
+        setMyActivitiesSectionId(sectionId);
+        setShowMyActivitiesPanel(true);
+        loadUserActivities();
+      } else if (optionId === 'gerar') {
+        console.log('Gerar nova atividade para seção:', sectionId);
+      } else if (optionId === 'comunidade') {
+        console.log('Buscar na comunidade para seção:', sectionId);
+      } else if (optionId === 'subir') {
+        console.log('Subir materiais para seção:', sectionId);
+      }
+      onClose();
+    };
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        className="absolute bottom-full left-0 mb-2 rounded-xl overflow-hidden z-[70]"
+        style={{
+          background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
+          border: `1px solid ${theme.menuBorder}`,
+          boxShadow: `0 -10px 30px rgba(0, 0, 0, 0.4), 0 0 15px ${theme.shadowLight}`,
+          minWidth: '200px'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="py-2">
+          {dropdownOptions.map((option, index) => (
+            <React.Fragment key={option.id}>
+              <motion.button
+                whileHover={{ x: 4, backgroundColor: `${option.color}1A` }}
+                onClick={() => handleOptionClick(option.id)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-white/90 hover:text-white transition-colors"
+              >
+                <option.icon className="w-4 h-4" style={{ color: option.color }} />
+                <span className="text-sm font-medium">{option.label}</span>
+              </motion.button>
+              {index < dropdownOptions.length - 1 && (
+                <div 
+                  className="h-px mx-3 my-0.5"
+                  style={{
+                    background: `linear-gradient(to right, transparent, ${theme.primary}22, transparent)`
+                  }}
+                />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </motion.div>
+    );
+  };
+
+  // Componente MyActivitiesPanel - Painel maior para selecionar atividades
+  const MyActivitiesPanel = () => {
+    if (!showMyActivitiesPanel || !myActivitiesSectionId) return null;
+
+    const activityTypes = ['all', ...new Set(userActivities.map(a => a.tipo).filter(Boolean))];
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+        onClick={() => {
+          setShowMyActivitiesPanel(false);
+          setMyActivitiesSectionId(null);
+          setSelectedActivities([]);
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="w-full max-w-2xl max-h-[80vh] rounded-2xl overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
+            border: `1px solid ${theme.menuBorder}`,
+            boxShadow: `0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px ${theme.shadowLight}`
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div 
+            className="p-4 flex items-center justify-between"
+            style={{ 
+              borderBottom: `1px solid ${theme.border}`,
+              background: `linear-gradient(135deg, ${theme.primary}15 0%, transparent 100%)`
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <FolderOpen className="w-5 h-5" style={{ color: theme.primary }} />
+              <h3 className="text-white font-bold text-lg">Minhas Atividades</h3>
+              {selectedActivities.length > 0 && (
+                <span 
+                  className="px-2 py-0.5 rounded-full text-xs font-medium"
+                  style={{ background: theme.primary, color: 'white' }}
+                >
+                  {selectedActivities.length} selecionada{selectedActivities.length > 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.1)' }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                setShowMyActivitiesPanel(false);
+                setMyActivitiesSectionId(null);
+                setSelectedActivities([]);
+              }}
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+            >
+              <X className="w-5 h-5 text-white/70" />
+            </motion.button>
+          </div>
+
+          {/* Filters */}
+          <div className="p-4 flex items-center gap-3" style={{ borderBottom: `1px solid ${theme.border}20` }}>
+            <div 
+              className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              <Search className="w-4 h-4 text-white/50" />
+              <input
+                type="text"
+                placeholder="Buscar atividades..."
+                value={activitySearchTerm}
+                onChange={(e) => setActivitySearchTerm(e.target.value)}
+                className="flex-1 bg-transparent border-0 text-white text-sm placeholder-white/40 focus:outline-none"
+              />
+            </div>
+            <div className="relative">
+              <select
+                value={activityTypeFilter}
+                onChange={(e) => setActivityTypeFilter(e.target.value)}
+                className="appearance-none px-4 py-2 pr-8 rounded-lg text-white text-sm font-medium cursor-pointer focus:outline-none"
+                style={{ 
+                  background: `${theme.primary}20`, 
+                  border: `1px solid ${theme.primary}40` 
+                }}
+              >
+                <option value="all">Todos os tipos</option>
+                {activityTypes.filter(t => t !== 'all').map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+              <Filter className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: theme.primary }} />
+            </div>
+          </div>
+
+          {/* Activities List */}
+          <div className="overflow-y-auto p-4 space-y-2" style={{ maxHeight: 'calc(80vh - 180px)' }}>
+            {loadingActivities ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin w-8 h-8 border-2 border-white/20 border-t-white rounded-full" />
+              </div>
+            ) : filteredActivities.length === 0 ? (
+              <div className="text-center py-12">
+                <FolderOpen className="w-12 h-12 mx-auto mb-3 text-white/20" />
+                <p className="text-white/50 text-sm">
+                  {userActivities.length === 0 
+                    ? 'Você ainda não tem atividades salvas' 
+                    : 'Nenhuma atividade encontrada com esses filtros'}
+                </p>
+              </div>
+            ) : (
+              filteredActivities.map(activity => {
+                const isSelected = selectedActivities.includes(activity.id);
+                const title = activity.id_json?.titulo || activity.id_json?.title || activity.tipo || 'Atividade sem título';
+                
+                return (
+                  <motion.div
+                    key={activity.id}
+                    whileHover={{ scale: 1.01 }}
+                    onClick={() => {
+                      setSelectedActivities(prev => 
+                        isSelected 
+                          ? prev.filter(id => id !== activity.id)
+                          : [...prev, activity.id]
+                      );
+                    }}
+                    className="p-3 rounded-xl cursor-pointer transition-all"
+                    style={{
+                      background: isSelected ? `${theme.primary}20` : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${isSelected ? theme.primary : 'rgba(255,255,255,0.08)'}`,
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div 
+                        className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5"
+                        style={{
+                          background: isSelected ? theme.primary : 'transparent',
+                          border: `2px solid ${isSelected ? theme.primary : 'rgba(255,255,255,0.3)'}`
+                        }}
+                      >
+                        {isSelected && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-white font-medium text-sm truncate">{title}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span 
+                            className="px-2 py-0.5 rounded-full text-xs"
+                            style={{ background: `${theme.primary}20`, color: theme.primary }}
+                          >
+                            {activity.tipo || 'Geral'}
+                          </span>
+                          {activity.stars && (
+                            <span className="text-xs text-white/40">{activity.stars} estrelas</span>
+                          )}
+                          {activity.created_at && (
+                            <span className="text-xs text-white/40">
+                              {new Date(activity.created_at).toLocaleDateString('pt-BR')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Footer with action button */}
+          <div 
+            className="p-4 flex items-center justify-between"
+            style={{ 
+              borderTop: `1px solid ${theme.border}`,
+              background: `linear-gradient(135deg, transparent 0%, ${theme.primary}10 100%)`
+            }}
+          >
+            <span className="text-white/50 text-sm">
+              {filteredActivities.length} atividade{filteredActivities.length !== 1 ? 's' : ''} encontrada{filteredActivities.length !== 1 ? 's' : ''}
+            </span>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              disabled={selectedActivities.length === 0}
+              onClick={() => addActivitiesToSection(myActivitiesSectionId)}
+              className="px-6 py-2.5 rounded-full text-white font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: selectedActivities.length > 0 ? theme.buttonGradient : 'rgba(255,255,255,0.1)',
+                boxShadow: selectedActivities.length > 0 ? `0 4px 15px ${theme.shadow}` : 'none'
+              }}
+            >
+              <span className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Adicionar {selectedActivities.length > 0 ? `(${selectedActivities.length})` : ''}
+              </span>
+            </motion.button>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  };
+
+  // Botão de adicionar atividade reutilizável
+  const AddActivityButton = ({ sectionId }: { sectionId: string }) => {
+    const isOpen = activeActivityDropdown === sectionId;
+
+    return (
+      <div className="relative">
+        <motion.button
+          whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
+          whileTap={{ scale: 0.98 }}
+          className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
+          style={{
+            background: `${theme.primary}1A`,
+            border: `1px solid ${theme.primary}33`,
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setActiveActivityDropdown(isOpen ? null : sectionId);
+          }}
+        >
+          <Plus className="w-4 h-4" />
+          <span>Adicionar atividade</span>
+        </motion.button>
+
+        <AnimatePresence>
+          {isOpen && (
+            <ActivityDropdown 
+              sectionId={sectionId} 
+              onClose={() => setActiveActivityDropdown(null)} 
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
+  // Fechar dropdown de atividade ao clicar fora
+  useEffect(() => {
+    const handleClickOutsideActivityDropdown = (event: MouseEvent) => {
+      if (activeActivityDropdown) {
+        setActiveActivityDropdown(null);
+      }
+    };
+
+    if (activeActivityDropdown) {
+      document.addEventListener('click', handleClickOutsideActivityDropdown);
+    }
+    return () => document.removeEventListener('click', handleClickOutsideActivityDropdown);
+  }, [activeActivityDropdown]);
 
   const SectionControls = ({ time, onTimeChange, onMoreClick }: { time: string, onTimeChange: (val: string) => void, onMoreClick: (e: React.MouseEvent) => void }) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -441,16 +822,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                     style={{ minHeight: '100px' }} 
                   />
                   <div className="flex items-center gap-3 mt-3">
-                    <motion.button 
-                      whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} 
-                      whileTap={{ scale: 0.98 }} 
-                      className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" 
-                      style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} 
-                      onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Seção personalizada'); }}
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Adicionar atividade</span>
-                    </motion.button>
+                    <AddActivityButton sectionId={section.id} />
                     <motion.button 
                       whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} 
                       whileTap={{ scale: 0.98 }} 
@@ -1046,22 +1418,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 />
 
                 <div className="flex items-center gap-3 mt-3">
-                  <motion.button
-                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
-                    style={{
-                      background: `${theme.primary}1A`,
-                      border: `1px solid ${theme.primary}33`,
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Adicionar atividade clicado');
-                    }}
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Adicionar atividade</span>
-                  </motion.button>
+                  <AddActivityButton sectionId="objetivo" />
 
                   <motion.button
                     whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
@@ -1198,16 +1555,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   style={{ minHeight: '100px' }}
                 />
                 <div className="flex items-center gap-3 mt-3">
-                  <motion.button
-                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
-                    style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-                    onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Pré-estudo'); }}
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Adicionar atividade</span>
-                  </motion.button>
+                  <AddActivityButton sectionId="pre-estudo" />
                   <motion.button
                     whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
                     whileTap={{ scale: 0.98 }}
@@ -1279,7 +1627,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               <div className="px-4 pb-4">
                 <textarea value={introducaoText} onChange={(e) => setIntroducaoText(e.target.value)} placeholder="Descreva a introdução da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
                 <div className="flex items-center gap-3 mt-3">
-                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Introdução'); }}><Plus className="w-4 h-4" /><span>Adicionar atividade</span></motion.button>
+                  <AddActivityButton sectionId="introducao" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Introdução'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
               </div>
@@ -1342,7 +1690,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               <div className="px-4 pb-4">
                 <textarea value={desenvolvimentoText} onChange={(e) => setDesenvolvimentoText(e.target.value)} placeholder="Descreva o desenvolvimento da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
                 <div className="flex items-center gap-3 mt-3">
-                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Desenvolvimento'); }}><Plus className="w-4 h-4" /><span>Adicionar atividade</span></motion.button>
+                  <AddActivityButton sectionId="desenvolvimento" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Desenvolvimento'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
               </div>
@@ -1405,7 +1753,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               <div className="px-4 pb-4">
                 <textarea value={encerramentoText} onChange={(e) => setEncerramentoText(e.target.value)} placeholder="Descreva o encerramento da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
                 <div className="flex items-center gap-3 mt-3">
-                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Encerramento'); }}><Plus className="w-4 h-4" /><span>Adicionar atividade</span></motion.button>
+                  <AddActivityButton sectionId="encerramento" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Encerramento'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
               </div>
@@ -1468,7 +1816,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               <div className="px-4 pb-4">
                 <textarea value={materiaisText} onChange={(e) => setMateriaisText(e.target.value)} placeholder="Liste os materiais complementares..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
                 <div className="flex items-center gap-3 mt-3">
-                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Materiais'); }}><Plus className="w-4 h-4" /><span>Adicionar atividade</span></motion.button>
+                  <AddActivityButton sectionId="materiais" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Materiais'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
               </div>
@@ -1531,7 +1879,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               <div className="px-4 pb-4">
                 <textarea value={observacoesText} onChange={(e) => setObservacoesText(e.target.value)} placeholder="Adicione suas observações..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
                 <div className="flex items-center gap-3 mt-3">
-                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Observações'); }}><Plus className="w-4 h-4" /><span>Adicionar atividade</span></motion.button>
+                  <AddActivityButton sectionId="observacoes" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Observações'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
               </div>
@@ -1594,7 +1942,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               <div className="px-4 pb-4">
                 <textarea value={bnccText} onChange={(e) => setBnccText(e.target.value)} placeholder="Descreva os critérios da BNCC..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
                 <div className="flex items-center gap-3 mt-3">
-                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - BNCC'); }}><Plus className="w-4 h-4" /><span>Adicionar atividade</span></motion.button>
+                  <AddActivityButton sectionId="bncc" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - BNCC'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
               </div>
@@ -1603,6 +1951,11 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </AnimatePresence>
       </motion.div>
       )}
+      </AnimatePresence>
+
+      {/* MyActivitiesPanel - Modal para selecionar atividades */}
+      <AnimatePresence>
+        <MyActivitiesPanel />
       </AnimatePresence>
     </div>
   );
