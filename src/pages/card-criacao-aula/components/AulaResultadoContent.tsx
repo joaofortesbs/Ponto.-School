@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, GraduationCap, ChevronDown } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, GraduationCap, ChevronDown, Target } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 
 interface AulaResultadoContentProps {
@@ -592,14 +592,18 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           borderColor: theme.border
         }}
         transition={{ delay: 0.5, duration: 0.4 }}
-        className="mt-4 rounded-2xl p-4 flex items-center justify-between relative z-10"
+        className="mt-[18px] rounded-2xl p-4 flex items-center justify-between relative z-10"
         style={{
           background: theme.bgGradient,
           border: `1px solid ${theme.border}`,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          height: '62px'
         }}
       >
-        <span className="text-white font-bold text-lg">Objetivo da Aula</span>
+        <div className="flex items-center gap-3">
+          <Target className="w-5 h-5" style={{ color: theme.primary }} />
+          <span className="text-white font-bold text-lg">Objetivo da Aula</span>
+        </div>
         <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
       </motion.div>
 
