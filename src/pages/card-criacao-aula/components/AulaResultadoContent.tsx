@@ -1356,13 +1356,17 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               </motion.div>
             </div>
           </div>
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {section.isExpanded && (
               <motion.div
+                key="content"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ 
+                  height: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
+                  opacity: { duration: 0.2, ease: "linear" }
+                }}
                 className="overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -1600,13 +1604,17 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           </div>
         </div>
 
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {config.isExpanded && (
             <motion.div
+              key="content"
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ 
+                height: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
+                opacity: { duration: 0.2, ease: "linear" }
+              }}
               className="overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
@@ -2081,13 +2089,17 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           </motion.div>
         </div>
 
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {isObjectiveExpanded && (
             <motion.div
+              key="content"
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ 
+                height: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
+                opacity: { duration: 0.2, ease: "linear" }
+              }}
               className="overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
