@@ -133,15 +133,27 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const loadUserActivities = async () => {
     setLoadingActivities(true);
     try {
-      const userId = localStorage.getItem('userId') || localStorage.getItem('supabase_user_id');
+      const userId = localStorage.getItem('user_id') || 
+                     localStorage.getItem('userId') || 
+                     localStorage.getItem('supabase_user_id') || 
+                     localStorage.getItem('neon_user_id');
+      console.log('🔍 [MyActivitiesPanel] Buscando atividades para userId:', userId);
+      console.log('🔍 [MyActivitiesPanel] localStorage user_id:', localStorage.getItem('user_id'));
+      
       if (userId) {
         const result = await atividadesNeonService.buscarAtividadesUsuario(userId);
+        console.log('📋 [MyActivitiesPanel] Resultado da busca:', result);
         if (result.success && result.data) {
+          console.log('✅ [MyActivitiesPanel] Atividades carregadas:', result.data.length);
           setUserActivities(result.data);
+        } else {
+          console.log('⚠️ [MyActivitiesPanel] Nenhuma atividade encontrada ou erro:', result.error);
         }
+      } else {
+        console.log('⚠️ [MyActivitiesPanel] userId não encontrado no localStorage');
       }
     } catch (error) {
-      console.error('Erro ao carregar atividades:', error);
+      console.error('❌ [MyActivitiesPanel] Erro ao carregar atividades:', error);
     } finally {
       setLoadingActivities(false);
     }
