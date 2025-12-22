@@ -511,7 +511,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           borderColor: theme.border
         }}
         transition={{ delay: 0.5, duration: 0.4 }}
-        className="mt-[18px] rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        className="mt-[18px] rounded-2xl relative z-10 cursor-pointer"
         style={{
           background: theme.bgGradient,
           border: `1px solid ${theme.border}`,
@@ -542,6 +542,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
+              className="overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-4 pb-4">
@@ -606,7 +607,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           borderColor: theme.border
         }}
         transition={{ delay: 0.55, duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        className="mt-6 rounded-2xl relative z-10 cursor-pointer"
         style={{
           background: theme.bgGradient,
           border: `1px solid ${theme.border}`,
@@ -630,6 +631,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
+              className="overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-4 pb-4">
@@ -673,7 +675,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.6, duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        className="mt-6 rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
         onClick={() => setIsIntroducaoExpanded(!isIntroducaoExpanded)}
       >
@@ -688,7 +690,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </div>
         <AnimatePresence>
           {isIntroducaoExpanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} onClick={(e) => e.stopPropagation()}>
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
                 <textarea value={introducaoText} onChange={(e) => setIntroducaoText(e.target.value)} placeholder="Descreva a introdução da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
                 <div className="flex items-center gap-3 mt-3">
@@ -706,7 +708,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.65, duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        className="mt-6 rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
         onClick={() => setIsDesenvolvimentoExpanded(!isDesenvolvimentoExpanded)}
       >
@@ -721,7 +723,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </div>
         <AnimatePresence>
           {isDesenvolvimentoExpanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} onClick={(e) => e.stopPropagation()}>
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
                 <textarea value={desenvolvimentoText} onChange={(e) => setDesenvolvimentoText(e.target.value)} placeholder="Descreva o desenvolvimento da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
                 <div className="flex items-center gap-3 mt-3">
@@ -739,7 +741,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.7, duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        className="mt-6 rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
         onClick={() => setIsEncerramentoExpanded(!isEncerramentoExpanded)}
       >
@@ -754,7 +756,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </div>
         <AnimatePresence>
           {isEncerramentoExpanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} onClick={(e) => e.stopPropagation()}>
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
                 <textarea value={encerramentoText} onChange={(e) => setEncerramentoText(e.target.value)} placeholder="Descreva o encerramento da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
                 <div className="flex items-center gap-3 mt-3">
@@ -772,7 +774,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.75, duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        className="mt-6 rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
         onClick={() => setIsMateriaisExpanded(!isMateriaisExpanded)}
       >
@@ -787,7 +789,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </div>
         <AnimatePresence>
           {isMateriaisExpanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} onClick={(e) => e.stopPropagation()}>
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
                 <textarea value={materiaisText} onChange={(e) => setMateriaisText(e.target.value)} placeholder="Liste os materiais complementares..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
                 <div className="flex items-center gap-3 mt-3">
@@ -805,7 +807,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.8, duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        className="mt-6 rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
         onClick={() => setIsObservacoesExpanded(!isObservacoesExpanded)}
       >
@@ -820,7 +822,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </div>
         <AnimatePresence>
           {isObservacoesExpanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} onClick={(e) => e.stopPropagation()}>
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
                 <textarea value={observacoesText} onChange={(e) => setObservacoesText(e.target.value)} placeholder="Adicione suas observações..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
                 <div className="flex items-center gap-3 mt-3">
@@ -838,7 +840,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.85, duration: 0.4 }}
-        className="mt-4 mb-6 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        className="mt-4 mb-6 rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
         onClick={() => setIsBnccExpanded(!isBnccExpanded)}
       >
@@ -853,7 +855,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </div>
         <AnimatePresence>
           {isBnccExpanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} onClick={(e) => e.stopPropagation()}>
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
                 <textarea value={bnccText} onChange={(e) => setBnccText(e.target.value)} placeholder="Descreva os critérios da BNCC..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
                 <div className="flex items-center gap-3 mt-3">
