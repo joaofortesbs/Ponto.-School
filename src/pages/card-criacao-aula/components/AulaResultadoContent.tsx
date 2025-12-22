@@ -535,30 +535,20 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   value={objectiveText}
                   onChange={(e) => setObjectiveText(e.target.value)}
                   placeholder="Escreva o objetivo da aula..."
-                  className="w-full bg-[#030C2A]/50 border rounded-xl p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
+                  className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
                   style={{
                     minHeight: '100px',
-                    borderColor: 'rgba(255, 255, 255, 0.1)',
-                    boxShadow: 'inset 0 2px 10px rgba(0, 0, 0, 0.3)'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = `${theme.primary}40`;
-                    e.target.style.backgroundColor = 'rgba(3, 12, 42, 0.7)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    e.target.style.backgroundColor = 'rgba(3, 12, 42, 0.5)';
                   }}
                 />
 
                 <div className="flex items-center gap-3 mt-3">
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm"
+                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
                     style={{
-                      background: theme.buttonGradient,
-                      boxShadow: `0 4px 12px ${theme.shadow}`
+                      background: `${theme.primary}1A`,
+                      border: `1px solid ${theme.primary}33`,
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -570,12 +560,12 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   </motion.button>
 
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm"
+                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)'
+                      background: `${theme.primary}1A`,
+                      border: `1px solid ${theme.primary}33`,
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
