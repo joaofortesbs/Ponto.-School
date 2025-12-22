@@ -53,22 +53,34 @@ const themeColors = {
   }
 };
 
-// Componente de TextArea com redimensionamento automático otimizado para evitar travamentos
+// Componente de TextArea com redimensionamento automático otimizado
 const AutoResizeTextarea = React.memo(({ value, onChange, placeholder }: { value: string, onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void, placeholder: string }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [localValue, setLocalValue] = useState(value);
+
+  // Sincroniza o valor local quando o valor externo muda (mas não durante a digitação)
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  const handleLocalChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setLocalValue(newValue);
+    onChange(e); // Notifica o pai
+  };
 
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-  }, [value]);
+  }, [localValue]);
 
   return (
     <textarea
       ref={textareaRef}
-      value={value}
-      onChange={onChange}
+      value={localValue}
+      onChange={handleLocalChange}
       placeholder={placeholder}
       className="w-full bg-transparent border-0 text-white/90 placeholder-white/30 focus:outline-none resize-none overflow-hidden min-h-[100px] py-2"
       style={{ lineHeight: '1.6' }}
