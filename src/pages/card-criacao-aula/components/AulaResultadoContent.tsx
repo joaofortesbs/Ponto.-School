@@ -1503,23 +1503,28 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     );
   };
 
-  // Função para renderizar uma seção baseada na configuração
-  const renderSection = (config: SectionConfig) => {
+  // Estado para controlar qual menu de seção está aberto
+  const [activeMenuSection, setActiveMenuSection] = useState<string | null>(null);
+
+  // Componente Memoizado para Item de Seção para evitar re-renderizações e animações desnecessárias
+  const SectionItem = React.memo(({ config, theme, activeMenuSection, setActiveMenuSection }: { 
+    config: SectionConfig; 
+    theme: any; 
+    activeMenuSection: string | null;
+    setActiveMenuSection: (id: string | null) => void;
+  }) => {
     const IconComponent = config.icon;
     const isObjective = config.id === 'objective';
     const extraClass = config.id === 'bncc' ? 'mb-6' : '';
     
     return (
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        layout
+        initial={false}
         animate={{ 
-          opacity: 1, 
-          y: 0,
           background: theme.bgGradient,
           borderColor: theme.border
         }}
-        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-        transition={{ delay: config.delay, duration: 0.4 }}
         className={`rounded-2xl relative z-10 cursor-pointer ${extraClass}`}
         style={{
           background: theme.bgGradient,
@@ -1549,7 +1554,11 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                     <SectionMenu 
                       sectionId={config.menuId} 
                       onClose={() => setActiveMenuSection(null)}
-                      onAction={(action) => handleSectionAction(config.id, action)}
+                      onAction={(action) => {
+                        // Implementação básica do action
+                        console.log(`Action ${action} for ${config.id}`);
+                        setActiveMenuSection(null);
+                      }}
                     />
                   )}
                 </AnimatePresence>
@@ -1564,13 +1573,13 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           </div>
         </div>
 
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {config.isExpanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
               className="overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
@@ -1608,6 +1617,28 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+    );
+  }, (prevProps, nextProps) => {
+    // Só renderiza novamente se as propriedades essenciais mudarem
+    return (
+      prevProps.config.isExpanded === nextProps.config.isExpanded &&
+      prevProps.config.text === nextProps.config.text &&
+      prevProps.config.time === nextProps.config.time &&
+      prevProps.config.isVisible === nextProps.config.isVisible &&
+      prevProps.activeMenuSection === nextProps.activeMenuSection &&
+      prevProps.theme === nextProps.theme
+    );
+  });
+
+  // Função para renderizar uma seção baseada na configuração
+  const renderSection = (config: SectionConfig) => {
+    return (
+      <SectionItem 
+        config={config} 
+        theme={theme} 
+        activeMenuSection={activeMenuSection}
+        setActiveMenuSection={setActiveMenuSection}
+      />
     );
   };
   
