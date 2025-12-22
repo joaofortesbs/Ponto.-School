@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 
 interface AulaResultadoContentProps {
@@ -60,6 +60,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [aulaImage, setAulaImage] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [themeMode, setThemeMode] = useState<ThemeMode>('orange');
+  const [isObjectiveExpanded, setIsObjectiveExpanded] = useState(false);
+  const [objectiveText, setObjectiveText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const summaryCardRef = useRef<HTMLDivElement>(null);
@@ -495,19 +497,96 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           borderColor: theme.border
         }}
         transition={{ delay: 0.5, duration: 0.4 }}
-        className="mt-[23px] rounded-2xl p-4 flex items-center justify-between relative z-10"
+        className="mt-[18px] rounded-2xl relative z-10 overflow-hidden cursor-pointer"
         style={{
           background: theme.bgGradient,
           border: `1px solid ${theme.border}`,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-          height: '62px'
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
         }}
+        onClick={() => setIsObjectiveExpanded(!isObjectiveExpanded)}
       >
-        <div className="flex items-center gap-3">
-          <Target className="w-5 h-5" style={{ color: theme.primary }} />
-          <span className="text-white font-bold text-lg">Objetivo da Aula</span>
+        <div 
+          className="p-4 flex items-center justify-between"
+          style={{ height: '62px' }}
+        >
+          <div className="flex items-center gap-3">
+            <Target className="w-5 h-5" style={{ color: theme.primary }} />
+            <span className="text-white font-bold text-lg">Objetivo da Aula</span>
+          </div>
+          <motion.div
+            animate={{ rotate: isObjectiveExpanded ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+          </motion.div>
         </div>
-        <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+
+        <AnimatePresence>
+          {isObjectiveExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-4 pb-4">
+                <textarea
+                  value={objectiveText}
+                  onChange={(e) => setObjectiveText(e.target.value)}
+                  placeholder="Escreva o objetivo da aula..."
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white placeholder-white/40 resize-none focus:outline-none focus:border-opacity-50 transition-colors"
+                  style={{
+                    minHeight: '100px',
+                    borderColor: `${theme.primary}33`,
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = `${theme.primary}66`;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = `${theme.primary}33`;
+                  }}
+                />
+
+                <div className="flex items-center gap-3 mt-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium text-sm"
+                    style={{
+                      background: theme.buttonGradient,
+                      boxShadow: `0 4px 12px ${theme.shadow}`
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('Adicionar atividade clicado');
+                    }}
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar atividade</span>
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-white/80 font-medium text-sm"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)'
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('Tools clicado');
+                    }}
+                  >
+                    <Wrench className="w-4 h-4" />
+                    <span>Tools</span>
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       <div className="flex-1 mt-6">
