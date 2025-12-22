@@ -57,16 +57,28 @@ const themeColors = {
 const AutoResizeTextarea = React.memo(({ value, onChange, placeholder }: { value: string, onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void, placeholder: string }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [localValue, setLocalValue] = useState(value);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Sincroniza o valor local quando o valor externo muda (mas não durante a digitação)
+  // Sincroniza o valor local apenas quando o valor externo muda via props (carregamento inicial ou reset)
   useEffect(() => {
-    setLocalValue(value);
+    if (value !== localValue) {
+      setLocalValue(value);
+    }
   }, [value]);
 
   const handleLocalChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setLocalValue(newValue);
-    onChange(e); // Notifica o pai
+    
+    // Debounce a atualização do estado global para evitar re-renderizações pesadas a cada caractere
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    
+    // Mantemos uma referência estável do evento ou apenas passamos o valor
+    const event = { ...e, target: { ...e.target, value: newValue } } as React.ChangeEvent<HTMLTextAreaElement>;
+    
+    timeoutRef.current = setTimeout(() => {
+      onChange(event);
+    }, 300); // 300ms de debounce é imperceptível para o salvamento mas ótimo para performance
   };
 
   useEffect(() => {
@@ -75,6 +87,13 @@ const AutoResizeTextarea = React.memo(({ value, onChange, placeholder }: { value
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [localValue]);
+
+  // Limpa o timeout ao desmontar
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   return (
     <textarea
