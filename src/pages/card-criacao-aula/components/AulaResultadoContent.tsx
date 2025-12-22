@@ -1593,7 +1593,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           </div>
         </div>
 
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {config.isExpanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
