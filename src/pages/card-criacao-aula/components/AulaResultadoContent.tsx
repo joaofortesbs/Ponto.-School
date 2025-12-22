@@ -1818,31 +1818,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.35, duration: 0.3 }}
-              className="relative flex-shrink-0"
-              title="Fluxo de Integração"
-            >
-              <motion.div
-                animate={{
-                  background: theme.circleBg,
-                  borderColor: theme.circleBorder
-                }}
-                transition={{ duration: 0.3 }}
-                className="rounded-full flex items-center justify-center overflow-hidden"
-                style={{
-                  width: `${CIRCLE_SIZE}px`,
-                  height: `${CIRCLE_SIZE}px`,
-                  background: theme.circleBg,
-                  border: `2px solid ${theme.circleBorder}`
-                }}
-              >
-                <GitBranch className="w-7 h-7" style={{ color: `${theme.primary}99` }} />
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, duration: 0.3 }}
               className="relative flex-shrink-0"
             >
@@ -1888,6 +1863,31 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <Plus className="w-3.5 h-3.5 text-white" strokeWidth={3} />
                 </motion.div>
               )}
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.45, duration: 0.3 }}
+              className="relative flex-shrink-0"
+              title="Fluxo de Integração"
+            >
+              <motion.div
+                animate={{
+                  background: theme.circleBg,
+                  borderColor: theme.circleBorder
+                }}
+                transition={{ duration: 0.3 }}
+                className="rounded-full flex items-center justify-center overflow-hidden"
+                style={{
+                  width: `${CIRCLE_SIZE}px`,
+                  height: `${CIRCLE_SIZE}px`,
+                  background: theme.circleBg,
+                  border: `2px solid ${theme.circleBorder}`
+                }}
+              >
+                <GitBranch className="w-7 h-7" style={{ color: `${theme.primary}99` }} />
+              </motion.div>
             </motion.div>
 
             <motion.div
