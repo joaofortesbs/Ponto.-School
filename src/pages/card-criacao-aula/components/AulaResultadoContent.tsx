@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star, GripVertical } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
 import { ActivityViewModal } from '@/features/schoolpower/construction/ActivityViewModal';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface AulaResultadoContentProps {
   aulaName?: string;
@@ -111,6 +114,43 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [isMateriaisVisible, setIsMateriaisVisible] = useState(true);
   const [isObservacoesVisible, setIsObservacoesVisible] = useState(true);
   const [isBnccVisible, setIsBnccVisible] = useState(true);
+
+  // Estado para ordem das seções (drag and drop)
+  const [sectionOrder, setSectionOrder] = useState<string[]>([
+    'objective', 'preEstudo', 'introducao', 'desenvolvimento',
+    'encerramento', 'materiais', 'observacoes', 'bncc'
+  ]);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+  // Sensores para drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handler para quando o drag termina
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveDragId(null);
+    
+    if (over && active.id !== over.id) {
+      setSectionOrder((items) => {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over.id as string);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragId(event.active.id as string);
+  };
   
   // Estado para seções personalizadas adicionadas pelo usuário
   interface CustomSection {
@@ -166,6 +206,173 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const handleMateriaisChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setMateriaisText(e.target.value), []);
   const handleObservacoesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setObservacoesText(e.target.value), []);
   const handleBnccChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setBnccText(e.target.value), []);
+
+  // Configuração das seções para drag and drop
+  type SectionConfig = {
+    id: string;
+    title: string;
+    icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+    isVisible: boolean;
+    setVisible: (v: boolean) => void;
+    isExpanded: boolean;
+    setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+    text: string;
+    onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+    placeholder: string;
+    time: string;
+    setTime: (t: string) => void;
+    menuId: string;
+    dividerIndex: number;
+    delay: number;
+  };
+
+  const sectionConfigs = useMemo((): Record<string, SectionConfig> => ({
+    objective: {
+      id: 'objective',
+      title: 'Objetivo da Aula',
+      icon: Target,
+      isVisible: isObjectiveVisible,
+      setVisible: setIsObjectiveVisible,
+      isExpanded: isObjectiveExpanded,
+      setExpanded: setIsObjectiveExpanded,
+      text: objectiveText,
+      onChange: handleObjectiveChange,
+      placeholder: 'Escreva o objetivo da aula...',
+      time: '',
+      setTime: () => {},
+      menuId: 'objective',
+      dividerIndex: 0,
+      delay: 0.5,
+    },
+    preEstudo: {
+      id: 'preEstudo',
+      title: 'Pré-estudo',
+      icon: BookOpen,
+      isVisible: isPreEstudoVisible,
+      setVisible: setIsPreEstudoVisible,
+      isExpanded: isPreEstudoExpanded,
+      setExpanded: setIsPreEstudoExpanded,
+      text: preEstudoText,
+      onChange: handlePreEstudoChange,
+      placeholder: 'Descreva as atividades de pré-estudo...',
+      time: preEstudoTime,
+      setTime: setPreEstudoTime,
+      menuId: 'pre-estudo',
+      dividerIndex: 1,
+      delay: 0.55,
+    },
+    introducao: {
+      id: 'introducao',
+      title: 'Introdução',
+      icon: Lightbulb,
+      isVisible: isIntroducaoVisible,
+      setVisible: setIsIntroducaoVisible,
+      isExpanded: isIntroducaoExpanded,
+      setExpanded: setIsIntroducaoExpanded,
+      text: introducaoText,
+      onChange: handleIntroducaoChange,
+      placeholder: 'Descreva a introdução da aula...',
+      time: introducaoTime,
+      setTime: setIntroducaoTime,
+      menuId: 'introducao',
+      dividerIndex: 2,
+      delay: 0.6,
+    },
+    desenvolvimento: {
+      id: 'desenvolvimento',
+      title: 'Desenvolvimento',
+      icon: Layers,
+      isVisible: isDesenvolvimentoVisible,
+      setVisible: setIsDesenvolvimentoVisible,
+      isExpanded: isDesenvolvimentoExpanded,
+      setExpanded: setIsDesenvolvimentoExpanded,
+      text: desenvolvimentoText,
+      onChange: handleDesenvolvimentoChange,
+      placeholder: 'Descreva o desenvolvimento da aula...',
+      time: desenvolvimentoTime,
+      setTime: setDesenvolvimentoTime,
+      menuId: 'desenvolvimento',
+      dividerIndex: 3,
+      delay: 0.65,
+    },
+    encerramento: {
+      id: 'encerramento',
+      title: 'Encerramento',
+      icon: CheckCircle,
+      isVisible: isEncerramentoVisible,
+      setVisible: setIsEncerramentoVisible,
+      isExpanded: isEncerramentoExpanded,
+      setExpanded: setIsEncerramentoExpanded,
+      text: encerramentoText,
+      onChange: handleEncerramentoChange,
+      placeholder: 'Descreva o encerramento da aula...',
+      time: encerramentoTime,
+      setTime: setEncerramentoTime,
+      menuId: 'encerramento',
+      dividerIndex: 4,
+      delay: 0.7,
+    },
+    materiais: {
+      id: 'materiais',
+      title: 'Materiais Complementares',
+      icon: FileText,
+      isVisible: isMateriaisVisible,
+      setVisible: setIsMateriaisVisible,
+      isExpanded: isMateriaisExpanded,
+      setExpanded: setIsMateriaisExpanded,
+      text: materiaisText,
+      onChange: handleMateriaisChange,
+      placeholder: 'Liste os materiais complementares...',
+      time: materiaisTime,
+      setTime: setMateriaisTime,
+      menuId: 'materiais',
+      dividerIndex: 5,
+      delay: 0.75,
+    },
+    observacoes: {
+      id: 'observacoes',
+      title: 'Observações do Professor',
+      icon: MessageSquare,
+      isVisible: isObservacoesVisible,
+      setVisible: setIsObservacoesVisible,
+      isExpanded: isObservacoesExpanded,
+      setExpanded: setIsObservacoesExpanded,
+      text: observacoesText,
+      onChange: handleObservacoesChange,
+      placeholder: 'Adicione suas observações...',
+      time: observacoesTime,
+      setTime: setObservacoesTime,
+      menuId: 'observacoes',
+      dividerIndex: 6,
+      delay: 0.8,
+    },
+    bncc: {
+      id: 'bncc',
+      title: 'Critérios BNCC',
+      icon: Award,
+      isVisible: isBnccVisible,
+      setVisible: setIsBnccVisible,
+      isExpanded: isBnccExpanded,
+      setExpanded: setIsBnccExpanded,
+      text: bnccText,
+      onChange: handleBnccChange,
+      placeholder: 'Descreva os critérios da BNCC...',
+      time: bnccTime,
+      setTime: setBnccTime,
+      menuId: 'bncc',
+      dividerIndex: 6,
+      delay: 0.85,
+    },
+  }), [
+    isObjectiveVisible, isObjectiveExpanded, objectiveText, handleObjectiveChange,
+    isPreEstudoVisible, isPreEstudoExpanded, preEstudoText, handlePreEstudoChange, preEstudoTime,
+    isIntroducaoVisible, isIntroducaoExpanded, introducaoText, handleIntroducaoChange, introducaoTime,
+    isDesenvolvimentoVisible, isDesenvolvimentoExpanded, desenvolvimentoText, handleDesenvolvimentoChange, desenvolvimentoTime,
+    isEncerramentoVisible, isEncerramentoExpanded, encerramentoText, handleEncerramentoChange, encerramentoTime,
+    isMateriaisVisible, isMateriaisExpanded, materiaisText, handleMateriaisChange, materiaisTime,
+    isObservacoesVisible, isObservacoesExpanded, observacoesText, handleObservacoesChange, observacoesTime,
+    isBnccVisible, isBnccExpanded, bnccText, handleBnccChange, bnccTime,
+  ]);
 
   // Carregar atividades do usuário
   const loadUserActivities = async () => {
@@ -1259,6 +1466,42 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   // Constante para espaçamento vertical milimétrico entre cards
   // Este valor é usado para garantir posicionamento exato e simétrico do botão
   const CARD_VERTICAL_SPACING = 14; // 14px = espaçamento total entre cards
+
+  // Componente para seção arrastável com handle de drag
+  const SortableSectionCard = ({ id, children }: { id: string; children: React.ReactNode }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+      zIndex: isDragging ? 50 : 10,
+    };
+
+    return (
+      <div ref={setNodeRef} style={style} className="relative">
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center cursor-grab active:cursor-grabbing z-20 opacity-0 hover:opacity-100 transition-opacity"
+          style={{
+            background: `linear-gradient(to right, ${theme.primary}15, transparent)`,
+          }}
+          title="Arraste para reordenar"
+        >
+          <GripVertical className="w-5 h-5" style={{ color: theme.primary }} />
+        </div>
+        {children}
+      </div>
+    );
+  };
   
   const AddSectionDivider = ({ index, onAdd }: { index: number; onAdd: () => void }) => (
     <div 
