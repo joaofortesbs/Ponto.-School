@@ -1481,8 +1481,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     const style = {
       transform: CSS.Transform.toString(transform),
       transition,
-      opacity: isDragging ? 0.5 : 1,
-      zIndex: isDragging ? 50 : 10,
+      opacity: isDragging ? 0 : 1, // Esconde o card original enquanto arrasta
+      zIndex: isDragging ? 0 : 10,
     };
 
     return (
@@ -2169,9 +2169,15 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           })}
         </SortableContext>
         
-        <DragOverlay>
+        <DragOverlay dropAnimation={null}>
           {activeDragId && sectionConfigs[activeDragId] ? (
-            <div style={{ opacity: 0.8, transform: 'scale(1.02)' }}>
+            <div style={{ 
+              transform: 'scale(1.02)',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              cursor: 'grabbing'
+            }}>
               {renderSection(sectionConfigs[activeDragId])}
             </div>
           ) : null}
