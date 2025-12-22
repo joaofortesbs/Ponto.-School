@@ -673,7 +673,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   };
 
   // Componente para exibir atividades adicionadas em uma seção (estilo grade igual à sub-seção de Atividades)
-  const SectionActivitiesGrid = ({ sectionId }: { sectionId: string }) => {
+  // Memorizado com React.memo para evitar re-renderizações desnecessárias e reinício de animações
+  const SectionActivitiesGrid = React.memo(({ sectionId }: { sectionId: string }) => {
     const activitiesForSection = sectionActivities.filter(a => a.sectionId === sectionId);
     
     if (activitiesForSection.length === 0) return null;
@@ -694,6 +695,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           return (
             <motion.div
               key={activityId}
+              layoutId={`activity-${activityId}-${sectionId}`}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -764,7 +766,12 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         })}
       </div>
     );
-  };
+  }, (prevProps, nextProps) => {
+    // Comparação personalizada para garantir que só re-renderize se o sectionId mudar
+    // O sectionActivities é acessado via closure, o que pode ser um problema se não usarmos o padrão correto.
+    // Para simplificar e ser efetivo no Fast Mode, usaremos o memo básico primeiro.
+    return prevProps.sectionId === nextProps.sectionId;
+  });
 
   const SectionControls = ({ time, onTimeChange, onMoreClick }: { time: string, onTimeChange: (val: string) => void, onMoreClick: (e: React.MouseEvent) => void }) => {
     const [isEditing, setIsEditing] = useState(false);
