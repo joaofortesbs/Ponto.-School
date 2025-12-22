@@ -1,9 +1,28 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star, GripVertical } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
 import { ActivityViewModal } from '@/features/schoolpower/construction/ActivityViewModal';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface AulaResultadoContentProps {
   aulaName?: string;
@@ -156,6 +175,85 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     activityData: AtividadeNeon;
   }
   const [sectionActivities, setSectionActivities] = useState<SectionActivity[]>([]);
+
+  // Estado de ordem das seções para drag and drop
+  const [sectionOrder, setSectionOrder] = useState<string[]>([
+    'objective', 'preEstudo', 'introducao', 'desenvolvimento', 
+    'encerramento', 'materiais', 'observacoes', 'bncc'
+  ]);
+
+  // Estado de arraste ativo
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+  // Sensors com delay para pressão prolongada (250ms)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handlers de drag
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveDragId(event.active.id as string);
+  }, []);
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveDragId(null);
+    
+    if (over && active.id !== over.id) {
+      setSectionOrder((items) => {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over.id as string);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }, []);
+
+  // Componente wrapper para seções sortáveis
+  const SortableSectionWrapper = ({ id, children }: { id: string; children: React.ReactNode }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+      zIndex: isDragging ? 1000 : 1,
+      scale: isDragging ? 1.02 : 1,
+    };
+
+    return (
+      <div 
+        ref={setNodeRef} 
+        style={style}
+        className={`relative ${isDragging ? 'shadow-2xl' : ''}`}
+      >
+        {/* Handle de arraste */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-2 cursor-grab active:cursor-grabbing opacity-0 hover:opacity-100 transition-opacity z-50"
+          style={{ touchAction: 'none' }}
+        >
+          <GripVertical className="w-5 h-5 text-white/40 hover:text-white/70" />
+        </div>
+        {children}
+      </div>
+    );
+  };
 
   // Handlers memoizados para os campos de texto (performance)
   const handleObjectiveChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setObjectiveText(e.target.value), []);
