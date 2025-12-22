@@ -1768,83 +1768,92 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </motion.div>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ 
-          opacity: 1, 
-          y: 0,
-          background: theme.bgGradient,
-          borderColor: theme.border
-        }}
-        transition={{ delay: 0.5, duration: 0.4 }}
-        className="mt-[18px] rounded-2xl relative z-10 cursor-pointer"
-        style={{
-          background: theme.bgGradient,
-          border: `1px solid ${theme.border}`,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-        }}
-        onClick={() => setIsObjectiveExpanded(!isObjectiveExpanded)}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
       >
-        <div 
-          className="p-4 flex items-center justify-between"
-          style={{ height: '62px' }}
-        >
-          <div className="flex items-center gap-3">
-            <Target className="w-5 h-5" style={{ color: theme.primary }} />
-            <span className="text-white font-bold text-lg">Objetivo da Aula</span>
-          </div>
-          <motion.div
-            animate={{ rotate: isObjectiveExpanded ? 180 : 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-          </motion.div>
-        </div>
-
-        <AnimatePresence>
-          {isObjectiveExpanded && (
+        <SortableContext items={sectionOrder} strategy={verticalListSortingStrategy}>
+          <SortableSectionWrapper id="objective">
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ 
+                opacity: 1, 
+                y: 0,
+                background: theme.bgGradient,
+                borderColor: theme.border
+              }}
+              transition={{ delay: 0.5, duration: 0.4 }}
+              className="mt-[18px] rounded-2xl relative z-10"
+              style={{
+                background: theme.bgGradient,
+                border: `1px solid ${theme.border}`,
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+              }}
             >
-              <div className="px-4 pb-4">
-                <AutoResizeTextarea
-                  value={objectiveText}
-                  onChange={handleObjectiveChange}
-                  placeholder="Escreva o objetivo da aula..."
-                />
-
-                <SectionActivitiesGrid sectionId="objetivo" />
-
-                <div className="flex items-center gap-3 mt-3">
-                  <AddActivityButton sectionId="objetivo" />
-
-                  <motion.button
-                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
-                    style={{
-                      background: `${theme.primary}1A`,
-                      border: `1px solid ${theme.primary}33`,
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Tools clicado');
-                    }}
-                  >
-                    <Wrench className="w-4 h-4" />
-                    <span>Tools</span>
-                  </motion.button>
+              <div 
+                className="p-4 flex items-center justify-between"
+                style={{ height: '62px' }}
+              >
+                <div className="flex items-center gap-3">
+                  <Target className="w-5 h-5" style={{ color: theme.primary }} />
+                  <span className="text-white font-bold text-lg">Objetivo da Aula</span>
                 </div>
+                <motion.div
+                  animate={{ rotate: isObjectiveExpanded ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
+                  onClick={() => setIsObjectiveExpanded(!isObjectiveExpanded)}
+                  className="cursor-pointer p-1 rounded-full hover:bg-white/10 transition-colors"
+                >
+                  <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+                </motion.div>
               </div>
+
+              <AnimatePresence>
+                {isObjectiveExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4">
+                      <AutoResizeTextarea
+                        value={objectiveText}
+                        onChange={handleObjectiveChange}
+                        placeholder="Escreva o objetivo da aula..."
+                      />
+
+                      <SectionActivitiesGrid sectionId="objetivo" />
+
+                      <div className="flex items-center gap-3 mt-3">
+                        <AddActivityButton sectionId="objetivo" />
+
+                        <motion.button
+                          whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
+                          whileTap={{ scale: 0.98 }}
+                          className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
+                          style={{
+                            background: `${theme.primary}1A`,
+                            border: `1px solid ${theme.primary}33`,
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log('Tools clicado');
+                          }}
+                        >
+                          <Wrench className="w-4 h-4" />
+                          <span>Tools</span>
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+          </SortableSectionWrapper>
 
       {/* Espaçador e Botões de Ação - Após Objetivo da Aula */}
       <div className="relative flex items-center justify-between mt-16 mb-4 h-12">
@@ -2388,6 +2397,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           />
         )}
       </AnimatePresence>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 };
