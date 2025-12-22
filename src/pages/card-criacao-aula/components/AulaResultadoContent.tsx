@@ -320,7 +320,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
 
   // Constante para espaçamento vertical milimétrico entre cards
   // Este valor é usado para garantir posicionamento exato e simétrico do botão
-  const CARD_VERTICAL_SPACING = 12; // 12px = espaçamento total entre cards (6px acima + 6px abaixo do botão)
+  const CARD_VERTICAL_SPACING = 14; // 14px = espaçamento total entre cards
   
   const AddSectionDivider = ({ index, onAdd }: { index: number; onAdd: () => void }) => (
     <div 
@@ -342,7 +342,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           e.stopPropagation();
           onAdd();
         }}
-        className="flex items-center gap-2 px-6 py-3 rounded-full cursor-pointer transition-all duration-200"
+        className="flex items-center gap-2 px-6 py-2 rounded-full cursor-pointer transition-all duration-200"
         style={{
           background: `${theme.primary}15`,
           border: `1px dashed ${theme.primary}50`,
@@ -376,6 +376,24 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       />
 
       <div className="relative">
+        {/* Botão de Templates de Blocos */}
+        <div className="flex justify-end mb-4">
+          <motion.button
+            whileHover={{ scale: 1.05, background: `${theme.primary}20` }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200"
+            style={{ 
+              background: `${theme.primary}10`,
+              border: `1px solid ${theme.primary}33`,
+              color: theme.primary
+            }}
+            onClick={() => console.log('Templates de blocos clicado')}
+          >
+            <Layout className="w-4 h-4" />
+            <span className="text-xs font-semibold uppercase tracking-wider">Edição de blocos - Templates</span>
+          </motion.button>
+        </div>
+
         <motion.div
           ref={summaryCardRef}
           initial={{ opacity: 0, y: 20 }}
