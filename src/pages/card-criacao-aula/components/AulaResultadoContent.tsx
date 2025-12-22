@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 
 interface AulaResultadoContentProps {
@@ -91,6 +91,65 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const summaryCardRef = useRef<HTMLDivElement>(null);
+
+  const [preEstudoTime, setPreEstudoTime] = useState('10 min');
+  const [introducaoTime, setIntroducaoTime] = useState('10 min');
+  const [desenvolvimentoTime, setDesenvolvimentoTime] = useState('10 min');
+  const [encerramentoTime, setEncerramentoTime] = useState('10 min');
+  const [materiaisTime, setMateriaisTime] = useState('10 min');
+  const [observacoesTime, setObservacoesTime] = useState('10 min');
+  const [bnccTime, setBnccTime] = useState('10 min');
+
+  const SectionControls = ({ time, onTimeChange, onMoreClick }: { time: string, onTimeChange: (val: string) => void, onMoreClick: () => void }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [tempTime, setTempTime] = useState(time);
+
+    return (
+      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="flex items-center gap-2 px-3 h-8 rounded-lg transition-all border border-white/10"
+          style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+        >
+          {isEditing ? (
+            <input
+              autoFocus
+              className="w-16 bg-transparent border-0 text-white text-xs font-semibold focus:outline-none"
+              value={tempTime}
+              onChange={(e) => setTempTime(e.target.value)}
+              onBlur={() => {
+                setIsEditing(false);
+                onTimeChange(tempTime);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setIsEditing(false);
+                  onTimeChange(tempTime);
+                }
+              }}
+            />
+          ) : (
+            <div 
+              className="flex items-center gap-1.5 cursor-pointer"
+              onClick={() => setIsEditing(true)}
+            >
+              <Clock className="w-3.5 h-3.5 text-white/60" />
+              <span className="text-white text-xs font-semibold whitespace-nowrap">{time}</span>
+            </div>
+          )}
+        </div>
+
+        <motion.button
+          whileHover={{ scale: 1.1, background: 'rgba(255, 255, 255, 0.1)' }}
+          whileTap={{ scale: 0.9 }}
+          onClick={onMoreClick}
+          className="w-8 h-8 rounded-full flex items-center justify-center border border-white/10 transition-colors"
+          style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+        >
+          <MoreHorizontal className="w-4 h-4 text-white/80" />
+        </motion.button>
+      </div>
+    );
+  };
 
   const theme = themeColors[themeMode];
 
@@ -892,9 +951,16 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <BookOpen className="w-5 h-5" style={{ color: theme.primary }} />
             <span className="text-white font-bold text-lg">Pré-estudo</span>
           </div>
-          <motion.div animate={{ rotate: isPreEstudoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-          </motion.div>
+          <div className="flex items-center gap-3">
+            <SectionControls 
+              time={preEstudoTime} 
+              onTimeChange={setPreEstudoTime} 
+              onMoreClick={() => console.log('Mais opções - Pré-estudo')} 
+            />
+            <motion.div animate={{ rotate: isPreEstudoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+            </motion.div>
+          </div>
         </div>
         <AnimatePresence>
           {isPreEstudoExpanded && (
@@ -960,9 +1026,16 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <Lightbulb className="w-5 h-5" style={{ color: theme.primary }} />
             <span className="text-white font-bold text-lg">Introdução</span>
           </div>
-          <motion.div animate={{ rotate: isIntroducaoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-          </motion.div>
+          <div className="flex items-center gap-3">
+            <SectionControls 
+              time={introducaoTime} 
+              onTimeChange={setIntroducaoTime} 
+              onMoreClick={() => console.log('Mais opções - Introdução')} 
+            />
+            <motion.div animate={{ rotate: isIntroducaoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+            </motion.div>
+          </div>
         </div>
         <AnimatePresence>
           {isIntroducaoExpanded && (
@@ -997,9 +1070,16 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <Layers className="w-5 h-5" style={{ color: theme.primary }} />
             <span className="text-white font-bold text-lg">Desenvolvimento</span>
           </div>
-          <motion.div animate={{ rotate: isDesenvolvimentoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-          </motion.div>
+          <div className="flex items-center gap-3">
+            <SectionControls 
+              time={desenvolvimentoTime} 
+              onTimeChange={setDesenvolvimentoTime} 
+              onMoreClick={() => console.log('Mais opções - Desenvolvimento')} 
+            />
+            <motion.div animate={{ rotate: isDesenvolvimentoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+            </motion.div>
+          </div>
         </div>
         <AnimatePresence>
           {isDesenvolvimentoExpanded && (
@@ -1034,9 +1114,16 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <CheckCircle className="w-5 h-5" style={{ color: theme.primary }} />
             <span className="text-white font-bold text-lg">Encerramento</span>
           </div>
-          <motion.div animate={{ rotate: isEncerramentoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-          </motion.div>
+          <div className="flex items-center gap-3">
+            <SectionControls 
+              time={encerramentoTime} 
+              onTimeChange={setEncerramentoTime} 
+              onMoreClick={() => console.log('Mais opções - Encerramento')} 
+            />
+            <motion.div animate={{ rotate: isEncerramentoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+            </motion.div>
+          </div>
         </div>
         <AnimatePresence>
           {isEncerramentoExpanded && (
@@ -1071,9 +1158,16 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <FileText className="w-5 h-5" style={{ color: theme.primary }} />
             <span className="text-white font-bold text-lg">Materiais Complementares</span>
           </div>
-          <motion.div animate={{ rotate: isMateriaisExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-          </motion.div>
+          <div className="flex items-center gap-3">
+            <SectionControls 
+              time={materiaisTime} 
+              onTimeChange={setMateriaisTime} 
+              onMoreClick={() => console.log('Mais opções - Materiais')} 
+            />
+            <motion.div animate={{ rotate: isMateriaisExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+            </motion.div>
+          </div>
         </div>
         <AnimatePresence>
           {isMateriaisExpanded && (
@@ -1108,9 +1202,16 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <MessageSquare className="w-5 h-5" style={{ color: theme.primary }} />
             <span className="text-white font-bold text-lg">Observações do Professor</span>
           </div>
-          <motion.div animate={{ rotate: isObservacoesExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-          </motion.div>
+          <div className="flex items-center gap-3">
+            <SectionControls 
+              time={observacoesTime} 
+              onTimeChange={setObservacoesTime} 
+              onMoreClick={() => console.log('Mais opções - Observações')} 
+            />
+            <motion.div animate={{ rotate: isObservacoesExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+            </motion.div>
+          </div>
         </div>
         <AnimatePresence>
           {isObservacoesExpanded && (
@@ -1145,9 +1246,16 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <Award className="w-5 h-5" style={{ color: theme.primary }} />
             <span className="text-white font-bold text-lg">Critérios BNCC</span>
           </div>
-          <motion.div animate={{ rotate: isBnccExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-          </motion.div>
+          <div className="flex items-center gap-3">
+            <SectionControls 
+              time={bnccTime} 
+              onTimeChange={setBnccTime} 
+              onMoreClick={() => console.log('Mais opções - BNCC')} 
+            />
+            <motion.div animate={{ rotate: isBnccExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+            </motion.div>
+          </div>
         </div>
         <AnimatePresence>
           {isBnccExpanded && (
