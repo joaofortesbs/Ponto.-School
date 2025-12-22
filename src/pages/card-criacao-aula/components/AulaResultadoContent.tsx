@@ -107,8 +107,12 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     return (
       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
         <div 
-          className="flex items-center gap-2 px-4 h-8 rounded-full transition-all border border-white/10"
-          style={{ background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(8px)' }}
+          className="flex items-center gap-2 px-4 h-8 rounded-full transition-all border"
+          style={{ 
+            background: `${theme.primary}1A`, 
+            borderColor: `${theme.primary}4D`,
+            backdropFilter: 'blur(8px)' 
+          }}
         >
           {isEditing ? (
             <div className="flex items-center gap-1">
@@ -129,7 +133,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   }
                 }}
               />
-              <span className="text-white/40 text-xs font-semibold">min</span>
+              <span style={{ color: `${theme.primary}99` }} className="text-xs font-semibold">min</span>
             </div>
           ) : (
             <div 
@@ -139,20 +143,25 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 setIsEditing(true);
               }}
             >
-              <Clock className="w-3.5 h-3.5 text-white/60" />
+              <Clock className="w-3.5 h-3.5" style={{ color: theme.primary }} />
               <span className="text-white text-xs font-semibold whitespace-nowrap">{time}</span>
             </div>
           )}
         </div>
 
         <motion.button
-          whileHover={{ scale: 1.1, background: 'rgba(255, 255, 255, 0.1)' }}
+          whileHover={{ scale: 1.1, background: `${theme.primary}33` }}
           whileTap={{ scale: 0.9 }}
           onClick={onMoreClick}
-          className="w-8 h-8 rounded-full flex items-center justify-center border border-white/10 transition-colors"
-          style={{ background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(8px)' }}
+          data-section-more-button
+          className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors"
+          style={{ 
+            background: `${theme.primary}1A`, 
+            borderColor: `${theme.primary}4D`,
+            backdropFilter: 'blur(8px)' 
+          }}
         >
-          <MoreHorizontal className="w-4 h-4 text-white/80" />
+          <MoreHorizontal className="w-4 h-4" style={{ color: theme.primary }} />
         </motion.button>
       </div>
     );
@@ -386,14 +395,25 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               />
             </div>
             <div className="flex items-center gap-2">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={(e) => { e.stopPropagation(); deleteCustomSection(section.id); }}
-                className="p-1 rounded-full hover:bg-red-500/20"
-              >
-                <Trash2 className="w-4 h-4 text-red-400" />
-              </motion.button>
+              <div className="relative">
+                <SectionControls 
+                  time="10 min" // Default time for custom sections
+                  onTimeChange={() => {}} 
+                  onMoreClick={(e) => {
+                    e.stopPropagation();
+                    setActiveMenuSection(activeMenuSection === section.id ? null : section.id);
+                  }} 
+                />
+                <AnimatePresence>
+                  {activeMenuSection === section.id && (
+                    <SectionMenu 
+                      sectionId={section.id} 
+                      onClose={() => setActiveMenuSection(null)} 
+                      onAction={(action) => handleSectionAction(section.id, action)} 
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
               <motion.div animate={{ rotate: section.isExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
                 <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
               </motion.div>
@@ -467,6 +487,85 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
 
   const deleteCustomSection = (id: string) => {
     setCustomSections(sections => sections.filter(s => s.id !== id));
+  };
+
+  const handleSectionAction = (sectionId: string, action: string) => {
+    if (action === 'excluir') {
+      // Identificar se é uma seção padrão ou personalizada
+      const defaultSections = [
+        'objective', 'preEstudo', 'introducao', 'desenvolvimento', 
+        'encerramento', 'materiais', 'observacoes', 'bncc'
+      ];
+      
+      if (defaultSections.includes(sectionId)) {
+        // Para seções padrão, apenas "escondemos" limpando o texto ou poderíamos ter um estado de visibilidade
+        // Por enquanto, vamos apenas limpar o texto como uma forma de "remover" o conteúdo
+        switch (sectionId) {
+          case 'objective': setObjectiveText(''); break;
+          case 'preEstudo': setPreEstudoText(''); break;
+          case 'introducao': setIntroducaoText(''); break;
+          case 'desenvolvimento': setDesenvolvimentoText(''); break;
+          case 'encerramento': setEncerramentoText(''); break;
+          case 'materiais': setMateriaisText(''); break;
+          case 'observacoes': setObservacoesText(''); break;
+          case 'bncc': setBnccText(''); break;
+        }
+      } else {
+        // Seção personalizada
+        deleteCustomSection(sectionId);
+      }
+    } else if (action === 'duplicar') {
+      const defaultSectionsData: Record<string, { title: string, text: string }> = {
+        'objective': { title: 'Objetivos', text: objectiveText },
+        'preEstudo': { title: 'Pré-estudo', text: preEstudoText },
+        'introducao': { title: 'Introdução', text: introducaoText },
+        'desenvolvimento': { title: 'Desenvolvimento', text: desenvolvimentoText },
+        'encerramento': { title: 'Encerramento', text: encerramentoText },
+        'materiais': { title: 'Materiais', text: materiaisText },
+        'observacoes': { title: 'Observações', text: observacoesText },
+        'bncc': { title: 'BNCC', text: bnccText }
+      };
+
+      let sourceTitle = '';
+      let sourceText = '';
+      let afterDivider = 0;
+
+      if (defaultSectionsData[sectionId]) {
+        sourceTitle = defaultSectionsData[sectionId].title;
+        sourceText = defaultSectionsData[sectionId].text;
+        // Mapear seção padrão para o divisor correspondente
+        const mapping: Record<string, number> = {
+          'objective': 0, 'preEstudo': 1, 'introducao': 2, 'desenvolvimento': 3,
+          'encerramento': 4, 'materiais': 5, 'observacoes': 6, 'bncc': 6
+        };
+        afterDivider = mapping[sectionId] || 0;
+      } else {
+        const custom = customSections.find(s => s.id === sectionId);
+        if (custom) {
+          sourceTitle = custom.title;
+          sourceText = custom.text;
+          afterDivider = custom.afterDivider;
+        }
+      }
+
+      if (sourceTitle || sourceText) {
+        setCustomSections(prev => {
+          const sectionsInDivider = prev.filter(s => s.afterDivider === afterDivider);
+          const maxOrderIndex = sectionsInDivider.length > 0 
+            ? Math.max(...sectionsInDivider.map(s => s.orderIndex)) 
+            : -1;
+          
+          return [...prev, {
+            id: `section-${Date.now()}`,
+            title: `${sourceTitle} (Cópia)`,
+            text: sourceText,
+            isExpanded: true,
+            afterDivider,
+            orderIndex: maxOrderIndex + 1
+          }];
+        });
+      }
+    }
   };
 
   // Constante para espaçamento vertical milimétrico entre cards
