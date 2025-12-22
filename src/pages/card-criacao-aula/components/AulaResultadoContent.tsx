@@ -1820,10 +1820,11 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.35, duration: 0.3 }}
               className="relative flex-shrink-0"
+              title="Fluxo de Integração"
             >
               <motion.div
                 animate={{
-                  background: userAvatar ? 'transparent' : theme.circleBg,
+                  background: theme.circleBg,
                   borderColor: theme.circleBorder
                 }}
                 transition={{ duration: 0.3 }}
@@ -1831,21 +1832,11 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 style={{
                   width: `${CIRCLE_SIZE}px`,
                   height: `${CIRCLE_SIZE}px`,
-                  background: userAvatar 
-                    ? 'transparent' 
-                    : theme.circleBg,
+                  background: theme.circleBg,
                   border: `2px solid ${theme.circleBorder}`
                 }}
               >
-                {userAvatar ? (
-                  <img 
-                    src={userAvatar} 
-                    alt={userName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-7 h-7" style={{ color: `${theme.primary}99` }} />
-                )}
+                <GitBranch className="w-7 h-7" style={{ color: `${theme.primary}99` }} />
               </motion.div>
             </motion.div>
 
