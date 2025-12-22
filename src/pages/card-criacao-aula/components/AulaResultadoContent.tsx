@@ -667,6 +667,83 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     return () => document.removeEventListener('click', handleClickOutsideActivityDropdown);
   }, [activeActivityDropdown]);
 
+  // Remover atividade de uma seção
+  const removeActivityFromSection = (sectionId: string, activityId: string) => {
+    setSectionActivities(prev => prev.filter(a => !(a.sectionId === sectionId && a.activityId === activityId)));
+  };
+
+  // Componente para exibir atividades adicionadas em uma seção (estilo grade igual à sub-seção de Atividades)
+  const SectionActivitiesGrid = ({ sectionId }: { sectionId: string }) => {
+    const activitiesForSection = sectionActivities.filter(a => a.sectionId === sectionId);
+    
+    if (activitiesForSection.length === 0) return null;
+
+    return (
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {activitiesForSection.map(({ activityId, activityData }) => {
+          const title = activityData.id_json?.titulo || activityData.id_json?.title || activityData.tipo || 'Atividade sem título';
+          const type = activityData.tipo || 'Geral';
+          const createdDate = activityData.created_at 
+            ? new Date(activityData.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+            : null;
+
+          return (
+            <motion.div
+              key={activityId}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              whileHover={{ y: -2 }}
+              className="relative group rounded-2xl overflow-hidden cursor-pointer"
+              style={{
+                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+              }}
+            >
+              {/* Área do Ícone */}
+              <div 
+                className="flex items-center justify-center py-8"
+                style={{ background: 'rgba(0, 0, 0, 0.2)' }}
+              >
+                <FileText className="w-12 h-12" style={{ color: theme.primary }} />
+              </div>
+
+              {/* Informações da Atividade */}
+              <div 
+                className="p-4"
+                style={{ 
+                  background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.9) 100%)'
+                }}
+              >
+                <h4 className="text-white font-bold text-sm truncate mb-1">{title}</h4>
+                <p className="text-white/50 text-xs mb-2">{type}</p>
+                {createdDate && (
+                  <div className="flex items-center gap-1.5 text-white/40 text-xs">
+                    <Clock className="w-3 h-3" />
+                    <span>{createdDate}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Botão de Remover (aparece no hover) */}
+              <motion.button
+                initial={{ opacity: 0 }}
+                whileHover={{ scale: 1.1, backgroundColor: 'rgba(239, 68, 68, 0.3)' }}
+                className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeActivityFromSection(sectionId, activityId);
+                }}
+              >
+                <Trash2 className="w-3.5 h-3.5 text-red-400" />
+              </motion.button>
+            </motion.div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const SectionControls = ({ time, onTimeChange, onMoreClick }: { time: string, onTimeChange: (val: string) => void, onMoreClick: (e: React.MouseEvent) => void }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [tempTime, setTempTime] = useState(time.replace(' min', ''));
@@ -1613,6 +1690,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                     <span>Tools</span>
                   </motion.button>
                 </div>
+                <SectionActivitiesGrid sectionId="objetivo" />
               </div>
             </motion.div>
           )}
@@ -1743,6 +1821,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                     <span>Tools</span>
                   </motion.button>
                 </div>
+                <SectionActivitiesGrid sectionId="pre-estudo" />
               </div>
             </motion.div>
           )}
@@ -1806,6 +1885,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <AddActivityButton sectionId="introducao" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Introdução'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
+                <SectionActivitiesGrid sectionId="introducao" />
               </div>
             </motion.div>
           )}
@@ -1869,6 +1949,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <AddActivityButton sectionId="desenvolvimento" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Desenvolvimento'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
+                <SectionActivitiesGrid sectionId="desenvolvimento" />
               </div>
             </motion.div>
           )}
@@ -1932,6 +2013,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <AddActivityButton sectionId="encerramento" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Encerramento'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
+                <SectionActivitiesGrid sectionId="encerramento" />
               </div>
             </motion.div>
           )}
@@ -1995,6 +2077,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <AddActivityButton sectionId="materiais" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Materiais'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
+                <SectionActivitiesGrid sectionId="materiais" />
               </div>
             </motion.div>
           )}
@@ -2058,6 +2141,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <AddActivityButton sectionId="observacoes" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Observações'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
+                <SectionActivitiesGrid sectionId="observacoes" />
               </div>
             </motion.div>
           )}
@@ -2121,6 +2205,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <AddActivityButton sectionId="bncc" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - BNCC'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
+                <SectionActivitiesGrid sectionId="bncc" />
               </div>
             </motion.div>
           )}
