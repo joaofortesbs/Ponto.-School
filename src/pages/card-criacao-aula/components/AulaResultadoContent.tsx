@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
+import EditActivityModal from '@/features/schoolpower/construction/EditActivityModal';
 
 interface AulaResultadoContentProps {
   aulaName?: string;
@@ -121,6 +122,9 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [activitySearchTerm, setActivitySearchTerm] = useState('');
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Estado para o modal de visualização de atividade
+  const [viewingActivity, setViewingActivity] = useState<AtividadeNeon | null>(null);
 
   // Interface para atividades adicionadas às seções
   interface SectionActivity {
@@ -708,6 +712,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 border: '1px solid rgba(255, 255, 255, 0.08)',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
               }}
+              onClick={() => setViewingActivity(activityData)}
             >
               {/* Área do Ícone - Proporção Superior */}
               <div 
@@ -2275,6 +2280,26 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       {/* MyActivitiesPanel - Modal para selecionar atividades */}
       <AnimatePresence>
         <MyActivitiesPanel />
+      </AnimatePresence>
+
+      {/* Modal de Visualização de Atividade */}
+      <AnimatePresence>
+        {viewingActivity && (
+          <EditActivityModal 
+            isOpen={!!viewingActivity}
+            activity={{
+              id: viewingActivity.id,
+              title: viewingActivity.id_json?.titulo || viewingActivity.id_json?.title || viewingActivity.tipo || 'Atividade',
+              type: viewingActivity.tipo || 'default',
+              status: 'completed',
+              color: theme.primary,
+              icon: 'FileText',
+              content: viewingActivity.id_json
+            }}
+            onClose={() => setViewingActivity(null)}
+            onSave={() => setViewingActivity(null)}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
