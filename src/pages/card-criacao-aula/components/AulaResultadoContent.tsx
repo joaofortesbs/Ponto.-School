@@ -1502,6 +1502,114 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       </div>
     );
   };
+
+  // Função para renderizar uma seção baseada na configuração
+  const renderSection = (config: SectionConfig) => {
+    const IconComponent = config.icon;
+    const isObjective = config.id === 'objective';
+    const extraClass = config.id === 'bncc' ? 'mb-6' : '';
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ 
+          opacity: 1, 
+          y: 0,
+          background: theme.bgGradient,
+          borderColor: theme.border
+        }}
+        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+        transition={{ delay: config.delay, duration: 0.4 }}
+        className={`rounded-2xl relative z-10 cursor-pointer ${extraClass}`}
+        style={{
+          background: theme.bgGradient,
+          border: `1px solid ${theme.border}`,
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+        }}
+        onClick={() => config.setExpanded(!config.isExpanded)}
+      >
+        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
+          <div className="flex items-center gap-3">
+            <IconComponent className="w-5 h-5" style={{ color: theme.primary }} />
+            <span className="text-white font-bold text-lg">{config.title}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            {!isObjective && (
+              <div className="relative">
+                <SectionControls 
+                  time={config.time} 
+                  onTimeChange={config.setTime} 
+                  onMoreClick={(e) => {
+                    e.stopPropagation();
+                    setActiveMenuSection(activeMenuSection === config.menuId ? null : config.menuId);
+                  }} 
+                />
+                <AnimatePresence>
+                  {activeMenuSection === config.menuId && (
+                    <SectionMenu 
+                      sectionId={config.menuId} 
+                      onClose={() => setActiveMenuSection(null)}
+                      onAction={(action) => handleSectionAction(config.id, action)}
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+            <motion.div
+              animate={{ rotate: config.isExpanded ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+            </motion.div>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {config.isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-4 pb-4">
+                <AutoResizeTextarea
+                  value={config.text}
+                  onChange={config.onChange}
+                  placeholder={config.placeholder}
+                />
+
+                <SectionActivitiesGrid sectionId={config.menuId} />
+
+                <div className="flex items-center gap-3 mt-3">
+                  <AddActivityButton sectionId={config.menuId} />
+
+                  <motion.button
+                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
+                    style={{
+                      background: `${theme.primary}1A`,
+                      border: `1px solid ${theme.primary}33`,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log(`Tools - ${config.title}`);
+                    }}
+                  >
+                    <Wrench className="w-4 h-4" />
+                    <span>Tools</span>
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    );
+  };
   
   const AddSectionDivider = ({ index, onAdd }: { index: number; onAdd: () => void }) => (
     <div 
@@ -2031,479 +2139,46 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           </motion.button>
         </div>
       </div>
+
+      {/* Divider 0 - Após Objetivo */}
       {renderCustomSectionsForDivider(0)}
 
-      {/* Card Pré-estudo */}
-      <AnimatePresence>
-      {isPreEstudoVisible && (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ 
-          opacity: 1, 
-          y: 0,
-          background: theme.bgGradient,
-          borderColor: theme.border
-        }}
-        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-        transition={{ delay: 0.55, duration: 0.4 }}
-        className="rounded-2xl relative z-10 cursor-pointer"
-        style={{
-          background: theme.bgGradient,
-          border: `1px solid ${theme.border}`,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-        }}
-        onClick={() => setIsPreEstudoExpanded(!isPreEstudoExpanded)}
+      {/* Seções arrastáveis com DndContext */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
       >
-        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
-          <div className="flex items-center gap-3">
-            <BookOpen className="w-5 h-5" style={{ color: theme.primary }} />
-            <span className="text-white font-bold text-lg">Pré-estudo</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <SectionControls 
-                time={preEstudoTime} 
-                onTimeChange={setPreEstudoTime} 
-                onMoreClick={(e) => {
-                  e.stopPropagation();
-                  setActiveMenuSection(activeMenuSection === 'pre-estudo' ? null : 'pre-estudo');
-                }} 
-              />
-              <AnimatePresence>
-                {activeMenuSection === 'pre-estudo' && (
-                  <SectionMenu 
-                    sectionId="pre-estudo" 
-                    onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => handleSectionAction('preEstudo', action)}
-                  />
-                )}
-              </AnimatePresence>
+        <SortableContext items={sectionOrder.filter(id => id !== 'objective')} strategy={verticalListSortingStrategy}>
+          {sectionOrder.filter(id => id !== 'objective').map((sectionId, index) => {
+            const config = sectionConfigs[sectionId];
+            if (!config || !config.isVisible) return null;
+            
+            const dynamicDividerIndex = index + 1;
+            
+            return (
+              <React.Fragment key={sectionId}>
+                <AnimatePresence mode="popLayout">
+                  <SortableSectionCard id={sectionId}>
+                    {renderSection(config)}
+                  </SortableSectionCard>
+                </AnimatePresence>
+                <AddSectionDivider index={dynamicDividerIndex} onAdd={() => addCustomSection(dynamicDividerIndex)} />
+                {renderCustomSectionsForDivider(dynamicDividerIndex)}
+              </React.Fragment>
+            );
+          })}
+        </SortableContext>
+        
+        <DragOverlay>
+          {activeDragId && sectionConfigs[activeDragId] ? (
+            <div style={{ opacity: 0.8, transform: 'scale(1.02)' }}>
+              {renderSection(sectionConfigs[activeDragId])}
             </div>
-            <motion.div animate={{ rotate: isPreEstudoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-            </motion.div>
-          </div>
-        </div>
-        <AnimatePresence>
-          {isPreEstudoExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="px-4 pb-4">
-                <AutoResizeTextarea
-                  value={preEstudoText}
-                  onChange={handlePreEstudoChange}
-                  placeholder="Descreva as atividades de pré-estudo..."
-                />
-                <SectionActivitiesGrid sectionId="pre-estudo" />
-                <div className="flex items-center gap-3 mt-3">
-                  <AddActivityButton sectionId="pre-estudo" />
-                  <motion.button
-                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
-                    style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-                    onClick={(e) => { e.stopPropagation(); console.log('Tools - Pré-estudo'); }}
-                  >
-                    <Wrench className="w-4 h-4" />
-                    <span>Tools</span>
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-      )}
-      </AnimatePresence>
-
-      {/* Divider 1 - Após Pré-estudo */}
-      <AddSectionDivider index={1} onAdd={() => addCustomSection(1)} />
-      {renderCustomSectionsForDivider(1)}
-
-      {/* Card Introdução */}
-      <AnimatePresence>
-      {isIntroducaoVisible && (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
-        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-        transition={{ delay: 0.6, duration: 0.4 }}
-        className="rounded-2xl relative z-10 cursor-pointer"
-        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
-        onClick={() => setIsIntroducaoExpanded(!isIntroducaoExpanded)}
-      >
-        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
-          <div className="flex items-center gap-3">
-            <Lightbulb className="w-5 h-5" style={{ color: theme.primary }} />
-            <span className="text-white font-bold text-lg">Introdução</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <SectionControls 
-                time={introducaoTime} 
-                onTimeChange={setIntroducaoTime} 
-                onMoreClick={(e) => {
-                  e.stopPropagation();
-                  setActiveMenuSection(activeMenuSection === 'introducao' ? null : 'introducao');
-                }} 
-              />
-              <AnimatePresence>
-                {activeMenuSection === 'introducao' && (
-                  <SectionMenu 
-                    sectionId="introducao" 
-                    onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => handleSectionAction('introducao', action)}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-            <motion.div animate={{ rotate: isIntroducaoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-            </motion.div>
-          </div>
-        </div>
-        <AnimatePresence>
-          {isIntroducaoExpanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <div className="px-4 pb-4">
-                <AutoResizeTextarea value={introducaoText} onChange={handleIntroducaoChange} placeholder="Descreva a introdução da aula..." />
-                <SectionActivitiesGrid sectionId="introducao" />
-                <div className="flex items-center gap-3 mt-3">
-                  <AddActivityButton sectionId="introducao" />
-                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Introdução'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-      )}
-      </AnimatePresence>
-
-      {/* Divider 2 - Após Introdução */}
-      <AddSectionDivider index={2} onAdd={() => addCustomSection(2)} />
-      {renderCustomSectionsForDivider(2)}
-
-      {/* Card Desenvolvimento */}
-      <AnimatePresence>
-      {isDesenvolvimentoVisible && (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
-        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-        transition={{ delay: 0.65, duration: 0.4 }}
-        className="rounded-2xl relative z-10 cursor-pointer"
-        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
-        onClick={() => setIsDesenvolvimentoExpanded(!isDesenvolvimentoExpanded)}
-      >
-        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
-          <div className="flex items-center gap-3">
-            <Layers className="w-5 h-5" style={{ color: theme.primary }} />
-            <span className="text-white font-bold text-lg">Desenvolvimento</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <SectionControls 
-                time={desenvolvimentoTime} 
-                onTimeChange={setDesenvolvimentoTime} 
-                onMoreClick={(e) => {
-                  e.stopPropagation();
-                  setActiveMenuSection(activeMenuSection === 'desenvolvimento' ? null : 'desenvolvimento');
-                }} 
-              />
-              <AnimatePresence>
-                {activeMenuSection === 'desenvolvimento' && (
-                  <SectionMenu 
-                    sectionId="desenvolvimento" 
-                    onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => handleSectionAction('desenvolvimento', action)}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-            <motion.div animate={{ rotate: isDesenvolvimentoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-            </motion.div>
-          </div>
-        </div>
-        <AnimatePresence>
-          {isDesenvolvimentoExpanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <div className="px-4 pb-4">
-                <AutoResizeTextarea value={desenvolvimentoText} onChange={handleDesenvolvimentoChange} placeholder="Descreva o desenvolvimento da aula..." />
-                <SectionActivitiesGrid sectionId="desenvolvimento" />
-                <div className="flex items-center gap-3 mt-3">
-                  <AddActivityButton sectionId="desenvolvimento" />
-                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Desenvolvimento'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-      )}
-      </AnimatePresence>
-
-      {/* Divider 3 - Após Desenvolvimento */}
-      <AddSectionDivider index={3} onAdd={() => addCustomSection(3)} />
-      {renderCustomSectionsForDivider(3)}
-
-      {/* Card Encerramento */}
-      <AnimatePresence>
-      {isEncerramentoVisible && (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
-        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-        transition={{ delay: 0.7, duration: 0.4 }}
-        className="rounded-2xl relative z-10 cursor-pointer"
-        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
-        onClick={() => setIsEncerramentoExpanded(!isEncerramentoExpanded)}
-      >
-        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
-          <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5" style={{ color: theme.primary }} />
-            <span className="text-white font-bold text-lg">Encerramento</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <SectionControls 
-                time={encerramentoTime} 
-                onTimeChange={setEncerramentoTime} 
-                onMoreClick={(e) => {
-                  e.stopPropagation();
-                  setActiveMenuSection(activeMenuSection === 'encerramento' ? null : 'encerramento');
-                }} 
-              />
-              <AnimatePresence>
-                {activeMenuSection === 'encerramento' && (
-                  <SectionMenu 
-                    sectionId="encerramento" 
-                    onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => handleSectionAction('encerramento', action)}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-            <motion.div animate={{ rotate: isEncerramentoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-            </motion.div>
-          </div>
-        </div>
-        <AnimatePresence>
-          {isEncerramentoExpanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <div className="px-4 pb-4">
-                <AutoResizeTextarea value={encerramentoText} onChange={handleEncerramentoChange} placeholder="Descreva o encerramento da aula..." />
-                <SectionActivitiesGrid sectionId="encerramento" />
-                <div className="flex items-center gap-3 mt-3">
-                  <AddActivityButton sectionId="encerramento" />
-                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Encerramento'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-      )}
-      </AnimatePresence>
-
-      {/* Divider 4 - Após Encerramento */}
-      <AddSectionDivider index={4} onAdd={() => addCustomSection(4)} />
-      {renderCustomSectionsForDivider(4)}
-
-      {/* Card Materiais Complementares */}
-      <AnimatePresence>
-      {isMateriaisVisible && (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
-        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-        transition={{ delay: 0.75, duration: 0.4 }}
-        className="rounded-2xl relative z-10 cursor-pointer"
-        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
-        onClick={() => setIsMateriaisExpanded(!isMateriaisExpanded)}
-      >
-        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
-          <div className="flex items-center gap-3">
-            <FileText className="w-5 h-5" style={{ color: theme.primary }} />
-            <span className="text-white font-bold text-lg">Materiais Complementares</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <SectionControls 
-                time={materiaisTime} 
-                onTimeChange={setMateriaisTime} 
-                onMoreClick={(e) => {
-                  e.stopPropagation();
-                  setActiveMenuSection(activeMenuSection === 'materiais' ? null : 'materiais');
-                }} 
-              />
-              <AnimatePresence>
-                {activeMenuSection === 'materiais' && (
-                  <SectionMenu 
-                    sectionId="materiais" 
-                    onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => handleSectionAction('materiais', action)}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-            <motion.div animate={{ rotate: isMateriaisExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-            </motion.div>
-          </div>
-        </div>
-        <AnimatePresence>
-          {isMateriaisExpanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <div className="px-4 pb-4">
-                <AutoResizeTextarea value={materiaisText} onChange={handleMateriaisChange} placeholder="Liste os materiais complementares..." />
-                <SectionActivitiesGrid sectionId="materiais" />
-                <div className="flex items-center gap-3 mt-3">
-                  <AddActivityButton sectionId="materiais" />
-                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Materiais'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-      )}
-      </AnimatePresence>
-
-      {/* Divider 5 - Após Materiais Complementares */}
-      <AddSectionDivider index={5} onAdd={() => addCustomSection(5)} />
-      {renderCustomSectionsForDivider(5)}
-
-      {/* Card Observações do Professor */}
-      <AnimatePresence>
-      {isObservacoesVisible && (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
-        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-        transition={{ delay: 0.8, duration: 0.4 }}
-        className="rounded-2xl relative z-10 cursor-pointer"
-        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
-        onClick={() => setIsObservacoesExpanded(!isObservacoesExpanded)}
-      >
-        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
-          <div className="flex items-center gap-3">
-            <MessageSquare className="w-5 h-5" style={{ color: theme.primary }} />
-            <span className="text-white font-bold text-lg">Observações do Professor</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <SectionControls 
-                time={observacoesTime} 
-                onTimeChange={setObservacoesTime} 
-                onMoreClick={(e) => {
-                  e.stopPropagation();
-                  setActiveMenuSection(activeMenuSection === 'observacoes' ? null : 'observacoes');
-                }} 
-              />
-              <AnimatePresence>
-                {activeMenuSection === 'observacoes' && (
-                  <SectionMenu 
-                    sectionId="observacoes" 
-                    onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => handleSectionAction('observacoes', action)}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-            <motion.div animate={{ rotate: isObservacoesExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-            </motion.div>
-          </div>
-        </div>
-        <AnimatePresence>
-          {isObservacoesExpanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <div className="px-4 pb-4">
-                <AutoResizeTextarea value={observacoesText} onChange={handleObservacoesChange} placeholder="Adicione suas observações..." />
-                <SectionActivitiesGrid sectionId="observacoes" />
-                <div className="flex items-center gap-3 mt-3">
-                  <AddActivityButton sectionId="observacoes" />
-                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Observações'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-      )}
-      </AnimatePresence>
-
-      {/* Divider 6 - Após Observações */}
-      <AddSectionDivider index={6} onAdd={() => addCustomSection(6)} />
-      {renderCustomSectionsForDivider(6)}
-
-      {/* Card Critérios BNCC */}
-      <AnimatePresence>
-      {isBnccVisible && (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
-        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-        transition={{ delay: 0.85, duration: 0.4 }}
-        className="mb-6 rounded-2xl relative z-10 cursor-pointer"
-        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
-        onClick={() => setIsBnccExpanded(!isBnccExpanded)}
-      >
-        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
-          <div className="flex items-center gap-3">
-            <Award className="w-5 h-5" style={{ color: theme.primary }} />
-            <span className="text-white font-bold text-lg">Critérios BNCC</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <SectionControls 
-                time={bnccTime} 
-                onTimeChange={setBnccTime} 
-                onMoreClick={(e) => {
-                  e.stopPropagation();
-                  setActiveMenuSection(activeMenuSection === 'bncc' ? null : 'bncc');
-                }} 
-              />
-              <AnimatePresence>
-                {activeMenuSection === 'bncc' && (
-                  <SectionMenu 
-                    sectionId="bncc" 
-                    onClose={() => setActiveMenuSection(null)}
-                    onAction={(action) => handleSectionAction('bncc', action)}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-            <motion.div animate={{ rotate: isBnccExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-            </motion.div>
-          </div>
-        </div>
-        <AnimatePresence>
-          {isBnccExpanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <div className="px-4 pb-4">
-                <AutoResizeTextarea value={bnccText} onChange={handleBnccChange} placeholder="Descreva os critérios da BNCC..." />
-                <div className="flex items-center gap-3 mt-3">
-                  <AddActivityButton sectionId="bncc" />
-                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - BNCC'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-      )}
-      </AnimatePresence>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       {/* MyActivitiesPanel - Modal para selecionar atividades */}
       <AnimatePresence>
