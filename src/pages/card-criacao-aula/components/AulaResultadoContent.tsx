@@ -1490,7 +1490,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         <div
           {...attributes}
           {...listeners}
-          className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center cursor-grab active:cursor-grabbing z-20 opacity-0 hover:opacity-100 transition-opacity"
+          className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center cursor-grab active:cursor-grabbing z-20 opacity-0 hover:opacity-100 transition-opacity rounded-l-2xl"
           style={{
             background: `linear-gradient(to right, ${theme.primary}15, transparent)`,
           }}
