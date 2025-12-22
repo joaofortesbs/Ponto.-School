@@ -1602,11 +1602,11 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 opacity: 1,
                 transition: {
                   height: {
-                    duration: 0.4,
-                    ease: [0.04, 0.62, 0.23, 0.98]
+                    duration: 0.5,
+                    ease: [0.34, 1.56, 0.64, 1] // Curva idêntica ao Objetivo da Aula
                   },
                   opacity: {
-                    duration: 0.25,
+                    duration: 0.3,
                     delay: 0.1
                   }
                 }
@@ -1616,11 +1616,11 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 opacity: 0,
                 transition: {
                   height: {
-                    duration: 0.3,
-                    ease: [0.04, 0.62, 0.23, 0.98]
+                    duration: 0.4,
+                    ease: [0.34, 1.56, 0.64, 1]
                   },
                   opacity: {
-                    duration: 0.2
+                    duration: 0.25
                   }
                 }
               }}
