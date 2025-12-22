@@ -121,6 +121,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [activitySearchTerm, setActivitySearchTerm] = useState('');
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedActivityForView, setSelectedActivityForView] = useState<AtividadeNeon | null>(null);
 
   // Interface para atividades adicionadas às seções
   interface SectionActivity {
@@ -700,6 +701,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               whileHover={{ y: -4, boxShadow: `0 12px 24px rgba(0,0,0,0.3)` }}
+              onClick={() => setSelectedActivityForView(activityData)}
               className="relative group rounded-2xl overflow-hidden cursor-pointer flex flex-col"
               style={{
                 width: `${CARD_WIDTH}px`,
@@ -2275,6 +2277,126 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       {/* MyActivitiesPanel - Modal para selecionar atividades */}
       <AnimatePresence>
         <MyActivitiesPanel />
+      </AnimatePresence>
+      {/* Modal de Visualização de Atividade */}
+      <AnimatePresence>
+        {selectedActivityForView && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-center justify-center p-4"
+            onClick={() => setSelectedActivityForView(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="w-full max-w-4xl max-h-[90vh] rounded-3xl overflow-hidden flex flex-col"
+              style={{
+                background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
+                border: `1px solid ${theme.menuBorder}`,
+                boxShadow: `0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px ${theme.shadowLight}`
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header do Modal */}
+              <div className="p-6 flex items-center justify-between border-b border-white/10">
+                <div className="flex items-center gap-4">
+                  <div 
+                    className="p-3 rounded-2xl"
+                    style={{ background: `${theme.primary}20` }}
+                  >
+                    <FileText className="w-6 h-6" style={{ color: theme.primary }} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">
+                      {selectedActivityForView.id_json?.titulo || selectedActivityForView.id_json?.title || 'Visualizar Atividade'}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span 
+                        className="px-2 py-0.5 rounded-full text-xs font-bold uppercase"
+                        style={{ background: `${theme.primary}33`, color: theme.primary }}
+                      >
+                        {selectedActivityForView.tipo}
+                      </span>
+                      {selectedActivityForView.stars && (
+                        <div className="flex items-center gap-1 ml-2">
+                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                          <span className="text-xs text-white/60">{selectedActivityForView.stars} estrelas</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.1)' }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setSelectedActivityForView(null)}
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white/70"
+                >
+                  <X className="w-6 h-6" />
+                </motion.button>
+              </div>
+
+              {/* Conteúdo do Modal */}
+              <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <div className="space-y-8">
+                  {/* Descrição / Conteúdo Principal */}
+                  <div>
+                    <h4 className="text-sm font-bold text-white/40 uppercase tracking-widest mb-4">Conteúdo da Atividade</h4>
+                    <div className="prose prose-invert max-w-none">
+                      {typeof selectedActivityForView.id_json === 'string' ? (
+                        <p className="text-white/80 leading-relaxed whitespace-pre-wrap">{selectedActivityForView.id_json}</p>
+                      ) : (
+                        <pre className="bg-white/5 p-4 rounded-xl text-white/80 overflow-x-auto font-sans whitespace-pre-wrap">
+                          {JSON.stringify(selectedActivityForView.id_json, null, 2)}
+                        </pre>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Metadados Adicionais */}
+                  <div className="grid grid-cols-2 gap-6 pt-6 border-t border-white/5">
+                    <div>
+                      <span className="text-xs text-white/30 block mb-1">ID da Atividade</span>
+                      <code className="text-xs text-white/50 bg-white/5 px-2 py-1 rounded">{selectedActivityForView.id}</code>
+                    </div>
+                    <div>
+                      <span className="text-xs text-white/30 block mb-1">Data de Criação</span>
+                      <span className="text-sm text-white/60">
+                        {selectedActivityForView.created_at ? new Date(selectedActivityForView.created_at).toLocaleString('pt-BR') : 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer do Modal */}
+              <div className="p-6 bg-white/5 flex items-center justify-end gap-4 border-t border-white/10">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedActivityForView(null)}
+                  className="px-6 py-2.5 rounded-full text-white/70 font-medium text-sm border border-white/10 hover:bg-white/5 transition-colors"
+                >
+                  Fechar
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-8 py-2.5 rounded-full text-white font-bold text-sm"
+                  style={{ background: theme.buttonGradient, boxShadow: `0 4px 15px ${theme.shadow}` }}
+                  onClick={() => {
+                    console.log('Baixar atividade clicado');
+                  }}
+                >
+                  Baixar Atividade
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
