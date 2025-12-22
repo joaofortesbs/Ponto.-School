@@ -828,7 +828,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       </motion.div>
 
       {/* Espaçador e Botão de Templates - Após Objetivo da Aula */}
-      <div className="relative flex items-center justify-end mt-12 mb-6 h-10">
+      <div className="relative flex items-center justify-end mt-20 mb-10 h-10">
         <div className="absolute right-0 z-30 translate-y-[-50%]">
           <motion.button
             whileHover={{ scale: 1.1, background: `${theme.primary}20` }}
