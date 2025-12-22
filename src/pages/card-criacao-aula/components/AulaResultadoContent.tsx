@@ -1356,37 +1356,13 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               </motion.div>
             </div>
           </div>
-          <AnimatePresence initial={false}>
+          <AnimatePresence>
             {section.isExpanded && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
-                animate={{ 
-                  height: 'auto', 
-                  opacity: 1,
-                  transition: {
-                    height: {
-                      duration: 0.6,
-                      ease: [0.34, 1.56, 0.64, 1]
-                    },
-                    opacity: {
-                      duration: 0.4,
-                      delay: 0.1
-                    }
-                  }
-                }}
-                exit={{ 
-                  height: 0, 
-                  opacity: 0,
-                  transition: {
-                    height: {
-                      duration: 0.5,
-                      ease: [0.34, 1.56, 0.64, 1]
-                    },
-                    opacity: {
-                      duration: 0.3
-                    }
-                  }
-                }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
                 className="overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -1624,37 +1600,13 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           </div>
         </div>
 
-        <AnimatePresence initial={false}>
+        <AnimatePresence>
           {config.isExpanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ 
-                height: 'auto', 
-                opacity: 1,
-                transition: {
-                  height: {
-                    duration: 0.6,
-                    ease: [0.34, 1.56, 0.64, 1]
-                  },
-                  opacity: {
-                    duration: 0.4,
-                    delay: 0.1
-                  }
-                }
-              }}
-              exit={{ 
-                height: 0, 
-                opacity: 0,
-                transition: {
-                  height: {
-                    duration: 0.5,
-                    ease: [0.34, 1.56, 0.64, 1]
-                  },
-                  opacity: {
-                    duration: 0.3
-                  }
-                }
-              }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
               className="overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
