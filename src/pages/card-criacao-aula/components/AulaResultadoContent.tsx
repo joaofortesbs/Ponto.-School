@@ -1356,20 +1356,9 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               </motion.div>
             </div>
           </div>
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {section.isExpanded && (
-              <motion.div
-                key="content"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ 
-                  height: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
-                  opacity: { duration: 0.2, ease: "linear" }
-                }}
-                className="overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
                 <div className="px-4 pb-4">
                   <AutoResizeTextarea 
                     value={section.text} 
@@ -1604,17 +1593,13 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           </div>
         </div>
 
-        <AnimatePresence mode="wait">
+        <AnimatePresence initial={false}>
           {config.isExpanded && (
             <motion.div
-              key="content"
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ 
-                height: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
-                opacity: { duration: 0.2, ease: "linear" }
-              }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
@@ -2089,17 +2074,13 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           </motion.div>
         </div>
 
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           {isObjectiveExpanded && (
             <motion.div
-              key="content"
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ 
-                height: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
-                opacity: { duration: 0.2, ease: "linear" }
-              }}
+              transition={{ duration: 0.3 }}
               className="overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
