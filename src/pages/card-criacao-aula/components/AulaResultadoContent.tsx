@@ -76,6 +76,25 @@ const AutoResizeTextarea = React.memo(({ value, onChange, placeholder }: { value
   );
 });
 
+// Configuração das seções para drag and drop
+type SectionConfig = {
+  id: string;
+  title: string;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  isVisible: boolean;
+  setVisible: (v: boolean) => void;
+  isExpanded: boolean;
+  setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+  text: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  placeholder: string;
+  time: string;
+  setTime: (t: string) => void;
+  menuId: string;
+  dividerIndex: number;
+  delay: number;
+};
+
 const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   aulaName = 'Minha Nova Aula',
   selectedTemplate = null,
@@ -207,24 +226,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const handleObservacoesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setObservacoesText(e.target.value), []);
   const handleBnccChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setBnccText(e.target.value), []);
 
-  // Configuração das seções para drag and drop
-  type SectionConfig = {
-    id: string;
-    title: string;
-    icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
-    isVisible: boolean;
-    setVisible: (v: boolean) => void;
-    isExpanded: boolean;
-    setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
-    text: string;
-    onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-    placeholder: string;
-    time: string;
-    setTime: (t: string) => void;
-    menuId: string;
-    dividerIndex: number;
-    delay: number;
-  };
+  const theme = themeColors[themeMode];
 
   const sectionConfigs = useMemo((): Record<string, SectionConfig> => ({
     objective: {
@@ -374,26 +376,19 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     isBnccVisible, isBnccExpanded, bnccText, handleBnccChange, bnccTime,
   ]);
 
-  // Carregar atividades do usuário
   const loadUserActivities = async () => {
     setLoadingActivities(true);
     try {
-      // Tentar obter o ID do usuário de várias fontes comuns no projeto
       const userId = localStorage.getItem('user_id') || 
                      localStorage.getItem('userId') || 
                      localStorage.getItem('supabase_user_id') || 
                      localStorage.getItem('neon_user_id');
       
-      console.log('🔍 [MyActivitiesPanel] Buscando atividades para userId:', userId);
-      
       if (!userId) {
-        console.log('⚠️ [MyActivitiesPanel] userId não encontrado no localStorage');
-        // Tentar buscar do perfil se não houver ID direto
         const userProfileStr = localStorage.getItem('user_profile');
         if (userProfileStr) {
           const profile = JSON.parse(userProfileStr);
           if (profile.id) {
-            console.log('✅ [MyActivitiesPanel] ID encontrado no perfil:', profile.id);
             const result = await atividadesNeonService.buscarAtividadesUsuario(profile.id);
             if (result.success && result.data) {
               setUserActivities(result.data);
@@ -406,572 +401,61 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       }
 
       const result = await atividadesNeonService.buscarAtividadesUsuario(userId);
-      console.log('📋 [MyActivitiesPanel] Resultado da busca:', result);
-      
       if (result.success && result.data) {
-        console.log('✅ [MyActivitiesPanel] Atividades carregadas:', result.data.length);
         setUserActivities(result.data);
       } else {
-        console.log('⚠️ [MyActivitiesPanel] Nenhuma atividade encontrada ou erro:', result.error);
-        setUserActivities([]); // Garante que a lista não fique undefined
+        setUserActivities([]);
       }
     } catch (error) {
-      console.error('❌ [MyActivitiesPanel] Erro ao carregar atividades:', error);
+      console.error('❌ Erro ao carregar atividades:', error);
       setUserActivities([]);
     } finally {
       setLoadingActivities(false);
     }
   };
 
-  // Filtrar atividades
-  const filteredActivities = (userActivities || []).filter(activity => {
-    if (!activity) return false;
-    
-    const titulo = activity.id_json?.titulo || activity.id_json?.title || '';
-    const tipo = activity.tipo || '';
-    
-    const matchesSearch = activitySearchTerm === '' || 
-      titulo.toLowerCase().includes(activitySearchTerm.toLowerCase()) ||
-      tipo.toLowerCase().includes(activitySearchTerm.toLowerCase());
-      
-    const matchesType = activityTypeFilter === 'all' || activity.tipo === activityTypeFilter;
-    
-    return matchesSearch && matchesType;
-  });
-
-  // Adicionar atividades selecionadas a uma seção
-  const addActivitiesToSection = (sectionId: string) => {
-    const newActivities = selectedActivities.map(actId => {
-      const activity = userActivities.find(a => a.id === actId);
-      return {
-        sectionId,
-        activityId: actId,
-        activityData: activity!
-      };
-    }).filter(a => a.activityData);
-    
-    setSectionActivities(prev => [...prev, ...newActivities]);
-    setSelectedActivities([]);
-    setShowMyActivitiesPanel(false);
-    setMyActivitiesSectionId(null);
-  };
-
-  // Componente ActivityDropdown - Dropdown para cima com as 4 opções
-  const ActivityDropdown = ({ sectionId, onClose, position }: { sectionId: string; onClose: () => void, position?: { bottom: number, left: number } }) => {
-    const dropdownOptions = [
-      { id: 'minhas', icon: FolderOpen, label: 'Minhas atividades', color: theme.primary },
-      { id: 'gerar', icon: Wand2, label: 'Gerar nova', color: '#10B981' },
-      { id: 'comunidade', icon: Globe, label: 'Comunidade', color: '#3B82F6' },
-      { id: 'subir', icon: Upload, label: 'Subir materiais', color: '#8B5CF6' }
-    ];
-
-    const handleOptionClick = (optionId: string) => {
-      if (optionId === 'minhas') {
-        setMyActivitiesSectionId(sectionId);
-        setShowMyActivitiesPanel(true);
-        loadUserActivities();
-      } else if (optionId === 'gerar') {
-        console.log('Gerar nova atividade para seção:', sectionId);
-      } else if (optionId === 'comunidade') {
-        console.log('Buscar na comunidade para seção:', sectionId);
-      } else if (optionId === 'subir') {
-        console.log('Subir materiais para seção:', sectionId);
-      }
-      onClose();
-    };
-
-    const style: React.CSSProperties = position 
-      ? {
-          position: 'fixed',
-          bottom: position.bottom,
-          left: position.left,
-          background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
-          border: `1px solid ${theme.menuBorder}`,
-          boxShadow: `0 -10px 30px rgba(0, 0, 0, 0.4), 0 0 15px ${theme.shadowLight}`,
-          minWidth: '200px',
-          zIndex: 9999
-        }
-      : {
-          background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
-          border: `1px solid ${theme.menuBorder}`,
-          boxShadow: `0 -10px 30px rgba(0, 0, 0, 0.4), 0 0 15px ${theme.shadowLight}`,
-          minWidth: '200px'
-        };
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-        transition={{ duration: 0.2 }}
-        className={position ? "rounded-xl overflow-hidden" : "absolute bottom-full left-0 mb-2 rounded-xl overflow-hidden z-[70]"}
-        style={style}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="py-2">
-          {dropdownOptions.map((option, index) => (
-            <React.Fragment key={option.id}>
-              <motion.button
-                whileHover={{ x: 4, backgroundColor: `${option.color}1A` }}
-                onClick={() => handleOptionClick(option.id)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-white/90 hover:text-white transition-colors"
-              >
-                <option.icon className="w-4 h-4" style={{ color: option.color }} />
-                <span className="text-sm font-medium">{option.label}</span>
-              </motion.button>
-              {index < dropdownOptions.length - 1 && (
-                <div 
-                  className="h-px mx-3 my-0.5"
-                  style={{
-                    background: `linear-gradient(to right, transparent, ${theme.primary}22, transparent)`
-                  }}
-                />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </motion.div>
-    );
-  };
-
-  // Componente MyActivitiesPanel - Painel maior para selecionar atividades
-  const MyActivitiesPanel = () => {
-    if (!showMyActivitiesPanel || !myActivitiesSectionId) return null;
-
-    const activityTypes = ['all', ...new Set(userActivities.map(a => a.tipo).filter(Boolean))];
-
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
-        onClick={() => {
-          setShowMyActivitiesPanel(false);
-          setMyActivitiesSectionId(null);
-          setSelectedActivities([]);
-        }}
-      >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="w-full max-w-2xl max-h-[80vh] rounded-2xl overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
-            border: `1px solid ${theme.menuBorder}`,
-            boxShadow: `0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px ${theme.shadowLight}`
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div 
-            className="p-4 flex items-center justify-between"
-            style={{ 
-              borderBottom: `1px solid ${theme.border}`,
-              background: `linear-gradient(135deg, ${theme.primary}15 0%, transparent 100%)`
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <FolderOpen className="w-5 h-5" style={{ color: theme.primary }} />
-              <h3 className="text-white font-bold text-lg">Minhas Atividades</h3>
-              {selectedActivities.length > 0 && (
-                <span 
-                  className="px-2 py-0.5 rounded-full text-xs font-medium"
-                  style={{ background: theme.primary, color: 'white' }}
-                >
-                  {selectedActivities.length} selecionada{selectedActivities.length > 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.1)' }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => {
-                setShowMyActivitiesPanel(false);
-                setMyActivitiesSectionId(null);
-                setSelectedActivities([]);
-              }}
-              className="w-8 h-8 rounded-full flex items-center justify-center"
-            >
-              <X className="w-5 h-5 text-white/70" />
-            </motion.button>
-          </div>
-
-          {/* Filters */}
-          <div className="p-4 flex items-center gap-3" style={{ borderBottom: `1px solid ${theme.border}20` }}>
-            <div 
-              className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-            >
-              <Search className="w-4 h-4 text-white/50" />
-              <input
-                type="text"
-                placeholder="Buscar atividades..."
-                value={activitySearchTerm}
-                onChange={(e) => setActivitySearchTerm(e.target.value)}
-                className="flex-1 bg-transparent border-0 text-white text-sm placeholder-white/40 focus:outline-none"
-              />
-            </div>
-            <div className="relative">
-              <select
-                value={activityTypeFilter}
-                onChange={(e) => setActivityTypeFilter(e.target.value)}
-                className="appearance-none px-4 py-2 pr-8 rounded-lg text-white text-sm font-medium cursor-pointer focus:outline-none"
-                style={{ 
-                  background: `${theme.primary}20`, 
-                  border: `1px solid ${theme.primary}40` 
-                }}
-              >
-                <option value="all">Todos os tipos</option>
-                {activityTypes.filter(t => t !== 'all').map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-              <Filter className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: theme.primary }} />
-            </div>
-
-            {/* Alternância de Visualização */}
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-white/5 border border-white/10">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/60'}`}
-                style={{ color: viewMode === 'grid' ? theme.primary : undefined }}
-                title="Visualização em Blocos"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white/60'}`}
-                style={{ color: viewMode === 'list' ? theme.primary : undefined }}
-                title="Visualização em Lista"
-              >
-                <List className="w-4 h-4" />
-              </motion.button>
-            </div>
-          </div>
-
-          {/* Activities List */}
-          <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(80vh - 180px)' }}>
-            {loadingActivities ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin w-8 h-8 border-2 border-white/20 border-t-white rounded-full" />
-              </div>
-            ) : filteredActivities.length === 0 ? (
-              <div className="text-center py-12">
-                <FolderOpen className="w-12 h-12 mx-auto mb-3 text-white/20" />
-                <p className="text-white/50 text-sm">
-                  {userActivities.length === 0 
-                    ? 'Você ainda não tem atividades salvas' 
-                    : 'Nenhuma atividade encontrada com esses filtros'}
-                </p>
-              </div>
-            ) : viewMode === 'grid' ? (
-              /* Grid View (Blocos) */
-              <div className="grid grid-cols-2 gap-4">
-                {filteredActivities.map(activity => {
-                  const isSelected = selectedActivities.includes(activity.id);
-                  const title = activity.id_json?.titulo || activity.id_json?.title || activity.tipo || 'Atividade sem título';
-                  const type = activity.tipo || 'Geral';
-                  
-                  return (
-                    <motion.div
-                      key={activity.id}
-                      whileHover={{ y: -4, scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        setSelectedActivities(prev => 
-                          isSelected 
-                            ? prev.filter(id => id !== activity.id)
-                            : [...prev, activity.id]
-                        );
-                      }}
-                      className="relative flex flex-col h-36 rounded-2xl cursor-pointer overflow-hidden transition-all group"
-                      style={{
-                        background: 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
-                        border: `1px solid ${isSelected ? theme.primary : 'rgba(255,255,255,0.08)'}`,
-                        boxShadow: isSelected ? `0 8px 20px ${theme.shadow}44` : 'none'
-                      }}
-                    >
-                      {/* Borda decorativa lateral baseada no tipo */}
-                      <div 
-                        className="absolute left-0 top-0 bottom-0 w-1" 
-                        style={{ background: theme.primary }}
-                      />
-
-                      {/* Conteúdo do Card */}
-                      <div className="p-3 flex flex-col h-full">
-                        <div className="flex justify-between items-start mb-2">
-                          <div 
-                            className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
-                            style={{
-                              background: isSelected ? theme.primary : 'rgba(255,255,255,0.05)',
-                              border: `1.5px solid ${isSelected ? theme.primary : 'rgba(255,255,255,0.2)'}`
-                            }}
-                          >
-                            {isSelected && <Check className="w-3 h-3 text-white" />}
-                          </div>
-                          <span 
-                            className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
-                            style={{ background: `${theme.primary}20`, color: theme.primary }}
-                          >
-                            {type}
-                          </span>
-                        </div>
-
-                        <h4 className="text-white font-bold text-xs line-clamp-2 mb-auto group-hover:text-primary-orange transition-colors">
-                          {title}
-                        </h4>
-
-                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
-                          {activity.stars ? (
-                            <div className="flex items-center gap-0.5">
-                              <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
-                              <span className="text-[10px] text-white/50">{activity.stars}</span>
-                            </div>
-                          ) : <div />}
-                          
-                          {activity.created_at && (
-                            <span className="text-[10px] text-white/30">
-                              {new Date(activity.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Overlay de Seleção */}
-                      {isSelected && (
-                        <div className="absolute inset-0 bg-primary-orange/5 pointer-events-none" />
-                      )}
-                    </motion.div>
-                  );
-                })}
-              </div>
-            ) : (
-              /* List View (Lista) */
-              <div className="space-y-2">
-                {filteredActivities.map(activity => {
-                  const isSelected = selectedActivities.includes(activity.id);
-                  const title = activity.id_json?.titulo || activity.id_json?.title || activity.tipo || 'Atividade sem título';
-                  
-                  return (
-                    <motion.div
-                      key={activity.id}
-                      whileHover={{ scale: 1.01, x: 4 }}
-                      onClick={() => {
-                        setSelectedActivities(prev => 
-                          isSelected 
-                            ? prev.filter(id => id !== activity.id)
-                            : [...prev, activity.id]
-                        );
-                      }}
-                      className="p-3 rounded-xl cursor-pointer transition-all"
-                      style={{
-                        background: isSelected ? `${theme.primary}20` : 'rgba(255,255,255,0.03)',
-                        border: `1px solid ${isSelected ? theme.primary : 'rgba(255,255,255,0.08)'}`,
-                      }}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div 
-                          className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5"
-                          style={{
-                            background: isSelected ? theme.primary : 'transparent',
-                            border: `2px solid ${isSelected ? theme.primary : 'rgba(255,255,255,0.3)'}`
-                          }}
-                        >
-                          {isSelected && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-white font-medium text-sm truncate">{title}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span 
-                              className="px-2 py-0.5 rounded-full text-xs"
-                              style={{ background: `${theme.primary}20`, color: theme.primary }}
-                            >
-                              {activity.tipo || 'Geral'}
-                            </span>
-                            {activity.stars && (
-                              <span className="text-xs text-white/40">{activity.stars} estrelas</span>
-                            )}
-                            {activity.created_at && (
-                              <span className="text-xs text-white/40">
-                                {new Date(activity.created_at).toLocaleDateString('pt-BR')}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Footer with action button */}
-          <div 
-            className="p-4 flex items-center justify-between"
-            style={{ 
-              borderTop: `1px solid ${theme.border}`,
-              background: `linear-gradient(135deg, transparent 0%, ${theme.primary}10 100%)`
-            }}
-          >
-            <span className="text-white/50 text-sm">
-              {filteredActivities.length} atividade{filteredActivities.length !== 1 ? 's' : ''} encontrada{filteredActivities.length !== 1 ? 's' : ''}
-            </span>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={selectedActivities.length === 0}
-              onClick={() => addActivitiesToSection(myActivitiesSectionId)}
-              className="px-6 py-2.5 rounded-full text-white font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                background: selectedActivities.length > 0 ? theme.buttonGradient : 'rgba(255,255,255,0.1)',
-                boxShadow: selectedActivities.length > 0 ? `0 4px 15px ${theme.shadow}` : 'none'
-              }}
-            >
-              <span className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Adicionar {selectedActivities.length > 0 ? `(${selectedActivities.length})` : ''}
-              </span>
-            </motion.button>
-          </div>
-        </motion.div>
-      </motion.div>
-    );
-  };
-
-  // Botão de adicionar atividade reutilizável
-  const AddActivityButton = ({ sectionId }: { sectionId: string }) => {
-    const isOpen = activeActivityDropdown === sectionId;
-    const buttonRef = useRef<HTMLButtonElement>(null);
-    const [dropdownPosition, setDropdownPosition] = useState<{ bottom: number, left: number } | null>(null);
-
-    useEffect(() => {
-      if (isOpen && buttonRef.current) {
-        const rect = buttonRef.current.getBoundingClientRect();
-        setDropdownPosition({
-          bottom: window.innerHeight - rect.top + 8,
-          left: rect.left
-        });
-      }
-    }, [isOpen]);
-
-    return (
-      <div className="relative">
-        <motion.button
-          ref={buttonRef}
-          whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-          whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
-          style={{
-            background: `${theme.primary}1A`,
-            border: `1px solid ${theme.primary}33`,
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setActiveActivityDropdown(isOpen ? null : sectionId);
-          }}
-        >
-          <Plus className="w-4 h-4" />
-          <span>Adicionar atividade</span>
-        </motion.button>
-
-        <AnimatePresence>
-          {isOpen && dropdownPosition && (
-            <div className="fixed inset-0 z-[9998]" onClick={() => setActiveActivityDropdown(null)}>
-              <ActivityDropdown 
-                sectionId={sectionId} 
-                onClose={() => setActiveActivityDropdown(null)} 
-                position={dropdownPosition}
-              />
-            </div>
-          )}
-        </AnimatePresence>
-      </div>
-    );
-  };
-
-  // Fechar dropdown de atividade ao clicar fora
-  useEffect(() => {
-    const handleClickOutsideActivityDropdown = (event: MouseEvent) => {
-      if (activeActivityDropdown) {
-        setActiveActivityDropdown(null);
-      }
-    };
-
-    if (activeActivityDropdown) {
-      document.addEventListener('click', handleClickOutsideActivityDropdown);
-    }
-    return () => document.removeEventListener('click', handleClickOutsideActivityDropdown);
-  }, [activeActivityDropdown]);
-
-  // Remover atividade de uma seção
   const removeActivityFromSection = (sectionId: string, activityId: string) => {
     setSectionActivities(prev => prev.filter(a => !(a.sectionId === sectionId && a.activityId === activityId)));
   };
 
-  // Componente para exibir atividades adicionadas em uma seção (estilo grade igual à sub-seção de Atividades)
-  // Memorizado com React.memo para evitar re-renderizações desnecessárias e reinício de animações
   const SectionActivitiesGrid = React.memo(({ sectionId }: { sectionId: string }) => {
-    const activitiesForSection = sectionActivities.filter(a => a.sectionId === sectionId);
-    
-    if (activitiesForSection.length === 0) return null;
-
-    // Configurações profissionais de proporção (Exato: 208x260)
-    const CARD_WIDTH = 208;
-    const CARD_HEIGHT = 260;
+    const activities = sectionActivities.filter(a => a.sectionId === sectionId);
+    if (activities.length === 0) return null;
 
     return (
-      <div className="mt-4 flex flex-wrap gap-4 max-w-full">
-        {activitiesForSection.map(({ activityId, activityData }) => {
-          const title = activityData.id_json?.titulo || activityData.id_json?.title || activityData.tipo || 'Atividade sem título';
-          const type = activityData.tipo || 'Geral';
-          const createdDate = activityData.created_at 
-            ? new Date(activityData.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
-            : null;
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        {activities.map((act) => {
+          const activity = act.activityData;
+          const activityId = act.activityId;
+          const title = activity.id_json?.titulo || activity.id_json?.title || activity.tipo || 'Atividade';
+          const type = activity.tipo || 'default';
+          const createdDate = activity.id_json?.data_criacao ? new Date(activity.id_json.data_criacao).toLocaleDateString() : null;
 
           return (
             <motion.div
-              key={activityId}
-              layoutId={`activity-${activityId}-${sectionId}`}
-              initial={{ opacity: 0, scale: 0.95 }}
+              key={`${sectionId}-${activityId}`}
+              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              whileHover={{ y: -4, boxShadow: `0 12px 24px rgba(0,0,0,0.3)` }}
-              className="relative group rounded-2xl overflow-hidden cursor-pointer flex flex-col"
-              style={{
-                width: `${CARD_WIDTH}px`,
-                height: `${CARD_HEIGHT}px`,
-                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+              whileHover={{ y: -5 }}
+              className="group relative rounded-xl overflow-hidden border cursor-pointer"
+              style={{ 
+                background: 'rgba(15, 23, 42, 0.6)',
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(12px)'
               }}
-              onClick={() => setViewingActivity(activityData)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setViewingActivity(activity);
+              }}
             >
-              {/* Área do Ícone - Proporção Superior */}
-              <div 
-                className="flex items-center justify-center flex-1"
-                style={{ background: 'rgba(0, 0, 0, 0.2)' }}
-              >
-                <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                  style={{ background: `${theme.primary}15`, border: `1px solid ${theme.primary}30` }}
-                >
-                  <FileText className="w-8 h-8" style={{ color: theme.primary }} />
-                </div>
+              <div className="aspect-video bg-slate-800/50 flex items-center justify-center overflow-hidden relative">
+                <FileText className="w-10 h-10 text-white/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
               </div>
 
-              {/* Informações da Atividade - Proporção Inferior */}
               <div 
-                className="p-5 flex flex-col justify-between"
+                className="p-3 flex flex-col gap-2"
                 style={{ 
-                  height: '110px',
                   background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.4) 0%, rgba(30, 41, 59, 0.8) 100%)',
                   borderTop: '1px solid rgba(255,255,255,0.05)'
                 }}
@@ -994,7 +478,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                 )}
               </div>
 
-              {/* Botão de Remover (Profissional) */}
               <motion.button
                 initial={{ opacity: 0 }}
                 whileHover={{ scale: 1.1, backgroundColor: '#ef4444' }}
@@ -1011,12 +494,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         })}
       </div>
     );
-  }, (prevProps, nextProps) => {
-    // Comparação personalizada para garantir que só re-renderize se o sectionId mudar
-    // O sectionActivities é acessado via closure, o que pode ser um problema se não usarmos o padrão correto.
-    // Para simplificar e ser efetivo no Fast Mode, usaremos o memo básico primeiro.
-    return prevProps.sectionId === nextProps.sectionId;
-  });
+  }, (prevProps, nextProps) => prevProps.sectionId === nextProps.sectionId);
 
   const SectionControls = ({ time, onTimeChange, onMoreClick }: { time: string, onTimeChange: (val: string) => void, onMoreClick: (e: React.MouseEvent) => void }) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -1087,21 +565,28 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
 
   const [activeMenuSection, setActiveMenuSection] = useState<string | null>(null);
 
-  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (activeMenuSection) {
-        // If there's an active menu, we can check if the click was outside the trigger/menu
-        // However, since we're using a simple implementation, let's just close all menus on any click outside
-        // that isn't the button itself (which is handled by propagation stop)
-        setActiveMenuSection(null);
+        const moreButtons = document.querySelectorAll('[data-section-more-button]');
+        let clickedOnButton = false;
+        moreButtons.forEach(btn => {
+          if (btn.contains(event.target as Node)) clickedOnButton = true;
+        });
+        
+        if (!clickedOnButton) {
+          setActiveMenuSection(null);
+        }
+      }
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
       }
     };
 
-    if (activeMenuSection) {
-      document.addEventListener('click', handleClickOutside);
-    }
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [activeMenuSection]);
 
   const SectionMenu = ({ sectionId, onClose, onAction }: { sectionId: string, onClose: () => void, onAction: (action: string) => void }) => {
@@ -1158,243 +643,14 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     );
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-      // Fechar menu de seção ao clicar fora
-      if (activeMenuSection) {
-        const moreButtons = document.querySelectorAll('[data-section-more-button]');
-        let clickedOnButton = false;
-        moreButtons.forEach(btn => {
-          if (btn.contains(event.target as Node)) clickedOnButton = true;
-        });
-        
-        if (!clickedOnButton) {
-          setActiveMenuSection(null);
-        }
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [activeMenuSection]);
-
-  const theme = themeColors[themeMode];
-
-  const formatDate = (date: Date) => {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  const handleImageUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAulaImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleMenuItemClick = (action: string) => {
-    console.log(`Ação selecionada: ${action}`);
-    setIsMenuOpen(false);
-  };
-
-  // Função para adicionar seção personalizada com suporte a inserção entre seções existentes
-  // dividerIndex: índice do divisor principal (0-6)
-  // insertAfterOrderIndex: se fornecido, insere após a seção com esse orderIndex (para inserir entre seções)
-  const addCustomSection = (dividerIndex: number, insertAfterOrderIndex?: number) => {
-    setCustomSections(prev => {
-      // Filtra seções do mesmo divider para calcular orderIndex
-      const sectionsInDivider = prev.filter(s => s.afterDivider === dividerIndex);
-      
-      let newOrderIndex: number;
-      
-      if (insertAfterOrderIndex !== undefined) {
-        // Inserindo entre seções existentes
-        // Encontra todas as seções com orderIndex maior que insertAfterOrderIndex e incrementa
-        const updatedSections = prev.map(s => {
-          if (s.afterDivider === dividerIndex && s.orderIndex > insertAfterOrderIndex) {
-            return { ...s, orderIndex: s.orderIndex + 1 };
-          }
-          return s;
-        });
-        newOrderIndex = insertAfterOrderIndex + 1;
-        
-        const newSection: CustomSection = {
-          id: `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          title: '',
-          text: '',
-          isExpanded: true,
-          afterDivider: dividerIndex,
-          orderIndex: newOrderIndex
-        };
-        
-        return [...updatedSections, newSection];
-      } else {
-        // Adicionando ao final (comportamento padrão - clicou no divisor principal)
-        const maxOrderIndex = sectionsInDivider.length > 0 
-          ? Math.max(...sectionsInDivider.map(s => s.orderIndex)) 
-          : -1;
-        newOrderIndex = maxOrderIndex + 1;
-        
-        const newSection: CustomSection = {
-          id: `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          title: '',
-          text: '',
-          isExpanded: true,
-          afterDivider: dividerIndex,
-          orderIndex: newOrderIndex
-        };
-        
-        return [...prev, newSection];
-      }
-    });
-    setHoveredDividerIndex(null);
-  };
-
-  // Função para renderizar seções personalizadas após um divisor específico
-  // Inclui botões "Adicionar seção" entre cada seção personalizada
-  const renderCustomSectionsForDivider = (dividerIndex: number) => {
-    const sectionsForDivider = customSections
-      .filter(s => s.afterDivider === dividerIndex)
-      .sort((a, b) => a.orderIndex - b.orderIndex); // Ordena por orderIndex
-    
-    if (sectionsForDivider.length === 0) return null;
-    
-    return sectionsForDivider.map((section, idx) => (
-      <React.Fragment key={section.id}>
-        {/* Card da seção personalizada */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
-          transition={{ duration: 0.4 }}
-          className="rounded-2xl relative z-10 cursor-pointer"
-          style={{ 
-            background: theme.bgGradient, 
-            border: `1px solid ${theme.border}`, 
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-            marginTop: '0px' // Sem margin-top, o espaçamento é controlado pelo divisor
-          }}
-          onClick={() => toggleCustomSectionExpand(section.id)}
-        >
-          <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
-            <div className="flex items-center gap-3 flex-1">
-              <Edit3 className="w-5 h-5" style={{ color: theme.primary }} />
-              <input
-                type="text"
-                value={section.title}
-                onChange={(e) => { e.stopPropagation(); updateCustomSectionTitle(section.id, e.target.value); }}
-                onClick={(e) => e.stopPropagation()}
-                placeholder="Digite o título da seção..."
-                className="bg-transparent border-0 text-white font-bold text-lg placeholder-white/40 focus:outline-none flex-1"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <SectionControls 
-                  time="10 min" // Default time for custom sections
-                  onTimeChange={() => {}} 
-                  onMoreClick={(e) => {
-                    e.stopPropagation();
-                    setActiveMenuSection(activeMenuSection === section.id ? null : section.id);
-                  }} 
-                />
-                <AnimatePresence>
-                  {activeMenuSection === section.id && (
-                    <SectionMenu 
-                      sectionId={section.id} 
-                      onClose={() => setActiveMenuSection(null)} 
-                      onAction={(action) => handleSectionAction(section.id, action)} 
-                    />
-                  )}
-                </AnimatePresence>
-              </div>
-              <motion.div animate={{ rotate: section.isExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-                <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-              </motion.div>
-            </div>
-          </div>
-          <AnimatePresence>
-            {section.isExpanded && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                <div className="px-4 pb-4">
-                  <AutoResizeTextarea 
-                    value={section.text} 
-                    onChange={(e) => updateCustomSectionText(section.id, e.target.value)} 
-                    placeholder="Escreva o conteúdo desta seção..." 
-                  />
-                  <SectionActivitiesGrid sectionId={section.id} />
-                  <div className="flex items-center gap-3 mt-3">
-                    <AddActivityButton sectionId={section.id} />
-                    <motion.button 
-                      whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} 
-                      whileTap={{ scale: 0.98 }} 
-                      className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" 
-                      style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} 
-                      onClick={(e) => { e.stopPropagation(); console.log('Tools - Seção personalizada'); }}
-                    >
-                      <Wrench className="w-4 h-4" />
-                      <span>Tools</span>
-                    </motion.button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-        
-        {/* Botão "Adicionar seção" APÓS cada seção personalizada (para inserir entre seções) */}
-        <AddSectionDivider 
-          index={dividerIndex} 
-          onAdd={() => addCustomSection(dividerIndex, section.orderIndex)} 
-        />
-      </React.Fragment>
-    ));
-  };
-
-  const updateCustomSectionTitle = (id: string, title: string) => {
-    setCustomSections(sections => 
-      sections.map(s => s.id === id ? { ...s, title } : s)
-    );
-  };
-
-  const updateCustomSectionText = (id: string, text: string) => {
-    setCustomSections(sections => 
-      sections.map(s => s.id === id ? { ...s, text } : s)
-    );
-  };
-
-  const toggleCustomSectionExpand = (id: string) => {
-    setCustomSections(sections => 
-      sections.map(s => s.id === id ? { ...s, isExpanded: !s.isExpanded } : s)
-    );
-  };
-
-  const deleteCustomSection = (id: string) => {
-    setCustomSections(sections => sections.filter(s => s.id !== id));
-  };
-
   const handleSectionAction = (sectionId: string, action: string) => {
     if (action === 'excluir') {
-      // Identificar se é uma seção padrão ou personalizada
       const defaultSections = [
         'objective', 'preEstudo', 'introducao', 'desenvolvimento', 
         'encerramento', 'materiais', 'observacoes', 'bncc'
       ];
       
       if (defaultSections.includes(sectionId)) {
-        // Para seções padrão, escondemos completamente o card
         switch (sectionId) {
           case 'objective': setIsObjectiveVisible(false); break;
           case 'preEstudo': setIsPreEstudoVisible(false); break;
@@ -1406,7 +662,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           case 'bncc': setIsBnccVisible(false); break;
         }
       } else {
-        // Seção personalizada - remove completamente
         deleteCustomSection(sectionId);
       }
     } else if (action === 'duplicar') {
@@ -1428,7 +683,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       if (defaultSectionsData[sectionId]) {
         sourceTitle = defaultSectionsData[sectionId].title;
         sourceText = defaultSectionsData[sectionId].text;
-        // Mapear seção padrão para o divisor correspondente
         const mapping: Record<string, number> = {
           'objective': 0, 'preEstudo': 1, 'introducao': 2, 'desenvolvimento': 3,
           'encerramento': 4, 'materiais': 5, 'observacoes': 6, 'bncc': 6
@@ -1463,11 +717,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     }
   };
 
-  // Constante para espaçamento vertical milimétrico entre cards
-  // Este valor é usado para garantir posicionamento exato e simétrico do botão
-  const CARD_VERTICAL_SPACING = 14; // 14px = espaçamento total entre cards
+  const CARD_VERTICAL_SPACING = 14;
 
-  // Componente para seção arrastável com handle de drag
   const SortableSectionCard = ({ id, children }: { id: string; children: React.ReactNode }) => {
     const {
       attributes,
@@ -1503,15 +754,12 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     );
   };
 
-  // Estado para controlar qual menu de seção está aberto
-  const [activeMenuSection, setActiveMenuSection] = useState<string | null>(null);
-
-  // Componente Memoizado para Item de Seção para evitar re-renderizações e animações desnecessárias
-  const SectionItem = React.memo(({ config, theme, activeMenuSection, setActiveMenuSection }: { 
+  const SectionItem = React.memo(({ config, theme, activeMenuSection, setActiveMenuSection, handleSectionAction }: { 
     config: SectionConfig; 
     theme: any; 
     activeMenuSection: string | null;
     setActiveMenuSection: (id: string | null) => void;
+    handleSectionAction: (sectionId: string, action: string) => void;
   }) => {
     const IconComponent = config.icon;
     const isObjective = config.id === 'objective';
@@ -1554,11 +802,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                     <SectionMenu 
                       sectionId={config.menuId} 
                       onClose={() => setActiveMenuSection(null)}
-                      onAction={(action) => {
-                        // Implementação básica do action
-                        console.log(`Action ${action} for ${config.id}`);
-                        setActiveMenuSection(null);
-                      }}
+                      onAction={(action) => handleSectionAction(config.id, action)}
                     />
                   )}
                 </AnimatePresence>
@@ -1619,7 +863,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       </motion.div>
     );
   }, (prevProps, nextProps) => {
-    // Só renderiza novamente se as propriedades essenciais mudarem
     return (
       prevProps.config.isExpanded === nextProps.config.isExpanded &&
       prevProps.config.text === nextProps.config.text &&
@@ -1630,7 +873,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     );
   });
 
-  // Função para renderizar uma seção baseada na configuração
   const renderSection = (config: SectionConfig) => {
     return (
       <SectionItem 
@@ -1638,18 +880,17 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         theme={theme} 
         activeMenuSection={activeMenuSection}
         setActiveMenuSection={setActiveMenuSection}
+        handleSectionAction={handleSectionAction}
       />
     );
   };
-  
+
   const AddSectionDivider = ({ index, onAdd }: { index: number; onAdd: () => void }) => (
     <div 
       className="flex items-center justify-center"
       style={{
-        // Espaçamento milimétrico: padding vertical simétrico para centralização perfeita
         paddingTop: `${CARD_VERTICAL_SPACING}px`,
         paddingBottom: `${CARD_VERTICAL_SPACING}px`,
-        // Garante que o botão fique exatamente no centro vertical entre os cards
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -1682,8 +923,437 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     </div>
   );
 
+  const AddActivityButton = ({ sectionId }: { sectionId: string }) => (
+    <motion.button
+      whileHover={{ scale: 1.02, background: theme.buttonGradient }}
+      whileTap={{ scale: 0.98 }}
+      className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm shadow-lg transition-all"
+      style={{ background: theme.buttonGradient }}
+      onClick={(e) => {
+        e.stopPropagation();
+        setActiveActivityDropdown(activeActivityDropdown === sectionId ? null : sectionId);
+      }}
+    >
+      <Plus className="w-4 h-4" />
+      <span>Atividade</span>
+      {activeActivityDropdown === sectionId && (
+        <ActivityDropdown 
+          sectionId={sectionId} 
+          onClose={() => setActiveActivityDropdown(null)} 
+        />
+      )}
+    </motion.button>
+  );
+
+  const ActivityDropdown = ({ sectionId, onClose, position }: { sectionId: string; onClose: () => void, position?: { bottom: number, left: number } }) => {
+    const dropdownOptions = [
+      { id: 'minhas', icon: FolderOpen, label: 'Minhas atividades', color: theme.primary },
+      { id: 'gerar', icon: Wand2, label: 'Gerar nova', color: '#10B981' },
+      { id: 'comunidade', icon: Globe, label: 'Comunidade', color: '#3B82F6' },
+      { id: 'subir', icon: Upload, label: 'Subir materiais', color: '#8B5CF6' }
+    ];
+
+    const handleOptionClick = (optionId: string) => {
+      if (optionId === 'minhas') {
+        setMyActivitiesSectionId(sectionId);
+        setShowMyActivitiesPanel(true);
+        loadUserActivities();
+      }
+      onClose();
+    };
+
+    const style: React.CSSProperties = position 
+      ? {
+          position: 'fixed',
+          bottom: position.bottom,
+          left: position.left,
+          background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
+          border: `1px solid ${theme.menuBorder}`,
+          boxShadow: `0 -10px 30px rgba(0, 0, 0, 0.4), 0 0 15px ${theme.shadowLight}`,
+          minWidth: '200px',
+          zIndex: 9999
+        }
+      : {
+          background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
+          border: `1px solid ${theme.menuBorder}`,
+          boxShadow: `0 -10px 30px rgba(0, 0, 0, 0.4), 0 0 15px ${theme.shadowLight}`,
+          minWidth: '200px'
+        };
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        className={position ? "rounded-xl overflow-hidden" : "absolute bottom-full left-0 mb-2 rounded-xl overflow-hidden z-[70]"}
+        style={style}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="py-2">
+          {dropdownOptions.map((option, index) => (
+            <React.Fragment key={option.id}>
+              <motion.button
+                whileHover={{ x: 4, backgroundColor: `${option.color}1A` }}
+                onClick={() => handleOptionClick(option.id)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-white/90 hover:text-white transition-colors"
+              >
+                <option.icon className="w-4 h-4" style={{ color: option.color }} />
+                <span className="text-sm font-medium">{option.label}</span>
+              </motion.button>
+              {index < dropdownOptions.length - 1 && (
+                <div 
+                  className="h-px mx-3 my-0.5"
+                  style={{
+                    background: `linear-gradient(to right, transparent, ${theme.primary}22, transparent)`
+                  }}
+                />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </motion.div>
+    );
+  };
+
+  const MyActivitiesPanel = () => {
+    if (!showMyActivitiesPanel || !myActivitiesSectionId) return null;
+    const activityTypes = ['all', ...new Set(userActivities.map(a => a.tipo).filter(Boolean))];
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+        onClick={() => {
+          setShowMyActivitiesPanel(false);
+          setMyActivitiesSectionId(null);
+          setSelectedActivities([]);
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                <FolderOpen className="w-6 h-6 text-orange-500" />
+                Minhas Atividades
+              </h2>
+              <p className="text-slate-400 text-sm">Selecione as atividades para adicionar à seção</p>
+            </div>
+            <button 
+              onClick={() => {
+                setShowMyActivitiesPanel(false);
+                setMyActivitiesSectionId(null);
+                setSelectedActivities([]);
+              }}
+              className="p-2 hover:bg-slate-800 rounded-full transition-colors"
+            >
+              <X className="w-6 h-6 text-slate-400" />
+            </button>
+          </div>
+
+          <div className="p-4 bg-slate-900/50 border-b border-slate-800 flex flex-wrap gap-4 items-center">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <input 
+                type="text"
+                placeholder="Buscar atividades..."
+                value={activitySearchTerm}
+                onChange={(e) => setActivitySearchTerm(e.target.value)}
+                className="w-full bg-slate-800 border-0 rounded-xl pl-10 pr-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-orange-500/50 outline-none transition-all"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setViewMode('grid')}
+                className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-orange-500 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+              >
+                <LayoutGrid className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => setViewMode('list')}
+                className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-orange-500 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+              >
+                <List className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
+            {loadingActivities ? (
+              <div className="h-full flex flex-col items-center justify-center gap-4">
+                <div className="w-12 h-12 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
+                <p className="text-slate-400 animate-pulse">Carregando suas atividades...</p>
+              </div>
+            ) : filteredActivities.length > 0 ? (
+              <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col gap-3"}>
+                {filteredActivities.map((activity) => {
+                  const isSelected = selectedActivities.includes(activity.id);
+                  const title = activity.id_json?.titulo || activity.id_json?.title || activity.tipo || 'Atividade';
+                  const type = activity.tipo || 'default';
+
+                  return (
+                    <motion.div
+                      key={activity.id}
+                      whileHover={{ y: -4 }}
+                      className={`group relative rounded-2xl border transition-all cursor-pointer overflow-hidden ${isSelected ? 'border-orange-500 bg-orange-500/10' : 'border-slate-800 bg-slate-800/40 hover:border-slate-700'}`}
+                      onClick={() => {
+                        setSelectedActivities(prev => 
+                          prev.includes(activity.id) ? prev.filter(id => id !== activity.id) : [...prev, activity.id]
+                        );
+                      }}
+                    >
+                      <div className="p-4 flex flex-col gap-3">
+                        <div className="flex items-start justify-between">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isSelected ? 'bg-orange-500 text-white' : 'bg-slate-700 text-slate-400'}`}>
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          {isSelected && (
+                            <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                              <Check className="w-4 h-4 text-white" />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-white font-bold leading-tight line-clamp-2">{title}</h3>
+                          <span className="text-slate-500 text-xs mt-1 block uppercase tracking-wider font-semibold">{type}</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center gap-4 text-center">
+                <div className="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center">
+                  <Search className="w-10 h-10 text-slate-700" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-lg">Nenhuma atividade encontrada</h3>
+                  <p className="text-slate-500 max-w-xs">Tente mudar os filtros ou busque por outro termo.</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="p-6 border-t border-slate-800 bg-slate-900/80 backdrop-blur-md flex items-center justify-between">
+            <p className="text-slate-400 text-sm">
+              <span className="text-orange-500 font-bold">{selectedActivities.length}</span> atividades selecionadas
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => {
+                  setShowMyActivitiesPanel(false);
+                  setMyActivitiesSectionId(null);
+                  setSelectedActivities([]);
+                }}
+                className="px-6 py-2.5 rounded-xl text-slate-400 font-bold hover:bg-slate-800 transition-all"
+              >
+                Cancelar
+              </button>
+              <button 
+                disabled={selectedActivities.length === 0}
+                onClick={() => addActivitiesToSection(myActivitiesSectionId)}
+                className="px-8 py-2.5 rounded-xl bg-orange-500 text-white font-bold shadow-lg shadow-orange-500/20 disabled:opacity-50 disabled:shadow-none hover:bg-orange-400 transition-all"
+              >
+                Adicionar Atividades
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  };
+
   const CIRCLE_SIZE = 72;
   const ACTION_CIRCLE_SIZE = 48;
+
+  const formatDate = (date: Date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const handleImageUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAulaImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const toggleCustomSectionExpand = (id: string) => {
+    setCustomSections(sections => 
+      sections.map(s => s.id === id ? { ...s, isExpanded: !s.isExpanded } : s)
+    );
+  };
+
+  const deleteCustomSection = (id: string) => {
+    setCustomSections(sections => sections.filter(s => s.id !== id));
+  };
+
+  const updateCustomSectionTitle = (id: string, title: string) => {
+    setCustomSections(sections => 
+      sections.map(s => s.id === id ? { ...s, title } : s)
+    );
+  };
+
+  const updateCustomSectionText = (id: string, text: string) => {
+    setCustomSections(sections => 
+      sections.map(s => s.id === id ? { ...s, text } : s)
+    );
+  };
+
+  const addCustomSection = (dividerIndex: number, insertAfterOrderIndex?: number) => {
+    setCustomSections(prev => {
+      const sectionsInDivider = prev.filter(s => s.afterDivider === dividerIndex);
+      let newOrderIndex: number;
+      if (insertAfterOrderIndex !== undefined) {
+        const updatedSections = prev.map(s => {
+          if (s.afterDivider === dividerIndex && s.orderIndex > insertAfterOrderIndex) {
+            return { ...s, orderIndex: s.orderIndex + 1 };
+          }
+          return s;
+        });
+        newOrderIndex = insertAfterOrderIndex + 1;
+        const newSection: CustomSection = {
+          id: `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          title: '',
+          text: '',
+          isExpanded: true,
+          afterDivider: dividerIndex,
+          orderIndex: newOrderIndex
+        };
+        return [...updatedSections, newSection];
+      } else {
+        const maxOrderIndex = sectionsInDivider.length > 0 
+          ? Math.max(...sectionsInDivider.map(s => s.orderIndex)) 
+          : -1;
+        newOrderIndex = maxOrderIndex + 1;
+        const newSection: CustomSection = {
+          id: `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          title: '',
+          text: '',
+          isExpanded: true,
+          afterDivider: dividerIndex,
+          orderIndex: newOrderIndex
+        };
+        return [...prev, newSection];
+      }
+    });
+    setHoveredDividerIndex(null);
+  };
+
+  const renderCustomSectionsForDivider = (dividerIndex: number) => {
+    const sectionsForDivider = customSections
+      .filter(s => s.afterDivider === dividerIndex)
+      .sort((a, b) => a.orderIndex - b.orderIndex);
+    
+    if (sectionsForDivider.length === 0) return null;
+    
+    return sectionsForDivider.map((section, idx) => (
+      <React.Fragment key={section.id}>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
+          transition={{ duration: 0.4 }}
+          className="rounded-2xl relative z-10 cursor-pointer"
+          style={{ 
+            background: theme.bgGradient, 
+            border: `1px solid ${theme.border}`, 
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            marginTop: '0px'
+          }}
+          onClick={() => toggleCustomSectionExpand(section.id)}
+        >
+          <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
+            <div className="flex items-center gap-3 flex-1">
+              <Edit3 className="w-5 h-5" style={{ color: theme.primary }} />
+              <input
+                type="text"
+                value={section.title}
+                onChange={(e) => { e.stopPropagation(); updateCustomSectionTitle(section.id, e.target.value); }}
+                onClick={(e) => e.stopPropagation()}
+                placeholder="Digite o título da seção..."
+                className="bg-transparent border-0 text-white font-bold text-lg placeholder-white/40 focus:outline-none flex-1"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <SectionControls 
+                  time="10 min"
+                  onTimeChange={() => {}} 
+                  onMoreClick={(e) => {
+                    e.stopPropagation();
+                    setActiveMenuSection(activeMenuSection === section.id ? null : section.id);
+                  }} 
+                />
+                <AnimatePresence>
+                  {activeMenuSection === section.id && (
+                    <SectionMenu 
+                      sectionId={section.id} 
+                      onClose={() => setActiveMenuSection(null)} 
+                      onAction={(action) => handleSectionAction(section.id, action)} 
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
+              <motion.div animate={{ rotate: section.isExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+                <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+              </motion.div>
+            </div>
+          </div>
+          <AnimatePresence>
+            {section.isExpanded && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                <div className="px-4 pb-4">
+                  <AutoResizeTextarea 
+                    value={section.text} 
+                    onChange={(e) => updateCustomSectionText(section.id, e.target.value)} 
+                    placeholder="Escreva o conteúdo desta seção..." 
+                  />
+                  <SectionActivitiesGrid sectionId={section.id} />
+                  <div className="flex items-center gap-3 mt-3">
+                    <AddActivityButton sectionId={section.id} />
+                    <motion.button 
+                      whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} 
+                      whileTap={{ scale: 0.98 }} 
+                      className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" 
+                      style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} 
+                      onClick={(e) => { e.stopPropagation(); console.log('Tools - Seção personalizada'); }}
+                    >
+                      <Wrench className="w-4 h-4" />
+                      <span>Tools</span>
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+        
+        <AddSectionDivider 
+          index={dividerIndex} 
+          onAdd={() => addCustomSection(dividerIndex, section.orderIndex)} 
+        />
+      </React.Fragment>
+    ));
+  };
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -1710,429 +1380,121 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           style={{
             background: theme.bgGradient,
             border: `1px solid ${theme.border}`,
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
           }}
         >
-          <div className="flex items-center gap-5 flex-1">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1, duration: 0.3 }}
-              className="relative flex-shrink-0"
-            >
-              <motion.div
-                animate={{
-                  background: aulaImage ? 'transparent' : theme.circleBg,
-                  borderColor: theme.circleBorder
-                }}
-                transition={{ duration: 0.3 }}
-                className="rounded-full flex items-center justify-center overflow-hidden"
-                style={{
-                  width: `${CIRCLE_SIZE}px`,
-                  height: `${CIRCLE_SIZE}px`,
-                  background: aulaImage 
-                    ? 'transparent'
-                    : theme.circleBg,
-                  border: `2px solid ${theme.circleBorder}`
-                }}
+          <div className="flex items-center gap-4">
+            <div className="relative group">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="w-16 h-16 rounded-2xl overflow-hidden cursor-pointer border-2"
+                style={{ borderColor: theme.border }}
+                onClick={handleImageUploadClick}
               >
                 {aulaImage ? (
-                  <img 
-                    src={aulaImage} 
-                    alt="Imagem da aula"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={aulaImage} alt="Aula" className="w-full h-full object-cover" />
                 ) : (
-                  <Image className="w-7 h-7" style={{ color: `${theme.primary}99` }} />
+                  <div className="w-full h-full bg-slate-800/50 flex items-center justify-center">
+                    <Image className="w-6 h-6" style={{ color: theme.primary }} />
+                  </div>
                 )}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Plus className="w-5 h-5 text-white" />
+                </div>
               </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={handleImageUploadClick}
-                animate={{ background: theme.buttonGradient }}
-                transition={{ duration: 0.3 }}
-                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center cursor-pointer"
-                style={{
-                  background: theme.buttonGradient,
-                  border: '2px solid #030C2A',
-                  boxShadow: `0 2px 8px ${theme.shadow}`
-                }}
-              >
-                <Plus className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-              </motion.div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, duration: 0.3 }}
-              className="flex flex-col gap-2"
-            >
-              <h2 className="text-white font-bold text-xl">{aulaName}</h2>
-              
-              <div className="flex items-center gap-2">
-                <motion.div
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ 
-                    opacity: 1, 
-                    y: 0,
-                    background: theme.tagBg,
-                    borderColor: theme.tagBorder
-                  }}
-                  transition={{ delay: 0.25, duration: 0.3 }}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg"
-                  style={{
-                    background: theme.tagBg,
-                    border: `1px solid ${theme.tagBorder}`
-                  }}
-                >
-                  {selectedTemplate?.icon && (
-                    <selectedTemplate.icon 
-                      className="w-3.5 h-3.5"
-                      style={{ color: theme.primary }}
-                    />
-                  )}
-                  <span className="text-white/80 text-xs font-medium">
-                    {selectedTemplate?.name || 'Sem template'}
-                  </span>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.3 }}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)'
-                  }}
-                >
-                  <span className="text-white/60 text-xs font-medium">
-                    {formatDate(createdAt)}
-                  </span>
-                </motion.div>
+            <div>
+              <h1 className="text-2xl font-bold text-white mb-1">{aulaName}</h1>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase" style={{ background: theme.tagBg, color: theme.primary, border: `1px solid ${theme.tagBorder}` }}>
+                  <Calendar className="w-3 h-3" />
+                  <span>{formatDate(createdAt)}</span>
+                </div>
+                {turmaName && (
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase text-blue-400 bg-blue-400/10 border border-blue-400/20">
+                    <Users className="w-3 h-3" />
+                    <span>{turmaName}</span>
+                  </div>
+                )}
               </div>
-            </motion.div>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.35, duration: 0.3 }}
-              className="relative flex-shrink-0"
+            <motion.button
+              whileHover={{ scale: 1.1, background: `${theme.primary}20` }}
+              whileTap={{ scale: 0.9 }}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
+              style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${theme.border}` }}
+              onClick={() => setThemeMode(themeMode === 'orange' ? 'purple' : 'orange')}
             >
-              <motion.div
-                animate={{
-                  background: userAvatar ? 'transparent' : theme.circleBg,
-                  borderColor: theme.circleBorder
-                }}
-                transition={{ duration: 0.3 }}
-                className="rounded-full flex items-center justify-center overflow-hidden"
-                style={{
-                  width: `${CIRCLE_SIZE}px`,
-                  height: `${CIRCLE_SIZE}px`,
-                  background: userAvatar 
-                    ? 'transparent' 
-                    : theme.circleBg,
-                  border: `2px solid ${theme.circleBorder}`
-                }}
-              >
-                {userAvatar ? (
-                  <img 
-                    src={userAvatar} 
-                    alt={userName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-7 h-7" style={{ color: `${theme.primary}99` }} />
-                )}
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, duration: 0.3 }}
-              className="relative flex-shrink-0"
-            >
-              <motion.div
-                animate={{
-                  background: turmaImage ? 'transparent' : theme.circleBg,
-                  borderColor: theme.circleBorder
-                }}
-                transition={{ duration: 0.3 }}
-                className="rounded-full flex items-center justify-center overflow-hidden"
-                style={{
-                  width: `${CIRCLE_SIZE}px`,
-                  height: `${CIRCLE_SIZE}px`,
-                  background: turmaImage 
-                    ? 'transparent' 
-                    : theme.circleBg,
-                  border: `2px solid ${theme.circleBorder}`
-                }}
-              >
-                {turmaImage ? (
-                  <img 
-                    src={turmaImage} 
-                    alt={turmaName || 'Turma'}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Users className="w-7 h-7" style={{ color: `${theme.primary}99` }} />
-                )}
-              </motion.div>
-              {!turmaImage && (
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  animate={{ background: theme.buttonGradient }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center cursor-pointer"
-                  style={{
-                    background: theme.buttonGradient,
-                    border: '2px solid #030C2A',
-                    boxShadow: `0 2px 8px ${theme.shadow}`
-                  }}
-                >
-                  <Plus className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-                </motion.div>
-              )}
-            </motion.div>
-
-            <motion.div
-              ref={menuRef}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.45, duration: 0.3 }}
-              className="relative flex-shrink-0"
-            >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Sparkles className="w-5 h-5" style={{ color: theme.primary }} />
+            </motion.button>
+            
+            <div className="relative">
+              <motion.button
+                whileHover={{ scale: 1.1, background: `${theme.primary}20` }}
+                whileTap={{ scale: 0.9 }}
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
+                style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${theme.border}` }}
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="cursor-pointer"
               >
-                <motion.div
-                  animate={{
-                    background: isMenuOpen 
-                      ? `${theme.primary}4D`
-                      : `${theme.primary}26`,
-                    borderColor: theme.circleBorder
-                  }}
-                  transition={{ duration: 0.3 }}
-                  className="rounded-full flex items-center justify-center"
-                  style={{
-                    width: `${CIRCLE_SIZE}px`,
-                    height: `${CIRCLE_SIZE}px`,
-                    background: isMenuOpen 
-                      ? `${theme.primary}4D`
-                      : `${theme.primary}26`,
-                    border: `2px solid ${theme.circleBorder}`
-                  }}
-                >
-                  <MoreVertical className="w-6 h-6" style={{ color: theme.primary }} />
-                </motion.div>
-              </motion.div>
+                <MoreVertical className="w-5 h-5" style={{ color: theme.primary }} />
+              </motion.button>
 
               <AnimatePresence>
                 {isMenuOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    ref={menuRef}
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute right-0 top-full mt-4 rounded-xl overflow-hidden z-50"  // Changed mt-2 to mt-4 to move down
-                    style={{
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 top-full mt-2 w-56 rounded-2xl overflow-hidden z-50 shadow-2xl"
+                    style={{ 
                       background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
                       border: `1px solid ${theme.menuBorder}`,
-                      boxShadow: `0 10px 30px rgba(0, 0, 0, 0.4), 0 0 15px ${theme.shadowLight}`,
-                      minWidth: '200px'
+                      backdropFilter: 'blur(20px)'
                     }}
                   >
-                    <div className="py-2">
+                    <div className="p-2 space-y-1">
+                      {[
+                        { id: 'share', label: 'Compartilhar', icon: Share2 },
+                        { id: 'download', label: 'Baixar Aula', icon: Download },
+                        { id: 'print', label: 'Imprimir', icon: FileText },
+                        { id: 'lock', label: 'Privacidade', icon: Lock }
+                      ].map((item) => (
+                        <motion.button
+                          key={item.id}
+                          whileHover={{ x: 4, backgroundColor: `${theme.primary}15` }}
+                          onClick={() => handleMenuItemClick(item.id)}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-white/80 hover:text-white transition-all rounded-xl text-sm font-medium"
+                        >
+                          <item.icon className="w-4 h-4" style={{ color: theme.primary }} />
+                          {item.label}
+                        </motion.button>
+                      ))}
+                      <div className="h-px mx-3 my-1" style={{ background: `linear-gradient(to right, transparent, ${theme.primary}33, transparent)` }} />
                       <motion.button
-                        whileHover={{ x: 4, backgroundColor: `${theme.primary}1A` }}
-                        onClick={() => handleMenuItemClick('compartilhar')}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-white/90 hover:text-white transition-colors"
+                        whileHover={{ x: 4, backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+                        onClick={() => handleMenuItemClick('delete')}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-red-400 hover:text-red-300 transition-all rounded-xl text-sm font-medium"
                       >
-                        <Share2 className="w-4 h-4" style={{ color: theme.primary }} />
-                        <span className="text-sm font-medium">Compartilhar</span>
-                      </motion.button>
-
-                      <motion.button
-                        whileHover={{ x: 4, backgroundColor: `${theme.primary}1A` }}
-                        onClick={() => handleMenuItemClick('baixar')}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-white/90 hover:text-white transition-colors"
-                      >
-                        <Download className="w-4 h-4" style={{ color: theme.primary }} />
-                        <span className="text-sm font-medium">Baixar</span>
-                      </motion.button>
-
-                      <motion.button
-                        whileHover={{ x: 4, backgroundColor: `${theme.primary}1A` }}
-                        onClick={() => handleMenuItemClick('adicionar-calendario')}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-white/90 hover:text-white transition-colors"
-                      >
-                        <Calendar className="w-4 h-4" style={{ color: theme.primary }} />
-                        <span className="text-sm font-medium">Add. ao calendário</span>
-                      </motion.button>
-
-                      <div 
-                        className="h-px mx-3 my-1"
-                        style={{
-                          background: `linear-gradient(to right, transparent, ${theme.primary}33, transparent)`
-                        }}
-                      />
-
-                      <motion.button
-                        whileHover={{ x: 4, backgroundColor: `${theme.primary}1A` }}
-                        onClick={() => handleMenuItemClick('tornar-privada')}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-white/90 hover:text-white transition-colors"
-                      >
-                        <Lock className="w-4 h-4" style={{ color: theme.primary }} />
-                        <span className="text-sm font-medium">Tornar privada</span>
-                      </motion.button>
-
-                      <div 
-                        className="h-px mx-3 my-1"
-                        style={{
-                          background: `linear-gradient(to right, transparent, ${theme.primary}33, transparent)`
-                        }}
-                      />
-
-                      <motion.button
-                        whileHover={{ x: 4, backgroundColor: `${theme.primary}1A` }}
-                        onClick={() => {
-                          setThemeMode(prev => prev === 'orange' ? 'purple' : 'orange');
-                          setIsMenuOpen(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-white/90 hover:text-white transition-colors"
-                      >
-                        <BarChart3 className="w-4 h-4" style={{ color: theme.primary }} />
-                        <span className="text-sm font-medium">
-                          {themeMode === 'orange' ? 'Ativar modo análise' : 'Desativar modo análise'}
-                        </span>
+                        <Trash2 className="w-4 h-4" />
+                        Excluir Aula
                       </motion.button>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.3 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex-shrink-0 cursor-pointer"
-              title="Modo Apresentação de atividade"
-            >
-              <motion.div
-                animate={{ 
-                  background: theme.buttonGradient,
-                  borderColor: `${theme.primary}99`
-                }}
-                transition={{ duration: 0.3 }}
-                className="rounded-full flex items-center justify-center"
-                style={{
-                  width: `${CIRCLE_SIZE}px`,
-                  height: `${CIRCLE_SIZE}px`,
-                  background: theme.buttonGradient,
-                  border: `2px solid ${theme.primary}99`,
-                  boxShadow: `0 4px 12px ${theme.shadow}`
-                }}
-              >
-                <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
-              </motion.div>
-            </motion.div>
+            </div>
           </div>
         </motion.div>
+
+        <div className="absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2 w-32 h-32 blur-[60px] rounded-full z-10 opacity-30 pointer-events-none" style={{ background: theme.primary }} />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ 
-          opacity: 1, 
-          y: 0,
-          background: theme.bgGradient,
-          borderColor: theme.border
-        }}
-        transition={{ delay: 0.5, duration: 0.4 }}
-        className="mt-[18px] rounded-2xl relative z-10 cursor-pointer"
-        style={{
-          background: theme.bgGradient,
-          border: `1px solid ${theme.border}`,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-        }}
-        onClick={() => setIsObjectiveExpanded(!isObjectiveExpanded)}
-      >
-        <div 
-          className="p-4 flex items-center justify-between"
-          style={{ height: '62px' }}
-        >
-          <div className="flex items-center gap-3">
-            <Target className="w-5 h-5" style={{ color: theme.primary }} />
-            <span className="text-white font-bold text-lg">Objetivo da Aula</span>
-          </div>
-          <motion.div
-            animate={{ rotate: isObjectiveExpanded ? 180 : 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-          </motion.div>
-        </div>
-
-        <AnimatePresence>
-          {isObjectiveExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="px-4 pb-4">
-                <AutoResizeTextarea
-                  value={objectiveText}
-                  onChange={handleObjectiveChange}
-                  placeholder="Escreva o objetivo da aula..."
-                />
-
-                <SectionActivitiesGrid sectionId="objetivo" />
-
-                <div className="flex items-center gap-3 mt-3">
-                  <AddActivityButton sectionId="objetivo" />
-
-                  <motion.button
-                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
-                    style={{
-                      background: `${theme.primary}1A`,
-                      border: `1px solid ${theme.primary}33`,
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Tools clicado');
-                    }}
-                  >
-                    <Wrench className="w-4 h-4" />
-                    <span>Tools</span>
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* Espaçador e Botões de Ação - Após Objetivo da Aula */}
-      <div className="relative flex items-center justify-between mt-16 mb-4 h-12">
-        {/* Botão School Tools (Canto Esquerdo) */}
+      <div className="mt-8 flex items-center justify-between mb-2">
         <div className="relative z-30 translate-y-[10%]">
           <motion.button
             whileHover={{ scale: 1.1, background: `${theme.primary}20` }}
@@ -2144,14 +1506,13 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               color: theme.primary,
               backdropFilter: 'blur(12px)'
             }}
-            onClick={() => console.log('School Tools clicado')}
-            title="School Tools"
+            onClick={() => console.log('Histórico de versões clicado')}
+            title="Histórico de alterações"
           >
-            <Sparkles className="w-6 h-6" />
+            <Clock className="w-6 h-6" />
           </motion.button>
         </div>
 
-        {/* Botão de Templates (Canto Direito) */}
         <div className="relative z-30 translate-y-[10%]">
           <motion.button
             whileHover={{ scale: 1.1, background: `${theme.primary}20` }}
@@ -2171,10 +1532,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </div>
       </div>
 
-      {/* Divider 0 - Após Objetivo */}
       {renderCustomSectionsForDivider(0)}
 
-      {/* Seções arrastáveis com DndContext */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -2211,12 +1570,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </DragOverlay>
       </DndContext>
 
-      {/* MyActivitiesPanel - Modal para selecionar atividades */}
       <AnimatePresence>
         <MyActivitiesPanel />
       </AnimatePresence>
 
-      {/* Modal de Visualização de Atividade */}
       <AnimatePresence>
         {viewingActivity && (
           <ActivityViewModal 
