@@ -1597,9 +1597,33 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           {config.isExpanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              animate={{ 
+                height: 'auto', 
+                opacity: 1,
+                transition: {
+                  height: {
+                    duration: 0.4,
+                    ease: [0.04, 0.62, 0.23, 0.98]
+                  },
+                  opacity: {
+                    duration: 0.25,
+                    delay: 0.1
+                  }
+                }
+              }}
+              exit={{ 
+                height: 0, 
+                opacity: 0,
+                transition: {
+                  height: {
+                    duration: 0.3,
+                    ease: [0.04, 0.62, 0.23, 0.98]
+                  },
+                  opacity: {
+                    duration: 0.2
+                  }
+                }
+              }}
               className="overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
