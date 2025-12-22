@@ -84,6 +84,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     text: string;
     isExpanded: boolean;
     afterDivider: number; // Índice do divisor após o qual a seção aparece
+    orderIndex: number; // Índice de ordem dentro do mesmo divider (para inserção entre seções)
   }
   const [customSections, setCustomSections] = useState<CustomSection[]>([]);
   const [hoveredDividerIndex, setHoveredDividerIndex] = useState<number | null>(null);
@@ -143,95 +144,155 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     setIsMenuOpen(false);
   };
 
-  const addCustomSection = (dividerIndex: number) => {
-    const newSection: CustomSection = {
-      id: `section-${Date.now()}`,
-      title: '',
-      text: '',
-      isExpanded: true,
-      afterDivider: dividerIndex
-    };
-    setCustomSections(prev => [...prev, newSection]);
+  // Função para adicionar seção personalizada com suporte a inserção entre seções existentes
+  // dividerIndex: índice do divisor principal (0-6)
+  // insertAfterOrderIndex: se fornecido, insere após a seção com esse orderIndex (para inserir entre seções)
+  const addCustomSection = (dividerIndex: number, insertAfterOrderIndex?: number) => {
+    setCustomSections(prev => {
+      // Filtra seções do mesmo divider para calcular orderIndex
+      const sectionsInDivider = prev.filter(s => s.afterDivider === dividerIndex);
+      
+      let newOrderIndex: number;
+      
+      if (insertAfterOrderIndex !== undefined) {
+        // Inserindo entre seções existentes
+        // Encontra todas as seções com orderIndex maior que insertAfterOrderIndex e incrementa
+        const updatedSections = prev.map(s => {
+          if (s.afterDivider === dividerIndex && s.orderIndex > insertAfterOrderIndex) {
+            return { ...s, orderIndex: s.orderIndex + 1 };
+          }
+          return s;
+        });
+        newOrderIndex = insertAfterOrderIndex + 1;
+        
+        const newSection: CustomSection = {
+          id: `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          title: '',
+          text: '',
+          isExpanded: true,
+          afterDivider: dividerIndex,
+          orderIndex: newOrderIndex
+        };
+        
+        return [...updatedSections, newSection];
+      } else {
+        // Adicionando ao final (comportamento padrão - clicou no divisor principal)
+        const maxOrderIndex = sectionsInDivider.length > 0 
+          ? Math.max(...sectionsInDivider.map(s => s.orderIndex)) 
+          : -1;
+        newOrderIndex = maxOrderIndex + 1;
+        
+        const newSection: CustomSection = {
+          id: `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          title: '',
+          text: '',
+          isExpanded: true,
+          afterDivider: dividerIndex,
+          orderIndex: newOrderIndex
+        };
+        
+        return [...prev, newSection];
+      }
+    });
     setHoveredDividerIndex(null);
   };
 
   // Função para renderizar seções personalizadas após um divisor específico
+  // Inclui botões "Adicionar seção" entre cada seção personalizada
   const renderCustomSectionsForDivider = (dividerIndex: number) => {
-    const sectionsForDivider = customSections.filter(s => s.afterDivider === dividerIndex);
-    return sectionsForDivider.map((section) => (
-      <motion.div
-        key={section.id}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
-        transition={{ duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 cursor-pointer"
-        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
-        onClick={() => toggleCustomSectionExpand(section.id)}
-      >
-        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
-          <div className="flex items-center gap-3 flex-1">
-            <Edit3 className="w-5 h-5" style={{ color: theme.primary }} />
-            <input
-              type="text"
-              value={section.title}
-              onChange={(e) => { e.stopPropagation(); updateCustomSectionTitle(section.id, e.target.value); }}
-              onClick={(e) => e.stopPropagation()}
-              placeholder="Digite o título da seção..."
-              className="bg-transparent border-0 text-white font-bold text-lg placeholder-white/40 focus:outline-none flex-1"
-            />
+    const sectionsForDivider = customSections
+      .filter(s => s.afterDivider === dividerIndex)
+      .sort((a, b) => a.orderIndex - b.orderIndex); // Ordena por orderIndex
+    
+    if (sectionsForDivider.length === 0) return null;
+    
+    return sectionsForDivider.map((section, idx) => (
+      <React.Fragment key={section.id}>
+        {/* Card da seção personalizada */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
+          transition={{ duration: 0.4 }}
+          className="rounded-2xl relative z-10 cursor-pointer"
+          style={{ 
+            background: theme.bgGradient, 
+            border: `1px solid ${theme.border}`, 
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            marginTop: '0px' // Sem margin-top, o espaçamento é controlado pelo divisor
+          }}
+          onClick={() => toggleCustomSectionExpand(section.id)}
+        >
+          <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
+            <div className="flex items-center gap-3 flex-1">
+              <Edit3 className="w-5 h-5" style={{ color: theme.primary }} />
+              <input
+                type="text"
+                value={section.title}
+                onChange={(e) => { e.stopPropagation(); updateCustomSectionTitle(section.id, e.target.value); }}
+                onClick={(e) => e.stopPropagation()}
+                placeholder="Digite o título da seção..."
+                className="bg-transparent border-0 text-white font-bold text-lg placeholder-white/40 focus:outline-none flex-1"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={(e) => { e.stopPropagation(); deleteCustomSection(section.id); }}
+                className="p-1 rounded-full hover:bg-red-500/20"
+              >
+                <Trash2 className="w-4 h-4 text-red-400" />
+              </motion.button>
+              <motion.div animate={{ rotate: section.isExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+                <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+              </motion.div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={(e) => { e.stopPropagation(); deleteCustomSection(section.id); }}
-              className="p-1 rounded-full hover:bg-red-500/20"
-            >
-              <Trash2 className="w-4 h-4 text-red-400" />
-            </motion.button>
-            <motion.div animate={{ rotate: section.isExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
-            </motion.div>
-          </div>
-        </div>
-        <AnimatePresence>
-          {section.isExpanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <div className="px-4 pb-4">
-                <textarea 
-                  value={section.text} 
-                  onChange={(e) => updateCustomSectionText(section.id, e.target.value)} 
-                  placeholder="Escreva o conteúdo desta seção..." 
-                  className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" 
-                  style={{ minHeight: '100px' }} 
-                />
-                <div className="flex items-center gap-3 mt-3">
-                  <motion.button 
-                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} 
-                    whileTap={{ scale: 0.98 }} 
-                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" 
-                    style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} 
-                    onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Seção personalizada'); }}
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Adicionar atividade</span>
-                  </motion.button>
-                  <motion.button 
-                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} 
-                    whileTap={{ scale: 0.98 }} 
-                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" 
-                    style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} 
-                    onClick={(e) => { e.stopPropagation(); console.log('Tools - Seção personalizada'); }}
-                  >
-                    <Wrench className="w-4 h-4" />
-                    <span>Tools</span>
-                  </motion.button>
+          <AnimatePresence>
+            {section.isExpanded && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                <div className="px-4 pb-4">
+                  <textarea 
+                    value={section.text} 
+                    onChange={(e) => updateCustomSectionText(section.id, e.target.value)} 
+                    placeholder="Escreva o conteúdo desta seção..." 
+                    className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" 
+                    style={{ minHeight: '100px' }} 
+                  />
+                  <div className="flex items-center gap-3 mt-3">
+                    <motion.button 
+                      whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} 
+                      whileTap={{ scale: 0.98 }} 
+                      className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" 
+                      style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} 
+                      onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Seção personalizada'); }}
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Adicionar atividade</span>
+                    </motion.button>
+                    <motion.button 
+                      whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} 
+                      whileTap={{ scale: 0.98 }} 
+                      className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" 
+                      style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} 
+                      onClick={(e) => { e.stopPropagation(); console.log('Tools - Seção personalizada'); }}
+                    >
+                      <Wrench className="w-4 h-4" />
+                      <span>Tools</span>
+                    </motion.button>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+        
+        {/* Botão "Adicionar seção" APÓS cada seção personalizada (para inserir entre seções) */}
+        <AddSectionDivider 
+          index={dividerIndex} 
+          onAdd={() => addCustomSection(dividerIndex, section.orderIndex)} 
+        />
+      </React.Fragment>
     ));
   };
 
@@ -257,8 +318,25 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     setCustomSections(sections => sections.filter(s => s.id !== id));
   };
 
+  // Constante para espaçamento vertical milimétrico entre cards
+  // Este valor é usado para garantir posicionamento exato e simétrico do botão
+  const CARD_VERTICAL_SPACING = 12; // 12px = espaçamento total entre cards (6px acima + 6px abaixo do botão)
+  
   const AddSectionDivider = ({ index, onAdd }: { index: number; onAdd: () => void }) => (
-    <div className="py-2 flex items-center justify-center">
+    <div 
+      className="flex items-center justify-center"
+      style={{
+        // Espaçamento milimétrico: padding vertical simétrico para centralização perfeita
+        paddingTop: `${CARD_VERTICAL_SPACING}px`,
+        paddingBottom: `${CARD_VERTICAL_SPACING}px`,
+        // Garante que o botão fique exatamente no centro vertical entre os cards
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        zIndex: 5
+      }}
+    >
       <motion.button
         onClick={(e) => {
           e.stopPropagation();
@@ -763,7 +841,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           borderColor: theme.border
         }}
         transition={{ delay: 0.55, duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 cursor-pointer"
+        className="rounded-2xl relative z-10 cursor-pointer"
         style={{
           background: theme.bgGradient,
           border: `1px solid ${theme.border}`,
@@ -835,7 +913,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.6, duration: 0.4 }}
-        className="mt-6 rounded-2xl relative z-10 cursor-pointer"
+        className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
         onClick={() => setIsIntroducaoExpanded(!isIntroducaoExpanded)}
       >
@@ -872,7 +950,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.65, duration: 0.4 }}
-        className="mt-6 rounded-2xl relative z-10 cursor-pointer"
+        className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
         onClick={() => setIsDesenvolvimentoExpanded(!isDesenvolvimentoExpanded)}
       >
@@ -909,7 +987,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.7, duration: 0.4 }}
-        className="mt-6 rounded-2xl relative z-10 cursor-pointer"
+        className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
         onClick={() => setIsEncerramentoExpanded(!isEncerramentoExpanded)}
       >
@@ -946,7 +1024,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.75, duration: 0.4 }}
-        className="mt-6 rounded-2xl relative z-10 cursor-pointer"
+        className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
         onClick={() => setIsMateriaisExpanded(!isMateriaisExpanded)}
       >
@@ -983,7 +1061,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.8, duration: 0.4 }}
-        className="mt-6 rounded-2xl relative z-10 cursor-pointer"
+        className="rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
         onClick={() => setIsObservacoesExpanded(!isObservacoesExpanded)}
       >
@@ -1020,7 +1098,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.85, duration: 0.4 }}
-        className="mt-4 mb-6 rounded-2xl relative z-10 cursor-pointer"
+        className="mb-6 rounded-2xl relative z-10 cursor-pointer"
         style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
         onClick={() => setIsBnccExpanded(!isBnccExpanded)}
       >
