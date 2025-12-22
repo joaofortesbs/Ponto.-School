@@ -828,8 +828,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       </motion.div>
 
       {/* Divider 0 - Após Objetivo da Aula */}
-      <div className="relative">
-        <div className="absolute right-0 -top-2 z-30">
+      <div className="relative flex items-center justify-center">
+        <AddSectionDivider index={0} onAdd={() => addCustomSection(0)} />
+        
+        <div className="absolute right-0 z-30">
           <motion.button
             whileHover={{ scale: 1.1, background: `${theme.primary}20` }}
             whileTap={{ scale: 0.9 }}
@@ -846,7 +848,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <Layout className="w-5 h-5" />
           </motion.button>
         </div>
-        <AddSectionDivider index={0} onAdd={() => addCustomSection(0)} />
       </div>
       {renderCustomSectionsForDivider(0)}
 
