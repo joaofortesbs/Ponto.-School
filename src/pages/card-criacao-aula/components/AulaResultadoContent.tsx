@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2 } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 
 interface AulaResultadoContentProps {
@@ -100,37 +100,44 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [observacoesTime, setObservacoesTime] = useState('10 min');
   const [bnccTime, setBnccTime] = useState('10 min');
 
-  const SectionControls = ({ time, onTimeChange, onMoreClick }: { time: string, onTimeChange: (val: string) => void, onMoreClick: () => void }) => {
+  const SectionControls = ({ time, onTimeChange, onMoreClick }: { time: string, onTimeChange: (val: string) => void, onMoreClick: (e: React.MouseEvent) => void }) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [tempTime, setTempTime] = useState(time);
+    const [tempTime, setTempTime] = useState(time.replace(' min', ''));
 
     return (
       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
         <div 
-          className="flex items-center gap-2 px-3 h-8 rounded-lg transition-all border border-white/10"
-          style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+          className="flex items-center gap-2 px-4 h-8 rounded-full transition-all border border-white/10"
+          style={{ background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(8px)' }}
         >
           {isEditing ? (
-            <input
-              autoFocus
-              className="w-16 bg-transparent border-0 text-white text-xs font-semibold focus:outline-none"
-              value={tempTime}
-              onChange={(e) => setTempTime(e.target.value)}
-              onBlur={() => {
-                setIsEditing(false);
-                onTimeChange(tempTime);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+            <div className="flex items-center gap-1">
+              <input
+                autoFocus
+                type="number"
+                className="w-8 bg-transparent border-0 text-white text-xs font-semibold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                value={tempTime}
+                onChange={(e) => setTempTime(e.target.value)}
+                onBlur={() => {
                   setIsEditing(false);
-                  onTimeChange(tempTime);
-                }
-              }}
-            />
+                  onTimeChange(`${tempTime || '0'} min`);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setIsEditing(false);
+                    onTimeChange(`${tempTime || '0'} min`);
+                  }
+                }}
+              />
+              <span className="text-white/40 text-xs font-semibold">min</span>
+            </div>
           ) : (
             <div 
               className="flex items-center gap-1.5 cursor-pointer"
-              onClick={() => setIsEditing(true)}
+              onClick={() => {
+                setTempTime(time.replace(' min', ''));
+                setIsEditing(true);
+              }}
             >
               <Clock className="w-3.5 h-3.5 text-white/60" />
               <span className="text-white text-xs font-semibold whitespace-nowrap">{time}</span>
@@ -143,11 +150,84 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           whileTap={{ scale: 0.9 }}
           onClick={onMoreClick}
           className="w-8 h-8 rounded-full flex items-center justify-center border border-white/10 transition-colors"
-          style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+          style={{ background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(8px)' }}
         >
           <MoreHorizontal className="w-4 h-4 text-white/80" />
         </motion.button>
       </div>
+    );
+  };
+
+  const [activeMenuSection, setActiveMenuSection] = useState<string | null>(null);
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (activeMenuSection) {
+        // If there's an active menu, we can check if the click was outside the trigger/menu
+        // However, since we're using a simple implementation, let's just close all menus on any click outside
+        // that isn't the button itself (which is handled by propagation stop)
+        setActiveMenuSection(null);
+      }
+    };
+
+    if (activeMenuSection) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [activeMenuSection]);
+
+  const SectionMenu = ({ sectionId, onClose, onAction }: { sectionId: string, onClose: () => void, onAction: (action: string) => void }) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        className="absolute right-0 top-full mt-2 rounded-xl overflow-hidden z-[60]"
+        style={{
+          background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
+          border: `1px solid ${theme.menuBorder}`,
+          boxShadow: `0 10px 30px rgba(0, 0, 0, 0.4), 0 0 15px ${theme.shadowLight}`,
+          minWidth: '160px'
+        }}
+      >
+        <div className="py-2">
+          <motion.button
+            whileHover={{ x: 4, backgroundColor: `${theme.primary}1A` }}
+            onClick={() => { onAction('duplicar'); onClose(); }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-white/90 hover:text-white transition-colors"
+          >
+            <Copy className="w-4 h-4" style={{ color: theme.primary }} />
+            <span className="text-sm font-medium">Duplicar</span>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ x: 4, backgroundColor: `${theme.primary}1A` }}
+            onClick={() => { onAction('adaptar'); onClose(); }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-white/90 hover:text-white transition-colors"
+          >
+            <Wand2 className="w-4 h-4" style={{ color: theme.primary }} />
+            <span className="text-sm font-medium">Adaptar</span>
+          </motion.button>
+
+          <div 
+            className="h-px mx-3 my-1"
+            style={{
+              background: `linear-gradient(to right, transparent, ${theme.primary}33, transparent)`
+            }}
+          />
+
+          <motion.button
+            whileHover={{ x: 4, backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+            onClick={() => { onAction('excluir'); onClose(); }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-red-400 hover:text-red-300 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span className="text-sm font-medium">Excluir</span>
+          </motion.button>
+        </div>
+      </motion.div>
     );
   };
 
@@ -170,11 +250,23 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
       }
+      // Fechar menu de seção ao clicar fora
+      if (activeMenuSection) {
+        const moreButtons = document.querySelectorAll('[data-section-more-button]');
+        let clickedOnButton = false;
+        moreButtons.forEach(btn => {
+          if (btn.contains(event.target as Node)) clickedOnButton = true;
+        });
+        
+        if (!clickedOnButton) {
+          setActiveMenuSection(null);
+        }
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [activeMenuSection]);
 
   const formatDate = (date: Date) => {
     const day = String(date.getDate()).padStart(2, '0');
@@ -952,11 +1044,25 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <span className="text-white font-bold text-lg">Pré-estudo</span>
           </div>
           <div className="flex items-center gap-3">
-            <SectionControls 
-              time={preEstudoTime} 
-              onTimeChange={setPreEstudoTime} 
-              onMoreClick={() => console.log('Mais opções - Pré-estudo')} 
-            />
+            <div className="relative">
+              <SectionControls 
+                time={preEstudoTime} 
+                onTimeChange={setPreEstudoTime} 
+                onMoreClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuSection(activeMenuSection === 'pre-estudo' ? null : 'pre-estudo');
+                }} 
+              />
+              <AnimatePresence>
+                {activeMenuSection === 'pre-estudo' && (
+                  <SectionMenu 
+                    sectionId="pre-estudo" 
+                    onClose={() => setActiveMenuSection(null)}
+                    onAction={(action) => console.log(`${action} - Pré-estudo`)}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
             <motion.div animate={{ rotate: isPreEstudoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
@@ -1027,11 +1133,25 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <span className="text-white font-bold text-lg">Introdução</span>
           </div>
           <div className="flex items-center gap-3">
-            <SectionControls 
-              time={introducaoTime} 
-              onTimeChange={setIntroducaoTime} 
-              onMoreClick={() => console.log('Mais opções - Introdução')} 
-            />
+            <div className="relative">
+              <SectionControls 
+                time={introducaoTime} 
+                onTimeChange={setIntroducaoTime} 
+                onMoreClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuSection(activeMenuSection === 'introducao' ? null : 'introducao');
+                }} 
+              />
+              <AnimatePresence>
+                {activeMenuSection === 'introducao' && (
+                  <SectionMenu 
+                    sectionId="introducao" 
+                    onClose={() => setActiveMenuSection(null)}
+                    onAction={(action) => console.log(`${action} - Introdução`)}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
             <motion.div animate={{ rotate: isIntroducaoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
@@ -1071,11 +1191,25 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <span className="text-white font-bold text-lg">Desenvolvimento</span>
           </div>
           <div className="flex items-center gap-3">
-            <SectionControls 
-              time={desenvolvimentoTime} 
-              onTimeChange={setDesenvolvimentoTime} 
-              onMoreClick={() => console.log('Mais opções - Desenvolvimento')} 
-            />
+            <div className="relative">
+              <SectionControls 
+                time={desenvolvimentoTime} 
+                onTimeChange={setDesenvolvimentoTime} 
+                onMoreClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuSection(activeMenuSection === 'desenvolvimento' ? null : 'desenvolvimento');
+                }} 
+              />
+              <AnimatePresence>
+                {activeMenuSection === 'desenvolvimento' && (
+                  <SectionMenu 
+                    sectionId="desenvolvimento" 
+                    onClose={() => setActiveMenuSection(null)}
+                    onAction={(action) => console.log(`${action} - Desenvolvimento`)}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
             <motion.div animate={{ rotate: isDesenvolvimentoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
@@ -1115,11 +1249,25 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <span className="text-white font-bold text-lg">Encerramento</span>
           </div>
           <div className="flex items-center gap-3">
-            <SectionControls 
-              time={encerramentoTime} 
-              onTimeChange={setEncerramentoTime} 
-              onMoreClick={() => console.log('Mais opções - Encerramento')} 
-            />
+            <div className="relative">
+              <SectionControls 
+                time={encerramentoTime} 
+                onTimeChange={setEncerramentoTime} 
+                onMoreClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuSection(activeMenuSection === 'encerramento' ? null : 'encerramento');
+                }} 
+              />
+              <AnimatePresence>
+                {activeMenuSection === 'encerramento' && (
+                  <SectionMenu 
+                    sectionId="encerramento" 
+                    onClose={() => setActiveMenuSection(null)}
+                    onAction={(action) => console.log(`${action} - Encerramento`)}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
             <motion.div animate={{ rotate: isEncerramentoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
@@ -1159,11 +1307,25 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <span className="text-white font-bold text-lg">Materiais Complementares</span>
           </div>
           <div className="flex items-center gap-3">
-            <SectionControls 
-              time={materiaisTime} 
-              onTimeChange={setMateriaisTime} 
-              onMoreClick={() => console.log('Mais opções - Materiais')} 
-            />
+            <div className="relative">
+              <SectionControls 
+                time={materiaisTime} 
+                onTimeChange={setMateriaisTime} 
+                onMoreClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuSection(activeMenuSection === 'materiais' ? null : 'materiais');
+                }} 
+              />
+              <AnimatePresence>
+                {activeMenuSection === 'materiais' && (
+                  <SectionMenu 
+                    sectionId="materiais" 
+                    onClose={() => setActiveMenuSection(null)}
+                    onAction={(action) => console.log(`${action} - Materiais`)}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
             <motion.div animate={{ rotate: isMateriaisExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
@@ -1203,11 +1365,25 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <span className="text-white font-bold text-lg">Observações do Professor</span>
           </div>
           <div className="flex items-center gap-3">
-            <SectionControls 
-              time={observacoesTime} 
-              onTimeChange={setObservacoesTime} 
-              onMoreClick={() => console.log('Mais opções - Observações')} 
-            />
+            <div className="relative">
+              <SectionControls 
+                time={observacoesTime} 
+                onTimeChange={setObservacoesTime} 
+                onMoreClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuSection(activeMenuSection === 'observacoes' ? null : 'observacoes');
+                }} 
+              />
+              <AnimatePresence>
+                {activeMenuSection === 'observacoes' && (
+                  <SectionMenu 
+                    sectionId="observacoes" 
+                    onClose={() => setActiveMenuSection(null)}
+                    onAction={(action) => console.log(`${action} - Observações`)}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
             <motion.div animate={{ rotate: isObservacoesExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
@@ -1247,11 +1423,25 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <span className="text-white font-bold text-lg">Critérios BNCC</span>
           </div>
           <div className="flex items-center gap-3">
-            <SectionControls 
-              time={bnccTime} 
-              onTimeChange={setBnccTime} 
-              onMoreClick={() => console.log('Mais opções - BNCC')} 
-            />
+            <div className="relative">
+              <SectionControls 
+                time={bnccTime} 
+                onTimeChange={setBnccTime} 
+                onMoreClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuSection(activeMenuSection === 'bncc' ? null : 'bncc');
+                }} 
+              />
+              <AnimatePresence>
+                {activeMenuSection === 'bncc' && (
+                  <SectionMenu 
+                    sectionId="bncc" 
+                    onClose={() => setActiveMenuSection(null)}
+                    onAction={(action) => console.log(`${action} - BNCC`)}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
             <motion.div animate={{ rotate: isBnccExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
               <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
             </motion.div>
