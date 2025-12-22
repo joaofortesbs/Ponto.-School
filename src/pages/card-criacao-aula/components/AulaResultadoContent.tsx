@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
-import EditActivityModal from '@/features/schoolpower/construction/EditActivityModal';
+import { ActivityViewModal } from '@/features/schoolpower/construction/ActivityViewModal';
 
 interface AulaResultadoContentProps {
   aulaName?: string;
@@ -2285,19 +2285,23 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       {/* Modal de Visualização de Atividade */}
       <AnimatePresence>
         {viewingActivity && (
-          <EditActivityModal 
+          <ActivityViewModal 
             isOpen={!!viewingActivity}
             activity={{
               id: viewingActivity.id,
               title: viewingActivity.id_json?.titulo || viewingActivity.id_json?.title || viewingActivity.tipo || 'Atividade',
+              description: viewingActivity.id_json?.descricao || viewingActivity.id_json?.description || '',
+              categoryId: viewingActivity.tipo || 'default',
+              categoryName: viewingActivity.tipo || 'Atividade',
+              icon: 'FileText',
+              tags: [],
+              difficulty: 'medium',
+              estimatedTime: '30min',
               type: viewingActivity.tipo || 'default',
               status: 'completed',
-              color: theme.primary,
-              icon: 'FileText',
-              content: viewingActivity.id_json
+              originalData: viewingActivity.id_json
             }}
             onClose={() => setViewingActivity(null)}
-            onSave={() => setViewingActivity(null)}
           />
         )}
       </AnimatePresence>
