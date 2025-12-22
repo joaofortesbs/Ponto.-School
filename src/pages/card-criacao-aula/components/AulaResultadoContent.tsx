@@ -535,16 +535,19 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   value={objectiveText}
                   onChange={(e) => setObjectiveText(e.target.value)}
                   placeholder="Escreva o objetivo da aula..."
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white placeholder-white/40 resize-none focus:outline-none focus:border-opacity-50 transition-colors"
+                  className="w-full bg-[#030C2A]/50 border rounded-xl p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
                   style={{
                     minHeight: '100px',
-                    borderColor: `${theme.primary}33`,
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    boxShadow: 'inset 0 2px 10px rgba(0, 0, 0, 0.3)'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = `${theme.primary}66`;
+                    e.target.style.borderColor = `${theme.primary}40`;
+                    e.target.style.backgroundColor = 'rgba(3, 12, 42, 0.7)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = `${theme.primary}33`;
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.backgroundColor = 'rgba(3, 12, 42, 0.5)';
                   }}
                 />
 
@@ -552,7 +555,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium text-sm"
+                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm"
                     style={{
                       background: theme.buttonGradient,
                       boxShadow: `0 4px 12px ${theme.shadow}`
@@ -569,7 +572,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-white/80 font-medium text-sm"
+                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm"
                     style={{
                       background: 'rgba(255, 255, 255, 0.08)',
                       border: '1px solid rgba(255, 255, 255, 0.15)'
