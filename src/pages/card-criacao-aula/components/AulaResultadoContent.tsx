@@ -107,6 +107,92 @@ const AutoResizeTextarea = React.memo(({ value, onChange, placeholder }: { value
   );
 });
 
+// Interface for saved draft data
+interface AulaDraftData {
+  aulaName: string;
+  themeMode: ThemeMode;
+  aulaImage: string | null;
+  sectionTexts: {
+    objective: string;
+    preEstudo: string;
+    introducao: string;
+    desenvolvimento: string;
+    encerramento: string;
+    materiais: string;
+    observacoes: string;
+    bncc: string;
+  };
+  sectionExpanded: {
+    objective: boolean;
+    preEstudo: boolean;
+    introducao: boolean;
+    desenvolvimento: boolean;
+    encerramento: boolean;
+    materiais: boolean;
+    observacoes: boolean;
+    bncc: boolean;
+  };
+  sectionVisible: {
+    objective: boolean;
+    preEstudo: boolean;
+    introducao: boolean;
+    desenvolvimento: boolean;
+    encerramento: boolean;
+    materiais: boolean;
+    observacoes: boolean;
+    bncc: boolean;
+  };
+  sectionTimes: {
+    preEstudo: string;
+    introducao: string;
+    desenvolvimento: string;
+    encerramento: string;
+    materiais: string;
+    observacoes: string;
+    bncc: string;
+  };
+  sectionOrder: string[];
+  customSections: Array<{
+    id: string;
+    title: string;
+    text: string;
+    isExpanded: boolean;
+    afterDivider: number;
+    orderIndex: number;
+  }>;
+  sectionActivities: Array<{
+    sectionId: string;
+    activityId: string;
+    activityData: any;
+  }>;
+  lastSaved: string;
+}
+
+// Helper function to generate storage key scoped by aula name
+const getAulaStorageKey = (aulaName: string): string => {
+  const sanitizedName = aulaName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+  return `ponto_school_aula_draft_${sanitizedName}`;
+};
+
+// Helper function to load saved draft (browser-safe)
+const loadSavedDraft = (aulaName: string): AulaDraftData | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const key = getAulaStorageKey(aulaName);
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      const data = JSON.parse(saved) as AulaDraftData;
+      if (data.aulaName === aulaName) {
+        return data;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('Erro ao carregar rascunho salvo:', error);
+    return null;
+  }
+};
+
 const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   aulaName = 'Minha Nova Aula',
   selectedTemplate = null,
@@ -114,43 +200,45 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   turmaName = null,
   createdAt = new Date()
 }) => {
+  // Load saved draft on component mount (browser-safe)
+  const savedDraft = useMemo(() => loadSavedDraft(aulaName), [aulaName]);
+  
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('Professor');
-  const [aulaImage, setAulaImage] = useState<string | null>(null);
+  const [aulaImage, setAulaImage] = useState<string | null>(savedDraft?.aulaImage ?? null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [themeMode, setThemeMode] = useState<ThemeMode>('orange');
-  const [isObjectiveExpanded, setIsObjectiveExpanded] = useState(false);
-  const [objectiveText, setObjectiveText] = useState('');
-  const [preEstudoText, setPreEstudoText] = useState('');
-  const [introducaoText, setIntroducaoText] = useState('');
-  const [desenvolvimentoText, setDesenvolvimentoText] = useState('');
-  const [encerramentoText, setEncerramentoText] = useState('');
-  const [materiaisText, setMateriaisText] = useState('');
-  const [observacoesText, setObservacoesText] = useState('');
-  const [bnccText, setBnccText] = useState('');
-  const [isPreEstudoExpanded, setIsPreEstudoExpanded] = useState(true);
-  const [isIntroducaoExpanded, setIsIntroducaoExpanded] = useState(true);
-  const [isDesenvolvimentoExpanded, setIsDesenvolvimentoExpanded] = useState(true);
-  const [isEncerramentoExpanded, setIsEncerramentoExpanded] = useState(true);
-  const [isMateriaisExpanded, setIsMateriaisExpanded] = useState(true);
-  const [isObservacoesExpanded, setIsObservacoesExpanded] = useState(true);
-  const [isBnccExpanded, setIsBnccExpanded] = useState(true);
+  const [themeMode, setThemeMode] = useState<ThemeMode>(savedDraft?.themeMode ?? 'orange');
+  const [isObjectiveExpanded, setIsObjectiveExpanded] = useState(savedDraft?.sectionExpanded?.objective ?? false);
+  const [objectiveText, setObjectiveText] = useState(savedDraft?.sectionTexts?.objective ?? '');
+  const [preEstudoText, setPreEstudoText] = useState(savedDraft?.sectionTexts?.preEstudo ?? '');
+  const [introducaoText, setIntroducaoText] = useState(savedDraft?.sectionTexts?.introducao ?? '');
+  const [desenvolvimentoText, setDesenvolvimentoText] = useState(savedDraft?.sectionTexts?.desenvolvimento ?? '');
+  const [encerramentoText, setEncerramentoText] = useState(savedDraft?.sectionTexts?.encerramento ?? '');
+  const [materiaisText, setMateriaisText] = useState(savedDraft?.sectionTexts?.materiais ?? '');
+  const [observacoesText, setObservacoesText] = useState(savedDraft?.sectionTexts?.observacoes ?? '');
+  const [bnccText, setBnccText] = useState(savedDraft?.sectionTexts?.bncc ?? '');
+  const [isPreEstudoExpanded, setIsPreEstudoExpanded] = useState(savedDraft?.sectionExpanded?.preEstudo ?? true);
+  const [isIntroducaoExpanded, setIsIntroducaoExpanded] = useState(savedDraft?.sectionExpanded?.introducao ?? true);
+  const [isDesenvolvimentoExpanded, setIsDesenvolvimentoExpanded] = useState(savedDraft?.sectionExpanded?.desenvolvimento ?? true);
+  const [isEncerramentoExpanded, setIsEncerramentoExpanded] = useState(savedDraft?.sectionExpanded?.encerramento ?? true);
+  const [isMateriaisExpanded, setIsMateriaisExpanded] = useState(savedDraft?.sectionExpanded?.materiais ?? true);
+  const [isObservacoesExpanded, setIsObservacoesExpanded] = useState(savedDraft?.sectionExpanded?.observacoes ?? true);
+  const [isBnccExpanded, setIsBnccExpanded] = useState(savedDraft?.sectionExpanded?.bncc ?? true);
 
   // Estados de visibilidade para seções padrão (para exclusão completa)
-  const [isObjectiveVisible, setIsObjectiveVisible] = useState(true);
-  const [isPreEstudoVisible, setIsPreEstudoVisible] = useState(true);
-  const [isIntroducaoVisible, setIsIntroducaoVisible] = useState(true);
-  const [isDesenvolvimentoVisible, setIsDesenvolvimentoVisible] = useState(true);
-  const [isEncerramentoVisible, setIsEncerramentoVisible] = useState(true);
-  const [isMateriaisVisible, setIsMateriaisVisible] = useState(true);
-  const [isObservacoesVisible, setIsObservacoesVisible] = useState(true);
-  const [isBnccVisible, setIsBnccVisible] = useState(true);
+  const [isObjectiveVisible, setIsObjectiveVisible] = useState(savedDraft?.sectionVisible?.objective ?? true);
+  const [isPreEstudoVisible, setIsPreEstudoVisible] = useState(savedDraft?.sectionVisible?.preEstudo ?? true);
+  const [isIntroducaoVisible, setIsIntroducaoVisible] = useState(savedDraft?.sectionVisible?.introducao ?? true);
+  const [isDesenvolvimentoVisible, setIsDesenvolvimentoVisible] = useState(savedDraft?.sectionVisible?.desenvolvimento ?? true);
+  const [isEncerramentoVisible, setIsEncerramentoVisible] = useState(savedDraft?.sectionVisible?.encerramento ?? true);
+  const [isMateriaisVisible, setIsMateriaisVisible] = useState(savedDraft?.sectionVisible?.materiais ?? true);
+  const [isObservacoesVisible, setIsObservacoesVisible] = useState(savedDraft?.sectionVisible?.observacoes ?? true);
+  const [isBnccVisible, setIsBnccVisible] = useState(savedDraft?.sectionVisible?.bncc ?? true);
 
   // Estado para ordem das seções (drag and drop)
-  const [sectionOrder, setSectionOrder] = useState<string[]>([
-    'objective', 'preEstudo', 'introducao', 'desenvolvimento',
-    'encerramento', 'materiais', 'observacoes', 'bncc'
-  ]);
+  const [sectionOrder, setSectionOrder] = useState<string[]>(
+    savedDraft?.sectionOrder ?? ['objective', 'preEstudo', 'introducao', 'desenvolvimento', 'encerramento', 'materiais', 'observacoes', 'bncc']
+  );
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   // Sensores para drag and drop
@@ -189,22 +277,22 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     title: string;
     text: string;
     isExpanded: boolean;
-    afterDivider: number; // Índice do divisor após o qual a seção aparece
-    orderIndex: number; // Índice de ordem dentro do mesmo divider (para inserção entre seções)
+    afterDivider: number;
+    orderIndex: number;
   }
-  const [customSections, setCustomSections] = useState<CustomSection[]>([]);
+  const [customSections, setCustomSections] = useState<CustomSection[]>(savedDraft?.customSections ?? []);
   const [hoveredDividerIndex, setHoveredDividerIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const summaryCardRef = useRef<HTMLDivElement>(null);
 
-  const [preEstudoTime, setPreEstudoTime] = useState('10 min');
-  const [introducaoTime, setIntroducaoTime] = useState('10 min');
-  const [desenvolvimentoTime, setDesenvolvimentoTime] = useState('10 min');
-  const [encerramentoTime, setEncerramentoTime] = useState('10 min');
-  const [materiaisTime, setMateriaisTime] = useState('10 min');
-  const [observacoesTime, setObservacoesTime] = useState('10 min');
-  const [bnccTime, setBnccTime] = useState('10 min');
+  const [preEstudoTime, setPreEstudoTime] = useState(savedDraft?.sectionTimes?.preEstudo ?? '10 min');
+  const [introducaoTime, setIntroducaoTime] = useState(savedDraft?.sectionTimes?.introducao ?? '10 min');
+  const [desenvolvimentoTime, setDesenvolvimentoTime] = useState(savedDraft?.sectionTimes?.desenvolvimento ?? '10 min');
+  const [encerramentoTime, setEncerramentoTime] = useState(savedDraft?.sectionTimes?.encerramento ?? '10 min');
+  const [materiaisTime, setMateriaisTime] = useState(savedDraft?.sectionTimes?.materiais ?? '10 min');
+  const [observacoesTime, setObservacoesTime] = useState(savedDraft?.sectionTimes?.observacoes ?? '10 min');
+  const [bnccTime, setBnccTime] = useState(savedDraft?.sectionTimes?.bncc ?? '10 min');
 
   // Estados para o dropdown de atividades
   const [activeActivityDropdown, setActiveActivityDropdown] = useState<string | null>(null);
@@ -226,7 +314,98 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     activityId: string;
     activityData: AtividadeNeon;
   }
-  const [sectionActivities, setSectionActivities] = useState<SectionActivity[]>([]);
+  const [sectionActivities, setSectionActivities] = useState<SectionActivity[]>(savedDraft?.sectionActivities ?? []);
+
+  // Auto-save to localStorage with debounce (scoped by aulaName)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    saveTimeoutRef.current = setTimeout(() => {
+      const draftData: AulaDraftData = {
+        aulaName,
+        themeMode,
+        aulaImage,
+        sectionTexts: {
+          objective: objectiveText,
+          preEstudo: preEstudoText,
+          introducao: introducaoText,
+          desenvolvimento: desenvolvimentoText,
+          encerramento: encerramentoText,
+          materiais: materiaisText,
+          observacoes: observacoesText,
+          bncc: bnccText,
+        },
+        sectionExpanded: {
+          objective: isObjectiveExpanded,
+          preEstudo: isPreEstudoExpanded,
+          introducao: isIntroducaoExpanded,
+          desenvolvimento: isDesenvolvimentoExpanded,
+          encerramento: isEncerramentoExpanded,
+          materiais: isMateriaisExpanded,
+          observacoes: isObservacoesExpanded,
+          bncc: isBnccExpanded,
+        },
+        sectionVisible: {
+          objective: isObjectiveVisible,
+          preEstudo: isPreEstudoVisible,
+          introducao: isIntroducaoVisible,
+          desenvolvimento: isDesenvolvimentoVisible,
+          encerramento: isEncerramentoVisible,
+          materiais: isMateriaisVisible,
+          observacoes: isObservacoesVisible,
+          bncc: isBnccVisible,
+        },
+        sectionTimes: {
+          preEstudo: preEstudoTime,
+          introducao: introducaoTime,
+          desenvolvimento: desenvolvimentoTime,
+          encerramento: encerramentoTime,
+          materiais: materiaisTime,
+          observacoes: observacoesTime,
+          bncc: bnccTime,
+        },
+        sectionOrder,
+        customSections,
+        sectionActivities: sectionActivities.map(sa => ({
+          sectionId: sa.sectionId,
+          activityId: sa.activityId,
+          activityData: sa.activityData,
+        })),
+        lastSaved: new Date().toISOString(),
+      };
+      
+      try {
+        const storageKey = getAulaStorageKey(aulaName);
+        localStorage.setItem(storageKey, JSON.stringify(draftData));
+        console.log('💾 Rascunho salvo automaticamente para:', aulaName);
+      } catch (error) {
+        console.error('Erro ao salvar rascunho:', error);
+      }
+    }, 1000);
+    
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [
+    aulaName, themeMode, aulaImage,
+    objectiveText, preEstudoText, introducaoText, desenvolvimentoText,
+    encerramentoText, materiaisText, observacoesText, bnccText,
+    isObjectiveExpanded, isPreEstudoExpanded, isIntroducaoExpanded, isDesenvolvimentoExpanded,
+    isEncerramentoExpanded, isMateriaisExpanded, isObservacoesExpanded, isBnccExpanded,
+    isObjectiveVisible, isPreEstudoVisible, isIntroducaoVisible, isDesenvolvimentoVisible,
+    isEncerramentoVisible, isMateriaisVisible, isObservacoesVisible, isBnccVisible,
+    preEstudoTime, introducaoTime, desenvolvimentoTime, encerramentoTime,
+    materiaisTime, observacoesTime, bnccTime,
+    sectionOrder, customSections, sectionActivities,
+  ]);
 
   // Handlers memoizados para os campos de texto (performance)
   const handleObjectiveChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setObjectiveText(e.target.value), []);
