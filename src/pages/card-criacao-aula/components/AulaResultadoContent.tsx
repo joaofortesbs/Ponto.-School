@@ -678,8 +678,12 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     
     if (activitiesForSection.length === 0) return null;
 
+    // Configurações profissionais de proporção (Exato: 208x260)
+    const CARD_WIDTH = 208;
+    const CARD_HEIGHT = 260;
+
     return (
-      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-4xl">
+      <div className="mt-4 flex flex-wrap gap-4 max-w-full">
         {activitiesForSection.map(({ activityId, activityData }) => {
           const title = activityData.id_json?.titulo || activityData.id_json?.title || activityData.tipo || 'Atividade sem título';
           const type = activityData.tipo || 'Geral';
@@ -693,45 +697,67 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              whileHover={{ y: -2 }}
-              className="relative group rounded-xl overflow-hidden cursor-pointer"
+              whileHover={{ y: -4, boxShadow: `0 12px 24px rgba(0,0,0,0.3)` }}
+              className="relative group rounded-2xl overflow-hidden cursor-pointer flex flex-col"
               style={{
+                width: `${CARD_WIDTH}px`,
+                height: `${CARD_HEIGHT}px`,
                 background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%)',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
               }}
             >
-              {/* Área do Ícone */}
+              {/* Área do Ícone - Proporção Superior */}
               <div 
-                className="flex items-center justify-center py-4"
+                className="flex items-center justify-center flex-1"
                 style={{ background: 'rgba(0, 0, 0, 0.2)' }}
               >
-                <FileText className="w-8 h-8" style={{ color: theme.primary }} />
-              </div>
-
-              {/* Informações da Atividade */}
-              <div 
-                className="p-3"
-                style={{ 
-                  background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.9) 100%)'
-                }}
-              >
-                <h4 className="text-white font-bold text-[10px] leading-tight line-clamp-2 mb-1 h-6">{title}</h4>
-                <div className="flex items-center justify-between">
-                  <p className="text-white/50 text-[9px] truncate">{type}</p>
+                <div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  style={{ background: `${theme.primary}15`, border: `1px solid ${theme.primary}30` }}
+                >
+                  <FileText className="w-8 h-8" style={{ color: theme.primary }} />
                 </div>
               </div>
 
-              {/* Botão de Remover (aparece no hover) */}
+              {/* Informações da Atividade - Proporção Inferior */}
+              <div 
+                className="p-5 flex flex-col justify-between"
+                style={{ 
+                  height: '110px',
+                  background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.4) 0%, rgba(30, 41, 59, 0.8) 100%)',
+                  borderTop: '1px solid rgba(255,255,255,0.05)'
+                }}
+              >
+                <div className="space-y-1.5">
+                  <h4 className="text-white font-bold text-sm leading-tight line-clamp-2">{title}</h4>
+                  <span 
+                    className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
+                    style={{ background: `${theme.primary}20`, color: theme.primary }}
+                  >
+                    {type}
+                  </span>
+                </div>
+                
+                {createdDate && (
+                  <div className="flex items-center gap-1.5 text-white/30 text-[10px] mt-auto">
+                    <Clock className="w-3 h-3" />
+                    <span>{createdDate}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Botão de Remover (Profissional) */}
               <motion.button
                 initial={{ opacity: 0 }}
-                whileHover={{ scale: 1.1, backgroundColor: 'rgba(239, 68, 68, 0.3)' }}
-                className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                whileHover={{ scale: 1.1, backgroundColor: '#ef4444' }}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-md"
                 onClick={(e) => {
                   e.stopPropagation();
                   removeActivityFromSection(sectionId, activityId);
                 }}
               >
-                <Trash2 className="w-3 h-3 text-red-400" />
+                <Trash2 className="w-4 h-4 text-white" />
               </motion.button>
             </motion.div>
           );
@@ -1689,7 +1715,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                     <span>Tools</span>
                   </motion.button>
                 </div>
-                <SectionActivitiesGrid sectionId="objetivo" />
               </div>
             </motion.div>
           )}
@@ -1821,7 +1846,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                     <span>Tools</span>
                   </motion.button>
                 </div>
-                <SectionActivitiesGrid sectionId="pre-estudo" />
               </div>
             </motion.div>
           )}
@@ -2137,11 +2161,11 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
                 <textarea value={observacoesText} onChange={(e) => setObservacoesText(e.target.value)} placeholder="Adicione suas observações..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <SectionActivitiesGrid sectionId="observacoes" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="observacoes" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Observações'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
-                <SectionActivitiesGrid sectionId="observacoes" />
               </div>
             </motion.div>
           )}
@@ -2205,7 +2229,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   <AddActivityButton sectionId="bncc" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - BNCC'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
-                <SectionActivitiesGrid sectionId="bncc" />
               </div>
             </motion.div>
           )}
