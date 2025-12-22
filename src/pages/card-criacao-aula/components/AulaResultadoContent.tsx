@@ -1356,9 +1356,40 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               </motion.div>
             </div>
           </div>
-          <AnimatePresence>
+          <AnimatePresence initial={false}>
             {section.isExpanded && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ 
+                  height: 'auto', 
+                  opacity: 1,
+                  transition: {
+                    height: {
+                      duration: 0.6,
+                      ease: [0.34, 1.56, 0.64, 1]
+                    },
+                    opacity: {
+                      duration: 0.4,
+                      delay: 0.1
+                    }
+                  }
+                }}
+                exit={{ 
+                  height: 0, 
+                  opacity: 0,
+                  transition: {
+                    height: {
+                      duration: 0.5,
+                      ease: [0.34, 1.56, 0.64, 1]
+                    },
+                    opacity: {
+                      duration: 0.3
+                    }
+                  }
+                }}
+                className="overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="px-4 pb-4">
                   <AutoResizeTextarea 
                     value={section.text} 
