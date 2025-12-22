@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3 } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 
 interface AulaResultadoContentProps {
@@ -83,6 +83,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     title: string;
     text: string;
     isExpanded: boolean;
+    afterDivider: number; // Índice do divisor após o qual a seção aparece
   }
   const [customSections, setCustomSections] = useState<CustomSection[]>([]);
   const [hoveredDividerIndex, setHoveredDividerIndex] = useState<number | null>(null);
@@ -141,6 +142,158 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     console.log(`Ação selecionada: ${action}`);
     setIsMenuOpen(false);
   };
+
+  const addCustomSection = (dividerIndex: number) => {
+    const newSection: CustomSection = {
+      id: `section-${Date.now()}`,
+      title: '',
+      text: '',
+      isExpanded: true,
+      afterDivider: dividerIndex
+    };
+    setCustomSections(prev => [...prev, newSection]);
+    setHoveredDividerIndex(null);
+  };
+
+  // Função para renderizar seções personalizadas após um divisor específico
+  const renderCustomSectionsForDivider = (dividerIndex: number) => {
+    const sectionsForDivider = customSections.filter(s => s.afterDivider === dividerIndex);
+    return sectionsForDivider.map((section) => (
+      <motion.div
+        key={section.id}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
+        transition={{ duration: 0.4 }}
+        className="mt-4 rounded-2xl relative z-10 cursor-pointer"
+        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        onClick={() => toggleCustomSectionExpand(section.id)}
+      >
+        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
+          <div className="flex items-center gap-3 flex-1">
+            <Edit3 className="w-5 h-5" style={{ color: theme.primary }} />
+            <input
+              type="text"
+              value={section.title}
+              onChange={(e) => { e.stopPropagation(); updateCustomSectionTitle(section.id, e.target.value); }}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="Digite o título da seção..."
+              className="bg-transparent border-0 text-white font-bold text-lg placeholder-white/40 focus:outline-none flex-1"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={(e) => { e.stopPropagation(); deleteCustomSection(section.id); }}
+              className="p-1 rounded-full hover:bg-red-500/20"
+            >
+              <Trash2 className="w-4 h-4 text-red-400" />
+            </motion.button>
+            <motion.div animate={{ rotate: section.isExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+              <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+            </motion.div>
+          </div>
+        </div>
+        <AnimatePresence>
+          {section.isExpanded && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 pb-4">
+                <textarea 
+                  value={section.text} 
+                  onChange={(e) => updateCustomSectionText(section.id, e.target.value)} 
+                  placeholder="Escreva o conteúdo desta seção..." 
+                  className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" 
+                  style={{ minHeight: '100px' }} 
+                />
+                <div className="flex items-center gap-3 mt-3">
+                  <motion.button 
+                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} 
+                    whileTap={{ scale: 0.98 }} 
+                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" 
+                    style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} 
+                    onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Seção personalizada'); }}
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar atividade</span>
+                  </motion.button>
+                  <motion.button 
+                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} 
+                    whileTap={{ scale: 0.98 }} 
+                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" 
+                    style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} 
+                    onClick={(e) => { e.stopPropagation(); console.log('Tools - Seção personalizada'); }}
+                  >
+                    <Wrench className="w-4 h-4" />
+                    <span>Tools</span>
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    ));
+  };
+
+  const updateCustomSectionTitle = (id: string, title: string) => {
+    setCustomSections(sections => 
+      sections.map(s => s.id === id ? { ...s, title } : s)
+    );
+  };
+
+  const updateCustomSectionText = (id: string, text: string) => {
+    setCustomSections(sections => 
+      sections.map(s => s.id === id ? { ...s, text } : s)
+    );
+  };
+
+  const toggleCustomSectionExpand = (id: string) => {
+    setCustomSections(sections => 
+      sections.map(s => s.id === id ? { ...s, isExpanded: !s.isExpanded } : s)
+    );
+  };
+
+  const deleteCustomSection = (id: string) => {
+    setCustomSections(sections => sections.filter(s => s.id !== id));
+  };
+
+  const AddSectionDivider = ({ index, onAdd }: { index: number; onAdd: () => void }) => (
+    <div 
+      className="relative h-6 flex items-center justify-center group"
+      onMouseEnter={() => setHoveredDividerIndex(index)}
+      onMouseLeave={() => setHoveredDividerIndex(null)}
+    >
+      <AnimatePresence>
+        {hoveredDividerIndex === index && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAdd();
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer"
+            style={{
+              background: `${theme.primary}1A`,
+              border: `1px dashed ${theme.primary}66`,
+            }}
+            whileHover={{ 
+              scale: 1.02,
+              background: `${theme.primary}33`
+            }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Plus className="w-4 h-4" style={{ color: theme.primary }} />
+            <span className="text-sm font-medium" style={{ color: theme.primary }}>
+              Adicionar seção
+            </span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   const CIRCLE_SIZE = 72;
   const ACTION_CIRCLE_SIZE = 48;
@@ -607,6 +760,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </AnimatePresence>
       </motion.div>
 
+      {/* Divider 0 - Após Objetivo da Aula */}
+      <AddSectionDivider index={0} onAdd={() => addCustomSection(0)} />
+      {renderCustomSectionsForDivider(0)}
+
       {/* Card Pré-estudo */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -617,7 +774,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           borderColor: theme.border
         }}
         transition={{ delay: 0.55, duration: 0.4 }}
-        className="mt-6 rounded-2xl relative z-10 cursor-pointer"
+        className="mt-4 rounded-2xl relative z-10 cursor-pointer"
         style={{
           background: theme.bgGradient,
           border: `1px solid ${theme.border}`,
@@ -680,6 +837,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </AnimatePresence>
       </motion.div>
 
+      {/* Divider 1 - Após Pré-estudo */}
+      <AddSectionDivider index={1} onAdd={() => addCustomSection(1)} />
+      {renderCustomSectionsForDivider(1)}
+
       {/* Card Introdução */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -712,6 +873,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Divider 2 - Após Introdução */}
+      <AddSectionDivider index={2} onAdd={() => addCustomSection(2)} />
+      {renderCustomSectionsForDivider(2)}
 
       {/* Card Desenvolvimento */}
       <motion.div
@@ -746,6 +911,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </AnimatePresence>
       </motion.div>
 
+      {/* Divider 3 - Após Desenvolvimento */}
+      <AddSectionDivider index={3} onAdd={() => addCustomSection(3)} />
+      {renderCustomSectionsForDivider(3)}
+
       {/* Card Encerramento */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -778,6 +947,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Divider 4 - Após Encerramento */}
+      <AddSectionDivider index={4} onAdd={() => addCustomSection(4)} />
+      {renderCustomSectionsForDivider(4)}
 
       {/* Card Materiais Complementares */}
       <motion.div
@@ -812,6 +985,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </AnimatePresence>
       </motion.div>
 
+      {/* Divider 5 - Após Materiais Complementares */}
+      <AddSectionDivider index={5} onAdd={() => addCustomSection(5)} />
+      {renderCustomSectionsForDivider(5)}
+
       {/* Card Observações do Professor */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -844,6 +1021,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Divider 6 - Após Observações */}
+      <AddSectionDivider index={6} onAdd={() => addCustomSection(6)} />
+      {renderCustomSectionsForDivider(6)}
 
       {/* Card Critérios BNCC */}
       <motion.div
