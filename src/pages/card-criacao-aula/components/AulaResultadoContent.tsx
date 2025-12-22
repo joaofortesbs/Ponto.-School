@@ -1468,7 +1468,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const CARD_VERTICAL_SPACING = 14; // 14px = espaçamento total entre cards
 
   // Componente para seção arrastável com handle de drag
-  const SortableSectionCard = ({ id, children }: { id: string; children: React.ReactNode }) => {
+  const SortableSectionCard = React.memo(({ id, children }: { id: string; children: React.ReactNode }) => {
     const {
       attributes,
       listeners,
@@ -1501,7 +1501,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         {children}
       </div>
     );
-  };
+  });
 
   // Função para renderizar uma seção baseada na configuração
   const renderSection = (config: SectionConfig) => {
@@ -1511,15 +1511,13 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     
     return (
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        layout
+        initial={false}
         animate={{ 
-          opacity: 1, 
-          y: 0,
           background: theme.bgGradient,
           borderColor: theme.border
         }}
-        exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-        transition={{ delay: config.delay, duration: 0.4 }}
+        transition={{ duration: 0.3 }}
         className={`rounded-2xl relative z-10 cursor-pointer ${extraClass}`}
         style={{
           background: theme.bgGradient,
@@ -1564,13 +1562,13 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           </div>
         </div>
 
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {config.isExpanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
