@@ -679,7 +679,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     if (activitiesForSection.length === 0) return null;
 
     return (
-      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-4xl">
         {activitiesForSection.map(({ activityId, activityData }) => {
           const title = activityData.id_json?.titulo || activityData.id_json?.title || activityData.tipo || 'Atividade sem título';
           const type = activityData.tipo || 'Geral';
@@ -694,7 +694,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               whileHover={{ y: -2 }}
-              className="relative group rounded-2xl overflow-hidden cursor-pointer"
+              className="relative group rounded-xl overflow-hidden cursor-pointer"
               style={{
                 background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%)',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -702,40 +702,36 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             >
               {/* Área do Ícone */}
               <div 
-                className="flex items-center justify-center py-8"
+                className="flex items-center justify-center py-4"
                 style={{ background: 'rgba(0, 0, 0, 0.2)' }}
               >
-                <FileText className="w-12 h-12" style={{ color: theme.primary }} />
+                <FileText className="w-8 h-8" style={{ color: theme.primary }} />
               </div>
 
               {/* Informações da Atividade */}
               <div 
-                className="p-4"
+                className="p-3"
                 style={{ 
                   background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.9) 100%)'
                 }}
               >
-                <h4 className="text-white font-bold text-sm truncate mb-1">{title}</h4>
-                <p className="text-white/50 text-xs mb-2">{type}</p>
-                {createdDate && (
-                  <div className="flex items-center gap-1.5 text-white/40 text-xs">
-                    <Clock className="w-3 h-3" />
-                    <span>{createdDate}</span>
-                  </div>
-                )}
+                <h4 className="text-white font-bold text-[10px] leading-tight line-clamp-2 mb-1 h-6">{title}</h4>
+                <div className="flex items-center justify-between">
+                  <p className="text-white/50 text-[9px] truncate">{type}</p>
+                </div>
               </div>
 
               {/* Botão de Remover (aparece no hover) */}
               <motion.button
                 initial={{ opacity: 0 }}
                 whileHover={{ scale: 1.1, backgroundColor: 'rgba(239, 68, 68, 0.3)' }}
-                className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={(e) => {
                   e.stopPropagation();
                   removeActivityFromSection(sectionId, activityId);
                 }}
               >
-                <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                <Trash2 className="w-3 h-3 text-red-400" />
               </motion.button>
             </motion.div>
           );
@@ -1074,6 +1070,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                     className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" 
                     style={{ minHeight: '100px' }} 
                   />
+                  <SectionActivitiesGrid sectionId={section.id} />
                   <div className="flex items-center gap-3 mt-3">
                     <AddActivityButton sectionId={section.id} />
                     <motion.button 
@@ -1670,6 +1667,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   }}
                 />
 
+                <SectionActivitiesGrid sectionId="objetivo" />
+
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="objetivo" />
 
@@ -1808,6 +1807,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                   className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
                   style={{ minHeight: '100px' }}
                 />
+                <SectionActivitiesGrid sectionId="pre-estudo" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="pre-estudo" />
                   <motion.button
@@ -1881,11 +1881,11 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
                 <textarea value={introducaoText} onChange={(e) => setIntroducaoText(e.target.value)} placeholder="Descreva a introdução da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <SectionActivitiesGrid sectionId="introducao" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="introducao" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Introdução'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
-                <SectionActivitiesGrid sectionId="introducao" />
               </div>
             </motion.div>
           )}
@@ -1945,11 +1945,11 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
                 <textarea value={desenvolvimentoText} onChange={(e) => setDesenvolvimentoText(e.target.value)} placeholder="Descreva o desenvolvimento da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <SectionActivitiesGrid sectionId="desenvolvimento" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="desenvolvimento" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Desenvolvimento'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
-                <SectionActivitiesGrid sectionId="desenvolvimento" />
               </div>
             </motion.div>
           )}
@@ -2009,11 +2009,11 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
                 <textarea value={encerramentoText} onChange={(e) => setEncerramentoText(e.target.value)} placeholder="Descreva o encerramento da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <SectionActivitiesGrid sectionId="encerramento" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="encerramento" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Encerramento'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
-                <SectionActivitiesGrid sectionId="encerramento" />
               </div>
             </motion.div>
           )}
@@ -2073,11 +2073,11 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="px-4 pb-4">
                 <textarea value={materiaisText} onChange={(e) => setMateriaisText(e.target.value)} placeholder="Liste os materiais complementares..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <SectionActivitiesGrid sectionId="materiais" />
                 <div className="flex items-center gap-3 mt-3">
                   <AddActivityButton sectionId="materiais" />
                   <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Materiais'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
                 </div>
-                <SectionActivitiesGrid sectionId="materiais" />
               </div>
             </motion.div>
           )}
