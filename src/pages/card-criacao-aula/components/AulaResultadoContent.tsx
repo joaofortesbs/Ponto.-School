@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles } from 'lucide-react';
 import { Template } from './TemplateDropdown';
 
 interface AulaResultadoContentProps {
@@ -827,9 +827,29 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </AnimatePresence>
       </motion.div>
 
-      {/* Espaçador e Botão de Templates - Após Objetivo da Aula */}
-      <div className="relative flex items-center justify-end mt-20 mb-10 h-10">
-        <div className="absolute right-0 z-30 translate-y-[-50%]">
+      {/* Espaçador e Botões de Ação - Após Objetivo da Aula */}
+      <div className="relative flex items-center justify-between mt-16 mb-4 h-12">
+        {/* Botão School Tools (Canto Esquerdo) */}
+        <div className="relative z-30 translate-y-[10%]">
+          <motion.button
+            whileHover={{ scale: 1.1, background: `${theme.primary}20` }}
+            whileTap={{ scale: 0.9 }}
+            className="flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 shadow-xl"
+            style={{ 
+              background: `${theme.primary}15`,
+              border: `2px solid ${theme.primary}50`,
+              color: theme.primary,
+              backdropFilter: 'blur(12px)'
+            }}
+            onClick={() => console.log('School Tools clicado')}
+            title="School Tools"
+          >
+            <Sparkles className="w-6 h-6" />
+          </motion.button>
+        </div>
+
+        {/* Botão de Templates (Canto Direito) */}
+        <div className="relative z-30 translate-y-[10%]">
           <motion.button
             whileHover={{ scale: 1.1, background: `${theme.primary}20` }}
             whileTap={{ scale: 0.9 }}
