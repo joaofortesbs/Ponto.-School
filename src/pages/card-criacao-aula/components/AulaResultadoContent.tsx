@@ -174,7 +174,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   };
 
   // Componente ActivityDropdown - Dropdown para cima com as 4 opções
-  const ActivityDropdown = ({ sectionId, onClose }: { sectionId: string; onClose: () => void }) => {
+  const ActivityDropdown = ({ sectionId, onClose, position }: { sectionId: string; onClose: () => void, position?: { bottom: number, left: number } }) => {
     const dropdownOptions = [
       { id: 'minhas', icon: FolderOpen, label: 'Minhas atividades', color: theme.primary },
       { id: 'gerar', icon: Wand2, label: 'Gerar nova', color: '#10B981' },
@@ -197,19 +197,32 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       onClose();
     };
 
+    const style: React.CSSProperties = position 
+      ? {
+          position: 'fixed',
+          bottom: position.bottom,
+          left: position.left,
+          background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
+          border: `1px solid ${theme.menuBorder}`,
+          boxShadow: `0 -10px 30px rgba(0, 0, 0, 0.4), 0 0 15px ${theme.shadowLight}`,
+          minWidth: '200px',
+          zIndex: 9999
+        }
+      : {
+          background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
+          border: `1px solid ${theme.menuBorder}`,
+          boxShadow: `0 -10px 30px rgba(0, 0, 0, 0.4), 0 0 15px ${theme.shadowLight}`,
+          minWidth: '200px'
+        };
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 10, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 10, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="absolute bottom-full left-0 mb-2 rounded-xl overflow-hidden z-[70]"
-        style={{
-          background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
-          border: `1px solid ${theme.menuBorder}`,
-          boxShadow: `0 -10px 30px rgba(0, 0, 0, 0.4), 0 0 15px ${theme.shadowLight}`,
-          minWidth: '200px'
-        }}
+        className={position ? "rounded-xl overflow-hidden" : "absolute bottom-full left-0 mb-2 rounded-xl overflow-hidden z-[70]"}
+        style={style}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="py-2">
@@ -445,10 +458,23 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   // Botão de adicionar atividade reutilizável
   const AddActivityButton = ({ sectionId }: { sectionId: string }) => {
     const isOpen = activeActivityDropdown === sectionId;
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const [dropdownPosition, setDropdownPosition] = useState<{ bottom: number, left: number } | null>(null);
+
+    useEffect(() => {
+      if (isOpen && buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          bottom: window.innerHeight - rect.top + 8,
+          left: rect.left
+        });
+      }
+    }, [isOpen]);
 
     return (
       <div className="relative">
         <motion.button
+          ref={buttonRef}
           whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
           whileTap={{ scale: 0.98 }}
           className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
@@ -466,11 +492,14 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         </motion.button>
 
         <AnimatePresence>
-          {isOpen && (
-            <ActivityDropdown 
-              sectionId={sectionId} 
-              onClose={() => setActiveActivityDropdown(null)} 
-            />
+          {isOpen && dropdownPosition && (
+            <div className="fixed inset-0 z-[9998]" onClick={() => setActiveActivityDropdown(null)}>
+              <ActivityDropdown 
+                sectionId={sectionId} 
+                onClose={() => setActiveActivityDropdown(null)} 
+                position={dropdownPosition}
+              />
+            </div>
           )}
         </AnimatePresence>
       </div>
