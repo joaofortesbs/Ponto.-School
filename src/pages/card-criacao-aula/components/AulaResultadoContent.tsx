@@ -69,6 +69,13 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [materiaisText, setMateriaisText] = useState('');
   const [observacoesText, setObservacoesText] = useState('');
   const [bnccText, setBnccText] = useState('');
+  const [isPreEstudoExpanded, setIsPreEstudoExpanded] = useState(true);
+  const [isIntroducaoExpanded, setIsIntroducaoExpanded] = useState(true);
+  const [isDesenvolvimentoExpanded, setIsDesenvolvimentoExpanded] = useState(true);
+  const [isEncerramentoExpanded, setIsEncerramentoExpanded] = useState(true);
+  const [isMateriaisExpanded, setIsMateriaisExpanded] = useState(true);
+  const [isObservacoesExpanded, setIsObservacoesExpanded] = useState(true);
+  const [isBnccExpanded, setIsBnccExpanded] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const summaryCardRef = useRef<HTMLDivElement>(null);
@@ -599,372 +606,264 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           borderColor: theme.border
         }}
         transition={{ delay: 0.55, duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 overflow-hidden"
+        className="mt-4 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
         style={{
           background: theme.bgGradient,
           border: `1px solid ${theme.border}`,
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
         }}
+        onClick={() => setIsPreEstudoExpanded(!isPreEstudoExpanded)}
       >
-        <div className="p-4 flex items-center gap-3" style={{ height: '62px' }}>
-          <BookOpen className="w-5 h-5" style={{ color: theme.primary }} />
-          <span className="text-white font-bold text-lg">Pré-estudo</span>
-        </div>
-        <div className="px-4 pb-4">
-          <textarea
-            value={preEstudoText}
-            onChange={(e) => setPreEstudoText(e.target.value)}
-            placeholder="Descreva as atividades de pré-estudo..."
-            className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
-            style={{ minHeight: '100px' }}
-          />
-          <div className="flex items-center gap-3 mt-3">
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Adicionar atividade - Pré-estudo')}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Adicionar atividade</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Tools - Pré-estudo')}
-            >
-              <Wrench className="w-4 h-4" />
-              <span>Tools</span>
-            </motion.button>
+        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
+          <div className="flex items-center gap-3">
+            <BookOpen className="w-5 h-5" style={{ color: theme.primary }} />
+            <span className="text-white font-bold text-lg">Pré-estudo</span>
           </div>
+          <motion.div animate={{ rotate: isPreEstudoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+          </motion.div>
         </div>
+        <AnimatePresence>
+          {isPreEstudoExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-4 pb-4">
+                <textarea
+                  value={preEstudoText}
+                  onChange={(e) => setPreEstudoText(e.target.value)}
+                  placeholder="Descreva as atividades de pré-estudo..."
+                  className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
+                  style={{ minHeight: '100px' }}
+                />
+                <div className="flex items-center gap-3 mt-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
+                    style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
+                    onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Pré-estudo'); }}
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar atividade</span>
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
+                    style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
+                    onClick={(e) => { e.stopPropagation(); console.log('Tools - Pré-estudo'); }}
+                  >
+                    <Wrench className="w-4 h-4" />
+                    <span>Tools</span>
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* Card Introdução */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
-        animate={{ 
-          opacity: 1, 
-          y: 0,
-          background: theme.bgGradient,
-          borderColor: theme.border
-        }}
+        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.6, duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 overflow-hidden"
-        style={{
-          background: theme.bgGradient,
-          border: `1px solid ${theme.border}`,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-        }}
+        className="mt-4 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        onClick={() => setIsIntroducaoExpanded(!isIntroducaoExpanded)}
       >
-        <div className="p-4 flex items-center gap-3" style={{ height: '62px' }}>
-          <Lightbulb className="w-5 h-5" style={{ color: theme.primary }} />
-          <span className="text-white font-bold text-lg">Introdução</span>
-        </div>
-        <div className="px-4 pb-4">
-          <textarea
-            value={introducaoText}
-            onChange={(e) => setIntroducaoText(e.target.value)}
-            placeholder="Descreva a introdução da aula..."
-            className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
-            style={{ minHeight: '100px' }}
-          />
-          <div className="flex items-center gap-3 mt-3">
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Adicionar atividade - Introdução')}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Adicionar atividade</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Tools - Introdução')}
-            >
-              <Wrench className="w-4 h-4" />
-              <span>Tools</span>
-            </motion.button>
+        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
+          <div className="flex items-center gap-3">
+            <Lightbulb className="w-5 h-5" style={{ color: theme.primary }} />
+            <span className="text-white font-bold text-lg">Introdução</span>
           </div>
+          <motion.div animate={{ rotate: isIntroducaoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+          </motion.div>
         </div>
+        <AnimatePresence>
+          {isIntroducaoExpanded && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 pb-4">
+                <textarea value={introducaoText} onChange={(e) => setIntroducaoText(e.target.value)} placeholder="Descreva a introdução da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <div className="flex items-center gap-3 mt-3">
+                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Introdução'); }}><Plus className="w-4 h-4" /><span>Adicionar atividade</span></motion.button>
+                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Introdução'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* Card Desenvolvimento */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
-        animate={{ 
-          opacity: 1, 
-          y: 0,
-          background: theme.bgGradient,
-          borderColor: theme.border
-        }}
+        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.65, duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 overflow-hidden"
-        style={{
-          background: theme.bgGradient,
-          border: `1px solid ${theme.border}`,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-        }}
+        className="mt-4 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        onClick={() => setIsDesenvolvimentoExpanded(!isDesenvolvimentoExpanded)}
       >
-        <div className="p-4 flex items-center gap-3" style={{ height: '62px' }}>
-          <Layers className="w-5 h-5" style={{ color: theme.primary }} />
-          <span className="text-white font-bold text-lg">Desenvolvimento</span>
-        </div>
-        <div className="px-4 pb-4">
-          <textarea
-            value={desenvolvimentoText}
-            onChange={(e) => setDesenvolvimentoText(e.target.value)}
-            placeholder="Descreva o desenvolvimento da aula..."
-            className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
-            style={{ minHeight: '100px' }}
-          />
-          <div className="flex items-center gap-3 mt-3">
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Adicionar atividade - Desenvolvimento')}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Adicionar atividade</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Tools - Desenvolvimento')}
-            >
-              <Wrench className="w-4 h-4" />
-              <span>Tools</span>
-            </motion.button>
+        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
+          <div className="flex items-center gap-3">
+            <Layers className="w-5 h-5" style={{ color: theme.primary }} />
+            <span className="text-white font-bold text-lg">Desenvolvimento</span>
           </div>
+          <motion.div animate={{ rotate: isDesenvolvimentoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+          </motion.div>
         </div>
+        <AnimatePresence>
+          {isDesenvolvimentoExpanded && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 pb-4">
+                <textarea value={desenvolvimentoText} onChange={(e) => setDesenvolvimentoText(e.target.value)} placeholder="Descreva o desenvolvimento da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <div className="flex items-center gap-3 mt-3">
+                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Desenvolvimento'); }}><Plus className="w-4 h-4" /><span>Adicionar atividade</span></motion.button>
+                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Desenvolvimento'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* Card Encerramento */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
-        animate={{ 
-          opacity: 1, 
-          y: 0,
-          background: theme.bgGradient,
-          borderColor: theme.border
-        }}
+        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.7, duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 overflow-hidden"
-        style={{
-          background: theme.bgGradient,
-          border: `1px solid ${theme.border}`,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-        }}
+        className="mt-4 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        onClick={() => setIsEncerramentoExpanded(!isEncerramentoExpanded)}
       >
-        <div className="p-4 flex items-center gap-3" style={{ height: '62px' }}>
-          <CheckCircle className="w-5 h-5" style={{ color: theme.primary }} />
-          <span className="text-white font-bold text-lg">Encerramento</span>
-        </div>
-        <div className="px-4 pb-4">
-          <textarea
-            value={encerramentoText}
-            onChange={(e) => setEncerramentoText(e.target.value)}
-            placeholder="Descreva o encerramento da aula..."
-            className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
-            style={{ minHeight: '100px' }}
-          />
-          <div className="flex items-center gap-3 mt-3">
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Adicionar atividade - Encerramento')}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Adicionar atividade</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Tools - Encerramento')}
-            >
-              <Wrench className="w-4 h-4" />
-              <span>Tools</span>
-            </motion.button>
+        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-5 h-5" style={{ color: theme.primary }} />
+            <span className="text-white font-bold text-lg">Encerramento</span>
           </div>
+          <motion.div animate={{ rotate: isEncerramentoExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+          </motion.div>
         </div>
+        <AnimatePresence>
+          {isEncerramentoExpanded && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 pb-4">
+                <textarea value={encerramentoText} onChange={(e) => setEncerramentoText(e.target.value)} placeholder="Descreva o encerramento da aula..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <div className="flex items-center gap-3 mt-3">
+                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Encerramento'); }}><Plus className="w-4 h-4" /><span>Adicionar atividade</span></motion.button>
+                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Encerramento'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* Card Materiais Complementares */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
-        animate={{ 
-          opacity: 1, 
-          y: 0,
-          background: theme.bgGradient,
-          borderColor: theme.border
-        }}
+        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.75, duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 overflow-hidden"
-        style={{
-          background: theme.bgGradient,
-          border: `1px solid ${theme.border}`,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-        }}
+        className="mt-4 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        onClick={() => setIsMateriaisExpanded(!isMateriaisExpanded)}
       >
-        <div className="p-4 flex items-center gap-3" style={{ height: '62px' }}>
-          <FileText className="w-5 h-5" style={{ color: theme.primary }} />
-          <span className="text-white font-bold text-lg">Materiais Complementares</span>
-        </div>
-        <div className="px-4 pb-4">
-          <textarea
-            value={materiaisText}
-            onChange={(e) => setMateriaisText(e.target.value)}
-            placeholder="Liste os materiais complementares..."
-            className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
-            style={{ minHeight: '100px' }}
-          />
-          <div className="flex items-center gap-3 mt-3">
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Adicionar atividade - Materiais')}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Adicionar atividade</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Tools - Materiais')}
-            >
-              <Wrench className="w-4 h-4" />
-              <span>Tools</span>
-            </motion.button>
+        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
+          <div className="flex items-center gap-3">
+            <FileText className="w-5 h-5" style={{ color: theme.primary }} />
+            <span className="text-white font-bold text-lg">Materiais Complementares</span>
           </div>
+          <motion.div animate={{ rotate: isMateriaisExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+          </motion.div>
         </div>
+        <AnimatePresence>
+          {isMateriaisExpanded && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 pb-4">
+                <textarea value={materiaisText} onChange={(e) => setMateriaisText(e.target.value)} placeholder="Liste os materiais complementares..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <div className="flex items-center gap-3 mt-3">
+                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Materiais'); }}><Plus className="w-4 h-4" /><span>Adicionar atividade</span></motion.button>
+                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Materiais'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* Card Observações do Professor */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
-        animate={{ 
-          opacity: 1, 
-          y: 0,
-          background: theme.bgGradient,
-          borderColor: theme.border
-        }}
+        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.8, duration: 0.4 }}
-        className="mt-4 rounded-2xl relative z-10 overflow-hidden"
-        style={{
-          background: theme.bgGradient,
-          border: `1px solid ${theme.border}`,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-        }}
+        className="mt-4 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        onClick={() => setIsObservacoesExpanded(!isObservacoesExpanded)}
       >
-        <div className="p-4 flex items-center gap-3" style={{ height: '62px' }}>
-          <MessageSquare className="w-5 h-5" style={{ color: theme.primary }} />
-          <span className="text-white font-bold text-lg">Observações do Professor</span>
-        </div>
-        <div className="px-4 pb-4">
-          <textarea
-            value={observacoesText}
-            onChange={(e) => setObservacoesText(e.target.value)}
-            placeholder="Adicione suas observações..."
-            className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
-            style={{ minHeight: '100px' }}
-          />
-          <div className="flex items-center gap-3 mt-3">
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Adicionar atividade - Observações')}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Adicionar atividade</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Tools - Observações')}
-            >
-              <Wrench className="w-4 h-4" />
-              <span>Tools</span>
-            </motion.button>
+        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
+          <div className="flex items-center gap-3">
+            <MessageSquare className="w-5 h-5" style={{ color: theme.primary }} />
+            <span className="text-white font-bold text-lg">Observações do Professor</span>
           </div>
+          <motion.div animate={{ rotate: isObservacoesExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+          </motion.div>
         </div>
+        <AnimatePresence>
+          {isObservacoesExpanded && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 pb-4">
+                <textarea value={observacoesText} onChange={(e) => setObservacoesText(e.target.value)} placeholder="Adicione suas observações..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <div className="flex items-center gap-3 mt-3">
+                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - Observações'); }}><Plus className="w-4 h-4" /><span>Adicionar atividade</span></motion.button>
+                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - Observações'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* Card Critérios BNCC */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
-        animate={{ 
-          opacity: 1, 
-          y: 0,
-          background: theme.bgGradient,
-          borderColor: theme.border
-        }}
+        animate={{ opacity: 1, y: 0, background: theme.bgGradient, borderColor: theme.border }}
         transition={{ delay: 0.85, duration: 0.4 }}
-        className="mt-4 mb-6 rounded-2xl relative z-10 overflow-hidden"
-        style={{
-          background: theme.bgGradient,
-          border: `1px solid ${theme.border}`,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-        }}
+        className="mt-4 mb-6 rounded-2xl relative z-10 overflow-hidden cursor-pointer"
+        style={{ background: theme.bgGradient, border: `1px solid ${theme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        onClick={() => setIsBnccExpanded(!isBnccExpanded)}
       >
-        <div className="p-4 flex items-center gap-3" style={{ height: '62px' }}>
-          <Award className="w-5 h-5" style={{ color: theme.primary }} />
-          <span className="text-white font-bold text-lg">Critérios BNCC</span>
-        </div>
-        <div className="px-4 pb-4">
-          <textarea
-            value={bnccText}
-            onChange={(e) => setBnccText(e.target.value)}
-            placeholder="Descreva os critérios da BNCC..."
-            className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all"
-            style={{ minHeight: '100px' }}
-          />
-          <div className="flex items-center gap-3 mt-3">
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Adicionar atividade - BNCC')}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Adicionar atividade</span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors"
-              style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }}
-              onClick={() => console.log('Tools - BNCC')}
-            >
-              <Wrench className="w-4 h-4" />
-              <span>Tools</span>
-            </motion.button>
+        <div className="p-4 flex items-center justify-between" style={{ height: '62px' }}>
+          <div className="flex items-center gap-3">
+            <Award className="w-5 h-5" style={{ color: theme.primary }} />
+            <span className="text-white font-bold text-lg">Critérios BNCC</span>
           </div>
+          <motion.div animate={{ rotate: isBnccExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+            <ChevronDown className="w-6 h-6" style={{ color: theme.primary }} />
+          </motion.div>
         </div>
+        <AnimatePresence>
+          {isBnccExpanded && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} onClick={(e) => e.stopPropagation()}>
+              <div className="px-4 pb-4">
+                <textarea value={bnccText} onChange={(e) => setBnccText(e.target.value)} placeholder="Descreva os critérios da BNCC..." className="w-full bg-transparent border-0 p-3 text-white placeholder-white/40 resize-none focus:outline-none transition-all" style={{ minHeight: '100px' }} />
+                <div className="flex items-center gap-3 mt-3">
+                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Adicionar atividade - BNCC'); }}><Plus className="w-4 h-4" /><span>Adicionar atividade</span></motion.button>
+                  <motion.button whileHover={{ scale: 1.02, backgroundColor: `${theme.primary}26` }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2 rounded-full text-white/80 font-medium text-sm transition-colors" style={{ background: `${theme.primary}1A`, border: `1px solid ${theme.primary}33` }} onClick={(e) => { e.stopPropagation(); console.log('Tools - BNCC'); }}><Wrench className="w-4 h-4" /><span>Tools</span></motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );
