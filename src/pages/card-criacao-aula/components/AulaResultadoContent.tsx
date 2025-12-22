@@ -259,37 +259,31 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
 
   const AddSectionDivider = ({ index, onAdd }: { index: number; onAdd: () => void }) => (
     <div 
-      className="relative h-8 flex items-center justify-center group z-30 -my-4"
-      onMouseEnter={() => {
-        console.log('Hover enter divider:', index);
-        setHoveredDividerIndex(index);
-      }}
+      className="relative h-6 flex items-center justify-center group"
+      onMouseEnter={() => setHoveredDividerIndex(index)}
       onMouseLeave={() => setHoveredDividerIndex(null)}
     >
-      <div className="absolute inset-0 bg-transparent" />
       <AnimatePresence>
         {hoveredDividerIndex === index && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.9, y: 5 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 5 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.2 }}
             onClick={(e) => {
               e.stopPropagation();
               onAdd();
             }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer shadow-lg"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer"
             style={{
-              background: '#0a1434',
-              border: `1px solid ${theme.primary}66`,
-              boxShadow: `0 0 15px ${theme.primary}33`
+              background: `${theme.primary}1A`,
+              border: `1px dashed ${theme.primary}66`,
             }}
             whileHover={{ 
-              scale: 1.05,
-              borderColor: theme.primary,
-              background: '#0d1a45'
+              scale: 1.02,
+              background: `${theme.primary}33`
             }}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.98 }}
           >
             <Plus className="w-4 h-4" style={{ color: theme.primary }} />
             <span className="text-sm font-medium" style={{ color: theme.primary }}>
