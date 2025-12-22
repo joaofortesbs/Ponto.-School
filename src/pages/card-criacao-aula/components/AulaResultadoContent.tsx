@@ -949,6 +949,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       />
     );
   };
+  useEffect(() => {
     const cachedAvatar = localStorage.getItem('userAvatarUrl');
     const cachedName = localStorage.getItem('userFirstName');
     
@@ -982,6 +983,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [activeMenuSection]);
+
+  const theme = themeColors[themeMode];
 
   const formatDate = (date: Date) => {
     const day = String(date.getDate()).padStart(2, '0');
