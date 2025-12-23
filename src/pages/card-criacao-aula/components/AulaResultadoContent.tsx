@@ -503,6 +503,7 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
 
   // Handler de publicação da aula
   const handlePublishAula = useCallback(async () => {
+    console.log('[HANDLECLICK] função chamada');
     console.log('[PUBLISH_AULA] clique detectado');
     console.log('📤 [PUBLISH_AULA] Iniciando publicação da aula...');
     setIsPublishing(true);
@@ -521,6 +522,7 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
         sectionOrder
       };
 
+      console.log('[GETAULADATA] resultado:', aulaData);
       console.log('[PUBLISH_AULA] salvando aula, objeto completo:', aulaData);
 
       const aulaSalva = aulasStorageService.salvarAula({
@@ -547,6 +549,7 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
         setShowPublishModal(false);
       }, 3000);
     } catch (error) {
+      console.error('[GETAULADATA_ERROR]', error);
       console.error('📤 [PUBLISH_AULA] ❌ Erro ao publicar aula:', error);
     } finally {
       setIsPublishing(false);
@@ -2565,10 +2568,14 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
               transition={{ delay: 0.5, duration: 0.3 }}
               whileHover={!isPublished && !isPublishing ? { scale: 1.05 } : {}}
               whileTap={!isPublished && !isPublishing ? { scale: 0.95 } : {}}
-              onClick={handlePublishAula}
+              onClick={(e) => {
+                console.log('[PUBLISH_AULA] evento:', e);
+                handlePublishAula();
+              }}
               onMouseDown={() => console.log('[PUBLISH_AULA] mouse down')}
+              onBlur={() => console.log('[PUBLISH_AULA] blur detectado')}
               disabled={isPublished || isPublishing}
-              className="flex-shrink-0 border-0 bg-transparent p-0"
+              className="flex-shrink-0 border-0 bg-transparent p-0 pointer-events-auto"
               style={{ cursor: isPublished || isPublishing ? 'default' : 'pointer' }}
               title={isPublished ? "Aula publicada" : "Publicar aula"}
             >

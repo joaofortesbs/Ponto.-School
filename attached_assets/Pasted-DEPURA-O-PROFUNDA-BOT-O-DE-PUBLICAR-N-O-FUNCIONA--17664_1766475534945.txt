@@ -1,0 +1,71 @@
+DEPURAÇÃO PROFUNDA: BOTÃO DE PUBLICAR NÃO FUNCIONA
+====================================================
+
+Contexto: Você já transformou motion.div em motion.button e adicionou logs. 
+Porém, o usuário diz que AINDA NÃO está funcionando quando clica no botão.
+
+Quero que você explore 7 CAUSAS CRIATIVAS E COMUNS para esse tipo de erro:
+
+1. **Evento não chegando por blur/focus**: O motion.button está perdendo o foco antes do clique ser processado. Adicione um onBlur log: console.log('[PUBLISH_AULA] blur detectado')
+
+2. **preventDefault oculto**: Existe um e.preventDefault() ou e.stopPropagation() em um parent que você não viu. Adicione: onClick={(e) => { console.log('[PUBLISH_AULA] evento completo:', e); e.preventDefault(); handlePublishAula(); }}
+
+3. **Condição de disabled ativada**: isPublished ou isPublishing está TRUE mesmo quando deveria ser FALSE, desativando o botão. Adicione antes do render: console.log('[PUBLISH_BUTTON_STATE] isPublished:', isPublished, 'isPublishing:', isPublishing);
+
+4. **Elemento pai com pointer-events: none**: Uma div pai tem pointer-events: none que bloqueia o clique. Verifique no inspetor e adicione className="pointer-events-auto" ao motion.button.
+
+5. **Timeout ou debounce secreto**: Existe um debounce/throttle que bloqueia cliques rápidos. Se o usuário clicar 1x rápido, procure por: setTimeout, lodash debounce ou Framer Motion delay.
+
+6. **Dados inválidos causam erro silencioso**: A função handlePublishAula chama getAulaData() que retorna undefined ou erro que é engolido por try/catch. Procure por try/catch que não loga erro: adicione catch((err) => console.error('[PUBLISH_AULA] erro:', err))
+
+7. **Ref não está atribuída**: O ref de AulaResultadoContent não foi passado ou está null, então getAulaData() falha silenciosamente. Verifique se o ref está sendo passado de ConstrucaoAulaPanel para AulaResultadoContent.
+
+PASSO A PASSO (executar TODOS em ordem):
+
+1. Abra AulaResultadoContent.tsx e cole AQUI o estado atual do motion.button (busque por "motion.button" ou "handlePublishAula").
+
+2. Adicione TODOS estes logs imediatamente no código:
+   - Antes do return JSX (render): console.log('[PUBLISH_BUTTON_STATE]', { isPublished, isPublishing })
+   - No atributo onClick: (e) => { console.log('[PUBLISH_AULA] evento:', e); handlePublishAula(); }
+   - Na primeira linha de handlePublishAula: console.log('[HANDLECLICK] função chamada')
+   - Dentro de try de getAulaData: console.log('[GETAULADATA] resultado:', aulaData)
+   - Em catch da getAulaData: catch((err) => console.error('[GETAULADATA_ERROR]', err))
+
+3. Salve e deixe o app rodar.
+
+4. Na interface, navegue até:
+   - Aulas → + Criar Aula
+   - Escolha template e preencha Assunto/Contexto
+   - Clique "Gerar aula"
+   - Aguarde os cards serem preenchidos
+   
+5. ANTES DE CLICAR NO BOTÃO, abra o Console (F12) e observe:
+   - Se [PUBLISH_BUTTON_STATE] aparece no render (significa que o estado foi lido)
+   - Se o disabled está true ou false
+   
+6. AGORA clique no botão de Publicar e procure IMEDIATAMENTE por:
+   - [PUBLISH_AULA] evento: (confirma que o clique chegou)
+   - [HANDLECLICK] função chamada: (confirma que a função executou)
+   - [GETAULADATA] resultado: (confirma que os dados foram coletados)
+   
+7. Me mostre:
+   - Uma screenshot do console com TODOS os logs que aparecerem (ou não)
+   - O código atual do motion.button com os logs adicionados
+   - Se [PUBLISH_BUTTON_STATE] mostra disabled: true ou disabled: false
+   
+8. Com base no que aparecer (ou não) no console, identifique qual das 7 causas é a real.
+
+RESPONDA EXATAMENTE:
+- Qual das 7 causas você acha que é a raiz do problema (justifique com o que viu no console)
+- O código CORRIGIDO e COMPLETO do motion.button com os logs
+- Uma confirmação de que ao clicar agora:
+  ✅ O console mostra "[PUBLISH_AULA] evento" (clique detectado)
+  ✅ O console mostra "[HANDLECLICK] função chamada" (função executou)
+  ✅ O modal de publicação APARECE
+  ✅ O botão muda para Play icon
+  ✅ A aula aparece na grade "Minhas Aulas"
+  ✅ Recarregar página e aula continua lá
+
+Sem cumprir TODOS os 5 checkmarks ✅, você não termina. Foque em resolver até que TUDO funcione. Pode fazer quantas iterações precisar, adicionando mais logs, testando, voltando... mas tem que funcionar 100%.
+
+NÃO DIGA "está funcionando" sem comprovar com screenshots/logs. Mostre a evidência.
