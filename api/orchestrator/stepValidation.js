@@ -72,6 +72,14 @@ const VALIDATION_RULES = {
 };
 
 const VALID_ACTIVITY_TYPES = [
+  // IDs do catálogo schoolPowerActivities.json
+  'lista-exercicios',
+  'plano-aula',
+  'sequencia-didatica',
+  'quiz-interativo',
+  'flash-cards',
+  'tese-redacao',
+  // Fallback IDs (compatibilidade)
   'quiz',
   'flashcards', 
   'exercise_list',
@@ -204,8 +212,9 @@ class StepValidation {
         };
       },
       validActivityTypes: () => {
-        const types = (data.suggestions || []).map(s => s.activityType);
-        const invalid = types.filter(t => !VALID_ACTIVITY_TYPES.includes(t));
+        // Access activityId from nested suggestion object
+        const types = (data.suggestions || []).map(s => s.suggestion?.activityId || s.activityType);
+        const invalid = types.filter(t => !t || !VALID_ACTIVITY_TYPES.includes(t));
         return {
           passed: invalid.length === 0,
           details: { types, invalid }
