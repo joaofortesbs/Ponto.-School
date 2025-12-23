@@ -535,7 +535,18 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
       };
       console.log('[PUBLISH_AULA_DATA] Dados coletados:', aulaData);
 
-      // 4. Validar dados
+      // 🔴 VALIDAÇÃO SUPER IMPORTANTE: Verifica conteúdo das seções
+      console.log('[PUBLISH_VALIDATE] Validando conteúdo das seções...');
+      const secoesComConteudo = Object.entries(aulaData.secoes).filter(
+        ([, section]) => section && section.text && String(section.text).trim().length > 0
+      );
+      console.log(`[PUBLISH_VALIDATE] Seções com conteúdo: ${secoesComConteudo.length}/${Object.keys(aulaData.secoes).length}`);
+      
+      if (secoesComConteudo.length === 0) {
+        console.warn('[PUBLISH_VALIDATE] ⚠️ Nenhuma seção tem conteúdo!');
+      }
+
+      // 4. Validar dados básicos
       if (!aulaData || !aulaData.titulo || aulaData.titulo.trim() === '') {
         console.error('[PUBLISH_AULA_ERROR] ❌ Título vazio ou ausente');
         setIsPublishing(false);
@@ -561,6 +572,7 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
           sectionOrder: aulaData.sectionOrder
         });
         console.log('[PUBLISH_AULA_STORAGE] ✅ Salvo em localStorage:', aulaSalva);
+        console.log('[PUBLISH_AULA_STORAGE] Seções salvas:', Object.keys(aulaSalva.secoes));
       } catch (localStorageErr) {
         // Se localStorage falhar, usa IndexedDB como fallback
         console.warn('[PUBLISH_AULA_FALLBACK] localStorage cheio, usando IndexedDB...');
@@ -583,6 +595,13 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
         await aulasIndexedDBService.salvarAulaIndexedDB(aulaSalva);
         console.log('[PUBLISH_AULA_INDEXED_DB] ✅ Salvo em IndexedDB:', aulaSalva);
       }
+
+      // 🔴 VERIFICAÇÃO: Confirma que seções foram salvas
+      console.log('[PUBLISH_VERIFY] Verificando conteúdo salvo...');
+      Object.entries(aulaSalva.secoes).forEach(([id, section]) => {
+        const sectionData = section as any;
+        console.log(`  [PUBLISH_VERIFY] ${id}: ${String(sectionData?.text || '').substring(0, 50)}...`);
+      });
 
       // 6. Atualizar estado
       setIsPublished(true);
@@ -620,6 +639,8 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
     isPublished: () => isPublished,
     getAulaData: () => {
       console.log('📤 [GET_AULA_DATA] Coletando dados da aula para salvamento...');
+      console.log('📤 [GET_AULA_DATA] dynamicSections:', dynamicSections);
+      console.log('📤 [GET_AULA_DATA] sectionOrder:', sectionOrder);
       
       const secoes: Record<string, { id: string; text: string; time?: string }> = {};
       Object.entries(dynamicSections).forEach(([id, section]) => {
@@ -637,6 +658,16 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
         secoes,
         sectionOrder
       };
+      
+      // 🔴 VALIDAÇÃO: Verifica conteúdo de cada seção
+      console.log('📤 [GET_AULA_DATA] Verificando conteúdo das seções:');
+      const secoesComConteudo = Object.entries(secoes).filter(
+        ([, section]) => section.text && String(section.text).trim().length > 0
+      );
+      console.log('📤 [GET_AULA_DATA] Seções com conteúdo:', secoesComConteudo.length, '/', Object.keys(secoes).length);
+      secoesComConteudo.forEach(([id, section]) => {
+        console.log(`  ✅ ${id}: ${String(section.text).substring(0, 50)}...`);
+      });
       
       console.log('📤 [GET_AULA_DATA] Dados coletados:', data);
       console.log('📤 [GET_AULA_DATA] Validando titulo:', { titulo: data.titulo, isEmpty: !data.titulo || data.titulo.trim() === '' });

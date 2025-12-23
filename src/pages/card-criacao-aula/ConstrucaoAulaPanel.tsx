@@ -278,7 +278,25 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
               turmaImage={turmaImage}
               turmaName={turmaName}
               createdAt={new Date()}
-              generatedData={aulaCarregada ? { titulo: aulaCarregada.titulo, objetivo: aulaCarregada.objetivo, secoes: aulaCarregada.secoes || {} } : generatedData}
+              generatedData={aulaCarregada ? (() => {
+                // 🔴 TRANSFORMAÇÃO: Converte secoes salvas para formato generatedData
+                const secoesTransformadas: Record<string, string> = {};
+                if (aulaCarregada.secoes && typeof aulaCarregada.secoes === 'object') {
+                  Object.entries(aulaCarregada.secoes).forEach(([key, value]: [string, any]) => {
+                    secoesTransformadas[key] = String(value?.text || value || '');
+                  });
+                }
+                
+                console.log('[LOAD_TRANSFORM] Transformando secoes para generatedData');
+                console.log('[LOAD_TRANSFORM] secoes originais:', Object.keys(aulaCarregada.secoes || {}));
+                console.log('[LOAD_TRANSFORM] secoesTransformadas:', Object.keys(secoesTransformadas));
+                
+                return {
+                  titulo: aulaCarregada.titulo,
+                  objetivo: aulaCarregada.objetivo,
+                  secoes: secoesTransformadas
+                };
+              })() : generatedData}
             />
           </div>
         </motion.div>

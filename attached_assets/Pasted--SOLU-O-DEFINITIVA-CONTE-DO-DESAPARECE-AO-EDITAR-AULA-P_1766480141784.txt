@@ -1,0 +1,317 @@
+🚀 SOLUÇÃO DEFINITIVA: CONTEÚDO DESAPARECE AO EDITAR AULA PUBLICADA
+
+PROBLEMA EXATO:
+1. ✅ Gera aula com IA → seções têm conteúdo
+2. ✅ Clica publicar → salva
+3. ✅ Volta para grade → vê o card
+4. ❌ Clica em "Editar" (3 pontinhos) → aula carrega MAS blocos estão VAZIOS
+
+CAUSA RAIZ:
+Ao PUBLICAR, o código não está salvando `sectionTexts` corretamente.
+Quando carrega a aula publicada, `sectionTexts` vem vazio ou undefined.
+
+═══════════════════════════════════════════════════════════════
+
+DIAGNÓSTICO SUPER INTELIGENTE:
+
+O PROBLEMA está em `handlePublishAula()` em AulaResultadoContent.tsx.
+
+Quando chama `aulaPanelRef.current.getAulaData()`, essa função
+retorna um objeto que DEVERIA incluir TODOS os `sectionTexts`.
+
+MAS provavelmente está retornando vazio porque:
+1. Os estados de `sectionTexts` não foram sincronizados antes
+2. O `useImperativeHandle` está lendo estados obsoletos
+3. Ou `getAulaData()` não está coletando `sectionTexts`
+
+═══════════════════════════════════════════════════════════════
+
+SOLUÇÃO #1: FUNÇÃO ROBUSTA DE COLETA DE DADOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Em AulaResultadoContent.tsx, modifique useImperativeHandle:
+
+import { ensureString, validateSectionData } from '@/utils/contentSanitizer';
+
+useImperativeHandle(ref, () => ({
+getAulaData: () => {
+console.log('[GET_AULA_DATA] Coletando dados da aula...');
+console.log('[GET_AULA_DATA] Estado atual de sectionTexts:', sectionTexts);
+console.log('[GET_AULA_DATA] Estado atual de sectionOrder:', sectionOrder);
+
+texto
+// 🔴 COLETA TODOS OS DADOS NECESSÁRIOS
+const aulaObject = {
+  id: aulaId || Date.now().toString(),
+  titulo: ensureString(titulo, 'Aula sem título'),
+  objetivo: ensureString(objetivo, ''),
+  template: templateSelecionado || 'Padrão',
+  dataCriacao: new Date().toISOString(),
+  dataEdicao: new Date().toISOString(), // NOVO
+  
+  // SEÇÕES
+  sectionOrder: Array.isArray(sectionOrder) ? sectionOrder : [],
+  
+  // 🔴 CRÍTICO: CERTIFIQUE-SE QUE sectionTexts TEM CONTEÚDO
+  sectionTexts: { ...sectionTexts }, // Cópia explícita
+  
+  // Outros estados
+  sectionConfigs: { ...sectionConfigs } || {},
+  dynamicSections: { ...dynamicSections } || {},
+  sectionExpanded: { ...sectionExpanded } || {},
+  sectionVisible: { ...sectionVisible } || {},
+  sectionTimes: { ...sectionTimes } || {},
+  
+  isPublished: isPublished || false,
+};
+
+// VALIDAÇÃO: Verifica se sectionTexts foi coletado
+console.log('[GET_AULA_DATA] Verificação de sectionTexts:');
+Object.entries(aulaObject.sectionTexts).forEach(([key, value]) => {
+  console.log(`  ${key}: ${String(value).substring(0, 50)}...`);
+});
+
+// VALIDAÇÃO: Se sectionOrder tem seções mas sectionTexts está vazio
+if (aulaObject.sectionOrder.length > 0) {
+  const secoesFaltando = aulaObject.sectionOrder.filter(
+    (id) => !aulaObject.sectionTexts[id] || 
+             String(aulaObject.sectionTexts[id]).trim().length === 0
+  );
+
+  if (secoesFaltando.length > 0) {
+    console.warn('[GET_AULA_DATA] ⚠️ SEÇÕES SEM CONTEÚDO:', secoesFaltando);
+    // Tenta recuperar do estado
+    secoesFaltando.forEach((sectionId) => {
+      if (!aulaObject.sectionTexts[sectionId]) {
+        aulaObject.sectionTexts[sectionId] = 
+          sectionTexts[sectionId] || '';
+      }
+    });
+  }
+}
+
+console.log('[GET_AULA_DATA] ✅ Dados coletados:', aulaObject);
+return aulaObject;
+},
+}), [
+// DEPENDÊNCIAS: Verifique-se QUE sectionTexts está aqui!
+aulaId,
+titulo,
+objetivo,
+templateSelecionado,
+sectionOrder,
+sectionTexts, // 🔴 SUPER IMPORTANTE
+sectionConfigs,
+dynamicSections,
+sectionExpanded,
+sectionVisible,
+sectionTimes,
+isPublished,
+]);
+
+texto
+
+═══════════════════════════════════════════════════════════════
+
+SOLUÇÃO #2: VALIDAÇÃO ANTES DE PUBLICAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Em handlePublishAula (AulaResultadoContent.tsx):
+
+const handlePublishAula = async () => {
+try {
+console.log('[PUBLISH_START] Iniciando publicação...');
+
+texto
+if (isPublished) {
+  console.log('[PUBLISH] Aula já foi publicada');
+  return;
+}
+
+setIsPublishing(true);
+
+if (!aulaPanelRef?.current) {
+  console.error('[PUBLISH_ERROR] Ref não inicializado');
+  setIsPublishing(false);
+  return;
+}
+
+// 🔴 COLETA DADOS
+const aulaData = aulaPanelRef.current.getAulaData?.();
+console.log('[PUBLISH] Dados coletados:', aulaData);
+
+if (!aulaData) {
+  console.error('[PUBLISH_ERROR] Dados vazios');
+  setIsPublishing(false);
+  alert('❌ Preencha o título da aula antes de publicar');
+  return;
+}
+
+// 🔴 VALIDAÇÃO SUPER IMPORTANTE
+console.log('[PUBLISH_VALIDATE] Validando dados antes de salvar...');
+
+const validacoes = {
+  titulo: !!aulaData.titulo && aulaData.titulo.trim().length > 0,
+  objetivo: !!aulaData.objetivo && aulaData.objetivo.trim().length > 0,
+  sectionTexts: Object.keys(aulaData.sectionTexts || {}).length > 0,
+  conteudoSeções: Object.values(aulaData.sectionTexts || {}).some(
+    (text) => typeof text === 'string' && text.trim().length > 0
+  ),
+};
+
+console.log('[PUBLISH_VALIDATE] Resultado:', validacoes);
+
+if (!validacoes.conteudoSeções) {
+  console.warn('[PUBLISH] ⚠️ Nenhuma seção tem conteúdo!');
+  // Continua mesmo assim, mas avisa
+}
+
+// 🔴 SALVA
+console.log('[PUBLISH_SAVE] Salvando aula...');
+const resultado = await aulasStorageService.salvarAula(aulaData);
+console.log('[PUBLISH_SAVE_OK] Aula salva:', resultado);
+
+// 🔴 VERIFICA QUE SALVOU MESMO
+console.log('[PUBLISH_VERIFY] Verificando salvamento...');
+const aulasCarregadas = aulasStorageService.listarAulas();
+const aulaVerificada = aulasCarregadas.find((a: any) => a.id === aulaData.id);
+
+if (aulaVerificada) {
+  console.log('[PUBLISH_VERIFY_OK] ✅ Aula salva e verificada');
+  console.log('[PUBLISH_VERIFY_CONTENTS] sectionTexts:', 
+    Object.keys(aulaVerificada.sectionTexts || {}));
+} else {
+  console.error('[PUBLISH_VERIFY_FAIL] ❌ Aula não foi salva!');
+}
+
+// Continua com sucesso
+setIsPublished(true);
+setIsPublishing(false);
+
+// Dispara evento
+window.dispatchEvent(new Event('aulasPublicadas'));
+console.log('[PUBLISH_TRIGGER] Evento disparado');
+
+// Modal
+setShowPublishModal(true);
+console.log('[PUBLISH_MODAL] Modal aberto');
+
+setTimeout(() => {
+  setShowPublishModal(false);
+}, 3000);
+} catch (error: any) {
+console.error('[PUBLISH_ERROR_CATCH]', error.message, error);
+setIsPublishing(false);
+alert( ❌ Erro ao publicar: ${error.message});
+}
+};
+
+texto
+
+═══════════════════════════════════════════════════════════════
+
+SOLUÇÃO #3: REFORÇO NO CARREGAMENTO (ao abrir para editar)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Em ConstrucaoAulaPanel.tsx, ao carregar aula:
+
+const carregarAula = async() => {
+try {
+console.log('[CARREGAR_AULA] Carregando aula:', aulaIdParaCarregar);
+setCarregando(true);
+
+texto
+// BUSCA
+let aulasStorageService = require('@/services/aulasStorageService');
+let aulas = aulasStorageService.listarAulas();
+let aulaCarregada = aulas.find((a: any) => a.id === aulaIdParaCarregar);
+
+if (!aulaCarregada) {
+  console.log('[CARREGAR_AULA] Tentando IndexedDB...');
+  let aulasIndexedDBService = require('@/services/aulasIndexedDBService');
+  let aulasIndexedDB = await aulasIndexedDBService.listarAulasIndexedDB();
+  aulaCarregada = aulasIndexedDB.find((a: any) => a.id === aulaIdParaCarregar);
+}
+
+if (!aulaCarregada) {
+  console.error('[CARREGAR_AULA] Aula não encontrada');
+  setCarregando(false);
+  onClose?.();
+  return;
+}
+
+console.log('[CARREGAR_AULA] Aula encontrada:', aulaCarregada);
+
+// 🔴 SANITIZA ANTES DE USAR
+const aulaSanitizada = sanitizeLoadedAula(aulaCarregada);
+console.log('[CARREGAR_AULA_SANITIZADA] SectionTexts:', 
+  Object.keys(aulaSanitizada.sectionTexts || {}));
+
+// VERIFICA CONTEÚDO DE CADA SEÇÃO
+Object.entries(aulaSanitizada.sectionTexts || {}).forEach(([key, value]) => {
+  const conteudo = String(value);
+  console.log(`[CARREGAR_SEÇÃO] ${key}: ${conteudo.length} caracteres`);
+  if (conteudo.length === 0) {
+    console.warn(`[CARREGAR_SEÇÃO_VAZIA] ⚠️ ${key} está vazio!`);
+  }
+});
+
+// POPULA ESTADOS
+setTitulo(ensureString(aulaSanitizada.titulo));
+setObjetivo(ensureString(aulaSanitizada.objetivo));
+setTemplateSelecionado(ensureString(aulaSanitizada.template));
+setSectionOrder(Array.isArray(aulaSanitizada.sectionOrder) ? aulaSanitizada.sectionOrder : []);
+
+// 🔴 SUPER IMPORTANTE: Popula sectionTexts
+setSectionTexts(aulaSanitizada.sectionTexts || {});
+console.log('[CARREGAR_AULA] setSectionTexts chamado com:', 
+  Object.keys(aulaSanitizada.sectionTexts || {}));
+
+setDynamicSections(aulaSanitizada.dynamicSections || {});
+setSectionConfigs(aulaSanitizada.sectionConfigs || {});
+setSectionExpanded(aulaSanitizada.sectionExpanded || {});
+setSectionVisible(aulaSanitizada.sectionVisible || {});
+setSectionTimes(aulaSanitizada.sectionTimes || {});
+
+if (aulaSanitizada.isPublished) {
+  setIsPublished(true);
+}
+
+console.log('[CARREGAR_AULA_COMPLETO] ✅ Aula carregada com sucesso');
+setCarregando(false);
+} catch (erro) {
+console.error('[CARREGAR_AULA_ERROR]', erro);
+setCarregando(false);
+onClose?.();
+}
+};
+
+texto
+
+═══════════════════════════════════════════════════════════════
+
+TESTE AGORA - FLUXO COMPLETO:
+
+1. ✅ Vá para Aulas → + Criar Aula
+2. ✅ Preencha template, assunto, contexto
+3. ✅ Clique "Gerar aula"
+4. ✅ Abra Console (F12)
+5. ✅ Clique "Publicar"
+6. ✅ Console deve mostrar:
+   [PUBLISH_START]
+   [GET_AULA_DATA] Coletando dados...
+   [GET_AULA_DATA] Verificação de sectionTexts:
+     secao1: conteúdo aqui...
+     secao2: conteúdo aqui...
+   [PUBLISH] Dados coletados: {...sectionTexts: {...}}
+   [PUBLISH_VALIDATE] Resultado: { titulo: true, objetivo: true, sectionTexts: true, conteudoSeções: true }
+   [PUBLISH_SAVE] Salvando aula...
+   [PUBLISH_SAVE_OK]
+   [PUBLISH_VERIFY_OK] ✅ Aula salva e verificada
+7. ✅ Modal de sucesso aparece
+8. ✅ Clique X para fechar
+9. ✅ Volta para grade
+10. ✅ Clique no card da aula
+11. ✅ Clique nos 3 pontinhos → Editar
+12. ✅ Console deve mostrar:
+    [CARREGAR_AULA] Carregan
