@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { BookPlus, MessageSquare, ArrowRight, Code, ChevronDown } from 'lucide-react';
+import { BookPlus, MessageSquare, GitBranch, Code, Plus } from 'lucide-react';
 
 interface QuickAccessCardsProps {
   selectedCard: string | null;
@@ -16,25 +16,25 @@ export const QuickAccessCards: React.FC<QuickAccessCardsProps> = ({ selectedCard
   return (
     <div className="quick-access-cards">
       <div
-        className={`quick-access-card ${selectedCard === "Criar aula" ? "selected" : ""}`}
-        onClick={() => handleClick("Criar aula")}
+        className={`quick-access-card ${selectedCard === "Aulas" ? "selected" : ""}`}
+        onClick={() => handleClick("Aulas")}
       >
         <BookPlus className="quick-access-card-icon" />
-        <span className="quick-access-card-text">Criar aula</span>
+        <span className="quick-access-card-text">Aulas</span>
       </div>
       <div
-        className={`quick-access-card ${selectedCard === "Chat School" ? "selected" : ""}`}
-        onClick={() => handleClick("Chat School")}
+        className={`quick-access-card ${selectedCard === "Chats" ? "selected" : ""}`}
+        onClick={() => handleClick("Chats")}
       >
         <MessageSquare className="quick-access-card-icon" />
-        <span className="quick-access-card-text">Chat School</span>
+        <span className="quick-access-card-text">Chats</span>
       </div>
       <div
-        className={`quick-access-card ${selectedCard === "Flow School" ? "selected" : ""}`}
-        onClick={() => handleClick("Flow School")}
+        className={`quick-access-card ${selectedCard === "Flows" ? "selected" : ""}`}
+        onClick={() => handleClick("Flows")}
       >
-        <ArrowRight className="quick-access-card-icon" />
-        <span className="quick-access-card-text">Flow School</span>
+        <GitBranch className="quick-access-card-icon" />
+        <span className="quick-access-card-text">Flows</span>
       </div>
       <div
         className={`quick-access-card ${selectedCard === "Desenvolver" ? "selected" : ""}`}
@@ -47,7 +47,7 @@ export const QuickAccessCards: React.FC<QuickAccessCardsProps> = ({ selectedCard
         className={`quick-access-card ${selectedCard === "Mais" ? "selected" : ""}`}
         onClick={() => handleClick("Mais")}
       >
-        <ChevronDown className="quick-access-card-icon" />
+        <Plus className="quick-access-card-icon" />
         <span className="quick-access-card-text">Mais</span>
       </div>
     </div>
