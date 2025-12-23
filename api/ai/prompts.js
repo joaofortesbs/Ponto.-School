@@ -152,7 +152,6 @@ export function buildLessonGenerationPrompt(params) {
   } = params;
 
   const sectionsToGenerate = sectionOrder
-    .filter(id => id !== 'objective')
     .map(sectionId => {
       const details = sectionDetails[sectionId] || SECTION_DESCRIPTIONS[sectionId];
       return {
@@ -189,6 +188,8 @@ ${sectionsToGenerate.map(section => `    "${section.id}": "Conteúdo completo e 
   "tags": ["tag1", "tag2", "tag3"],
   "competencias_bncc": ["código1", "código2"]
 }
+
+IMPORTANTE: O campo "objetivo" DEVE estar também em "secoes" com a chave "objective"!
 
 IMPORTANTE:
 - Gere conteúdo substancial para cada seção (mínimo 3-4 parágrafos)
