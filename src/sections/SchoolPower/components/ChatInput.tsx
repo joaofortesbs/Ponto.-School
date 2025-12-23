@@ -1197,8 +1197,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           align-items: center;
           justify-content: center;
           gap: 8px;
-          padding: 10px 4px;
-          margin: 0 2px;
+          padding: 10px 8px;
           background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
           border: 1px solid #333;
           border-radius: 999px;
@@ -1207,43 +1206,62 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        /* Cards 1, 2, 3, 5 (Aulas, Chats, Flows, Mais) - margens reduzidas */
-        .quick-access-card:nth-child(1),
-        .quick-access-card:nth-child(2),
-        .quick-access-card:nth-child(3),
-        .quick-access-card:nth-child(5) {
-          padding: 10px 4px;
-          margin: 0 2px;
+        /* Card "Aulas" (1º card) - padding reduzido */
+        .quick-access-card:nth-child(1) {
+          padding: 10px 3px;
         }
 
-        /* Card "Desenvolver" (4º card) - margens maiores para destacar */
+        /* Card "Chats" (2º card) - padding reduzido */
+        .quick-access-card:nth-child(2) {
+          padding: 10px 2px;
+        }
+
+        /* Card "Flows" (3º card) - padding reduzido */
+        .quick-access-card:nth-child(3) {
+          padding: 10px 3px;
+        }
+
+        /* Card "Desenvolver" (4º card) - padding original (sem alteração) */
         .quick-access-card:nth-child(4) {
-          padding: 10px 6px;
-          margin: 0 8px;
+          padding: 10px 8px;
+        }
+
+        /* Card "Mais" (5º card) - padding reduzido */
+        .quick-access-card:nth-child(5) {
+          padding: 10px 2px;
         }
 
         @media (max-width: 768px) {
           .quick-access-card {
             min-width: 120px;
-            padding: 10px 3px;
+            padding: 10px 6px;
             gap: 6px;
-            margin: 0 1px;
             border-radius: 999px;
           }
 
-          /* Cards 1, 2, 3, 5 mobile */
-          .quick-access-card:nth-child(1),
-          .quick-access-card:nth-child(2),
-          .quick-access-card:nth-child(3),
-          .quick-access-card:nth-child(5) {
-            padding: 10px 3px;
-            margin: 0 1px;
+          /* Card "Aulas" mobile */
+          .quick-access-card:nth-child(1) {
+            padding: 10px 2px;
           }
 
-          /* Card "Desenvolver" (4º card) mobile */
+          /* Card "Chats" mobile */
+          .quick-access-card:nth-child(2) {
+            padding: 10px 1px;
+          }
+
+          /* Card "Flows" mobile */
+          .quick-access-card:nth-child(3) {
+            padding: 10px 2px;
+          }
+
+          /* Card "Desenvolver" mobile */
           .quick-access-card:nth-child(4) {
-            padding: 10px 5px;
-            margin: 0 6px;
+            padding: 10px 6px;
+          }
+
+          /* Card "Mais" mobile */
+          .quick-access-card:nth-child(5) {
+            padding: 10px 1px;
           }
         }
 
