@@ -40,11 +40,24 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
   const contentRef = useRef<AulaResultadoContentRef>(null);
   const [carregando, setCarregando] = useState(!!aulaIdParaCarregar);
   const [aulaCarregada, setAulaCarregada] = useState<any>(null);
+  
+  // 🔴 MODO: Determina se é criação nova ou edição
+  const modoEdicao = !!aulaIdParaCarregar;
+  const modoCriacao = !aulaIdParaCarregar;
+
+  // 🔴 EFEITO: Reset quando muda de modo edição para criação
+  useEffect(() => {
+    if (modoCriacao) {
+      console.log('[CONSTRUCAO_PANEL] 🧹 Modo CRIAÇÃO - limpando aulaCarregada');
+      setAulaCarregada(null);
+      setCarregando(false);
+    }
+  }, [modoCriacao]);
 
   // EFEITO: Carrega aula se aulaIdParaCarregar foi passada
   useEffect(() => {
     if (!aulaIdParaCarregar) {
-      aulaLoadingDebugger.log('SKIP', 'aulaIdParaCarregar é nulo');
+      aulaLoadingDebugger.log('SKIP', 'aulaIdParaCarregar é nulo - modo criação');
       setCarregando(false);
       return;
     }
