@@ -1410,55 +1410,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
                 />
               </div>
 
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  scale: 0.85,
-                  y: 20,
-                  filter: "blur(10px)",
-                }}
-                animate={
-                  isTyping && uploadedFiles.length === 0
-                    ? {
-                        opacity: 1,
-                        scale: 1,
-                        y: 0,
-                        filter: "blur(0px)",
-                      }
-                    : {
-                        opacity: 0,
-                        scale: 0.85,
-                        y: 20,
-                        filter: "blur(10px)",
-                      }
-                }
-                transition={{
-                  duration: 0.6,
-                  ease: [0.23, 1, 0.32, 1],
-                  opacity: { duration: 0.4 },
-                  scale: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
-                  y: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
-                  filter: { duration: 0.3 },
-                }}
-                className="expanded-section"
-                style={{
-                  position: "absolute",
-                  top: "-75px",
-                  left: 0,
-                  right: 0,
-                  zIndex: 1000,
-                  pointerEvents: isTyping && uploadedFiles.length === 0 ? "auto" : "none",
-                }}
-              >
-                <motion.div
-                  className="expanded-card"
-                  initial={{ backdropFilter: "blur(0px)" }}
-                  animate={{ backdropFilter: "blur(20px)" }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
-                >
-                </motion.div>
-              </motion.div>
-
               <button
                 onClick={handleSend}
                 className="action-button"
