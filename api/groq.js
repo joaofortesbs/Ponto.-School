@@ -4,7 +4,7 @@ const apiKey = process.env.GROQ_API_KEY?.trim();
 
 let groqClient = null;
 
-function getGroqClient() {
+export function getGroqClient() {
   if (!groqClient) {
     if (!apiKey || !apiKey.startsWith('gsk_')) {
       throw new Error('❌ GROQ_API_KEY inválida! Verifique a variável de ambiente.');
@@ -19,7 +19,7 @@ function getGroqClient() {
   return groqClient;
 }
 
-async function withRetryAndTimeout(asyncFn, maxRetries = 3) {
+export async function withRetryAndTimeout(asyncFn, maxRetries = 3) {
   let lastError = null;
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {

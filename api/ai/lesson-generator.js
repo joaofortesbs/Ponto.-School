@@ -21,6 +21,7 @@
  */
 
 import Groq from 'groq-sdk';
+import { withRetryAndTimeout } from '../groq.js';
 import {
   SYSTEM_PROMPT,
   SECTION_DESCRIPTIONS,
@@ -40,8 +41,6 @@ const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const GEMINI_MODEL = 'gemini-1.5-flash';
 const MAX_RETRIES = 3;
 const TIMEOUT_MS = 60000;
-
-let groqClient = null;
 
 /**
  * ====================================================================
@@ -96,34 +95,6 @@ function logFlowEnd(flowName, requestId, success, duration) {
  */
 function generateRequestId() {
   return `REQ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
-
-/**
- * ====================================================================
- * INICIALIZAÇÃO DO CLIENTE GROQ
- * ====================================================================
- */
-function getGroqClient() {
-  if (!groqClient) {
-    log(LOG_PREFIX.API, 'Inicializando cliente Groq...');
-    
-    if (!GROQ_API_KEY) {
-      const error = 'GROQ_API_KEY não configurada!';
-      log(LOG_PREFIX.ERROR, error);
-      throw new Error(error);
-    }
-    
-    if (!GROQ_API_KEY.startsWith('gsk_')) {
-      const error = 'GROQ_API_KEY inválida! Deve começar com "gsk_"';
-      log(LOG_PREFIX.ERROR, error);
-      throw new Error(error);
-    }
-    
-    groqClient = new Groq({ apiKey: GROQ_API_KEY });
-    log(LOG_PREFIX.API, '✅ Cliente Groq inicializado com sucesso');
-  }
-  
-  return groqClient;
 }
 
 /**
@@ -224,36 +195,6 @@ function isRateLimitError(error) {
   return false;
 }
 
-/**
- * ====================================================================
- * SISTEMA DE RETRY COM BACKOFF EXPONENCIAL
- * ====================================================================
- */
-async function withRetry(asyncFn, maxRetries = MAX_RETRIES, requestId = '') {
-  let lastError = null;
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      log(LOG_PREFIX.API, `[${requestId}] Tentativa ${attempt}/${maxRetries}`);
-      return await asyncFn();
-    } catch (err) {
-      lastError = err;
-      log(LOG_PREFIX.ERROR, `[${requestId}] Erro na tentativa ${attempt}:`, {
-        message: err.message,
-        status: err.status,
-        code: err.code
-      });
-      
-      if (attempt < maxRetries) {
-        const waitTime = Math.pow(2, attempt) * 1000;
-        log(LOG_PREFIX.API, `[${requestId}] Aguardando ${waitTime}ms antes de retry...`);
-        await new Promise(r => setTimeout(r, waitTime));
-      }
-    }
-  }
-  
-  throw lastError;
-}
 
 /**
  * ====================================================================
@@ -483,7 +424,7 @@ export async function generateLesson(data) {
     let usedFallback = false;
     
     try {
-      result = await withRetry(async () => {
+      result = await withRetryAndTimeout(async () => {
         const client = getGroqClient();
         
         const response = await client.chat.completions.create({
@@ -498,7 +439,7 @@ export async function generateLesson(data) {
         });
         
         return response;
-      }, MAX_RETRIES, requestId);
+      }, MAX_RETRIES);
     } catch (groqError) {
       if (isRateLimitError(groqError)) {
         log(LOG_PREFIX.API, `[${requestId}] ⚠️ Groq atingiu rate limit. Tentando fallback para Gemini...`);
