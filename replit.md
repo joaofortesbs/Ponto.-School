@@ -6,6 +6,30 @@ Ponto. School is an AI-powered educational platform designed to provide personal
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (December 23, 2025)
+
+### ✅ FIXED: Dynamic Template Section Synchronization System
+**Critical Issue Resolved:** All lessons were displaying identical section sequences regardless of template selection.
+
+**Root Cause:** The `sectionConfigs` was being created with ALL sections from ALL templates, while `sectionOrder` only contained sections for the selected template. This mismatch prevented proper rendering.
+
+**Solution Implemented:**
+1. **Refactored `sectionConfigs` to be 100% dynamic:** Now creates configurations ONLY for sections in `sectionOrder`
+2. **Simplified section synchronization:** Removed complex state management for old hardcoded sections (preEstudo, introducao, desenvolvimento, etc.)
+3. **Perfect template-to-rendering pipeline:**
+   - Template selected → `getTemplateSectionOrder()` calculates section IDs
+   - `sectionOrder` receives the template's section IDs
+   - `sectionConfigs` creates configs ONLY for those IDs
+   - Rendering maps `sectionOrder` and finds matching configs
+
+**Implementation Details:**
+- Removed 7 hardcoded section states (preEstudo, introducao, desenvolvimento, encerramento, materiais, observacoes, bncc)
+- Kept only Objective section as fixed (always appears first)
+- All other sections now managed through `dynamicSections` state
+- Updated `AulaDraftData` interface to support flexible section storage via Record types
+
+**Result:** Each template now renders EXACTLY the sections it defines, in the correct order, with perfect synchronization.
+
 ## System Architecture
 
 ### UI/UX Decisions
@@ -17,15 +41,18 @@ The platform features a modern design with glass-morphism effects and blur backg
 - **AI Integration**: Primarily uses the Google Gemini API for content generation, lesson planning, and the Epictus AI assistant.
 - **Authentication & User Management**: Supabase is used for authentication, user sessions, role-based access, and profile management.
 - **Core Features**:
-    - **School Power**: AI-powered lesson planning with contextualization cards and action plan generation, supporting .docx and PDF downloads.
+    - **School Power**: AI-powered lesson planning with 5 dynamic templates (Aula Ativa, Aula Expositiva, Aula Socioemocional, Aula Técnica, Aula SE) that generate custom section structures
     - **Study Groups**: Real-time chat with member management.
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation and interactive materials.
     - **Daily Login System**: Gamified streaks and rewards.
     - **School Points**: Persisted and synchronized school points system.
     - **Calendário School**: Comprehensive calendar event management including draggable events, icon/tag system, class/turma selector, settings menu (share/export/integrations/templates), and an optimized planning modal with category filters and templates.
+    - **Lesson Template System**: 5 customizable teaching methodologies with template-based section generation
 
 ### System Design Choices
 The architecture emphasizes a modular component design using shadcn/ui patterns. Data persistence is managed with Neon PostgreSQL for primary data, Supabase PostgreSQL for authentication, and Supabase Storage for file assets. Supabase Realtime enables live features such as chat. The system is configured for VM deployment, ensuring backend state maintenance and real-time database connections.
+
+**Critical Architecture Decision:** Dynamic sections are now fully decoupled from hardcoded templates. The `sectionConfigs` → `sectionOrder` → rendering pipeline ensures perfect synchronization between template selection and section display.
 
 ## External Dependencies
 
@@ -49,8 +76,32 @@ The architecture emphasizes a modular component design using shadcn/ui patterns.
 - **Lucide React**: Icon library.
 
 ### Specialized Libraries
-- **@dnd-kit** & **React Beautiful DnD**: For drag-and-drop functionality.
+- **@dnd-kit**: For drag-and-drop functionality with sortable context
 - **@tsparticles**: For particle effects.
 - **Axios**: HTTP client for API communication.
 - **docx**, **jsPDF**, **file-saver**: For generating and downloading activity documents.
 - **bcrypt**: For password hashing.
+- **Framer Motion**: For smooth animations and transitions.
+
+## Architecture Notes
+
+### Template Section System
+- **5 Templates**: Aula Ativa, Aula Expositiva, Aula Socioemocional, Aula Técnica, Aula SE
+- **Mandatory Final Sections**: Materiais Complementares, Observações do Professor, Critérios BNCC (appear in all templates)
+- **Dynamic Section Generation**: Each template defines its own section sequence in `TEMPLATE_SECTIONS` (TemplateDropdown.tsx)
+- **Section Mapping**: `SECTION_NAME_TO_CONFIG` maps template section names to internal IDs with icons and placeholders
+
+### State Management Flow
+1. User selects template in UI
+2. `selectedTemplate` prop updated
+3. `getTemplateSectionOrder(selectedTemplate)` calculates section IDs
+4. `sectionOrder` state updated with template's section IDs
+5. `dynamicSections` state synchronized to match template (via useEffect)
+6. `sectionConfigs` useMemo regenerated with ONLY sections in sectionOrder
+7. Rendering loops through sectionOrder and renders matching configs
+
+### Data Persistence
+- localStorage stores draft data per lesson (scoped by aulaName)
+- Includes: objective text, theme, image, sectionOrder, selectedTemplateId, dynamicSections, customSections
+- Auto-save with 1000ms debounce for performance
+- Sections state is fully reconstructed from dynamicSections on reload

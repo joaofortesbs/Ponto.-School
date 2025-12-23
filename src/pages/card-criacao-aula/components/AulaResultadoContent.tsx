@@ -200,43 +200,17 @@ interface AulaDraftData {
   selectedTemplateId?: string | null; // ID do template selecionado
   sectionTexts: {
     objective: string;
-    preEstudo: string;
-    introducao: string;
-    desenvolvimento: string;
-    encerramento: string;
-    materiais: string;
-    observacoes: string;
-    bncc: string;
+    [key: string]: string;
   };
   sectionExpanded: {
     objective: boolean;
-    preEstudo: boolean;
-    introducao: boolean;
-    desenvolvimento: boolean;
-    encerramento: boolean;
-    materiais: boolean;
-    observacoes: boolean;
-    bncc: boolean;
+    [key: string]: boolean;
   };
   sectionVisible: {
     objective: boolean;
-    preEstudo: boolean;
-    introducao: boolean;
-    desenvolvimento: boolean;
-    encerramento: boolean;
-    materiais: boolean;
-    observacoes: boolean;
-    bncc: boolean;
+    [key: string]: boolean;
   };
-  sectionTimes: {
-    preEstudo: string;
-    introducao: string;
-    desenvolvimento: string;
-    encerramento: string;
-    materiais: string;
-    observacoes: string;
-    bncc: string;
-  };
+  sectionTimes: Record<string, string>;
   sectionOrder: string[];
   // ====================================================================
   // SEÇÕES DINÂMICAS DO TEMPLATE (PERSISTÊNCIA)
@@ -309,13 +283,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [themeMode, setThemeMode] = useState<ThemeMode>(savedDraft?.themeMode ?? 'orange');
   const [isObjectiveExpanded, setIsObjectiveExpanded] = useState(savedDraft?.sectionExpanded?.objective ?? false);
   const [objectiveText, setObjectiveText] = useState(savedDraft?.sectionTexts?.objective ?? '');
-  const [preEstudoText, setPreEstudoText] = useState(savedDraft?.sectionTexts?.preEstudo ?? '');
-  const [introducaoText, setIntroducaoText] = useState(savedDraft?.sectionTexts?.introducao ?? '');
-  const [desenvolvimentoText, setDesenvolvimentoText] = useState(savedDraft?.sectionTexts?.desenvolvimento ?? '');
-  const [encerramentoText, setEncerramentoText] = useState(savedDraft?.sectionTexts?.encerramento ?? '');
-  const [materiaisText, setMateriaisText] = useState(savedDraft?.sectionTexts?.materiais ?? '');
-  const [observacoesText, setObservacoesText] = useState(savedDraft?.sectionTexts?.observacoes ?? '');
-  const [bnccText, setBnccText] = useState(savedDraft?.sectionTexts?.bncc ?? '');
 
   // ====================================================================
   // ESTADO DINÂMICO PARA SEÇÕES DO TEMPLATE
@@ -415,26 +382,12 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     });
   }, [selectedTemplate?.id]);
 
-  const [isPreEstudoExpanded, setIsPreEstudoExpanded] = useState(savedDraft?.sectionExpanded?.preEstudo ?? true);
-  const [isIntroducaoExpanded, setIsIntroducaoExpanded] = useState(savedDraft?.sectionExpanded?.introducao ?? true);
-  const [isDesenvolvimentoExpanded, setIsDesenvolvimentoExpanded] = useState(savedDraft?.sectionExpanded?.desenvolvimento ?? true);
-  const [isEncerramentoExpanded, setIsEncerramentoExpanded] = useState(savedDraft?.sectionExpanded?.encerramento ?? true);
-  const [isMateriaisExpanded, setIsMateriaisExpanded] = useState(savedDraft?.sectionExpanded?.materiais ?? true);
-  const [isObservacoesExpanded, setIsObservacoesExpanded] = useState(savedDraft?.sectionExpanded?.observacoes ?? true);
-  const [isBnccExpanded, setIsBnccExpanded] = useState(savedDraft?.sectionExpanded?.bncc ?? true);
   const [isEditingAulaName, setIsEditingAulaName] = useState(false);
   const [editingAulaName, setEditingAulaName] = useState(aulaName);
   const [currentAulaName, setCurrentAulaName] = useState(aulaName);
 
-  // Estados de visibilidade para seções padrão (para exclusão completa)
+  // Estado de visibilidade para seção Objetivo (única seção fixa)
   const [isObjectiveVisible, setIsObjectiveVisible] = useState(savedDraft?.sectionVisible?.objective ?? true);
-  const [isPreEstudoVisible, setIsPreEstudoVisible] = useState(savedDraft?.sectionVisible?.preEstudo ?? true);
-  const [isIntroducaoVisible, setIsIntroducaoVisible] = useState(savedDraft?.sectionVisible?.introducao ?? true);
-  const [isDesenvolvimentoVisible, setIsDesenvolvimentoVisible] = useState(savedDraft?.sectionVisible?.desenvolvimento ?? true);
-  const [isEncerramentoVisible, setIsEncerramentoVisible] = useState(savedDraft?.sectionVisible?.encerramento ?? true);
-  const [isMateriaisVisible, setIsMateriaisVisible] = useState(savedDraft?.sectionVisible?.materiais ?? true);
-  const [isObservacoesVisible, setIsObservacoesVisible] = useState(savedDraft?.sectionVisible?.observacoes ?? true);
-  const [isBnccVisible, setIsBnccVisible] = useState(savedDraft?.sectionVisible?.bncc ?? true);
 
   // Estado para ordem das seções (drag and drop)
   // ====================================================================
@@ -523,13 +476,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const summaryCardRef = useRef<HTMLDivElement>(null);
 
-  const [preEstudoTime, setPreEstudoTime] = useState(savedDraft?.sectionTimes?.preEstudo ?? '10 min');
-  const [introducaoTime, setIntroducaoTime] = useState(savedDraft?.sectionTimes?.introducao ?? '10 min');
-  const [desenvolvimentoTime, setDesenvolvimentoTime] = useState(savedDraft?.sectionTimes?.desenvolvimento ?? '10 min');
-  const [encerramentoTime, setEncerramentoTime] = useState(savedDraft?.sectionTimes?.encerramento ?? '10 min');
-  const [materiaisTime, setMateriaisTime] = useState(savedDraft?.sectionTimes?.materiais ?? '10 min');
-  const [observacoesTime, setObservacoesTime] = useState(savedDraft?.sectionTimes?.observacoes ?? '10 min');
-  const [bnccTime, setBnccTime] = useState(savedDraft?.sectionTimes?.bncc ?? '10 min');
 
   // Estados para o dropdown de atividades
   const [activeActivityDropdown, setActiveActivityDropdown] = useState<string | null>(null);
@@ -570,47 +516,15 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         aulaImage,
         sectionTexts: {
           objective: objectiveText,
-          preEstudo: preEstudoText,
-          introducao: introducaoText,
-          desenvolvimento: desenvolvimentoText,
-          encerramento: encerramentoText,
-          materiais: materiaisText,
-          observacoes: observacoesText,
-          bncc: bnccText,
         },
         sectionExpanded: {
           objective: isObjectiveExpanded,
-          preEstudo: isPreEstudoExpanded,
-          introducao: isIntroducaoExpanded,
-          desenvolvimento: isDesenvolvimentoExpanded,
-          encerramento: isEncerramentoExpanded,
-          materiais: isMateriaisExpanded,
-          observacoes: isObservacoesExpanded,
-          bncc: isBnccExpanded,
         },
         sectionVisible: {
           objective: isObjectiveVisible,
-          preEstudo: isPreEstudoVisible,
-          introducao: isIntroducaoVisible,
-          desenvolvimento: isDesenvolvimentoVisible,
-          encerramento: isEncerramentoVisible,
-          materiais: isMateriaisVisible,
-          observacoes: isObservacoesVisible,
-          bncc: isBnccVisible,
         },
-        sectionTimes: {
-          preEstudo: preEstudoTime,
-          introducao: introducaoTime,
-          desenvolvimento: desenvolvimentoTime,
-          encerramento: encerramentoTime,
-          materiais: materiaisTime,
-          observacoes: observacoesTime,
-          bncc: bnccTime,
-        },
+        sectionTimes: {},
         sectionOrder,
-        // ====================================================================
-        // PERSISTÊNCIA DAS SEÇÕES DINÂMICAS DO TEMPLATE
-        // ====================================================================
         selectedTemplateId: selectedTemplate?.id ?? null,
         dynamicSections,
         customSections,
@@ -639,26 +553,12 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     };
   }, [
     aulaName, themeMode, aulaImage, selectedTemplate,
-    objectiveText, preEstudoText, introducaoText, desenvolvimentoText,
-    encerramentoText, materiaisText, observacoesText, bnccText,
-    isObjectiveExpanded, isPreEstudoExpanded, isIntroducaoExpanded, isDesenvolvimentoExpanded,
-    isEncerramentoExpanded, isMateriaisExpanded, isObservacoesExpanded, isBnccExpanded,
-    isObjectiveVisible, isPreEstudoVisible, isIntroducaoVisible, isDesenvolvimentoVisible,
-    isEncerramentoVisible, isMateriaisVisible, isObservacoesVisible, isBnccVisible,
-    preEstudoTime, introducaoTime, desenvolvimentoTime, encerramentoTime,
-    materiaisTime, observacoesTime, bnccTime,
+    objectiveText, isObjectiveExpanded, isObjectiveVisible,
     sectionOrder, customSections, sectionActivities, dynamicSections,
   ]);
 
-  // Handlers memoizados para os campos de texto (performance)
+  // Handlers memoizados para campos de texto (performance)
   const handleObjectiveChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setObjectiveText(e.target.value), []);
-  const handlePreEstudoChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setPreEstudoText(e.target.value), []);
-  const handleIntroducaoChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setIntroducaoText(e.target.value), []);
-  const handleDesenvolvimentoChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDesenvolvimentoText(e.target.value), []);
-  const handleEncerramentoChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setEncerramentoText(e.target.value), []);
-  const handleMateriaisChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setMateriaisText(e.target.value), []);
-  const handleObservacoesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setObservacoesText(e.target.value), []);
-  const handleBnccChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setBnccText(e.target.value), []);
 
   // Configuração das seções para drag and drop
   type SectionConfig = {
@@ -680,17 +580,22 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   };
 
   // ====================================================================
-  // CONFIGURAÇÃO DE SEÇÕES - 100% DINÂMICA BASEADA NO TEMPLATE
+  // CONFIGURAÇÃO DE SEÇÕES - SÍNCRONIZAÇÃO PERFEITA COM TEMPLATE
   // ====================================================================
-  // IMPORTANTE: A renderização das seções é agora COMPLETAMENTE baseada
-  // no template selecionado. As seções que aparecem são determinadas
-  // pelo TEMPLATE_SECTIONS e o estado é gerenciado pelo dynamicSections.
+  // CRÍTICO: sectionConfigs é criado APENAS com as seções em sectionOrder.
+  // Isso garante sincronização 100% perfeita entre template → sectionOrder → renderização.
   //
-  // A única seção fixa é 'objective' (Objetivos) que sempre aparece primeiro.
+  // Fluxo:
+  // 1. Template selecionado → getTemplateSectionOrder retorna os IDs
+  // 2. sectionOrder recebe os IDs das seções do template
+  // 3. sectionConfigs cria configs APENAS para esses IDs
+  // 4. Renderização mapeia sectionOrder e encontra config em sectionConfigs
+  //
+  // Resultado: Seções sempre sincronizadas com o template!
   // ====================================================================
   const sectionConfigs = useMemo((): Record<string, SectionConfig> => {
     const configs: Record<string, SectionConfig> = {
-      // Seção de Objetivo - SEMPRE PRESENTE
+      // Seção de Objetivo - SEMPRE PRESENTE E FIXA
       objective: {
         id: 'objective',
         title: 'Objetivo da Aula',
@@ -711,56 +616,65 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     };
 
     // ====================================================================
-    // GERAR CONFIGURAÇÕES PARA TODAS AS SEÇÕES DO TEMPLATE
+    // CRIAR CONFIGS APENAS PARA SEÇÕES EM sectionOrder
     // ====================================================================
-    // Itera sobre TODAS as seções definidas no SECTION_NAME_TO_CONFIG
-    // e cria configurações dinâmicas para cada uma baseada no estado
-    // armazenado em dynamicSections.
+    // Itera APENAS sobre os IDs em sectionOrder (que vêm do template)
+    // e cria configurações para cada seção, buscando no dynamicSections.
     // ====================================================================
-    Object.entries(SECTION_NAME_TO_CONFIG).forEach(([name, mappingConfig]) => {
-      // Pula a seção objective que já está definida acima
-      if (mappingConfig.id === 'objective') return;
+    sectionOrder.forEach((sectionId) => {
+      if (sectionId === 'objective') return; // Já foi criada acima
 
-      const dynamicState = dynamicSections[mappingConfig.id];
-      
-      // Cria a configuração baseada no estado dinâmico ou com valores padrão
-      configs[mappingConfig.id] = {
-        id: mappingConfig.id,
+      // Procura a configuração do mapeamento
+      const mappingConfig = Object.values(SECTION_NAME_TO_CONFIG).find(
+        config => config.id === sectionId
+      );
+
+      if (!mappingConfig) {
+        console.warn(`⚠️ [SECTION_CONFIGS] Seção "${sectionId}" não tem mapeamento em SECTION_NAME_TO_CONFIG`);
+        return;
+      }
+
+      const dynamicState = dynamicSections[sectionId];
+
+      // Cria a configuração baseada no estado dinâmico
+      configs[sectionId] = {
+        id: sectionId,
         title: mappingConfig.title,
         icon: mappingConfig.icon,
         isVisible: dynamicState?.isVisible ?? true,
-        setVisible: (v: boolean) => updateDynamicSection(mappingConfig.id, { isVisible: v }),
+        setVisible: (v: boolean) => updateDynamicSection(sectionId, { isVisible: v }),
         isExpanded: dynamicState?.isExpanded ?? true,
         setExpanded: ((v: boolean | ((prev: boolean) => boolean)) => {
           if (typeof v === 'function') {
             setDynamicSections(prev => ({
               ...prev,
-              [mappingConfig.id]: { 
-                ...prev[mappingConfig.id], 
-                isExpanded: v(prev[mappingConfig.id]?.isExpanded ?? true) 
+              [sectionId]: { 
+                ...prev[sectionId], 
+                isExpanded: v(prev[sectionId]?.isExpanded ?? true) 
               }
             }));
           } else {
-            updateDynamicSection(mappingConfig.id, { isExpanded: v });
+            updateDynamicSection(sectionId, { isExpanded: v });
           }
         }) as React.Dispatch<React.SetStateAction<boolean>>,
         text: dynamicState?.text ?? '',
         onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => 
-          updateDynamicSection(mappingConfig.id, { text: e.target.value }),
+          updateDynamicSection(sectionId, { text: e.target.value }),
         placeholder: mappingConfig.placeholder,
         time: dynamicState?.time ?? '10 min',
-        setTime: (t: string) => updateDynamicSection(mappingConfig.id, { time: t }),
-        menuId: mappingConfig.id,
+        setTime: (t: string) => updateDynamicSection(sectionId, { time: t }),
+        menuId: sectionId,
         dividerIndex: 0,
         delay: 0.6,
       };
     });
 
-    console.log('📋 [SECTION_CONFIGS] Configurações geradas:', Object.keys(configs));
+    console.log('📋 [SECTION_CONFIGS] Sincronizadas com sectionOrder:', Object.keys(configs));
     return configs;
   }, [
+    sectionOrder,
     isObjectiveVisible, isObjectiveExpanded, objectiveText, handleObjectiveChange,
-    dynamicSections, updateDynamicSection, setDynamicSections,
+    dynamicSections, updateDynamicSection,
   ]);
 
   // Carregar atividades do usuário
@@ -1832,46 +1746,33 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       ];
       
       if (defaultSections.includes(sectionId)) {
-        // Para seções padrão, escondemos completamente o card
-        switch (sectionId) {
-          case 'objective': setIsObjectiveVisible(false); break;
-          case 'preEstudo': setIsPreEstudoVisible(false); break;
-          case 'introducao': setIsIntroducaoVisible(false); break;
-          case 'desenvolvimento': setIsDesenvolvimentoVisible(false); break;
-          case 'encerramento': setIsEncerramentoVisible(false); break;
-          case 'materiais': setIsMateriaisVisible(false); break;
-          case 'observacoes': setIsObservacoesVisible(false); break;
-          case 'bncc': setIsBnccVisible(false); break;
+        // Esconde a seção dinâmica
+        if (sectionId === 'objective') {
+          setIsObjectiveVisible(false);
+        } else {
+          updateDynamicSection(sectionId, { isVisible: false });
         }
       } else {
         // Seção personalizada - remove completamente
         deleteCustomSection(sectionId);
       }
     } else if (action === 'duplicar') {
-      const defaultSectionsData: Record<string, { title: string, text: string }> = {
-        'objective': { title: 'Objetivos', text: objectiveText },
-        'preEstudo': { title: 'Pré-estudo', text: preEstudoText },
-        'introducao': { title: 'Introdução', text: introducaoText },
-        'desenvolvimento': { title: 'Desenvolvimento', text: desenvolvimentoText },
-        'encerramento': { title: 'Encerramento', text: encerramentoText },
-        'materiais': { title: 'Materiais', text: materiaisText },
-        'observacoes': { title: 'Observações', text: observacoesText },
-        'bncc': { title: 'BNCC', text: bnccText }
-      };
-
       let sourceTitle = '';
       let sourceText = '';
       let afterDivider = 0;
 
-      if (defaultSectionsData[sectionId]) {
-        sourceTitle = defaultSectionsData[sectionId].title;
-        sourceText = defaultSectionsData[sectionId].text;
-        // Mapear seção padrão para o divisor correspondente
-        const mapping: Record<string, number> = {
-          'objective': 0, 'preEstudo': 1, 'introducao': 2, 'desenvolvimento': 3,
-          'encerramento': 4, 'materiais': 5, 'observacoes': 6, 'bncc': 6
-        };
-        afterDivider = mapping[sectionId] || 0;
+      // Obter dados da seção (padrão ou personalizada)
+      if (sectionId === 'objective') {
+        sourceTitle = 'Objetivos';
+        sourceText = objectiveText;
+        afterDivider = 0;
+      } else if (dynamicSections[sectionId]) {
+        const config = sectionConfigs[sectionId];
+        sourceTitle = config?.title || sectionId;
+        sourceText = dynamicSections[sectionId].text;
+        // Obter ordem da seção no sectionOrder para determinar o divisor
+        const sectionIndex = sectionOrder.indexOf(sectionId);
+        afterDivider = Math.max(0, sectionIndex);
       } else {
         const custom = customSections.find(s => s.id === sectionId);
         if (custom) {
