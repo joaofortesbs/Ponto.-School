@@ -7,6 +7,7 @@ import SchoolToolsContent from './components/SchoolToolsContent';
 import StyleDefinitionContent from './components/StyleDefinitionContent';
 import { Template, TEMPLATE_SECTIONS } from './components/TemplateDropdown';
 import { generateLesson, GeneratedLessonData } from '@/services/lessonGeneratorService';
+import { mapAIResponseToAula, validateAIResponse } from '@/utils/aiResponseMapper';
 
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
@@ -146,10 +147,32 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
       console.log('🎯 [INTERFACE] Request ID:', result.requestId);
       
       if (result.success && result.data) {
-        console.log('🎯 [INTERFACE] Título gerado:', result.data.titulo);
-        console.log('🎯 [INTERFACE] Seções geradas:', Object.keys(result.data.secoes));
+        console.log('🎯 [INTERFACE] Resposta bruta da IA:', result.data);
+        
+        // 🔴 MAPEAR RESPOSTA DA IA PARA ESTRUTURA CORRETA
+        const aulaMapeada = mapAIResponseToAula(result.data, sectionOrder);
+        console.log('🎯 [INTERFACE] aulaMapeada:', aulaMapeada);
+        
+        // 🔴 VALIDAR RESPOSTA
+        const valida = validateAIResponse(aulaMapeada);
+        if (!valida) {
+          console.warn('⚠️ [INTERFACE] Validação falhou - resposta pode estar incompleta');
+        }
+        
         console.log('🎯 [INTERFACE] ========================================');
-        onGerarAula(selectedTemplate, result.data);
+        console.log('🎯 [INTERFACE] Enviando para construção:', {
+          titulo: aulaMapeada.titulo,
+          objetivo: aulaMapeada.objetivo?.substring(0, 50),
+          secoes: Object.keys(aulaMapeada.sectionTexts).length
+        });
+        console.log('🎯 [INTERFACE] ========================================');
+        
+        // Passa dados MAPEADOS para onGerarAula
+        onGerarAula(selectedTemplate, {
+          titulo: aulaMapeada.titulo,
+          objetivo: aulaMapeada.objetivo,
+          secoes: aulaMapeada.sectionTexts
+        });
       } else {
         console.log('❌ [INTERFACE] Erro na geração:', result.error);
         setGenerationError(result.error || 'Erro ao gerar aula. Tente novamente.');

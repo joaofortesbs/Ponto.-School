@@ -1,0 +1,328 @@
+🎯 SOLUÇÃO DEFINITIVA: IA NÃO GERA CONTEÚDO DAS SEÇÕES
+
+PROBLEMA EXATO:
+Ao gerar aula:
+✅ Título é gerado
+✅ Objetivo é gerado
+❌ Conteúdo dos blocos de seções fica VAZIO
+
+CAUSA RAIZ PROVÁVEL:
+A resposta da IA está vindo corretamente,
+MAS o código não está mapeando ela para os estados `sectionTexts` e `dynamicSections`.
+
+═══════════════════════════════════════════════════════════════
+
+INVESTIGAÇÃO SUPER INTELIGENTE:
+
+Procure por estes arquivos que processam resposta da IA:
+
+1. src/services/lessonGeneratorService.ts
+   → Onde a resposta da IA é processada
+   
+2. src/pages/card-criacao-aula/interface.tsx
+   → Onde a resposta é aplicada aos estados
+   
+3. api/ai/lesson-generator.js (ou similar)
+   → Backend que chama IA
+
+═══════════════════════════════════════════════════════════════
+
+SOLUÇÃO #1: FUNÇÃO DE MAPEAMENTO SUPER ROBUSTA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Crie src/utils/aiResponseMapper.ts:
+
+/**
+
+Mapeia resposta da IA ​​para estrutura de estados da aula
+
+GARANTE que os frascos são preenchidos com conteúdo
+*/
+export const mapAIResponseToAula = (
+aiResponse: any,
+sectionOrder: string[]
+) => {
+console.log('[AI_MAPPER] Iniciando mapeamento da resposta IA');
+console.log('[AI_MAPPER]seçãoOrder:', seçãoOrder);
+console.log('[AI_MAPPER] aiResponse:', aiResponse);
+
+const resultado = {
+titulo: '',
+objetivo: '',
+sectionTexts: {} as Record<string, string>,
+dynamicSections: {} as Record<string, any>,
+};
+
+// 1. MAPEAR TÍTULO E OBJETIVO
+if (aiResponse.titulo) {
+resultado.titulo = String(aiResponse.titulo);
+console.log('[AI_MAPPER] Título mapeado:', resultado.titulo);
+}
+
+if (aiResponse.objetivo || aiResponse.objetivo) {
+resultado.objetivo = String(aiResponse.objetivo || aiResponse.objetivo);
+console.log('[AI_MAPPER] Objetivo mapeado:', resultado.objetivo);
+}
+
+// 2. MAPEAR SEÇÕES - SUPER IMPORTANTE
+// A resposta IA pode vir de várias formas:
+// Forma 1: { seções: { "secao1": "conteúdo", "secao2": "conteúdo" } }
+// Forma 2: { "secao1": "conteúdo", "secao2": "conteúdo" }
+// Forma 3: { seções: [ { id: "secao1", conteúdo: "..." }, ... ] }
+
+console.log('[AI_MAPPER] Processando reservatórios...');
+
+// Tenta encontrar frascos na resposta
+let secoes = aiResponse.sections || aiResponse.secoes || {};
+
+// Se seções são array, convertidas para objeto
+if (Array.isArray(secoes)) {
+console.log('[AI_MAPPER] Seções como array, convertendo para objeto');
+secoes = secoes.reduce((acc: any, sec: any) => {
+const id = sec.id || sec.nome || sec.name;
+const content = sec.content || sec.conteudo || sec.texto || '';
+if (id) {
+acc[id] = content;
+}
+return acc;
+}, {});
+}
+
+// Agora processa cada seção da seçãoOrder
+sectionOrder.forEach((sectionId) => {
+console.log('[AI_MAPPER] Processando seção:', sectionId);
+
+texto
+// Procura em várias chaves possíveis
+let conteudo =
+  secoes[sectionId] ||
+  secoes[sectionId.toLowerCase()] ||
+  secoes[sectionId.replace(/-/g, '_')] ||
+  secoes[sectionId.replace(/_/g, '-')] ||
+  aiResponse[sectionId] ||
+  '';
+
+// Se ainda não encontrou, tenta com variações de nome
+if (!conteudo) {
+  const variations = [
+    sectionId.toLowerCase(),
+    sectionId.toUpperCase(),
+    sectionId.replace(/[\s-_]/g, ''),
+  ];
+
+  for (const variation of variations) {
+    for (const key of Object.keys(secoes)) {
+      if (
+        key.toLowerCase().includes(variation) ||
+        variation.includes(key.toLowerCase())
+      ) {
+        conteudo = secoes[key];
+        console.log('[AI_MAPPER] Encontrado por variação:', key, '→', sectionId);
+        break;
+      }
+    }
+    if (conteudo) break;
+  }
+}
+
+// Garante que é string
+conteudo = String(conteudo || '').trim();
+
+// Se ainda vazio, usa um padrão
+if (!conteudo) {
+  console.warn('[AI_MAPPER] Nenhum conteúdo para seção:', sectionId);
+  conteudo = `Conteúdo não gerado para ${sectionId}`;
+}
+
+resultado.sectionTexts[sectionId] = conteudo;
+console.log('[AI_MAPPER] Seção mapeada:', sectionId, `(${conteudo.substring(0, 50)}...)`);
+});
+
+console.log('[AI_MAPPER] Mapeamento completo:', resultado);
+retornar resultado;
+};
+
+/**
+
+Valida se a resposta da IA ​​tem conteúdo
+*/
+export const validateAIResponse = (
+mapped: ReturnType <typeof mapAIResponseToAula>
+): boolean => {
+const hasTitle = !!mapped.titulo && mapped.titulo.length > 0;
+const hasObjective = !!mapped.objetivo && mapped.objetivo.length > 0;
+const hasSectionContent = Object.values(mapped.sectionTexts).some(
+(text) => text && text.length > 10
+);
+
+console.log('[VALIDATE_AI] Validação:', {
+hasTitle,
+hasObjective,
+hasSectionContent,
+totalSections: Object.keys(mapped.sectionTexts).length,
+});
+
+retornar hasTitle && hasObjective && hasSectionContent;
+};
+
+texto
+
+═══════════════════════════════════════════════════════════════
+
+SOLUÇÃO #2: USE O MAPEADOR EM interface.tsx
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Em interface.tsx (ou onde gera aula), localize `handleGerarAula()`:
+
+import { mapAIResponseToAula, validateAIResponse } from '@/utils/aiResponseMapper';
+
+const handleGerarAula = async() => {
+try {
+console.log('[GERAR_AULA] Iniciando geração');
+setCarregando(true);
+
+texto
+// Busca resposta da IA
+const resposta = await lessonGeneratorService.gerarAula({
+  template: templateSelecionado,
+  assunto,
+  contexto,
+  sectionOrder, // PASSA sectionOrder para IA saber quais seções gerar!
+});
+
+console.log('[GERAR_AULA] Resposta bruta da IA:', resposta);
+
+// 🔴 MAPEIA resposta para estrutura correta
+const aulaMapeada = mapAIResponseToAula(resposta, sectionOrder);
+console.log('[GERAR_AULA] Resposta mapeada:', aulaMapeada);
+
+// 🔴 VALIDA
+const valido = validateAIResponse(aulaMapeada);
+if (!valido) {
+  console.warn('[GERAR_AULA] Validação falhou, resposta pode estar incompleta');
+  // Mesmo incompleta, tenta usar
+}
+
+// 🔴 POPULA TODOS OS ESTADOS COM DADOS MAPEADOS
+console.log('[GERAR_AULA] Populando estados...');
+
+setTitulo(aulaMapeada.titulo);
+console.log('[GERAR_AULA] Título setado:', aulaMapeada.titulo);
+
+setObjetivo(aulaMapeada.objetivo);
+console.log('[GERAR_AULA] Objetivo setado:', aulaMapeada.objetivo);
+
+setSectionTexts(aulaMapeada.sectionTexts);
+console.log('[GERAR_AULA] SectionTexts setado:', Object.keys(aulaMapeada.sectionTexts));
+
+// SE necessário, também popula sectionConfigs
+const configs: Record<string, any> = {};
+sectionOrder.forEach((sectionId) => {
+  configs[sectionId] = {
+    id: sectionId,
+    title: sectionId,
+    content: aulaMapeada.sectionTexts[sectionId] || '',
+  };
+});
+setSectionConfigs(configs);
+console.log('[GERAR_AULA] SectionConfigs setado:', Object.keys(configs));
+
+setCarregando(false);
+console.log('[GERAR_AULA] Geração completa!');
+} catch (erro) {
+console.error('[GERAR_AULA_ERROR]', erro);
+setCarregando(false);
+alert('Erro ao gerar aula');
+}
+};
+
+texto
+
+═══════════════════════════════════════════════════════════════
+
+SOLUÇÃO #3: VALIDE O PROMPT DA IA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+No backend (api/ai/lesson-generator.js), verifique o prompt:
+
+// O prompt DEVE pedir conteúdo PARA CADA SEÇÃO
+// Exemplo correto:
+
+const gerarAula = async (template, assunto, contexto, sectionOrder) => {
+const sectionsList = sectionOrder.join(', ');
+
+const prompt = `
+Gere uma aula com os seguintes dados:
+- Assunto: ${assunto}
+- Contexto: ${contexto}
+- Seções: ${sectionsList}
+
+texto
+Responda com JSON estruturado EXATAMENTE assim:
+{
+  "titulo": "Título da aula",
+  "objetivo": "Objetivo geral",
+  "sections": {
+    "${sectionOrder}": "Conteúdo detalhado da primeira seção",
+    "${sectionOrder}": "Conteúdo detalhado da segunda seção",[1]
+    ... (para CADA seção em sectionOrder)
+  }
+}
+
+IMPORTANTE: Gere conteúdo PARA CADA SEÇÃO listada acima.
+Cada conteúdo deve ter mínimo 100 palavras.
+`;
+
+const resposta = aguarda chamadaIA(prompt);
+console.log('[IA_RESPONSE]', resposta);
+
+retornar resposta;
+};
+
+texto
+
+═══════════════════════════════════════════════════════════════
+
+TESTE AGORA:
+
+1. ✅ Crie src/utils/aiResponseMapper.ts
+2. ✅ Importe em interface.tsx
+3. ✅ Modifique handleGerarAula para usar mapAIResponseToAula
+4. ✅ Vá para Aulas → + Criar Aula
+5. ✅ Escolha template, preencha Assunto + Contexto
+6. ✅ Abra Console (F12)
+7. ✅ Clique "Gerar aula"
+8. ✅ Console deve mostrar:
+   [GERAR_AULA] Iniciando geração
+   [GERAR_AULA] Resposta bruta da IA: {...}
+   [AI_MAPPER] Iniciando mapeamento...
+   [AI_MAPPER] sectionOrder: [...]
+   [AI_MAPPER] Processando seções...
+   [AI_MAPPER] Seção mapeada: secao1 (conteúdo...)
+   [AI_MAPPER] Seção mapeada: secao2 (conteúdo...)
+   ... (para cada seção)
+   [GERAR_AULA] Populando estados...
+   [GERAR_AULA] Título setado: ...
+   [GERAR_AULA] SectionTexts setado: [...]
+   [GERAR_AULA] Geração completa!
+9. ✅ Interface mostra TODOS os cards com CONTEÚDO
+10. ✅ Pode publicar normalmente
+
+═══════════════════════════════════════════════════════════════
+
+SE AINDA TIVER VAZIO:
+
+Cole aqui:
+1. O output do console [GERAR_AULA] Resposta bruta da IA
+2. O output do [AI_MAPPER] sectionOrder
+3. O formato JSON que a IA está retornando
+
+Com isso, saberei EXATAMENTE como ajustar o mapeamento!
+
+RESPONDA COM:
+
+1. ✅ Código de aiResponseMapper.ts criado
+2. ✅ Modificação de interface.tsx com mapeador
+3. ✅ Screenshot do console com TODOS os logs [GERAR_AULA_*]
+4. ✅ Screenshot da interface COM CONTEÚDO em todas as seções
+5. ✅ Confirmação de que pode publicar a aula
