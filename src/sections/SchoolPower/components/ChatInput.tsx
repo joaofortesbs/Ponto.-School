@@ -1197,7 +1197,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           align-items: center;
           justify-content: center;
           gap: 8px;
-          padding: 10px 6px;
+          padding: 10px 4px;
           background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
           border: 1px solid #333;
           border-radius: 999px;
@@ -1206,12 +1206,22 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
+        /* Card "Desenvolver" (4º card) - mantém padding original */
+        .quick-access-card:nth-child(4) {
+          padding: 10px 6px;
+        }
+
         @media (max-width: 768px) {
           .quick-access-card {
             min-width: 120px;
-            padding: 10px 5px;
+            padding: 10px 3px;
             gap: 6px;
             border-radius: 999px;
+          }
+
+          /* Card "Desenvolver" (4º card) mobile */
+          .quick-access-card:nth-child(4) {
+            padding: 10px 5px;
           }
         }
 
