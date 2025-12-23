@@ -1198,6 +1198,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           justify-content: center;
           gap: 8px;
           padding: 10px 4px;
+          margin: 0 2px;
           background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
           border: 1px solid #333;
           border-radius: 999px;
@@ -1206,9 +1207,19 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        /* Card "Desenvolver" (4º card) - mantém padding original */
+        /* Cards 1, 2, 3, 5 (Aulas, Chats, Flows, Mais) - margens reduzidas */
+        .quick-access-card:nth-child(1),
+        .quick-access-card:nth-child(2),
+        .quick-access-card:nth-child(3),
+        .quick-access-card:nth-child(5) {
+          padding: 10px 4px;
+          margin: 0 2px;
+        }
+
+        /* Card "Desenvolver" (4º card) - margens maiores para destacar */
         .quick-access-card:nth-child(4) {
           padding: 10px 6px;
+          margin: 0 8px;
         }
 
         @media (max-width: 768px) {
@@ -1216,12 +1227,23 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
             min-width: 120px;
             padding: 10px 3px;
             gap: 6px;
+            margin: 0 1px;
             border-radius: 999px;
+          }
+
+          /* Cards 1, 2, 3, 5 mobile */
+          .quick-access-card:nth-child(1),
+          .quick-access-card:nth-child(2),
+          .quick-access-card:nth-child(3),
+          .quick-access-card:nth-child(5) {
+            padding: 10px 3px;
+            margin: 0 1px;
           }
 
           /* Card "Desenvolver" (4º card) mobile */
           .quick-access-card:nth-child(4) {
             padding: 10px 5px;
+            margin: 0 6px;
           }
         }
 
