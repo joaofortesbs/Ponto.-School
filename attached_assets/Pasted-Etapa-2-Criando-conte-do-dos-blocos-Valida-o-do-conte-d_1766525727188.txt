@@ -1,0 +1,133 @@
+Etapa 2
+Criando conteúdo dos blocos
+Validação do conteúdo falhou: Algumas seções não têm conteúdo
+
+5.1s
+
+
+Logs da Etapa
+2/3 validações
+INFO
+18:34:00.394
++0ms
+Etapa iniciada
+
+SUCCESS
+18:34:00.395
++1ms
+Sub-fase COMMAND_SENT: COMPLETA
+
+{
+  "sectionCount": 10
+}
+RETRY
+18:34:00.396
++2ms
+Tentativa 1/3
+
+{
+  "attemptKey": "2-1766525640396",
+  "context": {
+    "templateId": "aula-socioemocional",
+    "templateName": "Aula Socioemocional",
+    "assunto": "Criação de uma startup de Edtech",
+    "contexto": "Criação de uma startup de Edtech",
+    "sectionOrder": [
+      "objective",
+      "contextualizacao",
+      "apresentacao",
+      "engajamento",
+      "colaboracao",
+      "reflexao",
+      "fechamento",
+      "materiais",
+      "observacoes",
+      "bncc"
+    ],
+    "requestId": "REQ-1766525640109-joqweckwi",
+    "completedSteps": [
+      1
+    ],
+    "timing": {
+      "step1": 0
+    }
+  }
+}
+SUCCESS
+18:34:00.396
++2ms
+Sub-fase BACKEND_RECEIVED: COMPLETA
+
+INFO
+18:34:00.396
++2ms
+IA iniciando geração de conteúdo
+
+SUCCESS
+18:34:05.519
++5125ms
+Sub-fase AI_COMPLETED: COMPLETA
+
+{
+  "titulo": "Criando uma Startup de Edtech: Um Desafio Inovador",
+  "secoesCount": 10
+}
+SUCCESS
+18:34:05.519
++5125ms
+Recuperação bem-sucedida na tentativa 1
+
+SUCCESS
+18:34:05.520
++5126ms
+Validação "contentGenerated": OK
+
+{
+  "hasLesson": true
+}
+WARNING
+18:34:05.520
++5126ms
+Validação "allSectionsHaveContent": FALHOU
+
+{
+  "message": "Algumas seções não têm conteúdo",
+  "error": "secoes[s].trim is not a function"
+}
+SUCCESS
+18:34:05.520
++5126ms
+Validação "contentNotEmpty": OK
+
+{
+  "contentLength": 3601
+}
+WARNING
+18:34:05.520
++5126ms
+Validação falhou: 1 erro(s)
+
+{
+  "errors": [
+    {
+      "check": "allSectionsHaveContent",
+      "message": "Algumas seções não têm conteúdo",
+      "details": {
+        "error": "secoes[s].trim is not a function"
+      }
+    }
+  ]
+}
+ERROR
+18:34:05.521
++5127ms
+Falha na etapa: Validação do conteúdo falhou: Algumas seções não têm conteúdo
+
+{
+  "retryCount": 1,
+  "canRetry": false
+}
+Validações:
+
+✓ contentGenerated
+✗ allSectionsHaveContent

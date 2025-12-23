@@ -159,7 +159,19 @@ class StepValidation {
       allSectionsHaveContent: () => {
         const secoes = data.lesson?.secoes || {};
         const sectionOrder = data.sectionOrder || [];
-        const missing = sectionOrder.filter(s => !secoes[s] || !secoes[s].trim());
+        const missing = sectionOrder.filter(s => {
+          const content = secoes[s];
+          if (!content) return true;
+          // Handle both string and object content
+          if (typeof content === 'string') {
+            return !content.trim();
+          }
+          if (typeof content === 'object') {
+            const stringified = JSON.stringify(content).trim();
+            return !stringified || stringified === '{}' || stringified === '[]';
+          }
+          return true;
+        });
         return {
           passed: missing.length === 0,
           details: { missing, total: sectionOrder.length }
@@ -167,7 +179,10 @@ class StepValidation {
       },
       contentNotEmpty: () => {
         const secoes = data.lesson?.secoes || {};
-        const totalContent = Object.values(secoes).join('').trim();
+        const totalContent = Object.values(secoes)
+          .map(v => typeof v === 'string' ? v : JSON.stringify(v))
+          .join('')
+          .trim();
         return {
           passed: totalContent.length > 100,
           details: { contentLength: totalContent.length }
