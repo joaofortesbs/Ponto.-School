@@ -226,6 +226,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [isBnccExpanded, setIsBnccExpanded] = useState(savedDraft?.sectionExpanded?.bncc ?? true);
   const [isEditingAulaName, setIsEditingAulaName] = useState(false);
   const [editingAulaName, setEditingAulaName] = useState(aulaName);
+  const [currentAulaName, setCurrentAulaName] = useState(aulaName);
 
   // Estados de visibilidade para seções padrão (para exclusão completa)
   const [isObjectiveVisible, setIsObjectiveVisible] = useState(savedDraft?.sectionVisible?.objective ?? true);
@@ -1411,9 +1412,58 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAulaImage(reader.result as string);
+        const imageData = reader.result as string;
+        setAulaImage(imageData);
+        // Salva a imagem imediatamente no localStorage
+        if (typeof window !== 'undefined') {
+          try {
+            const storageKey = getAulaStorageKey(currentAulaName);
+            const saved = localStorage.getItem(storageKey);
+            if (saved) {
+              const data = JSON.parse(saved) as AulaDraftData;
+              data.aulaImage = imageData;
+              localStorage.setItem(storageKey, JSON.stringify(data));
+              console.log('📸 Imagem da aula salva no localStorage');
+            }
+          } catch (error) {
+            console.error('Erro ao salvar imagem:', error);
+          }
+        }
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveAulaName = (newName: string) => {
+    if (newName.trim()) {
+      setCurrentAulaName(newName);
+      setEditingAulaName(newName);
+      
+      // Salva o novo nome no localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          const oldKey = getAulaStorageKey(aulaName);
+          const newKey = getAulaStorageKey(newName);
+          
+          // Carrega o draft antigo
+          const oldSaved = localStorage.getItem(oldKey);
+          if (oldSaved) {
+            const data = JSON.parse(oldSaved) as AulaDraftData;
+            data.aulaName = newName;
+            
+            // Salva com a nova chave
+            localStorage.setItem(newKey, JSON.stringify(data));
+            
+            // Opcionalmente, remove a chave antiga se diferente
+            if (oldKey !== newKey) {
+              localStorage.removeItem(oldKey);
+            }
+            console.log('💾 Nome da aula atualizado e salvo:', newName);
+          }
+        } catch (error) {
+          console.error('Erro ao salvar nome da aula:', error);
+        }
+      }
     }
   };
 
@@ -1955,17 +2005,16 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                     value={editingAulaName}
                     onChange={(e) => setEditingAulaName(e.target.value)}
                     onBlur={() => {
+                      handleSaveAulaName(editingAulaName);
                       setIsEditingAulaName(false);
-                      if (editingAulaName.trim()) {
-                        // Update aulaName in parent or state as needed
-                      }
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
+                        handleSaveAulaName(editingAulaName);
                         setIsEditingAulaName(false);
                       }
                       if (e.key === 'Escape') {
-                        setEditingAulaName(aulaName);
+                        setEditingAulaName(currentAulaName);
                         setIsEditingAulaName(false);
                       }
                     }}
@@ -1985,7 +2034,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
                         }
                       }}
                     >
-                      {aulaName}
+                      {currentAulaName}
                     </h2>
                     <motion.button
                       whileHover={{ scale: 1.15 }}
