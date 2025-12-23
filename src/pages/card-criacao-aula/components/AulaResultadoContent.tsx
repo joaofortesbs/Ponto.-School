@@ -59,7 +59,9 @@ const SECTION_NAME_TO_CONFIG: Record<string, SectionMappingConfig> = {
 };
 
 // Seções padrão quando nenhum template é selecionado
-const DEFAULT_SECTION_ORDER = ['objective', 'preEstudo', 'introducao', 'desenvolvimento', 'encerramento', 'materiais', 'observacoes', 'bncc'];
+// FIXO: Removidas seções inválidas (preEstudo, introducao, desenvolvimento, encerramento)
+// Essas seções não existem em SECTION_NAME_TO_CONFIG
+const DEFAULT_SECTION_ORDER = ['objective', 'materiais', 'observacoes', 'bncc'];
 
 // Função helper para obter as seções baseadas no template
 const getTemplateSectionOrder = (template: Template | null): string[] => {
@@ -417,17 +419,22 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   // ====================================================================
   const previousTemplateIdRef = useRef<string | null>(selectedTemplate?.id ?? null);
   
+  // ====================================================================
+  // SINCRONIZAÇÃO TAMBÉM NA INICIALIZAÇÃO
+  // Quando template é selecionado, update sectionOrder imediatamente
+  // ====================================================================
   useEffect(() => {
-    if (!selectedTemplate?.id) return;
-    
-    // Só recalcula se o template REALMENTE mudou (não na inicialização)
-    if (previousTemplateIdRef.current !== null && previousTemplateIdRef.current !== selectedTemplate.id) {
-      const newOrder = getTemplateSectionOrder(selectedTemplate);
-      console.log('📋 [SECTION_ORDER] Template mudou de', previousTemplateIdRef.current, 'para', selectedTemplate.id);
-      console.log('📋 [SECTION_ORDER] Novas seções:', newOrder);
-      setSectionOrder(newOrder);
+    if (!selectedTemplate?.id) {
+      console.log('🔴 [PONTO 1] NENHUM TEMPLATE SELECIONADO');
+      return;
     }
     
+    const newOrder = getTemplateSectionOrder(selectedTemplate);
+    console.log('🔴 [PONTO 1] TEMPLATE SELECIONADO');
+    console.log('   Template ID:', selectedTemplate.id);
+    console.log('   Template Name:', selectedTemplate.name);
+    console.log('   sectionOrder NOVO:', newOrder);
+    setSectionOrder(newOrder);
     previousTemplateIdRef.current = selectedTemplate.id;
   }, [selectedTemplate?.id]);
 
@@ -594,6 +601,10 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   // Resultado: Seções sempre sincronizadas com o template!
   // ====================================================================
   const sectionConfigs = useMemo((): Record<string, SectionConfig> => {
+    console.log('🟡 [PONTO 2] MONTANDO sectionConfigs');
+    console.log('   sectionOrder:', sectionOrder);
+    console.log('   dynamicSections keys:', Object.keys(dynamicSections));
+    
     const configs: Record<string, SectionConfig> = {
       // Seção de Objetivo - SEMPRE PRESENTE E FIXA
       objective: {
@@ -2528,7 +2539,16 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={sectionOrder.filter(id => id !== 'objective')} strategy={verticalListSortingStrategy}>
-          {sectionOrder.filter(id => id !== 'objective').map((sectionId, index) => {
+          {(() => {
+            const renderArray = sectionOrder.filter(id => id !== 'objective');
+            console.log('🟢 [PONTO 3] RENDERIZANDO SEÇÕES');
+            console.log('   Array final para renderizar:', renderArray);
+            console.log('   sectionConfigs keys disponíveis:', Object.keys(sectionConfigs));
+            renderArray.forEach(id => {
+              console.log(`     - Seção "${id}": config existe?`, !!sectionConfigs[id]);
+            });
+            return renderArray;
+          })().map((sectionId, index) => {
             const config = sectionConfigs[sectionId];
             if (!config || !config.isVisible) return null;
             
