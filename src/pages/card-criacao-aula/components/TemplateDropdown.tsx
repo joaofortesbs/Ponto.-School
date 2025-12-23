@@ -24,7 +24,20 @@ interface TemplateWithSections extends Template {
   sections: string[];
 }
 
-const TEMPLATE_SECTIONS: Record<string, string[]> = {
+// ====================================================================
+// MAPEAMENTO DE SEÇÕES POR TEMPLATE
+// ====================================================================
+// Este objeto define quais seções/blocos aparecem para cada template.
+// A IA e o sistema usam esses dados para gerar a estrutura da aula.
+// 
+// ESTRUTURA:
+// - Chave: ID do template (ex: 'aula-ativa')
+// - Valor: Array de nomes das seções na ordem de exibição
+//
+// IMPORTANTE: O card "Objetivos" é SEMPRE exibido primeiro, independente
+// do template. As seções abaixo são as que aparecem DEPOIS de Objetivos.
+// ====================================================================
+export const TEMPLATE_SECTIONS: Record<string, string[]> = {
   'aula-ativa': [
     'Contextualização',
     'Exploração',
