@@ -195,14 +195,13 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 secoes: Object.keys(aulaMapeada.sectionTexts).length
               });
               
-              setTimeout(() => {
-                setShowWorkflowModal(false);
-                onGerarAula(selectedTemplate, {
-                  titulo: aulaMapeada.titulo,
-                  objetivo: aulaMapeada.objetivo,
-                  secoes: aulaMapeada.sectionTexts
-                });
-              }, 1500);
+              // IMPORTANTE: NÃO FECHAR O MODAL AUTOMATICAMENTE
+              // O usuário deve fechar manualmente o modal após visualizar o resultado
+              onGerarAula(selectedTemplate, {
+                titulo: aulaMapeada.titulo,
+                objetivo: aulaMapeada.objetivo,
+                secoes: aulaMapeada.sectionTexts
+              });
             } else {
               // Erro na orquestração - MANTER MODAL ABERTO
               console.log('❌ [INTERFACE] Erro na orquestração:', result.errors);
