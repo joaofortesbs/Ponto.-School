@@ -8,6 +8,45 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (December 23, 2025)
 
+### ✅ CRITICAL FIX: State Isolation Between Lesson Creation Sessions
+**Issue Resolved:** Previous lesson data was bleeding into new lesson creation when user clicked "+ Criar" without page reload.
+
+**Root Cause:** 
+- Parent component (`atividades/interface.tsx`) held state (`selectedAulaTemplate`, `generatedLessonData`, `aulaIdParaCarregar`)
+- When `handleOpenPersonalizacaoModal()` was called, these states were NOT being reset
+- Child components (`CriacaoAulaPanel`, `ConstrucaoAulaPanel`) retained their internal state
+
+**Architecture Solution:**
+1. **Session ID System:**
+   - Added `aulaSessionId` state that changes for each new lesson creation
+   - Used as `key` prop on child components to force complete remount
+   - Format: `session_${Date.now()}_${randomId}`
+
+2. **Reset Function (`resetAulaState()`):**
+   - Clears ALL parent-level lesson state when "+ Criar" is clicked
+   - Resets: `selectedAulaTemplate`, `generatedLessonData`, `aulaIdParaCarregar`
+   - Generates new `aulaSessionId` to force component remounts
+
+3. **Mode Detection in ConstrucaoAulaPanel:**
+   - `modoEdicao`: When `aulaIdParaCarregar` is provided (loading existing lesson)
+   - `modoCriacao`: When `aulaIdParaCarregar` is undefined (new lesson)
+   - useEffect clears `aulaCarregada` when switching to creation mode
+
+**Key Files Modified:**
+- `src/pages/minhas-criacoes/atividades/interface.tsx` - Added session ID and reset function
+- `src/pages/card-criacao-aula/ConstrucaoAulaPanel.tsx` - Added mode detection and cleanup
+
+**Debug Logs:**
+- `[RESET_AULA_STATE]` - When state is being cleared
+- `[OPEN_PERSONALIZACAO]` - When modal opens with clean state
+- `[CONSTRUCAO_PANEL]` - Mode detection and state changes
+
+**Expected Behavior Now:**
+1. User creates Lesson A → publishes → closes
+2. User clicks "+ Criar" → ALL state is reset, new session ID generated
+3. Modal opens completely clean (no template, no data)
+4. User creates Lesson B → completely independent from Lesson A
+
 ### ✅ NEW: Lesson Publishing System with Modal Confirmation
 **Feature Implemented:** Transform Play button to Publish button with complete save flow and success modal.
 
