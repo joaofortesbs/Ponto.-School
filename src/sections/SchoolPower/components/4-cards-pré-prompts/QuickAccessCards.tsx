@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { BookPlus, MessageSquare, Zap, Code, MoreHorizontal } from 'lucide-react';
+import { BookPlus, MessageSquare, ArrowRight, Code, ChevronDown } from 'lucide-react';
 
 interface QuickAccessCardsProps {
   selectedCard: string | null;
@@ -33,7 +33,7 @@ export const QuickAccessCards: React.FC<QuickAccessCardsProps> = ({ selectedCard
         className={`quick-access-card ${selectedCard === "Flow School" ? "selected" : ""}`}
         onClick={() => handleClick("Flow School")}
       >
-        <Zap className="quick-access-card-icon" />
+        <ArrowRight className="quick-access-card-icon" />
         <span className="quick-access-card-text">Flow School</span>
       </div>
       <div
@@ -47,7 +47,7 @@ export const QuickAccessCards: React.FC<QuickAccessCardsProps> = ({ selectedCard
         className={`quick-access-card ${selectedCard === "Mais" ? "selected" : ""}`}
         onClick={() => handleClick("Mais")}
       >
-        <MoreHorizontal className="quick-access-card-icon" />
+        <ChevronDown className="quick-access-card-icon" />
         <span className="quick-access-card-text">Mais</span>
       </div>
     </div>
