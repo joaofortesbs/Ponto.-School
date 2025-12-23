@@ -420,7 +420,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           background: #040b2a;
           border-radius: 36px;
           padding: 7px 8px 7px 12px;
-          border: 1px solid #333;
+          border: 1px solid #0c1334;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           display: flex;
           align-items: center;
@@ -1139,7 +1139,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           gap: 8px;
           padding: 10px 8px;
           background: #040b2a;
-          border: 1px solid #333;
+          border: 1px solid #0c1334;
           border-radius: 999px;
           cursor: pointer;
           transition: all 0.3s ease;
