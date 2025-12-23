@@ -17,7 +17,59 @@ export interface Template {
   name: string;
   description: string;
   icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  sections?: string[];
 }
+
+interface TemplateWithSections extends Template {
+  sections: string[];
+}
+
+const TEMPLATE_SECTIONS: Record<string, string[]> = {
+  'aula-ativa': [
+    'Contextualização',
+    'Exploração',
+    'Apresentação',
+    'Prática Guiada',
+    'Prática Independente',
+    'Fechamento'
+  ],
+  'aula-expositiva': [
+    'Objetivos',
+    'Contextualização',
+    'Apresentação',
+    'Demonstração',
+    'Avaliação',
+    'Fechamento'
+  ],
+  'aula-socioemocional': [
+    'Objetivos',
+    'Contextualização',
+    'Apresentação',
+    'Engajamento',
+    'Colaboração',
+    'Reflexão',
+    'Fechamento'
+  ],
+  'aula-tecnica': [
+    'Objetivos',
+    'Contextualização',
+    'Apresentação',
+    'Demonstração',
+    'Desenvolvimento',
+    'Aplicação',
+    'Avaliação',
+    'Fechamento'
+  ],
+  'aula-se': [
+    'Objetivos',
+    'Contextualização',
+    'Exploração',
+    'Engajamento',
+    'Desenvolvimento',
+    'Colaboração',
+    'Fechamento'
+  ]
+};
 
 export const TEMPLATES: Template[] = [
   {
@@ -74,6 +126,7 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
   const [templateInstructions, setTemplateInstructions] = useState('');
   const [selectedIconIndex, setSelectedIconIndex] = useState(0);
   const [hoveredTemplateId, setHoveredTemplateId] = useState<string | null>(null);
+  const [viewingSections, setViewingSections] = useState<TemplateWithSections | null>(null);
 
   useEffect(() => {
     if (isOpen && anchorRef.current) {
@@ -91,6 +144,15 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
   const handleSelectTemplate = (template: Template) => {
     onSelectTemplate(template);
     onClose();
+  };
+
+  const handleViewSections = (template: Template) => {
+    const sections = TEMPLATE_SECTIONS[template.id] || [];
+    setViewingSections({ ...template, sections });
+  };
+
+  const handleBackFromSections = () => {
+    setViewingSections(null);
   };
 
   const handleCreateTemplate = () => {
@@ -150,7 +212,53 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             <AnimatePresence mode="wait">
-              {isCreating ? (
+              {viewingSections ? (
+                <motion.div
+                  key="sections-mode"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col h-full"
+                >
+                  {/* Header */}
+                  <div className="flex items-center gap-3 px-4 py-3 border-b border-[#FF6B00]/20">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleBackFromSections}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </motion.button>
+                    <h3 className="text-white font-semibold text-base">
+                      {viewingSections.name}
+                    </h3>
+                  </div>
+
+                  {/* Content - Blocos de Seções */}
+                  <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 hide-scrollbar">
+                    <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+                    
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {viewingSections.sections.map((section, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.05, duration: 0.2 }}
+                          whileHover={{ scale: 1.05, y: -2 }}
+                          className="p-3 rounded-lg border border-[#FF6B00]/30 bg-gradient-to-br from-[#FF6B00]/10 to-[#FF6B00]/5 cursor-pointer transition-all"
+                        >
+                          <h4 className="text-white font-medium text-xs text-center">
+                            {section}
+                          </h4>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              ) : isCreating ? (
                 <motion.div
                   key="creation-mode"
                   initial={{ opacity: 0, x: 20 }}
@@ -340,12 +448,16 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                               </div>
 
                               {hoveredTemplateId === template.id && (
-                                <motion.div
+                                <motion.button
                                   initial={{ opacity: 0, scale: 0.8 }}
                                   animate={{ opacity: 1, scale: 1 }}
                                   exit={{ opacity: 0, scale: 0.8 }}
                                   transition={{ duration: 0.15 }}
-                                  className="absolute top-2 right-2 w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewSections(template);
+                                  }}
+                                  className="absolute top-2 right-2 w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 hover:scale-110 transition-transform"
                                   style={{
                                     background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
                                   }}
@@ -354,7 +466,7 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                                     className="text-white" 
                                     style={{ width: '14px', height: '14px' }}
                                   />
-                                </motion.div>
+                                </motion.button>
                               )}
                             </motion.div>
                           );
@@ -410,12 +522,16 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                           </div>
 
                           {hoveredTemplateId === template.id && (
-                            <motion.div
+                            <motion.button
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0, scale: 0.8 }}
                               transition={{ duration: 0.15 }}
-                              className="absolute top-2 right-2 w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewSections(template);
+                              }}
+                              className="absolute top-2 right-2 w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 hover:scale-110 transition-transform"
                               style={{
                                 background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
                               }}
@@ -424,7 +540,7 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                                 className="text-white" 
                                 style={{ width: '14px', height: '14px' }}
                               />
-                            </motion.div>
+                            </motion.button>
                           )}
                         </motion.div>
                       );
