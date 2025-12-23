@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
-import AulaResultadoContent from './components/AulaResultadoContent';
+import { X, Save } from 'lucide-react';
+import AulaResultadoContent, { AulaResultadoContentRef } from './components/AulaResultadoContent';
 import { Template } from './components/TemplateDropdown';
 import { GeneratedLessonData } from '@/services/lessonGeneratorService';
+import { aulasStorageService } from '@/services/aulasStorageService';
 
 interface ConstrucaoAulaPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  onSave?: () => void;
   aulaName?: string;
   selectedTemplate?: Template | null;
   turmaImage?: string | null;
@@ -23,12 +25,50 @@ const PANEL_HEADER_BORDER_RADIUS = 24;
 const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
   isOpen,
   onClose,
+  onSave,
   aulaName = 'Minha Nova Aula',
   selectedTemplate = null,
   turmaImage = null,
   turmaName = null,
   generatedData = null
 }) => {
+  const contentRef = useRef<AulaResultadoContentRef>(null);
+
+  const handleSaveAndClose = useCallback(() => {
+    console.log('💾 [SAVE_AULA] Iniciando salvamento automático da aula...');
+    
+    if (contentRef.current) {
+      const aulaData = contentRef.current.getAulaData();
+      console.log('💾 [SAVE_AULA] Dados obtidos:', aulaData);
+      
+      if (aulaData && aulaData.titulo && aulaData.titulo.trim() !== '') {
+        try {
+          aulasStorageService.salvarAula({
+            titulo: aulaData.titulo,
+            objetivo: aulaData.objetivo || '',
+            templateId: selectedTemplate?.id || 'unknown',
+            templateName: selectedTemplate?.name || 'Template',
+            turmaName: turmaName,
+            turmaImage: turmaImage,
+            duracao: aulaData.duracao || '60 min',
+            status: 'rascunho',
+            secoes: aulaData.secoes || {},
+            sectionOrder: aulaData.sectionOrder || []
+          });
+          
+          console.log('💾 [SAVE_AULA] ✅ Aula salva com sucesso!');
+          onSave?.();
+        } catch (error) {
+          console.error('💾 [SAVE_AULA] ❌ Erro ao salvar aula:', error);
+        }
+      } else {
+        console.log('💾 [SAVE_AULA] ⚠️ Aula sem título - não salvando');
+      }
+    }
+    
+    onClose();
+  }, [selectedTemplate, turmaName, turmaImage, onClose, onSave]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -54,14 +94,16 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
           <motion.button
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
-            onClick={onClose}
+            onClick={handleSaveAndClose}
             className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all z-50"
+            title="Salvar e fechar"
           >
             <X className="w-5 h-5" />
           </motion.button>
           
           <div className="flex-1 overflow-auto p-6">
             <AulaResultadoContent
+              ref={contentRef}
               aulaName={aulaName}
               selectedTemplate={selectedTemplate}
               turmaImage={turmaImage}

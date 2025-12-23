@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star, GripVertical, GitBranch, GraduationCap } from 'lucide-react';
 import { Template, TEMPLATE_SECTIONS } from './TemplateDropdown';
@@ -103,6 +103,16 @@ interface AulaResultadoContentProps {
   turmaName?: string | null;
   createdAt?: Date;
   generatedData?: GeneratedLessonData | null;
+}
+
+export interface AulaResultadoContentRef {
+  getAulaData: () => {
+    titulo: string;
+    objetivo: string;
+    duracao: string;
+    secoes: Record<string, { id: string; text: string; time?: string }>;
+    sectionOrder: string[];
+  };
 }
 
 type ThemeMode = 'orange' | 'purple';
@@ -270,14 +280,14 @@ const loadSavedDraft = (aulaName: string): AulaDraftData | null => {
   }
 };
 
-const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
+const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoContentProps>(({
   aulaName = 'Minha Nova Aula',
   selectedTemplate = null,
   turmaImage = null,
   turmaName = null,
   createdAt = new Date(),
   generatedData = null
-}) => {
+}, ref) => {
   // Load saved draft on component mount (browser-safe)
   const savedDraft = useMemo(() => loadSavedDraft(aulaName), [aulaName]);
   
@@ -486,6 +496,43 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
 
   const [sectionOrder, setSectionOrder] = useState<string[]>(initialSectionOrder);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+  // ====================================================================
+  // EXPOSIÇÃO DE MÉTODOS VIA REF (useImperativeHandle)
+  // ====================================================================
+  // Expõe o método getAulaData para que o componente pai possa obter
+  // os dados da aula para salvamento.
+  // ====================================================================
+  useImperativeHandle(ref, () => ({
+    getAulaData: () => {
+      console.log('📤 [GET_AULA_DATA] Coletando dados da aula para salvamento...');
+      
+      const secoes: Record<string, { id: string; text: string; time?: string }> = {};
+      Object.entries(dynamicSections).forEach(([id, section]) => {
+        secoes[id] = {
+          id: section.id,
+          text: section.text,
+          time: section.time
+        };
+      });
+      
+      const data = {
+        titulo: currentAulaName,
+        objetivo: objectiveText,
+        duracao: '60 min',
+        secoes,
+        sectionOrder
+      };
+      
+      console.log('📤 [GET_AULA_DATA] Dados coletados:', {
+        titulo: data.titulo,
+        objetivo: data.objetivo?.substring(0, 50) + '...',
+        secoesCount: Object.keys(secoes).length
+      });
+      
+      return data;
+    }
+  }), [currentAulaName, objectiveText, dynamicSections, sectionOrder]);
 
   // ====================================================================
   // SINCRONIZAÇÃO SIMPLIFICADA DE sectionOrder QUANDO O TEMPLATE MUDA
@@ -2690,6 +2737,6 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       </AnimatePresence>
     </div>
   );
-};
+});
 
 export default AulaResultadoContent;

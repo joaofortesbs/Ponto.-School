@@ -1,27 +1,82 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, BookOpen, Clock, MoreVertical, Eye, Edit2, Trash2, Share2 } from 'lucide-react';
+import { Plus, BookOpen, Clock, MoreVertical, Eye, Edit2, Trash2, Share2, Loader2, ChevronDown, Sparkles } from 'lucide-react';
+import { aulasStorageService, AulaSalva } from '@/services/aulasStorageService';
 
 interface AulasGridProps {
   searchTerm: string;
   onCreateAula?: () => void;
+  onCountChange?: (count: number) => void;
 }
 
-interface Aula {
-  id: string;
-  titulo: string;
-  disciplina: string;
-  duracao: string;
-  criadoEm: string;
-  status: 'rascunho' | 'publicada' | 'arquivada';
-}
+const CARDS_PER_ROW = 5;
+const INITIAL_ROWS = 2;
 
-const mockAulas: Aula[] = [];
+const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  } catch {
+    return dateString;
+  }
+};
 
-const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm, onCreateAula }) => {
-  const [aulas, setAulas] = useState<Aula[]>(mockAulas);
-  const [filteredAulas, setFilteredAulas] = useState<Aula[]>(mockAulas);
+const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm, onCreateAula, onCountChange }) => {
+  const hasAnimatedRef = useRef(false);
+  const [aulas, setAulas] = useState<AulaSalva[]>([]);
+  const [filteredAulas, setFilteredAulas] = useState<AulaSalva[]>([]);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [visibleRows, setVisibleRows] = useState(INITIAL_ROWS);
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+
+  const carregarAulas = () => {
+    console.log('📚 CARREGANDO AULAS DO LOCALSTORAGE');
+    setLoading(true);
+
+    try {
+      const aulasCarregadas = aulasStorageService.listarAulas();
+      setAulas(aulasCarregadas);
+      onCountChange?.(aulasCarregadas.length);
+    } catch (err) {
+      console.error('❌ Erro ao carregar aulas:', err);
+      setAulas([]);
+      onCountChange?.(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    carregarAulas();
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'ponto_school_aulas_salvas') {
+        carregarAulas();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  useEffect(() => {
+    if (!loading && aulas.length > 0 && !hasAnimatedRef.current) {
+      hasAnimatedRef.current = true;
+      setShouldAnimate(true);
+      
+      const timer = setTimeout(() => {
+        setShouldAnimate(false);
+      }, 1200);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loading, aulas.length]);
 
   useEffect(() => {
     if (searchTerm.trim() === '') {
@@ -29,117 +84,230 @@ const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm, onCreateAula }) => {
     } else {
       const filtered = aulas.filter(a => 
         a.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        a.disciplina.toLowerCase().includes(searchTerm.toLowerCase())
+        a.templateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        a.objetivo.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredAulas(filtered);
     }
+    setVisibleRows(INITIAL_ROWS);
   }, [searchTerm, aulas]);
 
-  const EmptyCard = ({ index }: { index: number }) => (
+  const visibleAulas = useMemo(() => {
+    const maxVisible = visibleRows * CARDS_PER_ROW;
+    return filteredAulas.slice(0, maxVisible);
+  }, [filteredAulas, visibleRows]);
+
+  const hasMoreToShow = filteredAulas.length > visibleRows * CARDS_PER_ROW;
+
+  const handleShowMore = () => {
+    setVisibleRows(prev => prev + 2);
+  };
+
+  const handleViewAula = (aula: AulaSalva) => {
+    console.log('👁️ Visualizando aula:', aula.titulo);
+    setActiveMenu(null);
+  };
+
+  const handleEditAula = (aula: AulaSalva) => {
+    console.log('✏️ Editando aula:', aula.titulo);
+    setActiveMenu(null);
+  };
+
+  const handleDeleteAula = (aula: AulaSalva) => {
+    if (!confirm(`Tem certeza que deseja excluir a aula "${aula.titulo}"?`)) {
+      return;
+    }
+
+    try {
+      aulasStorageService.excluirAula(aula.id);
+      carregarAulas();
+    } catch (err) {
+      alert('Erro ao excluir aula. Tente novamente.');
+    }
+    setActiveMenu(null);
+  };
+
+  const handleShareAula = (aula: AulaSalva) => {
+    console.log('📤 Compartilhando aula:', aula.titulo);
+    setActiveMenu(null);
+  };
+
+  const CreateAulaCard = ({ index }: { index: number }) => (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
+      initial={shouldAnimate ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3, delay: index * 0.1 }}
+      transition={shouldAnimate ? { duration: 0.3, delay: index * 0.1 } : { duration: 0 }}
       onClick={() => onCreateAula?.()}
-      className="aspect-[3/4] bg-[#1A2B3C]/50 border-2 border-[#FF6B00]/20 rounded-2xl flex items-center justify-center hover:border-[#FF6B00]/40 transition-colors cursor-pointer group"
+      className="flex flex-col items-center justify-center border-2 border-dashed border-[#FF6B00]/40 rounded-2xl hover:border-[#FF6B00] hover:bg-[#FF6B00]/5 transition-all duration-300 cursor-pointer group hover:scale-[1.02]"
+      style={{ width: 208, height: 260, flexShrink: 0, pointerEvents: shouldAnimate ? 'none' : 'auto' }}
     >
-      <div className="text-center">
-        <div className="w-12 h-12 rounded-full border-2 border-dashed border-[#FF6B00]/30 flex items-center justify-center mx-auto mb-3 group-hover:border-[#FF6B00]/50 transition-colors">
-          <Plus className="w-6 h-6 text-[#FF6B00]/40 group-hover:text-[#FF6B00]/60" />
-        </div>
-        <p className="text-white/30 text-sm group-hover:text-white/50">Criar Aula</p>
+      <div className="w-14 h-14 rounded-full border-2 border-dashed border-[#FF6B00]/40 flex items-center justify-center mb-3 group-hover:border-[#FF6B00] group-hover:bg-[#FF6B00]/10 transition-all duration-300">
+        <Sparkles className="w-6 h-6 text-[#FF6B00]/60 group-hover:text-[#FF6B00]" />
       </div>
+      <p className="text-[#FF6B00]/60 text-sm font-medium group-hover:text-[#FF6B00]">Criar Aula</p>
     </motion.div>
   );
 
-  const AulaCard = ({ aula, index }: { aula: Aula; index: number }) => (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3, delay: index * 0.1 }}
-      className="aspect-[3/4] bg-[#1A2B3C] border-2 border-[#FF6B00]/30 rounded-2xl overflow-hidden hover:border-[#FF6B00] transition-all group relative"
-    >
-      <div className="absolute top-3 right-3 z-10">
-        <button
-          onClick={() => setActiveMenu(activeMenu === aula.id ? null : aula.id)}
-          className="w-8 h-8 rounded-full bg-[#0D1B2A]/80 flex items-center justify-center text-white/60 hover:text-white transition-colors"
+  const AulaCard = ({ aula, index }: { aula: AulaSalva; index: number }) => {
+    const isHovered = hoveredCard === aula.id;
+    const isMenuOpen = activeMenu === aula.id;
+    const showMenu = isHovered || isMenuOpen;
+    
+    return (
+      <motion.div
+        initial={shouldAnimate ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={shouldAnimate ? { duration: 0.3, delay: (index + 1) * 0.1 } : { duration: 0 }}
+        onMouseEnter={() => !shouldAnimate && setHoveredCard(aula.id)}
+        onMouseLeave={() => {
+          if (!isMenuOpen && !shouldAnimate) {
+            setHoveredCard(null);
+          }
+        }}
+        className={`bg-[#1A2B3C] rounded-2xl overflow-hidden transition-all duration-300 relative cursor-pointer hover:scale-[1.02] ${
+          isHovered ? 'border border-[#FF6B00]/50 shadow-lg shadow-[#FF6B00]/10' : 'border border-[#FF6B00]/15'
+        }`}
+        style={{ width: 208, height: 260, flexShrink: 0, pointerEvents: shouldAnimate ? 'none' : 'auto' }}
+      >
+        <div 
+          className={`absolute top-3 right-3 z-10 transition-all duration-200 ${
+            showMenu ? 'opacity-100 visible' : 'opacity-0 invisible'
+          }`}
         >
-          <MoreVertical className="w-4 h-4" />
-        </button>
-        
-        {activeMenu === aula.id && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="absolute right-0 top-10 w-36 bg-[#0D1B2A] border border-[#FF6B00]/30 rounded-xl shadow-xl overflow-hidden"
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveMenu(isMenuOpen ? null : aula.id);
+            }}
+            className="w-8 h-8 rounded-full bg-[#0D1B2A]/90 flex items-center justify-center text-white/70 hover:text-white hover:bg-[#0D1B2A] transition-colors"
           >
-            <button className="w-full flex items-center gap-2 px-3 py-2 text-white/80 hover:bg-[#FF6B00]/10 text-sm">
-              <Eye className="w-4 h-4" /> Visualizar
-            </button>
-            <button className="w-full flex items-center gap-2 px-3 py-2 text-white/80 hover:bg-[#FF6B00]/10 text-sm">
-              <Edit2 className="w-4 h-4" /> Editar
-            </button>
-            <button className="w-full flex items-center gap-2 px-3 py-2 text-white/80 hover:bg-[#FF6B00]/10 text-sm">
-              <Share2 className="w-4 h-4" /> Compartilhar
-            </button>
-            <button className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-red-500/10 text-sm">
-              <Trash2 className="w-4 h-4" /> Excluir
-            </button>
-          </motion.div>
-        )}
-      </div>
-
-      <div className="h-2/3 bg-gradient-to-br from-[#FF6B00]/20 to-[#FF6B00]/5 flex items-center justify-center">
-        <BookOpen className="w-16 h-16 text-[#FF6B00]/40" />
-      </div>
-      
-      <div className="p-4">
-        <h3 className="text-white font-medium text-sm truncate mb-1">{aula.titulo}</h3>
-        <p className="text-white/50 text-xs mb-2">{aula.disciplina}</p>
-        <div className="flex items-center justify-between text-white/40 text-xs">
-          <div className="flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            <span>{aula.duracao}</span>
-          </div>
-          <span>{aula.criadoEm}</span>
+            <MoreVertical className="w-4 h-4" />
+          </button>
+          
+          {isMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="absolute right-0 top-10 w-36 bg-[#0D1B2A] border border-[#FF6B00]/30 rounded-xl shadow-xl overflow-hidden z-20"
+            >
+              <button 
+                onClick={() => handleViewAula(aula)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-white/80 hover:bg-[#FF6B00]/10 text-sm"
+              >
+                <Eye className="w-4 h-4" /> Visualizar
+              </button>
+              <button 
+                onClick={() => handleEditAula(aula)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-white/80 hover:bg-[#FF6B00]/10 text-sm"
+              >
+                <Edit2 className="w-4 h-4" /> Editar
+              </button>
+              <button 
+                onClick={() => handleShareAula(aula)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-white/80 hover:bg-[#FF6B00]/10 text-sm"
+              >
+                <Share2 className="w-4 h-4" /> Compartilhar
+              </button>
+              <button 
+                onClick={() => handleDeleteAula(aula)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-red-500/10 text-sm"
+              >
+                <Trash2 className="w-4 h-4" /> Excluir
+              </button>
+            </motion.div>
+          )}
         </div>
+
+        <div 
+          onClick={() => handleViewAula(aula)}
+          className="h-[160px] bg-gradient-to-br from-[#FF6B00]/20 to-[#FF6B00]/5 flex items-center justify-center"
+        >
+          <BookOpen className="w-14 h-14 text-[#FF6B00]/40" />
+        </div>
+        
+        <div className="p-3">
+          <h3 className="text-white font-medium text-sm truncate mb-1">{aula.titulo}</h3>
+          <p className="text-white/50 text-xs mb-2 truncate">{aula.templateName}</p>
+          <div className="flex items-center gap-1 text-white/40 text-xs">
+            <Clock className="w-3 h-3" />
+            <span>{formatDate(aula.criadoEm)}</span>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  const LoadingState = () => (
+    <div className="w-full flex flex-col items-center justify-center py-12">
+      <Loader2 className="w-8 h-8 text-[#FF6B00] animate-spin mb-4" />
+      <p className="text-white/60 text-sm">Carregando aulas...</p>
+    </div>
+  );
+
+  const EmptyTemplateCard = ({ index }: { index: number }) => (
+    <motion.div
+      initial={shouldAnimate ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={shouldAnimate ? { duration: 0.3, delay: index * 0.1 } : { duration: 0 }}
+      className="flex flex-col items-center justify-center border border-dashed border-[#FF6B00]/20 rounded-2xl hover:border-[#FF6B00]/40 hover:scale-[1.02] transition-all duration-300 cursor-pointer group"
+      style={{ width: 208, height: 260, flexShrink: 0 }}
+    >
+      <div className="w-12 h-12 rounded-full border-2 border-dashed border-[#FF6B00]/30 flex items-center justify-center mb-3 group-hover:border-[#FF6B00]/50 transition-colors">
+        <Plus className="w-6 h-6 text-[#FF6B00]/40 group-hover:text-[#FF6B00]/60" />
       </div>
+      <p className="text-white/30 text-sm group-hover:text-white/50">Vazio</p>
     </motion.div>
   );
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {filteredAulas.length > 0 ? (
-          filteredAulas.map((aula, index) => (
-            <AulaCard key={aula.id} aula={aula} index={index} />
-          ))
+      <div className="grid grid-cols-[repeat(auto-fill,208px)] gap-6 justify-start w-full">
+        {loading ? (
+          <LoadingState />
         ) : (
-          <EmptyCard key={0} index={0} />
+          <>
+            <CreateAulaCard index={0} />
+            {visibleAulas.map((aula, index) => (
+              <AulaCard key={aula.id} aula={aula} index={index} />
+            ))}
+          </>
         )}
       </div>
 
-      <div className="mt-8">
-        <div className="flex items-center gap-3 mb-4">
-          <motion.div
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-[#FF6B00] text-[#FF6B00] font-medium text-sm"
+      {!loading && hasMoreToShow && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.5 }}
+          className="flex justify-center mt-6"
+        >
+          <button
+            onClick={handleShowMore}
+            className="flex items-center gap-2 px-6 py-2.5 bg-[#1A2B3C] border border-[#FF6B00]/30 text-[#FF6B00] rounded-full hover:bg-[#FF6B00]/10 hover:border-[#FF6B00] transition-all font-medium text-sm"
           >
+            <span>Visualizar mais</span>
+            <ChevronDown className="w-4 h-4" />
+          </button>
+        </motion.div>
+      )}
+
+      <div className="mt-8">
+        <motion.div 
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+          className="flex items-center gap-3 mb-4"
+        >
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-[#FF6B00] text-[#FF6B00] font-medium text-sm">
             <BookOpen className="w-4 h-4" />
             <span>Templates de Aulas</span>
-            <motion.div
-              animate={{ rotate: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <i className="fas fa-chevron-down text-xs ml-1"></i>
-            </motion.div>
-          </motion.div>
-        </div>
+            <ChevronDown className="w-4 h-4" />
+          </div>
+        </motion.div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,208px)] gap-6 justify-start w-full">
           {[0, 1, 2, 3].map((index) => (
-            <EmptyCard key={`template-${index}`} index={index} />
+            <EmptyTemplateCard key={`template-${index}`} index={index} />
           ))}
         </div>
       </div>
