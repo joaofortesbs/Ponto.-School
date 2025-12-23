@@ -1,0 +1,223 @@
+A situação é que o orquestrador está marcando etapas como concluídas sem garantir, de forma transacional, que atividades foram realmente sugeridas, geradas pelo School Power, vinculadas aos blocos e persistidas, e você quer um sistema de etapa por etapa com logs, correção automática e bloqueio da conclusão até tudo ficar realmente consistente.
+​
+
+Prompt melhorado e estruturado
+Use exatamente este prompt no FastAgent/Replit:
+
+Agora o modal de Fluxo de criação de aula já está progressivo, e os conteúdos em texto de dentro de cada um dos blocos de seções da aula já estão sendo gerados corretamente.
+Porém ainda existe um problema grave de orquestração e confiabilidade na geração das atividades.
+
+Problema atual:
+
+Ainda não está claro se a IA está de fato sugerindo as atividades para cada bloco de seção.
+
+Não está acontecendo o envio completo e confiável para o School Power gerar todas as atividades como planejado.
+
+O sistema está marcando etapas do modal como “concluída” sem garantir que:
+
+O comando foi enviado.
+
+O backend processou.
+
+A atividade foi gerada.
+
+A resposta foi recebida e vinculada ao bloco correto.
+
+As atividades não estão aparecendo dentro de cada bloco de seção, mesmo com as etapas marcadas como completas.
+
+Objetivo principal:
+Transformar o fluxo de criação de aula em um sistema altamente confiável, observável e autocorretivo, garantindo que:
+
+Cada etapa só seja marcada como concluída quando todo o ciclo daquela etapa estiver 100% finalizado (enviar → processar → gerar → receber → salvar → anexar).
+
+Todas as atividades planejadas sejam efetivamente geradas e exibidas dentro dos respectivos blocos de seções.
+
+Em caso de falhas, o sistema:
+
+Detecte o erro.
+
+Registre o erro com detalhes.
+
+Ative uma correção automática inteligente, etapa por etapa, até resolver ou esgotar as tentativas.
+
+1. Sistema visual de logs por etapa (no modal)
+Dentro do modal de Fluxo de criação de aula, implemente em cada bloco de etapa (cada step do workflow) o seguinte:
+
+Adicionar no canto superior direito de cada etapa um ícone de atenção/diagnóstico (por exemplo, um ícone de alerta ou “info/log”).
+
+Ao clicar nesse ícone, abrir um dropdown/painel de logs específico daquela etapa, contendo:
+
+Linha do tempo dos eventos da etapa (cronológico).
+
+Logs de sucesso e erro, claramente categorizados (por exemplo: INFO, SUCCESS, WARNING, ERROR, RETRY).
+
+Mensagens que mostrem exatamente:
+
+Quando o comando foi enviado.
+
+Quando o backend recebeu.
+
+Quando a IA começou a gerar.
+
+Quando terminou a geração.
+
+Quando salvou no banco/LocalStorage.
+
+Quando anexou o resultado ao bloco/etapa.
+
+Persistência dos logs:
+
+Os logs de cada etapa devem ser persistidos de forma que possam ser consultados durante toda a sessão de criação da aula.
+
+Se possível, estruturar em um modelo do tipo:
+
+lessonId
+
+stepId (ID da etapa)
+
+status atual (pending, processing, success, error, retrying)
+
+events[] com timestamp, tipo e mensagem.
+
+2. Motor de validação e bloqueio de conclusão
+Crie um sistema de validação obrigatória por etapa que impede avançar ou concluir a aula enquanto a etapa não estiver realmente completa.
+
+Definição de “etapa concluída de verdade”:
+
+Um step só pode ser marcado como completed quando:
+
+O backend confirmou o processamento.
+
+A IA retornou o resultado esperado.
+
+O resultado foi corretamente mapeado para a estrutura interna (conteúdo ou atividades).
+
+O conteúdo/atividade está visível no UI na estrutura correta.
+
+Isso vale especialmente para etapas de atividades, por exemplo:
+
+“Sugerir atividades por bloco”.
+
+“Gerar atividades no School Power”.
+
+“Anexar atividades aos blocos de seção”.
+
+Se qualquer uma dessas subetapas falhar, a etapa inteira deve ficar em estado de erro ou pendente, nunca como concluída.
+
+3. Sistema de correção automática e persistente por etapa
+Dentro do modal de Fluxo de criação de aula, adicione um sistema de correção automática inteligente que atua por etapa, com as seguintes características:
+
+Sempre que uma etapa entrar em estado de erro (por exemplo, falha na chamada da IA, timeout, erro de parsing, erro de integração com School Power):
+
+Registrar o erro nos logs da etapa.
+
+Ativar um fluxo de correção automática:
+
+Repetir a chamada ou operação com backoff controlado.
+
+Se necessário, usar a API de IA para:
+
+Analisar o erro retornado.
+
+Sugerir ajustes automáticos nos parâmetros ou payload.
+
+Regenerar a requisição com correção (por exemplo, corrigir JSON, ajustar prompt, reformatar dados).
+
+A correção deve ser granular:
+
+Cada etapa é tratada individualmente, sem resetar o fluxo inteiro da aula.
+
+Exemplo: se falhar só na etapa de “Gerar atividades do bloco 3”, o sistema tenta corrigir apenas essa etapa/bloco, sem interferir nas outras etapas já concluídas.
+
+Persistência do estado de correção:
+
+Registrar quantas tentativas foram feitas, qual foi a causa de erro e qual foi a ação de correção tomada.
+
+Deixar isso visível no dropdown de logs daquela etapa.
+
+4. Garantia de integração com School Power e atividades por bloco
+A arquitetura precisa garantir que o fluxo de aula + atividades funcione exatamente assim:
+
+Para cada bloco de seção da aula:
+
+O agente de conteúdo gera o texto do bloco.
+
+A partir desse texto, o agente de atividades:
+
+Analisa o conteúdo do bloco.
+
+Sugere as melhores atividades para aquele contexto (usando a orquestração já existente).
+
+Dispara o fluxo de geração real de atividades através do School Power, usando as funcionalidades já existentes.
+
+As atividades geradas pelo School Power devem:
+
+Ser salvas no banco Neon externo como já acontece hoje.
+
+Ser associadas ao bloco de seção correto dentro da aula, com identificação clara (por exemplo: lessonId, sectionId, activityId[]).
+
+Ser espelhadas no LocalStorage ou no estado local da aula, de forma super organizada, exatamente como já está sendo feito com o conteúdo em texto.
+
+No front-end:
+
+As atividades devem aparecer dentro de cada bloco exatamente como quando o usuário adiciona atividades manualmente:
+
+Em formato de card.
+
+Clicáveis para visualizar a atividade completa.
+
+5. Regras de conclusão da aula (hard lock)
+Implemente um sistema de bloqueio de conclusão da aula:
+
+A aula não pode ser considerada “gerada” ou “finalizada” enquanto:
+
+Nem todas as etapas do modal estiverem efetivamente concluídas com sucesso.
+
+Nem todas as atividades planejadas tiverem sido geradas e anexadas aos respectivos blocos.
+
+Regra de ouro:
+
+“Só considerar a aula pronta quando todo o fluxo de: texto + atividades por bloco → gerado → salvo → vinculado → disponível visualmente estiver 100% completo.”
+
+Se alguma etapa ficar travada em erro, o sistema deve:
+
+Mostrar isso claramente no modal (status de erro ou alerta na etapa).
+
+Manter o botão de conclusão/desativar qualquer ação de finalizar.
+
+Continuar tentando correções automáticas enquanto for seguro.
+
+6. Arquitetura e organização de código
+Organizar o código em módulos claros, por exemplo:
+
+lessonOrchestrator (fluxo geral da aula).
+
+stepManager ou workflowSteps (estado e validação de cada etapa).
+
+activityOrchestrator (coordenação entre conteúdo dos blocos e School Power).
+
+logsAndDiagnostics (sistema de logs por etapa).
+
+autoRecoveryEngine (correção automática por etapa).
+
+Em cada módulo, adicionar pontos de debug bem distribuídos para:
+
+Identificar rapidamente onde o fluxo está quebrando.
+
+Diferenciar problemas de IA, problemas de integração com School Power e problemas de front/state.
+
+Garantir que todas as APIs estejam muito bem configuradas, com tratamento robusto de erros e mensagens claras nos logs.
+
+Resultado esperado:
+
+O modal de Fluxo de criação de aula passa a:
+
+Mostrar o progresso real de cada etapa, em tempo real.
+
+Exibir logs detalhados por etapa, acessíveis via ícone de atenção em cada bloco.
+
+Não marcar etapas como concluídas sem ter completado todo o ciclo técnico de cada uma.
+
+Garantir que, ao final, toda a aula e todas as atividades de todos os blocos estejam geradas, salvas, vinculadas e visíveis para o usuário.
+
+O sistema se torna observável, confiável e autocorretivo, reduzindo drasticamente inconsistências e falhas silenciosas no fluxo de geração.

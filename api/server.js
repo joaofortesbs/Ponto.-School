@@ -498,18 +498,38 @@ app.get('/api/orchestrator/stream/:requestId', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.flushHeaders();
 
-  const sendEvent = (data) => {
-    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  const sendEvent = (eventType, data) => {
+    const payload = { type: eventType, ...data, timestamp: Date.now() };
+    res.write(`data: ${JSON.stringify(payload)}\n\n`);
   };
 
-  sendEvent({ type: 'connected', requestId, timestamp: Date.now() });
+  sendEvent('connected', { requestId });
 
   sseClients.set(requestId, sendEvent);
+  
+  orchestrator.registerSSEClient(requestId, sendEvent);
 
   req.on('close', () => {
     sseClients.delete(requestId);
+    orchestrator.unregisterSSEClient(requestId);
     orchestratorLog(LOG_PREFIXES.API, `SSE: Cliente desconectado de ${requestId}`);
   });
+});
+
+app.get('/api/orchestrator/logs/:requestId', (req, res) => {
+  const { requestId } = req.params;
+  const stepId = req.query.step ? parseInt(String(req.query.step)) : undefined;
+  
+  const logs = orchestrator.getStepLogs(requestId, stepId);
+  
+  if (!logs) {
+    return res.status(404).json({ 
+      success: false, 
+      error: 'Logs não encontrados para este requestId' 
+    });
+  }
+  
+  res.json({ success: true, logs });
 });
 
 app.post('/api/orchestrator/orchestrate-stream', async (req, res) => {
@@ -524,14 +544,16 @@ app.post('/api/orchestrator/orchestrate-stream', async (req, res) => {
     });
   }
 
+  const requestId = lessonContext.requestId;
+  orchestratorLog(LOG_PREFIXES.API, `RequestId recebido: ${requestId}`);
+
   try {
     const onProgress = (state) => {
-      const sendEvent = sseClients.get(state.requestId);
+      const sendEvent = sseClients.get(requestId);
       if (sendEvent) {
-        sendEvent({ 
-          type: 'progress', 
+        sendEvent('progress', { 
           ...state,
-          timestamp: Date.now()
+          requestId
         });
       }
     };
@@ -541,30 +563,28 @@ app.post('/api/orchestrator/orchestrate-stream', async (req, res) => {
       onProgress
     });
     
-    const sendEvent = sseClients.get(result.requestId);
-    if (sendEvent) {
-      sendEvent({ 
-        type: 'complete', 
-        success: result.success,
-        lesson: result.lesson,
-        activities: result.activities,
-        timing: result.timing,
-        errors: result.errors,
-        timestamp: Date.now()
-      });
-    }
-    
     res.json({
       success: result.success,
       requestId: result.requestId,
       lesson: result.lesson,
       activities: result.activities,
       timing: result.timing,
-      errors: result.errors
+      errors: result.errors,
+      logs: result.logs,
+      validationSummary: result.validationSummary
     });
 
   } catch (error) {
     orchestratorLog(LOG_PREFIXES.ERROR, `Erro na orquestração com streaming: ${error.message}`);
+    
+    const sendEvent = sseClients.get(requestId);
+    if (sendEvent) {
+      sendEvent('error', { 
+        message: error.message,
+        requestId
+      });
+    }
+    
     res.status(500).json({
       success: false,
       error: error.message,

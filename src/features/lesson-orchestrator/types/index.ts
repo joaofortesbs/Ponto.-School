@@ -19,13 +19,51 @@ export interface OrchestratorOptions {
   onProgress?: (state: WorkflowState) => void;
 }
 
+export type LogEventType = 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR' | 'RETRY' | 'DEBUG';
+
+export interface LogEvent {
+  timestamp: number;
+  type: LogEventType;
+  message: string;
+  data?: any;
+  relativeTime: number;
+}
+
+export interface SubPhase {
+  completed: boolean;
+  timestamp: number;
+  details?: any;
+}
+
+export interface ValidationCheck {
+  name: string;
+  passed: boolean;
+  timestamp: number;
+  details?: any;
+}
+
+export interface StepLogs {
+  stepId: number;
+  stepName: string;
+  status: 'pending' | 'running' | 'completed' | 'error' | 'retrying';
+  events: LogEvent[];
+  subPhases: Record<string, SubPhase>;
+  retryCount: number;
+  lastError: { message: string; stack?: string; timestamp: number } | null;
+  startTime: number | null;
+  endTime: number | null;
+  validationChecks: ValidationCheck[];
+  duration: number | null;
+}
+
 export interface WorkflowStep {
   name: string;
-  status: 'pending' | 'running' | 'completed' | 'error';
+  status: 'pending' | 'running' | 'completed' | 'error' | 'retrying';
   startTime: number | null;
   endTime: number | null;
   data: any;
   error: string | null;
+  logs?: StepLogs;
 }
 
 export interface WorkflowState {
@@ -88,7 +126,18 @@ export interface OrchestratorResult {
   success: boolean;
   lesson: LessonData | null;
   activities: GeneratedActivity[];
-  errors: Array<{ step: number; message: string; stack?: string }>;
+  errors: Array<{ 
+    step: number; 
+    message: string; 
+    stack?: string;
+    recoveryStats?: {
+      attempts: number;
+      maxRetries: number;
+      lastError: any;
+      corrections: any[];
+      exhausted: boolean;
+    };
+  }>;
   timing: {
     step1?: number;
     step2?: number;
@@ -99,6 +148,17 @@ export interface OrchestratorResult {
     step7?: number;
     total?: number;
   };
+  logs?: {
+    requestId: string;
+    createdAt: number;
+    steps: Record<number, StepLogs>;
+    totalDuration: number;
+  };
+  validationSummary?: Record<number, {
+    valid: boolean;
+    errorCount: number;
+    passedCount: number;
+  }>;
 }
 
 export const WORKFLOW_STEPS = {

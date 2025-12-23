@@ -15,7 +15,8 @@ import type {
   OrchestratorOptions,
   OrchestratorResult,
   WorkflowState,
-  GeneratedActivity
+  GeneratedActivity,
+  StepLogs
 } from '../types';
 
 const ORCHESTRATOR_BASE_URL = '/api/orchestrator';
@@ -32,6 +33,7 @@ function log(message: string, data?: any) {
 export class OrchestratorService {
   private static instance: OrchestratorService;
   private eventSources: Map<string, EventSource> = new Map();
+  private stepLogsCache: Map<string, Record<number, StepLogs>> = new Map();
 
   private constructor() {}
 
@@ -77,31 +79,37 @@ export class OrchestratorService {
             break;
             
           case 'progress':
+            if (data.logs) {
+              this.updateStepLogs(requestId, data.step, data.logs);
+            }
             onProgress({
               requestId: data.requestId,
-              currentStep: data.currentStep,
-              steps: data.steps,
-              progress: data.progress,
-              totalDuration: data.totalDuration,
-              isComplete: data.isComplete,
-              hasError: data.hasError
+              currentStep: data.currentStep || data.step,
+              steps: data.steps || {},
+              progress: data.progress || 0,
+              totalDuration: data.totalDuration || 0,
+              isComplete: data.isComplete || false,
+              hasError: data.hasError || false
             });
             break;
             
           case 'complete':
+          case 'failed':
             onComplete({
               success: data.success,
               requestId: requestId,
               lesson: data.lesson,
               activities: data.activities || [],
               errors: data.errors || [],
-              timing: data.timing || {}
+              timing: data.timing || {},
+              logs: data.logs,
+              validationSummary: data.validationSummary
             });
             this.disconnectSSE(requestId);
             break;
             
           case 'error':
-            onError(data.error || 'Erro desconhecido');
+            onError(data.message || data.error || 'Erro desconhecido');
             this.disconnectSSE(requestId);
             break;
         }
@@ -125,6 +133,39 @@ export class OrchestratorService {
       eventSource.close();
       this.eventSources.delete(requestId);
       log(`SSE desconectado para ${requestId}`);
+    }
+  }
+
+  private updateStepLogs(requestId: string, stepId: number, logs: StepLogs): void {
+    if (!this.stepLogsCache.has(requestId)) {
+      this.stepLogsCache.set(requestId, {});
+    }
+    const cache = this.stepLogsCache.get(requestId)!;
+    cache[stepId] = logs;
+  }
+
+  getStepLogs(requestId: string): Record<number, StepLogs> | undefined {
+    return this.stepLogsCache.get(requestId);
+  }
+
+  clearStepLogs(requestId: string): void {
+    this.stepLogsCache.delete(requestId);
+  }
+
+  async fetchStepLogs(requestId: string, stepId?: number): Promise<StepLogs | Record<number, StepLogs> | null> {
+    try {
+      const url = stepId 
+        ? `${ORCHESTRATOR_BASE_URL}/logs/${requestId}?step=${stepId}`
+        : `${ORCHESTRATOR_BASE_URL}/logs/${requestId}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) return null;
+      
+      const data = await response.json();
+      return data.logs;
+    } catch (error) {
+      log('Erro ao buscar logs', error);
+      return null;
     }
   }
   
