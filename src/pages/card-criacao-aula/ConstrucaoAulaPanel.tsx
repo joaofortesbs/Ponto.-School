@@ -7,6 +7,7 @@ import { GeneratedLessonData } from '@/services/lessonGeneratorService';
 import { aulasStorageService } from '@/services/aulasStorageService';
 import { aulasIndexedDBService } from '@/services/aulasIndexedDBService';
 import { aulaLoadingDebugger } from '@/services/aulaLoadingDebugger';
+import { sanitizeLoadedAula, ensureString } from '@/utils/contentSanitizer';
 
 interface ConstrucaoAulaPanelProps {
   isOpen: boolean;
@@ -89,8 +90,16 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
           secoesLength: Object.keys(aula.secoes || {}).length
         });
 
-        console.log('[CONSTRUCAO_AULA] ✅ Aula carregada:', aula.titulo);
-        setAulaCarregada(aula);
+        // 🔴 SANITIZAR ANTES DE USAR
+        const aulaSanitizada = sanitizeLoadedAula(aula);
+        aulaLoadingDebugger.log('AULA_SANITIZADA', {
+          titulo: aulaSanitizada.titulo,
+          objetivo: aulaSanitizada.objetivo?.substring(0, 50),
+          sectionOrderLength: aulaSanitizada.sectionOrder.length
+        });
+
+        console.log('[CONSTRUCAO_AULA] ✅ Aula carregada e sanitizada:', aulaSanitizada.titulo);
+        setAulaCarregada(aulaSanitizada);
         setCarregando(false);
         aulaLoadingDebugger.log('LOADING_FALSE', null);
         aulaLoadingDebugger.log('COMPLETE', 'Aula carregada com sucesso no estado');

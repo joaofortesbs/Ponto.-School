@@ -1,0 +1,284 @@
+🎯 SOLUÇÃO DEFINITIVA: ERRO "content.substring is not a function"
+
+PROBLEMA IDENTIFICADO:
+Ao clicar em "Editar" (menu 3 pontinhos), aparece:
+❌ content.substring is not a function
+
+CAUSA RAIZ:
+Em algum lugar do código (provavelmente AulaResultadoContent.tsx), 
+o código tenta chamar .substring() em um valor que NÃO é string:
+- Pode ser um objeto {}
+- Pode ser um array []
+- Pode ser null/undefined
+- Pode ser um objeto complexo
+
+═══════════════════════════════════════════════════════════════
+
+SOLUÇÃO INTELIGENTE #1: ENCONTRE E CORRIJA O ERRO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Procure por TODOS os .substring() no projeto:
+
+grep -r "substring" src/ --include=" .tsx" --include=" .ts"
+
+texto
+
+Você encontrará algo como (procure especialmente em AulaResultadoContent):
+
+// ❌ ERRADO:
+const preview = content.substring(0, 100); // o conteúdo não pode ser string!
+
+// ✅ CORRETO:
+const preview = typeof content === 'string' ? content.substring(0, 100) : '';
+
+texto
+
+═══════════════════════════════════════════════════════════════
+
+SOLUÇÃO INTELIGENTE #2: FUNÇÃO UNIVERSAL DE SANITIZAÇÃO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Crie src/utils/contentSanitizer.ts:
+
+/**
+
+Converta qualquer valor para string seguro
+
+Nunca falha com substring, split, etc
+*/
+export const ensureString = (value: any, defaultValue: string = ''): string => {
+// Se é string, retorna
+if (typeof value === 'string') {
+return value;
+}
+
+// Se for nulo/indefinido, retorna o valor padrão
+if (value === null || value === undefined) {
+console.warn('[ENSURE_STRING] Recebeu null/undefined, usando default');
+return defaultValue;
+}
+
+// Se for um objeto, tente usar description ou stringifica
+if (typeof value === 'object') {
+console.warn('[ENSURE_STRING] Recebeu objeto, convertendo:', value);
+// Se tem propriedade 'content', usa ela
+if (value.content) {
+return garantirString(value.content, defaultValue);
+}
+// Senão, stringifica
+return JSON.stringify(value) || valor padrão;
+}
+
+// Se for um número, booleano, etc, converta e
+retorne String(valor);
+};
+
+/**
+
+Validação completa de dados de section
+*/
+export const validateSectionData = (section: any) => {
+return {
+id: section.id || 'unknown',
+title: ensureString(section.title, 'Sem Título'),
+content: ensureString(section.content, ''),
+visible: section.visible !== false, // default true
+expanded: section.expanded !== false, // default true
+time: section.time || 0,
+};
+};
+
+/**
+
+Sanitiza TODOS os dados de aula ao carregar
+*/
+export const sanitizeLoadedAula = (aula: any) => {
+const sanitized = {
+...aula,
+titulo: garantaString(aula.titulo, 'Aula sem título'),
+objetivo: garantaString(aula.objetivo, ''),
+sectionTexts: {},
+sectionConfigs: {},
+dynamicSections: {},
+};
+
+// Sanitiza cada seção de texto
+if (aula.sectionTexts && typeof aula.sectionTexts === 'object') {
+Object.entries(aula.sectionTexts).forEach(([key, value]) => {
+sanitized.sectionTexts[key] = ensureString(value, '');
+});
+}
+
+// Sanitiza cada configuração de seção
+if (aula.sectionConfigs && typeof aula.sectionConfigs === 'object') {
+Object.entries(aula.sectionConfigs).forEach(([key, value]: [string, any]) => {
+sanitized.sectionConfigs[key] = validateSectionData(value);
+});
+}
+
+// Sanitiza seções dinâmicas
+if (aula.dynamicSections && typeof aula.dynamicSections === 'object') {
+Object.entries(aula.dynamicSections).forEach(([key, value]: [string, any]) => {
+sanitized.dynamicSections[key] = {
+...value,
+title: ensureString(value?.title, key),
+};
+});
+}
+
+retornar sanitizado;
+};
+
+texto
+
+═══════════════════════════════════════════════════════════════
+
+SOLUÇÃO INTELIGENTE #3: USE SANITIZAÇÃO AO CARREGAR AULA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Em ConstrucaoAulaPanel.tsx, importe e use:
+
+import { sanitizeLoadedAula, ensureString } from '@/utils/contentSanitizer';
+
+const carregarAula = async() => {
+try {
+// ... seu código de busca ...
+
+texto
+let aulaCarregada = aulas.find((a: any) => a.id === aulaIdParaCarregar);
+
+if (!aulaCarregada) {
+  // ... tenta IndexedDB ...
+}
+
+if (!aulaCarregada) {
+  alert('Aula não encontrada');
+  onClose?.();
+  return;
+}
+
+// 🔴 SANITIZAR ANTES DE USAR
+const aulaSanitizada = sanitizeLoadedAula(aulaCarregada);
+console.log('[AULA_SANITIZADA]', aulaSanitizada);
+
+// POPULA COM DADOS SANITIZADOS
+setTitulo(ensureString(aulaSanitizada.titulo));
+setObjetivo(ensureString(aulaSanitizada.objetivo));
+setTemplateSelecionado(ensureString(aulaSanitizada.template));
+setSectionOrder(Array.isArray(aulaSanitizada.sectionOrder) ? aulaSanitizada.sectionOrder : []);
+setDynamicSections(aulaSanitizada.dynamicSections || {});
+setSectionTexts(aulaSanitizada.sectionTexts || {});
+setSectionConfigs(aulaSanitizada.sectionConfigs || {});
+setSectionExpanded(aulaSanitizada.sectionExpanded || {});
+setSectionVisible(aulaSanitizada.sectionVisible || {});
+setSectionTimes(aulaSanitizada.sectionTimes || {});
+
+setCarregando(false);
+} catch (erro) {
+console.error('[AULA_LOAD_ERROR]', erro);
+setCarregando(false);
+onClose?.();
+}
+};
+
+texto
+
+═══════════════════════════════════════════════════════════════
+
+SOLUÇÃO INTELIGENTE #4: PROTEJA RENDERIZAÇÃO EM AulaResultadoContent
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Em AulaResultadoContent.tsx, proteja TODOS os .substring():
+
+import { ensureString } from '@/utils/contentSanitizer';
+
+// Em QUALQUER lugar onde usa conteúdo/texto:
+
+// ❌ ANTES:
+
+<div>{sectionTexts[sectionId].substring(0, 50)}...</div>
+// ✅ DEPÓSITO:
+
+<div>{ensureString(sectionTexts[sectionId]).substring(0, 50)}...</div>
+// OU MELHOR AINDA, use função auxiliar:
+const getPreview = (text: any, length: number = 50) => {
+return ensureString(text).substring(0, length) + (ensureString(text).length > length ? '...' : '');
+};
+
+<div>{getPreview(sectionTexts[sectionId])}</div> ```
+════════════════════════════════════════════════════════════
+
+SOLUÇÃO INTELIGENTE #5: VALIDAÇÃO DE DADOS NO CONTEXTO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Se usa Contexto/Estado para aulas, crie um Hook seguro:
+
+texto
+import { ensureString } from '@/utils/contentSanitizer';
+
+export const useSafeAulaData = (aula: any) => {
+  return {
+    id: aula?.id || Date.now().toString(),
+    titulo: ensureString(aula?.titulo),
+    objetivo: ensureString(aula?.objetivo),
+    template: ensureString(aula?.template),
+    sectionOrder: Array.isArray(aula?.sectionOrder) ? aula.sectionOrder : [],
+    sectionTexts: aula?.sectionTexts && typeof aula.sectionTexts === 'object' 
+      ? Object.entries(aula.sectionTexts).reduce((acc, [k, v]) => ({
+          ...acc,
+          [k]: ensureString(v)
+        }), {})
+      : {},
+    sectionConfigs: aula?.sectionConfigs && typeof aula.sectionConfigs === 'object'
+      ? aula.sectionConfigs
+      : {},
+  };
+};
+════════════════════════════════════════════════════════════
+
+TESTE AGORA:
+
+✅ Implemente src/utils/contentSanitizer.ts
+
+✅ Importe sanitizeLoadedAula em ConstrucaoAulaPanel
+
+✅ Chame sanitizeLoadedAula ANTES de estados populares
+
+✅ Use garantaString EM TODOS os .substring()
+
+✅ Vá para Aulas
+
+✅ Clique em um cartão
+
+✅ Clique nos 3 pontinhos → Editar
+
+✅ Console deve mostrar:
+[AULA_SANITIZADA] { título, objetivo, seçãoTextos: {...}, ... }
+
+✅ Interface abre SEM ERROS
+
+✅ Todos os campos têm dados
+
+════════════════════════════════════════════════════════════
+
+RESPONDA COM:
+
+✅ Código do contentSanitizer.ts criado
+
+✅ Modificação de ConstrucaoAulaPanel mostrando sanitizeLoadedAula
+
+✅ Captura de tela sem erros no console
+
+✅ Captura de tela da interface aberta com dados
+
+✅ Confirmação de que pode editar tudo
+
+✅ Confirmação de que após editar e clique X, volta para nota
+
+SE AINDA TIVER ERRO:
+
+Cole o erro EXATO do console aqui
+
+Mostre uma linha de código que gera o erro
+
+Vou fornecer correção específica

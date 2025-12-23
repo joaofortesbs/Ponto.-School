@@ -12,6 +12,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Zap, Heart, Briefcase, Monitor, PenTool, Users as UsersIcon, Brain, Compass, Presentation, HandHelping, Rocket } from 'lucide-react';
 import { GeneratedLessonData } from '@/services/lessonGeneratorService';
 import { notifyAllWatchers } from '@/services/publicationWatcher';
+import { ensureString } from '@/utils/contentSanitizer';
 
 // ====================================================================
 // SISTEMA DE MAPEAMENTO DE SEÇÕES DO TEMPLATE
@@ -424,7 +425,7 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
     console.log('🤖 [AI_DATA] APLICANDO DADOS GERADOS PELA IA');
     console.log('🤖 [AI_DATA] ========================================');
     console.log('🤖 [AI_DATA] Título:', generatedData.titulo);
-    console.log('🤖 [AI_DATA] Objetivo:', generatedData.objetivo?.substring(0, 100) + '...');
+    console.log('🤖 [AI_DATA] Objetivo:', ensureString(generatedData.objetivo).substring(0, 100) + '...');
     console.log('🤖 [AI_DATA] Seções recebidas:', Object.keys(generatedData.secoes || {}));
     
     // Atualiza o nome da aula (título)
@@ -436,7 +437,7 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
     
     // Atualiza o objetivo
     if (generatedData.objetivo) {
-      console.log('🤖 [AI_DATA] Aplicando objetivo (primeiros 100 chars):', generatedData.objetivo.substring(0, 100));
+      console.log('🤖 [AI_DATA] Aplicando objetivo (primeiros 100 chars):', ensureString(generatedData.objetivo).substring(0, 100));
       setObjectiveText(generatedData.objetivo);
     }
     
@@ -454,14 +455,14 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
           }
           
           if (updated[sectionId]) {
-            console.log(`🤖 [AI_DATA] Seção "${sectionId}" atualizada: ${(content as string).substring(0, 50)}...`);
+            console.log(`🤖 [AI_DATA] Seção "${sectionId}" atualizada: ${ensureString(content).substring(0, 50)}...`);
             updated[sectionId] = {
               ...updated[sectionId],
               text: content as string
             };
           } else {
             // Se a seção não existe, cria uma nova
-            console.log(`🤖 [AI_DATA] Seção "${sectionId}" criada: ${(content as string).substring(0, 50)}...`);
+            console.log(`🤖 [AI_DATA] Seção "${sectionId}" criada: ${ensureString(content).substring(0, 50)}...`);
             updated[sectionId] = {
               id: sectionId,
               text: content as string,
