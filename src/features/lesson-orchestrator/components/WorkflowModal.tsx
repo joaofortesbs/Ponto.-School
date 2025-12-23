@@ -259,7 +259,14 @@ const WorkflowModal: React.FC<WorkflowModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !workflowState?.hasError) {
+          onClose();
+        }
+      }}
+    >
       <div className="relative w-full max-w-2xl mx-4 bg-[#1a1a2e] rounded-2xl shadow-2xl border border-orange-500/20 overflow-hidden max-h-[90vh] flex flex-col">
         <div className="bg-gradient-to-r from-orange-500/20 to-purple-500/20 px-6 py-4 border-b border-white/10">
           <div className="flex items-center justify-between">
@@ -276,7 +283,13 @@ const WorkflowModal: React.FC<WorkflowModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              disabled={workflowState?.hasError}
+              className={`p-2 rounded-full transition-colors ${
+                workflowState?.hasError 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-white/10'
+              }`}
+              title={workflowState?.hasError ? 'Feche os logs do erro antes de fechar' : 'Fechar'}
             >
               <X className="w-5 h-5 text-gray-400" />
             </button>
@@ -426,12 +439,9 @@ const WorkflowModal: React.FC<WorkflowModalProps> = ({
                 </button>
               )}
               {workflowState?.hasError && (
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
-                >
-                  Fechar
-                </button>
+                <div className="text-sm text-red-400 font-medium">
+                  ⚠️ Erro detectado - Modal bloqueado para inspeção de logs
+                </div>
               )}
               {isLoading && !workflowState?.isComplete && !workflowState?.hasError && (
                 <div className="flex items-center gap-2 text-orange-400">
