@@ -185,13 +185,33 @@ async function generateWithGemini(systemPrompt, userPrompt, requestId) {
  * ====================================================================
  * VERIFICAÇÃO SE ERRO É RATE LIMIT
  * ====================================================================
+ * Groq SDK pode expor rate limit em diversos campos:
+ * - error.status (padrão HTTP)
+ * - error.statusCode (Groq SDK)
+ * - error.response?.status (axios-style)
+ * - error.code (string code)
+ * - error.message (texto descritivo)
  */
 function isRateLimitError(error) {
-  return error?.status === 429 || 
-         error?.message?.includes('429') || 
-         error?.message?.includes('rate_limit') ||
-         error?.message?.includes('Rate limit') ||
-         error?.code === 'rate_limit_exceeded';
+  if (!error) return false;
+  
+  // Verificações numéricas de status HTTP 429
+  if (error.status === 429) return true;
+  if (error.statusCode === 429) return true;
+  if (error.response?.status === 429) return true;
+  
+  // Verificações por código de erro
+  if (error.code === 'rate_limit_exceeded') return true;
+  if (error.error?.code === 'rate_limit_exceeded') return true;
+  
+  // Verificações por mensagem de erro
+  const message = error.message || error.error?.message || '';
+  if (message.includes('429')) return true;
+  if (message.toLowerCase().includes('rate_limit')) return true;
+  if (message.toLowerCase().includes('rate limit')) return true;
+  if (message.toLowerCase().includes('too many requests')) return true;
+  
+  return false;
 }
 
 /**
