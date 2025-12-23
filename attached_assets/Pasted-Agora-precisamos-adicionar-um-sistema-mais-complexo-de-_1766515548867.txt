@@ -1,0 +1,20 @@
+Agora precisamos adicionar um sistema mais complexo de dentro da criação das aulas, porque precisamos adiiconar a criação de atividades automatica, precisamos achar uma forma de integrar a criação das aulas, com a adição de atividades que vão ser criadas ao mesmo tempo dentro do School Power automaticamente, ou seja, o fluxo precisa ser assim:
+
+1: O usuário entra no modal de Personalizar aula, e preenche todos os campos para poder criar a aula.
+
+2: Quando a aula estiver sendo criada, no back-end vai existir de maneira organizada os agentes IA que estão criando tudo da aula, que vão ser (O agente que gera os conteúdos em texto de dentro de cada bloco de seção) e o (Agente que gera as atividades de dentro de cada um dos blocos de seção para serem adicionados dentro de cada um dos blocos)
+
+Ou seja, precisamos achar uma maneira que o Agente que gera os textos de dentro dos blocos de seções, também envie um especie de comando que esse comando é as atividades que o School Power deve gerar [Isso significa que o agente vai precisar ter acesso ao arquivo de (src/features/schoolpower/data/schoolPowerActivities.json) para buscar as atividades que ele pode sugerir, sem alucinações], e quando o sistema de Agente de criação de atividades captar esses comandos e o texto que a IA gerou dentro do bloco de seção, ele vai usar a API do Groq para criar prompts para dentro da seção School Power, e esses prompts precisam ser exatos e vindos de uma analise completa, e o sistema interno de back-end e geração automatica vai enviar esses prompts dentro do School Power, e vai passar por todas as etapas de dentro do school power, até as atividades sugeridas serem criadas, e serem salvas dentro do banco de dados, e serem coletadas e enviadas para dentro dos blocos de seções de dentro da criação da aula, tudo isso automaticamente enquanto acontece a animação de carregamento!
+
+Talvez você precise criar um servidor individual e exclusivo para simular toda a interação com a seção School Power, enviando comandos e executando scripts necessários para que todas as atividades sejam criadas corretamente!
+
+Você pode criar um modal que simula a criação da aula, e dentro desse modal no canto superior direito você pode colocar um icone de fluxo, e quando o usuário clicar a interface do modal vai atualizar para mostrar todo o fluxo de criação da aula, como se fosse uma especie de debug para analisarmos cada etapa e se por acaso acontecer algum erro identificarmos de maneira exata, parecido com um workflow react, no estilo:
+
+1: Envio de contexto
+2: Criando conteúdo dos blocos
+3: Criando as atividades
+4: Salvando as atividades
+5: Colocando atividades nos blocos
+6: Finalizando aula
+
+Esse modal que mostra todo o fluxo precisa ter uma aruiterura perfeita para identificar perfeitamente cada etapa e ser sicronizada com toda a plataforma para consegur passar as informações progressivamente da maneira correta! Como se cada etapa fosse um comando e agente diferente porém dentro da mesma janela de contexto para gerar tudo de maneira alinha! Isso é uma visão macro da criação das aulas!
