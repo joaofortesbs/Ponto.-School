@@ -1,0 +1,110 @@
+O problema é que o prompt é emocional, redundante e pouco específico sobre o comportamento esperado no código; ele não explica claramente o bug, nem o estado atual do sistema e o estado desejado.
+​
+
+Novo prompt enxuto e objetivo
+Use este prompt completo para o agente dentro do Replit:
+
+Você é um engenheiro de software sênior especializado em React, TypeScript e arquitetura de front-end.
+
+Contexto do problema
+
+Estou construindo um sistema de criação de aulas com templates de aula.
+
+Cada template define uma ordem específica de seções (sectionOrder).
+
+As seções são renderizadas a partir de AulaResultadoContent.tsx usando sectionOrder, dynamicSections e sectionConfigs.
+
+O objetivo é que cada aula gerada mostre exatamente as seções do template selecionado, sempre finalizando com estes 3 blocos fixos, na ordem:
+
+Materiais Complementares
+
+Observações do Professor
+
+Critérios BNCC
+
+Problema atual
+
+Todas as aulas geradas ainda aparecem com a mesma sequência de cards de seções, independentemente do template escolhido.
+
+O sistema não está sincronizando corretamente os cards de blocos de seção com o template selecionado.
+
+Já houve tentativas de corrigir sectionOrder, sectionConfigs e dynamicSections, mas o comportamento final ainda não está correto.
+​
+
+O que você deve fazer
+
+Ler e entender profundamente TODO o fluxo de templates e seções, incluindo (mas não limitado a):
+
+src/pages/card-criacao-aula/components/AulaResultadoContent.tsx
+
+src/pages/card-criacao-aula/components/TemplateDropdown.tsx
+
+Qualquer arquivo onde:
+
+sectionOrder é definido, atualizado ou usado
+
+dynamicSections é definido, atualizado ou usado
+
+SECTION_NAME_TO_CONFIG ou mapeamentos similares são definidos
+
+Identificar com precisão a causa da falta de sincronização entre:
+
+template selecionado
+
+getTemplateSectionOrder (ou função equivalente)
+
+sectionOrder
+
+sectionConfigs
+
+renderização dos cards na interface.
+
+Refatorar o código para garantir que:
+
+sectionOrder contenha apenas as seções do template ativo, na ordem correta.
+
+sectionConfigs seja derivado apenas de sectionOrder, e não de todas as seções globais.
+​
+
+dynamicSections e qualquer estado relacionado (texts, expanded, visible, times) estejam completamente alinhados com sectionOrder.
+
+TODOS os templates terminem sempre com os três blocos finais:
+
+Materiais Complementares
+
+Observações do Professor
+
+Critérios BNCC
+
+Remover estados obsoletos ou duplicados ligados a seções antigas (ex.: preEstudoText, introducaoText, desenvolvimentoText, etc.), garantindo que o estado da aula seja centralizado em uma estrutura dinâmica (ex.: dynamicSections + Records como sectionTexts, sectionExpanded, sectionVisible, sectionTimes).
+​
+
+Garantir que o sistema de salvar rascunho e de persistência (localStorage / backend) continue funcionando corretamente com a nova estrutura.
+
+Critérios de aceitação (não avance sem cumprir todos)
+
+Para cada template, a sequência de seções exibidas deve:
+
+Seguir exatamente a ordem definida pelo template.
+
+Ser consistente entre o que é calculado em código e o que é renderizado em tela.
+
+Sempre finalizar com: Materiais Complementares → Observações do Professor → Critérios BNCC.
+
+Não deve existir nenhuma seção sendo renderizada que não faça parte do template selecionado.
+
+O código deve compilar sem erros de TypeScript/React e sem erros LSP.
+
+A experiência de edição (expandir/ocultar seções, editar textos, tempos, etc.) deve funcionar normalmente para todas as seções.
+
+Como responder
+
+Explique primeiro:
+
+Onde estava o problema raiz.
+
+Qual foi a nova arquitetura/lógica adotada.
+
+Depois, mostre os trechos de código relevantes antes e depois da mudança (quando fizer sentido).
+
+Garanta que todas as alterações necessárias estejam incluídas (imports, tipos, estados, hooks, etc.).
