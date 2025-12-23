@@ -65,9 +65,15 @@ const AtividadesInterface: React.FC = () => {
     setIsConstrucaoAulaOpen(true);
   };
 
-  const handleCloseConstrucaoAula = () => {
-    console.log('📚 Fechando Card de Construção de Aula');
+  const handleCloseConstrucaoAula = (foiPublicada?: boolean) => {
+    console.log('📚 Fechando Card de Construção de Aula, foiPublicada:', foiPublicada);
     setIsConstrucaoAulaOpen(false);
+    
+    // Se aula foi publicada, disparar evento para recarregar grade
+    if (foiPublicada) {
+      console.log('[PAI] 🔄 Disparando evento de atualização de grade');
+      window.dispatchEvent(new Event('aulasPublicadas'));
+    }
   };
 
   const renderGrid = () => {

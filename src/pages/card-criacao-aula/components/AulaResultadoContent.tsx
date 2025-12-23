@@ -108,6 +108,7 @@ interface AulaResultadoContentProps {
 }
 
 export interface AulaResultadoContentRef {
+  isPublished: () => boolean;
   getAulaData: () => {
     titulo: string;
     objetivo: string;
@@ -613,6 +614,7 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
   // os dados da aula para salvamento.
   // ====================================================================
   useImperativeHandle(ref, () => ({
+    isPublished: () => isPublished,
     getAulaData: () => {
       console.log('📤 [GET_AULA_DATA] Coletando dados da aula para salvamento...');
       

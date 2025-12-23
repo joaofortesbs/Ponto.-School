@@ -8,7 +8,7 @@ import { aulasStorageService } from '@/services/aulasStorageService';
 
 interface ConstrucaoAulaPanelProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (foiPublicada?: boolean) => void;
   onSave?: () => void;
   aulaName?: string;
   selectedTemplate?: Template | null;
@@ -35,9 +35,13 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
   const contentRef = useRef<AulaResultadoContentRef>(null);
 
   const handleSaveAndClose = useCallback(() => {
-    console.log('💾 [SAVE_AULA] Iniciando salvamento automático da aula...');
+    console.log('💾 [SAVE_AULA] Iniciando salvamento/fechamento da aula...');
     
-    if (contentRef.current) {
+    // Verificar se aula foi publicada
+    const foiPublicada = contentRef.current?.isPublished?.() ?? false;
+    console.log('[CONSTRUCAO_AULA] Aula foi publicada?', foiPublicada);
+    
+    if (contentRef.current && !foiPublicada) {
       const aulaData = contentRef.current.getAulaData();
       console.log('💾 [SAVE_AULA] Dados obtidos:', aulaData);
       
@@ -66,7 +70,7 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
       }
     }
     
-    onClose();
+    onClose(foiPublicada);
   }, [selectedTemplate, turmaName, turmaImage, onClose, onSave]);
 
   return (
