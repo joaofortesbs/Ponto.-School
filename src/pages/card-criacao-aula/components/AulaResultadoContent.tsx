@@ -586,11 +586,15 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
       setIsPublishing(false);
       console.log('[PUBLISH_AULA_SUCCESS] ✅ isPublished = true, isPublishing = false');
 
-      // 7. Mostrar modal
+      // 7. Disparar evento para atualizar a grade na mesma aba
+      console.log('[PUBLISH_TRIGGER] Disparando evento "aulasPublicadas"');
+      window.dispatchEvent(new Event('aulasPublicadas'));
+
+      // 8. Mostrar modal
       setShowPublishModal(true);
       console.log('[PUBLISH_AULA_MODAL] Modal de sucesso aberto');
 
-      // 8. Auto-fechar modal
+      // 9. Auto-fechar modal
       setTimeout(() => {
         setShowPublishModal(false);
         console.log('[PUBLISH_AULA_MODAL_CLOSED] Modal fechado automaticamente');

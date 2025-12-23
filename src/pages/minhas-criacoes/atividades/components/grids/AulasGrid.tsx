@@ -57,12 +57,24 @@ const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm, onCreateAula, onCount
     
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'ponto_school_aulas_salvas') {
+        console.log('📚 [AULAS_GRID] Storage event detectado, recarregando...');
         carregarAulas();
       }
     };
     
+    // Listener para evento customizado de publicação na mesma aba
+    const handleAulasPublicadas = () => {
+      console.log('📚 [AULAS_GRID] Evento "aulasPublicadas" detectado, recarregando...');
+      carregarAulas();
+    };
+    
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('aulasPublicadas', handleAulasPublicadas);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('aulasPublicadas', handleAulasPublicadas);
+    };
   }, []);
 
   useEffect(() => {
