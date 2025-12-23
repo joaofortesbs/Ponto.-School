@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen, Sparkles, LayoutGrid, Palette, Settings, PenTool, Loader2, Shuffle } from 'lucide-react';
+import { X, BookOpen, Sparkles, LayoutGrid, Palette, Settings, PenTool, Loader2 } from 'lucide-react';
 import AgenteProfessorCard from './components/AgenteProfessorCard';
 import PersonalizationStepCard from './components/PersonalizationStepCard';
 import SchoolToolsContent from './components/SchoolToolsContent';
 import StyleDefinitionContent from './components/StyleDefinitionContent';
 import { Template, TEMPLATE_SECTIONS } from './components/TemplateDropdown';
-import { generateLesson, GeneratedLessonData } from '@/services/lessonGeneratorService';
+import { GeneratedLessonData } from '@/services/lessonGeneratorService';
 import { mapAIResponseToAula, validateAIResponse } from '@/utils/aiResponseMapper';
 import { orchestratorService } from '@/features/lesson-orchestrator';
 import { WorkflowModal } from '@/features/lesson-orchestrator';
-import type { WorkflowState, LessonContext as OrchestratorLessonContext } from '@/features/lesson-orchestrator/types';
+import type { WorkflowState, LessonContext as OrchestratorLessonContext, OrchestratorResult } from '@/features/lesson-orchestrator/types';
 
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
@@ -23,11 +23,9 @@ const PANEL_BORDER_RADIUS = 24;
 const PANEL_HEADER_PADDING = 16;
 const PANEL_HEADER_BORDER_RADIUS = 24;
 
-// Dimensões escaladas proporcionalmente para modal de 900px (redução de 25% do tamanho original)
-const CARD_HEIGHT = 42; // Reduzido de 56px (75% do original)
-const CARD_MAX_WIDTH = 310; // Reduzido de 450px para 310px (melhor proporção para 3 cards)
-const CARD_GAP = '24px'; // Gap entre cards internos
-const TEXT_PADDING_LEFT = 50; // Distância do texto "Agente Professor" a partir da esquerda (em pixels)
+const CARD_HEIGHT = 42;
+const CARD_MAX_WIDTH = 310;
+const CARD_GAP = '24px';
 
 const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   isOpen,
@@ -47,7 +45,6 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   
-  const [isOrchestrating, setIsOrchestrating] = useState(false);
   const [showWorkflowModal, setShowWorkflowModal] = useState(false);
   const [workflowState, setWorkflowState] = useState<WorkflowState | null>(null);
 
@@ -91,9 +88,15 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    return () => {
+      orchestratorService.disconnectAllSSE();
+    };
+  }, []);
+
   const handleGerarAula = async () => {
     console.log('🎯 [INTERFACE] ========================================');
-    console.log('🎯 [INTERFACE] INICIANDO GERAÇÃO DE AULA');
+    console.log('🎯 [INTERFACE] INICIANDO GERAÇÃO DE AULA COM ORQUESTRADOR');
     console.log('🎯 [INTERFACE] ========================================');
     console.log('🎯 [INTERFACE] Template:', selectedTemplate?.name || 'Nenhum');
     console.log('🎯 [INTERFACE] Template ID:', selectedTemplate?.id || 'N/A');
@@ -114,6 +117,8 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
     
     setIsGenerating(true);
     setGenerationError(null);
+    setShowWorkflowModal(true);
+    setWorkflowState(null);
     
     try {
       const templateSections = TEMPLATE_SECTIONS[selectedTemplate.id] || [];
@@ -140,106 +145,6 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
       })];
       
       console.log('🎯 [INTERFACE] Seções mapeadas:', sectionOrder);
-      console.log('🎯 [INTERFACE] Chamando API de geração...');
-      
-      const result = await generateLesson({
-        templateId: selectedTemplate.id,
-        templateName: selectedTemplate.name,
-        assunto,
-        contexto,
-        sectionOrder
-      });
-      
-      console.log('🎯 [INTERFACE] Resultado da API:', result.success ? '✅ SUCESSO' : '❌ FALHA');
-      console.log('🎯 [INTERFACE] Request ID:', result.requestId);
-      
-      if (result.success && result.data) {
-        console.log('🎯 [INTERFACE] Resposta bruta da IA:', result.data);
-        
-        // 🔴 MAPEAR RESPOSTA DA IA PARA ESTRUTURA CORRETA
-        const aulaMapeada = mapAIResponseToAula(result.data, sectionOrder);
-        console.log('🎯 [INTERFACE] aulaMapeada:', aulaMapeada);
-        
-        // 🔴 VALIDAR RESPOSTA
-        const valida = validateAIResponse(aulaMapeada);
-        if (!valida) {
-          console.warn('⚠️ [INTERFACE] Validação falhou - resposta pode estar incompleta');
-        }
-        
-        console.log('🎯 [INTERFACE] ========================================');
-        console.log('🎯 [INTERFACE] Enviando para construção:', {
-          titulo: aulaMapeada.titulo,
-          objetivo: aulaMapeada.objetivo?.substring(0, 50),
-          secoes: Object.keys(aulaMapeada.sectionTexts).length
-        });
-        console.log('🎯 [INTERFACE] ========================================');
-        
-        // Passa dados MAPEADOS para onGerarAula
-        onGerarAula(selectedTemplate, {
-          titulo: aulaMapeada.titulo,
-          objetivo: aulaMapeada.objetivo,
-          secoes: aulaMapeada.sectionTexts
-        });
-      } else {
-        console.log('❌ [INTERFACE] Erro na geração:', result.error);
-        setGenerationError(result.error || 'Erro ao gerar aula. Tente novamente.');
-      }
-      
-    } catch (error) {
-      console.error('❌ [INTERFACE] Erro fatal:', error);
-      setGenerationError('Erro de conexão. Verifique sua internet e tente novamente.');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleTemplateChange = (template: Template | null) => {
-    setSelectedTemplate(template);
-    setIsTemplateCompleted(template !== null);
-  };
-
-  const handleOrchestrateLesson = async () => {
-    console.log('🎭 [ORCHESTRATOR] ========================================');
-    console.log('🎭 [ORCHESTRATOR] INICIANDO ORQUESTRAÇÃO DE AULA');
-    console.log('🎭 [ORCHESTRATOR] ========================================');
-    
-    if (!selectedTemplate) {
-      setGenerationError('Por favor, selecione um template de aula primeiro.');
-      return;
-    }
-    
-    if (!assunto.trim()) {
-      setGenerationError('Por favor, preencha o assunto da aula.');
-      return;
-    }
-    
-    setIsOrchestrating(true);
-    setGenerationError(null);
-    setShowWorkflowModal(true);
-    
-    try {
-      const templateSections = TEMPLATE_SECTIONS[selectedTemplate.id] || [];
-      const sectionOrder = ['objective', ...templateSections.map(name => {
-        const mapping: Record<string, string> = {
-          'Contextualização': 'contextualizacao',
-          'Exploração': 'exploracao',
-          'Apresentação': 'apresentacao',
-          'Prática Guiada': 'pratica-guiada',
-          'Prática Independente': 'pratica-independente',
-          'Fechamento': 'fechamento',
-          'Demonstração': 'demonstracao',
-          'Avaliação': 'avaliacao',
-          'Engajamento': 'engajamento',
-          'Colaboração': 'colaboracao',
-          'Reflexão': 'reflexao',
-          'Desenvolvimento': 'desenvolvimento',
-          'Aplicação': 'aplicacao',
-          'Materiais Complementares': 'materiais',
-          'Observações do Professor': 'observacoes',
-          'Critérios BNCC': 'bncc'
-        };
-        return mapping[name] || name.toLowerCase().replace(/\s+/g, '-');
-      })];
       
       const lessonContext: OrchestratorLessonContext = {
         templateId: selectedTemplate.id,
@@ -249,45 +154,88 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
         sectionOrder
       };
       
-      console.log('🎭 [ORCHESTRATOR] Contexto:', lessonContext);
+      console.log('🎯 [INTERFACE] Chamando orquestrador com SSE...');
       
-      const result = await orchestratorService.orchestrateLesson(lessonContext, {
-        activitiesPerSection: 1,
-        skipSections: ['objective', 'materiais', 'observacoes', 'bncc'],
-        onProgress: (state) => {
-          console.log('🎭 [ORCHESTRATOR] Progresso:', state.progress + '%');
-          setWorkflowState(state);
+      await orchestratorService.orchestrateLessonWithSSE(
+        lessonContext,
+        {
+          activitiesPerSection: 1,
+          skipSections: ['objective', 'materiais', 'observacoes', 'bncc']
+        },
+        {
+          onProgress: (state: WorkflowState) => {
+            console.log('🎯 [INTERFACE] Progresso SSE:', state.progress + '%', 'Etapa:', state.currentStep);
+            setWorkflowState(state);
+          },
+          onComplete: (result: OrchestratorResult) => {
+            console.log('🎯 [INTERFACE] ========================================');
+            console.log('🎯 [INTERFACE] ORQUESTRAÇÃO CONCLUÍDA');
+            console.log('🎯 [INTERFACE] Sucesso:', result.success);
+            console.log('🎯 [INTERFACE] Atividades geradas:', result.activities?.length || 0);
+            console.log('🎯 [INTERFACE] ========================================');
+            
+            if (result.success && result.lesson) {
+              const secoesSimples: Record<string, string> = {};
+              
+              if (result.lesson.secoes) {
+                Object.entries(result.lesson.secoes).forEach(([key, value]) => {
+                  secoesSimples[key] = typeof value === 'string' ? value : (value as any).text || '';
+                });
+              }
+              
+              const aulaMapeada = mapAIResponseToAula({
+                titulo: result.lesson.titulo,
+                objetivo: result.lesson.objetivo,
+                secoes: secoesSimples
+              }, sectionOrder);
+              
+              console.log('🎯 [INTERFACE] Enviando para construção:', {
+                titulo: aulaMapeada.titulo,
+                objetivo: aulaMapeada.objetivo?.substring(0, 50),
+                secoes: Object.keys(aulaMapeada.sectionTexts).length
+              });
+              
+              setTimeout(() => {
+                setShowWorkflowModal(false);
+                onGerarAula(selectedTemplate, {
+                  titulo: aulaMapeada.titulo,
+                  objetivo: aulaMapeada.objetivo,
+                  secoes: aulaMapeada.sectionTexts
+                });
+              }, 1500);
+            } else {
+              console.log('❌ [INTERFACE] Erro na orquestração:', result.errors);
+              setGenerationError('Erro ao gerar aula. Tente novamente.');
+              setShowWorkflowModal(false);
+            }
+            
+            setIsGenerating(false);
+          },
+          onError: (error: string) => {
+            console.error('❌ [INTERFACE] Erro SSE:', error);
+            setGenerationError('Erro de conexão. Verifique sua internet e tente novamente.');
+            setShowWorkflowModal(false);
+            setIsGenerating(false);
+          }
         }
-      });
-      
-      console.log('🎭 [ORCHESTRATOR] Resultado:', result);
-      
-      if (result.success && result.lesson) {
-        console.log('🎭 [ORCHESTRATOR] ✅ Orquestração concluída!');
-        console.log('🎭 [ORCHESTRATOR] Atividades geradas:', result.activities.length);
-        
-        const secoesSimples: Record<string, string> = {};
-        Object.entries(result.lesson.secoes).forEach(([key, value]) => {
-          secoesSimples[key] = typeof value === 'string' ? value : value.text;
-        });
-        
-        onGerarAula(selectedTemplate, {
-          titulo: result.lesson.titulo,
-          objetivo: result.lesson.objetivo,
-          secoes: secoesSimples
-        });
-        
-        setShowWorkflowModal(false);
-      } else {
-        console.error('🎭 [ORCHESTRATOR] ❌ Erro:', result.errors);
-        setGenerationError('Erro na orquestração. Tente novamente.');
-      }
+      );
       
     } catch (error) {
-      console.error('🎭 [ORCHESTRATOR] Erro fatal:', error);
+      console.error('❌ [INTERFACE] Erro fatal:', error);
       setGenerationError('Erro de conexão. Verifique sua internet e tente novamente.');
-    } finally {
-      setIsOrchestrating(false);
+      setShowWorkflowModal(false);
+      setIsGenerating(false);
+    }
+  };
+
+  const handleTemplateChange = (template: Template | null) => {
+    setSelectedTemplate(template);
+    setIsTemplateCompleted(template !== null);
+  };
+
+  const handleCloseWorkflowModal = () => {
+    if (!isGenerating) {
+      setShowWorkflowModal(false);
     }
   };
 
@@ -295,7 +243,6 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Overlay escuro */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -305,7 +252,6 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
             onClick={onClose}
           />
           
-          {/* Modal centralizado */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -432,7 +378,6 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 />
               </PersonalizationStepCard>
 
-              {/* Mensagem de Erro */}
               {generationError && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
@@ -443,49 +388,17 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 </motion.div>
               )}
               
-              {/* Botões de Ação - Fora dos cards */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.3 }}
                 className="flex justify-end gap-3 pt-4"
               >
-                {/* Botão Orquestrar (com atividades) */}
-                <motion.button
-                  whileHover={!isOrchestrating ? { scale: 1.05 } : {}}
-                  whileTap={!isOrchestrating ? { scale: 0.95 } : {}}
-                  onClick={handleOrchestrateLesson}
-                  disabled={isOrchestrating || isGenerating}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-                  style={{
-                    background: isOrchestrating 
-                      ? 'linear-gradient(135deg, #666 0%, #888 100%)'
-                      : 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
-                    boxShadow: isOrchestrating 
-                      ? '0 4px 15px rgba(100, 100, 100, 0.3)'
-                      : '0 4px 15px rgba(139, 92, 246, 0.3)'
-                  }}
-                  title="Gerar aula + atividades automáticas"
-                >
-                  {isOrchestrating ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Orquestrando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Shuffle className="w-5 h-5" />
-                      <span>Aula + Atividades</span>
-                    </>
-                  )}
-                </motion.button>
-
-                {/* Botão Gerar Aula (simples) */}
                 <motion.button
                   whileHover={!isGenerating ? { scale: 1.05 } : {}}
                   whileTap={!isGenerating ? { scale: 0.95 } : {}}
                   onClick={handleGerarAula}
-                  disabled={isGenerating || isOrchestrating}
+                  disabled={isGenerating}
                   className="flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-white transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                   style={{
                     background: isGenerating 
@@ -516,12 +429,11 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
         </>
       )}
 
-      {/* Modal de Workflow do Orquestrador */}
       <WorkflowModal
         isOpen={showWorkflowModal}
-        onClose={() => setShowWorkflowModal(false)}
+        onClose={handleCloseWorkflowModal}
         workflowState={workflowState}
-        isLoading={isOrchestrating}
+        isLoading={isGenerating}
       />
     </AnimatePresence>
   );

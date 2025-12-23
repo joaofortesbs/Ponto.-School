@@ -18,7 +18,7 @@ The platform features a modern design with glass-morphism effects, blur backgrou
 - **Authentication & User Management**: Supabase handles authentication, user sessions, role-based access, and profile management.
 - **Core Features**:
     - **School Power**: AI-powered lesson planning with 5 dynamic templates (Aula Ativa, Aula Expositiva, Aula Socioemocional, Aula Técnica, Aula SE) that generate custom section structures.
-    - **Multi-Agent Lesson Orchestrator**: Coordinates 3 AI agents (`TextContentAgent`, `ActivitySuggestionAgent`, `ActivityGenerationAgent`) through a 7-step workflow to generate lessons with embedded educational activities (Quizzes, Flashcards, etc.).
+    - **Multi-Agent Lesson Orchestrator**: Coordinates AI agents through a 7-step workflow to generate lessons with embedded educational activities. Uses existing `lesson-generator.js` for content generation (consolidated, no duplication) plus `ActivitySuggestionAgent` and `ActivityGenerationAgent` for activities. Real-time progress via SSE streaming. Integrated into the "Gerar aula" button.
     - **Study Groups**: Real-time chat with member management.
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.

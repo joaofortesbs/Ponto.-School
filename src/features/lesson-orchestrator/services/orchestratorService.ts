@@ -4,8 +4,9 @@
  * ====================================================================
  * 
  * Cliente frontend para comunicação com o servidor do orquestrador.
+ * Usa SSE (Server-Sent Events) para atualizações em tempo real.
  * 
- * VERSÃO: 1.0.0
+ * VERSÃO: 2.0.0 - Integrado com SSE
  * ====================================================================
  */
 
@@ -30,7 +31,7 @@ function log(message: string, data?: any) {
 
 export class OrchestratorService {
   private static instance: OrchestratorService;
-  private pollingIntervals: Map<string, NodeJS.Timeout> = new Map();
+  private eventSources: Map<string, EventSource> = new Map();
 
   private constructor() {}
 
@@ -51,11 +52,159 @@ export class OrchestratorService {
     }
   }
 
+  generateRequestId(): string {
+    return `REQ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  connectSSE(
+    requestId: string,
+    onProgress: (state: WorkflowState) => void,
+    onComplete: (result: OrchestratorResult) => void,
+    onError: (error: string) => void
+  ): void {
+    log(`Conectando SSE para ${requestId}`);
+    
+    const eventSource = new EventSource(`${ORCHESTRATOR_BASE_URL}/stream/${requestId}`);
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        log(`SSE recebido: ${data.type}`, data);
+        
+        switch (data.type) {
+          case 'connected':
+            log('SSE conectado com sucesso');
+            break;
+            
+          case 'progress':
+            onProgress({
+              requestId: data.requestId,
+              currentStep: data.currentStep,
+              steps: data.steps,
+              progress: data.progress,
+              totalDuration: data.totalDuration,
+              isComplete: data.isComplete,
+              hasError: data.hasError
+            });
+            break;
+            
+          case 'complete':
+            onComplete({
+              success: data.success,
+              requestId: requestId,
+              lesson: data.lesson,
+              activities: data.activities || [],
+              errors: data.errors || [],
+              timing: data.timing || {}
+            });
+            this.disconnectSSE(requestId);
+            break;
+            
+          case 'error':
+            onError(data.error || 'Erro desconhecido');
+            this.disconnectSSE(requestId);
+            break;
+        }
+      } catch (error) {
+        log('Erro ao processar evento SSE', error);
+      }
+    };
+    
+    eventSource.onerror = (error) => {
+      log('Erro SSE', error);
+      onError('Conexão SSE perdida');
+      this.disconnectSSE(requestId);
+    };
+    
+    this.eventSources.set(requestId, eventSource);
+  }
+  
+  disconnectSSE(requestId: string): void {
+    const eventSource = this.eventSources.get(requestId);
+    if (eventSource) {
+      eventSource.close();
+      this.eventSources.delete(requestId);
+      log(`SSE desconectado para ${requestId}`);
+    }
+  }
+  
+  disconnectAllSSE(): void {
+    this.eventSources.forEach((es, id) => {
+      es.close();
+      log(`SSE desconectado para ${id}`);
+    });
+    this.eventSources.clear();
+  }
+
+  async orchestrateLessonWithSSE(
+    lessonContext: LessonContext,
+    options: OrchestratorOptions = {},
+    callbacks: {
+      onProgress: (state: WorkflowState) => void;
+      onComplete: (result: OrchestratorResult) => void;
+      onError: (error: string) => void;
+    }
+  ): Promise<string> {
+    const requestId = this.generateRequestId();
+    
+    log('Iniciando orquestração com SSE', { lessonContext, requestId });
+
+    const lessonContextWithId = {
+      ...lessonContext,
+      requestId
+    };
+
+    this.connectSSE(
+      requestId,
+      callbacks.onProgress,
+      (result) => {
+        if (result.success && result.activities && result.activities.length > 0) {
+          this.saveActivitiesToLocalStorage(
+            result.activities,
+            result.lesson?.activitiesPerSection || {}
+          );
+        }
+        callbacks.onComplete(result);
+      },
+      callbacks.onError
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    try {
+      const response = await fetch(`${ORCHESTRATOR_BASE_URL}/orchestrate-stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          lessonContext: lessonContextWithId,
+          options: {
+            activitiesPerSection: options.activitiesPerSection || 1,
+            skipSections: options.skipSections || ['objective', 'materiais', 'observacoes', 'bncc']
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro na orquestração');
+      }
+
+      return requestId;
+    } catch (error: any) {
+      log('Erro na orquestração', error);
+      this.disconnectSSE(requestId);
+      callbacks.onError(error.message || 'Erro de conexão');
+      throw error;
+    }
+  }
+
   async orchestrateLesson(
     lessonContext: LessonContext,
     options: OrchestratorOptions = {}
   ): Promise<OrchestratorResult> {
-    log('Iniciando orquestração de aula', { lessonContext, options });
+    log('Iniciando orquestração de aula (modo simples)', { lessonContext, options });
 
     try {
       const response = await fetch(`${ORCHESTRATOR_BASE_URL}/orchestrate`, {
@@ -89,68 +238,6 @@ export class OrchestratorService {
       log('Erro na orquestração', error);
       throw error;
     }
-  }
-
-  async getWorkflowStatus(requestId: string): Promise<WorkflowState | null> {
-    try {
-      const response = await fetch(`${ORCHESTRATOR_BASE_URL}/status/${requestId}`);
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null;
-        }
-        throw new Error('Erro ao obter status');
-      }
-
-      return await response.json();
-    } catch (error) {
-      log(`Erro ao obter status do workflow ${requestId}`, error);
-      return null;
-    }
-  }
-
-  startPolling(
-    requestId: string,
-    onUpdate: (state: WorkflowState) => void,
-    intervalMs: number = 1000
-  ): void {
-    if (this.pollingIntervals.has(requestId)) {
-      this.stopPolling(requestId);
-    }
-
-    const interval = setInterval(async () => {
-      const state = await this.getWorkflowStatus(requestId);
-      
-      if (state) {
-        onUpdate(state);
-        
-        if (state.isComplete || state.hasError) {
-          this.stopPolling(requestId);
-        }
-      } else {
-        this.stopPolling(requestId);
-      }
-    }, intervalMs);
-
-    this.pollingIntervals.set(requestId, interval);
-    log(`Polling iniciado para ${requestId}`);
-  }
-
-  stopPolling(requestId: string): void {
-    const interval = this.pollingIntervals.get(requestId);
-    if (interval) {
-      clearInterval(interval);
-      this.pollingIntervals.delete(requestId);
-      log(`Polling parado para ${requestId}`);
-    }
-  }
-
-  stopAllPolling(): void {
-    this.pollingIntervals.forEach((interval, requestId) => {
-      clearInterval(interval);
-      log(`Polling parado para ${requestId}`);
-    });
-    this.pollingIntervals.clear();
   }
 
   private saveActivitiesToLocalStorage(

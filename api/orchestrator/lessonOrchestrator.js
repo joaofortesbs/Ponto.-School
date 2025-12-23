@@ -3,18 +3,18 @@
  * ORQUESTRADOR PRINCIPAL DE CRIAÇÃO DE AULAS
  * ====================================================================
  * 
- * Coordena os 3 agentes em sequência para criar uma aula completa
+ * Coordena os agentes em sequência para criar uma aula completa
  * com conteúdo e atividades automaticamente geradas.
  * 
  * FLUXO:
  * 1. Recebe contexto (template, assunto, seções)
- * 2. TextContentAgent gera conteúdo para cada seção
+ * 2. USA O LESSON-GENERATOR.JS EXISTENTE para gerar conteúdo
  * 3. ActivitySuggestionAgent sugere atividades baseadas no conteúdo
  * 4. ActivityGenerationAgent gera as atividades
  * 5. Salva atividades e anexa aos blocos
  * 6. Finaliza e retorna dados completos
  * 
- * VERSÃO: 1.0.0
+ * VERSÃO: 2.0.0 - Consolidado com lesson-generator.js
  * ====================================================================
  */
 
@@ -30,7 +30,7 @@ import {
 } from './debugLogger.js';
 
 import WorkflowManager from './workflowManager.js';
-import { generateAllSectionsContent } from './agents/textContentAgent.js';
+import { generateLesson } from '../ai/lesson-generator.js';
 import { suggestActivitiesForAllSections } from './agents/activitySuggestionAgent.js';
 import { generateAllActivities } from './agents/activityGenerationAgent.js';
 
@@ -40,7 +40,7 @@ class LessonOrchestrator {
   }
 
   async orchestrate(lessonContext, options = {}) {
-    const requestId = generateRequestId();
+    const requestId = lessonContext.requestId || generateRequestId();
     const workflow = new WorkflowManager(requestId);
     
     this.activeWorkflows.set(requestId, workflow);
@@ -86,31 +86,46 @@ class LessonOrchestrator {
 
       // ========================================
       // ETAPA 2: Gerando Conteúdo dos Blocos
+      // USANDO O LESSON-GENERATOR.JS EXISTENTE
       // ========================================
       logStepStart(2, requestId, { sections: validatedContext.sectionOrder.length });
       workflow.startStep(2);
       const step2Start = Date.now();
 
-      const contentResult = await generateAllSectionsContent(requestId, validatedContext);
+      log(LOG_PREFIXES.CONTENT, `[${requestId}] Chamando lesson-generator.js existente...`);
       
-      if (contentResult.totalGenerated === 0) {
-        throw new Error('Nenhum conteúdo foi gerado');
+      const lessonResult = await generateLesson({
+        templateId: validatedContext.templateId,
+        templateName: validatedContext.templateName,
+        assunto: validatedContext.assunto,
+        contexto: validatedContext.contexto,
+        sectionOrder: validatedContext.sectionOrder
+      });
+      
+      if (!lessonResult.success || !lessonResult.data) {
+        throw new Error(lessonResult.error || 'Nenhum conteúdo foi gerado');
       }
 
+      log(LOG_PREFIXES.CONTENT, `[${requestId}] Conteúdo gerado com sucesso via lesson-generator.js`);
+      
+      const contentSections = Object.entries(lessonResult.data.secoes || {}).map(([sectionId, text]) => ({
+        sectionId,
+        sectionName: sectionId,
+        content: typeof text === 'string' ? text : text.text || '',
+        generatedAt: new Date().toISOString()
+      }));
+
       workflow.completeStep(2, { 
-        generated: contentResult.totalGenerated,
-        failed: contentResult.totalFailed 
+        generated: contentSections.length,
+        failed: 0 
       });
       result.timing.step2 = Date.now() - step2Start;
       result.lesson = {
-        titulo: validatedContext.assunto,
-        objetivo: validatedContext.objetivo || '',
+        titulo: lessonResult.data.titulo || validatedContext.assunto,
+        objetivo: lessonResult.data.objetivo || '',
         templateId: validatedContext.templateId,
         templateName: validatedContext.templateName,
-        secoes: contentResult.sections.reduce((acc, s) => {
-          acc[s.sectionId] = { text: s.content, generatedAt: s.generatedAt };
-          return acc;
-        }, {})
+        secoes: lessonResult.data.secoes || {}
       };
       logStepEnd(2, requestId, true, result.timing.step2);
 
@@ -123,7 +138,7 @@ class LessonOrchestrator {
 
       const suggestionsResult = await suggestActivitiesForAllSections(
         requestId, 
-        contentResult.sections,
+        contentSections,
         { activitiesPerSection, skipSections }
       );
 
@@ -144,7 +159,7 @@ class LessonOrchestrator {
       const activitiesResult = await generateAllActivities(
         requestId,
         suggestionsResult.suggestions,
-        contentResult.sections
+        contentSections
       );
 
       workflow.completeStep(4, { 

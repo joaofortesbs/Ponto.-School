@@ -484,6 +484,95 @@ app.get('/api/orchestrator/activities-catalog', (req, res) => {
   }
 });
 
+// SSE Stream para progresso em tempo real
+const sseClients = new Map();
+
+app.get('/api/orchestrator/stream/:requestId', (req, res) => {
+  const { requestId } = req.params;
+  
+  orchestratorLog(LOG_PREFIXES.API, `SSE: Cliente conectado para ${requestId}`);
+  
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.flushHeaders();
+
+  const sendEvent = (data) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
+  sendEvent({ type: 'connected', requestId, timestamp: Date.now() });
+
+  sseClients.set(requestId, sendEvent);
+
+  req.on('close', () => {
+    sseClients.delete(requestId);
+    orchestratorLog(LOG_PREFIXES.API, `SSE: Cliente desconectado de ${requestId}`);
+  });
+});
+
+app.post('/api/orchestrator/orchestrate-stream', async (req, res) => {
+  orchestratorLog(LOG_PREFIXES.API, 'Nova requisição de orquestração com streaming');
+  
+  const { lessonContext, options = {} } = req.body;
+
+  if (!lessonContext) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'lessonContext é obrigatório' 
+    });
+  }
+
+  try {
+    const onProgress = (state) => {
+      const sendEvent = sseClients.get(state.requestId);
+      if (sendEvent) {
+        sendEvent({ 
+          type: 'progress', 
+          ...state,
+          timestamp: Date.now()
+        });
+      }
+    };
+
+    const result = await orchestrator.orchestrate(lessonContext, {
+      ...options,
+      onProgress
+    });
+    
+    const sendEvent = sseClients.get(result.requestId);
+    if (sendEvent) {
+      sendEvent({ 
+        type: 'complete', 
+        success: result.success,
+        lesson: result.lesson,
+        activities: result.activities,
+        timing: result.timing,
+        errors: result.errors,
+        timestamp: Date.now()
+      });
+    }
+    
+    res.json({
+      success: result.success,
+      requestId: result.requestId,
+      lesson: result.lesson,
+      activities: result.activities,
+      timing: result.timing,
+      errors: result.errors
+    });
+
+  } catch (error) {
+    orchestratorLog(LOG_PREFIXES.ERROR, `Erro na orquestração com streaming: ${error.message}`);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
 // Rota de teste de conexão com banco de dados (simples)
 app.get('/api/test-db-connection', async (req, res) => {
   try {
