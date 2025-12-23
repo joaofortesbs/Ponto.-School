@@ -456,48 +456,26 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   // ====================================================================
-  // SINCRONIZAÇÃO DE sectionOrder QUANDO O TEMPLATE MUDA
+  // SINCRONIZAÇÃO SIMPLIFICADA DE sectionOrder QUANDO O TEMPLATE MUDA
   // ====================================================================
-  // Esta lógica precisa distinguir 4 cenários:
-  // 1. Inicialização com draft (mesmo template): NÃO recalcula
-  // 2. Inicialização com draft legado (sem selectedTemplateId): NÃO recalcula
-  // 3. Primeira seleção de template (sem draft): RECALCULA
-  // 4. Mudança de template durante sessão: RECALCULA
+  // REGRA SIMPLES: Sempre que o selectedTemplate.id mudar, recalcula
+  // as seções. A ordem inicial já foi definida pelo initialSectionOrder.
+  // Este efeito só roda após a primeira renderização (mudanças reais).
   // ====================================================================
-  const hasDraftOrderRef = useRef<boolean>(!!savedDraft?.sectionOrder);
-  const isLegacyDraftRef = useRef<boolean>(!!savedDraft?.sectionOrder && !savedDraft?.selectedTemplateId);
-  const hasProcessedInitialTemplateRef = useRef<boolean>(false);
-  const previousTemplateIdRef = useRef<string | null>(
-    savedDraft?.selectedTemplateId ?? null
-  );
+  const previousTemplateIdRef = useRef<string | null>(selectedTemplate?.id ?? null);
   
   useEffect(() => {
     if (!selectedTemplate?.id) return;
     
-    // Caso 1 e 2: Primeiro template recebido com draft salvo
-    if (!hasProcessedInitialTemplateRef.current && hasDraftOrderRef.current) {
-      hasProcessedInitialTemplateRef.current = true;
-      previousTemplateIdRef.current = selectedTemplate.id;
-      console.log('📋 [SECTION_ORDER] Draft com ordem salva - preservando', isLegacyDraftRef.current ? '(legado)' : '');
-      return;
-    }
-    
-    // Marcar como processado se ainda não foi
-    if (!hasProcessedInitialTemplateRef.current) {
-      hasProcessedInitialTemplateRef.current = true;
-    }
-    
-    // Caso 3 e 4: Template diferente do anterior → recalcula
-    if (previousTemplateIdRef.current !== selectedTemplate.id) {
+    // Só recalcula se o template REALMENTE mudou (não na inicialização)
+    if (previousTemplateIdRef.current !== null && previousTemplateIdRef.current !== selectedTemplate.id) {
       const newOrder = getTemplateSectionOrder(selectedTemplate);
-      console.log('📋 [SECTION_ORDER] Template:', previousTemplateIdRef.current ? `mudou de ${previousTemplateIdRef.current} para ${selectedTemplate.id}` : `primeira seleção ${selectedTemplate.id}`);
-      console.log('📋 [SECTION_ORDER] Atualizando sectionOrder:', newOrder);
+      console.log('📋 [SECTION_ORDER] Template mudou de', previousTemplateIdRef.current, 'para', selectedTemplate.id);
+      console.log('📋 [SECTION_ORDER] Novas seções:', newOrder);
       setSectionOrder(newOrder);
-      previousTemplateIdRef.current = selectedTemplate.id;
-      
-      // Uma vez que recalculamos, o flag de draft não se aplica mais
-      hasDraftOrderRef.current = false;
     }
+    
+    previousTemplateIdRef.current = selectedTemplate.id;
   }, [selectedTemplate?.id]);
 
   // Sensores para drag and drop
@@ -701,196 +679,88 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     delay: number;
   };
 
-  const sectionConfigs = useMemo((): Record<string, SectionConfig> => ({
-    objective: {
-      id: 'objective',
-      title: 'Objetivo da Aula',
-      icon: Target,
-      isVisible: isObjectiveVisible,
-      setVisible: setIsObjectiveVisible,
-      isExpanded: isObjectiveExpanded,
-      setExpanded: setIsObjectiveExpanded,
-      text: objectiveText,
-      onChange: handleObjectiveChange,
-      placeholder: 'Escreva o objetivo da aula...',
-      time: '',
-      setTime: () => {},
-      menuId: 'objective',
-      dividerIndex: 0,
-      delay: 0.5,
-    },
-    preEstudo: {
-      id: 'preEstudo',
-      title: 'Pré-estudo',
-      icon: BookOpen,
-      isVisible: isPreEstudoVisible,
-      setVisible: setIsPreEstudoVisible,
-      isExpanded: isPreEstudoExpanded,
-      setExpanded: setIsPreEstudoExpanded,
-      text: preEstudoText,
-      onChange: handlePreEstudoChange,
-      placeholder: 'Descreva as atividades de pré-estudo...',
-      time: preEstudoTime,
-      setTime: setPreEstudoTime,
-      menuId: 'pre-estudo',
-      dividerIndex: 1,
-      delay: 0.55,
-    },
-    introducao: {
-      id: 'introducao',
-      title: 'Introdução',
-      icon: Lightbulb,
-      isVisible: isIntroducaoVisible,
-      setVisible: setIsIntroducaoVisible,
-      isExpanded: isIntroducaoExpanded,
-      setExpanded: setIsIntroducaoExpanded,
-      text: introducaoText,
-      onChange: handleIntroducaoChange,
-      placeholder: 'Descreva a introdução da aula...',
-      time: introducaoTime,
-      setTime: setIntroducaoTime,
-      menuId: 'introducao',
-      dividerIndex: 2,
-      delay: 0.6,
-    },
-    desenvolvimento: {
-      id: 'desenvolvimento',
-      title: 'Desenvolvimento',
-      icon: Layers,
-      isVisible: isDesenvolvimentoVisible,
-      setVisible: setIsDesenvolvimentoVisible,
-      isExpanded: isDesenvolvimentoExpanded,
-      setExpanded: setIsDesenvolvimentoExpanded,
-      text: desenvolvimentoText,
-      onChange: handleDesenvolvimentoChange,
-      placeholder: 'Descreva o desenvolvimento da aula...',
-      time: desenvolvimentoTime,
-      setTime: setDesenvolvimentoTime,
-      menuId: 'desenvolvimento',
-      dividerIndex: 3,
-      delay: 0.65,
-    },
-    encerramento: {
-      id: 'encerramento',
-      title: 'Encerramento',
-      icon: CheckCircle,
-      isVisible: isEncerramentoVisible,
-      setVisible: setIsEncerramentoVisible,
-      isExpanded: isEncerramentoExpanded,
-      setExpanded: setIsEncerramentoExpanded,
-      text: encerramentoText,
-      onChange: handleEncerramentoChange,
-      placeholder: 'Descreva o encerramento da aula...',
-      time: encerramentoTime,
-      setTime: setEncerramentoTime,
-      menuId: 'encerramento',
-      dividerIndex: 4,
-      delay: 0.7,
-    },
-    materiais: {
-      id: 'materiais',
-      title: 'Materiais Complementares',
-      icon: FileText,
-      isVisible: isMateriaisVisible,
-      setVisible: setIsMateriaisVisible,
-      isExpanded: isMateriaisExpanded,
-      setExpanded: setIsMateriaisExpanded,
-      text: materiaisText,
-      onChange: handleMateriaisChange,
-      placeholder: 'Liste os materiais complementares...',
-      time: materiaisTime,
-      setTime: setMateriaisTime,
-      menuId: 'materiais',
-      dividerIndex: 5,
-      delay: 0.75,
-    },
-    observacoes: {
-      id: 'observacoes',
-      title: 'Observações do Professor',
-      icon: MessageSquare,
-      isVisible: isObservacoesVisible,
-      setVisible: setIsObservacoesVisible,
-      isExpanded: isObservacoesExpanded,
-      setExpanded: setIsObservacoesExpanded,
-      text: observacoesText,
-      onChange: handleObservacoesChange,
-      placeholder: 'Adicione suas observações...',
-      time: observacoesTime,
-      setTime: setObservacoesTime,
-      menuId: 'observacoes',
-      dividerIndex: 6,
-      delay: 0.8,
-    },
-    bncc: {
-      id: 'bncc',
-      title: 'Critérios BNCC',
-      icon: Award,
-      isVisible: isBnccVisible,
-      setVisible: setIsBnccVisible,
-      isExpanded: isBnccExpanded,
-      setExpanded: setIsBnccExpanded,
-      text: bnccText,
-      onChange: handleBnccChange,
-      placeholder: 'Descreva os critérios da BNCC...',
-      time: bnccTime,
-      setTime: setBnccTime,
-      menuId: 'bncc',
-      dividerIndex: 6,
-      delay: 0.85,
-    },
+  // ====================================================================
+  // CONFIGURAÇÃO DE SEÇÕES - 100% DINÂMICA BASEADA NO TEMPLATE
+  // ====================================================================
+  // IMPORTANTE: A renderização das seções é agora COMPLETAMENTE baseada
+  // no template selecionado. As seções que aparecem são determinadas
+  // pelo TEMPLATE_SECTIONS e o estado é gerenciado pelo dynamicSections.
+  //
+  // A única seção fixa é 'objective' (Objetivos) que sempre aparece primeiro.
+  // ====================================================================
+  const sectionConfigs = useMemo((): Record<string, SectionConfig> => {
+    const configs: Record<string, SectionConfig> = {
+      // Seção de Objetivo - SEMPRE PRESENTE
+      objective: {
+        id: 'objective',
+        title: 'Objetivo da Aula',
+        icon: Target,
+        isVisible: isObjectiveVisible,
+        setVisible: setIsObjectiveVisible,
+        isExpanded: isObjectiveExpanded,
+        setExpanded: setIsObjectiveExpanded,
+        text: objectiveText,
+        onChange: handleObjectiveChange,
+        placeholder: 'Escreva o objetivo da aula...',
+        time: '',
+        setTime: () => {},
+        menuId: 'objective',
+        dividerIndex: 0,
+        delay: 0.5,
+      },
+    };
+
     // ====================================================================
-    // SEÇÕES DINÂMICAS DO TEMPLATE
+    // GERAR CONFIGURAÇÕES PARA TODAS AS SEÇÕES DO TEMPLATE
     // ====================================================================
-    // Estas seções são geradas com base no template selecionado.
-    // Cada uma tem estado próprio gerenciado pelo dynamicSections.
+    // Itera sobre TODAS as seções definidas no SECTION_NAME_TO_CONFIG
+    // e cria configurações dinâmicas para cada uma baseada no estado
+    // armazenado em dynamicSections.
     // ====================================================================
-    ...Object.entries(SECTION_NAME_TO_CONFIG).reduce((acc, [name, config]) => {
-      // Pula seções que já existem como estáticas ou a seção objective
-      if (['objective', 'preEstudo', 'introducao', 'desenvolvimento', 'encerramento', 'materiais', 'observacoes', 'bncc'].includes(config.id)) {
-        return acc;
-      }
+    Object.entries(SECTION_NAME_TO_CONFIG).forEach(([name, mappingConfig]) => {
+      // Pula a seção objective que já está definida acima
+      if (mappingConfig.id === 'objective') return;
+
+      const dynamicState = dynamicSections[mappingConfig.id];
       
-      const dynamicState = dynamicSections[config.id];
-      if (dynamicState) {
-        acc[config.id] = {
-          id: config.id,
-          title: config.title,
-          icon: config.icon,
-          isVisible: dynamicState.isVisible,
-          setVisible: (v: boolean) => updateDynamicSection(config.id, { isVisible: v }),
-          isExpanded: dynamicState.isExpanded,
-          setExpanded: ((v: boolean | ((prev: boolean) => boolean)) => {
-            if (typeof v === 'function') {
-              setDynamicSections(prev => ({
-                ...prev,
-                [config.id]: { ...prev[config.id], isExpanded: v(prev[config.id]?.isExpanded ?? true) }
-              }));
-            } else {
-              updateDynamicSection(config.id, { isExpanded: v });
-            }
-          }) as React.Dispatch<React.SetStateAction<boolean>>,
-          text: dynamicState.text,
-          onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => updateDynamicSection(config.id, { text: e.target.value }),
-          placeholder: config.placeholder,
-          time: dynamicState.time,
-          setTime: (t: string) => updateDynamicSection(config.id, { time: t }),
-          menuId: config.id,
-          dividerIndex: 0,
-          delay: 0.6,
-        };
-      }
-      return acc;
-    }, {} as Record<string, SectionConfig>),
-  }), [
+      // Cria a configuração baseada no estado dinâmico ou com valores padrão
+      configs[mappingConfig.id] = {
+        id: mappingConfig.id,
+        title: mappingConfig.title,
+        icon: mappingConfig.icon,
+        isVisible: dynamicState?.isVisible ?? true,
+        setVisible: (v: boolean) => updateDynamicSection(mappingConfig.id, { isVisible: v }),
+        isExpanded: dynamicState?.isExpanded ?? true,
+        setExpanded: ((v: boolean | ((prev: boolean) => boolean)) => {
+          if (typeof v === 'function') {
+            setDynamicSections(prev => ({
+              ...prev,
+              [mappingConfig.id]: { 
+                ...prev[mappingConfig.id], 
+                isExpanded: v(prev[mappingConfig.id]?.isExpanded ?? true) 
+              }
+            }));
+          } else {
+            updateDynamicSection(mappingConfig.id, { isExpanded: v });
+          }
+        }) as React.Dispatch<React.SetStateAction<boolean>>,
+        text: dynamicState?.text ?? '',
+        onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => 
+          updateDynamicSection(mappingConfig.id, { text: e.target.value }),
+        placeholder: mappingConfig.placeholder,
+        time: dynamicState?.time ?? '10 min',
+        setTime: (t: string) => updateDynamicSection(mappingConfig.id, { time: t }),
+        menuId: mappingConfig.id,
+        dividerIndex: 0,
+        delay: 0.6,
+      };
+    });
+
+    console.log('📋 [SECTION_CONFIGS] Configurações geradas:', Object.keys(configs));
+    return configs;
+  }, [
     isObjectiveVisible, isObjectiveExpanded, objectiveText, handleObjectiveChange,
-    isPreEstudoVisible, isPreEstudoExpanded, preEstudoText, handlePreEstudoChange, preEstudoTime,
-    isIntroducaoVisible, isIntroducaoExpanded, introducaoText, handleIntroducaoChange, introducaoTime,
-    isDesenvolvimentoVisible, isDesenvolvimentoExpanded, desenvolvimentoText, handleDesenvolvimentoChange, desenvolvimentoTime,
-    isEncerramentoVisible, isEncerramentoExpanded, encerramentoText, handleEncerramentoChange, encerramentoTime,
-    isMateriaisVisible, isMateriaisExpanded, materiaisText, handleMateriaisChange, materiaisTime,
-    isObservacoesVisible, isObservacoesExpanded, observacoesText, handleObservacoesChange, observacoesTime,
-    isBnccVisible, isBnccExpanded, bnccText, handleBnccChange, bnccTime,
-    dynamicSections, updateDynamicSection,
+    dynamicSections, updateDynamicSection, setDynamicSections,
   ]);
 
   // Carregar atividades do usuário
