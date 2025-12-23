@@ -25,6 +25,11 @@ class AutoRecoveryEngine {
     this.stepLogger = stepLogger;
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.recoveryAttempts = new Map();
+    this.onRetryCallback = null;
+  }
+
+  setOnRetryCallback(callback) {
+    this.onRetryCallback = callback;
   }
 
   async attemptRecovery(stepId, operation, context = {}) {
@@ -48,6 +53,10 @@ class AutoRecoveryEngine {
           attemptKey,
           context
         });
+
+      if (this.onRetryCallback && state.attempts > 1) {
+        this.onRetryCallback(stepId, state.attempts, this.config.maxRetries);
+      }
 
       try {
         const correctedContext = this.config.enableSmartCorrection 

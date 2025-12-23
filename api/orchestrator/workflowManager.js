@@ -81,6 +81,19 @@ class WorkflowManager {
     this.notifyListeners();
   }
 
+  retryingStep(stepNumber, attempt, maxAttempts) {
+    if (stepNumber < 1 || stepNumber > 7) {
+      throw new Error(`Etapa inválida: ${stepNumber}`);
+    }
+
+    this.steps[stepNumber].status = 'retrying';
+    this.steps[stepNumber].retryCount = attempt;
+    this.steps[stepNumber].maxRetries = maxAttempts;
+
+    log(LOG_PREFIXES.WORKFLOW, `[${this.requestId}] Etapa ${stepNumber} em retry: tentativa ${attempt}/${maxAttempts}`);
+    this.notifyListeners();
+  }
+
   failStep(stepNumber, error) {
     if (stepNumber < 1 || stepNumber > 7) {
       throw new Error(`Etapa inválida: ${stepNumber}`);
@@ -93,6 +106,12 @@ class WorkflowManager {
     const duration = this.steps[stepNumber].endTime - this.steps[stepNumber].startTime;
     log(LOG_PREFIXES.ERROR, `[${this.requestId}] Etapa ${stepNumber} falhou em ${duration}ms: ${error}`);
     this.notifyListeners();
+  }
+
+  setStepLogs(stepNumber, logs) {
+    if (stepNumber >= 1 && stepNumber <= 7) {
+      this.steps[stepNumber].logs = logs;
+    }
   }
 
   getState() {

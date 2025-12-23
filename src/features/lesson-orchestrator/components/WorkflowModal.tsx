@@ -243,7 +243,19 @@ const WorkflowModal: React.FC<WorkflowModalProps> = ({
 
   const hasLogs = (stepNumber: number): boolean => {
     const logs = getStepLogs(stepNumber);
-    return !!logs && (logs.events?.length > 0 || logs.lastError !== null);
+    return !!logs && ((logs.events && logs.events.length > 0) || logs.lastError !== null || logs.retryCount > 0);
+  };
+
+  const getStepRetryInfo = (stepNumber: number) => {
+    const step = workflowState?.steps[stepNumber];
+    if (step?.retryCount) {
+      return { retryCount: step.retryCount, maxRetries: step.maxRetries || 3 };
+    }
+    const logs = getStepLogs(stepNumber);
+    if (logs?.retryCount) {
+      return { retryCount: logs.retryCount, maxRetries: 3 };
+    }
+    return null;
   };
 
   return (
@@ -292,7 +304,8 @@ const WorkflowModal: React.FC<WorkflowModalProps> = ({
               const duration = getStepDuration(stepNumber);
               const isExpanded = expandedSteps[stepNumber];
               const logs = getStepLogs(stepNumber);
-              const showLogIndicator = hasLogs(stepNumber) || status === 'running' || status === 'error' || status === 'retrying';
+              const retryInfo = getStepRetryInfo(stepNumber);
+              const showLogIndicator = true;
 
               return (
                 <div key={stepNumber}>
@@ -329,9 +342,10 @@ const WorkflowModal: React.FC<WorkflowModalProps> = ({
                       {status === 'running' && (
                         <p className="text-sm text-orange-400/70 mt-1">Processando...</p>
                       )}
-                      {status === 'retrying' && logs?.retryCount && (
-                        <p className="text-sm text-yellow-400/70 mt-1">
-                          Tentativa {logs.retryCount + 1} de 3...
+                      {status === 'retrying' && retryInfo && (
+                        <p className="text-sm text-yellow-400/70 mt-1 flex items-center gap-2">
+                          <RefreshCw className="w-3 h-3 animate-spin" />
+                          Corrigindo automaticamente... Tentativa {retryInfo.retryCount}/{retryInfo.maxRetries}
                         </p>
                       )}
                       {status === 'error' && workflowState?.steps[stepNumber]?.error && (
@@ -345,41 +359,46 @@ const WorkflowModal: React.FC<WorkflowModalProps> = ({
                       {duration !== null && (
                         <span className="text-sm text-gray-500">{formatDuration(duration)}</span>
                       )}
-                      
-                      {showLogIndicator && (
-                        <button
-                          onClick={() => toggleStepLogs(stepNumber)}
-                          className={`p-1.5 rounded-lg transition-colors ${
-                            isExpanded 
-                              ? 'bg-orange-500/20 text-orange-400' 
-                              : 'hover:bg-white/10 text-gray-400'
-                          }`}
-                          title="Ver logs da etapa"
-                        >
-                          {status === 'error' ? (
-                            <AlertCircle className="w-4 h-4 text-red-400" />
-                          ) : (
-                            <Info className="w-4 h-4" />
-                          )}
-                        </button>
+
+                      {status === 'retrying' && retryInfo && (
+                        <span className="px-2 py-0.5 text-xs bg-yellow-500/20 text-yellow-400 rounded-full flex items-center gap-1">
+                          <RefreshCw className="w-3 h-3 animate-spin" />
+                          {retryInfo.retryCount}/{retryInfo.maxRetries}
+                        </span>
                       )}
+                      
+                      <button
+                        onClick={() => toggleStepLogs(stepNumber)}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          isExpanded 
+                            ? 'bg-orange-500/20 text-orange-400' 
+                            : 'hover:bg-white/10 text-gray-400'
+                        }`}
+                        title="Inspecionar logs da etapa"
+                      >
+                        {status === 'error' ? (
+                          <AlertCircle className="w-4 h-4 text-red-400" />
+                        ) : status === 'retrying' ? (
+                          <RefreshCw className="w-4 h-4 text-yellow-400 animate-spin" />
+                        ) : (
+                          <Bug className="w-4 h-4" />
+                        )}
+                      </button>
 
                       <div className="text-gray-500/50">
                         {STEP_ICONS[stepNumber]}
                       </div>
 
-                      {showLogIndicator && (
-                        <button
-                          onClick={() => toggleStepLogs(stepNumber)}
-                          className="p-1 text-gray-500 hover:text-gray-300"
-                        >
-                          {isExpanded ? (
-                            <ChevronUp className="w-4 h-4" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4" />
-                          )}
-                        </button>
-                      )}
+                      <button
+                        onClick={() => toggleStepLogs(stepNumber)}
+                        className="p-1 text-gray-500 hover:text-gray-300"
+                      >
+                        {isExpanded ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
                   

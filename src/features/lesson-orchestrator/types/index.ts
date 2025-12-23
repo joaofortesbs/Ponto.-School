@@ -64,6 +64,8 @@ export interface WorkflowStep {
   data: any;
   error: string | null;
   logs?: StepLogs;
+  retryCount?: number;
+  maxRetries?: number;
 }
 
 export interface WorkflowState {

@@ -82,6 +82,21 @@ class LessonOrchestrator {
       workflow.addListener(onProgress);
     }
 
+    recovery.setOnRetryCallback((stepId, attempt, maxAttempts) => {
+      workflow.retryingStep(stepId, attempt, maxAttempts);
+      workflow.setStepLogs(stepId, stepLogger.getStepLogs(stepId));
+      
+      this.sendSSE(requestId, 'progress', {
+        type: 'progress',
+        step: stepId,
+        status: 'retrying',
+        retryCount: attempt,
+        maxRetries: maxAttempts,
+        ...workflow.getState(),
+        logs: stepLogger.getStepLogs(stepId)
+      });
+    });
+
     for (let i = 1; i <= 7; i++) {
       stepLogger.initStep(i, this.getStepName(i));
     }
@@ -126,6 +141,7 @@ class LessonOrchestrator {
     } catch (error) {
       const currentStep = workflow.currentStep || 1;
       workflow.failStep(currentStep, error);
+      workflow.setStepLogs(currentStep, stepLogger.getStepLogs(currentStep));
       stepLogger.failStep(currentStep, error, false);
       logError(requestId, currentStep, error);
       
@@ -138,9 +154,13 @@ class LessonOrchestrator {
       });
       result.timing.total = workflow.getTotalDuration();
 
-      this.sendSSE(requestId, 'error', {
+      this.sendSSE(requestId, 'progress', {
+        type: 'progress',
         step: currentStep,
-        message: error.message
+        status: 'error',
+        ...workflow.getState(),
+        logs: stepLogger.getStepLogs(currentStep),
+        error: error.message
       });
     }
 
@@ -151,10 +171,15 @@ class LessonOrchestrator {
     logOrchestratorEnd(requestId, result.success, result.timing.total, summary);
 
     this.sendSSE(requestId, result.success ? 'complete' : 'failed', {
+      type: result.success ? 'complete' : 'failed',
       success: result.success,
+      ...workflow.getState(),
       lesson: result.lesson,
       activities: result.activities,
-      timing: result.timing
+      timing: result.timing,
+      errors: result.errors,
+      logs: result.logs,
+      validationSummary: result.validationSummary
     });
 
     if (onProgress) {
@@ -198,10 +223,12 @@ class LessonOrchestrator {
     currentData.completedSteps.push(1);
     logStepEnd(1, requestId, true, currentData.timing.step1);
 
+    workflow.setStepLogs(1, stepLogger.getStepLogs(1));
     this.sendSSE(requestId, 'progress', {
+      type: 'progress',
       step: 1,
       status: 'completed',
-      progress: 14,
+      ...workflow.getState(),
       logs: stepLogger.getStepLogs(1)
     });
 
@@ -215,9 +242,10 @@ class LessonOrchestrator {
     const startTime = Date.now();
 
     this.sendSSE(requestId, 'progress', {
+      type: 'progress',
       step: 2,
       status: 'running',
-      progress: 14,
+      ...workflow.getState(),
       message: 'Gerando conteúdo dos blocos...'
     });
 
@@ -296,10 +324,12 @@ class LessonOrchestrator {
     currentData.completedSteps.push(2);
     logStepEnd(2, requestId, true, currentData.timing.step2);
 
+    workflow.setStepLogs(2, stepLogger.getStepLogs(2));
     this.sendSSE(requestId, 'progress', {
+      type: 'progress',
       step: 2,
       status: 'completed',
-      progress: 28,
+      ...workflow.getState(),
       logs: stepLogger.getStepLogs(2)
     });
 
@@ -313,9 +343,10 @@ class LessonOrchestrator {
     const startTime = Date.now();
 
     this.sendSSE(requestId, 'progress', {
+      type: 'progress',
       step: 3,
       status: 'running',
-      progress: 28,
+      ...workflow.getState(),
       message: 'Sugerindo atividades para cada bloco...'
     });
 
@@ -374,10 +405,12 @@ class LessonOrchestrator {
     currentData.completedSteps.push(3);
     logStepEnd(3, requestId, true, currentData.timing.step3);
 
+    workflow.setStepLogs(3, stepLogger.getStepLogs(3));
     this.sendSSE(requestId, 'progress', {
+      type: 'progress',
       step: 3,
       status: 'completed',
-      progress: 42,
+      ...workflow.getState(),
       logs: stepLogger.getStepLogs(3),
       data: { suggestions: suggestionsResult.suggestions }
     });
@@ -392,9 +425,10 @@ class LessonOrchestrator {
     const startTime = Date.now();
 
     this.sendSSE(requestId, 'progress', {
+      type: 'progress',
       step: 4,
       status: 'running',
-      progress: 42,
+      ...workflow.getState(),
       message: 'Gerando atividades via School Power...'
     });
 
@@ -450,10 +484,12 @@ class LessonOrchestrator {
     currentData.completedSteps.push(4);
     logStepEnd(4, requestId, true, currentData.timing.step4);
 
+    workflow.setStepLogs(4, stepLogger.getStepLogs(4));
     this.sendSSE(requestId, 'progress', {
+      type: 'progress',
       step: 4,
       status: 'completed',
-      progress: 56,
+      ...workflow.getState(),
       logs: stepLogger.getStepLogs(4),
       data: { activitiesCount: activitiesResult.activities.length }
     });
@@ -468,9 +504,10 @@ class LessonOrchestrator {
     const startTime = Date.now();
 
     this.sendSSE(requestId, 'progress', {
+      type: 'progress',
       step: 5,
       status: 'running',
-      progress: 56,
+      ...workflow.getState(),
       message: 'Salvando atividades no banco de dados...'
     });
 
@@ -514,10 +551,12 @@ class LessonOrchestrator {
     currentData.completedSteps.push(5);
     logStepEnd(5, requestId, true, currentData.timing.step5);
 
+    workflow.setStepLogs(5, stepLogger.getStepLogs(5));
     this.sendSSE(requestId, 'progress', {
+      type: 'progress',
       step: 5,
       status: 'completed',
-      progress: 70,
+      ...workflow.getState(),
       logs: stepLogger.getStepLogs(5)
     });
 
@@ -531,9 +570,10 @@ class LessonOrchestrator {
     const startTime = Date.now();
 
     this.sendSSE(requestId, 'progress', {
+      type: 'progress',
       step: 6,
       status: 'running',
-      progress: 70,
+      ...workflow.getState(),
       message: 'Anexando atividades aos blocos de seção...'
     });
 
@@ -585,10 +625,12 @@ class LessonOrchestrator {
     currentData.completedSteps.push(6);
     logStepEnd(6, requestId, true, currentData.timing.step6);
 
+    workflow.setStepLogs(6, stepLogger.getStepLogs(6));
     this.sendSSE(requestId, 'progress', {
+      type: 'progress',
       step: 6,
       status: 'completed',
-      progress: 85,
+      ...workflow.getState(),
       logs: stepLogger.getStepLogs(6),
       data: { activitiesPerSection: mapping }
     });
@@ -603,9 +645,10 @@ class LessonOrchestrator {
     const startTime = Date.now();
 
     this.sendSSE(requestId, 'progress', {
+      type: 'progress',
       step: 7,
       status: 'running',
-      progress: 85,
+      ...workflow.getState(),
       message: 'Finalizando e verificando consistência...'
     });
 
@@ -643,10 +686,12 @@ class LessonOrchestrator {
     currentData.completedSteps.push(7);
     logStepEnd(7, requestId, true, currentData.timing.step7);
 
+    workflow.setStepLogs(7, stepLogger.getStepLogs(7));
     this.sendSSE(requestId, 'progress', {
+      type: 'progress',
       step: 7,
       status: 'completed',
-      progress: 100,
+      ...workflow.getState(),
       logs: stepLogger.getStepLogs(7)
     });
 
