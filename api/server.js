@@ -13,6 +13,9 @@ import translateRoutes from './translate.js';
 import { runConversion, getConversionStats, deletePngFiles } from '../scripts/convert-images-to-webp.js';
 import groqService from './groq.js';
 import lessonGenerator from './ai/lesson-generator.js';
+import orchestrator from './orchestrator/lessonOrchestrator.js';
+import { loadActivitiesCatalog } from './orchestrator/agents/activitySuggestionAgent.js';
+import { log as orchestratorLog, LOG_PREFIXES } from './orchestrator/debugLogger.js';
 
 dotenv.config();
 
@@ -407,6 +410,77 @@ app.post('/api/lesson-generator/generate-titles', async (req, res) => {
       success: false,
       error: error.message || 'Erro interno do servidor'
     });
+  }
+});
+
+// ========================================
+// ROTAS DO ORQUESTRADOR DE AULAS
+// ========================================
+
+app.get('/api/orchestrator/health', (req, res) => {
+  orchestratorLog(LOG_PREFIXES.API, 'Health check do orquestrador');
+  res.json({ 
+    status: 'ok', 
+    service: 'lesson-orchestrator',
+    timestamp: new Date().toISOString(),
+    groqConfigured: !!process.env.GROQ_API_KEY
+  });
+});
+
+app.post('/api/orchestrator/orchestrate', async (req, res) => {
+  orchestratorLog(LOG_PREFIXES.API, 'Nova requisição de orquestração recebida');
+  
+  const { lessonContext, options = {} } = req.body;
+
+  if (!lessonContext) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'lessonContext é obrigatório' 
+    });
+  }
+
+  try {
+    const result = await orchestrator.orchestrate(lessonContext, options);
+    
+    res.json({
+      success: result.success,
+      requestId: result.requestId,
+      lesson: result.lesson,
+      activities: result.activities,
+      timing: result.timing,
+      errors: result.errors
+    });
+
+  } catch (error) {
+    orchestratorLog(LOG_PREFIXES.ERROR, `Erro na orquestração: ${error.message}`);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+app.get('/api/orchestrator/status/:requestId', (req, res) => {
+  const { requestId } = req.params;
+  const state = orchestrator.getWorkflowState(requestId);
+
+  if (!state) {
+    return res.status(404).json({ 
+      success: false, 
+      error: 'Workflow não encontrado ou já finalizado' 
+    });
+  }
+
+  res.json({ success: true, ...state });
+});
+
+app.get('/api/orchestrator/activities-catalog', (req, res) => {
+  try {
+    const catalog = loadActivitiesCatalog();
+    res.json({ success: true, catalog });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
