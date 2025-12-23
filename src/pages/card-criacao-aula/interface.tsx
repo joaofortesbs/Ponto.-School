@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen, Sparkles, LayoutGrid, Palette, Settings, PenTool, Loader2 } from 'lucide-react';
+import { X, BookOpen, Sparkles, LayoutGrid, Palette, Settings, PenTool, Loader2, Shuffle } from 'lucide-react';
 import AgenteProfessorCard from './components/AgenteProfessorCard';
 import PersonalizationStepCard from './components/PersonalizationStepCard';
 import SchoolToolsContent from './components/SchoolToolsContent';
@@ -8,6 +8,9 @@ import StyleDefinitionContent from './components/StyleDefinitionContent';
 import { Template, TEMPLATE_SECTIONS } from './components/TemplateDropdown';
 import { generateLesson, GeneratedLessonData } from '@/services/lessonGeneratorService';
 import { mapAIResponseToAula, validateAIResponse } from '@/utils/aiResponseMapper';
+import { orchestratorService } from '@/features/lesson-orchestrator';
+import { WorkflowModal } from '@/features/lesson-orchestrator';
+import type { WorkflowState, LessonContext as OrchestratorLessonContext } from '@/features/lesson-orchestrator/types';
 
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
@@ -43,6 +46,10 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   const [contexto, setContexto] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  
+  const [isOrchestrating, setIsOrchestrating] = useState(false);
+  const [showWorkflowModal, setShowWorkflowModal] = useState(false);
+  const [workflowState, setWorkflowState] = useState<WorkflowState | null>(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -189,6 +196,99 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   const handleTemplateChange = (template: Template | null) => {
     setSelectedTemplate(template);
     setIsTemplateCompleted(template !== null);
+  };
+
+  const handleOrchestrateLesson = async () => {
+    console.log('🎭 [ORCHESTRATOR] ========================================');
+    console.log('🎭 [ORCHESTRATOR] INICIANDO ORQUESTRAÇÃO DE AULA');
+    console.log('🎭 [ORCHESTRATOR] ========================================');
+    
+    if (!selectedTemplate) {
+      setGenerationError('Por favor, selecione um template de aula primeiro.');
+      return;
+    }
+    
+    if (!assunto.trim()) {
+      setGenerationError('Por favor, preencha o assunto da aula.');
+      return;
+    }
+    
+    setIsOrchestrating(true);
+    setGenerationError(null);
+    setShowWorkflowModal(true);
+    
+    try {
+      const templateSections = TEMPLATE_SECTIONS[selectedTemplate.id] || [];
+      const sectionOrder = ['objective', ...templateSections.map(name => {
+        const mapping: Record<string, string> = {
+          'Contextualização': 'contextualizacao',
+          'Exploração': 'exploracao',
+          'Apresentação': 'apresentacao',
+          'Prática Guiada': 'pratica-guiada',
+          'Prática Independente': 'pratica-independente',
+          'Fechamento': 'fechamento',
+          'Demonstração': 'demonstracao',
+          'Avaliação': 'avaliacao',
+          'Engajamento': 'engajamento',
+          'Colaboração': 'colaboracao',
+          'Reflexão': 'reflexao',
+          'Desenvolvimento': 'desenvolvimento',
+          'Aplicação': 'aplicacao',
+          'Materiais Complementares': 'materiais',
+          'Observações do Professor': 'observacoes',
+          'Critérios BNCC': 'bncc'
+        };
+        return mapping[name] || name.toLowerCase().replace(/\s+/g, '-');
+      })];
+      
+      const lessonContext: OrchestratorLessonContext = {
+        templateId: selectedTemplate.id,
+        templateName: selectedTemplate.name,
+        assunto,
+        contexto,
+        sectionOrder
+      };
+      
+      console.log('🎭 [ORCHESTRATOR] Contexto:', lessonContext);
+      
+      const result = await orchestratorService.orchestrateLesson(lessonContext, {
+        activitiesPerSection: 1,
+        skipSections: ['objective', 'materiais', 'observacoes', 'bncc'],
+        onProgress: (state) => {
+          console.log('🎭 [ORCHESTRATOR] Progresso:', state.progress + '%');
+          setWorkflowState(state);
+        }
+      });
+      
+      console.log('🎭 [ORCHESTRATOR] Resultado:', result);
+      
+      if (result.success && result.lesson) {
+        console.log('🎭 [ORCHESTRATOR] ✅ Orquestração concluída!');
+        console.log('🎭 [ORCHESTRATOR] Atividades geradas:', result.activities.length);
+        
+        const secoesSimples: Record<string, string> = {};
+        Object.entries(result.lesson.secoes).forEach(([key, value]) => {
+          secoesSimples[key] = typeof value === 'string' ? value : value.text;
+        });
+        
+        onGerarAula(selectedTemplate, {
+          titulo: result.lesson.titulo,
+          objetivo: result.lesson.objetivo,
+          secoes: secoesSimples
+        });
+        
+        setShowWorkflowModal(false);
+      } else {
+        console.error('🎭 [ORCHESTRATOR] ❌ Erro:', result.errors);
+        setGenerationError('Erro na orquestração. Tente novamente.');
+      }
+      
+    } catch (error) {
+      console.error('🎭 [ORCHESTRATOR] Erro fatal:', error);
+      setGenerationError('Erro de conexão. Verifique sua internet e tente novamente.');
+    } finally {
+      setIsOrchestrating(false);
+    }
   };
 
   return (
@@ -343,18 +443,49 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 </motion.div>
               )}
               
-              {/* Botão Gerar Aula - Fora dos cards */}
+              {/* Botões de Ação - Fora dos cards */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.3 }}
-                className="flex justify-end pt-4"
+                className="flex justify-end gap-3 pt-4"
               >
+                {/* Botão Orquestrar (com atividades) */}
+                <motion.button
+                  whileHover={!isOrchestrating ? { scale: 1.05 } : {}}
+                  whileTap={!isOrchestrating ? { scale: 0.95 } : {}}
+                  onClick={handleOrchestrateLesson}
+                  disabled={isOrchestrating || isGenerating}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                  style={{
+                    background: isOrchestrating 
+                      ? 'linear-gradient(135deg, #666 0%, #888 100%)'
+                      : 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
+                    boxShadow: isOrchestrating 
+                      ? '0 4px 15px rgba(100, 100, 100, 0.3)'
+                      : '0 4px 15px rgba(139, 92, 246, 0.3)'
+                  }}
+                  title="Gerar aula + atividades automáticas"
+                >
+                  {isOrchestrating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Orquestrando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Shuffle className="w-5 h-5" />
+                      <span>Aula + Atividades</span>
+                    </>
+                  )}
+                </motion.button>
+
+                {/* Botão Gerar Aula (simples) */}
                 <motion.button
                   whileHover={!isGenerating ? { scale: 1.05 } : {}}
                   whileTap={!isGenerating ? { scale: 0.95 } : {}}
                   onClick={handleGerarAula}
-                  disabled={isGenerating}
+                  disabled={isGenerating || isOrchestrating}
                   className="flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-white transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                   style={{
                     background: isGenerating 
@@ -384,6 +515,14 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
           </motion.div>
         </>
       )}
+
+      {/* Modal de Workflow do Orquestrador */}
+      <WorkflowModal
+        isOpen={showWorkflowModal}
+        onClose={() => setShowWorkflowModal(false)}
+        workflowState={workflowState}
+        isLoading={isOrchestrating}
+      />
     </AnimatePresence>
   );
 };
