@@ -4,9 +4,15 @@ import { Paperclip, Upload, Link, Zap } from 'lucide-react';
 
 interface StyleDefinitionContentProps {
   onCompletionChange?: (isComplete: boolean) => void;
+  onAssuntoChange?: (assunto: string) => void;
+  onContextoChange?: (contexto: string) => void;
 }
 
-const StyleDefinitionContent: React.FC<StyleDefinitionContentProps> = ({ onCompletionChange }) => {
+const StyleDefinitionContent: React.FC<StyleDefinitionContentProps> = ({ 
+  onCompletionChange,
+  onAssuntoChange,
+  onContextoChange 
+}) => {
   const [assunto, setAssunto] = useState('');
   const [contexto, setContexto] = useState('');
   const [isSourcesDropdownOpen, setIsSourcesDropdownOpen] = useState(false);
@@ -55,6 +61,7 @@ const StyleDefinitionContent: React.FC<StyleDefinitionContentProps> = ({ onCompl
           value={assunto}
           onChange={(e) => {
             setAssunto(e.target.value);
+            onAssuntoChange?.(e.target.value);
             onCompletionChange?.(e.target.value.trim().length > 0 && contexto.trim().length > 0);
           }}
           placeholder="Digite o assunto da aula..."
@@ -76,6 +83,7 @@ const StyleDefinitionContent: React.FC<StyleDefinitionContentProps> = ({ onCompl
           value={contexto}
           onChange={(e) => {
             setContexto(e.target.value);
+            onContextoChange?.(e.target.value);
             onCompletionChange?.(assunto.trim().length > 0 && e.target.value.trim().length > 0);
           }}
           placeholder="Descreva o contexto e detalhes da aula..."

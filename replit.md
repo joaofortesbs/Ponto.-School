@@ -8,6 +8,37 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (December 23, 2025)
 
+### ✅ NEW: AI-Powered Lesson Generation System (Groq API)
+**Feature Implemented:** Automatic content generation for all lesson sections using AI.
+
+**Architecture:**
+- **Backend Files:**
+  - `api/ai/prompts.js` - Dedicated file for AI prompts with section descriptions
+  - `api/ai/lesson-generator.js` - Complete flow with millimetric debugging
+- **Frontend Service:**
+  - `src/services/lessonGeneratorService.ts` - API client with TypeScript interfaces
+- **API Endpoints:**
+  - `POST /api/lesson-generator/generate` - Generate complete lesson
+  - `POST /api/lesson-generator/regenerate-section` - Regenerate specific section
+  - `POST /api/lesson-generator/generate-titles` - Generate title options
+  - `GET /api/lesson-generator/test` - Test connection
+
+**Flow:**
+1. User opens "Personalize sua aula" modal
+2. Selects template (defines section structure)
+3. Fills "Assunto" and "Contexto" fields
+4. Clicks "Gerar aula" button
+5. Backend maps all fields and sections
+6. Groq AI generates personalized content for each section
+7. Response populates all interface fields automatically
+
+**Debugging System:**
+- Request IDs for tracking
+- Timestamps on all operations
+- Prefixed logs: `[LESSON-GEN:FLOW]`, `[LESSON-GEN:API]`, `[LESSON-GEN:PARSING]`, etc.
+- Processing time measurement
+- Retry with exponential backoff
+
 ### ✅ FIXED: Dynamic Template Section Synchronization System
 **Critical Issue Resolved:** All lessons were displaying identical section sequences regardless of template selection.
 
@@ -59,6 +90,7 @@ The architecture emphasizes a modular component design using shadcn/ui patterns.
 ### Core Services
 - **Supabase**: Backend-as-a-Service for PostgreSQL database, authentication, real-time capabilities, and file storage.
 - **Google Gemini AI**: Main AI service for content generation, lesson planning, and educational assistance.
+- **Groq API**: AI service for fast lesson content generation using Llama 3.3 70B model.
 - **Neon PostgreSQL**: Managed external PostgreSQL database.
 - **SendGrid**: Email service for notifications.
 
@@ -105,3 +137,21 @@ The architecture emphasizes a modular component design using shadcn/ui patterns.
 - Includes: objective text, theme, image, sectionOrder, selectedTemplateId, dynamicSections, customSections
 - Auto-save with 1000ms debounce for performance
 - Sections state is fully reconstructed from dynamicSections on reload
+
+### AI Lesson Generation Flow
+1. **Modal Input:** User fills template + assunto + contexto
+2. **Section Mapping:** System maps template sections to IDs via `SECTION_NAME_TO_CONFIG`
+3. **Prompt Building:** `buildLessonGenerationPrompt()` creates detailed prompt with section purposes
+4. **API Call:** Request to Groq API with retry logic
+5. **Response Parsing:** JSON parsing with validation
+6. **Interface Population:** Generated data fills titulo, objetivo, and all section textareas
+
+### Backend File Structure (AI)
+```
+api/
+├── ai/
+│   ├── prompts.js          # AI prompts and section descriptions
+│   └── lesson-generator.js # Main generation logic with debugging
+├── groq.js                 # Existing Groq utilities
+└── server.js               # API routes including /api/lesson-generator/*
+```

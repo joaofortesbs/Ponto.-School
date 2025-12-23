@@ -12,6 +12,7 @@ import visitantesRoutes from './visitantes.js';
 import translateRoutes from './translate.js';
 import { runConversion, getConversionStats, deletePngFiles } from '../scripts/convert-images-to-webp.js';
 import groqService from './groq.js';
+import lessonGenerator from './ai/lesson-generator.js';
 
 dotenv.config();
 
@@ -265,6 +266,143 @@ app.post('/api/groq/chat', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Erro no chat:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Erro interno do servidor'
+    });
+  }
+});
+
+// ========================================
+// ROTAS DE GERAÇÃO DE AULAS COM IA
+// ========================================
+// Sistema dedicado para geração automática de conteúdo de aulas
+// Fluxo: Modal → Template → Assunto/Contexto → IA → Campos preenchidos
+// ========================================
+
+app.get('/api/lesson-generator/test', async (req, res) => {
+  try {
+    console.log('🧪 [LESSON-GENERATOR] Testando conexão...');
+    const result = await lessonGenerator.testConnection();
+    res.json(result);
+  } catch (error) {
+    console.error('❌ [LESSON-GENERATOR] Erro no teste:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.post('/api/lesson-generator/generate', async (req, res) => {
+  try {
+    console.log('🎓 [LESSON-GENERATOR] ========================================');
+    console.log('🎓 [LESSON-GENERATOR] NOVA REQUISIÇÃO DE GERAÇÃO DE AULA');
+    console.log('🎓 [LESSON-GENERATOR] ========================================');
+    console.log('🎓 [LESSON-GENERATOR] Dados recebidos:', JSON.stringify(req.body, null, 2));
+    
+    const { templateId, templateName, assunto, contexto, sectionOrder } = req.body;
+    
+    if (!templateId || !templateName || !assunto || !sectionOrder) {
+      console.log('❌ [LESSON-GENERATOR] Validação falhou - campos obrigatórios faltando');
+      return res.status(400).json({
+        success: false,
+        error: 'Campos obrigatórios: templateId, templateName, assunto, sectionOrder'
+      });
+    }
+    
+    console.log('🎓 [LESSON-GENERATOR] Validação OK - iniciando geração...');
+    console.log(`🎓 [LESSON-GENERATOR] Template: ${templateName} (${templateId})`);
+    console.log(`🎓 [LESSON-GENERATOR] Assunto: ${assunto}`);
+    console.log(`🎓 [LESSON-GENERATOR] Contexto: ${contexto || '[não fornecido]'}`);
+    console.log(`🎓 [LESSON-GENERATOR] Seções: ${sectionOrder.length} seções`);
+    
+    const result = await lessonGenerator.generateLesson({
+      templateId,
+      templateName,
+      assunto,
+      contexto: contexto || '',
+      sectionOrder
+    });
+    
+    console.log('🎓 [LESSON-GENERATOR] Resultado:', result.success ? '✅ SUCESSO' : '❌ FALHA');
+    console.log(`🎓 [LESSON-GENERATOR] Request ID: ${result.requestId}`);
+    
+    if (result.success) {
+      console.log(`🎓 [LESSON-GENERATOR] Título gerado: ${result.data.titulo}`);
+      console.log(`🎓 [LESSON-GENERATOR] Seções geradas: ${Object.keys(result.data.secoes).length}`);
+    }
+    
+    console.log('🎓 [LESSON-GENERATOR] ========================================');
+    
+    res.json(result);
+    
+  } catch (error) {
+    console.error('❌ [LESSON-GENERATOR] Erro fatal:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Erro interno do servidor'
+    });
+  }
+});
+
+app.post('/api/lesson-generator/regenerate-section', async (req, res) => {
+  try {
+    console.log('🔄 [LESSON-GENERATOR] Regenerando seção...');
+    console.log('🔄 [LESSON-GENERATOR] Dados:', JSON.stringify(req.body, null, 2));
+    
+    const { sectionId, sectionName, assunto, contexto, currentContent, instruction } = req.body;
+    
+    if (!sectionId || !sectionName || !assunto) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campos obrigatórios: sectionId, sectionName, assunto'
+      });
+    }
+    
+    const result = await lessonGenerator.regenerateSection({
+      sectionId,
+      sectionName,
+      assunto,
+      contexto,
+      currentContent,
+      instruction
+    });
+    
+    console.log('🔄 [LESSON-GENERATOR] Regeneração:', result.success ? '✅ SUCESSO' : '❌ FALHA');
+    
+    res.json(result);
+    
+  } catch (error) {
+    console.error('❌ [LESSON-GENERATOR] Erro na regeneração:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Erro interno do servidor'
+    });
+  }
+});
+
+app.post('/api/lesson-generator/generate-titles', async (req, res) => {
+  try {
+    console.log('📝 [LESSON-GENERATOR] Gerando opções de títulos...');
+    
+    const { assunto, contexto } = req.body;
+    
+    if (!assunto) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campo obrigatório: assunto'
+      });
+    }
+    
+    const result = await lessonGenerator.generateTitleOptions(assunto, contexto);
+    
+    console.log('📝 [LESSON-GENERATOR] Títulos gerados:', result.success ? '✅' : '❌');
+    
+    res.json(result);
+    
+  } catch (error) {
+    console.error('❌ [LESSON-GENERATOR] Erro ao gerar títulos:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Erro interno do servidor'

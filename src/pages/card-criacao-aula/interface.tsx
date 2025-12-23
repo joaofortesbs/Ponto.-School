@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen, Sparkles, LayoutGrid, Palette, Settings, PenTool } from 'lucide-react';
+import { X, BookOpen, Sparkles, LayoutGrid, Palette, Settings, PenTool, Loader2 } from 'lucide-react';
 import AgenteProfessorCard from './components/AgenteProfessorCard';
 import PersonalizationStepCard from './components/PersonalizationStepCard';
 import SchoolToolsContent from './components/SchoolToolsContent';
 import StyleDefinitionContent from './components/StyleDefinitionContent';
-import { Template } from './components/TemplateDropdown';
+import { Template, TEMPLATE_SECTIONS } from './components/TemplateDropdown';
+import { generateLesson, GeneratedLessonData } from '@/services/lessonGeneratorService';
 
 interface CriacaoAulaPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  onGerarAula: (template: Template | null) => void;
+  onGerarAula: (template: Template | null, generatedData?: GeneratedLessonData) => void;
 }
 
 const PANEL_PADDING_HORIZONTAL = 13;
@@ -37,6 +38,10 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   const [isSchoolToolsCompleted, setIsSchoolToolsCompleted] = useState(false);
   const [isStyleCompleted, setIsStyleCompleted] = useState(false);
   const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false);
+  const [assunto, setAssunto] = useState('');
+  const [contexto, setContexto] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -78,9 +83,84 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
     }
   }, [isOpen]);
 
-  const handleGerarAula = () => {
-    console.log('🎯 Gerando aula...');
-    onGerarAula(selectedTemplate);
+  const handleGerarAula = async () => {
+    console.log('🎯 [INTERFACE] ========================================');
+    console.log('🎯 [INTERFACE] INICIANDO GERAÇÃO DE AULA');
+    console.log('🎯 [INTERFACE] ========================================');
+    console.log('🎯 [INTERFACE] Template:', selectedTemplate?.name || 'Nenhum');
+    console.log('🎯 [INTERFACE] Template ID:', selectedTemplate?.id || 'N/A');
+    console.log('🎯 [INTERFACE] Assunto:', assunto);
+    console.log('🎯 [INTERFACE] Contexto:', contexto || '[não fornecido]');
+    
+    if (!selectedTemplate) {
+      console.log('❌ [INTERFACE] Erro: Nenhum template selecionado');
+      setGenerationError('Por favor, selecione um template de aula primeiro.');
+      return;
+    }
+    
+    if (!assunto.trim()) {
+      console.log('❌ [INTERFACE] Erro: Assunto vazio');
+      setGenerationError('Por favor, preencha o assunto da aula.');
+      return;
+    }
+    
+    setIsGenerating(true);
+    setGenerationError(null);
+    
+    try {
+      const templateSections = TEMPLATE_SECTIONS[selectedTemplate.id] || [];
+      const sectionOrder = ['objective', ...templateSections.map(name => {
+        const mapping: Record<string, string> = {
+          'Contextualização': 'contextualizacao',
+          'Exploração': 'exploracao',
+          'Apresentação': 'apresentacao',
+          'Prática Guiada': 'pratica-guiada',
+          'Prática Independente': 'pratica-independente',
+          'Fechamento': 'fechamento',
+          'Demonstração': 'demonstracao',
+          'Avaliação': 'avaliacao',
+          'Engajamento': 'engajamento',
+          'Colaboração': 'colaboracao',
+          'Reflexão': 'reflexao',
+          'Desenvolvimento': 'desenvolvimento',
+          'Aplicação': 'aplicacao',
+          'Materiais Complementares': 'materiais',
+          'Observações do Professor': 'observacoes',
+          'Critérios BNCC': 'bncc'
+        };
+        return mapping[name] || name.toLowerCase().replace(/\s+/g, '-');
+      })];
+      
+      console.log('🎯 [INTERFACE] Seções mapeadas:', sectionOrder);
+      console.log('🎯 [INTERFACE] Chamando API de geração...');
+      
+      const result = await generateLesson({
+        templateId: selectedTemplate.id,
+        templateName: selectedTemplate.name,
+        assunto,
+        contexto,
+        sectionOrder
+      });
+      
+      console.log('🎯 [INTERFACE] Resultado da API:', result.success ? '✅ SUCESSO' : '❌ FALHA');
+      console.log('🎯 [INTERFACE] Request ID:', result.requestId);
+      
+      if (result.success && result.data) {
+        console.log('🎯 [INTERFACE] Título gerado:', result.data.titulo);
+        console.log('🎯 [INTERFACE] Seções geradas:', Object.keys(result.data.secoes));
+        console.log('🎯 [INTERFACE] ========================================');
+        onGerarAula(selectedTemplate, result.data);
+      } else {
+        console.log('❌ [INTERFACE] Erro na geração:', result.error);
+        setGenerationError(result.error || 'Erro ao gerar aula. Tente novamente.');
+      }
+      
+    } catch (error) {
+      console.error('❌ [INTERFACE] Erro fatal:', error);
+      setGenerationError('Erro de conexão. Verifique sua internet e tente novamente.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleTemplateChange = (template: Template | null) => {
@@ -222,9 +302,24 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 onToggle={() => setExpandedCard(3)}
                 isCompleted={isStyleCompleted}
               >
-                <StyleDefinitionContent onCompletionChange={setIsStyleCompleted} />
+                <StyleDefinitionContent 
+                  onCompletionChange={setIsStyleCompleted}
+                  onAssuntoChange={setAssunto}
+                  onContextoChange={setContexto}
+                />
               </PersonalizationStepCard>
 
+              {/* Mensagem de Erro */}
+              {generationError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-500/20 border border-red-500/50 rounded-lg px-4 py-3 text-red-300 text-sm"
+                >
+                  {generationError}
+                </motion.div>
+              )}
+              
               {/* Botão Gerar Aula - Fora dos cards */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -233,17 +328,31 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 className="flex justify-end pt-4"
               >
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={!isGenerating ? { scale: 1.05 } : {}}
+                  whileTap={!isGenerating ? { scale: 0.95 } : {}}
                   onClick={handleGerarAula}
-                  className="flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-white transition-all"
+                  disabled={isGenerating}
+                  className="flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-white transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                   style={{
-                    background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
-                    boxShadow: '0 4px 15px rgba(255, 107, 0, 0.3)'
+                    background: isGenerating 
+                      ? 'linear-gradient(135deg, #666 0%, #888 100%)'
+                      : 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+                    boxShadow: isGenerating 
+                      ? '0 4px 15px rgba(100, 100, 100, 0.3)'
+                      : '0 4px 15px rgba(255, 107, 0, 0.3)'
                   }}
                 >
-                  <Sparkles className="w-5 h-5" />
-                  <span>Gerar aula</span>
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Gerando aula...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      <span>Gerar aula</span>
+                    </>
+                  )}
                 </motion.button>
               </motion.div>
             </div>
