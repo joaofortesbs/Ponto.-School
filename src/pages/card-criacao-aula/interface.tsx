@@ -204,9 +204,11 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 });
               }, 1500);
             } else {
+              // Erro na orquestração - MANTER MODAL ABERTO
               console.log('❌ [INTERFACE] Erro na orquestração:', result.errors);
-              setGenerationError('Erro ao gerar aula. Tente novamente.');
-              setShowWorkflowModal(false);
+              console.log('❌ [INTERFACE] Modal permanecerá ABERTO para inspeção de logs');
+              setGenerationError('Erro ao gerar aula. Verifique os logs no modal.');
+              // NÃO FECHAR O MODAL - Deixar aberto para o usuário inspecionar os logs
             }
             
             setIsGenerating(false);
