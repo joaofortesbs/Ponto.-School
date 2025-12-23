@@ -439,6 +439,11 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
     console.log('🤖 [AI_DATA] Título:', generatedData.titulo);
     console.log('🤖 [AI_DATA] Objetivo:', ensureString(generatedData.objetivo).substring(0, 100) + '...');
     console.log('🤖 [AI_DATA] Seções recebidas:', Object.keys(generatedData.secoes || {}));
+    console.log('🤖 [AI_DATA] ActivitiesPerSection recebido?', generatedData.activitiesPerSection ? 'SIM' : 'NÃO');
+    if (generatedData.activitiesPerSection) {
+      console.log('🤖 [AI_DATA] Seções com atividades:', Object.keys(generatedData.activitiesPerSection));
+      console.log('🤖 [AI_DATA] Detalhes:', JSON.stringify(generatedData.activitiesPerSection, null, 2));
+    }
     
     // Atualiza o nome da aula (título)
     if (generatedData.titulo) {

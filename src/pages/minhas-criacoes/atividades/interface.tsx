@@ -75,6 +75,10 @@ const AtividadesInterface: React.FC = () => {
       console.log('🎯 [ATIVIDADES] Título gerado:', generatedData.titulo);
       console.log('🎯 [ATIVIDADES] Objetivo gerado:', generatedData.objetivo?.substring(0, 100) + '...');
       console.log('🎯 [ATIVIDADES] Seções geradas:', Object.keys(generatedData.secoes || {}));
+      console.log('🎯 [ATIVIDADES] Atividades por seção recebidas:', generatedData.activitiesPerSection ? Object.keys(generatedData.activitiesPerSection) : 'Nenhuma');
+      if (generatedData.activitiesPerSection) {
+        console.log('🎯 [ATIVIDADES] Detalhes ativitiesPerSection:', JSON.stringify(generatedData.activitiesPerSection, null, 2));
+      }
     }
     console.log('🎯 [ATIVIDADES] ========================================');
     
