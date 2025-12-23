@@ -1,11 +1,12 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, Loader2 } from 'lucide-react';
+import { X, Save, Loader2, CheckCircle } from 'lucide-react';
 import AulaResultadoContent, { AulaResultadoContentRef } from './components/AulaResultadoContent';
 import { Template } from './components/TemplateDropdown';
 import { GeneratedLessonData } from '@/services/lessonGeneratorService';
 import { aulasStorageService } from '@/services/aulasStorageService';
 import { aulasIndexedDBService } from '@/services/aulasIndexedDBService';
+import { aulaLoadingDebugger } from '@/services/aulaLoadingDebugger';
 
 interface ConstrucaoAulaPanelProps {
   isOpen: boolean;
@@ -42,27 +43,38 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
   // EFEITO: Carrega aula se aulaIdParaCarregar foi passada
   useEffect(() => {
     if (!aulaIdParaCarregar) {
+      aulaLoadingDebugger.log('SKIP', 'aulaIdParaCarregar é nulo');
       setCarregando(false);
       return;
     }
 
     const carregarAula = async () => {
       try {
-        console.log('[CONSTRUCAO_AULA] 🔄 Carregando aula:', aulaIdParaCarregar);
+        aulaLoadingDebugger.log('START', { aulaIdParaCarregar });
+        aulaLoadingDebugger.log('LOADING_TRUE', null);
         setCarregando(true);
 
         // 1. Tenta localStorage
         let aulas = aulasStorageService.listarAulas();
+        aulaLoadingDebugger.log('STORAGE_READ', { 
+          totalAulasNoStorage: aulas.length,
+          aulaIds: aulas.map((a: any) => a.id)
+        });
+        
         let aula = aulas.find((a: any) => a.id === aulaIdParaCarregar);
 
         // 2. Se não encontrou, tenta IndexedDB
         if (!aula) {
-          console.log('[CONSTRUCAO_AULA] 💾 Não encontrou em localStorage, tentando IndexedDB...');
+          aulaLoadingDebugger.log('NOT_IN_STORAGE', { aulaId: aulaIdParaCarregar });
           let aulasIndexedDB = await aulasIndexedDBService.listarAulasIndexedDB();
+          aulaLoadingDebugger.log('INDEXEDDB_READ', { 
+            totalAulasNoIndexedDB: aulasIndexedDB.length 
+          });
           aula = aulasIndexedDB.find((a: any) => a.id === aulaIdParaCarregar);
         }
 
         if (!aula) {
+          aulaLoadingDebugger.log('NOT_FOUND_ANYWHERE', { aulaId: aulaIdParaCarregar });
           console.error('[CONSTRUCAO_AULA] ❌ Aula não encontrada!');
           alert('Aula não encontrada');
           setCarregando(false);
@@ -70,11 +82,24 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
           return;
         }
 
+        aulaLoadingDebugger.log('FOUND', {
+          titulo: aula.titulo,
+          templateId: aula.templateId,
+          sectionOrderLength: aula.sectionOrder?.length || 0,
+          secoesLength: Object.keys(aula.secoes || {}).length
+        });
+
         console.log('[CONSTRUCAO_AULA] ✅ Aula carregada:', aula.titulo);
         setAulaCarregada(aula);
         setCarregando(false);
+        aulaLoadingDebugger.log('LOADING_FALSE', null);
+        aulaLoadingDebugger.log('COMPLETE', 'Aula carregada com sucesso no estado');
 
       } catch (error) {
+        aulaLoadingDebugger.log('ERROR', {
+          message: (error as any).message,
+          stack: (error as any).stack
+        });
         console.error('[CONSTRUCAO_AULA_ERROR]', error);
         alert('Erro ao carregar aula');
         setCarregando(false);
@@ -141,6 +166,36 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
     }
   }, [selectedTemplate, turmaName, turmaImage, onClose, onSave]);
 
+  // Verificação pós-carregamento
+  useEffect(() => {
+    if (carregando || !aulaIdParaCarregar || !aulaCarregada) return;
+
+    const verificarCarregamento = () => {
+      console.log('[VERIFY_LOAD] Verificando se tudo foi carregado...');
+      
+      const checklist = {
+        titulo: !!aulaCarregada.titulo && aulaCarregada.titulo.length > 0,
+        sectionOrder: Array.isArray(aulaCarregada.sectionOrder) && aulaCarregada.sectionOrder.length > 0,
+        secoes: Object.keys(aulaCarregada.secoes || {}).length > 0,
+      };
+
+      console.log('[VERIFY_LOAD] Checklist:', checklist);
+      aulaLoadingDebugger.log('VERIFICATION_CHECK', checklist);
+
+      const todasAsCondicoes = Object.values(checklist).every(v => v);
+      
+      if (todasAsCondicoes) {
+        console.log('[VERIFY_LOAD] ✅ TUDO CARREGOU CORRETAMENTE!');
+        aulaLoadingDebugger.log('VERIFICATION_SUCCESS', checklist);
+      } else {
+        console.warn('[VERIFY_LOAD] ⚠️ ALGO FALTOU:', checklist);
+        aulaLoadingDebugger.log('VERIFICATION_FAILED', checklist);
+      }
+    };
+
+    setTimeout(verificarCarregamento, 100);
+  }, [aulaCarregada, carregando, aulaIdParaCarregar]);
+
   // Se carregando aula, mostra loader
   if (carregando && aulaIdParaCarregar) {
     return (
@@ -193,6 +248,18 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
           >
             <X className="w-5 h-5" />
           </motion.button>
+
+          {/* BADGE DE STATUS - Verde quando carregada */}
+          {!carregando && aulaIdParaCarregar && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute top-4 left-6 flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/50 rounded-full"
+            >
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span className="text-xs text-green-400 font-medium">EDITANDO</span>
+            </motion.div>
+          )}
           
           <div className="flex-1 overflow-auto p-6">
             <AulaResultadoContent
