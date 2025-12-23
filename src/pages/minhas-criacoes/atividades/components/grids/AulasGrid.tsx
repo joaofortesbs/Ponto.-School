@@ -9,6 +9,7 @@ interface AulasGridProps {
   searchTerm: string;
   onCreateAula?: () => void;
   onCountChange?: (count: number) => void;
+  onOpenAula?: (aulaId: string) => void;
 }
 
 const CARDS_PER_ROW = 5;
@@ -27,7 +28,7 @@ const formatDate = (dateString: string): string => {
   }
 };
 
-const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm, onCreateAula, onCountChange }) => {
+const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm, onCreateAula, onCountChange, onOpenAula }) => {
   const hasAnimatedRef = useRef(false);
   const [aulas, setAulas] = useState<AulaSalva[]>([]);
   const [filteredAulas, setFilteredAulas] = useState<AulaSalva[]>([]);
@@ -36,6 +37,7 @@ const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm, onCreateAula, onCount
   const [loading, setLoading] = useState(true);
   const [visibleRows, setVisibleRows] = useState(INITIAL_ROWS);
   const [shouldAnimate, setShouldAnimate] = useState(false);
+  const [aulaAberta, setAulaAberta] = useState<string | null>(null);
 
   // FUNÇÃO: Carregar com retry automático
   const carregarAulasComRetry = useCallback(async (tentativa = 1, maxTentativas = 3) => {
@@ -187,8 +189,9 @@ const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm, onCreateAula, onCount
   };
 
   const handleEditAula = (aula: AulaSalva) => {
-    console.log('✏️ Editando aula:', aula.titulo);
+    console.log('✏️ [GRID] Abrindo aula para edição:', aula.id, aula.titulo);
     setActiveMenu(null);
+    onOpenAula?.(aula.id);
   };
 
   const handleDeleteAula = (aula: AulaSalva) => {

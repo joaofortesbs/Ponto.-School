@@ -1,10 +1,11 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save } from 'lucide-react';
+import { X, Save, Loader2 } from 'lucide-react';
 import AulaResultadoContent, { AulaResultadoContentRef } from './components/AulaResultadoContent';
 import { Template } from './components/TemplateDropdown';
 import { GeneratedLessonData } from '@/services/lessonGeneratorService';
 import { aulasStorageService } from '@/services/aulasStorageService';
+import { aulasIndexedDBService } from '@/services/aulasIndexedDBService';
 
 interface ConstrucaoAulaPanelProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface ConstrucaoAulaPanelProps {
   turmaImage?: string | null;
   turmaName?: string | null;
   generatedData?: GeneratedLessonData | null;
+  aulaIdParaCarregar?: string;
 }
 
 const PANEL_PADDING_HORIZONTAL = 13;
@@ -30,9 +32,58 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
   selectedTemplate = null,
   turmaImage = null,
   turmaName = null,
-  generatedData = null
+  generatedData = null,
+  aulaIdParaCarregar = undefined
 }) => {
   const contentRef = useRef<AulaResultadoContentRef>(null);
+  const [carregando, setCarregando] = useState(!!aulaIdParaCarregar);
+  const [aulaCarregada, setAulaCarregada] = useState<any>(null);
+
+  // EFEITO: Carrega aula se aulaIdParaCarregar foi passada
+  useEffect(() => {
+    if (!aulaIdParaCarregar) {
+      setCarregando(false);
+      return;
+    }
+
+    const carregarAula = async () => {
+      try {
+        console.log('[CONSTRUCAO_AULA] 🔄 Carregando aula:', aulaIdParaCarregar);
+        setCarregando(true);
+
+        // 1. Tenta localStorage
+        let aulas = aulasStorageService.listarAulas();
+        let aula = aulas.find((a: any) => a.id === aulaIdParaCarregar);
+
+        // 2. Se não encontrou, tenta IndexedDB
+        if (!aula) {
+          console.log('[CONSTRUCAO_AULA] 💾 Não encontrou em localStorage, tentando IndexedDB...');
+          let aulasIndexedDB = await aulasIndexedDBService.listarAulasIndexedDB();
+          aula = aulasIndexedDB.find((a: any) => a.id === aulaIdParaCarregar);
+        }
+
+        if (!aula) {
+          console.error('[CONSTRUCAO_AULA] ❌ Aula não encontrada!');
+          alert('Aula não encontrada');
+          setCarregando(false);
+          onClose?.();
+          return;
+        }
+
+        console.log('[CONSTRUCAO_AULA] ✅ Aula carregada:', aula.titulo);
+        setAulaCarregada(aula);
+        setCarregando(false);
+
+      } catch (error) {
+        console.error('[CONSTRUCAO_AULA_ERROR]', error);
+        alert('Erro ao carregar aula');
+        setCarregando(false);
+        onClose?.();
+      }
+    };
+
+    carregarAula();
+  }, [aulaIdParaCarregar, onClose]);
 
   const handleSaveAndClose = useCallback(async () => {
     console.log('💾 [CLOSE_BUTTON] Clicado, verificando se foi publicada...');
@@ -90,6 +141,27 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
     }
   }, [selectedTemplate, turmaName, turmaImage, onClose, onSave]);
 
+  // Se carregando aula, mostra loader
+  if (carregando && aulaIdParaCarregar) {
+    return (
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            className="absolute inset-0 z-40 flex items-center justify-center bg-black/50"
+          >
+            <div className="bg-[#1A2B3C] p-8 rounded-lg flex flex-col items-center gap-4 border border-[#FF6B00]/30">
+              <Loader2 className="w-8 h-8 text-[#FF6B00] animate-spin" />
+              <p className="text-white font-semibold">Carregando aula...</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -125,12 +197,12 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
           <div className="flex-1 overflow-auto p-6">
             <AulaResultadoContent
               ref={contentRef}
-              aulaName={aulaName}
+              aulaName={aulaCarregada?.titulo || aulaName}
               selectedTemplate={selectedTemplate}
               turmaImage={turmaImage}
               turmaName={turmaName}
               createdAt={new Date()}
-              generatedData={generatedData}
+              generatedData={aulaCarregada ? { titulo: aulaCarregada.titulo, objetivo: aulaCarregada.objetivo, secoes: aulaCarregada.secoes || {} } : generatedData}
             />
           </div>
         </motion.div>

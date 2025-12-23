@@ -22,6 +22,7 @@ const AtividadesInterface: React.FC = () => {
   const [isConstrucaoAulaOpen, setIsConstrucaoAulaOpen] = useState(false);
   const [selectedAulaTemplate, setSelectedAulaTemplate] = useState<Template | null>(null);
   const [generatedLessonData, setGeneratedLessonData] = useState<GeneratedLessonData | null>(null);
+  const [aulaIdParaCarregar, setAulaIdParaCarregar] = useState<string | undefined>(undefined);
 
   const handleAtividadesCountChange = (count: number) => {
     setCounts(prev => ({ ...prev, atividades: count }));
@@ -81,7 +82,11 @@ const AtividadesInterface: React.FC = () => {
       case 'atividades':
         return <AtividadesGrid searchTerm={searchTerm} onCountChange={handleAtividadesCountChange} />;
       case 'aulas':
-        return <AulasGrid searchTerm={searchTerm} onCreateAula={handleOpenPersonalizacaoModal} />;
+        return <AulasGrid searchTerm={searchTerm} onCreateAula={handleOpenPersonalizacaoModal} onOpenAula={(aulaId) => {
+          console.log('[INTERFACE] 📖 Abrindo aula para edição:', aulaId);
+          setAulaIdParaCarregar(aulaId);
+          setIsConstrucaoAulaOpen(true);
+        }} />;
       case 'colecoes':
         return <ColecoesGrid searchTerm={searchTerm} />;
       default:
@@ -171,10 +176,14 @@ const AtividadesInterface: React.FC = () => {
 
       <ConstrucaoAulaPanel 
         isOpen={isConstrucaoAulaOpen}
-        onClose={handleCloseConstrucaoAula}
+        onClose={(foiPublicada) => {
+          handleCloseConstrucaoAula(foiPublicada);
+          setAulaIdParaCarregar(undefined);
+        }}
         aulaName={generatedLessonData?.titulo || "Minha Nova Aula"}
         selectedTemplate={selectedAulaTemplate}
         generatedData={generatedLessonData}
+        aulaIdParaCarregar={aulaIdParaCarregar}
       />
     </div>
   );
