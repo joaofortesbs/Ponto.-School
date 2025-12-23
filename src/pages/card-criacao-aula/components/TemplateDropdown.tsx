@@ -237,20 +237,29 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                   </div>
 
                   {/* Content - Blocos de Seções */}
-                  <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 hide-scrollbar">
+                  <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 hide-scrollbar">
                     <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
                     
-                    <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-2">
                       {viewingSections.sections.map((section, index) => (
                         <motion.div
                           key={index}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.05, duration: 0.2 }}
-                          whileHover={{ scale: 1.05, y: -2 }}
-                          className="p-3 rounded-lg border border-[#FF6B00]/30 bg-gradient-to-br from-[#FF6B00]/10 to-[#FF6B00]/5 cursor-pointer transition-all"
+                          whileHover={{ x: 4, scale: 1.02 }}
+                          className="flex items-center gap-3 p-3 rounded-lg border border-[#FF6B00]/30 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF6B00]/5 cursor-pointer transition-all"
                         >
-                          <h4 className="text-white font-medium text-xs text-center">
+                          <div
+                            className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 font-semibold text-xs"
+                            style={{
+                              background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
+                              color: 'white'
+                            }}
+                          >
+                            {index + 1}
+                          </div>
+                          <h4 className="text-white font-medium text-sm">
                             {section}
                           </h4>
                         </motion.div>
