@@ -36,6 +36,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
   const [isTemplateCompleted, setIsTemplateCompleted] = useState(false);
   const [isSchoolToolsCompleted, setIsSchoolToolsCompleted] = useState(false);
   const [isStyleCompleted, setIsStyleCompleted] = useState(false);
+  const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -115,13 +116,14 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
             className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none"
           >
             <div 
-              className="flex flex-col max-h-[90vh] w-full pointer-events-auto"
+              className="flex flex-col max-h-[90vh] w-full pointer-events-auto transition-all duration-300"
               style={{ 
                 background: '#030C2A',
                 borderRadius: `${PANEL_BORDER_RADIUS}px`,
                 border: '1px solid rgba(255, 107, 0, 0.3)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 107, 0, 0.1)',
-                maxWidth: '900px'
+                maxWidth: '900px',
+                filter: isTemplateDropdownOpen ? 'blur(4px)' : 'blur(0px)',
               }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -194,6 +196,7 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                     isTemplateCard={true}
                     selectedTemplate={selectedTemplate}
                     onSelectTemplate={handleTemplateChange}
+                    onTemplateDropdownChange={setIsTemplateDropdownOpen}
                   />
                 </div>
               </PersonalizationStepCard>

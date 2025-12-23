@@ -14,6 +14,7 @@ interface AgenteProfessorCardProps {
   isTemplateCard?: boolean;
   selectedTemplate?: Template | null;
   onSelectTemplate?: (template: Template) => void;
+  onTemplateDropdownChange?: (isOpen: boolean) => void;
 }
 
 const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
@@ -26,14 +27,17 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
   customIcon: CustomIcon,
   isTemplateCard = false,
   selectedTemplate,
-  onSelectTemplate
+  onSelectTemplate,
+  onTemplateDropdownChange
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleCardClick = () => {
     if (isTemplateCard) {
-      setIsDropdownOpen(!isDropdownOpen);
+      const newState = !isDropdownOpen;
+      setIsDropdownOpen(newState);
+      onTemplateDropdownChange?.(newState);
     }
   };
 
@@ -42,6 +46,7 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
       onSelectTemplate(template);
     }
     setIsDropdownOpen(false);
+    onTemplateDropdownChange?.(false);
   };
 
   const displayTitle = isTemplateCard && selectedTemplate ? selectedTemplate.name : cardTitle;
@@ -131,7 +136,10 @@ const AgenteProfessorCard: React.FC<AgenteProfessorCardProps> = ({
       {isTemplateCard && (
         <TemplateDropdown
           isOpen={isDropdownOpen}
-          onClose={() => setIsDropdownOpen(false)}
+          onClose={() => {
+            setIsDropdownOpen(false);
+            onTemplateDropdownChange?.(false);
+          }}
           onSelectTemplate={handleSelectTemplate}
           selectedTemplate={selectedTemplate || null}
           anchorRef={cardRef}
