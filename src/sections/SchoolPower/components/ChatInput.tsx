@@ -417,7 +417,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
         }
 
         .inner-container {
-          background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+          background: #040b2a;
           border-radius: 36px;
           padding: 7px 8px 7px 12px;
           border: 1px solid #333;
@@ -1138,7 +1138,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           justify-content: center;
           gap: 8px;
           padding: 10px 8px;
-          background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+          background: #040b2a;
           border: 1px solid #333;
           border-radius: 999px;
           cursor: pointer;
@@ -1216,7 +1216,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
         }
 
         .quick-access-card:hover {
-          background: linear-gradient(145deg, #333, #2a2a2a);
+          background: #0a1138;
           border-color: rgba(255, 107, 0, 0.4);
           box-shadow:
             0 6px 12px rgba(0, 0, 0, 0.3),
