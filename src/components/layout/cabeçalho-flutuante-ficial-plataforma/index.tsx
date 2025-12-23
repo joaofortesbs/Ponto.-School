@@ -69,8 +69,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import MessageReplyModal from "@/components/layout/MessageReplyModal";
-import LoginDiario from "@/components/logindiario/LoginDiario";
 import { supabase } from "@/integrations/supabase/client";
 
 // Configuração milimétrica do cabeçalho flutuante - matching PromotionalBanner
@@ -98,11 +96,9 @@ export default function CabecalhoFlutuante() {
   const [customLogo, setCustomLogo] = useState<string | null>(null);
   const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isMessagesOpen, setIsMessagesOpen] = useState(false);
   const [isSilenceDialogOpen, setIsSilenceDialogOpen] = useState(false);
   const [silenceDuration, setSilenceDuration] = useState("1h");
   const [notificationsSilenced, setNotificationsSilenced] = useState(false);
-  const [messagesSilenced, setMessagesSilenced] = useState(false);
   const [silenceEndTime, setSilenceEndTime] = useState<Date | null>(null);
   const [swipingItemId, setSwipingItemId] = useState<string | null>(null);
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null);
@@ -110,17 +106,13 @@ export default function CabecalhoFlutuante() {
   const [deletedNotifications, setDeletedNotifications] = useState<string[]>(
     [],
   );
-  const [deletedMessages, setDeletedMessages] = useState<string[]>([]);
   const [silenceType, setSilenceType] = useState<
-    "all" | "messages" | "notifications"
-  >("all");
+    "notifications"
+  >("notifications");
   const [lastAutoNotificationTime, setLastAutoNotificationTime] =
     useState<Date | null>(null);
   const [currentNotificationType, setCurrentNotificationType] = useState(0);
   const [sessionStartTime, setSessionStartTime] = useState<Date>(new Date());
-  const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
-  const [selectedMessageForReply, setSelectedMessageForReply] =
-    useState<any>(null);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [isGeneratingAiSuggestions, setIsGeneratingAiSuggestions] =
     useState(false);
@@ -398,41 +390,7 @@ export default function CabecalhoFlutuante() {
     },
   ];
 
-  const messages = [
-    {
-      id: "1",
-      sender: "Suporte Técnico",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Support",
-      message: "Olá! Como posso ajudar você hoje?",
-      time: "10:30",
-      date: "Hoje",
-      unread: true,
-      responseCount: 0,
-    },
-    {
-      id: "2",
-      sender: "Prof. Carlos",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos",
-      message: "Lembre-se de enviar o trabalho até sexta-feira!",
-      time: "15:45",
-      date: "Ontem",
-      unread: false,
-      responseCount: 2,
-    },
-    {
-      id: "3",
-      sender: "Grupo de Estudos - Física",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Physics",
-      message: "Maria: Alguém pode me ajudar com o exercício 5?",
-      time: "09:15",
-      date: "2 dias atrás",
-      unread: false,
-      responseCount: 1,
-    },
-  ];
-
   const [notificationsData, setNotificationsData] = useState(notifications);
-  const [messagesData, setMessagesData] = useState(messages);
 
   useEffect(() => {
     let silenceTimer: NodeJS.Timeout;
@@ -442,21 +400,11 @@ export default function CabecalhoFlutuante() {
 
       if (timeUntilEnd > 0) {
         silenceTimer = setTimeout(() => {
-          if (silenceType === "all" || silenceType === "notifications") {
-            setNotificationsSilenced(false);
-          }
-          if (silenceType === "all" || silenceType === "messages") {
-            setMessagesSilenced(false);
-          }
+          setNotificationsSilenced(false);
           setSilenceEndTime(null);
         }, timeUntilEnd);
       } else {
-        if (silenceType === "all" || silenceType === "notifications") {
-          setNotificationsSilenced(false);
-        }
-        if (silenceType === "all" || silenceType === "messages") {
-          setMessagesSilenced(false);
-        }
+        setNotificationsSilenced(false);
         setSilenceEndTime(null);
       }
     }
@@ -697,7 +645,7 @@ export default function CabecalhoFlutuante() {
     }
   };
 
-  const handleSwipeEnd = (itemId: string, type: "message" | "notification") => {
+  const handleSwipeEnd = (itemId: string, type: "notification") => {
     if (swipeStartX !== null && swipeCurrentX !== null) {
       const swipeDistance = swipeStartX - swipeCurrentX;
       if (swipeDistance > 100) {
@@ -709,14 +657,9 @@ export default function CabecalhoFlutuante() {
     setSwipeCurrentX(null);
   };
 
-  const handleDelete = (itemId: string, type: "message" | "notification") => {
-    if (type === "message") {
-      setMessagesData(messagesData.filter((m) => m.id !== itemId));
-      setDeletedMessages([...deletedMessages, itemId]);
-    } else {
-      setNotificationsData(notificationsData.filter((n) => n.id !== itemId));
-      setDeletedNotifications([...deletedNotifications, itemId]);
-    }
+  const handleDelete = (itemId: string, type: "notification") => {
+    setNotificationsData(notificationsData.filter((n) => n.id !== itemId));
+    setDeletedNotifications([...deletedNotifications, itemId]);
   };
 
   const getSwipeOffset = (itemId: string) => {
@@ -729,7 +672,6 @@ export default function CabecalhoFlutuante() {
 
   const handleSilenceNotifications = (
     duration: string,
-    type: "all" | "messages" | "notifications",
   ) => {
     const now = new Date();
     let endTime: Date;
@@ -752,43 +694,13 @@ export default function CabecalhoFlutuante() {
     }
 
     setSilenceEndTime(endTime);
-    setSilenceType(type);
-
-    if (type === "all" || type === "notifications") {
-      setNotificationsSilenced(true);
-    }
-    if (type === "all" || type === "messages") {
-      setMessagesSilenced(true);
-    }
+    setSilenceType("notifications");
+    setNotificationsSilenced(true);
   };
 
   const handleRestoreNotifications = () => {
     setNotificationsSilenced(false);
-    setMessagesSilenced(false);
     setSilenceEndTime(null);
-  };
-
-  const handleReplyClick = (message: any) => {
-    setSelectedMessageForReply(message);
-    setIsReplyModalOpen(true);
-    setIsMessagesOpen(false);
-  };
-
-  const handleSendReply = (replyText: string) => {
-    if (selectedMessageForReply) {
-      const updatedMessages = messagesData.map((m) => {
-        if (m.id === selectedMessageForReply.id) {
-          return {
-            ...m,
-            responseCount: m.responseCount + 1,
-          };
-        }
-        return m;
-      });
-      setMessagesData(updatedMessages);
-    }
-    setIsReplyModalOpen(false);
-    setSelectedMessageForReply(null);
   };
 
   const handleSearch = (query: string) => {
@@ -842,19 +754,9 @@ export default function CabecalhoFlutuante() {
         <Dialog open={isSilenceDialogOpen} onOpenChange={setIsSilenceDialogOpen}>
           <DialogContent className="sm:max-w-md backdrop-blur-md bg-white/90 dark:bg-[#030C2A]/90 border border-[#FF6B00]/30 shadow-lg">
             <DialogHeader>
-              <DialogTitle>
-                {silenceType === "all" && "Silenciar Todas as Notificações"}
-                {silenceType === "messages" && "Silenciar Mensagens"}
-                {silenceType === "notifications" && "Silenciar Notificações"}
-              </DialogTitle>
+              <DialogTitle>Silenciar Notificações</DialogTitle>
               <DialogDescription>
-                Por quanto tempo você deseja silenciar as{" "}
-                {silenceType === "messages"
-                  ? "mensagens"
-                  : silenceType === "notifications"
-                    ? "notificações"
-                    : "notificações e mensagens"}
-                ?
+                Por quanto tempo você deseja silenciar as notificações?
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
@@ -890,7 +792,7 @@ export default function CabecalhoFlutuante() {
               </Button>
               <Button
                 onClick={() => {
-                  handleSilenceNotifications(silenceDuration, silenceType);
+                  handleSilenceNotifications(silenceDuration);
                   setIsSilenceDialogOpen(false);
                 }}
               >
@@ -992,147 +894,6 @@ export default function CabecalhoFlutuante() {
         </div>
 
         <div className="flex items-center gap-4">
-          <LoginDiario />
-
-          <Popover open={isMessagesOpen} onOpenChange={setIsMessagesOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <MessageCircle className="h-5 w-5" />
-                {messagesData.filter((m) => m.unread).length > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-[#FF6B00] text-white text-xs">
-                    {messagesData.filter((m) => m.unread).length}
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="end">
-              <div className="flex items-center justify-between p-3 border-b">
-                <h3 className="font-semibold">Mensagens</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 text-xs"
-                  onClick={() => {
-                    setSilenceType("messages");
-                    setIsSilenceDialogOpen(true);
-                  }}
-                >
-                  <BellOff className="h-4 w-4 mr-1" />
-                  Silenciar
-                </Button>
-              </div>
-              <ScrollArea className="h-[300px]">
-                <div className="p-2">
-                  {messagesData.length > 0 ? (
-                    messagesData.map((message) => (
-                      <div
-                        key={message.id}
-                        className="relative overflow-hidden mb-2"
-                        onTouchStart={(e) => handleSwipeStart(e, message.id)}
-                        onTouchMove={handleSwipeMove}
-                        onTouchEnd={() => handleSwipeEnd(message.id, "message")}
-                      >
-                        <div
-                          className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-transform"
-                          style={{
-                            transform: `translateX(-${getSwipeOffset(message.id)}px)`,
-                          }}
-                          onClick={() => handleReplyClick(message)}
-                        >
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={message.avatar} />
-                            <AvatarFallback>
-                              {message.sender.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <p className="font-medium text-sm truncate">
-                                {message.sender}
-                              </p>
-                              <span className="text-xs text-gray-500">
-                                {message.time}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                              {message.message}
-                            </p>
-                            {message.responseCount > 0 && (
-                              <span className="text-xs text-[#FF6B00]">
-                                {message.responseCount} resposta(s)
-                              </span>
-                            )}
-                          </div>
-                          {message.unread && (
-                            <div className="h-2 w-2 bg-[#FF6B00] rounded-full" />
-                          )}
-                        </div>
-                        <div
-                          className="delete-button"
-                          onClick={() => handleDelete(message.id, "message")}
-                        >
-                          <X className="h-5 w-5" />
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-40 p-4 text-center">
-                      <MessageCircle className="h-10 w-10 text-gray-300 dark:text-gray-600 mb-2" />
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Você não tem mensagens
-                      </p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        As novas mensagens aparecerão aqui
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-              <div className="p-3 border-t flex justify-end items-center bg-gray-50 dark:bg-gray-800 rounded-b-xl">
-                <div className="flex items-center gap-2">
-                  {messagesSilenced && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-xs bg-green-100 hover:bg-green-200 text-green-700 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 transition-colors duration-200"
-                      onClick={handleRestoreNotifications}
-                    >
-                      <BellRing className="h-3 w-3 mr-1" />
-                      Restaurar mensagens
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-xs hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
-                    onClick={() => setMessagesData([])}
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Limpar
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="text-xs hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
-                    variant="outline"
-                    onClick={() => {
-                      const updatedMessages = messagesData.map((msg) => ({
-                        ...msg,
-                        unread: false,
-                      }));
-                      setMessagesData(updatedMessages);
-                    }}
-                  >
-                    Marcar todas como lidas
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-
           <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -1286,13 +1047,6 @@ export default function CabecalhoFlutuante() {
 
           <PerfilCabecalho />
         </div>
-
-        <MessageReplyModal
-          isOpen={isReplyModalOpen}
-          onOpenChange={setIsReplyModalOpen}
-          message={selectedMessageForReply}
-          onSendReply={handleSendReply}
-        />
       </header>
   );
 }
