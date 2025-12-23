@@ -1,0 +1,115 @@
+
+Está acontecendo um novo problema crítico no fluxo de criação de aulas dentro da plataforma Ponto. School:
+
+Contexto atual do fluxo:
+
+O usuário entra na plataforma, clica em “Aulas” e depois em “+ Criar”.
+
+Ele seleciona um template no modal “Personalize sua aula”, preenche as informações, gera a aula com a IA, publica e consegue visualizar essa aula normalmente.
+
+Em seguida, sem recarregar a página, o usuário volta para criar uma nova aula.
+
+Problema exato:
+
+Ao abrir novamente o modal “Personalize sua aula” para criar uma nova aula:
+
+Já aparece um template previamente selecionado automaticamente, em vez de começar limpo.
+
+Quando o usuário gera a nova aula, o sistema exibe a mesma aula anterior, como se estivesse reaproveitando/recuperando os dados da aula anterior em vez de gerar e exibir um novo conteúdo.
+
+Isso está impedindo a visualização e a geração correta de uma nova aula, porque o sistema parece estar “puxando” o estado/dados da última aula gerada/publicada.
+
+Objetivo principal:
+Você precisa criar uma arquitetura de estado, salvamento e consulta de dados extremamente organizada, previsível e à prova de erros, garantindo que:
+
+Cada aula tenha um identificador único (ID de aula).
+
+O estado do modal “Personalize sua aula” seja totalmente resetado sempre que o usuário inicia a criação de uma nova aula.
+
+Os dados exibidos no modal e na tela de construção da aula sejam sempre referentes somente à aula atual selecionada ou sendo criada, nunca da aula anterior.
+
+Requisitos de arquitetura de estado (front-end):
+
+Crie uma separação clara entre:
+
+Estado de criação de nova aula (draft/newLesson).
+
+Estado de edição de aula existente (loadedLesson).
+
+Sempre que o usuário clicar em “+ Criar aula”:
+
+Resetar completamente:
+
+Template selecionado.
+
+Campos de assunto, contexto, objetivos, seções, textos gerados pela IA, imagens, metadados etc.
+
+Qualquer referência à aulaCarregada, aulaSelecionada, selectedTemplate, generatedData, sectionTexts, ou estados semelhantes.
+
+Garantir que nenhum dado da aula anterior seja reaproveitado, a menos que exista uma funcionalidade explícita de “duplicar aula” (que não é o caso aqui).
+
+Quando o usuário estiver editando uma aula publicada:
+
+Carregar os dados 100% a partir do ID da aula e da fonte de dados (API/DB), mapeando tudo corretamente para os estados locais.
+
+Nunca misturar esse estado com o estado de “criação de nova aula”.
+
+Requisitos de salvamento e consulta de dados (back-end/DB):
+
+Toda aula salva ou publicada deve ficar registrada com:
+
+id único da aula.
+
+Template utilizado.
+
+Todas as seções e conteúdos gerados (título, objetivos, seções, textos, atividades, etc.).
+
+Ao abrir uma aula para visualizar ou editar:
+
+Buscar os dados exclusivamente pelo ID da aula.
+
+Mapear os dados para a estrutura correta utilizada no front (por exemplo: generatedData.secoes, sectionTexts, dynamicSections etc.).
+
+Ao iniciar a criação de uma nova aula:
+
+Não deve haver nenhuma consulta automática aos dados da aula anterior.
+
+Só deve haver carregamento de dados se o fluxo for explicitamente “editar” ou “duplicar aula”.
+
+Comportamento esperado após o ajuste:
+
+Fluxo 1: Criar primeira aula
+
+Seleciona template → Gera com IA → Publica → Visualiza.
+
+Fluxo 2: Criar segunda aula logo em seguida (sem recarregar a página)
+
+Clica em “+ Criar aula” → Modal “Personalize sua aula” abre totalmente limpo, sem template selecionado previamente.
+
+Usuário escolhe outro template (ou o mesmo), preenche novo assunto/contexto → Gera aula.
+
+A nova aula exibida é completamente nova, com conteúdo independente, sem reaproveitar dados da aula anterior.
+
+Fluxo 3: Editar aula publicada
+
+Ao clicar em “Editar” em uma aula da grade, o sistema carrega somente os dados dessa aula, identificada pelo seu id, sem interferir em nada no fluxo de criação de novas aulas.
+
+O que você precisa fazer agora:
+
+Identificar todos os pontos do código onde:
+
+O estado da aula atual está sendo armazenado (por exemplo: contextos, hooks, localStorage, Zustand, React Context, etc.).
+
+O modal “Personalize sua aula” reutiliza estados ou props da última aula.
+
+Refatorar a arquitetura para:
+
+Garantir isolamento completo entre “nova aula” e “aula carregada”.
+
+Resetar o estado do modal e da construção de aula sempre que uma nova criação for iniciada.
+
+Garantir que consultas por dados sejam sempre baseadas no id correto da aula.
+
+Explique, em um resumo breve ao final, quais arquivos foram alterados, quais estados/contexts/hooks foram criados ou refatorados e como ficou o fluxo final (criar → publicar → criar outra → editar).
+
+Tenha um cuidado extremo com estado residual, referências ao último objeto carregado e side effects. Sua solução precisa ser determinística, limpa, previsível e estável em produção, mesmo quando o usuário cria várias aulas em sequência, alternando entre criar, publicar e editar.

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import AtividadesHeader from './components/AtividadesHeader';
 import GridSelector from './components/GridSelector';
@@ -23,6 +23,21 @@ const AtividadesInterface: React.FC = () => {
   const [selectedAulaTemplate, setSelectedAulaTemplate] = useState<Template | null>(null);
   const [generatedLessonData, setGeneratedLessonData] = useState<GeneratedLessonData | null>(null);
   const [aulaIdParaCarregar, setAulaIdParaCarregar] = useState<string | undefined>(undefined);
+  
+  // 🔴 NOVO: Session ID para forçar remount dos componentes quando criar nova aula
+  const [aulaSessionId, setAulaSessionId] = useState<string>(() => `session_${Date.now()}`);
+  
+  // 🔴 NOVO: Função de reset completo para nova aula
+  const resetAulaState = useCallback(() => {
+    console.log('[RESET_AULA_STATE] 🧹 Limpando TODOS os estados para nova aula...');
+    setSelectedAulaTemplate(null);
+    setGeneratedLessonData(null);
+    setAulaIdParaCarregar(undefined);
+    // Gera nova session ID para forçar remount dos componentes filhos
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    setAulaSessionId(newSessionId);
+    console.log('[RESET_AULA_STATE] ✅ Estado limpo. Nova sessão:', newSessionId);
+  }, []);
 
   const handleAtividadesCountChange = (count: number) => {
     setCounts(prev => ({ ...prev, atividades: count }));
@@ -39,8 +54,11 @@ const AtividadesInterface: React.FC = () => {
   };
 
   const handleOpenPersonalizacaoModal = () => {
-    console.log('📚 Abrindo Modal de Personalização de Aula');
+    console.log('📚 [OPEN_PERSONALIZACAO] Abrindo Modal de Personalização de Aula');
+    // 🔴 CRÍTICO: Resetar TODOS os estados antes de abrir o modal
+    resetAulaState();
     setIsPersonalizacaoModalOpen(true);
+    console.log('📚 [OPEN_PERSONALIZACAO] ✅ Modal aberto com estados limpos');
   };
 
   const handleClosePersonalizacaoModal = () => {
@@ -169,12 +187,14 @@ const AtividadesInterface: React.FC = () => {
       />
 
       <CriacaoAulaPanel 
+        key={`criacao-${aulaSessionId}`}
         isOpen={isPersonalizacaoModalOpen}
         onClose={handleClosePersonalizacaoModal}
         onGerarAula={handleGerarAula}
       />
 
       <ConstrucaoAulaPanel 
+        key={`construcao-${aulaSessionId}-${aulaIdParaCarregar || 'new'}`}
         isOpen={isConstrucaoAulaOpen}
         onClose={(foiPublicada) => {
           handleCloseConstrucaoAula(foiPublicada);
