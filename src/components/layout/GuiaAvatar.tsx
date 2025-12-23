@@ -1,5 +1,11 @@
 
 import React from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface GuiaAvatarProps {
   className?: string;
@@ -7,9 +13,22 @@ interface GuiaAvatarProps {
 
 const GuiaAvatar: React.FC<GuiaAvatarProps> = ({ className = "" }) => {
   return (
-    <div className={`w-12 h-12 rounded-full border-2 border-orange-500 ${className}`}>
-      {/* Este é o componente circular vazio com borda laranja - Guia Avatar */}
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className={`w-12 h-12 rounded-full border-2 border-orange-500 overflow-hidden flex items-center justify-center ${className}`}>
+            <img
+              src="/images/avatar11-sobreposto-pv.webp"
+              alt="Agente Professor"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="text-sm font-semibold">Agente Professor</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
