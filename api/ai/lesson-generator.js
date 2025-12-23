@@ -21,7 +21,7 @@
  */
 
 import Groq from 'groq-sdk';
-import { withRetryAndTimeout } from '../groq.js';
+import { withRetryAndTimeout, getGroqClient } from '../groq.js';
 import {
   SYSTEM_PROMPT,
   SECTION_DESCRIPTIONS,
