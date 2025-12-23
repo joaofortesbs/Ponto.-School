@@ -21,7 +21,6 @@
  */
 
 import Groq from 'groq-sdk';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
   SYSTEM_PROMPT,
   SECTION_DESCRIPTIONS,
@@ -43,7 +42,6 @@ const MAX_RETRIES = 3;
 const TIMEOUT_MS = 60000;
 
 let groqClient = null;
-let geminiClient = null;
 
 /**
  * ====================================================================
@@ -130,48 +128,52 @@ function getGroqClient() {
 
 /**
  * ====================================================================
- * INICIALIZAÇÃO DO CLIENTE GEMINI (FALLBACK)
- * ====================================================================
- */
-function getGeminiClient() {
-  if (!geminiClient) {
-    log(LOG_PREFIX.API, 'Inicializando cliente Gemini (fallback)...');
-    
-    if (!GEMINI_API_KEY) {
-      log(LOG_PREFIX.ERROR, 'GEMINI_API_KEY não configurada! Fallback indisponível.');
-      return null;
-    }
-    
-    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    geminiClient = genAI.getGenerativeModel({ model: GEMINI_MODEL });
-    log(LOG_PREFIX.API, '✅ Cliente Gemini (fallback) inicializado com sucesso');
-  }
-  
-  return geminiClient;
-}
-
-/**
- * ====================================================================
- * GERAÇÃO COM GEMINI (FALLBACK)
+ * GERAÇÃO COM GEMINI (FALLBACK) - VIA REST API
  * ====================================================================
  */
 async function generateWithGemini(systemPrompt, userPrompt, requestId) {
-  const gemini = getGeminiClient();
-  
-  if (!gemini) {
+  if (!GEMINI_API_KEY) {
     throw new Error('Gemini não disponível como fallback - GEMINI_API_KEY não configurada');
   }
   
-  log(LOG_PREFIX.API, `[${requestId}] 🔄 Usando Gemini (${GEMINI_MODEL}) como fallback...`);
+  log(LOG_PREFIX.API, `[${requestId}] 🔄 Usando Gemini (${GEMINI_MODEL}-latest) como fallback via REST...`);
   
   try {
     const fullPrompt = `${systemPrompt}\n\n---\n\nSolicitação do usuário:\n${userPrompt}`;
     
-    const result = await gemini.generateContent(fullPrompt);
-    const response = await result.response;
-    const content = response.text();
-    
-    log(LOG_PREFIX.API, `[${requestId}] ✅ Resposta do Gemini recebida com sucesso`);
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}-latest:generateContent?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: fullPrompt }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.9,
+          maxOutputTokens: 4000
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Gemini API Error [${response.status}]: ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!content) {
+      throw new Error('Resposta inválida do Gemini - sem conteúdo');
+    }
+
+    log(LOG_PREFIX.API, `[${requestId}] ✅ Resposta do Gemini recebida com sucesso via REST`);
     
     return {
       choices: [{
@@ -183,9 +185,6 @@ async function generateWithGemini(systemPrompt, userPrompt, requestId) {
   } catch (error) {
     log(LOG_PREFIX.ERROR, `[${requestId}] ❌ Erro detalhado do Gemini:`, {
       message: error.message,
-      statusCode: error.statusCode,
-      status: error.status,
-      code: error.code,
       fullError: error.toString()
     });
     throw error;
