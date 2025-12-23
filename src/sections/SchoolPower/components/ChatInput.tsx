@@ -1206,29 +1206,29 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        /* Card "Aulas" (1º card) - padding reduzido */
+        /* Card "Aulas" (1º card) - padding interno bem reduzido */
         .quick-access-card:nth-child(1) {
-          padding: 10px 3px;
-        }
-
-        /* Card "Chats" (2º card) - padding reduzido */
-        .quick-access-card:nth-child(2) {
           padding: 10px 2px;
         }
 
-        /* Card "Flows" (3º card) - padding reduzido */
-        .quick-access-card:nth-child(3) {
-          padding: 10px 3px;
+        /* Card "Chats" (2º card) - padding interno bem reduzido */
+        .quick-access-card:nth-child(2) {
+          padding: 10px 1px;
         }
 
-        /* Card "Desenvolver" (4º card) - padding original (sem alteração) */
+        /* Card "Flows" (3º card) - padding interno bem reduzido */
+        .quick-access-card:nth-child(3) {
+          padding: 10px 2px;
+        }
+
+        /* Card "Desenvolver" (4º card) - padding original (SEM ALTERAÇÃO) */
         .quick-access-card:nth-child(4) {
           padding: 10px 8px;
         }
 
-        /* Card "Mais" (5º card) - padding reduzido */
+        /* Card "Mais" (5º card) - padding interno bem reduzido */
         .quick-access-card:nth-child(5) {
-          padding: 10px 2px;
+          padding: 10px 1px;
         }
 
         @media (max-width: 768px) {
@@ -1239,29 +1239,29 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
             border-radius: 999px;
           }
 
-          /* Card "Aulas" mobile */
+          /* Card "Aulas" mobile - padding bem reduzido */
           .quick-access-card:nth-child(1) {
-            padding: 10px 2px;
-          }
-
-          /* Card "Chats" mobile */
-          .quick-access-card:nth-child(2) {
             padding: 10px 1px;
           }
 
-          /* Card "Flows" mobile */
-          .quick-access-card:nth-child(3) {
-            padding: 10px 2px;
+          /* Card "Chats" mobile - padding bem reduzido */
+          .quick-access-card:nth-child(2) {
+            padding: 10px 0px;
           }
 
-          /* Card "Desenvolver" mobile */
+          /* Card "Flows" mobile - padding bem reduzido */
+          .quick-access-card:nth-child(3) {
+            padding: 10px 1px;
+          }
+
+          /* Card "Desenvolver" mobile - SEM ALTERAÇÃO */
           .quick-access-card:nth-child(4) {
             padding: 10px 6px;
           }
 
-          /* Card "Mais" mobile */
+          /* Card "Mais" mobile - padding bem reduzido */
           .quick-access-card:nth-child(5) {
-            padding: 10px 1px;
+            padding: 10px 0px;
           }
         }
 
