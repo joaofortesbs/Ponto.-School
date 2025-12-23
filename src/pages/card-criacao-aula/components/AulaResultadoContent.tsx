@@ -1,12 +1,91 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star, GripVertical, GitBranch } from 'lucide-react';
-import { Template } from './TemplateDropdown';
+import { Template, TEMPLATE_SECTIONS } from './TemplateDropdown';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
 import { ActivityViewModal } from '@/features/schoolpower/construction/ActivityViewModal';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { Zap, Heart, Briefcase, Monitor, PenTool, Users as UsersIcon, Brain, Compass, Presentation, HandHelping, Rocket } from 'lucide-react';
+
+// ====================================================================
+// SISTEMA DE MAPEAMENTO DE SEÇÕES DO TEMPLATE
+// ====================================================================
+// Este sistema converte os nomes das seções definidas em TEMPLATE_SECTIONS
+// para IDs internos usados pelo componente, com ícones e configurações.
+//
+// COMO FUNCIONA:
+// 1. O usuário seleciona um template (ex: "Aula Ativa")
+// 2. O sistema busca as seções desse template em TEMPLATE_SECTIONS
+// 3. Cada seção é mapeada para um ID interno com ícone e placeholder
+// 4. As seções são renderizadas dinamicamente abaixo do card Objetivos
+//
+// PARA ADICIONAR NOVA SEÇÃO:
+// 1. Adicione a seção em TEMPLATE_SECTIONS no TemplateDropdown.tsx
+// 2. Adicione o mapeamento aqui em SECTION_NAME_TO_CONFIG
+// ====================================================================
+
+interface SectionMappingConfig {
+  id: string;           // ID interno único da seção
+  title: string;        // Título exibido no card
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  placeholder: string;  // Placeholder do textarea
+}
+
+// Mapeamento de nomes de seção (do template) para configuração interna
+const SECTION_NAME_TO_CONFIG: Record<string, SectionMappingConfig> = {
+  // Seções comuns a múltiplos templates
+  'Objetivos': { id: 'objective', title: 'Objetivo da Aula', icon: Target, placeholder: 'Escreva o objetivo da aula...' },
+  'Contextualização': { id: 'contextualizacao', title: 'Contextualização', icon: Compass, placeholder: 'Descreva a contextualização da aula...' },
+  'Exploração': { id: 'exploracao', title: 'Exploração', icon: Zap, placeholder: 'Descreva as atividades de exploração...' },
+  'Apresentação': { id: 'apresentacao', title: 'Apresentação', icon: Presentation, placeholder: 'Descreva a apresentação do conteúdo...' },
+  'Prática Guiada': { id: 'pratica-guiada', title: 'Prática Guiada', icon: HandHelping, placeholder: 'Descreva as atividades de prática guiada...' },
+  'Prática Independente': { id: 'pratica-independente', title: 'Prática Independente', icon: PenTool, placeholder: 'Descreva as atividades de prática independente...' },
+  'Fechamento': { id: 'fechamento', title: 'Fechamento', icon: CheckCircle, placeholder: 'Descreva o fechamento da aula...' },
+  'Demonstração': { id: 'demonstracao', title: 'Demonstração', icon: Monitor, placeholder: 'Descreva a demonstração prática...' },
+  'Avaliação': { id: 'avaliacao', title: 'Avaliação', icon: Award, placeholder: 'Descreva os critérios de avaliação...' },
+  'Engajamento': { id: 'engajamento', title: 'Engajamento', icon: Rocket, placeholder: 'Descreva as estratégias de engajamento...' },
+  'Colaboração': { id: 'colaboracao', title: 'Colaboração', icon: UsersIcon, placeholder: 'Descreva as atividades colaborativas...' },
+  'Reflexão': { id: 'reflexao', title: 'Reflexão', icon: Brain, placeholder: 'Descreva o momento de reflexão...' },
+  'Desenvolvimento': { id: 'desenvolvimento', title: 'Desenvolvimento', icon: Layers, placeholder: 'Descreva o desenvolvimento da aula...' },
+  'Aplicação': { id: 'aplicacao', title: 'Aplicação', icon: Briefcase, placeholder: 'Descreva as atividades de aplicação prática...' },
+};
+
+// Seções padrão quando nenhum template é selecionado
+const DEFAULT_SECTION_ORDER = ['objective', 'preEstudo', 'introducao', 'desenvolvimento', 'encerramento', 'materiais', 'observacoes', 'bncc'];
+
+// Função helper para obter as seções baseadas no template
+const getTemplateSectionOrder = (template: Template | null): string[] => {
+  if (!template || !template.id) {
+    console.log('📋 [TEMPLATE_SECTIONS] Nenhum template selecionado, usando seções padrão');
+    return DEFAULT_SECTION_ORDER;
+  }
+
+  const templateSections = TEMPLATE_SECTIONS[template.id];
+  if (!templateSections) {
+    console.log(`📋 [TEMPLATE_SECTIONS] Template "${template.id}" não encontrado, usando seções padrão`);
+    return DEFAULT_SECTION_ORDER;
+  }
+
+  // Sempre incluir 'objective' primeiro, depois as seções do template
+  const sectionIds = ['objective'];
+  
+  for (const sectionName of templateSections) {
+    const config = SECTION_NAME_TO_CONFIG[sectionName];
+    if (config && config.id !== 'objective') {
+      sectionIds.push(config.id);
+    } else if (!config) {
+      // Se não existe mapeamento, cria um ID baseado no nome
+      const generatedId = sectionName.toLowerCase().replace(/\s+/g, '-').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      sectionIds.push(generatedId);
+      console.log(`📋 [TEMPLATE_SECTIONS] Seção "${sectionName}" não mapeada, usando ID gerado: ${generatedId}`);
+    }
+  }
+
+  console.log(`📋 [TEMPLATE_SECTIONS] Template "${template.name}" carregado com seções:`, sectionIds);
+  return sectionIds;
+};
 
 interface AulaResultadoContentProps {
   aulaName?: string;
@@ -112,6 +191,7 @@ interface AulaDraftData {
   aulaName: string;
   themeMode: ThemeMode;
   aulaImage: string | null;
+  selectedTemplateId?: string | null; // ID do template selecionado
   sectionTexts: {
     objective: string;
     preEstudo: string;
@@ -152,6 +232,19 @@ interface AulaDraftData {
     bncc: string;
   };
   sectionOrder: string[];
+  // ====================================================================
+  // SEÇÕES DINÂMICAS DO TEMPLATE (PERSISTÊNCIA)
+  // ====================================================================
+  // Armazena o estado de todas as seções dinâmicas geradas pelo template.
+  // Isso permite que os dados sejam preservados entre recarregamentos.
+  // ====================================================================
+  dynamicSections?: Record<string, {
+    id: string;
+    text: string;
+    isExpanded: boolean;
+    isVisible: boolean;
+    time: string;
+  }>;
   customSections: Array<{
     id: string;
     title: string;
@@ -217,6 +310,105 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [materiaisText, setMateriaisText] = useState(savedDraft?.sectionTexts?.materiais ?? '');
   const [observacoesText, setObservacoesText] = useState(savedDraft?.sectionTexts?.observacoes ?? '');
   const [bnccText, setBnccText] = useState(savedDraft?.sectionTexts?.bncc ?? '');
+
+  // ====================================================================
+  // ESTADO DINÂMICO PARA SEÇÕES DO TEMPLATE
+  // ====================================================================
+  // Estas seções são geradas dinamicamente baseado no template selecionado.
+  // Cada seção tem seu próprio estado de texto, expansão e visibilidade.
+  // ====================================================================
+  interface DynamicSectionState {
+    id: string;
+    text: string;
+    isExpanded: boolean;
+    isVisible: boolean;
+    time: string;
+  }
+
+  const [dynamicSections, setDynamicSections] = useState<Record<string, DynamicSectionState>>(() => {
+    // ====================================================================
+    // INICIALIZAÇÃO DAS SEÇÕES DINÂMICAS
+    // ====================================================================
+    // 1. Se existe um draft salvo com dynamicSections, usa os dados salvos
+    // 2. Caso contrário, inicializa baseado no template selecionado
+    // ====================================================================
+    
+    // Primeiro, verifica se há dados salvos
+    if (savedDraft?.dynamicSections) {
+      console.log('📋 [DYNAMIC_SECTIONS] Carregando seções do draft salvo:', Object.keys(savedDraft.dynamicSections));
+      return savedDraft.dynamicSections;
+    }
+    
+    // Caso contrário, inicializa baseado no template
+    const sections: Record<string, DynamicSectionState> = {};
+    const templateId = selectedTemplate?.id;
+    
+    if (templateId && TEMPLATE_SECTIONS[templateId]) {
+      TEMPLATE_SECTIONS[templateId].forEach((sectionName) => {
+        const config = SECTION_NAME_TO_CONFIG[sectionName];
+        if (config && config.id !== 'objective') {
+          sections[config.id] = {
+            id: config.id,
+            text: '',
+            isExpanded: true,
+            isVisible: true,
+            time: '10 min'
+          };
+        }
+      });
+    }
+    
+    console.log('📋 [DYNAMIC_SECTIONS] Seções dinâmicas inicializadas:', Object.keys(sections));
+    return sections;
+  });
+
+  // Handlers para seções dinâmicas
+  const updateDynamicSection = useCallback((sectionId: string, updates: Partial<DynamicSectionState>) => {
+    setDynamicSections(prev => ({
+      ...prev,
+      [sectionId]: { ...prev[sectionId], ...updates }
+    }));
+  }, []);
+
+  // ====================================================================
+  // SINCRONIZAÇÃO DE SEÇÕES DINÂMICAS COM TEMPLATE
+  // ====================================================================
+  // Este efeito garante que as seções dinâmicas sejam reconstruídas
+  // sempre que o template selecionado mudar, mantendo dados existentes.
+  // ====================================================================
+  useEffect(() => {
+    if (!selectedTemplate?.id) return;
+    
+    const templateSections = TEMPLATE_SECTIONS[selectedTemplate.id];
+    if (!templateSections) return;
+
+    setDynamicSections(prevSections => {
+      const newSections: Record<string, DynamicSectionState> = {};
+      
+      templateSections.forEach((sectionName) => {
+        const config = SECTION_NAME_TO_CONFIG[sectionName];
+        if (config && config.id !== 'objective') {
+          // Preserva dados existentes se a seção já existia
+          if (prevSections[config.id]) {
+            newSections[config.id] = prevSections[config.id];
+          } else {
+            // Cria nova seção
+            newSections[config.id] = {
+              id: config.id,
+              text: '',
+              isExpanded: true,
+              isVisible: true,
+              time: '10 min'
+            };
+          }
+        }
+      });
+      
+      console.log('📋 [DYNAMIC_SECTIONS] Template mudou, seções atualizadas:', Object.keys(newSections));
+      return newSections;
+    });
+  }, [selectedTemplate?.id]);
+
   const [isPreEstudoExpanded, setIsPreEstudoExpanded] = useState(savedDraft?.sectionExpanded?.preEstudo ?? true);
   const [isIntroducaoExpanded, setIsIntroducaoExpanded] = useState(savedDraft?.sectionExpanded?.introducao ?? true);
   const [isDesenvolvimentoExpanded, setIsDesenvolvimentoExpanded] = useState(savedDraft?.sectionExpanded?.desenvolvimento ?? true);
@@ -239,10 +431,68 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [isBnccVisible, setIsBnccVisible] = useState(savedDraft?.sectionVisible?.bncc ?? true);
 
   // Estado para ordem das seções (drag and drop)
-  const [sectionOrder, setSectionOrder] = useState<string[]>(
-    savedDraft?.sectionOrder ?? ['objective', 'preEstudo', 'introducao', 'desenvolvimento', 'encerramento', 'materiais', 'observacoes', 'bncc']
-  );
+  // ====================================================================
+  // SEÇÕES DINÂMICAS BASEADAS NO TEMPLATE
+  // ====================================================================
+  // O sectionOrder é inicializado com base no template selecionado.
+  // Se houver um draft salvo, usa as seções do draft.
+  // Caso contrário, gera as seções baseadas no template selecionado.
+  // ====================================================================
+  const initialSectionOrder = useMemo(() => {
+    if (savedDraft?.sectionOrder) {
+      console.log('📋 [SECTION_ORDER] Usando ordem do draft salvo:', savedDraft.sectionOrder);
+      return savedDraft.sectionOrder;
+    }
+    return getTemplateSectionOrder(selectedTemplate);
+  }, [savedDraft, selectedTemplate]);
+
+  const [sectionOrder, setSectionOrder] = useState<string[]>(initialSectionOrder);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+  // ====================================================================
+  // SINCRONIZAÇÃO DE sectionOrder QUANDO O TEMPLATE MUDA
+  // ====================================================================
+  // Esta lógica precisa distinguir 4 cenários:
+  // 1. Inicialização com draft (mesmo template): NÃO recalcula
+  // 2. Inicialização com draft legado (sem selectedTemplateId): NÃO recalcula
+  // 3. Primeira seleção de template (sem draft): RECALCULA
+  // 4. Mudança de template durante sessão: RECALCULA
+  // ====================================================================
+  const hasDraftOrderRef = useRef<boolean>(!!savedDraft?.sectionOrder);
+  const isLegacyDraftRef = useRef<boolean>(!!savedDraft?.sectionOrder && !savedDraft?.selectedTemplateId);
+  const hasProcessedInitialTemplateRef = useRef<boolean>(false);
+  const previousTemplateIdRef = useRef<string | null>(
+    savedDraft?.selectedTemplateId ?? null
+  );
+  
+  useEffect(() => {
+    if (!selectedTemplate?.id) return;
+    
+    // Caso 1 e 2: Primeiro template recebido com draft salvo
+    if (!hasProcessedInitialTemplateRef.current && hasDraftOrderRef.current) {
+      hasProcessedInitialTemplateRef.current = true;
+      previousTemplateIdRef.current = selectedTemplate.id;
+      console.log('📋 [SECTION_ORDER] Draft com ordem salva - preservando', isLegacyDraftRef.current ? '(legado)' : '');
+      return;
+    }
+    
+    // Marcar como processado se ainda não foi
+    if (!hasProcessedInitialTemplateRef.current) {
+      hasProcessedInitialTemplateRef.current = true;
+    }
+    
+    // Caso 3 e 4: Template diferente do anterior → recalcula
+    if (previousTemplateIdRef.current !== selectedTemplate.id) {
+      const newOrder = getTemplateSectionOrder(selectedTemplate);
+      console.log('📋 [SECTION_ORDER] Template:', previousTemplateIdRef.current ? `mudou de ${previousTemplateIdRef.current} para ${selectedTemplate.id}` : `primeira seleção ${selectedTemplate.id}`);
+      console.log('📋 [SECTION_ORDER] Atualizando sectionOrder:', newOrder);
+      setSectionOrder(newOrder);
+      previousTemplateIdRef.current = selectedTemplate.id;
+      
+      // Uma vez que recalculamos, o flag de draft não se aplica mais
+      hasDraftOrderRef.current = false;
+    }
+  }, [selectedTemplate?.id]);
 
   // Sensores para drag and drop
   const sensors = useSensors(
@@ -374,6 +624,11 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
           bncc: bnccTime,
         },
         sectionOrder,
+        // ====================================================================
+        // PERSISTÊNCIA DAS SEÇÕES DINÂMICAS DO TEMPLATE
+        // ====================================================================
+        selectedTemplateId: selectedTemplate?.id ?? null,
+        dynamicSections,
         customSections,
         sectionActivities: sectionActivities.map(sa => ({
           sectionId: sa.sectionId,
@@ -387,6 +642,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
         const storageKey = getAulaStorageKey(aulaName);
         localStorage.setItem(storageKey, JSON.stringify(draftData));
         console.log('💾 Rascunho salvo automaticamente para:', aulaName);
+        console.log('💾 [DYNAMIC_SECTIONS] Seções dinâmicas salvas:', Object.keys(dynamicSections));
       } catch (error) {
         console.error('Erro ao salvar rascunho:', error);
       }
@@ -398,7 +654,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       }
     };
   }, [
-    aulaName, themeMode, aulaImage,
+    aulaName, themeMode, aulaImage, selectedTemplate,
     objectiveText, preEstudoText, introducaoText, desenvolvimentoText,
     encerramentoText, materiaisText, observacoesText, bnccText,
     isObjectiveExpanded, isPreEstudoExpanded, isIntroducaoExpanded, isDesenvolvimentoExpanded,
@@ -407,7 +663,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     isEncerramentoVisible, isMateriaisVisible, isObservacoesVisible, isBnccVisible,
     preEstudoTime, introducaoTime, desenvolvimentoTime, encerramentoTime,
     materiaisTime, observacoesTime, bnccTime,
-    sectionOrder, customSections, sectionActivities,
+    sectionOrder, customSections, sectionActivities, dynamicSections,
   ]);
 
   // Handlers memoizados para os campos de texto (performance)
@@ -576,6 +832,49 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
       dividerIndex: 6,
       delay: 0.85,
     },
+    // ====================================================================
+    // SEÇÕES DINÂMICAS DO TEMPLATE
+    // ====================================================================
+    // Estas seções são geradas com base no template selecionado.
+    // Cada uma tem estado próprio gerenciado pelo dynamicSections.
+    // ====================================================================
+    ...Object.entries(SECTION_NAME_TO_CONFIG).reduce((acc, [name, config]) => {
+      // Pula seções que já existem como estáticas ou a seção objective
+      if (['objective', 'preEstudo', 'introducao', 'desenvolvimento', 'encerramento', 'materiais', 'observacoes', 'bncc'].includes(config.id)) {
+        return acc;
+      }
+      
+      const dynamicState = dynamicSections[config.id];
+      if (dynamicState) {
+        acc[config.id] = {
+          id: config.id,
+          title: config.title,
+          icon: config.icon,
+          isVisible: dynamicState.isVisible,
+          setVisible: (v: boolean) => updateDynamicSection(config.id, { isVisible: v }),
+          isExpanded: dynamicState.isExpanded,
+          setExpanded: ((v: boolean | ((prev: boolean) => boolean)) => {
+            if (typeof v === 'function') {
+              setDynamicSections(prev => ({
+                ...prev,
+                [config.id]: { ...prev[config.id], isExpanded: v(prev[config.id]?.isExpanded ?? true) }
+              }));
+            } else {
+              updateDynamicSection(config.id, { isExpanded: v });
+            }
+          }) as React.Dispatch<React.SetStateAction<boolean>>,
+          text: dynamicState.text,
+          onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => updateDynamicSection(config.id, { text: e.target.value }),
+          placeholder: config.placeholder,
+          time: dynamicState.time,
+          setTime: (t: string) => updateDynamicSection(config.id, { time: t }),
+          menuId: config.id,
+          dividerIndex: 0,
+          delay: 0.6,
+        };
+      }
+      return acc;
+    }, {} as Record<string, SectionConfig>),
   }), [
     isObjectiveVisible, isObjectiveExpanded, objectiveText, handleObjectiveChange,
     isPreEstudoVisible, isPreEstudoExpanded, preEstudoText, handlePreEstudoChange, preEstudoTime,
@@ -585,6 +884,7 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
     isMateriaisVisible, isMateriaisExpanded, materiaisText, handleMateriaisChange, materiaisTime,
     isObservacoesVisible, isObservacoesExpanded, observacoesText, handleObservacoesChange, observacoesTime,
     isBnccVisible, isBnccExpanded, bnccText, handleBnccChange, bnccTime,
+    dynamicSections, updateDynamicSection,
   ]);
 
   // Carregar atividades do usuário
