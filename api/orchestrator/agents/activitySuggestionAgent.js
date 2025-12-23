@@ -12,31 +12,26 @@
  * - Sugerir 1 atividade por bloco (configurável)
  * - Retornar lista de atividades a serem geradas
  * 
- * VERSÃO: 1.0.0
+ * VERSÃO: 2.0.0 - Com retry automático e fallback para Gemini
+ * ÚLTIMA ATUALIZAÇÃO: 2025-12-23
  * ====================================================================
  */
 
-import Groq from 'groq-sdk';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { log, LOG_PREFIXES, logActivitySuggestion } from '../debugLogger.js';
+import { withRetryAndTimeout, getGroqClient } from '../../groq.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const API_KEY = process.env.GROQ_API_KEY?.trim();
+const GROQ_API_KEY = process.env.GROQ_API_KEY?.trim();
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
 const MODEL = 'llama-3.3-70b-versatile';
+const GEMINI_MODEL = 'gemini-1.5-flash';
 
-let groqClient = null;
 let activitiesCatalog = null;
-
-function getGroqClient() {
-  if (!groqClient && API_KEY) {
-    groqClient = new Groq({ apiKey: API_KEY });
-  }
-  return groqClient;
-}
 
 function loadActivitiesCatalog() {
   if (activitiesCatalog) return activitiesCatalog;
@@ -87,14 +82,67 @@ Responda em JSON com o formato:
   }
 }`;
 
+function isRateLimitError(error) {
+  return error?.status === 429 || 
+         error?.message?.includes('rate limit') ||
+         error?.message?.includes('429') ||
+         error?.error?.code === 'rate_limit_exceeded';
+}
+
+async function generateWithGemini(systemPrompt, userPrompt, requestId) {
+  if (!GEMINI_API_KEY) {
+    throw new Error('Gemini não disponível como fallback - GEMINI_API_KEY não configurada');
+  }
+  
+  log(LOG_PREFIXES.SUGGEST, `[${requestId}] 🔄 Usando Gemini (${GEMINI_MODEL}-latest) como fallback via REST...`);
+  
+  try {
+    const fullPrompt = `${systemPrompt}\n\n---\n\nSolicitação do usuário:\n${userPrompt}`;
+    
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}-latest:generateContent?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: fullPrompt }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.5,
+          maxOutputTokens: 500,
+          topP: 0.9
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.text();
+      throw new Error(`Gemini API error (${response.status}): ${errorData}`);
+    }
+    
+    const data = await response.json();
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!content) {
+      throw new Error('Gemini não retornou conteúdo válido');
+    }
+    
+    log(LOG_PREFIXES.SUGGEST, `[${requestId}] ✅ Gemini fallback retornou resposta`);
+    return content;
+    
+  } catch (error) {
+    log(LOG_PREFIXES.ERROR, `[${requestId}] ❌ Erro no Gemini fallback:`, error.message);
+    throw error;
+  }
+}
+
 async function suggestActivityForSection(requestId, section, activitiesLimit = 1) {
   log(LOG_PREFIXES.SUGGEST, `[${requestId}] Analisando seção ${section.sectionId} para sugestões`);
   
-  const client = getGroqClient();
-  if (!client) {
-    throw new Error('Cliente Groq não configurado');
-  }
-
   const catalog = loadActivitiesCatalog();
   const enabledActivities = catalog.filter(a => a.enabled !== false);
   
@@ -107,63 +155,106 @@ async function suggestActivityForSection(requestId, section, activitiesLimit = 1
     .replace('{sectionContent}', section.content.substring(0, 1000))
     .replace('{activitiesCatalog}', catalogStr);
 
+  const systemPrompt = 'Você sugere atividades educacionais. Responda APENAS em JSON válido.';
+  
+  const startTime = Date.now();
+  let responseText = '';
+  let usedFallback = false;
+
   try {
-    const startTime = Date.now();
+    const completion = await withRetryAndTimeout(async () => {
+      const client = getGroqClient();
+      return await client.chat.completions.create({
+        model: MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.5,
+        max_tokens: 500
+      });
+    }, 3);
+
+    responseText = completion.choices[0]?.message?.content || '{}';
+    log(LOG_PREFIXES.SUGGEST, `[${requestId}] ✅ Groq retornou sugestão para ${section.sectionId}`);
+
+  } catch (groqError) {
+    log(LOG_PREFIXES.ERROR, `[${requestId}] ⚠️ Groq falhou: ${groqError.message}`);
     
-    const completion = await client.chat.completions.create({
-      model: MODEL,
-      messages: [
-        { role: 'system', content: 'Você sugere atividades educacionais. Responda APENAS em JSON válido.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.5,
-      max_tokens: 500
-    });
-
-    const duration = Date.now() - startTime;
-    const responseText = completion.choices[0]?.message?.content || '{}';
-
-    let suggestion;
-    try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      suggestion = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
-    } catch (parseError) {
-      log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao parsear resposta, usando fallback`);
-      suggestion = {
-        activityId: 'quiz-interativo',
-        activityName: 'Quiz Interativo',
-        justification: 'Fallback devido a erro de parsing',
-        parameters: {
-          title: `Quiz sobre ${section.sectionName}`,
-          description: 'Quiz gerado automaticamente',
-          difficulty: 'médio',
-          estimatedTime: '10'
-        }
-      };
+    if (isRateLimitError(groqError)) {
+      log(LOG_PREFIXES.SUGGEST, `[${requestId}] 🔄 Tentando fallback para Gemini...`);
+      
+      try {
+        responseText = await generateWithGemini(systemPrompt, prompt, requestId);
+        usedFallback = true;
+        log(LOG_PREFIXES.SUGGEST, `[${requestId}] ✅ Fallback Gemini bem-sucedido para ${section.sectionId}`);
+      } catch (geminiError) {
+        log(LOG_PREFIXES.ERROR, `[${requestId}] ❌ Fallback Gemini também falhou: ${geminiError.message}`);
+        
+        log(LOG_PREFIXES.SUGGEST, `[${requestId}] 📦 Usando atividade padrão (fallback local)`);
+        return createFallbackResult(section, enabledActivities, startTime, 'Fallback local (API indisponível)');
+      }
+    } else {
+      throw groqError;
     }
-
-    const validActivity = enabledActivities.find(a => a.id === suggestion.activityId);
-    if (!validActivity) {
-      log(LOG_PREFIXES.DEBUG, `[${requestId}] Atividade ${suggestion.activityId} não encontrada, usando primeira disponível`);
-      suggestion.activityId = enabledActivities[0]?.id || 'quiz-interativo';
-      suggestion.activityName = enabledActivities[0]?.name || 'Quiz Interativo';
-    }
-
-    const result = {
-      sectionId: section.sectionId,
-      sectionName: section.sectionName,
-      suggestion,
-      generatedAt: new Date().toISOString(),
-      duration
-    };
-
-    logActivitySuggestion(requestId, section.sectionId, [suggestion.activityId]);
-    return result;
-
-  } catch (error) {
-    log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao sugerir atividade para ${section.sectionId}:`, error.message);
-    throw error;
   }
+
+  const duration = Date.now() - startTime;
+
+  let suggestion;
+  try {
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    suggestion = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
+  } catch (parseError) {
+    log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao parsear resposta, usando fallback`);
+    return createFallbackResult(section, enabledActivities, startTime, 'Fallback devido a erro de parsing');
+  }
+
+  const validActivity = enabledActivities.find(a => a.id === suggestion.activityId);
+  if (!validActivity) {
+    log(LOG_PREFIXES.DEBUG, `[${requestId}] Atividade ${suggestion.activityId} não encontrada, usando primeira disponível`);
+    suggestion.activityId = enabledActivities[0]?.id || 'quiz-interativo';
+    suggestion.activityName = enabledActivities[0]?.name || 'Quiz Interativo';
+  }
+
+  const result = {
+    sectionId: section.sectionId,
+    sectionName: section.sectionName,
+    suggestion,
+    generatedAt: new Date().toISOString(),
+    duration,
+    usedFallback,
+    aiProvider: usedFallback ? 'gemini' : 'groq'
+  };
+
+  logActivitySuggestion(requestId, section.sectionId, [suggestion.activityId]);
+  return result;
+}
+
+function createFallbackResult(section, enabledActivities, startTime, justification) {
+  const fallbackActivity = enabledActivities[0] || { id: 'quiz-interativo', name: 'Quiz Interativo' };
+  
+  const suggestion = {
+    activityId: fallbackActivity.id,
+    activityName: fallbackActivity.name,
+    justification: justification,
+    parameters: {
+      title: `Quiz sobre ${section.sectionName}`,
+      description: 'Atividade gerada automaticamente',
+      difficulty: 'médio',
+      estimatedTime: '10'
+    }
+  };
+
+  return {
+    sectionId: section.sectionId,
+    sectionName: section.sectionName,
+    suggestion,
+    generatedAt: new Date().toISOString(),
+    duration: Date.now() - startTime,
+    usedFallback: true,
+    aiProvider: 'fallback-local'
+  };
 }
 
 async function suggestActivitiesForAllSections(requestId, sections, config = {}) {
@@ -185,17 +276,23 @@ async function suggestActivitiesForAllSections(requestId, sections, config = {})
       const result = await suggestActivityForSection(requestId, section, activitiesPerSection);
       suggestions.push(result);
     } catch (error) {
-      errors.push({ sectionId: section.sectionId, error: error.message });
+      log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao sugerir para ${section.sectionId}: ${error.message}`);
+      
+      const catalog = loadActivitiesCatalog();
+      const enabledActivities = catalog.filter(a => a.enabled !== false);
+      const fallbackResult = createFallbackResult(section, enabledActivities, Date.now(), `Fallback após erro: ${error.message}`);
+      suggestions.push(fallbackResult);
+      errors.push({ sectionId: section.sectionId, error: error.message, recoveredWithFallback: true });
     }
   }
 
-  log(LOG_PREFIXES.SUGGEST, `[${requestId}] Sugestões concluídas: ${suggestions.length} sucesso, ${errors.length} erros`);
+  log(LOG_PREFIXES.SUGGEST, `[${requestId}] Sugestões concluídas: ${suggestions.length} sucesso, ${errors.length} erros recuperados`);
 
   return {
     suggestions,
     errors,
     totalSuggested: suggestions.length,
-    totalFailed: errors.length
+    totalFailed: errors.filter(e => !e.recoveredWithFallback).length
   };
 }
 
