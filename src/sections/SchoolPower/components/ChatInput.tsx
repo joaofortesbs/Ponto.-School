@@ -1176,7 +1176,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 20px;
+          gap: 10px;
           width: 100%;
           padding: 0 2px;
           margin: 0;
@@ -1184,7 +1184,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
 
         @media (max-width: 768px) {
           .quick-access-cards {
-            gap: 8px;
+            gap: 4px;
             margin: 0;
           }
         }
