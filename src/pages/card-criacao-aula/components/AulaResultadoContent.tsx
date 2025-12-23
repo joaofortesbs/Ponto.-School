@@ -301,8 +301,10 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
   turmaName = null,
   createdAt = new Date(),
   generatedData = null,
-  suggestedActivities = []
+  suggestedActivities: suggestedActivitiesProp = []
 }, ref) => {
+  // Estado interno para atividades sugeridas (populado via generatedData ou props)
+  const [suggestedActivitiesState, setSuggestedActivitiesState] = useState<SuggestedActivity[]>([]);
   // Load saved draft on component mount (browser-safe)
   const savedDraft = useMemo(() => loadSavedDraft(aulaName), [aulaName]);
   
@@ -486,6 +488,45 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
         console.log('🤖 [AI_DATA] Seções dinâmicas atualizadas:', Object.keys(updated));
         return updated;
       });
+    }
+    
+    // ====================================================================
+    // PROCESSAR ATIVIDADES POR SEÇÃO (activitiesPerSection)
+    // ====================================================================
+    // Converte o mapeamento de atividades do orquestrador para o formato
+    // SuggestedActivity usado pelo componente SectionActivitiesGrid
+    // ====================================================================
+    if (generatedData.activitiesPerSection && Object.keys(generatedData.activitiesPerSection).length > 0) {
+      console.log('🤖 [AI_DATA] ========================================');
+      console.log('🤖 [AI_DATA] PROCESSANDO ATIVIDADES POR SEÇÃO');
+      console.log('🤖 [AI_DATA] Seções com atividades:', Object.keys(generatedData.activitiesPerSection));
+      
+      const newSuggestedActivities: SuggestedActivity[] = [];
+      
+      Object.entries(generatedData.activitiesPerSection).forEach(([sectionId, activities]) => {
+        console.log(`🤖 [AI_DATA] Seção "${sectionId}": ${activities.length} atividade(s)`);
+        
+        // Buscar nome da seção
+        const sectionConfig = Object.entries(SECTION_NAME_TO_CONFIG).find(
+          ([, config]) => config.id === sectionId
+        );
+        const sectionName = sectionConfig ? sectionConfig[1].title : sectionId;
+        
+        activities.forEach((activity) => {
+          console.log(`🤖 [AI_DATA]   - ${activity.title} (${activity.type})`);
+          
+          newSuggestedActivities.push({
+            sectionId,
+            sectionName,
+            activityId: activity.id,
+            activityName: activity.title || `Atividade ${activity.type}`,
+            status: 'generated' // Atividades que vêm do orquestrador já estão geradas
+          });
+        });
+      });
+      
+      console.log('🤖 [AI_DATA] Total de atividades sugeridas:', newSuggestedActivities.length);
+      setSuggestedActivitiesState(newSuggestedActivities);
     }
     
     console.log('🤖 [AI_DATA] ========================================');
@@ -1511,6 +1552,24 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
   const removeActivityFromSection = (sectionId: string, activityId: string) => {
     setSectionActivities(prev => prev.filter(a => !(a.sectionId === sectionId && a.activityId === activityId)));
   };
+
+  // ====================================================================
+  // ATIVIDADES SUGERIDAS COMBINADAS (Estado interno + Props)
+  // ====================================================================
+  // Combina as atividades do estado interno (vindo de generatedData) com as props
+  // ====================================================================
+  const suggestedActivities = useMemo(() => {
+    // Prioriza o estado interno, depois as props
+    if (suggestedActivitiesState.length > 0) {
+      console.log('📋 [SUGGESTED_ACTIVITIES] Usando estado interno:', suggestedActivitiesState.length);
+      return suggestedActivitiesState;
+    }
+    if (suggestedActivitiesProp.length > 0) {
+      console.log('📋 [SUGGESTED_ACTIVITIES] Usando props:', suggestedActivitiesProp.length);
+      return suggestedActivitiesProp;
+    }
+    return [];
+  }, [suggestedActivitiesState, suggestedActivitiesProp]);
 
   // Componente para exibir atividades adicionadas E sugeridas em uma seção
   // Memorizado com React.memo para evitar re-renderizações desnecessárias e reinício de animações
