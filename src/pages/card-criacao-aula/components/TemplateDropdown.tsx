@@ -197,13 +197,14 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed"
+            className="fixed flex flex-col"
             style={{
               zIndex: 9999,
               top: `${position.top}px`,
               left: `${position.left}px`,
               width: '369px',
-              maxHeight: '431px',
+              maxHeight: 'min(90vh, 600px)',
+              height: 'auto',
               background: 'linear-gradient(135deg, #0a1434 0%, #030C2A 100%)',
               borderRadius: '16px',
               border: '1px solid rgba(255, 107, 0, 0.3)',
@@ -219,25 +220,25 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.2 }}
-                  className="flex flex-col h-full"
+                  className="flex flex-col h-full min-h-0"
                 >
-                  {/* Header */}
-                  <div className="flex items-center gap-3 px-4 py-3 border-b border-[#FF6B00]/20">
+                  {/* Header - Flex-shrink-0 para não diminuir */}
+                  <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-[#FF6B00]/20">
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={handleBackFromSections}
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all"
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all flex-shrink-0"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </motion.button>
-                    <h3 className="text-white font-semibold text-base">
+                    <h3 className="text-white font-semibold text-base truncate">
                       {viewingSections.name}
                     </h3>
                   </div>
 
-                  {/* Content - Blocos de Seções */}
-                  <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 hide-scrollbar">
+                  {/* Content - Blocos de Seções - Com overflow controlado */}
+                  <div className="flex-1 overflow-y-auto px-3 py-3 hide-scrollbar min-h-0">
                     <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
                     
                     <div className="space-y-2">
@@ -259,7 +260,7 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                           >
                             {index + 1}
                           </div>
-                          <h4 className="text-white font-medium text-sm">
+                          <h4 className="text-white font-medium text-sm truncate">
                             {section}
                           </h4>
                         </motion.div>
@@ -274,15 +275,15 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.2 }}
-                  className="flex flex-col h-full"
+                  className="flex flex-col h-full min-h-0"
                 >
-                  {/* Header */}
-                  <div className="flex items-center gap-3 px-4 py-3 border-b border-[#FF6B00]/20">
+                  {/* Header - Flex-shrink-0 para não diminuir */}
+                  <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-[#FF6B00]/20">
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={handleBackFromCreation}
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all"
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all flex-shrink-0"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </motion.button>
@@ -290,7 +291,7 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 hide-scrollbar">
+                  <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 hide-scrollbar min-h-0">
                     <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
                     
                     {/* Nome e Ícone na mesma linha */}
@@ -381,19 +382,19 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.2 }}
-                  className="flex flex-col h-full"
+                  className="flex flex-col h-full min-h-0"
                 >
-                  {/* Header */}
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-[#FF6B00]/20">
+                  {/* Header - Flex-shrink-0 para não diminuir */}
+                  <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#FF6B00]/20">
                     <div className="flex items-center gap-2">
                       <LayoutGrid className="w-5 h-5 text-[#FF6B00]" />
-                      <h3 className="text-white font-semibold text-base">Escolha seu template</h3>
+                      <h3 className="text-white font-semibold text-base truncate">Escolha seu template</h3>
                     </div>
                     <motion.button
                       whileHover={{ scale: 1.1, rotate: 90 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setIsCreating(true)}
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all"
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-all flex-shrink-0"
                     >
                       <Plus className="w-4 h-4" />
                     </motion.button>
@@ -401,9 +402,8 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
 
                   {/* Content */}
                   <div 
-                    className="px-3 py-2 space-y-1.5 overflow-y-auto hide-scrollbar flex-1 flex flex-col"
+                    className="px-3 py-2 space-y-1.5 overflow-y-auto hide-scrollbar flex-1 flex flex-col min-h-0"
                     style={{ 
-                      maxHeight: '380px',
                       scrollbarWidth: 'none',
                       msOverflowStyle: 'none'
                     }}
