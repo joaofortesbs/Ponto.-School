@@ -16,20 +16,8 @@
  * ====================================================================
  */
 
-import Groq from 'groq-sdk';
 import { log, LOG_PREFIXES, logActivityGeneration } from '../debugLogger.js';
-
-const API_KEY = process.env.GROQ_API_KEY?.trim();
-const MODEL = 'llama-3.3-70b-versatile';
-
-let groqClient = null;
-
-function getGroqClient() {
-  if (!groqClient && API_KEY) {
-    groqClient = new Groq({ apiKey: API_KEY });
-  }
-  return groqClient;
-}
+import { generateWithCascade, GROQ_MODELS_CASCADE } from '../../groq.js';
 
 const ACTIVITY_PROMPTS = {
   'quiz-interativo': `Crie um quiz interativo educacional sobre o tema fornecido.
@@ -147,14 +135,15 @@ function generateActivityId() {
 }
 
 async function generateActivity(requestId, suggestion, sectionContent) {
-  const { activityId, activityName, parameters } = suggestion.suggestion;
+  const { activityId, activityName, parameters } = suggestion.suggestion || {};
+  
+  if (!activityId) {
+    log(LOG_PREFIXES.ERROR, `[${requestId}] activityId não encontrado na sugestão`);
+    throw new Error('activityId não encontrado na sugestão');
+  }
   
   logActivityGeneration(requestId, activityId, activityName);
-  
-  const client = getGroqClient();
-  if (!client) {
-    throw new Error('Cliente Groq não configurado');
-  }
+  log(LOG_PREFIXES.GENERATE, `[${requestId}] Modelos disponíveis: ${GROQ_MODELS_CASCADE.map(m => m.name).join(' → ')} → Gemini`);
 
   const promptTemplate = ACTIVITY_PROMPTS[activityId] || ACTIVITY_PROMPTS['quiz-interativo'];
   
@@ -163,58 +152,136 @@ async function generateActivity(requestId, suggestion, sectionContent) {
     .replace('{description}', parameters?.description || sectionContent?.substring(0, 500) || '')
     .replace('{difficulty}', parameters?.difficulty || 'médio');
 
+  const startTime = Date.now();
+  let responseText = '';
+  let aiProvider = 'groq';
+  let modelUsed = 'unknown';
+  let attempts = 1;
+
   try {
-    const startTime = Date.now();
+    const messages = [
+      { role: 'system', content: 'Você gera conteúdo educacional. Responda APENAS em JSON válido.' },
+      { role: 'user', content: prompt }
+    ];
     
-    const completion = await client.chat.completions.create({
-      model: MODEL,
-      messages: [
-        { role: 'system', content: 'Você gera conteúdo educacional. Responda APENAS em JSON válido.' },
-        { role: 'user', content: prompt }
-      ],
+    const result = await generateWithCascade(messages, {
       temperature: 0.7,
-      max_tokens: 2000
+      max_tokens: 2000,
+      top_p: 0.9
     });
 
-    const duration = Date.now() - startTime;
-    const responseText = completion.choices[0]?.message?.content || '{}';
-
-    let content;
-    try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      content = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
-    } catch (parseError) {
-      log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao parsear atividade, usando fallback`);
-      content = { error: 'Falha no parsing', raw: responseText.substring(0, 500) };
+    responseText = result.choices[0]?.message?.content || '{}';
+    
+    const metadata = result._metadata || {};
+    aiProvider = metadata.provider || 'groq';
+    modelUsed = metadata.modelName || metadata.model || 'unknown';
+    attempts = metadata.attempts || 1;
+    
+    log(LOG_PREFIXES.GENERATE, `[${requestId}] ✅ Atividade gerada via ${modelUsed} (${aiProvider})`);
+    if (attempts > 1) {
+      log(LOG_PREFIXES.GENERATE, `[${requestId}] 📊 Tentativas: ${attempts}, Modelos tentados: ${metadata.totalModelsTriad}`);
     }
 
-    const generatedActivity = {
-      id: generateActivityId(),
-      templateId: activityId,
-      type: activityId,
-      title: parameters?.title || `${activityName} - ${suggestion.sectionName}`,
-      description: parameters?.description || '',
-      content,
-      sectionId: suggestion.sectionId,
-      sectionName: suggestion.sectionName,
-      metadata: {
-        generatedAt: new Date().toISOString(),
-        duration,
-        difficulty: parameters?.difficulty || 'médio',
-        estimatedTime: parameters?.estimatedTime || '10',
-        source: 'lesson-orchestrator',
-        requestId
-      }
-    };
-
-    log(LOG_PREFIXES.GENERATE, `[${requestId}] Atividade ${generatedActivity.id} gerada em ${duration}ms`);
+  } catch (cascadeError) {
+    log(LOG_PREFIXES.ERROR, `[${requestId}] ❌ Todos os modelos falharam: ${cascadeError.message}`);
+    log(LOG_PREFIXES.GENERATE, `[${requestId}] 📦 Usando atividade stub (fallback local)`);
     
-    return generatedActivity;
-
-  } catch (error) {
-    log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao gerar atividade ${activityId}:`, error.message);
-    throw error;
+    // Fallback local - retorna uma atividade stub
+    return createFallbackActivity(requestId, suggestion, activityId, activityName, parameters, startTime);
   }
+
+  const duration = Date.now() - startTime;
+
+  let content;
+  try {
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    content = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
+  } catch (parseError) {
+    log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao parsear atividade, usando fallback`);
+    content = { error: 'Falha no parsing', raw: responseText.substring(0, 500) };
+  }
+
+  const generatedActivity = {
+    id: generateActivityId(),
+    templateId: activityId,
+    type: activityId,
+    title: parameters?.title || `${activityName} - ${suggestion.sectionName}`,
+    description: parameters?.description || '',
+    content,
+    sectionId: suggestion.sectionId,
+    sectionName: suggestion.sectionName,
+    metadata: {
+      generatedAt: new Date().toISOString(),
+      duration,
+      difficulty: parameters?.difficulty || 'médio',
+      estimatedTime: parameters?.estimatedTime || '10',
+      source: 'lesson-orchestrator',
+      requestId,
+      aiProvider,
+      modelUsed,
+      attempts
+    }
+  };
+
+  log(LOG_PREFIXES.GENERATE, `[${requestId}] Atividade ${generatedActivity.id} gerada em ${duration}ms`);
+  
+  return generatedActivity;
+}
+
+function createFallbackActivity(requestId, suggestion, activityId, activityName, parameters, startTime) {
+  const duration = Date.now() - startTime;
+  
+  // Conteúdo stub para cada tipo de atividade
+  const stubContent = {
+    'quiz-interativo': {
+      questions: [{
+        id: 1,
+        question: 'Questão de exemplo - edite para personalizar',
+        options: ['A) Opção 1', 'B) Opção 2', 'C) Opção 3', 'D) Opção 4'],
+        correctAnswer: 0,
+        explanation: 'Explicação da resposta correta'
+      }]
+    },
+    'flash-cards': {
+      cards: [{
+        id: 1,
+        front: 'Conceito de exemplo',
+        back: 'Definição de exemplo - edite para personalizar'
+      }]
+    },
+    'lista-exercicios': {
+      exercises: [{
+        id: 1,
+        type: 'dissertativo',
+        question: 'Exercício de exemplo - edite para personalizar',
+        answer: 'Resposta esperada',
+        points: 2
+      }]
+    }
+  };
+  
+  return {
+    id: generateActivityId(),
+    templateId: activityId,
+    type: activityId,
+    title: parameters?.title || `${activityName} - ${suggestion.sectionName}`,
+    description: parameters?.description || 'Atividade gerada via fallback local',
+    content: stubContent[activityId] || stubContent['quiz-interativo'],
+    sectionId: suggestion.sectionId,
+    sectionName: suggestion.sectionName,
+    metadata: {
+      generatedAt: new Date().toISOString(),
+      duration,
+      difficulty: parameters?.difficulty || 'médio',
+      estimatedTime: parameters?.estimatedTime || '10',
+      source: 'lesson-orchestrator',
+      requestId,
+      aiProvider: 'local-fallback',
+      modelUsed: 'stub',
+      attempts: 0,
+      usedFallback: true
+    }
+  };
 }
 
 async function generateAllActivities(requestId, suggestions, sectionsContent) {
