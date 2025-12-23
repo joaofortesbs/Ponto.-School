@@ -73,6 +73,7 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
   const [templateName, setTemplateName] = useState('');
   const [templateInstructions, setTemplateInstructions] = useState('');
   const [selectedIconIndex, setSelectedIconIndex] = useState(0);
+  const [hoveredTemplateId, setHoveredTemplateId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && anchorRef.current) {
@@ -305,7 +306,9 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                               whileHover={{ scale: 1.01, x: 2 }}
                               whileTap={{ scale: 0.99 }}
                               onClick={() => handleSelectTemplate(template)}
-                              className="flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all"
+                              onMouseEnter={() => setHoveredTemplateId(template.id)}
+                              onMouseLeave={() => setHoveredTemplateId(null)}
+                              className="flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all relative"
                               style={{
                                 background: isSelected 
                                   ? 'linear-gradient(135deg, rgba(255, 107, 0, 0.25) 0%, rgba(255, 107, 0, 0.1) 100%)'
@@ -335,6 +338,24 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                                   {template.description}
                                 </p>
                               </div>
+
+                              {hoveredTemplateId === template.id && (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.8 }}
+                                  transition={{ duration: 0.15 }}
+                                  className="absolute top-2 right-2 w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                  style={{
+                                    background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
+                                  }}
+                                >
+                                  <LayoutGrid 
+                                    className="text-white" 
+                                    style={{ width: '14px', height: '14px' }}
+                                  />
+                                </motion.div>
+                              )}
                             </motion.div>
                           );
                         })}
@@ -355,7 +376,9 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                           whileHover={{ scale: 1.01, x: 2 }}
                           whileTap={{ scale: 0.99 }}
                           onClick={() => handleSelectTemplate(template)}
-                          className="flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all"
+                          onMouseEnter={() => setHoveredTemplateId(template.id)}
+                          onMouseLeave={() => setHoveredTemplateId(null)}
+                          className="flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all relative"
                           style={{
                             background: isSelected 
                               ? 'linear-gradient(135deg, rgba(255, 107, 0, 0.25) 0%, rgba(255, 107, 0, 0.1) 100%)'
@@ -385,6 +408,24 @@ const TemplateDropdown: React.FC<TemplateDropdownProps> = ({
                               {template.description}
                             </p>
                           </div>
+
+                          {hoveredTemplateId === template.id && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute top-2 right-2 w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                              style={{
+                                background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
+                              }}
+                            >
+                              <LayoutGrid 
+                                className="text-white" 
+                                style={{ width: '14px', height: '14px' }}
+                              />
+                            </motion.div>
+                          )}
                         </motion.div>
                       );
                     })}
