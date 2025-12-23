@@ -3,25 +3,28 @@
  * AGENTE DE GERAÇÃO DE INPUTS PARA SCHOOL POWER
  * ====================================================================
  * 
- * Este agente gera PROMPTS estruturados para o School Power API
- * com base nas sugestões da Etapa 3 e conteúdo da Etapa 2.
+ * Este agente gera UM ÚNICO PROMPT estruturado para o School Power API
+ * que cobrirá TODAS as atividades sugeridas na Etapa 3.
  * 
  * RESPONSABILIDADES:
  * - Receber as sugestões de atividades da Etapa 3
- * - Analisar o conteúdo gerado na Etapa 2
- * - Gerar um PROMPT estruturado para cada sugestão com:
+ * - Consolidar todos os tipos de atividades sugeridos
+ * - Gerar UM ÚNICO input estruturado para o School Power com:
  *   • Mensagem inicial (Input)
  *   • 📚 Matérias e temas
  *   • 🎯 Público-alvo
  *   • ⚠️ Restrições ou preferências
  *   • 📅 Período de entrega
  *   • 📝 Observações importantes
- * - Retornar inputs prontos para School Power gerar as atividades
+ * - Retornar input pronto para School Power gerar todas as atividades
  * 
  * FLUXO:
- * Etapa 3 (Sugestões) → Etapa 4 (Inputs estruturados) → School Power API → Atividades geradas
+ * Etapa 3 (Sugestões para 6 seções) 
+ * → Etapa 4 (Consolidar em 1 input universal)
+ * → School Power API (gera todas as atividades)
+ * → Etapa 5-7 (Organiza atividades nos blocos)
  * 
- * VERSÃO: 2.0.0 - Reescrito para gerar inputs School Power
+ * VERSÃO: 3.0.0 - Input único consolidado
  * ÚLTIMA ATUALIZAÇÃO: 2025-12-23
  * ====================================================================
  */
@@ -30,31 +33,35 @@ import { log, LOG_PREFIXES, logActivityGeneration } from '../debugLogger.js';
 import { generateWithCascade, GROQ_MODELS_CASCADE } from '../../groq.js';
 
 /**
- * Prompt para gerar inputs estruturados para School Power
+ * Prompt para gerar um ÚNICO input estruturado para o School Power
+ * que cobrirá TODAS as atividades sugeridas
  */
-const SCHOOL_POWER_INPUT_PROMPT = `Você é um especialista em design instrucional e pedagogia.
-Analise a sugestão de atividade e o conteúdo educacional fornecido.
-Gere um PROMPT estruturado com os campos necessários para o School Power gerar a atividade.
+const CONSOLIDATED_SCHOOL_POWER_PROMPT = `Você é um especialista em design instrucional e pedagogia.
+Seu objetivo é gerar UM ÚNICO PROMPT estruturado que será usado pelo School Power para gerar TODAS as atividades abaixo.
 
-TIPO DE ATIVIDADE: {activityType}
-NOME DA ATIVIDADE: {activityName}
+CONTEXTO DA AULA:
+- Assunto: {subject}
+- Template: {template}
+- Nível: {level}
 
-CONTEÚDO DA SEÇÃO: {sectionContent}
+ATIVIDADES QUE SERÃO GERADAS (Consolidadas):
+{activitiesList}
 
-CONTEXTO DO CURSO:
-- Assunto Principal: {subject}
-- Público-alvo: Estudantes
-- Dificuldade sugerida: {difficulty}
+INSTRUÇÕES IMPORTANTES:
+1. Gere UM ÚNICO input que funcione para gerar TODOS os tipos de atividades acima
+2. O input deve ser UNIVERSAL - NÃO específico para uma atividade apenas
+3. Os campos devem orientar o School Power para gerar atividades de qualidade educacional
+4. Considere que essas atividades serão distribuídas em diferentes seções da aula
 
 Responda APENAS em JSON VÁLIDO com exatamente esta estrutura:
 {
   "schoolPowerInput": {
-    "initialMessage": "Mensagem clara explicando o que precisa ser gerado",
-    "subjects": "Matérias e temas a serem trabalhados (ex: Matemática, Álgebra, Equações)",
-    "targetAudience": "Descrição do público-alvo (ex: Alunos do 8º ano)",
-    "restrictions": "Restrições e preferências (ex: Use linguagem simples, 5 questões)",
-    "deliveryPeriod": "Período ou datas importantes (ex: Para semana de 20-24 de dezembro)",
-    "observations": "Observações adicionais para personalizar a geração"
+    "initialMessage": "Mensagem clara explicando o que precisa ser gerado - MENCIONAR QUE SÃO MÚLTIPLAS ATIVIDADES",
+    "subjects": "Matérias e temas (ex: Matemática, Geometria, Formas 3D)",
+    "targetAudience": "Público-alvo (ex: Alunos do ensino médio)",
+    "restrictions": "Restrições e preferências para TODAS as atividades",
+    "deliveryPeriod": "Período ou datas importantes",
+    "observations": "Observações para personalizar a geração de TODAS as atividades"
   }
 }`;
 
@@ -63,26 +70,57 @@ function generateActivityId() {
 }
 
 /**
- * Gera um input estruturado para School Power para uma sugestão de atividade
+ * Consolida as sugestões em um resumo legível para o prompt
  */
-async function generateSchoolPowerInput(requestId, suggestion, sectionContent, lesson) {
-  const { activityId, activityName, parameters } = suggestion.suggestion || {};
+function buildActivitiesSummary(suggestions) {
+  const grouped = {};
   
-  if (!activityId) {
-    log(LOG_PREFIXES.ERROR, `[${requestId}] activityId não encontrado na sugestão`);
-    throw new Error('activityId não encontrado na sugestão');
+  for (const suggestion of suggestions) {
+    const actId = suggestion.suggestion?.activityId || 'unknown';
+    const actName = suggestion.suggestion?.activityName || 'Atividade Desconhecida';
+    const sectionName = suggestion.sectionName || suggestion.sectionId;
+    
+    if (!grouped[actId]) {
+      grouped[actId] = {
+        name: actName,
+        sections: []
+      };
+    }
+    grouped[actId].sections.push(sectionName);
   }
   
-  logActivityGeneration(requestId, activityId, activityName);
-  log(LOG_PREFIXES.GENERATE, `[${requestId}] Gerando input para School Power: ${activityName}`);
+  let summary = 'Atividades a serem geradas:\n';
+  let index = 1;
+  
+  for (const [actId, data] of Object.entries(grouped)) {
+    summary += `${index}. ${data.name} (${actId})\n`;
+    summary += `   - Para seções: ${data.sections.join(', ')}\n`;
+    index++;
+  }
+  
+  return summary;
+}
+
+/**
+ * Gera UM ÚNICO input consolidado para School Power
+ */
+async function generateUnifiedSchoolPowerInput(requestId, suggestions, lesson) {
+  if (!suggestions || suggestions.length === 0) {
+    log(LOG_PREFIXES.ERROR, `[${requestId}] Nenhuma sugestão fornecida`);
+    throw new Error('Nenhuma sugestão de atividade fornecida');
+  }
+  
+  const activitiesSummary = buildActivitiesSummary(suggestions);
+  
+  log(LOG_PREFIXES.GENERATE, `[${requestId}] Gerando input ÚNICO consolidado para ${suggestions.length} sugestões`);
+  log(LOG_PREFIXES.GENERATE, `[${requestId}] Atividades a gerar: ${Object.keys(new Set(suggestions.map(s => s.suggestion?.activityId))).join(', ')}`);
   log(LOG_PREFIXES.GENERATE, `[${requestId}] Modelos disponíveis: ${GROQ_MODELS_CASCADE.map(m => m.name).join(' → ')} → Gemini`);
 
-  const prompt = SCHOOL_POWER_INPUT_PROMPT
-    .replace('{activityType}', activityId)
-    .replace('{activityName}', activityName)
-    .replace('{sectionContent}', sectionContent?.substring(0, 1000) || 'Conteúdo não disponível')
+  const prompt = CONSOLIDATED_SCHOOL_POWER_PROMPT
     .replace('{subject}', lesson?.assunto || 'Tema não especificado')
-    .replace('{difficulty}', parameters?.difficulty || 'médio');
+    .replace('{template}', lesson?.templateName || 'Template desconhecido')
+    .replace('{level}', 'Ensino Médio')
+    .replace('{activitiesList}', activitiesSummary);
 
   const startTime = Date.now();
   let responseText = '';
@@ -92,7 +130,10 @@ async function generateSchoolPowerInput(requestId, suggestion, sectionContent, l
 
   try {
     const messages = [
-      { role: 'system', content: 'Você gera prompts estruturados para ferramentas educacionais. Responda APENAS em JSON válido.' },
+      { 
+        role: 'system', 
+        content: 'Você gera um ÚNICO prompt consolidado para ferramentas educacionais que cobrirá TODAS as atividades. Responda APENAS em JSON válido.' 
+      },
       { role: 'user', content: prompt }
     ];
     
@@ -109,17 +150,17 @@ async function generateSchoolPowerInput(requestId, suggestion, sectionContent, l
     modelUsed = metadata.modelName || metadata.model || 'unknown';
     attempts = metadata.attempts || 1;
     
-    log(LOG_PREFIXES.GENERATE, `[${requestId}] ✅ Input gerado via ${modelUsed} (${aiProvider})`);
+    log(LOG_PREFIXES.GENERATE, `[${requestId}] ✅ Input consolidado gerado via ${modelUsed} (${aiProvider})`);
     if (attempts > 1) {
-      log(LOG_PREFIXES.GENERATE, `[${requestId}] 📊 Tentativas: ${attempts}, Modelos tentados: ${metadata.totalModelsTriad}`);
+      log(LOG_PREFIXES.GENERATE, `[${requestId}] 📊 Tentativas: ${attempts}`);
     }
 
   } catch (cascadeError) {
     log(LOG_PREFIXES.ERROR, `[${requestId}] ❌ Todos os modelos falharam: ${cascadeError.message}`);
-    log(LOG_PREFIXES.GENERATE, `[${requestId}] 📦 Usando input padrão (fallback local)`);
+    log(LOG_PREFIXES.GENERATE, `[${requestId}] 📦 Usando input padrão consolidado (fallback local)`);
     
     // Fallback local
-    return createFallbackSchoolPowerInput(requestId, suggestion, activityId, activityName, parameters, startTime);
+    return createFallbackUnifiedInput(requestId, suggestions, lesson);
   }
 
   const duration = Date.now() - startTime;
@@ -130,130 +171,147 @@ async function generateSchoolPowerInput(requestId, suggestion, sectionContent, l
     const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
     parsedInput = parsed.schoolPowerInput || parsed;
   } catch (parseError) {
-    log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao parsear input, usando fallback`);
-    return createFallbackSchoolPowerInput(requestId, suggestion, activityId, activityName, parameters, startTime);
+    log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao parsear input consolidado, usando fallback`);
+    return createFallbackUnifiedInput(requestId, suggestions, lesson);
   }
 
   const schoolPowerInput = {
     id: generateActivityId(),
-    activityId,
-    activityName,
-    sectionId: suggestion.sectionId,
-    sectionName: suggestion.sectionName,
+    type: 'consolidated',
+    applicableSections: suggestions.map(s => ({
+      sectionId: s.sectionId,
+      sectionName: s.sectionName,
+      activityType: s.suggestion?.activityId,
+      activityName: s.suggestion?.activityName
+    })),
     input: {
-      initialMessage: parsedInput.initialMessage || `Gere uma atividade de ${activityName}`,
-      subjects: parsedInput.subjects || suggestion.sectionName,
-      targetAudience: parsedInput.targetAudience || 'Alunos',
-      restrictions: parsedInput.restrictions || parameters?.description || 'Nenhuma restrição especificada',
+      initialMessage: parsedInput.initialMessage || buildDefaultInitialMessage(suggestions),
+      subjects: parsedInput.subjects || lesson?.assunto || 'Tema não especificado',
+      targetAudience: parsedInput.targetAudience || 'Alunos de ensino médio',
+      restrictions: parsedInput.restrictions || 'Crie atividades educacionais de qualidade',
       deliveryPeriod: parsedInput.deliveryPeriod || 'Sem data limite',
-      observations: parsedInput.observations || 'Gere conteúdo educacional de qualidade'
+      observations: parsedInput.observations || 'Essas atividades serão usadas em diferentes seções da aula'
     },
     metadata: {
       generatedAt: new Date().toISOString(),
       duration,
-      difficulty: parameters?.difficulty || 'médio',
-      estimatedTime: parameters?.estimatedTime || '10',
+      totalActivitiesInInput: suggestions.length,
       source: 'lesson-orchestrator',
       requestId,
       aiProvider,
       modelUsed,
-      attempts
+      attempts,
+      isConsolidated: true
     }
   };
 
-  log(LOG_PREFIXES.GENERATE, `[${requestId}] Input ${schoolPowerInput.id} gerado em ${duration}ms`);
+  log(LOG_PREFIXES.GENERATE, `[${requestId}] ✅ Input consolidado ${schoolPowerInput.id} gerado em ${duration}ms`);
+  log(LOG_PREFIXES.GENERATE, `[${requestId}] Este input será usado para gerar TODAS as ${suggestions.length} atividades`);
   
   return schoolPowerInput;
 }
 
 /**
- * Cria um input padrão para School Power (fallback local)
+ * Cria a mensagem inicial padrão
  */
-function createFallbackSchoolPowerInput(requestId, suggestion, activityId, activityName, parameters, startTime) {
-  const duration = Date.now() - startTime;
+function buildDefaultInitialMessage(suggestions) {
+  const activityTypes = new Set(suggestions.map(s => s.suggestion?.activityName).filter(Boolean));
+  const activities = Array.from(activityTypes).join(', ');
+  
+  return `Gere as seguintes atividades educacionais: ${activities}. 
+Estas atividades serão distribuídas em diferentes seções de uma aula. 
+Cada atividade deve ser de alta qualidade pedagógica e apropriada para o público-alvo.`;
+}
+
+/**
+ * Cria um input padrão consolidado (fallback local)
+ */
+function createFallbackUnifiedInput(requestId, suggestions, lesson) {
+  const duration = Date.now();
   
   return {
     id: generateActivityId(),
-    activityId,
-    activityName,
-    sectionId: suggestion.sectionId,
-    sectionName: suggestion.sectionName,
+    type: 'consolidated',
+    applicableSections: suggestions.map(s => ({
+      sectionId: s.sectionId,
+      sectionName: s.sectionName,
+      activityType: s.suggestion?.activityId,
+      activityName: s.suggestion?.activityName
+    })),
     input: {
-      initialMessage: `Gere uma atividade de ${activityName} sobre ${suggestion.sectionName}`,
-      subjects: suggestion.sectionName,
+      initialMessage: buildDefaultInitialMessage(suggestions),
+      subjects: lesson?.assunto || 'Tema educacional',
       targetAudience: 'Estudantes de ensino médio',
-      restrictions: parameters?.description || 'Crie uma atividade engajante e educativa',
+      restrictions: 'Crie atividades educacionais engajantes e bem estruturadas',
       deliveryPeriod: 'Sem prazo específico',
-      observations: 'Atividade gerada via fallback local - revise os parâmetros conforme necessário'
+      observations: 'Input gerado com fallback local - revise conforme necessário. Essas atividades serão usadas em diferentes seções.'
     },
     metadata: {
       generatedAt: new Date().toISOString(),
-      duration,
-      difficulty: parameters?.difficulty || 'médio',
-      estimatedTime: parameters?.estimatedTime || '10',
+      duration: 0,
+      totalActivitiesInInput: suggestions.length,
       source: 'lesson-orchestrator',
       requestId,
       aiProvider: 'local-fallback',
       modelUsed: 'fallback',
       attempts: 0,
-      usedFallback: true
+      usedFallback: true,
+      isConsolidated: true
     }
   };
 }
 
 /**
- * Gera inputs para todas as sugestões de atividades
+ * Gera UM ÚNICO input para todas as sugestões de atividades
  */
 async function generateAllActivities(requestId, suggestions, sectionsContent, lesson) {
-  log(LOG_PREFIXES.GENERATE, `[${requestId}] Gerando inputs para ${suggestions.length} atividades`);
+  log(LOG_PREFIXES.GENERATE, `[${requestId}] ETAPA 4: Gerando input ÚNICO para School Power`);
+  log(LOG_PREFIXES.GENERATE, `[${requestId}] Total de sugestões consolidadas: ${suggestions.length}`);
   
-  const activities = [];
   const errors = [];
 
-  for (const suggestion of suggestions) {
-    const sectionContent = sectionsContent.find(s => s.sectionId === suggestion.sectionId);
+  try {
+    const unifiedInput = await generateUnifiedSchoolPowerInput(requestId, suggestions, lesson);
     
+    // Retorna um objeto com activities array contendo apenas UM input
+    return {
+      activities: [unifiedInput],
+      errors,
+      totalGenerated: 1,
+      totalFailed: 0,
+      isConsolidated: true,
+      applicableToSections: suggestions.map(s => s.sectionId)
+    };
+    
+  } catch (error) {
+    log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao gerar input consolidado: ${error.message}`);
+    errors.push({ 
+      error: error.message,
+      suggestions: suggestions.length
+    });
+    
+    // Tenta criar um fallback mesmo com erro
     try {
-      const schoolPowerInput = await generateSchoolPowerInput(requestId, suggestion, sectionContent?.content, lesson);
-      activities.push(schoolPowerInput);
-    } catch (error) {
-      log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao gerar input para ${suggestion.sectionId}: ${error.message}`);
-      errors.push({ 
-        sectionId: suggestion.sectionId, 
-        activityId: suggestion.suggestion?.activityId,
-        error: error.message 
-      });
-      
-      // Tenta criar um fallback mesmo com erro
-      try {
-        const fallback = createFallbackSchoolPowerInput(
-          requestId, 
-          suggestion, 
-          suggestion.suggestion?.activityId, 
-          suggestion.suggestion?.activityName, 
-          suggestion.suggestion?.parameters,
-          Date.now()
-        );
-        activities.push(fallback);
-      } catch (fallbackError) {
-        log(LOG_PREFIXES.ERROR, `[${requestId}] Falha até no fallback para ${suggestion.sectionId}`);
-      }
+      const fallback = createFallbackUnifiedInput(requestId, suggestions, lesson);
+      return {
+        activities: [fallback],
+        errors,
+        totalGenerated: 1,
+        totalFailed: 0,
+        isConsolidated: true,
+        applicableToSections: suggestions.map(s => s.sectionId),
+        usedFallback: true
+      };
+    } catch (fallbackError) {
+      log(LOG_PREFIXES.ERROR, `[${requestId}] Falha total - nem fallback funcionou: ${fallbackError.message}`);
+      throw new Error('Falha ao gerar input consolidado, nem fallback funcionou');
     }
   }
-
-  log(LOG_PREFIXES.GENERATE, `[${requestId}] Geração de inputs concluída: ${activities.length} inputs, ${errors.length} erros`);
-
-  return {
-    activities,
-    errors,
-    totalGenerated: activities.length,
-    totalFailed: errors.length
-  };
 }
 
 export {
-  generateSchoolPowerInput,
+  generateUnifiedSchoolPowerInput,
   generateAllActivities,
   generateActivityId,
-  SCHOOL_POWER_INPUT_PROMPT
+  CONSOLIDATED_SCHOOL_POWER_PROMPT
 };

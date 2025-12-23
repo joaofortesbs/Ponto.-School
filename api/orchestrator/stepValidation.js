@@ -39,11 +39,11 @@ const VALIDATION_RULES = {
     ]
   },
   4: {
-    name: 'Geração de Atividades',
+    name: 'Geração de Input para School Power',
     required: [
-      { check: 'activitiesGenerated', message: 'Atividades não foram geradas' },
-      { check: 'activitiesHaveContent', message: 'Atividades sem conteúdo' },
-      { check: 'activitiesMatchSuggestions', message: 'Atividades não correspondem às sugestões' }
+      { check: 'inputGenerated', message: 'Input não foi gerado' },
+      { check: 'inputHasFields', message: 'Input sem campos obrigatórios' },
+      { check: 'inputIsConsolidated', message: 'Input não é consolidado' }
     ]
   },
   5: {
@@ -221,12 +221,50 @@ class StepValidation {
         };
       },
 
+      // ETAPA 4: Validações para Input Consolidado do School Power
+      inputGenerated: () => ({
+        passed: Array.isArray(data.activities) && data.activities.length > 0,
+        details: { count: data.activities?.length || 0 }
+      }),
+      inputHasFields: () => {
+        const inputs = data.activities || [];
+        const withAllFields = inputs.filter(a => 
+          a.input && 
+          a.input.initialMessage && 
+          a.input.subjects && 
+          a.input.targetAudience && 
+          a.input.restrictions !== undefined && 
+          a.input.deliveryPeriod && 
+          a.input.observations
+        );
+        return {
+          passed: withAllFields.length === inputs.length,
+          details: { 
+            total: inputs.length,
+            complete: withAllFields.length 
+          }
+        };
+      },
+      inputIsConsolidated: () => {
+        const inputs = data.activities || [];
+        const isConsolidated = inputs.length === 1 && inputs[0].isConsolidated === true;
+        return {
+          passed: isConsolidated,
+          details: { 
+            totalInputs: inputs.length,
+            isConsolidated: inputs[0]?.isConsolidated || false,
+            applicableSections: inputs[0]?.applicableSections?.length || 0
+          }
+        };
+      },
+
+      // Fallback: verificações antigas para compatibilidade
       activitiesGenerated: () => ({
         passed: Array.isArray(data.activities) && data.activities.length > 0,
         details: { count: data.activities?.length || 0 }
       }),
       activitiesHaveContent: () => {
-        const withContent = (data.activities || []).filter(a => a.content || a.questions || a.items);
+        const withContent = (data.activities || []).filter(a => a.content || a.input || a.questions || a.items);
         return {
           passed: withContent.length === (data.activities?.length || 0),
           details: { 
@@ -238,9 +276,11 @@ class StepValidation {
       activitiesMatchSuggestions: () => {
         const suggestionCount = data.suggestions?.length || 0;
         const activityCount = data.activities?.length || 0;
+        // Para input consolidado, sempre retorna true (um input cobre tudo)
+        const isConsolidated = data.activities?.[0]?.isConsolidated;
         return {
-          passed: activityCount >= suggestionCount * 0.8,
-          details: { suggestions: suggestionCount, activities: activityCount }
+          passed: isConsolidated || (activityCount >= suggestionCount * 0.8),
+          details: { suggestions: suggestionCount, activities: activityCount, isConsolidated }
         };
       },
 
