@@ -448,11 +448,12 @@ class LessonOrchestrator {
       const result = await generateAllActivities(
         requestId,
         ctx.suggestions,
-        ctx.contentSections
+        ctx.contentSections,
+        ctx.lesson
       );
 
       if (!result.activities || result.activities.length === 0) {
-        throw new Error('Nenhuma atividade foi gerada');
+        throw new Error('Nenhum input para School Power foi gerado');
       }
 
       return result;

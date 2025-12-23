@@ -1,140 +1,71 @@
 /**
  * ====================================================================
- * AGENTE DE GERAÇÃO DE ATIVIDADES
+ * AGENTE DE GERAÇÃO DE INPUTS PARA SCHOOL POWER
  * ====================================================================
  * 
- * Este agente gera as atividades sugeridas usando a API Groq
- * e prepara os dados para salvamento no banco Neon.
+ * Este agente gera PROMPTS estruturados para o School Power API
+ * com base nas sugestões da Etapa 3 e conteúdo da Etapa 2.
  * 
  * RESPONSABILIDADES:
- * - Receber as sugestões de atividades
- * - Gerar conteúdo específico para cada tipo de atividade
- * - Preparar dados no formato correto para salvamento
- * - Retornar atividades prontas para persistência
+ * - Receber as sugestões de atividades da Etapa 3
+ * - Analisar o conteúdo gerado na Etapa 2
+ * - Gerar um PROMPT estruturado para cada sugestão com:
+ *   • Mensagem inicial (Input)
+ *   • 📚 Matérias e temas
+ *   • 🎯 Público-alvo
+ *   • ⚠️ Restrições ou preferências
+ *   • 📅 Período de entrega
+ *   • 📝 Observações importantes
+ * - Retornar inputs prontos para School Power gerar as atividades
  * 
- * VERSÃO: 1.0.0
+ * FLUXO:
+ * Etapa 3 (Sugestões) → Etapa 4 (Inputs estruturados) → School Power API → Atividades geradas
+ * 
+ * VERSÃO: 2.0.0 - Reescrito para gerar inputs School Power
+ * ÚLTIMA ATUALIZAÇÃO: 2025-12-23
  * ====================================================================
  */
 
 import { log, LOG_PREFIXES, logActivityGeneration } from '../debugLogger.js';
 import { generateWithCascade, GROQ_MODELS_CASCADE } from '../../groq.js';
 
-const ACTIVITY_PROMPTS = {
-  'quiz-interativo': `Crie um quiz interativo educacional sobre o tema fornecido.
-TEMA: {title}
-CONTEXTO: {description}
-DIFICULDADE: {difficulty}
+/**
+ * Prompt para gerar inputs estruturados para School Power
+ */
+const SCHOOL_POWER_INPUT_PROMPT = `Você é um especialista em design instrucional e pedagogia.
+Analise a sugestão de atividade e o conteúdo educacional fornecido.
+Gere um PROMPT estruturado com os campos necessários para o School Power gerar a atividade.
 
-Gere exatamente 5 perguntas de múltipla escolha com 4 alternativas cada.
+TIPO DE ATIVIDADE: {activityType}
+NOME DA ATIVIDADE: {activityName}
 
-Responda em JSON:
+CONTEÚDO DA SEÇÃO: {sectionContent}
+
+CONTEXTO DO CURSO:
+- Assunto Principal: {subject}
+- Público-alvo: Estudantes
+- Dificuldade sugerida: {difficulty}
+
+Responda APENAS em JSON VÁLIDO com exatamente esta estrutura:
 {
-  "questions": [
-    {
-      "id": 1,
-      "question": "Texto da pergunta",
-      "options": ["A) opção 1", "B) opção 2", "C) opção 3", "D) opção 4"],
-      "correctAnswer": 0,
-      "explanation": "Explicação da resposta correta"
-    }
-  ]
-}`,
-
-  'flash-cards': `Crie flashcards educativos sobre o tema fornecido.
-TEMA: {title}
-CONTEXTO: {description}
-
-Gere exatamente 8 flashcards com frente e verso.
-
-Responda em JSON:
-{
-  "cards": [
-    {
-      "id": 1,
-      "front": "Pergunta ou conceito",
-      "back": "Resposta ou definição"
-    }
-  ]
-}`,
-
-  'lista-exercicios': `Crie uma lista de exercícios sobre o tema fornecido.
-TEMA: {title}
-CONTEXTO: {description}
-DIFICULDADE: {difficulty}
-
-Gere 5 exercícios variados (dissertativos e objetivos).
-
-Responda em JSON:
-{
-  "exercises": [
-    {
-      "id": 1,
-      "type": "dissertativo|objetiva|completar",
-      "question": "Enunciado do exercício",
-      "answer": "Resposta esperada ou gabarito",
-      "points": 2
-    }
-  ]
-}`,
-
-  'sequencia-didatica': `Crie uma sequência didática sobre o tema fornecido.
-TEMA: {title}
-CONTEXTO: {description}
-
-Gere uma sequência com 4 aulas progressivas.
-
-Responda em JSON:
-{
-  "sequence": [
-    {
-      "lesson": 1,
-      "title": "Título da aula",
-      "objective": "Objetivo",
-      "activities": ["Atividade 1", "Atividade 2"],
-      "duration": "50 min"
-    }
-  ]
-}`,
-
-  'plano-aula': `Crie um plano de aula sobre o tema fornecido.
-TEMA: {title}
-CONTEXTO: {description}
-
-Responda em JSON:
-{
-  "planTitle": "Título do plano",
-  "objectives": ["Objetivo 1", "Objetivo 2"],
-  "methodology": "Descrição da metodologia",
-  "resources": ["Recurso 1", "Recurso 2"],
-  "evaluation": "Forma de avaliação",
-  "bnccSkills": ["EF01MA01", "EF02LP02"]
-}`,
-
-  'tese-redacao': `Crie exercícios de tese de redação sobre o tema fornecido.
-TEMA: {title}
-CONTEXTO: {description}
-
-Gere 3 propostas de tema com teses modelo.
-
-Responda em JSON:
-{
-  "proposals": [
-    {
-      "id": 1,
-      "theme": "Tema da redação",
-      "motivationalTexts": ["Texto motivador 1"],
-      "thesisSuggestions": ["Tese 1", "Tese 2"],
-      "arguments": ["Argumento 1", "Argumento 2"]
-    }
-  ]
-}`
-};
+  "schoolPowerInput": {
+    "initialMessage": "Mensagem clara explicando o que precisa ser gerado",
+    "subjects": "Matérias e temas a serem trabalhados (ex: Matemática, Álgebra, Equações)",
+    "targetAudience": "Descrição do público-alvo (ex: Alunos do 8º ano)",
+    "restrictions": "Restrições e preferências (ex: Use linguagem simples, 5 questões)",
+    "deliveryPeriod": "Período ou datas importantes (ex: Para semana de 20-24 de dezembro)",
+    "observations": "Observações adicionais para personalizar a geração"
+  }
+}`;
 
 function generateActivityId() {
   return `act_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
-async function generateActivity(requestId, suggestion, sectionContent) {
+/**
+ * Gera um input estruturado para School Power para uma sugestão de atividade
+ */
+async function generateSchoolPowerInput(requestId, suggestion, sectionContent, lesson) {
   const { activityId, activityName, parameters } = suggestion.suggestion || {};
   
   if (!activityId) {
@@ -143,13 +74,14 @@ async function generateActivity(requestId, suggestion, sectionContent) {
   }
   
   logActivityGeneration(requestId, activityId, activityName);
+  log(LOG_PREFIXES.GENERATE, `[${requestId}] Gerando input para School Power: ${activityName}`);
   log(LOG_PREFIXES.GENERATE, `[${requestId}] Modelos disponíveis: ${GROQ_MODELS_CASCADE.map(m => m.name).join(' → ')} → Gemini`);
 
-  const promptTemplate = ACTIVITY_PROMPTS[activityId] || ACTIVITY_PROMPTS['quiz-interativo'];
-  
-  const prompt = promptTemplate
-    .replace('{title}', parameters?.title || suggestion.sectionName)
-    .replace('{description}', parameters?.description || sectionContent?.substring(0, 500) || '')
+  const prompt = SCHOOL_POWER_INPUT_PROMPT
+    .replace('{activityType}', activityId)
+    .replace('{activityName}', activityName)
+    .replace('{sectionContent}', sectionContent?.substring(0, 1000) || 'Conteúdo não disponível')
+    .replace('{subject}', lesson?.assunto || 'Tema não especificado')
     .replace('{difficulty}', parameters?.difficulty || 'médio');
 
   const startTime = Date.now();
@@ -160,13 +92,13 @@ async function generateActivity(requestId, suggestion, sectionContent) {
 
   try {
     const messages = [
-      { role: 'system', content: 'Você gera conteúdo educacional. Responda APENAS em JSON válido.' },
+      { role: 'system', content: 'Você gera prompts estruturados para ferramentas educacionais. Responda APENAS em JSON válido.' },
       { role: 'user', content: prompt }
     ];
     
     const result = await generateWithCascade(messages, {
-      temperature: 0.7,
-      max_tokens: 2000,
+      temperature: 0.6,
+      max_tokens: 1000,
       top_p: 0.9
     });
 
@@ -177,39 +109,45 @@ async function generateActivity(requestId, suggestion, sectionContent) {
     modelUsed = metadata.modelName || metadata.model || 'unknown';
     attempts = metadata.attempts || 1;
     
-    log(LOG_PREFIXES.GENERATE, `[${requestId}] ✅ Atividade gerada via ${modelUsed} (${aiProvider})`);
+    log(LOG_PREFIXES.GENERATE, `[${requestId}] ✅ Input gerado via ${modelUsed} (${aiProvider})`);
     if (attempts > 1) {
       log(LOG_PREFIXES.GENERATE, `[${requestId}] 📊 Tentativas: ${attempts}, Modelos tentados: ${metadata.totalModelsTriad}`);
     }
 
   } catch (cascadeError) {
     log(LOG_PREFIXES.ERROR, `[${requestId}] ❌ Todos os modelos falharam: ${cascadeError.message}`);
-    log(LOG_PREFIXES.GENERATE, `[${requestId}] 📦 Usando atividade stub (fallback local)`);
+    log(LOG_PREFIXES.GENERATE, `[${requestId}] 📦 Usando input padrão (fallback local)`);
     
-    // Fallback local - retorna uma atividade stub
-    return createFallbackActivity(requestId, suggestion, activityId, activityName, parameters, startTime);
+    // Fallback local
+    return createFallbackSchoolPowerInput(requestId, suggestion, activityId, activityName, parameters, startTime);
   }
 
   const duration = Date.now() - startTime;
 
-  let content;
+  let parsedInput;
   try {
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    content = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
+    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
+    parsedInput = parsed.schoolPowerInput || parsed;
   } catch (parseError) {
-    log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao parsear atividade, usando fallback`);
-    content = { error: 'Falha no parsing', raw: responseText.substring(0, 500) };
+    log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao parsear input, usando fallback`);
+    return createFallbackSchoolPowerInput(requestId, suggestion, activityId, activityName, parameters, startTime);
   }
 
-  const generatedActivity = {
+  const schoolPowerInput = {
     id: generateActivityId(),
-    templateId: activityId,
-    type: activityId,
-    title: parameters?.title || `${activityName} - ${suggestion.sectionName}`,
-    description: parameters?.description || '',
-    content,
+    activityId,
+    activityName,
     sectionId: suggestion.sectionId,
     sectionName: suggestion.sectionName,
+    input: {
+      initialMessage: parsedInput.initialMessage || `Gere uma atividade de ${activityName}`,
+      subjects: parsedInput.subjects || suggestion.sectionName,
+      targetAudience: parsedInput.targetAudience || 'Alunos',
+      restrictions: parsedInput.restrictions || parameters?.description || 'Nenhuma restrição especificada',
+      deliveryPeriod: parsedInput.deliveryPeriod || 'Sem data limite',
+      observations: parsedInput.observations || 'Gere conteúdo educacional de qualidade'
+    },
     metadata: {
       generatedAt: new Date().toISOString(),
       duration,
@@ -223,52 +161,31 @@ async function generateActivity(requestId, suggestion, sectionContent) {
     }
   };
 
-  log(LOG_PREFIXES.GENERATE, `[${requestId}] Atividade ${generatedActivity.id} gerada em ${duration}ms`);
+  log(LOG_PREFIXES.GENERATE, `[${requestId}] Input ${schoolPowerInput.id} gerado em ${duration}ms`);
   
-  return generatedActivity;
+  return schoolPowerInput;
 }
 
-function createFallbackActivity(requestId, suggestion, activityId, activityName, parameters, startTime) {
+/**
+ * Cria um input padrão para School Power (fallback local)
+ */
+function createFallbackSchoolPowerInput(requestId, suggestion, activityId, activityName, parameters, startTime) {
   const duration = Date.now() - startTime;
-  
-  // Conteúdo stub para cada tipo de atividade
-  const stubContent = {
-    'quiz-interativo': {
-      questions: [{
-        id: 1,
-        question: 'Questão de exemplo - edite para personalizar',
-        options: ['A) Opção 1', 'B) Opção 2', 'C) Opção 3', 'D) Opção 4'],
-        correctAnswer: 0,
-        explanation: 'Explicação da resposta correta'
-      }]
-    },
-    'flash-cards': {
-      cards: [{
-        id: 1,
-        front: 'Conceito de exemplo',
-        back: 'Definição de exemplo - edite para personalizar'
-      }]
-    },
-    'lista-exercicios': {
-      exercises: [{
-        id: 1,
-        type: 'dissertativo',
-        question: 'Exercício de exemplo - edite para personalizar',
-        answer: 'Resposta esperada',
-        points: 2
-      }]
-    }
-  };
   
   return {
     id: generateActivityId(),
-    templateId: activityId,
-    type: activityId,
-    title: parameters?.title || `${activityName} - ${suggestion.sectionName}`,
-    description: parameters?.description || 'Atividade gerada via fallback local',
-    content: stubContent[activityId] || stubContent['quiz-interativo'],
+    activityId,
+    activityName,
     sectionId: suggestion.sectionId,
     sectionName: suggestion.sectionName,
+    input: {
+      initialMessage: `Gere uma atividade de ${activityName} sobre ${suggestion.sectionName}`,
+      subjects: suggestion.sectionName,
+      targetAudience: 'Estudantes de ensino médio',
+      restrictions: parameters?.description || 'Crie uma atividade engajante e educativa',
+      deliveryPeriod: 'Sem prazo específico',
+      observations: 'Atividade gerada via fallback local - revise os parâmetros conforme necessário'
+    },
     metadata: {
       generatedAt: new Date().toISOString(),
       duration,
@@ -277,15 +194,18 @@ function createFallbackActivity(requestId, suggestion, activityId, activityName,
       source: 'lesson-orchestrator',
       requestId,
       aiProvider: 'local-fallback',
-      modelUsed: 'stub',
+      modelUsed: 'fallback',
       attempts: 0,
       usedFallback: true
     }
   };
 }
 
-async function generateAllActivities(requestId, suggestions, sectionsContent) {
-  log(LOG_PREFIXES.GENERATE, `[${requestId}] Gerando ${suggestions.length} atividades`);
+/**
+ * Gera inputs para todas as sugestões de atividades
+ */
+async function generateAllActivities(requestId, suggestions, sectionsContent, lesson) {
+  log(LOG_PREFIXES.GENERATE, `[${requestId}] Gerando inputs para ${suggestions.length} atividades`);
   
   const activities = [];
   const errors = [];
@@ -294,18 +214,34 @@ async function generateAllActivities(requestId, suggestions, sectionsContent) {
     const sectionContent = sectionsContent.find(s => s.sectionId === suggestion.sectionId);
     
     try {
-      const activity = await generateActivity(requestId, suggestion, sectionContent?.content);
-      activities.push(activity);
+      const schoolPowerInput = await generateSchoolPowerInput(requestId, suggestion, sectionContent?.content, lesson);
+      activities.push(schoolPowerInput);
     } catch (error) {
+      log(LOG_PREFIXES.ERROR, `[${requestId}] Erro ao gerar input para ${suggestion.sectionId}: ${error.message}`);
       errors.push({ 
         sectionId: suggestion.sectionId, 
         activityId: suggestion.suggestion?.activityId,
         error: error.message 
       });
+      
+      // Tenta criar um fallback mesmo com erro
+      try {
+        const fallback = createFallbackSchoolPowerInput(
+          requestId, 
+          suggestion, 
+          suggestion.suggestion?.activityId, 
+          suggestion.suggestion?.activityName, 
+          suggestion.suggestion?.parameters,
+          Date.now()
+        );
+        activities.push(fallback);
+      } catch (fallbackError) {
+        log(LOG_PREFIXES.ERROR, `[${requestId}] Falha até no fallback para ${suggestion.sectionId}`);
+      }
     }
   }
 
-  log(LOG_PREFIXES.GENERATE, `[${requestId}] Geração concluída: ${activities.length} atividades, ${errors.length} erros`);
+  log(LOG_PREFIXES.GENERATE, `[${requestId}] Geração de inputs concluída: ${activities.length} inputs, ${errors.length} erros`);
 
   return {
     activities,
@@ -316,8 +252,8 @@ async function generateAllActivities(requestId, suggestions, sectionsContent) {
 }
 
 export {
-  generateActivity,
+  generateSchoolPowerInput,
   generateAllActivities,
   generateActivityId,
-  ACTIVITY_PROMPTS
+  SCHOOL_POWER_INPUT_PROMPT
 };
