@@ -29,7 +29,7 @@ const __dirname = dirname(__filename);
 const GROQ_API_KEY = process.env.GROQ_API_KEY?.trim();
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
 const MODEL = 'llama-3.3-70b-versatile';
-const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_MODEL = 'gemini-2.0-flash';
 
 let activitiesCatalog = null;
 
