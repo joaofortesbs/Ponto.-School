@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star, GripVertical, GitBranch, GraduationCap, Upload as PublishIcon } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star, GripVertical, GitBranch, GraduationCap, Upload as PublishIcon, AlertCircle } from 'lucide-react';
 import { Template, TEMPLATE_SECTIONS } from './TemplateDropdown';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
 import { ActivityViewModal } from '@/features/schoolpower/construction/ActivityViewModal';
@@ -100,6 +100,14 @@ const getTemplateSectionOrder = (template: Template | null): string[] => {
   return sectionIds;
 };
 
+interface SuggestedActivity {
+  sectionId: string;
+  sectionName: string;
+  activityId: string;
+  activityName: string;
+  status: 'pending' | 'generating' | 'generated' | 'error';
+}
+
 interface AulaResultadoContentProps {
   aulaName?: string;
   selectedTemplate?: Template | null;
@@ -107,6 +115,7 @@ interface AulaResultadoContentProps {
   turmaName?: string | null;
   createdAt?: Date;
   generatedData?: GeneratedLessonData | null;
+  suggestedActivities?: SuggestedActivity[];
 }
 
 export interface AulaResultadoContentRef {
@@ -291,7 +300,8 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
   turmaImage = null,
   turmaName = null,
   createdAt = new Date(),
-  generatedData = null
+  generatedData = null,
+  suggestedActivities = []
 }, ref) => {
   // Load saved draft on component mount (browser-safe)
   const savedDraft = useMemo(() => loadSavedDraft(aulaName), [aulaName]);
@@ -1502,12 +1512,13 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
     setSectionActivities(prev => prev.filter(a => !(a.sectionId === sectionId && a.activityId === activityId)));
   };
 
-  // Componente para exibir atividades adicionadas em uma seção (estilo grade igual à sub-seção de Atividades)
+  // Componente para exibir atividades adicionadas E sugeridas em uma seção
   // Memorizado com React.memo para evitar re-renderizações desnecessárias e reinício de animações
   const SectionActivitiesGrid = React.memo(({ sectionId }: { sectionId: string }) => {
     const activitiesForSection = sectionActivities.filter(a => a.sectionId === sectionId);
+    const suggestedForSection = suggestedActivities.filter(a => a.sectionId === sectionId);
     
-    if (activitiesForSection.length === 0) return null;
+    if (activitiesForSection.length === 0 && suggestedForSection.length === 0) return null;
 
     // Configurações profissionais de proporção (Exato: 208x260)
     const CARD_WIDTH = 208;
@@ -1595,12 +1606,189 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
             </motion.div>
           );
         })}
+
+        {/* Cards de Atividades SUGERIDAS com 4 estados visuais */}
+        {suggestedForSection.map((suggested) => {
+          const isPending = suggested.status === 'pending';
+          const isGenerating = suggested.status === 'generating';
+          const isGenerated = suggested.status === 'generated';
+          const hasError = suggested.status === 'error';
+          
+          // Estilos diferenciados para cada estado
+          const getCardStyle = () => {
+            if (hasError) {
+              return {
+                background: 'linear-gradient(145deg, rgba(239, 68, 68, 0.1) 0%, rgba(15, 23, 42, 0.5) 100%)',
+                border: '1px dashed rgba(239, 68, 68, 0.4)',
+                boxShadow: '0 2px 8px rgba(239, 68, 68, 0.1)',
+                opacity: 1
+              };
+            }
+            if (isGenerated) {
+              return {
+                background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)',
+                opacity: 1
+              };
+            }
+            if (isGenerating) {
+              return {
+                background: 'linear-gradient(145deg, rgba(251, 191, 36, 0.1) 0%, rgba(15, 23, 42, 0.5) 100%)',
+                border: '1px dashed rgba(251, 191, 36, 0.3)',
+                boxShadow: '0 2px 8px rgba(251, 191, 36, 0.1)',
+                opacity: 0.85
+              };
+            }
+            // Pending
+            return {
+              background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.5) 100%)',
+              border: '1px dashed rgba(255, 255, 255, 0.15)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              opacity: 0.6
+            };
+          };
+          
+          const cardStyle = getCardStyle();
+          
+          return (
+            <motion.div
+              key={`suggested-${suggested.activityId}-${suggested.sectionId}`}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={isGenerated ? { y: -4, boxShadow: `0 12px 24px rgba(16, 185, 129, 0.2)` } : undefined}
+              className={`relative rounded-2xl overflow-hidden flex flex-col ${isGenerated ? 'cursor-pointer' : ''}`}
+              style={{
+                width: `${CARD_WIDTH}px`,
+                height: `${CARD_HEIGHT}px`,
+                ...cardStyle
+              }}
+            >
+              {/* Área do Ícone */}
+              <div 
+                className="flex items-center justify-center flex-1"
+                style={{ background: isGenerated ? 'rgba(16, 185, 129, 0.05)' : 'rgba(0, 0, 0, 0.15)' }}
+              >
+                <div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center relative"
+                  style={{ 
+                    background: hasError 
+                      ? 'rgba(239, 68, 68, 0.1)' 
+                      : isGenerated 
+                        ? 'rgba(16, 185, 129, 0.15)'
+                        : isGenerating
+                          ? 'rgba(251, 191, 36, 0.1)'
+                          : 'rgba(100, 100, 100, 0.15)', 
+                    border: hasError 
+                      ? '1px dashed rgba(239, 68, 68, 0.3)' 
+                      : isGenerated 
+                        ? '1px solid rgba(16, 185, 129, 0.3)'
+                        : isGenerating
+                          ? '1px dashed rgba(251, 191, 36, 0.3)'
+                          : '1px dashed rgba(255, 255, 255, 0.1)' 
+                  }}
+                >
+                  {isGenerating ? (
+                    <div className="w-8 h-8 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
+                  ) : hasError ? (
+                    <AlertCircle className="w-8 h-8 text-red-400/60" />
+                  ) : isGenerated ? (
+                    <CheckCircle className="w-8 h-8 text-emerald-400" />
+                  ) : (
+                    <Sparkles className="w-8 h-8 text-white/30" />
+                  )}
+                </div>
+              </div>
+
+              {/* Informações da Atividade Sugerida */}
+              <div 
+                className="p-5 flex flex-col justify-between"
+                style={{ 
+                  height: '110px',
+                  background: isGenerated 
+                    ? 'linear-gradient(180deg, rgba(16, 185, 129, 0.05) 0%, rgba(30, 41, 59, 0.6) 100%)'
+                    : 'linear-gradient(180deg, rgba(30, 41, 59, 0.2) 0%, rgba(30, 41, 59, 0.4) 100%)',
+                  borderTop: isGenerated 
+                    ? '1px solid rgba(16, 185, 129, 0.15)'
+                    : '1px dashed rgba(255,255,255,0.05)'
+                }}
+              >
+                <div className="space-y-1.5">
+                  <h4 className={`font-bold text-sm leading-tight line-clamp-2 ${isGenerated ? 'text-white' : 'text-white/50'}`}>
+                    {suggested.activityName}
+                  </h4>
+                  <span 
+                    className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
+                    style={{ 
+                      background: hasError 
+                        ? 'rgba(239, 68, 68, 0.15)' 
+                        : isGenerated 
+                          ? 'rgba(16, 185, 129, 0.2)'
+                          : isGenerating
+                            ? 'rgba(251, 191, 36, 0.15)'
+                            : 'rgba(100, 100, 100, 0.2)', 
+                      color: hasError 
+                        ? '#f87171' 
+                        : isGenerated
+                          ? '#10b981'
+                          : isGenerating
+                            ? '#fbbf24'
+                            : 'rgba(255, 255, 255, 0.4)' 
+                    }}
+                  >
+                    {hasError ? 'Erro' : isGenerated ? 'Gerada' : isGenerating ? 'Gerando...' : 'Pendente'}
+                  </span>
+                </div>
+                
+                <div className={`flex items-center gap-1.5 text-[10px] mt-auto ${isGenerated ? 'text-emerald-400/60' : 'text-white/20'}`}>
+                  <Clock className="w-3 h-3" />
+                  <span>
+                    {hasError 
+                      ? 'Falha na geração' 
+                      : isGenerated 
+                        ? 'Pronta para uso' 
+                        : isGenerating 
+                          ? 'Processando...' 
+                          : 'Aguardando geração'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Badge de Status no Canto */}
+              <div 
+                className="absolute top-3 right-3 px-2 py-1 rounded-full text-[9px] font-bold uppercase"
+                style={{ 
+                  background: hasError 
+                    ? 'rgba(239, 68, 68, 0.2)' 
+                    : isGenerated
+                      ? 'rgba(16, 185, 129, 0.2)'
+                      : isGenerating 
+                        ? 'rgba(251, 191, 36, 0.2)' 
+                        : 'rgba(100, 100, 100, 0.3)',
+                  color: hasError 
+                    ? '#f87171' 
+                    : isGenerated
+                      ? '#10b981'
+                      : isGenerating 
+                        ? '#fbbf24' 
+                        : 'rgba(255, 255, 255, 0.4)',
+                  border: hasError 
+                    ? '1px solid rgba(239, 68, 68, 0.3)' 
+                    : isGenerated
+                      ? '1px solid rgba(16, 185, 129, 0.3)'
+                      : isGenerating 
+                        ? '1px solid rgba(251, 191, 36, 0.3)' 
+                        : '1px solid rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                {hasError ? 'Erro' : isGenerated ? 'Gerada' : isGenerating ? 'Gerando' : 'Sugerida'}
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     );
   }, (prevProps, nextProps) => {
-    // Comparação personalizada para garantir que só re-renderize se o sectionId mudar
-    // O sectionActivities é acessado via closure, o que pode ser um problema se não usarmos o padrão correto.
-    // Para simplificar e ser efetivo no Fast Mode, usaremos o memo básico primeiro.
     return prevProps.sectionId === nextProps.sectionId;
   });
 

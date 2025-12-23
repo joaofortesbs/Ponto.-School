@@ -30,8 +30,11 @@ function getGroqClient() {
   return groqClient;
 }
 
-const SECTION_CONTENT_PROMPT = `Você é um especialista em educação e criação de conteúdo didático.
-Sua tarefa é gerar conteúdo educacional de alta qualidade para uma seção específica de uma aula.
+const SECTION_CONTENT_PROMPT = `Você é um especialista em educação e criação de material de apoio para PROFESSORES.
+Sua tarefa é gerar conteúdo que AJUDE O PROFESSOR a conduzir esta etapa da aula.
+
+IMPORTANTE: O conteúdo é PARA O PROFESSOR, não para os alunos!
+Escreva como se estivesse conversando diretamente com o professor, dando dicas, sugestões e orientações de como ele deve conduzir esta parte da aula.
 
 CONTEXTO DA AULA:
 - Template: {templateName}
@@ -44,27 +47,32 @@ SEÇÃO A GERAR:
 - Propósito: {sectionPurpose}
 
 INSTRUÇÕES:
-1. Gere conteúdo rico e educativo específico para esta seção
-2. Use linguagem clara e acessível
-3. Inclua exemplos práticos quando apropriado
-4. O conteúdo deve ter entre 200-400 palavras
-5. Seja criativo mas mantenha o rigor educacional
+1. Escreva PARA O PROFESSOR, usando "você" e dando orientações diretas
+2. Inclua sugestões de como abordar o tema com os alunos
+3. Dê dicas de perguntas que o professor pode fazer
+4. Sugira formas de engajar a turma
+5. Inclua exemplos práticos que o professor pode usar
+6. O conteúdo deve ter entre 200-400 palavras
+7. Use tom amigável e profissional, como um colega ajudando outro
+
+EXEMPLO DE TOM:
+"Professor, neste momento você pode começar perguntando aos alunos o que eles já sabem sobre o tema. Isso vai ajudar você a identificar o nível de conhecimento prévio da turma. Uma boa estratégia é..."
 
 Responda APENAS com o conteúdo da seção, sem introduções ou conclusões extras.`;
 
 const SECTION_PURPOSES = {
-  'objective': 'Definir claramente o que os alunos aprenderão ao final da aula',
-  'contextualizacao': 'Conectar o tema com o cotidiano e conhecimentos prévios dos alunos',
-  'exploracao': 'Permitir que os alunos investiguem e descubram conceitos por conta própria',
-  'apresentacao': 'Expor o conteúdo principal de forma clara e estruturada',
-  'pratica-guiada': 'Exercícios acompanhados pelo professor para fixação',
-  'pratica-independente': 'Atividades para os alunos realizarem sozinhos',
-  'fechamento': 'Sintetizar os aprendizados e verificar compreensão',
-  'demonstracao': 'Mostrar exemplos práticos do conceito',
-  'avaliacao': 'Verificar o aprendizado dos alunos',
-  'materiais': 'Listar recursos complementares para aprofundamento',
-  'observacoes': 'Dicas para o professor sobre a condução da aula',
-  'bncc': 'Competências e habilidades da BNCC contempladas'
+  'objective': 'Orientar o professor sobre como apresentar e contextualizar o objetivo da aula para os alunos',
+  'contextualizacao': 'Ajudar o professor a conectar o tema com a realidade dos alunos e ativar conhecimentos prévios',
+  'exploracao': 'Guiar o professor sobre como conduzir atividades de descoberta e investigação com a turma',
+  'apresentacao': 'Orientar o professor sobre como expor o conteúdo de forma clara e engajante',
+  'pratica-guiada': 'Ajudar o professor a conduzir exercícios acompanhados, dando suporte aos alunos',
+  'pratica-independente': 'Orientar o professor sobre como configurar e monitorar atividades autônomas',
+  'fechamento': 'Ajudar o professor a sintetizar os aprendizados e verificar a compreensão da turma',
+  'demonstracao': 'Guiar o professor sobre como demonstrar exemplos práticos do conceito',
+  'avaliacao': 'Orientar o professor sobre como avaliar o aprendizado da turma',
+  'materiais': 'Sugerir recursos complementares que o professor pode usar ou indicar aos alunos',
+  'observacoes': 'Dicas e lembretes importantes para o professor sobre a condução da aula',
+  'bncc': 'Orientar o professor sobre as competências e habilidades da BNCC contempladas'
 };
 
 async function generateSectionContent(requestId, sectionId, sectionName, lessonContext) {

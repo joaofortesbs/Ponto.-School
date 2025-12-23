@@ -283,13 +283,19 @@ const WorkflowModal: React.FC<WorkflowModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              disabled={workflowState?.hasError}
+              disabled={!workflowState?.isComplete && !workflowState?.hasError}
               className={`p-2 rounded-full transition-colors ${
-                workflowState?.hasError 
-                  ? 'opacity-50 cursor-not-allowed' 
+                (!workflowState?.isComplete && !workflowState?.hasError)
+                  ? 'opacity-30 cursor-not-allowed' 
                   : 'hover:bg-white/10'
               }`}
-              title={workflowState?.hasError ? 'Feche os logs do erro antes de fechar' : 'Fechar'}
+              title={
+                workflowState?.hasError 
+                  ? 'Erro detectado - verifique os logs' 
+                  : !workflowState?.isComplete 
+                    ? 'Aguarde a conclusão do processo' 
+                    : 'Fechar'
+              }
             >
               <X className="w-5 h-5 text-gray-400" />
             </button>
