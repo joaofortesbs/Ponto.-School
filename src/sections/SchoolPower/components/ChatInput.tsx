@@ -1110,73 +1110,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           pointer-events: none;
         }
 
-        .thinking-indicator {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        @media (max-width: 768px) {
-          .thinking-indicator {
-            gap: 8px;
-          }
-        }
-
-        .pulse-dot {
-          width: 12px;
-          height: 12px;
-          background: linear-gradient(135deg, #ff6b35, #f7931e);
-          border-radius: 50%;
-          animation: softPulse 2s ease-in-out infinite;
-          box-shadow:
-            0 0 12px rgba(255, 107, 53, 0.4),
-            0 0 24px rgba(255, 107, 53, 0.2);
-        }
-
-        @media (max-width: 768px) {
-          .pulse-dot {
-            width: 10px;
-            height: 10px;
-          }
-        }
-
-        .thinking-text {
-          color: #ccc;
-          font-size: 13px;
-          font-weight: 400;
-          line-height: 1.4;
-        }
-
-        @media (max-width: 768px) {
-          .thinking-text {
-            font-size: 11px;
-          }
-        }
-
-        @keyframes softPulse {
-          0%,
-          100% {
-            opacity: 0.8;
-            transform: scale(1);
-            box-shadow:
-              0 0 12px rgba(255, 107, 53, 0.4),
-              0 0 24px rgba(255, 107, 53, 0.2);
-          }
-          50% {
-            opacity: 1;
-            transform: scale(1.1);
-            box-shadow:
-              0 0 16px rgba(255, 107, 53, 0.6),
-              0 0 32px rgba(255, 107, 53, 0.3);
-          }
-        }
 
         /* Cards retangulares abaixo da caixa de mensagens */
         .quick-access-cards {
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 10px;
+          gap: 14px;
           width: 100%;
           padding: 0 2px;
           margin: 0;
@@ -1184,7 +1124,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
 
         @media (max-width: 768px) {
           .quick-access-cards {
-            gap: 4px;
+            gap: 8px;
             margin: 0;
           }
         }
@@ -1516,45 +1456,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
                   animate={{ backdropFilter: "blur(20px)" }}
                   transition={{ duration: 0.4, delay: 0.2 }}
                 >
-                  <div className="thinking-indicator">
-                    <motion.div
-                      className="pulse-dot"
-                      initial={{ scale: 0 }}
-                      animate={isTyping ? { scale: 1 } : { scale: 0 }}
-                      transition={{
-                        duration: 0.4,
-                        delay: 0.3,
-                        ease: [0.68, -0.55, 0.265, 1.55],
-                      }}
-                    />
-                    <motion.div
-                      className="thinking-text"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={
-                        isTyping ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }
-                      }
-                      transition={{
-                        duration: 0.4,
-                        delay: 0.4,
-                        ease: [0.25, 0.1, 0.25, 1],
-                      }}
-                    >
-                      <TextShimmerWave
-                        className='font-mono text-sm text-white'
-                        duration={1.5}
-                        zDistance={8}
-                        xDistance={1.5}
-                        yDistance={-1.5}
-                        scaleDistance={1.08}
-                        rotateYDistance={8}
-                        spread={1.2}
-                      >
-                        {selectedMode === "Agente IA"
-                          ? "Seu Agente IA está pensando em uma resposta para isso..."
-                          : "Seu Assistente IA está pensando em uma resposta para isso..."}
-                      </TextShimmerWave>
-                    </motion.div>
-                  </div>
                 </motion.div>
               </motion.div>
 
