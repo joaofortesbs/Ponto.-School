@@ -439,7 +439,7 @@ class LessonOrchestrator {
       step: 4,
       status: 'running',
       ...workflow.getState(),
-      message: 'Gerando atividades via School Power...'
+      message: 'Gerando inputs estruturados para School Power...'
     });
 
     stepLogger.markSubPhase(4, SUB_PHASES.AI_STARTED, true);
