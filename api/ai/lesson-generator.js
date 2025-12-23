@@ -10,17 +10,18 @@
  * 1. [ENTRADA] Recebe dados do modal (template, assunto, contexto)
  * 2. [VALIDAÇÃO] Valida todos os campos obrigatórios
  * 3. [MAPEAMENTO] Mapeia seções do template para a IA
- * 4. [GERAÇÃO] Envia prompt para Groq API
+ * 4. [GERAÇÃO] Envia prompt para Groq API (com fallback para Gemini)
  * 5. [PARSING] Processa resposta JSON da IA
  * 6. [FORMATAÇÃO] Formata dados para a interface
  * 7. [RETORNO] Retorna dados prontos para popular os campos
  * 
- * VERSÃO: 1.0.0
+ * VERSÃO: 2.0.0 - Com fallback para Gemini quando Groq atinge rate limit
  * ÚLTIMA ATUALIZAÇÃO: 2025-12-23
  * ====================================================================
  */
 
 import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
   SYSTEM_PROMPT,
   SECTION_DESCRIPTIONS,
@@ -34,12 +35,15 @@ import {
  * CONFIGURAÇÃO E CONSTANTES
  * ====================================================================
  */
-const API_KEY = process.env.GROQ_API_KEY?.trim();
-const MODEL = 'llama-3.3-70b-versatile';
+const GROQ_API_KEY = process.env.GROQ_API_KEY?.trim();
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GEMINI_MODEL = 'gemini-1.5-flash';
 const MAX_RETRIES = 3;
 const TIMEOUT_MS = 60000;
 
 let groqClient = null;
+let geminiClient = null;
 
 /**
  * ====================================================================
@@ -105,23 +109,89 @@ function getGroqClient() {
   if (!groqClient) {
     log(LOG_PREFIX.API, 'Inicializando cliente Groq...');
     
-    if (!API_KEY) {
+    if (!GROQ_API_KEY) {
       const error = 'GROQ_API_KEY não configurada!';
       log(LOG_PREFIX.ERROR, error);
       throw new Error(error);
     }
     
-    if (!API_KEY.startsWith('gsk_')) {
+    if (!GROQ_API_KEY.startsWith('gsk_')) {
       const error = 'GROQ_API_KEY inválida! Deve começar com "gsk_"';
       log(LOG_PREFIX.ERROR, error);
       throw new Error(error);
     }
     
-    groqClient = new Groq({ apiKey: API_KEY });
+    groqClient = new Groq({ apiKey: GROQ_API_KEY });
     log(LOG_PREFIX.API, '✅ Cliente Groq inicializado com sucesso');
   }
   
   return groqClient;
+}
+
+/**
+ * ====================================================================
+ * INICIALIZAÇÃO DO CLIENTE GEMINI (FALLBACK)
+ * ====================================================================
+ */
+function getGeminiClient() {
+  if (!geminiClient) {
+    log(LOG_PREFIX.API, 'Inicializando cliente Gemini (fallback)...');
+    
+    if (!GEMINI_API_KEY) {
+      log(LOG_PREFIX.ERROR, 'GEMINI_API_KEY não configurada! Fallback indisponível.');
+      return null;
+    }
+    
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    geminiClient = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+    log(LOG_PREFIX.API, '✅ Cliente Gemini (fallback) inicializado com sucesso');
+  }
+  
+  return geminiClient;
+}
+
+/**
+ * ====================================================================
+ * GERAÇÃO COM GEMINI (FALLBACK)
+ * ====================================================================
+ */
+async function generateWithGemini(systemPrompt, userPrompt, requestId) {
+  const gemini = getGeminiClient();
+  
+  if (!gemini) {
+    throw new Error('Gemini não disponível como fallback - GEMINI_API_KEY não configurada');
+  }
+  
+  log(LOG_PREFIX.API, `[${requestId}] 🔄 Usando Gemini como fallback...`);
+  
+  const fullPrompt = `${systemPrompt}\n\n---\n\nSolicitação do usuário:\n${userPrompt}`;
+  
+  const result = await gemini.generateContent(fullPrompt);
+  const response = await result.response;
+  const content = response.text();
+  
+  log(LOG_PREFIX.API, `[${requestId}] ✅ Resposta do Gemini recebida`);
+  
+  return {
+    choices: [{
+      message: { content },
+      finish_reason: 'stop'
+    }],
+    usage: { total_tokens: Math.ceil(content.length / 4) }
+  };
+}
+
+/**
+ * ====================================================================
+ * VERIFICAÇÃO SE ERRO É RATE LIMIT
+ * ====================================================================
+ */
+function isRateLimitError(error) {
+  return error?.status === 429 || 
+         error?.message?.includes('429') || 
+         error?.message?.includes('rate_limit') ||
+         error?.message?.includes('Rate limit') ||
+         error?.code === 'rate_limit_exceeded';
 }
 
 /**
@@ -379,25 +449,47 @@ export async function generateLesson(data) {
     log(LOG_PREFIX.API, `[${requestId}] Enviando requisição para Groq API...`);
     const apiStartTime = Date.now();
     
-    const result = await withRetry(async () => {
-      const client = getGroqClient();
-      
-      const response = await client.chat.completions.create({
-        model: MODEL,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-        top_p: 0.9
-      });
-      
-      return response;
-    }, MAX_RETRIES, requestId);
+    let result;
+    let usedFallback = false;
+    
+    try {
+      result = await withRetry(async () => {
+        const client = getGroqClient();
+        
+        const response = await client.chat.completions.create({
+          model: GROQ_MODEL,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 4000,
+          top_p: 0.9
+        });
+        
+        return response;
+      }, MAX_RETRIES, requestId);
+    } catch (groqError) {
+      if (isRateLimitError(groqError)) {
+        log(LOG_PREFIX.API, `[${requestId}] ⚠️ Groq atingiu rate limit. Tentando fallback para Gemini...`);
+        
+        try {
+          result = await generateWithGemini(SYSTEM_PROMPT, prompt, requestId);
+          usedFallback = true;
+          log(LOG_PREFIX.API, `[${requestId}] ✅ Fallback para Gemini bem-sucedido!`);
+        } catch (geminiError) {
+          log(LOG_PREFIX.ERROR, `[${requestId}] ❌ Fallback para Gemini também falhou:`, {
+            message: geminiError.message
+          });
+          throw new Error(`Groq rate limit atingido e Gemini falhou: ${geminiError.message}`);
+        }
+      } else {
+        throw groqError;
+      }
+    }
     
     const apiDuration = Date.now() - apiStartTime;
-    log(LOG_PREFIX.TIMING, `[${requestId}] Tempo de resposta da API: ${apiDuration}ms`);
+    log(LOG_PREFIX.TIMING, `[${requestId}] Tempo de resposta da API: ${apiDuration}ms${usedFallback ? ' (via Gemini fallback)' : ''}`);
     
     const content = result.choices?.[0]?.message?.content;
     log(LOG_PREFIX.API, `[${requestId}] Resposta recebida:`, {
@@ -428,7 +520,9 @@ export async function generateLesson(data) {
         templateName: data.templateName,
         assunto: data.assunto,
         generatedAt: new Date().toISOString(),
-        processingTime: Date.now() - startTime
+        processingTime: Date.now() - startTime,
+        usedFallback: usedFallback,
+        aiProvider: usedFallback ? 'gemini' : 'groq'
       }
     };
     
@@ -497,7 +591,7 @@ export async function regenerateSection(data) {
       const client = getGroqClient();
       
       return await client.chat.completions.create({
-        model: MODEL,
+        model: GROQ_MODEL,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: prompt }
@@ -561,7 +655,7 @@ export async function generateTitleOptions(assunto, contexto) {
       const client = getGroqClient();
       
       return await client.chat.completions.create({
-        model: MODEL,
+        model: GROQ_MODEL,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: prompt }
@@ -613,7 +707,7 @@ export async function testConnection() {
     const client = getGroqClient();
     
     const response = await client.chat.completions.create({
-      model: MODEL,
+      model: GROQ_MODEL,
       messages: [{ role: 'user', content: 'Responda apenas "OK"' }],
       max_tokens: 10,
       temperature: 0
