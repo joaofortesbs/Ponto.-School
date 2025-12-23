@@ -5,6 +5,7 @@ import { Template, TEMPLATE_SECTIONS } from './TemplateDropdown';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
 import { ActivityViewModal } from '@/features/schoolpower/construction/ActivityViewModal';
 import { aulasStorageService } from '@/services/aulasStorageService';
+import { aulasIndexedDBService } from '@/services/aulasIndexedDBService';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -539,36 +540,57 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
         return;
       }
 
-      // 5. Salvar via serviço
-      console.log('[PUBLISH_AULA_SAVING] Salvando aula com aulasStorageService...');
-      const aulaSalva = aulasStorageService.salvarAula({
-        titulo: aulaData.titulo,
-        objetivo: aulaData.objetivo || '',
-        templateId: selectedTemplate?.id || 'unknown',
-        templateName: selectedTemplate?.name || 'Template',
-        turmaName: turmaName,
-        turmaImage: turmaImage,
-        duracao: aulaData.duracao,
-        status: 'publicada',
-        secoes: aulaData.secoes,
-        sectionOrder: aulaData.sectionOrder
-      });
-      console.log('[PUBLISH_AULA_SAVED] ✅ Aula salva com sucesso:', aulaSalva);
+      // 5. Tentar salvar via localStorage primeiro
+      console.log('[PUBLISH_AULA_SAVING] Tentando salvar em localStorage...');
+      let aulaSalva;
+      
+      try {
+        aulaSalva = aulasStorageService.salvarAula({
+          titulo: aulaData.titulo,
+          objetivo: aulaData.objetivo || '',
+          templateId: selectedTemplate?.id || 'unknown',
+          templateName: selectedTemplate?.name || 'Template',
+          turmaName: turmaName,
+          turmaImage: turmaImage,
+          duracao: aulaData.duracao,
+          status: 'publicada',
+          secoes: aulaData.secoes,
+          sectionOrder: aulaData.sectionOrder
+        });
+        console.log('[PUBLISH_AULA_STORAGE] ✅ Salvo em localStorage:', aulaSalva);
+      } catch (localStorageErr) {
+        // Se localStorage falhar, usa IndexedDB como fallback
+        console.warn('[PUBLISH_AULA_FALLBACK] localStorage cheio, usando IndexedDB...');
+        aulaSalva = {
+          id: `aula_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          titulo: aulaData.titulo,
+          objetivo: aulaData.objetivo || '',
+          templateId: selectedTemplate?.id || 'unknown',
+          templateName: selectedTemplate?.name || 'Template',
+          turmaName: turmaName,
+          turmaImage: turmaImage,
+          duracao: aulaData.duracao,
+          status: 'publicada' as const,
+          secoes: aulaData.secoes,
+          sectionOrder: aulaData.sectionOrder,
+          criadoEm: new Date().toISOString(),
+          atualizadoEm: new Date().toISOString()
+        };
+        
+        await aulasIndexedDBService.salvarAulaIndexedDB(aulaSalva);
+        console.log('[PUBLISH_AULA_INDEXED_DB] ✅ Salvo em IndexedDB:', aulaSalva);
+      }
 
-      // 6. Listar aulas para confirmar
-      const aulasSalvas = aulasStorageService.listarAulas();
-      console.log('[PUBLISH_AULA_LIST] Aulas no storage:', aulasSalvas);
-
-      // 7. Atualizar estado
+      // 6. Atualizar estado
       setIsPublished(true);
       setIsPublishing(false);
       console.log('[PUBLISH_AULA_SUCCESS] ✅ isPublished = true, isPublishing = false');
 
-      // 8. Mostrar modal
+      // 7. Mostrar modal
       setShowPublishModal(true);
       console.log('[PUBLISH_AULA_MODAL] Modal de sucesso aberto');
 
-      // 9. Auto-fechar modal
+      // 8. Auto-fechar modal
       setTimeout(() => {
         setShowPublishModal(false);
         console.log('[PUBLISH_AULA_MODAL_CLOSED] Modal fechado automaticamente');
