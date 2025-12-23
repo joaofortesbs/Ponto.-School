@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star, GripVertical, GitBranch } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star, GripVertical, GitBranch, GraduationCap } from 'lucide-react';
 import { Template, TEMPLATE_SECTIONS } from './TemplateDropdown';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
 import { ActivityViewModal } from '@/features/schoolpower/construction/ActivityViewModal';
@@ -50,6 +50,12 @@ const SECTION_NAME_TO_CONFIG: Record<string, SectionMappingConfig> = {
   'Reflexão': { id: 'reflexao', title: 'Reflexão', icon: Brain, placeholder: 'Descreva o momento de reflexão...' },
   'Desenvolvimento': { id: 'desenvolvimento', title: 'Desenvolvimento', icon: Layers, placeholder: 'Descreva o desenvolvimento da aula...' },
   'Aplicação': { id: 'aplicacao', title: 'Aplicação', icon: Briefcase, placeholder: 'Descreva as atividades de aplicação prática...' },
+  // ====================================================================
+  // SEÇÕES FINAIS OBRIGATÓRIAS (aparecem em TODOS os templates)
+  // ====================================================================
+  'Materiais Complementares': { id: 'materiais', title: 'Materiais Complementares', icon: FileText, placeholder: 'Liste os materiais complementares necessários para a aula...' },
+  'Observações do Professor': { id: 'observacoes', title: 'Observações do Professor', icon: BookOpen, placeholder: 'Adicione observações e notas importantes sobre a aula...' },
+  'Critérios BNCC': { id: 'bncc', title: 'Critérios BNCC', icon: GraduationCap, placeholder: 'Indique os critérios e competências da BNCC abordados...' },
 };
 
 // Seções padrão quando nenhum template é selecionado

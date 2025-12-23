@@ -37,6 +37,17 @@ interface TemplateWithSections extends Template {
 // IMPORTANTE: O card "Objetivos" é SEMPRE exibido primeiro, independente
 // do template. As seções abaixo são as que aparecem DEPOIS de Objetivos.
 // ====================================================================
+// ====================================================================
+// SEÇÕES FINAIS OBRIGATÓRIAS
+// ====================================================================
+// Estas 3 seções aparecem no final de TODOS os templates:
+// ====================================================================
+const FINAL_SECTIONS = [
+  'Materiais Complementares',
+  'Observações do Professor',
+  'Critérios BNCC'
+];
+
 export const TEMPLATE_SECTIONS: Record<string, string[]> = {
   'aula-ativa': [
     'Contextualização',
@@ -44,43 +55,44 @@ export const TEMPLATE_SECTIONS: Record<string, string[]> = {
     'Apresentação',
     'Prática Guiada',
     'Prática Independente',
-    'Fechamento'
+    'Fechamento',
+    ...FINAL_SECTIONS
   ],
   'aula-expositiva': [
-    'Objetivos',
     'Contextualização',
     'Apresentação',
     'Demonstração',
     'Avaliação',
-    'Fechamento'
+    'Fechamento',
+    ...FINAL_SECTIONS
   ],
   'aula-socioemocional': [
-    'Objetivos',
     'Contextualização',
     'Apresentação',
     'Engajamento',
     'Colaboração',
     'Reflexão',
-    'Fechamento'
+    'Fechamento',
+    ...FINAL_SECTIONS
   ],
   'aula-tecnica': [
-    'Objetivos',
     'Contextualização',
     'Apresentação',
     'Demonstração',
     'Desenvolvimento',
     'Aplicação',
     'Avaliação',
-    'Fechamento'
+    'Fechamento',
+    ...FINAL_SECTIONS
   ],
   'aula-se': [
-    'Objetivos',
     'Contextualização',
     'Exploração',
     'Engajamento',
     'Desenvolvimento',
     'Colaboração',
-    'Fechamento'
+    'Fechamento',
+    ...FINAL_SECTIONS
   ]
 };
 
