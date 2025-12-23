@@ -1191,13 +1191,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
 
         .quick-access-card {
           flex: 0 1 auto;
-          max-width: 140px;
+          max-width: 120px;
           display: flex;
-          flex-direction: column;
           align-items: center;
-          justify-content: center;
-          gap: 6px;
-          padding: 12px 14px;
+          justify-content: flex-start;
+          gap: 0;
+          padding: 10px 11px;
           background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
           border: 1px solid #333;
           border-radius: 999px;
@@ -1228,14 +1227,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           flex-shrink: 0;
           color: #ff6b35;
           transition: all 0.3s ease;
-          margin: 0;
+          margin-right: 8px;
         }
 
         @media (max-width: 768px) {
           .quick-access-card-icon {
             width: 18px;
             height: 18px;
-            margin: 0;
+            margin-right: 6px;
           }
         }
 
@@ -1245,19 +1244,18 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
         }
 
         .quick-access-card-text {
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 500;
           color: #e0e0e0;
           white-space: nowrap;
           transition: color 0.3s ease;
           margin: 0;
           padding: 0;
-          text-align: center;
         }
 
         @media (max-width: 768px) {
           .quick-access-card-text {
-            font-size: 10px;
+            font-size: 11px;
           }
         }
 
