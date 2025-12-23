@@ -224,6 +224,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [isMateriaisExpanded, setIsMateriaisExpanded] = useState(savedDraft?.sectionExpanded?.materiais ?? true);
   const [isObservacoesExpanded, setIsObservacoesExpanded] = useState(savedDraft?.sectionExpanded?.observacoes ?? true);
   const [isBnccExpanded, setIsBnccExpanded] = useState(savedDraft?.sectionExpanded?.bncc ?? true);
+  const [isEditingAulaName, setIsEditingAulaName] = useState(false);
+  const [editingAulaName, setEditingAulaName] = useState(aulaName);
 
   // Estados de visibilidade para seções padrão (para exclusão completa)
   const [isObjectiveVisible, setIsObjectiveVisible] = useState(savedDraft?.sectionVisible?.objective ?? true);
@@ -1946,7 +1948,57 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
               transition={{ delay: 0.2, duration: 0.3 }}
               className="flex flex-col gap-2"
             >
-              <h2 className="text-white font-bold text-xl">{aulaName}</h2>
+              <div className="flex items-center gap-2">
+                {isEditingAulaName ? (
+                  <input
+                    type="text"
+                    value={editingAulaName}
+                    onChange={(e) => setEditingAulaName(e.target.value)}
+                    onBlur={() => {
+                      setIsEditingAulaName(false);
+                      if (editingAulaName.trim()) {
+                        // Update aulaName in parent or state as needed
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setIsEditingAulaName(false);
+                      }
+                      if (e.key === 'Escape') {
+                        setEditingAulaName(aulaName);
+                        setIsEditingAulaName(false);
+                      }
+                    }}
+                    autoFocus
+                    className="text-white font-bold text-xl bg-white/10 border-b-2 border-white/30 focus:border-white px-2 py-1 rounded outline-none"
+                  />
+                ) : (
+                  <>
+                    <h2 
+                      className="text-white font-bold text-xl transition-all duration-300 hover:underline hover:underline-offset-4 cursor-pointer"
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.textDecoration = 'underline';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isEditingAulaName) {
+                          e.currentTarget.style.textDecoration = 'none';
+                        }
+                      }}
+                    >
+                      {aulaName}
+                    </h2>
+                    <motion.button
+                      whileHover={{ scale: 1.15 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setIsEditingAulaName(true)}
+                      className="text-white/60 hover:text-white transition-colors flex-shrink-0"
+                      title="Editar nome da aula"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </motion.button>
+                  </>
+                )}
+              </div>
               
               <div className="flex items-center gap-2">
                 <motion.div
