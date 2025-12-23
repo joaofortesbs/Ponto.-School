@@ -503,13 +503,20 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
 
   // Handler de publicação da aula
   const handlePublishAula = useCallback(async () => {
-    console.log('🔴 [HANDLECLICK] função handlePublishAula CHAMADA!');
-    console.log('🔴 [PUBLISH_AULA] clique detectado');
-    console.log('🔴 [PUBLISH_AULA] Estados atuais:', { isPublished, isPublishing });
-    console.log('📤 [PUBLISH_AULA] Iniciando publicação da aula...');
-    setIsPublishing(true);
-    
     try {
+      console.log('[PUBLISH_AULA_START] Iniciando publicação...');
+      
+      // 1. Validar estado: já publicado?
+      if (isPublished) {
+        console.log('[PUBLISH_AULA_ERROR] Aula já foi publicada');
+        return;
+      }
+
+      // 2. Iniciar loading
+      setIsPublishing(true);
+      console.log('[PUBLISH_AULA_LOADING] isPublishing = true');
+
+      // 3. Coletar dados
       const aulaData = {
         titulo: currentAulaName,
         objetivo: objectiveText,
@@ -522,56 +529,56 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
         ),
         sectionOrder
       };
+      console.log('[PUBLISH_AULA_DATA] Dados coletados:', aulaData);
 
-      console.log('🔴 [GETAULADATA] resultado:', aulaData);
-      console.log('🔴 [GETAULADATA] titulo:', aulaData.titulo);
-      console.log('🔴 [GETAULADATA] sectionOrder:', aulaData.sectionOrder);
-      console.log('🔴 [GETAULADATA] dynamicSections keys:', Object.keys(aulaData.secoes));
-      
+      // 4. Validar dados
       if (!aulaData || !aulaData.titulo || aulaData.titulo.trim() === '') {
-        console.error('🔴 [FATAL] aulaData vazio ou sem título:', aulaData);
+        console.error('[PUBLISH_AULA_ERROR] ❌ Título vazio ou ausente');
         setIsPublishing(false);
+        alert('❌ Por favor, preencha o título da aula antes de publicar');
         return;
       }
 
-      console.log('[PUBLISH_AULA] salvando aula, objeto completo:', aulaData);
+      // 5. Salvar via serviço
+      console.log('[PUBLISH_AULA_SAVING] Salvando aula com aulasStorageService...');
+      const aulaSalva = aulasStorageService.salvarAula({
+        titulo: aulaData.titulo,
+        objetivo: aulaData.objetivo || '',
+        templateId: selectedTemplate?.id || 'unknown',
+        templateName: selectedTemplate?.name || 'Template',
+        turmaName: turmaName,
+        turmaImage: turmaImage,
+        duracao: aulaData.duracao,
+        status: 'publicada',
+        secoes: aulaData.secoes,
+        sectionOrder: aulaData.sectionOrder
+      });
+      console.log('[PUBLISH_AULA_SAVED] ✅ Aula salva com sucesso:', aulaSalva);
 
-      try {
-        const aulaSalva = aulasStorageService.salvarAula({
-          titulo: aulaData.titulo,
-          objetivo: aulaData.objetivo || '',
-          templateId: selectedTemplate?.id || 'unknown',
-          templateName: selectedTemplate?.name || 'Template',
-          turmaName: turmaName,
-          turmaImage: turmaImage,
-          duracao: aulaData.duracao,
-          status: 'publicada',
-          secoes: aulaData.secoes,
-          sectionOrder: aulaData.sectionOrder
-        });
-        console.log('🔴 [SALVAR_AULA] sucesso:', aulaSalva);
-      } catch (saveErr) {
-        console.error('🔴 [SALVAR_AULA] ERRO CAPTURADO:', saveErr);
-        throw saveErr;
-      }
+      // 6. Listar aulas para confirmar
+      const aulasSalvas = aulasStorageService.listarAulas();
+      console.log('[PUBLISH_AULA_LIST] Aulas no storage:', aulasSalvas);
 
-      console.log('[PUBLISH_AULA] aulas salvas, listando:', aulasStorageService.listarAulas());
-
-      console.log('📤 [PUBLISH_AULA] ✅ Aula publicada com sucesso!');
+      // 7. Atualizar estado
       setIsPublished(true);
-      console.log('🔴 [PUBLISH_AULA] modal aberto, setShowPublishModal(true)');
+      setIsPublishing(false);
+      console.log('[PUBLISH_AULA_SUCCESS] ✅ isPublished = true, isPublishing = false');
+
+      // 8. Mostrar modal
       setShowPublishModal(true);
-      
+      console.log('[PUBLISH_AULA_MODAL] Modal de sucesso aberto');
+
+      // 9. Auto-fechar modal
       setTimeout(() => {
         setShowPublishModal(false);
+        console.log('[PUBLISH_AULA_MODAL_CLOSED] Modal fechado automaticamente');
       }, 3000);
     } catch (error) {
-      console.error('🔴 [GETAULADATA_ERROR]', error);
-      console.error('📤 [PUBLISH_AULA] ❌ Erro ao publicar aula:', error);
-    } finally {
+      console.error('[PUBLISH_AULA_CATCH] ❌ ERRO NA PUBLICAÇÃO:', error);
       setIsPublishing(false);
+      alert(`❌ Erro ao publicar: ${error instanceof Error ? error.message : 'Desconhecido'}`);
     }
-  }, [currentAulaName, objectiveText, dynamicSections, sectionOrder, selectedTemplate, turmaName, turmaImage, isPublished, isPublishing]);
+  }, [currentAulaName, objectiveText, dynamicSections, sectionOrder, selectedTemplate, turmaName, turmaImage, isPublished]);
 
   // ====================================================================
   // EXPOSIÇÃO DE MÉTODOS VIA REF (useImperativeHandle)
@@ -600,11 +607,14 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
         sectionOrder
       };
       
-      console.log('📤 [GET_AULA_DATA] Dados coletados:', {
-        titulo: data.titulo,
-        objetivo: data.objetivo?.substring(0, 50) + '...',
-        secoesCount: Object.keys(secoes).length
-      });
+      console.log('📤 [GET_AULA_DATA] Dados coletados:', data);
+      console.log('📤 [GET_AULA_DATA] Validando titulo:', { titulo: data.titulo, isEmpty: !data.titulo || data.titulo.trim() === '' });
+      
+      // VALIDAÇÃO: Se título está vazio, retorna null
+      if (!data.titulo || data.titulo.trim() === '') {
+        console.error('[GET_AULA_DATA_VALIDATION] ❌ Título vazio, bloqueando publicação');
+        return null;
+      }
       
       return data;
     }
@@ -2578,7 +2588,6 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
               </AnimatePresence>
             </motion.div>
 
-            {(() => { console.log('🔴 [BUTTON_STATE] isPublished:', isPublished, 'isPublishing:', isPublishing, 'disabled:', isPublished || isPublishing); return null; })()}
             <motion.button
               type="button"
               initial={{ opacity: 0, scale: 0.8 }}
@@ -2586,25 +2595,10 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
               transition={{ delay: 0.5, duration: 0.3 }}
               whileHover={!isPublished && !isPublishing ? { scale: 1.05 } : {}}
               whileTap={!isPublished && !isPublishing ? { scale: 0.95 } : {}}
-              onMouseDown={(e) => {
-                console.log('🔴 [MOUSEDOWN] evento detectado, fase:', e.detail);
-              }}
-              onMouseUp={(e) => {
-                console.log('🔴 [MOUSEUP] evento detectado');
-              }}
-              onClick={(e) => {
-                console.log('🔴 [ONCLICK] evento detectado, cancelado?', e.defaultPrevented);
-                console.log('🔴 [ONCLICK] isPublished:', isPublished, 'isPublishing:', isPublishing);
-                if (!isPublished && !isPublishing) {
-                  handlePublishAula();
-                } else {
-                  console.log('🔴 [ONCLICK] BLOQUEADO - botão desativado');
-                }
-              }}
-              onBlur={() => console.log('🔴 [PUBLISH_AULA] blur detectado')}
+              onClick={handlePublishAula}
               disabled={isPublished || isPublishing}
               className="flex-shrink-0 border-0 bg-transparent p-0 pointer-events-auto"
-              style={{ cursor: isPublished || isPublishing ? 'default' : 'pointer' }}
+              style={{ cursor: isPublished || isPublishing ? 'not-allowed' : 'pointer' }}
               title={isPublished ? "Aula publicada" : "Publicar aula"}
             >
               <motion.div

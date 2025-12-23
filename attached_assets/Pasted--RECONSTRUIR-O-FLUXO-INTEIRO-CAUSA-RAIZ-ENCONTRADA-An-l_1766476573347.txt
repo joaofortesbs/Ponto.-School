@@ -1,0 +1,223 @@
+🎯 RECONSTRUIR O FLUXO INTEIRO - CAUSA RAIZ ENCONTRADA
+
+Análise dos logs do console revelou a CAUSA RAIZ:
+
+❌ PROBLEMA PRINCIPAL:
+- isPublished INICIA COMO TRUE (bloqueando o fluxo)
+- aulaData está VAZIO quando handlePublishAula tenta usar
+- getAulaData() não está retornando dados válidos
+- Modal abre, mas sem salvar nada (false positive)
+
+═══════════════════════════════════════════════════════════════
+
+VOCÊ PRECISA RECONSTRUIR 3 COMPONENTES:
+
+═══════════════════════════════════════════════════════════════
+
+1️⃣ RECONSTRUIR: Estado de isPublished em AulaResultadoContent.tsx
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PROBLEMA: isPublished inicia como TRUE
+
+SOLUÇÃO:
+// ANTES (ERRADO):
+const [isPublished, setIsPublished] = useState(true); // ❌ Sempre é verdade!
+
+// DEPOIS (CORRETO):
+const [isPublished, setIsPublished] = useState(false); // ✅ Começa false
+const [isPublishing, setIsPublishing] = useState(false);
+const [showPublishModal, setShowPublishModal] = useState(false);
+
+texto
+
+2️⃣ RECONSTRUIR: getAulaData() em useImperativeHandle
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PROBLEMA: Retorna objeto vazio
+
+SOLUÇÃO: Crie função que GARANTE retornar dados válidos:
+
+useImperativeHandle(ref, () => ({
+getAulaData: () => {
+const aulaObject = {
+id: aulaId || Date.now().toString(),
+titulo: titulo || 'Aula sem título',
+objetivo: objetivo || '',
+template: templateSelecionado || 'Padrão',
+dataCriacao: new Date().toISOString(),
+sectionOrder: sectionOrder || [],
+seções: {},
+seções dinâmicas: seções dinâmicas || {},
+seçõesTextos: seçõesTextos ||,
+seçõesConfigs: seçõesConfigs
+||
+
+texto
+// Popula sections com dados reais
+sectionOrder.forEach((sectionId) => {
+  aulaObject.sections[sectionId] = {
+    id: sectionId,
+    title: sectionId,
+    content: sectionTexts?.[sectionId] || '',
+    visible: sectionVisible?.[sectionId] ?? true,
+    expanded: sectionExpanded?.[sectionId] ?? true,
+  };
+});
+
+console.log('[GETAULADATA] Objeto completo retornado:', aulaObject);
+
+// VALIDAÇÃO: Se título está vazio, retorne null para bloquear salvamento
+if (!aulaObject.titulo || aulaObject.titulo === 'Aula sem título') {
+  console.error('[GETAULADATA_VALIDATION] Título vazio, bloqueando publicação');
+  return null;
+}
+
+return aulaObject;
+},
+}), [aulaId, titulo, objetivo, templateSelecionado, sectionOrder, dynamicSections, sectionTexts, sectionConfigs, sectionVisible, sectionExpanded]);
+
+texto
+
+3️⃣ RECONSTRUIR: handlePublishAula completa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PROBLEMA: Função não coleta dados, tenta salvar vazio, modal abre mesmo falhando
+
+SOLUÇÃO:
+
+const handlePublishAula = async () => {
+try {
+console.log('[PUBLISH_AULA_START] Iniciando publicação...');
+
+texto
+// 1. Validar estado: já publicado?
+if (isPublished) {
+  console.log('[PUBLISH_AULA] Aula já foi publicada');
+  return;
+}
+
+// 2. Iniciar loading
+setIsPublishing(true);
+console.log('[PUBLISH_AULA_LOADING] isPublishing = true');
+
+// 3. Coletar dados (GET REF DE ConstrucaoAulaPanel)
+if (!aulaPanelRef?.current) {
+  console.error('[PUBLISH_AULA_ERROR] Ref não inicializado');
+  setIsPublishing(false);
+  return;
+}
+
+const aulaData = aulaPanelRef.current.getAulaData?.();
+console.log('[PUBLISH_AULA_DATA] Dados coletados:', aulaData);
+
+// 4. Validar dados
+if (!aulaData) {
+  console.error('[PUBLISH_AULA_ERROR] Dados inválidos ou vazios');
+  setIsPublishing(false);
+  alert('❌ Preencha o título da aula antes de publicar');
+  return;
+}
+
+// 5. Validar se title está realmente preenchido
+if (!aulaData.titulo || aulaData.titulo.trim() === '') {
+  console.error('[PUBLISH_AULA_ERROR] Título vazio');
+  setIsPublishing(false);
+  alert('❌ Título da aula não pode estar vazio');
+  return;
+}
+
+// 6. Salvar via serviço
+console.log('[PUBLISH_AULA_SAVING] Salvando aula...');
+const resultado = await aulasStorageService.salvarAula(aulaData);
+console.log('[PUBLISH_AULA_SAVED] Aula salva com sucesso:', resultado);
+
+// 7. Atualizar estado de publicação
+setIsPublished(true);
+setIsPublishing(false);
+console.log('[PUBLISH_AULA_SUCCESS] isPublished = true');
+
+// 8. Mostrar modal de sucesso
+setShowPublishModal(true);
+console.log('[PUBLISH_AULA_MODAL] Modal aberto');
+
+// 9. Auto-fechar modal após 3 segundos
+setTimeout(() => {
+  setShowPublishModal(false);
+  console.log('[PUBLISH_AULA_MODAL_CLOSED] Modal fechado automaticamente');
+}, 3000);
+} catch (error) {
+console.error('[PUBLISH_AULA_CATCH_ERROR]', error);
+setIsPublishing(false);
+alert( ❌ Erro ao publicar: ${error.message});
+}
+};
+
+texto
+
+4️⃣ RECONSTRUIR: Botão com estado correto
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+<motion.button
+type="button"
+onClick={handlePublishAula}
+disabled={isPublished || isPublishing}
+className={ flex-shrink-0 border-0 p-2 rounded-full transition-all ${isPublished ? 'bg-transparent cursor-not-allowed' : 'bg-transparent hover:bg-orange-100 cursor-pointer' } }
+whileHover={!isPublished && !isPublishing ? { scale: 1.1 } : {}}
+whileTap={!isPublished && !isPublishing ? { scale: 0.95 } : {}}
+
+{isPublishing ? (
+<Loader className="w-6 h-6 animate-spin text-orange-500" />
+) : isPublished ? (
+<Play className="w-6 h-6 text-orange-500" />
+) : (
+<Upload className="w-6 h-6 text-orange-500" />
+)}
+</motion.button>
+
+texto
+
+═══════════════════════════════════════════════════════════════
+
+AÇÕES IMEDIATAS:
+
+1. ✅ Mudar isPublished inicialização de TRUE para FALSE
+2. ✅ Reconstruir getAulaData() com validação de dados
+3. ✅ Reconstruir handlePublishAula com try/catch robusto
+4. ✅ Validar que titulo não está vazio ANTES de publicar
+5. ✅ Salvar via aulasStorageService
+6. ✅ Atualizar isPublished para true APENAS após salvamento bem-sucedido
+
+═══════════════════════════════════════════════════════════════
+
+DEPOIS DE FAZER TUDO, TESTE:
+
+1. Abra Aulas → + Criar Aula
+2. Escolha template, preencha Assunto e Contexto
+3. Clique "Gerar aula"
+4. Console deve mostrar:
+   ✅ [PUBLISH_AULA_START]
+   ✅ [PUBLISH_AULA_DATA] com objeto COMPLETO
+   ✅ [PUBLISH_AULA_SAVING]
+   ✅ [PUBLISH_AULA_SAVED]
+   ✅ [PUBLISH_AULA_SUCCESS] isPublished = true
+   ✅ [PUBLISH_AULA_MODAL] Modal aberto
+5. Botão deve mudar de Upload → Play
+6. Aula deve aparecer em "Minhas Aulas"
+7. Recarregar página e aula continua lá
+
+SE TITULO ESTIVER VAZIO:
+- Console mostra [GETAULADATA_VALIDATION] Título vazio
+- Alert diz "Título da aula não pode estar vazio"
+- Botão NÃO fica publicado
+- Aula NÃO é salva
+
+═══════════════════════════════════════════════════════════════
+
+Me mostre:
+1. O código reconstruído de todos os 4 pontos acima
+2. Screenshot do console após clicar no botão de Publicar (com TODOS os logs [PUBLISH_AULA_*])
+3. Confirmação de que:
+   ✅ Botão mudou para Play
+   ✅ Modal de sucesso apareceu
+   ✅ Aula aparece em "Minhas Aulas"
+   ✅ Recarregar página e aula continua lá
