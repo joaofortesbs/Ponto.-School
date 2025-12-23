@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { BookOpen, Zap, Brain, GraduationCap } from 'lucide-react';
+import { BookPlus, MessageSquare, Zap, Code, MoreHorizontal } from 'lucide-react';
 
 interface QuickAccessCardsProps {
   selectedCard: string | null;
@@ -16,32 +16,39 @@ export const QuickAccessCards: React.FC<QuickAccessCardsProps> = ({ selectedCard
   return (
     <div className="quick-access-cards">
       <div
-        className={`quick-access-card ${selectedCard === "Plano ENEM" ? "selected" : ""}`}
-        onClick={() => handleClick("Plano ENEM")}
+        className={`quick-access-card ${selectedCard === "Criar aula" ? "selected" : ""}`}
+        onClick={() => handleClick("Criar aula")}
       >
-        <BookOpen className="quick-access-card-icon" />
-        <span className="quick-access-card-text">Plano ENEM</span>
+        <BookPlus className="quick-access-card-icon" />
+        <span className="quick-access-card-text">Criar aula</span>
       </div>
       <div
-        className={`quick-access-card ${selectedCard === "Aula Turbo" ? "selected" : ""}`}
-        onClick={() => handleClick("Aula Turbo")}
+        className={`quick-access-card ${selectedCard === "Chat School" ? "selected" : ""}`}
+        onClick={() => handleClick("Chat School")}
+      >
+        <MessageSquare className="quick-access-card-icon" />
+        <span className="quick-access-card-text">Chat School</span>
+      </div>
+      <div
+        className={`quick-access-card ${selectedCard === "Flow School" ? "selected" : ""}`}
+        onClick={() => handleClick("Flow School")}
       >
         <Zap className="quick-access-card-icon" />
-        <span className="quick-access-card-text">Aula Turbo</span>
+        <span className="quick-access-card-text">Flow School</span>
       </div>
       <div
-        className={`quick-access-card ${selectedCard === "Novos Gênios" ? "selected" : ""}`}
-        onClick={() => handleClick("Novos Gênios")}
+        className={`quick-access-card ${selectedCard === "Desenvolver" ? "selected" : ""}`}
+        onClick={() => handleClick("Desenvolver")}
       >
-        <Brain className="quick-access-card-icon" />
-        <span className="quick-access-card-text">Novos Gênios</span>
+        <Code className="quick-access-card-icon" />
+        <span className="quick-access-card-text">Desenvolver</span>
       </div>
       <div
-        className={`quick-access-card ${selectedCard === "Escola Viva" ? "selected" : ""}`}
-        onClick={() => handleClick("Escola Viva")}
+        className={`quick-access-card ${selectedCard === "Mais" ? "selected" : ""}`}
+        onClick={() => handleClick("Mais")}
       >
-        <GraduationCap className="quick-access-card-icon" />
-        <span className="quick-access-card-text">Escola Viva</span>
+        <MoreHorizontal className="quick-access-card-icon" />
+        <span className="quick-access-card-text">Mais</span>
       </div>
     </div>
   );
