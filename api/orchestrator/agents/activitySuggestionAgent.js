@@ -94,12 +94,12 @@ async function generateWithGemini(systemPrompt, userPrompt, requestId) {
     throw new Error('Gemini não disponível como fallback - GEMINI_API_KEY não configurada');
   }
   
-  log(LOG_PREFIXES.SUGGEST, `[${requestId}] 🔄 Usando Gemini (${GEMINI_MODEL}-latest) como fallback via REST...`);
+  log(LOG_PREFIXES.SUGGEST, `[${requestId}] 🔄 Usando Gemini (${GEMINI_MODEL}) como fallback via REST...`);
   
   try {
     const fullPrompt = `${systemPrompt}\n\n---\n\nSolicitação do usuário:\n${userPrompt}`;
     
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}-latest:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
