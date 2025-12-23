@@ -14,7 +14,16 @@ The platform features a modern design with glass-morphism effects, blur backgrou
 ### Technical Implementations
 - **Frontend**: React 18 with TypeScript, Vite, Tailwind CSS with shadcn/ui, and Zustand for state management.
 - **Backend**: Express.js handles API endpoints.
-- **AI Integration**: Utilizes Google Gemini API and Groq API (Llama 3.3 70B) for content generation, lesson planning, and AI assistance.
+- **AI Integration**: Utilizes a resilient multi-model fallback system with Groq API (4 models in cascade) and Google Gemini API as final fallback for content generation, lesson planning, and AI assistance.
+    - **Multi-Model Cascade System** (api/groq.js):
+      - Primary: Llama 3.3 70B Versatile
+      - Fallback 1: Llama 3.1 8B Instant (fast, high limit)
+      - Fallback 2: Llama 4 Scout 17B (preview)
+      - Fallback 3: Qwen3 32B (alternative)
+      - Final Fallback: Google Gemini 2.0 Flash via REST API
+    - Automatic retry with exponential backoff per model
+    - Rate limit detection and intelligent model switching
+    - Full observability: logs model used, attempts, provider in metadata
 - **Authentication & User Management**: Supabase handles authentication, user sessions, role-based access, and profile management.
 - **Core Features**:
     - **School Power**: AI-powered lesson planning with 5 dynamic templates (Aula Ativa, Aula Expositiva, Aula Socioemocional, Aula Técnica, Aula SE) that generate custom section structures.

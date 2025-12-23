@@ -20,8 +20,7 @@
  * ====================================================================
  */
 
-import Groq from 'groq-sdk';
-import { withRetryAndTimeout, getGroqClient } from '../groq.js';
+import { generateWithCascade, GROQ_MODELS_CASCADE, GEMINI_MODEL } from '../groq.js';
 import {
   SYSTEM_PROMPT,
   SECTION_DESCRIPTIONS,
@@ -35,10 +34,6 @@ import {
  * CONFIGURAÇÃO E CONSTANTES
  * ====================================================================
  */
-const GROQ_API_KEY = process.env.GROQ_API_KEY?.trim();
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const GEMINI_MODEL = 'gemini-2.0-flash';
 const MAX_RETRIES = 3;
 const TIMEOUT_MS = 60000;
 
@@ -97,103 +92,6 @@ function generateRequestId() {
   return `REQ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-/**
- * ====================================================================
- * GERAÇÃO COM GEMINI (FALLBACK) - VIA REST API
- * ====================================================================
- */
-async function generateWithGemini(systemPrompt, userPrompt, requestId) {
-  if (!GEMINI_API_KEY) {
-    throw new Error('Gemini não disponível como fallback - GEMINI_API_KEY não configurada');
-  }
-  
-  log(LOG_PREFIX.API, `[${requestId}] 🔄 Usando Gemini (${GEMINI_MODEL}) como fallback via REST...`);
-  
-  try {
-    const fullPrompt = `${systemPrompt}\n\n---\n\nSolicitação do usuário:\n${userPrompt}`;
-    
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: fullPrompt }]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.9,
-          maxOutputTokens: 4000
-        }
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Gemini API Error [${response.status}]: ${JSON.stringify(errorData)}`);
-    }
-
-    const data = await response.json();
-    const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!content) {
-      throw new Error('Resposta inválida do Gemini - sem conteúdo');
-    }
-
-    log(LOG_PREFIX.API, `[${requestId}] ✅ Resposta do Gemini recebida com sucesso via REST`);
-    
-    return {
-      choices: [{
-        message: { content },
-        finish_reason: 'stop'
-      }],
-      usage: { total_tokens: Math.ceil(content.length / 4) }
-    };
-  } catch (error) {
-    log(LOG_PREFIX.ERROR, `[${requestId}] ❌ Erro detalhado do Gemini:`, {
-      message: error.message,
-      fullError: error.toString()
-    });
-    throw error;
-  }
-}
-
-/**
- * ====================================================================
- * VERIFICAÇÃO SE ERRO É RATE LIMIT
- * ====================================================================
- * Groq SDK pode expor rate limit em diversos campos:
- * - error.status (padrão HTTP)
- * - error.statusCode (Groq SDK)
- * - error.response?.status (axios-style)
- * - error.code (string code)
- * - error.message (texto descritivo)
- */
-function isRateLimitError(error) {
-  if (!error) return false;
-  
-  // Verificações numéricas de status HTTP 429
-  if (error.status === 429) return true;
-  if (error.statusCode === 429) return true;
-  if (error.response?.status === 429) return true;
-  
-  // Verificações por código de erro
-  if (error.code === 'rate_limit_exceeded') return true;
-  if (error.error?.code === 'rate_limit_exceeded') return true;
-  
-  // Verificações por mensagem de erro
-  const message = error.message || error.error?.message || '';
-  if (message.includes('429')) return true;
-  if (message.toLowerCase().includes('rate_limit')) return true;
-  if (message.toLowerCase().includes('rate limit')) return true;
-  if (message.toLowerCase().includes('too many requests')) return true;
-  
-  return false;
-}
 
 
 /**
@@ -417,55 +315,39 @@ export async function generateLesson(data) {
     
     log(LOG_PREFIX.DEBUG, `[${requestId}] Tamanho do prompt: ${prompt.length} caracteres`);
     
-    log(LOG_PREFIX.API, `[${requestId}] Enviando requisição para Groq API...`);
+    log(LOG_PREFIX.API, `[${requestId}] Enviando requisição com sistema de fallback multi-modelo...`);
+    log(LOG_PREFIX.API, `[${requestId}] Modelos disponíveis: ${GROQ_MODELS_CASCADE.map(m => m.name).join(' → ')} → Gemini`);
     const apiStartTime = Date.now();
     
-    let result;
-    let usedFallback = false;
+    const messages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: prompt }
+    ];
     
-    try {
-      result = await withRetryAndTimeout(async () => {
-        const client = getGroqClient();
-        
-        const response = await client.chat.completions.create({
-          model: GROQ_MODEL,
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user', content: prompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 4000,
-          top_p: 0.9
-        });
-        
-        return response;
-      }, MAX_RETRIES);
-    } catch (groqError) {
-      if (isRateLimitError(groqError)) {
-        log(LOG_PREFIX.API, `[${requestId}] ⚠️ Groq atingiu rate limit. Tentando fallback para Gemini...`);
-        
-        try {
-          result = await generateWithGemini(SYSTEM_PROMPT, prompt, requestId);
-          usedFallback = true;
-          log(LOG_PREFIX.API, `[${requestId}] ✅ Fallback para Gemini bem-sucedido!`);
-        } catch (geminiError) {
-          log(LOG_PREFIX.ERROR, `[${requestId}] ❌ Fallback para Gemini também falhou:`, {
-            message: geminiError.message
-          });
-          throw new Error(`Groq rate limit atingido e Gemini falhou: ${geminiError.message}`);
-        }
-      } else {
-        throw groqError;
-      }
-    }
+    const result = await generateWithCascade(messages, {
+      temperature: 0.7,
+      max_tokens: 4000,
+      top_p: 0.9
+    });
+    
+    const metadata = result._metadata || {};
+    const usedFallback = metadata.usedFallback || false;
+    const aiProvider = metadata.provider || 'groq';
+    const modelUsed = metadata.modelName || metadata.model || 'unknown';
     
     const apiDuration = Date.now() - apiStartTime;
-    log(LOG_PREFIX.TIMING, `[${requestId}] Tempo de resposta da API: ${apiDuration}ms${usedFallback ? ' (via Gemini fallback)' : ''}`);
+    log(LOG_PREFIX.TIMING, `[${requestId}] Tempo de resposta da API: ${apiDuration}ms`);
+    log(LOG_PREFIX.API, `[${requestId}] ✅ Modelo usado: ${modelUsed} (${aiProvider})`);
+    if (metadata.attempts > 1) {
+      log(LOG_PREFIX.API, `[${requestId}] 📊 Tentativas: ${metadata.attempts}, Modelos tentados: ${metadata.totalModelsTriad}`);
+    }
     
     const content = result.choices?.[0]?.message?.content;
     log(LOG_PREFIX.API, `[${requestId}] Resposta recebida:`, {
       tokensUsed: result.usage?.total_tokens,
-      finishReason: result.choices?.[0]?.finish_reason
+      finishReason: result.choices?.[0]?.finish_reason,
+      model: modelUsed,
+      provider: aiProvider
     });
     
     const parsed = parseJsonResponse(content, requestId);
@@ -493,7 +375,10 @@ export async function generateLesson(data) {
         generatedAt: new Date().toISOString(),
         processingTime: Date.now() - startTime,
         usedFallback: usedFallback,
-        aiProvider: usedFallback ? 'gemini' : 'groq'
+        aiProvider: aiProvider,
+        modelUsed: modelUsed,
+        attempts: metadata.attempts || 1,
+        totalModelsTriad: metadata.totalModelsTriad || 1
       }
     };
     

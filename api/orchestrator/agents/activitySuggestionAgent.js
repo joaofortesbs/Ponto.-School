@@ -21,15 +21,10 @@ import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { log, LOG_PREFIXES, logActivitySuggestion } from '../debugLogger.js';
-import { withRetryAndTimeout, getGroqClient } from '../../groq.js';
+import { generateWithCascade, GROQ_MODELS_CASCADE } from '../../groq.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-const GROQ_API_KEY = process.env.GROQ_API_KEY?.trim();
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
-const MODEL = 'llama-3.3-70b-versatile';
-const GEMINI_MODEL = 'gemini-2.0-flash';
 
 let activitiesCatalog = null;
 
@@ -82,66 +77,10 @@ Responda em JSON com o formato:
   }
 }`;
 
-function isRateLimitError(error) {
-  return error?.status === 429 || 
-         error?.message?.includes('rate limit') ||
-         error?.message?.includes('429') ||
-         error?.error?.code === 'rate_limit_exceeded';
-}
-
-async function generateWithGemini(systemPrompt, userPrompt, requestId) {
-  if (!GEMINI_API_KEY) {
-    throw new Error('Gemini não disponível como fallback - GEMINI_API_KEY não configurada');
-  }
-  
-  log(LOG_PREFIXES.SUGGEST, `[${requestId}] 🔄 Usando Gemini (${GEMINI_MODEL}) como fallback via REST...`);
-  
-  try {
-    const fullPrompt = `${systemPrompt}\n\n---\n\nSolicitação do usuário:\n${userPrompt}`;
-    
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: fullPrompt }]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.5,
-          maxOutputTokens: 500,
-          topP: 0.9
-        }
-      })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.text();
-      throw new Error(`Gemini API error (${response.status}): ${errorData}`);
-    }
-    
-    const data = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!content) {
-      throw new Error('Gemini não retornou conteúdo válido');
-    }
-    
-    log(LOG_PREFIXES.SUGGEST, `[${requestId}] ✅ Gemini fallback retornou resposta`);
-    return content;
-    
-  } catch (error) {
-    log(LOG_PREFIXES.ERROR, `[${requestId}] ❌ Erro no Gemini fallback:`, error.message);
-    throw error;
-  }
-}
 
 async function suggestActivityForSection(requestId, section, activitiesLimit = 1) {
   log(LOG_PREFIXES.SUGGEST, `[${requestId}] Analisando seção ${section.sectionId} para sugestões`);
+  log(LOG_PREFIXES.SUGGEST, `[${requestId}] Modelos disponíveis: ${GROQ_MODELS_CASCADE.map(m => m.name).join(' → ')} → Gemini`);
   
   const catalog = loadActivitiesCatalog();
   const enabledActivities = catalog.filter(a => a.enabled !== false);
@@ -150,7 +89,7 @@ async function suggestActivityForSection(requestId, section, activitiesLimit = 1
     `- ID: ${a.id}, Nome: ${a.name}, Descrição: ${a.description}, Tags: ${a.tags?.join(', ') || 'N/A'}`
   ).join('\n');
 
-  const prompt = SUGGESTION_PROMPT
+  const userPrompt = SUGGESTION_PROMPT
     .replace('{sectionName}', section.sectionName)
     .replace('{sectionContent}', section.content.substring(0, 1000))
     .replace('{activitiesCatalog}', catalogStr);
@@ -160,43 +99,37 @@ async function suggestActivityForSection(requestId, section, activitiesLimit = 1
   const startTime = Date.now();
   let responseText = '';
   let usedFallback = false;
+  let aiProvider = 'groq';
+  let modelUsed = 'unknown';
 
   try {
-    const completion = await withRetryAndTimeout(async () => {
-      const client = getGroqClient();
-      return await client.chat.completions.create({
-        model: MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.5,
-        max_tokens: 500
-      });
-    }, 3);
-
-    responseText = completion.choices[0]?.message?.content || '{}';
-    log(LOG_PREFIXES.SUGGEST, `[${requestId}] ✅ Groq retornou sugestão para ${section.sectionId}`);
-
-  } catch (groqError) {
-    log(LOG_PREFIXES.ERROR, `[${requestId}] ⚠️ Groq falhou: ${groqError.message}`);
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ];
     
-    if (isRateLimitError(groqError)) {
-      log(LOG_PREFIXES.SUGGEST, `[${requestId}] 🔄 Tentando fallback para Gemini...`);
-      
-      try {
-        responseText = await generateWithGemini(systemPrompt, prompt, requestId);
-        usedFallback = true;
-        log(LOG_PREFIXES.SUGGEST, `[${requestId}] ✅ Fallback Gemini bem-sucedido para ${section.sectionId}`);
-      } catch (geminiError) {
-        log(LOG_PREFIXES.ERROR, `[${requestId}] ❌ Fallback Gemini também falhou: ${geminiError.message}`);
-        
-        log(LOG_PREFIXES.SUGGEST, `[${requestId}] 📦 Usando atividade padrão (fallback local)`);
-        return createFallbackResult(section, enabledActivities, startTime, 'Fallback local (API indisponível)');
-      }
-    } else {
-      throw groqError;
+    const result = await generateWithCascade(messages, {
+      temperature: 0.5,
+      max_tokens: 500,
+      top_p: 0.9
+    });
+
+    responseText = result.choices[0]?.message?.content || '{}';
+    
+    const metadata = result._metadata || {};
+    usedFallback = metadata.usedFallback || false;
+    aiProvider = metadata.provider || 'groq';
+    modelUsed = metadata.modelName || metadata.model || 'unknown';
+    
+    log(LOG_PREFIXES.SUGGEST, `[${requestId}] ✅ Sugestão recebida via ${modelUsed} (${aiProvider})`);
+    if (metadata.attempts > 1) {
+      log(LOG_PREFIXES.SUGGEST, `[${requestId}] 📊 Tentativas: ${metadata.attempts}, Modelos tentados: ${metadata.totalModelsTriad}`);
     }
+
+  } catch (cascadeError) {
+    log(LOG_PREFIXES.ERROR, `[${requestId}] ❌ Todos os modelos falharam: ${cascadeError.message}`);
+    log(LOG_PREFIXES.SUGGEST, `[${requestId}] 📦 Usando atividade padrão (fallback local)`);
+    return createFallbackResult(section, enabledActivities, startTime, 'Fallback local (todas as APIs falharam)');
   }
 
   const duration = Date.now() - startTime;
@@ -224,7 +157,8 @@ async function suggestActivityForSection(requestId, section, activitiesLimit = 1
     generatedAt: new Date().toISOString(),
     duration,
     usedFallback,
-    aiProvider: usedFallback ? 'gemini' : 'groq'
+    aiProvider,
+    modelUsed
   };
 
   logActivitySuggestion(requestId, section.sectionId, [suggestion.activityId]);
