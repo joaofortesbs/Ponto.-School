@@ -283,12 +283,18 @@ class LessonOrchestrator {
 
     const lessonResult = recoveryResult.result;
 
-    const contentSections = Object.entries(lessonResult.data.secoes || {}).map(([sectionId, text]) => ({
-      sectionId,
-      sectionName: sectionId,
-      content: typeof text === 'string' ? text : text.text || '',
-      generatedAt: new Date().toISOString()
-    }));
+    const contentSections = Object.entries(lessonResult.data.secoes || {}).map(([sectionId, text]) => {
+      const content = typeof text === 'string' ? text : text.text || '';
+      if (!content || content.trim().length === 0) {
+        console.warn(`[ETAPA-2] ⚠️ Seção vazia detectada: ${sectionId}`);
+      }
+      return {
+        sectionId,
+        sectionName: sectionId,
+        content: content.trim(),
+        generatedAt: new Date().toISOString()
+      };
+    });
 
     const lesson = {
       titulo: lessonResult.data.titulo || currentData.assunto,
@@ -297,6 +303,10 @@ class LessonOrchestrator {
       templateName: currentData.templateName,
       secoes: lessonResult.data.secoes || {}
     };
+    
+    console.log(`[ETAPA-2] 📊 Seções geradas:`, Object.keys(lessonResult.data.secoes || {}));
+    console.log(`[ETAPA-2] 📍 Total de seções esperadas:`, currentData.sectionOrder.length);
+    console.log(`[ETAPA-2] ✅ Total de seções geradas:`, Object.keys(lesson.secoes).length);
 
     const step2Data = { 
       ...currentData, 

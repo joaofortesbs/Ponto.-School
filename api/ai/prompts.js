@@ -191,6 +191,12 @@ ${sectionsToGenerate.map(section => `    "${section.id}": "Conteúdo completo e 
 
 IMPORTANTE: O campo "objetivo" DEVE estar também em "secoes" com a chave "objective"!
 
+IMPORTANTE - ESTRUTURA EXATA DO JSON:
+- TODAS as ${sectionOrder.length} seções DEVEM estar no objeto "secoes"
+- Cada seção recebe conteúdo completo e detalhado
+- Nenhuma seção pode estar vazia ou ausente
+- Formato: "id_da_secao": "conteúdo em texto puro (sem markdown)"
+
 IMPORTANTE:
 - Gere conteúdo substancial para cada seção (mínimo 3-4 parágrafos)
 - Use formatação clara com tópicos quando apropriado
