@@ -11,6 +11,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { CSS } from '@dnd-kit/utilities';
 import { Zap, Heart, Briefcase, Monitor, PenTool, Users as UsersIcon, Brain, Compass, Presentation, HandHelping, Rocket } from 'lucide-react';
 import { GeneratedLessonData } from '@/services/lessonGeneratorService';
+import { notifyAllWatchers } from '@/services/publicationWatcher';
 
 // ====================================================================
 // SISTEMA DE MAPEAMENTO DE SEÇÕES DO TEMPLATE
@@ -587,8 +588,9 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
       setIsPublishing(false);
       console.log('[PUBLISH_AULA_SUCCESS] ✅ isPublished = true, isPublishing = false');
 
-      // 7. Disparar evento para atualizar a grade na mesma aba
-      console.log('[PUBLISH_TRIGGER] Disparando evento "aulasPublicadas"');
+      // 7. Notificar observadores globais + disparar evento
+      console.log('[PUBLISH_TRIGGER] Notificando observadores + evento');
+      notifyAllWatchers();
       window.dispatchEvent(new Event('aulasPublicadas'));
 
       // 8. Mostrar modal

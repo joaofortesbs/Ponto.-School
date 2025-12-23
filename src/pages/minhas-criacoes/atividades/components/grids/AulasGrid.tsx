@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, BookOpen, Clock, MoreVertical, Eye, Edit2, Trash2, Share2, Loader2, ChevronDown, Sparkles } from 'lucide-react';
 import { aulasStorageService, AulaSalva } from '@/services/aulasStorageService';
+import { aulasIndexedDBService } from '@/services/aulasIndexedDBService';
+import { onAulaPublished } from '@/services/publicationWatcher';
 
 interface AulasGridProps {
   searchTerm: string;
@@ -35,47 +37,111 @@ const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm, onCreateAula, onCount
   const [visibleRows, setVisibleRows] = useState(INITIAL_ROWS);
   const [shouldAnimate, setShouldAnimate] = useState(false);
 
-  const carregarAulas = () => {
-    console.log('📚 CARREGANDO AULAS DO LOCALSTORAGE');
-    setLoading(true);
-
+  // FUNÇÃO: Carregar com retry automático
+  const carregarAulasComRetry = useCallback(async (tentativa = 1, maxTentativas = 3) => {
     try {
-      const aulasCarregadas = aulasStorageService.listarAulas();
-      setAulas(aulasCarregadas);
-      onCountChange?.(aulasCarregadas.length);
-    } catch (err) {
-      console.error('❌ Erro ao carregar aulas:', err);
+      setLoading(true);
+      console.log(`[AULAS_GRID_LOAD] 🔄 Tentativa ${tentativa}/${maxTentativas}`);
+
+      // Tenta localStorage
+      let aulasCarregadas = aulasStorageService.listarAulas();
+      console.log('[AULAS_GRID] 📦 localStorage retornou:', aulasCarregadas.length, 'aulas');
+      
+      // Se vazio, tenta IndexedDB
+      if (!aulasCarregadas || aulasCarregadas.length === 0) {
+        console.log('[AULAS_GRID] 💾 localStorage vazio, tentando IndexedDB...');
+        aulasCarregadas = await aulasIndexedDBService.listarAulasIndexedDB();
+        console.log('[AULAS_GRID] 📦 IndexedDB retornou:', aulasCarregadas.length, 'aulas');
+      }
+      
+      // Se AINDA vazio e temos mais tentativas, aguarda e tenta novamente
+      if ((!aulasCarregadas || aulasCarregadas.length === 0) && tentativa < maxTentativas) {
+        console.log(`[AULAS_GRID] ⏳ Vazio na tentativa ${tentativa}, aguardando 500ms...`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return carregarAulasComRetry(tentativa + 1, maxTentativas);
+      }
+      
+      setAulas(aulasCarregadas || []);
+      onCountChange?.(aulasCarregadas?.length || 0);
+      console.log('[AULAS_GRID_FINAL] ✅ Aulas renderizadas:', aulasCarregadas?.length);
+      setLoading(false);
+      
+    } catch (error) {
+      console.error('[AULAS_GRID_ERROR]', error);
       setAulas([]);
       onCountChange?.(0);
-    } finally {
       setLoading(false);
     }
+  }, [onCountChange]);
+
+  // Debounce helper
+  const debounce = (fn: () => void, delay: number) => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(fn, delay);
+    };
   };
 
+  const carregarAulasDebounced = useCallback(
+    debounce(() => {
+      console.log('[AULAS_GRID_DEBOUNCE] 🚀 Carregando (debounced)');
+      carregarAulasComRetry();
+    }, 300),
+    [carregarAulasComRetry]
+  );
+
+  // MOUNT: Carrega aulas
   useEffect(() => {
-    carregarAulas();
-    
+    carregarAulasComRetry();
+  }, [carregarAulasComRetry]);
+
+  // LISTENER #1: Event listener para publicações na mesma aba
+  useEffect(() => {
+    const handleAulasPublicadas = () => {
+      console.log('[AULAS_GRID_LISTENER_1] 📡 Evento "aulasPublicadas" recebido!');
+      carregarAulasDebounced();
+    };
+
+    window.addEventListener('aulasPublicadas', handleAulasPublicadas);
+    return () => window.removeEventListener('aulasPublicadas', handleAulasPublicadas);
+  }, [carregarAulasDebounced]);
+
+  // LISTENER #2: Listener de armazenamento para mudanças de aba/janela
+  useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'ponto_school_aulas_salvas') {
-        console.log('📚 [AULAS_GRID] Storage event detectado, recarregando...');
-        carregarAulas();
+        console.log('[AULAS_GRID_LISTENER_2] 💾 localStorage mudou!');
+        carregarAulasDebounced();
       }
     };
-    
-    // Listener para evento customizado de publicação na mesma aba
-    const handleAulasPublicadas = () => {
-      console.log('📚 [AULAS_GRID] Evento "aulasPublicadas" detectado, recarregando...');
-      carregarAulas();
-    };
-    
+
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('aulasPublicadas', handleAulasPublicadas);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('aulasPublicadas', handleAulasPublicadas);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [carregarAulasDebounced]);
+
+  // LISTENER #3: Watcher global de publicações
+  useEffect(() => {
+    const unsubscribe = onAulaPublished(() => {
+      console.log('[AULAS_GRID_LISTENER_3] 🎯 Watcher global: aula foi publicada!');
+      carregarAulasDebounced();
+    });
+
+    return unsubscribe;
+  }, [carregarAulasDebounced]);
+
+  // LISTENER #4: Visibilidade - quando usuário volta para aba
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('[AULAS_GRID_LISTENER_4] 👁️ Aba ficou visível, recarregando');
+        carregarAulasDebounced();
+      }
     };
-  }, []);
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [carregarAulasDebounced]);
 
   useEffect(() => {
     if (!loading && aulas.length > 0 && !hasAnimatedRef.current) {
@@ -132,7 +198,7 @@ const AulasGrid: React.FC<AulasGridProps> = ({ searchTerm, onCreateAula, onCount
 
     try {
       aulasStorageService.excluirAula(aula.id);
-      carregarAulas();
+      carregarAulasComRetry();
     } catch (err) {
       alert('Erro ao excluir aula. Tente novamente.');
     }

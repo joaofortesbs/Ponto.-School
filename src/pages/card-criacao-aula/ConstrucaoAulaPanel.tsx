@@ -34,43 +34,60 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
 }) => {
   const contentRef = useRef<AulaResultadoContentRef>(null);
 
-  const handleSaveAndClose = useCallback(() => {
-    console.log('💾 [SAVE_AULA] Iniciando salvamento/fechamento da aula...');
+  const handleSaveAndClose = useCallback(async () => {
+    console.log('💾 [CLOSE_BUTTON] Clicado, verificando se foi publicada...');
     
     // Verificar se aula foi publicada
     const foiPublicada = contentRef.current?.isPublished?.() ?? false;
-    console.log('[CONSTRUCAO_AULA] Aula foi publicada?', foiPublicada);
+    console.log('[CLOSE_BUTTON] Aula foi publicada?', foiPublicada);
     
-    if (contentRef.current && !foiPublicada) {
-      const aulaData = contentRef.current.getAulaData();
-      console.log('💾 [SAVE_AULA] Dados obtidos:', aulaData);
+    if (foiPublicada) {
+      console.log('[CLOSE_BUTTON] ✅ Aula FOI publicada, iniciando sincronização robusta...');
       
-      if (aulaData && aulaData.titulo && aulaData.titulo.trim() !== '') {
-        try {
-          aulasStorageService.salvarAula({
-            titulo: aulaData.titulo,
-            objetivo: aulaData.objetivo || '',
-            templateId: selectedTemplate?.id || 'unknown',
-            templateName: selectedTemplate?.name || 'Template',
-            turmaName: turmaName,
-            turmaImage: turmaImage,
-            duracao: aulaData.duracao || '60 min',
-            status: 'rascunho',
-            secoes: aulaData.secoes || {},
-            sectionOrder: aulaData.sectionOrder || []
-          });
-          
-          console.log('💾 [SAVE_AULA] ✅ Aula salva com sucesso!');
-          onSave?.();
-        } catch (error) {
-          console.error('💾 [SAVE_AULA] ❌ Erro ao salvar aula:', error);
+      // DUPLA VALIDAÇÃO: Dispara evento 2x com timing para garantir recebimento
+      window.dispatchEvent(new Event('aulasPublicadas'));
+      console.log('[CLOSE_BUTTON] 📤 Evento #1 disparado');
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      window.dispatchEvent(new Event('aulasPublicadas'));
+      console.log('[CLOSE_BUTTON] 📤 Evento #2 disparado (confirma)');
+      
+      onClose(foiPublicada);
+    } else {
+      console.log('[CLOSE_BUTTON] ⚠️ Aula NÃO foi publicada, salvando como rascunho...');
+      
+      if (contentRef.current) {
+        const aulaData = contentRef.current.getAulaData();
+        console.log('💾 [SAVE_AULA] Dados obtidos:', aulaData);
+        
+        if (aulaData && aulaData.titulo && aulaData.titulo.trim() !== '') {
+          try {
+            aulasStorageService.salvarAula({
+              titulo: aulaData.titulo,
+              objetivo: aulaData.objetivo || '',
+              templateId: selectedTemplate?.id || 'unknown',
+              templateName: selectedTemplate?.name || 'Template',
+              turmaName: turmaName,
+              turmaImage: turmaImage,
+              duracao: aulaData.duracao || '60 min',
+              status: 'rascunho',
+              secoes: aulaData.secoes || {},
+              sectionOrder: aulaData.sectionOrder || []
+            });
+            
+            console.log('💾 [SAVE_AULA] ✅ Aula salva com sucesso!');
+            onSave?.();
+          } catch (error) {
+            console.error('💾 [SAVE_AULA] ❌ Erro ao salvar aula:', error);
+          }
+        } else {
+          console.log('💾 [SAVE_AULA] ⚠️ Aula sem título - não salvando');
         }
-      } else {
-        console.log('💾 [SAVE_AULA] ⚠️ Aula sem título - não salvando');
       }
+      
+      onClose(foiPublicada);
     }
-    
-    onClose(foiPublicada);
   }, [selectedTemplate, turmaName, turmaImage, onClose, onSave]);
 
   return (
