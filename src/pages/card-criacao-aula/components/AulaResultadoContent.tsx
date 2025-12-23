@@ -8,6 +8,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Zap, Heart, Briefcase, Monitor, PenTool, Users as UsersIcon, Brain, Compass, Presentation, HandHelping, Rocket } from 'lucide-react';
+import { GeneratedLessonData } from '@/services/lessonGeneratorService';
 
 // ====================================================================
 // SISTEMA DE MAPEAMENTO DE SEÇÕES DO TEMPLATE
@@ -101,6 +102,7 @@ interface AulaResultadoContentProps {
   turmaImage?: string | null;
   turmaName?: string | null;
   createdAt?: Date;
+  generatedData?: GeneratedLessonData | null;
 }
 
 type ThemeMode = 'orange' | 'purple';
@@ -273,7 +275,8 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   selectedTemplate = null,
   turmaImage = null,
   turmaName = null,
-  createdAt = new Date()
+  createdAt = new Date(),
+  generatedData = null
 }) => {
   // Load saved draft on component mount (browser-safe)
   const savedDraft = useMemo(() => loadSavedDraft(aulaName), [aulaName]);
@@ -387,6 +390,80 @@ const AulaResultadoContent: React.FC<AulaResultadoContentProps> = ({
   const [isEditingAulaName, setIsEditingAulaName] = useState(false);
   const [editingAulaName, setEditingAulaName] = useState(aulaName);
   const [currentAulaName, setCurrentAulaName] = useState(aulaName);
+
+  // ====================================================================
+  // APLICAÇÃO DOS DADOS GERADOS PELA IA
+  // ====================================================================
+  // Este efeito aplica os dados gerados pela IA nos estados corretos
+  // quando o componente recebe dados do gerador de aulas.
+  // ====================================================================
+  useEffect(() => {
+    if (!generatedData) {
+      console.log('🤖 [AI_DATA] Nenhum dado gerado recebido');
+      return;
+    }
+    
+    console.log('🤖 [AI_DATA] ========================================');
+    console.log('🤖 [AI_DATA] APLICANDO DADOS GERADOS PELA IA');
+    console.log('🤖 [AI_DATA] ========================================');
+    console.log('🤖 [AI_DATA] Título:', generatedData.titulo);
+    console.log('🤖 [AI_DATA] Objetivo:', generatedData.objetivo?.substring(0, 100) + '...');
+    console.log('🤖 [AI_DATA] Seções recebidas:', Object.keys(generatedData.secoes || {}));
+    
+    // Atualiza o nome da aula (título)
+    if (generatedData.titulo) {
+      console.log('🤖 [AI_DATA] Aplicando título:', generatedData.titulo);
+      setCurrentAulaName(generatedData.titulo);
+      setEditingAulaName(generatedData.titulo);
+    }
+    
+    // Atualiza o objetivo
+    if (generatedData.objetivo) {
+      console.log('🤖 [AI_DATA] Aplicando objetivo (primeiros 100 chars):', generatedData.objetivo.substring(0, 100));
+      setObjectiveText(generatedData.objetivo);
+    }
+    
+    // Atualiza as seções dinâmicas
+    if (generatedData.secoes && Object.keys(generatedData.secoes).length > 0) {
+      console.log('🤖 [AI_DATA] Aplicando seções dinâmicas...');
+      
+      setDynamicSections(prev => {
+        const updated = { ...prev };
+        
+        Object.entries(generatedData.secoes).forEach(([sectionId, content]) => {
+          if (sectionId === 'objective') {
+            // Objetivo já foi tratado acima
+            return;
+          }
+          
+          if (updated[sectionId]) {
+            console.log(`🤖 [AI_DATA] Seção "${sectionId}" atualizada: ${(content as string).substring(0, 50)}...`);
+            updated[sectionId] = {
+              ...updated[sectionId],
+              text: content as string
+            };
+          } else {
+            // Se a seção não existe, cria uma nova
+            console.log(`🤖 [AI_DATA] Seção "${sectionId}" criada: ${(content as string).substring(0, 50)}...`);
+            updated[sectionId] = {
+              id: sectionId,
+              text: content as string,
+              isExpanded: true,
+              isVisible: true,
+              time: '10 min'
+            };
+          }
+        });
+        
+        console.log('🤖 [AI_DATA] Seções dinâmicas atualizadas:', Object.keys(updated));
+        return updated;
+      });
+    }
+    
+    console.log('🤖 [AI_DATA] ========================================');
+    console.log('🤖 [AI_DATA] DADOS APLICADOS COM SUCESSO');
+    console.log('🤖 [AI_DATA] ========================================');
+  }, [generatedData]);
 
   // Estado de visibilidade para seção Objetivo (única seção fixa)
   const [isObjectiveVisible, setIsObjectiveVisible] = useState(savedDraft?.sectionVisible?.objective ?? true);

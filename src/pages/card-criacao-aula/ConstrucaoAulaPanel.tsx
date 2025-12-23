@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import AulaResultadoContent from './components/AulaResultadoContent';
 import { Template } from './components/TemplateDropdown';
+import { GeneratedLessonData } from '@/services/lessonGeneratorService';
 
 interface ConstrucaoAulaPanelProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface ConstrucaoAulaPanelProps {
   selectedTemplate?: Template | null;
   turmaImage?: string | null;
   turmaName?: string | null;
+  generatedData?: GeneratedLessonData | null;
 }
 
 const PANEL_PADDING_HORIZONTAL = 13;
@@ -24,7 +26,8 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
   aulaName = 'Minha Nova Aula',
   selectedTemplate = null,
   turmaImage = null,
-  turmaName = null
+  turmaName = null,
+  generatedData = null
 }) => {
   return (
     <AnimatePresence>
@@ -64,6 +67,7 @@ const ConstrucaoAulaPanel: React.FC<ConstrucaoAulaPanelProps> = ({
               turmaImage={turmaImage}
               turmaName={turmaName}
               createdAt={new Date()}
+              generatedData={generatedData}
             />
           </div>
         </motion.div>

@@ -9,6 +9,7 @@ import CalendarioSchoolPanel from '@/pages/calendario-school/card-modal/interfac
 import CriacaoAulaPanel from '@/pages/card-criacao-aula/interface';
 import ConstrucaoAulaPanel from '@/pages/card-criacao-aula/ConstrucaoAulaPanel';
 import { Template } from '@/pages/card-criacao-aula/components/TemplateDropdown';
+import { GeneratedLessonData } from '@/services/lessonGeneratorService';
 
 export type GridType = 'atividades' | 'aulas' | 'colecoes';
 
@@ -20,6 +21,7 @@ const AtividadesInterface: React.FC = () => {
   const [isPersonalizacaoModalOpen, setIsPersonalizacaoModalOpen] = useState(false);
   const [isConstrucaoAulaOpen, setIsConstrucaoAulaOpen] = useState(false);
   const [selectedAulaTemplate, setSelectedAulaTemplate] = useState<Template | null>(null);
+  const [generatedLessonData, setGeneratedLessonData] = useState<GeneratedLessonData | null>(null);
 
   const handleAtividadesCountChange = (count: number) => {
     setCounts(prev => ({ ...prev, atividades: count }));
@@ -45,9 +47,20 @@ const AtividadesInterface: React.FC = () => {
     setIsPersonalizacaoModalOpen(false);
   };
 
-  const handleGerarAula = (template: Template | null) => {
-    console.log('🎯 Gerando aula - fechando modal e abrindo card de construção', template);
+  const handleGerarAula = (template: Template | null, generatedData?: GeneratedLessonData) => {
+    console.log('🎯 [ATIVIDADES] ========================================');
+    console.log('🎯 [ATIVIDADES] RECEBENDO DADOS DA GERAÇÃO DE AULA');
+    console.log('🎯 [ATIVIDADES] Template:', template?.name || 'Nenhum');
+    console.log('🎯 [ATIVIDADES] Dados gerados recebidos:', generatedData ? 'SIM' : 'NÃO');
+    if (generatedData) {
+      console.log('🎯 [ATIVIDADES] Título gerado:', generatedData.titulo);
+      console.log('🎯 [ATIVIDADES] Objetivo gerado:', generatedData.objetivo?.substring(0, 100) + '...');
+      console.log('🎯 [ATIVIDADES] Seções geradas:', Object.keys(generatedData.secoes || {}));
+    }
+    console.log('🎯 [ATIVIDADES] ========================================');
+    
     setSelectedAulaTemplate(template);
+    setGeneratedLessonData(generatedData || null);
     setIsPersonalizacaoModalOpen(false);
     setIsConstrucaoAulaOpen(true);
   };
@@ -153,8 +166,9 @@ const AtividadesInterface: React.FC = () => {
       <ConstrucaoAulaPanel 
         isOpen={isConstrucaoAulaOpen}
         onClose={handleCloseConstrucaoAula}
-        aulaName="Minha Nova Aula"
+        aulaName={generatedLessonData?.titulo || "Minha Nova Aula"}
         selectedTemplate={selectedAulaTemplate}
+        generatedData={generatedLessonData}
       />
     </div>
   );

@@ -180,17 +180,55 @@ function parseJsonResponse(content, requestId) {
       jsonStr = jsonMatch[0];
     }
     
+    // Sanitização robusta: substitui quebras de linha dentro de strings por espaço
+    // Isso evita erros de "Bad control character in string literal"
+    jsonStr = jsonStr.replace(/:\s*"([^"]*(?:\\.[^"]*)*)"/g, (match, content) => {
+      const sanitized = content
+        .replace(/\n/g, ' ')
+        .replace(/\r/g, ' ')
+        .replace(/\t/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return `: "${sanitized}"`;
+    });
+    
     const parsed = JSON.parse(jsonStr);
     log(LOG_PREFIX.PARSING, `[${requestId}] ✅ JSON parseado com sucesso`);
     log(LOG_PREFIX.DEBUG, `[${requestId}] Campos encontrados:`, Object.keys(parsed));
     
     return parsed;
   } catch (err) {
-    log(LOG_PREFIX.ERROR, `[${requestId}] Erro ao parsear JSON:`, {
-      error: err.message,
-      contentPreview: content?.substring(0, 500)
+    log(LOG_PREFIX.ERROR, `[${requestId}] Erro ao parsear JSON (tentativa 1):`, {
+      error: err.message
     });
-    return null;
+    
+    // Tentativa 2: limpeza mais agressiva
+    try {
+      let jsonStr = content
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+      
+      const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[0];
+      }
+      
+      // Remove todos os caracteres de controle exceto espaço
+      jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, ' ');
+      
+      const parsed = JSON.parse(jsonStr);
+      log(LOG_PREFIX.PARSING, `[${requestId}] ✅ JSON parseado com sucesso (tentativa 2 - limpeza agressiva)`);
+      log(LOG_PREFIX.DEBUG, `[${requestId}] Campos encontrados:`, Object.keys(parsed));
+      
+      return parsed;
+    } catch (err2) {
+      log(LOG_PREFIX.ERROR, `[${requestId}] Erro ao parsear JSON (tentativa 2):`, {
+        error: err2.message,
+        contentPreview: content?.substring(0, 500)
+      });
+      return null;
+    }
   }
 }
 

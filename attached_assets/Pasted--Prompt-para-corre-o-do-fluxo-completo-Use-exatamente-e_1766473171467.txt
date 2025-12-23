@@ -1,0 +1,143 @@
+​
+
+Prompt para correção do fluxo completo
+Use exatamente este prompt para o agente no Replit:
+
+Você precisa corrigir o fluxo COMPLETO de geração de aula com IA, do back-end até os estados de front-end.
+
+Situação atual (BUG):
+
+No modal "Personalizar sua aula" , o usuário:
+
+Escolhe um modelo.
+
+Preenche Assunto e Contexto .
+
+Clica em "Gerar aula" .
+
+A animação de carregamento aparece, a aula é criada, o cartão é renderizado, mas todos os campos da aula parecem vazios (título, objetivo, bolsos etc.).
+
+Ou seja: a IA aparentemente responde, mas o conteúdo não está sendo aplicado nos estados que alimentam os cartões da aula.
+​
+
+Seu objetivo:
+Garantir que a resposta da IA ​​seja mapeada e aplicada corretamente em todos os campos da interface de criação de aula, de acordo com o template selecionado.
+
+Entenda o fluxo atual (obrigatório):
+Leia com atenção, sem pular etapas:
+
+api/ai/prompts.js
+
+api/ai/lesson-generator.js
+
+api/server.js(rotas de rode de documents)
+
+src/services/lessonGeneratorService.ts
+
+src/pages/card-criacao-aula/interface.tsx
+
+src/pages/card-criacao-aula/components/AulaResultadoContent.tsx
+
+src/pages/card-criacao-aula/components/TemplateDropdown.tsx
+
+Em seguida, responda explicitamente:
+
+Qual é a forma exata do JSON que o back-end retorna na rota de geração de aula (exemplo de objeto completo).
+
+Quais estados no front-end são responsáveis ​​por:
+
+título/nome da all;
+
+objetivo da aluna;
+
+conteúdo de cada bloco de seção;
+
+tempos, visibilidade, expandido/contraído (se existirem);
+
+dynamicSections// sectionTexts.sectionConfigs​
+​
+
+Corrija o mapeamento da resposta da IA ​​→ estados da interface:
+
+Garanta que o serviço lessonGeneratorService.ts:
+
+Obtenha templateSelecionado, assunto, contextoe, se necessário, a lista das garrafas ativas ( sectionOrderou equivalente).
+
+Retorne um objeto digitado com todas as informações possíveis para preencher a aula.
+
+Não interface.tsx, ao receber uma resposta da IA:
+
+Atualizar:
+
+o estado do título da aula ;
+
+o estado do objetivo ;
+
+os estados de cada seção ( dynamicSections, sectionTextsou estrutura equivalente).
+
+Não basta salvar a resposta crua; é obrigatório definir os estados exatos que alimentam os cartões .
+
+Se o back-end precisar retornar um formato genérico (ex.: sections: { id, title, content }[]), escreva a função de conversão que transforma isso na estrutura que a interface realmente usa ( dynamicSections, sectionTexts, etc.).
+​
+
+Adicione logs cirúrgicos para localizar o problema:
+Adicione console.logos seguintes pontos e deixe-os ativos por enquanto:
+
+No back-end ( lesson-generator.js), imediatamente antes do res.json(...), logando o objeto COMPLETO que está sendo retornado para o front-end.
+
+No serviço lessonGeneratorService.ts, logando:
+
+uma URL chamada;
+
+o corpo enviado;
+
+a resposta recebida da API.
+
+Não interface.tsx, logo após a chamada da função que consome lessonGeneratorService:
+
+logar o objeto de resposta;
+
+logar o estado atualizado da aula (título, objetivo, e uma amostra de 2–3 frascos).
+
+Garantir o preenchimento visual dos cartões:
+
+Verifique AulaResultadoContent.tsx de onde vêm exatamente os textos que aparecem dentro dos cards (por exemplo: sectionConfigs[sectionId].text, sectionTexts[sectionId]ou algo similar).
+
+Certifique-se de que os estados que você atualiza interface.tsxsão os mesmos que AulaResultadoContent.tsxvocê usa para renderizar.
+
+Se houver divergência (ex.: salvar numa chave sectionsmas renderizar a partir de dynamicSections), unifique a fonte de verdade.
+
+Critérios de acessibilidade (só marque como concluído se TODOS forem verdadeiros):
+
+Após clicar em "Gerar aula" :
+
+O título da aula aparece preenchido com o valor gerado pela IA.
+
+O cartão de Objetivos da aula aparece com texto gerado.
+
+Cada cartão de seção do template selecionado aparece com texto gerado, consistentemente com o nome/propósito da seção.
+
+Não existe cartão em branco quando a IA retorna conteúdo válido.
+
+Os logs mostram claramente o mesmo conteúdo:
+
+sendo retornado pelo back-end;
+
+Sem interface;
+
+sendo aplicados nos estados que alimentam os cartões.
+
+Nenhum erro silencioso no console (frontal) ou terminal (traseiro) relacionado à geração de aula.
+
+Como responder:
+
+Primeiro, descreva onde estava o problema (ex.: resposta da IA ​​não mapeada, estados errados, chave incorreta, etc.).
+
+Depois, mostre trechos de código antes e depois das partes que foram corrigidas (rotas, serviço, interface, mapeamento para os cartões).
+
+Por fim, descreva um exemplo completo de resposta da IA ​​e como ela preenche título, objetivo e duas especificações específicas da interface.
+
+Dica extra para garantir que ele não “minta” sucesso
+Se depois disso ainda vier dizendo “está funcionando” e continue vazio, peça óbvia:
+
+Cole o JSON exato retornado pela rota de geração de aula no último teste e o estado final da aula (objeto de draft/state) logo após o setState, para comparar campo a campo.
