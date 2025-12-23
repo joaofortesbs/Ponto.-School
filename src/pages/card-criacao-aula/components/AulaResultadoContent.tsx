@@ -503,6 +503,7 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
 
   // Handler de publicação da aula
   const handlePublishAula = useCallback(async () => {
+    console.log('[PUBLISH_AULA] clique detectado');
     console.log('📤 [PUBLISH_AULA] Iniciando publicação da aula...');
     setIsPublishing(true);
     
@@ -520,13 +521,9 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
         sectionOrder
       };
 
-      console.log('📤 [PUBLISH_AULA] Dados coletados:', {
-        titulo: aulaData.titulo,
-        objetivo: aulaData.objetivo?.substring(0, 50) + '...',
-        secoesCount: Object.keys(aulaData.secoes).length
-      });
+      console.log('[PUBLISH_AULA] salvando aula, objeto completo:', aulaData);
 
-      aulasStorageService.salvarAula({
+      const aulaSalva = aulasStorageService.salvarAula({
         titulo: aulaData.titulo,
         objetivo: aulaData.objetivo || '',
         templateId: selectedTemplate?.id || 'unknown',
@@ -539,8 +536,11 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
         sectionOrder: aulaData.sectionOrder
       });
 
+      console.log('[PUBLISH_AULA] aulas salvas, listando:', aulasStorageService.listarAulas());
+
       console.log('📤 [PUBLISH_AULA] ✅ Aula publicada com sucesso!');
       setIsPublished(true);
+      console.log('[PUBLISH_AULA] modal aberto');
       setShowPublishModal(true);
       
       setTimeout(() => {
@@ -2558,14 +2558,17 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
               </AnimatePresence>
             </motion.div>
 
-            <motion.div
+            <motion.button
+              type="button"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5, duration: 0.3 }}
-              whileHover={!isPublished ? { scale: 1.05 } : {}}
-              whileTap={!isPublished ? { scale: 0.95 } : {}}
-              onClick={!isPublished && !isPublishing ? handlePublishAula : undefined}
-              className="flex-shrink-0"
+              whileHover={!isPublished && !isPublishing ? { scale: 1.05 } : {}}
+              whileTap={!isPublished && !isPublishing ? { scale: 0.95 } : {}}
+              onClick={handlePublishAula}
+              onMouseDown={() => console.log('[PUBLISH_AULA] mouse down')}
+              disabled={isPublished || isPublishing}
+              className="flex-shrink-0 border-0 bg-transparent p-0"
               style={{ cursor: isPublished || isPublishing ? 'default' : 'pointer' }}
               title={isPublished ? "Aula publicada" : "Publicar aula"}
             >
@@ -2598,7 +2601,7 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
                   <PublishIcon className="w-5 h-5 text-white" />
                 )}
               </motion.div>
-            </motion.div>
+            </motion.button>
           </div>
         </motion.div>
       </div>
