@@ -1,0 +1,171 @@
+
+a IA já está gerando e preenchendo corretamente os cartões da aula;
+
+você quer transformar o botão Play em botão Publicar , e esse clique deve disparar o salvamento completo da aula no localStorage e só depois virar Play.
+​
+
+Prompt revisado e completo para o agente
+Use este prompt integralmente no campo “Perguntar ao Agente”:
+
+Você é responsável por encerrar o fluxo de publicação e salvamento de aulas no Ponto.School.
+
+Contexto atual da tela:
+
+O usuário entra no modal “Personalizar sua aula” , escolhe um modelo, preenche os campos e clica em “Gerar aula” .
+
+A IA já está gerando corretamente todos os textos dos cartões de blocos de rótulos dentro da aula (título, objetivo, frascos, etc.).
+
+Existe um cartão de resumo da aula que atualmente tem um botão circular de Play .
+​
+
+Você já criou um sistema de salvamento automático com:
+
+aulasStorageService.ts
+
+apenas emConstrucaoAulaPanel.tsx
+
+integração com a nota de aulas (AulasGrid) para mostrar aulas salvas.
+​
+
+Porém:
+
+A aula ainda não está sendo salva corretamente (não aparece como deveria na nota de Aulas).
+
+E a experiência de publicação/salvamento vai mudar.
+
+Novo comportamento desejado (regra de produto):
+
+O botão circular que hoje é um Play dentro do cartão de resumo da aula passa a ser, por padrão, um botão de “Publicar aula” (ícone de publicar).
+
+Quando o usuário clicar em “Publicar aula” :
+
+Deve abrir uma central modal informando algo como:
+
+"Sua aula foi publicada com sucesso! Ela já está disponível na sua nota de aulas."
+
+Sem back-end/front-end, esse clique deve disparar o fluxo de salvamento completo da aula .
+
+Após a publicação bem-sucedida, o botão deixa de ser “Publicar” e passa a ser um botão de Play , diminuindo que a aula já está publicada/pronta para uso.
+
+O ato de publicar é uma ativação do sistema de salvamento permanente da aula no localStorage (ou camada de persistência definida), de forma robusta e imune à perda de dados por atualização de página.
+
+Requisitos técnicos para o salvamento da aula:
+
+Quando o usuário clica em “Publicar aula” , o sistema deve:
+
+Mapeie absolutamente todos os dados relevantes da aula atual , incluindo:
+
+id da aula (ou gerar um id único se ainda não existir);
+
+título/nome da all;
+
+modelo utilizado;
+
+dados/hora de criação/publicação;
+
+todos os blocos/seções com seus conteúdos (textos, tempos, bandeiras de visibilidade/expandido, etc.);
+
+qualquer metadado necessário para reconstruir essa aula na interface depois.
+
+Montar um objeto de aula publicado bem definido e tipado (ex.: PublishedAula), e salvar esse objeto via aulasStorageService.ts(ou outro serviço único de armazenamento).
+
+Atualizar a nota de Aulas para que essa nova aula seja aplicada como um cartão retangular, no mesmo estilo visual das atividades já salvas na nota de Atividades, incluindo:
+
+título da todas;
+
+nome do modelo;
+
+dados de criação/publicação;
+
+menu com opções: Visualizar, Editar, Compartilhar, Excluir.
+​
+
+Arquivos-chave que você DEVE analisar e ajustar (sem pular):
+
+src/pages/card-criacao-aula/ConstrucaoAulaPanel.tsx
+
+src/pages/card-criacao-aula/components/AulaResultadoContent.tsx
+
+src/services/aulasStorageService.ts
+
+src/pages/minhas-criacoes/aulas/components/grids/AulasGrid.tsx(ou arquivo equivalente que mostra a nota das aulas)
+
+Qualquer componente que renderize o cartão de resumo da aula e o botão Play atual.
+​
+
+Passos que você deve implementar:
+
+Refatorar o botão Play para fluxo de publicação:
+
+Localize o componente do cartão de resumo da aula e o botão circular de Play.
+
+Transformar o estado inicial desse botão em “Publicar aula” (ícone de publicar).
+
+Crie um estado/flag (ex.: isPublished) que, quando verdadeiro, altere o botão para o ícone de Play.
+
+Expor uma função confiável para coletar todos os dados da aula:
+
+Em AulaResultadoContent.tsx, garanta que existe um método acessível via ref(ex.: getAulaData()via forwardRef+ useImperativeHandle) que retorna um objeto completo da aula atual pronto para salvar .
+
+Esse objeto deve conter tudo o que é necessário para reconstruir a aula depois.
+
+Implementar o fluxo de publicação em ConstrucaoAulaPanel.tsx:
+
+No handler de clique do botão “Publicar aula”:
+
+Chamar getAulaData()via ref.
+
+Montar o objeto PublishedAulacom os metadados adicionais (id, dados, etc.).
+
+Cham ar o serviço aulasStorageService.saveAula(publishedAula)(ou função equivalente, podendo ajustar a API do serviço se necessário).
+
+Ao finalizar o salvamento, abra o modal de confirmação de publicação .
+
+Atualizar isPublishedpara true, para que o botão mude para Play.
+
+Atualizar a nota das Aulas para usar o novo serviço:
+
+Garantir que a nota das Aulas (AulasGrid) carregue as aulas salvas com o mesmo serviço ( aulasStorageService.getAulas()).
+
+Garantir que, após publicar uma aula e voltar para a página de criações, o cartão recém-publicado corretamente.
+
+Logs mínimos para validação:
+
+Logar o objeto retornado getAulaData()no momento da publicação.
+
+Logar o objeto PublishedAulaantes de salvá-lo.
+
+Logar a lista de aulas retornadas pela aulasStorageService.getAulas()montagem da série.
+
+Critérios de acessibilidade (não marque como concluído se qualquer item falhar):
+
+Ao clicar em “Publicar aula” :
+
+É aberto um modal confirmando a publicação da aula.
+
+O botão muda de “Publicar” para Play e permanece assim para essa aula.
+
+A aula aparece na série de Aulas como um cartão retangular, com título, modelo, dados e menu de ações.
+
+Recarregar a página não apaga a aula publicada (ela continua aparecendo na nota).
+
+O objeto de aula salvo contém todos os resumos e conteúdos exibidos na interface no momento da publicação.
+
+Não há erros no console relacionados à publicação, salvamento ou carregamento das aulas.
+
+Como responder:
+
+Explique onde houve uma falha anterior no fluxo de salvamento/publicação.
+
+Mostre os trechos de código relevantes antes e depois em:
+
+botão de Reproduzir → Publicar;
+
+AulaResultadoContent(exposição de getAulaData);
+
+ConstrucaoAulaPanel(manipulador de publicação);
+
+aulasStorageServicee grade de Aulas.
+
+Confirme explicitamente, em texto, que ao publicar uma aula ela aparece na nota e persiste após recarregar uma página.
+

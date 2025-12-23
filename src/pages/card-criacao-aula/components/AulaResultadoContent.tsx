@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star, GripVertical, GitBranch, GraduationCap } from 'lucide-react';
+import { Plus, Image, User, Users, Play, MoreVertical, Share2, Download, Calendar, Lock, BarChart3, ChevronDown, Target, Wrench, BookOpen, Lightbulb, Layers, CheckCircle, FileText, MessageSquare, Award, Trash2, Edit3, Layout, Sparkles, MoreHorizontal, Clock, Copy, Wand2, FolderOpen, Globe, Upload, Search, Filter, X, Check, LayoutGrid, List, Star, GripVertical, GitBranch, GraduationCap, Upload as PublishIcon } from 'lucide-react';
 import { Template, TEMPLATE_SECTIONS } from './TemplateDropdown';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
 import { ActivityViewModal } from '@/features/schoolpower/construction/ActivityViewModal';
+import { aulasStorageService } from '@/services/aulasStorageService';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -298,6 +299,9 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
   const [themeMode, setThemeMode] = useState<ThemeMode>(savedDraft?.themeMode ?? 'orange');
   const [isObjectiveExpanded, setIsObjectiveExpanded] = useState(savedDraft?.sectionExpanded?.objective ?? false);
   const [objectiveText, setObjectiveText] = useState(savedDraft?.sectionTexts?.objective ?? '');
+  const [isPublished, setIsPublished] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   // ====================================================================
   // ESTADO DINÂMICO PARA SEÇÕES DO TEMPLATE
@@ -496,6 +500,58 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
 
   const [sectionOrder, setSectionOrder] = useState<string[]>(initialSectionOrder);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+  // Handler de publicação da aula
+  const handlePublishAula = useCallback(async () => {
+    console.log('📤 [PUBLISH_AULA] Iniciando publicação da aula...');
+    setIsPublishing(true);
+    
+    try {
+      const aulaData = {
+        titulo: currentAulaName,
+        objetivo: objectiveText,
+        duracao: '60 min',
+        secoes: Object.fromEntries(
+          Object.entries(dynamicSections).map(([id, section]) => [
+            id,
+            { id: section.id, text: section.text, time: section.time }
+          ])
+        ),
+        sectionOrder
+      };
+
+      console.log('📤 [PUBLISH_AULA] Dados coletados:', {
+        titulo: aulaData.titulo,
+        objetivo: aulaData.objetivo?.substring(0, 50) + '...',
+        secoesCount: Object.keys(aulaData.secoes).length
+      });
+
+      aulasStorageService.salvarAula({
+        titulo: aulaData.titulo,
+        objetivo: aulaData.objetivo || '',
+        templateId: selectedTemplate?.id || 'unknown',
+        templateName: selectedTemplate?.name || 'Template',
+        turmaName: turmaName,
+        turmaImage: turmaImage,
+        duracao: aulaData.duracao,
+        status: 'publicada',
+        secoes: aulaData.secoes,
+        sectionOrder: aulaData.sectionOrder
+      });
+
+      console.log('📤 [PUBLISH_AULA] ✅ Aula publicada com sucesso!');
+      setIsPublished(true);
+      setShowPublishModal(true);
+      
+      setTimeout(() => {
+        setShowPublishModal(false);
+      }, 3000);
+    } catch (error) {
+      console.error('📤 [PUBLISH_AULA] ❌ Erro ao publicar aula:', error);
+    } finally {
+      setIsPublishing(false);
+    }
+  }, [currentAulaName, objectiveText, dynamicSections, sectionOrder, selectedTemplate, turmaName, turmaImage]);
 
   // ====================================================================
   // EXPOSIÇÃO DE MÉTODOS VIA REF (useImperativeHandle)
@@ -2506,10 +2562,12 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5, duration: 0.3 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex-shrink-0 cursor-pointer"
-              title="Modo Apresentação de atividade"
+              whileHover={!isPublished ? { scale: 1.05 } : {}}
+              whileTap={!isPublished ? { scale: 0.95 } : {}}
+              onClick={!isPublished && !isPublishing ? handlePublishAula : undefined}
+              className="flex-shrink-0"
+              style={{ cursor: isPublished || isPublishing ? 'default' : 'pointer' }}
+              title={isPublished ? "Aula publicada" : "Publicar aula"}
             >
               <motion.div
                 animate={{ 
@@ -2517,7 +2575,7 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
                   borderColor: `${theme.primary}99`
                 }}
                 transition={{ duration: 0.3 }}
-                className="rounded-full flex items-center justify-center"
+                className="rounded-full flex items-center justify-center relative"
                 style={{
                   width: `${CIRCLE_SIZE}px`,
                   height: `${CIRCLE_SIZE}px`,
@@ -2526,7 +2584,19 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
                   boxShadow: `0 4px 12px ${theme.shadow}`
                 }}
               >
-                <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
+                {isPublishing ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                    className="w-5 h-5"
+                  >
+                    <PublishIcon className="w-5 h-5 text-white" />
+                  </motion.div>
+                ) : isPublished ? (
+                  <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
+                ) : (
+                  <PublishIcon className="w-5 h-5 text-white" />
+                )}
               </motion.div>
             </motion.div>
           </div>
@@ -2733,6 +2803,52 @@ const AulaResultadoContent = forwardRef<AulaResultadoContentRef, AulaResultadoCo
             }}
             onClose={() => setViewingActivity(null)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Confirmação de Publicação */}
+      <AnimatePresence>
+        {showPublishModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
+            onClick={() => setShowPublishModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#1A2B3C] border border-[#FF6B00]/30 rounded-2xl p-8 max-w-md mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex flex-col items-center gap-4">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
+                  className="w-16 h-16 rounded-full bg-[#FF6B00]/20 flex items-center justify-center"
+                >
+                  <CheckCircle className="w-8 h-8 text-[#FF6B00]" />
+                </motion.div>
+                
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-center"
+                >
+                  <h3 className="text-white font-bold text-xl mb-2">
+                    Aula publicada com sucesso!
+                  </h3>
+                  <p className="text-white/70 text-sm">
+                    Ela já está disponível na sua nota de aulas.
+                  </p>
+                </motion.div>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
