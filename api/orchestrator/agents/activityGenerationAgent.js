@@ -142,6 +142,8 @@ async function generateUnifiedSchoolPowerInput(requestId, suggestions, lesson) {
   const schoolPowerInput = {
     id: generateActivityId(),
     type: 'consolidated',
+    isConsolidated: true,
+    sectionId: suggestions[0]?.sectionId || 'universal',
     applicableSections: suggestions.map(s => ({
       sectionId: s.sectionId,
       sectionName: s.sectionName,
@@ -163,8 +165,7 @@ async function generateUnifiedSchoolPowerInput(requestId, suggestions, lesson) {
       source: 'lesson-orchestrator',
       requestId,
       aiProvider,
-      modelUsed,
-      isConsolidated: true
+      modelUsed
     }
   };
   
@@ -178,6 +179,8 @@ function createFallbackUnifiedInput(requestId, suggestions, lesson) {
   return {
     id: generateActivityId(),
     type: 'consolidated',
+    isConsolidated: true,
+    sectionId: suggestions[0]?.sectionId || 'universal',
     applicableSections: suggestions.map(s => ({
       sectionId: s.sectionId,
       sectionName: s.sectionName,
@@ -200,8 +203,7 @@ function createFallbackUnifiedInput(requestId, suggestions, lesson) {
       requestId,
       aiProvider: 'local-fallback',
       modelUsed: 'fallback',
-      usedFallback: true,
-      isConsolidated: true
+      usedFallback: true
     }
   };
 }

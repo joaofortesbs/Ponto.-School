@@ -247,13 +247,20 @@ class StepValidation {
       },
       inputIsConsolidated: () => {
         const inputs = data.activities || [];
-        const isConsolidated = inputs.length === 1 && inputs[0].isConsolidated === true;
+        // Verifica isConsolidated na raiz OU no metadata OU type === 'consolidated'
+        const firstInput = inputs[0] || {};
+        const isConsolidated = inputs.length === 1 && (
+          firstInput.isConsolidated === true ||
+          firstInput.metadata?.isConsolidated === true ||
+          firstInput.type === 'consolidated'
+        );
         return {
           passed: isConsolidated,
           details: { 
             totalInputs: inputs.length,
-            isConsolidated: inputs[0]?.isConsolidated || false,
-            applicableSections: inputs[0]?.applicableSections?.length || 0
+            isConsolidated: isConsolidated,
+            type: firstInput.type,
+            applicableSections: firstInput.applicableSections?.length || 0
           }
         };
       },
@@ -334,10 +341,25 @@ class StepValidation {
           details: { hasLesson, hasActivities, hasMapping }
         };
       },
-      lessonReady: () => ({
-        passed: data.lesson?.status === 'generated' && data.lesson?.generatedAt,
-        details: { status: data.lesson?.status, generatedAt: data.lesson?.generatedAt }
-      })
+      lessonReady: () => {
+        // Durante a validação inicial de Step 7, lesson ainda não tem status
+        // A validação deve passar se temos os dados necessários para finalizar
+        const hasLesson = !!data.lesson;
+        const hasContent = !!data.lesson?.secoes;
+        const hasActivities = (data.activities?.length || 0) > 0 || (data.savedActivities?.length || 0) > 0;
+        // Se já tem status 'generated', está pronto. Senão, verifica se tem dados para finalizar
+        const isReady = (data.lesson?.status === 'generated' && data.lesson?.generatedAt) ||
+                        (hasLesson && hasContent && hasActivities);
+        return {
+          passed: isReady,
+          details: { 
+            status: data.lesson?.status || 'pending',
+            hasLesson,
+            hasContent,
+            hasActivities
+          }
+        };
+      }
     };
 
     const checkFn = checks[checkName];
