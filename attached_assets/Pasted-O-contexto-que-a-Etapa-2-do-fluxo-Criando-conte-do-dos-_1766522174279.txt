@@ -1,0 +1,194 @@
+O contexto é que a Etapa 2 do fluxo “Criando conteúdo dos blocos” está falhando após 3 tentativas: Groq bateu rate limit 429 e o fallback para Gemini está quebrando por usar o modelo gemini-1.5-flash em endpoint /v1beta (que responde 404 para esse nome), então nenhum dos dois providers entrega conteúdo para os blocos.
+​
+
+Prompt melhorado e bem estruturado
+Use este prompt completo no FastAgent/Replit:
+
+A IA ainda não está gerando os conteúdos de dentro de cada um dos blocos de seções na criação de aulas.
+Mesmo com a IA da Groq funcionando em outras áreas da plataforma Ponto. School, o fluxo de geração de aulas continua falhando na Etapa 2 – Criando conteúdo dos blocos.
+
+Situação atual do fluxo (conforme logs e UI):
+
+Etapa 1 – Envio de contexto: SUCESSO em milissegundos.
+
+Etapa 2 – Criando conteúdo dos blocos:
+
+Exibe: “Falha na geração de conteúdo após 3 tentativas”.
+
+Logs da etapa mostram:
+
+INFO – Etapa iniciada.
+
+SUCCESS – Sub-fase COMMAND_SENT: COMPLETA com payload { "sectionCount": 9 }.
+
+RETRY / Último Erro com mensagem:
+
+“Groq rate limit atingido e Gemini falhou: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash: generateContent: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.”
+
+Depois de 3 tentativas, a etapa fica vermelha e o modal permanece aberto (como configurado), mas nenhum conteúdo é gerado para os blocos.
+
+Problemas identificados (a partir dos logs):
+
+Rate limit da Groq (429):
+
+A Groq é o provider principal para gerar o conteúdo dos blocos.
+
+Quando o limite é atingido, a chamada falha e o sistema aciona o fallback.
+
+Fallback Gemini configurado de forma incorreta:
+
+O fallback está chamando o endpoint /v1beta/models/gemini-1.5-flash:generateContent.
+
+A resposta é 404 Not Found com mensagem clara de que o modelo gemini-1.5-flash não existe nesse endpoint ou não é suportado para generateContent na versão v1beta.
+
+Ou seja: quando a Groq falha por rate limit, o fallback também falha, e a Etapa 2 nunca recebe um conteúdo válido para os blocos.
+
+Mesmo após correções anteriores no api/ai/prompts.js (como reintroduzir a seção "objective"), a Etapa 2 continua quebrando por problema de providers/modelos, não mais de prompt.
+
+Objetivo geral:
+Corrigir de forma definitiva a orquestração de IA na Etapa 2 para garantir que:
+
+Sempre exista pelo menos um provider funcional capaz de gerar o conteúdo de todos os blocos de seção.
+
+O fallback para Gemini esteja configurado com modelo e endpoint válidos, sem 404.
+
+O fluxo de retries seja inteligente (não repetir a mesma requisição quebrada) e os conteúdos sejam finalmente gerados, persistidos e exibidos nos blocos.
+
+1. Revisar e corrigir o fallback de IA (Groq → Gemini)
+Analise com extremo cuidado todos os pontos do código onde a Etapa 2 chama a IA para gerar conteúdo dos blocos:
+
+Arquivos prováveis:
+
+api/ai/*.ts (serviços de IA).
+
+api/ai/prompts.js ou equivalente.
+
+Serviços específicos de “lesson blocks content” ou “lesson generator”.
+
+Verifique:
+
+Qual função faz a chamada principal para Groq.
+
+Como o fallback para Gemini é acionado quando Groq retorna erro (especialmente 429).
+
+Quais model IDs e endpoints estão sendo usados para Gemini.
+
+Correções obrigatórias para Gemini:
+
+Ajustar o model ID e o endpoint para usar um modelo realmente suportado pelo SDK/API que você está usando.
+
+Remover o uso de gemini-1.5-flash se esse nome não for válido no endpoint v1beta e substituí-lo por um modelo suportado (por exemplo, gemini-1.5-pro ou o modelo recomendado pelo SDK atual).
+
+Verificar se a função usada é de fato generateContent compatível com o endpoint e modelo.
+
+Testar manualmente (via pequeno script isolado ou playground interno) uma chamada simples a esse modelo para garantir que não retorna 404 antes de reintegrar ao fluxo da Etapa 2.
+
+Regras de fallback desejadas:
+
+Se Groq responder 429 (rate limit) ou erro de infraestrutura:
+
+Logar claramente o erro.
+
+Acionar Gemini com os mesmos parâmetros (prompt, seções, contexto), adaptando apenas o formato exigido pela API.
+
+Se Gemini também falhar:
+
+Registrar nos logs da Etapa 2 a causa exata.
+
+Manter a etapa em estado de erro, sem marcar como concluída.
+
+Importante: não repetir cegamente a mesma chamada 3 vezes para o mesmo provider com a mesma configuração quebrada. Os retries precisam considerar o fallback já corrigido.
+
+2. Garantir compatibilidade de prompt e schema entre Groq e Gemini
+Garanta que tanto Groq quanto Gemini recebam prompts e esquemas compatíveis:
+
+O payload de seções (por exemplo sectionCount, secoes, objective, etc.) deve ser mapeado corretamente para o formato esperado de cada provider.
+
+Se estiver usando structured output (JSON schema, function calling, etc.), valide:
+
+Se o provider Gemini suporta esse modo da mesma forma.
+
+Se a implementação atual não está enviando propriedades inválidas ou em formato errado para o Gemini.
+
+Se necessário, crie uma camada de normalização:
+
+Uma função que recebe a intenção “gerar conteúdo de X seções da aula” e constrói:
+
+O prompt + payload no formato adequado para Groq.
+
+Outra versão do prompt + payload no formato adequado para Gemini.
+
+Dessa forma, o fallback não reaproveita um payload incompatível.
+
+3. Ajustar o sistema de retries da Etapa 2
+A Etapa 2 mostra “Falha na geração de conteúdo após 3 tentativas”.
+Você precisa reestruturar a lógica de retry para:
+
+Registrar, em cada tentativa:
+
+Qual provider foi usado (Groq ou Gemini).
+
+Qual erro retornou.
+
+O que foi tentado na próxima tentativa.
+
+Comportamento desejado:
+
+Tentativa 1: Groq.
+
+Se Groq der 429 ou erro crítico → Tentativa 2: Gemini (com modelo/endpoint corretos).
+
+Se Gemini der erro recuperável (timeout, 5xx, etc.) → aplicar novo retry em Gemini com backoff curto, mas evitar replicar 404 se o modelo estiver errado.
+
+Atualizar os logs da Etapa 2 no modal para deixar isso transparente:
+
+“Tentativa 1: Groq – erro 429 rate limit.”
+
+“Tentativa 2: Gemini – modelo X – sucesso.”
+
+Ou “Tentativa 2: Gemini – erro 404 modelo inexistente.”, etc.
+
+4. Garantir que, após um provider ter sucesso, os blocos sejam realmente preenchidos
+Não basta apenas fazer a chamada de IA funcionar.
+Você precisa garantir que o resultado bem-sucedido (de Groq ou Gemini) percorra todo o fluxo:
+
+Parse do retorno no formato correto.
+
+Mapeamento para a estrutura de dados interna da aula (por exemplo lesson.blocks, sections[], etc.).
+
+Atualização do estado front-end e/ou LocalStorage.
+
+Renderização do conteúdo dentro de cada bloco de seção na UI.
+
+Marcação da Etapa 2 como success somente depois de tudo isso estar OK.
+
+Se hoje o código só está preparado para o formato de resposta da Groq, adapte o parser para também aceitar o formato de resposta do Gemini (ou normalize a resposta de ambos para um formato interno comum antes de salvar).
+
+5. Resultado esperado após a correção
+Depois de aplicar todas as correções:
+
+Quando o usuário clicar em “Construir aula”:
+
+Etapa 1 continua rápida e bem-sucedida.
+
+Etapa 2 passa a:
+
+Tentar Groq.
+
+Se Groq estiver com rate limit, acionar Gemini com modelo/endpoint corretos.
+
+Gerar conteúdo para todas as seções/blocos da aula.
+
+Preencher os blocos na interface com os textos gerados.
+
+Os logs da Etapa 2 no modal devem mostrar claramente qual provider foi usado e qual tentativa resultou em sucesso.
+
+O usuário finalmente verá os conteúdos gerados dentro de cada bloco de seção, permitindo o fluxo seguir para as etapas seguintes (atividades, salvamento, etc.).
+
+Tenha cuidado extremo para:
+
+Não quebrar as outras áreas da plataforma onde Groq já funciona bem.
+
+Não introduzir novos erros de modelo/endpoint em Gemini.
+
+Garantir que qualquer mudança em prompts.js ou serviços de IA mantenha compatibilidade com todas as etapas do fluxo de criação de aulas.

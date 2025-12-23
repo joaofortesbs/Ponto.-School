@@ -38,7 +38,7 @@ import {
 const GROQ_API_KEY = process.env.GROQ_API_KEY?.trim();
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_MODEL = 'gemini-1.5-pro';
 const MAX_RETRIES = 3;
 const TIMEOUT_MS = 60000;
 
@@ -162,23 +162,34 @@ async function generateWithGemini(systemPrompt, userPrompt, requestId) {
     throw new Error('Gemini não disponível como fallback - GEMINI_API_KEY não configurada');
   }
   
-  log(LOG_PREFIX.API, `[${requestId}] 🔄 Usando Gemini como fallback...`);
+  log(LOG_PREFIX.API, `[${requestId}] 🔄 Usando Gemini (${GEMINI_MODEL}) como fallback...`);
   
-  const fullPrompt = `${systemPrompt}\n\n---\n\nSolicitação do usuário:\n${userPrompt}`;
-  
-  const result = await gemini.generateContent(fullPrompt);
-  const response = await result.response;
-  const content = response.text();
-  
-  log(LOG_PREFIX.API, `[${requestId}] ✅ Resposta do Gemini recebida`);
-  
-  return {
-    choices: [{
-      message: { content },
-      finish_reason: 'stop'
-    }],
-    usage: { total_tokens: Math.ceil(content.length / 4) }
-  };
+  try {
+    const fullPrompt = `${systemPrompt}\n\n---\n\nSolicitação do usuário:\n${userPrompt}`;
+    
+    const result = await gemini.generateContent(fullPrompt);
+    const response = await result.response;
+    const content = response.text();
+    
+    log(LOG_PREFIX.API, `[${requestId}] ✅ Resposta do Gemini recebida com sucesso`);
+    
+    return {
+      choices: [{
+        message: { content },
+        finish_reason: 'stop'
+      }],
+      usage: { total_tokens: Math.ceil(content.length / 4) }
+    };
+  } catch (error) {
+    log(LOG_PREFIX.ERROR, `[${requestId}] ❌ Erro detalhado do Gemini:`, {
+      message: error.message,
+      statusCode: error.statusCode,
+      status: error.status,
+      code: error.code,
+      fullError: error.toString()
+    });
+    throw error;
+  }
 }
 
 /**
