@@ -1206,24 +1206,24 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        /* Card "Aulas" (1º card) - largura reduzida + padding compacto */
+        /* Card "Aulas" (1º card) - largura bem reduzida + padding compacto */
         .quick-access-card:nth-child(1) {
-          min-width: 120px;
-          max-width: 125px;
+          min-width: 100px;
+          max-width: 105px;
           padding: 10px 2px;
         }
 
-        /* Card "Chats" (2º card) - largura reduzida + padding compacto */
+        /* Card "Chats" (2º card) - largura bem reduzida + padding compacto */
         .quick-access-card:nth-child(2) {
-          min-width: 120px;
-          max-width: 125px;
+          min-width: 100px;
+          max-width: 105px;
           padding: 10px 1px;
         }
 
-        /* Card "Flows" (3º card) - largura reduzida + padding compacto */
+        /* Card "Flows" (3º card) - largura bem reduzida + padding compacto */
         .quick-access-card:nth-child(3) {
-          min-width: 120px;
-          max-width: 125px;
+          min-width: 100px;
+          max-width: 105px;
           padding: 10px 2px;
         }
 
@@ -1234,10 +1234,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
           padding: 10px 8px;
         }
 
-        /* Card "Mais" (5º card) - largura reduzida + padding compacto */
+        /* Card "Mais" (5º card) - largura bem reduzida + padding compacto */
         .quick-access-card:nth-child(5) {
-          min-width: 120px;
-          max-width: 125px;
+          min-width: 100px;
+          max-width: 105px;
           padding: 10px 1px;
         }
 
