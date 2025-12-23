@@ -563,6 +563,20 @@ app.post('/api/orchestrator/orchestrate-stream', async (req, res) => {
       onProgress
     });
     
+    const sendEvent = sseClients.get(requestId);
+    if (sendEvent) {
+      sendEvent(result.success ? 'complete' : 'failed', {
+        success: result.success,
+        lesson: result.lesson,
+        activities: result.activities,
+        timing: result.timing,
+        errors: result.errors,
+        logs: result.logs,
+        validationSummary: result.validationSummary,
+        requestId: result.requestId
+      });
+    }
+    
     res.json({
       success: result.success,
       requestId: result.requestId,
