@@ -189,25 +189,18 @@ const CriacaoAulaPanel: React.FC<CriacaoAulaPanelProps> = ({
                 secoes: secoesSimples
               }, sectionOrder);
               
-              // Extrair mapeamento de atividades por seção
-              const activitiesPerSection = result.lesson.activitiesPerSection || {};
-              
               console.log('🎯 [INTERFACE] Enviando para construção:', {
                 titulo: aulaMapeada.titulo,
                 objetivo: aulaMapeada.objetivo?.substring(0, 50),
-                secoes: Object.keys(aulaMapeada.sectionTexts).length,
-                atividadesPorSecao: Object.keys(activitiesPerSection).length
+                secoes: Object.keys(aulaMapeada.sectionTexts).length
               });
-              
-              console.log('🎯 [INTERFACE] Atividades por seção:', activitiesPerSection);
               
               // IMPORTANTE: NÃO FECHAR O MODAL AUTOMATICAMENTE
               // O usuário deve fechar manualmente o modal após visualizar o resultado
               onGerarAula(selectedTemplate, {
                 titulo: aulaMapeada.titulo,
                 objetivo: aulaMapeada.objetivo,
-                secoes: aulaMapeada.sectionTexts,
-                activitiesPerSection
+                secoes: aulaMapeada.sectionTexts
               });
             } else {
               // Erro na orquestração - MANTER MODAL ABERTO

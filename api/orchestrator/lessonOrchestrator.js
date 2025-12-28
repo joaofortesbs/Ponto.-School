@@ -590,76 +590,23 @@ class LessonOrchestrator {
 
     const mapping = {};
     
-    // ====================================================================
-    // MAPEAMENTO USANDO SUGESTÕES ORIGINAIS (Etapa 3)
-    // ====================================================================
-    // Cada sugestão da Etapa 3 representa uma atividade para uma seção
-    // específica. Usamos as sugestões para criar o mapeamento correto,
-    // já que a atividade consolidada (School Power Input) se aplica a
-    // todas as seções sugeridas.
-    // ====================================================================
-    
-    const suggestions = currentData.suggestions || [];
-    const consolidatedActivity = currentData.savedActivities[0]; // Atividade consolidada
-    
-    if (consolidatedActivity && suggestions.length > 0) {
-      // Para cada sugestão da Etapa 3, criar uma referência de atividade
-      for (const suggestionItem of suggestions) {
-        const sectionId = suggestionItem.sectionId;
-        const sectionName = suggestionItem.sectionName;
-        
-        if (!mapping[sectionId]) {
-          mapping[sectionId] = [];
-        }
-        
-        // Extrair dados da sugestão aninhada
-        // Estrutura: { sectionId, sectionName, suggestion: { activityId, activityName, ... } }
-        const innerSuggestion = suggestionItem.suggestion || {};
-        const activityId = innerSuggestion.activityId || 'quiz-interativo';
-        const activityName = innerSuggestion.activityName || 'Atividade';
-        
-        // Criar uma referência de atividade para esta seção
-        // O frontend espera: id, templateId, title, type
-        const activityRef = {
-          id: `${consolidatedActivity.id}_${sectionId}`,
-          templateId: activityId,  // ID da atividade sugerida (quiz-interativo, lista-exercicios)
-          title: `${activityName}`,  // Nome legível da atividade
-          type: activityId,  // Tipo da atividade
-          sectionId: sectionId,
-          sectionName: sectionName
-        };
-        
-        mapping[sectionId].push(activityRef);
-
-        stepLogger.logEvent(6, LOG_TYPES.DEBUG, 
-          `Atividade "${activityName}" (${activityId}) anexada ao bloco ${sectionId}`);
+    for (const activity of currentData.savedActivities) {
+      const sectionId = activity.sectionId;
+      if (!mapping[sectionId]) {
+        mapping[sectionId] = [];
       }
       
-      stepLogger.logEvent(6, LOG_TYPES.INFO, 
-        `Mapeamento criado com base em ${suggestions.length} sugestões da Etapa 3`);
-    } else {
-      // Fallback: usar o mapeamento antigo se não houver sugestões
-      for (const activity of currentData.savedActivities) {
-        const sectionId = activity.sectionId;
-        if (!mapping[sectionId]) {
-          mapping[sectionId] = [];
-        }
-        
-        mapping[sectionId].push({
-          id: activity.id,
-          templateId: activity.templateId,
-          title: activity.title,
-          type: activity.type,
-          content: activity.content || activity.questions || activity.items
-        });
+      mapping[sectionId].push({
+        id: activity.id,
+        templateId: activity.templateId,
+        title: activity.title,
+        type: activity.type,
+        content: activity.content || activity.questions || activity.items
+      });
 
-        stepLogger.logEvent(6, LOG_TYPES.DEBUG, 
-          `Atividade ${activity.id} anexada ao bloco ${sectionId}`);
-      }
+      stepLogger.logEvent(6, LOG_TYPES.DEBUG, 
+        `Atividade ${activity.id} anexada ao bloco ${sectionId}`);
     }
-    
-    stepLogger.logEvent(6, LOG_TYPES.INFO, 
-      `Mapeamento criado: ${Object.keys(mapping).length} seções com atividades`);
 
     stepLogger.markSubPhase(6, SUB_PHASES.BLOCK_ATTACHED, true, {
       sectionsWithActivities: Object.keys(mapping).length,

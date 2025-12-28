@@ -31,17 +31,6 @@ export interface LessonGenerationInput {
 }
 
 /**
- * Interface para atividade gerada para uma seção
- */
-export interface GeneratedSectionActivity {
-  id: string;
-  templateId: string;
-  title: string;
-  type: string;
-  content?: any;
-}
-
-/**
  * Interface para dados gerados pela IA
  */
 export interface GeneratedLessonData {
@@ -52,7 +41,6 @@ export interface GeneratedLessonData {
   secoes: Record<string, string>;
   tags?: string[];
   competencias_bncc?: string[];
-  activitiesPerSection?: Record<string, GeneratedSectionActivity[]>;
 }
 
 /**
