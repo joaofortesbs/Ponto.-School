@@ -266,33 +266,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       className="flex flex-col h-full w-full mx-auto bg-transparent backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
       style={{ maxWidth: CHAT_CONFIG.maxWidth, width: CHAT_CONFIG.widthPx }}
     >
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/10">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Voltar</span>
-        </button>
-
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-            <Bot className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h2 className="text-white font-semibold">Agente Jota</h2>
-            <p className="text-white/50 text-sm">Assistente School Power</p>
-          </div>
-        </div>
-
-        <button
-          onClick={() => setShowContextModal(!showContextModal)}
-          className="px-3 py-1.5 text-sm bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
-        >
-          Contexto
-        </button>
-      </div>
-
       <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-64">
         <MessageStream messages={sessionState.messages} />
 
