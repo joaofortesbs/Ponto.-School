@@ -1,8 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Bot, Circle, Play, Edit3 } from 'lucide-react';
-import { useChatState } from '../state/chatState';
-import type { PlanCardData, EtapaState } from '../types/message-types';
+import type { PlanCardData } from '../types/message-types';
 
 interface PlanActionCardProps {
   cardId: string;
@@ -12,27 +11,7 @@ interface PlanActionCardProps {
 }
 
 export function PlanActionCard({ cardId, data, isStatic = true, onApplyPlan }: PlanActionCardProps) {
-  const { addTextMessage, addDevModeCard, setExecuting } = useChatState();
-
   const handleApplyPlan = () => {
-    addTextMessage('assistant', 'Vou executar o seu plano de ação agora');
-
-    const devModeData = {
-      plano: data,
-      status: 'executando' as const,
-      etapaAtual: 0,
-      etapas: data.etapas.map((e, idx): EtapaState => ({
-        ordem: e.ordem,
-        titulo: e.titulo,
-        descricao: e.descricao,
-        status: idx === 0 ? 'executando' : 'pendente',
-        capabilities: []
-      }))
-    };
-
-    addDevModeCard(devModeData);
-    setExecuting(true);
-
     onApplyPlan?.();
   };
 
