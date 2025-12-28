@@ -118,12 +118,20 @@ export const useChatState = create<ChatState>((set, get) => ({
         return state;
       }
 
+      const textMessage: Message = {
+        id: generateId(),
+        type: 'assistant',
+        role: 'assistant',
+        content: 'Vou executar o seu plano de ação agora',
+        timestamp: Date.now()
+      };
+
       const devCard: Message = {
         id: generateId(),
         type: 'dev_mode_card',
         role: 'assistant',
         content: '',
-        timestamp: Date.now(),
+        timestamp: Date.now() + 1,
         metadata: {
           cardType: 'dev_mode',
           cardData: devModeData,
@@ -136,7 +144,7 @@ export const useChatState = create<ChatState>((set, get) => ({
 
       return {
         ...state,
-        messages: [...state.messages, devCard],
+        messages: [...state.messages, textMessage, devCard],
         activeDevModeCardId: devCard.id,
         isExecuting: true
       };

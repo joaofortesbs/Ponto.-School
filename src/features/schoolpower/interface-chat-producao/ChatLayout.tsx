@@ -155,8 +155,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     };
     setExecutionPlan(updatedPlan);
 
-    addTextMessage('assistant', 'Vou executar o seu plano de ação agora');
-
     addDevModeCard({
       plano: executionPlan,
       status: 'executando',
