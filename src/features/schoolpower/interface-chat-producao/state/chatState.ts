@@ -10,11 +10,13 @@ interface ChatState {
   activePlanCardId: string | null;
   activeDevModeCardId: string | null;
   isExecuting: boolean;
+  executionStarted: boolean;
 
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
   addTextMessage: (role: 'user' | 'assistant', content: string) => void;
   addPlanCard: (planData: PlanCardData) => void;
   addDevModeCard: (devModeData: DevModeCardData) => void;
+  startExecution: () => boolean;
   addConstructionCard: (constructionData: any) => void;
   updateCardData: (cardId: string, newData: Partial<DevModeCardData>) => void;
   updateCapabilityStatus: (cardId: string, etapaIndex: number, capabilityId: string, status: CapabilityState['status']) => void;
@@ -32,6 +34,7 @@ export const useChatState = create<ChatState>((set, get) => ({
   activePlanCardId: null,
   activeDevModeCardId: null,
   isExecuting: false,
+  executionStarted: false,
 
   addMessage: (message) => {
     const newMessage: Message = {
@@ -91,12 +94,27 @@ export const useChatState = create<ChatState>((set, get) => ({
     });
   },
 
+  startExecution: () => {
+    const state = get();
+    if (state.executionStarted) {
+      console.warn('⚠️ [chatState.startExecution] Execução já iniciada! Bloqueando.');
+      return false;
+    }
+    set({ executionStarted: true });
+    console.log('✅ [chatState.startExecution] Execução iniciada com sucesso.');
+    return true;
+  },
+
   addDevModeCard: (devModeData) => {
     set((state) => {
+      if (state.activeDevModeCardId) {
+        console.warn('⚠️ [chatState.addDevModeCard] activeDevModeCardId já existe! Ignorando.');
+        return state;
+      }
+
       const existingDevModeCard = state.messages.find(m => m.type === 'dev_mode_card');
       if (existingDevModeCard) {
         console.warn('⚠️ [chatState.addDevModeCard] DevModeCard já existe! ID:', existingDevModeCard.id);
-        console.warn('⚠️ [chatState.addDevModeCard] Ignorando criação duplicada - retornando estado atual.');
         return state;
       }
 
@@ -273,7 +291,8 @@ export const useChatState = create<ChatState>((set, get) => ({
       messages: [],
       activePlanCardId: null,
       activeDevModeCardId: null,
-      isExecuting: false
+      isExecuting: false,
+      executionStarted: false
     });
   },
 

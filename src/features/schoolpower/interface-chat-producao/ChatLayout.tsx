@@ -60,7 +60,8 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     addDevModeCard,
     setExecuting,
     clearMessages,
-    activeDevModeCardId
+    activeDevModeCardId,
+    startExecution
   } = useChatState();
 
   const scrollToBottom = useCallback(() => {
@@ -134,34 +135,16 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   const handleExecutePlan = async () => {
     if (!executionPlan) return;
 
-    if (globalExecutionLock) {
-      console.warn('⚠️ [ChatLayout] Execução bloqueada por globalExecutionLock! Ignorando chamada duplicada.');
+    const canStart = startExecution();
+    if (!canStart) {
+      console.warn('⚠️ [ChatLayout] Execução bloqueada pelo Zustand startExecution! Ignorando.');
       return;
     }
+
+    console.log('▶️ [ChatLayout] Iniciando execução do plano (aprovado pelo Zustand)');
 
     globalExecutionLock = true;
-
-    if (isExecutingPlanRef.current) {
-      console.warn('⚠️ [ChatLayout] Execução já em andamento (ref)! Ignorando chamada duplicada.');
-      globalExecutionLock = false;
-      return;
-    }
-
     isExecutingPlanRef.current = true;
-
-    const currentState = useChatState.getState();
-    const existingDevModeCards = currentState.messages.filter(m => m.type === 'dev_mode_card');
-    
-    console.log('▶️ [ChatLayout] Iniciando execução do plano');
-    console.log('🔍 [ChatLayout] DevMode cards existentes (getState):', existingDevModeCards.length);
-    console.log('🔍 [ChatLayout] Total de mensagens (getState):', currentState.messages.length);
-
-    if (existingDevModeCards.length > 0) {
-      console.warn('⚠️ [ChatLayout] DevMode card já existe! Abortando criação duplicada.');
-      globalExecutionLock = false;
-      isExecutingPlanRef.current = false;
-      return;
-    }
 
     setIsExecutingLocal(true);
     setExecuting(true);
