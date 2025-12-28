@@ -3,7 +3,10 @@
  */
 
 import { executeWithCascadeFallback } from '../../../services/controle-APIs-gerais-school-power';
-import schoolPowerActivities from '../../../data/schoolPowerActivities.json';
+import schoolPowerActivitiesRaw from '../../../data/schoolPowerActivities.json';
+
+// Get activities array from the new JSON structure
+const schoolPowerActivities = ((schoolPowerActivitiesRaw as any).atividades || schoolPowerActivitiesRaw) as any[];
 
 interface CriarAtividadeParams {
   tipo: string;

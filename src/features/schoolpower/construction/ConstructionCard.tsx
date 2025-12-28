@@ -49,7 +49,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProgressCircle } from './ProgressCircle';
-import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
+import schoolPowerActivitiesRaw from '../data/schoolPowerActivities.json';
+
+// Get activities array from the new JSON structure
+const schoolPowerActivitiesData = (schoolPowerActivitiesRaw as any).atividades || schoolPowerActivitiesRaw;
 
 interface ConstructionActivityProps {
   id: string;

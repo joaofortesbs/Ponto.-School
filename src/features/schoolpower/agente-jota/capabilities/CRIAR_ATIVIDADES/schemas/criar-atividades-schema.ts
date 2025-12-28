@@ -10,8 +10,12 @@ export const criarAtividadesSchema = z.object({
     tags: z.array(z.string()).optional(),
     template: z.any().optional(),
     justificativa: z.string().optional(),
-    ordem_sugerida: z.number().optional()
-  })).describe('Atividades que foram decididas na etapa anterior'),
+    ordem_sugerida: z.number().optional(),
+    campos_obrigatorios: z.array(z.string()).optional(),
+    campos_opcionais: z.array(z.string()).optional(),
+    schema_campos: z.record(z.any()).optional(),
+    campos_preenchidos: z.record(z.any()).optional()
+  })).describe('Atividades que foram decididas na etapa anterior com campos já preenchidos'),
 
   configuracoes_criacao: z.object({
     turma_id: z.string().optional(),

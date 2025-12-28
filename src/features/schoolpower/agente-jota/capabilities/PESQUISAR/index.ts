@@ -7,17 +7,26 @@ import type { CapabilityConfig } from '../index';
 async function pesquisarTiposAtividades(_params: Record<string, any>): Promise<any> {
   console.log('🔍 [Pesquisar] Buscando tipos de atividades disponíveis');
 
-  const schoolPowerActivities = await import('../../../data/schoolPowerActivities.json');
-  const activities = schoolPowerActivities.default || schoolPowerActivities;
+  const schoolPowerActivitiesRaw = await import('../../../data/schoolPowerActivities.json');
+  const rawData = schoolPowerActivitiesRaw.default || schoolPowerActivitiesRaw;
+  const activities = (rawData as any).atividades || rawData;
+
+  if (!Array.isArray(activities)) {
+    console.warn('⚠️ [Pesquisar] schoolPowerActivities não é um array');
+    return { total: 0, categorias: [], tipos: [], mensagem: 'Erro ao carregar atividades' };
+  }
 
   return {
     total: activities.length,
-    categorias: [...new Set((activities as any[]).map((a: any) => a.category))],
-    tipos: (activities as any[]).slice(0, 20).map((a: any) => ({
+    categorias: [...new Set(activities.map((a: any) => a.categoria || a.category))],
+    tipos: activities.slice(0, 20).map((a: any) => ({
       id: a.id,
-      nome: a.name,
-      descricao: a.description,
-      categoria: a.category,
+      nome: a.titulo || a.name,
+      descricao: a.descricao || a.description,
+      categoria: a.categoria || a.category,
+      tipo: a.tipo || a.type,
+      campos_obrigatorios: a.campos_obrigatorios || [],
+      schema_campos: a.schema_campos || {}
     })),
     mensagem: `Encontrados ${activities.length} tipos de atividades disponíveis em diversas categorias.`,
   };

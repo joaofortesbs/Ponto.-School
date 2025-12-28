@@ -44,7 +44,7 @@ import { ContextualizationData } from "../contextualization/ContextualizationCar
 import { ActionPlanItem } from "../actionplan/ActionPlanCard";
 import { isActivityEligibleForTrilhas, getTrilhasBadgeProps } from "../data/trilhasActivitiesConfig";
 import { TrilhasBadge } from "../components/TrilhasBadge";
-import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
+import schoolPowerActivitiesRaw from '../data/schoolPowerActivities.json';
 import { ConstructionInterface } from './index';
 import atividadesTrilhas from '../data/atividadesTrilhas.json';
 import { getCustomFieldsForActivity, hasCustomFields } from '../data/activityCustomFields';
@@ -54,13 +54,15 @@ import { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping } from '../
 import { processQuadroInterativoData } from '../activities/quadro-interativo/quadroInterativoProcessor';
 import { processMapaMentalData } from '../activities/mapa-mental/mapaMentalProcessor';
 
+// Get activities array from the new JSON structure
+const schoolPowerActivitiesData = (schoolPowerActivitiesRaw as any).atividades || schoolPowerActivitiesRaw;
+
 // Convert to proper format with name field
-const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
+const schoolPowerActivities = (Array.isArray(schoolPowerActivitiesData) ? schoolPowerActivitiesData : []).map((activity: any) => ({
   ...activity,
-  name: activity.name || activity.title || activity.description,
-  // Garantir que Flash Cards tem o ID correto
+  name: activity.name || activity.titulo || activity.title || activity.description || activity.descricao,
   id: activity.id === 'flash-cards' ? 'flash-cards' : activity.id,
-  type: activity.type || activity.id
+  type: activity.type || activity.tipo || activity.id
 }));
 
 // Componente do Modal de Acesso Vitalício com código exato fornecido

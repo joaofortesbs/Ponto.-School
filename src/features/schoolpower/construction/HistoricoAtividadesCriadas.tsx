@@ -8,9 +8,12 @@ import { ConstructionActivity } from './types';
 import { ConstructionCard } from './ConstructionCard';
 import { EditActivityModal } from './EditActivityModal';
 import { ActivityViewModal } from './ActivityViewModal';
-import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
+import schoolPowerActivitiesRaw from '../data/schoolPowerActivities.json';
 import activitiesApi, { ActivityData } from '@/services/activitiesApiService';
 import { profileService } from '@/services/profileService';
+
+// Get activities array from the new JSON structure
+const schoolPowerActivitiesData = ((schoolPowerActivitiesRaw as any).atividades || schoolPowerActivitiesRaw) as any[];
 
 interface HistoricoAtividadesCriadasProps {
   onBack: () => void;
@@ -23,8 +26,8 @@ interface AtividadeHistorico extends ConstructionActivity {
 
 // Função para obter nome da atividade
 const getActivityNameById = (activityId: string): string => {
-  const activity = schoolPowerActivitiesData.find(act => act.id === activityId);
-  return activity ? activity.name : activityId;
+  const activity = schoolPowerActivitiesData.find((act: any) => act.id === activityId);
+  return activity ? (activity.name || activity.titulo) : activityId;
 };
 
 export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriadasProps) {

@@ -2,10 +2,13 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, FileText, Clock, MoreVertical, Eye, Edit2, Trash2, Share2, Loader2, ChevronDown, Sparkles } from 'lucide-react';
 import { atividadesNeonService, AtividadeNeon } from '@/services/atividadesNeonService';
-import schoolPowerActivitiesData from '@/features/schoolpower/data/schoolPowerActivities.json';
+import schoolPowerActivitiesRaw from '@/features/schoolpower/data/schoolPowerActivities.json';
 import { EditActivityModal } from '@/features/schoolpower/construction/EditActivityModal';
 import { ActivityViewModal } from '@/features/schoolpower/construction/ActivityViewModal';
 import { useNavigate } from 'react-router-dom';
+
+// Get activities array from the new JSON structure
+const schoolPowerActivitiesData = ((schoolPowerActivitiesRaw as any).atividades || schoolPowerActivitiesRaw) as any[];
 
 interface AtividadesGridProps {
   searchTerm: string;
@@ -29,8 +32,8 @@ const CARDS_PER_ROW = 5;
 const INITIAL_ROWS = 2;
 
 const getActivityNameById = (activityId: string): string => {
-  const activity = schoolPowerActivitiesData.find(act => act.id === activityId);
-  return activity ? activity.name : activityId;
+  const activity = schoolPowerActivitiesData.find((act: any) => act.id === activityId);
+  return activity ? (activity.name || activity.titulo) : activityId;
 };
 
 const formatDate = (dateString: string): string => {

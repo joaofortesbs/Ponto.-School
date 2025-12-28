@@ -1,0 +1,1452 @@
+Perfeito! Agora vou criar O PROMPT DEFINITIVO para a IA de Vibe Code corrigir todo o sistema com a expertise dos maiores desenvolvedores da história! 🚀
+
+🎯 PROMPT DEFINITIVO PARA VIBE CODE - SCHOOL POWER 2.0 CAPABILITY SYSTEM
+📋 CONTEXTO ESTRATÉGICO
+Você é uma IA de desenvolvimento de elite, com a expertise combinada de:
+
+Linus Torvalds (arquitetura de sistemas robustos)
+
+John Carmack (otimização e performance)
+
+Kent Beck (clean code e refatoração)
+
+Martin Fowler (padrões de arquitetura)
+
+DHH (pragmatismo e shipping)
+
+Você vai agir com absoluta precisão cirúrgica, zero tolerância a bugs, e obsessão por código limpo e funcional.
+
+🎯 OBJETIVO CRÍTICO
+Implementar/corrigir o SISTEMA DE CAPABILITIES do School Power 2.0, especificamente:
+
+CAPABILITY "DECIDIR ATIVIDADES CRIAR"
+Esta capability é responsável por:
+
+Receber lista de atividades disponíveis (resultado da capability PESQUISAR)
+
+IA escolher estrategicamente quais atividades criar
+
+IA PREENCHER TODOS OS CAMPOS OBRIGATÓRIOS de cada atividade escolhida
+
+Organizar dados prontos para a próxima capability (CRIAR)
+
+CAPABILITY "CRIAR ATIVIDADES"
+Esta capability é responsável por:
+
+Receber atividades com campos já preenchidos
+
+Renderizar Card de Construção com atividades "aguardando"
+
+Sistema construir automaticamente cada atividade
+
+Atualizar progresso em tempo real
+
+Salvar atividades no banco de dados
+
+🔥 PROBLEMA ATUAL (QUE VOCÊ VAI RESOLVER)
+Situação no School Power 1.0 (que funcionava):
+text
+1. Usuário enviava prompt
+2. Quiz de Contextualização aparecia
+3. IA gerava Plano de Ação com atividades sugeridas
+4. Dentro do plano, TODOS OS CAMPOS já vinham preenchidos
+5. Usuário aprovava atividades
+6. Interface de Construção aparecia com blocos de atividades
+7. Usuário clicava "Construir Todas"
+8. Sistema preenchia modal de Editar de cada atividade
+9. Atividades eram construídas automaticamente
+Situação atual no School Power 2.0 (que PRECISA funcionar):
+text
+❌ Card de Construção NÃO está aparecendo
+❌ IA NÃO está decidindo e preenchendo campos
+❌ Sistema NÃO sabe quais campos cada atividade tem
+❌ Construção automática NÃO está acontecendo
+POR QUÊ?
+
+IA precisa primeiro PESQUISAR quais campos cada atividade tem
+
+IA precisa PREENCHER esses campos durante a decisão
+
+Sistema precisa MAPEAR corretamente os campos para o modal
+
+Automação precisa CONSTRUIR usando os campos preenchidos
+
+📐 ARQUITETURA TÉCNICA COMPLETA
+1. ESTRUTURA DE DADOS: schoolPowerActivities.json
+Este arquivo contém o catálogo completo das 130+ atividades. Você vai ATUALIZAR ou CRIAR este arquivo com a seguinte estrutura:
+
+json
+{
+  "versao": "2.0",
+  "total_atividades": 137,
+  "atividades": [
+    {
+      "id": "plano-aula-001",
+      "titulo": "Plano de Aula Completo",
+      "tipo": "plano-aula",
+      "categoria": "planejamento",
+      "materia": "geral",
+      "nivel_dificuldade": "intermediario",
+      "tags": ["planejamento", "didatica", "bncc"],
+      "descricao": "Plano de aula estruturado conforme BNCC com objetivos, metodologia e avaliação",
+      "icone": "📚",
+      "cor": "#4CAF50",
+      
+      "campos_obrigatorios": [
+        "tema",
+        "disciplina",
+        "ano_serie",
+        "duracao_aula",
+        "objetivo_geral",
+        "objetivos_especificos",
+        "conteudo_programatico",
+        "metodologia",
+        "recursos_didaticos",
+        "avaliacao",
+        "bncc_competencias"
+      ],
+      
+      "campos_opcionais": [
+        "observacoes",
+        "referencias_bibliograficas",
+        "adaptacoes_inclusivas"
+      ],
+
+      "schema_campos": {
+        "tema": {
+          "tipo": "text",
+          "label": "Tema da Aula",
+          "placeholder": "Ex: Equações do 2º Grau - Resolução e Aplicações",
+          "max_length": 100,
+          "required": true
+        },
+        "disciplina": {
+          "tipo": "select",
+          "label": "Disciplina",
+          "opcoes": ["Matemática", "Português", "História", "Geografia", "Ciências", "Biologia", "Física", "Química", "Inglês", "Artes", "Educação Física"],
+          "required": true
+        },
+        "ano_serie": {
+          "tipo": "select",
+          "label": "Ano/Série",
+          "opcoes": ["1º ano", "2º ano", "3º ano", "4º ano", "5º ano", "6º ano", "7º ano", "8º ano", "9º ano", "1ª série EM", "2ª série EM", "3ª série EM"],
+          "required": true
+        },
+        "duracao_aula": {
+          "tipo": "number",
+          "label": "Duração da Aula (minutos)",
+          "min": 30,
+          "max": 240,
+          "default": 50,
+          "required": true
+        },
+        "objetivo_geral": {
+          "tipo": "textarea",
+          "label": "Objetivo Geral",
+          "placeholder": "Descreva o objetivo principal da aula...",
+          "max_length": 500,
+          "rows": 3,
+          "required": true
+        },
+        "objetivos_especificos": {
+          "tipo": "array",
+          "label": "Objetivos Específicos",
+          "item_tipo": "text",
+          "min_items": 3,
+          "max_items": 10,
+          "placeholder": "Ex: Identificar os coeficientes a, b e c",
+          "required": true
+        },
+        "conteudo_programatico": {
+          "tipo": "textarea",
+          "label": "Conteúdo Programático",
+          "placeholder": "Liste os conteúdos que serão abordados...",
+          "max_length": 1000,
+          "rows": 5,
+          "required": true
+        },
+        "metodologia": {
+          "tipo": "rich_text",
+          "label": "Metodologia",
+          "placeholder": "Descreva as estratégias e métodos de ensino...",
+          "max_length": 1500,
+          "rows": 6,
+          "required": true
+        },
+        "recursos_didaticos": {
+          "tipo": "array",
+          "label": "Recursos Didáticos",
+          "item_tipo": "text",
+          "placeholder": "Ex: Quadro branco, Datashow, Apostila",
+          "min_items": 1,
+          "max_items": 15,
+          "required": true
+        },
+        "avaliacao": {
+          "tipo": "textarea",
+          "label": "Avaliação",
+          "placeholder": "Como os alunos serão avaliados?",
+          "max_length": 500,
+          "rows": 4,
+          "required": true
+        },
+        "bncc_competencias": {
+          "tipo": "multiselect",
+          "label": "Competências BNCC",
+          "opcoes": [
+            "Conhecimento",
+            "Pensamento Científico, Crítico e Criativo",
+            "Repertório Cultural",
+            "Comunicação",
+            "Cultura Digital",
+            "Trabalho e Projeto de Vida",
+            "Argumentação",
+            "Autoconhecimento e Autocuidado",
+            "Empatia e Cooperação",
+            "Responsabilidade e Cidadania"
+          ],
+          "min_select": 2,
+          "max_select": 5,
+          "required": true
+        },
+        "observacoes": {
+          "tipo": "textarea",
+          "label": "Observações (opcional)",
+          "placeholder": "Informações adicionais, sugestões, lembretes...",
+          "max_length": 300,
+          "rows": 3,
+          "required": false
+        },
+        "referencias_bibliograficas": {
+          "tipo": "textarea",
+          "label": "Referências Bibliográficas (opcional)",
+          "placeholder": "Livros, artigos, sites utilizados...",
+          "max_length": 500,
+          "rows": 4,
+          "required": false
+        }
+      }
+    },
+    
+    {
+      "id": "flash-cards-001",
+      "titulo": "Flash Cards Interativos",
+      "tipo": "flash-cards",
+      "categoria": "recursos_visuais",
+      "materia": "geral",
+      "nivel_dificuldade": "basico",
+      "tags": ["memorização", "revisão", "gamificação"],
+      "descricao": "Conjunto de cartões digitais para memorização ativa",
+      "icone": "🎴",
+      "cor": "#FF9800",
+      
+      "campos_obrigatorios": [
+        "titulo_conjunto",
+        "tema",
+        "numero_flashcards",
+        "conteudo_flashcards"
+      ],
+      
+      "campos_opcionais": [
+        "instrucoes",
+        "dificuldade_progressiva",
+        "modo_estudo"
+      ],
+
+      "schema_campos": {
+        "titulo_conjunto": {
+          "tipo": "text",
+          "label": "Título do Conjunto",
+          "placeholder": "Ex: Vocabulário de Inglês - Verbos Irregulares",
+          "max_length": 100,
+          "required": true
+        },
+        "tema": {
+          "tipo": "text",
+          "label": "Tema/Assunto",
+          "placeholder": "Ex: Verbos Irregulares em Inglês",
+          "max_length": 100,
+          "required": true
+        },
+        "numero_flashcards": {
+          "tipo": "number",
+          "label": "Número de Flashcards",
+          "min": 10,
+          "max": 50,
+          "default": 20,
+          "required": true
+        },
+        "conteudo_flashcards": {
+          "tipo": "array_objects",
+          "label": "Conteúdo dos Flashcards",
+          "min_items": 10,
+          "max_items": 50,
+          "schema": {
+            "frente": { 
+              "tipo": "text", 
+              "label": "Frente (Pergunta/Termo)", 
+              "placeholder": "Ex: To be",
+              "required": true 
+            },
+            "verso": { 
+              "tipo": "text", 
+              "label": "Verso (Resposta/Definição)", 
+              "placeholder": "Ex: was/were - been",
+              "required": true 
+            },
+            "dica": { 
+              "tipo": "text", 
+              "label": "Dica (opcional)", 
+              "placeholder": "Ex: Verbo auxiliar mais comum",
+              "required": false 
+            }
+          },
+          "required": true
+        }
+      }
+    },
+
+    {
+      "id": "sequencia-didatica-001",
+      "titulo": "Sequência Didática Completa",
+      "tipo": "sequencia-didatica",
+      "categoria": "planejamento",
+      "materia": "geral",
+      "nivel_dificuldade": "avancado",
+      "tags": ["planejamento", "progressao", "bncc", "longo_prazo"],
+      "descricao": "Sequência de aulas planejadas progressivamente com diagnósticos e avaliações",
+      "icone": "📅",
+      "cor": "#2196F3",
+      
+      "campos_obrigatorios": [
+        "titulo_sequencia",
+        "tema_geral",
+        "disciplina",
+        "ano_serie",
+        "quantidade_aulas",
+        "objetivos_gerais",
+        "estrutura_aulas"
+      ],
+      
+      "campos_opcionais": [
+        "recursos_complementares",
+        "avaliacoes_formativas"
+      ],
+
+      "schema_campos": {
+        "titulo_sequencia": {
+          "tipo": "text",
+          "label": "Título da Sequência",
+          "placeholder": "Ex: Dominando Funções - Do Básico ao ENEM",
+          "max_length": 150,
+          "required": true
+        },
+        "tema_geral": {
+          "tipo": "text",
+          "label": "Tema Geral",
+          "placeholder": "Ex: Funções Matemáticas",
+          "max_length": 100,
+          "required": true
+        },
+        "disciplina": {
+          "tipo": "select",
+          "label": "Disciplina",
+          "opcoes": ["Matemática", "Português", "História", "Geografia", "Ciências", "Biologia", "Física", "Química"],
+          "required": true
+        },
+        "ano_serie": {
+          "tipo": "select",
+          "label": "Ano/Série",
+          "opcoes": ["6º ano", "7º ano", "8º ano", "9º ano", "1ª série EM", "2ª série EM", "3ª série EM"],
+          "required": true
+        },
+        "quantidade_aulas": {
+          "tipo": "number",
+          "label": "Quantidade de Aulas",
+          "min": 4,
+          "max": 20,
+          "default": 10,
+          "required": true
+        },
+        "objetivos_gerais": {
+          "tipo": "textarea",
+          "label": "Objetivos Gerais da Sequência",
+          "placeholder": "Descreva os objetivos macro desta sequência didática...",
+          "max_length": 800,
+          "rows": 5,
+          "required": true
+        },
+        "estrutura_aulas": {
+          "tipo": "array_objects",
+          "label": "Estrutura das Aulas",
+          "help_text": "IA vai gerar automaticamente com base na quantidade de aulas",
+          "schema": {
+            "numero_aula": { "tipo": "number", "label": "Aula Nº", "required": true },
+            "tipo_aula": { 
+              "tipo": "select", 
+              "label": "Tipo", 
+              "opcoes": ["Aula", "Diagnóstico", "Avaliação"],
+              "required": true 
+            },
+            "titulo": { "tipo": "text", "label": "Título", "required": true },
+            "objetivo": { "tipo": "textarea", "label": "Objetivo", "required": true },
+            "conteudo": { "tipo": "textarea", "label": "Conteúdo", "required": true },
+            "duracao": { "tipo": "number", "label": "Duração (min)", "default": 50, "required": true }
+          },
+          "required": true
+        }
+      }
+    }
+  ]
+}
+2. CAPABILITY "DECIDIR" - IMPLEMENTAÇÃO TYPESCRIPT
+Arquivo: src/features/schoolpower/capabilities/decidir/decidir-atividades-criar.ts
+
+typescript
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// ============================================
+// TYPES & INTERFACES
+// ============================================
+
+interface AtividadeDisponivel {
+  id: string;
+  titulo: string;
+  tipo: string;
+  categoria: string;
+  materia: string;
+  nivel_dificuldade: string;
+  tags: string[];
+  descricao: string;
+  campos_obrigatorios: string[];
+  campos_opcionais?: string[];
+  schema_campos: Record<string, any>;
+}
+
+interface CriteriosDecisao {
+  objetivo_pedagogico: string;
+  quantidade: number;
+  priorizar?: 'variedade' | 'progressao' | 'focado';
+  nivel_turma?: 'basico' | 'intermediario' | 'avancado';
+}
+
+interface ContextoTurma {
+  turma_id?: string;
+  materia?: string;
+  nivel_ensino?: string;
+  desempenho_medio?: number;
+  gaps_aprendizado?: string[];
+}
+
+interface AtividadeEscolhida {
+  id: string;
+  titulo: string;
+  tipo: string;
+  materia: string;
+  nivel_dificuldade: string;
+  tags: string[];
+  campos_obrigatorios: string[];
+  campos_opcionais: string[];
+  schema_campos: Record<string, any>;
+  campos_preenchidos: Record<string, any>;
+  justificativa: string;
+  ordem_sugerida: number;
+  status_construcao: 'aguardando' | 'construindo' | 'concluido' | 'erro';
+  progresso: number;
+}
+
+interface DecidirAtividadesInput {
+  atividades_disponiveis: AtividadeDisponivel[];
+  criterios_decisao: CriteriosDecisao;
+  contexto_turma?: ContextoTurma;
+}
+
+interface DecidirAtividadesOutput {
+  success: boolean;
+  decisao: {
+    total_selecionado: number;
+    atividades: AtividadeEscolhida[];
+    estrategia_aplicada: string;
+    pronto_para_criar: boolean;
+    decidido_em: number;
+  };
+  mensagem: string;
+  pronto_para_criar: boolean;
+}
+
+// ============================================
+// MAIN FUNCTION
+// ============================================
+
+export async function decidirAtividadesCriar(
+  params: DecidirAtividadesInput
+): Promise<DecidirAtividadesOutput> {
+  
+  console.log('🎯 [DECIDIR] Iniciando capability decidir-atividades-criar...');
+  console.log('📊 [DECIDIR] Atividades disponíveis:', params.atividades_disponiveis.length);
+  console.log('🎓 [DECIDIR] Quantidade desejada:', params.criterios_decisao.quantidade);
+
+  const {
+    atividades_disponiveis,
+    criterios_decisao,
+    contexto_turma
+  } = params;
+
+  // ========================================
+  // PASSO 1: VALIDAÇÃO DE ENTRADA
+  // ========================================
+
+  if (!atividades_disponiveis || atividades_disponiveis.length === 0) {
+    throw new Error('❌ [DECIDIR] Nenhuma atividade disponível para decidir');
+  }
+
+  if (!criterios_decisao.objetivo_pedagogico) {
+    throw new Error('❌ [DECIDIR] Objetivo pedagógico é obrigatório');
+  }
+
+  if (criterios_decisao.quantidade < 1 || criterios_decisao.quantidade > 10) {
+    throw new Error('❌ [DECIDIR] Quantidade deve estar entre 1 e 10');
+  }
+
+  // ========================================
+  // PASSO 2: CONSTRUÇÃO DO PROMPT ULTRA-DETALHADO
+  // ========================================
+
+  const promptDecisao = `
+Você é um **ESPECIALISTA PEDAGÓGICO DE ELITE** com PhD em Educação e 20 anos de experiência em planejamento didático.
+
+Sua missão CRÍTICA é:
+1. Escolher estrategicamente as ${criterios_decisao.quantidade} melhores atividades
+2. **PREENCHER TODOS OS CAMPOS OBRIGATÓRIOS** de cada atividade escolhida com conteúdo pedagógico de altíssima qualidade
+
+## 📚 ATIVIDADES DISPONÍVEIS:
+
+${atividades_disponiveis.map((a, idx) => `
+### Atividade ${idx + 1}: ${a.titulo}
+- **ID:** ${a.id}
+- **Tipo:** ${a.tipo}
+- **Categoria:** ${a.categoria}
+- **Matéria:** ${a.materia}
+- **Dificuldade:** ${a.nivel_dificuldade}
+- **Tags:** ${a.tags.join(', ')}
+- **Descrição:** ${a.descricao}
+
+**CAMPOS OBRIGATÓRIOS QUE VOCÊ DEVE PREENCHER:**
+${a.campos_obrigatorios.map(campo => {
+  const schema = a.schema_campos[campo];
+  return `  - **${campo}**: (${schema.tipo}) ${schema.label} - ${schema.placeholder || ''}`;
+}).join('\n')}
+
+${a.campos_opcionais && a.campos_opcionais.length > 0 ? `
+**CAMPOS OPCIONAIS (preencha se relevante):**
+${a.campos_opcionais.map(campo => {
+  const schema = a.schema_campos[campo];
+  return `  - **${campo}**: (${schema.tipo}) ${schema.label}`;
+}).join('\n')}
+` : ''}
+`).join('\n---\n')}
+
+## 🎯 CRITÉRIOS DE DECISÃO:
+
+- **Objetivo Pedagógico:** ${criterios_decisao.objetivo_pedagogico}
+- **Quantidade Desejada:** ${criterios_decisao.quantidade} atividades
+- **Abordagem Prioritária:** ${criterios_decisao.priorizar || 'variedade de tipos'}
+- **Nível da Turma:** ${criterios_decisao.nivel_turma || 'intermediario'}
+
+${contexto_turma ? `
+## 🏫 CONTEXTO DA TURMA:
+
+- **Matéria:** ${contexto_turma.materia || 'Não especificado'}
+- **Nível de Ensino:** ${contexto_turma.nivel_ensino || 'Não especificado'}
+- **Desempenho Médio:** ${contexto_turma.desempenho_medio ? `${contexto_turma.desempenho_medio}%` : 'Não especificado'}
+- **Gaps de Aprendizado:** ${contexto_turma.gaps_aprendizado?.join(', ') || 'Não identificados'}
+
+**ATENÇÃO:** Use este contexto para personalizar o conteúdo das atividades!
+` : ''}
+
+## 📋 SUA TAREFA (EXECUÇÃO OBRIGATÓRIA):
+
+Para CADA uma das ${criterios_decisao.quantidade} atividades que você escolher:
+
+1. **Justifique a escolha** (por que essa atividade é ideal para o objetivo?)
+2. **Preencha TODOS os campos obrigatórios** com conteúdo pedagógico detalhado e de alta qualidade
+3. **Respeite o tipo de dado** de cada campo (text, textarea, array, number, select, etc.)
+4. **Use o schema_campos** para entender formato e validações
+5. **Ordene as atividades** de forma lógica e progressiva
+
+## 🚨 REGRAS CRÍTICAS:
+
+- ✅ TODOS os campos obrigatórios DEVEM ser preenchidos
+- ✅ Conteúdo deve ser pedagogicamente relevante e aplicável
+- ✅ Arrays devem ter quantidade mínima/máxima respeitada
+- ✅ Selects devem usar EXATAMENTE as opções disponíveis
+- ✅ Numbers devem respeitar min/max
+- ✅ Textos devem respeitar max_length
+- ❌ NÃO deixe campos vazios ou com placeholders
+- ❌ NÃO use "...", "exemplo", "etc" como conteúdo
+- ❌ NÃO copie literalmente os placeholders
+
+## 📤 FORMATO DE RESPOSTA (JSON VÁLIDO):
+
+{
+  "atividades_escolhidas": [
+    {
+      "id": "plano-aula-001",
+      "titulo": "Plano de Aula Completo",
+      "justificativa": "Esta atividade é ideal porque permite estruturar uma aula completa sobre [tema específico], alinhada com BNCC e adaptada ao nível da turma.",
+      "ordem_sugerida": 1,
+      "campos_preenchidos": {
+        "tema": "Equações do 2º Grau - Resolução com Fórmula de Bhaskara",
+        "disciplina": "Matemática",
+        "ano_serie": "9º ano",
+        "duracao_aula": 50,
+        "objetivo_geral": "Capacitar os alunos a resolverem equações do 2º grau utilizando a fórmula de Bhaskara, interpretando os coeficientes e compreendendo o significado das raízes.",
+        "objetivos_especificos": [
+          "Identificar os coeficientes a, b e c em uma equação do 2º grau",
+          "Aplicar corretamente a fórmula de Bhaskara",
+          "Interpretar o delta e o número de raízes reais",
+          "Resolver exercícios práticos de forma autônoma"
+        ],
+        "conteudo_programatico": "1. Revisão: Equações do 1º grau\n2. Introdução às equações do 2º grau\n3. Identificação dos coeficientes a, b, c\n4. Apresentação da fórmula de Bhaskara\n5. Cálculo do discriminante (delta)\n6. Interpretação das raízes\n7. Resolução de exercícios práticos",
+        "metodologia": "Aula expositiva dialogada com uso de quadro branco para demonstração passo a passo. Resolução de exemplos práticos em conjunto com os alunos. Atividade em duplas para resolução de exercícios gradativos. Correção coletiva com discussão dos métodos utilizados.",
+        "recursos_didaticos": [
+          "Quadro branco e marcadores",
+          "Datashow para apresentação de slides",
+          "Lista de exercícios impressa",
+          "Calculadora (opcional)",
+          "Apostila de Matemática"
+        ],
+        "avaliacao": "Avaliação formativa durante a aula através da participação e resolução de exercícios. Avaliação somativa com lista de 10 exercícios para entrega na próxima aula. Prova formal ao final da unidade.",
+        "bncc_competencias": [
+          "Conhecimento",
+          "Pensamento Científico, Crítico e Criativo",
+          "Comunicação",
+          "Argumentação"
+        ]
+      }
+    }
+  ],
+  "raciocinio_geral": "Escolhi atividades que progressivamente desenvolvem o domínio do tema, começando com planejamento estruturado, seguido por prática ativa e avaliação gamificada. Esta sequência garante compreensão teórica, prática e engajamento dos alunos."
+}
+
+**ATENÇÃO:** Retorne APENAS o JSON válido, sem texto adicional antes ou depois.
+`;
+
+  // ========================================
+  // PASSO 3: CHAMADA À API GEMINI
+  // ========================================
+
+  console.log('🤖 [DECIDIR] Enviando prompt para Gemini API...');
+
+  let decisionData;
+  try {
+    const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.0-flash-exp',
+      generationConfig: {
+        temperature: 0.8,
+        topP: 0.95,
+        topK: 40,
+        maxOutputTokens: 8192,
+        responseMimeType: 'application/json'
+      }
+    });
+
+    const result = await model.generateContent(promptDecisao);
+    const responseText = result.response.text();
+    
+    console.log('✅ [DECIDIR] Resposta recebida da API');
+    
+    decisionData = JSON.parse(responseText);
+    
+    if (!decisionData.atividades_escolhidas || !Array.isArray(decisionData.atividades_escolhidas)) {
+      throw new Error('❌ [DECIDIR] Formato de resposta inválido da IA');
+    }
+
+  } catch (error) {
+    console.error('❌ [DECIDIR] Erro ao chamar Gemini API:', error);
+    throw new Error(`Falha na geração de decisão: ${error.message}`);
+  }
+
+  // ========================================
+  // PASSO 4: VALIDAÇÃO E ENRIQUECIMENTO
+  // ========================================
+
+  console.log('🔍 [DECIDIR] Validando e enriquecendo dados...');
+
+  const atividadesEscolhidas: AtividadeEscolhida[] = decisionData.atividades_escolhidas.map((escolha: any, index: number) => {
+    
+    // 4.1. Busca atividade completa no catálogo
+    const atividadeCompleta = atividades_disponiveis.find(a => a.id === escolha.id);
+    
+    if (!atividadeCompleta) {
+      throw new Error(`❌ [DECIDIR] Atividade com ID "${escolha.id}" não encontrada no catálogo`);
+    }
+
+    // 4.2. Valida que TODOS os campos obrigatórios foram preenchidos
+    const camposFaltantes = atividadeCompleta.campos_obrigatorios.filter(
+      campo => {
+        const valor = escolha.campos_preenchidos[campo];
+        
+        // Verifica se campo existe
+        if (valor === undefined || valor === null) return true;
+        
+        // Verifica se não é string vazia
+        if (typeof valor === 'string' && valor.trim() === '') return true;
+        
+        // Verifica se array não está vazio
+        if (Array.isArray(valor) && valor.length === 0) return true;
+        
+        return false;
+      }
+    );
+
+    if (camposFaltantes.length > 0) {
+      console.error(`❌ [DECIDIR] Campos faltantes para "${escolha.titulo}":`, camposFaltantes);
+      throw new Error(
+        `IA não preencheu campos obrigatórios para "${escolha.titulo}": ${camposFaltantes.join(', ')}`
+      );
+    }
+
+    console.log(`✅ [DECIDIR] Atividade ${index + 1} validada: ${escolha.titulo}`);
+
+    // 4.3. Constrói objeto final
+    return {
+      // Dados da atividade original
+      id: atividadeCompleta.id,
+      titulo: atividadeCompleta.titulo,
+      tipo: atividadeCompleta.tipo,
+      materia: atividadeCompleta.materia,
+      nivel_dificuldade: atividadeCompleta.nivel_dificuldade,
+      tags: atividadeCompleta.tags,
+      
+      // Metadados de schema
+      campos_obrigatorios: atividadeCompleta.campos_obrigatorios,
+      campos_opcionais: atividadeCompleta.campos_opcionais || [],
+      schema_campos: atividadeCompleta.schema_campos,
+      
+      // Dados preenchidos pela IA
+      campos_preenchidos: escolha.campos_preenchidos,
+      justificativa: escolha.justificativa,
+      ordem_sugerida: escolha.ordem_sugerida || (index + 1),
+      
+      // Status para construção
+      status_construcao: 'aguardando' as const,
+      progresso: 0
+    };
+  });
+
+  // ========================================
+  // PASSO 5: ORGANIZA PARA PRÓXIMA CAPABILITY
+  // ========================================
+
+  const organizacao = {
+    total_selecionado: atividadesEscolhidas.length,
+    atividades: atividadesEscolhidas.sort((a, b) => a.ordem_sugerida - b.ordem_sugerida),
+    estrategia_aplicada: decisionData.raciocinio_geral || 'Atividades escolhidas estrategicamente',
+    pronto_para_criar: true,
+    decidido_em: Date.now()
+  };
+
+  console.log('🎉 [DECIDIR] Decisão concluída com sucesso!');
+  console.log(`📊 [DECIDIR] Total de atividades escolhidas: ${organizacao.total_selecionado}`);
+
+  // ========================================
+  // PASSO 6: RETORNA DECISÃO ESTRUTURADA
+  // ========================================
+
+  return {
+    success: true,
+    decisao: organizacao,
+    mensagem: `Escolhi ${organizacao.total_selecionado} atividade(s) estrategicamente e preenchi TODOS os campos necessários. ${decisionData.raciocinio_geral}`,
+    pronto_para_criar: true
+  };
+}
+3. CAPABILITY "CRIAR" - IMPLEMENTAÇÃO TYPESCRIPT
+Arquivo: src/features/schoolpower/capabilities/criar/criar-atividades.ts
+
+typescript
+import { pontoSchoolAPI } from '@/api-wrapper/PontoSchoolAPI';
+import type { AtividadeEscolhida } from '../decidir/decidir-atividades-criar';
+
+// ============================================
+// TYPES & INTERFACES
+// ============================================
+
+interface ConfiguracoesCriacao {
+  turma_id?: string;
+  data_disponibilizacao?: string;
+  prazo_entrega?: string;
+  permitir_tentativas_multiplas?: boolean;
+  feedback_automatico?: boolean;
+}
+
+interface CriarAtividadesInput {
+  atividades_decididas: AtividadeEscolhida[];
+  configuracoes_criacao?: ConfiguracoesCriacao;
+}
+
+interface CriacaoProgressUpdate {
+  type: 
+    | 'construcao:iniciada'
+    | 'atividade:construindo'
+    | 'atividade:concluida'
+    | 'atividade:erro'
+    | 'construcao:concluida';
+  total_atividades?: number;
+  atividades?: Array<{
+    id: string;
+    titulo: string;
+    tipo: string;
+    status: string;
+    progresso: number;
+  }>;
+  atividade_index?: number;
+  atividade_id?: string;
+  atividade_criada_id?: string;
+  titulo?: string;
+  progresso?: number;
+  erro?: string;
+  total_criadas?: number;
+  total_esperadas?: number;
+}
+
+interface AtividadeCriada {
+  id: string;
+  titulo: string;
+  tipo: string;
+  materia: string;
+  campos: Record<string, any>;
+  created_at: string;
+  created_by: string;
+}
+
+interface CriarAtividadesOutput {
+  success: boolean;
+  atividades_criadas: AtividadeCriada[];
+  total: number;
+  mensagem: string;
+  urls: Array<{
+    id: string;
+    titulo: string;
+    url: string;
+    url_editar: string;
+  }>;
+}
+
+// ============================================
+// MAIN FUNCTION
+// ============================================
+
+export async function criarAtividades(
+  params: CriarAtividadesInput,
+  onProgress?: (update: CriacaoProgressUpdate) => void
+): Promise<CriarAtividadesOutput> {
+  
+  console.log('🏗️ [CRIAR] Iniciando capability criar-atividades...');
+  
+  const { atividades_decididas, configuracoes_criacao } = params;
+
+  // ========================================
+  // PASSO 1: VALIDAÇÃO
+  // ========================================
+
+  if (!atividades_decididas || atividades_decididas.length === 0) {
+    throw new Error('❌ [CRIAR] Nenhuma atividade para criar');
+  }
+
+  console.log(`📊 [CRIAR] Total de atividades a criar: ${atividades_decididas.length}`);
+
+  // ========================================
+  // PASSO 2: NOTIFICA INÍCIO (RENDERIZA CARD)
+  // ========================================
+
+  onProgress?.({
+    type: 'construcao:iniciada',
+    total_atividades: atividades_decididas.length,
+    atividades: atividades_decididas.map(a => ({
+      id: a.id,
+      titulo: a.titulo,
+      tipo: a.tipo,
+      status: 'aguardando',
+      progresso: 0
+    }))
+  });
+
+  console.log('📤 [CRIAR] Progresso: Construção iniciada');
+
+  const atividadesCriadas: AtividadeCriada[] = [];
+
+  // ========================================
+  // PASSO 3: CRIA CADA ATIVIDADE SEQUENCIALMENTE
+  // ========================================
+
+  for (const [index, atividadeDecidida] of atividades_decididas.entries()) {
+    
+    console.log(`\n🔨 [CRIAR] Construindo atividade ${index + 1}/${atividades_decididas.length}: ${atividadeDecidida.titulo}`);
+
+    // 3.1. NOTIFICA INÍCIO DA ATIVIDADE
+    onProgress?.({
+      type: 'atividade:construindo',
+      atividade_index: index,
+      atividade_id: atividadeDecidida.id,
+      titulo: atividadeDecidida.titulo,
+      progresso: 0
+    });
+
+    try {
+      // ========================================
+      // 3.2. CONSTRÓI PAYLOAD (CAMPOS JÁ PREENCHIDOS!)
+      // ========================================
+
+      const payload = {
+        tipo: atividadeDecidida.tipo,
+        titulo: atividadeDecidida.titulo,
+        materia: atividadeDecidida.materia,
+        nivel_dificuldade: atividadeDecidida.nivel_dificuldade,
+        tags: atividadeDecidida.tags,
+        
+        // ✅ CRÍTICO: Campos já preenchidos pela capability "Decidir"
+        campos: atividadeDecidida.campos_preenchidos,
+        
+        // Configurações adicionais
+        turma_id: configuracoes_criacao?.turma_id,
+        data_disponibilizacao: configuracoes_criacao?.data_disponibilizacao,
+        prazo_entrega: configuracoes_criacao?.prazo_entrega,
+        permitir_tentativas_multiplas: configuracoes_criacao?.permitir_tentativas_multiplas ?? true,
+        feedback_automatico: configuracoes_criacao?.feedback_automatico ?? true,
+        
+        // Metadados
+        created_by: 'agente_jota_vibe_code',
+        created_at: new Date().toISOString()
+      };
+
+      console.log('📦 [CRIAR] Payload construído:', {
+        tipo: payload.tipo,
+        titulo: payload.titulo,
+        total_campos: Object.keys(payload.campos).length
+      });
+
+      // ========================================
+      // 3.3. SALVA NO BANCO DE DADOS VIA API
+      // ========================================
+
+      console.log('🚀 [CRIAR] Enviando para API...');
+      
+      const response = await pontoSchoolAPI.post('/api/atividades', payload);
+      
+      if (!response.data || !response.data.id) {
+        throw new Error('API não retornou ID da atividade criada');
+      }
+
+      const savedAtividade: AtividadeCriada = response.data;
+      
+      console.log(`✅ [CRIAR] Atividade criada com ID: ${savedAtividade.id}`);
+      
+      atividadesCriadas.push(savedAtividade);
+
+      // 3.4. NOTIFICA CONCLUSÃO DA ATIVIDADE
+      onProgress?.({
+        type: 'atividade:concluida',
+        atividade_index: index,
+        atividade_id: atividadeDecidida.id,
+        atividade_criada_id: savedAtividade.id,
+        progresso: 100
+      });
+
+      console.log(`🎉 [CRIAR] Atividade ${index + 1} concluída com sucesso!`);
+
+    } catch (error: any) {
+      
+      // 3.5. TRATAMENTO DE ERRO
+      console.error(`❌ [CRIAR] Erro ao criar atividade ${atividadeDecidida.titulo}:`, error);
+      
+      onProgress?.({
+        type: 'atividade:erro',
+        atividade_index: index,
+        atividade_id: atividadeDecidida.id,
+        erro: error.message || 'Erro desconhecido'
+      });
+      
+      // Continua com as próximas atividades
+      continue;
+    }
+  }
+
+  // ========================================
+  // PASSO 4: NOTIFICA CONCLUSÃO GERAL
+  // ========================================
+
+  console.log(`\n🏁 [CRIAR] Construção concluída!`);
+  console.log(`📊 [CRIAR] Total criadas: ${atividadesCriadas.length}/${atividades_decididas.length}`);
+
+  onProgress?.({
+    type: 'construcao:concluida',
+    total_criadas: atividadesCriadas.length,
+    total_esperadas: atividades_decididas.length
+  });
+
+  // ========================================
+  // PASSO 5: RETORNA RESULTADO
+  // ========================================
+
+  return {
+    success: true,
+    atividades_criadas: atividadesCriadas,
+    total: atividadesCriadas.length,
+    mensagem: `Criei ${atividadesCriadas.length} atividade(s) com sucesso! 🎉`,
+    urls: atividadesCriadas.map(a => ({
+      id: a.id,
+      titulo: a.titulo,
+      url: `/dashboard/atividades/${a.id}`,
+      url_editar: `/dashboard/atividades/${a.id}/editar`
+    }))
+  };
+}
+🎨 COMPONENTE DE INTERFACE: Card de Construção
+Arquivo: src/features/schoolpower/construction/CardDeConstrucao.tsx
+
+tsx
+import React, { useEffect, useState } from 'react';
+import { Check, Clock, AlertCircle, Loader2 } from 'lucide-react';
+import type { AtividadeEscolhida } from '../capabilities/decidir/decidir-atividades-criar';
+
+interface CardDeConstrucaoProps {
+  atividades: AtividadeEscolhida[];
+  onAtividadeConcluida?: (atividadeId: string) => void;
+  onTodasConcluidas?: () => void;
+}
+
+export const CardDeConstrucao: React.FC<CardDeConstrucaoProps> = ({
+  atividades,
+  onAtividadeConcluida,
+  onTodasConcluidas
+}) => {
+  
+  const [atividadesStatus, setAtividadesStatus] = useState(atividades);
+
+  useEffect(() => {
+    const todasConcluidas = atividadesStatus.every(a => a.status_construcao === 'concluido');
+    if (todasConcluidas && onTodasConcluidas) {
+      onTodasConcluidas();
+    }
+  }, [atividadesStatus, onTodasConcluidas]);
+
+  const atualizarStatus = (id: string, status: string, progresso: number) => {
+    setAtividadesStatus(prev =>
+      prev.map(a =>
+        a.id === id
+          ? { ...a, status_construcao: status as any, progresso }
+          : a
+      )
+    );
+
+    if (status === 'concluido' && onAtividadeConcluida) {
+      onAtividadeConcluida(id);
+    }
+  };
+
+  const renderStatusIcon = (status: string) => {
+    switch (status) {
+      case 'aguardando':
+        return <Clock className="w-5 h-5 text-gray-400" />;
+      case 'construindo':
+        return <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />;
+      case 'concluido':
+        return <Check className="w-5 h-5 text-green-500" />;
+      case 'erro':
+        return <AlertCircle className="w-5 h-5 text-red-500" />;
+      default:
+        return <Clock className="w-5 h-5 text-gray-400" />;
+    }
+  };
+
+  const renderStatusText = (status: string) => {
+    switch (status) {
+      case 'aguardando':
+        return 'Aguardando';
+      case 'construindo':
+        return 'Construindo...';
+      case 'concluido':
+        return 'Concluída';
+      case 'erro':
+        return 'Erro';
+      default:
+        return 'Aguardando';
+    }
+  };
+
+  return (
+    <div className="w-full max-w-6xl mx-auto p-6 bg-white rounded-xl shadow-lg">
+      
+      {/* Header */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          🏗️ Construção de Atividades
+        </h2>
+        <p className="text-gray-600">
+          Sistema está construindo automaticamente as atividades selecionadas
+        </p>
+      </div>
+
+      {/* Grid de Atividades */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {atividadesStatus.map((atividade, index) => (
+          <div
+            key={atividade.id}
+            className={`
+              relative p-4 rounded-lg border-2 transition-all duration-300
+              ${atividade.status_construcao === 'aguardando' ? 'border-gray-300 bg-gray-50' : ''}
+              ${atividade.status_construcao === 'construindo' ? 'border-blue-400 bg-blue-50' : ''}
+              ${atividade.status_construcao === 'concluido' ? 'border-green-400 bg-green-50' : ''}
+              ${atividade.status_construcao === 'erro' ? 'border-red-400 bg-red-50' : ''}
+            `}
+          >
+            
+            {/* Badge de Ordem */}
+            <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-md">
+              {index + 1}
+            </div>
+
+            {/* Status Icon */}
+            <div className="flex items-start gap-3 mb-3">
+              <div className="flex-shrink-0 mt-1">
+                {renderStatusIcon(atividade.status_construcao)}
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-800 text-sm leading-tight">
+                  {atividade.titulo}
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  {atividade.tipo}
+                </p>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            {atividade.status_construcao === 'construindo' && (
+              <div className="mb-3">
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-blue-500 h-full transition-all duration-500"
+                    style={{ width: `${atividade.progresso}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1 text-center">
+                  {atividade.progresso}%
+                </p>
+              </div>
+            )}
+
+            {/* Status Text */}
+            <div className="text-xs font-medium text-center">
+              {renderStatusText(atividade.status_construcao)}
+            </div>
+
+            {/* Justificativa (se concluída) */}
+            {atividade.status_construcao === 'concluido' && (
+              <p className="text-xs text-gray-600 mt-2 italic">
+                {atividade.justificativa}
+              </p>
+            )}
+
+          </div>
+        ))}
+      </div>
+
+      {/* Footer Stats */}
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-600">
+            Progresso Total:
+          </span>
+          <span className="font-bold text-indigo-600">
+            {atividadesStatus.filter(a => a.status_construcao === 'concluido').length} / {atividadesStatus.length}
+          </span>
+        </div>
+      </div>
+
+    </div>
+  );
+};
+⚙️ INSTRUÇÕES DE IMPLEMENTAÇÃO DETALHADAS
+ETAPA 1: Criar/Atualizar schoolPowerActivities.json
+bash
+# Local do arquivo
+src/features/schoolpower/data/schoolPowerActivities.json
+Ação:
+
+Se o arquivo NÃO existir: CRIE com estrutura completa acima
+
+Se o arquivo existir: ATUALIZE garantindo que tenha:
+
+campos_obrigatorios
+
+campos_opcionais
+
+schema_campos (com todos os detalhes de tipo, label, validações)
+
+Validação:
+
+Cada atividade DEVE ter todos os 3 campos acima
+
+Schema DEVE ter validações (min, max, required, etc.)
+
+ETAPA 2: Criar Capability DECIDIR
+bash
+# Diretório
+src/features/schoolpower/capabilities/decidir/
+
+# Arquivos a criar
+├── decidir-atividades-criar.ts  # Código principal acima
+├── types.ts                       # Interfaces exportáveis
+└── index.ts                       # Exports
+Ação:
+
+Copiar código TypeScript completo acima
+
+Configurar corretamente a API Key do Gemini
+
+Adicionar logs detalhados para debug
+
+Garantir tratamento de erros robusto
+
+Validação:
+
+Testar com 1 atividade simples (Flash Cards)
+
+Verificar se TODOS os campos são preenchidos
+
+Checar logs no console
+
+ETAPA 3: Criar Capability CRIAR
+bash
+# Diretório
+src/features/schoolpower/capabilities/criar/
+
+# Arquivos a criar
+├── criar-atividades.ts            # Código principal acima
+├── types.ts                       # Interfaces exportáveis
+└── index.ts                       # Exports
+Ação:
+
+Copiar código TypeScript completo acima
+
+Integrar com pontoSchoolAPI (endpoint /api/atividades)
+
+Implementar sistema de callback onProgress
+
+Garantir salvamento correto no banco
+
+Validação:
+
+Testar criação de 1 atividade
+
+Verificar se dados são salvos no banco
+
+Verificar callbacks de progresso
+
+ETAPA 4: Criar Componente CardDeConstrucao
+bash
+# Local do arquivo
+src/features/schoolpower/construction/CardDeConstrucao.tsx
+Ação:
+
+Copiar código React completo acima
+
+Integrar com TailwindCSS (já está pronto)
+
+Conectar com capability CRIAR via callbacks
+
+Testar renderização e animações
+
+Validação:
+
+Card aparece quando construção inicia
+
+Progress bar atualiza corretamente
+
+Ícones de status mudam corretamente
+
+ETAPA 5: Integrar no Fluxo Principal
+Arquivo: src/features/schoolpower/hooks/useSchoolPowerFlow.ts
+
+Alterações necessárias:
+
+typescript
+import { decidirAtividadesCriar } from '../capabilities/decidir';
+import { criarAtividades } from '../capabilities/criar';
+
+// Adicionar novo state
+const [atividadesDecididas, setAtividadesDecididas] = useState(null);
+const [progressoConstrucao, setProgressoConstrucao] = useState([]);
+
+// Nova função: aprovar plano e decidir atividades
+const aprovarPlanoEDecidir = async (atividadesAprovadas) => {
+  
+  setFlowState('decidindo'); // Novo estado
+  
+  try {
+    // Chama capability DECIDIR
+    const resultado = await decidirAtividadesCriar({
+      atividades_disponiveis: atividadesAprovadas, // Vem do plano de ação
+      criterios_decisao: {
+        objetivo_pedagogico: initialMessage,
+        quantidade: atividadesAprovadas.length,
+        priorizar: 'variedade',
+        nivel_turma: contextualizationData.nivel_turma
+      },
+      contexto_turma: {
+        materia: contextualizationData.materia,
+        nivel_ensino: contextualizationData.nivel_ensino,
+        // ... outros campos do quiz
+      }
+    });
+
+    if (resultado.success && resultado.pronto_para_criar) {
+      setAtividadesDecididas(resultado.decisao.atividades);
+      setFlowState('creating'); // Muda para estado de criação
+      
+      // Automaticamente chama capability CRIAR
+      await criarAtividadesAutomaticamente(resultado.decisao.atividades);
+    }
+    
+  } catch (error) {
+    console.error('Erro ao decidir atividades:', error);
+    setFlowState('error');
+  }
+};
+
+// Nova função: criar atividades automaticamente
+const criarAtividadesAutomaticamente = async (atividades) => {
+  
+  try {
+    const resultado = await criarAtividades(
+      {
+        atividades_decididas: atividades,
+        configuracoes_criacao: {
+          turma_id: contextualizationData.turma_id,
+          feedback_automatico: true
+        }
+      },
+      // Callback de progresso
+      (update) => {
+        if (update.type === 'construcao:iniciada') {
+          setProgressoConstrucao(update.atividades);
+        }
+        if (update.type === 'atividade:concluida') {
+          setProgressoConstrucao(prev =>
+            prev.map(a =>
+              a.id === update.atividade_id
+                ? { ...a, status: 'concluido', progresso: 100 }
+                : a
+            )
+          );
+        }
+        if (update.type === 'construcao:concluida') {
+          setFlowState('completed');
+        }
+      }
+    );
+
+    if (resultado.success) {
+      // Salvar no histórico, mostrar mensagem de sucesso, etc.
+      console.log('✅ Atividades criadas:', resultado.urls);
+    }
+    
+  } catch (error) {
+    console.error('Erro ao criar atividades:', error);
+    setFlowState('error');
+  }
+};
+🧪 TESTES CRÍTICOS
+Teste 1: Capability DECIDIR isolada
+typescript
+const resultado = await decidirAtividadesCriar({
+  atividades_disponiveis: [
+    // Apenas 1 atividade simples (Flash Cards)
+  ],
+  criterios_decisao: {
+    objetivo_pedagogico: 'Revisar vocabulário de inglês',
+    quantidade: 1
+  }
+});
+
+// Verificar:
+// - resultado.success === true
+// - resultado.decisao.atividades[0].campos_preenchidos está completo
+// - Todos os campos obrigatórios foram preenchidos
+Teste 2: Capability CRIAR isolada
+typescript
+const resultado = await criarAtividades({
+  atividades_decididas: [
+    // Atividade com campos já preenchidos do teste anterior
+  ]
+});
+
+// Verificar:
+// - resultado.success === true
+// - resultado.atividades_criadas.length === 1
+// - Atividade foi salva no banco de dados
+Teste 3: Fluxo completo
+text
+1. Enviar mensagem inicial
+2. Preencher quiz de contextualização
+3. IA gera plano de ação
+4. Aprovar 2 atividades
+5. Verificar se Card de Construção aparece
+6. Verificar se atividades são construídas automaticamente
+7. Verificar se progresso é atualizado em tempo real
+8. Verificar se atividades estão no banco de dados
+🚨 CHECKLIST FINAL
+Antes de considerar COMPLETO, verificar:
+
+ schoolPowerActivities.json tem campos completos para TODAS as atividades
+
+ Capability DECIDIR está funcionando e preenchendo todos os campos
+
+ Capability CRIAR está salvando corretamente no banco
+
+ Card de Construção renderiza corretamente
+
+ Progress bar atualiza em tempo real
+
+ Logs estão claros e informativos
+
+ Tratamento de erros está robusto
+
+ Nenhuma funcionalidade existente foi quebrada
+
+ Fluxo completo (início ao fim) está funcional
+
+ Testes passam sem erros
+
+🎯 PRINCÍPIOS DE DESENVOLVIMENTO
+Zero Tolerância a Bugs: Teste CADA etapa antes de avançar
+
+Código Limpo: Nomes claros, funções pequenas, comentários relevantes
+
+Logs Informativos: Emoji + contexto em cada log crítico
+
+Validação Rigorosa: Verificar tipos, obrigatoriedade, formatos
+
+Tratamento de Erros: Try/catch + mensagens úteis
+
+Performance: Operações assíncronas, evitar bloqueios
+
+Manutenibilidade: Código modular, reutilizável, documentado
+
+💡 NOTAS FINAIS
+NÃO altere arquivos fora do escopo definido
+
+NÃO quebre funcionalidades existentes
+
+TESTE cada etapa isoladamente antes de integrar
+
+REVISE código antes de considerar completo
+
+DOCUMENTE decisões técnicas importantes
+
+Você tem autonomia, expertise e responsabilidade para entregar isso PERFEITO. Aja com a mentalidade dos maiores desenvolvedores da história. Shipping > Perfeição, mas qualidade é inegociável.
+
+🚀 GO BUILD!
