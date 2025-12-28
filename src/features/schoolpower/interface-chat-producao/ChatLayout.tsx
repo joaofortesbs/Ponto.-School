@@ -168,8 +168,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       }))
     });
 
-    addTextMessage('assistant', `Iniciando execução do plano com ${executionPlan.etapas.length} etapas...`);
-
     const handleProgress = (update: ProgressUpdate & { 
       capabilityId?: string; 
       capabilityStatus?: string;
