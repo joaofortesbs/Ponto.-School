@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Wrench, CheckCircle, Circle, Loader2, Clock, Check, AlertCircle } from 'lucide-react';
+import React, { useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { Wrench, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { useChatState } from '../state/chatState';
+import { ProgressiveExecutionCard, ObjectiveItem, CapabilityItem } from './ProgressiveExecutionCard';
 import type { DevModeCardData, CapabilityState } from '../types/message-types';
 
 interface DeveloperModeCardProps {
@@ -59,13 +60,46 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
     };
   }, [cardId, updateCardData, updateCapabilityStatus, updateEtapaStatus, addTextMessage, addCapabilityToEtapa]);
 
+  const objectivesForProgressiveCard = useMemo((): ObjectiveItem[] => {
+    if (!data?.etapas) return [];
+
+    return data.etapas.map((etapa, idx) => {
+      let objectiveStatus: 'pending' | 'active' | 'completed' = 'pending';
+      if (etapa.status === 'concluido') objectiveStatus = 'completed';
+      else if (etapa.status === 'executando') objectiveStatus = 'active';
+
+      const capabilities: CapabilityItem[] = etapa.capabilities.map((cap) => {
+        let capStatus: 'hidden' | 'executing' | 'completed' | 'error' = 'hidden';
+        if (cap.status === 'executando') capStatus = 'executing';
+        else if (cap.status === 'concluido') capStatus = 'completed';
+        else if (cap.status === 'erro') capStatus = 'error';
+        else if (cap.status === 'pendente') capStatus = 'hidden';
+
+        return {
+          id: cap.id,
+          nome: cap.nome,
+          displayName: cap.displayName,
+          status: capStatus,
+        };
+      });
+
+      return {
+        ordem: idx,
+        titulo: etapa.titulo,
+        descricao: etapa.descricao,
+        status: objectiveStatus,
+        capabilities,
+      };
+    });
+  }, [data?.etapas]);
+
   if (!data) return null;
 
   const getStatusBadge = () => {
     switch (data.status) {
       case 'executando':
         return (
-          <span className="flex items-center gap-1.5 bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full text-xs font-medium">
+          <span className="flex items-center gap-1.5 bg-[#FF6B35]/20 text-[#FF6B35] px-3 py-1 rounded-full text-xs font-medium">
             <Loader2 className="w-3 h-3 animate-spin" />
             Em execução
           </span>
@@ -87,116 +121,39 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
     }
   };
 
-  const getEtapaIcon = (status: string) => {
-    switch (status) {
-      case 'concluido':
-        return <CheckCircle className="w-5 h-5 text-emerald-500" />;
-      case 'executando':
-        return <Circle className="w-5 h-5 text-orange-500 animate-pulse" />;
-      default:
-        return <Circle className="w-5 h-5 text-gray-500" />;
-    }
-  };
-
-  const getCapabilityIcon = (status: CapabilityState['status']) => {
-    switch (status) {
-      case 'executando':
-        return <Loader2 className="w-3.5 h-3.5 animate-spin text-orange-400" />;
-      case 'concluido':
-        return <Check className="w-3.5 h-3.5 text-emerald-400" />;
-      case 'erro':
-        return <AlertCircle className="w-3.5 h-3.5 text-red-400" />;
-      default:
-        return <Clock className="w-3.5 h-3.5 text-gray-400" />;
-    }
-  };
-
   return (
     <motion.div
       layout={isStatic}
       className="w-full max-w-2xl mx-auto my-2"
     >
-      <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-orange-500/30 rounded-xl overflow-hidden shadow-lg">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700">
+      <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/95 border border-[#FF6B35]/30 rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700/50">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
-              <Wrench className="w-4 h-4 text-orange-400" />
+            <div className="w-9 h-9 rounded-xl bg-[#FF6B35]/20 flex items-center justify-center">
+              <Wrench className="w-5 h-5 text-[#FF6B35]" />
             </div>
-            <h3 className="text-white font-semibold text-sm uppercase tracking-wide">
-              Modo Desenvolvedor
-            </h3>
+            <div>
+              <h3 className="text-white font-semibold text-sm uppercase tracking-wide">
+                Modo Desenvolvedor
+              </h3>
+              <p className="text-gray-400 text-xs mt-0.5">
+                Acompanhe a execução em tempo real
+              </p>
+            </div>
           </div>
           {getStatusBadge()}
         </div>
 
-        <div className="p-5 space-y-4">
-          <AnimatePresence mode="sync">
-            {data.etapas.map((etapa, idx) => (
-              <motion.div
-                key={idx}
-                layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className={`
-                  p-4 rounded-lg border transition-all duration-300
-                  ${etapa.status === 'concluido' 
-                    ? 'bg-emerald-500/10 border-emerald-500/30' 
-                    : etapa.status === 'executando'
-                    ? 'bg-orange-500/10 border-orange-500/30'
-                    : 'bg-gray-700/30 border-gray-600/30'}
-                `}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5">
-                    {getEtapaIcon(etapa.status)}
-                  </div>
-                  <div className="flex-1">
-                    <p className={`font-medium text-sm ${
-                      etapa.status === 'concluido' 
-                        ? 'text-emerald-300' 
-                        : etapa.status === 'executando'
-                        ? 'text-orange-300'
-                        : 'text-gray-300'
-                    }`}>
-                      {etapa.titulo}
-                    </p>
-
-                    {etapa.status === 'executando' && etapa.capabilities.length > 0 && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        className="mt-3 pl-2 border-l-2 border-orange-500/30 space-y-2"
-                      >
-                        {etapa.capabilities.map((cap) => (
-                          <div 
-                            key={cap.id} 
-                            className="flex items-center gap-2 text-xs"
-                          >
-                            {getCapabilityIcon(cap.status)}
-                            <span className={`
-                              ${cap.status === 'concluido' ? 'text-emerald-300' : 
-                                cap.status === 'executando' ? 'text-orange-300' : 
-                                'text-gray-400'}
-                            `}>
-                              {cap.displayName || cap.nome}
-                            </span>
-                          </div>
-                        ))}
-                      </motion.div>
-                    )}
-
-                    {etapa.status === 'concluido' && (
-                      <span className="inline-flex items-center gap-1 mt-2 text-xs text-emerald-400">
-                        <Check size={12} />
-                        Concluído
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+        <div className="p-5">
+          <ProgressiveExecutionCard
+            objectives={objectivesForProgressiveCard}
+            onObjectiveComplete={(index) => {
+              console.log(`📍 [DeveloperModeCard] Objetivo ${index} concluído`);
+            }}
+            onAllComplete={() => {
+              console.log('✅ [DeveloperModeCard] Todos os objetivos concluídos');
+            }}
+          />
         </div>
       </div>
     </motion.div>

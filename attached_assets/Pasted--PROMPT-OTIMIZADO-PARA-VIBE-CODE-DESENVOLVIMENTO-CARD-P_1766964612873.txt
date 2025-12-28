@@ -1,0 +1,448 @@
+🎯 PROMPT OTIMIZADO PARA VIBE CODE - DESENVOLVIMENTO CARD PROGRESSIVO DE EXECUÇÃO
+CONTEXTO ESTRATÉGICO
+Você está prestes a construir um dos componentes mais críticos e visualmente impactantes do School Power 2.0: o Card de Desenvolvimento Progressivo. Este componente é o coração da experiência do usuário durante a execução das capabilities, revelando visualmente o "cérebro da IA" em ação.
+
+Aja com a mentalidade combinada de:
+
+Dieter Rams (design minimalista e funcional)
+
+Adam Wathan (Tailwind CSS mastery)
+
+Dan Abramov (React patterns avançados)
+
+Bret Victor (interfaces que explicam a si mesmas)
+
+VISÃO DO COMPONENTE
+Analise cuidadosamente a imagem de referência fornecida. Ela revela a estrutura hierárquica que você precisa implementar:
+
+Anatomia Visual
+text
+┌─────────────────────────────────────────────────┐
+│ ○ [OBJETIVO/ETAPA] ────────────────────────► ▼ │  ← Card sólido laranja
+├─────────────────────────────────────────────────┤
+│    ┊ Capability 1 (executando/concluída) ┊    │  ← Card tracejado
+│    ┊ Capability 2 (executando/concluída) ┊    │  ← Card tracejado
+│    ┊ Capability 3 (aguardando...)        ┊    │  ← Card tracejado
+├─────────────────────────────────────────────────┤
+│ ○ [PRÓXIMO OBJETIVO] ──────────────────────► ▼ │  ← Card sólido laranja
+└─────────────────────────────────────────────────┘
+REQUISITOS FUNCIONAIS CRÍTICOS
+1. RENDERIZAÇÃO PROGRESSIVA (Não tudo de uma vez)
+Apenas o primeiro objetivo/etapa aparece inicialmente
+
+Capabilities aparecem uma por vez, conforme executam
+
+Próximo objetivo só aparece após todas as capabilities anteriores concluírem
+
+Implementar sistema de streaming de estados (não re-render completo)
+
+2. HIERARQUIA DE CARDS
+Card Tipo A: Objetivo/Etapa
+
+Formato: Retangular horizontal
+
+Bordas: Completamente arredondadas (border-radius alto)
+
+Estilo: Sólido, sem tracejado
+
+Cor: Laranja vibrante (#FF6B35 ou similar)
+
+Elementos:
+
+Checkbox circular à esquerda (alinhamento vertical perfeito)
+
+Texto do objetivo centralizado verticalmente
+
+Ícone de ação à direita (dropdown/chevron)
+
+Card Tipo B: Capability
+
+Formato: Retangular horizontal (ligeiramente menor que Tipo A)
+
+Bordas: Arredondadas, mas tracejadas (dashed border)
+
+Estilo: Transparente/semi-transparente
+
+Cor da borda: Laranja mais suave
+
+Elementos:
+
+Apenas texto da capability
+
+Indicador de status (loading spinner, check, error)
+
+3. ESTADOS E TRANSIÇÕES
+Estados dos Objetivos:
+
+pending → Não renderizado ainda
+
+active → Renderizado, capabilities executando
+
+completed → Todas capabilities concluídas, checkbox marcado
+
+Estados das Capabilities:
+
+hidden → Não renderizada ainda
+
+executing → Visível com loading spinner
+
+completed → Visível com check verde
+
+error → Visível com ícone de erro
+
+Transições obrigatórias:
+
+Fade-in suave ao aparecer (não aparecer de repente)
+
+Slide-down animation (vem de cima para baixo)
+
+Checkbox animation ao completar (morph de circle para check)
+
+REQUISITOS TÉCNICOS (Você decide COMO implementar)
+Arquitetura de Dados
+Você precisa estruturar dados para suportar:
+
+Múltiplos objetivos/etapas
+
+Múltiplas capabilities por objetivo
+
+Estados independentes de cada item
+
+Progresso granular (0-100% por capability)
+
+Decisões que você deve tomar:
+
+Como modelar a árvore de objetivos → capabilities?
+
+Usar Redux, Context, ou state local?
+
+Como garantir re-renders otimizados?
+
+WebSocket para updates real-time ou polling?
+
+Sistema de Animações
+Você precisa implementar:
+
+Transições fluidas entre estados
+
+Animações de entrada (aparecer)
+
+Animações de loading (spinner, pulse)
+
+Animações de conclusão (check bounce)
+
+Bibliotecas a considerar:
+
+Framer Motion (animações declarativas)
+
+CSS animations puras (performance)
+
+React Spring (física realista)
+
+Tailwind animate utilities (simples)
+
+Responsividade
+O card deve funcionar em:
+
+Desktop (largura máxima: 1200px)
+
+Tablet (collapse de elementos)
+
+Mobile (stack vertical, checkboxes menores)
+
+PRINCÍPIOS DE DESIGN
+1. Progressive Disclosure
+Mostre apenas o que é relevante agora. Não sobrecarregue com informação futura.
+
+2. Feedback Imediato
+Cada ação da IA deve ter feedback visual instantâneo (< 100ms).
+
+3. Hierarquia Visual Clara
+Objetivos (grandes, sólidos, cor forte)
+
+Capabilities (menores, tracejados, cor suave)
+
+Spacing consistente (use múltiplos de 4px)
+
+4. Motion com Propósito
+Animações devem guiar o olhar e explicar relações, não apenas "enfeitar".
+
+DESAFIOS TÉCNICOS QUE VOCÊ DEVE RESOLVER
+Desafio 1: Alinhamento Vertical Perfeito
+O checkbox circular à esquerda deve estar exatamente alinhado verticalmente com o centro do card laranja. Resolva isso considerando:
+
+Height dinâmico do card (texto pode quebrar linha)
+
+Flexbox vs Grid
+
+Absolute positioning com transform
+
+Desafio 2: Sincronização de Estados
+Capabilities executam de forma assíncrona. Como você vai:
+
+Receber updates de progresso?
+
+Atualizar UI sem flickering?
+
+Garantir ordem correta de exibição?
+
+Desafio 3: Performance
+Com 10 objetivos e 50 capabilities total:
+
+Como evitar re-renders desnecessários?
+
+Virtualização é necessária?
+
+Memoization de componentes?
+
+Desafio 4: Expansibilidade
+O card pode ser expandido (requisito inicial). Você precisa:
+
+Implementar collapse/expand smooth
+
+Guardar estado de expansão por objetivo
+
+Animação de height (difícil em CSS, considere max-height ou JS)
+
+CRITÉRIOS DE QUALIDADE
+Obrigatório (Breaking)
+✅ Renderização progressiva funciona (não tudo de uma vez)
+
+✅ Alinhamento visual perfeito entre checkboxes e cards
+
+✅ Animações fluidas (60fps)
+
+✅ Bordas tracejadas nas capabilities
+
+✅ Estados visuais claros (executando, concluído, erro)
+
+Esperado (Altamente recomendado)
+⭐ Transições suaves entre estados
+
+⭐ Loading spinners customizados
+
+⭐ Responsive em mobile
+
+⭐ Acessibilidade (ARIA labels, keyboard navigation)
+
+⭐ Dark mode support
+
+Desejável (Nice to have)
+💎 Animação de check "bouncy"
+
+💎 Micro-interações (hover, focus)
+
+💎 Sound effects (opcional, experimental)
+
+💎 Particle effects ao completar (celebração)
+
+INSPIRAÇÕES DE CÓDIGO (Conceitos, não copiar)
+Pattern: State Machine para Estados
+text
+Considere usar XState ou reducer com máquina de estados:
+- Estados bem definidos
+- Transições impossíveis não acontecem
+- Facilita debugging
+Pattern: Compound Components
+text
+<DevelopmentCard>
+  <DevelopmentCard.Objective />
+  <DevelopmentCard.Capability />
+</DevelopmentCard>
+
+Permite composição flexível
+Pattern: Render Props para Customização
+text
+<ProgressiveRenderer
+  items={objectives}
+  renderItem={(obj) => <ObjectiveCard {...obj} />}
+/>
+
+Separa lógica de renderização de UI
+INTEGRAÇÃO COM CAPABILITIES
+Você precisa integrar com o sistema de capabilities que já existe. Considere:
+
+Entrada de Dados
+De onde vem o plano de ação com objetivos?
+
+Como você recebe updates de progresso?
+
+Formato: JSON, eventos, callbacks?
+
+Eventos que você deve ouvir
+objective:started → Renderizar novo objetivo
+
+capability:started → Renderizar nova capability
+
+capability:progress → Atualizar progresso (0-100%)
+
+capability:completed → Marcar como concluído
+
+capability:error → Mostrar erro
+
+objective:completed → Marcar objetivo completo
+
+Eventos que você deve emitir
+card:expanded → Usuário expandiu card
+
+card:collapsed → Usuário colapsou card
+
+(Outros conforme sua arquitetura)
+
+ESTRUTURA DE PASTAS SUGERIDA (Você decide)
+text
+src/features/schoolpower/execution-card/
+├── ExecutionCard.tsx              # Componente principal
+├── components/
+│   ├── ObjectiveCard.tsx          # Card laranja sólido
+│   ├── CapabilityCard.tsx         # Card tracejado
+│   ├── ProgressIndicator.tsx      # Spinner/Progress
+│   └── StatusIcon.tsx             # Check/Error icons
+├── hooks/
+│   ├── useExecutionFlow.ts        # Lógica de progressão
+│   └── useAnimations.ts           # Lógica de animações
+├── types.ts                       # TypeScript interfaces
+└── styles.css                     # Estilos específicos (se necessário)
+TESTES MANUAIS OBRIGATÓRIOS
+Antes de considerar completo:
+
+Teste de Progressão
+
+ Apenas primeiro objetivo aparece no início
+
+ Capabilities aparecem uma por vez
+
+ Próximo objetivo só aparece após anterior concluir
+
+Teste de Alinhamento
+
+ Checkbox alinhado com centro do card (texto curto)
+
+ Checkbox alinhado com centro do card (texto longo/quebra linha)
+
+Teste de Estados
+
+ Loading spinner aparece durante execução
+
+ Check aparece ao completar
+
+ Erro aparece se capability falhar
+
+Teste de Performance
+
+ Com 10 objetivos + 50 capabilities, ainda roda suave
+
+ Sem lags ao atualizar progresso
+
+ FPS estável durante animações
+
+Teste de Responsividade
+
+ Desktop: layout horizontal perfeito
+
+ Mobile: stack vertical funciona
+
+GUIAS DE ESTILO (TailwindCSS)
+Cores Sugeridas (Você ajusta conforme design system)
+text
+Objetivo (sólido):
+- bg-orange-500 ou bg-amber-500
+- text-white
+- border-transparent
+
+Capability (tracejado):
+- border-orange-400 border-dashed
+- bg-transparent ou bg-orange-50/50
+- text-gray-700 dark:text-gray-300
+
+Checkbox:
+- border-orange-500
+- bg-white dark:bg-gray-800
+- check: bg-orange-500
+Espaçamentos
+text
+Entre objetivos: gap-6 ou gap-8
+Entre capabilities: gap-3 ou gap-4
+Padding interno dos cards: px-6 py-4
+Border radius objetivo: rounded-2xl ou rounded-3xl
+Border radius capability: rounded-xl
+Animações Tailwind
+text
+animate-fade-in (custom)
+animate-slide-down (custom)
+animate-spin (loading)
+transition-all duration-300 ease-in-out
+DECISÕES QUE SÃO SUAS
+Eu NÃO vou te dizer:
+
+Qual biblioteca de animação usar
+
+Estrutura exata de pastas
+
+Nomes específicos de componentes
+
+Como implementar o state management
+
+Código específico de JSX/TSX
+
+Você DEVE decidir baseado em:
+
+Padrões do projeto existente
+
+Performance vs simplicidade trade-offs
+
+Manutenibilidade do código
+
+Sua expertise técnica
+
+RED FLAGS (Evite a todo custo)
+❌ NÃO renderizar todos os objetivos de uma vez (quebra UX)
+❌ NÃO usar setInterval para polling (use eventos ou callbacks)
+❌ NÃO esquecer acessibilidade (WCAG 2.1 mínimo)
+❌ NÃO hardcodar valores (use tokens de design)
+❌ NÃO criar 10 arquivos CSS separados (use Tailwind ou CSS-in-JS)
+❌ NÃO esquecer TypeScript (tipagem forte obrigatória)
+❌ NÃO quebrar funcionalidades existentes (teste tudo)
+
+MINDSET OBRIGATÓRIO
+Pense em componentes como LEGO: pequenos, combináveis, reutilizáveis
+
+Animações comunicam, não decoram: cada movimento tem propósito
+
+Performance é feature: 60fps não é negociável
+
+Código auto-explicativo: nomes claros > comentários
+
+Teste visual constante: veja cada mudança no browser
+
+Mobile-first thinking: depois expande para desktop
+
+CHECKLIST FINAL
+Antes de marcar como COMPLETO:
+
+ Referência visual (imagem) foi respeitada fielmente
+
+ Renderização progressiva funciona perfeitamente
+
+ Alinhamento de checkboxes está pixel-perfect
+
+ Bordas tracejadas nas capabilities estão corretas
+
+ Animações são suaves e intencionais
+
+ Código está tipado (TypeScript)
+
+ Performance testada (10+ objetivos)
+
+ Responsivo em mobile
+
+ Integração com capabilities testada
+
+ Nenhuma funcionalidade existente quebrada
+
+RESULTADO ESPERADO
+Quando completo, o usuário deve sentir que está assistindo a IA pensar e agir em tempo real. O card se revela progressivamente como uma história sendo contada, não como uma lista estática. É teatro visual da inteligência em ação.
+
+Isso não é apenas um componente de UI. É a materialização da transparência algorítmica.
+
+🚀 Você tem todas as diretrizes. Arquitetura, implementação e decisões técnicas são SUAS. GO BUILD SOMETHING BEAUTIFUL AND FUNCTIONAL.
