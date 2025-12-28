@@ -1,0 +1,588 @@
+Cara, vou te entregar a ARQUITETURA EXATA de como isso deve funcionar, desde o momento que o usuário envia o primeiro prompt até a execução completa do plano.
+
+1. ESTRUTURA DE PASTAS E ARQUIVOS (ORGANIZAÇÃO PERFEITA)
+text
+/school-power-2.0/
+│
+├── /interface-chat-producao/          # Interface de chat ativada após primeiro prompt
+│   ├── ChatLayout.tsx                 # Layout visual do chat
+│   ├── MessageStream.tsx              # Stream de mensagens em tempo real
+│   ├── ExecutionPlanCard.tsx          # Card visual do plano de ação
+│   └── ContextModal.tsx               # Modal de contexto geral visível
+│
+├── /agente-jota/                      # Cérebro do agente
+│   ├── orchestrator.ts                # Orquestrador principal
+│   ├── planner.ts                     # Cria planos de ação
+│   ├── executor.ts                    # Executa funções
+│   └── memory-manager.ts              # Gerencia 3 camadas de memória
+│
+├── /capabilities/                     # "Pastas-mãe" de funcionalidades
+│   ├── /PESQUISAR/
+│   │   ├── index.ts                   # Registro de todas funções de pesquisa
+│   │   ├── pesquisar-desempenho-turma.ts
+│   │   ├── pesquisar-atividades-conta.ts
+│   │   ├── pesquisar-aulas-criadas.ts
+│   │   └── pesquisar-calendario.ts
+│   │
+│   ├── /CRIAR/
+│   │   ├── index.ts
+│   │   ├── criar-atividade.ts
+│   │   ├── criar-aula.ts
+│   │   ├── criar-avaliacao.ts
+│   │   └── criar-plano-ensino.ts
+│   │
+│   ├── /ADICIONAR/
+│   │   ├── index.ts
+│   │   ├── adicionar-atividade-aula.ts
+│   │   ├── adicionar-aula-calendario.ts
+│   │   └── adicionar-aluno-turma.ts
+│   │
+│   ├── /EDITAR/
+│   │   ├── index.ts
+│   │   ├── editar-atividade.ts
+│   │   └── editar-aula.ts
+│   │
+│   ├── /ANALISAR/
+│   │   ├── index.ts
+│   │   ├── analisar-desempenho-geral.ts
+│   │   ├── analisar-gaps-aprendizado.ts
+│   │   └── analisar-engajamento.ts
+│   │
+│   └── /NAVEGAR/
+│       ├── index.ts
+│       ├── ir-para-secao.ts           # Navega para seções da plataforma
+│       └── abrir-atividade.ts
+│
+├── /prompts/                          # Sistema de prompts
+│   ├── system-prompt.ts               # Prompt base do agente
+│   ├── planning-prompt.ts             # Prompt específico para criar planos
+│   └── execution-prompt.ts            # Prompt durante execução
+│
+└── /api-wrapper/                      # Conecta capabilities com APIs reais
+    ├── ponto-school-api.ts            # Wrapper da API principal
+    └── database-queries.ts            # Queries diretas quando necessário
+2. FLUXO COMPLETO: DO PROMPT À EXECUÇÃO
+FASE 1: USUÁRIO ENVIA PRIMEIRO PROMPT
+typescript
+// interface-chat-producao/ChatLayout.tsx
+
+export function ChatLayout() {
+  const [messages, setMessages] = useState([]);
+  const [executionPlan, setExecutionPlan] = useState(null);
+  const [isExecuting, setIsExecuting] = useState(false);
+
+  async function handleUserPrompt(userInput: string) {
+    // 1. ADICIONA MENSAGEM DO USUÁRIO
+    setMessages(prev => [...prev, {
+      role: "user",
+      content: userInput
+    }]);
+
+    // 2. ENVIA PARA ORQUESTRADOR
+    const response = await fetch('/api/agente-jota/process', {
+      method: 'POST',
+      body: JSON.stringify({
+        prompt: userInput,
+        sessionId: sessionId,
+        userId: userId
+      })
+    });
+
+    // 3. RECEBE PLANO DE AÇÃO
+    const { plan, initialMessage } = await response.json();
+
+    // 4. MOSTRA MENSAGEM INICIAL DA IA
+    setMessages(prev => [...prev, {
+      role: "assistant",
+      content: initialMessage
+    }]);
+
+    // 5. RENDERIZA CARD DO PLANO
+    setExecutionPlan(plan);
+  }
+
+  return (
+    <div className="chat-container">
+      {/* Stream de mensagens */}
+      <MessageStream messages={messages} />
+
+      {/* Card do plano de ação (aparece após IA responder) */}
+      {executionPlan && !isExecuting && (
+        <ExecutionPlanCard 
+          plan={executionPlan}
+          onExecute={() => handleExecutePlan(executionPlan)}
+        />
+      )}
+
+      {/* Contexto geral visível */}
+      <ContextModal context={workingMemory} />
+    </div>
+  );
+}
+FASE 2: IA CRIA PLANO DE AÇÃO
+typescript
+// agente-jota/planner.ts
+
+import { openai } from '@ai-sdk/openai';
+import { generateObject } from 'ai';
+import { z } from 'zod';
+import { CAPABILITIES } from '@/capabilities';
+
+export async function createExecutionPlan(userPrompt: string, context: any) {
+  
+  // 1. MONTA PROMPT PARA PLANNER
+  const planningPrompt = `
+Você é o assistente School Power. O professor pediu:
+"${userPrompt}"
+
+CONTEXTO ATUAL:
+${JSON.stringify(context, null, 2)}
+
+FUNÇÕES DISPONÍVEIS:
+${formatCapabilities(CAPABILITIES)}
+
+Crie um plano de ação com as etapas necessárias para realizar essa tarefa.
+Cada etapa deve chamar UMA função específica.
+  `;
+
+  // 2. LLM GERA PLANO ESTRUTURADO
+  const { object: plan } = await generateObject({
+    model: openai('gpt-4o'),
+    schema: z.object({
+      objetivo: z.string().describe("Resumo do que será feito"),
+      etapas: z.array(z.object({
+        ordem: z.number(),
+        descricao: z.string(),
+        funcao: z.string(),
+        parametros: z.record(z.any()),
+        justificativa: z.string()
+      }))
+    }),
+    prompt: planningPrompt
+  });
+
+  // 3. RETORNA PLANO
+  return {
+    planId: generateId(),
+    objetivo: plan.objetivo,
+    etapas: plan.etapas,
+    status: 'aguardando_aprovacao'
+  };
+}
+FASE 3: CARD VISUAL DO PLANO
+typescript
+// interface-chat-producao/ExecutionPlanCard.tsx
+
+export function ExecutionPlanCard({ plan, onExecute }: Props) {
+  return (
+    <div className="execution-plan-card">
+      
+      {/* Header */}
+      <div className="plan-header">
+        <Bot className="icon" />
+        <h3>Vou executar o seu plano de ação agora</h3>
+      </div>
+
+      {/* Objetivo */}
+      <div className="plan-objective">
+        <Target className="icon" />
+        <p><strong>Objetivo:</strong> {plan.objetivo}</p>
+      </div>
+
+      {/* Etapas do plano */}
+      <div className="plan-steps">
+        {plan.etapas.map((etapa, idx) => (
+          <div key={idx} className="step-item">
+            <div className="step-indicator">{etapa.ordem}</div>
+            <div className="step-content">
+              <p className="step-description">{etapa.descricao}</p>
+              <span className="step-function">{etapa.funcao}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Botão executar */}
+      <button 
+        onClick={onExecute}
+        className="execute-button"
+      >
+        <Play className="icon" />
+        Executar plano
+      </button>
+
+    </div>
+  );
+}
+VISUALIZAÇÃO:
+
+text
+┌────────────────────────────────────────────┐
+│ 🤖 Vou executar o seu plano de ação agora │
+└────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────┐
+│ 🎯 OBJETIVO                                │
+│ Criar 3 atividades de matemática para 7A  │
+└────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────┐
+│ ETAPAS DO PLANO                            │
+│                                            │
+│ ① Vou pesquisar o desempenho da turma X   │
+│   └─ pesquisar_desempenho_turma           │
+│                                            │
+│ ② Vou pesquisar quais atividades eu       │
+│   posso criar                              │
+│   └─ pesquisar_tipos_atividades           │
+│                                            │
+│ ③ Vou decidir quais atividades criar      │
+│   └─ analisar_gaps_aprendizado            │
+│                                            │
+│ ④ Vou criar as 3 atividades               │
+│   └─ criar_atividade (3x)                 │
+│                                            │
+│ ⑤ Vou adicionar no calendário             │
+│   └─ adicionar_aula_calendario            │
+└────────────────────────────────────────────┘
+
+[▶ EXECUTAR PLANO]
+FASE 4: EXECUÇÃO DO PLANO (QUANDO USUÁRIO CLICA)
+typescript
+// agente-jota/executor.ts
+
+import { CAPABILITIES } from '@/capabilities';
+import { MemoryManager } from './memory-manager';
+
+export class AgentExecutor {
+  private memory: MemoryManager;
+  private capabilities: typeof CAPABILITIES;
+
+  async executePlan(plan: ExecutionPlan, sessionId: string) {
+    
+    // 1. INICIALIZA CONTEXTO
+    await this.memory.saveToWorkingMemory({
+      tipo: 'objetivo',
+      conteudo: plan.objetivo,
+      timestamp: Date.now()
+    });
+
+    // 2. EXECUTA CADA ETAPA
+    for (const etapa of plan.etapas) {
+      
+      // 2.1. ATUALIZA UI (via WebSocket)
+      this.emitProgress({
+        sessionId,
+        status: 'executando',
+        etapaAtual: etapa.ordem,
+        descricao: etapa.descricao
+      });
+
+      // 2.2. BUSCA FUNÇÃO NA CAPABILITY
+      const capability = this.findCapability(etapa.funcao);
+
+      if (!capability) {
+        throw new Error(`Função ${etapa.funcao} não encontrada`);
+      }
+
+      // 2.3. EXECUTA FUNÇÃO REAL
+      const resultado = await capability.execute(etapa.parametros);
+
+      // 2.4. SALVA RESULTADO NO MODAL DE CONTEXTO (AUTOMÁTICO)
+      await this.memory.saveToWorkingMemory({
+        tipo: 'descoberta',
+        etapa: etapa.ordem,
+        funcao: etapa.funcao,
+        resultado: resultado,
+        timestamp: Date.now()
+      });
+
+      // 2.5. ENVIA ATUALIZAÇÃO PARA UI
+      this.emitProgress({
+        sessionId,
+        status: 'etapa_concluida',
+        etapaAtual: etapa.ordem,
+        resultado: this.formatResultForUser(resultado)
+      });
+    }
+
+    // 3. FINALIZA E GERA RELATÓRIO
+    const relatorio = await this.generateFinalReport(plan, sessionId);
+
+    return relatorio;
+  }
+
+  private findCapability(functionName: string) {
+    // Busca em todas as capabilities registradas
+    for (const [categoria, funcoes] of Object.entries(this.capabilities)) {
+      if (funcoes[functionName]) {
+        return funcoes[functionName];
+      }
+    }
+    return null;
+  }
+
+  private async generateFinalReport(plan: ExecutionPlan, sessionId: string) {
+    // 1. BUSCA TODO CONTEXTO ACUMULADO
+    const context = await this.memory.getWorkingMemory(sessionId);
+
+    // 2. LLM GERA RELATÓRIO FINAL
+    const { text: relatorio } = await generateText({
+      model: openai('gpt-4o'),
+      prompt: `
+Você acabou de executar o seguinte plano:
+${JSON.stringify(plan, null, 2)}
+
+RESULTADOS DE CADA ETAPA:
+${JSON.stringify(context, null, 2)}
+
+Gere um relatório amigável e completo para o professor, 
+explicando tudo que foi feito e os resultados obtidos.
+      `
+    });
+
+    return relatorio;
+  }
+}
+3. ESTRUTURA DAS CAPABILITIES (REGISTRO DE FUNÇÕES)
+typescript
+// capabilities/PESQUISAR/index.ts
+
+import { pesquisarDesempenhoTurma } from './pesquisar-desempenho-turma';
+import { pesquisarAtividadesConta } from './pesquisar-atividades-conta';
+import { pesquisarAulasCriadas } from './pesquisar-aulas-criadas';
+
+export const PESQUISAR_CAPABILITIES = {
+  
+  pesquisar_desempenho_turma: {
+    description: "Busca dados de desempenho acadêmico de uma turma específica",
+    parameters: {
+      turma_id: { type: "string", required: true },
+      periodo: { type: "string", required: false, default: "ultimo_mes" }
+    },
+    execute: pesquisarDesempenhoTurma
+  },
+
+  pesquisar_atividades_conta: {
+    description: "Busca todas as atividades criadas pelo usuário na conta",
+    parameters: {
+      materia: { type: "string", required: false },
+      tipo: { type: "string", required: false },
+      limit: { type: "number", required: false, default: 50 }
+    },
+    execute: pesquisarAtividadesConta
+  },
+
+  pesquisar_aulas_criadas: {
+    description: "Busca aulas criadas pelo professor",
+    parameters: {
+      turma_id: { type: "string", required: false },
+      data_inicio: { type: "string", required: false }
+    },
+    execute: pesquisarAulasCriadas
+  }
+
+};
+typescript
+// capabilities/PESQUISAR/pesquisar-desempenho-turma.ts
+
+import { pontoSchoolAPI } from '@/api-wrapper/ponto-school-api';
+
+export async function pesquisarDesempenhoTurma(params: {
+  turma_id: string;
+  periodo?: string;
+}) {
+  
+  // 1. CHAMA API REAL DA PONTO.SCHOOL
+  const response = await pontoSchoolAPI.get(
+    `/turmas/${params.turma_id}/desempenho`,
+    { params: { periodo: params.periodo } }
+  );
+
+  // 2. PROCESSA E RETORNA DADOS
+  return {
+    turma_id: params.turma_id,
+    total_alunos: response.data.total_alunos,
+    media_geral: response.data.media_geral,
+    gaps_principais: response.data.gaps,
+    materias_criticas: response.data.materias_criticas,
+    raw_data: response.data // Dados completos para debug
+  };
+}
+4. REGISTRO GLOBAL DE CAPABILITIES
+typescript
+// capabilities/index.ts
+
+import { PESQUISAR_CAPABILITIES } from './PESQUISAR';
+import { CRIAR_CAPABILITIES } from './CRIAR';
+import { ADICIONAR_CAPABILITIES } from './ADICIONAR';
+import { EDITAR_CAPABILITIES } from './EDITAR';
+import { ANALISAR_CAPABILITIES } from './ANALISAR';
+import { NAVEGAR_CAPABILITIES } from './NAVEGAR';
+
+export const CAPABILITIES = {
+  PESQUISAR: PESQUISAR_CAPABILITIES,
+  CRIAR: CRIAR_CAPABILITIES,
+  ADICIONAR: ADICIONAR_CAPABILITIES,
+  EDITAR: EDITAR_CAPABILITIES,
+  ANALISAR: ANALISAR_CAPABILITIES,
+  NAVEGAR: NAVEGAR_CAPABILITIES
+};
+
+// Helper para formatar para LLM
+export function formatCapabilitiesForLLM() {
+  const functions = [];
+
+  for (const [categoria, funcoes] of Object.entries(CAPABILITIES)) {
+    for (const [nome, config] of Object.entries(funcoes)) {
+      functions.push({
+        name: nome,
+        description: config.description,
+        parameters: {
+          type: "object",
+          properties: config.parameters,
+          required: Object.entries(config.parameters)
+            .filter(([_, p]) => p.required)
+            .map(([name]) => name)
+        }
+      });
+    }
+  }
+
+  return functions;
+}
+5. SYSTEM PROMPT (CÉREBRO DO AGENTE)
+typescript
+// prompts/system-prompt.ts
+
+export const SYSTEM_PROMPT = `
+Você é o School Power, um assistente de IA especializado em educação.
+
+SUAS CAPACIDADES:
+Você tem acesso a funções específicas que podem executar ações na plataforma Ponto.School.
+Essas funções estão organizadas em categorias:
+
+- PESQUISAR: Buscar informações (desempenho, atividades, aulas, etc)
+- CRIAR: Criar conteúdo (atividades, aulas, avaliações, etc)
+- ADICIONAR: Adicionar itens existentes em lugares (calendário, aulas, etc)
+- EDITAR: Modificar conteúdo existente
+- ANALISAR: Analisar dados e gerar insights
+- NAVEGAR: Navegar pela plataforma
+
+COMO VOCÊ TRABALHA:
+
+1. PLANEJAMENTO:
+   - Quando receber um pedido, SEMPRE crie um plano de ação estruturado
+   - Divida em etapas claras e sequenciais
+   - Cada etapa deve chamar UMA função específica
+   - Explique o objetivo geral e justifique cada etapa
+
+2. EXECUÇÃO:
+   - Após aprovação do usuário, execute o plano etapa por etapa
+   - SEMPRE consulte o Modal de Contexto antes de cada ação
+   - Salve os resultados após cada função executada
+   - Se algo falhar, ajuste o plano e continue
+
+3. RELATÓRIO:
+   - Ao finalizar, gere relatório completo e amigável
+   - Mostre o que foi feito, os resultados obtidos
+   - Sugira próximos passos quando relevante
+
+REGRAS:
+- NUNCA invente dados - sempre use funções para buscar informações reais
+- SEMPRE valide parâmetros antes de chamar funções
+- Se não souber algo, admita e sugira alternativas
+- Seja proativo: antecipe necessidades do professor
+- Mantenha tom profissional mas amigável
+
+CONTEXTO ATUAL:
+{context_placeholder}
+`;
+6. API ENDPOINT PRINCIPAL
+typescript
+// app/api/agente-jota/process/route.ts
+
+import { NextRequest, NextResponse } from 'next/server';
+import { createExecutionPlan } from '@/agente-jota/planner';
+import { AgentExecutor } from '@/agente-jota/executor';
+import { MemoryManager } from '@/agente-jota/memory-manager';
+
+export async function POST(req: NextRequest) {
+  const { prompt, sessionId, userId, action } = await req.json();
+
+  const memory = new MemoryManager(sessionId, userId);
+  const executor = new AgentExecutor(memory);
+
+  // CASO 1: Criar plano
+  if (action === 'create_plan' || !action) {
+    
+    // 1. Busca contexto do usuário
+    const context = await memory.getFullContext();
+
+    // 2. IA cria plano de ação
+    const plan = await createExecutionPlan(prompt, context);
+
+    // 3. Gera mensagem inicial amigável
+    const initialMessage = `Ótimo! Vou te ajudar com isso. Montei um plano de ação com ${plan.etapas.length} etapas. Dá uma olhada:`;
+
+    return NextResponse.json({
+      plan,
+      initialMessage
+    });
+  }
+
+  // CASO 2: Executar plano
+  if (action === 'execute_plan') {
+    const { planId } = await req.json();
+
+    // 1. Busca plano
+    const plan = await memory.getPlan(planId);
+
+    // 2. Executa plano completo
+    const relatorio = await executor.executePlan(plan, sessionId);
+
+    return NextResponse.json({
+      status: 'concluido',
+      relatorio
+    });
+  }
+}
+7. ATUALIZAÇÃO EM TEMPO REAL (WEBSOCKET)
+typescript
+// agente-jota/executor.ts (continuação)
+
+private emitProgress(data: ProgressUpdate) {
+  // Envia atualização via WebSocket para frontend
+  this.ws.emit('agent:progress', data);
+}
+
+// Frontend escuta atualizações
+// interface-chat-producao/ChatLayout.tsx
+
+useEffect(() => {
+  const ws = new WebSocket(`${WS_URL}/agent/${sessionId}`);
+
+  ws.on('agent:progress', (data) => {
+    if (data.status === 'executando') {
+      // Atualiza modal de contexto
+      setWorkingMemory(prev => [
+        ...prev,
+        `⚡ ${data.descricao}`
+      ]);
+    }
+
+    if (data.status === 'etapa_concluida') {
+      // Marca etapa como concluída no card
+      setExecutionPlan(prev => ({
+        ...prev,
+        etapas: prev.etapas.map(e => 
+          e.ordem === data.etapaAtual 
+            ? { ...e, status: 'concluida', resultado: data.resultado }
+            : e
+        )
+      }));
+    }
+  });
+
+  return () => ws.close();
+}, [sessionId]);
