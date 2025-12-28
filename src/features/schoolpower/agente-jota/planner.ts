@@ -98,34 +98,45 @@ function parseAIPlanResponse(responseText: string): ParsedPlan {
 }
 
 function createFallbackPlan(userPrompt: string): ExecutionPlan {
-  console.log('🔄 [Planner] Usando plano fallback');
+  console.log('🔄 [Planner] Usando plano fallback direto');
+
+  const promptLower = userPrompt.toLowerCase();
+  const isPlanoAula = promptLower.includes('plano de aula') || promptLower.includes('aula');
+  const isAtividade = promptLower.includes('atividade') || promptLower.includes('exercício');
+  const isAvaliacao = promptLower.includes('avaliação') || promptLower.includes('prova') || promptLower.includes('diagnóstico');
+
+  const etapas: ExecutionPlan['etapas'] = [];
+
+  if (isPlanoAula) {
+    etapas.push({
+      ordem: 1,
+      descricao: 'Criar plano de aula personalizado',
+      funcao: 'criar_plano_aula',
+      parametros: { tema: userPrompt, contexto: userPrompt },
+      status: 'pendente',
+    });
+  } else if (isAvaliacao) {
+    etapas.push({
+      ordem: 1,
+      descricao: 'Criar avaliação diagnóstica',
+      funcao: 'criar_avaliacao_diagnostica',
+      parametros: { tema: userPrompt, contexto: userPrompt },
+      status: 'pendente',
+    });
+  } else {
+    etapas.push({
+      ordem: 1,
+      descricao: 'Criar atividade educacional',
+      funcao: 'criar_atividade',
+      parametros: { tipo: 'personalizada', contexto: userPrompt },
+      status: 'pendente',
+    });
+  }
 
   return {
     planId: `plan-fallback-${Date.now()}`,
-    objetivo: `Processar solicitação: "${userPrompt.substring(0, 100)}..."`,
-    etapas: [
-      {
-        ordem: 1,
-        descricao: 'Analisar a solicitação do usuário',
-        funcao: 'analisar_solicitacao',
-        parametros: { prompt: userPrompt },
-        status: 'pendente',
-      },
-      {
-        ordem: 2,
-        descricao: 'Identificar atividades relevantes',
-        funcao: 'pesquisar_tipos_atividades',
-        parametros: {},
-        status: 'pendente',
-      },
-      {
-        ordem: 3,
-        descricao: 'Criar atividades solicitadas',
-        funcao: 'criar_atividade',
-        parametros: { tipo: 'generico', contexto: userPrompt },
-        status: 'pendente',
-      },
-    ],
+    objetivo: `Criar material educacional conforme solicitado`,
+    etapas,
     status: 'aguardando_aprovacao',
     createdAt: Date.now(),
   };

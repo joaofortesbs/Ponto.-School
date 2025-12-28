@@ -17,30 +17,33 @@ FUNÇÕES DISPONÍVEIS:
 {capabilities}
 
 INSTRUÇÕES:
-Crie um plano de ação estruturado para realizar essa tarefa.
-O plano deve ter entre 2 e 6 etapas, cada uma chamando UMA função específica.
+Analise a solicitação do professor de forma IMEDIATA e CONCRETA.
+NÃO crie etapas de "análise" ou "entendimento" - você já entendeu a solicitação.
+Crie um plano de ação DIRETO e EXECUTÁVEL com 1 a 5 etapas práticas.
 
 RESPONDA APENAS COM UM JSON VÁLIDO no seguinte formato:
 {
-  "objetivo": "Resumo claro do que será feito (1-2 frases)",
+  "objetivo": "Resumo claro e específico do que será criado/feito",
   "etapas": [
     {
-      "descricao": "Descrição amigável do que será feito nesta etapa",
+      "descricao": "Ação concreta que será executada",
       "funcao": "nome_da_funcao",
       "parametros": { "param1": "valor1" },
-      "justificativa": "Por que essa etapa é necessária"
+      "justificativa": "Resultado esperado desta ação"
     }
   ]
 }
 
-REGRAS:
-1. Use APENAS funções da lista de capabilities disponíveis
-2. Cada etapa deve ser específica e executável
-3. Ordene as etapas de forma lógica
-4. Use parâmetros corretos para cada função
-5. Se não souber qual função usar, use "analisar_solicitacao" ou "criar_atividade"
-6. Descrições devem ser em português brasileiro, claras e amigáveis
+REGRAS CRÍTICAS:
+1. NUNCA use "analisar_solicitacao" como primeira etapa - você já analisou
+2. Vá DIRETO para ações práticas: criar, pesquisar, gerar
+3. Use APENAS funções da lista de capabilities disponíveis
+4. Cada etapa deve produzir um resultado tangível
+5. Use parâmetros corretos e específicos para cada função
+6. Descrições devem ser em português brasileiro, claras e diretas
 7. NÃO inclua markdown ou texto fora do JSON
+8. Se o professor quer uma atividade, use "criar_atividade" diretamente
+9. Se o professor quer um plano de aula, use "criar_plano_aula" diretamente
 
 IMPORTANTE: Retorne APENAS o JSON, sem explicações adicionais.
 `.trim();
