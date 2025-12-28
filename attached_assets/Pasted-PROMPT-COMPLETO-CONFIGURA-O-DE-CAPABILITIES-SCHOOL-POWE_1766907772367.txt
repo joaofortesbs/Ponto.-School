@@ -1,0 +1,1119 @@
+PROMPT COMPLETO: CONFIGURAÇÃO DE CAPABILITIES - SCHOOL POWER 2.0
+OBJETIVO
+Implementar e configurar as 4 capabilities iniciais do School Power 2.0, com comportamento sequencial e aparição progressiva conforme a IA finaliza cada capability anterior. As capabilities devem ser executadas de forma encadeada e mostrar feedbacks visuais específicos para cada tipo de ação.
+
+CAPABILITIES DISPONÍVEIS
+1. CAPABILITY: PLANEJAR
+Nome da Função: planejar_plano_de_acao
+Descrição:
+Monta um plano de ação estruturado baseado no objetivo do usuário. Esta capability pode ser chamada a qualquer momento durante a conversa, independente do estágio ou contexto.
+
+Comportamento:
+
+Quando chamada, a IA SEMPRE deve:
+
+Analisar o objetivo do usuário
+
+Gerar um plano estruturado em etapas
+
+Renderizar o Card de Plano de Ação no chat
+
+Aguardar aprovação do usuário (botão "APLICAR PLANO")
+
+Schema da Capability:
+
+typescript
+// capabilities/PLANEJAR/schemas/planejar-schema.ts
+
+import { z } from 'zod';
+
+export const planejarPlanoAcaoSchema = z.object({
+  objetivo: z.string().describe('Objetivo principal que o usuário deseja alcançar'),
+  contexto: z.object({
+    turma_id: z.string().optional(),
+    materia: z.string().optional(),
+    nivel_ensino: z.string().optional()
+  }).optional(),
+  preferencias: z.object({
+    tipo_atividade_preferida: z.string().optional(),
+    dificuldade: z.enum(['basico', 'intermediario', 'avancado']).optional()
+  }).optional()
+});
+
+export type PlanejarPlanoAcaoInput = z.infer<typeof planejarPlanoAcaoSchema>;
+Implementação:
+
+typescript
+// capabilities/PLANEJAR/implementations/planejar-plano-de-acao.ts
+
+import { PromptBuilder } from '@/agente-jota-chat/prompt-system/prompt-planning/planning-prompt';
+import { llm } from '@/services/llm-service';
+
+export async function planejarPlanoDeAcao(params: PlanejarPlanoAcaoInput) {
+  
+  // 1. MONTA PROMPT DE PLANEJAMENTO
+  const promptBuilder = new PromptBuilder();
+  const planningPrompt = await promptBuilder.buildPlanningPrompt({
+    objetivo: params.objetivo,
+    contexto: params.contexto,
+    preferencias: params.preferencias,
+    availableCapabilities: [
+      'pesquisar_atividades_disponiveis',
+      'decidir_atividades_criar',
+      'criar_atividades'
+    ]
+  });
+
+  // 2. LLM GERA O PLANO
+  const planResponse = await llm.generatePlan(planningPrompt);
+
+  // 3. ESTRUTURA O PLANO
+  const plano = {
+    id: generateId(),
+    objetivo: params.objetivo,
+    etapas: planResponse.etapas.map((etapa, idx) => ({
+      ordem: idx + 1,
+      titulo: etapa.titulo,
+      descricao: etapa.descricao,
+      capabilities: [], // Será populado durante execução
+      status: 'pending',
+      justificativa: etapa.justificativa
+    })),
+    status: 'pending',
+    createdAt: Date.now()
+  };
+
+  // 4. RETORNA PLANO PARA RENDERIZAÇÃO
+  return {
+    success: true,
+    plano,
+    mensagem: 'Montei um plano de ação completo pra você! Dá uma olhada e clica em "APLICAR PLANO" quando estiver pronto.'
+  };
+}
+Registro da Capability:
+
+typescript
+// capabilities/PLANEJAR/registry.ts
+
+import { planejarPlanoDeAcao } from './implementations/planejar-plano-de-acao';
+import { planejarPlanoAcaoSchema } from './schemas/planejar-schema';
+
+export const PLANEJAR_CAPABILITIES = {
+  planejar_plano_de_acao: {
+    funcao: 'planejar_plano_de_acao',
+    displayName: 'Vou montar um plano de ação pra você',
+    categoria: 'PLANEJAR',
+    descricao: 'Cria um plano estruturado de ações para alcançar objetivo do usuário',
+    schema: planejarPlanoAcaoSchema,
+    execute: planejarPlanoDeAcao,
+    // Configurações especiais
+    canCallAnytime: true, // Pode ser chamada a qualquer momento
+    requiresUserApproval: true, // Sempre requer aprovação
+    renderComponent: 'PlanActionCard' // Componente específico a renderizar
+  }
+};
+2. CAPABILITY: PESQUISAR ATIVIDADES DISPONÍVEIS
+Nome da Função: pesquisar_atividades_disponiveis
+Descrição:
+Consulta o arquivo JSON com todas as atividades disponíveis na plataforma de forma tererizada (typeahead/filtered), permitindo à IA visualizar e filtrar atividades por critérios específicos.
+
+Localização do Arquivo:
+src/features/schoolpower/data/schoolPowerActivities.json
+
+Schema da Capability:
+
+typescript
+// capabilities/PESQUISAR/schemas/pesquisar-atividades-schema.ts
+
+import { z } from 'zod';
+
+export const pesquisarAtividadesDisponiveisSchema = z.object({
+  filtros: z.object({
+    materia: z.string().optional().describe('Matéria/disciplina (ex: matematica, portugues)'),
+    tipo: z.string().optional().describe('Tipo de atividade (ex: exercicio, quiz, projeto)'),
+    nivel_dificuldade: z.enum(['basico', 'intermediario', 'avancado']).optional(),
+    tags: z.array(z.string()).optional().describe('Tags para filtrar (ex: ["algebra", "equacoes"])'),
+    busca_texto: z.string().optional().describe('Busca livre no título/descrição')
+  }).optional()
+});
+
+export type PesquisarAtividadesDisponiveisInput = z.infer<typeof pesquisarAtividadesDisponiveisSchema>;
+Estrutura Esperada do JSON:
+
+json
+// src/features/schoolpower/data/schoolPowerActivities.json
+{
+  "atividades": [
+    {
+      "id": "ativ_001",
+      "titulo": "Equações do 1º Grau",
+      "tipo": "exercicio",
+      "materia": "matematica",
+      "nivel_dificuldade": "intermediario",
+      "tags": ["algebra", "equacoes", "resolucao_problemas"],
+      "descricao": "Atividade completa sobre resolução de equações de primeiro grau",
+      "template": {
+        "estrutura": "quiz",
+        "numero_questoes": 10,
+        "tempo_estimado": 30,
+        "pontuacao_maxima": 100
+      },
+      "requisitos": {
+        "conhecimentos_previos": ["operacoes_basicas", "variavel"],
+        "nivel_ensino": ["7ano", "8ano"]
+      }
+    },
+    {
+      "id": "ativ_002",
+      "titulo": "Interpretação Textual - Fábulas",
+      "tipo": "leitura_interpretacao",
+      "materia": "portugues",
+      "nivel_dificuldade": "basico",
+      "tags": ["leitura", "interpretacao", "fabulas"],
+      "descricao": "Atividade de interpretação de texto com fábulas clássicas",
+      "template": {
+        "estrutura": "questoes_abertas",
+        "numero_questoes": 5,
+        "tempo_estimado": 40,
+        "pontuacao_maxima": 50
+      }
+    }
+    // ... mais atividades
+  ]
+}
+Implementação:
+
+typescript
+// capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis.ts
+
+import fs from 'fs/promises';
+import path from 'path';
+
+export async function pesquisarAtividadesDisponiveis(
+  params: PesquisarAtividadesDisponiveisInput
+) {
+  
+  // 1. LÊ O ARQUIVO JSON
+  const filePath = path.join(
+    process.cwd(),
+    'src/features/schoolpower/data/schoolPowerActivities.json'
+  );
+  
+  const fileContent = await fs.readFile(filePath, 'utf-8');
+  const data = JSON.parse(fileContent);
+  
+  let atividades = data.atividades;
+
+  // 2. APLICA FILTROS (se fornecidos)
+  if (params.filtros) {
+    const { materia, tipo, nivel_dificuldade, tags, busca_texto } = params.filtros;
+
+    // Filtro por matéria
+    if (materia) {
+      atividades = atividades.filter(a => 
+        a.materia.toLowerCase() === materia.toLowerCase()
+      );
+    }
+
+    // Filtro por tipo
+    if (tipo) {
+      atividades = atividades.filter(a => 
+        a.tipo.toLowerCase() === tipo.toLowerCase()
+      );
+    }
+
+    // Filtro por dificuldade
+    if (nivel_dificuldade) {
+      atividades = atividades.filter(a => 
+        a.nivel_dificuldade === nivel_dificuldade
+      );
+    }
+
+    // Filtro por tags (pelo menos uma tag deve coincidir)
+    if (tags && tags.length > 0) {
+      atividades = atividades.filter(a => 
+        a.tags.some(tag => 
+          tags.some(filterTag => 
+            tag.toLowerCase().includes(filterTag.toLowerCase())
+          )
+        )
+      );
+    }
+
+    // Busca textual
+    if (busca_texto) {
+      const searchLower = busca_texto.toLowerCase();
+      atividades = atividades.filter(a => 
+        a.titulo.toLowerCase().includes(searchLower) ||
+        a.descricao.toLowerCase().includes(searchLower)
+      );
+    }
+  }
+
+  // 3. RETORNA RESULTADOS ESTRUTURADOS
+  return {
+    success: true,
+    total_encontrado: atividades.length,
+    atividades: atividades.map(a => ({
+      id: a.id,
+      titulo: a.titulo,
+      tipo: a.tipo,
+      materia: a.materia,
+      nivel_dificuldade: a.nivel_dificuldade,
+      tags: a.tags,
+      descricao: a.descricao,
+      template: a.template,
+      requisitos: a.requisitos
+    })),
+    filtros_aplicados: params.filtros || {},
+    mensagem: `Encontrei ${atividades.length} atividade(s) disponível(is) que combinam com o que você procura.`
+  };
+}
+Registro da Capability:
+
+typescript
+// capabilities/PESQUISAR/registry.ts
+
+export const PESQUISAR_CAPABILITIES = {
+  pesquisar_atividades_disponiveis: {
+    funcao: 'pesquisar_atividades_disponiveis',
+    displayName: 'Vou pesquisar quais atividades eu posso criar',
+    categoria: 'PESQUISAR',
+    descricao: 'Consulta arquivo JSON com todas as atividades disponíveis na plataforma',
+    schema: pesquisarAtividadesDisponiveisSchema,
+    execute: pesquisarAtividadesDisponiveis,
+    // Configurações
+    isSequential: true, // Deve ser executada em ordem
+    showProgress: true, // Mostra progresso visual
+    cacheResults: true, // Cache por 5 minutos
+    cacheTTL: 300000
+  }
+};
+3. CAPABILITY: DECIDIR ATIVIDADES A CRIAR
+Nome da Função: decidir_atividades_criar
+Descrição:
+A IA analisa estrategicamente as atividades disponíveis (resultado da pesquisa anterior) e decide quais atividades vai criar baseado em critérios pedagógicos, contexto da turma e objetivo do usuário.
+
+Comportamento:
+
+Esta capability só pode ser chamada após pesquisar_atividades_disponiveis
+
+A IA recebe lista de atividades disponíveis
+
+Aplica raciocínio estratégico para escolher as melhores
+
+Retorna lista organizada de atividades selecionadas
+
+Essas atividades ficam automaticamente preparadas para a próxima capability (criar_atividades)
+
+Schema da Capability:
+
+typescript
+// capabilities/DECIDIR/schemas/decidir-atividades-schema.ts
+
+import { z } from 'zod';
+
+export const decidirAtividadesCriarSchema = z.object({
+  atividades_disponiveis: z.array(z.object({
+    id: z.string(),
+    titulo: z.string(),
+    tipo: z.string(),
+    materia: z.string(),
+    nivel_dificuldade: z.string(),
+    tags: z.array(z.string()),
+    template: z.any()
+  })).describe('Lista de atividades disponíveis da pesquisa anterior'),
+  
+  criterios_decisao: z.object({
+    objetivo_pedagogico: z.string().describe('O que se quer ensinar/reforçar'),
+    quantidade: z.number().min(1).max(10).describe('Quantas atividades criar'),
+    priorizar: z.enum(['variedade', 'progressao', 'focado']).optional()
+      .describe('variedade: tipos diferentes; progressao: do fácil ao difícil; focado: mesmo tema'),
+    nivel_turma: z.enum(['basico', 'intermediario', 'avancado']).optional()
+  }),
+
+  contexto_turma: z.object({
+    turma_id: z.string().optional(),
+    desempenho_medio: z.number().min(0).max(100).optional(),
+    gaps_aprendizado: z.array(z.string()).optional(),
+    preferencias_alunos: z.array(z.string()).optional()
+  }).optional()
+});
+
+export type DecidirAtividadesCriarInput = z.infer<typeof decidirAtividadesCriarSchema>;
+Implementação:
+
+typescript
+// capabilities/DECIDIR/implementations/decidir-atividades-criar.ts
+
+import { llm } from '@/services/llm-service';
+
+export async function decidirAtividadesCriar(params: DecidirAtividadesCriarInput) {
+  
+  const {
+    atividades_disponiveis,
+    criterios_decisao,
+    contexto_turma
+  } = params;
+
+  // 1. MONTA PROMPT PARA LLM DECIDIR
+  const decisionPrompt = `
+Você é um especialista pedagógico que precisa escolher as melhores atividades para uma turma.
+
+## ATIVIDADES DISPONÍVEIS:
+${JSON.stringify(atividades_disponiveis, null, 2)}
+
+## CRITÉRIOS DE DECISÃO:
+- Objetivo pedagógico: ${criterios_decisao.objetivo_pedagogico}
+- Quantidade desejada: ${criterios_decisao.quantidade}
+- Abordagem: ${criterios_decisao.priorizar || 'variedade'}
+- Nível da turma: ${criterios_decisao.nivel_turma || 'intermediario'}
+
+${contexto_turma ? `
+## CONTEXTO DA TURMA:
+- Desempenho médio: ${contexto_turma.desempenho_medio}%
+- Gaps de aprendizado: ${contexto_turma.gaps_aprendizado?.join(', ')}
+- Preferências: ${contexto_turma.preferencias_alunos?.join(', ')}
+` : ''}
+
+## SUA TAREFA:
+Escolha as ${criterios_decisao.quantidade} melhores atividades baseado nos critérios acima.
+
+Para cada atividade escolhida, explique:
+1. Por que ela é adequada
+2. Qual objetivo pedagógico atende
+3. Como se encaixa na sequência
+
+Retorne em formato JSON:
+{
+  "atividades_escolhidas": [
+    {
+      "id": "...",
+      "titulo": "...",
+      "justificativa": "...",
+      "ordem_sugerida": 1
+    }
+  ],
+  "raciocinio_geral": "Explicação da estratégia escolhida"
+}
+`;
+
+  // 2. LLM FAZ A DECISÃO ESTRATÉGICA
+  const decision = await llm.complete({
+    prompt: decisionPrompt,
+    model: 'gpt-4o',
+    temperature: 0.7,
+    response_format: { type: 'json_object' }
+  });
+
+  const decisionData = JSON.parse(decision.content);
+
+  // 3. ENRIQUECE COM DADOS COMPLETOS DAS ATIVIDADES
+  const atividadesEscolhidas = decisionData.atividades_escolhidas.map(escolha => {
+    const atividadeCompleta = atividades_disponiveis.find(a => a.id === escolha.id);
+    return {
+      ...atividadeCompleta,
+      justificativa: escolha.justificativa,
+      ordem_sugerida: escolha.ordem_sugerida
+    };
+  });
+
+  // 4. ORGANIZA AUTOMATICAMENTE PARA PRÓXIMA CAPABILITY
+  const organizacao = {
+    total_selecionado: atividadesEscolhidas.length,
+    atividades: atividadesEscolhidas.sort((a, b) => a.ordem_sugerida - b.ordem_sugerida),
+    estrategia_aplicada: decisionData.raciocinio_geral
+  };
+
+  // 5. RETORNA DECISÃO ESTRUTURADA
+  return {
+    success: true,
+    decisao: organizacao,
+    mensagem: `Escolhi ${organizacao.total_selecionado} atividades estrategicamente. ${decisionData.raciocinio_geral}`,
+    // Flag para indicar que está pronto para criar
+    pronto_para_criar: true
+  };
+}
+Registro da Capability:
+
+typescript
+// capabilities/DECIDIR/registry.ts
+
+export const DECIDIR_CAPABILITIES = {
+  decidir_atividades_criar: {
+    funcao: 'decidir_atividades_criar',
+    displayName: 'Vou decidir quais atividades criar estrategicamente',
+    categoria: 'DECIDIR',
+    descricao: 'Analisa e escolhe as melhores atividades baseado em critérios pedagógicos',
+    schema: decidirAtividadesCriarSchema,
+    execute: decidirAtividadesCriar,
+    // Configurações
+    requiresPreviousCapability: 'pesquisar_atividades_disponiveis', // Dependência
+    isSequential: true,
+    showProgress: true,
+    prepareForNext: 'criar_atividades' // Prepara dados para próxima capability
+  }
+};
+4. CAPABILITY: CRIAR ATIVIDADES
+Nome da Função: criar_atividades
+Descrição:
+Cria as atividades que foram decididas pela capability anterior. Renderiza um Card de Construção de Atividades dentro do Modo Desenvolvedor, mostrando cada atividade sendo construída em tempo real.
+
+Comportamento:
+
+Recebe lista de atividades decididas
+
+Renderiza Card de Construção com atividades "em branco" (aguardando construção)
+
+Para cada atividade:
+
+Inicia construção automática
+
+Atualiza status visual no card
+
+Mostra progresso (0% → 100%)
+
+Ao finalizar todas, marca card como "concluído"
+
+Schema da Capability:
+
+typescript
+// capabilities/CRIAR/schemas/criar-atividades-schema.ts
+
+import { z } from 'zod';
+
+export const criarAtividadesSchema = z.object({
+  atividades_decididas: z.array(z.object({
+    id: z.string(),
+    titulo: z.string(),
+    tipo: z.string(),
+    materia: z.string(),
+    nivel_dificuldade: z.string(),
+    tags: z.array(z.string()),
+    template: z.any(),
+    justificativa: z.string(),
+    ordem_sugerida: z.number()
+  })).describe('Atividades que foram decididas na etapa anterior'),
+
+  configuracoes_criacao: z.object({
+    turma_id: z.string().optional(),
+    data_disponibilizacao: z.string().optional(),
+    prazo_entrega: z.string().optional(),
+    permitir_tentativas_multiplas: z.boolean().optional().default(true),
+    feedback_automatico: z.boolean().optional().default(true)
+  }).optional()
+});
+
+export type CriarAtividadesInput = z.infer<typeof criarAtividadesSchema>;
+Implementação:
+
+typescript
+// capabilities/CRIAR/implementations/criar-atividades.ts
+
+import { pontoSchoolAPI } from '@/api-wrapper/PontoSchoolAPI';
+import { atividade_builder } from '@/services/atividade-builder-service';
+
+export async function criarAtividades(
+  params: CriarAtividadesInput,
+  onProgress?: (update: CriacaoProgressUpdate) => void
+) {
+  
+  const { atividades_decididas, configuracoes_criacao } = params;
+
+  // 1. NOTIFICA INÍCIO (renderiza card)
+  onProgress?.({
+    type: 'construcao:iniciada',
+    total_atividades: atividades_decididas.length,
+    atividades: atividades_decididas.map(a => ({
+      id: a.id,
+      titulo: a.titulo,
+      status: 'aguardando',
+      progresso: 0
+    }))
+  });
+
+  const atividadesCriadas = [];
+
+  // 2. CRIA CADA ATIVIDADE SEQUENCIALMENTE
+  for (const [index, atividadeDecidida] of atividades_decididas.entries()) {
+    
+    // 2.1. NOTIFICA INÍCIO DA ATIVIDADE
+    onProgress?.({
+      type: 'atividade:construindo',
+      atividade_index: index,
+      atividade_id: atividadeDecidida.id,
+      titulo: atividadeDecidida.titulo,
+      progresso: 0
+    });
+
+    try {
+      // 2.2. CONSTRÓI A ATIVIDADE
+      const atividadeConstruida = await atividade_builder.build({
+        template: atividadeDecidida.template,
+        metadata: {
+          titulo: atividadeDecidida.titulo,
+          tipo: atividadeDecidida.tipo,
+          materia: atividadeDecidida.materia,
+          nivel_dificuldade: atividadeDecidida.nivel_dificuldade,
+          tags: atividadeDecidida.tags
+        },
+        configuracoes: configuracoes_criacao,
+        // Callback de progresso interno
+        onBuildProgress: (progress) => {
+          onProgress?.({
+            type: 'atividade:progresso',
+            atividade_index: index,
+            atividade_id: atividadeDecidida.id,
+            progresso: progress // 0-100
+          });
+        }
+      });
+
+      // 2.3. SALVA NO BANCO DE DADOS
+      const savedAtividade = await pontoSchoolAPI.post('/api/atividades', {
+        ...atividadeConstruida,
+        turma_id: configuracoes_criacao?.turma_id,
+        created_by: 'agente_jota',
+        created_at: new Date().toISOString()
+      });
+
+      atividadesCriadas.push(savedAtividade.data);
+
+      // 2.4. NOTIFICA CONCLUSÃO DA ATIVIDADE
+      onProgress?.({
+        type: 'atividade:concluida',
+        atividade_index: index,
+        atividade_id: atividadeDecidida.id,
+        atividade_criada_id: savedAtividade.data.id,
+        progresso: 100
+      });
+
+    } catch (error) {
+      // 2.5. TRATAMENTO DE ERRO
+      onProgress?.({
+        type: 'atividade:erro',
+        atividade_index: index,
+        atividade_id: atividadeDecidida.id,
+        erro: error.message
+      });
+      
+      // Continua para próxima atividade
+      continue;
+    }
+  }
+
+  // 3. NOTIFICA CONCLUSÃO GERAL
+  onProgress?.({
+    type: 'construcao:concluida',
+    total_criadas: atividadesCriadas.length,
+    total_esperadas: atividades_decididas.length
+  });
+
+  // 4. RETORNA RESULTADO
+  return {
+    success: true,
+    atividades_criadas: atividadesCriadas,
+    total: atividadesCriadas.length,
+    mensagem: `Criei ${atividadesCriadas.length} atividade(s) com sucesso! Elas já estão disponíveis na sua conta.`,
+    urls: atividadesCriadas.map(a => ({
+      id: a.id,
+      titulo: a.titulo,
+      url: `/dashboard/atividades/${a.id}`
+    }))
+  };
+}
+Registro da Capability:
+
+typescript
+// capabilities/CRIAR/registry.ts
+
+export const CRIAR_CAPABILITIES = {
+  criar_atividades: {
+    funcao: 'criar_atividades',
+    displayName: 'Vou criar todas as atividades',
+    categoria: 'CRIAR',
+    descricao: 'Constrói as atividades decididas e salva na plataforma',
+    schema: criarAtividadesSchema,
+    execute: criarAtividades,
+    // Configurações
+    requiresPreviousCapability: 'decidir_atividades_criar', // Dependência
+    isSequential: true,
+    showProgress: true,
+    renderComponent: 'ActivityConstructionCard', // Componente visual específico
+    streamProgress: true // Envia progresso em tempo real
+  }
+};
+COMPONENTE VISUAL: CARD DE CONSTRUÇÃO DE ATIVIDADES
+typescript
+// interface-modo-producao-chat/components/ActivityConstructionCard.tsx
+
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useChatWebSocket } from '@/hooks/useChatWebSocket';
+
+interface ActivityConstructionCardProps {
+  sessionId: string;
+}
+
+export function ActivityConstructionCard({ sessionId }: ActivityConstructionCardProps) {
+  const [constructionState, setConstructionState] = useState<{
+    status: 'aguardando' | 'construindo' | 'concluido';
+    atividades: ActivityBuildState[];
+  }>({
+    status: 'aguardando',
+    atividades: []
+  });
+
+  const { socket } = useChatWebSocket(sessionId);
+
+  // WebSocket listeners
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('construcao:iniciada', (data) => {
+      setConstructionState({
+        status: 'aguardando',
+        atividades: data.atividades.map(a => ({
+          id: a.id,
+          titulo: a.titulo,
+          status: 'aguardando',
+          progresso: 0
+        }))
+      });
+    });
+
+    socket.on('atividade:construindo', (data) => {
+      setConstructionState(prev => ({
+        ...prev,
+        status: 'construindo',
+        atividades: prev.atividades.map((a, idx) =>
+          idx === data.atividade_index
+            ? { ...a, status: 'construindo', progresso: 0 }
+            : a
+        )
+      }));
+    });
+
+    socket.on('atividade:progresso', (data) => {
+      setConstructionState(prev => ({
+        ...prev,
+        atividades: prev.atividades.map((a, idx) =>
+          idx === data.atividade_index
+            ? { ...a, progresso: data.progresso }
+            : a
+        )
+      }));
+    });
+
+    socket.on('atividade:concluida', (data) => {
+      setConstructionState(prev => ({
+        ...prev,
+        atividades: prev.atividades.map((a, idx) =>
+          idx === data.atividade_index
+            ? { ...a, status: 'concluido', progresso: 100, id_criado: data.atividade_criada_id }
+            : a
+        )
+      }));
+    });
+
+    socket.on('construcao:concluida', (data) => {
+      setConstructionState(prev => ({
+        ...prev,
+        status: 'concluido'
+      }));
+    });
+
+    return () => {
+      socket.off('construcao:iniciada');
+      socket.off('atividade:construindo');
+      socket.off('atividade:progresso');
+      socket.off('atividade:concluida');
+      socket.off('construcao:concluida');
+    };
+  }, [socket]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="activity-construction-card"
+    >
+      {/* Header */}
+      <div className="construction-header">
+        <Hammer className="icon" />
+        <h3>CONSTRUÇÃO DE ATIVIDADES</h3>
+        {constructionState.status === 'concluido' && (
+          <CheckCircle className="text-green-500" />
+        )}
+      </div>
+
+      {/* Lista de atividades */}
+      <div className="activities-list">
+        <AnimatePresence>
+          {constructionState.atividades.map((atividade, idx) => (
+            <motion.div
+              key={atividade.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className={`activity-item ${atividade.status}`}
+            >
+              {/* Status Icon */}
+              <div className="activity-icon">
+                {atividade.status === 'aguardando' && (
+                  <Clock className="text-gray-400" size={20} />
+                )}
+                {atividade.status === 'construindo' && (
+                  <Loader2 className="text-orange-500 animate-spin" size={20} />
+                )}
+                {atividade.status === 'concluido' && (
+                  <Check className="text-green-500" size={20} />
+                )}
+              </div>
+
+              {/* Título */}
+              <div className="activity-info">
+                <p className="activity-title">{atividade.titulo}</p>
+                
+                {/* Barra de progresso */}
+                {atividade.status === 'construindo' && (
+                  <div className="progress-bar">
+                    <motion.div
+                      className="progress-fill"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${atividade.progresso}%` }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
+                )}
+
+                {/* Status text */}
+                <span className="activity-status">
+                  {atividade.status === 'aguardando' && 'Aguardando...'}
+                  {atividade.status === 'construindo' && `Construindo... ${atividade.progresso}%`}
+                  {atividade.status === 'concluido' && 'Concluído ✓'}
+                </span>
+              </div>
+
+              {/* Link (se concluído) */}
+              {atividade.status === 'concluido' && atividade.id_criado && (
+                <a
+                  href={`/dashboard/atividades/${atividade.id_criado}`}
+                  target="_blank"
+                  className="view-link"
+                >
+                  Ver atividade →
+                </a>
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
+interface ActivityBuildState {
+  id: string;
+  titulo: string;
+  status: 'aguardando' | 'construindo' | 'concluido';
+  progresso: number;
+  id_criado?: string;
+}
+FLUXO SEQUENCIAL COMPLETO
+Aparição Progressiva de Capabilities
+Regra: Capabilities aparecem uma por vez, somente após a anterior ser completamente finalizada.
+
+Implementação do Sequenciamento:
+
+typescript
+// agente-jota-chat/executor/SequentialExecutor.ts
+
+export class SequentialCapabilityExecutor {
+  
+  async executeCapabilitiesSequentially(
+    capabilities: CapabilityCall[],
+    onProgress: ProgressCallback
+  ) {
+    
+    const results = [];
+
+    for (const [index, capability] of capabilities.entries()) {
+      
+      // 1. AGUARDA CONCLUSÃO DA ANTERIOR (se não for a primeira)
+      if (index > 0) {
+        await this.waitForPreviousCompletion(capabilities[index - 1]);
+      }
+
+      // 2. TORNA CAPABILITY VISÍVEL
+      onProgress({
+        type: 'capability:apareceu',
+        capability_index: index,
+        capability_name: capability.displayName
+      });
+
+      // Pequeno delay para UX (usuário ver aparecer)
+      await delay(300);
+
+      // 3. INICIA EXECUÇÃO
+      onProgress({
+        type: 'capability:iniciou',
+        capability_index: index,
+        capability_id: capability.id
+      });
+
+      try {
+        // 4. EXECUTA
+        const result = await this.executeCapability(capability);
+
+        results.push(result);
+
+        // 5. MARCA COMO CONCLUÍDA
+        onProgress({
+          type: 'capability:concluiu',
+          capability_index: index,
+          capability_id: capability.id,
+          resultado: result
+        });
+
+      } catch (error) {
+        onProgress({
+          type: 'capability:erro',
+          capability_index: index,
+          capability_id: capability.id,
+          erro: error.message
+        });
+        
+        // Decide se continua ou para (baseado em configuração)
+        if (!this.config.continueOnError) {
+          throw error;
+        }
+      }
+
+      // 6. AGUARDA FINALIZAÇÃO COMPLETA (incluindo animações)
+      await delay(500);
+    }
+
+    return results;
+  }
+
+  private async waitForPreviousCompletion(previousCapability: CapabilityCall) {
+    // Aguarda até que capability anterior esteja 100% concluída
+    // (incluindo salvamento de dados, renderizações, etc)
+    return new Promise(resolve => {
+      const checkInterval = setInterval(() => {
+        if (previousCapability.status === 'completed') {
+          clearInterval(checkInterval);
+          resolve(true);
+        }
+      }, 100);
+    });
+  }
+}
+REGISTRO CENTRAL DE CAPABILITIES
+typescript
+// capabilities/index.ts
+
+import { PLANEJAR_CAPABILITIES } from './PLANEJAR/registry';
+import { PESQUISAR_CAPABILITIES } from './PESQUISAR/registry';
+import { DECIDIR_CAPABILITIES } from './DECIDIR/registry';
+import { CRIAR_CAPABILITIES } from './CRIAR/registry';
+
+export const ALL_CAPABILITIES = {
+  ...PLANEJAR_CAPABILITIES,
+  ...PESQUISAR_CAPABILITIES,
+  ...DECIDIR_CAPABILITIES,
+  ...CRIAR_CAPABILITIES
+};
+
+// Lista de capabilities disponíveis para a IA
+export const AVAILABLE_CAPABILITY_NAMES = Object.keys(ALL_CAPABILITIES);
+
+// Função para registrar todas no FunctionRegistry
+export function registerAllCapabilities(registry: FunctionRegistry) {
+  Object.entries(ALL_CAPABILITIES).forEach(([name, capability]) => {
+    registry.register(name, capability);
+  });
+}
+PROMPT PARA LLM ESCOLHER CAPABILITIES
+typescript
+// agente-jota-chat/prompt-system/prompt-execution/capability-selection-prompt.ts
+
+export const CAPABILITY_SELECTION_PROMPT = `
+Você tem acesso às seguintes CAPABILITIES para executar ações:
+
+## CAPABILITIES DISPONÍVEIS:
+
+### 1. PLANEJAR
+- **planejar_plano_de_acao**: Monta um plano estruturado de ações
+  - Quando usar: Sempre que o usuário pedir algo complexo que requer múltiplas etapas
+  - Pode ser chamada A QUALQUER MOMENTO
+
+### 2. PESQUISAR
+- **pesquisar_atividades_disponiveis**: Consulta atividades disponíveis no JSON
+  - Quando usar: Quando precisar saber quais atividades existem
+  - Parâmetros: filtros opcionais (matéria, tipo, dificuldade, tags)
+
+### 3. DECIDIR
+- **decidir_atividades_criar**: Escolhe estrategicamente quais atividades criar
+  - Quando usar: Após pesquisar atividades disponíveis
+  - REQUER: Resultado de 'pesquisar_atividades_disponiveis'
+  - Usa raciocínio pedagógico para decidir
+
+### 4. CRIAR
+- **criar_atividades**: Constrói as atividades decididas
+  - Quando usar: Após decidir quais atividades criar
+  - REQUER: Resultado de 'decidir_atividades_criar'
+  - Mostra progresso visual de construção
+
+## REGRAS DE SEQUENCIAMENTO:
+1. Capabilities aparecem UMA POR VEZ
+2. Próxima só aparece APÓS anterior ser 100% concluída
+3. Respeitar dependências (PESQUISAR → DECIDIR → CRIAR)
+4. "planejar_plano_de_acao" pode ser chamada a qualquer momento
+
+## SUA TAREFA:
+Com base na etapa atual do plano, escolha a capability apropriada para chamar.
+
+Retorne apenas o nome da função e parâmetros:
+{
+  "capability": "nome_da_funcao",
+  "parametros": { ... }
+}
+`;
+EXEMPLO DE FLUXO COMPLETO
+Prompt do usuário:
+"Criar 3 atividades de álgebra para turma 7A"
+
+Execução passo a passo:
+Etapa 1: Planejamento
+text
+[IA chama: planejar_plano_de_acao]
+
+CARD DE PLANO APARECE:
+┌─────────────────────────────────────┐
+│ ○ Pesquisar atividades disponíveis │
+│ ○ Decidir quais criar              │
+│ ○ Criar as atividades              │
+└─────────────────────────────────────┘
+[APLICAR PLANO] [EDITAR PLANO]
+
+(Usuário clica APLICAR PLANO)
+Etapa 2: Execução - Pesquisar
+text
+Mensagem: "Vou executar o seu plano de ação agora"
+
+MODO DESENVOLVEDOR ATIVO:
+┌──────────────────────────────────────────┐
+│ ◉ Pesquisar atividades disponíveis      │
+│   └─ 📊 Vou pesquisar quais atividades  │
+│       eu posso criar                     │
+│       [⚡ Executando...]                 │
+└──────────────────────────────────────────┘
+
+(Após 2s - capability concluída)
+
+│   └─ 📊 Vou pesquisar quais atividades  │
+│       eu posso criar                     │
+│       [✓ Encontrei 24 atividades]       │
+Etapa 3: Decidir (aparece automaticamente)
+text
+│ ◉ Pesquisar atividades disponíveis      │
+│   └─ ✓ Concluído                        │
+│                                          │
+│ ◉ Decidir quais criar                   │
+│   └─ 🎯 Vou decidir quais atividades    │
+│       criar estrategicamente             │
+│       [⚡ Analisando...]                 │
+Etapa 4: Criar (aparece automaticamente)
+text
+│ ◉ Decidir quais criar                   │
+│   └─ ✓ 3 atividades escolhidas         │
+│                                          │
+│ ◉ Criar as atividades                   │
+│   └─ 🛠️ Vou criar todas as atividades  │
+│       [⚡ Construindo...]                │
+│                                          │
+│   [CARD DE CONSTRUÇÃO APARECE ABAIXO]   │
+│                                          │
+│   ┌────────────────────────────────┐   │
+│   │ 🛠️ CONSTRUÇÃO DE ATIVIDADES   │   │
+│   ├────────────────────────────────┤   │
+│   │ ⚡ Equações do 1º Grau         │   │
+│   │    [████████░░] 80%            │   │
+│   │                                 │   │
+│   │ ⏳ Fatoração de Polinômios     │   │
+│   │    Aguardando...               │   │
+│   │                                 │   │
+│   │ ⏳ Sistemas de Equações        │   │
+│   │    Aguardando...               │   │
+│   └────────────────────────────────┘   │
+ARQUIVOS A CRIAR/MODIFICAR
+text
+/capabilities/
+├── PLANEJAR/
+│   ├── registry.ts                    # NOVO
+│   ├── implementations/
+│   │   └── planejar-plano-de-acao.ts # NOVO
+│   └── schemas/
+│       └── planejar-schema.ts         # NOVO
+│
+├── PESQUISAR/
+│   ├── registry.ts                    # NOVO
+│   ├── implementations/
+│   │   └── pesquisar-atividades-disponiveis.ts # NOVO
+│   └── schemas/
+│       └── pesquisar-atividades-schema.ts      # NOVO
+│
+├── DECIDIR/
+│   ├── registry.ts                    # NOVO
+│   ├── implementations/
+│   │   └── decidir-atividades-criar.ts # NOVO
+│   └── schemas/
+│       └── decidir-atividades-schema.ts # NOVO
+│
+├── CRIAR/
+│   ├── registry.ts                    # NOVO
+│   ├── implementations/
+│   │   └── criar-atividades.ts        # NOVO
+│   └── schemas/
+│       └── criar-atividades-schema.ts  # NOVO
+│
+└── index.ts                           # MODIFICAR - registrar todas
+
+/agente-jota-chat/executor/
+└── SequentialExecutor.ts              # NOVO - execução sequencial
+
+/interface-modo-producao-chat/components/
+└── ActivityConstructionCard.tsx       # NOVO - card de construção
+
+/src/features/schoolpower/data/
+└── schoolPowerActivities.json         # VERIFICAR - arquivo existe?
+PONTOS CRÍTICOS
+⚠️ Sequenciamento Rígido:
+
+SEMPRE aguardar capability anterior finalizar 100%
+
+Não mostrar próxima capability antes da hora
+
+⚠️ Dependências:
+
+DECIDIR depende de PESQUISAR
+
+CRIAR depende de DECIDIR
+
+Validar dados passados entre capabilities
+
+⚠️ UX do Card de Construção:
+
+Mostrar progresso visual claro (0-100%)
+
+Animações suaves entre estados
+
+Link para atividade criada após conclusão
+
+⚠️ Performance:
+
+Cache do JSON de atividades (evitar leitura múltipla)
+
+Paralelizar construção se possível (mas manter UI sequencial)
