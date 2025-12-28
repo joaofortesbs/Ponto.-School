@@ -263,11 +263,10 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
   return (
     <div 
-      className="flex flex-col h-full w-full mx-auto bg-[#050a18] overflow-hidden"
-      style={{ maxWidth: '100%', width: '100%' }}
+      className="flex flex-col h-full w-full mx-auto bg-[#050a18] overflow-hidden fixed inset-0"
     >
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-64 relative">
-        <div className="max-w-[1200px] mx-auto w-full">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-64 relative scrollbar-hide">
+        <div className="max-w-[1200px] mx-auto w-full px-4">
           <MessageStream messages={sessionState.messages} />
 
           <AnimatePresence>
