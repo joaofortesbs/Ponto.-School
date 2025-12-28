@@ -29,8 +29,8 @@ interface ChatLayoutProps {
 
 // Configuração de dimensões e proporções do chat
 const CHAT_CONFIG = {
-  maxWidth: '90%', // Largura relativa ao container pai
-  widthPx: '1200px', // Largura máxima em pixels
+  maxWidth: '95%', // Largura relativa ao container pai
+  widthPx: '1600px', // Largura máxima em pixels
 };
 
 export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: ChatLayoutProps) {
@@ -291,7 +291,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-32">
         <MessageStream messages={sessionState.messages} />
 
         <AnimatePresence>
@@ -325,33 +325,38 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSendMessage} className="p-4 border-t border-white/10 bg-black/20">
-        <div className="flex items-center gap-3">
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder={
-              sessionState.isLoading 
-                ? 'Processando...' 
-                : sessionState.isExecuting 
-                  ? 'Aguarde a execução...'
-                  : 'Digite sua mensagem...'
-            }
-            disabled={sessionState.isLoading || sessionState.isExecuting}
-            className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-purple-500 transition-colors disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled={sessionState.isLoading || sessionState.isExecuting || !inputValue.trim()}
-            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {sessionState.isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-            Enviar
-          </button>
-        </div>
-      </form>
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-3xl px-4 z-[60]">
+        <form 
+          onSubmit={handleSendMessage} 
+          className="bg-black/60 backdrop-blur-2xl border border-white/20 rounded-2xl p-2 shadow-2xl shadow-black/50"
+        >
+          <div className="flex items-center gap-3">
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={
+                sessionState.isLoading 
+                  ? 'Processando...' 
+                  : sessionState.isExecuting 
+                    ? 'Aguarde a execução...'
+                    : 'Digite sua mensagem...'
+              }
+              disabled={sessionState.isLoading || sessionState.isExecuting}
+              className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-purple-500/50 transition-colors disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={sessionState.isLoading || sessionState.isExecuting || !inputValue.trim()}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-purple-500/20"
+            >
+              {sessionState.isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+              <span>Enviar</span>
+            </button>
+          </div>
+        </form>
+      </div>
 
       <AnimatePresence>
         {showContextModal && (
