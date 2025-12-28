@@ -7,7 +7,11 @@ import { PlanActionCard } from './PlanActionCard';
 import { DeveloperModeCard } from './DeveloperModeCard';
 import { ActivityConstructionCard } from './ActivityConstructionCard';
 
-export function MessageStream() {
+interface MessageStreamProps {
+  onApplyPlan?: () => void;
+}
+
+export function MessageStream({ onApplyPlan }: MessageStreamProps) {
   const messages = useChatState((state) => state.messages);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -46,6 +50,7 @@ export function MessageStream() {
                 cardId={message.id}
                 data={message.metadata?.cardData}
                 isStatic={message.metadata?.isStatic}
+                onApplyPlan={onApplyPlan}
               />
             )}
 
