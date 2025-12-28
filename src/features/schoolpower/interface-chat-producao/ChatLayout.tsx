@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Bot, User, Loader2 } from 'lucide-react';
+import { ArrowLeft, Bot, User, Loader2, Paperclip, Send } from 'lucide-react';
 import { MessageStream } from './MessageStream';
 import { ExecutionPlanCard } from './ExecutionPlanCard';
 import { ContextModal } from './ContextModal';
@@ -325,37 +325,192 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-3xl px-4 z-[60]">
-        <form 
-          onSubmit={handleSendMessage} 
-          className="bg-black/60 backdrop-blur-2xl border border-white/20 rounded-2xl p-2 shadow-2xl shadow-black/50"
-        >
-          <div className="flex items-center gap-3">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={
-                sessionState.isLoading 
-                  ? 'Processando...' 
-                  : sessionState.isExecuting 
-                    ? 'Aguarde a execução...'
-                    : 'Digite sua mensagem...'
-              }
-              disabled={sessionState.isLoading || sessionState.isExecuting}
-              className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-purple-500/50 transition-colors disabled:opacity-50"
-            />
-            <button
-              type="submit"
-              disabled={sessionState.isLoading || sessionState.isExecuting || !inputValue.trim()}
-              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-purple-500/20"
-            >
-              {sessionState.isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>Enviar</span>
-            </button>
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 z-[60]">
+        <div className="message-container typing">
+          <div className="message-container-inner">
+            <div className="moving-border-container">
+              <div className="moving-gradient" />
+            </div>
+            <div className="inner-container">
+              <form 
+                onSubmit={handleSendMessage} 
+                className="w-full flex items-center gap-3"
+              >
+                <button 
+                  type="button"
+                  className="clip-button"
+                  title="Anexar arquivos"
+                >
+                  <Paperclip className="w-5 h-5" />
+                </button>
+                
+                <textarea
+                  ref={inputRef as any}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage(e as any);
+                    }
+                  }}
+                  placeholder={
+                    sessionState.isLoading 
+                      ? 'Agente Jota processando...' 
+                      : sessionState.isExecuting 
+                        ? 'Aguarde a execução...'
+                        : 'Digite sua mensagem ou comando...'
+                  }
+                  disabled={sessionState.isLoading || sessionState.isExecuting}
+                  className="textarea-custom flex-1"
+                  rows={1}
+                />
+                
+                <button
+                  type="submit"
+                  disabled={sessionState.isLoading || sessionState.isExecuting || !inputValue.trim()}
+                  className="action-button"
+                >
+                  {sessionState.isLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
+                </button>
+              </form>
+            </div>
           </div>
-        </form>
+        </div>
+        
+        <style>{`
+          .message-container {
+            position: relative;
+            background: transparent;
+            border-radius: 40px;
+            padding: 2px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            overflow: visible;
+            height: 68px;
+            z-index: 1000;
+          }
+
+          .message-container-inner {
+            position: relative;
+            background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+            border-radius: 38px;
+            height: 100%;
+            width: 100%;
+            box-shadow: 
+              0 12px 24px rgba(0, 0, 0, 0.3),
+              0 8px 16px rgba(0, 0, 0, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            z-index: 3;
+          }
+
+          .inner-container {
+            background: #09122b;
+            border-radius: 36px;
+            padding: 7px 12px;
+            border: 1px solid #192038;
+            display: flex;
+            align-items: center;
+            height: 100%;
+            gap: 8px;
+          }
+
+          .textarea-custom {
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            font-size: 16px;
+            line-height: 24px;
+            resize: none;
+            outline: none;
+            width: 100%;
+            font-family: inherit;
+            caret-color: #ff6b35;
+          }
+
+          .textarea-custom::placeholder {
+            color: #999;
+            font-style: italic;
+          }
+
+          .action-button {
+            background: linear-gradient(145deg, #ff6b35, #f7931e);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+            flex-shrink: 0;
+          }
+
+          .action-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+          }
+
+          .clip-button {
+            background: transparent;
+            border: none;
+            color: #ff6b35;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+          }
+
+          .clip-button:hover {
+            color: #f7931e;
+            transform: scale(1.1);
+          }
+
+          .moving-border-container {
+            position: absolute;
+            inset: 0;
+            border-radius: 40px;
+            overflow: hidden;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+          }
+
+          .typing .moving-border-container {
+            opacity: 1;
+          }
+
+          .moving-gradient {
+            width: 100%;
+            height: 100%;
+            background: conic-gradient(
+              from 0deg,
+              transparent 0%,
+              #ff6b35 25%,
+              transparent 50%,
+              #f7931e 75%,
+              transparent 100%
+            );
+            animation: rotate 4s linear infinite;
+          }
+
+          @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
 
       <AnimatePresence>
