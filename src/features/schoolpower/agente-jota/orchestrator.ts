@@ -15,8 +15,26 @@ import type { ExecutionPlan, WorkingMemoryItem, ProgressUpdate } from '../interf
 
 const memoryManagers: Map<string, MemoryManager> = new Map();
 const executors: Map<string, AgentExecutor> = new Map();
+const sessionTimestamps: Map<string, number> = new Map();
+const SESSION_CLEANUP_INTERVAL = 10 * 60 * 1000;
+const SESSION_MAX_AGE = 60 * 60 * 1000;
+
+function cleanupExpiredSessions(): void {
+  const now = Date.now();
+  for (const [sessionId, timestamp] of sessionTimestamps.entries()) {
+    if (now - timestamp > SESSION_MAX_AGE) {
+      console.log('🧹 [Orchestrator] Limpando sessão expirada:', sessionId);
+      memoryManagers.delete(sessionId);
+      executors.delete(sessionId);
+      sessionTimestamps.delete(sessionId);
+    }
+  }
+}
+
+setInterval(cleanupExpiredSessions, SESSION_CLEANUP_INTERVAL);
 
 function getOrCreateMemoryManager(sessionId: string, userId: string): MemoryManager {
+  sessionTimestamps.set(sessionId, Date.now());
   if (!memoryManagers.has(sessionId)) {
     memoryManagers.set(sessionId, createMemoryManager(sessionId, userId));
   }
