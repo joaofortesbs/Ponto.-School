@@ -158,24 +158,52 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       content: `Iniciando execução do plano com ${sessionState.executionPlan.etapas.length} etapas...`,
     });
 
-    const handleProgress = (update: ProgressUpdate) => {
+    const handleProgress = (update: ProgressUpdate & { 
+      capabilityId?: string; 
+      capabilityStatus?: string;
+      capabilityResult?: any;
+      capabilityDuration?: number;
+    }) => {
       console.log('📊 [ChatLayout] Progresso:', update);
 
       if (update.status === 'executando' && update.etapaAtual !== undefined) {
-        setSessionState(prev => ({
-          ...prev,
-          currentStep: update.etapaAtual!,
-          executionPlan: prev.executionPlan ? {
-            ...prev.executionPlan,
-            etapas: prev.executionPlan.etapas.map(e =>
-              e.ordem === update.etapaAtual
-                ? { ...e, status: 'executando' }
-                : e
-            ),
-          } : null,
-        }));
+        setSessionState(prev => {
+          if (!prev.executionPlan) return prev;
 
-        if (update.descricao) {
+          const updatedEtapas = prev.executionPlan.etapas.map(e => {
+            if (e.ordem !== update.etapaAtual) return e;
+
+            let updatedCapabilities = e.capabilities;
+            if (update.capabilityId && updatedCapabilities) {
+              updatedCapabilities = updatedCapabilities.map(cap => {
+                if (cap.id !== update.capabilityId) return cap;
+                return {
+                  ...cap,
+                  status: update.capabilityStatus as any || cap.status,
+                  resultado: update.capabilityResult,
+                  duracao: update.capabilityDuration,
+                };
+              });
+            }
+
+            return { 
+              ...e, 
+              status: 'executando' as const,
+              capabilities: updatedCapabilities,
+            };
+          });
+
+          return {
+            ...prev,
+            currentStep: update.etapaAtual!,
+            executionPlan: {
+              ...prev.executionPlan,
+              etapas: updatedEtapas,
+            },
+          };
+        });
+
+        if (update.descricao && !update.capabilityId) {
           addMemory({
             tipo: 'acao',
             conteudo: update.descricao,
@@ -191,7 +219,15 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
             ...prev.executionPlan,
             etapas: prev.executionPlan.etapas.map(e =>
               e.ordem === update.etapaAtual
-                ? { ...e, status: 'concluida', resultado: update.resultado }
+                ? { 
+                    ...e, 
+                    status: 'concluida' as const, 
+                    resultado: update.resultado,
+                    capabilities: e.capabilities?.map(cap => ({
+                      ...cap,
+                      status: 'completed' as const,
+                    })),
+                  }
                 : e
             ),
           } : null,

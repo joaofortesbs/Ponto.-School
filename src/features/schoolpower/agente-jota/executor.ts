@@ -1,17 +1,25 @@
 /**
- * EXECUTOR - Executador de Planos
+ * EXECUTOR - Executador de Planos com Capabilities
  * 
  * Executa cada etapa do plano de forma sequencial,
- * chamando as capabilities correspondentes
+ * processando as capabilities de cada etapa em ordem
  */
 
 import { executeWithCascadeFallback } from '../services/controle-APIs-gerais-school-power';
 import { findCapability, executeCapability } from './capabilities';
 import { MemoryManager } from './memory-manager';
 import { EXECUTION_PROMPT } from './prompts/execution-prompt';
-import type { ExecutionPlan, ExecutionStep, ProgressUpdate } from '../interface-chat-producao/types';
+import type { ExecutionPlan, ExecutionStep, CapabilityCall, ProgressUpdate } from '../interface-chat-producao/types';
 
 export type ProgressCallback = (update: ProgressUpdate) => void;
+
+export interface CapabilityProgressUpdate extends ProgressUpdate {
+  capabilityId?: string;
+  capabilityName?: string;
+  capabilityStatus?: 'pending' | 'executing' | 'completed' | 'failed';
+  capabilityResult?: any;
+  capabilityDuration?: number;
+}
 
 export class AgentExecutor {
   private sessionId: string;
@@ -27,10 +35,10 @@ export class AgentExecutor {
     this.onProgress = callback;
   }
 
-  private emitProgress(update: ProgressUpdate): void {
+  private emitProgress(update: ProgressUpdate | CapabilityProgressUpdate): void {
     console.log('📊 [Executor] Progresso:', update);
     if (this.onProgress) {
-      this.onProgress(update);
+      this.onProgress(update as ProgressUpdate);
     }
   }
 
@@ -56,39 +64,44 @@ export class AgentExecutor {
           sessionId: this.sessionId,
           status: 'executando',
           etapaAtual: etapa.ordem,
-          descricao: etapa.descricao,
+          descricao: etapa.titulo || etapa.descricao,
         });
 
-        console.log(`🔄 [Executor] Executando etapa ${etapa.ordem}: ${etapa.descricao}`);
+        console.log(`🔄 [Executor] Executando etapa ${etapa.ordem}: ${etapa.titulo || etapa.descricao}`);
 
-        const capability = findCapability(etapa.funcao);
-        let resultado: any;
+        let etapaResultados: any[] = [];
 
-        if (capability) {
-          resultado = await executeCapability(etapa.funcao, etapa.parametros);
+        if (etapa.capabilities && etapa.capabilities.length > 0) {
+          etapaResultados = await this.executeCapabilities(etapa);
         } else {
-          console.warn(`⚠️ [Executor] Capability não encontrada: ${etapa.funcao}`);
-          resultado = await this.executeWithAI(etapa);
+          const resultado = await this.executeSingleFunction(etapa);
+          etapaResultados = [resultado];
         }
 
-        results.push({ etapa: etapa.ordem, resultado });
+        const combinedResult = {
+          etapa: etapa.ordem,
+          titulo: etapa.titulo,
+          resultados: etapaResultados,
+        };
+
+        results.push({ etapa: etapa.ordem, resultado: combinedResult });
 
         await this.memory.saveToWorkingMemory({
           tipo: 'descoberta',
-          conteudo: this.formatResultSummary(resultado),
+          conteudo: this.formatResultSummary(combinedResult),
           etapa: etapa.ordem,
           funcao: etapa.funcao,
-          resultado,
+          resultado: combinedResult,
         });
 
         this.emitProgress({
           sessionId: this.sessionId,
           status: 'etapa_concluida',
           etapaAtual: etapa.ordem,
-          resultado: this.formatResultSummary(resultado),
+          resultado: this.formatResultSummary(combinedResult),
         });
 
-        await this.delay(500);
+        await this.delay(300);
 
       } catch (error) {
         console.error(`❌ [Executor] Erro na etapa ${etapa.ordem}:`, error);
@@ -118,6 +131,137 @@ export class AgentExecutor {
     });
 
     return relatorio;
+  }
+
+  private async executeCapabilities(etapa: ExecutionStep): Promise<any[]> {
+    const capabilities = etapa.capabilities || [];
+    const results: any[] = [];
+
+    console.log(`📦 [Executor] Executando ${capabilities.length} capabilities na etapa ${etapa.ordem}`);
+
+    for (const capability of capabilities) {
+      const startTime = Date.now();
+
+      this.emitProgress({
+        sessionId: this.sessionId,
+        status: 'executando',
+        etapaAtual: etapa.ordem,
+        descricao: capability.displayName || capability.nome,
+        capabilityId: capability.id,
+        capabilityName: capability.nome,
+        capabilityStatus: 'executing',
+      } as CapabilityProgressUpdate);
+
+      console.log(`  ⚡ [Executor] Capability: ${capability.displayName}`);
+
+      try {
+        const capFunc = findCapability(capability.nome);
+        let resultado: any;
+
+        if (capFunc) {
+          resultado = await executeCapability(capability.nome, capability.parametros);
+        } else {
+          console.warn(`  ⚠️ [Executor] Capability não encontrada: ${capability.nome}`);
+          resultado = await this.executeCapabilityWithAI(capability, etapa);
+        }
+
+        const duration = Date.now() - startTime;
+
+        this.emitProgress({
+          sessionId: this.sessionId,
+          status: 'executando',
+          etapaAtual: etapa.ordem,
+          descricao: `${capability.displayName} - Concluído`,
+          capabilityId: capability.id,
+          capabilityName: capability.nome,
+          capabilityStatus: 'completed',
+          capabilityResult: resultado,
+          capabilityDuration: duration,
+        } as CapabilityProgressUpdate);
+
+        results.push({
+          capability: capability.nome,
+          displayName: capability.displayName,
+          resultado,
+          duration,
+        });
+
+        await this.delay(200);
+
+      } catch (error) {
+        const duration = Date.now() - startTime;
+
+        this.emitProgress({
+          sessionId: this.sessionId,
+          status: 'executando',
+          etapaAtual: etapa.ordem,
+          descricao: `${capability.displayName} - Erro`,
+          capabilityId: capability.id,
+          capabilityName: capability.nome,
+          capabilityStatus: 'failed',
+          capabilityDuration: duration,
+        } as CapabilityProgressUpdate);
+
+        console.error(`  ❌ [Executor] Erro na capability ${capability.nome}:`, error);
+        
+        results.push({
+          capability: capability.nome,
+          displayName: capability.displayName,
+          erro: error instanceof Error ? error.message : String(error),
+          duration,
+        });
+      }
+    }
+
+    return results;
+  }
+
+  private async executeSingleFunction(etapa: ExecutionStep): Promise<any> {
+    const capability = findCapability(etapa.funcao);
+
+    if (capability) {
+      return await executeCapability(etapa.funcao, etapa.parametros);
+    }
+
+    console.warn(`⚠️ [Executor] Capability não encontrada: ${etapa.funcao}`);
+    return await this.executeWithAI(etapa);
+  }
+
+  private async executeCapabilityWithAI(capability: CapabilityCall, etapa: ExecutionStep): Promise<any> {
+    console.log(`🤖 [Executor] Executando capability com IA: ${capability.nome}`);
+
+    const context = this.memory.formatContextForPrompt();
+
+    const prompt = `
+Você é o Agente Jota executando uma capability específica.
+
+CAPABILITY: ${capability.nome}
+DISPLAY NAME: ${capability.displayName}
+CATEGORIA: ${capability.categoria}
+PARÂMETROS: ${JSON.stringify(capability.parametros, null, 2)}
+
+CONTEXTO DA ETAPA: ${etapa.descricao}
+CONTEXTO GERAL: ${context}
+
+Execute esta capability e retorne um resultado útil e realista.
+Seja específico e forneça dados que ajudem o professor.
+    `.trim();
+
+    const result = await executeWithCascadeFallback(prompt);
+
+    if (result.success && result.data) {
+      return {
+        tipo: 'ai_response',
+        conteudo: result.data,
+        capability: capability.nome,
+      };
+    }
+
+    return {
+      tipo: 'fallback',
+      conteudo: `Capability "${capability.displayName}" processada`,
+      capability: capability.nome,
+    };
   }
 
   private async executeWithAI(etapa: ExecutionStep): Promise<any> {
@@ -154,6 +298,9 @@ export class AgentExecutor {
     }
 
     if (resultado && typeof resultado === 'object') {
+      if (resultado.resultados && Array.isArray(resultado.resultados)) {
+        return `${resultado.resultados.length} capabilities executadas com sucesso`;
+      }
       if (resultado.conteudo) return String(resultado.conteudo);
       if (resultado.mensagem) return String(resultado.mensagem);
       if (resultado.summary) return String(resultado.summary);
@@ -179,7 +326,7 @@ Você acabou de executar o seguinte plano de ação:
 OBJETIVO: ${plan.objetivo}
 
 ETAPAS EXECUTADAS:
-${plan.etapas.map(e => `${e.ordem}. ${e.descricao}`).join('\n')}
+${plan.etapas.map(e => `${e.ordem}. ${e.titulo || e.descricao}`).join('\n')}
 
 RESULTADOS DE CADA ETAPA:
 ${results.map(r => `Etapa ${r.etapa}: ${this.formatResultSummary(r.resultado)}`).join('\n\n')}
