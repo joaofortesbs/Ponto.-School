@@ -60,46 +60,69 @@ export const useChatState = create<ChatState>((set, get) => ({
   },
 
   addPlanCard: (planData) => {
-    const planCard: Message = {
-      id: generateId(),
-      type: 'plan_card',
-      role: 'assistant',
-      content: '',
-      timestamp: Date.now(),
-      metadata: {
-        cardType: 'plan',
-        cardData: planData,
-        isStatic: true,
-        shouldUpdate: false
+    set((state) => {
+      const existingPlanCard = state.messages.find(m => m.type === 'plan_card');
+      if (existingPlanCard) {
+        console.warn('⚠️ [chatState.addPlanCard] PlanCard já existe! ID:', existingPlanCard.id);
+        return state;
       }
-    };
 
-    set((state) => ({
-      messages: [...state.messages, planCard],
-      activePlanCardId: planCard.id
-    }));
+      const planCard: Message = {
+        id: generateId(),
+        type: 'plan_card',
+        role: 'assistant',
+        content: '',
+        timestamp: Date.now(),
+        metadata: {
+          cardType: 'plan',
+          cardData: planData,
+          isStatic: true,
+          shouldUpdate: false
+        }
+      };
+
+      console.log('✅ [chatState.addPlanCard] Criando novo PlanCard com ID:', planCard.id);
+
+      return {
+        ...state,
+        messages: [...state.messages, planCard],
+        activePlanCardId: planCard.id
+      };
+    });
   },
 
   addDevModeCard: (devModeData) => {
-    const devCard: Message = {
-      id: generateId(),
-      type: 'dev_mode_card',
-      role: 'assistant',
-      content: '',
-      timestamp: Date.now(),
-      metadata: {
-        cardType: 'dev_mode',
-        cardData: devModeData,
-        isStatic: true,
-        shouldUpdate: true
+    set((state) => {
+      const existingDevModeCard = state.messages.find(m => m.type === 'dev_mode_card');
+      if (existingDevModeCard) {
+        console.warn('⚠️ [chatState.addDevModeCard] DevModeCard já existe! ID:', existingDevModeCard.id);
+        console.warn('⚠️ [chatState.addDevModeCard] Ignorando criação duplicada - retornando estado atual.');
+        return state;
       }
-    };
 
-    set((state) => ({
-      messages: [...state.messages, devCard],
-      activeDevModeCardId: devCard.id,
-      isExecuting: true
-    }));
+      const devCard: Message = {
+        id: generateId(),
+        type: 'dev_mode_card',
+        role: 'assistant',
+        content: '',
+        timestamp: Date.now(),
+        metadata: {
+          cardType: 'dev_mode',
+          cardData: devModeData,
+          isStatic: true,
+          shouldUpdate: true
+        }
+      };
+
+      console.log('✅ [chatState.addDevModeCard] Criando novo DevModeCard com ID:', devCard.id);
+
+      return {
+        ...state,
+        messages: [...state.messages, devCard],
+        activeDevModeCardId: devCard.id,
+        isExecuting: true
+      };
+    });
   },
 
   addConstructionCard: (constructionData) => {

@@ -21,6 +21,14 @@ export function MessageStream({ onApplyPlan }: MessageStreamProps) {
     }
   }, [messages]);
 
+  useEffect(() => {
+    const devModeCards = messages.filter(m => m.type === 'dev_mode_card');
+    const planCards = messages.filter(m => m.type === 'plan_card');
+    console.log('📊 [MessageStream] Total mensagens:', messages.length);
+    console.log('📊 [MessageStream] DevModeCards:', devModeCards.length, devModeCards.map(c => c.id));
+    console.log('📊 [MessageStream] PlanCards:', planCards.length, planCards.map(c => c.id));
+  }, [messages]);
+
   return (
     <div 
       ref={scrollRef}
