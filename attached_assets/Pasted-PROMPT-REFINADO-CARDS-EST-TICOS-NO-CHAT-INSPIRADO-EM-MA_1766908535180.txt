@@ -1,0 +1,837 @@
+PROMPT REFINADO: CARDS ESTÁTICOS NO CHAT (INSPIRADO EM MANUS IA)
+OBJETIVO
+Implementar comportamento de cards estáticos posicionados no fluxo do chat, onde tanto o Card de Plano de Ação quanto o Card de Modo Desenvolvedor permanecem fixos em suas posições originais, e todas as mensagens subsequentes da IA aparecem abaixo deles, criando um fluxo de conversa natural e organizado.
+
+ANÁLISE DAS IMAGENS (REFERÊNCIA VISUAL)
+Imagem 1 - Fluxo Inicial:
+Usuário: "Preciso que você escolha as melhores atividades para eu fazer e crie elas"
+
+IA: "Ótimo! Entendi o que você precisa. Montei um plano de ação com 3 etapas..."
+
+IA: "Vou executar o seu plano de ação agora"
+
+IA: "Iniciando execução do plano com 3 etapas..."
+
+IA: Relatório de Atividades Personalizadas (começando a aparecer)
+
+Imagem 2 - Modo Desenvolvedor Ativo:
+MODO DESENVOLVEDOR (card fixo)
+
+✓ Pesquisar atividades disponíveis - Concluído
+
+✓ Escolher as melhores atividades - Concluído
+
+✓ Criar as atividades - Concluído
+
+Badge inferior: "Vou pesquisar as atividades disponíveis na plataforma" (1/3)
+
+Input de mensagem abaixo
+
+Comportamento esperado: Cards ficam "ancorados" em suas posições no histórico do chat.
+
+COMPORTAMENTO ESPERADO (INSPIRADO EM MANUS IA)
+Fluxo Visual Completo:
+text
+┌─────────────────────────────────────────────┐
+│ USUÁRIO (azul, direita)                     │
+│ "Criar 3 atividades de álgebra"            │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ IA (cinza escuro, esquerda)                 │
+│ "Ótimo! Entendi o que você precisa.        │
+│  Montei um plano de ação com 3 etapas:"    │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ CARD DE PLANO DE AÇÃO (estático)           │
+│ ┌─────────────────────────────────────┐    │
+│ │ 🤖 Plano de Ação                    │    │
+│ │ ○ Pesquisar atividades              │    │
+│ │ ○ Decidir quais criar               │    │
+│ │ ○ Criar as atividades               │    │
+│ │                                     │    │
+│ │ [APLICAR PLANO] [EDITAR PLANO]     │    │
+│ └─────────────────────────────────────┘    │
+└─────────────────────────────────────────────┘
+         ↓ (usuário clica APLICAR PLANO)
+
+┌─────────────────────────────────────────────┐
+│ IA (cinza escuro, esquerda)                 │
+│ "Vou executar o seu plano de ação agora"   │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ CARD MODO DESENVOLVEDOR (estático)         │
+│ ┌─────────────────────────────────────┐    │
+│ │ 🛠️ MODO DESENVOLVEDOR              │    │
+│ │              [⚡ Em execução]        │    │
+│ │                                     │    │
+│ │ ◉ Pesquisar atividades              │    │
+│ │   └─ 📊 Pesquisando...              │    │
+│ └─────────────────────────────────────┘    │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ IA (cinza escuro, esquerda)                 │
+│ "Encontrei 24 atividades disponíveis!"     │
+└─────────────────────────────────────────────┘
+
+(Card Modo Desenvolvedor ATUALIZA internamente)
+
+┌─────────────────────────────────────────────┐
+│ CARD MODO DESENVOLVEDOR (mesma posição)    │
+│ ┌─────────────────────────────────────┐    │
+│ │ 🛠️ MODO DESENVOLVEDOR              │    │
+│ │              [⚡ Em execução]        │    │
+│ │                                     │    │
+│ │ ✓ Pesquisar atividades (Concluído) │    │
+│ │                                     │    │
+│ │ ◉ Decidir quais criar               │    │
+│ │   └─ 🎯 Analisando...               │    │
+│ └─────────────────────────────────────┘    │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ IA (cinza escuro, esquerda)                 │
+│ "Escolhi 3 atividades estrategicamente"    │
+└─────────────────────────────────────────────┘
+
+... e assim sucessivamente
+ARQUITETURA DE MENSAGENS NO CHAT
+Tipos de Mensagens
+typescript
+// shared/types/message-types.ts
+
+export type MessageType = 
+  | 'user'           // Mensagem do usuário
+  | 'assistant'      // Mensagem de texto da IA
+  | 'plan_card'      // Card de Plano de Ação (estático)
+  | 'dev_mode_card'  // Card de Modo Desenvolvedor (estático)
+  | 'construction_card' // Card de Construção de Atividades (estático)
+  | 'system';        // Mensagens de sistema
+
+export interface Message {
+  id: string;
+  type: MessageType;
+  role: 'user' | 'assistant' | 'system';
+  content: string | any; // string para texto, any para dados estruturados
+  timestamp: number;
+  
+  // Metadados para cards
+  metadata?: {
+    cardType?: 'plan' | 'dev_mode' | 'construction';
+    cardData?: any; // Dados específicos do card
+    isStatic?: boolean; // Se é card estático
+    shouldUpdate?: boolean; // Se card deve atualizar conteúdo interno
+  };
+}
+IMPLEMENTAÇÃO DO FLUXO DE MENSAGENS
+1. Estado de Mensagens no Chat
+typescript
+// interface-modo-producao-chat/state/chatState.ts
+
+import { create } from 'zustand';
+
+interface ChatState {
+  messages: Message[];
+  
+  // Cards ativos (referências)
+  activePlanCardId: string | null;
+  activeDevModeCardId: string | null;
+  
+  // Ações
+  addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
+  addPlanCard: (planData: any) => void;
+  addDevModeCard: (devModeData: any) => void;
+  updateCardData: (cardId: string, newData: any) => void;
+  
+  // Helpers
+  getPlanCard: () => Message | null;
+  getDevModeCard: () => Message | null;
+}
+
+export const useChatState = create<ChatState>((set, get) => ({
+  messages: [],
+  activePlanCardId: null,
+  activeDevModeCardId: null,
+
+  // ADICIONA MENSAGEM DE TEXTO NORMAL
+  addMessage: (message) => {
+    const newMessage: Message = {
+      ...message,
+      id: generateId(),
+      timestamp: Date.now()
+    };
+
+    set((state) => ({
+      messages: [...state.messages, newMessage]
+    }));
+  },
+
+  // ADICIONA CARD DE PLANO (estático)
+  addPlanCard: (planData) => {
+    const planCard: Message = {
+      id: generateId(),
+      type: 'plan_card',
+      role: 'assistant',
+      content: '', // Vazio, dados estão em metadata
+      timestamp: Date.now(),
+      metadata: {
+        cardType: 'plan',
+        cardData: planData,
+        isStatic: true,
+        shouldUpdate: false // Plano não atualiza após criação
+      }
+    };
+
+    set((state) => ({
+      messages: [...state.messages, planCard],
+      activePlanCardId: planCard.id
+    }));
+  },
+
+  // ADICIONA CARD DE MODO DESENVOLVEDOR (estático, mas atualizável)
+  addDevModeCard: (devModeData) => {
+    const devCard: Message = {
+      id: generateId(),
+      type: 'dev_mode_card',
+      role: 'assistant',
+      content: '',
+      timestamp: Date.now(),
+      metadata: {
+        cardType: 'dev_mode',
+        cardData: devModeData,
+        isStatic: true,
+        shouldUpdate: true // Dev mode atualiza internamente
+      }
+    };
+
+    set((state) => ({
+      messages: [...state.messages, devCard],
+      activeDevModeCardId: devCard.id
+    }));
+  },
+
+  // ATUALIZA DADOS INTERNOS DE UM CARD (sem mudar posição)
+  updateCardData: (cardId, newData) => {
+    set((state) => ({
+      messages: state.messages.map((msg) => 
+        msg.id === cardId
+          ? {
+              ...msg,
+              metadata: {
+                ...msg.metadata,
+                cardData: {
+                  ...msg.metadata?.cardData,
+                  ...newData
+                }
+              }
+            }
+          : msg
+      )
+    }));
+  },
+
+  // HELPERS
+  getPlanCard: () => {
+    const state = get();
+    return state.messages.find(m => m.id === state.activePlanCardId) || null;
+  },
+
+  getDevModeCard: () => {
+    const state = get();
+    return state.messages.find(m => m.id === state.activeDevModeCardId) || null;
+  }
+}));
+2. Renderização do Stream de Mensagens
+typescript
+// interface-modo-producao-chat/components/MessageStream.tsx
+
+import { useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useChatState } from '@/state/chatState';
+import { UserMessage } from './UserMessage';
+import { AssistantMessage } from './AssistantMessage';
+import { PlanActionCard } from './PlanActionCard';
+import { DeveloperModeCard } from './DeveloperModeCard';
+import { ActivityConstructionCard } from './ActivityConstructionCard';
+
+export function MessageStream() {
+  const messages = useChatState((state) => state.messages);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll para última mensagem
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  return (
+    <div 
+      ref={scrollRef}
+      className="message-stream"
+    >
+      <AnimatePresence initial={false}>
+        {messages.map((message) => (
+          <motion.div
+            key={message.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="message-container"
+          >
+            {/* RENDERIZA BASEADO NO TIPO */}
+            {message.type === 'user' && (
+              <UserMessage content={message.content} />
+            )}
+
+            {message.type === 'assistant' && (
+              <AssistantMessage content={message.content} />
+            )}
+
+            {message.type === 'plan_card' && (
+              <PlanActionCard 
+                data={message.metadata?.cardData}
+                isStatic={message.metadata?.isStatic}
+              />
+            )}
+
+            {message.type === 'dev_mode_card' && (
+              <DeveloperModeCard 
+                cardId={message.id}
+                data={message.metadata?.cardData}
+                isStatic={message.metadata?.isStatic}
+              />
+            )}
+
+            {message.type === 'construction_card' && (
+              <ActivityConstructionCard 
+                data={message.metadata?.cardData}
+              />
+            )}
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
+      {/* Scroll anchor */}
+      <div className="scroll-anchor" />
+    </div>
+  );
+}
+3. Card de Plano de Ação (Estático)
+typescript
+// interface-modo-producao-chat/components/PlanActionCard.tsx
+
+import { motion } from 'framer-motion';
+import { useChatState } from '@/state/chatState';
+
+interface PlanActionCardProps {
+  data: {
+    objetivo: string;
+    etapas: Array<{
+      ordem: number;
+      titulo: string;
+      descricao: string;
+    }>;
+  };
+  isStatic?: boolean;
+}
+
+export function PlanActionCard({ data, isStatic = true }: PlanActionCardProps) {
+  const addDevModeCard = useChatState((state) => state.addDevModeCard);
+  const addMessage = useChatState((state) => state.addMessage);
+
+  const handleApplyPlan = () => {
+    // 1. ADICIONA MENSAGEM DE CONFIRMAÇÃO
+    addMessage({
+      type: 'assistant',
+      role: 'assistant',
+      content: 'Vou executar o seu plano de ação agora'
+    });
+
+    // 2. ADICIONA CARD DE MODO DESENVOLVEDOR (logo abaixo)
+    addDevModeCard({
+      plano: data,
+      status: 'executando',
+      etapaAtual: 0,
+      etapas: data.etapas.map((e, idx) => ({
+        ...e,
+        status: idx === 0 ? 'executando' : 'pendente',
+        capabilities: []
+      }))
+    });
+
+    // 3. INICIA EXECUÇÃO NO BACKEND
+    fetch('/api/agente-jota/execute-plan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ planData: data })
+    });
+  };
+
+  return (
+    <motion.div
+      layout={isStatic} // Mantém posição se estático
+      className="plan-action-card-wrapper"
+    >
+      <div className="plan-card">
+        {/* Header */}
+        <div className="plan-header">
+          <Bot className="icon" />
+          <h3>Plano de Ação</h3>
+        </div>
+
+        {/* Objetivo */}
+        <p className="plan-objetivo">{data.objetivo}</p>
+
+        {/* Etapas */}
+        <div className="plan-etapas">
+          {data.etapas.map((etapa) => (
+            <div key={etapa.ordem} className="etapa-item">
+              <Circle size={20} className="etapa-icon" />
+              <span className="etapa-titulo">{etapa.titulo}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Ações */}
+        <div className="plan-actions">
+          <button 
+            className="btn-primary"
+            onClick={handleApplyPlan}
+          >
+            APLICAR PLANO
+          </button>
+          <button className="btn-secondary">
+            EDITAR PLANO
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+4. Card de Modo Desenvolvedor (Estático com Atualizações Internas)
+typescript
+// interface-modo-producao-chat/components/DeveloperModeCard.tsx
+
+import { useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useChatState } from '@/state/chatState';
+import { useChatWebSocket } from '@/hooks/useChatWebSocket';
+
+interface DeveloperModeCardProps {
+  cardId: string; // ID da mensagem/card
+  data: {
+    plano: any;
+    status: 'executando' | 'concluido' | 'erro';
+    etapaAtual: number;
+    etapas: Array<{
+      titulo: string;
+      status: 'pendente' | 'executando' | 'concluido';
+      capabilities: CapabilityState[];
+    }>;
+  };
+  isStatic?: boolean;
+}
+
+export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperModeCardProps) {
+  const updateCardData = useChatState((state) => state.updateCardData);
+  const addMessage = useChatState((state) => state.addMessage);
+  const { socket } = useChatWebSocket();
+
+  // ATUALIZA CARD INTERNAMENTE VIA WEBSOCKET
+  useEffect(() => {
+    if (!socket) return;
+
+    // Capability iniciada
+    socket.on('capability:apareceu', (update) => {
+      const etapaIndex = update.stepIndex;
+      const novaCapability = {
+        id: generateId(),
+        nome: update.capability_name,
+        status: 'pendente'
+      };
+
+      // Atualiza dados do card (não muda posição)
+      updateCardData(cardId, {
+        etapas: data.etapas.map((e, idx) => 
+          idx === etapaIndex
+            ? { ...e, capabilities: [...e.capabilities, novaCapability] }
+            : e
+        )
+      });
+    });
+
+    socket.on('capability:iniciou', (update) => {
+      updateCardData(cardId, {
+        etapas: data.etapas.map((e, idx) => 
+          idx === update.stepIndex
+            ? {
+                ...e,
+                capabilities: e.capabilities.map(cap =>
+                  cap.id === update.capability_id
+                    ? { ...cap, status: 'executando' }
+                    : cap
+                )
+              }
+            : e
+        )
+      });
+    });
+
+    socket.on('capability:concluiu', (update) => {
+      // Atualiza status no card
+      updateCardData(cardId, {
+        etapas: data.etapas.map((e, idx) => 
+          idx === update.stepIndex
+            ? {
+                ...e,
+                capabilities: e.capabilities.map(cap =>
+                  cap.id === update.capability_id
+                    ? { ...cap, status: 'concluido' }
+                    : cap
+                )
+              }
+            : e
+        )
+      });
+
+      // ADICIONA MENSAGEM DE TEXTO ABAIXO DO CARD
+      addMessage({
+        type: 'assistant',
+        role: 'assistant',
+        content: update.mensagem || `Concluí: ${update.capability_name}`
+      });
+    });
+
+    socket.on('execution:step:completed', (update) => {
+      updateCardData(cardId, {
+        etapas: data.etapas.map((e, idx) => 
+          idx === update.stepIndex
+            ? { ...e, status: 'concluido' }
+            : e
+        ),
+        etapaAtual: update.stepIndex + 1
+      });
+
+      // Adiciona mensagem de progresso
+      addMessage({
+        type: 'assistant',
+        role: 'assistant',
+        content: `Etapa ${update.stepIndex + 1} concluída!`
+      });
+    });
+
+    return () => {
+      socket.off('capability:apareceu');
+      socket.off('capability:iniciou');
+      socket.off('capability:concluiu');
+      socket.off('execution:step:completed');
+    };
+  }, [socket, cardId, data, updateCardData, addMessage]);
+
+  return (
+    <motion.div
+      layout={isStatic}
+      className="developer-mode-card-wrapper"
+    >
+      <div className="dev-mode-card">
+        {/* Header */}
+        <div className="dev-mode-header">
+          <Wrench className="icon" />
+          <h3>MODO DESENVOLVEDOR</h3>
+          <span className={`status-badge ${data.status}`}>
+            {data.status === 'executando' && '⚡ Em execução'}
+            {data.status === 'concluido' && '✓ Concluído'}
+          </span>
+        </div>
+
+        {/* Etapas */}
+        <div className="dev-mode-steps">
+          <AnimatePresence mode="sync">
+            {data.etapas.map((etapa, idx) => (
+              <motion.div
+                key={idx}
+                layout
+                className={`step-item ${etapa.status}`}
+              >
+                {/* Ícone de status */}
+                <div className="step-icon">
+                  {etapa.status === 'concluido' && <CheckCircle className="text-green-500" />}
+                  {etapa.status === 'executando' && <Circle className="text-orange-500" />}
+                  {etapa.status === 'pendente' && <Circle className="text-gray-500" />}
+                </div>
+
+                {/* Título */}
+                <div className="step-content">
+                  <p className="step-title">{etapa.titulo}</p>
+
+                  {/* Capabilities (só mostra se etapa ativa) */}
+                  {etapa.status === 'executando' && etapa.capabilities.length > 0 && (
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: 'auto' }}
+                      className="capabilities-list"
+                    >
+                      {etapa.capabilities.map((cap) => (
+                        <div key={cap.id} className="capability-item">
+                          <span className="capability-icon">
+                            {cap.status === 'executando' && <Loader2 className="animate-spin" size={14} />}
+                            {cap.status === 'concluido' && <Check className="text-green-500" size={14} />}
+                            {cap.status === 'pendente' && <Clock size={14} />}
+                          </span>
+                          <span className="capability-name">{cap.nome}</span>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+
+                  {/* Badge de status */}
+                  {etapa.status === 'concluido' && (
+                    <span className="badge-concluido">✓ Concluído</span>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+5. Badge de Progresso Inferior (Inspirado em Manus)
+typescript
+// interface-modo-producao-chat/components/ProgressBadge.tsx
+
+import { motion, AnimatePresence } from 'framer-motion';
+import { useChatState } from '@/state/chatState';
+
+export function ProgressBadge() {
+  const devModeCard = useChatState((state) => state.getDevModeCard());
+
+  if (!devModeCard?.metadata?.cardData) return null;
+
+  const data = devModeCard.metadata.cardData;
+  const etapaAtual = data.etapaAtual || 0;
+  const totalEtapas = data.etapas.length;
+  const etapaAtualData = data.etapas[etapaAtual];
+
+  // Se não está executando, não mostra badge
+  if (data.status !== 'executando') return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 100, opacity: 0 }}
+        className="progress-badge"
+      >
+        <div className="badge-icon">
+          <Loader2 className="animate-spin" size={20} />
+        </div>
+        
+        <p className="badge-text">
+          {etapaAtualData?.capabilities[0]?.nome || 'Processando...'}
+        </p>
+
+        <div className="badge-counter">
+          {etapaAtual + 1} / {totalEtapas}
+        </div>
+
+        <button className="badge-expand">
+          <ChevronUp size={16} />
+        </button>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+CSS PARA CARDS ESTÁTICOS
+css
+/* interface-modo-producao-chat/styles/message-stream.css */
+
+.message-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* Mensagens ficam no fluxo natural */
+.message-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cards estáticos têm largura máxima */
+.plan-action-card-wrapper,
+.developer-mode-card-wrapper,
+.activity-construction-card-wrapper {
+  width: 100%;
+  max-width: 800px;
+  margin: 8px 0;
+}
+
+/* Cards ficam posicionados como mensagens normais */
+.plan-card,
+.dev-mode-card {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Badge de progresso inferior fixo */
+.progress-badge {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  background: rgba(249, 115, 22, 0.95);
+  backdrop-filter: blur(10px);
+  
+  padding: 12px 20px;
+  border-radius: 24px;
+  
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
+  
+  z-index: 100;
+}
+
+/* Animações suaves de layout */
+[layout] {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Scroll suave */
+.message-stream::-webkit-scrollbar {
+  width: 8px;
+}
+
+.message-stream::-webkit-scrollbar-thumb {
+  background: rgba(249, 115, 22, 0.5);
+  border-radius: 4px;
+}
+FLUXO COMPLETO DE EXECUÇÃO
+Sequência de Ações:
+Usuário envia prompt → Mensagem azul à direita
+
+IA responde texto → Mensagem cinza à esquerda: "Ótimo! Montei um plano..."
+
+Card de Plano aparece → Card estático no fluxo
+
+Usuário clica "APLICAR PLANO" → Card fica na mesma posição
+
+IA adiciona mensagem → "Vou executar o seu plano de ação agora" (abaixo do card de plano)
+
+Card Modo Desenvolvedor aparece → Logo abaixo da mensagem anterior
+
+Capabilities aparecem progressivamente → Card Modo Dev atualiza internamente
+
+IA adiciona mensagens de progresso → Mensagens aparecem abaixo do card
+
+Card de Construção aparece → Quando capability "criar_atividades" é chamada
+
+Mensagens finais → Todas abaixo dos cards
+
+COMPORTAMENTO DE ATUALIZAÇÃO
+Cards Estáticos vs Mensagens:
+Elemento	Posição	Atualizações	Scroll
+Mensagem de texto	Fixa no histórico	Nunca muda	Sim
+Card de Plano	Fixa no histórico	Nunca muda após criação	Sim
+Card Modo Dev	Fixa no histórico	Atualiza conteúdo interno (capabilities)	Sim
+Mensagens de progresso	Abaixo dos cards	Nunca muda	Sim
+Badge inferior	Fixa na tela (overlay)	Atualiza em tempo real	Não (overlay)
+IMPLEMENTAÇÃO NO BACKEND (ADICIONAR MENSAGENS)
+typescript
+// app/api/agente-jota/execute-plan/route.ts
+
+export async function POST(req: NextRequest) {
+  const { planData } = await req.json();
+  const sessionId = req.headers.get('x-session-id');
+
+  // Inicia executor
+  const executor = new PlanExecutor(sessionId);
+
+  await executor.executePlan(planData, {
+    onProgress: async (update) => {
+      
+      // Envia atualização via WebSocket (atualiza card)
+      broadcastToSession(sessionId, update.type, update);
+
+      // ADICIONA MENSAGENS DE TEXTO quando apropriado
+      if (update.type === 'capability:concluiu') {
+        await addChatMessage(sessionId, {
+          type: 'assistant',
+          role: 'assistant',
+          content: generateProgressMessage(update)
+        });
+      }
+
+      if (update.type === 'execution:step:completed') {
+        await addChatMessage(sessionId, {
+          type: 'assistant',
+          role: 'assistant',
+          content: `Etapa "${update.stepTitle}" concluída com sucesso! ✓`
+        });
+      }
+
+      // Card de Construção (quando necessário)
+      if (update.capability_name === 'criar_atividades') {
+        await addChatMessage(sessionId, {
+          type: 'construction_card',
+          role: 'assistant',
+          content: '',
+          metadata: {
+            cardType: 'construction',
+            cardData: update.construction_data,
+            isStatic: true
+          }
+        });
+      }
+    }
+  });
+
+  return NextResponse.json({ success: true });
+}
+
+function generateProgressMessage(update: any): string {
+  const messages = {
+    'pesquisar_atividades_disponiveis': 'Encontrei {total} atividades disponíveis!',
+    'decidir_atividades_criar': 'Escolhi {total} atividades estrategicamente',
+    'criar_atividades': 'Todas as atividades foram criadas com sucesso!'
+  };
+
+  return messages[update.capability_name]?.replace('{total}', update.resultado?.total || '');
+}
+RESUMO DO COMPORTAMENTO
+✅ Card de Plano: Estático, nunca muda posição ou conteúdo
+✅ Card Modo Desenvolvedor: Estático na posição, mas atualiza internamente
+✅ Mensagens de texto: Sempre abaixo dos cards, no fluxo natural
+✅ Badge de progresso: Overlay fixo na parte inferior (opcional)
+✅ Scroll automático: Para última mensagem, mas cards ficam no histórico
+✅ Animações: Suaves, sem "pulos" ou reposicionamentos bruscos
+
+REFERÊNCIAS VISUAIS (MANUS IA)
+O comportamento é idêntico ao da Manus IA:
+
+Cards ficam "ancorados" no chat como mensagens
+
+Novas mensagens sempre aparecem abaixo
+
+Cards podem atualizar conteúdo interno sem mudar posição
+
+Badge inferior mostra progresso em tempo real (opcional)
+
