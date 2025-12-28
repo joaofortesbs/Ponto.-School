@@ -23,6 +23,8 @@ import type {
 import { ChatInputJota } from './chat-input-jota';
 import { CardSuperiorSuasCriacoes } from './card-superior-suas-criacoes-input';
 
+import CabecalhoFlutuante from '../../../components/layout/cabeçalho-flutuante-ficial-plataforma';
+
 interface ChatLayoutProps {
   initialMessage: string;
   userId?: string;
@@ -265,32 +267,13 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     <div 
       className="flex flex-col h-full w-full mx-auto bg-[#050a18] overflow-hidden fixed inset-0"
     >
-      {/* Cabeçalho Flutuante Fixo */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[1002] w-full max-w-[1200px] px-6 pointer-events-none">
-        <div className="flex items-center justify-between pointer-events-auto bg-[#09122b]/40 backdrop-blur-xl border border-white/10 p-3 rounded-2xl shadow-2xl">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 text-white/70 hover:text-white transition-colors px-3 py-1.5 rounded-xl hover:bg-white/5"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Voltar</span>
-          </button>
-
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
-              <Bot className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex flex-col">
-              <h2 className="text-white font-semibold text-sm leading-tight">Agente Jota</h2>
-              <p className="text-white/40 text-[10px]">Assistente School Power</p>
-            </div>
-          </div>
-
-          <div className="w-[84px]" /> {/* Spacer para manter o Agente Jota centralizado */}
+      <div className="fixed top-0 left-0 right-0 z-[2000] pointer-events-none">
+        <div className="pointer-events-auto">
+          <CabecalhoFlutuante />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 pt-28 pb-64 relative scrollbar-hide">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 pt-32 pb-64 relative scrollbar-hide">
         <div className="max-w-[1200px] mx-auto w-full px-4">
           <MessageStream messages={sessionState.messages} />
 
