@@ -263,7 +263,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
   return (
     <div 
-      className="flex flex-col h-full w-full mx-auto bg-[#050a18] overflow-hidden"
+      className="flex flex-col h-full w-full mx-auto bg-transparent overflow-hidden"
       style={{ maxWidth: '100%', width: '100%' }}
     >
       <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-64 relative">
