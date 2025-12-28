@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Loader2, ChevronRight, AlertCircle } from 'lucide-react';
 
-export type CapabilityStatus = 'hidden' | 'executing' | 'completed' | 'error';
+export type CapabilityStatus = 'hidden' | 'pending' | 'executing' | 'completed' | 'error';
 export type ObjectiveStatus = 'pending' | 'active' | 'completed';
 
 export interface CapabilityItem {
@@ -125,6 +125,7 @@ const CapabilityCard: React.FC<{
   capability: CapabilityItem;
   index: number;
 }> = ({ capability, index }) => {
+  const isPending = capability.status === 'pending';
   const isExecuting = capability.status === 'executing';
   const isCompleted = capability.status === 'completed';
   const isError = capability.status === 'error';
@@ -151,11 +152,22 @@ const CapabilityCard: React.FC<{
             ? 'border-red-400/60 bg-red-500/10'
             : isExecuting
             ? 'border-[#FF6B35]/60 bg-[#FF6B35]/10'
+            : isPending
+            ? 'border-gray-500/40 bg-gray-500/5'
             : 'border-[#FF6B35]/40 bg-[#FF6B35]/5'}
         `}
       >
         <div className="flex items-center justify-center w-6 h-6">
           <AnimatePresence mode="wait">
+            {isPending && (
+              <motion.div
+                key="pending"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                className="w-4 h-4 rounded-full border-2 border-gray-500/50"
+              />
+            )}
             {isExecuting && (
               <motion.div
                 key="spinner"
@@ -197,7 +209,7 @@ const CapabilityCard: React.FC<{
               ? 'text-red-300'
               : isExecuting
               ? 'text-[#FF6B35]'
-              : 'text-gray-400'}
+              : 'text-gray-500'}
           `}
         >
           {capability.displayName || capability.nome}
@@ -236,8 +248,11 @@ export function ProgressiveExecutionCard({
   const [objectives, setObjectives] = useState<ObjectiveItem[]>(
     initialObjectives.map((obj, idx) => ({
       ...obj,
-      status: idx === 0 ? 'active' : 'pending',
-      capabilities: obj.capabilities.map(cap => ({ ...cap, status: 'hidden' as CapabilityStatus })),
+      status: idx === 0 ? 'active' : obj.status,
+      capabilities: obj.capabilities.map(cap => ({ 
+        ...cap, 
+        status: cap.status === 'hidden' ? 'pending' : cap.status 
+      })),
     }))
   );
   const [visibleObjectives, setVisibleObjectives] = useState<Set<number>>(new Set([0]));
@@ -246,10 +261,10 @@ export function ProgressiveExecutionCard({
     setObjectives(
       initialObjectives.map((obj, idx) => ({
         ...obj,
-        status: idx === 0 ? 'active' : (obj.status === 'completed' ? 'completed' : 'pending'),
+        status: idx === 0 ? 'active' : (obj.status === 'completed' ? 'completed' : obj.status),
         capabilities: obj.capabilities.map(cap => ({ 
           ...cap, 
-          status: cap.status || 'hidden' as CapabilityStatus 
+          status: cap.status === 'hidden' ? 'pending' : cap.status 
         })),
       }))
     );

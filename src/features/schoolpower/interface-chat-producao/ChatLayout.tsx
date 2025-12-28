@@ -189,7 +189,12 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         titulo: e.titulo || e.descricao,
         descricao: e.descricao,
         status: idx === 0 ? 'executando' : 'pendente',
-        capabilities: []
+        capabilities: (e.capabilities || []).map((cap, capIdx) => ({
+          id: cap.id || `cap-${idx}-${capIdx}-${Date.now()}`,
+          nome: cap.nome,
+          displayName: cap.displayName || cap.nome,
+          status: idx === 0 && capIdx === 0 ? 'executando' : 'pendente'
+        }))
       }))
     });
 

@@ -68,11 +68,11 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
       else if (etapa.status === 'executando') objectiveStatus = 'active';
 
       const capabilities: CapabilityItem[] = etapa.capabilities.map((cap) => {
-        let capStatus: 'hidden' | 'executing' | 'completed' | 'error' = 'executing';
+        let capStatus: 'hidden' | 'pending' | 'executing' | 'completed' | 'error' = 'pending';
         if (cap.status === 'executando') capStatus = 'executing';
         else if (cap.status === 'concluido') capStatus = 'completed';
         else if (cap.status === 'erro') capStatus = 'error';
-        else if (cap.status === 'pendente') capStatus = 'executing';
+        else if (cap.status === 'pendente') capStatus = 'pending';
 
         return {
           id: cap.id,
@@ -99,15 +99,17 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
       layout={isStatic}
       className="w-full max-w-2xl mx-auto my-2"
     >
-      <ProgressiveExecutionCard
-        objectives={objectivesForProgressiveCard}
-        onObjectiveComplete={(index) => {
-          console.log(`📍 [DeveloperModeCard] Objetivo ${index} concluído`);
-        }}
-        onAllComplete={() => {
-          console.log('✅ [DeveloperModeCard] Todos os objetivos concluídos');
-        }}
-      />
+      <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/95 border border-[#FF6B35]/30 rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm p-5">
+        <ProgressiveExecutionCard
+          objectives={objectivesForProgressiveCard}
+          onObjectiveComplete={(index) => {
+            console.log(`📍 [DeveloperModeCard] Objetivo ${index} concluído`);
+          }}
+          onAllComplete={() => {
+            console.log('✅ [DeveloperModeCard] Todos os objetivos concluídos');
+          }}
+        />
+      </div>
     </motion.div>
   );
 }
