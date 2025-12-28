@@ -27,6 +27,12 @@ interface ChatLayoutProps {
   onBack: () => void;
 }
 
+// Configuração de dimensões e proporções do chat
+const CHAT_CONFIG = {
+  maxWidth: '90%', // Largura relativa ao container pai
+  widthPx: '1200px', // Largura máxima em pixels
+};
+
 export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: ChatLayoutProps) {
   const [sessionState, setSessionState] = useState<ChatSessionState>({
     sessionId: generateSessionId(),
@@ -254,8 +260,11 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   };
 
   return (
-    <div className="flex flex-col h-full w-full max-w-4xl mx-auto bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
+    <div 
+      className="flex flex-col h-full w-full mx-auto bg-transparent backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
+      style={{ maxWidth: CHAT_CONFIG.maxWidth, width: CHAT_CONFIG.widthPx }}
+    >
+      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/10">
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
