@@ -304,7 +304,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
           </AnimatePresence>
 
           {sessionState.executionPlan && 
-           sessionState.executionPlan.status === 'em_execucao' && 
+           (sessionState.executionPlan.status === 'em_execucao' || sessionState.executionPlan.status === 'concluido') && 
            developerModeActive && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
