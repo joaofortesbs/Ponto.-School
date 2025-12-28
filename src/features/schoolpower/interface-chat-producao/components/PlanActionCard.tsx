@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, Circle, Play, Edit3 } from 'lucide-react';
+import { Bot, Circle, Play, Edit3, Loader2 } from 'lucide-react';
 import type { PlanCardData } from '../types/message-types';
 
 interface PlanActionCardProps {
@@ -11,7 +11,15 @@ interface PlanActionCardProps {
 }
 
 export function PlanActionCard({ cardId, data, isStatic = true, onApplyPlan }: PlanActionCardProps) {
+  const [isApplying, setIsApplying] = useState(false);
+
   const handleApplyPlan = () => {
+    if (isApplying) {
+      console.log('⚠️ [PlanActionCard] Click ignorado - já está aplicando');
+      return;
+    }
+    console.log('✅ [PlanActionCard] Aplicando plano...');
+    setIsApplying(true);
     onApplyPlan?.();
   };
 
@@ -44,10 +52,15 @@ export function PlanActionCard({ cardId, data, isStatic = true, onApplyPlan }: P
         <div className="flex gap-3">
           <button
             onClick={handleApplyPlan}
-            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+            disabled={isApplying}
+            className={`flex-1 flex items-center justify-center gap-2 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 shadow-md ${
+              isApplying 
+                ? 'bg-gray-600 cursor-not-allowed opacity-70' 
+                : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 hover:shadow-lg'
+            }`}
           >
-            <Play size={16} />
-            APLICAR PLANO
+            {isApplying ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
+            {isApplying ? 'APLICANDO...' : 'APLICAR PLANO'}
           </button>
           <button
             className="flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium py-2.5 px-4 rounded-lg transition-all duration-200"

@@ -47,6 +47,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   const [isCardExpanded, setIsCardExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasProcessedInitialMessage = useRef(false);
+  const isExecutingPlanRef = useRef(false);
 
   const { 
     messages,
@@ -129,7 +130,22 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   const handleExecutePlan = async () => {
     if (!executionPlan) return;
 
+    if (isExecutingPlanRef.current) {
+      console.warn('⚠️ [ChatLayout] Execução já em andamento (ref)! Ignorando chamada duplicada.');
+      return;
+    }
+
+    const existingDevModeCards = messages.filter(m => m.type === 'dev_mode_card');
     console.log('▶️ [ChatLayout] Iniciando execução do plano');
+    console.log('🔍 [ChatLayout] DevMode cards existentes ANTES:', existingDevModeCards.length);
+    console.log('🔍 [ChatLayout] Total de mensagens:', messages.length);
+
+    if (existingDevModeCards.length > 0) {
+      console.warn('⚠️ [ChatLayout] DevMode card já existe! Abortando criação duplicada.');
+      return;
+    }
+
+    isExecutingPlanRef.current = true;
 
     setIsExecutingLocal(true);
     setExecuting(true);
@@ -217,6 +233,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       setExecuting(false);
       setCurrentStep(null);
       setExecutionPlan(prev => prev ? { ...prev, status: 'concluido' } : null);
+      isExecutingPlanRef.current = false;
 
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: { type: 'execution:completed' }
@@ -235,6 +252,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       setIsExecutingLocal(false);
       setExecuting(false);
       setExecutionPlan(prev => prev ? { ...prev, status: 'erro' } : null);
+      isExecutingPlanRef.current = false;
 
       addTextMessage('assistant', 'Ocorreu um erro durante a execução. Por favor, tente novamente.');
     }
@@ -251,6 +269,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     setShowContextModal(false);
     setIsCardExpanded(false);
     hasProcessedInitialMessage.current = false;
+    isExecutingPlanRef.current = false;
     
     onBack();
   };
