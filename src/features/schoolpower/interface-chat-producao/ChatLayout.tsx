@@ -263,10 +263,10 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
   return (
     <div 
-      className="flex flex-col h-full w-full mx-auto bg-[#050a18] overflow-hidden"
+      className="flex flex-col h-screen w-full mx-auto bg-[#050a18] overflow-hidden fixed inset-0 z-[1000]"
       style={{ maxWidth: '100%', width: '100%' }}
     >
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-80 relative">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-80 relative scrollbar-hide">
         <div className="max-w-[1200px] mx-auto w-full">
           <MessageStream messages={sessionState.messages} />
 
