@@ -26,7 +26,27 @@ import { ChatInputJota } from './chat-input-jota';
 import { CardSuperiorSuasCriacoes } from './card-superior-suas-criacoes-input';
 import { ProgressBadge } from './components/ProgressBadge';
 
-let globalExecutionLock = false;
+const EXECUTION_LOCK_KEY = 'agente-jota-execution-lock';
+
+function acquireExecutionLock(sessionId: string): boolean {
+  const lockData = sessionStorage.getItem(EXECUTION_LOCK_KEY);
+  if (lockData) {
+    const { session, timestamp } = JSON.parse(lockData);
+    const age = Date.now() - timestamp;
+    if (session === sessionId && age < 60000) {
+      console.warn('⚠️ [ExecutionLock] Lock já existe para esta sessão! Bloqueando.');
+      return false;
+    }
+  }
+  sessionStorage.setItem(EXECUTION_LOCK_KEY, JSON.stringify({ session: sessionId, timestamp: Date.now() }));
+  console.log('✅ [ExecutionLock] Lock adquirido com sucesso.');
+  return true;
+}
+
+function releaseExecutionLock(): void {
+  sessionStorage.removeItem(EXECUTION_LOCK_KEY);
+  console.log('🔓 [ExecutionLock] Lock liberado.');
+}
 
 interface ChatLayoutProps {
   initialMessage: string;
@@ -135,15 +155,20 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   const handleExecutePlan = async () => {
     if (!executionPlan) return;
 
-    const canStart = startExecution();
-    if (!canStart) {
-      console.warn('⚠️ [ChatLayout] Execução bloqueada pelo Zustand startExecution! Ignorando.');
+    if (!acquireExecutionLock(sessionId)) {
+      console.warn('⚠️ [ChatLayout] Execução bloqueada pelo sessionStorage! Ignorando.');
       return;
     }
 
-    console.log('▶️ [ChatLayout] Iniciando execução do plano (aprovado pelo Zustand)');
+    const canStart = startExecution();
+    if (!canStart) {
+      console.warn('⚠️ [ChatLayout] Execução bloqueada pelo Zustand startExecution! Ignorando.');
+      releaseExecutionLock();
+      return;
+    }
 
-    globalExecutionLock = true;
+    console.log('▶️ [ChatLayout] Iniciando execução do plano (aprovado)');
+
     isExecutingPlanRef.current = true;
 
     setIsExecutingLocal(true);
@@ -243,7 +268,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       setCurrentStep(null);
       setExecutionPlan(prev => prev ? { ...prev, status: 'concluido' } : null);
       isExecutingPlanRef.current = false;
-      globalExecutionLock = false;
+      releaseExecutionLock();
 
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: { type: 'execution:completed' }
@@ -263,7 +288,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       setExecuting(false);
       setExecutionPlan(prev => prev ? { ...prev, status: 'erro' } : null);
       isExecutingPlanRef.current = false;
-      globalExecutionLock = false;
+      releaseExecutionLock();
 
       addTextMessage('assistant', 'Ocorreu um erro durante a execução. Por favor, tente novamente.');
     }
@@ -271,6 +296,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
   const handleExit = () => {
     clearMessages();
+    releaseExecutionLock();
     setSessionId(generateSessionId());
     setExecutionPlan(null);
     setWorkingMemory([]);
@@ -281,7 +307,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     setIsCardExpanded(false);
     hasProcessedInitialMessage.current = false;
     isExecutingPlanRef.current = false;
-    globalExecutionLock = false;
     
     onBack();
   };
