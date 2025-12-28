@@ -263,40 +263,44 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
   return (
     <div 
-      className="flex flex-col h-full w-full mx-auto bg-transparent backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
-      style={{ maxWidth: CHAT_CONFIG.maxWidth, width: CHAT_CONFIG.widthPx }}
+      className="flex flex-col h-full w-full mx-auto bg-[#050a18] overflow-hidden"
+      style={{ maxWidth: '100%', width: '100%' }}
     >
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-64">
-        <MessageStream messages={sessionState.messages} />
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-64 relative">
+        <div className="max-w-[1200px] mx-auto w-full">
+          <MessageStream messages={sessionState.messages} />
 
-        <AnimatePresence>
+          <AnimatePresence>
+            {sessionState.executionPlan && 
+             sessionState.executionPlan.status === 'aguardando_aprovacao' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-2xl mx-auto mt-4"
+              >
+                <ExecutionPlanCard
+                  plan={sessionState.executionPlan}
+                  onExecute={handleExecutePlan}
+                  isExecuting={sessionState.isExecuting}
+                  currentStep={sessionState.currentStep}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {sessionState.executionPlan && 
-           sessionState.executionPlan.status === 'aguardando_aprovacao' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
+           sessionState.executionPlan.status === 'em_execucao' && (
+            <div className="max-w-2xl mx-auto mt-4">
               <ExecutionPlanCard
                 plan={sessionState.executionPlan}
                 onExecute={handleExecutePlan}
                 isExecuting={sessionState.isExecuting}
                 currentStep={sessionState.currentStep}
               />
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
-
-        {sessionState.executionPlan && 
-         sessionState.executionPlan.status === 'em_execucao' && (
-          <ExecutionPlanCard
-            plan={sessionState.executionPlan}
-            onExecute={handleExecutePlan}
-            isExecuting={sessionState.isExecuting}
-            currentStep={sessionState.currentStep}
-          />
-        )}
-
+        </div>
         <div ref={messagesEndRef} />
       </div>
 
