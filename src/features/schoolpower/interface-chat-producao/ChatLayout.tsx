@@ -139,18 +139,22 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       return;
     }
 
+    globalExecutionLock = true;
+
     if (isExecutingPlanRef.current) {
       console.warn('⚠️ [ChatLayout] Execução já em andamento (ref)! Ignorando chamada duplicada.');
+      globalExecutionLock = false;
       return;
     }
 
-    globalExecutionLock = true;
     isExecutingPlanRef.current = true;
 
-    const existingDevModeCards = messages.filter(m => m.type === 'dev_mode_card');
+    const currentState = useChatState.getState();
+    const existingDevModeCards = currentState.messages.filter(m => m.type === 'dev_mode_card');
+    
     console.log('▶️ [ChatLayout] Iniciando execução do plano');
-    console.log('🔍 [ChatLayout] DevMode cards existentes ANTES:', existingDevModeCards.length);
-    console.log('🔍 [ChatLayout] Total de mensagens:', messages.length);
+    console.log('🔍 [ChatLayout] DevMode cards existentes (getState):', existingDevModeCards.length);
+    console.log('🔍 [ChatLayout] Total de mensagens (getState):', currentState.messages.length);
 
     if (existingDevModeCards.length > 0) {
       console.warn('⚠️ [ChatLayout] DevMode card já existe! Abortando criação duplicada.');
@@ -193,11 +197,25 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     }) => {
       console.log('📊 [ChatLayout] Progresso:', update);
 
+      let eventType: string = update.status;
+      
+      if (update.status === 'etapa_concluida') {
+        eventType = 'execution:step:completed';
+      } else if (update.status === 'executando') {
+        if (update.capabilityId && update.capabilityStatus === 'executing') {
+          eventType = 'capability:iniciou';
+        } else if (update.capabilityId && update.capabilityStatus === 'completed') {
+          eventType = 'capability:concluiu';
+        } else if (!update.capabilityId) {
+          eventType = 'execution:step:started';
+        }
+      } else if (update.status === 'concluido') {
+        eventType = 'execution:completed';
+      }
+
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: {
-          type: update.status === 'etapa_concluida' ? 'execution:step:completed' : 
-                update.status === 'executando' ? 'capability:iniciou' : 
-                update.status === 'concluido' ? 'execution:completed' : update.status,
+          type: eventType,
           stepIndex: update.etapaAtual,
           stepTitle: update.descricao,
           capability_id: update.capabilityId,
