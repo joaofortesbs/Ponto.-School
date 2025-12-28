@@ -23,8 +23,6 @@ import type {
 import { ChatInputJota } from './chat-input-jota';
 import { CardSuperiorSuasCriacoes } from './card-superior-suas-criacoes-input';
 
-import CabecalhoFlutuante from '../../../components/layout/cabeçalho-flutuante-ficial-plataforma';
-
 interface ChatLayoutProps {
   initialMessage: string;
   userId?: string;
@@ -265,16 +263,11 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
   return (
     <div 
-      className="flex flex-col h-full w-full mx-auto bg-[#050a18] overflow-hidden fixed inset-0"
+      className="flex flex-col h-full w-full mx-auto bg-[#050a18] overflow-hidden"
+      style={{ maxWidth: '100%', width: '100%' }}
     >
-      <div className="fixed top-0 left-0 right-0 z-[2000] pointer-events-none">
-        <div className="pointer-events-auto">
-          <CabecalhoFlutuante />
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 pt-32 pb-64 relative scrollbar-hide">
-        <div className="max-w-[1200px] mx-auto w-full px-4">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-64 relative">
+        <div className="max-w-[1200px] mx-auto w-full">
           <MessageStream messages={sessionState.messages} />
 
           <AnimatePresence>
