@@ -63,6 +63,25 @@ The platform features a modern design with glass-morphism effects, blur backgrou
     - **School Points**: Persisted and synchronized school points system.
     - **Calendário School**: Comprehensive calendar event management with draggable events, category filters, and templates.
     - **Lesson Publishing System**: Transforms lessons to a published state with confirmation and persistence.
+    - **Agente Jota Chat Interface** (NEW - Dec 2025): Modern chat-based interface for School Power replacing the card-based contextualization flow.
+      - **Architecture**: `/features/schoolpower/interface-chat-producao/` for UI, `/agente-jota/` for agent brain
+      - **Flow**: idle → chat (on first prompt) → agent creates plan → user approves → step-by-step execution
+      - **Components**:
+        - ChatLayout: Main container managing the entire chat experience
+        - MessageStream: Renders chat messages with animations
+        - ExecutionPlanCard: Visual card showing execution plan with step status
+        - ContextModal: Shows agent's working memory during execution
+      - **Agent Brain** (`/agente-jota/`):
+        - orchestrator.ts: Coordinates entire flow, manages sessions
+        - planner.ts: Creates structured execution plans from user prompts
+        - executor.ts: Executes plan steps by calling capabilities
+        - memory-manager.ts: 3-layer memory (working, short-term, long-term)
+      - **Capabilities System**: Modular functions organized by category
+        - CRIAR: criar_atividade, criar_plano_aula, criar_avaliacao_diagnostica
+        - PESQUISAR: pesquisar_tipos_atividades, pesquisar_atividades_conta
+        - ANALISAR: analisar_gaps_aprendizado, gerar_relatorio_personalizado
+      - **Session Management**: Automatic cleanup of expired sessions (10min interval, 1hr max age)
+      - Uses multi-API cascade fallback system for AI calls
 
 ### System Design Choices
 The architecture emphasizes a modular component design using shadcn/ui patterns. Data persistence is managed with Neon PostgreSQL for primary data, Supabase PostgreSQL for authentication, and Supabase Storage for file assets. Supabase Realtime enables live features. The system is configured for VM deployment, ensuring backend state maintenance and real-time database connections. A critical architectural decision involves the dynamic section system, where `sectionConfigs` are dynamically generated based on `sectionOrder` for each template, ensuring perfect synchronization between template selection and section display. Lesson creation sessions are isolated using a session ID system and state reset functions to prevent data bleed.
