@@ -15,14 +15,18 @@ import { ContextModal } from './ContextModal';
 import { useChatState } from './state/chatState';
 import { processUserPrompt, executeAgentPlan } from '../agente-jota/orchestrator';
 import { generateSessionId } from '../agente-jota/memory-manager';
+
 import type { 
   ExecutionPlan, 
   WorkingMemoryItem, 
   ProgressUpdate 
 } from './types';
+
 import { ChatInputJota } from './chat-input-jota';
 import { CardSuperiorSuasCriacoes } from './card-superior-suas-criacoes-input';
 import { ProgressBadge } from './components/ProgressBadge';
+
+let globalExecutionLock = false;
 
 interface ChatLayoutProps {
   initialMessage: string;
@@ -130,10 +134,18 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   const handleExecutePlan = async () => {
     if (!executionPlan) return;
 
+    if (globalExecutionLock) {
+      console.warn('⚠️ [ChatLayout] Execução bloqueada por globalExecutionLock! Ignorando chamada duplicada.');
+      return;
+    }
+
     if (isExecutingPlanRef.current) {
       console.warn('⚠️ [ChatLayout] Execução já em andamento (ref)! Ignorando chamada duplicada.');
       return;
     }
+
+    globalExecutionLock = true;
+    isExecutingPlanRef.current = true;
 
     const existingDevModeCards = messages.filter(m => m.type === 'dev_mode_card');
     console.log('▶️ [ChatLayout] Iniciando execução do plano');
@@ -142,10 +154,10 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
     if (existingDevModeCards.length > 0) {
       console.warn('⚠️ [ChatLayout] DevMode card já existe! Abortando criação duplicada.');
+      globalExecutionLock = false;
+      isExecutingPlanRef.current = false;
       return;
     }
-
-    isExecutingPlanRef.current = true;
 
     setIsExecutingLocal(true);
     setExecuting(true);
@@ -234,6 +246,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       setCurrentStep(null);
       setExecutionPlan(prev => prev ? { ...prev, status: 'concluido' } : null);
       isExecutingPlanRef.current = false;
+      globalExecutionLock = false;
 
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: { type: 'execution:completed' }
@@ -253,6 +266,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       setExecuting(false);
       setExecutionPlan(prev => prev ? { ...prev, status: 'erro' } : null);
       isExecutingPlanRef.current = false;
+      globalExecutionLock = false;
 
       addTextMessage('assistant', 'Ocorreu um erro durante a execução. Por favor, tente novamente.');
     }
@@ -270,6 +284,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     setIsCardExpanded(false);
     hasProcessedInitialMessage.current = false;
     isExecutingPlanRef.current = false;
+    globalExecutionLock = false;
     
     onBack();
   };
