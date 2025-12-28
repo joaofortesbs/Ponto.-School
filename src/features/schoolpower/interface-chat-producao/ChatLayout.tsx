@@ -48,6 +48,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
   const [inputValue, setInputValue] = useState('');
   const [showContextModal, setShowContextModal] = useState(false);
+  const [isCardExpanded, setIsCardExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasProcessedInitialMessage = useRef(false);
@@ -331,6 +332,9 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
           <CardSuperiorSuasCriacoes 
             plan={sessionState.executionPlan}
             currentStep={sessionState.currentStep}
+            isExpanded={isCardExpanded}
+            onToggleExpand={() => setIsCardExpanded(!isCardExpanded)}
+            onOpenContext={() => setShowContextModal(true)}
           />
           <ChatInputJota 
             onSend={(msg) => {
