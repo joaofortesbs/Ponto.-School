@@ -263,10 +263,10 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
   return (
     <div 
-      className="flex flex-col h-screen w-full mx-auto bg-[#050a18] overflow-hidden fixed inset-0 z-[1000]"
+      className="flex flex-col h-full w-full mx-auto bg-[#050a18] overflow-hidden"
       style={{ maxWidth: '100%', width: '100%' }}
     >
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-80 relative scrollbar-hide">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-80 relative">
         <div className="max-w-[1200px] mx-auto w-full">
           <MessageStream messages={sessionState.messages} />
 
@@ -303,19 +303,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         </div>
         <div ref={messagesEndRef} />
       </div>
-
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        body {
-          overflow: hidden !important;
-        }
-      `}</style>
 
       <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[1001] pointer-events-auto">
         <div className="flex flex-col items-center" style={{ width: '600px' }}>
