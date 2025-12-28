@@ -40,7 +40,7 @@ export function CardSuperiorSuasCriacoes({
         height: isExpanded ? 'auto' : '44px'
       }}
       exit={{ opacity: 0, y: 10 }}
-      className="w-full mb-3 overflow-hidden cursor-pointer flex-shrink-0"
+      className="w-full mb-3 overflow-hidden cursor-pointer"
       onClick={() => !isExpanded && onToggleExpand?.()}
     >
       <div className="card-superior-container">
