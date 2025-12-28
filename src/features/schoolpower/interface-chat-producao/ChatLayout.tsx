@@ -20,7 +20,8 @@ import type {
   ChatSessionState,
   ProgressUpdate 
 } from './types';
-import { ChatInput } from '../../../sections/SchoolPower/components';
+import { ChatInputJota } from './chat-input-jota';
+import { CardSuperiorSuasCriacoes } from './card-superior-suas-criacoes-input';
 
 interface ChatLayoutProps {
   initialMessage: string;
@@ -326,13 +327,20 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       </div>
 
       <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[1001] pointer-events-auto">
-        <div className="relative" style={{ width: '900px' }}>
-          <ChatInput 
+        <div className="flex flex-col items-center" style={{ width: '600px' }}>
+          <CardSuperiorSuasCriacoes 
+            plan={sessionState.executionPlan}
+            currentStep={sessionState.currentStep}
+          />
+          <ChatInputJota 
             onSend={(msg) => {
               if (msg.trim() && !sessionState.isLoading && !sessionState.isExecuting) {
                 handleUserPrompt(msg);
               }
             }}
+            isLoading={sessionState.isLoading}
+            isDisabled={sessionState.isExecuting}
+            placeholder="Digite sua mensagem ou comando..."
           />
         </div>
       </div>
