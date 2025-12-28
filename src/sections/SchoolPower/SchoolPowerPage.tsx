@@ -11,10 +11,9 @@ import {
 } from "./components";
 import { QuickAccessCards } from "./components/4-cards-pré-prompts";
 import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerFlow";
-import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
-import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 import { HistoricoAtividadesCriadas } from "../../features/schoolpower/construction/HistoricoAtividadesCriadas";
+import { ChatLayout } from "../../features/schoolpower/interface-chat-producao/ChatLayout";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import DebugPanel from './components/DebugPanel';
 import GeminiApiMonitor from './components/GeminiApiMonitor';
@@ -30,13 +29,11 @@ interface SchoolPowerPageProps {
 
 export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const [isDarkTheme] = useState(true);
-  const [isCentralExpanded, setIsCentralExpanded] = useState(false);
   const [showHistorico, setShowHistorico] = useState(false);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const pendingMessageProcessed = useRef(false);
 
-  // Hook para gerenciar o fluxo do School Power
   const {
     flowState,
     flowData,
@@ -45,13 +42,8 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     approveActionPlan: handleApproveActionPlanHook,
     resetFlow: handleResetFlowHook,
     isLoading,
-    currentState,
-    initialMessage,
-    setInitialMessage,
-    generatePersonalizedPlan
   } = useSchoolPowerFlow();
 
-  // Verificar e processar mensagem pendente da página de vendas
   useEffect(() => {
     if (pendingMessageProcessed.current) return;
     
@@ -60,14 +52,11 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     if (pendingMessage && pendingMessage.message) {
       console.log('📨 Processando mensagem pendente da página de vendas:', pendingMessage.message);
       
-      // Marcar como processado para evitar duplicação
       pendingMessageProcessed.current = true;
       
-      // Limpar dados de sincronização
       clearPendingMessage();
       clearRedirectToSchoolPower();
       
-      // Enviar a mensagem automaticamente com um pequeno delay para garantir que a UI esteja pronta
       setTimeout(() => {
         handleSendInitialMessage(pendingMessage.message);
         console.log('✅ Mensagem pendente enviada automaticamente!');
@@ -75,77 +64,52 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     }
   }, [handleSendInitialMessage]);
 
-  // Log apenas mudanças importantes de estado
   useEffect(() => {
     if (flowState !== 'idle') {
       console.log('🔄 School Power - Estado alterado:', flowState);
     }
   }, [flowState]);
 
-  const handleCentralExpandedChange = (expanded: boolean) => {
-    setIsCentralExpanded(expanded);
-    console.log('🔄 Central expanded alterado:', expanded);
-  };
-
-  const [uploadedFiles, setUploadedFiles] = React.useState<any[]>([]);
-
-  // Função para enviar mensagem inicial
   const handleSendMessage = async (message: string, files?: any[]) => {
     console.log('📨 Mensagem recebida:', message);
     console.log('📎 Arquivos recebidos:', files?.length || 0);
 
     if (message.trim()) {
-      // Armazenar arquivos se houver
-      if (files && files.length > 0) {
-        setUploadedFiles(files);
-      }
-      
-      // Enviar mensagem para o hook
       handleSendInitialMessage(message);
     }
   };
 
-  // Função para submeter contextualização
   const handleSubmitContextualization = (data: any) => {
     console.log("📝 Submetendo contextualização do SchoolPowerPage:", data);
     handleSubmitContextualizationHook(data);
   };
 
-  // Função para aprovar action plan
   const handleApproveActionPlan = (approvedItems: any) => {
     console.log("✅ Aprovando action plan do SchoolPowerPage:", approvedItems);
     handleApproveActionPlanHook(approvedItems);
   };
 
-  // Função para resetar o fluxo
   const handleResetFlow = () => {
     console.log("🔄 Resetando fluxo do SchoolPowerPage");
     handleResetFlowHook();
   };
 
-  // Função para voltar
   const handleBack = () => {
     console.log("🔄 Voltando ao início");
     setShowHistorico(false);
     handleResetFlowHook();
   };
 
-  // Função para abrir histórico
   const handleOpenHistorico = () => {
     console.log("📚 Abrindo histórico de atividades");
     setShowHistorico(true);
   };
 
-  // Função para lidar com clique nos cards
   const handleCardClick = (cardName: string) => {
     setSelectedCard(cardName);
   };
 
-  // Determina se os componentes padrão devem estar visíveis
   const componentsVisible = flowState === 'idle' && !showHistorico;
-  console.log('👁️ Componentes padrão visíveis:', componentsVisible);
-  console.log('🏗️ Estado atual do fluxo:', flowState);
-  console.log('📚 Mostrar histórico:', showHistorico);
 
   return (
     <div
@@ -170,22 +134,19 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
           display: none;
         }
       `}</style>
-      {/* Background de estrelas - SEMPRE visível em todos os estados */}
+
       <div className="absolute inset-0 z-0">
         <ParticlesBackground isDarkTheme={isDarkTheme} />
       </div>
 
-      {/* Componentes padrões - só aparecem quando flowState é 'idle' */}
       {componentsVisible && (
         <>
-          {/* Vertical dock positioned at right side - hidden on mobile quiz mode */}
           {!(isMobile && isQuizMode) && (
             <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
               <SideMenu onHistoricoClick={handleOpenHistorico} />
             </div>
           )}
 
-          {/* Container Ripple fixo e centralizado no background */}
           <div className={`absolute ${isMobile && isQuizMode ? 'top-[42%]' : 'top-[48%]'} left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none`}>
             <div
               className="relative"
@@ -194,7 +155,6 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 height: isMobile && isQuizMode ? "450px" : "617px"
               }}
             >
-              {/* TechCircle posicionado no topo do container Ripple */}
               <div
                 className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full z-30 pointer-events-none"
                 style={{ marginTop: isMobile && isQuizMode ? "2px" : "3px" }}
@@ -202,12 +162,10 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 <TopHeader isDarkTheme={isDarkTheme} isQuizMode={isQuizMode} />
               </div>
 
-              {/* Ripple centralizado */}
               <div className="absolute inset-0">
-                <Particles3D isDarkTheme={isDarkTheme} isBlurred={isCentralExpanded} />
+                <Particles3D isDarkTheme={isDarkTheme} isBlurred={false} />
               </div>
 
-              {/* Ícone Central no centro do Ripple */}
               <div
                 className="absolute z-50 pointer-events-auto"
                 style={{
@@ -219,7 +177,6 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 <JotaAvatar />
               </div>
 
-              {/* Caixa de Mensagem dentro do mesmo container Ripple - ACIMA dos 4 cards */}
               <div
                 className={`absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto`}
                 style={{
@@ -235,7 +192,6 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 />
               </div>
 
-              {/* 4 Cards Retangulares abaixo da caixa de mensagens */}
               <div
                 className="absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto"
                 style={{
@@ -253,7 +209,6 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
         </>
       )}
 
-      {/* Histórico de Atividades Criadas */}
       {showHistorico && (
         <motion.div
           className="absolute inset-0 flex items-center justify-center z-10"
@@ -267,7 +222,20 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
         </motion.div>
       )}
 
-      {/* Card de Construção unificado - aparece baseado no flowState com fundo estrelado visível */}
+      {flowState === 'chat' && flowData.initialMessage && (
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center z-10 p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <ChatLayout
+            initialMessage={flowData.initialMessage}
+            onBack={handleBack}
+          />
+        </motion.div>
+      )}
+
       {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
         <motion.div
           className="absolute inset-0 flex items-center justify-center z-10"
@@ -301,10 +269,8 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
         </motion.div>
       )}
 
-      {/* Debug Panel - apenas em desenvolvimento */}
       <DebugPanel />
 
-      {/* Monitor API Gemini - apenas em desenvolvimento */}
       <GeminiApiMonitor />
     </div>
   );
