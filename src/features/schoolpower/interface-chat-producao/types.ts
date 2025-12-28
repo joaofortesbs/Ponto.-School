@@ -29,8 +29,21 @@ export interface ExecutionPlan {
   createdAt: number;
 }
 
+export interface CapabilityCall {
+  id: string;
+  nome: string;
+  displayName: string;
+  categoria: 'PESQUISAR' | 'CRIAR' | 'ADICIONAR' | 'EDITAR' | 'ANALISAR';
+  parametros: Record<string, any>;
+  status: 'pending' | 'executing' | 'completed' | 'failed';
+  resultado?: any;
+  duracao?: number;
+  ordem: number;
+}
+
 export interface ExecutionStep {
   ordem: number;
+  titulo?: string;
   descricao: string;
   funcao: string;
   parametros: Record<string, any>;
@@ -38,6 +51,9 @@ export interface ExecutionStep {
   status: 'pendente' | 'executando' | 'concluida' | 'erro';
   resultado?: any;
   erro?: string;
+  capabilities?: CapabilityCall[];
+  startedAt?: number;
+  completedAt?: number;
 }
 
 export interface WorkingMemoryItem {

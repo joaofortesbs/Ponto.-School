@@ -104,7 +104,7 @@ export function CardSuperiorSuasCriacoes({
                       
                       return (
                         <div 
-                          key={etapa.id || idx} 
+                          key={idx} 
                           className={`step-item ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''}`}
                         >
                           <div className="step-status-icon">

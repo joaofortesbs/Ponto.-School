@@ -11,6 +11,8 @@ import { ArrowLeft, Bot, User, Loader2 } from 'lucide-react';
 import { MessageStream } from './MessageStream';
 import { ExecutionPlanCard } from './ExecutionPlanCard';
 import { ContextModal } from './ContextModal';
+import { DeveloperModeCard } from './developer-mode';
+import { PlanActionCard } from './developer-mode/PlanActionCard';
 import { processUserPrompt, executeAgentPlan } from '../agente-jota/orchestrator';
 import { generateSessionId } from '../agente-jota/memory-manager';
 import type { 
@@ -49,6 +51,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   const [inputValue, setInputValue] = useState('');
   const [showContextModal, setShowContextModal] = useState(false);
   const [isCardExpanded, setIsCardExpanded] = useState(false);
+  const [developerModeActive, setDeveloperModeActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasProcessedInitialMessage = useRef(false);
@@ -279,26 +282,40 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
                 exit={{ opacity: 0, y: -20 }}
                 className="max-w-2xl mx-auto mt-4"
               >
-                <ExecutionPlanCard
+                <PlanActionCard
                   plan={sessionState.executionPlan}
-                  onExecute={handleExecutePlan}
-                  isExecuting={sessionState.isExecuting}
-                  currentStep={sessionState.currentStep}
+                  onApply={() => {
+                    addMessage({
+                      role: 'assistant',
+                      content: 'Vou executar o seu plano de ação agora',
+                    });
+                    setDeveloperModeActive(true);
+                    handleExecutePlan();
+                  }}
+                  onEdit={() => {
+                    addMessage({
+                      role: 'assistant',
+                      content: 'Como você gostaria de modificar o plano?',
+                    });
+                  }}
                 />
               </motion.div>
             )}
           </AnimatePresence>
 
           {sessionState.executionPlan && 
-           sessionState.executionPlan.status === 'em_execucao' && (
-            <div className="max-w-2xl mx-auto mt-4">
-              <ExecutionPlanCard
+           sessionState.executionPlan.status === 'em_execucao' && 
+           developerModeActive && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-2xl mx-auto mt-4"
+            >
+              <DeveloperModeCard
                 plan={sessionState.executionPlan}
-                onExecute={handleExecutePlan}
-                isExecuting={sessionState.isExecuting}
                 currentStep={sessionState.currentStep}
               />
-            </div>
+            </motion.div>
           )}
         </div>
         <div ref={messagesEndRef} />

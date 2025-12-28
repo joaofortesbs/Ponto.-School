@@ -1,0 +1,690 @@
+PROMPT REFINADO E COMPLETO PARA VIBE CODE
+OBJETIVO GERAL
+Implementar o sistema de Modo Desenvolvedor no School Power 2.0, que exibe em tempo real o progresso de execução do plano de ação, mostrando cada etapa sendo processada e as capabilities sendo acionadas dinamicamente conforme a IA trabalha.
+
+CONTEXTO ARQUITETURAL
+Baseado nas imagens fornecidas, o fluxo atual possui:
+
+Card de Plano de Ação (primeira imagem) - mostra etapas como checkboxes
+
+Botões de ação: "APLICAR PLANO" e "EDITAR PLANO"
+
+Mensagem de confirmação: "Vou executar o seu plano de ação agora"
+
+Card expandido (segunda imagem) - mostra etapas sendo executadas em tempo real
+
+ESPECIFICAÇÃO TÉCNICA DETALHADA
+1. FLUXO COMPLETO DE EXECUÇÃO
+FASE 1: Recepção do Prompt Inicial
+Entrada:
+
+Usuário digita prompt na caixa de mensagens
+
+Exemplo: "Criar 3 atividades de álgebra para turma 7A"
+
+Saída:
+
+IA retorna mensagem explicativa: "Vou montar um plano de ação pra você:"
+
+Renderiza Card de Plano de Ação com etapas estruturadas
+
+Componente:
+
+typescript
+// interface-modo-producao-chat/components/PlanActionCard.tsx
+Estrutura visual:
+
+text
+┌─────────────────────────────────────────┐
+│ 🤖 Vou montar um plano de ação pra você:│
+├─────────────────────────────────────────┤
+│                                         │
+│ ○ Escolher as melhores atividades      │
+│   para sua turma                        │
+│                                         │
+│ ○ Vou criar todas as atividades        │
+│                                         │
+│ ○ Transformar essas atividades em aulas│
+│                                         │
+│ ○ Criar um flow para suas atividades   │
+│                                         │
+├─────────────────────────────────────────┤
+│ [APLICAR PLANO]  [EDITAR PLANO]        │
+└─────────────────────────────────────────┘
+FASE 2: Confirmação de Execução
+Trigger: Usuário clica em "APLICAR PLANO"
+
+Comportamento:
+
+NÃO animar o card atual
+
+Manter card de plano visível e estático
+
+Adicionar nova mensagem do agente abaixo do card:
+
+Avatar do Agente Jota
+
+Texto: "Vou executar o seu plano de ação agora"
+
+Iniciar transição para Modo Desenvolvedor
+
+Componente:
+
+typescript
+// interface-modo-producao-chat/components/ExecutionConfirmationMessage.tsx
+Código:
+
+typescript
+function handleApplyPlan(plan: ExecutionPlan) {
+  // 1. Adiciona mensagem de confirmação
+  setMessages(prev => [...prev, {
+    id: generateId(),
+    role: "assistant",
+    content: "Vou executar o seu plano de ação agora",
+    timestamp: Date.now(),
+    type: "execution_start"
+  }]);
+
+  // 2. Ativa Modo Desenvolvedor
+  setDeveloperMode({
+    active: true,
+    plan: plan,
+    currentStep: null,
+    capabilities: []
+  });
+
+  // 3. Inicia execução no backend
+  executeDevPlan(plan.id);
+}
+FASE 3: Renderização do Modo Desenvolvedor
+Comportamento:
+
+Renderizar Card Retangular de Modo Desenvolvedor abaixo da mensagem de confirmação
+
+Card expande verticalmente conforme etapas são processadas
+
+Progressive disclosure: apenas etapa atual é visível inicialmente
+
+Capabilities aparecem dinamicamente abaixo da etapa atual
+
+Componente:
+
+typescript
+// interface-modo-producao-chat/components/DeveloperModeCard.tsx
+Estrutura visual inicial:
+
+text
+┌────────────────────────────────────────────────┐
+│ 🛠️ MODO DESENVOLVEDOR                         │
+├────────────────────────────────────────────────┤
+│                                                │
+│ ◉ Vou escolher as melhores atividades         │
+│   para sua turma                               │
+│   ├─ 📊 Vou pesquisar o desempenho da turma X │
+│   │   [⚡ Executando...]                       │
+│   └─ 📝 Vou pesquisar quais atividades eu     │
+│       posso criar                              │
+│       [⏳ Aguardando...]                        │
+│                                                │
+│ ○ Vou criar todas as atividades               │
+│   [🔒 Bloqueado]                               │
+│                                                │
+│ ○ Transformar essas atividades em aulas       │
+│   [🔒 Bloqueado]                               │
+│                                                │
+└────────────────────────────────────────────────┘
+2. ESTRUTURA DE DADOS
+Schema do Plano de Ação
+typescript
+// shared/types/plan-types.ts
+
+interface ExecutionPlan {
+  id: string;
+  objetivo: string;
+  etapas: PlanStep[];
+  status: 'pending' | 'executing' | 'completed' | 'failed';
+  createdAt: number;
+}
+
+interface PlanStep {
+  ordem: number;
+  titulo: string; // Ex: "Escolher as melhores atividades para sua turma"
+  descricao: string;
+  capabilities: CapabilityCall[];
+  status: 'pending' | 'executing' | 'completed' | 'failed';
+  resultado?: any;
+  startedAt?: number;
+  completedAt?: number;
+}
+
+interface CapabilityCall {
+  id: string;
+  nome: string; // Ex: "pesquisar_desempenho_turma"
+  displayName: string; // Ex: "Vou pesquisar o desempenho da turma X"
+  categoria: 'PESQUISAR' | 'CRIAR' | 'ADICIONAR' | 'EDITAR' | 'ANALISAR';
+  parametros: Record<string, any>;
+  status: 'pending' | 'executing' | 'completed' | 'failed';
+  resultado?: any;
+  duracao?: number; // ms
+  ordem: number; // Ordem dentro da etapa
+}
+3. COMPORTAMENTO DINÂMICO (PROGRESSIVE DISCLOSURE)
+Regras de Exibição
+Etapa 1 (Atual):
+
+✅ Totalmente expandida
+
+✅ Capabilities visíveis e atualizando em tempo real
+
+✅ Ícone: ◉ (filled circle)
+
+✅ Status individual de cada capability
+
+Etapa 2+ (Futuras):
+
+✅ Visível mas colapsada
+
+❌ Capabilities ocultas
+
+✅ Ícone: ○ (empty circle)
+
+✅ Label: [🔒 Bloqueado]
+
+Etapas Concluídas:
+
+✅ Colapsadas por padrão
+
+✅ Ícone: ✓ (checkmark)
+
+✅ Cor: verde
+
+✅ Clicável para expandir e ver detalhes
+
+4. ATUALIZAÇÃO EM TEMPO REAL (WEBSOCKET)
+Eventos do Backend → Frontend
+typescript
+// WebSocket Events
+
+// 1. Etapa iniciada
+ws.on('execution:step:started', (data: {
+  stepIndex: number;
+  stepTitle: string;
+  capabilities: CapabilityCall[];
+}) => {
+  // Expande etapa atual
+  // Mostra capabilities iniciais
+});
+
+// 2. Capability iniciada
+ws.on('execution:capability:started', (data: {
+  stepIndex: number;
+  capabilityId: string;
+  capabilityName: string;
+}) => {
+  // Atualiza status da capability para "executing"
+  // Adiciona animação de loading
+});
+
+// 3. Capability concluída
+ws.on('execution:capability:completed', (data: {
+  stepIndex: number;
+  capabilityId: string;
+  resultado: any;
+  duracao: number;
+}) => {
+  // Marca capability como concluída
+  // Mostra checkmark verde
+  // Opcionalmente exibe resultado resumido
+});
+
+// 4. Etapa concluída
+ws.on('execution:step:completed', (data: {
+  stepIndex: number;
+  resultado: any;
+}) => {
+  // Marca etapa como concluída
+  // Colapsa etapa atual
+  // Expande próxima etapa (se houver)
+});
+
+// 5. Execução completa
+ws.on('execution:completed', (data: {
+  planId: string;
+  relatorio: string;
+}) => {
+  // Colapsa todas as etapas
+  // Mostra mensagem final com relatório
+});
+5. IMPLEMENTAÇÃO DO COMPONENTE PRINCIPAL
+typescript
+// interface-modo-producao-chat/components/DeveloperModeCard.tsx
+
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useChatWebSocket } from '@/hooks/useChatWebSocket';
+
+interface DeveloperModeCardProps {
+  plan: ExecutionPlan;
+  sessionId: string;
+}
+
+export function DeveloperModeCard({ plan, sessionId }: DeveloperModeCardProps) {
+  const [executionState, setExecutionState] = useState<ExecutionPlan>(plan);
+  const { socket } = useChatWebSocket(sessionId);
+
+  // WebSocket listeners
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('execution:step:started', (data) => {
+      setExecutionState(prev => ({
+        ...prev,
+        etapas: prev.etapas.map((etapa, idx) => 
+          idx === data.stepIndex
+            ? { ...etapa, status: 'executing', capabilities: data.capabilities }
+            : etapa
+        )
+      }));
+    });
+
+    socket.on('execution:capability:started', (data) => {
+      setExecutionState(prev => ({
+        ...prev,
+        etapas: prev.etapas.map((etapa, idx) => 
+          idx === data.stepIndex
+            ? {
+                ...etapa,
+                capabilities: etapa.capabilities.map(cap =>
+                  cap.id === data.capabilityId
+                    ? { ...cap, status: 'executing' }
+                    : cap
+                )
+              }
+            : etapa
+        )
+      }));
+    });
+
+    socket.on('execution:capability:completed', (data) => {
+      setExecutionState(prev => ({
+        ...prev,
+        etapas: prev.etapas.map((etapa, idx) => 
+          idx === data.stepIndex
+            ? {
+                ...etapa,
+                capabilities: etapa.capabilities.map(cap =>
+                  cap.id === data.capabilityId
+                    ? { ...cap, status: 'completed', resultado: data.resultado, duracao: data.duracao }
+                    : cap
+                )
+              }
+            : etapa
+        )
+      }));
+    });
+
+    socket.on('execution:step:completed', (data) => {
+      setExecutionState(prev => ({
+        ...prev,
+        etapas: prev.etapas.map((etapa, idx) => 
+          idx === data.stepIndex
+            ? { ...etapa, status: 'completed', resultado: data.resultado }
+            : etapa
+        )
+      }));
+    });
+
+    return () => {
+      socket.off('execution:step:started');
+      socket.off('execution:capability:started');
+      socket.off('execution:capability:completed');
+      socket.off('execution:step:completed');
+    };
+  }, [socket]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="developer-mode-card"
+    >
+      {/* Header */}
+      <div className="dev-mode-header">
+        <Wrench className="icon" />
+        <h3>MODO DESENVOLVEDOR</h3>
+      </div>
+
+      {/* Etapas */}
+      <div className="execution-steps">
+        <AnimatePresence mode="sync">
+          {executionState.etapas.map((etapa, idx) => (
+            <ExecutionStepItem
+              key={idx}
+              etapa={etapa}
+              isActive={etapa.status === 'executing'}
+              isCompleted={etapa.status === 'completed'}
+              isPending={etapa.status === 'pending'}
+            />
+          ))}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
+// Componente individual de etapa
+function ExecutionStepItem({
+  etapa,
+  isActive,
+  isCompleted,
+  isPending
+}: {
+  etapa: PlanStep;
+  isActive: boolean;
+  isCompleted: boolean;
+  isPending: boolean;
+}) {
+  const [isExpanded, setIsExpanded] = useState(isActive);
+
+  useEffect(() => {
+    if (isActive) setIsExpanded(true);
+    if (isCompleted) setIsExpanded(false);
+  }, [isActive, isCompleted]);
+
+  return (
+    <motion.div
+      layout
+      className={`execution-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
+    >
+      {/* Header da etapa */}
+      <div 
+        className="step-header"
+        onClick={() => isCompleted && setIsExpanded(!isExpanded)}
+      >
+        {/* Ícone de status */}
+        <div className="step-icon">
+          {isCompleted && <Check className="text-green-500" />}
+          {isActive && <Circle className="text-orange-500 animate-pulse" />}
+          {isPending && <Circle className="text-gray-500" />}
+        </div>
+
+        {/* Título */}
+        <p className="step-title">{etapa.titulo}</p>
+
+        {/* Badge de status */}
+        {isPending && (
+          <span className="status-badge locked">
+            🔒 Bloqueado
+          </span>
+        )}
+      </div>
+
+      {/* Capabilities (expansível) */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="capabilities-list"
+          >
+            {etapa.capabilities.map((capability, capIdx) => (
+              <CapabilityItem
+                key={capability.id}
+                capability={capability}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// Componente individual de capability
+function CapabilityItem({ capability }: { capability: CapabilityCall }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.2 }}
+      className="capability-item"
+    >
+      {/* Ícone da categoria */}
+      <div className="capability-icon">
+        {capability.categoria === 'PESQUISAR' && <Search size={16} />}
+        {capability.categoria === 'CRIAR' && <Plus size={16} />}
+        {capability.categoria === 'ADICIONAR' && <Link size={16} />}
+        {capability.categoria === 'ANALISAR' && <BarChart size={16} />}
+      </div>
+
+      {/* Nome da capability */}
+      <p className="capability-name">{capability.displayName}</p>
+
+      {/* Status */}
+      <div className="capability-status">
+        {capability.status === 'pending' && (
+          <span className="status-badge pending">⏳ Aguardando...</span>
+        )}
+        {capability.status === 'executing' && (
+          <span className="status-badge executing">
+            <Loader2 className="animate-spin" size={14} />
+            Executando...
+          </span>
+        )}
+        {capability.status === 'completed' && (
+          <span className="status-badge completed">
+            <Check size={14} />
+            {capability.duracao && `${capability.duracao}ms`}
+          </span>
+        )}
+        {capability.status === 'failed' && (
+          <span className="status-badge failed">❌ Falhou</span>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+6. BACKEND: ESCOLHA DINÂMICA DE CAPABILITIES
+Importante: As capabilities não são pré-definidas - a IA escolhe dinamicamente durante a execução.
+
+typescript
+// agente-jota-chat/executor/PlanExecutor.ts
+
+async function executeStep(etapa: PlanStep, onProgress: ProgressCallback) {
+  
+  // 1. NOTIFICA INÍCIO DA ETAPA
+  onProgress({
+    type: 'execution:step:started',
+    stepIndex: etapa.ordem,
+    stepTitle: etapa.titulo,
+    capabilities: [] // Inicialmente vazio
+  });
+
+  // 2. IA DECIDE QUAIS CAPABILITIES USAR
+  const capabilitiesToCall = await this.llm.decideCapabilities({
+    stepDescription: etapa.descricao,
+    availableCapabilities: this.registry.getAll(),
+    context: await this.memory.getWorkingMemory()
+  });
+
+  // 3. EXECUTA CADA CAPABILITY DINAMICAMENTE
+  for (const capability of capabilitiesToCall) {
+    
+    // 3.1. NOTIFICA INÍCIO DA CAPABILITY
+    onProgress({
+      type: 'execution:capability:started',
+      stepIndex: etapa.ordem,
+      capabilityId: capability.id,
+      capabilityName: capability.displayName
+    });
+
+    // 3.2. EXECUTA
+    const startTime = Date.now();
+    const resultado = await this.functionCaller.call(
+      capability.funcao,
+      capability.parametros
+    );
+    const duracao = Date.now() - startTime;
+
+    // 3.3. NOTIFICA CONCLUSÃO
+    onProgress({
+      type: 'execution:capability:completed',
+      stepIndex: etapa.ordem,
+      capabilityId: capability.id,
+      resultado,
+      duracao
+    });
+
+    // 3.4. SALVA NA MEMÓRIA
+    await this.memory.saveToWorkingMemory({
+      tipo: 'capability_executed',
+      capability: capability.funcao,
+      resultado
+    });
+  }
+
+  // 4. NOTIFICA CONCLUSÃO DA ETAPA
+  onProgress({
+    type: 'execution:step:completed',
+    stepIndex: etapa.ordem,
+    resultado: await this.summarizeStepResult(etapa)
+  });
+}
+7. ANIMAÇÕES E FEEDBACK VISUAL
+css
+/* Animações suaves */
+.execution-step {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.execution-step.active {
+  border-left: 3px solid #f97316; /* Orange */
+  background: rgba(249, 115, 22, 0.05);
+}
+
+.execution-step.completed {
+  border-left: 3px solid #10b981; /* Green */
+  opacity: 0.7;
+}
+
+.capability-item {
+  animation: slideInFromLeft 0.3s ease-out;
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Loading spinner */
+.status-badge.executing {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+8. CONFIGURAÇÃO
+typescript
+// config/developer-mode-config.ts
+
+export const DEVELOPER_MODE_CONFIG = {
+  // Comportamento
+  autoExpandCurrentStep: true,
+  autoCollapseCompletedSteps: true,
+  allowManualExpand: true, // Permitir clicar para expandir etapas concluídas
+  
+  // Exibição
+  showCapabilityDuration: true,
+  showCapabilityParameters: false, // Esconder parâmetros técnicos por padrão
+  maxVisibleSteps: 5, // Scroll após 5 etapas
+  
+  // Animações
+  stepTransitionDuration: 300, // ms
+  capabilityAppearDelay: 100, // ms entre capabilities
+  
+  // Feedback
+  showProgressPercentage: true,
+  showEstimatedTime: false, // Não mostrar tempo estimado (pode ser impreciso)
+  playSuccessSound: false,
+  
+  // Debug
+  enableDevTools: process.env.NODE_ENV === 'development',
+  logCapabilityCalls: true
+};
+RESUMO DO COMPORTAMENTO ESPERADO
+Fluxo Visual Completo
+✅ Usuário clica "APLICAR PLANO"
+
+✅ Card de plano permanece estático (sem animação)
+
+✅ Nova mensagem aparece: "Vou executar o seu plano de ação agora"
+
+✅ Card de Modo Desenvolvedor aparece abaixo
+
+✅ Primeira etapa expande automaticamente
+
+✅ Capabilities aparecem progressivamente conforme IA escolhe
+
+✅ Cada capability mostra status em tempo real (aguardando → executando → concluído)
+
+✅ Ao concluir etapa, ela colapsa e próxima expande automaticamente
+
+✅ Ao finalizar tudo, todas as etapas mostram checkmark verde
+
+ARQUIVOS A SEREM CRIADOS/MODIFICADOS
+text
+/interface-modo-producao-chat/components/
+├── DeveloperModeCard.tsx          # NOVO - Card principal do modo dev
+├── ExecutionStepItem.tsx          # NOVO - Item de etapa individual
+├── CapabilityItem.tsx             # NOVO - Item de capability individual
+└── ExecutionConfirmationMessage.tsx # NOVO - Mensagem de confirmação
+
+/agente-jota-chat/executor/
+├── PlanExecutor.ts                # MODIFICAR - Adicionar escolha dinâmica
+└── CapabilityDecider.ts           # NOVO - LLM decide capabilities
+
+/shared/types/
+└── execution-types.ts             # NOVO - Types para execução
+
+/config/
+└── developer-mode-config.ts       # NOVO - Configurações do modo dev
+PONTOS CRÍTICOS DE ATENÇÃO
+⚠️ Performance:
+
+Limitar número de capabilities exibidas simultaneamente (max 10 por etapa)
+
+Virtualizar lista se houver muitas etapas
+
+⚠️ UX:
+
+Loading spinners para indicar que capability está executando
+
+Transições suaves para não causar "flashing"
+
+Scroll automático para manter etapa atual visível
+
+⚠️ Erro Handling:
+
+Se capability falhar, mostrar status vermelho mas continuar execução
+
+Permitir retry manual de capability falhada
+
+Mostrar mensagem de erro amigável
+
+⚠️ WebSocket:
+
+Implementar reconnection automática
+
+Buffer de eventos caso conexão caia temporariamente
+
+Fallback para polling se WebSocket falhar
