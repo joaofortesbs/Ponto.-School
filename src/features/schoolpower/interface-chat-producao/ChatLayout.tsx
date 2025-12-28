@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Bot, User, Loader2 } from 'lucide-react';
+import { ArrowLeft, Bot, User, Loader2, LogOut } from 'lucide-react';
 import { MessageStream } from './MessageStream';
 import { ExecutionPlanCard } from './ExecutionPlanCard';
 import { ContextModal } from './ContextModal';
@@ -300,11 +300,42 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     }
   };
 
+  const handleExit = () => {
+    // Limpa o estado local
+    setSessionState({
+      sessionId: generateSessionId(),
+      userId,
+      messages: [],
+      executionPlan: null,
+      workingMemory: [],
+      isExecuting: false,
+      isLoading: false,
+      currentStep: null,
+    });
+    setInputValue('');
+    setShowContextModal(false);
+    setIsCardExpanded(false);
+    setDeveloperModeActive(false);
+    hasProcessedInitialMessage.current = false;
+    
+    // Chama o callback de voltar
+    onBack();
+  };
+
   return (
     <div 
-      className="flex flex-col h-full w-full mx-auto bg-transparent overflow-hidden"
+      className="flex flex-col h-full w-full mx-auto bg-transparent overflow-hidden relative"
       style={{ maxWidth: '100%', width: '100%' }}
     >
+      {/* Botão Sair */}
+      <button
+        onClick={handleExit}
+        className="absolute top-6 right-6 z-[1002] flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-2 rounded-full transition-all duration-200 group shadow-lg"
+      >
+        <LogOut className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+        <span className="text-xs font-bold uppercase tracking-wider">Sair</span>
+      </button>
+
       <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-64 relative">
         <div className="max-w-[1200px] mx-auto w-full">
           <MessageStream messages={sessionState.messages} />
