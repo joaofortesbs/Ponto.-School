@@ -280,7 +280,7 @@ export function ContextModal({ workingMemory, onClose }: ContextModalProps) {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-white/50 text-xs uppercase tracking-wider">
-                                  {entry.entry_type} - {entry.capability_name}
+                                  {entry.entry_type} - {entry.capability_id}
                                 </span>
                                 <div className="flex items-center gap-2">
                                   <span className="text-white/30 text-xs">

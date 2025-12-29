@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useChatState } from '../state/chatState';
 import { ProgressiveExecutionCard, ObjectiveItem, CapabilityItem, ObjectiveReflection } from './ProgressiveExecutionCard';
 import type { DevModeCardData, CapabilityState } from '../types/message-types';
+import type { ActivityToBuild } from '../construction-interface';
 
 interface DeveloperModeCardProps {
   cardId: string;
@@ -14,6 +15,16 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
   const { updateCardData, updateCapabilityStatus, updateEtapaStatus, addCapabilityToEtapa } = useChatState();
   const [reflections, setReflections] = useState<Map<number, ObjectiveReflection>>(new Map());
   const [loadingReflections, setLoadingReflections] = useState<Set<number>>(new Set());
+  const [activitiesToBuild, setActivitiesToBuild] = useState<ActivityToBuild[]>([]);
+  const [isBuildingActivities, setIsBuildingActivities] = useState(false);
+
+  const handleBuildActivities = useCallback(() => {
+    console.log('🔨 [DeveloperModeCard] Iniciando construção de atividades');
+    setIsBuildingActivities(true);
+    window.dispatchEvent(new CustomEvent('agente-jota-build-activities', {
+      detail: { activities: activitiesToBuild }
+    }));
+  }, [activitiesToBuild]);
 
   useEffect(() => {
     const handleProgress = (event: CustomEvent) => {
@@ -90,6 +101,44 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
       if (update.type === 'execution:completed') {
         console.log(`🎉 [DeveloperModeCard] Execução completa!`);
         updateCardData(cardId, { status: 'concluido' });
+        setIsBuildingActivities(false);
+      }
+
+      if (update.type === 'construction:activities_ready') {
+        console.log(`🏗️ [DeveloperModeCard] Atividades para construir:`, update.activities);
+        setActivitiesToBuild(update.activities || []);
+      }
+
+      if (update.type === 'construction:activity_progress') {
+        console.log(`📊 [DeveloperModeCard] Progresso da atividade:`, update.activityId, update.progress);
+        setActivitiesToBuild(prev => prev.map(a => 
+          a.id === update.activityId 
+            ? { ...a, status: 'building' as const, progress: update.progress }
+            : a
+        ));
+      }
+
+      if (update.type === 'construction:activity_completed') {
+        console.log(`✅ [DeveloperModeCard] Atividade concluída:`, update.activityId);
+        setActivitiesToBuild(prev => prev.map(a => 
+          a.id === update.activityId 
+            ? { ...a, status: 'completed' as const, progress: 100, built_data: update.data }
+            : a
+        ));
+      }
+
+      if (update.type === 'construction:activity_error') {
+        console.log(`❌ [DeveloperModeCard] Erro na atividade:`, update.activityId, update.error);
+        setActivitiesToBuild(prev => prev.map(a => 
+          a.id === update.activityId 
+            ? { ...a, status: 'error' as const, error_message: update.error }
+            : a
+        ));
+      }
+
+      if (update.type === 'construction:all_completed') {
+        console.log(`🎉 [DeveloperModeCard] Todas as atividades construídas!`);
+        setIsBuildingActivities(false);
       }
     };
 
@@ -145,6 +194,9 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
           objectives={objectivesForProgressiveCard}
           reflections={reflections}
           loadingReflections={loadingReflections}
+          activitiesToBuild={activitiesToBuild}
+          onBuildActivities={handleBuildActivities}
+          isBuildingActivities={isBuildingActivities}
           onObjectiveComplete={(index) => {
             console.log(`📍 [DeveloperModeCard] Objetivo ${index} concluído`);
           }}
