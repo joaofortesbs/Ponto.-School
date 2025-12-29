@@ -76,10 +76,11 @@ The platform features a modern design with glass-morphism effects, blur backgrou
         - planner.ts: Creates structured execution plans from user prompts
         - executor.ts: Executes plan steps by calling capabilities
         - memory-manager.ts: 3-layer memory (working, short-term, long-term)
-      - **Capabilities System**: Modular functions organized by category
-        - CRIAR: criar_atividade, criar_plano_aula, criar_avaliacao_diagnostica
-        - PESQUISAR: pesquisar_tipos_atividades, pesquisar_atividades_conta
-        - ANALISAR: analisar_gaps_aprendizado, gerar_relatorio_personalizado
+      - **4 Capabilities Core** (Pipeline obrigatório: BUSCAR → DECIDIR → CRIAR):
+        - **Cap 1: pesquisar_atividades_conta** - Busca no Neon PostgreSQL atividades já criadas pelo professor
+        - **Cap 2: pesquisar_atividades_disponiveis** - Consulta catálogo JSON local (schoolPowerActivities.json)
+        - **Cap 3: decidir_atividades_criar** - IA analisa contexto e decide estrategicamente quais criar
+        - **Cap 4: criar_atividade** - Preenche campos com IA e salva no banco
       - **Session Management**: Automatic cleanup of expired sessions (10min interval, 1hr max age)
       - Uses multi-API cascade fallback system for AI calls
       - **Anti-Hallucination System** (3-layer validation):
