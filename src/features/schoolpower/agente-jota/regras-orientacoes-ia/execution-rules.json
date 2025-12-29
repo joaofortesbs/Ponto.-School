@@ -1,15 +1,16 @@
 {
-  "version": "1.1.0",
-  "description": "Regras de execução do Agente Jota - Versão Simplificada",
+  "version": "2.0.0",
+  "description": "Regras de execução das 4 Capabilities Core do Agente Jota",
 
   "execution_rules": [
     {
       "id": "rule_001",
       "type": "mandatory",
       "priority": 1,
-      "rule": "SEMPRE pesquisar atividades disponíveis ANTES de decidir quais criar",
-      "rationale": "Impossível tomar decisão informada sem conhecer opções disponíveis",
-      "violates_if": "decidir_atividades_criar executado sem pesquisar_atividades_disponiveis",
+      "capability": "pipeline",
+      "rule": "SEMPRE executar as capabilities na ordem: 1→2→3→4",
+      "rationale": "O pipeline tem dependências estritas entre as etapas",
+      "violates_if": "Capability executada fora de ordem ou sem dados da anterior",
       "action_on_violation": "abort_and_notify"
     },
     
@@ -17,49 +18,129 @@
       "id": "rule_002",
       "type": "mandatory",
       "priority": 1,
-      "rule": "SEMPRE decidir quais atividades criar ANTES de executar criação",
-      "rationale": "Criação requer seleção prévia para garantir qualidade e relevância",
-      "violates_if": "criar_atividade executado sem decidir_atividades_criar",
+      "capability": "pesquisar_atividades_conta",
+      "rule": "SEMPRE buscar atividades da conta ANTES de decidir",
+      "rationale": "Evita sugerir atividades que professor já criou",
+      "violates_if": "decidir_atividades_criar sem pesquisar_atividades_conta",
       "action_on_violation": "auto_execute_dependency"
     },
-    
+
     {
       "id": "rule_003",
       "type": "mandatory",
       "priority": 1,
-      "rule": "SEMPRE analisar contexto do usuário antes de qualquer operação de criação",
-      "rationale": "As ações devem ser personalizadas para o contexto do professor",
-      "violates_if": "qualquer capability de CRIAR sem analisar_contexto_usuario",
+      "capability": "pesquisar_atividades_disponiveis",
+      "rule": "SEMPRE consultar catálogo ANTES de decidir",
+      "rationale": "IA só pode escolher atividades que existem no catálogo",
+      "violates_if": "decidir_atividades_criar sem pesquisar_atividades_disponiveis",
       "action_on_violation": "abort_and_notify"
     },
-    
+
     {
       "id": "rule_004",
-      "type": "validation",
+      "type": "mandatory",
       "priority": 1,
-      "rule": "NUNCA criar mais de 10 atividades de uma vez",
-      "validation": "atividades_escolhidas.length <= 10",
-      "action_on_fail": "truncate_to_limit",
-      "limit": 10,
-      "rationale": "Quantidade excessiva sobrecarrega professor e dificulta gestão"
+      "capability": "decidir_atividades_criar",
+      "rule": "SEMPRE validar escolhas da IA contra whitelist de valid_ids",
+      "rationale": "Anti-alucinação: IA não pode inventar atividades",
+      "violates_if": "IA escolheu ID que não está na whitelist",
+      "action_on_violation": "reject_and_retry_with_reinforced_prompt"
     },
-    
+
     {
       "id": "rule_005",
       "type": "mandatory",
       "priority": 1,
+      "capability": "criar_atividade",
+      "rule": "SEMPRE usar apenas atividades validadas da capability 3",
+      "rationale": "Garante que apenas atividades aprovadas são construídas",
+      "violates_if": "Tentativa de criar atividade não decidida",
+      "action_on_violation": "abort_and_notify"
+    },
+
+    {
+      "id": "rule_006",
+      "type": "validation",
+      "priority": 1,
+      "capability": "decidir_atividades_criar",
+      "rule": "NUNCA criar mais de 10 atividades de uma vez",
+      "validation": "chosen_activities.length <= 10",
+      "action_on_fail": "truncate_to_limit",
+      "limit": 10,
+      "rationale": "Quantidade excessiva sobrecarrega professor"
+    },
+
+    {
+      "id": "rule_007",
+      "type": "mandatory",
+      "priority": 1,
+      "capability": "all",
       "rule": "NUNCA inventar dados que não existem no contexto",
       "validation": "all_referenced_data exists in validated_context",
       "action_on_violation": "use_only_validated_data",
-      "rationale": "Anti-alucinação: IA deve usar apenas dados reais do professor"
+      "rationale": "Anti-alucinação: IA deve usar apenas dados reais"
+    },
+
+    {
+      "id": "rule_008",
+      "type": "conditional",
+      "priority": 2,
+      "capability": "pesquisar_atividades_conta",
+      "condition": "professor novo (count = 0)",
+      "rule": "SE nenhuma atividade anterior ENTÃO informar claramente no contexto",
+      "action": "add_empty_context_message",
+      "rationale": "IA precisa saber que professor é novo"
+    },
+
+    {
+      "id": "rule_009",
+      "type": "optimization",
+      "priority": 3,
+      "capability": "decidir_atividades_criar",
+      "rule": "Priorizar atividades que professor ainda não criou",
+      "condition": "Se professor tem atividades anteriores",
+      "action": "diversify_selection",
+      "rationale": "Evita repetição de conteúdo"
+    },
+
+    {
+      "id": "rule_010",
+      "type": "validation",
+      "priority": 1,
+      "capability": "decidir_atividades_criar",
+      "rule": "Cada atividade DEVE ter justificativa com pelo menos 10 caracteres",
+      "validation": "all justificativas.length >= 10",
+      "action_on_fail": "add_default_justification"
+    },
+
+    {
+      "id": "rule_011",
+      "type": "mandatory",
+      "priority": 1,
+      "capability": "criar_atividade",
+      "rule": "TODOS os campos obrigatórios DEVEM ser preenchidos",
+      "validation": "no empty required fields",
+      "action_on_fail": "fill_with_defaults"
+    },
+
+    {
+      "id": "rule_012",
+      "type": "optimization",
+      "priority": 3,
+      "capability": "criar_atividade",
+      "rule": "Salvar atividades no banco assim que construídas",
+      "action": "auto_save_on_complete",
+      "rationale": "Evita perda de dados se houver falha"
     }
   ],
 
   "meta_rules": {
-    "description": "Regras sobre como resolver conflitos entre regras",
+    "description": "Regras sobre como resolver conflitos",
     "priority_order": [
-      "Regras mandatory sempre têm precedência",
-      "Regras validation têm precedência sobre optimization"
+      "Regras mandatory (priority 1) sempre têm precedência",
+      "Regras validation (priority 1) vêm em seguida",
+      "Regras conditional (priority 2) aplicam quando condição é verdadeira",
+      "Regras optimization (priority 3) são sugestões de melhoria"
     ],
     "conflict_resolution": "priority_based"
   }

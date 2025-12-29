@@ -1,358 +1,383 @@
+/**
+ * CAPABILITY 3: decidir_atividades_criar
+ * 
+ * Responsabilidade: IA analisa contexto completo (dados de cap1, cap2, 
+ * contexto do usuário) e decide estrategicamente quais atividades criar.
+ * 
+ * Inputs: Resultado de pesquisar_atividades_conta + pesquisar_atividades_disponiveis + contexto
+ */
+
 import { executeWithCascadeFallback } from '../../../../services/controle-APIs-gerais-school-power';
-import type { DecidirAtividadesCriarInput, AtividadeEscolhida } from '../schemas/decidir-atividades-schema';
-import schoolPowerActivitiesData from '../../../../data/schoolPowerActivities.json';
+import { 
+  ActivityFromCatalog,
+  AtividadeForAI,
+  ChosenActivity,
+  DecisionContext,
+  DecisionResult,
+  DecisionValidation,
+  SearchAccountActivitiesResult,
+  SearchAvailableActivitiesResult,
+  validateAIChoices
+} from '../../shared/types';
+import { formatAccountActivitiesForPrompt } from '../../../capabilities/PESQUISAR/implementations/pesquisar-atividades-conta';
+import { formatAvailableActivitiesForPrompt, validateActivitySelection } from '../../../capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis';
 
-interface AtividadeCompleta {
-  id: string;
-  titulo: string;
-  tipo: string;
-  categoria?: string;
-  materia: string;
-  nivel_dificuldade: string;
-  tags: string[];
-  descricao?: string;
-  campos_obrigatorios?: string[];
-  campos_opcionais?: string[];
-  schema_campos?: Record<string, any>;
-}
-
-function getAtividadesComSchemas(): AtividadeCompleta[] {
-  const data = schoolPowerActivitiesData as any;
-  const atividades = data.atividades || data;
-  if (!Array.isArray(atividades)) return [];
-  return atividades.filter((a: any) => a.enabled !== false && a.schema_campos);
-}
-
-function buildSchemaDescription(atividade: AtividadeCompleta): string {
-  const camposObrigatorios = atividade.campos_obrigatorios || [];
-  const schemasCampos = atividade.schema_campos || {};
-  
-  return camposObrigatorios.map(campo => {
-    const schema = schemasCampos[campo];
-    if (!schema) return `  - ${campo}: (campo obrigatório)`;
-    
-    let descricao = `  - **${campo}** (${schema.tipo})`;
-    if (schema.label) descricao += `: ${schema.label}`;
-    if (schema.placeholder) descricao += ` - ${schema.placeholder}`;
-    if (schema.opcoes) descricao += ` [Opções: ${schema.opcoes.slice(0, 5).join(', ')}${schema.opcoes.length > 5 ? '...' : ''}]`;
-    if (schema.min !== undefined) descricao += ` [min: ${schema.min}]`;
-    if (schema.max !== undefined) descricao += ` [max: ${schema.max}]`;
-    if (schema.min_items !== undefined) descricao += ` [min_items: ${schema.min_items}]`;
-    
-    return descricao;
-  }).join('\n');
-}
-
-export async function decidirAtividadesCriar(params: DecidirAtividadesCriarInput): Promise<{
-  success: boolean;
-  decisao: {
-    total_selecionado: number;
-    atividades: AtividadeEscolhida[];
-    estrategia_aplicada: string;
-    pronto_para_criar: boolean;
+interface DecidirAtividadesCriarParams {
+  account_activities: SearchAccountActivitiesResult;
+  available_activities: SearchAvailableActivitiesResult;
+  user_objective: string;
+  user_context?: {
+    disciplina?: string;
+    turma?: {
+      nome: string;
+      nivel: string;
+      alunos_count?: number;
+    };
+    objetivo_pedagogico?: string;
   };
-  atividades_escolhidas: AtividadeEscolhida[];
-  mensagem: string;
-  pronto_para_criar: boolean;
-}> {
-  console.log('🎯 [DECIDIR] Iniciando capability decidir-atividades-criar...');
+  constraints?: {
+    max_activities?: number;
+    preferred_types?: string[];
+    avoid_types?: string[];
+  };
+}
 
-  const {
-    atividades_disponiveis,
-    criterios_decisao,
-    contexto_turma
-  } = params;
+const MAX_RETRIES = 2;
+const DEFAULT_MAX_ACTIVITIES = 5;
 
-  const quantidade = criterios_decisao?.quantidade || 3;
+function buildDecisionPrompt(context: DecisionContext): string {
+  const accountContext = context.previous_activities.length > 0
+    ? `
+ATIVIDADES JÁ CRIADAS PELO PROFESSOR:
+Total: ${context.previous_activities.length}
+${context.previous_activities.map(a => `- ${a.titulo} (${a.tipo})`).join('\n')}
+`
+    : `
+PROFESSOR NOVO: Nenhuma atividade anterior encontrada.
+`;
 
-  const atividadesComSchemas = atividades_disponiveis.length > 0 
-    ? atividades_disponiveis 
-    : getAtividadesComSchemas();
+  const catalogSummary = context.available_activities.slice(0, 15).map((a, idx) => `
+${idx + 1}. **${a.titulo}** (ID: ${a.id})
+   - Tipo: ${a.tipo} | Categoria: ${a.categoria}
+   - Descrição: ${a.descricao?.substring(0, 100)}...
+   - Campos: ${a.campos_obrigatorios.slice(0, 5).join(', ')}${a.campos_obrigatorios.length > 5 ? '...' : ''}
+`).join('');
 
-  console.log(`📊 [DECIDIR] Atividades disponíveis: ${atividadesComSchemas.length}`);
-  console.log(`🎓 [DECIDIR] Quantidade desejada: ${quantidade}`);
+  return `
+# TAREFA: Decidir quais atividades criar
 
-  const decisionPrompt = `
-Você é um **ESPECIALISTA PEDAGÓGICO DE ELITE** com PhD em Educação e 20 anos de experiência em planejamento didático.
+Você é um especialista pedagógico escolhendo atividades para um professor.
 
-Sua missão CRÍTICA é:
-1. Escolher estrategicamente as ${quantidade} melhores atividades
-2. **PREENCHER TODOS OS CAMPOS OBRIGATÓRIOS** de cada atividade escolhida com conteúdo pedagógico de altíssima qualidade
+## OBJETIVO DO USUÁRIO
+${context.user_objective}
 
-## 📚 ATIVIDADES DISPONÍVEIS:
+## CONTEXTO DO PROFESSOR
+- Disciplina: ${context.user_context.disciplina || 'Não especificada'}
+- Turma: ${context.user_context.turma?.nome || 'Não especificada'}
+- Nível: ${context.user_context.turma?.nivel || 'Não especificado'}
+- Objetivo pedagógico: ${context.user_context.objetivo_pedagogico || context.user_objective}
 
-${atividadesComSchemas.slice(0, 10).map((a: any, idx: number) => `
-### Atividade ${idx + 1}: ${a.titulo}
-- **ID:** ${a.id}
-- **Tipo:** ${a.tipo}
-- **Categoria:** ${a.categoria || 'geral'}
-- **Matéria:** ${a.materia}
-- **Dificuldade:** ${a.nivel_dificuldade}
-- **Descrição:** ${a.descricao}
+${accountContext}
 
-**CAMPOS OBRIGATÓRIOS QUE VOCÊ DEVE PREENCHER:**
-${buildSchemaDescription(a as AtividadeCompleta)}
-`).join('\n---\n')}
+## ATIVIDADES DISPONÍVEIS NO CATÁLOGO (FONTE DE VERDADE)
+Total disponível: ${context.available_activities.length}
 
-## 🎯 CRITÉRIOS DE DECISÃO:
+IDs VÁLIDOS: ${context.available_activities.map(a => a.id).join(', ')}
 
-- **Objetivo Pedagógico:** ${criterios_decisao?.objetivo_pedagogico || 'Aprendizado geral do tema'}
-- **Quantidade Desejada:** ${quantidade} atividades
-- **Abordagem Prioritária:** ${criterios_decisao?.priorizar || 'variedade de tipos'}
-- **Nível da Turma:** ${criterios_decisao?.nivel_turma || 'intermediario'}
+${catalogSummary}
 
-${contexto_turma ? `
-## 🏫 CONTEXTO DA TURMA:
+## CONSTRAINTS
+- Máximo de atividades: ${context.constraints.max_activities}
+- Tipos preferidos: ${context.constraints.preferred_types?.join(', ') || 'Nenhum'}
+- Evitar tipos: ${context.constraints.avoid_types?.join(', ') || 'Nenhum'}
 
-- **Matéria:** ${contexto_turma.materia || 'Não especificado'}
-- **Nível de Ensino:** ${contexto_turma.nivel_ensino || 'Não especificado'}
-- **Desempenho Médio:** ${contexto_turma.desempenho_medio ? `${contexto_turma.desempenho_medio}%` : 'Não especificado'}
-- **Gaps de Aprendizado:** ${contexto_turma.gaps_aprendizado?.join(', ') || 'Não identificados'}
+## INSTRUÇÕES DE DECISÃO
 
-**ATENÇÃO:** Use este contexto para personalizar o conteúdo das atividades!
-` : ''}
+1. Analise o objetivo do usuário e o contexto
+2. Escolha até ${context.constraints.max_activities} atividades do CATÁLOGO DISPONÍVEL
+3. Priorize:
+   - Relevância para disciplina e nível
+   - Progressão pedagógica (básico → avançado)
+   - Diversidade de tipos (não repetir mesmo tipo)
+   - Atividades que o professor ainda não criou
 
-## 📋 SUA TAREFA (EXECUÇÃO OBRIGATÓRIA):
+## ⚠️ REGRA ABSOLUTA - ANTI-ALUCINAÇÃO
 
-Para CADA uma das ${quantidade} atividades que você escolher:
+- Use APENAS IDs da lista de IDs válidos acima
+- NUNCA invente IDs ou atividades que não existem
+- Se escolher um ID inválido, o sistema REJEITARÁ sua resposta
 
-1. **Justifique a escolha** (por que essa atividade é ideal para o objetivo?)
-2. **Preencha TODOS os campos obrigatórios** com conteúdo pedagógico detalhado e de alta qualidade
-3. **Respeite o tipo de dado** de cada campo (text, textarea, array, number, select, etc.)
-4. **Use o schema_campos** para entender formato e validações
-5. **Ordene as atividades** de forma lógica e progressiva
-
-## 🚨 REGRAS CRÍTICAS:
-
-- ✅ TODOS os campos obrigatórios DEVEM ser preenchidos
-- ✅ Conteúdo deve ser pedagogicamente relevante e aplicável
-- ✅ Arrays devem ter quantidade mínima respeitada
-- ✅ Selects devem usar EXATAMENTE as opções disponíveis
-- ✅ Numbers devem respeitar min/max
-- ❌ NÃO deixe campos vazios ou com placeholders
-- ❌ NÃO use "...", "exemplo", "etc" como conteúdo
-
-## 📤 FORMATO DE RESPOSTA (JSON VÁLIDO):
+## FORMATO DE RESPOSTA (JSON VÁLIDO)
 
 {
   "atividades_escolhidas": [
     {
       "id": "plano-aula-001",
-      "titulo": "Plano de Aula Completo",
-      "justificativa": "Esta atividade é ideal porque...",
-      "ordem_sugerida": 1,
-      "campos_preenchidos": {
-        "tema": "Tema específico aqui",
-        "disciplina": "Matemática",
-        "ano_serie": "9º ano",
-        "duracao_aula": 50,
-        "objetivo_geral": "Objetivo detalhado...",
-        "objetivos_especificos": ["Objetivo 1", "Objetivo 2", "Objetivo 3"],
-        "conteudo_programatico": "Conteúdo detalhado...",
-        "metodologia": "Metodologia detalhada...",
-        "recursos_didaticos": ["Recurso 1", "Recurso 2"],
-        "avaliacao": "Como os alunos serão avaliados..."
-      }
+      "titulo": "Título exato do catálogo",
+      "justificativa": "Por que esta atividade é ideal para o objetivo",
+      "ordem_sugerida": 1
     }
   ],
-  "raciocinio_geral": "Escolhi estas atividades porque..."
+  "estrategia_pedagogica": "Explicação da progressão pedagógica escolhida",
+  "total_escolhidas": 2
 }
 
-**ATENÇÃO:** Retorne APENAS o JSON válido, sem texto adicional.
+Retorne APENAS o JSON, sem texto adicional.
   `.trim();
+}
 
-  console.log('🤖 [DECIDIR] Enviando prompt para API...');
-
-  const result = await executeWithCascadeFallback(decisionPrompt);
-
-  let decisionData: any = null;
-
-  if (result.success && result.data) {
-    try {
-      const cleanedText = result.data.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        decisionData = JSON.parse(jsonMatch[0]);
-        console.log('✅ [DECIDIR] Resposta parseada com sucesso');
-      }
-    } catch (e) {
-      console.warn('⚠️ [DECIDIR] Falha ao parsear resposta:', e);
-    }
-  }
-
-  if (!decisionData || !decisionData.atividades_escolhidas) {
-    console.log('⚠️ [DECIDIR] Usando fallback - gerando atividades com campos padrão');
-    
-    const atividadesSelecionadas = atividadesComSchemas
-      .slice(0, quantidade)
-      .map((a: any, idx: number) => {
-        const camposPreenchidos: Record<string, any> = {};
-        
-        (a.campos_obrigatorios || []).forEach((campo: string) => {
-          const schema = a.schema_campos?.[campo];
-          if (!schema) {
-            camposPreenchidos[campo] = 'Conteúdo a ser definido';
-            return;
-          }
-          
-          switch (schema.tipo) {
-            case 'text':
-            case 'textarea':
-              camposPreenchidos[campo] = `${schema.label || campo} - Conteúdo pedagógico sobre ${criterios_decisao?.objetivo_pedagogico || 'o tema'}`;
-              break;
-            case 'number':
-              camposPreenchidos[campo] = schema.default || schema.min || 5;
-              break;
-            case 'select':
-              camposPreenchidos[campo] = schema.opcoes?.[0] || 'Não especificado';
-              break;
-            case 'array':
-              camposPreenchidos[campo] = ['Item 1', 'Item 2', 'Item 3'];
-              break;
-            case 'array_objects':
-              camposPreenchidos[campo] = [{ exemplo: 'Item de exemplo' }];
-              break;
-            case 'boolean':
-              camposPreenchidos[campo] = schema.default ?? true;
-              break;
-            default:
-              camposPreenchidos[campo] = 'Valor padrão';
-          }
-        });
-
-        return {
-          id: a.id,
-          titulo: a.titulo,
-          tipo: a.tipo,
-          materia: a.materia,
-          nivel_dificuldade: a.nivel_dificuldade,
-          tags: a.tags || [],
-          campos_obrigatorios: a.campos_obrigatorios || [],
-          campos_opcionais: a.campos_opcionais || [],
-          schema_campos: a.schema_campos || {},
-          campos_preenchidos: camposPreenchidos,
-          justificativa: 'Atividade selecionada automaticamente baseada nos critérios pedagógicos',
-          ordem_sugerida: idx + 1,
-          status_construcao: 'aguardando' as const,
-          progresso: 0
-        };
-      });
-
-    decisionData = {
-      atividades_escolhidas: atividadesSelecionadas,
-      raciocinio_geral: 'Seleção baseada em diversidade e relevância pedagógica'
+function validateDecision(
+  aiResponse: any,
+  validCatalog: ActivityFromCatalog[],
+  maxActivities: number
+): DecisionValidation {
+  const errors: string[] = [];
+  
+  if (!aiResponse || !aiResponse.atividades_escolhidas) {
+    return {
+      all_ids_valid: false,
+      count_within_limit: false,
+      has_justification: false,
+      no_duplicates: false,
+      fields_complete: false,
+      errors: ['Resposta da IA não contém atividades_escolhidas']
     };
   }
 
-  const atividadesEscolhidas: AtividadeEscolhida[] = decisionData.atividades_escolhidas.map((escolha: any, index: number) => {
-    const atividadeCompleta = atividadesComSchemas.find((a: any) => a.id === escolha.id);
+  const chosenIds = aiResponse.atividades_escolhidas.map((a: any) => a.id);
+  
+  const validation = validateAIChoices(chosenIds, validCatalog);
+  const all_ids_valid = validation.valid;
+  if (!all_ids_valid) {
+    errors.push(validation.error || 'IDs inválidos encontrados');
+  }
+
+  const count_within_limit = chosenIds.length <= maxActivities;
+  if (!count_within_limit) {
+    errors.push(`Quantidade (${chosenIds.length}) excede o limite (${maxActivities})`);
+  }
+
+  const has_justification = aiResponse.atividades_escolhidas.every(
+    (a: any) => a.justificativa && a.justificativa.length > 10
+  );
+  if (!has_justification) {
+    errors.push('Nem todas as atividades têm justificativa adequada');
+  }
+
+  const uniqueIds = new Set(chosenIds);
+  const no_duplicates = uniqueIds.size === chosenIds.length;
+  if (!no_duplicates) {
+    errors.push('Existem IDs duplicados na seleção');
+  }
+
+  const fields_complete = aiResponse.atividades_escolhidas.every(
+    (a: any) => a.id && a.titulo && a.ordem_sugerida !== undefined
+  );
+  if (!fields_complete) {
+    errors.push('Campos obrigatórios ausentes em algumas atividades');
+  }
+
+  return {
+    all_ids_valid,
+    count_within_limit,
+    has_justification,
+    no_duplicates,
+    fields_complete,
+    errors
+  };
+}
+
+function enrichChosenActivities(
+  aiChoices: any[],
+  catalog: ActivityFromCatalog[]
+): ChosenActivity[] {
+  return aiChoices.map((choice, index) => {
+    const catalogActivity = catalog.find(a => a.id === choice.id);
     
-    if (!atividadeCompleta) {
-      console.warn(`⚠️ [DECIDIR] Atividade ${escolha.id} não encontrada, usando dados da escolha`);
+    if (!catalogActivity) {
+      console.warn(`⚠️ [DECIDIR] Atividade ${choice.id} não encontrada no catálogo`);
+      return null;
     }
-
-    const camposObrigatorios = atividadeCompleta?.campos_obrigatorios || [];
-    const schemaCampos = atividadeCompleta?.schema_campos || {};
-    let camposPreenchidos = { ...(escolha.campos_preenchidos || {}) };
-
-    const camposFaltantes = camposObrigatorios.filter((campo: string) => {
-      const valor = camposPreenchidos[campo];
-      if (valor === undefined || valor === null) return true;
-      if (typeof valor === 'string' && valor.trim() === '') return true;
-      if (Array.isArray(valor) && valor.length === 0) return true;
-      return false;
-    });
-
-    if (camposFaltantes.length > 0) {
-      console.log(`🔧 [DECIDIR] Preenchendo ${camposFaltantes.length} campos faltantes para "${escolha.titulo}"`);
-      
-      camposFaltantes.forEach((campo: string) => {
-        const schema = schemaCampos[campo];
-        if (!schema) {
-          camposPreenchidos[campo] = `Conteúdo sobre ${criterios_decisao?.objetivo_pedagogico || 'o tema'}`;
-          return;
-        }
-        
-        switch (schema.tipo) {
-          case 'text':
-            camposPreenchidos[campo] = schema.placeholder 
-              ? schema.placeholder.replace('Ex:', '').trim()
-              : `${schema.label || campo}`;
-            break;
-          case 'textarea':
-            camposPreenchidos[campo] = `Conteúdo detalhado para ${schema.label || campo} sobre ${criterios_decisao?.objetivo_pedagogico || 'o tema especificado'}. Este conteúdo será personalizado conforme as necessidades pedagógicas.`;
-            break;
-          case 'number':
-            camposPreenchidos[campo] = schema.default || schema.min || 5;
-            break;
-          case 'select':
-            camposPreenchidos[campo] = schema.opcoes?.[0] || 'Não especificado';
-            break;
-          case 'array':
-            const minItems = schema.min_items || 3;
-            camposPreenchidos[campo] = Array.from({ length: minItems }, (_, i) => 
-              `${schema.label || campo} ${i + 1}: Item de exemplo`
-            );
-            break;
-          case 'array_objects':
-            const minObjs = schema.min_items || 3;
-            const objSchema = schema.schema || {};
-            camposPreenchidos[campo] = Array.from({ length: minObjs }, (_, i) => {
-              const obj: Record<string, any> = {};
-              Object.entries(objSchema).forEach(([key, fieldDef]: [string, any]) => {
-                if (fieldDef.tipo === 'number') {
-                  obj[key] = i + 1;
-                } else {
-                  obj[key] = `${fieldDef.label || key} ${i + 1}`;
-                }
-              });
-              return obj;
-            });
-            break;
-          case 'boolean':
-            camposPreenchidos[campo] = schema.default ?? true;
-            break;
-          default:
-            camposPreenchidos[campo] = 'Valor padrão';
-        }
-      });
-    }
-
-    console.log(`✅ [DECIDIR] Atividade ${index + 1} processada: ${escolha.titulo} (${Object.keys(camposPreenchidos).length} campos)`);
 
     return {
-      id: atividadeCompleta?.id || escolha.id,
-      titulo: atividadeCompleta?.titulo || escolha.titulo,
-      tipo: atividadeCompleta?.tipo || escolha.tipo || 'atividade',
-      materia: atividadeCompleta?.materia || escolha.materia || 'geral',
-      nivel_dificuldade: atividadeCompleta?.nivel_dificuldade || escolha.nivel_dificuldade || 'intermediario',
-      tags: atividadeCompleta?.tags || escolha.tags || [],
-      campos_obrigatorios: camposObrigatorios,
-      campos_opcionais: atividadeCompleta?.campos_opcionais || [],
-      schema_campos: schemaCampos,
-      campos_preenchidos: camposPreenchidos,
-      justificativa: escolha.justificativa || 'Atividade escolhida estrategicamente',
-      ordem_sugerida: escolha.ordem_sugerida || (index + 1),
+      id: catalogActivity.id,
+      titulo: catalogActivity.titulo,
+      tipo: catalogActivity.tipo,
+      categoria: catalogActivity.categoria,
+      materia: catalogActivity.materia,
+      nivel_dificuldade: catalogActivity.nivel_dificuldade,
+      tags: catalogActivity.tags,
+      campos_obrigatorios: catalogActivity.campos_obrigatorios,
+      campos_opcionais: catalogActivity.campos_opcionais || [],
+      schema_campos: catalogActivity.schema_campos,
+      campos_preenchidos: {},
+      justificativa: choice.justificativa || 'Atividade selecionada estrategicamente',
+      ordem_sugerida: choice.ordem_sugerida || (index + 1),
       status_construcao: 'aguardando' as const,
       progresso: 0
     };
-  });
+  }).filter(Boolean) as ChosenActivity[];
+}
 
-  const organizacao = {
-    total_selecionado: atividadesEscolhidas.length,
-    atividades: atividadesEscolhidas.sort((a, b) => a.ordem_sugerida - b.ordem_sugerida),
-    estrategia_aplicada: decisionData.raciocinio_geral || 'Atividades escolhidas estrategicamente',
-    pronto_para_criar: true
+export async function decidirAtividadesCriar(
+  params: DecidirAtividadesCriarParams
+): Promise<DecisionResult> {
+  console.log('🎯 [Capability:DECIDIR] Iniciando decisão de atividades');
+  
+  const startTime = Date.now();
+  const maxActivities = params.constraints?.max_activities || DEFAULT_MAX_ACTIVITIES;
+
+  const context: DecisionContext = {
+    user_objective: params.user_objective,
+    user_context: {
+      disciplina: params.user_context?.disciplina,
+      turma: params.user_context?.turma,
+      objetivo_pedagogico: params.user_context?.objetivo_pedagogico || params.user_objective
+    },
+    available_activities: params.available_activities.activities,
+    previous_activities: params.account_activities.activities || [],
+    constraints: {
+      max_activities: maxActivities,
+      preferred_types: params.constraints?.preferred_types,
+      avoid_types: params.constraints?.avoid_types
+    }
   };
 
-  console.log('🎉 [DECIDIR] Decisão concluída com sucesso!');
-  console.log(`📊 [DECIDIR] Total de atividades escolhidas: ${organizacao.total_selecionado}`);
+  let lastError: string | null = null;
+  let attemptNumber = 0;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    attemptNumber = attempt;
+    console.log(`   Tentativa ${attempt}/${MAX_RETRIES}...`);
+
+    try {
+      const prompt = buildDecisionPrompt(context);
+      
+      if (attempt > 1 && lastError) {
+        const reinforcedPrompt = `
+${prompt}
+
+⚠️ CORREÇÃO NECESSÁRIA (Tentativa ${attempt}):
+Sua resposta anterior foi REJEITADA porque: ${lastError}
+
+Por favor, corrija o erro e responda novamente com IDs VÁLIDOS do catálogo.
+        `.trim();
+        
+        const result = await executeWithCascadeFallback(reinforcedPrompt);
+        var aiResponse = result;
+      } else {
+        var aiResponse = await executeWithCascadeFallback(prompt);
+      }
+
+      if (!aiResponse.success || !aiResponse.data) {
+        throw new Error('Falha na chamada da API');
+      }
+
+      const cleanedText = aiResponse.data.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+      
+      if (!jsonMatch) {
+        throw new Error('Resposta não contém JSON válido');
+      }
+
+      const parsedResponse = JSON.parse(jsonMatch[0]);
+
+      const validation = validateDecision(
+        parsedResponse,
+        params.available_activities.activities,
+        maxActivities
+      );
+
+      if (validation.errors.length === 0) {
+        const chosenActivities = enrichChosenActivities(
+          parsedResponse.atividades_escolhidas,
+          params.available_activities.activities
+        );
+
+        console.log(`✅ [Capability:DECIDIR] Decisão aprovada: ${chosenActivities.length} atividades`);
+
+        return {
+          success: true,
+          validation,
+          chosen_activities: chosenActivities,
+          estrategia_pedagogica: parsedResponse.estrategia_pedagogica || 'Estratégia baseada em diversidade e relevância',
+          total_escolhidas: chosenActivities.length,
+          metadata: {
+            decision_timestamp: new Date().toISOString(),
+            attempt_number: attemptNumber,
+            model_used: aiResponse.modelUsed
+          }
+        };
+      }
+
+      lastError = validation.errors.join('; ');
+      console.warn(`⚠️ [Capability:DECIDIR] Validação falhou: ${lastError}`);
+
+    } catch (error) {
+      lastError = (error as Error).message;
+      console.error(`❌ [Capability:DECIDIR] Erro na tentativa ${attempt}:`, error);
+    }
+  }
+
+  console.error('❌ [Capability:DECIDIR] Todas as tentativas falharam, usando fallback');
+
+  const fallbackActivities = params.available_activities.activities
+    .slice(0, Math.min(3, maxActivities))
+    .map((a, idx) => ({
+      id: a.id,
+      titulo: a.titulo,
+      tipo: a.tipo,
+      categoria: a.categoria,
+      materia: a.materia,
+      nivel_dificuldade: a.nivel_dificuldade,
+      tags: a.tags,
+      campos_obrigatorios: a.campos_obrigatorios,
+      campos_opcionais: a.campos_opcionais || [],
+      schema_campos: a.schema_campos,
+      campos_preenchidos: {},
+      justificativa: 'Seleção automática (fallback)',
+      ordem_sugerida: idx + 1,
+      status_construcao: 'aguardando' as const,
+      progresso: 0
+    }));
 
   return {
     success: true,
-    decisao: organizacao,
-    atividades_escolhidas: organizacao.atividades,
-    mensagem: `Escolhi ${organizacao.total_selecionado} atividade(s) estrategicamente e preenchi TODOS os campos necessários. ${decisionData.raciocinio_geral}`,
-    pronto_para_criar: true
+    validation: {
+      all_ids_valid: true,
+      count_within_limit: true,
+      has_justification: true,
+      no_duplicates: true,
+      fields_complete: true,
+      errors: []
+    },
+    chosen_activities: fallbackActivities,
+    estrategia_pedagogica: 'Seleção automática baseada no catálogo disponível (fallback após falha de IA)',
+    total_escolhidas: fallbackActivities.length,
+    metadata: {
+      decision_timestamp: new Date().toISOString(),
+      attempt_number: attemptNumber,
+      model_used: 'fallback'
+    }
   };
+}
+
+export function formatDecisionForNextCapability(result: DecisionResult): string {
+  return `
+DECISÃO DE ATIVIDADES APROVADA:
+═══════════════════════════════════════════════════════════
+
+Total selecionado: ${result.total_escolhidas}
+Estratégia: ${result.estrategia_pedagogica}
+
+ATIVIDADES PARA CRIAR:
+${result.chosen_activities.map((a, idx) => `
+${idx + 1}. ${a.titulo} (ID: ${a.id})
+   - Tipo: ${a.tipo}
+   - Justificativa: ${a.justificativa}
+   - Campos obrigatórios: ${a.campos_obrigatorios.join(', ')}
+`).join('')}
+
+Próximo passo: Capability 4 (criar_atividade) iniciará a construção.
+  `.trim();
 }

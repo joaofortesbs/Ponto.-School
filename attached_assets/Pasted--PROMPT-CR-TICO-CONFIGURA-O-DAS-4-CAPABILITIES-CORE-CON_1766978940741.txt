@@ -1,0 +1,1151 @@
+🎯 PROMPT CRÍTICO - CONFIGURAÇÃO DAS 4 CAPABILITIES CORE
+CONTEXTO ESTRATÉGICO
+Você está implementando as 4 capabilities fundamentais que formam o coração do sistema School Power 2.0. Estas capabilities representam o ciclo completo: BUSCAR → DECIDIR → CRIAR → ENTREGAR. Cada uma tem responsabilidades distintas mas interdependentes.
+
+Aja com a mentalidade de:
+
+Martin Fowler (enterprise integration patterns)
+
+Eric Evans (domain-driven design, bounded contexts)
+
+Greg Young (CQRS, event sourcing)
+
+Sam Newman (microservices, service boundaries)
+
+VISÃO MACRO DO SISTEMA
+Fluxo de Dados (Pipeline Obrigatório)
+text
+┌─────────────────────────────────────────────────────┐
+│ CAPABILITY 1: pesquisar_atividades_conta           │
+│ Fonte: Database Neon (PostgreSQL)                  │
+│ Output: Lista de atividades já criadas pelo prof   │
+└─────────────────┬───────────────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────────────────┐
+│ CAPABILITY 2: pesquisar_atividades_disponiveis     │
+│ Fonte: JSON Local (schoolPowerActivities.json)     │
+│ Output: Catálogo completo de atividades possíveis  │
+└─────────────────┬───────────────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────────────────┐
+│ CAPABILITY 3: decidir_atividades_criar             │
+│ Input: Dados de 1 + 2 + Contexto do usuário       │
+│ Output: Lista filtrada de atividades escolhidas    │
+└─────────────────┬───────────────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────────────────┐
+│ CAPABILITY 4: criar_atividade                      │
+│ Input: Decisões de 3                               │
+│ Output: Interface de Construção + Atividades reais │
+└─────────────────────────────────────────────────────┘
+CAPABILITY 1: pesquisar_atividades_conta
+Responsabilidade:
+Buscar atividades que o professor já criou anteriormente no sistema, armazenadas no banco de dados Neon.
+
+Fonte de Dados: Neon PostgreSQL
+Decisões Arquiteturais que VOCÊ deve tomar:
+
+1. Database Connection Strategy
+Como estabelecer conexão segura com Neon?
+
+Pool de conexões ou conexão por request?
+
+Timeout e retry logic?
+
+Connection string vem de environment variables?
+
+2. Query Strategy
+Você precisa decidir a query SQL exata. Considere:
+
+Básico (retorna tudo):
+
+sql
+SELECT * FROM atividades WHERE professor_id = ?
+Intermediário (com filtros):
+
+sql
+SELECT * FROM atividades 
+WHERE professor_id = ? 
+  AND deleted_at IS NULL
+  AND status = 'published'
+ORDER BY created_at DESC
+Avançado (com joins e metadata):
+
+sql
+SELECT 
+  a.*,
+  t.nome as turma_nome,
+  COUNT(DISTINCT ua.aluno_id) as total_usos,
+  AVG(ua.rating) as rating_medio
+FROM atividades a
+LEFT JOIN turmas t ON a.turma_id = t.id
+LEFT JOIN uso_atividades ua ON a.id = ua.atividade_id
+WHERE a.professor_id = ?
+  AND a.deleted_at IS NULL
+GROUP BY a.id, t.nome
+ORDER BY a.created_at DESC
+Você decide: Qual nível de complexidade é necessário?
+
+3. Data Transformation
+Dados do banco vêm em formato SQL row. Você deve transformar para estrutura que IA entende.
+
+Padrão sugerido (você implementa):
+
+typescript
+interface AtividadeFromDB {
+  id: string;
+  titulo: string;
+  tipo: string;
+  disciplina: string;
+  conteudo: any; // JSON blob
+  created_at: Date;
+  // ... outros campos
+}
+
+interface AtividadeForAI {
+  id: string;
+  titulo: string;
+  tipo: string;
+  metadata: {
+    disciplina: string;
+    nivel: string;
+    tags: string[];
+  };
+  usage_stats: {
+    times_used: number;
+    avg_rating: number;
+  };
+  was_successful: boolean; // Heurística baseada em ratings
+}
+
+function transformDBtoAI(dbActivities: AtividadeFromDB[]): AtividadeForAI[] {
+  // Sua lógica de transformação
+}
+4. Anti-Hallucination Measures
+CRÍTICO: Esta capability deve retornar estrutura que previne alucinação.
+
+Formato de retorno obrigatório:
+
+typescript
+interface SearchAccountActivitiesResult {
+  found: boolean;
+  count: number;
+  activities: AtividadeForAI[] | null;
+  metadata: {
+    query_timestamp: string;
+    professor_id: string;
+    database: "neon_production";
+  };
+  isEmpty: boolean;
+  summary: string; // "Encontradas 5 atividades" ou "Nenhuma atividade encontrada"
+}
+Este objeto vai DIRETO para o prompt da IA:
+
+text
+DADOS DE ATIVIDADES NA CONTA DO PROFESSOR:
+- Total encontrado: {result.count}
+- Status: {result.isEmpty ? "VAZIO - Nenhuma atividade criada ainda" : "DADOS DISPONÍVEIS"}
+- Lista completa: {JSON.stringify(result.activities)}
+
+IMPORTANTE: Você DEVE usar APENAS as atividades listadas acima.
+Se count = 0, você DEVE informar que não há atividades anteriores.
+5. Error Handling
+Cenários que VOCÊ deve tratar:
+
+Database connection failed
+
+Query timeout
+
+Professor_id inválido
+
+Tabela vazia (professor novo)
+
+Dados corrompidos no banco
+
+Para cada cenário, decida:
+
+Retry? Quantas vezes?
+
+Fallback value (retornar vazio ou erro)?
+
+Log level (error, warn, info)?
+
+User notification (mostrar erro ou silencioso)?
+
+6. Performance Considerations
+Perguntas a responder:
+
+Cache results? Por quanto tempo?
+
+Limit de registros (ex: últimas 100 atividades)?
+
+Pagination (se professor tem 1000+ atividades)?
+
+Lazy loading ou eager loading de relationships?
+
+CAPABILITY 2: pesquisar_atividades_disponiveis
+Responsabilidade:
+Consultar o catálogo completo de atividades que o sistema pode criar, definido no arquivo JSON local.
+
+Fonte de Dados: schoolPowerActivities.json
+Decisões Arquiteturais que VOCÊ deve tomar:
+
+1. File Access Strategy
+O arquivo está em src/features/schoolpower/data/schoolPowerActivities.json
+
+Opções de acesso:
+
+Static Import: import activities from './data/schoolPowerActivities.json'
+
+Pro: Bundled, rápido, type-safe
+
+Con: Não atualiza sem rebuild
+
+Dynamic Import: const activities = await import('./data/schoolPowerActivities.json')
+
+Pro: Code-splitting
+
+Con: Assíncrono, mais complexo
+
+Fetch API: const activities = await fetch('/data/schoolPowerActivities.json')
+
+Pro: Pode atualizar arquivo sem rebuild
+
+Con: Overhead de network request
+
+File System (Node.js): fs.readFileSync('./data/schoolPowerActivities.json')
+
+Pro: Funciona em server-side
+
+Con: Não funciona em browser
+
+Você decide: Qual approach baseado em onde essa capability executa (client/server/edge)?
+
+2. JSON Schema Validation
+O arquivo JSON tem estrutura esperada? Você DEVE validar.
+
+Padrões a considerar:
+
+Zod: Schema validation com TypeScript inference
+
+Ajv: JSON Schema validator (performance)
+
+Yup: Validation library
+
+Custom validator: Se arquivo é trusted
+
+Schema esperado (você refina):
+
+typescript
+const ActivityCatalogSchema = z.object({
+  version: z.string(),
+  total_activities: z.number(),
+  activities: z.array(z.object({
+    id: z.string(),
+    titulo: z.string(),
+    tipo: z.string(),
+    categoria: z.string(),
+    campos_obrigatorios: z.array(z.string()),
+    schema_campos: z.record(z.any()),
+    // ... outros campos
+  }))
+});
+
+type ActivityCatalog = z.infer<typeof ActivityCatalogSchema>;
+3. Filtering and Search
+IA pode querer filtrar atividades do catálogo. Você deve implementar.
+
+Capacidades de filtro necessárias:
+
+typescript
+interface FilterOptions {
+  tipo?: string[];          // ["plano-aula", "quiz"]
+  categoria?: string[];     // ["planejamento", "avaliacao"]
+  disciplina?: string[];    // ["matematica", "portugues"]
+  nivel?: string[];         // ["fundamental1", "fundamental2"]
+  tags?: string[];          // ["bncc", "gamificacao"]
+  search_text?: string;     // Busca em titulo/descricao
+}
+
+function filterActivities(
+  catalog: Activity[],
+  filters: FilterOptions
+): Activity[] {
+  // Sua lógica de filtro
+  // Considere: case-insensitive, partial match, scoring
+}
+4. Anti-Hallucination: CRITICAL
+ESTE É O PONTO MAIS CRÍTICO: IA NÃO pode inventar atividades fora do JSON.
+
+Estratégia de Enforcement (você implementa):
+
+A. Whitelist Explícita no Prompt:
+
+text
+ATIVIDADES DISPONÍVEIS NO CATÁLOGO (FONTE DE VERDADE):
+
+Total: {catalog.total_activities}
+IDs válidos: {catalog.activities.map(a => a.id).join(', ')}
+
+LISTA COMPLETA:
+{JSON.stringify(catalog.activities, null, 2)}
+
+⚠️ REGRA ABSOLUTA:
+Você DEVE escolher APENAS atividades desta lista.
+Se você mencionar um ID que não está nesta lista, o sistema REJEITARÁ.
+Se você criar um tipo de atividade que não existe aqui, o sistema REJEITARÁ.
+B. Validation Post-LLM:
+
+typescript
+function validateAIChoices(
+  aiChosenIds: string[],
+  validCatalog: Activity[]
+): ValidationResult {
+  const validIds = new Set(validCatalog.map(a => a.id));
+  const invalidIds = aiChosenIds.filter(id => !validIds.has(id));
+  
+  if (invalidIds.length > 0) {
+    return {
+      valid: false,
+      error: `IA escolheu IDs inválidos: ${invalidIds.join(', ')}`,
+      action: 'reject_and_retry_with_reinforced_prompt'
+    };
+  }
+  
+  return { valid: true };
+}
+C. Embeddings + Semantic Search (Avançado):
+Se IA pedir "atividade sobre frações", você deve:
+
+Gerar embedding da query
+
+Calcular similarity com embeddings de atividades do catálogo
+
+Retornar top-K matches
+
+Garantir que IA escolhe APENAS destas matches
+
+5. Caching Strategy
+Arquivo JSON não muda frequentemente. Cache agressivo é recomendado.
+
+Decisões:
+
+In-memory cache (variável global)?
+
+Browser cache (localStorage/sessionStorage)?
+
+Server cache (Redis)?
+
+Invalidation strategy (TTL? Manual?)?
+
+6. Return Format
+Formato padronizado para IA:
+
+typescript
+interface SearchAvailableActivitiesResult {
+  found: boolean;
+  count: number;
+  activities: Activity[];
+  filtered_count?: number; // Se filtros aplicados
+  filters_applied?: FilterOptions;
+  metadata: {
+    catalog_version: string;
+    query_timestamp: string;
+    source: "schoolPowerActivities.json";
+  };
+  summary: string; // "Encontradas 137 atividades no catálogo"
+}
+CAPABILITY 3: decidir_atividades_criar
+Responsabilidade:
+IA analisa contexto completo (dados de cap1, cap2, contexto do usuário) e decide estrategicamente quais atividades criar.
+
+Inputs desta Capability:
+Esta capability recebe:
+
+Resultado de pesquisar_atividades_conta
+
+Resultado de pesquisar_atividades_disponiveis
+
+Contexto do usuário (Quiz de Contextualização)
+
+Objetivo/prompt do usuário
+
+Decisões Arquiteturais:
+1. Decision Engine Architecture
+Como IA vai decidir? Você precisa estruturar o raciocínio.
+
+Opção A: Pure LLM Decision
+
+text
+Enviar todo contexto para LLM.
+LLM retorna lista de IDs escolhidos + justificativa.
+Opção B: Rule-Based + LLM
+
+text
+Primeiro: Aplicar regras hard-coded
+  - Se disciplina = Matemática → Filtrar atividades de matemática
+  - Se nível = Fundamental I → Excluir atividades avançadas
+Depois: LLM escolhe dentro do subset filtrado
+Opção C: Scoring System + LLM Ranking
+
+text
+Sistema calcula score para cada atividade:
+  - Relevância para disciplina: +10
+  - Match com nível: +10
+  - Foi usada antes com sucesso: +5
+  - Popular no sistema: +3
+LLM recebe top-20 por score, escolhe 3-5 finais
+Você decide qual approach baseado em:
+
+Controle desejado
+
+Previsibilidade
+
+Flexibilidade
+
+Performance
+
+2. Context Assembly
+Você deve montar um prompt estruturado. Exemplo conceitual:
+
+typescript
+interface DecisionContext {
+  user_objective: string;
+  user_context: {
+    disciplina: string;
+    turma?: {
+      nome: string;
+      nivel: string;
+      alunos_count: number;
+    };
+    tempo_disponivel?: string;
+    objetivo_pedagogico: string;
+  };
+  available_activities: Activity[]; // Do catálogo
+  previous_activities: AtividadeForAI[]; // Do banco
+  constraints: {
+    max_activities: number;
+    preferred_types?: string[];
+    avoid_types?: string[];
+  };
+}
+
+function buildDecisionPrompt(context: DecisionContext): string {
+  return `
+# TAREFA: Decidir quais atividades criar
+
+## OBJETIVO DO USUÁRIO
+${context.user_objective}
+
+## CONTEXTO DO PROFESSOR
+- Disciplina: ${context.user_context.disciplina}
+- Turma: ${context.user_context.turma?.nome || 'Não especificada'}
+- Nível: ${context.user_context.turma?.nivel || 'Não especificado'}
+- Alunos: ${context.user_context.turma?.alunos_count || 'Não especificado'}
+
+## ATIVIDADES DISPONÍVEIS NO CATÁLOGO
+Total: ${context.available_activities.length}
+Lista: ${JSON.stringify(context.available_activities)}
+
+## ATIVIDADES JÁ CRIADAS PELO PROFESSOR
+Total: ${context.previous_activities.length}
+${context.previous_activities.length > 0 
+  ? 'Lista: ' + JSON.stringify(context.previous_activities)
+  : 'Nenhuma atividade anterior encontrada.'}
+
+## CONSTRAINTS
+- Máximo de atividades: ${context.constraints.max_activities}
+- Tipos preferidos: ${context.constraints.preferred_types?.join(', ') || 'Nenhum'}
+
+## INSTRUÇÕES DE DECISÃO
+
+1. Analise o objetivo do usuário e contexto
+2. Escolha ${context.constraints.max_activities} atividades do CATÁLOGO DISPONÍVEL
+3. Priorize:
+   - Relevância para disciplina e nível
+   - Progressão pedagógica (básico → avançado)
+   - Diversidade de tipos (não repetir mesmo tipo)
+   - Atividades que o professor ainda não criou (se possível)
+
+4. RETORNE JSON:
+{
+  "atividades_escolhidas": [
+    {
+      "id": "id_do_catalogo",
+      "titulo": "titulo_exato_do_catalogo",
+      "justificativa": "por que escolhi esta"
+    }
+  ],
+  "estrategia_pedagogica": "explicação da progressão escolhida",
+  "total_escolhidas": número
+}
+
+⚠️ CRÍTICO: Use APENAS IDs do catálogo listado acima.
+  `;
+}
+3. Output Validation
+IA retornou decisão. Você DEVE validar antes de prosseguir.
+
+Validações obrigatórias:
+
+typescript
+interface DecisionValidation {
+  all_ids_valid: boolean;        // Todos IDs existem no catálogo?
+  count_within_limit: boolean;   // Respeitou max_activities?
+  has_justification: boolean;    // Forneceu justificativas?
+  no_duplicates: boolean;        // Sem IDs repetidos?
+  fields_complete: boolean;      // Todos campos obrigatórios?
+}
+
+function validateDecision(
+  decision: AIDecision,
+  catalog: Activity[],
+  constraints: Constraints
+): DecisionValidation {
+  // Implementar todas validações
+  // Se alguma falhar → Reject & Retry
+}
+4. State Management
+Decisão aprovada precisa ser armazenada para próxima capability.
+
+Decisões de state management:
+
+Onde guardar? (Context, Redux, Zustand, State local)
+
+Como próxima capability acessa? (Props, Context, Store)
+
+Formato de persistência (JSON, estrutura específica)
+
+Quanto tempo persiste (sessão, localStorage, temporário)
+
+Estrutura sugerida:
+
+typescript
+interface CapabilityState {
+  pesquisar_conta: {
+    status: 'completed';
+    result: SearchAccountActivitiesResult;
+    timestamp: string;
+  };
+  pesquisar_disponiveis: {
+    status: 'completed';
+    result: SearchAvailableActivitiesResult;
+    timestamp: string;
+  };
+  decidir: {
+    status: 'completed';
+    result: {
+      escolhidas: ChosenActivity[];
+      estrategia: string;
+      metadata: any;
+    };
+    timestamp: string;
+  };
+  criar: {
+    status: 'pending' | 'executing' | 'completed';
+    // ...
+  };
+}
+5. Feedback Loop
+Se decisão falhar validação, como informar IA?
+
+Estratégia de retry:
+
+typescript
+async function decideWithRetry(
+  context: DecisionContext,
+  maxRetries: number = 2
+): Promise<ValidatedDecision> {
+  for (let i = 0; i < maxRetries; i++) {
+    const decision = await callLLM(buildDecisionPrompt(context));
+    const validation = validateDecision(decision, context.catalog, context.constraints);
+    
+    if (validation.all_valid) {
+      return decision;
+    }
+    
+    // Retry com prompt reforçado
+    context.retry_feedback = {
+      attempt: i + 1,
+      errors: validation.errors,
+      reinforcement: "Você cometeu erros na tentativa anterior. Corrija:"
+    };
+  }
+  
+  throw new Error('IA falhou em decidir corretamente após retries');
+}
+CAPABILITY 4: criar_atividade
+Responsabilidade:
+Mostrar interface de construção de atividades com as escolhas da capability anterior, permitindo criação automatizada.
+
+UI Component Integration
+CRÍTICO: Esta capability tem componente visual que aparece no card de desenvolvimento.
+
+Decisões Arquiteturais:
+1. Component Location & Mounting
+Hierarquia visual:
+
+text
+<ExecutionCard>
+  <Objective>Criar atividades personalizadas</Objective>
+  <Capability status="completed">Pesquisar disponíveis</Capability>
+  <Capability status="completed">Decidir quais criar</Capability>
+  <Capability status="executing">Criar atividades</Capability>
+  
+  {/* AQUI: Interface de Construção aparece */}
+  <ActivityConstructionInterface 
+    activities={decidedActivities}
+    onBuildAll={handleBuildAll}
+    onBuildSingle={handleBuildSingle}
+  />
+</ExecutionCard>
+Decisões:
+
+Renderizar dentro do card de desenvolvimento ou fora?
+
+Usar Portal para renderização?
+
+Animação de entrada (slide, fade)?
+
+Posicionamento exato (abaixo de capability, centralizado)?
+
+2. Data Synchronization
+CRÍTICO: Interface precisa receber exatamente as atividades decididas na cap3.
+
+Padrão de sincronização:
+
+typescript
+// Capability 3 terminou e salvou decisão
+const decision = capabilityState.decidir.result;
+
+// Capability 4 inicia e lê decisão
+useEffect(() => {
+  if (capabilityState.decidir.status === 'completed') {
+    const activitiesToBuild = capabilityState.decidir.result.escolhidas;
+    setConstructionQueue(activitiesToBuild);
+    showConstructionInterface();
+  }
+}, [capabilityState.decidir.status]);
+Validação de sincronização:
+
+Número de atividades coincide?
+
+IDs são os mesmos?
+
+Campos obrigatórios preenchidos?
+
+Ordenação mantida?
+
+3. Construction Interface Component
+Este componente já existe no School Power 1.0. Você precisa:
+
+Localizar o componente nos arquivos
+
+Verificar se ainda funciona
+
+Adaptar para nova arquitetura se necessário
+
+Integrar no fluxo de capabilities
+
+Questões a investigar:
+
+Onde está o componente? (path exato)
+
+Nome do componente? (ActivityBuilder? ConstructionCard?)
+
+Props que ele aceita?
+
+Estado interno dele?
+
+Emite eventos/callbacks?
+
+Interface esperada (você ajusta baseado no real):
+
+typescript
+interface ActivityConstructionInterfaceProps {
+  activities: ChosenActivity[];
+  onActivityBuilt: (activityId: string, result: Activity) => void;
+  onAllBuilt: (results: Activity[]) => void;
+  onError: (error: Error) => void;
+  autoStart?: boolean;
+}
+
+// Exemplo de uso
+<ActivityConstructionInterface
+  activities={chosenActivities}
+  onActivityBuilt={(id, result) => {
+    console.log(`Atividade ${id} construída:`, result);
+    updateProgress(id, 'completed');
+  }}
+  onAllBuilt={(results) => {
+    console.log('Todas construídas:', results);
+    moveToNextCapability();
+  }}
+  autoStart={true}
+/>
+4. Construction Process
+Fluxo de construção (já existia no 1.0, você replica/melhora):
+
+text
+Para cada atividade escolhida:
+1. Mostrar card de "Aguardando construção"
+2. Sistema preenche modal de edição com campos
+3. IA ou sistema completa campos obrigatórios
+4. Sistema salva no banco de dados
+5. Card atualiza para "Construída ✓"
+6. Repetir para próxima
+Decisões que VOCÊ toma:
+
+Construir sequencial (uma por vez) ou paralelo (todas juntas)?
+
+Mostrar preview de cada atividade antes de construir?
+
+Permitir edição manual pelo usuário ou totalmente automatizado?
+
+Como tratar erro em uma atividade? (Skip, retry, abort all)
+
+5. Progress Tracking
+Usuário deve ver progresso de construção em tempo real.
+
+UI de progresso:
+
+typescript
+interface ConstructionProgress {
+  total: number;
+  completed: number;
+  failed: number;
+  current: string | null; // ID da atividade sendo construída
+  percentage: number;
+}
+
+// Exibição visual
+<ProgressBar>
+  {progress.completed} de {progress.total} atividades construídas
+  ({progress.percentage}%)
+</ProgressBar>
+
+{activities.map(activity => (
+  <ActivityCard
+    key={activity.id}
+    status={getStatus(activity.id)}
+    title={activity.titulo}
+  >
+    {status === 'building' && <Spinner />}
+    {status === 'completed' && <CheckIcon />}
+    {status === 'failed' && <ErrorIcon />}
+  </ActivityCard>
+))}
+6. Database Persistence
+Atividades construídas precisam ser salvas no Neon.
+
+Decisões de persistência:
+
+Salvar uma por vez ou batch insert?
+
+Transação (rollback se alguma falhar)?
+
+Gerar IDs no frontend ou backend?
+
+Validação de dados antes de salvar?
+
+Estrutura de salvamento (você implementa):
+
+typescript
+async function saveActivityToDB(activity: BuiltActivity): Promise<SaveResult> {
+  try {
+    // Validar dados
+    const validated = validateActivity(activity);
+    
+    // Insert no banco
+    const result = await db.atividades.create({
+      data: {
+        professor_id: session.user.id,
+        titulo: validated.titulo,
+        tipo: validated.tipo,
+        conteudo: validated.conteudo, // JSON
+        campos: validated.campos,     // JSON
+        // ... outros campos
+      }
+    });
+    
+    return { success: true, id: result.id };
+  } catch (error) {
+    return { success: false, error };
+  }
+}
+7. Error Handling & Recovery
+Cenários de erro:
+
+Campo obrigatório faltando
+
+Falha de conexão com banco
+
+Timeout na criação
+
+Dados inválidos
+
+Para cada cenário, decida:
+
+Retry automático?
+
+Notificar usuário?
+
+Pular atividade problemática?
+
+Abortar todo processo?
+
+Estratégia sugerida:
+
+typescript
+async function buildActivityWithRetry(
+  activity: ChosenActivity,
+  maxRetries: number = 2
+): Promise<BuildResult> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const built = await buildActivity(activity);
+      const saved = await saveActivityToDB(built);
+      return { success: true, data: saved };
+    } catch (error) {
+      if (i === maxRetries - 1) {
+        // Última tentativa falhou
+        return { 
+          success: false, 
+          error,
+          action: 'skip_and_notify_user'
+        };
+      }
+      // Retry com delay exponencial
+      await sleep(1000 * Math.pow(2, i));
+    }
+  }
+}
+8. Post-Construction Actions
+Após todas atividades construídas, o que acontece?
+
+Opções:
+
+Mostrar resumo de sucesso
+
+Permitir visualizar/editar atividades criadas
+
+Organizar em plano de aula (próxima capability?)
+
+Compartilhar com turma
+
+Exportar para PDF
+
+Você decide o fluxo pós-construção baseado em UX desejada.
+
+INTEGRAÇÃO ENTRE AS 4 CAPABILITIES
+Pipeline Completo (Você implementa)
+typescript
+// Orquestrador de capabilities
+class CapabilityOrchestrator {
+  private state: CapabilityState;
+  
+  async executeCapability1() {
+    this.updateStatus('pesquisar_conta', 'executing');
+    
+    const result = await searchAccountActivities(this.userId);
+    
+    this.state.pesquisar_conta = {
+      status: 'completed',
+      result,
+      timestamp: new Date().toISOString()
+    };
+    
+    return result;
+  }
+  
+  async executeCapability2() {
+    this.updateStatus('pesquisar_disponiveis', 'executing');
+    
+    const result = await searchAvailableActivities();
+    
+    this.state.pesquisar_disponiveis = {
+      status: 'completed',
+      result,
+      timestamp: new Date().toISOString()
+    };
+    
+    return result;
+  }
+  
+  async executeCapability3() {
+    // Precisa de resultados de 1 e 2
+    if (
+      this.state.pesquisar_conta.status !== 'completed' ||
+      this.state.pesquisar_disponiveis.status !== 'completed'
+    ) {
+      throw new Error('Dependencies not completed');
+    }
+    
+    const context = this.assembleDecisionContext();
+    const decision = await decideActivities(context);
+    const validated = await validateDecision(decision);
+    
+    this.state.decidir = {
+      status: 'completed',
+      result: validated,
+      timestamp: new Date().toISOString()
+    };
+    
+    return validated;
+  }
+  
+  async executeCapability4() {
+    // Precisa de resultado de 3
+    if (this.state.decidir.status !== 'completed') {
+      throw new Error('Decision not completed');
+    }
+    
+    const activitiesToBuild = this.state.decidir.result.escolhidas;
+    
+    // Renderizar UI de construção
+    this.renderConstructionInterface(activitiesToBuild);
+    
+    // Esperar construção completar
+    const results = await this.waitForConstruction();
+    
+    this.state.criar = {
+      status: 'completed',
+      result: results,
+      timestamp: new Date().toISOString()
+    };
+    
+    return results;
+  }
+}
+Event System
+Capabilities se comunicam via eventos.
+
+Eventos importantes:
+
+typescript
+enum CapabilityEvent {
+  CAP1_STARTED = 'capability:pesquisar_conta:started',
+  CAP1_COMPLETED = 'capability:pesquisar_conta:completed',
+  CAP1_FAILED = 'capability:pesquisar_conta:failed',
+  
+  CAP2_STARTED = 'capability:pesquisar_disponiveis:started',
+  CAP2_COMPLETED = 'capability:pesquisar_disponiveis:completed',
+  
+  CAP3_STARTED = 'capability:decidir:started',
+  CAP3_COMPLETED = 'capability:decidir:completed',
+  CAP3_VALIDATION_FAILED = 'capability:decidir:validation_failed',
+  
+  CAP4_STARTED = 'capability:criar:started',
+  CAP4_ACTIVITY_BUILT = 'capability:criar:activity_built',
+  CAP4_ALL_BUILT = 'capability:criar:all_built',
+  CAP4_ERROR = 'capability:criar:error',
+}
+
+// Event emitter
+eventBus.on(CapabilityEvent.CAP3_COMPLETED, (decision) => {
+  // Capability 4 escuta e inicia
+  executeCapability4(decision);
+});
+DEBUGGING E LOGGING
+Logging Estruturado Obrigatório
+Cada capability deve logar detalhadamente.
+
+typescript
+logger.info('Capability 1: Pesquisar Atividades Conta', {
+  capability_id: 'cap_pesquisar_conta',
+  user_id: userId,
+  status: 'started',
+  timestamp: Date.now()
+});
+
+// Após query
+logger.info('Database query completed', {
+  capability_id: 'cap_pesquisar_conta',
+  query_duration_ms: duration,
+  rows_returned: result.length,
+  database: 'neon_production'
+});
+
+// Resultado
+logger.info('Capability 1: Completed', {
+  capability_id: 'cap_pesquisar_conta',
+  result_count: result.count,
+  isEmpty: result.isEmpty,
+  status: 'completed'
+});
+Debug Panel Para Desenvolvedor
+tsx
+{isDev && (
+  <DebugPanel>
+    <h3>Capability State</h3>
+    <pre>{JSON.stringify(capabilityState, null, 2)}</pre>
+    
+    <h3>Data Flow</h3>
+    <Timeline>
+      {events.map(e => (
+        <TimelineItem 
+          event={e.type} 
+          timestamp={e.timestamp}
+          data={e.data}
+        />
+      ))}
+    </Timeline>
+    
+    <h3>Validation Results</h3>
+    {validations.map(v => (
+      <ValidationItem 
+        capability={v.capability}
+        passed={v.passed}
+        errors={v.errors}
+      />
+    ))}
+  </DebugPanel>
+)}
+CHECKLIST DE IMPLEMENTAÇÃO
+Capability 1: pesquisar_atividades_conta
+ Conexão com Neon configurada
+
+ Query SQL definida e testada
+
+ Transformação de dados DB → IA implementada
+
+ Anti-hallucination measures aplicadas
+
+ Error handling completo
+
+ Logging estruturado
+
+ Testado com professor novo (0 atividades)
+
+ Testado com professor existente (N atividades)
+
+Capability 2: pesquisar_atividades_disponiveis
+ Acesso ao JSON implementado
+
+ Schema validation implementada
+
+ Filtros de busca funcionando
+
+ Whitelist enforcement para IA
+
+ Post-LLM validation implementada
+
+ Caching strategy definida
+
+ Testado com catálogo completo
+
+ Testado com filtros aplicados
+
+Capability 3: decidir_atividades_criar
+ Context assembly implementado
+
+ Prompt de decisão estruturado
+
+ Decision validation robusta
+
+ Retry logic implementada
+
+ State management configurado
+
+ Integration com cap 1 e 2 testada
+
+ Testado com diversos contextos
+
+ Logs de decisões salvos
+
+Capability 4: criar_atividade
+ Componente de construção localizado
+
+ Integração visual no card implementada
+
+ Sincronização com cap 3 funcionando
+
+ Progress tracking visível
+
+ Database persistence implementada
+
+ Error handling e recovery
+
+ Testado com 1 atividade
+
+ Testado com múltiplas atividades
+
+ Testado com falhas simuladas
+
+Integração Geral
+ Pipeline completo funcionando
+
+ Event system implementado
+
+ Dependencies validadas
+
+ Logging end-to-end
+
+ Debug panel para dev
+
+ Performance aceitável
+
+ Error recovery testado
+
+ Documentação atualizada
+
+TESTES OBRIGATÓRIOS
+Teste E2E: Fluxo Completo
+text
+1. Usuário pede "Criar atividades de Matemática para 7º ano"
+2. Cap 1 executa → Retorna 3 atividades existentes
+3. Cap 2 executa → Retorna 137 do catálogo
+4. Cap 3 executa → Decide criar 4 novas
+5. Cap 4 executa → Construção interface aparece
+6. Sistema constrói 4 atividades automaticamente
+7. Salva no banco de dados
+8. Mostra sucesso ao usuário
+
+✓ Todas etapas completaram
+✓ Dados sincronizados
+✓ Sem alucinações
+✓ Atividades salvas corretamente
+Teste Edge Cases
+Professor sem nenhuma atividade anterior
+
+Catálogo de atividades vazio (não deveria acontecer)
+
+IA decide mais que limite permitido
+
+IA escolhe ID inválido
+
+Falha de conexão com banco
+
+Timeout na criação
+
+Construção parcial (algumas falham)
+
+RESULTADO ESPERADO
+Quando completo:
+
+Cap 1: Busca precisa no Neon, zero alucinação
+
+Cap 2: Consulta exata ao JSON, IA não inventa atividades
+
+Cap 3: Decisões inteligentes e validadas
+
+Cap 4: Interface de construção funcional e sincronizada
+
+Pipeline: Fluxo suave de dados entre capabilities
+
+UX: Usuário vê construção acontecendo em tempo real
+
+Persistência: Atividades salvas corretamente no banco
+
+MINDSET OBRIGATÓRIO
+Data Integrity First: Dados reais > Dados inventados
+
+Validation Everywhere: Validar entrada e saída de tudo
+
+Fail Visibly: Erros devem ser óbvios, não silenciosos
+
+Sync is Critical: Capabilities dependem umas das outras
+
+User sees Process: Transparência da construção
+
+🚀 ESTAS SÃO AS CAPABILITIES CORE. IMPLEMENTE COM PRECISÃO CIRÚRGICA. DATA FLOW É SAGRADO.

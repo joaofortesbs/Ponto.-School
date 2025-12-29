@@ -1,81 +1,135 @@
 {
-  "version": "1.1.0",
-  "description": "Grafo de dependências entre capabilities do Agente Jota - Versão Simplificada",
+  "version": "2.0.0",
+  "description": "Grafo de dependências das 4 Capabilities Core do Agente Jota",
   
+  "pipeline_flow": {
+    "description": "Fluxo obrigatório: BUSCAR → DECIDIR → CRIAR → ENTREGAR",
+    "steps": [
+      {
+        "step": 1,
+        "capability": "pesquisar_atividades_conta",
+        "source": "Database Neon (PostgreSQL)",
+        "output": "Lista de atividades já criadas pelo professor"
+      },
+      {
+        "step": 2,
+        "capability": "pesquisar_atividades_disponiveis",
+        "source": "JSON Local (schoolPowerActivities.json)",
+        "output": "Catálogo completo de atividades possíveis"
+      },
+      {
+        "step": 3,
+        "capability": "decidir_atividades_criar",
+        "input": "Dados de step 1 + step 2 + Contexto do usuário",
+        "output": "Lista filtrada de atividades escolhidas"
+      },
+      {
+        "step": 4,
+        "capability": "criar_atividade",
+        "input": "Decisões de step 3",
+        "output": "Interface de Construção + Atividades persistidas"
+      }
+    ]
+  },
+
   "capability_dependencies": {
-    "pesquisar_atividades_disponiveis": {
-      "id": "cap_pesq_ativ",
-      "category": "PESQUISAR",
-      "depends_on": [],
-      "required_before": ["decidir_atividades_criar"],
-      "outputs": ["lista_atividades", "count_atividades"],
-      "priority": "critical",
-      "failure_handling": "abort_flow",
-      "estimated_duration_ms": 2000
-    },
-    
     "pesquisar_atividades_conta": {
       "id": "cap_pesq_conta",
       "category": "PESQUISAR",
+      "step": 1,
       "depends_on": [],
       "required_before": ["decidir_atividades_criar"],
-      "outputs": ["atividades_professor", "historico_uso"],
-      "priority": "medium",
+      "outputs": ["atividades_professor", "historico_uso", "prompt_context"],
+      "priority": "high",
       "failure_handling": "continue_without",
-      "estimated_duration_ms": 2000
+      "estimated_duration_ms": 2000,
+      "source": "neon_postgresql",
+      "anti_hallucination": {
+        "returns_validated_data": true,
+        "includes_count": true,
+        "includes_summary": true
+      }
     },
     
-    "analisar_contexto_usuario": {
-      "id": "cap_analisar_ctx",
-      "category": "ANALISAR",
+    "pesquisar_atividades_disponiveis": {
+      "id": "cap_pesq_disp",
+      "category": "PESQUISAR",
+      "step": 2,
       "depends_on": [],
-      "required_before": ["decidir_atividades_criar", "criar_atividade"],
-      "required_data": ["user_id"],
-      "outputs": ["contexto_completo", "turmas", "disciplinas"],
+      "required_before": ["decidir_atividades_criar"],
+      "outputs": ["lista_atividades", "valid_ids", "prompt_context"],
       "priority": "critical",
       "failure_handling": "abort_flow",
-      "estimated_duration_ms": 1000
+      "estimated_duration_ms": 500,
+      "source": "schoolPowerActivities.json",
+      "anti_hallucination": {
+        "returns_whitelist": true,
+        "includes_valid_ids": true,
+        "post_validation_required": true
+      }
     },
     
     "decidir_atividades_criar": {
       "id": "cap_decidir",
       "category": "DECIDIR",
-      "depends_on": ["pesquisar_atividades_disponiveis", "analisar_contexto_usuario"],
+      "step": 3,
+      "depends_on": ["pesquisar_atividades_conta", "pesquisar_atividades_disponiveis"],
       "required_before": ["criar_atividade"],
-      "required_inputs": ["lista_atividades"],
-      "optional_inputs": ["historico_uso"],
-      "outputs": ["atividades_escolhidas", "justificativa", "quantidade"],
+      "required_inputs": ["available_activities", "account_activities", "user_objective"],
+      "outputs": ["chosen_activities", "estrategia_pedagogica", "validation"],
       "priority": "critical",
-      "failure_handling": "use_defaults",
-      "estimated_duration_ms": 3000
+      "failure_handling": "retry_with_reinforced_prompt",
+      "max_retries": 2,
+      "estimated_duration_ms": 4000,
+      "anti_hallucination": {
+        "validates_ai_choices": true,
+        "rejects_invalid_ids": true,
+        "requires_justification": true
+      }
     },
     
     "criar_atividade": {
-      "id": "cap_criar_ativ",
+      "id": "cap_criar",
       "category": "CRIAR",
+      "step": 4,
       "depends_on": ["decidir_atividades_criar"],
-      "required_inputs": ["atividades_escolhidas"],
-      "outputs": ["atividades_criadas", "ids_atividades"],
+      "required_inputs": ["decision_result", "professor_id"],
+      "outputs": ["activities_built", "progress", "db_ids"],
       "priority": "critical",
-      "failure_handling": "retry_with_adjustments",
+      "failure_handling": "retry_individual",
       "max_retries": 3,
-      "estimated_duration_ms": 5000
-    },
-    
-    "gerar_relatorio_personalizado": {
-      "id": "cap_gerar_relat",
-      "category": "ANALISAR",
-      "depends_on": ["analisar_contexto_usuario"],
-      "outputs": ["relatorio", "insights"],
-      "priority": "medium",
-      "failure_handling": "generate_basic",
-      "estimated_duration_ms": 4000
+      "estimated_duration_ms": 8000,
+      "saves_to_database": true,
+      "shows_progress": true
     }
   },
 
   "category_order": {
     "description": "Ordem preferencial de execução por categoria",
-    "order": ["PESQUISAR", "ANALISAR", "DECIDIR", "CRIAR"],
-    "rationale": "Sempre coletar dados antes de analisar, analisar antes de decidir, decidir antes de criar"
+    "order": ["PESQUISAR", "DECIDIR", "CRIAR"],
+    "rationale": "Sempre coletar dados antes de decidir, decidir antes de criar"
+  },
+
+  "anti_hallucination_rules": {
+    "capability_1": {
+      "name": "pesquisar_atividades_conta",
+      "rule": "Retorna apenas dados reais do banco Neon",
+      "validation": "isEmpty flag indica se há dados ou não"
+    },
+    "capability_2": {
+      "name": "pesquisar_atividades_disponiveis", 
+      "rule": "Retorna whitelist de valid_ids do catálogo JSON",
+      "validation": "IA só pode escolher IDs da whitelist"
+    },
+    "capability_3": {
+      "name": "decidir_atividades_criar",
+      "rule": "Valida todas escolhas da IA contra whitelist",
+      "validation": "Rejeita e retry se IDs inválidos detectados"
+    },
+    "capability_4": {
+      "name": "criar_atividade",
+      "rule": "Usa apenas atividades validadas da capability 3",
+      "validation": "Não aceita atividades que não passaram pela decisão"
+    }
   }
 }

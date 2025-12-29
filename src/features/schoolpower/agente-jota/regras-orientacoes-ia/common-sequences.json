@@ -1,53 +1,104 @@
 {
-  "version": "1.1.0",
-  "description": "Sequências comuns de capabilities - Versão Simplificada",
+  "version": "2.0.0",
+  "description": "Sequências padrão de execução das 4 Capabilities Core",
 
   "common_sequences": {
-    "criar_atividade_personalizada": {
-      "id": "seq_ativ_pers",
-      "description": "Fluxo padrão para criação de atividades",
+    
+    "criar_atividades_completo": {
+      "id": "seq_criar_completo",
+      "description": "Fluxo completo para criar atividades personalizadas",
+      "trigger_keywords": ["criar", "atividade", "exercício", "quiz", "avaliação", "gerar"],
       "estimated_duration_ms": 15000,
       "sequence": [
         {
           "step": 1,
-          "capability": "analisar_contexto_usuario",
-          "required": true
+          "capability": "pesquisar_atividades_conta",
+          "required": false,
+          "fallback_on_error": "continue_without_history",
+          "description": "Busca atividades anteriores do professor"
         },
         {
           "step": 2,
           "capability": "pesquisar_atividades_disponiveis",
-          "required": true
+          "required": true,
+          "fallback_on_error": "abort_flow",
+          "description": "Carrega catálogo de atividades disponíveis"
         },
         {
           "step": 3,
           "capability": "decidir_atividades_criar",
           "required": true,
-          "inputs_from": [2]
+          "inputs_from": [1, 2],
+          "fallback_on_error": "use_default_selection",
+          "description": "IA decide quais atividades criar"
         },
         {
           "step": 4,
           "capability": "criar_atividade",
           "required": true,
-          "inputs_from": [3]
+          "inputs_from": [3],
+          "fallback_on_error": "retry_failed_individually",
+          "description": "Constrói e salva as atividades"
         }
       ]
     },
 
-    "gerar_insights_professor": {
-      "id": "seq_insights",
-      "description": "Gerar relatório de insights para o professor",
-      "estimated_duration_ms": 5000,
+    "criar_atividade_rapida": {
+      "id": "seq_criar_rapido",
+      "description": "Fluxo rápido sem consulta de histórico",
+      "trigger_keywords": ["rápido", "urgente", "simples", "básico"],
+      "estimated_duration_ms": 10000,
       "sequence": [
         {
           "step": 1,
-          "capability": "analisar_contexto_usuario",
-          "required": true
+          "capability": "pesquisar_atividades_disponiveis",
+          "required": true,
+          "description": "Carrega catálogo"
         },
         {
           "step": 2,
-          "capability": "gerar_relatorio_personalizado",
+          "capability": "decidir_atividades_criar",
           "required": true,
-          "inputs_from": [1]
+          "inputs_from": [1],
+          "skip_account_check": true,
+          "description": "Decisão rápida"
+        },
+        {
+          "step": 3,
+          "capability": "criar_atividade",
+          "required": true,
+          "inputs_from": [2],
+          "description": "Criação"
+        }
+      ]
+    },
+
+    "consultar_catalogo": {
+      "id": "seq_consultar",
+      "description": "Apenas consulta o catálogo sem criar",
+      "trigger_keywords": ["ver", "listar", "quais", "disponíveis", "catálogo"],
+      "estimated_duration_ms": 1000,
+      "sequence": [
+        {
+          "step": 1,
+          "capability": "pesquisar_atividades_disponiveis",
+          "required": true,
+          "description": "Lista atividades disponíveis"
+        }
+      ]
+    },
+
+    "verificar_historico": {
+      "id": "seq_historico",
+      "description": "Consulta atividades anteriores do professor",
+      "trigger_keywords": ["minhas", "anteriores", "histórico", "já criei"],
+      "estimated_duration_ms": 2000,
+      "sequence": [
+        {
+          "step": 1,
+          "capability": "pesquisar_atividades_conta",
+          "required": true,
+          "description": "Lista atividades do professor"
         }
       ]
     }
@@ -55,15 +106,39 @@
 
   "sequence_selection_rules": {
     "description": "Como escolher qual sequência usar",
+    "default_sequence": "criar_atividades_completo",
     "patterns": [
       {
-        "keywords": ["atividade", "criar", "questões", "exercício"],
-        "sequence": "criar_atividade_personalizada"
+        "keywords": ["criar", "gerar", "fazer", "produzir", "elaborar"],
+        "sequence": "criar_atividades_completo",
+        "priority": 1
       },
       {
-        "keywords": ["relatório", "insights", "como estou", "resumo"],
-        "sequence": "gerar_insights_professor"
+        "keywords": ["rápido", "urgente", "simples", "sem demora"],
+        "sequence": "criar_atividade_rapida",
+        "priority": 2
+      },
+      {
+        "keywords": ["ver", "listar", "quais existem", "catálogo"],
+        "sequence": "consultar_catalogo",
+        "priority": 3
+      },
+      {
+        "keywords": ["minhas atividades", "já criei", "histórico"],
+        "sequence": "verificar_historico",
+        "priority": 3
       }
     ]
+  },
+
+  "error_recovery": {
+    "max_retries_per_step": 2,
+    "backoff_strategy": "exponential",
+    "fallback_behaviors": {
+      "continue_without_history": "Prossegue sem dados de atividades anteriores",
+      "abort_flow": "Para execução e notifica usuário",
+      "use_default_selection": "Usa seleção automática de 3 atividades do catálogo",
+      "retry_failed_individually": "Tenta criar novamente apenas as que falharam"
+    }
   }
 }
