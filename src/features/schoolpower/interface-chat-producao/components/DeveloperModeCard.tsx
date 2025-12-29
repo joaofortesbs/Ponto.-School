@@ -11,7 +11,7 @@ interface DeveloperModeCardProps {
 }
 
 export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperModeCardProps) {
-  const { updateCardData, updateCapabilityStatus, updateEtapaStatus, addTextMessage, addCapabilityToEtapa } = useChatState();
+  const { updateCardData, updateCapabilityStatus, updateEtapaStatus, addCapabilityToEtapa } = useChatState();
   const [reflections, setReflections] = useState<Map<number, ObjectiveReflection>>(new Map());
   const [loadingReflections, setLoadingReflections] = useState<Set<number>>(new Set());
 
@@ -26,7 +26,7 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
 
       if (update.type === 'capability:apareceu') {
         const novaCapability: CapabilityState = {
-          id: `cap-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+          id: update.capability_id || `cap-${update.stepIndex}-${update.capability_name}`,
           nome: update.capability_name,
           displayName: update.displayName,
           status: 'pendente'
@@ -98,7 +98,7 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
     return () => {
       window.removeEventListener('agente-jota-progress', handleProgress as EventListener);
     };
-  }, [cardId, updateCardData, updateCapabilityStatus, updateEtapaStatus, addTextMessage, addCapabilityToEtapa]);
+  }, [cardId, updateCardData, updateCapabilityStatus, updateEtapaStatus, addCapabilityToEtapa]);
 
   const objectivesForProgressiveCard = useMemo((): ObjectiveItem[] => {
     if (!data?.etapas) return [];

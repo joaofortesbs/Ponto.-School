@@ -12,12 +12,13 @@ export interface NarrativeReflectionProps {
   onComplete?: () => void;
 }
 
-const INITIAL_DELAY = 200;
+const INITIAL_DELAY = 150;
 
-function calculateTypewriterSpeed(textLength: number): number {
-  if (textLength < 50) return 2;
-  if (textLength < 100) return 3;
-  if (textLength < 200) return 5;
+function calculateTypewriterInterval(textLength: number): number {
+  if (textLength < 50) return 35;
+  if (textLength < 100) return 25;
+  if (textLength < 200) return 18;
+  if (textLength < 400) return 12;
   return 8;
 }
 
@@ -76,7 +77,7 @@ export function NarrativeReflectionCard({
       return;
     }
 
-    const typingSpeed = calculateTypewriterSpeed(narrative.length);
+    const intervalMs = calculateTypewriterInterval(narrative.length);
     
     const startTyping = setTimeout(() => {
       setIsTyping(true);
@@ -84,8 +85,7 @@ export function NarrativeReflectionCard({
 
       typingRef.current = setInterval(() => {
         if (currentIndex < narrative.length) {
-          const charsPerTick = Math.max(1, Math.floor(narrative.length / 60));
-          currentIndex = Math.min(currentIndex + charsPerTick, narrative.length);
+          currentIndex += 1;
           setDisplayedText(narrative.slice(0, currentIndex));
         } else {
           if (typingRef.current) {
@@ -95,7 +95,7 @@ export function NarrativeReflectionCard({
           setShowHighlights(true);
           onComplete?.();
         }
-      }, typingSpeed);
+      }, intervalMs);
     }, INITIAL_DELAY);
 
     return () => {
