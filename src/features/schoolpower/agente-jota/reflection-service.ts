@@ -156,7 +156,11 @@ class NarrativeReflectionService {
     throw new Error('Falha ao gerar reflexão com LLM');
   }
 
-  private createTemplateReflection(objectiveIndex: number, insights: ObjectiveInsights): NarrativeReflection {
+  private createTemplateReflection(objectiveIndex: number, insights: ObjectiveInsights | undefined): NarrativeReflection {
+    if (!insights || !insights.capabilities || insights.capabilities.length === 0) {
+      return this.createFallbackReflection(objectiveIndex, insights?.objectiveTitle || 'Objetivo');
+    }
+
     const capCount = insights.capabilities.length;
     const successCount = insights.capabilities.filter(c => c.success).length;
     const tone = this.determineTone(insights);
@@ -215,7 +219,11 @@ class NarrativeReflectionService {
     return 'reassuring';
   }
 
-  private extractHighlights(insights: ObjectiveInsights): string[] {
+  private extractHighlights(insights: ObjectiveInsights | undefined): string[] {
+    if (!insights || !insights.capabilities) {
+      return [];
+    }
+
     const highlights: string[] = [];
     
     for (const cap of insights.capabilities) {

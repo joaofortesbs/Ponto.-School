@@ -276,6 +276,17 @@ export class AgentExecutor {
     
     if (!resultado) return discoveries;
     
+    if (typeof resultado === 'string') {
+      const numMatch = resultado.match(/(\d+)\s*(atividades?|exercícios?|questões?|itens?|tipos?|resultados?)/i);
+      if (numMatch) {
+        discoveries.push(`${numMatch[1]} ${numMatch[2]} encontrados`);
+      }
+      if (resultado.length > 10 && resultado.length < 100) {
+        discoveries.push(resultado);
+      }
+      return discoveries.slice(0, 2);
+    }
+    
     if (typeof resultado === 'object') {
       if (resultado.total !== undefined) {
         discoveries.push(`Encontrei ${resultado.total} itens`);
@@ -292,6 +303,23 @@ export class AgentExecutor {
       if (resultado.turma) {
         discoveries.push(`Turma: ${resultado.turma}`);
       }
+      if (resultado.items && Array.isArray(resultado.items)) {
+        discoveries.push(`${resultado.items.length} itens processados`);
+      }
+      if (resultado.data && typeof resultado.data === 'object') {
+        const nested = this.extractDiscoveries(resultado.data);
+        discoveries.push(...nested);
+      }
+      if (resultado.resultado && typeof resultado.resultado === 'object') {
+        const nested = this.extractDiscoveries(resultado.resultado);
+        discoveries.push(...nested);
+      }
+      if (resultado.message && typeof resultado.message === 'string') {
+        discoveries.push(resultado.message);
+      }
+      if (resultado.summary && typeof resultado.summary === 'string') {
+        discoveries.push(resultado.summary);
+      }
       if (resultado.conteudo && typeof resultado.conteudo === 'string') {
         const match = resultado.conteudo.match(/(\d+)\s*(atividades?|exercícios?|questões?)/i);
         if (match) {
@@ -300,13 +328,20 @@ export class AgentExecutor {
       }
     }
     
-    return discoveries.slice(0, 2);
+    return discoveries.slice(0, 3);
   }
 
   private extractDecisions(resultado: any): string[] {
     const decisions: string[] = [];
     
     if (!resultado) return decisions;
+    
+    if (typeof resultado === 'string') {
+      if (resultado.toLowerCase().includes('criado') || resultado.toLowerCase().includes('gerado')) {
+        decisions.push(resultado);
+      }
+      return decisions.slice(0, 2);
+    }
     
     if (typeof resultado === 'object') {
       if (resultado.decisao) {
@@ -317,6 +352,15 @@ export class AgentExecutor {
       }
       if (resultado.tipo && resultado.nome) {
         decisions.push(`Criando ${resultado.tipo}: ${resultado.nome}`);
+      }
+      if (resultado.action) {
+        decisions.push(`Ação: ${resultado.action}`);
+      }
+      if (resultado.created) {
+        decisions.push(`Criado: ${typeof resultado.created === 'string' ? resultado.created : 'Item'}`);
+      }
+      if (resultado.selected && Array.isArray(resultado.selected)) {
+        decisions.push(`Selecionados: ${resultado.selected.length} itens`);
       }
     }
     
@@ -333,6 +377,15 @@ export class AgentExecutor {
       if (resultado.count !== undefined) metrics['Quantidade'] = resultado.count;
       if (resultado.media !== undefined) metrics['Média'] = resultado.media;
       if (resultado.duracao !== undefined) metrics['Duração'] = resultado.duracao;
+      if (resultado.length !== undefined && typeof resultado.length === 'number') {
+        metrics['Items'] = resultado.length;
+      }
+      if (resultado.items && Array.isArray(resultado.items)) {
+        metrics['Processados'] = resultado.items.length;
+      }
+      if (resultado.atividades && Array.isArray(resultado.atividades)) {
+        metrics['Atividades'] = resultado.atividades.length;
+      }
     }
     
     return metrics;
