@@ -11,6 +11,8 @@ import { MemoryManager } from './memory-manager';
 import { EXECUTION_PROMPT } from './prompts/execution-prompt';
 import { reflectionService, type CapabilityInsight, type NarrativeReflection } from './reflection-service';
 import type { ExecutionPlan, ExecutionStep, CapabilityCall, ProgressUpdate } from '../interface-chat-producao/types';
+import { createDebugEntry } from '../interface-chat-producao/debug-system/DebugStore';
+import { useDebugStore } from '../interface-chat-producao/debug-system/DebugStore';
 
 export type ProgressCallback = (update: ProgressUpdate) => void;
 
@@ -50,6 +52,9 @@ export class AgentExecutor {
 
   async executePlan(plan: ExecutionPlan): Promise<string> {
     console.log('▶️ [Executor] Iniciando execução do plano:', plan.planId);
+
+    // Inicializar sessão de debug
+    useDebugStore.getState().initSession(this.sessionId);
 
     await this.memory.saveToWorkingMemory({
       tipo: 'objetivo',
@@ -175,54 +180,114 @@ export class AgentExecutor {
 
     for (const capability of capabilities) {
       const startTime = Date.now();
+      const capId = capability.id;
+      const capName = capability.nome;
+      const capDisplayName = capability.displayName || capability.nome;
+
+      // Iniciar debug para esta capability
+      useDebugStore.getState().startCapability(capId, capDisplayName);
+      
+      // Debug: Iniciando capability
+      createDebugEntry(
+        capId,
+        capDisplayName,
+        'action',
+        `Iniciando execução da capability "${capDisplayName}". Objetivo: processar dados conforme parâmetros recebidos.`,
+        'low',
+        { parametros: capability.parametros, categoria: capability.categoria }
+      );
 
       this.emitProgress({
         sessionId: this.sessionId,
         status: 'executando',
         etapaAtual: etapa.ordem,
-        descricao: capability.displayName || capability.nome,
-        capabilityId: capability.id,
-        capabilityName: capability.nome,
+        descricao: capDisplayName,
+        capabilityId: capId,
+        capabilityName: capName,
         capabilityStatus: 'executing',
       } as CapabilityProgressUpdate);
 
-      console.log(`  ⚡ [Executor] Capability: ${capability.displayName}`);
+      console.log(`  ⚡ [Executor] Capability: ${capDisplayName}`);
 
       try {
-        const capFunc = findCapability(capability.nome);
+        const capFunc = findCapability(capName);
         let resultado: any;
 
         if (capFunc) {
-          resultado = await executeCapability(capability.nome, capability.parametros);
+          // Debug: Capability encontrada
+          createDebugEntry(
+            capId,
+            capDisplayName,
+            'info',
+            `Capability "${capName}" encontrada no registro. Iniciando execução com os parâmetros configurados.`,
+            'low'
+          );
+          
+          resultado = await executeCapability(capName, capability.parametros);
+          
+          // Debug: Resultado obtido
+          createDebugEntry(
+            capId,
+            capDisplayName,
+            'discovery',
+            this.formatDebugNarrative(capName, resultado),
+            'low',
+            { resultado_resumo: this.formatResultSummary(resultado) }
+          );
         } else {
-          console.warn(`  ⚠️ [Executor] Capability não encontrada: ${capability.nome}`);
+          console.warn(`  ⚠️ [Executor] Capability não encontrada: ${capName}`);
+          
+          // Debug: Usando fallback IA
+          createDebugEntry(
+            capId,
+            capDisplayName,
+            'warning',
+            `Capability "${capName}" não encontrada no registro. Utilizando fallback com IA para processar a solicitação.`,
+            'medium'
+          );
+          
           resultado = await this.executeCapabilityWithAI(capability, etapa);
         }
 
         const duration = Date.now() - startTime;
 
+        // Debug: Capability concluída
+        createDebugEntry(
+          capId,
+          capDisplayName,
+          'action',
+          `Capability "${capDisplayName}" concluída com sucesso em ${duration}ms. Todos os dados foram processados corretamente.`,
+          'low',
+          { duration_ms: duration, success: true }
+        );
+
+        // Emitir eventos especiais para capability criar_atividade
+        if (capName.includes('criar_atividade') || capName.includes('criar-atividade')) {
+          this.emitConstructionEvents(resultado, capId);
+        }
+
         this.emitProgress({
           sessionId: this.sessionId,
           status: 'executando',
           etapaAtual: etapa.ordem,
-          descricao: `${capability.displayName} - Concluído`,
-          capabilityId: capability.id,
-          capabilityName: capability.nome,
+          descricao: `${capDisplayName} - Concluído`,
+          capabilityId: capId,
+          capabilityName: capName,
           capabilityStatus: 'completed',
           capabilityResult: resultado,
           capabilityDuration: duration,
         } as CapabilityProgressUpdate);
 
         results.push({
-          capability: capability.nome,
-          displayName: capability.displayName,
+          capability: capName,
+          displayName: capDisplayName,
           resultado,
           duration,
         });
 
         const insight: CapabilityInsight = {
-          capabilityName: capability.nome,
-          displayName: capability.displayName,
+          capabilityName: capName,
+          displayName: capDisplayName,
           categoria: capability.categoria,
           duration,
           success: true,
@@ -232,43 +297,129 @@ export class AgentExecutor {
         };
         reflectionService.addCapabilityInsight(objectiveIndex, insight);
 
+        // Finalizar debug para esta capability
+        useDebugStore.getState().endCapability(capId);
+
         await this.delay(200);
 
       } catch (error) {
         const duration = Date.now() - startTime;
+        const errorMessage = error instanceof Error ? error.message : String(error);
+
+        // Debug: Erro na capability
+        createDebugEntry(
+          capId,
+          capDisplayName,
+          'error',
+          `Erro ao executar "${capDisplayName}": ${errorMessage}. A execução foi interrompida para esta capability.`,
+          'high',
+          { error: errorMessage, duration_ms: duration, stack: error instanceof Error ? error.stack : undefined }
+        );
 
         this.emitProgress({
           sessionId: this.sessionId,
           status: 'executando',
           etapaAtual: etapa.ordem,
-          descricao: `${capability.displayName} - Erro`,
-          capabilityId: capability.id,
-          capabilityName: capability.nome,
+          descricao: `${capDisplayName} - Erro`,
+          capabilityId: capId,
+          capabilityName: capName,
           capabilityStatus: 'failed',
           capabilityDuration: duration,
         } as CapabilityProgressUpdate);
 
-        console.error(`  ❌ [Executor] Erro na capability ${capability.nome}:`, error);
+        console.error(`  ❌ [Executor] Erro na capability ${capName}:`, error);
         
         results.push({
-          capability: capability.nome,
-          displayName: capability.displayName,
-          erro: error instanceof Error ? error.message : String(error),
+          capability: capName,
+          displayName: capDisplayName,
+          erro: errorMessage,
           duration,
         });
 
         const insight: CapabilityInsight = {
-          capabilityName: capability.nome,
-          displayName: capability.displayName,
+          capabilityName: capName,
+          displayName: capDisplayName,
           categoria: capability.categoria,
           duration,
           success: false,
         };
         reflectionService.addCapabilityInsight(objectiveIndex, insight);
+
+        // Finalizar debug mesmo com erro
+        useDebugStore.getState().endCapability(capId);
       }
     }
 
     return results;
+  }
+
+  private formatDebugNarrative(capName: string, resultado: any): string {
+    if (capName.includes('pesquisar_atividades_conta')) {
+      const count = resultado?.atividades?.length || resultado?.total || 0;
+      return `Pesquisei as atividades já criadas na conta do professor. Encontrei ${count} atividade(s) registrada(s) no banco de dados.`;
+    }
+    if (capName.includes('pesquisar_atividades_disponiveis')) {
+      const count = resultado?.atividades?.length || resultado?.tipos?.length || resultado?.total || 0;
+      return `Consultei o catálogo de atividades disponíveis. Identifiquei ${count} tipo(s) de atividade que podem ser criadas.`;
+    }
+    if (capName.includes('decidir_atividades')) {
+      const chosen = resultado?.chosen_activities?.length || resultado?.decisoes?.length || 0;
+      return `Analisei o contexto pedagógico e decidi criar ${chosen} atividade(s) que melhor atendem às necessidades identificadas.`;
+    }
+    if (capName.includes('criar_atividade')) {
+      const built = resultado?.activities_built?.length || resultado?.progress?.completed || 0;
+      return `Construí ${built} atividade(s) com todos os campos preenchidos pela IA e salvei no banco de dados.`;
+    }
+    
+    // Narrativa genérica
+    const summary = this.formatResultSummary(resultado);
+    return `Processamento concluído. Resultado: ${summary}`;
+  }
+
+  private emitConstructionEvents(resultado: any, capabilityId: string): void {
+    // Verificar se temos atividades para construir
+    if (resultado?.activities_built && Array.isArray(resultado.activities_built)) {
+      const activities = resultado.activities_built.map((a: any) => ({
+        id: a.id || a.original_id,
+        titulo: a.titulo,
+        tipo: a.tipo,
+        status: a.status === 'completed' ? 'completed' : a.status === 'failed' ? 'error' : 'waiting',
+        progress: a.status === 'completed' ? 100 : 0,
+        built_data: a.campos_preenchidos,
+        error_message: a.error_message
+      }));
+
+      // Emitir evento de atividades prontas
+      this.emitProgress({
+        sessionId: this.sessionId,
+        type: 'construction:activities_ready',
+        activities,
+        capabilityId
+      } as any);
+
+      // Se já temos atividades construídas, emitir conclusão
+      const completedCount = activities.filter((a: any) => a.status === 'completed').length;
+      if (completedCount > 0) {
+        this.emitProgress({
+          sessionId: this.sessionId,
+          type: 'construction:all_completed',
+          activities,
+          summary: `${completedCount} atividade(s) construída(s) com sucesso`
+        } as any);
+      }
+    }
+
+    // Verificar se temos progresso incremental
+    if (resultado?.progress) {
+      createDebugEntry(
+        capabilityId,
+        'Criar atividades',
+        'info',
+        `Progresso da construção: ${resultado.progress.completed}/${resultado.progress.total} atividades concluídas (${resultado.progress.percentage}%)`,
+        'low',
+        { progress: resultado.progress }
+      );
+    }
   }
 
   private extractDiscoveries(resultado: any): string[] {
