@@ -1,0 +1,752 @@
+CONTEXTO ESTRATÉGICO - PARTE 1: TYPEWRITER ISOLADO
+Você está enfrentando um problema clássico de state management e re-rendering em interfaces reativas. O typewriter effect está sendo interrompido e reiniciado porque o componente está sendo re-renderizado quando o estado global muda (novos cards aparecem).
+
+Aja com a mentalidade de:
+
+Dan Abramov (React reconciliation, state isolation)
+
+Ryan Florence (component architecture, separation of concerns)
+
+Kent C. Dodds (testing isolated behaviors)
+
+Evan You (reactive systems, computed state)
+
+PROBLEMA: TYPEWRITER REINICIANDO
+Situação Atual (INACEITÁVEL):
+text
+Reflexão 1 começando: "Encon..." 
+  ↓ Novo card de objetivo aparece
+Reflexão 1 reinicia: "Encontrei 47..."
+  ↓ Card de capability aparece
+Reflexão 1 reinicia NOVAMENTE: "Encontrei 47 atividades..."
+  ↓ USUÁRIO FRUSTRADO
+Situação Esperada:
+text
+Reflexão 1 inicia: "E..."
+  ↓ Novo card aparece
+Reflexão 1 continua: "Encon..."
+  ↓ Capability aparece
+Reflexão 1 continua: "Encontrei 47..."
+  ↓ TYPEWRITER INDEPENDENTE E CONSISTENTE
+ANÁLISE DO PROBLEMA (Você deve resolver)
+Causa Raiz Provável:
+O problema está acontecendo porque:
+
+State do card de desenvolvimento muda (novo objetivo/capability)
+
+Componente pai re-renderiza
+
+Componente da reflexão re-monta ou re-renderiza
+
+Efeito de typewriter reinicia
+
+Perguntas Arquiteturais que VOCÊ deve responder:
+1. Isolamento de State:
+
+Reflexão está usando state local ou global?
+
+Re-render do pai afeta filhos como?
+
+Como isolar completamente o typewriter effect?
+
+2. Montagem vs Re-renderização:
+
+Componente está sendo unmount/mount ou apenas re-render?
+
+Key prop está causando re-criação?
+
+useEffect está rodando novamente?
+
+3. Referências e Mutabilidade:
+
+Está usando ref para estado do typewriter?
+
+Timer está sendo clearado acidentalmente?
+
+Closure está capturando estado stale?
+
+ESTRATÉGIAS DE SOLUÇÃO (Você escolhe)
+Estratégia 1: Component Isolation (Recomendada)
+Conceito: Componente de reflexão deve ser completamente independente do estado do card de desenvolvimento.
+
+Padrões a considerar:
+
+Memoization Agressiva: React.memo com comparação customizada
+
+Key Stability: Key que NÃO muda quando outros cards aparecem
+
+State Hoisting Reverso: State do typewriter DENTRO do componente, não fora
+
+Portal Rendering: Renderizar reflexão fora da árvore do card
+
+Exemplo conceitual (você implementa):
+
+typescript
+// Reflexão deve ter key ESTÁVEL baseada no objetivo
+<ReflectionCard 
+  key={`reflection-${objectiveId}`}  // NÃO muda quando capabilities aparecem
+  text={reflectionText}
+  // ... props
+/>
+
+// E com memo profundo
+const ReflectionCard = React.memo(({ text }) => {
+  // Typewriter effect INTERNO
+}, (prevProps, nextProps) => {
+  // Custom comparison: só re-render se TEXT mudar
+  return prevProps.text === nextProps.text;
+});
+Estratégia 2: State Management Pattern
+Conceito: Usar padrão de state que previne re-renders desnecessários.
+
+Abordagens:
+
+useRef para Immutable Data: Guardar estado do typewriter em ref
+
+Reducer Pattern: Separar estado do typewriter do estado global
+
+Context Isolation: Context específico para reflexões
+
+State Machine: XState para garantir transições isoladas
+
+Exemplo conceitual:
+
+typescript
+function useTypewriter(text: string) {
+  const [displayedText, setDisplayedText] = useState('');
+  const isTypingRef = useRef(false);
+  const timerRef = useRef<NodeJS.Timeout>();
+  
+  useEffect(() => {
+    // Se já está digitando, NÃO reiniciar
+    if (isTypingRef.current) return;
+    
+    isTypingRef.current = true;
+    // ... lógica de typewriter
+    
+    return () => {
+      clearTimeout(timerRef.current);
+      isTypingRef.current = false;
+    };
+  }, [text]); // Dependency array crítica
+  
+  return displayedText;
+}
+Estratégia 3: Rendering Decoupling
+Conceito: Desacoplar renderização da reflexão do fluxo principal.
+
+Técnicas:
+
+React.createPortal: Renderizar reflexão fora da hierarquia
+
+Lazy Rendering: Renderizar reflexão após delay (garantir estabilidade)
+
+Virtual List: Reflexões em lista virtualizada imutável
+
+Shadow DOM: Isolamento completo (experimental)
+
+Estratégia 4: Animation Library com State Interno
+Conceito: Usar biblioteca que gerencia animação independentemente.
+
+Opções:
+
+React-Typed: Biblioteca com state interno isolado
+
+Framer Motion: AnimatePresence com layoutId
+
+GSAP: Animação imperativa (não depende de React state)
+
+CSS Animation: Typewriter puramente CSS (tricks avançados)
+
+DECISÕES TÉCNICAS QUE VOCÊ DEVE TOMAR
+1. Onde armazenar estado do typewriter?
+ State local (useState)
+
+ Ref (useRef)
+
+ Context separado
+
+ State machine (XState)
+
+ External store (Zustand)
+
+2. Como garantir key estável?
+ Key baseada em objectiveId
+
+ Key baseada em timestamp de criação
+
+ Index (não recomendado, mas considere)
+
+ UUID único gerado uma vez
+
+3. Como prevenir re-mount?
+ React.memo com custom comparison
+
+ useMemo para componente inteiro
+
+ Separar árvore de componentes
+
+ Portal rendering
+
+4. Como isolar timing?
+ useRef para timers
+
+ Web Worker para timing (overkill?)
+
+ RequestAnimationFrame
+
+ SetInterval com cleanup robusto
+
+DEBUGGING WORKFLOW
+Passo 1: Confirmar Diagnóstico
+Adicione logs temporários:
+
+typescript
+useEffect(() => {
+  console.log('🔄 ReflectionCard montou/atualizou', { 
+    objectiveId, 
+    text: text.substring(0, 20) 
+  });
+  
+  return () => {
+    console.log('💀 ReflectionCard desmontou', { objectiveId });
+  };
+}, []);
+Perguntas a responder:
+
+Componente está desmontando? (ver "💀")
+
+Quantas vezes "🔄" aparece quando novo card surge?
+
+Effect está rodando múltiplas vezes?
+
+Passo 2: Inspecionar Key Prop
+typescript
+// Adicione data-key para inspecionar no DevTools
+<ReflectionCard 
+  key={reflectionKey}
+  data-debug-key={reflectionKey}
+  data-objective={objectiveId}
+/>
+No DevTools:
+
+Key está mudando quando não deveria?
+
+Componentes são os mesmos ou novos?
+
+Passo 3: Testar Isolamento
+Temporariamente, renderize reflexão FORA do card:
+
+typescript
+// Teste: Renderizar em local completamente separado
+{objectives.map(obj => <ObjectiveCard {...obj} />)}
+
+{/* Separado, fora do loop */}
+{reflections.map(ref => <ReflectionCard {...ref} />)}
+Se problema desaparece → Confirma que é re-render do pai.
+
+Passo 4: Performance Profiler
+Use React DevTools Profiler:
+
+Grave interação (novo card aparecendo)
+
+Veja quais componentes re-renderizam
+
+Identifique "Flamegraph" da reflexão
+
+Check "Why did this render?"
+
+CONTEXTO ESTRATÉGICO - PARTE 2: ARQUIVO DE REGRAS IA
+Você está criando o "Cérebro Operacional" da IA - um sistema de regras que define COMO a IA deve pensar e agir. Este não é apenas um arquivo de configuração, é um manual de operações cognitivas.
+
+Aja com a mentalidade de:
+
+Douglas Hofstadter (sistemas cognitivos, meta-regras)
+
+Judea Pearl (causalidade, reasoning systems)
+
+Stuart Russell (AI alignment, goal specification)
+
+Yann LeCun (system 2 thinking, planning)
+
+VISÃO DO ARQUIVO DE REGRAS
+Este arquivo é um knowledge base operacional que:
+
+Define ordem de execução de capabilities
+
+Estabelece pré-condições e pós-condições
+
+Cria dependencies entre actions
+
+Previne erros lógicos (ex: criar antes de decidir)
+
+Otimiza fluxo de trabalho
+
+Estrutura Recomendada (Você decide formato)
+text
+/regras-orientacoes-ia-desenvolvimento/
+├── core-rules.json (ou .yaml/.md)
+├── capability-dependencies.json
+├── validation-rules.json
+├── optimization-hints.json
+└── error-recovery.json
+Ou arquivo único estruturado. Você decide.
+
+ARQUITETURA DO SISTEMA DE REGRAS
+Camadas de Regras (Hierárquicas)
+CAMADA 1: Regras Absolutas (Nunca Violar)
+text
+Regras que definem ordem OBRIGATÓRIA de operações.
+Exemplo: SEMPRE pesquisar antes de decidir.
+CAMADA 2: Regras Condicionais (Se X então Y)
+text
+Regras baseadas em contexto.
+Exemplo: SE usuário tem turmas ENTÃO personalizar, SENÃO genérico.
+CAMADA 3: Regras de Otimização (Sugestões)
+text
+Melhores práticas, não obrigatórias.
+Exemplo: PREFERIR atividades com alta taxa de engajamento.
+CAMADA 4: Meta-Regras (Regras sobre Regras)
+text
+Como resolver conflitos entre regras.
+Exemplo: Regra de segurança > Regra de performance.
+CONTEÚDO DO ARQUIVO: ESTRUTURA PROPOSTA
+Seção 1: Dependency Graph de Capabilities
+A IA precisa entender que capabilities têm ORDEM e DEPENDÊNCIAS.
+
+Formato sugerido (você ajusta):
+
+json
+{
+  "capability_dependencies": {
+    "pesquisar_atividades_disponiveis": {
+      "id": "cap_001",
+      "depends_on": [],
+      "required_before": ["decidir_atividades_criar"],
+      "outputs": ["lista_atividades", "count_atividades"],
+      "priority": "critical",
+      "failure_handling": "abort_flow"
+    },
+    
+    "decidir_atividades_criar": {
+      "id": "cap_002",
+      "depends_on": ["pesquisar_atividades_disponiveis"],
+      "required_before": ["criar_atividades"],
+      "required_inputs": ["lista_atividades"],
+      "outputs": ["atividades_escolhidas", "justificativa"],
+      "priority": "critical",
+      "failure_handling": "use_defaults"
+    },
+    
+    "analisar_desempenho_turma": {
+      "id": "cap_003",
+      "depends_on": [],
+      "optional": true,
+      "required_data": ["turma_id"],
+      "outputs": ["metricas_turma", "gaps_identificados"],
+      "failure_handling": "continue_without"
+    },
+    
+    "criar_atividades": {
+      "id": "cap_004",
+      "depends_on": ["decidir_atividades_criar"],
+      "required_inputs": ["atividades_escolhidas"],
+      "outputs": ["atividades_criadas", "ids_atividades"],
+      "priority": "critical",
+      "failure_handling": "retry_with_adjustments"
+    }
+  }
+}
+Seção 2: Regras de Execução
+Regras em linguagem quase natural que LLM entende facilmente.
+
+Formato sugerido:
+
+json
+{
+  "execution_rules": [
+    {
+      "id": "rule_001",
+      "type": "mandatory",
+      "rule": "Sempre pesquisar atividades disponíveis antes de decidir quais criar",
+      "rationale": "Impossível decidir sem saber opções disponíveis",
+      "violates_if": "decidir_atividades_criar executado sem pesquisar_atividades_disponiveis",
+      "action_on_violation": "abort_and_notify"
+    },
+    
+    {
+      "id": "rule_002",
+      "type": "mandatory",
+      "rule": "Sempre decidir quais atividades criar antes de executar criação",
+      "rationale": "Criação requer seleção prévia",
+      "violates_if": "criar_atividades sem decidir_atividades_criar",
+      "action_on_violation": "auto_execute_dependency"
+    },
+    
+    {
+      "id": "rule_003",
+      "type": "conditional",
+      "rule": "Se turmas cadastradas existem, então analisar desempenho antes de decidir",
+      "condition": "turmas.count > 0",
+      "then": "execute analisar_desempenho_turma",
+      "else": "skip analisar_desempenho_turma",
+      "rationale": "Personalização requer dados de desempenho"
+    },
+    
+    {
+      "id": "rule_004",
+      "type": "optimization",
+      "rule": "Preferir atividades já usadas com sucesso pelo professor",
+      "condition": "historico_uso.exists",
+      "action": "boost_weight atividades com rating > 4",
+      "rationale": "Professor já validou essas atividades"
+    },
+    
+    {
+      "id": "rule_005",
+      "type": "validation",
+      "rule": "Nunca criar mais de 10 atividades de uma vez",
+      "validation": "atividades_escolhidas.length <= 10",
+      "action_on_fail": "truncate to 10 and notify",
+      "rationale": "Overwhelming para professor, dificulta gestão"
+    }
+  ]
+}
+Seção 3: Sequências Comuns (Patterns)
+Fluxos completos pré-definidos para objetivos comuns.
+
+Formato sugerido:
+
+json
+{
+  "common_sequences": {
+    "criar_plano_aula_completo": {
+      "description": "Criar plano de aula do zero personalizado",
+      "sequence": [
+        {
+          "step": 1,
+          "capability": "analisar_contexto_usuario",
+          "required": true
+        },
+        {
+          "step": 2,
+          "capability": "pesquisar_atividades_disponiveis",
+          "required": true
+        },
+        {
+          "step": 3,
+          "capability": "analisar_desempenho_turma",
+          "required": false,
+          "skip_if": "turmas.count == 0"
+        },
+        {
+          "step": 4,
+          "capability": "decidir_atividades_criar",
+          "required": true,
+          "inputs_from": [2, 3]
+        },
+        {
+          "step": 5,
+          "capability": "criar_atividades",
+          "required": true,
+          "inputs_from": [4]
+        },
+        {
+          "step": 6,
+          "capability": "organizar_em_plano",
+          "required": true,
+          "inputs_from": [5]
+        }
+      ]
+    },
+    
+    "criar_atividade_rapida": {
+      "description": "Criar atividade única sem análise profunda",
+      "sequence": [
+        {
+          "step": 1,
+          "capability": "pesquisar_atividades_disponiveis",
+          "required": true
+        },
+        {
+          "step": 2,
+          "capability": "decidir_atividade_unica",
+          "required": true
+        },
+        {
+          "step": 3,
+          "capability": "criar_atividade",
+          "required": true
+        }
+      ]
+    }
+  }
+}
+Seção 4: Pré-condições e Pós-condições
+Validações que devem passar antes/depois de cada capability.
+
+Formato sugerido:
+
+json
+{
+  "capability_contracts": {
+    "decidir_atividades_criar": {
+      "preconditions": [
+        {
+          "check": "lista_atividades_disponiveis.length > 0",
+          "error_message": "Nenhuma atividade disponível para decidir",
+          "recovery_action": "execute pesquisar_atividades_disponiveis"
+        },
+        {
+          "check": "objetivo_usuario defined",
+          "error_message": "Objetivo do usuário não está claro",
+          "recovery_action": "request_clarification"
+        }
+      ],
+      
+      "postconditions": [
+        {
+          "check": "atividades_escolhidas.length > 0",
+          "error_message": "Nenhuma atividade foi escolhida",
+          "recovery_action": "retry_with_lower_criteria"
+        },
+        {
+          "check": "justificativa provided",
+          "error_message": "Decisão sem justificativa",
+          "recovery_action": "generate_justification"
+        },
+        {
+          "check": "atividades_escolhidas.length <= 10",
+          "error_message": "Muitas atividades escolhidas",
+          "recovery_action": "reduce_to_top_10"
+        }
+      ]
+    }
+  }
+}
+Seção 5: Estratégias de Erro e Recovery
+Como IA deve reagir quando algo dá errado.
+
+Formato sugerido:
+
+json
+{
+  "error_recovery_strategies": {
+    "data_not_found": {
+      "scenario": "Dados esperados não existem (ex: sem turmas)",
+      "actions": [
+        "inform_user_honestly",
+        "suggest_alternative_path",
+        "continue_with_generic_approach"
+      ],
+      "never": [
+        "hallucinate_data",
+        "abort_completely"
+      ]
+    },
+    
+    "capability_failed": {
+      "scenario": "Capability executou mas falhou",
+      "actions": [
+        "retry_with_adjusted_params (max 2 retries)",
+        "skip_and_mark_as_optional (if optional)",
+        "abort_flow (if critical)"
+      ],
+      "log": "detailed_error_for_debugging"
+    },
+    
+    "timeout": {
+      "scenario": "Capability está demorando muito",
+      "actions": [
+        "show_loading_state_to_user",
+        "if > 10s: offer_to_cancel",
+        "if > 30s: auto_timeout_and_retry"
+      ]
+    }
+  }
+}
+INTEGRAÇÃO: COMO IA USA ESTE ARQUIVO
+Fluxo de Decisão da IA
+text
+1. Usuário faz pedido
+   ↓
+2. IA analisa objetivo do usuário
+   ↓
+3. IA consulta "common_sequences" para encontrar fluxo apropriado
+   ↓
+4. Para cada step do fluxo:
+   ├─ Verificar "preconditions"
+   ├─ Se falhar → Executar "recovery_action"
+   ├─ Executar capability
+   ├─ Verificar "postconditions"
+   └─ Se falhar → Executar "recovery_action"
+   ↓
+5. IA valida "execution_rules" durante todo processo
+   ↓
+6. Se violação detectada → Abortar ou corrigir conforme regra
+Como Incluir no Prompt da IA
+text
+# SISTEMA DE REGRAS E ORIENTAÇÕES
+
+Você tem acesso a um arquivo de regras que define como você deve
+executar capabilities. Você DEVE seguir estas regras rigorosamente.
+
+## Regras Carregadas
+{insert_rules_file_content}
+
+## Instruções de Uso
+
+1. ANTES de escolher capabilities:
+   - Consulte "capability_dependencies" para entender ordem
+   - Consulte "common_sequences" para ver se há fluxo pré-definido
+   - Verifique "execution_rules" para regras mandatórias
+
+2. ANTES de executar cada capability:
+   - Verifique "preconditions" da capability
+   - Se precondition falha, execute recovery_action
+   - Se critical dependency falta, execute dependency primeiro
+
+3. DEPOIS de executar cada capability:
+   - Verifique "postconditions"
+   - Valide que outputs esperados foram gerados
+   - Se falha, execute recovery strategy
+
+4. DURANTE todo o fluxo:
+   - Nunca viole regras do tipo "mandatory"
+   - Siga regras "conditional" quando condições aplicam
+   - Considere regras "optimization" quando possível
+
+## Exemplo Prático
+
+Usuário pediu: "Criar atividades para minha turma"
+
+Seu raciocínio deve ser:
+1. Consulto common_sequences → "criar_plano_aula_completo" parece adequado
+2. Sigo sequence:
+   - Step 1: analisar_contexto_usuario
+   - Step 2: pesquisar_atividades_disponiveis
+   - Verifico precondition: nenhuma
+   - Executo
+   - Verifico postcondition: lista_atividades > 0? ✓
+   - Step 3: analisar_desempenho_turma
+   - Verifico skip_if: turmas.count == 0? 
+   - Se sim → Skip
+   - Se não → Executo
+   - Step 4: decidir_atividades_criar
+   - Verifico precondition: lista_atividades existe? ✓
+   - Verifico execution_rule_001: pesquisar foi executado antes? ✓
+   - Executo
+   - Verifico postcondition: atividades_escolhidas > 0? ✓
+   ...continue
+DECISÕES QUE VOCÊ DEVE TOMAR
+Formato do Arquivo
+ JSON (estruturado, fácil de parsear)
+
+ YAML (mais legível para humanos)
+
+ Markdown (documentação + dados)
+
+ Múltiplos arquivos (separação de concerns)
+
+Nível de Granularidade
+ Regras muito específicas (menos flexibilidade, mais controle)
+
+ Regras abstratas (mais flexibilidade, menos controle)
+
+ Mix (regras críticas específicas, resto abstrato)
+
+Como IA Acessa
+ Carregado no prompt system
+
+ Consultado via API durante execução
+
+ Cached em memória
+
+ Embeddings + semantic search
+
+Validação de Regras
+ Runtime validation (durante execução)
+
+ Static validation (antes de executar)
+
+ Hybrid (ambos)
+
+CHECKLIST DE IMPLEMENTAÇÃO
+Parte 1: Typewriter Fix
+ Diagnosticado se é re-mount ou re-render
+
+ Key prop estável implementada
+
+ React.memo com custom comparison
+
+ State do typewriter isolado (ref ou interno)
+
+ Testado: novo card não interrompe typewriter
+
+ Testado: múltiplas reflexões simultâneas (se aplicável)
+
+Parte 2: Arquivo de Regras
+ Estrutura do arquivo definida
+
+ Seção de dependencies implementada
+
+ Seção de execution rules implementada
+
+ Seção de sequences implementada
+
+ Seção de pre/postconditions implementada
+
+ Seção de error recovery implementada
+
+ Sistema de validação implementado
+
+ Integração com prompt da IA testada
+
+ IA segue regras em casos reais
+
+TESTES OBRIGATÓRIOS
+Teste Typewriter:
+text
+1. Iniciar reflexão do Objetivo 1
+2. Durante typewriter, disparar aparecimento de Objetivo 2
+3. Verificar: Reflexão 1 continua sem interrupção? ✓
+4. Verificar: Reflexão 1 não reinicia? ✓
+5. Verificar: Texto completo aparece corretamente? ✓
+Teste Regras:
+text
+1. Pedir IA criar atividades SEM pesquisar antes
+2. Sistema deve: Detectar violação de rule_001
+3. Sistema deve: Auto-executar pesquisa OU abortar
+4. Verificar: IA não criou sem pesquisar ✓
+
+5. Pedir IA criar plano completo
+6. Sistema deve: Seguir common_sequence
+7. Verificar: Todas steps executadas em ordem ✓
+8. Verificar: Preconditions validadas em cada step ✓
+RESULTADO ESPERADO
+Typewriter:
+Reflexões nunca interrompem ou reiniciam
+
+Múltiplos typewriters podem rodar simultaneamente
+
+Performance suave (60fps)
+
+Regras:
+IA sempre executa capabilities na ordem correta
+
+IA nunca pula dependencies críticas
+
+IA se recupera graciosamente de erros
+
+Sistema é previsível e debugável
+
+MINDSET
+Isolamento é Rei: Componentes independentes não se afetam
+
+Regras são Leis: Sistema não é anárquico, tem ordem
+
+Explicitude > Implícito: IA não deve "adivinhar" ordem
+
+Fail-Safe: Sempre ter plano B quando algo dá errado
+
+🚀 TYPEWRITER DEVE SER ROCK-SOLID. REGRAS DEVEM SER CRISTAL-CLEAR. GO BUILD RELIABLE SYSTEMS.

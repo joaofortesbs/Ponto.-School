@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lightbulb, Sparkles, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Lightbulb, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export interface NarrativeReflectionProps {
   id: string;
@@ -53,7 +53,89 @@ const toneConfig = {
   },
 };
 
-export function NarrativeReflectionCard({
+function useStableTypewriter(narrative: string, isLoading: boolean, onComplete?: () => void) {
+  const [displayedText, setDisplayedText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [showHighlights, setShowHighlights] = useState(false);
+  
+  const isTypingRef = useRef(false);
+  const hasCompletedRef = useRef(false);
+  const currentNarrativeRef = useRef(narrative);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const onCompleteRef = useRef(onComplete);
+
+  onCompleteRef.current = onComplete;
+
+  useEffect(() => {
+    if (isLoading) {
+      setDisplayedText('');
+      setIsTyping(false);
+      setShowHighlights(false);
+      isTypingRef.current = false;
+      hasCompletedRef.current = false;
+      return;
+    }
+
+    if (narrative === currentNarrativeRef.current && isTypingRef.current) {
+      console.log('🔒 [Typewriter] Já digitando, ignorando re-render');
+      return;
+    }
+
+    if (narrative === currentNarrativeRef.current && hasCompletedRef.current) {
+      console.log('✅ [Typewriter] Já completou, mantendo estado');
+      return;
+    }
+
+    currentNarrativeRef.current = narrative;
+    hasCompletedRef.current = false;
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
+    const intervalMs = calculateTypewriterInterval(narrative.length);
+    console.log(`⌨️ [Typewriter] Iniciando para: "${narrative.substring(0, 30)}..." (${intervalMs}ms/char)`);
+
+    timerRef.current = setTimeout(() => {
+      isTypingRef.current = true;
+      setIsTyping(true);
+      let currentIndex = 0;
+
+      intervalRef.current = setInterval(() => {
+        if (currentIndex < narrative.length) {
+          currentIndex += 1;
+          setDisplayedText(narrative.slice(0, currentIndex));
+        } else {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          isTypingRef.current = false;
+          hasCompletedRef.current = true;
+          setIsTyping(false);
+          setShowHighlights(true);
+          console.log('🏁 [Typewriter] Completou!');
+          onCompleteRef.current?.();
+        }
+      }, intervalMs);
+    }, INITIAL_DELAY);
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [narrative, isLoading]);
+
+  return { displayedText, isTyping, showHighlights };
+}
+
+const NarrativeReflectionCardInner: React.FC<NarrativeReflectionProps> = ({
   id,
   objectiveTitle,
   narrative,
@@ -61,50 +143,17 @@ export function NarrativeReflectionCard({
   highlights = [],
   isLoading = false,
   onComplete,
-}: NarrativeReflectionProps) {
-  const [displayedText, setDisplayedText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [showHighlights, setShowHighlights] = useState(false);
-  const typingRef = useRef<NodeJS.Timeout | null>(null);
+}) => {
+  const { displayedText, isTyping, showHighlights } = useStableTypewriter(
+    narrative,
+    isLoading,
+    onComplete
+  );
+
   const config = toneConfig[tone];
   const Icon = config.icon;
 
-  useEffect(() => {
-    if (isLoading) {
-      setDisplayedText('');
-      setIsTyping(false);
-      setShowHighlights(false);
-      return;
-    }
-
-    const intervalMs = calculateTypewriterInterval(narrative.length);
-    
-    const startTyping = setTimeout(() => {
-      setIsTyping(true);
-      let currentIndex = 0;
-
-      typingRef.current = setInterval(() => {
-        if (currentIndex < narrative.length) {
-          currentIndex += 1;
-          setDisplayedText(narrative.slice(0, currentIndex));
-        } else {
-          if (typingRef.current) {
-            clearInterval(typingRef.current);
-          }
-          setIsTyping(false);
-          setShowHighlights(true);
-          onComplete?.();
-        }
-      }, intervalMs);
-    }, INITIAL_DELAY);
-
-    return () => {
-      clearTimeout(startTyping);
-      if (typingRef.current) {
-        clearInterval(typingRef.current);
-      }
-    };
-  }, [narrative, isLoading, onComplete]);
+  console.log(`🎨 [ReflectionCard] Render id=${id}, isTyping=${isTyping}, chars=${displayedText.length}/${narrative.length}`);
 
   return (
     <motion.div
@@ -118,6 +167,7 @@ export function NarrativeReflectionCard({
         border-l-4 rounded-lg p-4 md:p-5
         backdrop-blur-sm
       `}
+      data-reflection-id={id}
     >
       <div className="flex items-start gap-3">
         <motion.div
@@ -214,7 +264,20 @@ export function NarrativeReflectionCard({
       />
     </motion.div>
   );
-}
+};
+
+export const NarrativeReflectionCard = memo(NarrativeReflectionCardInner, (prevProps, nextProps) => {
+  const isSame = prevProps.id === nextProps.id &&
+    prevProps.narrative === nextProps.narrative &&
+    prevProps.isLoading === nextProps.isLoading &&
+    prevProps.tone === nextProps.tone;
+  
+  if (!isSame) {
+    console.log('🔄 [ReflectionCard] Props mudaram, re-render permitido');
+  }
+  
+  return isSame;
+});
 
 export function LoadingReflection() {
   return (

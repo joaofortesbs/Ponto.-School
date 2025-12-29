@@ -1,0 +1,143 @@
+{
+  "version": "1.0.0",
+  "description": "Regras de execução do Agente Jota - Define comportamentos obrigatórios, condicionais e otimizações",
+
+  "execution_rules": [
+    {
+      "id": "rule_001",
+      "type": "mandatory",
+      "priority": 1,
+      "rule": "SEMPRE pesquisar atividades disponíveis ANTES de decidir quais criar",
+      "rationale": "Impossível tomar decisão informada sem conhecer opções disponíveis",
+      "violates_if": "decidir_atividades_criar executado sem pesquisar_atividades_disponiveis",
+      "action_on_violation": "abort_and_notify",
+      "error_message": "Erro: Tentativa de decisão sem pesquisa prévia. Executando pesquisa primeiro."
+    },
+    
+    {
+      "id": "rule_002",
+      "type": "mandatory",
+      "priority": 1,
+      "rule": "SEMPRE decidir quais atividades criar ANTES de executar criação",
+      "rationale": "Criação requer seleção prévia para garantir qualidade e relevância",
+      "violates_if": "criar_atividade executado sem decidir_atividades_criar",
+      "action_on_violation": "auto_execute_dependency",
+      "error_message": "Aviso: Criação solicitada sem decisão prévia. Executando etapa de decisão."
+    },
+    
+    {
+      "id": "rule_003",
+      "type": "mandatory",
+      "priority": 1,
+      "rule": "SEMPRE analisar contexto do usuário ANTES de criar plano de aula",
+      "rationale": "Plano de aula deve ser personalizado para o contexto do professor",
+      "violates_if": "criar_plano_aula executado sem analisar_contexto_usuario",
+      "action_on_violation": "abort_and_notify"
+    },
+    
+    {
+      "id": "rule_004",
+      "type": "conditional",
+      "priority": 2,
+      "rule": "SE turmas cadastradas existem, ENTÃO analisar desempenho ANTES de decidir atividades",
+      "condition": "turmas.count > 0",
+      "then_action": "execute analisar_desempenho_turma",
+      "else_action": "skip analisar_desempenho_turma",
+      "rationale": "Personalização requer dados de desempenho quando disponíveis"
+    },
+    
+    {
+      "id": "rule_005",
+      "type": "conditional",
+      "priority": 2,
+      "rule": "SE histórico de uso existe, ENTÃO considerar atividades bem-sucedidas anteriores",
+      "condition": "historico_uso.exists && historico_uso.count > 0",
+      "then_action": "boost_weight atividades com rating >= 4",
+      "else_action": "use_general_recommendations",
+      "rationale": "Professor já validou atividades que funcionaram bem"
+    },
+    
+    {
+      "id": "rule_006",
+      "type": "conditional",
+      "priority": 2,
+      "rule": "SE gaps de aprendizado identificados, ENTÃO priorizar atividades que abordam gaps",
+      "condition": "gaps_identificados.length > 0",
+      "then_action": "filter_and_prioritize atividades que abordam gaps",
+      "else_action": "use_balanced_selection",
+      "rationale": "Foco em lacunas melhora eficiência pedagógica"
+    },
+    
+    {
+      "id": "rule_007",
+      "type": "validation",
+      "priority": 1,
+      "rule": "NUNCA criar mais de 10 atividades de uma vez",
+      "validation": "atividades_escolhidas.length <= 10",
+      "action_on_fail": "truncate_to_limit",
+      "limit": 10,
+      "rationale": "Quantidade excessiva sobrecarrega professor e dificulta gestão",
+      "user_notification": "Limitei a 10 atividades para facilitar sua gestão. Posso criar mais depois."
+    },
+    
+    {
+      "id": "rule_008",
+      "type": "validation",
+      "priority": 1,
+      "rule": "NUNCA criar atividade sem tipo definido",
+      "validation": "tipo_atividade !== null && tipo_atividade !== undefined",
+      "action_on_fail": "request_clarification",
+      "rationale": "Tipo é obrigatório para estrutura correta da atividade"
+    },
+    
+    {
+      "id": "rule_009",
+      "type": "optimization",
+      "priority": 3,
+      "rule": "PREFERIR atividades com alta taxa de engajamento",
+      "condition": "metricas_engajamento.available",
+      "action": "sort_by engajamento DESC",
+      "rationale": "Atividades engajadoras têm melhor resultado pedagógico"
+    },
+    
+    {
+      "id": "rule_010",
+      "type": "optimization",
+      "priority": 3,
+      "rule": "PREFERIR variedade de tipos de atividades",
+      "action": "ensure_type_diversity minimum 2 types",
+      "rationale": "Variedade mantém interesse dos alunos"
+    },
+    
+    {
+      "id": "rule_011",
+      "type": "mandatory",
+      "priority": 1,
+      "rule": "NUNCA inventar dados que não existem no contexto",
+      "validation": "all_referenced_data exists in validated_context",
+      "action_on_violation": "use_only_validated_data",
+      "rationale": "Anti-alucinação: IA deve usar apenas dados reais do professor"
+    },
+    
+    {
+      "id": "rule_012",
+      "type": "mandatory",
+      "priority": 1,
+      "rule": "SEMPRE validar dados ANTES de qualquer operação",
+      "sequence": ["validate_data", "process_with_llm", "verify_output"],
+      "rationale": "Sistema de 3 camadas anti-alucinação"
+    }
+  ],
+
+  "meta_rules": {
+    "description": "Regras sobre como resolver conflitos entre regras",
+    "priority_order": [
+      "Regras mandatory sempre têm precedência",
+      "Regras validation têm precedência sobre optimization",
+      "Regras conditional são avaliadas em ordem de priority",
+      "Em caso de empate, regra com ID menor tem precedência"
+    ],
+    "conflict_resolution": "priority_based",
+    "logging": "always_log_rule_application"
+  }
+}

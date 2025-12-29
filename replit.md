@@ -82,6 +82,20 @@ The platform features a modern design with glass-morphism effects, blur backgrou
         - ANALISAR: analisar_gaps_aprendizado, gerar_relatorio_personalizado
       - **Session Management**: Automatic cleanup of expired sessions (10min interval, 1hr max age)
       - Uses multi-API cascade fallback system for AI calls
+      - **Anti-Hallucination System** (3-layer validation):
+        - Layer 1: DataValidationService validates turmas/atividades before LLM processing
+        - Layer 2: Structured prompts with few-shot examples and strict rules
+        - Layer 3: HallucinationLogger for audit trail and post-verification
+      - **Rules Engine** (`/agente-jota/regras-orientacoes-ia/`):
+        - capability-dependencies.json: Dependency graph between capabilities
+        - execution-rules.json: Mandatory, conditional, validation rules
+        - common-sequences.json: Pre-defined flows for common objectives
+        - RulesEngine class: Query methods for rule application
+      - **Isolated Typewriter Effect**:
+        - useStableTypewriter hook with refs for state isolation
+        - React.memo with custom comparison prevents re-renders
+        - Typewriter continues uninterrupted when parent re-renders
+        - Adaptive speed: 35ms (short) to 8ms (long) per character
 
 ### System Design Choices
 The architecture emphasizes a modular component design using shadcn/ui patterns. Data persistence is managed with Neon PostgreSQL for primary data, Supabase PostgreSQL for authentication, and Supabase Storage for file assets. Supabase Realtime enables live features. The system is configured for VM deployment, ensuring backend state maintenance and real-time database connections. A critical architectural decision involves the dynamic section system, where `sectionConfigs` are dynamically generated based on `sectionOrder` for each template, ensuring perfect synchronization between template selection and section display. Lesson creation sessions are isolated using a session ID system and state reset functions to prevent data bleed.
