@@ -203,13 +203,42 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       capabilityStatus?: string;
       capabilityResult?: any;
       capabilityDuration?: number;
+      reflectionLoading?: boolean;
+      reflection?: any;
     }) => {
       console.log('📊 [ChatLayout] Progresso:', JSON.stringify({
         status: update.status,
         etapaAtual: update.etapaAtual,
         capabilityId: update.capabilityId,
         capabilityStatus: update.capabilityStatus,
+        reflectionLoading: update.reflectionLoading,
+        hasReflection: !!update.reflection,
       }));
+
+      const stepIndex = update.etapaAtual !== undefined ? update.etapaAtual - 1 : 0;
+
+      if (update.reflectionLoading === true) {
+        console.log(`💭 [ChatLayout] Emitindo evento: reflection:loading | stepIndex: ${stepIndex}`);
+        window.dispatchEvent(new CustomEvent('agente-jota-progress', {
+          detail: {
+            type: 'reflection:loading',
+            stepIndex: stepIndex,
+          }
+        }));
+        return;
+      }
+
+      if (update.reflection) {
+        console.log(`💡 [ChatLayout] Emitindo evento: reflection:ready | stepIndex: ${stepIndex}`);
+        window.dispatchEvent(new CustomEvent('agente-jota-progress', {
+          detail: {
+            type: 'reflection:ready',
+            stepIndex: stepIndex,
+            reflection: update.reflection,
+          }
+        }));
+        return;
+      }
 
       let eventType: string = update.status;
       
@@ -228,8 +257,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       } else if (update.status === 'concluido') {
         eventType = 'execution:completed';
       }
-
-      const stepIndex = update.etapaAtual !== undefined ? update.etapaAtual - 1 : 0;
 
       console.log(`🎯 [ChatLayout] Emitindo evento: ${eventType} | stepIndex: ${stepIndex} | capabilityId: ${update.capabilityId}`);
 

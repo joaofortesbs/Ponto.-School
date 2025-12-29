@@ -9,6 +9,7 @@ import { executeWithCascadeFallback } from '../services/controle-APIs-gerais-sch
 import { findCapability, executeCapability } from './capabilities';
 import { MemoryManager } from './memory-manager';
 import { EXECUTION_PROMPT } from './prompts/execution-prompt';
+import { reflectionService, type CapabilityInsight, type NarrativeReflection } from './reflection-service';
 import type { ExecutionPlan, ExecutionStep, CapabilityCall, ProgressUpdate } from '../interface-chat-producao/types';
 
 export type ProgressCallback = (update: ProgressUpdate) => void;
@@ -19,6 +20,11 @@ export interface CapabilityProgressUpdate extends ProgressUpdate {
   capabilityStatus?: 'pending' | 'executing' | 'completed' | 'failed';
   capabilityResult?: any;
   capabilityDuration?: number;
+}
+
+export interface ReflectionProgressUpdate extends ProgressUpdate {
+  reflection?: NarrativeReflection;
+  reflectionLoading?: boolean;
 }
 
 export class AgentExecutor {
@@ -101,6 +107,31 @@ export class AgentExecutor {
           resultado: this.formatResultSummary(combinedResult),
         });
 
+        this.emitProgress({
+          sessionId: this.sessionId,
+          status: 'executando',
+          etapaAtual: etapa.ordem,
+          descricao: 'Gerando reflexão...',
+          reflectionLoading: true,
+        } as ReflectionProgressUpdate);
+
+        try {
+          const reflection = await reflectionService.generateReflection(etapa.ordem - 1);
+          
+          this.emitProgress({
+            sessionId: this.sessionId,
+            status: 'executando',
+            etapaAtual: etapa.ordem,
+            descricao: 'Reflexão gerada',
+            reflection,
+            reflectionLoading: false,
+          } as ReflectionProgressUpdate);
+          
+          console.log('💡 [Executor] Reflexão gerada:', reflection.narrative.substring(0, 100) + '...');
+        } catch (reflectionError) {
+          console.warn('⚠️ [Executor] Erro ao gerar reflexão:', reflectionError);
+        }
+
         await this.delay(300);
 
       } catch (error) {
@@ -136,6 +167,9 @@ export class AgentExecutor {
   private async executeCapabilities(etapa: ExecutionStep): Promise<any[]> {
     const capabilities = etapa.capabilities || [];
     const results: any[] = [];
+    const objectiveIndex = etapa.ordem - 1;
+
+    reflectionService.setObjectiveTitle(objectiveIndex, etapa.titulo || etapa.descricao);
 
     console.log(`📦 [Executor] Executando ${capabilities.length} capabilities na etapa ${etapa.ordem}`);
 
@@ -186,6 +220,18 @@ export class AgentExecutor {
           duration,
         });
 
+        const insight: CapabilityInsight = {
+          capabilityName: capability.nome,
+          displayName: capability.displayName,
+          categoria: capability.categoria,
+          duration,
+          success: true,
+          discovered: this.extractDiscoveries(resultado),
+          decided: this.extractDecisions(resultado),
+          metrics: this.extractMetrics(resultado),
+        };
+        reflectionService.addCapabilityInsight(objectiveIndex, insight);
+
         await this.delay(200);
 
       } catch (error) {
@@ -210,10 +256,86 @@ export class AgentExecutor {
           erro: error instanceof Error ? error.message : String(error),
           duration,
         });
+
+        const insight: CapabilityInsight = {
+          capabilityName: capability.nome,
+          displayName: capability.displayName,
+          categoria: capability.categoria,
+          duration,
+          success: false,
+        };
+        reflectionService.addCapabilityInsight(objectiveIndex, insight);
       }
     }
 
     return results;
+  }
+
+  private extractDiscoveries(resultado: any): string[] {
+    const discoveries: string[] = [];
+    
+    if (!resultado) return discoveries;
+    
+    if (typeof resultado === 'object') {
+      if (resultado.total !== undefined) {
+        discoveries.push(`Encontrei ${resultado.total} itens`);
+      }
+      if (resultado.count !== undefined) {
+        discoveries.push(`Total de ${resultado.count} resultados`);
+      }
+      if (resultado.atividades && Array.isArray(resultado.atividades)) {
+        discoveries.push(`${resultado.atividades.length} atividades disponíveis`);
+      }
+      if (resultado.tipos && Array.isArray(resultado.tipos)) {
+        discoveries.push(`${resultado.tipos.length} tipos identificados`);
+      }
+      if (resultado.turma) {
+        discoveries.push(`Turma: ${resultado.turma}`);
+      }
+      if (resultado.conteudo && typeof resultado.conteudo === 'string') {
+        const match = resultado.conteudo.match(/(\d+)\s*(atividades?|exercícios?|questões?)/i);
+        if (match) {
+          discoveries.push(`${match[1]} ${match[2]} encontrados`);
+        }
+      }
+    }
+    
+    return discoveries.slice(0, 2);
+  }
+
+  private extractDecisions(resultado: any): string[] {
+    const decisions: string[] = [];
+    
+    if (!resultado) return decisions;
+    
+    if (typeof resultado === 'object') {
+      if (resultado.decisao) {
+        decisions.push(String(resultado.decisao));
+      }
+      if (resultado.escolha) {
+        decisions.push(`Escolhi: ${resultado.escolha}`);
+      }
+      if (resultado.tipo && resultado.nome) {
+        decisions.push(`Criando ${resultado.tipo}: ${resultado.nome}`);
+      }
+    }
+    
+    return decisions.slice(0, 2);
+  }
+
+  private extractMetrics(resultado: any): Record<string, number | string> {
+    const metrics: Record<string, number | string> = {};
+    
+    if (!resultado) return metrics;
+    
+    if (typeof resultado === 'object') {
+      if (resultado.total !== undefined) metrics['Total'] = resultado.total;
+      if (resultado.count !== undefined) metrics['Quantidade'] = resultado.count;
+      if (resultado.media !== undefined) metrics['Média'] = resultado.media;
+      if (resultado.duracao !== undefined) metrics['Duração'] = resultado.duracao;
+    }
+    
+    return metrics;
   }
 
   private async executeSingleFunction(etapa: ExecutionStep): Promise<any> {

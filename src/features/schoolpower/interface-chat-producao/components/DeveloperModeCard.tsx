@@ -1,8 +1,19 @@
-import React, { useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useChatState } from '../state/chatState';
 import { ProgressiveExecutionCard, ObjectiveItem, CapabilityItem } from './ProgressiveExecutionCard';
+import { NarrativeReflectionCard, LoadingReflection } from './NarrativeReflectionCard';
 import type { DevModeCardData, CapabilityState } from '../types/message-types';
+
+interface ReflectionData {
+  id: string;
+  objectiveIndex: number;
+  objectiveTitle: string;
+  narrative: string;
+  tone: 'celebratory' | 'cautious' | 'explanatory' | 'reassuring';
+  highlights: string[];
+  isLoading?: boolean;
+}
 
 interface DeveloperModeCardProps {
   cardId: string;
@@ -12,6 +23,8 @@ interface DeveloperModeCardProps {
 
 export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperModeCardProps) {
   const { updateCardData, updateCapabilityStatus, updateEtapaStatus, addTextMessage, addCapabilityToEtapa } = useChatState();
+  const [reflections, setReflections] = useState<Map<number, ReflectionData>>(new Map());
+  const [loadingReflections, setLoadingReflections] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const handleProgress = (event: CustomEvent) => {
@@ -55,6 +68,35 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
       if (update.type === 'execution:step:completed') {
         console.log(`🏁 [DeveloperModeCard] Concluindo etapa: ${update.stepIndex}`);
         updateEtapaStatus(cardId, update.stepIndex, 'concluido');
+      }
+
+      if (update.type === 'reflection:loading') {
+        console.log(`💭 [DeveloperModeCard] Carregando reflexão para etapa: ${update.stepIndex}`);
+        setLoadingReflections(prev => new Set([...prev, update.stepIndex]));
+      }
+
+      if (update.type === 'reflection:ready') {
+        console.log(`💡 [DeveloperModeCard] Reflexão pronta para etapa: ${update.stepIndex}`, update.reflection);
+        setLoadingReflections(prev => {
+          const next = new Set(prev);
+          next.delete(update.stepIndex);
+          return next;
+        });
+        
+        if (update.reflection) {
+          setReflections(prev => {
+            const next = new Map(prev);
+            next.set(update.stepIndex, {
+              id: update.reflection.id,
+              objectiveIndex: update.stepIndex,
+              objectiveTitle: update.reflection.objectiveTitle,
+              narrative: update.reflection.narrative,
+              tone: update.reflection.tone,
+              highlights: update.reflection.highlights || [],
+            });
+            return next;
+          });
+        }
       }
 
       if (update.type === 'execution:completed') {
@@ -103,6 +145,42 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
     });
   }, [data?.etapas]);
 
+  const renderObjectiveWithReflection = (objective: ObjectiveItem, index: number) => {
+    const reflection = reflections.get(index);
+    const isLoadingReflection = loadingReflections.has(index);
+    const showReflection = objective.status === 'completed' || isLoadingReflection;
+
+    return (
+      <React.Fragment key={`objective-group-${index}`}>
+        <AnimatePresence>
+          {showReflection && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              {isLoadingReflection && !reflection ? (
+                <LoadingReflection />
+              ) : reflection ? (
+                <NarrativeReflectionCard
+                  id={reflection.id}
+                  objectiveTitle={reflection.objectiveTitle}
+                  narrative={reflection.narrative}
+                  tone={reflection.tone}
+                  highlights={reflection.highlights}
+                  onComplete={() => {
+                    console.log(`📝 [DeveloperModeCard] Reflexão ${index} exibida completamente`);
+                  }}
+                />
+              ) : null}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </React.Fragment>
+    );
+  };
+
   if (!data) return null;
 
   return (
@@ -120,6 +198,12 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
             console.log('✅ [DeveloperModeCard] Todos os objetivos concluídos');
           }}
         />
+        
+        <div className="mt-2">
+          {objectivesForProgressiveCard.map((objective, index) => 
+            renderObjectiveWithReflection(objective, index)
+          )}
+        </div>
       </div>
     </motion.div>
   );

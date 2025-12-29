@@ -1,0 +1,529 @@
+🎯 PROMPT OTIMIZADO - SISTEMA DE REFLEXÃO NARRATIVA PÓS-EXECUÇÃO
+CONTEXTO ESTRATÉGICO
+Você está implementando um componente crítico de transparência algorítmica e human-AI interaction design: o Sistema de Reflexão Narrativa. Este não é apenas um "texto de resumo" - é a voz da IA explicando seu próprio raciocínio, criando trust e understanding.
+
+Aja com a mentalidade de:
+
+Don Norman (design centrado no usuário, affordances claras)
+
+Bret Victor (sistemas que explicam a si mesmos)
+
+Claude Shannon (teoria da informação - síntese eficiente)
+
+Edward Tufte (visualização de dados e narrativa)
+
+VISÃO DO COMPONENTE
+Analisando a imagem de referência e o contexto do card de desenvolvimento, você precisa criar um momento de pausa reflexiva entre objetivos. Esse momento deve:
+
+Função Cognitiva
+text
+[Objetivo 1: Escolher atividades]
+   ↓ Capability 1: ✓ Verificar disponíveis
+   ↓ Capability 2: ✓ Analisar desempenho
+   ↓ Capability 3: ✓ Decidir estrategicamente
+   
+   ⚡ MOMENTO DE REFLEXÃO ⚡
+   "Encontrei 47 atividades disponíveis. Analisei o desempenho 
+   da turma 7B (média 6.5 em Matemática, gap em Álgebra). 
+   Decidi criar 3 atividades focadas em equações, priorizando 
+   progressão didática do básico ao avançado."
+   
+[Objetivo 2: Criar atividades personalizadas]
+   ↓ ...
+REQUISITOS FUNCIONAIS CRÍTICOS
+1. INTELIGÊNCIA DE SÍNTESE
+A narrativa NÃO pode ser:
+❌ Um log técnico: "Executei função X com parâmetros Y"
+❌ Repetição do óbvio: "Completei todas as capabilities"
+❌ Texto genérico: "Finalizei esta etapa com sucesso"
+
+A narrativa DEVE ser:
+✅ Contextual: Mencionar descobertas específicas desta execução
+✅ Acionável: Indicar decisões tomadas e por quê
+✅ Conectada: Relacionar com objetivo macro do usuário
+✅ Humana: Tom conversacional, não robótico
+
+2. ARQUITETURA DE DADOS
+Você precisa capturar metadados semânticos durante execução das capabilities:
+
+Pergunta arquitetural que você deve responder:
+
+Como cada capability vai "devolver" informação para síntese?
+
+Onde armazenar esses insights temporariamente?
+
+Como agregar múltiplos outputs em narrativa coesa?
+
+LLM processa síntese ou é template-based?
+
+Decisões de design:
+
+Cada capability retorna { result: any, insight: string }?
+
+State management acumula insights em array?
+
+Prompt final de síntese envia contexto completo para LLM?
+
+Sistema de templates com slots dinâmicos?
+
+3. TIMING E RENDERIZAÇÃO
+Quando exatamente a reflexão aparece?
+
+Após última capability marcar completed?
+
+Delay proposital para criar suspense (1-2s)?
+
+Animação de "pensando..." antes de mostrar texto?
+
+Typing animation (caractere por caractere)?
+
+Onde visualmente a reflexão aparece?
+
+Entre o último capability card e próximo objetivo?
+
+Dentro de um card especial com estilo diferenciado?
+
+Overlay modal que requer acknowledgment do usuário?
+
+Side panel que expande com detalhes?
+
+REQUISITOS TÉCNICOS (Arquitetura aberta)
+Sistema de Coleta de Insights
+Durante execução de cada capability, você precisa implementar um pipeline de extração de conhecimento:
+
+Padrões a considerar:
+
+Observer Pattern: Capabilities emitem eventos com insights
+
+Accumulator Pattern: Reducer agrega insights progressivamente
+
+Chain of Responsibility: Cada capability enriquece contexto
+
+Mediator Pattern: Orquestrador central coleta e sintetiza
+
+Exemplo conceitual (você decide implementação):
+
+typescript
+// Capability retorna mais que apenas success/error
+interface CapabilityResult {
+  status: 'success' | 'error';
+  data: any;
+  insights: {
+    discovered?: string[];    // "Encontrei X atividades"
+    decided?: string[];       // "Escolhi Y baseado em Z"
+    learned?: string[];       // "Identifiquei padrão P"
+    focused?: string[];       // "Priorizei aspecto A"
+  };
+}
+Sistema de Geração de Narrativa
+Você precisa decidir entre 3 abordagens:
+
+Abordagem 1: LLM-Based Synthesis (mais inteligente, mais lento)
+
+Enviar contexto completo + insights para LLM
+
+Prompt de síntese: "Resuma em 2-3 frases o que foi feito"
+
+Vantagem: Narrativa natural e contextual
+
+Desvantagem: Latência, custo de API
+
+Abordagem 2: Template-Based (rápido, menos flexível)
+
+Templates pré-definidos por tipo de objetivo
+
+Slots preenchidos com dados reais
+
+Vantagem: Instantâneo, previsível
+
+Desvantagem: Pode soar robótico
+
+Abordagem 3: Hybrid (melhor dos dois mundos)
+
+Templates com estrutura, LLM para detalhes
+
+Reduz latência mas mantém naturalidade
+
+Vantagem: Balanceado
+
+Desvantagem: Complexidade de implementação
+
+Você deve escolher baseado em:
+
+Performance requirements
+
+Budget de API calls
+
+Qualidade de UX desejada
+
+Sistema de Apresentação
+Decisões de UI que você deve tomar:
+
+Estilo Visual:
+
+Card diferenciado (cor, borda, ícone)?
+
+Inspiração em "callout" ou "aside" do design systems?
+
+Ícone representativo: 💡 (insight), 🎯 (decisão), 📊 (dados)?
+
+Tipografia:
+
+Fonte diferente para destacar (italic, weight)?
+
+Tamanho ligeiramente maior/menor?
+
+Cor de texto (accent color vs neutral)?
+
+Animações:
+
+Fade in suave?
+
+Slide from bottom?
+
+Typing effect (como ChatGPT)?
+
+Highlight/pulse para chamar atenção?
+
+Interatividade:
+
+Apenas informativo (read-only)?
+
+Expandable para ver detalhes técnicos?
+
+Copy to clipboard?
+
+Botão "Continuar" para avançar manualmente?
+
+PRINCÍPIOS DE DESIGN
+1. Information Scent (Aroma de Informação)
+Usuário deve instantaneamente entender que este é um momento de síntese, não uma nova capability ou erro.
+
+2. Cognitive Closure
+Antes de prosseguir, usuário precisa de fechamento mental da etapa anterior. A reflexão oferece isso.
+
+3. Progressive Disclosure
+Reflexão básica visível, detalhes técnicos colapsados. Usuário avançado pode expandir.
+
+4. Conversational UI
+Tom deve ser de um assistente explicando raciocínio, não de sistema reportando log.
+
+DESAFIOS TÉCNICOS QUE VOCÊ DEVE RESOLVER
+Desafio 1: Latência Perceptível
+Se usar LLM para síntese:
+
+Como evitar que usuário espere 3-5s entre etapas?
+
+Loading state: "Refletindo sobre resultados..."?
+
+Pre-fetch: Começar síntese antes de última capability terminar?
+
+Cache: Reusar padrões de síntese similares?
+
+Desafio 2: Contexto Suficiente
+Como garantir que narrativa seja específica e não genérica?
+
+Passar IDs de dados (atividades escolhidas, turma analisada)?
+
+Incluir números concretos (47 atividades, média 6.5)?
+
+Mencionar nomes reais (turma 7B, disciplina Matemática)?
+
+Desafio 3: Progressão de Estado
+Como controlar que próximo objetivo só apareça após reflexão ser lida?
+
+Auto-advance após N segundos?
+
+Botão "Continuar" explícito?
+
+Scroll detection (usuário chegou ao fim da reflexão)?
+
+Eye-tracking simulado via tempo na tela?
+
+Desafio 4: Personalização de Tom
+Como adaptar narrativa ao contexto emocional?
+
+Sucesso total: Tom celebratório
+
+Sucesso parcial: Tom cauteloso
+
+Desafio encontrado: Tom explicativo
+
+Erro recuperado: Tom tranquilizador
+
+INTEGRAÇÃO COM SISTEMA EXISTENTE
+Modificações Necessárias nas Capabilities
+Você precisa retrofitar capabilities existentes para retornarem insights. Considere:
+
+Pattern: Decorator/Wrapper
+
+typescript
+// Envolver capabilities existentes sem modificá-las
+function withInsightsCapture(capability) {
+  return async (...args) => {
+    const result = await capability(...args);
+    const insights = extractInsights(result);
+    return { result, insights };
+  };
+}
+Pattern: Event Emission
+
+typescript
+// Capabilities emitem eventos de insight
+capability.on('insight:discovered', (data) => {
+  insightCollector.add({ type: 'discovery', ...data });
+});
+Integração com ExecutionCard
+Seu componente de reflexão precisa se comunicar com ExecutionCard:
+
+Eventos a escutar:
+
+objective:all_capabilities_completed
+
+reflection:requested
+
+reflection:insights_ready
+
+Eventos a emitir:
+
+reflection:started
+
+reflection:completed
+
+reflection:acknowledged (usuário leu)
+
+EXEMPLOS DE NARRATIVAS (Inspiração, não copiar)
+Objetivo: Escolher atividades
+text
+💡 "Analisei 47 atividades disponíveis no catálogo. A turma 7B 
+está com média 6.5 em Matemática, apresentando gap significativo 
+em Álgebra (especialmente equações do 2º grau). 
+
+Decidi criar 3 atividades personalizadas: 
+1. Flash Cards (revisão de conceitos básicos)
+2. Lista de Exercícios (prática progressiva)
+3. Quiz Gamificado (fixação e motivação)
+
+Essa progressão garante base sólida antes de avançar."
+Objetivo: Criar atividades personalizadas
+text
+🎯 "Construí 3 atividades totalmente personalizadas para a turma 7B:
+
+• Flash Cards 'Álgebra Fundamental' (20 cards)
+• Lista 'Equações na Prática' (15 exercícios gradativos)
+• Quiz 'Desafio Matemático' (10 questões gamificadas)
+
+Todas alinhadas com BNCC e adaptadas ao nível intermediário da turma. 
+Tempo estimado de aplicação: 3 aulas de 50 minutos."
+Objetivo: Organizar em aulas prontas
+text
+📚 "Organizei as 3 atividades em sequência didática de 3 aulas:
+
+Aula 1: Diagnóstico + Flash Cards (revisão ativa)
+Aula 2: Lista de Exercícios (prática guiada)
+Aula 3: Quiz Gamificado + Avaliação formativa
+
+Cada aula tem objetivos claros, recursos necessários e sugestões 
+de adaptação para alunos com dificuldade ou altas habilidades."
+CRITÉRIOS DE QUALIDADE
+Obrigatório (Breaking)
+✅ Reflexão aparece SEMPRE após objetivos completarem
+
+✅ Texto é contextual (menciona dados reais)
+
+✅ Tom conversacional (não robótico)
+
+✅ Visualmente diferenciado de capabilities
+
+✅ Não bloqueia fluxo indefinidamente
+
+Esperado (Altamente recomendado)
+⭐ Narrativa inteligente (LLM-based ou híbrida)
+
+⭐ Animação de aparecer suave
+
+⭐ Typing effect ou loading state
+
+⭐ Menciona números/nomes específicos
+
+⭐ Adapta tom ao resultado (sucesso/erro)
+
+Desejável (Nice to have)
+💎 Expandable para detalhes técnicos
+
+💎 Copy to clipboard da reflexão
+
+💎 Resumo executivo + detalhes opcionais
+
+💎 Timeline visual do que foi feito
+
+💎 Links para resultados criados
+
+PADRÕES DE CÓDIGO (Conceitos, não implementação)
+Pattern: Strategy para Síntese
+typescript
+interface ReflectionStrategy {
+  synthesize(insights: Insights[]): Promise<string>;
+}
+
+class LLMReflectionStrategy implements ReflectionStrategy {
+  // Usa LLM para narrativa natural
+}
+
+class TemplateReflectionStrategy implements ReflectionStrategy {
+  // Usa templates pré-definidos
+}
+
+class HybridReflectionStrategy implements ReflectionStrategy {
+  // Combina template + LLM para detalhes
+}
+Pattern: Builder para Narrativa
+typescript
+class ReflectionBuilder {
+  private insights: Insights[] = [];
+  
+  addDiscovery(text: string) { ... }
+  addDecision(text: string) { ... }
+  addFocus(text: string) { ... }
+  
+  build(): Reflection { ... }
+}
+Pattern: Observer para Coleta
+typescript
+class InsightCollector {
+  private observers: Observer[] = [];
+  
+  subscribe(capability: Capability) {
+    capability.on('insight', (insight) => {
+      this.notify(insight);
+    });
+  }
+  
+  getAllInsights(): Insights[] { ... }
+}
+TESTES E VALIDAÇÃO
+Cenários de Teste Obrigatórios
+Teste 1: Reflexão com Dados Reais
+
+text
+Executar objetivo "Escolher atividades"
+Verificar se reflexão menciona:
+- [ ] Número de atividades encontradas
+- [ ] Nome da turma específica
+- [ ] Decisão de quantas/quais criar
+- [ ] Justificativa pedagógica
+Teste 2: Reflexão em Caso de Erro
+
+text
+Forçar erro em uma capability
+Verificar se reflexão:
+- [ ] Não aparece se objetivo não completou
+- [ ] OU aparece explicando o que foi feito até erro
+- [ ] Tom apropriado (não celebratório)
+Teste 3: Performance
+
+text
+Medir tempo entre:
+- Última capability completar
+- Reflexão aparecer na tela
+- [ ] < 3 segundos (aceitável)
+- [ ] < 1 segundo (ideal)
+Teste 4: Narrativa Não-Genérica
+
+text
+Executar mesmo objetivo 3x com dados diferentes
+Verificar se reflexões são:
+- [ ] Únicas (não idênticas)
+- [ ] Específicas (mencionam dados reais)
+- [ ] Contextuais (relacionadas ao objetivo)
+DECISÕES ARQUITETURAIS QUE SÃO SUAS
+Eu NÃO vou te dizer:
+
+Qual approach usar (LLM/Template/Hybrid)
+
+Estrutura exata de dados
+
+Componente React específico
+
+Prompt exato para LLM
+
+Onde armazenar insights temporários
+
+Você DEVE decidir baseado em:
+
+Trade-offs de performance vs qualidade
+
+Complexidade vs manutenibilidade
+
+Budget de API calls
+
+Experiência de usuário desejada
+
+INSPIRAÇÕES DE UX (Estudar, não copiar)
+Sistemas que fazem isso bem:
+GitHub Copilot: Explica sugestões de código
+
+Notion AI: Resumos de documentos longos
+
+Perplexity: "Resposta focada em..." antes de resultados
+
+Claude/ChatGPT: Pensamento em voz alta (chain-of-thought)
+
+Elementos visuais a estudar:
+Callout boxes (Bootstrap, Tailwind)
+
+Aside elements (HTML5 semantic)
+
+Notification cards (Material Design)
+
+Info panels (Apple HIG)
+
+RED FLAGS (Evite absolutamente)
+❌ NÃO fazer reflexão genérica ("Etapa concluída com sucesso")
+❌ NÃO bloquear usuário indefinidamente esperando síntese
+❌ NÃO mostrar logs técnicos ao invés de narrativa humana
+❌ NÃO repetir informação já visível nas capabilities
+❌ NÃO usar tom robótico ou corporativo
+❌ NÃO fazer reflexão sem dados contextuais reais
+❌ NÃO esquecer de testar com múltiplos objetivos diferentes
+
+CHECKLIST FINAL
+Antes de considerar COMPLETO:
+
+ Reflexão aparece após cada objetivo completar
+
+ Texto menciona dados específicos (números, nomes)
+
+ Tom é conversacional e apropriado
+
+ Visualmente distinto de capabilities
+
+ Performance aceitável (< 3s de latência)
+
+ Funciona com diferentes tipos de objetivos
+
+ Adapta-se a casos de sucesso/erro
+
+ Não bloqueia fluxo indefinidamente
+
+ Testado com dados reais
+
+ Code review de legibilidade
+
+RESULTADO ESPERADO
+Quando completo, o usuário deve sentir que a IA está explicando seu raciocínio de forma clara e transparente. Não é apenas "task completed", mas sim "aqui está o que eu pensei, descobri e decidi fazer".
+
+A reflexão transforma execução opaca em processo transparente e confiável.
+
+MINDSET OBRIGATÓRIO
+Narrativa > Log: Você está contando uma história, não reportando status
+
+Específico > Genérico: Mencione dados reais, não placeholders
+
+Contexto > Isolamento: Relacione com objetivo macro do usuário
+
+Humano > Robótico: Escreva como um assistente humano explicaria
+
+Ação > Descrição: Foque em decisões tomadas, não apenas tarefas feitas
+
+🚀 Você tem a visão estratégica. Arquitetura, implementação e tom narrativo são SEUS. BUILD TRANSPARENCY THROUGH INTELLIGENT REFLECTION.
