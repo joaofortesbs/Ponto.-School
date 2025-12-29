@@ -1,88 +1,11 @@
 {
-  "version": "1.0.0",
-  "description": "Sequências comuns de capabilities para objetivos frequentes",
+  "version": "1.1.0",
+  "description": "Sequências comuns de capabilities - Versão Simplificada",
 
   "common_sequences": {
-    "criar_plano_aula_completo": {
-      "id": "seq_plano_completo",
-      "description": "Criar plano de aula do zero, personalizado para o professor",
-      "estimated_duration_ms": 25000,
-      "sequence": [
-        {
-          "step": 1,
-          "capability": "analisar_contexto_usuario",
-          "required": true,
-          "description": "Entender contexto do professor"
-        },
-        {
-          "step": 2,
-          "capability": "pesquisar_atividades_disponiveis",
-          "required": true,
-          "description": "Descobrir atividades disponíveis"
-        },
-        {
-          "step": 3,
-          "capability": "analisar_desempenho_turma",
-          "required": false,
-          "skip_if": "turmas.count == 0",
-          "description": "Analisar desempenho se turmas existem"
-        },
-        {
-          "step": 4,
-          "capability": "decidir_atividades_criar",
-          "required": true,
-          "inputs_from": [2, 3],
-          "description": "Decidir quais atividades incluir"
-        },
-        {
-          "step": 5,
-          "capability": "criar_atividade",
-          "required": true,
-          "inputs_from": [4],
-          "loop": true,
-          "loop_over": "atividades_escolhidas",
-          "description": "Criar cada atividade selecionada"
-        },
-        {
-          "step": 6,
-          "capability": "criar_plano_aula",
-          "required": true,
-          "inputs_from": [1, 5],
-          "description": "Organizar tudo em plano de aula"
-        }
-      ]
-    },
-
-    "criar_atividade_rapida": {
-      "id": "seq_atividade_rapida",
-      "description": "Criar uma única atividade sem análise profunda",
-      "estimated_duration_ms": 8000,
-      "sequence": [
-        {
-          "step": 1,
-          "capability": "analisar_contexto_usuario",
-          "required": true,
-          "description": "Contexto básico do professor"
-        },
-        {
-          "step": 2,
-          "capability": "pesquisar_tipos_atividades",
-          "required": true,
-          "description": "Tipos disponíveis"
-        },
-        {
-          "step": 3,
-          "capability": "criar_atividade",
-          "required": true,
-          "inputs_from": [1, 2],
-          "description": "Criar atividade diretamente"
-        }
-      ]
-    },
-
-    "analise_completa_turma": {
-      "id": "seq_analise_turma",
-      "description": "Análise completa de uma turma com relatório",
+    "criar_atividade_personalizada": {
+      "id": "seq_ativ_pers",
+      "description": "Fluxo padrão para criação de atividades",
       "estimated_duration_ms": 15000,
       "sequence": [
         {
@@ -92,67 +15,28 @@
         },
         {
           "step": 2,
-          "capability": "analisar_desempenho_turma",
-          "required": true,
-          "fail_if": "turmas.count == 0",
-          "fail_message": "Nenhuma turma encontrada para analisar"
-        },
-        {
-          "step": 3,
-          "capability": "analisar_gaps_aprendizado",
-          "required": true,
-          "inputs_from": [2]
-        },
-        {
-          "step": 4,
-          "capability": "gerar_relatorio_personalizado",
-          "required": true,
-          "inputs_from": [2, 3]
-        }
-      ]
-    },
-
-    "sugerir_atividades_gaps": {
-      "id": "seq_sugerir_gaps",
-      "description": "Sugerir atividades baseadas em lacunas identificadas",
-      "estimated_duration_ms": 18000,
-      "sequence": [
-        {
-          "step": 1,
-          "capability": "analisar_contexto_usuario",
-          "required": true
-        },
-        {
-          "step": 2,
-          "capability": "analisar_desempenho_turma",
-          "required": true
-        },
-        {
-          "step": 3,
-          "capability": "analisar_gaps_aprendizado",
-          "required": true,
-          "inputs_from": [2]
-        },
-        {
-          "step": 4,
           "capability": "pesquisar_atividades_disponiveis",
-          "required": true,
-          "filter_by": "gaps_identificados"
+          "required": true
         },
         {
-          "step": 5,
+          "step": 3,
           "capability": "decidir_atividades_criar",
           "required": true,
-          "inputs_from": [3, 4],
-          "prioritize": "gap_coverage"
+          "inputs_from": [2]
+        },
+        {
+          "step": 4,
+          "capability": "criar_atividade",
+          "required": true,
+          "inputs_from": [3]
         }
       ]
     },
 
-    "criar_avaliacao_personalizada": {
-      "id": "seq_avaliacao",
-      "description": "Criar avaliação diagnóstica personalizada",
-      "estimated_duration_ms": 12000,
+    "gerar_insights_professor": {
+      "id": "seq_insights",
+      "description": "Gerar relatório de insights para o professor",
+      "estimated_duration_ms": 5000,
       "sequence": [
         {
           "step": 1,
@@ -161,42 +45,24 @@
         },
         {
           "step": 2,
-          "capability": "analisar_gaps_aprendizado",
-          "required": false,
-          "skip_if": "turmas.count == 0"
-        },
-        {
-          "step": 3,
-          "capability": "criar_avaliacao_diagnostica",
+          "capability": "gerar_relatorio_personalizado",
           "required": true,
-          "inputs_from": [1, 2]
+          "inputs_from": [1]
         }
       ]
     }
   },
 
   "sequence_selection_rules": {
-    "description": "Como escolher qual sequência usar baseado no pedido do usuário",
+    "description": "Como escolher qual sequência usar",
     "patterns": [
       {
-        "keywords": ["plano de aula", "aula completa", "preparar aula"],
-        "sequence": "criar_plano_aula_completo"
+        "keywords": ["atividade", "criar", "questões", "exercício"],
+        "sequence": "criar_atividade_personalizada"
       },
       {
-        "keywords": ["atividade rápida", "uma atividade", "criar atividade"],
-        "sequence": "criar_atividade_rapida"
-      },
-      {
-        "keywords": ["analisar turma", "como está minha turma", "desempenho"],
-        "sequence": "analise_completa_turma"
-      },
-      {
-        "keywords": ["lacunas", "gaps", "dificuldades", "melhorar"],
-        "sequence": "sugerir_atividades_gaps"
-      },
-      {
-        "keywords": ["avaliação", "diagnóstico", "prova", "teste"],
-        "sequence": "criar_avaliacao_personalizada"
+        "keywords": ["relatório", "insights", "como estou", "resumo"],
+        "sequence": "gerar_insights_professor"
       }
     ]
   }

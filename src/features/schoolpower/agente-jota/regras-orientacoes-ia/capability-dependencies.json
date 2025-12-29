@@ -1,35 +1,24 @@
 {
-  "version": "1.0.0",
-  "description": "Grafo de dependências entre capabilities do Agente Jota",
+  "version": "1.1.0",
+  "description": "Grafo de dependências entre capabilities do Agente Jota - Versão Simplificada",
   
   "capability_dependencies": {
     "pesquisar_atividades_disponiveis": {
       "id": "cap_pesq_ativ",
       "category": "PESQUISAR",
       "depends_on": [],
-      "required_before": ["decidir_atividades_criar", "selecionar_atividades"],
-      "outputs": ["lista_atividades", "count_atividades", "tipos_disponiveis"],
+      "required_before": ["decidir_atividades_criar"],
+      "outputs": ["lista_atividades", "count_atividades"],
       "priority": "critical",
       "failure_handling": "abort_flow",
       "estimated_duration_ms": 2000
-    },
-    
-    "pesquisar_tipos_atividades": {
-      "id": "cap_pesq_tipos",
-      "category": "PESQUISAR",
-      "depends_on": [],
-      "required_before": ["decidir_atividades_criar"],
-      "outputs": ["tipos_atividades", "categorias"],
-      "priority": "high",
-      "failure_handling": "use_cached",
-      "estimated_duration_ms": 1500
     },
     
     "pesquisar_atividades_conta": {
       "id": "cap_pesq_conta",
       "category": "PESQUISAR",
       "depends_on": [],
-      "required_before": ["analisar_gaps_aprendizado"],
+      "required_before": ["decidir_atividades_criar"],
       "outputs": ["atividades_professor", "historico_uso"],
       "priority": "medium",
       "failure_handling": "continue_without",
@@ -40,7 +29,7 @@
       "id": "cap_analisar_ctx",
       "category": "ANALISAR",
       "depends_on": [],
-      "required_before": ["criar_plano_aula", "criar_atividade"],
+      "required_before": ["decidir_atividades_criar", "criar_atividade"],
       "required_data": ["user_id"],
       "outputs": ["contexto_completo", "turmas", "disciplinas"],
       "priority": "critical",
@@ -48,36 +37,13 @@
       "estimated_duration_ms": 1000
     },
     
-    "analisar_desempenho_turma": {
-      "id": "cap_analisar_turma",
-      "category": "ANALISAR",
-      "depends_on": ["analisar_contexto_usuario"],
-      "optional": true,
-      "required_data": ["turma_id"],
-      "outputs": ["metricas_turma", "gaps_identificados", "pontos_fortes"],
-      "priority": "medium",
-      "failure_handling": "continue_without",
-      "estimated_duration_ms": 3000
-    },
-    
-    "analisar_gaps_aprendizado": {
-      "id": "cap_analisar_gaps",
-      "category": "ANALISAR",
-      "depends_on": ["analisar_desempenho_turma"],
-      "optional": true,
-      "outputs": ["gaps_list", "prioridades", "recomendacoes"],
-      "priority": "medium",
-      "failure_handling": "continue_without",
-      "estimated_duration_ms": 2500
-    },
-    
     "decidir_atividades_criar": {
       "id": "cap_decidir",
       "category": "DECIDIR",
-      "depends_on": ["pesquisar_atividades_disponiveis"],
+      "depends_on": ["pesquisar_atividades_disponiveis", "analisar_contexto_usuario"],
       "required_before": ["criar_atividade"],
       "required_inputs": ["lista_atividades"],
-      "optional_inputs": ["gaps_identificados", "historico_uso"],
+      "optional_inputs": ["historico_uso"],
       "outputs": ["atividades_escolhidas", "justificativa", "quantidade"],
       "priority": "critical",
       "failure_handling": "use_defaults",
@@ -88,7 +54,7 @@
       "id": "cap_criar_ativ",
       "category": "CRIAR",
       "depends_on": ["decidir_atividades_criar"],
-      "required_inputs": ["atividades_escolhidas", "tipo_atividade"],
+      "required_inputs": ["atividades_escolhidas"],
       "outputs": ["atividades_criadas", "ids_atividades"],
       "priority": "critical",
       "failure_handling": "retry_with_adjustments",
@@ -96,36 +62,11 @@
       "estimated_duration_ms": 5000
     },
     
-    "criar_plano_aula": {
-      "id": "cap_criar_plano",
-      "category": "CRIAR",
-      "depends_on": ["analisar_contexto_usuario"],
-      "optional_depends": ["analisar_desempenho_turma", "decidir_atividades_criar"],
-      "required_inputs": ["contexto_completo"],
-      "outputs": ["plano_aula", "id_plano", "secoes"],
-      "priority": "critical",
-      "failure_handling": "retry_with_adjustments",
-      "max_retries": 2,
-      "estimated_duration_ms": 8000
-    },
-    
-    "criar_avaliacao_diagnostica": {
-      "id": "cap_criar_aval",
-      "category": "CRIAR",
-      "depends_on": ["analisar_contexto_usuario"],
-      "optional_depends": ["analisar_gaps_aprendizado"],
-      "outputs": ["avaliacao", "questoes", "criterios"],
-      "priority": "high",
-      "failure_handling": "retry_with_adjustments",
-      "max_retries": 2,
-      "estimated_duration_ms": 6000
-    },
-    
     "gerar_relatorio_personalizado": {
       "id": "cap_gerar_relat",
       "category": "ANALISAR",
-      "depends_on": ["analisar_desempenho_turma"],
-      "outputs": ["relatorio", "insights", "graficos_data"],
+      "depends_on": ["analisar_contexto_usuario"],
+      "outputs": ["relatorio", "insights"],
       "priority": "medium",
       "failure_handling": "generate_basic",
       "estimated_duration_ms": 4000
