@@ -97,6 +97,18 @@ The platform features a modern design with glass-morphism effects, blur backgrou
         - React.memo with custom comparison prevents re-renders
         - Typewriter continues uninterrupted when parent re-renders
         - Adaptive speed: 35ms (short) to 8ms (long) per character
+      - **Debug System (NEW - Dec 2025)**:
+        - AIDebugEntry types: info, action, decision, discovery, error, warning, reflection
+        - DebugStore (Zustand): Manages debug logs per capability
+        - DebugIcon: Clickable icon in each capability card with badge
+        - DebugModal: Timeline visualization with filters, export, technical data
+        - Narrativas em português explicando ações da IA em linguagem humana
+      - **Construction Interface (NEW - Dec 2025)**:
+        - ConstructionInterface.tsx: Visual card during criar_atividade
+        - Shows activities being built with real-time progress
+        - ActivityCard: Individual activity with status (waiting/building/completed/error)
+        - Auto-start option, progress bars, expandable built data
+        - Conditional rendering in ExecutionPlanCardEnhanced
 
 ### System Design Choices
 The architecture emphasizes a modular component design using shadcn/ui patterns. Data persistence is managed with Neon PostgreSQL for primary data, Supabase PostgreSQL for authentication, and Supabase Storage for file assets. Supabase Realtime enables live features. The system is configured for VM deployment, ensuring backend state maintenance and real-time database connections. A critical architectural decision involves the dynamic section system, where `sectionConfigs` are dynamically generated based on `sectionOrder` for each template, ensuring perfect synchronization between template selection and section display. Lesson creation sessions are isolated using a session ID system and state reset functions to prevent data bleed.

@@ -207,11 +207,20 @@ export function ConstructionInterface({
 
   const allCompleted = completedCount === activities.length && activities.length > 0;
 
+  const hasStartedRef = React.useRef(false);
+
   useEffect(() => {
-    if (autoStart && !isBuilding && activities.every(a => a.status === 'waiting')) {
+    if (
+      autoStart && 
+      !isBuilding && 
+      activities.length > 0 &&
+      activities.every(a => a.status === 'waiting') &&
+      !hasStartedRef.current
+    ) {
+      hasStartedRef.current = true;
       onBuildAll();
     }
-  }, [autoStart]);
+  }, [autoStart, isBuilding, activities, onBuildAll]);
 
   return (
     <motion.div
