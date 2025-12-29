@@ -128,29 +128,30 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
   const isAvaliacao = promptLower.includes('avaliação') || promptLower.includes('prova') || promptLower.includes('diagnóstico');
 
   const etapas: ExecutionStep[] = [];
+  const timestamp = Date.now();
 
   if (isPlanoAula) {
     etapas.push({
       ordem: 1,
       titulo: 'Escolher as melhores atividades para sua turma',
-      descricao: 'Vou analisar sua turma e escolher as atividades ideais',
+      descricao: 'Vou analisar sua turma e selecionar as atividades que mais combinam',
       funcao: 'pesquisar_tipos_atividades',
       parametros: {},
       status: 'pendente',
       capabilities: [
         {
-          id: `cap-0-0-${Date.now()}`,
+          id: `cap-0-0-${timestamp}`,
           nome: 'pesquisar_tipos_atividades',
-          displayName: 'Vou pesquisar os tipos de atividades disponíveis',
+          displayName: 'Vou verificar quais tipos de atividades funcionam melhor',
           categoria: 'PESQUISAR',
           parametros: {},
           status: 'pending',
           ordem: 1,
         },
         {
-          id: `cap-0-1-${Date.now()}`,
+          id: `cap-0-1-${timestamp}`,
           nome: 'pesquisar_atividades_conta',
-          displayName: 'Vou verificar quais atividades posso criar',
+          displayName: 'Vou ver quais atividades já estão disponíveis',
           categoria: 'PESQUISAR',
           parametros: {},
           status: 'pending',
@@ -160,16 +161,35 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
     });
     etapas.push({
       ordem: 2,
-      titulo: 'Criar o plano de aula',
-      descricao: 'Vou criar um plano de aula personalizado',
-      funcao: 'criar_plano_aula',
-      parametros: { tema: userPrompt, contexto: userPrompt },
+      titulo: 'Criar as atividades personalizadas',
+      descricao: 'Vou criar atividades sob medida para sua turma',
+      funcao: 'criar_atividade',
+      parametros: { contexto: userPrompt },
       status: 'pendente',
       capabilities: [
         {
-          id: `cap-1-0-${Date.now()}`,
+          id: `cap-1-0-${timestamp}`,
+          nome: 'criar_atividade',
+          displayName: 'Vou criar atividades engajantes para seus alunos',
+          categoria: 'CRIAR',
+          parametros: { contexto: userPrompt },
+          status: 'pending',
+          ordem: 1,
+        },
+      ],
+    });
+    etapas.push({
+      ordem: 3,
+      titulo: 'Transformar tudo em uma aula pronta',
+      descricao: 'Vou organizar as atividades em um plano de aula completo',
+      funcao: 'criar_plano_aula',
+      parametros: { tema: userPrompt },
+      status: 'pendente',
+      capabilities: [
+        {
+          id: `cap-2-0-${timestamp}`,
           nome: 'criar_plano_aula',
-          displayName: 'Vou criar o plano de aula completo',
+          displayName: 'Vou montar a aula completa para você usar',
           categoria: 'CRIAR',
           parametros: { tema: userPrompt },
           status: 'pending',
@@ -180,16 +200,16 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
   } else if (isAvaliacao) {
     etapas.push({
       ordem: 1,
-      titulo: 'Analisar requisitos da avaliação',
-      descricao: 'Vou entender o que precisa ser avaliado',
+      titulo: 'Entender o que sua turma precisa',
+      descricao: 'Vou analisar as necessidades de avaliação da sua turma',
       funcao: 'analisar_gaps_aprendizado',
       parametros: {},
       status: 'pendente',
       capabilities: [
         {
-          id: `cap-0-0-${Date.now()}`,
+          id: `cap-0-0-${timestamp}`,
           nome: 'analisar_gaps_aprendizado',
-          displayName: 'Vou analisar as necessidades de avaliação',
+          displayName: 'Vou identificar os pontos que precisam ser avaliados',
           categoria: 'ANALISAR',
           parametros: {},
           status: 'pending',
@@ -199,16 +219,16 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
     });
     etapas.push({
       ordem: 2,
-      titulo: 'Criar avaliação diagnóstica',
-      descricao: 'Vou criar a avaliação personalizada',
+      titulo: 'Criar a avaliação ideal para sua turma',
+      descricao: 'Vou criar uma avaliação personalizada e eficaz',
       funcao: 'criar_avaliacao_diagnostica',
-      parametros: { tema: userPrompt, contexto: userPrompt },
+      parametros: { tema: userPrompt },
       status: 'pendente',
       capabilities: [
         {
-          id: `cap-1-0-${Date.now()}`,
+          id: `cap-1-0-${timestamp}`,
           nome: 'criar_avaliacao_diagnostica',
-          displayName: 'Vou criar a avaliação diagnóstica',
+          displayName: 'Vou criar uma avaliação que realmente funciona',
           categoria: 'CRIAR',
           parametros: { tema: userPrompt },
           status: 'pending',
@@ -219,25 +239,25 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
   } else {
     etapas.push({
       ordem: 1,
-      titulo: 'Escolher as melhores atividades para sua turma',
-      descricao: 'Vou analisar e escolher as atividades ideais',
+      titulo: 'Escolher as melhores opções para você',
+      descricao: 'Vou analisar e selecionar as melhores opções disponíveis',
       funcao: 'pesquisar_tipos_atividades',
       parametros: {},
       status: 'pendente',
       capabilities: [
         {
-          id: `cap-0-0-${Date.now()}`,
+          id: `cap-0-0-${timestamp}`,
           nome: 'pesquisar_tipos_atividades',
-          displayName: 'Vou pesquisar os tipos de atividades',
+          displayName: 'Vou verificar quais opções funcionam melhor',
           categoria: 'PESQUISAR',
           parametros: {},
           status: 'pending',
           ordem: 1,
         },
         {
-          id: `cap-0-1-${Date.now()}`,
+          id: `cap-0-1-${timestamp}`,
           nome: 'pesquisar_atividades_conta',
-          displayName: 'Vou pesquisar quais atividades posso criar',
+          displayName: 'Vou ver o que já está disponível',
           categoria: 'PESQUISAR',
           parametros: {},
           status: 'pending',
@@ -247,17 +267,36 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
     });
     etapas.push({
       ordem: 2,
-      titulo: 'Criar todas as atividades',
-      descricao: 'Vou criar cada atividade personalizada',
+      titulo: 'Criar o conteúdo personalizado',
+      descricao: 'Vou criar conteúdo sob medida para você',
       funcao: 'criar_atividade',
-      parametros: { tipo: 'personalizada', contexto: userPrompt },
+      parametros: { contexto: userPrompt },
       status: 'pendente',
       capabilities: [
         {
-          id: `cap-1-0-${Date.now()}`,
+          id: `cap-1-0-${timestamp}`,
           nome: 'criar_atividade',
-          displayName: 'Vou criar a atividade educacional',
+          displayName: 'Vou criar conteúdo engajante',
           categoria: 'CRIAR',
+          parametros: { contexto: userPrompt },
+          status: 'pending',
+          ordem: 1,
+        },
+      ],
+    });
+    etapas.push({
+      ordem: 3,
+      titulo: 'Entregar tudo pronto para você usar',
+      descricao: 'Vou organizar e entregar o material finalizado',
+      funcao: 'gerar_relatorio_personalizado',
+      parametros: { contexto: userPrompt },
+      status: 'pendente',
+      capabilities: [
+        {
+          id: `cap-2-0-${timestamp}`,
+          nome: 'gerar_relatorio_personalizado',
+          displayName: 'Vou preparar tudo para você usar',
+          categoria: 'ANALISAR',
           parametros: { contexto: userPrompt },
           status: 'pending',
           ordem: 1,
@@ -267,11 +306,11 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
   }
 
   return {
-    planId: `plan-fallback-${Date.now()}`,
-    objetivo: `Criar material educacional conforme solicitado`,
+    planId: `plan-fallback-${timestamp}`,
+    objetivo: `Criar material educacional personalizado para você`,
     etapas,
     status: 'aguardando_aprovacao',
-    createdAt: Date.now(),
+    createdAt: timestamp,
   };
 }
 

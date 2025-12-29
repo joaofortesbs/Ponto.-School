@@ -18,23 +18,23 @@ FUNÇÕES DISPONÍVEIS (CAPABILITIES):
 {capabilities}
 
 INSTRUÇÕES:
-Crie um plano de ação INTELIGENTE e ESTRATÉGICO com etapas claras.
-Para CADA ETAPA, você deve selecionar as CAPABILITIES mais apropriadas que serão executadas.
+Crie um plano de ação SIMPLES e ORIENTADO A VALOR com no máximo 3 etapas genéricas.
+As etapas devem ser AMPLAS e focadas no RESULTADO para o professor, não em detalhes técnicos.
 
 RESPONDA APENAS COM UM JSON VÁLIDO no seguinte formato:
 {
-  "objetivo": "Resumo claro e específico do que será criado/feito",
+  "objetivo": "Resumo claro do que será entregue ao professor",
   "etapas": [
     {
-      "titulo": "Nome curto e claro da etapa (ex: Escolher as melhores atividades)",
-      "descricao": "Descrição detalhada do que esta etapa faz",
+      "titulo": "Título genérico orientado a valor (começa com verbo)",
+      "descricao": "Descrição simples do benefício desta etapa",
       "capabilities": [
         {
           "nome": "nome_da_funcao",
-          "displayName": "Vou pesquisar o desempenho da turma",
-          "categoria": "PESQUISAR",
-          "parametros": { "param1": "valor1" },
-          "justificativa": "Por que esta capability é necessária"
+          "displayName": "Frase curta começando com 'Vou...'",
+          "categoria": "CATEGORIA",
+          "parametros": {},
+          "justificativa": "Breve justificativa"
         }
       ]
     }
@@ -42,56 +42,75 @@ RESPONDA APENAS COM UM JSON VÁLIDO no seguinte formato:
 }
 
 REGRAS CRÍTICAS:
-1. Cada ETAPA representa um objetivo maior (ex: "Escolher atividades", "Criar conteúdo")
-2. Cada etapa deve ter 1 a 4 CAPABILITIES que são as ações específicas para atingir o objetivo
-3. As capabilities devem ser executadas em ordem dentro da etapa
-4. Use displayName em português conversacional (ex: "Vou pesquisar...", "Vou criar...")
-5. Categorias válidas: PESQUISAR, CRIAR, ANALISAR, ADICIONAR, EDITAR
-6. NÃO crie etapas de "análise" ou "entendimento" - vá direto para ações práticas
+1. MÁXIMO 3 ETAPAS - etapas devem ser amplas e genéricas, não específicas
+2. TÍTULOS DAS ETAPAS devem ser orientados a valor, ex:
+   - "Escolher as melhores atividades para sua turma"
+   - "Criar atividades personalizadas"
+   - "Organizar tudo em uma aula pronta"
+3. NÃO use títulos técnicos como "Pesquisar banco de dados" ou "Executar query"
+4. DISPLAY NAMES das capabilities devem começar com "Vou..." em tom amigável
+5. Foque no RESULTADO FUTURO - o que o professor vai ganhar com cada etapa
+6. Categorias válidas: PESQUISAR, CRIAR, ANALISAR, ADICIONAR, EDITAR
 7. Use APENAS funções da lista de capabilities disponíveis
-8. Se o professor quer atividades, pesquise desempenho e atividades disponíveis primeiro
+8. NÃO crie etapas de "análise prévia" ou "entendimento" - vá direto às ações que entregam valor
 
-EXEMPLO DE PLANO BOM:
+EXEMPLOS DE TÍTULOS BOM vs RUIM:
+- BOM: "Escolher as melhores atividades para sua turma" 
+- RUIM: "Pesquisar atividades no banco de dados"
+
+- BOM: "Criar atividades personalizadas"
+- RUIM: "Executar criação de atividades via API"
+
+- BOM: "Transformar tudo em aulas prontas"
+- RUIM: "Gerar plano de aula com template padrão"
+
+EXEMPLO DE PLANO IDEAL PARA "Preciso criar a próxima aula para a turma 7A":
 {
-  "objetivo": "Criar 3 atividades de matemática para turma 7A",
+  "objetivo": "Criar uma aula completa e personalizada para a turma 7A",
   "etapas": [
     {
-      "titulo": "Escolher as melhores atividades para sua turma",
-      "descricao": "Vou analisar sua turma e escolher as atividades ideais",
+      "titulo": "Escolher as melhores atividades para a turma 7A",
+      "descricao": "Vou analisar sua turma e selecionar as atividades que mais combinam",
       "capabilities": [
         {
           "nome": "pesquisar_tipos_atividades",
-          "displayName": "Vou pesquisar o desempenho da turma X",
+          "displayName": "Vou verificar quais tipos de atividades funcionam melhor",
           "categoria": "PESQUISAR",
           "parametros": {},
-          "justificativa": "Entender as necessidades da turma"
+          "justificativa": "Encontrar atividades ideais para a turma"
         },
         {
           "nome": "pesquisar_atividades_conta",
-          "displayName": "Vou pesquisar quais atividades eu posso criar",
+          "displayName": "Vou ver quais atividades já estão disponíveis",
           "categoria": "PESQUISAR",
           "parametros": {},
-          "justificativa": "Ver atividades disponíveis"
+          "justificativa": "Aproveitar atividades existentes"
         }
       ]
     },
     {
-      "titulo": "Criar todas as atividades",
-      "descricao": "Vou criar cada atividade personalizada",
+      "titulo": "Criar as atividades personalizadas",
+      "descricao": "Vou criar atividades sob medida para sua turma",
       "capabilities": [
         {
           "nome": "criar_atividade",
-          "displayName": "Vou criar a primeira atividade",
+          "displayName": "Vou criar atividades engajantes para seus alunos",
           "categoria": "CRIAR",
-          "parametros": {"tipo": "exercício", "tema": "matemática"},
-          "justificativa": "Criar atividade 1"
-        },
+          "parametros": {"contexto": "turma 7A"},
+          "justificativa": "Criar conteúdo personalizado"
+        }
+      ]
+    },
+    {
+      "titulo": "Transformar tudo em uma aula pronta",
+      "descricao": "Vou organizar as atividades em um plano de aula completo",
+      "capabilities": [
         {
-          "nome": "criar_atividade",
-          "displayName": "Vou criar a segunda atividade",
+          "nome": "criar_plano_aula",
+          "displayName": "Vou montar a aula completa para você usar",
           "categoria": "CRIAR",
-          "parametros": {"tipo": "exercício", "tema": "matemática"},
-          "justificativa": "Criar atividade 2"
+          "parametros": {"tema": "aula personalizada"},
+          "justificativa": "Entregar aula pronta para uso"
         }
       ]
     }
