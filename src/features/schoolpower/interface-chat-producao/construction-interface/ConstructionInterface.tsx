@@ -1,0 +1,318 @@
+/**
+ * CONSTRUCTION INTERFACE - Interface de Construção de Atividades
+ * 
+ * Card visual que aparece quando a capability "criar_atividade" executa
+ * Mostra as atividades sendo construídas com progresso em tempo real
+ */
+
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Package, 
+  Loader2, 
+  Check, 
+  AlertCircle, 
+  Play,
+  ChevronDown,
+  ChevronRight,
+  Sparkles,
+  FileText,
+  Clock,
+  Zap
+} from 'lucide-react';
+
+export type ActivityBuildStatus = 'waiting' | 'building' | 'completed' | 'error';
+
+export interface ActivityToBuild {
+  id: string;
+  activity_id: string;
+  name: string;
+  type: string;
+  status: ActivityBuildStatus;
+  progress?: number;
+  fields_completed?: number;
+  fields_total?: number;
+  error_message?: string;
+  built_data?: Record<string, any>;
+}
+
+interface ConstructionInterfaceProps {
+  activities: ActivityToBuild[];
+  isBuilding: boolean;
+  onBuildAll: () => void;
+  onBuildSingle?: (activityId: string) => void;
+  autoStart?: boolean;
+}
+
+const STATUS_CONFIG = {
+  waiting: {
+    icon: Clock,
+    color: 'text-gray-400',
+    bg: 'bg-gray-500/10',
+    border: 'border-gray-500/20',
+    label: 'Aguardando'
+  },
+  building: {
+    icon: Loader2,
+    color: 'text-yellow-400',
+    bg: 'bg-yellow-500/10',
+    border: 'border-yellow-500/20',
+    label: 'Construindo'
+  },
+  completed: {
+    icon: Check,
+    color: 'text-green-400',
+    bg: 'bg-green-500/10',
+    border: 'border-green-500/20',
+    label: 'Concluído'
+  },
+  error: {
+    icon: AlertCircle,
+    color: 'text-red-400',
+    bg: 'bg-red-500/10',
+    border: 'border-red-500/20',
+    label: 'Erro'
+  }
+};
+
+function ActivityCard({ activity, onBuild }: { 
+  activity: ActivityToBuild; 
+  onBuild?: () => void;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const config = STATUS_CONFIG[activity.status];
+  const StatusIcon = config.icon;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`rounded-xl border overflow-hidden ${config.bg} ${config.border}`}
+    >
+      <div 
+        className="p-3 cursor-pointer"
+        onClick={() => activity.built_data && setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${config.bg} border ${config.border}`}>
+              <StatusIcon className={`w-5 h-5 ${config.color} ${activity.status === 'building' ? 'animate-spin' : ''}`} />
+            </div>
+            <div>
+              <h4 className="text-white font-medium text-sm">{activity.name}</h4>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className={`text-xs ${config.color}`}>
+                  {config.label}
+                </span>
+                {activity.fields_completed !== undefined && activity.fields_total && (
+                  <span className="text-white/40 text-xs">
+                    • {activity.fields_completed}/{activity.fields_total} campos
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {activity.status === 'waiting' && onBuild && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBuild();
+                }}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                title="Construir esta atividade"
+              >
+                <Play className="w-4 h-4 text-white/60" />
+              </button>
+            )}
+            {activity.built_data && (
+              isExpanded 
+                ? <ChevronDown className="w-4 h-4 text-white/40" />
+                : <ChevronRight className="w-4 h-4 text-white/40" />
+            )}
+          </div>
+        </div>
+
+        {activity.status === 'building' && activity.progress !== undefined && (
+          <div className="mt-3">
+            <div className="h-1.5 bg-black/30 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${activity.progress}%` }}
+                className="h-full bg-gradient-to-r from-yellow-500 to-orange-500"
+              />
+            </div>
+            <p className="text-yellow-400/70 text-xs mt-1">
+              Preenchendo campos com IA... {activity.progress}%
+            </p>
+          </div>
+        )}
+
+        {activity.error_message && (
+          <div className="mt-2 p-2 bg-red-500/10 rounded-lg border border-red-500/20">
+            <p className="text-red-400 text-xs">{activity.error_message}</p>
+          </div>
+        )}
+      </div>
+
+      <AnimatePresence>
+        {isExpanded && activity.built_data && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="border-t border-white/10"
+          >
+            <div className="p-3 bg-black/20">
+              <p className="text-white/50 text-xs uppercase tracking-wider mb-2">
+                Dados Gerados
+              </p>
+              <div className="space-y-1">
+                {Object.entries(activity.built_data).slice(0, 5).map(([key, value]) => (
+                  <div key={key} className="flex gap-2 text-xs">
+                    <span className="text-white/40 font-mono">{key}:</span>
+                    <span className="text-white/70 truncate">
+                      {typeof value === 'string' ? value : JSON.stringify(value)}
+                    </span>
+                  </div>
+                ))}
+                {Object.keys(activity.built_data).length > 5 && (
+                  <p className="text-white/30 text-xs">
+                    +{Object.keys(activity.built_data).length - 5} mais campos
+                  </p>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+export function ConstructionInterface({
+  activities,
+  isBuilding,
+  onBuildAll,
+  onBuildSingle,
+  autoStart = false
+}: ConstructionInterfaceProps) {
+  const completedCount = activities.filter(a => a.status === 'completed').length;
+  const errorCount = activities.filter(a => a.status === 'error').length;
+  const buildingCount = activities.filter(a => a.status === 'building').length;
+  const progress = activities.length > 0 
+    ? Math.round((completedCount / activities.length) * 100) 
+    : 0;
+
+  const allCompleted = completedCount === activities.length && activities.length > 0;
+
+  useEffect(() => {
+    if (autoStart && !isBuilding && activities.every(a => a.status === 'waiting')) {
+      onBuildAll();
+    }
+  }, [autoStart]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.3 }}
+      className="bg-gradient-to-br from-orange-900/30 to-amber-900/30 backdrop-blur-xl rounded-2xl border border-orange-500/20 overflow-hidden"
+    >
+      <div className="p-4 border-b border-white/10 bg-black/20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+              <Package className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-white font-semibold flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-orange-400" />
+                Interface de Construção
+              </h3>
+              <p className="text-white/50 text-sm">
+                {activities.length} atividade{activities.length !== 1 ? 's' : ''} para construir
+              </p>
+            </div>
+          </div>
+
+          <div className="text-right">
+            <p className={`text-lg font-bold ${
+              allCompleted ? 'text-green-400' : 'text-orange-400'
+            }`}>
+              {progress}%
+            </p>
+            <p className="text-white/40 text-xs">
+              {completedCount}/{activities.length} concluídas
+            </p>
+          </div>
+        </div>
+
+        {(isBuilding || buildingCount > 0) && (
+          <div className="mt-4">
+            <div className="h-2 bg-black/30 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                className="h-full bg-gradient-to-r from-orange-500 to-amber-500"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto">
+        {activities.map((activity, idx) => (
+          <motion.div
+            key={activity.id}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.05 }}
+          >
+            <ActivityCard 
+              activity={activity}
+              onBuild={onBuildSingle ? () => onBuildSingle(activity.activity_id) : undefined}
+            />
+          </motion.div>
+        ))}
+      </div>
+
+      {!allCompleted && !isBuilding && activities.some(a => a.status === 'waiting') && (
+        <div className="p-4 border-t border-white/10 bg-black/20">
+          <button
+            onClick={onBuildAll}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-medium hover:opacity-90 transition-all"
+          >
+            <Zap className="w-5 h-5" />
+            Construir Todas as Atividades
+          </button>
+        </div>
+      )}
+
+      {allCompleted && (
+        <div className="p-4 border-t border-green-500/20 bg-green-500/10">
+          <div className="flex items-center justify-center gap-2 text-green-400">
+            <Check className="w-5 h-5" />
+            <span className="font-medium">Todas as atividades foram construídas!</span>
+          </div>
+        </div>
+      )}
+
+      {errorCount > 0 && (
+        <div className="px-4 pb-4">
+          <div className="p-3 bg-red-500/10 rounded-xl border border-red-500/20">
+            <div className="flex items-center gap-2 text-red-400">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-sm font-medium">
+                {errorCount} atividade{errorCount > 1 ? 's' : ''} com erro
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+export default ConstructionInterface;

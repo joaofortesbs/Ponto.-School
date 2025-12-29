@@ -1,0 +1,840 @@
+# 🎯 PROMPT CRÍTICO - CARD DE CONSTRUÇÃO + SISTEMA DE DEBUG INTELIGENTE
+
+***
+
+## **CONTEXTO ESTRATÉGICO**
+
+Você está implementando duas funcionalidades críticas que transformam **opacidade em transparência** e **execução em visualização**:
+
+1. **Renderização Condicional da Interface de Construção** - Fazer aparecer o componente certo, no lugar certo, na hora certa
+2. **Sistema de Debug Narrativo da IA** - IA explicando suas próprias ações em linguagem humana
+
+Aja com a mentalidade de:
+- **Alan Kay** (sistemas que se explicam, reflexão computacional)
+- **Bret Victor** (visualização de processos invisíveis)
+- **Chris Lattner** (debugging tools, observability)
+- **Addy Osmani** (performance debugging, component lifecycle)
+
+***
+
+## **PROBLEMA 1: CARD DE CONSTRUÇÃO NÃO APARECE**
+
+### **Análise do Problema**
+
+**Situação Esperada:**
+```
+┌────────────────────────────────────────┐
+│ ○ Criar atividades personalizadas     │
+├────────────────────────────────────────┤
+│  ✓ Decidir quais criar                 │
+│  ⏳ Criar atividades                    │  ← Card de capacidade
+├────────────────────────────────────────┤
+│  ┌──────────────────────────────────┐  │
+│  │ 📦 INTERFACE DE CONSTRUÇÃO       │  │  ← DEVE APARECER AQUI
+│  │                                  │  │
+│  │ [Atividade 1] Aguardando...      │  │
+│  │ [Atividade 2] Aguardando...      │  │
+│  │ [Atividade 3] Aguardando...      │  │
+│  │                                  │  │
+│  │ [Construir Todas]                │  │
+│  └──────────────────────────────────┘  │
+└────────────────────────────────────────┘
+```
+
+**Situação Atual (Problema):**
+```
+┌────────────────────────────────────────┐
+│ ○ Criar atividades personalizadas     │
+├────────────────────────────────────────┤
+│  ✓ Decidir quais criar                 │
+│  ⏳ Criar atividades                    │
+├────────────────────────────────────────┤
+│  (NADA APARECE)                        │  ← VAZIO
+└────────────────────────────────────────┘
+```
+
+### **Perguntas de Diagnóstico que VOCÊ deve responder:**
+
+#### **1. Conditional Rendering**
+- [ ] Componente de construção existe no código?
+- [ ] Está sendo importado corretamente?
+- [ ] Condição de renderização está correta?
+- [ ] Estado que controla renderização está mudando?
+
+#### **2. Component Hierarchy**
+- [ ] Onde o componente deve ser renderizado? (DOM tree position)
+- [ ] Está dentro do card de desenvolvimento?
+- [ ] Está associado à capability correta?
+- [ ] CSS/Layout está escondendo o componente?
+
+#### **3. Data Flow**
+- [ ] Dados da capability "decidir" chegam na capability "criar"?
+- [ ] Lista de atividades escolhidas está disponível?
+- [ ] Props estão sendo passadas corretamente?
+- [ ] State update está triggerando re-render?
+
+#### **4. Timing**
+- [ ] Componente deve aparecer imediatamente?
+- [ ] Há delay intencional?
+- [ ] Animação de entrada está funcionando?
+- [ ] useEffect com dependencies está rodando?
+
+***
+
+## **ESTRATÉGIAS DE SOLUÇÃO (Você escolhe)**
+
+### **Estratégia A: Renderização Baseada em Capability Status**
+
+**Conceito:** Quando capability "criar_atividade" inicia, renderizar interface.
+
+**Padrão sugerido:**
+```typescript
+// Dentro do componente que renderiza capabilities
+{capabilities.map(capability => (
+  <div key={capability.id}>
+    <CapabilityCard {...capability} />
+    
+    {/* Renderização condicional */}
+    {capability.id === 'criar_atividade' && 
+     capability.status === 'executing' && (
+      <ConstructionInterface
+        activities={previousCapabilityResult}
+        onComplete={handleConstructionComplete}
+      />
+    )}
+  </div>
+))}
+```
+
+**Decisões que você toma:**
+- Status que trigga renderização: `executing`, `started`, `ready`?
+- Como obter `previousCapabilityResult`?
+- Onde buscar dados (Context, Props, Store)?
+
+### **Estratégia B: Component Registry Pattern**
+
+**Conceito:** Cada capability registra componente UI adicional.
+
+**Padrão sugerido:**
+```typescript
+const capabilityUIComponents = {
+  'criar_atividade': ConstructionInterface,
+  'analisar_dados': ChartVisualization,
+  // ... outros
+};
+
+// Durante renderização
+const AdditionalUI = capabilityUIComponents[capability.id];
+
+{AdditionalUI && (
+  <AdditionalUI data={capability.data} />
+)}
+```
+
+**Vantagens:**
+- Escalável (fácil adicionar novas UIs)
+- Desacoplado
+- Type-safe com TypeScript
+
+### **Estratégia C: Slot-Based Architecture**
+
+**Conceito:** Capability define "slots" onde componentes podem ser injetados.
+
+**Padrão sugerido:**
+```typescript
+interface CapabilitySlots {
+  beforeCard?: React.ReactNode;
+  afterCard?: React.ReactNode;
+  insideCard?: React.ReactNode;
+}
+
+// Capability "criar_atividade" define seu slot
+const criarAtividadeSlots: CapabilitySlots = {
+  afterCard: (
+    <ConstructionInterface 
+      activities={getDecidedActivities()}
+    />
+  )
+};
+```
+
+### **Estratégia D: Portal to Specific Location**
+
+**Conceito:** Renderizar via Portal em local específico do DOM.
+
+**Padrão sugerido:**
+```typescript
+// Dentro de CapabilityCard de "criar_atividade"
+const portalTarget = document.getElementById(
+  `capability-${capabilityId}-content`
+);
+
+{portalTarget && ReactDOM.createPortal(
+  <ConstructionInterface {...props} />,
+  portalTarget
+)}
+```
+
+***
+
+## **DEBUGGING WORKFLOW PARA VOCÊ**
+
+### **Passo 1: Verificar Componente Existe**
+
+```bash
+# Procurar componente nos arquivos
+grep -r "ConstructionInterface" src/
+grep -r "ActivityBuilder" src/
+grep -r "BuilderCard" src/
+
+# Ou nome similar usado no School Power 1.0
+```
+
+**Perguntas:**
+- Componente foi encontrado?
+- Qual o nome exato?
+- Qual o path do arquivo?
+
+### **Passo 2: Inspecionar Condição de Renderização**
+
+```typescript
+// Adicionar logs temporários
+console.log('🔍 Capability criar_atividade', {
+  id: capability.id,
+  status: capability.status,
+  shouldRenderUI: capability.id === 'criar_atividade',
+  hasData: !!decidedActivities,
+  decidedActivities
+});
+
+// Antes do JSX condicional
+```
+
+**O que procurar:**
+- `shouldRenderUI` é `true`?
+- `hasData` é `true`?
+- `status` está correto?
+
+### **Passo 3: Verificar DOM Rendering**
+
+```typescript
+// Usar useEffect para confirmar montagem
+useEffect(() => {
+  console.log('✅ ConstructionInterface MONTOU');
+  return () => {
+    console.log('❌ ConstructionInterface DESMONTOU');
+  };
+}, []);
+```
+
+**Análise:**
+- Se "MONTOU" não aparece → Componente não está renderizando
+- Se "MONTOU" e "DESMONTOU" imediatos → Componente está sendo destruído
+- Se "MONTOU" mas nada visível → Problema de CSS/Layout
+
+### **Passo 4: Inspecionar CSS/Layout**
+
+```typescript
+// Forçar visibilidade temporariamente
+<ConstructionInterface
+  style={{
+    border: '5px solid red',
+    minHeight: '200px',
+    backgroundColor: 'yellow',
+    position: 'relative',
+    zIndex: 9999
+  }}
+/>
+```
+
+**Se aparecer amarelo/vermelho:**
+- Componente está renderizando
+- Problema era CSS original (display: none, opacity: 0, height: 0)
+
+**Se NÃO aparecer:**
+- Componente realmente não está no DOM
+- Problema é lógica de renderização
+
+***
+
+## **PROBLEMA 2: SISTEMA DE DEBUG INTELIGENTE**
+
+### **Visão da Feature**
+
+**O que é:** Cada capability gera uma "narrativa de debug" em tempo real, explicando o que está fazendo, descobrindo, decidindo. Usuário clica em ícone de debug no card da capability e vê modal com essa narrativa.
+
+**Por que é revolucionário:**
+- Debug não é técnico (sem stack traces), é **narrativo**
+- IA explica seus próprios passos em linguagem humana
+- Desenvolvedor E usuário final podem debugar
+- Sistema de "caixa branca" - zero opacidade
+
+### **Arquitetura do Sistema**
+
+#### **CAMADA 1: IA Generate Debug Narrative**
+
+Durante execução de cada capability, IA deve gerar log narrativo.
+
+**Formato sugerido:**
+```typescript
+interface AIDebugEntry {
+  timestamp: string;
+  capability_id: string;
+  entry_type: 'info' | 'action' | 'decision' | 'discovery' | 'error' | 'warning';
+  narrative: string; // Texto escrito pela IA
+  technical_data?: any; // Dados técnicos opcionais
+  severity: 'low' | 'medium' | 'high' | 'critical';
+}
+
+// Exemplo de entries
+const debugLog: AIDebugEntry[] = [
+  {
+    timestamp: '2025-01-15T10:30:00Z',
+    capability_id: 'pesquisar_atividades_conta',
+    entry_type: 'action',
+    narrative: 'Conectei ao banco de dados Neon para buscar atividades do professor.',
+    technical_data: { database: 'neon_production', user_id: '123' },
+    severity: 'low'
+  },
+  {
+    timestamp: '2025-01-15T10:30:01Z',
+    capability_id: 'pesquisar_atividades_conta',
+    entry_type: 'discovery',
+    narrative: 'Encontrei 0 atividades na conta. Este professor ainda não criou nenhuma atividade.',
+    technical_data: { query_result: [], count: 0 },
+    severity: 'medium'
+  },
+  {
+    timestamp: '2025-01-15T10:30:05Z',
+    capability_id: 'decidir_atividades_criar',
+    entry_type: 'decision',
+    narrative: 'Decidi criar 3 atividades: Flash Cards, Lista de Exercícios e Quiz. Escolhi essas porque cobrem progressão de aprendizado (revisão → prática → avaliação).',
+    technical_data: { chosen_ids: ['fc-001', 'le-002', 'qz-003'] },
+    severity: 'low'
+  },
+  {
+    timestamp: '2025-01-15T10:30:10Z',
+    capability_id: 'criar_atividade',
+    entry_type: 'error',
+    narrative: 'Tentei criar a atividade "Flash Cards" mas o campo "quantidade_cards" não foi preenchido. Tentando novamente com valor padrão de 20 cards.',
+    technical_data: { error: 'ValidationError', field: 'quantidade_cards' },
+    severity: 'high'
+  }
+];
+```
+
+**Como IA gera esses logs?**
+
+**Opção A: Structured Logging Prompts**
+Durante execução, LLM recebe instrução:
+```
+Você está executando a capability "pesquisar_atividades_conta".
+Conforme você executa cada ação, gere entries de debug em formato JSON.
+
+Para cada ação significativa, crie um entry com:
+- narrative: Explicação em português claro do que você fez/descobriu
+- entry_type: Tipo da ação
+- severity: Importância
+
+Exemplo: Ao fazer query no banco, gere:
+{
+  "narrative": "Busquei no banco de dados atividades do professor ID 123",
+  "entry_type": "action",
+  "severity": "low"
+}
+
+Ao encontrar resultado, gere:
+{
+  "narrative": "Encontrei 5 atividades cadastradas. A mais recente é 'Plano de Aula sobre Frações' criada há 3 dias",
+  "entry_type": "discovery",
+  "severity": "low"
+}
+```
+
+**Opção B: Post-Execution Summary**
+Após capability completar, perguntar para LLM:
+```
+A capability "decidir_atividades_criar" foi executada.
+Dados: {contexto completo}
+Resultado: {resultado}
+
+Gere uma narrativa de debug explicando:
+1. O que você recebeu como input
+2. Como você processou
+3. Decisões que tomou e por quê
+4. Desafios encontrados
+5. Resultado final
+
+Formato: Array de debug entries
+```
+
+**Opção C: Real-Time Instrumentation**
+Capability emite eventos, sistema traduz em narrativa via LLM:
+```typescript
+// Capability emite evento técnico
+eventBus.emit('capability:query_executed', {
+  query: 'SELECT * FROM atividades WHERE...',
+  result_count: 5,
+  duration_ms: 120
+});
+
+// Sistema pega evento e pede LLM traduzir
+const narrative = await llm.translate({
+  event: eventData,
+  context: 'capability pesquisar_atividades_conta',
+  instruction: 'Explique esta ação em português simples para um professor'
+});
+
+// Resultado: "Busquei suas atividades no banco de dados e encontrei 5 atividades em 0.12 segundos"
+```
+
+**VOCÊ DECIDE** qual approach baseado em:
+- Latência aceitável
+- Custo de API calls
+- Qualidade da narrativa
+- Complexidade de implementação
+
+#### **CAMADA 2: Storage do Debug Log**
+
+Debug logs precisam ser armazenados. Onde?
+
+**Opções de storage:**
+
+**A. In-Memory (Session Only)**
+```typescript
+// Armazenar em Context ou Store
+const [debugLogs, setDebugLogs] = useState<Map<string, AIDebugEntry[]>>(
+  new Map()
+);
+
+// Key = capability_id, Value = array de entries
+```
+- Pro: Rápido, simples
+- Con: Perde ao recarregar página
+
+**B. LocalStorage (Persistent Client)**
+```typescript
+localStorage.setItem(
+  `debug_log_${executionId}`,
+  JSON.stringify(debugLogs)
+);
+```
+- Pro: Persiste entre sessões
+- Con: Limite de tamanho (~5-10MB)
+
+**C. Database (Full Persistence)**
+```typescript
+// Salvar logs no Neon
+await db.ai_debug_logs.createMany({
+  data: debugLogs.map(entry => ({
+    execution_id: executionId,
+    capability_id: entry.capability_id,
+    narrative: entry.narrative,
+    // ...
+  }))
+});
+```
+- Pro: Histórico completo, analytics
+- Con: Overhead, custo storage
+
+**D. Hybrid**
+- In-memory durante execução
+- Salvar em localStorage ao completar
+- Opcionalmente enviar para DB para analytics
+
+**VOCÊ DECIDE** baseado em requisitos de persistência.
+
+#### **CAMADA 3: Debug Icon UI**
+
+Adicionar ícone de debug nos cards de capability.
+
+**Posicionamento:**
+```
+┌─────────────────────────────────────────────┐
+│  ✓ Decidir quais atividades criar       [🐛]│  ← Ícone no canto direito
+└─────────────────────────────────────────────┘
+```
+
+**Implementação sugerida:**
+```typescript
+<CapabilityCard>
+  <CapabilityContent>
+    <StatusIcon status={capability.status} />
+    <CapabilityText>{capability.description}</CapabilityText>
+  </CapabilityContent>
+  
+  {/* Debug Icon (sempre visível ou só após completar?) */}
+  <DebugIconButton
+    onClick={() => openDebugModal(capability.id)}
+    aria-label="Ver debug desta capability"
+    className="absolute right-4 top-1/2 -translate-y-1/2"
+  >
+    <BugIcon className="w-5 h-5 text-gray-400 hover:text-orange-500" />
+  </DebugIconButton>
+</CapabilityCard>
+```
+
+**Decisões de UX:**
+- Ícone sempre visível ou só quando capability completou?
+- Badge com contagem de entries? (ex: "5 eventos")
+- Cor diferente se houver warnings/errors?
+- Tooltip ao hover?
+
+**Ícones sugeridos:**
+- 🐛 Bug emoji (universal)
+- 🔍 Lupa (investigação)
+- 📋 Clipboard (logs)
+- ⚙️ Gear (settings/debug)
+- 🧠 Cérebro (IA thinking)
+
+#### **CAMADA 4: Debug Modal**
+
+Ao clicar no ícone, abrir modal com narrativa completa.
+
+**Estrutura do Modal:**
+```typescript
+interface DebugModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  capabilityId: string;
+  capabilityTitle: string;
+  debugLog: AIDebugEntry[];
+}
+
+// UI Structure
+<Modal isOpen={isOpen} onClose={onClose} size="large">
+  <ModalHeader>
+    <div className="flex items-center gap-3">
+      <BugIcon className="w-6 h-6 text-orange-500" />
+      <div>
+        <h2>Debug: {capabilityTitle}</h2>
+        <p className="text-sm text-gray-500">
+          {debugLog.length} eventos registrados
+        </p>
+      </div>
+    </div>
+  </ModalHeader>
+  
+  <ModalBody>
+    {/* Timeline de eventos */}
+    <DebugTimeline entries={debugLog} />
+    
+    {/* Ou lista de cards */}
+    <DebugEntriesList entries={debugLog} />
+    
+    {/* Ou console-like */}
+    <DebugConsole entries={debugLog} />
+  </ModalBody>
+  
+  <ModalFooter>
+    <Button onClick={copyDebugToClipboard}>
+      Copiar Debug
+    </Button>
+    <Button onClick={exportDebugAsJSON}>
+      Exportar JSON
+    </Button>
+    <Button onClick={onClose} variant="secondary">
+      Fechar
+    </Button>
+  </ModalFooter>
+</Modal>
+```
+
+**Visualizações possíveis:**
+
+**A. Timeline Vertical**
+```
+┌─────────────────────────────────────┐
+│ 10:30:00 🔵 ACTION                  │
+│ Conectei ao banco de dados Neon...  │
+│ ─────────────────────────────────── │
+│                                     │
+│ 10:30:01 🟢 DISCOVERY               │
+│ Encontrei 0 atividades...           │
+│ ─────────────────────────────────── │
+│                                     │
+│ 10:30:05 🟡 DECISION                │
+│ Decidi criar 3 atividades...        │
+│ [Ver dados técnicos ▼]              │
+│ ─────────────────────────────────── │
+│                                     │
+│ 10:30:10 🔴 ERROR                   │
+│ Tentei criar mas faltou campo...    │
+│ ⚠️ Severity: HIGH                   │
+└─────────────────────────────────────┘
+```
+
+**B. Console-Style**
+```
+[10:30:00] [ACTION] Conectei ao banco de dados Neon...
+[10:30:01] [DISCOVERY] Encontrei 0 atividades...
+[10:30:05] [DECISION] Decidi criar 3 atividades...
+[10:30:10] [ERROR] ⚠️  Tentei criar mas faltou campo...
+```
+
+**C. Card-Based**
+```
+┌────────────────────────────────────┐
+│ 🔵 AÇÃO - 10:30:00                 │
+│ Conectei ao banco de dados Neon... │
+│                                    │
+│ Dados técnicos:                    │
+│ • Database: neon_production        │
+│ • User ID: 123                     │
+└────────────────────────────────────┘
+
+┌────────────────────────────────────┐
+│ 🟢 DESCOBERTA - 10:30:01           │
+│ Encontrei 0 atividades...          │
+└────────────────────────────────────┘
+```
+
+**VOCÊ DECIDE** qual visualização baseado em UX e complexidade.
+
+**Features avançadas do modal:**
+- [ ] Filtrar por tipo de entry (só errors, só decisions)
+- [ ] Buscar em narrativas (search box)
+- [ ] Expandir/colapsar dados técnicos
+- [ ] Copiar entry individual
+- [ ] Compartilhar debug com suporte
+- [ ] Highlight de warnings/errors
+- [ ] Export para arquivo .txt ou .json
+
+#### **CAMADA 5: Integração com "Contexto de Trabalho"**
+
+**CRÍTICO:** Debugs devem aparecer no modal "Contexto de Trabalho" que IA revisa.
+
+**Modal de Contexto de Trabalho estrutura:**
+```typescript
+<ContextoTrabalhoModal>
+  <Section title="Objetivo do Usuário">
+    {userPrompt}
+  </Section>
+  
+  <Section title="Informações Coletadas (Quiz)">
+    {quizData}
+  </Section>
+  
+  <Section title="Plano de Ação Gerado">
+    {actionPlan}
+  </Section>
+  
+  {/* NOVA SEÇÃO */}
+  <Section title="Debug de Execução" collapsible>
+    {objectives.map(obj => (
+      <ObjectiveDebugSection key={obj.id}>
+        <h4>{obj.title}</h4>
+        
+        {obj.capabilities.map(cap => (
+          <CapabilityDebugSection key={cap.id}>
+            <h5>{cap.title}</h5>
+            <DebugEntriesList entries={getDebugLog(cap.id)} />
+          </CapabilityDebugSection>
+        ))}
+      </ObjectiveDebugSection>
+    ))}
+  </Section>
+</ContextoTrabalhoModal>
+```
+
+**IA acessa este contexto para:**
+- Revisar o que já fez
+- Detectar inconsistências
+- Aprender com erros anteriores
+- Decidir próximas ações baseado em histórico
+
+**Formato para IA (no prompt):**
+```markdown
+# CONTEXTO DE TRABALHO COMPLETO
+
+## Debug de Execuções Anteriores
+
+### Objetivo 1: Escolher atividades
+#### Capability: pesquisar_atividades_conta
+- [10:30:00] Conectei ao banco e encontrei 0 atividades
+- [10:30:01] Professor novo, sem histórico
+
+#### Capability: decidir_atividades_criar
+- [10:30:05] Decidi criar 3 atividades: A, B, C
+- [10:30:06] Justificativa: Progressão pedagógica
+
+### Objetivo 2: Criar atividades
+#### Capability: criar_atividade
+- [10:30:10] Tentei criar atividade A
+- [10:30:11] ⚠️ ERRO: Campo obrigatório faltando
+- [10:30:12] Retrying com valor padrão
+- [10:30:13] ✓ Sucesso na segunda tentativa
+
+## Análise
+Com base neste histórico, você pode ver que:
+- Professor é novo (0 atividades anteriores)
+- Houve erro de validação em criação
+- Sistema se recuperou automaticamente
+
+Use essas informações para próximas decisões.
+```
+
+***
+
+## **IMPLEMENTAÇÃO: DECISÕES QUE VOCÊ TOMA**
+
+### **Para Card de Construção:**
+- [ ] Onde exatamente renderizar (slot, position)
+- [ ] Qual componente usar (localizar no código)
+- [ ] Condição de renderização (status, timing)
+- [ ] Como passar dados (props, context, store)
+- [ ] Animação de entrada (fade, slide, none)
+
+### **Para Sistema de Debug:**
+- [ ] Como IA gera narrativas (real-time, post-exec, hybrid)
+- [ ] Onde armazenar logs (memory, localStorage, DB)
+- [ ] Formato de visualização (timeline, console, cards)
+- [ ] Ícone usado (bug, lupa, clipboard)
+- [ ] Integração com Contexto de Trabalho
+- [ ] Features do modal (search, filter, export)
+
+***
+
+## **CHECKLIST DE IMPLEMENTAÇÃO**
+
+### **Parte 1: Card de Construção**
+- [ ] Componente de construção localizado no código
+- [ ] Importado no componente correto
+- [ ] Condição de renderização implementada
+- [ ] Data flow de "decidir" → "criar" funcionando
+- [ ] Renderiza abaixo de "Criar atividade" capability
+- [ ] Animação de entrada suave
+- [ ] Testado: aparece no timing correto
+- [ ] Testado: dados sincronizados
+
+### **Parte 2: Debug Icon**
+- [ ] Ícone escolhido e implementado
+- [ ] Posicionado no canto direito do card
+- [ ] Hover effect implementado
+- [ ] Click handler funcionando
+- [ ] Aparece em todos os cards de capability
+- [ ] Badge de contagem (opcional)
+- [ ] Cor muda se houver errors (opcional)
+
+### **Parte 3: Debug Log Generation**
+- [ ] Sistema de logging implementado
+- [ ] IA gera narrativas durante execução
+- [ ] Formato AIDebugEntry padronizado
+- [ ] Timestamp correto em cada entry
+- [ ] Tipos de entry (action, decision, error) funcionando
+- [ ] Severity levels implementados
+- [ ] Dados técnicos opcionais incluídos
+
+### **Parte 4: Debug Modal**
+- [ ] Modal implementado
+- [ ] Abre ao clicar no ícone
+- [ ] Mostra debug log da capability correta
+- [ ] Visualização escolhida implementada
+- [ ] Timeline/Console/Cards renderizando
+- [ ] Expandir/colapsar dados técnicos
+- [ ] Copiar debug funcionando
+- [ ] Exportar JSON funcionando
+- [ ] Filtros (opcional) funcionando
+
+### **Parte 5: Integração Contexto Trabalho**
+- [ ] Seção de debug adicionada ao modal
+- [ ] Debugs organizados por objetivo/capability
+- [ ] IA recebe debugs no prompt
+- [ ] Formato markdown correto
+- [ ] Análise automática de erros
+- [ ] Histórico completo disponível
+
+***
+
+## **TESTES OBRIGATÓRIOS**
+
+### **Teste Card de Construção:**
+```
+1. Executar capability "decidir_atividades_criar"
+2. Verificar: 3 atividades foram escolhidas
+3. Capability "criar_atividade" inicia
+4. Verificar: Interface de Construção aparece abaixo
+5. Verificar: 3 atividades listadas na interface
+6. Verificar: Dados coincidem com decisão
+✓ Card aparece no lugar certo com dados certos
+```
+
+### **Teste Debug System:**
+```
+1. Executar capability qualquer
+2. Verificar: Ícone de debug aparece no card
+3. Clicar no ícone
+4. Verificar: Modal abre
+5. Verificar: Narrativas estão em português
+6. Verificar: Timeline está ordenada
+7. Procurar por erro intencional
+8. Verificar: Erro destacado em vermelho
+9. Expandir dados técnicos
+10. Copiar debug para clipboard
+✓ Sistema completo funcionando
+```
+
+### **Teste Integração:**
+```
+1. Executar plano completo
+2. Abrir modal "Contexto de Trabalho"
+3. Verificar: Seção "Debug de Execução" existe
+4. Verificar: Todos objetivos listados
+5. Verificar: Todas capabilities com debug
+6. Verificar: Narrativas legíveis
+7. IA executa próxima ação
+8. Verificar: IA menciona debug anterior no reasoning
+✓ IA usa debug como contexto
+```
+
+***
+
+## **RESULTADO ESPERADO**
+
+### **Card de Construção:**
+- Aparece exatamente abaixo da capability "Criar atividade"
+- Mostra atividades decididas na etapa anterior
+- Permite construção automatizada
+- Feedback visual em tempo real
+
+### **Sistema de Debug:**
+- Ícone visível em cada capability
+- Modal com narrativa completa e legível
+- IA explica suas ações em português claro
+- Desenvolvedores E usuários podem debugar
+- Integrado ao contexto que IA revisa
+- Transparência total do processo
+
+***
+
+## **MINDSET OBRIGATÓRIO**
+
+1. **Renderização é Timing:** Componente certo, hora certa, dados certos
+2. **Debug é Narrativa:** Não stack trace, mas história
+3. **IA se Explica:** Sistema não é caixa preta
+4. **Transparência Radical:** Todo processo deve ser observável
+5. **Users são Debuggers:** UI acessível para não-técnicos
+
+***
+
+🚀 **CARD DEVE APARECER. DEBUG DEVE EXPLICAR. SISTEMA DEVE SER TRANSPARENTE. GO BUILD OBSERVABLE SYSTEMS.**
+
+[1](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/58005089/2a71e69a-b973-4b88-be67-7b5021532809/image.jpg?AWSAccessKeyId=ASIA2F3EMEYEQGHVKUEU&Signature=sLPHctfVHapcBWoy%2B0mKyOt23og%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEMz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJGMEQCIAfo2tItkVUICW3i6K1Sd04wyipvgylq9xQiP6hINn27AiBA%2BwYjHBREEx9U1rVeQMTtusu9frFsXAMZmGRtXIxLlir8BAiV%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAEaDDY5OTc1MzMwOTcwNSIMe55adLpyh%2BjU2e%2BKKtAEAg5tH2jg20KvsA8598kagT%2BfGAVX8RQZ7KBIw4oEYFc%2FYnRH0VoJEtE8ZsUBT6k98%2BVJOtNyzjh6evgBjW8xAqBbu3xcCsxzn2KKFbZChH3PHbsSpsjIIcrW%2FY3s21CnVrfPmt3lHv%2BnsM5WLzd0AvT6xP8SLtzvsoVbuAohUdF0UVXTvGlHcfIonYBdSzB55LJubzOgNrqhppm40jUYcY0bABNBATJCv1aWouhImCParIY8xVtolctRUJi01PHHcNlFkKVPJKUgddCTHXgl6E1FZ35WWNrV9OOEowFWmPo392qAgL0PjpMlZFAEW0jSMBxJSBIVb1vLNGxEVsGGYdH3Ob99pjAFAL73ev%2BO%2F2KT1W%2FH9pnp0052WbbcMfgPlqhxUoslAJjsco%2BGU0DryvgrCdMpKe5T0qGhsf5NaKgN%2FWIjzluhP825nbrDC1%2F17V4TpISLzd2b2tyMidYFXAivyynA03nvLPCNjOpdEAZ3h3Yat14nNrwJp%2F0HnDcFzwfBn7Wz7cnNYAb0ObnIZLZLqBhrg9fLjHWdHg7BbXSZUHcdfS1b9x8oUVJhZlPEqK2K37ymnBnU8mM8FETXGA3UMTS8ZgucUSZ5%2BOBvPocoiTBuQkRTXMSCGntqpPG1DjG8asWE5eARZBchSB41czOUAQoxbk228jryX9KRNlYMbFESB5kkjO2gLPdWkpQftEI9DXArDeL8N6ZkOxuWnAmq9zTAWWsSCmYB%2BuT8L32F3YdyzttymmDkqQHS1L5zKQWiurkaJTUd9DPWZFtbPjDU6sfKBjqZASqE9BkKEEAemFqvL5cMX68GHUG00oE4QL0GHMZQacuuPnEpDkEp11RIoAWT1LrMNx29X1X1M%2BwNyzfyDgW0ASFfxn3uptkXwQ9miX66qXBBv%2BF0PoaznkvpaGpuGEUJeI4p8gF7FZNkp9Wje7d0M1mGoavuE%2Br6Fni%2BersF9dIrAmUlDtbTGk%2FFBibJQntIQa3%2Bt4a7KKuDUg%3D%3D&Expires=1766980947)
+[2](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/collection_bc970d7f-5223-4aab-88ab-e5247ccf47f8/1d420c64-1d21-4741-b155-5092a062a148/Crie-todo-o-fluxo-de-atividade-das-personas-da-pla.pdf)
+[3](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/collection_bc970d7f-5223-4aab-88ab-e5247ccf47f8/2a2ebcbc-240b-4fa2-bdb2-42f38738a187/Ponto.-School-Apresentacao-Geral-e-Detalhamento.pdf)
+[4](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/collection_bc970d7f-5223-4aab-88ab-e5247ccf47f8/92bd49ec-7a4c-4516-ba01-e3e67da55d42/O-Futuro-do-Mundo-Digital_-A-Grande-Discussao-que-1.pdf)
+[5](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/collection_bc970d7f-5223-4aab-88ab-e5247ccf47f8/a7b87073-d49f-4eb0-83b3-4267fcf7a241/arquivo_supremo_conteudo.md-2.pdf)
+[6](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/collection_bc970d7f-5223-4aab-88ab-e5247ccf47f8/f4d6d15b-cc61-4648-94e9-7429f9f40937/Analise-Estrategica-Completa-Ponto.-School.pdf)
+[7](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/58005089/0b82f2c5-4a41-4843-91de-6c6acca2991f/image.jpg)
+[8](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/58005089/3c690584-d96e-49fb-afc4-0caed34298d1/image.jpg)
+[9](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/58005089/c4c98706-9477-4a7f-998d-9a5cae914204/image.jpg)
+[10](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/58005089/d8d2011b-918b-45b2-87ac-416e1abf49bd/image.jpg)
+[11](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/58005089/9bc62847-5a25-4256-8989-6f81decc045e/As-duvidas-que-eu-tenho-sao___-E-possivel-criar-t.pdf)
+[12](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/58005089/c37c4c84-2eb7-4a2c-9659-673ebcbb3aa9/image.jpg)
+[13](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/58005089/ba95a0c3-8f73-4397-ae02-bc51bbb8a768/image.jpg)
+[14](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/58005089/d202c09b-3045-411d-a6c8-b155d8b0e9f2/image.jpg)
+[15](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/58005089/5ad31166-ff08-4c66-b62a-6aff1b1327aa/image.jpg)
+[16](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/58005089/72a38304-5ad1-4fb5-b6fd-18dacb263c08/image.jpg)
+[17](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/58005089/c8bcea1a-fdac-41c3-a50a-de18718cf61f/image.jpg)
+[18](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/58005089/fa607280-aa40-496b-b626-4c5dfd5182f7/image.jpg)
+[19](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/58005089/234626b5-3b22-4515-9d6f-579ec5036fe6/image.jpg)

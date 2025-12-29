@@ -1,4 +1,4 @@
-import create from 'zustand';
+import { create } from 'zustand';
 import type { Message, DevModeCardData, PlanCardData, CapabilityState } from '../types/message-types';
 
 function generateId(): string {
