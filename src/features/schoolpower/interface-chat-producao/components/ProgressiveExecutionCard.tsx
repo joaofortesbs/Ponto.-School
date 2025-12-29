@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Loader2, ChevronRight, AlertCircle } from 'lucide-react';
 import { NarrativeReflectionCard, LoadingReflection } from './NarrativeReflectionCard';
+import { DebugIcon } from '../debug-system/DebugIcon';
+import { useDebugStore } from '../debug-system/DebugStore';
+import { ConstructionInterface } from '../construction-interface';
+import type { ActivityToBuild } from '../construction-interface';
 
 export type CapabilityStatus = 'hidden' | 'pending' | 'executing' | 'completed' | 'error';
 export type ObjectiveStatus = 'pending' | 'active' | 'completed';
@@ -37,6 +41,9 @@ interface ProgressiveExecutionCardProps {
   loadingReflections?: Set<number>;
   onObjectiveComplete?: (index: number) => void;
   onAllComplete?: () => void;
+  activitiesToBuild?: ActivityToBuild[];
+  onBuildActivities?: () => void;
+  isBuildingActivities?: boolean;
 }
 
 const ObjectiveCard: React.FC<{
@@ -45,7 +52,10 @@ const ObjectiveCard: React.FC<{
   isVisible: boolean;
   reflection?: ObjectiveReflection;
   isLoadingReflection?: boolean;
-}> = ({ objective, index, isVisible, reflection, isLoadingReflection }) => {
+  activitiesToBuild?: ActivityToBuild[];
+  onBuildActivities?: () => void;
+  isBuildingActivities?: boolean;
+}> = ({ objective, index, isVisible, reflection, isLoadingReflection, activitiesToBuild = [], onBuildActivities, isBuildingActivities = false }) => {
   const isCompleted = objective.status === 'completed';
   const isActive = objective.status === 'active';
   const showReflectionSlot = isCompleted || isLoadingReflection;
@@ -127,6 +137,9 @@ const ObjectiveCard: React.FC<{
               key={capability.id} 
               capability={capability}
               index={capIndex}
+              activitiesToBuild={activitiesToBuild}
+              onBuildActivities={onBuildActivities}
+              isBuildingActivities={isBuildingActivities}
             />
           ))}
       </AnimatePresence>
@@ -164,11 +177,25 @@ const ObjectiveCard: React.FC<{
 const CapabilityCard: React.FC<{
   capability: CapabilityItem;
   index: number;
-}> = ({ capability, index }) => {
+  activitiesToBuild?: ActivityToBuild[];
+  onBuildActivities?: () => void;
+  isBuildingActivities?: boolean;
+}> = ({ capability, index, activitiesToBuild = [], onBuildActivities, isBuildingActivities = false }) => {
+  const debugStore = useDebugStore();
   const isPending = capability.status === 'pending';
   const isExecuting = capability.status === 'executing';
   const isCompleted = capability.status === 'completed';
   const isError = capability.status === 'error';
+
+  const isCriarAtividade = capability.nome.toLowerCase().includes('criar_atividade') || 
+                           capability.nome.toLowerCase().includes('criar_atividades') ||
+                           capability.id.toLowerCase().includes('criar_atividade');
+
+  const shouldShowConstructionInterface = isCriarAtividade && 
+    (isExecuting || isCompleted) && 
+    activitiesToBuild.length > 0;
+
+  const debugEntries = debugStore.getEntriesForCapability(capability.id);
 
   return (
     <motion.div
@@ -184,7 +211,7 @@ const CapabilityCard: React.FC<{
     >
       <div
         className={`
-          flex items-center gap-3 px-4 py-3 rounded-full
+          relative flex items-center gap-3 px-4 py-3 rounded-2xl
           border-2 transition-all duration-300 mb-2
           ${isCompleted 
             ? 'border-emerald-400 bg-emerald-500/15 border-solid' 
@@ -275,7 +302,33 @@ const CapabilityCard: React.FC<{
             ))}
           </motion.div>
         )}
+
+        <DebugIcon
+          capabilityId={capability.id}
+          capabilityName={capability.displayName || capability.nome}
+          entries={debugEntries}
+          className="ml-2"
+        />
       </div>
+
+      <AnimatePresence>
+        {shouldShowConstructionInterface && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mt-2 mb-3"
+          >
+            <ConstructionInterface
+              activities={activitiesToBuild}
+              isBuilding={isBuildingActivities}
+              onBuildAll={onBuildActivities || (() => {})}
+              autoStart={true}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
@@ -286,6 +339,9 @@ export function ProgressiveExecutionCard({
   loadingReflections,
   onObjectiveComplete,
   onAllComplete,
+  activitiesToBuild = [],
+  onBuildActivities,
+  isBuildingActivities = false,
 }: ProgressiveExecutionCardProps) {
   const [visibleObjectives, setVisibleObjectives] = useState<Set<number>>(new Set([0]));
   const [prevObjectives, setPrevObjectives] = useState<ObjectiveItem[]>(objectives);
@@ -349,6 +405,9 @@ export function ProgressiveExecutionCard({
             isVisible={visibleObjectives.has(idx)}
             reflection={reflections?.get(idx)}
             isLoadingReflection={loadingReflections?.has(idx)}
+            activitiesToBuild={activitiesToBuild}
+            onBuildActivities={onBuildActivities}
+            isBuildingActivities={isBuildingActivities}
           />
         ))}
       </AnimatePresence>
