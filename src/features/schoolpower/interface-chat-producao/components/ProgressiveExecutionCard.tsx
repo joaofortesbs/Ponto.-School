@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Loader2, ChevronRight, AlertCircle } from 'lucide-react';
 
@@ -15,7 +15,7 @@ export interface CapabilityItem {
 export interface ObjectiveItem {
   ordem: number;
   titulo: string;
-  descricao?: string;
+  descricao: string;
   status: ObjectiveStatus;
   capabilities: CapabilityItem[];
 }
@@ -31,52 +31,49 @@ const ObjectiveCard: React.FC<{
   index: number;
   isVisible: boolean;
 }> = ({ objective, index, isVisible }) => {
-  if (!isVisible) return null;
-
   const isCompleted = objective.status === 'completed';
   const isActive = objective.status === 'active';
+
+  if (!isVisible) return null;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-      transition={{ 
-        duration: 0.4, 
-        ease: [0.25, 0.46, 0.45, 0.94],
-        delay: 0.1 
-      }}
-      className="flex flex-col gap-3"
+      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+      transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="w-full"
     >
       <div
         className={`
-          relative flex items-center gap-4 px-5 py-4 rounded-full
-          transition-all duration-500 ease-out
+          relative flex items-center gap-4 px-6 py-4 rounded-full
+          border-2 transition-all duration-500 mb-3
           ${isCompleted 
-            ? 'bg-emerald-500 shadow-lg shadow-emerald-500/30' 
-            : 'bg-[#FF6B35] shadow-lg shadow-[#FF6B35]/30'}
+            ? 'bg-emerald-500/20 border-emerald-400 shadow-lg shadow-emerald-500/20' 
+            : isActive 
+            ? 'bg-[#FF6B35]/20 border-[#FF6B35] shadow-lg shadow-[#FF6B35]/20' 
+            : 'bg-gray-700/30 border-gray-600/50'}
         `}
-        style={{
-          minHeight: '56px',
-        }}
       >
         <motion.div
           className={`
-            flex items-center justify-center w-7 h-7 rounded-full
+            flex items-center justify-center w-8 h-8 rounded-full
             border-2 transition-all duration-300
             ${isCompleted 
-              ? 'bg-white border-white' 
-              : 'bg-transparent border-white/70'}
+              ? 'bg-emerald-500 border-emerald-400' 
+              : isActive 
+              ? 'bg-[#FF6B35] border-[#FF6B35]' 
+              : 'bg-gray-600 border-gray-500'}
           `}
-          animate={isCompleted ? { scale: [1, 1.2, 1] } : {}}
-          transition={{ duration: 0.3 }}
+          animate={isActive ? { scale: [1, 1.1, 1] } : {}}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
         >
           <AnimatePresence mode="wait">
             {isCompleted ? (
               <motion.div
                 key="check"
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
                 transition={{ duration: 0.3, ease: 'backOut' }}
               >
@@ -145,16 +142,16 @@ const CapabilityCard: React.FC<{
       <div
         className={`
           flex items-center gap-3 px-4 py-3 rounded-full
-          border-2 border-dashed transition-all duration-300
+          border-2 transition-all duration-300 mb-2
           ${isCompleted 
-            ? 'border-emerald-400/60 bg-emerald-500/10' 
+            ? 'border-emerald-400 bg-emerald-500/15 border-solid' 
             : isError
-            ? 'border-red-400/60 bg-red-500/10'
+            ? 'border-red-400/60 bg-red-500/10 border-dashed'
             : isExecuting
-            ? 'border-[#FF6B35]/60 bg-[#FF6B35]/10'
+            ? 'border-[#FF6B35]/60 bg-[#FF6B35]/10 border-dashed'
             : isPending
-            ? 'border-gray-500/40 bg-gray-500/5'
-            : 'border-[#FF6B35]/40 bg-[#FF6B35]/5'}
+            ? 'border-gray-500/40 bg-gray-500/5 border-dashed'
+            : 'border-[#FF6B35]/40 bg-[#FF6B35]/5 border-dashed'}
         `}
       >
         <div className="flex items-center justify-center w-6 h-6">
@@ -241,133 +238,60 @@ const CapabilityCard: React.FC<{
 };
 
 export function ProgressiveExecutionCard({
-  objectives: initialObjectives,
+  objectives,
   onObjectiveComplete,
   onAllComplete,
 }: ProgressiveExecutionCardProps) {
-  const [objectives, setObjectives] = useState<ObjectiveItem[]>(
-    initialObjectives.map((obj, idx) => ({
-      ...obj,
-      status: idx === 0 ? 'active' : obj.status,
-      capabilities: obj.capabilities.map(cap => ({ 
-        ...cap, 
-        status: cap.status === 'hidden' ? 'pending' : cap.status 
-      })),
-    }))
-  );
   const [visibleObjectives, setVisibleObjectives] = useState<Set<number>>(new Set([0]));
+  const [prevObjectives, setPrevObjectives] = useState<ObjectiveItem[]>(objectives);
 
   useEffect(() => {
-    setObjectives(
-      initialObjectives.map((obj, idx) => ({
-        ...obj,
-        status: idx === 0 ? 'active' : (obj.status === 'completed' ? 'completed' : obj.status),
-        capabilities: obj.capabilities.map(cap => ({ 
-          ...cap, 
-          status: cap.status === 'hidden' ? 'pending' : cap.status 
-        })),
-      }))
-    );
-    setVisibleObjectives(new Set([0]));
-  }, [initialObjectives]);
+    objectives.forEach((obj, idx) => {
+      if (obj.status === 'active' || obj.status === 'completed') {
+        setVisibleObjectives(prev => {
+          if (prev.has(idx)) return prev;
+          return new Set([...prev, idx]);
+        });
+      }
 
-  const handleProgressEvent = useCallback((event: CustomEvent) => {
-    const update = event.detail;
+      const prevObj = prevObjectives[idx];
+      if (prevObj && prevObj.status !== 'completed' && obj.status === 'completed') {
+        onObjectiveComplete?.(idx);
+      }
+    });
 
-    if (update.type === 'execution:step:started') {
-      const stepIndex = update.stepIndex ?? 0;
-      setVisibleObjectives(prev => new Set([...prev, stepIndex]));
-      setObjectives(prev => prev.map((obj, idx) => 
-        idx === stepIndex ? { ...obj, status: 'active' } : obj
-      ));
-    }
-
-    if (update.type === 'capability:apareceu' || update.type === 'capability:iniciou') {
-      const stepIndex = update.stepIndex ?? 0;
-      const capabilityId = update.capability_id;
-      const capabilityName = update.capability_name || update.displayName;
-
-      setObjectives(prev => prev.map((obj, idx) => {
-        if (idx !== stepIndex) return obj;
-
-        const existingCap = obj.capabilities.find(c => c.id === capabilityId);
-        if (existingCap) {
-          return {
-            ...obj,
-            capabilities: obj.capabilities.map(cap =>
-              cap.id === capabilityId
-                ? { ...cap, status: 'executing' as CapabilityStatus }
-                : cap
-            ),
-          };
-        }
-
-        const newCapability: CapabilityItem = {
-          id: capabilityId || `cap-${Date.now()}`,
-          nome: capabilityName || 'Processando...',
-          displayName: update.displayName || capabilityName,
-          status: 'executing',
-        };
-
-        return {
-          ...obj,
-          capabilities: [...obj.capabilities, newCapability],
-        };
-      }));
-    }
-
-    if (update.type === 'capability:concluiu') {
-      const stepIndex = update.stepIndex ?? 0;
-      const capabilityId = update.capability_id;
-
-      setObjectives(prev => prev.map((obj, idx) => {
-        if (idx !== stepIndex) return obj;
-        return {
-          ...obj,
-          capabilities: obj.capabilities.map(cap =>
-            cap.id === capabilityId
-              ? { ...cap, status: 'completed' as CapabilityStatus }
-              : cap
-          ),
-        };
-      }));
-    }
-
-    if (update.type === 'execution:step:completed') {
-      const stepIndex = update.stepIndex ?? 0;
-      
-      setObjectives(prev => {
-        const updated = prev.map((obj, idx) =>
-          idx === stepIndex ? { ...obj, status: 'completed' as ObjectiveStatus } : obj
-        );
-
-        const nextIndex = stepIndex + 1;
-        if (nextIndex < updated.length) {
-          setVisibleObjectives(prevVisible => new Set([...prevVisible, nextIndex]));
-          updated[nextIndex] = { ...updated[nextIndex], status: 'active' };
-        }
-
-        return updated;
-      });
-
-      onObjectiveComplete?.(stepIndex);
-    }
-
-    if (update.type === 'execution:completed') {
-      setObjectives(prev => prev.map(obj => ({ 
-        ...obj, 
-        status: 'completed' as ObjectiveStatus 
-      })));
+    const allCompleted = objectives.length > 0 && objectives.every(obj => obj.status === 'completed');
+    const wasNotAllCompleted = prevObjectives.length === 0 || !prevObjectives.every(obj => obj.status === 'completed');
+    
+    if (allCompleted && wasNotAllCompleted) {
       onAllComplete?.();
     }
-  }, [onObjectiveComplete, onAllComplete]);
+
+    setPrevObjectives(objectives);
+  }, [objectives, onObjectiveComplete, onAllComplete, prevObjectives]);
 
   useEffect(() => {
-    window.addEventListener('agente-jota-progress', handleProgressEvent as EventListener);
-    return () => {
-      window.removeEventListener('agente-jota-progress', handleProgressEvent as EventListener);
+    const handleStepStarted = (event: CustomEvent) => {
+      const update = event.detail;
+      if (update.type === 'execution:step:started') {
+        const stepIndex = update.stepIndex ?? 0;
+        setVisibleObjectives(prev => new Set([...prev, stepIndex]));
+      }
     };
-  }, [handleProgressEvent]);
+
+    window.addEventListener('agente-jota-progress', handleStepStarted as EventListener);
+    return () => {
+      window.removeEventListener('agente-jota-progress', handleStepStarted as EventListener);
+    };
+  }, []);
+
+  console.log('📊 [ProgressiveExecutionCard] Renderizando com objectives:', 
+    objectives.map(o => ({
+      titulo: o.titulo,
+      status: o.status,
+      caps: o.capabilities.map(c => ({ id: c.id, status: c.status }))
+    }))
+  );
 
   return (
     <div className="w-full space-y-4">

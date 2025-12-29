@@ -17,6 +17,11 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
     const handleProgress = (event: CustomEvent) => {
       const update = event.detail;
 
+      console.log(`🔔 [DeveloperModeCard] Evento recebido: ${update.type}`, {
+        stepIndex: update.stepIndex,
+        capability_id: update.capability_id,
+      });
+
       if (update.type === 'capability:apareceu') {
         const novaCapability: CapabilityState = {
           id: `cap-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
@@ -28,26 +33,32 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
       }
 
       if (update.type === 'capability:iniciou') {
+        console.log(`▶️ [DeveloperModeCard] Iniciando capability: ${update.capability_id} na etapa ${update.stepIndex}`);
         updateCapabilityStatus(cardId, update.stepIndex, update.capability_id, 'executando');
       }
 
       if (update.type === 'capability:concluiu') {
+        console.log(`✅ [DeveloperModeCard] Concluindo capability: ${update.capability_id} na etapa ${update.stepIndex}`);
         updateCapabilityStatus(cardId, update.stepIndex, update.capability_id, 'concluido');
-        if (update.mensagem) {
-          addTextMessage('assistant', update.mensagem);
-        }
+      }
+
+      if (update.type === 'capability:erro') {
+        console.log(`❌ [DeveloperModeCard] Erro na capability: ${update.capability_id} na etapa ${update.stepIndex}`);
+        updateCapabilityStatus(cardId, update.stepIndex, update.capability_id, 'erro');
       }
 
       if (update.type === 'execution:step:started') {
+        console.log(`🚀 [DeveloperModeCard] Iniciando etapa: ${update.stepIndex}`);
         updateEtapaStatus(cardId, update.stepIndex, 'executando');
       }
 
       if (update.type === 'execution:step:completed') {
+        console.log(`🏁 [DeveloperModeCard] Concluindo etapa: ${update.stepIndex}`);
         updateEtapaStatus(cardId, update.stepIndex, 'concluido');
-        addTextMessage('assistant', `Etapa "${update.stepTitle}" concluída com sucesso!`);
       }
 
       if (update.type === 'execution:completed') {
+        console.log(`🎉 [DeveloperModeCard] Execução completa!`);
         updateCardData(cardId, { status: 'concluido' });
       }
     };

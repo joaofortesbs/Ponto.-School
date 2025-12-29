@@ -191,37 +191,66 @@ export const useChatState = create<ChatState>((set, get) => ({
   },
 
   updateCapabilityStatus: (cardId, etapaIndex, capabilityId, status) => {
-    set((state) => ({
-      messages: state.messages.map((msg) => {
-        if (msg.id !== cardId) return msg;
+    console.log(`🔄 [chatState] updateCapabilityStatus:`, { cardId, etapaIndex, capabilityId, status });
+    
+    set((state) => {
+      const targetMessage = state.messages.find(m => m.id === cardId);
+      if (!targetMessage) {
+        console.warn(`⚠️ [chatState] Mensagem não encontrada: ${cardId}`);
+        return state;
+      }
 
-        const cardData = msg.metadata?.cardData as DevModeCardData;
-        if (!cardData?.etapas) return msg;
+      const cardData = targetMessage.metadata?.cardData as DevModeCardData;
+      if (!cardData?.etapas) {
+        console.warn(`⚠️ [chatState] etapas não encontradas`);
+        return state;
+      }
 
-        const updatedEtapas = cardData.etapas.map((e, idx) => {
-          if (idx !== etapaIndex) return e;
+      const targetEtapa = cardData.etapas[etapaIndex];
+      if (!targetEtapa) {
+        console.warn(`⚠️ [chatState] Etapa ${etapaIndex} não encontrada. Total: ${cardData.etapas.length}`);
+        return state;
+      }
+
+      const targetCapability = targetEtapa.capabilities.find(c => c.id === capabilityId);
+      if (!targetCapability) {
+        console.warn(`⚠️ [chatState] Capability ${capabilityId} não encontrada. IDs disponíveis:`, 
+          targetEtapa.capabilities.map(c => c.id));
+        return state;
+      }
+
+      console.log(`✅ [chatState] Atualizando capability ${capabilityId} -> ${status}`);
+
+      return {
+        ...state,
+        messages: state.messages.map((msg) => {
+          if (msg.id !== cardId) return msg;
+
+          const updatedEtapas = cardData.etapas.map((e, idx) => {
+            if (idx !== etapaIndex) return e;
+            return {
+              ...e,
+              capabilities: e.capabilities.map(cap =>
+                cap.id === capabilityId
+                  ? { ...cap, status }
+                  : cap
+              )
+            };
+          });
+
           return {
-            ...e,
-            capabilities: e.capabilities.map(cap =>
-              cap.id === capabilityId
-                ? { ...cap, status }
-                : cap
-            )
-          };
-        });
-
-        return {
-          ...msg,
-          metadata: {
-            ...msg.metadata,
-            cardData: {
-              ...cardData,
-              etapas: updatedEtapas
+            ...msg,
+            metadata: {
+              ...msg.metadata,
+              cardData: {
+                ...cardData,
+                etapas: updatedEtapas
+              }
             }
-          }
-        };
-      })
-    }));
+          };
+        })
+      };
+    });
   },
 
   updateEtapaStatus: (cardId, etapaIndex, status) => {

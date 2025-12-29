@@ -204,7 +204,12 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       capabilityResult?: any;
       capabilityDuration?: number;
     }) => {
-      console.log('📊 [ChatLayout] Progresso:', update);
+      console.log('📊 [ChatLayout] Progresso:', JSON.stringify({
+        status: update.status,
+        etapaAtual: update.etapaAtual,
+        capabilityId: update.capabilityId,
+        capabilityStatus: update.capabilityStatus,
+      }));
 
       let eventType: string = update.status;
       
@@ -215,6 +220,8 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
           eventType = 'capability:iniciou';
         } else if (update.capabilityId && update.capabilityStatus === 'completed') {
           eventType = 'capability:concluiu';
+        } else if (update.capabilityId && update.capabilityStatus === 'failed') {
+          eventType = 'capability:erro';
         } else if (!update.capabilityId) {
           eventType = 'execution:step:started';
         }
@@ -222,10 +229,14 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         eventType = 'execution:completed';
       }
 
+      const stepIndex = update.etapaAtual !== undefined ? update.etapaAtual - 1 : 0;
+
+      console.log(`🎯 [ChatLayout] Emitindo evento: ${eventType} | stepIndex: ${stepIndex} | capabilityId: ${update.capabilityId}`);
+
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: {
           type: eventType,
-          stepIndex: update.etapaAtual,
+          stepIndex: stepIndex,
           stepTitle: update.descricao,
           capability_id: update.capabilityId,
           capability_name: update.descricao,
@@ -246,8 +257,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       }
 
       if (update.status === 'etapa_concluida' && update.etapaAtual !== undefined) {
-        addTextMessage('assistant', `Etapa ${update.etapaAtual + 1} concluída com sucesso!`);
-        
         if (update.resultado) {
           addMemory({
             tipo: 'descoberta',
