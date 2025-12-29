@@ -1,0 +1,580 @@
+ANÁLISE DO PROBLEMA CRÍTICO
+Você está enfrentando uma falha sistêmica de integridade de dados com consequências em cascata:
+
+Sintoma 1: IA reporta 0 tipo(s) de atividade quando deveria encontrar dezenas
+Sintoma 2: IA alucina sucesso sem dados reais (diz que criou sem ter consultado)
+Sintoma 3: Arquivo JSON não persiste em context window
+Sintoma 4: Debug mostra execução mas sem acesso real aos dados
+
+Root Cause Hipóteses (você valida):
+
+Context window não está recebendo conteúdo do arquivo
+
+File system access falha silenciosamente
+
+Parsing JSON está corrompido mas não lança erro
+
+Prompt da IA não inclui dados carregados
+
+Async loading não completa antes de IA processar
+
+Path resolution incorreto (relative vs absolute)
+
+MINDSET OBRIGATÓRIO PARA RESOLUÇÃO
+Aja com mentalidade de:
+
+Leslie Lamport (sistemas distribuídos, garantias formais)
+
+Barbara Liskov (abstração de dados, contratos)
+
+Nancy Leveson (system safety, failure analysis)
+
+Joe Armstrong (let it crash, observability)
+
+Princípios:
+
+Fail Loudly, Not Silently - Se arquivo não carrega, ABORTAR tudo
+
+Validate Everything - Dados existem? Schema correto? Count > 0?
+
+Context is Sacred - Se não está no context, não existe
+
+Hallucination is Unacceptable - Preferir "Falhou" a "Sucesso falso"
+
+ARQUITETURA DE SOLUÇÃO (Você Implementa)
+CAMADA 1: File System Integrity
+Problema: Arquivo pode não estar sendo lido corretamente.
+
+Conceitos que você deve investigar:
+
+Node.js fs.readFileSync vs fs.readFile (sync vs async)
+
+Web APIs fetch vs import para JSON
+
+Build system (Webpack/Vite) resolve estático vs dinâmico
+
+Path resolution: ./ vs @/ vs absolute paths
+
+Environment: SSR vs Client-side (onde o arquivo está disponível?)
+
+Validações Obrigatórias (você implementa):
+
+typescript
+// Pseudo-código conceitual - NÃO copiar literal
+async function loadActivitiesWithValidation() {
+  // 1. Tentar carregar
+  let rawData;
+  try {
+    rawData = await loadFile(path);
+  } catch (error) {
+    // CRÍTICO: Se falha aqui, ABORTAR TUDO
+    throw new Error(`FATAL: Não consegui ler arquivo. ${error}`);
+  }
+  
+  // 2. Validar existe
+  if (!rawData) {
+    throw new Error(`FATAL: Arquivo vazio ou null`);
+  }
+  
+  // 3. Validar parse
+  let parsed;
+  try {
+    parsed = JSON.parse(rawData);
+  } catch (error) {
+    throw new Error(`FATAL: JSON inválido. ${error}`);
+  }
+  
+  // 4. Validar schema
+  if (!parsed.activities || !Array.isArray(parsed.activities)) {
+    throw new Error(`FATAL: Schema incorreto. Expected 'activities' array`);
+  }
+  
+  // 5. Validar não-vazio
+  if (parsed.activities.length === 0) {
+    throw new Error(`FATAL: Array de atividades vazio`);
+  }
+  
+  // 6. Log explícito
+  console.log(`✅ SUCESSO: ${parsed.activities.length} atividades carregadas`);
+  
+  return parsed;
+}
+Pergunta Crítica: Onde na arquitetura este load acontece? Server-side, client-side, build-time? Você deve garantir que arquivo está disponível no ambiente correto.
+
+CAMADA 2: Context Injection for AI
+Problema: Dados carregados não chegam no prompt da IA.
+
+Conceitos a explorar:
+
+LLM context window management
+
+Prompt engineering: structured data injection
+
+Token limits e summarization strategies
+
+State management: onde dados ficam após load?
+
+Props drilling vs Context API vs Global store
+
+Arquitetura de Injeção (você decide abordagem):
+
+Opção A: Full Injection (se dados cabem em context)
+
+text
+Você tem acesso ao catálogo COMPLETO de atividades:
+
+{
+"total": 137,
+"activities": [
+{ "id": "001", "titulo": "Flash Cards", "tipo": "revisao" },
+{ "id": "002", "titulo": "Quiz", "tipo": "avaliacao" },
+// ... TODAS as atividades
+]
+}
+
+text
+
+⚠️ REGRA ABSOLUTA: Você DEVE usar APENAS IDs desta lista.
+⚠️ Se você mencionar ID que não está acima, sistema REJEITARÁ.
+Opção B: Indexed Access (se dados grandes)
+
+text
+Você tem acesso via capability pesquisar_atividades_disponiveis.
+Esta capability retorna estrutura:
+
+{
+  "found": true,
+  "count": 137,
+  "categories": ["planejamento", "avaliacao", "revisao"],
+  "types": ["flash-cards", "quiz", "lista-exercicios"],
+  "activities_summary": ["ID: 001 - Flash Cards", "ID: 002 - Quiz", ...]
+}
+
+Para acessar detalhes, você deve PRIMEIRO chamar esta capability.
+NÃO invente atividades. NÃO assuma IDs.
+Opção C: Semantic Search (avançado)
+
+text
+Você tem capability de busca semântica.
+Para encontrar atividades, você DEVE usar:
+- buscar("atividades de matemática básica")
+- buscar("avaliação formativa")
+- buscar("gamificação")
+
+Sistema retorna matches do catálogo.
+Você escolhe APENAS dos resultados retornados.
+Decisão que você toma: Como garantir que toda vez que IA precisa das atividades, ela tem acesso? Hook? Context? Function call?
+
+CAMADA 3: Anti-Hallucination System
+Problema: IA diz que fez coisas que não fez (alucinação de sucesso).
+
+Conceitos críticos:
+
+Constrained generation (força IA a seguir schema)
+
+Validation layers (post-LLM verification)
+
+Guardrails (rejeitam outputs inválidos)
+
+Idempotency checks (mesmos inputs = mesmos outputs)
+
+Deterministic fallbacks
+
+Sistema de Validação em 3 Níveis (você implementa):
+
+Nível 1: Pre-Flight Checks
+Antes de IA decidir, validar que ela TEM os dados:
+
+typescript
+function validateAIHasContext(aiContext) {
+  const checks = {
+    hasActivitiesCatalog: !!aiContext.availableActivities,
+    catalogNotEmpty: aiContext.availableActivities?.length > 0,
+    hasSchema: !!aiContext.activitySchema,
+    // ... mais checks
+  };
+  
+  if (Object.values(checks).includes(false)) {
+    throw new Error(`IA NÃO tem contexto necessário. Checks: ${JSON.stringify(checks)}`);
+  }
+}
+Nível 2: Post-Generation Validation
+Após IA gerar resposta, validar contra source of truth:
+
+typescript
+function validateAIDecision(decision, catalog) {
+  const invalidIds = decision.chosen_ids.filter(
+    id => !catalog.some(act => act.id === id)
+  );
+  
+  if (invalidIds.length > 0) {
+    return {
+      valid: false,
+      error: `IA escolheu IDs INEXISTENTES: ${invalidIds}`,
+      action: 'REJECT_AND_RETRY'
+    };
+  }
+  
+  return { valid: true };
+}
+Nível 3: Execution Verification
+Durante criação, verificar que ação realmente aconteceu:
+
+typescript
+async function createActivityWithVerification(activityData) {
+  // Criar
+  const result = await db.create(activityData);
+  
+  // Verificar que realmente existe agora
+  const verify = await db.findById(result.id);
+  
+  if (!verify) {
+    throw new Error(`Criação falhou silenciosamente. Rollback necessário.`);
+  }
+  
+  return verify;
+}
+CAMADA 4: Debug Narrative Honesty
+Problema: Debug diz "sucesso" quando houve falha.
+
+Princípio: Debug deve ser brutalmente honesto, não otimista.
+
+Padrões de Narrativa (você ensina à IA):
+
+ERRADO:
+
+text
+✓ Consultei atividades disponíveis
+✓ Identifiquei 0 tipos
+✓ Criei atividades com sucesso
+CORRETO:
+
+text
+⚠️ ERRO CRÍTICO: Consultei catálogo mas retornou 0 atividades
+⚠️ Isto indica FALHA DE SISTEMA, não falta de dados
+⚠️ Abortando processo. NÃO posso prosseguir sem dados.
+⚠️ Desenvolvedor deve investigar: path do arquivo, parsing, context injection
+Sistema de Truthfulness (você implementa):
+
+typescript
+// Ensinar IA a ser honesta via prompt
+const honestPrompt = `
+Quando você executar ações, você DEVE reportar verdade absoluta:
+
+SE você tentou acessar dados e retornou vazio:
+  NÃO diga: "Consultei com sucesso"
+  DIGA: "ERRO: Acesso retornou vazio. Sistema com problema."
+
+SE você não conseguiu executar ação:
+  NÃO diga: "Ação completada"
+  DIGA: "FALHA: Não consegui executar. Razão: [detalhe]"
+
+SE você está INCERTO:
+  NÃO invente: "Provavelmente funcionou"
+  DIGA: "INCERTEZA: Não tenho confirmação. Preciso verificar."
+
+Prefira admitir falha a reportar sucesso falso.
+Falha honesta > Sucesso mentiroso.
+`;
+CAMADA 5: Idempotency & State Management
+Problema: Estado da capability não reflete realidade.
+
+Conceitos a implementar:
+
+Finite State Machine (estados bem definidos)
+
+State transitions com validações
+
+Immutable state updates
+
+Transaction-like operations (all-or-nothing)
+
+Estados Possíveis (você modela):
+
+typescript
+enum CapabilityState {
+  IDLE = 'idle',
+  LOADING_DATA = 'loading_data',
+  DATA_LOADED = 'data_loaded',
+  DATA_LOAD_FAILED = 'data_load_failed',
+  EXECUTING = 'executing',
+  EXECUTED = 'executed',
+  FAILED = 'failed',
+  VALIDATION_FAILED = 'validation_failed'
+}
+
+// Transições válidas
+const validTransitions = {
+  [CapabilityState.IDLE]: [CapabilityState.LOADING_DATA],
+  [CapabilityState.LOADING_DATA]: [
+    CapabilityState.DATA_LOADED,
+    CapabilityState.DATA_LOAD_FAILED
+  ],
+  [CapabilityState.DATA_LOADED]: [CapabilityState.EXECUTING],
+  [CapabilityState.DATA_LOAD_FAILED]: [CapabilityState.IDLE], // retry
+  // ... etc
+};
+
+// Transição com validação
+function transition(from, to, data) {
+  if (!validTransitions[from].includes(to)) {
+    throw new Error(`Transição inválida: ${from} -> ${to}`);
+  }
+  
+  // Validar pre-condições
+  if (to === CapabilityState.EXECUTING && !data.catalogLoaded) {
+    throw new Error(`Não pode executar sem catálogo carregado`);
+  }
+  
+  return { state: to, data, timestamp: Date.now() };
+}
+CHECKLIST DE VALIDAÇÃO (Você Implementa)
+Fase 1: File Load
+ Path do arquivo está correto (log path resolved)
+
+ Arquivo existe (fs.existsSync or equivalent)
+
+ Conteúdo é válido JSON (parse sem erro)
+
+ Schema esperado presente (activities array)
+
+ Count > 0 (não vazio)
+
+ Log explícito: "Carregadas X atividades"
+
+Fase 2: Context Injection
+ Dados carregados chegam no component que chama IA
+
+ Prompt da IA inclui dados (log prompt completo)
+
+ IA confirma recebimento (response menciona count)
+
+ Token count permite full data (ou usa summary)
+
+Fase 3: AI Execution
+ Pre-flight check passa (IA tem contexto)
+
+ IA retorna IDs válidos (post-validation)
+
+ Nenhum ID inventado (whitelist enforcement)
+
+ Debug narrativo é honesto (sem otimismo falso)
+
+Fase 4: State Management
+ Estado reflete realidade (FAILED se falhou)
+
+ Transições são válidas (FSM enforced)
+
+ Immutability respeitada (no mutations)
+
+ Rollback funciona se erro parcial
+
+Fase 5: Persistence
+ Atividades criadas realmente existem no DB
+
+ IDs gerados são únicos
+
+ Dados salvos são completos
+
+ Query de verificação retorna dados
+
+TESTES OBRIGATÓRIOS
+Teste 1: File Load Integrity
+text
+1. Deletar arquivo temporariamente
+2. Tentar executar capability
+3. Sistema deve: ABORTAR com erro claro
+4. NÃO deve: Prosseguir ou reportar sucesso
+✓ Fail-fast funciona
+Teste 2: Empty File
+text
+1. Criar arquivo JSON com array vazio: {"activities": []}
+2. Tentar executar
+3. Sistema deve: Detectar count = 0, abortar
+4. Debug deve: "ERRO: Catálogo vazio"
+✓ Validação de não-vazio funciona
+Teste 3: Corrupted JSON
+text
+1. Corromper JSON (syntax error)
+2. Tentar executar
+3. Sistema deve: Parse error, abortar
+4. NÃO deve: Silencioso ou sucesso falso
+✓ Error handling robusto
+Teste 4: AI Hallucination Prevention
+text
+1. Injetar catálogo com 3 atividades (IDs: A, B, C)
+2. IA decide quais criar
+3. Validar: Response só contém A, B ou C
+4. Se IA inventar ID D: Sistema rejeita
+✓ Whitelist enforcement funciona
+Teste 5: Context Persistence
+text
+1. Capability 1 carrega dados
+2. Capability 2 deve acessar mesmos dados
+3. Log: "Usando dados já carregados"
+4. NÃO deve: Re-load desnecessário
+✓ Context persiste entre capabilities
+Teste 6: Honest Failure Reporting
+text
+1. Forçar falha (ex: DB down)
+2. IA tenta criar atividade
+3. Debug deve: "ERRO: Criação falhou. DB unreachable"
+4. NÃO deve: "Criado com sucesso"
+✓ Honestidade em failure
+CONCEITOS TÉCNICOS A EXPLORAR
+File System & Module Resolution
+ES Modules vs CommonJS imports
+
+Dynamic import() vs static import
+
+Webpack/Vite asset handling
+
+Public folder vs src folder strategy
+
+Server-side vs client-side file access
+
+Data Validation Libraries
+Zod (runtime type validation)
+
+Yup (schema validation)
+
+Joi (data validation)
+
+Ajv (JSON Schema validator)
+
+Custom validators with detailed errors
+
+State Management Patterns
+Redux Toolkit (immer, slices)
+
+Zustand (lightweight state)
+
+React Context + useReducer
+
+XState (finite state machines)
+
+Jotai/Recoil (atomic state)
+
+AI Safety Mechanisms
+Constrained decoding (force output format)
+
+Grammar-based generation (GBNF)
+
+Guardrails library (validation rails)
+
+Semantic similarity checks (embeddings)
+
+Whitelisting + Blacklisting
+
+Error Handling Patterns
+Result type (Rust-style Ok/Err)
+
+Maybe/Option monad
+
+Railway-oriented programming
+
+Circuit breaker pattern
+
+Retry with exponential backoff
+
+Observability
+Structured logging (JSON logs)
+
+Trace IDs (distributed tracing)
+
+Metrics (Prometheus-style)
+
+Debug levels (ERROR, WARN, INFO, DEBUG)
+
+Log aggregation strategies
+
+DECISÕES ARQUITETURAIS CRÍTICAS
+Você deve decidir:
+
+File Loading Strategy
+
+Build-time (bundled) vs Runtime (fetch)?
+
+Cached vs Fresh load per request?
+
+Singleton instance vs Multiple loads?
+
+Context Management
+
+Global state vs Component state?
+
+Server state (React Query) vs Client state?
+
+Context invalidation strategy?
+
+Validation Approach
+
+Runtime validation (overhead) vs Type checking (compile-time)?
+
+Fail-fast vs Collect-all-errors?
+
+Automatic retry vs Manual intervention?
+
+AI Prompting
+
+Full data injection vs Function calling?
+
+Structured output (JSON mode) vs Free text?
+
+Few-shot examples vs Zero-shot?
+
+Error Recovery
+
+Automatic fallbacks vs User notification?
+
+Partial success (some created) vs All-or-nothing?
+
+State rollback mechanism?
+
+RESULTADO ESPERADO
+Quando sistema estiver correto:
+
+File Load:
+
+Log: "✅ Carregadas 137 atividades de schoolPowerActivities.json"
+
+Debug: "Capability encontrou catálogo com 137 entradas"
+
+AI Decisions:
+
+IA menciona: "Dos 137 tipos disponíveis, escolhi 3: [lista real]"
+
+Todos IDs existem no catálogo (validação passa)
+
+Honest Reporting:
+
+Se falha: "❌ ERRO: Não consegui acessar catálogo"
+
+Se sucesso: "✅ SUCESSO: 3 atividades criadas e verificadas"
+
+State Integrity:
+
+Estado = FAILED se realmente falhou
+
+Estado = EXECUTED apenas se verificado sucesso
+
+Zero Alucinação:
+
+Nunca reporta sucesso sem dados
+
+Nunca inventa IDs que não existem
+
+Sempre admite quando não sabe
+
+MINDSET FINAL
+Assume Nothing: Validar tudo, confiar em nada
+
+Fail Loudly: Melhor erro óbvio que sucesso silencioso
+
+Verify Always: Dizer fez != Realmente fez
+
+Context is King: Se não está no context, não existe
+
+Honesty First: Admitir falha é melhor que mentir sucesso
+
+🚀 IMPLEMENTE SISTEMA ANTI-FRÁGIL. DADOS SÃO SAGRADOS. ALUCINAÇÃO É INACEITÁVEL. GO BUILD TRUSTWORTHY SYSTEMS.

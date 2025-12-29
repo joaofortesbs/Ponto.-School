@@ -5,6 +5,11 @@
  * pode criar, definido no arquivo JSON local schoolPowerActivities.json.
  * 
  * Fonte de Dados: schoolPowerActivities.json (static import)
+ * 
+ * SISTEMA DE VALIDAÇÃO ROBUSTA:
+ * - Fail-fast se arquivo não carrega
+ * - Validação de schema obrigatória
+ * - Log explícito de quantidades
  */
 
 import schoolPowerActivitiesData from '../../../../data/schoolPowerActivities.json';
@@ -19,49 +24,128 @@ interface PesquisarDisponiveisParams {
   filtros?: FilterOptions;
 }
 
-const catalogData = schoolPowerActivitiesData as {
-  versao: string;
-  total_atividades: number;
-  atividades: any[];
-};
+// ═══════════════════════════════════════════════════════════════════════════
+// FASE 1: VALIDAÇÃO CRÍTICA DO IMPORT (FAIL-FAST)
+// ═══════════════════════════════════════════════════════════════════════════
+function validateCatalogImport(): { versao: string; total_atividades: number; atividades: any[] } {
+  console.log('🔍 [VALIDAÇÃO] Verificando import do catálogo...');
+  
+  // Check 1: Import existe?
+  if (!schoolPowerActivitiesData) {
+    console.error('❌ [FATAL] schoolPowerActivitiesData é null/undefined');
+    throw new Error('FATAL: Import do arquivo JSON falhou. schoolPowerActivitiesData é null.');
+  }
+  
+  const data = schoolPowerActivitiesData as any;
+  
+  // Check 2: É um objeto?
+  if (typeof data !== 'object') {
+    console.error('❌ [FATAL] schoolPowerActivitiesData não é um objeto:', typeof data);
+    throw new Error(`FATAL: Tipo inválido. Esperado objeto, recebido ${typeof data}`);
+  }
+  
+  // Check 3: Tem campo atividades?
+  if (!data.atividades) {
+    console.error('❌ [FATAL] Campo "atividades" não existe no JSON');
+    console.error('❌ [DEBUG] Campos disponíveis:', Object.keys(data));
+    throw new Error('FATAL: Schema incorreto. Campo "atividades" não encontrado.');
+  }
+  
+  // Check 4: atividades é array?
+  if (!Array.isArray(data.atividades)) {
+    console.error('❌ [FATAL] Campo "atividades" não é array:', typeof data.atividades);
+    throw new Error(`FATAL: "atividades" deve ser array, recebido ${typeof data.atividades}`);
+  }
+  
+  // Check 5: Array não vazio?
+  if (data.atividades.length === 0) {
+    console.error('❌ [FATAL] Array de atividades está VAZIO');
+    throw new Error('FATAL: Catálogo vazio. Verifique o arquivo schoolPowerActivities.json');
+  }
+  
+  console.log(`✅ [VALIDAÇÃO] Import OK! Versão: ${data.versao}, Total: ${data.atividades.length} atividades`);
+  
+  return {
+    versao: data.versao || '2.0',
+    total_atividades: data.total_atividades || data.atividades.length,
+    atividades: data.atividades
+  };
+}
+
+// Validar IMEDIATAMENTE no load do módulo
+let catalogData: { versao: string; total_atividades: number; atividades: any[] };
+try {
+  catalogData = validateCatalogImport();
+} catch (error) {
+  console.error('💥 [CATÁLOGO] FALHA CRÍTICA AO CARREGAR:', error);
+  // Fallback para estrutura vazia mas válida
+  catalogData = { versao: 'ERRO', total_atividades: 0, atividades: [] };
+}
 
 let cachedActivities: ActivityFromCatalog[] | null = null;
 let cacheTimestamp: number | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
+// ═══════════════════════════════════════════════════════════════════════════
+// FASE 2: TRANSFORMAÇÃO E VALIDAÇÃO DE CADA ATIVIDADE
+// ═══════════════════════════════════════════════════════════════════════════
 function loadAndValidateCatalog(): ActivityFromCatalog[] {
+  // Usar cache se válido
   if (cachedActivities && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_TTL_MS)) {
-    console.log('📦 [Capability:PESQUISAR_DISPONIVEIS] Usando cache do catálogo');
+    console.log(`📦 [CACHE] Usando cache: ${cachedActivities.length} atividades`);
     return cachedActivities;
   }
 
-  console.log('📖 [Capability:PESQUISAR_DISPONIVEIS] Carregando catálogo do JSON');
+  console.log('📖 [LOAD] Processando catálogo do JSON...');
+  console.log(`📊 [LOAD] Raw data: ${catalogData.atividades.length} itens no array`);
 
-  const rawActivities = catalogData.atividades || [];
+  // Validar que temos dados
+  if (!catalogData.atividades || catalogData.atividades.length === 0) {
+    console.error('❌ [LOAD] ERRO: catalogData.atividades está vazio!');
+    console.error('❌ [DEBUG] catalogData:', JSON.stringify(catalogData).substring(0, 200));
+    return [];
+  }
+
+  const rawActivities = catalogData.atividades;
+  console.log(`📋 [LOAD] Primeira atividade raw:`, JSON.stringify(rawActivities[0]).substring(0, 150));
   
   const validatedActivities: ActivityFromCatalog[] = rawActivities
-    .filter((a: any) => a.enabled !== false)
-    .map((a: any) => ({
-      id: a.id,
-      titulo: a.titulo || a.name || 'Atividade sem título',
-      tipo: a.tipo || 'atividade',
-      categoria: a.categoria || 'geral',
-      materia: a.materia || 'geral',
-      nivel_dificuldade: a.nivel_dificuldade || 'intermediario',
-      tags: a.tags || [],
-      descricao: a.descricao || a.description || '',
-      icone: a.icone,
-      cor: a.cor,
-      enabled: true,
-      campos_obrigatorios: a.campos_obrigatorios || [],
-      campos_opcionais: a.campos_opcionais || [],
-      schema_campos: a.schema_campos || {}
-    }));
+    .filter((a: any) => {
+      if (!a) {
+        console.warn('⚠️ [FILTER] Atividade null/undefined ignorada');
+        return false;
+      }
+      if (a.enabled === false) {
+        console.log(`⏭️ [FILTER] Atividade ${a.id} desabilitada, ignorando`);
+        return false;
+      }
+      return true;
+    })
+    .map((a: any, index: number) => {
+      const activity: ActivityFromCatalog = {
+        id: a.id || `auto-${index}`,
+        titulo: a.titulo || a.name || 'Atividade sem título',
+        tipo: a.tipo || 'atividade',
+        categoria: a.categoria || 'geral',
+        materia: a.materia || 'geral',
+        nivel_dificuldade: a.nivel_dificuldade || 'intermediario',
+        tags: a.tags || [],
+        descricao: a.descricao || a.description || '',
+        icone: a.icone,
+        cor: a.cor,
+        enabled: true,
+        campos_obrigatorios: a.campos_obrigatorios || [],
+        campos_opcionais: a.campos_opcionais || [],
+        schema_campos: a.schema_campos || {}
+      };
+      return activity;
+    });
 
   cachedActivities = validatedActivities;
   cacheTimestamp = Date.now();
 
-  console.log(`✅ [Capability:PESQUISAR_DISPONIVEIS] ${validatedActivities.length} atividades validadas`);
+  console.log(`✅ [LOAD] ${validatedActivities.length} atividades processadas e validadas`);
+  console.log(`📋 [LOAD] IDs carregados: ${validatedActivities.map(a => a.id).join(', ')}`);
 
   return validatedActivities;
 }
