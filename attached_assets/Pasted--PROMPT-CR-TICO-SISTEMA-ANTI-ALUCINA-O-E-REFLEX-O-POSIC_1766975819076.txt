@@ -1,0 +1,687 @@
+🎯 PROMPT CRÍTICO - SISTEMA ANTI-ALUCINAÇÃO E REFLEXÃO POSICIONADA
+CONTEXTO ESTRATÉGICO
+Você está resolvendo O PROBLEMA MAIS CRÍTICO de sistemas de IA: alucinação de dados. Este não é apenas um bug técnico - é uma questão de confiança do usuário e integridade do produto. Um sistema que inventa dados é pior que um sistema que falha honestamente.
+
+Aja com a mentalidade de:
+
+Leslie Lamport (sistemas distribuídos confiáveis, provas formais)
+
+Barbara Liskov (design de sistemas robustos)
+
+Donald Knuth (precisão algorítmica absoluta)
+
+Rich Hickey (simplicidade, imutabilidade, verdade)
+
+VISÃO DO PROBLEMA
+Situação Atual (INACEITÁVEL):
+text
+Professor sem turma cadastrada
+  ↓
+IA diz: "Vou analisar a turma 7B"
+  ↓
+IA diz: "Turma 7B tem média 6.5 em Matemática"
+  ↓
+❌ DADOS INVENTADOS - PERDA DE CONFIANÇA
+Situação Esperada (OBRIGATÓRIA):
+text
+Professor sem turma cadastrada
+  ↓
+IA consulta banco de dados
+  ↓
+IA detecta: turmas = []
+  ↓
+IA responde honestamente: "Não encontrei turmas cadastradas"
+  ↓
+IA sugere ação: "Vamos criar atividades genéricas ou cadastrar turma?"
+  ↓
+✅ HONESTIDADE - MANUTENÇÃO DE CONFIANÇA
+PRINCÍPIOS FUNDAMENTAIS (NÃO NEGOCIÁVEIS)
+1. GROUND TRUTH FIRST
+text
+NUNCA gerar resposta antes de validar dados.
+SEMPRE consultar fonte de verdade (database).
+JAMAIS assumir ou inventar informações.
+2. FAIL GRACEFULLY
+text
+Ausência de dados NÃO é falha.
+Ausência de dados É informação.
+Sistema deve reconhecer e comunicar limitações.
+3. EXPLICIT > IMPLICIT
+text
+Melhor: "Nenhuma turma encontrada"
+Pior: "Processando turmas..." (quando não há nenhuma)
+4. VERIFY THEN EXECUTE
+text
+Toda capability DEVE validar pré-condições antes de executar.
+Se pré-condições falham, capability retorna estado claro.
+LLM recebe contexto de validação, não inventa.
+ARQUITETURA ANTI-ALUCINAÇÃO
+Sistema de Três Camadas (Implementar TODAS)
+CAMADA 1: Data Validation Layer
+Objetivo: Garantir que dados existem ANTES de processar
+
+Responsabilidades:
+
+Consultar database real
+
+Contar registros (quantos existem?)
+
+Validar campos obrigatórios preenchidos
+
+Retornar estrutura padronizada: { exists: boolean, data: any, count: number }
+
+Padrão arquitetural:
+
+text
+Toda capability começa com fase de validação.
+Validação retorna objeto estruturado.
+Objeto vai para LLM com flags booleanas claras.
+LLM NÃO pode inventar além do que objeto contém.
+Exemplo conceitual (você implementa):
+
+typescript
+interface ValidationResult<T> {
+  exists: boolean;        // Dados existem?
+  count: number;          // Quantos registros?
+  data: T | null;         // Dados reais ou null
+  isEmpty: boolean;       // Lista vazia?
+  errors?: string[];      // Erros de validação
+}
+
+// Toda capability usa isso
+async function validateTurmas(userId: string): Promise<ValidationResult<Turma[]>> {
+  const turmas = await db.turmas.findMany({ where: { professorId: userId } });
+  
+  return {
+    exists: turmas.length > 0,
+    count: turmas.length,
+    data: turmas.length > 0 ? turmas : null,
+    isEmpty: turmas.length === 0,
+  };
+}
+CAMADA 2: LLM Prompt Engineering Layer
+Objetivo: Forçar LLM a usar APENAS dados validados
+
+Técnicas obrigatórias:
+
+1. Structured Context Injection
+
+text
+Não envie: "Analise as turmas do professor"
+Envie: 
+"DADOS DISPONÍVEIS:
+- Turmas encontradas: 0
+- Lista de turmas: []
+- Status: VAZIO
+
+IMPORTANTE: Você DEVE informar ao usuário que nenhuma turma foi encontrada.
+NÃO invente nomes, números ou dados de turmas.
+Sugira próximos passos (cadastrar turma ou criar atividade genérica)."
+2. Negative Prompting (Anti-Hallucination)
+
+text
+"PROIBIDO:
+- Inventar nomes de turmas
+- Mencionar dados não fornecidos
+- Assumir existência de informações
+- Criar estatísticas fictícias
+
+OBRIGATÓRIO:
+- Usar APENAS dados em 'DADOS DISPONÍVEIS'
+- Se dado não existe, informar explicitamente
+- Sugerir ações para resolver ausência de dados"
+3. Output Schema Enforcement
+
+text
+Force LLM a retornar JSON estruturado:
+{
+  "found_data": true/false,
+  "message": "texto baseado em dados reais",
+  "suggested_actions": ["ação1", "ação2"],
+  "data_sources_used": ["turmas: 0 registros"]
+}
+4. Few-Shot Examples (Crítico para aprendizado)
+
+text
+Prompt deve incluir exemplos de comportamento correto:
+
+EXEMPLO 1 (Dados existem):
+Input: turmas = [{nome: "7B", alunos: 30}]
+Output: "Encontrei 1 turma cadastrada: 7B com 30 alunos."
+
+EXEMPLO 2 (Dados NÃO existem):
+Input: turmas = []
+Output: "Não encontrei turmas cadastradas na sua conta. 
+Gostaria de cadastrar uma turma ou criar atividades genéricas?"
+
+EXEMPLO 3 (Dados parciais):
+Input: turmas = [{nome: "7B", alunos: null}]
+Output: "Encontrei a turma 7B, mas o número de alunos não está cadastrado."
+CAMADA 3: Runtime Verification Layer
+Objetivo: Detectar alucinações APÓS LLM gerar resposta
+
+Técnicas:
+
+1. Fact-Checking Post-Processing
+
+text
+Após LLM gerar texto, verificar:
+- Mencionou nome de turma? Verificar se existe no banco
+- Mencionou número? Verificar se corresponde a dados reais
+- Mencionou estatística? Verificar se foi calculada ou inventada
+2. Entity Extraction + Database Lookup
+
+text
+Extrair entidades nomeadas do texto gerado.
+Para cada entidade, consultar banco de dados.
+Se entidade não existe, BLOQUEAR output e refazer.
+3. Confidence Scoring
+
+text
+Atribuir score de confiança a cada statement:
+- "Encontrei 3 turmas" + db.count = 3 → confidence: 1.0
+- "Turma 7B tem média 6.5" + db.media = null → confidence: 0.0
+
+Se confidence < 0.7, rejeitar e refazer.
+4. Diff Checking
+
+text
+Comparar output do LLM com dados reais:
+- LLM mentions: ["Turma 7B", "30 alunos", "média 6.5"]
+- Database has: {"7B": true, "30 alunos": true, "média": false}
+- Flag: "média 6.5" não validada → remover ou corrigir
+FLUXO DE EXECUÇÃO ANTI-ALUCINAÇÃO
+Pipeline Obrigatório para Cada Capability
+text
+1. PRE-EXECUTION VALIDATION
+   ├─ Query database for required data
+   ├─ Count records, check existence
+   ├─ Build ValidationResult object
+   └─ If isEmpty → Early return with honest message
+   
+2. LLM CONTEXT PREPARATION
+   ├─ Structure validated data explicitly
+   ├─ Add anti-hallucination instructions
+   ├─ Include few-shot examples
+   └─ Define strict output schema
+   
+3. LLM EXECUTION
+   ├─ Send structured prompt
+   ├─ Receive response
+   └─ Parse to structured format
+   
+4. POST-EXECUTION VERIFICATION
+   ├─ Extract entities from LLM output
+   ├─ Verify each entity against database
+   ├─ Calculate confidence scores
+   ├─ Flag suspicious statements
+   └─ If confidence < threshold → Reject and retry
+   
+5. USER-FACING OUTPUT
+   ├─ If verified → Show result
+   ├─ If rejected → Show error + suggestion
+   └─ Log discrepancy for debugging
+TRATAMENTO DE CASOS EXTREMOS
+Caso 1: Dados Completamente Ausentes
+Situação: Professor novo, nenhum dado cadastrado
+
+Resposta Correta:
+
+text
+🔍 "Não encontrei dados cadastrados ainda na sua conta.
+
+Para personalizar atividades, preciso de algumas informações:
+• Turmas (opcional): Qual turma vai usar essas atividades?
+• Disciplina: Qual matéria você leciona?
+• Nível: Ensino Fundamental I, II ou Médio?
+
+Posso criar atividades genéricas agora ou você prefere 
+cadastrar essas informações primeiro?"
+
+[Botão: Cadastrar Informações] [Botão: Criar Genérico]
+Resposta ERRADA (Atual):
+
+text
+❌ "Vou analisar a turma 7B..." (inventado)
+Caso 2: Dados Parciais
+Situação: Turma existe, mas sem alunos ou desempenho
+
+Resposta Correta:
+
+text
+📊 "Encontrei a turma 7B cadastrada, mas ainda não há:
+• Número de alunos registrado
+• Histórico de desempenho
+
+Vou criar atividades baseadas no nível 'Ensino Fundamental II'
+e você pode ajustar depois conforme conhece melhor a turma."
+Caso 3: Dados Inconsistentes
+Situação: Turma tem 30 alunos mas só 5 com notas
+
+Resposta Correta:
+
+text
+⚠️ "A turma 7B tem 30 alunos cadastrados, mas apenas 5 
+têm notas registradas (16% do total).
+
+Não tenho dados suficientes para análise estatística confiável.
+Vou criar atividades genéricas para Álgebra e você pode 
+personalizar conforme aplica e coleta mais dados."
+SISTEMA DE DEBUG E LOGGING
+Requisito: Transparência Total para Debugging
+Você DEVE implementar sistema de logging que mostre:
+
+1. Data Audit Trail
+
+text
+[Capability: Analisar Turmas]
+├─ Query executada: SELECT * FROM turmas WHERE professor_id = 123
+├─ Resultado: 0 registros
+├─ ValidationResult: { exists: false, count: 0, isEmpty: true }
+├─ LLM recebeu: "turmas_encontradas: 0, lista: []"
+├─ LLM retornou: "Não encontrei turmas cadastradas..."
+└─ Verificação: PASSOU ✓
+2. Hallucination Detection Log
+
+text
+[Capability: Analisar Turmas]
+├─ LLM mencionou: "Turma 7B"
+├─ Verificando existência no banco...
+├─ Query: SELECT * FROM turmas WHERE nome = '7B' AND professor_id = 123
+├─ Resultado: 0 registros
+├─ STATUS: ⚠️ ALUCINAÇÃO DETECTADA
+├─ Ação: Rejeitando output, tentando novamente com prompt reforçado
+└─ Retry #1...
+3. Developer Debug Panel (UI para desenvolvedores)
+
+text
+[Debug Panel - Visível em DEV mode]
+
+Capability: Pesquisar Atividades
+├─ Pré-condições:
+│   ├─ ✓ Usuário autenticado
+│   ├─ ✗ Turma selecionada (não encontrada)
+│   └─ ✓ Disciplina definida (Matemática)
+│
+├─ Dados Reais:
+│   ├─ Turmas: [] (0 registros)
+│   ├─ Atividades disponíveis: 47 registros
+│   └─ Disciplinas: ["Matemática", "Português"]
+│
+├─ Enviado ao LLM:
+│   └─ [Ver JSON completo]
+│
+├─ Resposta do LLM:
+│   └─ [Ver JSON completo]
+│
+└─ Verificação:
+    ├─ Entidades mencionadas: ["Matemática": ✓, "47 atividades": ✓]
+    ├─ Confidence: 1.0
+    └─ Status: APROVADO
+CORREÇÃO DE POSICIONAMENTO DA REFLEXÃO
+Problema Atual (conforme imagem):
+text
+Todas as reflexões aparecem agrupadas no final.
+Usuário vê objetivos executando, mas reflexões só depois.
+Solução Obrigatória:
+text
+Cada reflexão deve aparecer IMEDIATAMENTE após seu objetivo.
+
+Estrutura visual correta:
+┌─────────────────────────────────┐
+│ ○ Objetivo 1                    │
+├─────────────────────────────────┤
+│  ✓ Capability A                 │
+│  ✓ Capability B                 │
+├─────────────────────────────────┤
+│ 💡 REFLEXÃO DO OBJETIVO 1       │ ← AQUI, não no final
+│ "Encontrei 47 atividades..."    │
+└─────────────────────────────────┘
+        ↓
+┌─────────────────────────────────┐
+│ ○ Objetivo 2                    │
+├─────────────────────────────────┤
+│  ✓ Capability C                 │
+│  ✓ Capability D                 │
+├─────────────────────────────────┤
+│ 💡 REFLEXÃO DO OBJETIVO 2       │ ← AQUI, não no final
+│ "Decidi criar 3 atividades..."  │
+└─────────────────────────────────┘
+Implementação Técnica (Conceitual):
+Padrão: State Machine com Bloqueio
+
+text
+Estado: OBJECTIVE_1_EXECUTING
+  ↓ todas capabilities completam
+Estado: OBJECTIVE_1_SYNTHESIZING (gerar reflexão)
+  ↓ reflexão gerada
+Estado: OBJECTIVE_1_DISPLAYING (typewriter effect)
+  ↓ typewriter completo
+Estado: OBJECTIVE_1_COMPLETED
+  ↓ próximo objetivo pode iniciar
+Estado: OBJECTIVE_2_EXECUTING
+Decisão arquitetural que você deve fazer:
+
+Como sincronizar conclusão de objective → síntese → display?
+
+Event-driven ou state polling?
+
+Promise chains ou async/await?
+
+Como garantir que objetivo N+1 não inicia antes de reflexão N estar completa?
+
+TYPEWRITER EFFECT OTIMIZADO
+Requisito: Quase Instantâneo
+Problema: Typewriter lento frustra usuário
+Solução: Velocidade adaptativa baseada em comprimento
+
+Estratégia:
+
+text
+Textos curtos (< 50 chars): 100ms total
+Textos médios (50-200 chars): 300-500ms total
+Textos longos (> 200 chars): 800ms-1s total
+
+Fórmula: delay_per_char = base_speed / sqrt(text_length)
+Exemplo conceitual (você implementa):
+
+typescript
+function calculateTypewriterSpeed(textLength: number): number {
+  if (textLength < 50) return 2; // 2ms por char = 100ms total
+  if (textLength < 200) return 1.5; // ~300ms total
+  return 1; // ~1s para textos muito longos
+}
+
+// Ou chunk-based (mais rápido):
+function typewriterChunked(text: string) {
+  const chunks = text.split(' '); // Palavra por palavra
+  const delayPerChunk = 30; // 30ms por palavra
+  // Bem mais rápido que char-by-char
+}
+Alternativa: Fade-in imediato se texto curto
+
+text
+Se reflexão < 100 caracteres: Fade-in instantâneo (sem typewriter)
+Se reflexão > 100 caracteres: Typewriter rápido
+ESTRATÉGIAS CRIATIVAS PARA EVITAR ALUCINAÇÃO
+Estratégia 1: Preflight Check UI
+Antes de executar plano, mostrar checklist:
+
+text
+✅ Atividades no catálogo: 47 encontradas
+✅ Disciplina selecionada: Matemática
+⚠️ Turma: Nenhuma cadastrada
+⚠️ Desempenho histórico: Indisponível
+
+[Prosseguir com Dados Disponíveis] [Cadastrar Faltantes]
+Usuário vê exatamente o que IA tem acesso.
+
+Estratégia 2: Real-Time Data Pills
+Durante execução, mostrar "data pills" que aparecem:
+
+text
+┌──────────────────────────────────┐
+│ ✓ Vou verificar atividades       │
+│   [📊 47 atividades] ← pill      │
+└──────────────────────────────────┘
+
+┌──────────────────────────────────┐
+│ ✓ Vou analisar turma             │
+│   [⚠️ 0 turmas] ← pill warning   │
+└──────────────────────────────────┘
+Data pills são renderizadas APENAS com dados reais do banco.
+LLM não controla pills, apenas texto ao redor.
+
+Estratégia 3: Two-Phase Generation
+Fase 1: Fact Collection (No LLM)
+
+text
+Sistema coleta todos os fatos:
+- turmas: []
+- atividades: 47
+- disciplina: "Matemática"
+- desempenho: null
+Fase 2: Narrative Generation (LLM)
+
+text
+LLM recebe fatos imutáveis e gera apenas narrativa.
+Narrativa NÃO pode mencionar fatos não fornecidos.
+Estratégia 4: Interactive Correction
+Se sistema detectar possível alucinação:
+
+text
+┌─────────────────────────────────────┐
+│ ⚠️ Detectamos inconsistência        │
+│                                     │
+│ IA mencionou: "Turma 7B"            │
+│ Banco de dados: Nenhuma turma       │
+│                                     │
+│ [Corrigir IA] [Ignorar]             │
+└─────────────────────────────────────┘
+Feedback user vai para retreino.
+
+Estratégia 5: Confidence Badges
+Mostrar confiança de cada statement:
+
+text
+"Encontrei 47 atividades disponíveis" [✓ Verificado]
+"A turma tem bom desempenho em Álgebra" [⚠️ Estimativa]
+Usuário sabe o que é fato vs inferência.
+
+PROMPT SYSTEM PARA LLM (Template Conceitual)
+Estrutura de Prompt Anti-Alucinação
+text
+# CONTEXTO DA CAPABILITY
+
+Você está executando a capability: {capability_name}
+Objetivo: {objective_description}
+
+# DADOS DISPONÍVEIS (FONTE DE VERDADE)
+
+## Dados do Professor
+- ID: {user_id}
+- Nome: {user_name}
+- Disciplinas: {disciplinas_list}
+
+## Turmas Cadastradas
+- Total: {turmas_count}
+- Lista: {turmas_json}
+- Status: {turmas_isEmpty ? "VAZIO - Nenhuma turma encontrada" : "DADOS DISPONÍVEIS"}
+
+## Atividades Disponíveis
+- Total: {atividades_count}
+- Categorias: {categorias_list}
+- Status: {atividades_isEmpty ? "VAZIO" : "DADOS DISPONÍVEIS"}
+
+## Desempenho Histórico
+- Status: {desempenho_exists ? "DISPONÍVEL" : "INDISPONÍVEL - Sem dados históricos"}
+- Registros: {desempenho_count}
+
+# INSTRUÇÕES CRÍTICAS (OBRIGATÓRIAS)
+
+1. Você DEVE usar APENAS os dados listados em "DADOS DISPONÍVEIS"
+2. Se um dado está marcado como "VAZIO" ou "INDISPONÍVEL", você DEVE informar isso ao usuário
+3. PROIBIDO inventar:
+   - Nomes de turmas
+   - Números de alunos
+   - Médias ou estatísticas
+   - Qualquer informação não listada acima
+
+4. Se dados essenciais faltam, você DEVE:
+   - Informar explicitamente o que está faltando
+   - Sugerir ações para resolver (cadastrar, criar genérico, etc.)
+   - Continuar com dados disponíveis se possível
+
+# EXEMPLOS DE COMPORTAMENTO CORRETO
+
+## Exemplo 1: Sem Turmas
+Dados: turmas_count = 0
+Resposta CORRETA: "Não encontrei turmas cadastradas. Gostaria de cadastrar uma turma agora ou criar atividades genéricas?"
+Resposta ERRADA: "Vou analisar a turma 7B..." ❌
+
+## Exemplo 2: Com Turmas
+Dados: turmas_count = 2, turmas = [{"nome": "7A"}, {"nome": "8B"}]
+Resposta CORRETA: "Encontrei 2 turmas cadastradas: 7A e 8B. Qual delas vamos usar?"
+Resposta ERRADA: "Vou usar a turma 9C..." ❌
+
+# FORMATO DE RESPOSTA OBRIGATÓRIO
+
+Retorne JSON:
+{
+  "has_required_data": boolean,
+  "missing_data": string[],
+  "message": "mensagem para usuário baseada APENAS em dados reais",
+  "suggested_actions": ["ação1", "ação2"],
+  "confidence": 0-1,
+  "data_sources": ["fonte1: X registros", "fonte2: Y registros"]
+}
+
+# SUA TAREFA
+
+{task_description}
+
+Lembre-se: HONESTIDADE > COMPLETUDE. Melhor dizer "não sei" que inventar.
+CHECKLIST DE IMPLEMENTAÇÃO
+Fase 1: Validação de Dados (CRÍTICO)
+ Toda capability consulta database antes de executar
+
+ ValidationResult struct implementado
+
+ Early return quando dados faltam
+
+ Mensagens honestas de ausência de dados
+
+ Logging de queries e resultados
+
+Fase 2: LLM Hardening (CRÍTICO)
+ Prompts estruturados com dados explícitos
+
+ Instruções anti-alucinação em todos os prompts
+
+ Few-shot examples incluídos
+
+ Output schema enforcement
+
+ Negative prompting implementado
+
+Fase 3: Verificação Runtime (IMPORTANTE)
+ Entity extraction de outputs LLM
+
+ Database lookup para cada entidade
+
+ Confidence scoring
+
+ Reject & retry em baixa confiança
+
+ Logging de detecções de alucinação
+
+Fase 4: UX Adaptativo (IMPORTANTE)
+ Reflexão posicionada após cada objetivo
+
+ Typewriter rápido (< 1s)
+
+ Bloqueio de próximo objetivo até reflexão completa
+
+ Data pills com informações reais
+
+ Preflight check UI
+
+Fase 5: Debug & Monitoring (ESSENCIAL)
+ Developer debug panel
+
+ Audit trail completo
+
+ Hallucination detection logs
+
+ Metrics dashboard (taxa de alucinação)
+
+ Alertas para desenvolvedores
+
+MÉTRICAS DE SUCESSO
+Obrigatórias (Quebra se não atingir)
+✅ Taxa de alucinação: 0% (zero tolerância)
+
+✅ Reflexão aparece < 1s após objetivo
+
+✅ 100% das capabilities validam dados antes de executar
+
+✅ 100% dos outputs LLM verificados
+
+Esperadas
+⭐ Usuários entendem quando dados faltam
+
+⭐ Sistema sugere próximos passos úteis
+
+⭐ Debug panel auxilia desenvolvimento
+
+⭐ Performance não degrada com validações
+
+Desejáveis
+💎 Taxa de retry de LLM < 5%
+
+💎 Usuários completam fluxo mesmo sem dados completos
+
+💎 Feedback positivo sobre honestidade do sistema
+
+FALHAS COMUNS A EVITAR
+❌ Validar no frontend mas não no backend
+
+Validação DEVE acontecer em ambos
+
+❌ Confiar que LLM não vai alucinar
+
+LLMs SEMPRE tentam completar, mesmo sem dados
+
+❌ Logging insuficiente
+
+Sem logs, impossível debugar alucinações
+
+❌ UX que esconde ausência de dados
+
+Usuário deve saber exatamente o que sistema tem/não tem
+
+❌ Prompts genéricos
+
+"Analise os dados" → LLM inventa
+
+"Analise estes dados: []" → LLM entende que está vazio
+
+❌ Não ter fallback strategies
+
+Sempre ter plano B quando dados faltam
+
+❌ Typewriter muito lento
+
+2s frustra usuário, quebra fluxo
+
+❌ Reflexões todas no final
+
+Perde contexto, usuário não entende progressão
+
+RESULTADO ESPERADO
+Quando completo:
+
+Zero Alucinações: IA NUNCA menciona dados inexistentes
+
+Reflexão Posicionada: Aparece imediatamente após cada objetivo
+
+Typewriter Rápido: < 1s para textos normais
+
+Transparência: Usuário sabe exatamente quais dados existem
+
+Debugging: Desenvolvedores conseguem rastrear qualquer problema
+
+Confiança: Usuários confiam que sistema é honesto
+
+MINDSET OBRIGATÓRIO
+Desconfiança Construtiva: Sempre assumir que LLM pode alucinar
+
+Verificação Obsessiva: Validar tudo, sempre, duas vezes
+
+Honestidade Radical: Melhor frustrar usuário com verdade que enganar com mentira
+
+Transparência Total: Usuário e desenvolvedor devem ver "caixa preta"
+
+Degradação Elegante: Sistema funciona mesmo com dados incompletos
+
+🚀 ESTE É O SISTEMA MAIS CRÍTICO. QUALIDADE > VELOCIDADE. PRECISÃO > FEATURES. CONFIANÇA É TUDO.

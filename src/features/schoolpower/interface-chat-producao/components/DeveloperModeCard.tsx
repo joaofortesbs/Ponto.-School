@@ -1,19 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useChatState } from '../state/chatState';
-import { ProgressiveExecutionCard, ObjectiveItem, CapabilityItem } from './ProgressiveExecutionCard';
-import { NarrativeReflectionCard, LoadingReflection } from './NarrativeReflectionCard';
+import { ProgressiveExecutionCard, ObjectiveItem, CapabilityItem, ObjectiveReflection } from './ProgressiveExecutionCard';
 import type { DevModeCardData, CapabilityState } from '../types/message-types';
-
-interface ReflectionData {
-  id: string;
-  objectiveIndex: number;
-  objectiveTitle: string;
-  narrative: string;
-  tone: 'celebratory' | 'cautious' | 'explanatory' | 'reassuring';
-  highlights: string[];
-  isLoading?: boolean;
-}
 
 interface DeveloperModeCardProps {
   cardId: string;
@@ -23,7 +12,7 @@ interface DeveloperModeCardProps {
 
 export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperModeCardProps) {
   const { updateCardData, updateCapabilityStatus, updateEtapaStatus, addTextMessage, addCapabilityToEtapa } = useChatState();
-  const [reflections, setReflections] = useState<Map<number, ReflectionData>>(new Map());
+  const [reflections, setReflections] = useState<Map<number, ObjectiveReflection>>(new Map());
   const [loadingReflections, setLoadingReflections] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -88,7 +77,6 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
             const next = new Map(prev);
             next.set(update.stepIndex, {
               id: update.reflection.id,
-              objectiveIndex: update.stepIndex,
               objectiveTitle: update.reflection.objectiveTitle,
               narrative: update.reflection.narrative,
               tone: update.reflection.tone,
@@ -145,42 +133,6 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
     });
   }, [data?.etapas]);
 
-  const renderObjectiveWithReflection = (objective: ObjectiveItem, index: number) => {
-    const reflection = reflections.get(index);
-    const isLoadingReflection = loadingReflections.has(index);
-    const showReflection = objective.status === 'completed' || isLoadingReflection;
-
-    return (
-      <React.Fragment key={`objective-group-${index}`}>
-        <AnimatePresence>
-          {showReflection && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-            >
-              {isLoadingReflection && !reflection ? (
-                <LoadingReflection />
-              ) : reflection ? (
-                <NarrativeReflectionCard
-                  id={reflection.id}
-                  objectiveTitle={reflection.objectiveTitle}
-                  narrative={reflection.narrative}
-                  tone={reflection.tone}
-                  highlights={reflection.highlights}
-                  onComplete={() => {
-                    console.log(`📝 [DeveloperModeCard] Reflexão ${index} exibida completamente`);
-                  }}
-                />
-              ) : null}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </React.Fragment>
-    );
-  };
-
   if (!data) return null;
 
   return (
@@ -191,6 +143,8 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
       <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/95 border border-[#FF6B35]/30 rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm p-5">
         <ProgressiveExecutionCard
           objectives={objectivesForProgressiveCard}
+          reflections={reflections}
+          loadingReflections={loadingReflections}
           onObjectiveComplete={(index) => {
             console.log(`📍 [DeveloperModeCard] Objetivo ${index} concluído`);
           }}
@@ -198,12 +152,6 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
             console.log('✅ [DeveloperModeCard] Todos os objetivos concluídos');
           }}
         />
-        
-        <div className="mt-2">
-          {objectivesForProgressiveCard.map((objective, index) => 
-            renderObjectiveWithReflection(objective, index)
-          )}
-        </div>
       </div>
     </motion.div>
   );

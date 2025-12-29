@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Loader2, ChevronRight, AlertCircle } from 'lucide-react';
+import { NarrativeReflectionCard, LoadingReflection } from './NarrativeReflectionCard';
 
 export type CapabilityStatus = 'hidden' | 'pending' | 'executing' | 'completed' | 'error';
 export type ObjectiveStatus = 'pending' | 'active' | 'completed';
@@ -12,16 +13,28 @@ export interface CapabilityItem {
   status: CapabilityStatus;
 }
 
+export interface ObjectiveReflection {
+  id: string;
+  objectiveTitle: string;
+  narrative: string;
+  tone: 'celebratory' | 'cautious' | 'explanatory' | 'reassuring';
+  highlights: string[];
+  isLoading?: boolean;
+}
+
 export interface ObjectiveItem {
   ordem: number;
   titulo: string;
   descricao: string;
   status: ObjectiveStatus;
   capabilities: CapabilityItem[];
+  reflection?: ObjectiveReflection;
 }
 
 interface ProgressiveExecutionCardProps {
   objectives: ObjectiveItem[];
+  reflections?: Map<number, ObjectiveReflection>;
+  loadingReflections?: Set<number>;
   onObjectiveComplete?: (index: number) => void;
   onAllComplete?: () => void;
 }
@@ -30,9 +43,12 @@ const ObjectiveCard: React.FC<{
   objective: ObjectiveItem;
   index: number;
   isVisible: boolean;
-}> = ({ objective, index, isVisible }) => {
+  reflection?: ObjectiveReflection;
+  isLoadingReflection?: boolean;
+}> = ({ objective, index, isVisible, reflection, isLoadingReflection }) => {
   const isCompleted = objective.status === 'completed';
   const isActive = objective.status === 'active';
+  const showReflectionSlot = isCompleted || isLoadingReflection;
 
   if (!isVisible) return null;
 
@@ -113,6 +129,33 @@ const ObjectiveCard: React.FC<{
               index={capIndex}
             />
           ))}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showReflectionSlot && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="mt-2"
+          >
+            {isLoadingReflection && !reflection ? (
+              <LoadingReflection />
+            ) : reflection ? (
+              <NarrativeReflectionCard
+                id={reflection.id}
+                objectiveTitle={reflection.objectiveTitle}
+                narrative={reflection.narrative}
+                tone={reflection.tone}
+                highlights={reflection.highlights}
+                onComplete={() => {
+                  console.log(`📝 [ObjectiveCard] Reflexão ${index} exibida`);
+                }}
+              />
+            ) : null}
+          </motion.div>
+        )}
       </AnimatePresence>
     </motion.div>
   );
@@ -239,6 +282,8 @@ const CapabilityCard: React.FC<{
 
 export function ProgressiveExecutionCard({
   objectives,
+  reflections,
+  loadingReflections,
   onObjectiveComplete,
   onAllComplete,
 }: ProgressiveExecutionCardProps) {
@@ -302,6 +347,8 @@ export function ProgressiveExecutionCard({
             objective={objective}
             index={idx}
             isVisible={visibleObjectives.has(idx)}
+            reflection={reflections?.get(idx)}
+            isLoadingReflection={loadingReflections?.has(idx)}
           />
         ))}
       </AnimatePresence>
