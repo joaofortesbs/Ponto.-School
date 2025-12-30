@@ -1,23 +1,29 @@
 /**
  * CAPABILITY 2: pesquisar_atividades_disponiveis
  * 
- * Responsabilidade: Consultar o catálogo completo de atividades que o sistema
- * pode criar, definido no arquivo JSON local schoolPowerActivities.json.
+ * Responsabilidade ÚNICA: Consultar o catálogo de atividades disponíveis
+ * via Activity Catalog Service.
  * 
- * Fonte de Dados: schoolPowerActivities.json (static import)
+ * ARQUITETURA API-FIRST:
+ * - Recebe: CapabilityInput
+ * - Retorna: CapabilityOutput padronizado
+ * - Usa: activityCatalogService para file loading
  * 
- * SISTEMA DE VALIDAÇÃO ROBUSTA:
- * - Fail-fast se arquivo não carrega
- * - Validação de schema obrigatória
- * - Log explícito de quantidades
+ * Princípios:
+ * - Fail-fast se dados não carregam
+ * - Debug log em cada etapa
+ * - Validação rigorosa
  */
 
-import schoolPowerActivitiesData from '../../../../data/schoolPowerActivities.json';
+import { activityCatalogService } from '../../../../services/activity-catalog.service';
 import { 
   ActivityFromCatalog, 
   FilterOptions, 
   SearchAvailableActivitiesResult,
-  buildAntiHallucinationPrompt 
+  buildAntiHallucinationPrompt,
+  CapabilityInput,
+  CapabilityOutput,
+  DebugEntry
 } from '../../shared/types';
 
 interface PesquisarDisponiveisParams {
@@ -25,130 +31,209 @@ interface PesquisarDisponiveisParams {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// FASE 1: VALIDAÇÃO CRÍTICA DO IMPORT (FAIL-FAST)
+// FUNÇÃO PRINCIPAL - API-FIRST CAPABILITY
 // ═══════════════════════════════════════════════════════════════════════════
-function validateCatalogImport(): { versao: string; total_atividades: number; atividades: any[] } {
-  console.log('🔍 [VALIDAÇÃO] Verificando import do catálogo...');
-  
-  // Check 1: Import existe?
-  if (!schoolPowerActivitiesData) {
-    console.error('❌ [FATAL] schoolPowerActivitiesData é null/undefined');
-    throw new Error('FATAL: Import do arquivo JSON falhou. schoolPowerActivitiesData é null.');
-  }
-  
-  const data = schoolPowerActivitiesData as any;
-  
-  // Check 2: É um objeto?
-  if (typeof data !== 'object') {
-    console.error('❌ [FATAL] schoolPowerActivitiesData não é um objeto:', typeof data);
-    throw new Error(`FATAL: Tipo inválido. Esperado objeto, recebido ${typeof data}`);
-  }
-  
-  // Check 3: Tem campo atividades?
-  if (!data.atividades) {
-    console.error('❌ [FATAL] Campo "atividades" não existe no JSON');
-    console.error('❌ [DEBUG] Campos disponíveis:', Object.keys(data));
-    throw new Error('FATAL: Schema incorreto. Campo "atividades" não encontrado.');
-  }
-  
-  // Check 4: atividades é array?
-  if (!Array.isArray(data.atividades)) {
-    console.error('❌ [FATAL] Campo "atividades" não é array:', typeof data.atividades);
-    throw new Error(`FATAL: "atividades" deve ser array, recebido ${typeof data.atividades}`);
-  }
-  
-  // Check 5: Array não vazio?
-  if (data.atividades.length === 0) {
-    console.error('❌ [FATAL] Array de atividades está VAZIO');
-    throw new Error('FATAL: Catálogo vazio. Verifique o arquivo schoolPowerActivities.json');
-  }
-  
-  console.log(`✅ [VALIDAÇÃO] Import OK! Versão: ${data.versao}, Total: ${data.atividades.length} atividades`);
-  
-  return {
-    versao: data.versao || '2.0',
-    total_atividades: data.total_atividades || data.atividades.length,
-    atividades: data.atividades
-  };
-}
 
-// Validar IMEDIATAMENTE no load do módulo
-let catalogData: { versao: string; total_atividades: number; atividades: any[] };
-try {
-  catalogData = validateCatalogImport();
-} catch (error) {
-  console.error('💥 [CATÁLOGO] FALHA CRÍTICA AO CARREGAR:', error);
-  // Fallback para estrutura vazia mas válida
-  catalogData = { versao: 'ERRO', total_atividades: 0, atividades: [] };
-}
+export async function pesquisarAtividadesDisponiveisV2(
+  input: CapabilityInput
+): Promise<CapabilityOutput> {
+  const debug_log: DebugEntry[] = [];
+  const startTime = Date.now();
+  const params = (input.context?.filtros || {}) as PesquisarDisponiveisParams;
 
-let cachedActivities: ActivityFromCatalog[] | null = null;
-let cacheTimestamp: number | null = null;
-const CACHE_TTL_MS = 5 * 60 * 1000;
-
-// ═══════════════════════════════════════════════════════════════════════════
-// FASE 2: TRANSFORMAÇÃO E VALIDAÇÃO DE CADA ATIVIDADE
-// ═══════════════════════════════════════════════════════════════════════════
-function loadAndValidateCatalog(): ActivityFromCatalog[] {
-  // Usar cache se válido
-  if (cachedActivities && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_TTL_MS)) {
-    console.log(`📦 [CACHE] Usando cache: ${cachedActivities.length} atividades`);
-    return cachedActivities;
-  }
-
-  console.log('📖 [LOAD] Processando catálogo do JSON...');
-  console.log(`📊 [LOAD] Raw data: ${catalogData.atividades.length} itens no array`);
-
-  // Validar que temos dados
-  if (!catalogData.atividades || catalogData.atividades.length === 0) {
-    console.error('❌ [LOAD] ERRO: catalogData.atividades está vazio!');
-    console.error('❌ [DEBUG] catalogData:', JSON.stringify(catalogData).substring(0, 200));
-    return [];
-  }
-
-  const rawActivities = catalogData.atividades;
-  console.log(`📋 [LOAD] Primeira atividade raw:`, JSON.stringify(rawActivities[0]).substring(0, 150));
-  
-  const validatedActivities: ActivityFromCatalog[] = rawActivities
-    .filter((a: any) => {
-      if (!a) {
-        console.warn('⚠️ [FILTER] Atividade null/undefined ignorada');
-        return false;
-      }
-      if (a.enabled === false) {
-        console.log(`⏭️ [FILTER] Atividade ${a.id} desabilitada, ignorando`);
-        return false;
-      }
-      return true;
-    })
-    .map((a: any, index: number) => {
-      const activity: ActivityFromCatalog = {
-        id: a.id || `auto-${index}`,
-        titulo: a.titulo || a.name || 'Atividade sem título',
-        tipo: a.tipo || 'atividade',
-        categoria: a.categoria || 'geral',
-        materia: a.materia || 'geral',
-        nivel_dificuldade: a.nivel_dificuldade || 'intermediario',
-        tags: a.tags || [],
-        descricao: a.descricao || a.description || '',
-        icone: a.icone,
-        cor: a.cor,
-        enabled: true,
-        campos_obrigatorios: a.campos_obrigatorios || [],
-        campos_opcionais: a.campos_opcionais || [],
-        schema_campos: a.schema_campos || {}
-      };
-      return activity;
+  try {
+    // LOG 1: Início
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'action',
+      narrative: 'Iniciando carregamento do catálogo de atividades disponíveis via Service Layer.',
+      technical_data: { filters: params.filtros }
     });
 
-  cachedActivities = validatedActivities;
-  cacheTimestamp = Date.now();
+    // CARREGAR CATÁLOGO VIA SERVICE
+    console.log('🔍 [Capability:PESQUISAR_DISPONIVEIS] Chamando Activity Catalog Service...');
+    const catalog = await activityCatalogService.loadCatalog();
 
-  console.log(`✅ [LOAD] ${validatedActivities.length} atividades processadas e validadas`);
-  console.log(`📋 [LOAD] IDs carregados: ${validatedActivities.map(a => a.id).join(', ')}`);
+    // VALIDAÇÃO CRÍTICA
+    if (!catalog) {
+      throw new Error('Activity Catalog Service retornou null');
+    }
 
-  return validatedActivities;
+    if (!catalog.activities || catalog.activities.length === 0) {
+      throw new Error('Catálogo carregou mas não contém atividades');
+    }
+
+    // LOG 2: Dados carregados
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'discovery',
+      narrative: `✅ SUCESSO: Carregadas ${catalog.total} atividades do catálogo. Tipos disponíveis: ${catalog.types.join(', ')}. Categorias: ${catalog.categories.join(', ')}.`,
+      technical_data: {
+        count: catalog.total,
+        types: catalog.types,
+        categories: catalog.categories,
+        ids: catalog.activities.map(a => a.id)
+      }
+    });
+
+    // APLICAR FILTROS SE EXISTIREM
+    let filteredActivities = catalog.activities;
+    
+    if (params.filtros) {
+      filteredActivities = filterActivities(catalog.activities, params.filtros);
+      
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'info',
+        narrative: `Filtros aplicados: ${catalog.total} → ${filteredActivities.length} atividades`,
+        technical_data: { filters: params.filtros, original: catalog.total, filtered: filteredActivities.length }
+      });
+    }
+
+    const validIds = filteredActivities.map(a => a.id);
+    const elapsedTime = Date.now() - startTime;
+
+    // LOG 3: Conclusão
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'action',
+      narrative: `Consulta concluída em ${elapsedTime}ms. Retornando ${filteredActivities.length} atividades para próxima capability.`,
+      technical_data: { duration_ms: elapsedTime, valid_ids: validIds }
+    });
+
+    // RETORNO PADRONIZADO
+    return {
+      success: true,
+      capability_id: 'pesquisar_atividades_disponiveis',
+      execution_id: input.execution_id,
+      timestamp: new Date().toISOString(),
+      data: {
+        catalog: filteredActivities,
+        count: filteredActivities.length,
+        types: catalog.types,
+        categories: catalog.categories,
+        summary: filteredActivities.map(a => ({
+          id: a.id,
+          titulo: a.titulo,
+          tipo: a.tipo,
+          categoria: a.categoria
+        })),
+        valid_ids: validIds,
+        catalog_version: catalog.version
+      },
+      error: null,
+      debug_log,
+      metadata: {
+        duration_ms: elapsedTime,
+        retry_count: 0,
+        data_source: 'schoolPowerActivities.json via ActivityCatalogService'
+      }
+    };
+
+  } catch (error) {
+    const elapsedTime = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // LOG ERRO
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'error',
+      narrative: `❌ ERRO CRÍTICO: Não consegui carregar o catálogo. Razão: ${errorMessage}. Sistema NÃO pode prosseguir sem estes dados.`,
+      technical_data: { 
+        error: errorMessage, 
+        stack: error instanceof Error ? error.stack : undefined,
+        duration_ms: elapsedTime
+      }
+    });
+
+    console.error('❌ [Capability:PESQUISAR_DISPONIVEIS] ERRO:', errorMessage);
+
+    return {
+      success: false,
+      capability_id: 'pesquisar_atividades_disponiveis',
+      execution_id: input.execution_id,
+      timestamp: new Date().toISOString(),
+      data: null,
+      error: {
+        code: 'CATALOG_LOAD_FAILED',
+        message: errorMessage,
+        severity: 'critical',
+        recoverable: false,
+        recovery_suggestion: 'Verificar path do arquivo schoolPowerActivities.json e formato do JSON'
+      },
+      debug_log,
+      metadata: {
+        duration_ms: elapsedTime,
+        retry_count: 0,
+        data_source: 'schoolPowerActivities.json'
+      }
+    };
+  }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FUNÇÃO LEGACY (Compatibilidade com executor atual)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function pesquisarAtividadesDisponiveis(
+  params: PesquisarDisponiveisParams = {}
+): Promise<SearchAvailableActivitiesResult> {
+  console.log('🔍 [Capability:PESQUISAR_DISPONIVEIS] Consultando catálogo via Service Layer');
+  
+  const startTime = Date.now();
+  
+  try {
+    // Usar o novo service
+    const catalog = await activityCatalogService.loadCatalog();
+    
+    let filteredActivities = catalog.activities;
+    
+    if (params.filtros) {
+      filteredActivities = filterActivities(catalog.activities, params.filtros);
+      console.log(`🔎 [Capability:PESQUISAR_DISPONIVEIS] Filtros aplicados: ${catalog.total} → ${filteredActivities.length}`);
+    }
+
+    const validIds = filteredActivities.map(a => a.id);
+    const elapsedTime = Date.now() - startTime;
+
+    console.log(`✅ [Capability:PESQUISAR_DISPONIVEIS] Concluído em ${elapsedTime}ms. ${filteredActivities.length} atividades.`);
+
+    return {
+      found: filteredActivities.length > 0,
+      count: filteredActivities.length,
+      activities: filteredActivities,
+      filtered_count: params.filtros ? filteredActivities.length : undefined,
+      filters_applied: params.filtros,
+      metadata: {
+        catalog_version: catalog.version,
+        query_timestamp: new Date().toISOString(),
+        source: "schoolPowerActivities.json"
+      },
+      summary: `Encontradas ${filteredActivities.length} atividade(s) disponível(is) no catálogo`,
+      valid_ids: validIds
+    };
+
+  } catch (error) {
+    console.error('❌ [Capability:PESQUISAR_DISPONIVEIS] Erro ao carregar catálogo:', error);
+    
+    return {
+      found: false,
+      count: 0,
+      activities: [],
+      metadata: {
+        catalog_version: 'error',
+        query_timestamp: new Date().toISOString(),
+        source: "schoolPowerActivities.json"
+      },
+      summary: `Erro ao carregar catálogo: ${(error as Error).message}`,
+      valid_ids: []
+    };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FUNÇÕES AUXILIARES
+// ═══════════════════════════════════════════════════════════════════════════
 
 function filterActivities(
   catalog: ActivityFromCatalog[],
@@ -201,61 +286,6 @@ function filterActivities(
   }
 
   return result;
-}
-
-export async function pesquisarAtividadesDisponiveis(
-  params: PesquisarDisponiveisParams = {}
-): Promise<SearchAvailableActivitiesResult> {
-  console.log('🔍 [Capability:PESQUISAR_DISPONIVEIS] Consultando catálogo de atividades');
-  
-  const startTime = Date.now();
-  
-  try {
-    const allActivities = loadAndValidateCatalog();
-    
-    let filteredActivities = allActivities;
-    
-    if (params.filtros) {
-      filteredActivities = filterActivities(allActivities, params.filtros);
-      console.log(`🔎 [Capability:PESQUISAR_DISPONIVEIS] Filtros aplicados: ${allActivities.length} → ${filteredActivities.length}`);
-    }
-
-    const validIds = filteredActivities.map(a => a.id);
-
-    const elapsedTime = Date.now() - startTime;
-    console.log(`✅ [Capability:PESQUISAR_DISPONIVEIS] Concluído em ${elapsedTime}ms`);
-
-    return {
-      found: filteredActivities.length > 0,
-      count: filteredActivities.length,
-      activities: filteredActivities,
-      filtered_count: params.filtros ? filteredActivities.length : undefined,
-      filters_applied: params.filtros,
-      metadata: {
-        catalog_version: catalogData.versao || '2.0',
-        query_timestamp: new Date().toISOString(),
-        source: "schoolPowerActivities.json"
-      },
-      summary: `Encontradas ${filteredActivities.length} atividade(s) disponível(is) no catálogo`,
-      valid_ids: validIds
-    };
-
-  } catch (error) {
-    console.error('❌ [Capability:PESQUISAR_DISPONIVEIS] Erro ao carregar catálogo:', error);
-    
-    return {
-      found: false,
-      count: 0,
-      activities: [],
-      metadata: {
-        catalog_version: catalogData.versao || 'unknown',
-        query_timestamp: new Date().toISOString(),
-        source: "schoolPowerActivities.json"
-      },
-      summary: `Erro ao carregar catálogo: ${(error as Error).message}`,
-      valid_ids: []
-    };
-  }
 }
 
 export function formatAvailableActivitiesForPrompt(result: SearchAvailableActivitiesResult): string {
