@@ -624,10 +624,19 @@ Seja específico e forneça dados que ajudem o professor.
   private formatTechnicalDataForDebug(capName: string, resultado: any): Record<string, any> {
     // Dados técnicos específicos para pesquisar_atividades_disponiveis
     if (capName.includes('pesquisar_atividades_disponiveis')) {
-      const catalog = resultado?.catalog || resultado?.activities || [];
+      // O registry converte catalog → activities, então priorizar activities
+      const catalog = resultado?.activities || resultado?.catalog || [];
       const validIds = resultado?.valid_ids || catalog.map((a: any) => a.id);
       const types = resultado?.types || [...new Set(catalog.map((a: any) => a.tipo))];
       const categories = resultado?.categories || [...new Set(catalog.map((a: any) => a.categoria))];
+      
+      console.log(`📊 [Executor:formatTechnicalData] Resultado recebido:`, {
+        hasActivities: !!resultado?.activities,
+        hasCatalog: !!resultado?.catalog,
+        hasValidIds: !!resultado?.valid_ids,
+        catalogLength: catalog.length,
+        validIdsLength: validIds.length
+      });
       
       return {
         resultado_resumo: `Encontradas ${catalog.length} atividade(s) disponível(is) no catálogo`,

@@ -48,31 +48,41 @@ class ActivityCatalogService {
 
     const rawData = schoolPowerActivitiesData as any;
 
-    // FASE 2: Validar é objeto
-    if (typeof rawData !== 'object') {
-      throw new Error(`FATAL: Tipo inválido. Esperado objeto, recebido ${typeof rawData}`);
+    // FASE 2: Detectar formato do arquivo - pode ser array direto ou objeto com campo "atividades"
+    let atividadesArray: any[];
+    
+    if (Array.isArray(rawData)) {
+      // Formato: Array direto [ { id, name, ... }, ... ]
+      console.log('📋 [CatalogService] Formato detectado: Array direto');
+      atividadesArray = rawData;
+    } else if (typeof rawData === 'object' && rawData.atividades) {
+      // Formato: Objeto { atividades: [...], versao: "..." }
+      console.log('📋 [CatalogService] Formato detectado: Objeto com campo "atividades"');
+      atividadesArray = rawData.atividades;
+    } else if (typeof rawData === 'object' && rawData.activities) {
+      // Formato alternativo: Objeto { activities: [...] }
+      console.log('📋 [CatalogService] Formato detectado: Objeto com campo "activities"');
+      atividadesArray = rawData.activities;
+    } else {
+      console.error('❌ [CatalogService] Estrutura do JSON:', typeof rawData, Array.isArray(rawData) ? 'é array' : 'não é array');
+      console.error('❌ [CatalogService] Campos disponíveis:', typeof rawData === 'object' ? Object.keys(rawData) : 'N/A');
+      throw new Error('FATAL: Schema não reconhecido. Esperado array ou objeto com "atividades".');
     }
 
-    // FASE 3: Validar campo atividades
-    if (!rawData.atividades) {
-      console.error('❌ [CatalogService] Campos disponíveis:', Object.keys(rawData));
-      throw new Error('FATAL: Schema incorreto. Campo "atividades" não encontrado.');
+    // FASE 3: Validar é array
+    if (!Array.isArray(atividadesArray)) {
+      throw new Error(`FATAL: Dados de atividades devem ser array, recebido ${typeof atividadesArray}`);
     }
 
-    // FASE 4: Validar é array
-    if (!Array.isArray(rawData.atividades)) {
-      throw new Error(`FATAL: "atividades" deve ser array, recebido ${typeof rawData.atividades}`);
-    }
-
-    // FASE 5: Validar não vazio
-    if (rawData.atividades.length === 0) {
+    // FASE 4: Validar não vazio
+    if (atividadesArray.length === 0) {
       throw new Error('FATAL: Catálogo vazio. 0 atividades encontradas.');
     }
 
-    console.log(`📊 [CatalogService] Raw data: ${rawData.atividades.length} atividades no JSON`);
+    console.log(`📊 [CatalogService] Raw data: ${atividadesArray.length} atividades no JSON`);
 
-    // FASE 6: Processar e validar cada atividade
-    const activities: ActivityFromCatalog[] = rawData.atividades
+    // FASE 5: Processar e validar cada atividade
+    const activities: ActivityFromCatalog[] = atividadesArray
       .filter((a: any) => {
         if (!a) return false;
         if (a.enabled === false) {
