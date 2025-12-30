@@ -155,6 +155,49 @@ export async function pesquisarAtividadesDisponiveisV2(
       }
     });
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ETAPA 4.1: LOG DETALHADO DE TODAS AS ATIVIDADES DO CATÁLOGO
+    // ═══════════════════════════════════════════════════════════════════════════
+    const atividadesCompletas = catalog.activities.map((a, index) => ({
+      numero: index + 1,
+      id: a.id,
+      titulo: a.titulo,
+      tipo: a.tipo,
+      categoria: a.categoria,
+      materia: a.materia,
+      nivel: a.nivel_dificuldade,
+      descricao: a.descricao,
+      icone: a.icone,
+      tags: a.tags,
+      campos_obrigatorios: a.campos_obrigatorios,
+      campos_opcionais: a.campos_opcionais || [],
+      enabled: a.enabled
+    }));
+
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'discovery',
+      narrative: `📚 ETAPA 4.1: CATÁLOGO COMPLETO - Listando TODAS as ${catalog.activities.length} atividades disponíveis no arquivo schoolPowerActivities.json:`,
+      technical_data: { 
+        arquivo_fonte: 'schoolPowerActivities.json',
+        versao_catalogo: catalog.version,
+        total_atividades: catalog.activities.length,
+        atividades_completas: atividadesCompletas,
+        resumo_por_tipo: Object.entries(
+          catalog.activities.reduce((acc, a) => {
+            acc[a.tipo] = (acc[a.tipo] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>)
+        ).map(([tipo, count]) => `${tipo}: ${count}`),
+        resumo_por_categoria: Object.entries(
+          catalog.activities.reduce((acc, a) => {
+            acc[a.categoria] = (acc[a.categoria] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>)
+        ).map(([cat, count]) => `${cat}: ${count}`)
+      }
+    });
+
     // CONFIRMAÇÃO 3: IDs válidos extraídos?
     const idsValidos = idsExtraidos.every(id => typeof id === 'string' && id.length > 0);
     debug_log.push({

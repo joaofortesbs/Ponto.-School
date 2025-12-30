@@ -8,6 +8,7 @@
 import { executeWithCascadeFallback } from '../services/controle-APIs-gerais-school-power';
 import { PLANNING_PROMPT, formatCapabilitiesForPrompt } from './prompts/planning-prompt';
 import { getAllCapabilities } from './capabilities';
+import { validatePlanCapabilities, getCapabilityWhitelist, validateCapabilityName } from './validation/capability-validator';
 import type { ExecutionPlan, ExecutionStep, CapabilityCall } from '../interface-chat-producao/types';
 
 export interface PlannerContext {
@@ -24,11 +25,14 @@ export async function createExecutionPlan(
 
   const capabilities = getAllCapabilities();
   const capabilitiesText = formatCapabilitiesForPrompt(capabilities);
+  
+  // Adicionar whitelist de capabilities para prevenir alucinação
+  const whitelist = getCapabilityWhitelist();
 
   const planningPrompt = PLANNING_PROMPT
     .replace('{user_prompt}', userPrompt)
     .replace('{context}', context.workingMemory || 'Sem contexto anterior')
-    .replace('{capabilities}', capabilitiesText);
+    .replace('{capabilities}', capabilitiesText + '\n\n' + whitelist.prompt);
 
   console.log('🤖 [Planner] Enviando para IA...');
 
@@ -46,32 +50,62 @@ export async function createExecutionPlan(
   try {
     const parsed = parseAIPlanResponse(result.data);
     
+    // VALIDAÇÃO ANTI-ALUCINAÇÃO: Verificar e corrigir nomes de capabilities
+    console.log('🔍 [Planner] Validando capabilities do plano...');
+    const validation = validatePlanCapabilities(parsed);
+    
+    if (!validation.valid) {
+      console.warn('⚠️ [Planner] Capabilities inválidas detectadas:', validation.errors);
+      // Usar plano corrigido automaticamente
+    }
+    
+    const validatedPlan = validation.correctedPlan;
+    
     const plan: ExecutionPlan = {
       planId: `plan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      objetivo: parsed.objetivo,
-      etapas: parsed.etapas.map((etapa, idx) => ({
-        ordem: idx + 1,
-        titulo: etapa.titulo,
-        descricao: etapa.descricao,
-        funcao: etapa.capabilities?.[0]?.nome || 'executar_generico',
-        parametros: etapa.capabilities?.[0]?.parametros || {},
-        justificativa: etapa.descricao,
-        status: 'pendente' as const,
-        capabilities: (etapa.capabilities || []).map((cap, capIdx) => ({
-          id: `cap-${idx}-${capIdx}-${Date.now()}`,
-          nome: cap.nome,
-          displayName: cap.displayName,
-          categoria: cap.categoria as CapabilityCall['categoria'],
-          parametros: cap.parametros || {},
-          status: 'pending' as const,
-          ordem: capIdx + 1,
-        })),
-      })),
+      objetivo: validatedPlan.objetivo,
+      etapas: validatedPlan.etapas.map((etapa: ParsedEtapa, idx: number) => {
+        // Validar e normalizar cada capability
+        const validatedCapabilities = (etapa.capabilities || []).map((cap: ParsedCapability, capIdx: number) => {
+          const capValidation = validateCapabilityName(cap.nome);
+          const finalName = capValidation.normalizedName || cap.nome;
+          
+          if (!capValidation.valid && !capValidation.normalizedName) {
+            console.error(`❌ [Planner] Capability inválida ignorada: ${cap.nome}`);
+          }
+          
+          return {
+            id: `cap-${idx}-${capIdx}-${Date.now()}`,
+            nome: finalName,
+            displayName: cap.displayName,
+            categoria: cap.categoria as CapabilityCall['categoria'],
+            parametros: cap.parametros || {},
+            status: 'pending' as const,
+            ordem: capIdx + 1,
+          };
+        }).filter((cap: CapabilityCall) => {
+          // Remover capabilities que não existem após validação
+          const isValid = validateCapabilityName(cap.nome).valid || 
+                         validateCapabilityName(cap.nome).normalizedName;
+          return isValid;
+        });
+        
+        return {
+          ordem: idx + 1,
+          titulo: etapa.titulo,
+          descricao: etapa.descricao,
+          funcao: validatedCapabilities[0]?.nome || 'executar_generico',
+          parametros: validatedCapabilities[0]?.parametros || {},
+          justificativa: etapa.descricao,
+          status: 'pendente' as const,
+          capabilities: validatedCapabilities,
+        };
+      }),
       status: 'aguardando_aprovacao',
       createdAt: Date.now(),
     };
 
-    console.log('✅ [Planner] Plano criado com capabilities:', plan);
+    console.log('✅ [Planner] Plano criado e validado com capabilities:', plan);
     return plan;
   } catch (error) {
     console.error('❌ [Planner] Erro ao parsear resposta:', error);
@@ -120,29 +154,25 @@ function parseAIPlanResponse(responseText: string): ParsedPlan {
 }
 
 function createFallbackPlan(userPrompt: string): ExecutionPlan {
-  console.log('🔄 [Planner] Usando plano fallback inteligente');
+  console.log('🔄 [Planner] Usando plano fallback inteligente com capabilities válidas');
 
-  const promptLower = userPrompt.toLowerCase();
-  const isPlanoAula = promptLower.includes('plano de aula') || promptLower.includes('aula');
-  const isAtividade = promptLower.includes('atividade') || promptLower.includes('exercício');
-  const isAvaliacao = promptLower.includes('avaliação') || promptLower.includes('prova') || promptLower.includes('diagnóstico');
-
-  const etapas: ExecutionStep[] = [];
   const timestamp = Date.now();
 
-  if (isPlanoAula) {
-    etapas.push({
+  // PIPELINE OBRIGATÓRIO: BUSCAR → DECIDIR → CRIAR
+  // Usando APENAS capabilities válidas do registro
+  const etapas: ExecutionStep[] = [
+    {
       ordem: 1,
-      titulo: 'Escolher as melhores atividades para sua turma',
-      descricao: 'Vou analisar sua turma e selecionar as atividades que mais combinam',
-      funcao: 'pesquisar_tipos_atividades',
+      titulo: 'Pesquisar as melhores opções para você',
+      descricao: 'Vou analisar as atividades disponíveis e suas atividades anteriores',
+      funcao: 'pesquisar_atividades_disponiveis',
       parametros: {},
       status: 'pendente',
       capabilities: [
         {
           id: `cap-0-0-${timestamp}`,
-          nome: 'pesquisar_tipos_atividades',
-          displayName: 'Vou verificar quais tipos de atividades funcionam melhor',
+          nome: 'pesquisar_atividades_disponiveis',
+          displayName: 'Vou pesquisar quais atividades eu posso criar',
           categoria: 'PESQUISAR',
           parametros: {},
           status: 'pending',
@@ -151,159 +181,53 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
         {
           id: `cap-0-1-${timestamp}`,
           nome: 'pesquisar_atividades_conta',
-          displayName: 'Vou ver quais atividades já estão disponíveis',
+          displayName: 'Vou buscar suas atividades anteriores',
           categoria: 'PESQUISAR',
           parametros: {},
           status: 'pending',
           ordem: 2,
         },
       ],
-    });
-    etapas.push({
+    },
+    {
       ordem: 2,
+      titulo: 'Decidir quais atividades criar',
+      descricao: 'Vou escolher as melhores atividades para seu objetivo',
+      funcao: 'decidir_atividades_criar',
+      parametros: { contexto: userPrompt },
+      status: 'pendente',
+      capabilities: [
+        {
+          id: `cap-1-0-${timestamp}`,
+          nome: 'decidir_atividades_criar',
+          displayName: 'Vou decidir estrategicamente quais atividades criar',
+          categoria: 'ANALISAR',
+          parametros: { contexto: userPrompt },
+          status: 'pending',
+          ordem: 1,
+        },
+      ],
+    },
+    {
+      ordem: 3,
       titulo: 'Criar as atividades personalizadas',
-      descricao: 'Vou criar atividades sob medida para sua turma',
+      descricao: 'Vou criar as atividades sob medida para você',
       funcao: 'criar_atividade',
       parametros: { contexto: userPrompt },
       status: 'pendente',
       capabilities: [
         {
-          id: `cap-1-0-${timestamp}`,
-          nome: 'criar_atividade',
-          displayName: 'Vou criar atividades engajantes para seus alunos',
-          categoria: 'CRIAR',
-          parametros: { contexto: userPrompt },
-          status: 'pending',
-          ordem: 1,
-        },
-      ],
-    });
-    etapas.push({
-      ordem: 3,
-      titulo: 'Transformar tudo em uma aula pronta',
-      descricao: 'Vou organizar as atividades em um plano de aula completo',
-      funcao: 'criar_plano_aula',
-      parametros: { tema: userPrompt },
-      status: 'pendente',
-      capabilities: [
-        {
           id: `cap-2-0-${timestamp}`,
-          nome: 'criar_plano_aula',
-          displayName: 'Vou montar a aula completa para você usar',
-          categoria: 'CRIAR',
-          parametros: { tema: userPrompt },
-          status: 'pending',
-          ordem: 1,
-        },
-      ],
-    });
-  } else if (isAvaliacao) {
-    etapas.push({
-      ordem: 1,
-      titulo: 'Entender o que sua turma precisa',
-      descricao: 'Vou analisar as necessidades de avaliação da sua turma',
-      funcao: 'analisar_gaps_aprendizado',
-      parametros: {},
-      status: 'pendente',
-      capabilities: [
-        {
-          id: `cap-0-0-${timestamp}`,
-          nome: 'analisar_gaps_aprendizado',
-          displayName: 'Vou identificar os pontos que precisam ser avaliados',
-          categoria: 'ANALISAR',
-          parametros: {},
-          status: 'pending',
-          ordem: 1,
-        },
-      ],
-    });
-    etapas.push({
-      ordem: 2,
-      titulo: 'Criar a avaliação ideal para sua turma',
-      descricao: 'Vou criar uma avaliação personalizada e eficaz',
-      funcao: 'criar_avaliacao_diagnostica',
-      parametros: { tema: userPrompt },
-      status: 'pendente',
-      capabilities: [
-        {
-          id: `cap-1-0-${timestamp}`,
-          nome: 'criar_avaliacao_diagnostica',
-          displayName: 'Vou criar uma avaliação que realmente funciona',
-          categoria: 'CRIAR',
-          parametros: { tema: userPrompt },
-          status: 'pending',
-          ordem: 1,
-        },
-      ],
-    });
-  } else {
-    etapas.push({
-      ordem: 1,
-      titulo: 'Escolher as melhores opções para você',
-      descricao: 'Vou analisar e selecionar as melhores opções disponíveis',
-      funcao: 'pesquisar_tipos_atividades',
-      parametros: {},
-      status: 'pendente',
-      capabilities: [
-        {
-          id: `cap-0-0-${timestamp}`,
-          nome: 'pesquisar_tipos_atividades',
-          displayName: 'Vou verificar quais opções funcionam melhor',
-          categoria: 'PESQUISAR',
-          parametros: {},
-          status: 'pending',
-          ordem: 1,
-        },
-        {
-          id: `cap-0-1-${timestamp}`,
-          nome: 'pesquisar_atividades_conta',
-          displayName: 'Vou ver o que já está disponível',
-          categoria: 'PESQUISAR',
-          parametros: {},
-          status: 'pending',
-          ordem: 2,
-        },
-      ],
-    });
-    etapas.push({
-      ordem: 2,
-      titulo: 'Criar o conteúdo personalizado',
-      descricao: 'Vou criar conteúdo sob medida para você',
-      funcao: 'criar_atividade',
-      parametros: { contexto: userPrompt },
-      status: 'pendente',
-      capabilities: [
-        {
-          id: `cap-1-0-${timestamp}`,
           nome: 'criar_atividade',
-          displayName: 'Vou criar conteúdo engajante',
+          displayName: 'Vou criar atividades engajantes',
           categoria: 'CRIAR',
           parametros: { contexto: userPrompt },
           status: 'pending',
           ordem: 1,
         },
       ],
-    });
-    etapas.push({
-      ordem: 3,
-      titulo: 'Entregar tudo pronto para você usar',
-      descricao: 'Vou organizar e entregar o material finalizado',
-      funcao: 'gerar_relatorio_personalizado',
-      parametros: { contexto: userPrompt },
-      status: 'pendente',
-      capabilities: [
-        {
-          id: `cap-2-0-${timestamp}`,
-          nome: 'gerar_relatorio_personalizado',
-          displayName: 'Vou preparar tudo para você usar',
-          categoria: 'ANALISAR',
-          parametros: { contexto: userPrompt },
-          status: 'pending',
-          ordem: 1,
-        },
-      ],
-    });
-  }
+    },
+  ];
 
   return {
     planId: `plan-fallback-${timestamp}`,
