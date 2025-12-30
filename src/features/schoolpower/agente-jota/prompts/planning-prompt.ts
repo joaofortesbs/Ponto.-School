@@ -3,6 +3,8 @@
  * 
  * Usado pelo Planner para gerar planos de ação estruturados
  * com capabilities inteligentes para cada etapa
+ * 
+ * IMPORTANTE: Use APENAS os nomes de capabilities listados abaixo!
  */
 
 export const PLANNING_PROMPT = `
@@ -17,22 +19,38 @@ CONTEXTO ATUAL:
 FUNÇÕES DISPONÍVEIS (CAPABILITIES):
 {capabilities}
 
+═══════════════════════════════════════════════════════════════════════════
+⚠️ ATENÇÃO CRÍTICA: USE APENAS ESTAS 5 CAPABILITIES (NOMES EXATOS) ⚠️
+═══════════════════════════════════════════════════════════════════════════
+
+1. "pesquisar_atividades_disponiveis" - Pesquisa atividades no catálogo
+2. "pesquisar_atividades_conta" - Busca atividades já criadas pelo professor
+3. "decidir_atividades_criar" - Decide quais atividades criar
+4. "criar_atividade" - Cria as atividades selecionadas
+5. "planejar_plano_de_acao" - Monta um plano estruturado
+
+❌ NÃO INVENTE NOMES como: pesquisar_tipos_atividades, criar_plano_aula, etc.
+❌ NÃO MODIFIQUE os nomes acima de nenhuma forma!
+✅ COPIE exatamente um dos 5 nomes listados!
+
+═══════════════════════════════════════════════════════════════════════════
+
 INSTRUÇÕES:
-Crie um plano de ação SIMPLES e ORIENTADO A VALOR com no máximo 3 etapas genéricas.
-As etapas devem ser AMPLAS e focadas no RESULTADO para o professor, não em detalhes técnicos.
+Crie um plano de ação SIMPLES com no máximo 3 etapas seguindo o pipeline:
+PESQUISAR → DECIDIR → CRIAR
 
 RESPONDA APENAS COM UM JSON VÁLIDO no seguinte formato:
 {
   "objetivo": "Resumo claro do que será entregue ao professor",
   "etapas": [
     {
-      "titulo": "Título genérico orientado a valor (começa com verbo)",
-      "descricao": "Descrição simples do benefício desta etapa",
+      "titulo": "Título genérico orientado a valor",
+      "descricao": "Descrição simples do benefício",
       "capabilities": [
         {
-          "nome": "nome_da_funcao",
+          "nome": "NOME_EXATO_DA_LISTA_ACIMA",
           "displayName": "Frase curta começando com 'Vou...'",
-          "categoria": "CATEGORIA",
+          "categoria": "PESQUISAR|DECIDIR|CRIAR",
           "parametros": {},
           "justificativa": "Breve justificativa"
         }
@@ -41,83 +59,63 @@ RESPONDA APENAS COM UM JSON VÁLIDO no seguinte formato:
   ]
 }
 
-REGRAS CRÍTICAS:
-1. MÁXIMO 3 ETAPAS - etapas devem ser amplas e genéricas, não específicas
-2. TÍTULOS DAS ETAPAS devem ser orientados a valor, ex:
-   - "Escolher as melhores atividades para sua turma"
-   - "Criar atividades personalizadas"
-   - "Organizar tudo em uma aula pronta"
-3. NÃO use títulos técnicos como "Pesquisar banco de dados" ou "Executar query"
-4. DISPLAY NAMES das capabilities devem começar com "Vou..." em tom amigável
-5. Foque no RESULTADO FUTURO - o que o professor vai ganhar com cada etapa
-6. Categorias válidas: PESQUISAR, CRIAR, ANALISAR, ADICIONAR, EDITAR
-7. Use APENAS funções da lista de capabilities disponíveis
-8. NÃO crie etapas de "análise prévia" ou "entendimento" - vá direto às ações que entregam valor
-
-EXEMPLOS DE TÍTULOS BOM vs RUIM:
-- BOM: "Escolher as melhores atividades para sua turma" 
-- RUIM: "Pesquisar atividades no banco de dados"
-
-- BOM: "Criar atividades personalizadas"
-- RUIM: "Executar criação de atividades via API"
-
-- BOM: "Transformar tudo em aulas prontas"
-- RUIM: "Gerar plano de aula com template padrão"
-
-EXEMPLO DE PLANO IDEAL PARA "Preciso criar a próxima aula para a turma 7A":
+EXEMPLO DE PLANO CORRETO PARA "Preciso criar atividades de matemática":
 {
-  "objetivo": "Criar uma aula completa e personalizada para a turma 7A",
+  "objetivo": "Criar atividades de matemática personalizadas",
   "etapas": [
     {
-      "titulo": "Escolher as melhores atividades para a turma 7A",
-      "descricao": "Vou analisar sua turma e selecionar as atividades que mais combinam",
+      "titulo": "Pesquisar as melhores opções para você",
+      "descricao": "Vou analisar o catálogo e suas atividades anteriores",
       "capabilities": [
         {
-          "nome": "pesquisar_tipos_atividades",
-          "displayName": "Vou verificar quais tipos de atividades funcionam melhor",
+          "nome": "pesquisar_atividades_disponiveis",
+          "displayName": "Vou pesquisar quais atividades eu posso criar",
           "categoria": "PESQUISAR",
           "parametros": {},
-          "justificativa": "Encontrar atividades ideais para a turma"
+          "justificativa": "Consultar catálogo de atividades"
         },
         {
           "nome": "pesquisar_atividades_conta",
-          "displayName": "Vou ver quais atividades já estão disponíveis",
+          "displayName": "Vou buscar suas atividades anteriores",
           "categoria": "PESQUISAR",
           "parametros": {},
-          "justificativa": "Aproveitar atividades existentes"
+          "justificativa": "Evitar duplicações"
+        }
+      ]
+    },
+    {
+      "titulo": "Decidir quais atividades criar",
+      "descricao": "Vou escolher as melhores atividades para seu objetivo",
+      "capabilities": [
+        {
+          "nome": "decidir_atividades_criar",
+          "displayName": "Vou decidir estrategicamente quais atividades criar",
+          "categoria": "DECIDIR",
+          "parametros": {},
+          "justificativa": "Selecionar atividades ideais"
         }
       ]
     },
     {
       "titulo": "Criar as atividades personalizadas",
-      "descricao": "Vou criar atividades sob medida para sua turma",
+      "descricao": "Vou criar as atividades escolhidas",
       "capabilities": [
         {
           "nome": "criar_atividade",
-          "displayName": "Vou criar atividades engajantes para seus alunos",
+          "displayName": "Vou criar as atividades selecionadas",
           "categoria": "CRIAR",
-          "parametros": {"contexto": "turma 7A"},
-          "justificativa": "Criar conteúdo personalizado"
-        }
-      ]
-    },
-    {
-      "titulo": "Transformar tudo em uma aula pronta",
-      "descricao": "Vou organizar as atividades em um plano de aula completo",
-      "capabilities": [
-        {
-          "nome": "criar_plano_aula",
-          "displayName": "Vou montar a aula completa para você usar",
-          "categoria": "CRIAR",
-          "parametros": {"tema": "aula personalizada"},
-          "justificativa": "Entregar aula pronta para uso"
+          "parametros": {},
+          "justificativa": "Construir e salvar atividades"
         }
       ]
     }
   ]
 }
 
-IMPORTANTE: Retorne APENAS o JSON, sem explicações adicionais.
+IMPORTANTE: 
+- Retorne APENAS o JSON, sem explicações adicionais
+- Use APENAS os 5 nomes de capabilities listados acima
+- NÃO invente novos nomes de capabilities!
 `.trim();
 
 export interface Capability {

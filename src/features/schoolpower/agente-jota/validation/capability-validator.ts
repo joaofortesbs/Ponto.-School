@@ -228,6 +228,7 @@ export function validatePlanCapabilities(plan: any): {
 } {
   const errors: string[] = [];
   const correctedPlan = JSON.parse(JSON.stringify(plan));
+  const whitelist = getCapabilityWhitelist();
   
   if (!correctedPlan.etapas || !Array.isArray(correctedPlan.etapas)) {
     return { valid: false, errors: ['Plano não contém etapas válidas'], correctedPlan };
@@ -240,32 +241,77 @@ export function validatePlanCapabilities(plan: any): {
       continue;
     }
     
+    // Filtrar capabilities inválidas e corrigir as válidas
+    const validCapabilities: any[] = [];
+    
     for (let j = 0; j < etapa.capabilities.length; j++) {
       const cap = etapa.capabilities[j];
       const validation = validateCapabilityName(cap.nome);
       
-      if (!validation.valid) {
-        errors.push(`Etapa ${i + 1}, Capability ${j + 1}: ${validation.errorMessage}`);
+      if (!validation.valid && !validation.normalizedName) {
+        // Tentar encontrar a capability mais próxima
+        const closestMatch = findClosestCapabilityPublic(cap.nome);
         
-        if (validation.suggestion) {
-          const possibleName = validation.suggestion.match(/"([^"]+)"/)?.[1];
-          if (possibleName) {
-            console.warn(`⚠️ [CapabilityValidator] Corrigindo "${cap.nome}" → "${possibleName}"`);
-            correctedPlan.etapas[i].capabilities[j].nome = possibleName;
-          }
+        if (closestMatch) {
+          console.warn(`⚠️ [CapabilityValidator] Corrigindo "${cap.nome}" → "${closestMatch}"`);
+          cap.nome = closestMatch;
+        } else {
+          errors.push(`Etapa ${i + 1}, Capability ${j + 1}: "${cap.nome}" não existe e será removida`);
+          console.error(`❌ [CapabilityValidator] Removendo capability inválida: "${cap.nome}"`);
+          continue; // Não adiciona à lista de válidas
         }
-      } else if (validation.normalizedName !== cap.nome) {
+      } else if (validation.normalizedName && validation.normalizedName !== cap.nome) {
         console.log(`🔄 [CapabilityValidator] Normalizando "${cap.nome}" → "${validation.normalizedName}"`);
-        correctedPlan.etapas[i].capabilities[j].nome = validation.normalizedName;
+        cap.nome = validation.normalizedName;
       }
+      
+      // Sobrescrever displayName e categoria com valores canônicos do registro
+      const canonicalName = cap.nome;
+      if (whitelist.displayNames[canonicalName]) {
+        console.log(`📝 [CapabilityValidator] Sobrescrevendo displayName: "${cap.displayName}" → "${whitelist.displayNames[canonicalName]}"`);
+        cap.displayName = whitelist.displayNames[canonicalName];
+      }
+      
+      // Determinar categoria canônica baseada no nome
+      const canonicalCategory = getCanonicalCategory(canonicalName);
+      if (canonicalCategory && cap.categoria !== canonicalCategory) {
+        console.log(`📝 [CapabilityValidator] Sobrescrevendo categoria: "${cap.categoria}" → "${canonicalCategory}"`);
+        cap.categoria = canonicalCategory;
+      }
+      
+      validCapabilities.push(cap);
     }
+    
+    // Atualizar etapa apenas com capabilities válidas
+    correctedPlan.etapas[i].capabilities = validCapabilities;
   }
+  
+  // Remover etapas sem capabilities
+  correctedPlan.etapas = correctedPlan.etapas.filter((etapa: any) => 
+    etapa.capabilities && etapa.capabilities.length > 0
+  );
   
   return {
     valid: errors.length === 0,
     errors,
     correctedPlan
   };
+}
+
+function findClosestCapabilityPublic(name: string): string | null {
+  const validNames = getValidCapabilityNames();
+  return findClosestCapability(name, validNames);
+}
+
+function getCanonicalCategory(capabilityName: string): string | null {
+  const categoryMap: Record<string, string> = {
+    'pesquisar_atividades_disponiveis': 'PESQUISAR',
+    'pesquisar_atividades_conta': 'PESQUISAR',
+    'decidir_atividades_criar': 'ANALISAR',
+    'criar_atividade': 'CRIAR',
+    'planejar_plano_de_acao': 'PLANEJAR'
+  };
+  return categoryMap[capabilityName] || null;
 }
 
 export default {
