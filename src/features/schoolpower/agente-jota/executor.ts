@@ -225,14 +225,14 @@ export class AgentExecutor {
           
           resultado = await executeCapability(capName, capability.parametros);
           
-          // Debug: Resultado obtido
+          // Debug: Resultado obtido com dados técnicos detalhados
           createDebugEntry(
             capId,
             capDisplayName,
             'discovery',
             this.formatDebugNarrative(capName, resultado),
             'low',
-            { resultado_resumo: this.formatResultSummary(resultado) }
+            this.formatTechnicalDataForDebug(capName, resultado)
           );
         } else {
           console.warn(`  ⚠️ [Executor] Capability não encontrada: ${capName}`);
@@ -618,6 +618,80 @@ Seja específico e forneça dados que ajudem o professor.
       tipo: 'fallback',
       conteudo: `Etapa "${etapa.descricao}" processada`,
       funcao: etapa.funcao,
+    };
+  }
+
+  private formatTechnicalDataForDebug(capName: string, resultado: any): Record<string, any> {
+    // Dados técnicos específicos para pesquisar_atividades_disponiveis
+    if (capName.includes('pesquisar_atividades_disponiveis')) {
+      const catalog = resultado?.catalog || resultado?.activities || [];
+      const validIds = resultado?.valid_ids || catalog.map((a: any) => a.id);
+      const types = resultado?.types || [...new Set(catalog.map((a: any) => a.tipo))];
+      const categories = resultado?.categories || [...new Set(catalog.map((a: any) => a.categoria))];
+      
+      return {
+        resultado_resumo: `Encontradas ${catalog.length} atividade(s) disponível(is) no catálogo`,
+        ids_validos: validIds,
+        tipos_encontrados: types,
+        categorias: categories,
+        atividades: catalog.map((a: any) => ({
+          id: a.id,
+          titulo: a.titulo,
+          tipo: a.tipo,
+          categoria: a.categoria
+        }))
+      };
+    }
+    
+    // Dados técnicos específicos para pesquisar_atividades_conta
+    if (capName.includes('pesquisar_atividades_conta')) {
+      const atividades = resultado?.atividades || resultado?.activities || [];
+      return {
+        resultado_resumo: `Encontradas ${atividades.length} atividade(s) na conta do professor`,
+        total_atividades: atividades.length,
+        atividades: atividades.map((a: any) => ({
+          id: a.id,
+          titulo: a.titulo || a.nome,
+          tipo: a.tipo,
+          data_criacao: a.created_at || a.data_criacao
+        }))
+      };
+    }
+    
+    // Dados técnicos específicos para decidir_atividades_criar
+    if (capName.includes('decidir_atividades')) {
+      const chosen = resultado?.chosen_activities || resultado?.activities_to_create || resultado?.decisoes || [];
+      return {
+        resultado_resumo: `Decidido criar ${chosen.length} atividade(s)`,
+        atividades_escolhidas: chosen.map((a: any) => ({
+          id: a.id || a.activity_id,
+          titulo: a.titulo || a.name,
+          tipo: a.tipo || a.type,
+          justificativa: a.justificativa || a.reason
+        }))
+      };
+    }
+    
+    // Dados técnicos específicos para criar_atividade
+    if (capName.includes('criar_atividade')) {
+      const built = resultado?.activities_built || resultado?.created || [];
+      const progress = resultado?.progress;
+      return {
+        resultado_resumo: `Construídas ${built.length} atividade(s)`,
+        progresso: progress ? `${progress.completed}/${progress.total} (${progress.percentage}%)` : null,
+        atividades_criadas: built.map((a: any) => ({
+          id: a.id,
+          titulo: a.titulo,
+          tipo: a.tipo,
+          status: a.status,
+          campos_preenchidos: a.campos_preenchidos ? Object.keys(a.campos_preenchidos) : []
+        }))
+      };
+    }
+    
+    // Fallback genérico
+    return {
+      resultado_resumo: this.formatResultSummary(resultado)
     };
   }
 
