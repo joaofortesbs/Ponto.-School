@@ -355,15 +355,18 @@ export class AgentExecutor {
 
   private formatDebugNarrative(capName: string, resultado: any): string {
     if (capName.includes('pesquisar_atividades_conta')) {
-      const count = resultado?.atividades?.length || resultado?.total || 0;
+      const count = resultado?.atividades?.length || resultado?.total || resultado?.count || 0;
       return `Pesquisei as atividades já criadas na conta do professor. Encontrei ${count} atividade(s) registrada(s) no banco de dados.`;
     }
     if (capName.includes('pesquisar_atividades_disponiveis')) {
-      const count = resultado?.atividades?.length || resultado?.tipos?.length || resultado?.total || 0;
-      return `Consultei o catálogo de atividades disponíveis. Identifiquei ${count} tipo(s) de atividade que podem ser criadas.`;
+      // Estrutura correta do resultado: { catalog: [], count: X, types: [], categories: [], summary: [], valid_ids: [] }
+      const count = resultado?.count || resultado?.catalog?.length || resultado?.activities?.length || resultado?.total || 0;
+      const types = resultado?.types?.length || 0;
+      const ids = resultado?.valid_ids?.length || count;
+      return `Consultei o catálogo de atividades. Encontrei ${count} atividade(s) disponível(is) com ${types} tipo(s). IDs válidos: ${ids}.`;
     }
     if (capName.includes('decidir_atividades')) {
-      const chosen = resultado?.chosen_activities?.length || resultado?.decisoes?.length || 0;
+      const chosen = resultado?.chosen_activities?.length || resultado?.decisoes?.length || resultado?.activities_to_create?.length || 0;
       return `Analisei o contexto pedagógico e decidi criar ${chosen} atividade(s) que melhor atendem às necessidades identificadas.`;
     }
     if (capName.includes('criar_atividade')) {

@@ -68,32 +68,41 @@ export function useCapabilityExecutor() {
       })
     }));
 
+    // LIMPAR ENTRIES ANTERIORES E INICIAR NOVA CAPABILITY
     debugStore.startCapability(capabilityId, capabilityId);
-    
-    createDebugEntry(
-      capabilityId,
-      capabilityId,
-      'action',
-      `Iniciando execução da capability "${capabilityId}"...`,
-      'low'
-    );
 
     try {
       const result = await capabilityExecutor.execute(capabilityId, context);
       
+      // ═══════════════════════════════════════════════════════════════════════════
+      // INJETAR TODOS OS DEBUG_LOG ENTRIES DA CAPABILITY NO DEBUGSTORE
+      // ═══════════════════════════════════════════════════════════════════════════
+      if (result.debug_log && result.debug_log.length > 0) {
+        console.log(`📋 [useCapabilityExecutor] Injetando ${result.debug_log.length} entries no DebugStore para ${capabilityId}`);
+        
+        result.debug_log.forEach((entry, index) => {
+          // Mapear type da capability para entry_type do DebugStore
+          const entryType = entry.type as any;
+          const severity = entry.type === 'error' ? 'high' : 
+                          entry.type === 'warning' ? 'medium' : 
+                          entry.type === 'confirmation' ? (entry.technical_data?.status === 'FALHA' ? 'high' : 'low') :
+                          'low';
+          
+          debugStore.addEntry(capabilityId, capabilityId, {
+            entry_type: entryType,
+            narrative: entry.narrative,
+            severity: severity,
+            technical_data: entry.technical_data
+          });
+          
+          console.log(`   [${index + 1}/${result.debug_log.length}] ${entry.type}: ${entry.narrative.substring(0, 50)}...`);
+        });
+      } else {
+        console.warn(`⚠️ [useCapabilityExecutor] Capability ${capabilityId} não retornou debug_log`);
+      }
+
       // Verificar data confirmation
       const isBlocked = result.data_confirmation?.blocksNextStep && !result.data_confirmation?.confirmed;
-
-      if (result.data_confirmation) {
-        createDebugEntry(
-          capabilityId,
-          capabilityId,
-          'confirmation',
-          result.data_confirmation.summary,
-          result.data_confirmation.confirmed ? 'low' : 'high',
-          { checks: result.data_confirmation.checks }
-        );
-      }
 
       setState(prev => {
         const newProgress = new Map(prev.progress);
@@ -179,11 +188,45 @@ export function useCapabilityExecutor() {
     });
     setState(prev => ({ ...prev, progress: initialProgress }));
 
+    // Limpar DebugStore para nova execução
+    debugStore.clearSession();
+    debugStore.initSession(`seq_${Date.now()}`);
+
     try {
       const result = await capabilityExecutor.executeSequence({
         capabilities,
         context,
         dependencies
+      });
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      // INJETAR DEBUG_LOG DE CADA CAPABILITY NO DEBUGSTORE
+      // ═══════════════════════════════════════════════════════════════════════════
+      result.results.forEach((output, capId) => {
+        // Iniciar capability no store
+        debugStore.startCapability(capId, capId);
+
+        // Injetar todos os entries de debug_log
+        if (output.debug_log && output.debug_log.length > 0) {
+          console.log(`📋 [executeSequence] Injetando ${output.debug_log.length} entries para ${capId}`);
+          
+          output.debug_log.forEach((entry) => {
+            const entryType = entry.type as any;
+            const severity = entry.type === 'error' ? 'high' : 
+                            entry.type === 'warning' ? 'medium' : 
+                            entry.type === 'confirmation' ? (entry.technical_data?.status === 'FALHA' ? 'high' : 'low') :
+                            'low';
+            
+            debugStore.addEntry(capId, capId, {
+              entry_type: entryType,
+              narrative: entry.narrative,
+              severity: severity,
+              technical_data: entry.technical_data
+            });
+          });
+        }
+
+        debugStore.endCapability(capId);
       });
 
       // Atualizar estado com resultados
