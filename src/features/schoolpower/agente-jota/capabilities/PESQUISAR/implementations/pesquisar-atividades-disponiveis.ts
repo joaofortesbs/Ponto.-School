@@ -45,41 +45,135 @@ export async function pesquisarAtividadesDisponiveisV2(
   const params = (input.context?.filtros || {}) as PesquisarDisponiveisParams;
 
   try {
-    // LOG 1: Início
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ETAPA 1: INICIALIZAÇÃO E LOCALIZAÇÃO DO ARQUIVO
+    // ═══════════════════════════════════════════════════════════════════════════
     debug_log.push({
       timestamp: new Date().toISOString(),
       type: 'action',
-      narrative: 'Iniciando carregamento do catálogo de atividades disponíveis via Service Layer.',
-      technical_data: { filters: params.filtros }
-    });
-
-    // CARREGAR CATÁLOGO VIA SERVICE
-    console.log('🔍 [Capability:PESQUISAR_DISPONIVEIS] Chamando Activity Catalog Service...');
-    const catalog = await activityCatalogService.loadCatalog();
-
-    // VALIDAÇÃO CRÍTICA
-    if (!catalog) {
-      throw new Error('Activity Catalog Service retornou null');
-    }
-
-    if (!catalog.activities || catalog.activities.length === 0) {
-      throw new Error('Catálogo carregou mas não contém atividades');
-    }
-
-    // LOG 2: Dados carregados
-    debug_log.push({
-      timestamp: new Date().toISOString(),
-      type: 'discovery',
-      narrative: `✅ SUCESSO: Carregadas ${catalog.total} atividades do catálogo. Tipos disponíveis: ${catalog.types.join(', ')}. Categorias: ${catalog.categories.join(', ')}.`,
-      technical_data: {
-        count: catalog.total,
-        types: catalog.types,
-        categories: catalog.categories,
-        ids: catalog.activities.map(a => a.id)
+      narrative: '📂 ETAPA 1: Iniciando busca no catálogo de atividades do School Power...',
+      technical_data: { 
+        arquivo_alvo: 'schoolPowerActivities.json',
+        caminho: 'src/data/schoolPowerActivities.json',
+        filtros_solicitados: params.filtros || 'nenhum'
       }
     });
 
-    // APLICAR FILTROS SE EXISTIREM
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ETAPA 2: CARREGAMENTO DO ARQUIVO VIA SERVICE LAYER
+    // ═══════════════════════════════════════════════════════════════════════════
+    console.log('🔍 [Capability:PESQUISAR_DISPONIVEIS] Chamando Activity Catalog Service...');
+    
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'info',
+      narrative: '⏳ ETAPA 2: Acessando arquivo schoolPowerActivities.json via ActivityCatalogService...',
+      technical_data: { 
+        servico: 'ActivityCatalogService',
+        metodo: 'loadCatalog()',
+        cache_ativo: true,
+        cache_ttl: '1 minuto'
+      }
+    });
+
+    const catalog = await activityCatalogService.loadCatalog();
+
+    // CONFIRMAÇÃO 1: Arquivo carregado?
+    const arquivoCarregado = catalog !== null;
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'confirmation',
+      narrative: arquivoCarregado 
+        ? '✅ CONFIRMAÇÃO: Arquivo schoolPowerActivities.json carregado com sucesso!'
+        : '❌ FALHA: Arquivo não foi carregado - retorno null do service',
+      technical_data: { 
+        confirmacao: 'arquivo_carregado',
+        status: arquivoCarregado ? 'SUCESSO' : 'FALHA',
+        dados_recebidos: arquivoCarregado,
+        bloqueia_proxima_etapa: !arquivoCarregado
+      }
+    });
+
+    // VALIDAÇÃO CRÍTICA
+    if (!catalog) {
+      throw new Error('Activity Catalog Service retornou null - arquivo não encontrado ou inválido');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ETAPA 3: EXTRAÇÃO E PARSING DOS DADOS
+    // ═══════════════════════════════════════════════════════════════════════════
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'action',
+      narrative: '🔍 ETAPA 3: Extraindo atividades do JSON carregado...',
+      technical_data: { 
+        versao_catalogo: catalog.version,
+        total_bruto: catalog.total,
+        tipos_encontrados: catalog.types,
+        categorias_encontradas: catalog.categories
+      }
+    });
+
+    // CONFIRMAÇÃO 2: Atividades existem no arquivo?
+    const temAtividades = catalog.activities && catalog.activities.length > 0;
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'confirmation',
+      narrative: temAtividades 
+        ? `✅ CONFIRMAÇÃO: Encontradas ${catalog.activities.length} atividades no arquivo!`
+        : '❌ FALHA: Arquivo carregou mas não contém atividades',
+      technical_data: { 
+        confirmacao: 'atividades_encontradas',
+        status: temAtividades ? 'SUCESSO' : 'FALHA',
+        quantidade: catalog.activities?.length || 0,
+        bloqueia_proxima_etapa: !temAtividades
+      }
+    });
+
+    if (!temAtividades) {
+      throw new Error('Catálogo carregou mas não contém atividades');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ETAPA 4: EXTRAÇÃO DOS IDs POR ATIVIDADE
+    // ═══════════════════════════════════════════════════════════════════════════
+    const idsExtraidos = catalog.activities.map(a => a.id);
+    
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'discovery',
+      narrative: `📋 ETAPA 4: Extraídos ${idsExtraidos.length} IDs únicos do catálogo.`,
+      technical_data: { 
+        ids_extraidos: idsExtraidos,
+        quantidade_ids: idsExtraidos.length,
+        lista_atividades: catalog.activities.map(a => ({
+          id: a.id,
+          titulo: a.titulo,
+          tipo: a.tipo,
+          categoria: a.categoria
+        }))
+      }
+    });
+
+    // CONFIRMAÇÃO 3: IDs válidos extraídos?
+    const idsValidos = idsExtraidos.every(id => typeof id === 'string' && id.length > 0);
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'confirmation',
+      narrative: idsValidos 
+        ? `✅ CONFIRMAÇÃO: Todos os ${idsExtraidos.length} IDs são strings válidas!`
+        : '⚠️ AVISO: Alguns IDs podem estar inválidos ou vazios',
+      technical_data: { 
+        confirmacao: 'ids_validos',
+        status: idsValidos ? 'SUCESSO' : 'AVISO',
+        ids_verificados: idsExtraidos.length,
+        formato_esperado: 'string não vazia'
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ETAPA 5: APLICAÇÃO DE FILTROS (SE SOLICITADO)
+    // ═══════════════════════════════════════════════════════════════════════════
     let filteredActivities = catalog.activities;
     
     if (params.filtros) {
@@ -87,38 +181,121 @@ export async function pesquisarAtividadesDisponiveisV2(
       
       debug_log.push({
         timestamp: new Date().toISOString(),
+        type: 'action',
+        narrative: `🔎 ETAPA 5: Filtros aplicados - ${catalog.total} → ${filteredActivities.length} atividades após filtragem.`,
+        technical_data: { 
+          filtros_aplicados: params.filtros, 
+          antes_filtro: catalog.total, 
+          depois_filtro: filteredActivities.length,
+          atividades_filtradas: filteredActivities.map(a => ({ id: a.id, titulo: a.titulo }))
+        }
+      });
+
+      // CONFIRMAÇÃO 4: Filtros resultaram em atividades?
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'confirmation',
+        narrative: filteredActivities.length > 0 
+          ? `✅ CONFIRMAÇÃO: Filtros retornaram ${filteredActivities.length} atividades!`
+          : '⚠️ AVISO: Filtros não retornaram nenhuma atividade - usando todas',
+        technical_data: { 
+          confirmacao: 'filtros_resultado',
+          status: filteredActivities.length > 0 ? 'SUCESSO' : 'AVISO',
+          quantidade_pos_filtro: filteredActivities.length
+        }
+      });
+    } else {
+      debug_log.push({
+        timestamp: new Date().toISOString(),
         type: 'info',
-        narrative: `Filtros aplicados: ${catalog.total} → ${filteredActivities.length} atividades`,
-        technical_data: { filters: params.filtros, original: catalog.total, filtered: filteredActivities.length }
+        narrative: 'ℹ️ ETAPA 5: Nenhum filtro solicitado - retornando todas as atividades.',
+        technical_data: { 
+          filtros_aplicados: 'nenhum',
+          total_atividades: filteredActivities.length
+        }
       });
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ETAPA 6: VALIDAÇÃO DE SCHEMA DAS ATIVIDADES
+    // ═══════════════════════════════════════════════════════════════════════════
     const validIds = filteredActivities.map(a => a.id);
-    const elapsedTime = Date.now() - startTime;
-
-    // SISTEMA DE CONFIRMAÇÃO DE DADOS
-    const dataConfirmation = createDataConfirmation([
-      createDataCheck('catalog_loaded', 'Catálogo carregado', catalog !== null, catalog?.total, '> 0 atividades'),
-      createDataCheck('has_activities', 'Atividades encontradas', filteredActivities.length > 0, filteredActivities.length, '> 0'),
-      createDataCheck('has_valid_ids', 'IDs válidos extraídos', validIds.length > 0, validIds.length, '> 0'),
-      createDataCheck('activities_have_schema', 'Atividades com schema', filteredActivities.every(a => a.schema_campos), filteredActivities.filter(a => a.schema_campos).length, 'todos'),
-      createDataCheck('catalog_version_ok', 'Versão do catálogo válida', !!catalog.version, catalog.version, 'string')
-    ]);
-
-    // LOG 3: Confirmação de dados
-    debug_log.push({
-      timestamp: new Date().toISOString(),
-      type: 'confirmation',
-      narrative: dataConfirmation.summary,
-      technical_data: { checks: dataConfirmation.checks.map(c => ({ id: c.id, passed: c.passed, value: c.value })) }
-    });
-
-    // LOG 4: Conclusão
+    const atividadesComSchema = filteredActivities.filter(a => a.schema_campos);
+    
     debug_log.push({
       timestamp: new Date().toISOString(),
       type: 'action',
-      narrative: `Consulta concluída em ${elapsedTime}ms. Retornando ${filteredActivities.length} atividades para próxima capability.`,
-      technical_data: { duration_ms: elapsedTime, valid_ids: validIds }
+      narrative: `📝 ETAPA 6: Validando schema das ${filteredActivities.length} atividades...`,
+      technical_data: { 
+        atividades_com_schema: atividadesComSchema.length,
+        atividades_sem_schema: filteredActivities.length - atividadesComSchema.length,
+        campos_obrigatorios_exemplo: filteredActivities[0]?.campos_obrigatorios || []
+      }
+    });
+
+    // CONFIRMAÇÃO 5: Todas têm schema?
+    const todasTemSchema = filteredActivities.every(a => a.schema_campos);
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'confirmation',
+      narrative: todasTemSchema 
+        ? `✅ CONFIRMAÇÃO: Todas as ${filteredActivities.length} atividades possuem schema de campos!`
+        : `⚠️ AVISO: ${atividadesComSchema.length}/${filteredActivities.length} atividades têm schema`,
+      technical_data: { 
+        confirmacao: 'schema_validado',
+        status: todasTemSchema ? 'SUCESSO' : 'AVISO',
+        com_schema: atividadesComSchema.length,
+        sem_schema: filteredActivities.length - atividadesComSchema.length
+      }
+    });
+
+    const elapsedTime = Date.now() - startTime;
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ETAPA 7: CONFIRMAÇÃO FINAL DE DADOS RECEBIDOS
+    // ═══════════════════════════════════════════════════════════════════════════
+    const dataConfirmation = createDataConfirmation([
+      createDataCheck('catalog_loaded', 'Arquivo carregado', catalog !== null, catalog?.total, '> 0 atividades'),
+      createDataCheck('has_activities', 'Atividades encontradas', filteredActivities.length > 0, filteredActivities.length, '> 0'),
+      createDataCheck('has_valid_ids', 'IDs extraídos', validIds.length > 0, validIds.length, '> 0'),
+      createDataCheck('activities_have_schema', 'Schema validado', todasTemSchema, `${atividadesComSchema.length}/${filteredActivities.length}`, 'todos'),
+      createDataCheck('catalog_version_ok', 'Versão válida', !!catalog.version, catalog.version, 'string')
+    ]);
+
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'confirmation',
+      narrative: `🎯 ETAPA 7 - RESUMO FINAL: ${dataConfirmation.summary}`,
+      technical_data: { 
+        confirmacao: 'resumo_final',
+        todos_checks_passaram: dataConfirmation.confirmed,
+        checks_detalhados: dataConfirmation.checks.map(c => ({ 
+          id: c.id, 
+          label: c.label,
+          passou: c.passed, 
+          valor: c.value,
+          esperado: c.expected
+        })),
+        pode_prosseguir: dataConfirmation.confirmed,
+        bloqueia_proxima_etapa: dataConfirmation.blocksNextStep && !dataConfirmation.confirmed
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ETAPA 8: RESULTADO FINAL PARA PRÓXIMA CAPABILITY
+    // ═══════════════════════════════════════════════════════════════════════════
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'discovery',
+      narrative: `✅ ETAPA 8: Pesquisa concluída em ${elapsedTime}ms! Entregando ${filteredActivities.length} atividades para próxima capability.`,
+      technical_data: { 
+        resultado_resumo: `Encontradas ${filteredActivities.length} atividade(s) disponível(is) no catálogo`,
+        duracao_ms: elapsedTime, 
+        ids_validos_para_uso: validIds,
+        tipos_disponiveis: catalog.types,
+        categorias_disponiveis: catalog.categories,
+        pronto_para_proxima_etapa: true
+      }
     });
 
     // RETORNO PADRONIZADO
