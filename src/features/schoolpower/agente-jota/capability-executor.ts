@@ -161,11 +161,15 @@ export class CapabilityExecutor {
       try {
         const result = await this.execute(capabilityId, enrichedContext);
 
-        // VERIFICAR DATA CONFIRMATION
-        const isBlocked = this.validateOutput(result);
-        if (!isBlocked && result.data_confirmation?.blocksNextStep) {
-          errors.push(`Capability ${capabilityId} bloqueada: dados não confirmados`);
+        // Validar estrutura do output
+        this.validateOutput(result);
+
+        // VERIFICAR DATA CONFIRMATION - Abortar se dados não confirmados
+        if (result.data_confirmation && !result.data_confirmation.confirmed && result.data_confirmation.blocksNextStep) {
+          const failedChecks = result.data_confirmation.checks.filter(c => !c.passed);
+          errors.push(`Capability ${capabilityId} bloqueada: ${failedChecks.map(c => c.label).join(', ')}`);
           console.error(`🚫 [Executor] DATA CONFIRMATION FALHOU em ${capabilityId}. Abortando sequência.`);
+          console.error(`   Checks falhados: ${failedChecks.map(c => c.message).join('; ')}`);
           break;
         }
 
@@ -255,31 +259,27 @@ export class CapabilityExecutor {
   }
 
   /**
-   * Valida estrutura do output e confirmação de dados
+   * Valida estrutura do output e loga confirmação de dados
+   * Apenas logging - a lógica de bloqueio está em executeSequence
    */
-  private validateOutput(output: CapabilityOutput): boolean {
-    let isValid = true;
-
+  private validateOutput(output: CapabilityOutput): void {
     if (!output.capability_id) {
       console.warn('⚠️ [Executor] Output inválido: capability_id ausente');
-      isValid = false;
     }
 
     if (output.success && !output.data) {
       console.warn('⚠️ [Executor] Output suspeito: success=true mas data=null');
-      isValid = false;
     }
 
     if (!output.success && !output.error) {
       console.warn('⚠️ [Executor] Output inválido: success=false mas error=null');
-      isValid = false;
     }
 
     if (!output.debug_log || output.debug_log.length === 0) {
       console.warn('⚠️ [Executor] Capability sem debug_log');
     }
 
-    // VALIDAÇÃO DE DATA CONFIRMATION
+    // LOG DATA CONFIRMATION
     if (output.data_confirmation) {
       console.log(`📋 [Executor] Data Confirmation: ${output.data_confirmation.summary}`);
       
@@ -293,8 +293,7 @@ export class CapabilityExecutor {
           });
         
         if (output.data_confirmation.blocksNextStep) {
-          console.error('🚫 [Executor] Próxima capability BLOQUEADA até dados serem confirmados');
-          isValid = false;
+          console.error('🚫 [Executor] Próxima capability será BLOQUEADA');
         }
       } else {
         console.log('✅ [Executor] Todos os checks de dados passaram');
@@ -303,8 +302,6 @@ export class CapabilityExecutor {
         });
       }
     }
-
-    return isValid;
   }
 
   /**

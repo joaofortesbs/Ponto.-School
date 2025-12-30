@@ -116,14 +116,31 @@ The platform features a modern design with glass-morphism effects, blur backgrou
           - Validates outputs and manages dependencies via previous_results Map
           - Auto-enriches context (e.g., injects catalog for decidir_atividades_criar)
           - Unique execution_id per sequence for audit trails
+          - **DataConfirmation validation** - aborts sequence if critical checks fail
         - **ActivityCatalogService** (`activity-catalog.service.ts`): Service Layer
           - Isolated file loading with 1-minute cache
           - 6-phase fail-fast validation
           - Explicit logging at each step
         - **V2 Capability Functions**: pesquisarAtividadesDisponiveisV2, decidirAtividadesCriarV2
           - Use CapabilityInput/Output contracts
+          - Include DataConfirmation with validation checks
           - Legacy functions maintained for backward compatibility
         - **Anti-Hallucination Integration**: Validation against catalog whitelist in decidir step
+      - **DataConfirmation System (NEW - Dec 2025)**:
+        - Each capability validates that it received/processed real data before proceeding
+        - **DataConfirmation** interface: confirmed, checks[], summary, blocksNextStep
+        - **DataCheck** interface: id, label, passed, value, expected, message
+        - Helper functions: createDataConfirmation(), createDataCheck()
+        - Executor aborts sequence if blocksNextStep=true and confirmed=false
+        - **Checks implemented**:
+          - pesquisar_atividades_disponiveis: catalog_loaded, has_activities, has_valid_ids, activities_have_schema, catalog_version_ok
+          - decidir_atividades_criar: catalog_received, ai_responded, activities_chosen, all_ids_valid, no_duplicates, has_justifications, within_limit
+        - **UI Integration**:
+          - DataConfirmationBadge: Visual component showing check status
+          - Compact mode (inline badge) + Expanded mode (detailed checks list)
+          - Integrated into ProgressiveExecutionCard capability cards
+          - DebugEntry type 'confirmation' added for logging
+        - **useCapabilityExecutor hook**: React integration for state management and event emission
 
 ### System Design Choices
 The architecture emphasizes a modular component design using shadcn/ui patterns. Data persistence is managed with Neon PostgreSQL for primary data, Supabase PostgreSQL for authentication, and Supabase Storage for file assets. Supabase Realtime enables live features. The system is configured for VM deployment, ensuring backend state maintenance and real-time database connections. A critical architectural decision involves the dynamic section system, where `sectionConfigs` are dynamically generated based on `sectionOrder` for each template, ensuring perfect synchronization between template selection and section display. Lesson creation sessions are isolated using a session ID system and state reset functions to prevent data bleed.
