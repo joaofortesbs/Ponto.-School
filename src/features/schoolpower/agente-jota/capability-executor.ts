@@ -126,10 +126,17 @@ export class CapabilityExecutor {
 
   /**
    * Executa múltiplas capabilities em sequência
+   * 
+   * IMPORTANTE: Reseta estado automaticamente no início para garantir
+   * isolamento entre execuções e dados frescos.
    */
   async executeSequence(config: ExecutionConfig): Promise<ExecutionResult> {
+    // CORREÇÃO: Reset automático para garantir isolamento entre execuções
+    this.clearResults();
+    
     console.log(`\n═════════════════════════════════════════════════════`);
     console.log(`🎯 [Executor] Iniciando sequência: ${config.capabilities.length} capabilities`);
+    console.log(`📍 [Executor] Novo execution_id: ${this.executionId}`);
     console.log(`═════════════════════════════════════════════════════`);
 
     const startTime = Date.now();

@@ -109,6 +109,21 @@ The platform features a modern design with glass-morphism effects, blur backgrou
         - ActivityCard: Individual activity with status (waiting/building/completed/error)
         - Auto-start option, progress bars, expandable built data
         - Conditional rendering in ExecutionPlanCardEnhanced
+      - **API-First Architecture (NEW - Dec 2025)**:
+        - Standardized contracts: CapabilityInput, CapabilityOutput, DebugEntry
+        - **CapabilityExecutor** (`capability-executor.ts`): Central orchestrator
+          - Executes capabilities in sequence with automatic state reset per execution
+          - Validates outputs and manages dependencies via previous_results Map
+          - Auto-enriches context (e.g., injects catalog for decidir_atividades_criar)
+          - Unique execution_id per sequence for audit trails
+        - **ActivityCatalogService** (`activity-catalog.service.ts`): Service Layer
+          - Isolated file loading with 1-minute cache
+          - 6-phase fail-fast validation
+          - Explicit logging at each step
+        - **V2 Capability Functions**: pesquisarAtividadesDisponiveisV2, decidirAtividadesCriarV2
+          - Use CapabilityInput/Output contracts
+          - Legacy functions maintained for backward compatibility
+        - **Anti-Hallucination Integration**: Validation against catalog whitelist in decidir step
 
 ### System Design Choices
 The architecture emphasizes a modular component design using shadcn/ui patterns. Data persistence is managed with Neon PostgreSQL for primary data, Supabase PostgreSQL for authentication, and Supabase Storage for file assets. Supabase Realtime enables live features. The system is configured for VM deployment, ensuring backend state maintenance and real-time database connections. A critical architectural decision involves the dynamic section system, where `sectionConfigs` are dynamically generated based on `sectionOrder` for each template, ensuring perfect synchronization between template selection and section display. Lesson creation sessions are isolated using a session ID system and state reset functions to prevent data bleed.
