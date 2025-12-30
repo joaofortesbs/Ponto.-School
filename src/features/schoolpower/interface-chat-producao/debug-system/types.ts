@@ -4,7 +4,7 @@
  * Sistema onde a IA explica suas próprias ações em linguagem humana
  */
 
-export type DebugEntryType = 'info' | 'action' | 'decision' | 'discovery' | 'error' | 'warning' | 'reflection';
+export type DebugEntryType = 'info' | 'action' | 'decision' | 'discovery' | 'error' | 'warning' | 'reflection' | 'confirmation';
 export type DebugSeverity = 'low' | 'medium' | 'high' | 'critical';
 
 export interface AIDebugEntry {
@@ -42,7 +42,8 @@ export const ENTRY_TYPE_ICONS: Record<DebugEntryType, { icon: string; color: str
   discovery: { icon: '🟢', color: 'green', label: 'Descoberta' },
   error: { icon: '🔴', color: 'red', label: 'Erro' },
   warning: { icon: '🟠', color: 'orange', label: 'Aviso' },
-  reflection: { icon: '🧠', color: 'purple', label: 'Reflexão' }
+  reflection: { icon: '🧠', color: 'purple', label: 'Reflexão' },
+  confirmation: { icon: '✅', color: 'emerald', label: 'Confirmação de Dados' }
 };
 
 export const SEVERITY_STYLES: Record<DebugSeverity, { bg: string; border: string; text: string }> = {

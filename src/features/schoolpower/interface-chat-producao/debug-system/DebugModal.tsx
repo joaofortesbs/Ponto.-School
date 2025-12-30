@@ -20,7 +20,8 @@ import {
   Info,
   Lightbulb,
   Brain,
-  Zap
+  Zap,
+  ShieldCheck
 } from 'lucide-react';
 import type { AIDebugEntry, DebugEntryType } from './types';
 import { SEVERITY_STYLES } from './types';
@@ -40,7 +41,8 @@ const ENTRY_ICONS: Record<DebugEntryType, React.ReactNode> = {
   discovery: <CheckCircle2 className="w-4 h-4" />,
   error: <AlertTriangle className="w-4 h-4" />,
   warning: <AlertTriangle className="w-4 h-4" />,
-  reflection: <Brain className="w-4 h-4" />
+  reflection: <Brain className="w-4 h-4" />,
+  confirmation: <ShieldCheck className="w-4 h-4" />
 };
 
 const ENTRY_COLORS: Record<DebugEntryType, string> = {
@@ -50,7 +52,8 @@ const ENTRY_COLORS: Record<DebugEntryType, string> = {
   discovery: 'text-green-400 bg-green-500/20 border-green-500/30',
   error: 'text-red-400 bg-red-500/20 border-red-500/30',
   warning: 'text-orange-400 bg-orange-500/20 border-orange-500/30',
-  reflection: 'text-purple-400 bg-purple-500/20 border-purple-500/30'
+  reflection: 'text-purple-400 bg-purple-500/20 border-purple-500/30',
+  confirmation: 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30'
 };
 
 export function DebugModal({ 

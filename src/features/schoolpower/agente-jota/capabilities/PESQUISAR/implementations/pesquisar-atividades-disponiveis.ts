@@ -23,7 +23,10 @@ import {
   buildAntiHallucinationPrompt,
   CapabilityInput,
   CapabilityOutput,
-  DebugEntry
+  DebugEntry,
+  DataConfirmation,
+  createDataConfirmation,
+  createDataCheck
 } from '../../shared/types';
 
 interface PesquisarDisponiveisParams {
@@ -93,7 +96,24 @@ export async function pesquisarAtividadesDisponiveisV2(
     const validIds = filteredActivities.map(a => a.id);
     const elapsedTime = Date.now() - startTime;
 
-    // LOG 3: Conclusão
+    // SISTEMA DE CONFIRMAÇÃO DE DADOS
+    const dataConfirmation = createDataConfirmation([
+      createDataCheck('catalog_loaded', 'Catálogo carregado', catalog !== null, catalog?.total, '> 0 atividades'),
+      createDataCheck('has_activities', 'Atividades encontradas', filteredActivities.length > 0, filteredActivities.length, '> 0'),
+      createDataCheck('has_valid_ids', 'IDs válidos extraídos', validIds.length > 0, validIds.length, '> 0'),
+      createDataCheck('activities_have_schema', 'Atividades com schema', filteredActivities.every(a => a.schema_campos), filteredActivities.filter(a => a.schema_campos).length, 'todos'),
+      createDataCheck('catalog_version_ok', 'Versão do catálogo válida', !!catalog.version, catalog.version, 'string')
+    ]);
+
+    // LOG 3: Confirmação de dados
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'confirmation',
+      narrative: dataConfirmation.summary,
+      technical_data: { checks: dataConfirmation.checks.map(c => ({ id: c.id, passed: c.passed, value: c.value })) }
+    });
+
+    // LOG 4: Conclusão
     debug_log.push({
       timestamp: new Date().toISOString(),
       type: 'action',
@@ -123,6 +143,7 @@ export async function pesquisarAtividadesDisponiveisV2(
       },
       error: null,
       debug_log,
+      data_confirmation: dataConfirmation,
       metadata: {
         duration_ms: elapsedTime,
         retry_count: 0,

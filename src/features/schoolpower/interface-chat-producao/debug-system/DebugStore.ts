@@ -170,7 +170,8 @@ function getTypeEmoji(type: DebugEntryType): string {
     discovery: '🟢',
     error: '🔴',
     warning: '🟠',
-    reflection: '🧠'
+    reflection: '🧠',
+    confirmation: '✅'
   };
   return emojis[type] || '📝';
 }

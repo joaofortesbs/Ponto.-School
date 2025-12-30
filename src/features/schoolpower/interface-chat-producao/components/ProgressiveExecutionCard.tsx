@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Loader2, ChevronRight, AlertCircle } from 'lucide-react';
+import { Check, Loader2, ChevronRight, AlertCircle, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { NarrativeReflectionCard, LoadingReflection } from './NarrativeReflectionCard';
 import { DebugIcon } from '../debug-system/DebugIcon';
 import { useDebugStore } from '../debug-system/DebugStore';
 import { ConstructionInterface } from '../construction-interface';
 import type { ActivityToBuild } from '../construction-interface';
+import { DataConfirmationBadge } from './DataConfirmationBadge';
+import type { DataConfirmation } from '../../agente-jota/capabilities/shared/types';
 
 export type CapabilityStatus = 'hidden' | 'pending' | 'executing' | 'completed' | 'error';
 export type ObjectiveStatus = 'pending' | 'active' | 'completed';
@@ -15,6 +17,7 @@ export interface CapabilityItem {
   nome: string;
   displayName?: string;
   status: CapabilityStatus;
+  dataConfirmation?: DataConfirmation;
 }
 
 export interface ObjectiveReflection {
@@ -309,7 +312,30 @@ const CapabilityCard: React.FC<{
           entries={debugEntries}
           className="ml-2"
         />
+
+        {isCompleted && capability.dataConfirmation && (
+          <DataConfirmationBadge
+            confirmation={capability.dataConfirmation}
+            compact={true}
+          />
+        )}
       </div>
+
+      {isCompleted && capability.dataConfirmation && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="ml-4 mt-1 mb-2"
+        >
+          <DataConfirmationBadge
+            confirmation={capability.dataConfirmation}
+            capabilityName={capability.displayName || capability.nome}
+            compact={false}
+            showDetails={true}
+          />
+        </motion.div>
+      )}
 
       <AnimatePresence>
         {shouldShowConstructionInterface && (

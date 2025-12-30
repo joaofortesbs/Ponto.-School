@@ -20,7 +20,9 @@ import {
   validateAIChoices,
   CapabilityInput,
   CapabilityOutput,
-  DebugEntry
+  DebugEntry,
+  createDataConfirmation,
+  createDataCheck
 } from '../../shared/types';
 import { formatAccountActivitiesForPrompt } from '../../../capabilities/PESQUISAR/implementations/pesquisar-atividades-conta';
 import { formatAvailableActivitiesForPrompt, validateActivitySelection } from '../../../capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis';
@@ -506,6 +508,24 @@ export async function decidirAtividadesCriarV2(
 
     const elapsedTime = Date.now() - startTime;
 
+    // SISTEMA DE CONFIRMAÇÃO DE DADOS
+    const dataConfirmation = createDataConfirmation([
+      createDataCheck('catalog_received', 'Catálogo recebido da etapa anterior', catalog.length > 0, catalog.length, '> 0 atividades'),
+      createDataCheck('ai_responded', 'IA respondeu com decisão', !!parsedResponse, true, 'JSON válido'),
+      createDataCheck('activities_chosen', 'Atividades foram escolhidas', chosenActivities.length > 0, chosenActivities.length, '> 0'),
+      createDataCheck('all_ids_valid', 'Todos IDs escolhidos existem no catálogo', validation.all_ids_valid, validation.all_ids_valid, 'true'),
+      createDataCheck('no_duplicates', 'Sem atividades duplicadas', validation.no_duplicates, validation.no_duplicates, 'true'),
+      createDataCheck('has_justifications', 'Todas têm justificativa', validation.has_justification, validation.has_justification, 'true'),
+      createDataCheck('within_limit', 'Dentro do limite máximo', validation.count_within_limit, chosenActivities.length, `<= ${maxActivities}`)
+    ]);
+
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'confirmation',
+      narrative: dataConfirmation.summary,
+      technical_data: { checks: dataConfirmation.checks.map(c => ({ id: c.id, passed: c.passed, value: c.value })) }
+    });
+
     return {
       success: true,
       capability_id: 'decidir_atividades_criar',
@@ -519,6 +539,7 @@ export async function decidirAtividadesCriarV2(
       },
       error: null,
       debug_log,
+      data_confirmation: dataConfirmation,
       metadata: {
         duration_ms: elapsedTime,
         retry_count: 0,
@@ -566,6 +587,20 @@ export async function decidirAtividadesCriarV2(
       narrative: `Usando fallback: ${fallbackActivities.length} atividades selecionadas automaticamente.`
     });
 
+    // CONFIRMAÇÃO DE FALLBACK
+    const fallbackConfirmation = createDataConfirmation([
+      createDataCheck('fallback_used', 'Fallback acionado', true, 'sim', 'por erro de IA'),
+      createDataCheck('fallback_has_activities', 'Fallback gerou atividades', fallbackActivities.length > 0, fallbackActivities.length, '> 0'),
+      createDataCheck('catalog_available', 'Catálogo estava disponível', catalog.length > 0, catalog.length, '> 0')
+    ]);
+
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'confirmation',
+      narrative: fallbackConfirmation.summary,
+      technical_data: { is_fallback: true, original_error: errorMessage }
+    });
+
     return {
       success: true,
       capability_id: 'decidir_atividades_criar',
@@ -579,6 +614,7 @@ export async function decidirAtividadesCriarV2(
       },
       error: null,
       debug_log,
+      data_confirmation: fallbackConfirmation,
       metadata: {
         duration_ms: elapsedTime,
         retry_count: 0,

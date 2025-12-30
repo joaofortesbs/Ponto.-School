@@ -27,6 +27,7 @@ export interface CapabilityOutput {
   data: any | null;
   error: CapabilityError | null;
   debug_log: DebugEntry[];
+  data_confirmation?: DataConfirmation;
   metadata: {
     duration_ms: number;
     retry_count: number;
@@ -44,9 +45,63 @@ export interface CapabilityError {
 
 export interface DebugEntry {
   timestamp: string;
-  type: 'action' | 'discovery' | 'decision' | 'error' | 'warning' | 'info' | 'reflection';
+  type: 'action' | 'discovery' | 'decision' | 'error' | 'warning' | 'info' | 'reflection' | 'confirmation';
   narrative: string;
   technical_data?: any;
+}
+
+// ============================================
+// SISTEMA DE CONFIRMAÇÃO DE DADOS
+// Garante que cada capability recebeu/processou dados reais
+// ============================================
+
+export interface DataConfirmation {
+  confirmed: boolean;
+  checks: DataCheck[];
+  summary: string;
+  blocksNextStep: boolean;
+}
+
+export interface DataCheck {
+  id: string;
+  label: string;
+  passed: boolean;
+  value?: any;
+  expected?: string;
+  message: string;
+}
+
+export function createDataConfirmation(checks: DataCheck[]): DataConfirmation {
+  const allPassed = checks.every(c => c.passed);
+  const failedChecks = checks.filter(c => !c.passed);
+  
+  return {
+    confirmed: allPassed,
+    checks,
+    summary: allPassed 
+      ? `✅ Todos os ${checks.length} checks de dados passaram`
+      : `❌ ${failedChecks.length}/${checks.length} checks falharam: ${failedChecks.map(c => c.label).join(', ')}`,
+    blocksNextStep: !allPassed
+  };
+}
+
+export function createDataCheck(
+  id: string,
+  label: string,
+  condition: boolean,
+  value?: any,
+  expected?: string
+): DataCheck {
+  return {
+    id,
+    label,
+    passed: condition,
+    value,
+    expected,
+    message: condition 
+      ? `✅ ${label}: OK` 
+      : `❌ ${label}: Falhou${expected ? ` (esperado: ${expected})` : ''}`
+  };
 }
 
 // ============================================
