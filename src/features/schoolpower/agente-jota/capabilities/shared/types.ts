@@ -3,7 +3,51 @@
  * 
  * Estes tipos formam a estrutura de anti-alucinação e garantem 
  * que os dados fluam corretamente entre as capabilities.
+ * 
+ * ARQUITETURA API-FIRST: Cada capability recebe CapabilityInput
+ * e retorna CapabilityOutput padronizado.
  */
+
+// ============================================
+// CONTRATOS API-FIRST (Padrão para todas capabilities)
+// ============================================
+
+export interface CapabilityInput {
+  capability_id: string;
+  execution_id: string;
+  context: Record<string, any>;
+  previous_results?: Map<string, CapabilityOutput>;
+}
+
+export interface CapabilityOutput {
+  success: boolean;
+  capability_id: string;
+  execution_id: string;
+  timestamp: string;
+  data: any | null;
+  error: CapabilityError | null;
+  debug_log: DebugEntry[];
+  metadata: {
+    duration_ms: number;
+    retry_count: number;
+    data_source: string;
+  };
+}
+
+export interface CapabilityError {
+  code: string;
+  message: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  recoverable: boolean;
+  recovery_suggestion: string;
+}
+
+export interface DebugEntry {
+  timestamp: string;
+  type: 'action' | 'discovery' | 'decision' | 'error' | 'warning' | 'info' | 'reflection';
+  narrative: string;
+  technical_data?: any;
+}
 
 // ============================================
 // CAPABILITY 1: pesquisar_atividades_conta

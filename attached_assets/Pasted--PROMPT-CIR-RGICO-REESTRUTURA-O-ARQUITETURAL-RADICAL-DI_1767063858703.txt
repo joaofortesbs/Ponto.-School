@@ -1,0 +1,855 @@
+🚨 PROMPT CIRÚRGICO - REESTRUTURAÇÃO ARQUITETURAL RADICAL
+DIAGNÓSTICO BRUTAL DA SITUAÇÃO
+Seu sistema está com falha arquitetural fundamental, não apenas bug superficial. O problema não é "como carregar JSON" - é que não existe separação de concerns clara entre:
+
+Lógica de dados (file/DB access)
+
+Lógica de IA (LLM calls)
+
+Orquestração (workflow)
+
+UI (rendering)
+
+Sintoma: IA não vê dados, mas diz que viu
+Causa Real: Dados não estão no lugar que IA espera
+Solução: Arquitetura API-First com contrato explícito
+
+NOVA ARQUITETURA OBRIGATÓRIA
+PRINCÍPIO FUNDAMENTAL: API-FIRST CAPABILITIES
+Cada capability é uma API route independente que:
+
+Recebe input padronizado
+
+Retorna output padronizado
+
+Não depende de state externo
+
+É testável isoladamente
+
+Falha explicitamente ou sucede verificadamente
+
+Metáfora: Pense em cada capability como um microserviço mesmo que seja monolito.
+
+CAMADA 1: CAPABILITY API ROUTES
+Estrutura de Diretórios Obrigatória
+text
+src/
+├── api/
+│   ├── capabilities/
+│   │   ├── pesquisar-atividades-conta.ts
+│   │   ├── pesquisar-atividades-disponiveis.ts
+│   │   ├── decidir-atividades-criar.ts
+│   │   ├── criar-atividade.ts
+│   │   └── index.ts (registry)
+│   ├── orchestrator/
+│   │   ├── capability-executor.ts
+│   │   └── workflow-manager.ts
+│   └── types/
+│       └── capability.types.ts
+├── features/schoolpower/
+│   ├── data/
+│   │   └── schoolPowerActivities.json
+│   └── services/
+│       └── activity-catalog.service.ts
+Contrato de Capability (Type System)
+typescript
+// capability.types.ts
+interface CapabilityInput {
+  capability_id: string;
+  execution_id: string;
+  context: Record<string, any>;
+  previous_results?: Map<string, CapabilityOutput>;
+}
+
+interface CapabilityOutput {
+  success: boolean;
+  capability_id: string;
+  execution_id: string;
+  timestamp: string;
+  data: any | null;
+  error: CapabilityError | null;
+  debug_log: DebugEntry[];
+  metadata: {
+    duration_ms: number;
+    retry_count: number;
+    data_source: string;
+  };
+}
+
+interface CapabilityError {
+  code: string;
+  message: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  recoverable: boolean;
+  recovery_suggestion: string;
+}
+
+interface DebugEntry {
+  timestamp: string;
+  type: 'action' | 'discovery' | 'decision' | 'error' | 'warning' | 'info';
+  narrative: string;
+  technical_data?: any;
+}
+CAMADA 2: IMPLEMENTAÇÃO DE CADA CAPABILITY
+Capability 1: pesquisar-atividades-disponiveis
+Responsabilidade ÚNICA: Carregar e validar arquivo JSON. NADA MAIS.
+
+Pseudo-implementação (você adapta ao framework real):
+
+typescript
+// pesquisar-atividades-disponiveis.ts
+import catalogService from '@/services/activity-catalog.service';
+
+export async function pesquisarAtividadesDisponiveis(
+  input: CapabilityInput
+): Promise<CapabilityOutput> {
+  const debug_log: DebugEntry[] = [];
+  const start = Date.now();
+  
+  try {
+    // LOG 1: Início
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'action',
+      narrative: 'Iniciando carregamento do catálogo de atividades do arquivo JSON.',
+      technical_data: { path: 'schoolPowerActivities.json' }
+    });
+    
+    // CARREGAR E VALIDAR
+    const catalog = await catalogService.loadCatalog();
+    
+    // VALIDAÇÃO OBRIGATÓRIA
+    if (!catalog) {
+      throw new Error('Catalog service retornou null');
+    }
+    
+    if (!catalog.activities || !Array.isArray(catalog.activities)) {
+      throw new Error('Schema inválido: activities não é array');
+    }
+    
+    if (catalog.activities.length === 0) {
+      throw new Error('Catálogo vazio: 0 atividades encontradas');
+    }
+    
+    // LOG 2: Sucesso
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'discovery',
+      narrative: `✅ SUCESSO: Carregadas ${catalog.activities.length} atividades do catálogo. Tipos disponíveis: ${catalog.types.join(', ')}.`,
+      technical_data: {
+        count: catalog.activities.length,
+        types: catalog.types,
+        categories: catalog.categories
+      }
+    });
+    
+    return {
+      success: true,
+      capability_id: 'pesquisar_atividades_disponiveis',
+      execution_id: input.execution_id,
+      timestamp: new Date().toISOString(),
+      data: {
+        catalog: catalog.activities,
+        count: catalog.activities.length,
+        types: catalog.types,
+        categories: catalog.categories,
+        summary: catalog.activities.map(a => ({
+          id: a.id,
+          titulo: a.titulo,
+          tipo: a.tipo
+        }))
+      },
+      error: null,
+      debug_log,
+      metadata: {
+        duration_ms: Date.now() - start,
+        retry_count: 0,
+        data_source: 'schoolPowerActivities.json'
+      }
+    };
+    
+  } catch (error) {
+    // LOG ERRO
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'error',
+      narrative: `❌ ERRO CRÍTICO: Não consegui carregar o catálogo. Razão: ${error.message}. Sistema NÃO pode prosseguir sem estes dados.`,
+      technical_data: { error: error.stack }
+    });
+    
+    return {
+      success: false,
+      capability_id: 'pesquisar_atividades_disponiveis',
+      execution_id: input.execution_id,
+      timestamp: new Date().toISOString(),
+      data: null,
+      error: {
+        code: 'CATALOG_LOAD_FAILED',
+        message: error.message,
+        severity: 'critical',
+        recoverable: false,
+        recovery_suggestion: 'Verificar path do arquivo e formato JSON'
+      },
+      debug_log,
+      metadata: {
+        duration_ms: Date.now() - start,
+        retry_count: 0,
+        data_source: 'schoolPowerActivities.json'
+      }
+    };
+  }
+}
+Service Layer: activity-catalog.service.ts
+Isolar lógica de file loading completamente:
+
+typescript
+// activity-catalog.service.ts
+class ActivityCatalogService {
+  private cache: any | null = null;
+  private cacheDuration = 60000; // 1 min
+  private lastLoadTime = 0;
+  
+  async loadCatalog() {
+    // Cache válido?
+    if (this.cache && Date.now() - this.lastLoadTime < this.cacheDuration) {
+      console.log('📦 Usando catálogo em cache');
+      return this.cache;
+    }
+    
+    console.log('📂 Carregando catálogo do arquivo...');
+    
+    // DECISÃO SUA: Como carregar baseado em ambiente
+    let data;
+    
+    if (typeof window === 'undefined') {
+      // SERVER-SIDE (Node.js)
+      const fs = await import('fs');
+      const path = await import('path');
+      const filePath = path.join(process.cwd(), 'src/features/schoolpower/data/schoolPowerActivities.json');
+      
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`Arquivo não encontrado: ${filePath}`);
+      }
+      
+      const rawData = fs.readFileSync(filePath, 'utf-8');
+      data = JSON.parse(rawData);
+      
+    } else {
+      // CLIENT-SIDE (Browser)
+      const response = await fetch('/data/schoolPowerActivities.json');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      data = await response.json();
+    }
+    
+    // VALIDAÇÃO DE SCHEMA
+    if (!data.activities) {
+      throw new Error('Schema inválido: campo "activities" ausente');
+    }
+    
+    // Processar dados (extrair types, categories)
+    const processed = {
+      activities: data.activities,
+      types: [...new Set(data.activities.map(a => a.tipo))],
+      categories: [...new Set(data.activities.map(a => a.categoria))],
+      total: data.activities.length
+    };
+    
+    this.cache = processed;
+    this.lastLoadTime = Date.now();
+    
+    console.log(`✅ Catálogo carregado: ${processed.total} atividades`);
+    
+    return processed;
+  }
+  
+  clearCache() {
+    this.cache = null;
+  }
+}
+
+export default new ActivityCatalogService();
+CAMADA 3: ORCHESTRATOR (Coordenador Central)
+Capability Executor
+Responsabilidade: Executar capability, validar output, gerenciar state.
+
+typescript
+// capability-executor.ts
+import * as capabilities from './capabilities';
+
+export class CapabilityExecutor {
+  private results: Map<string, CapabilityOutput> = new Map();
+  
+  async execute(
+    capabilityId: string,
+    context: any,
+    executionId: string
+  ): Promise<CapabilityOutput> {
+    
+    // 1. Obter função da capability
+    const capabilityFn = capabilities[capabilityId];
+    
+    if (!capabilityFn) {
+      throw new Error(`Capability não encontrada: ${capabilityId}`);
+    }
+    
+    // 2. Preparar input
+    const input: CapabilityInput = {
+      capability_id: capabilityId,
+      execution_id: executionId,
+      context,
+      previous_results: this.results
+    };
+    
+    // 3. Executar
+    console.log(`🚀 Executando capability: ${capabilityId}`);
+    const output = await capabilityFn(input);
+    
+    // 4. Validar output
+    this.validateOutput(output);
+    
+    // 5. Armazenar resultado
+    this.results.set(capabilityId, output);
+    
+    // 6. Log
+    console.log(`${output.success ? '✅' : '❌'} Capability ${capabilityId}: ${output.success ? 'SUCESSO' : 'FALHA'}`);
+    
+    return output;
+  }
+  
+  private validateOutput(output: CapabilityOutput) {
+    if (!output.capability_id) {
+      throw new Error('Output inválido: capability_id ausente');
+    }
+    
+    if (output.success && !output.data) {
+      throw new Error('Output inválido: success=true mas data=null');
+    }
+    
+    if (!output.success && !output.error) {
+      throw new Error('Output inválido: success=false mas error=null');
+    }
+    
+    if (!output.debug_log || output.debug_log.length === 0) {
+      console.warn('⚠️ Capability sem debug_log');
+    }
+  }
+  
+  getResult(capabilityId: string): CapabilityOutput | undefined {
+    return this.results.get(capabilityId);
+  }
+  
+  getAllResults(): Map<string, CapabilityOutput> {
+    return this.results;
+  }
+  
+  clearResults() {
+    this.results.clear();
+  }
+}
+Workflow Manager
+Responsabilidade: Orquestrar sequência de capabilities, gerenciar dependencies.
+
+typescript
+// workflow-manager.ts
+export class WorkflowManager {
+  private executor: CapabilityExecutor;
+  
+  constructor() {
+    this.executor = new CapabilityExecutor();
+  }
+  
+  async executeWorkflow(
+    objectives: Objective[],
+    context: any
+  ): Promise<WorkflowResult> {
+    const executionId = crypto.randomUUID();
+    
+    for (const objective of objectives) {
+      console.log(`\n🎯 Objetivo: ${objective.title}`);
+      
+      for (const capability of objective.capabilities) {
+        // PRE-FLIGHT: Verificar dependencies
+        const depsOk = this.checkDependencies(capability);
+        
+        if (!depsOk) {
+          console.error(`❌ Dependencies não satisfeitas para ${capability.id}`);
+          // Decidir: abortar ou pular
+          continue;
+        }
+        
+        // EXECUTAR
+        const result = await this.executor.execute(
+          capability.id,
+          context,
+          executionId
+        );
+        
+        // VERIFICAR SUCESSO
+        if (!result.success) {
+          // Capability falhou
+          if (result.error?.recoverable) {
+            console.warn(`⚠️ Erro recuperável, continuando...`);
+          } else {
+            console.error(`❌ Erro crítico, abortando workflow`);
+            throw new Error(`Workflow abortado: ${result.error?.message}`);
+          }
+        }
+        
+        // INJECT RESULT NO CONTEXTO
+        context[`result_${capability.id}`] = result.data;
+      }
+    }
+    
+    return {
+      success: true,
+      execution_id: executionId,
+      results: this.executor.getAllResults()
+    };
+  }
+  
+  private checkDependencies(capability: Capability): boolean {
+    // Verificar se capabilities das quais depende já executaram
+    if (!capability.depends_on) return true;
+    
+    for (const depId of capability.depends_on) {
+      const depResult = this.executor.getResult(depId);
+      
+      if (!depResult) {
+        console.error(`Dependency ${depId} não executada`);
+        return false;
+      }
+      
+      if (!depResult.success) {
+        console.error(`Dependency ${depId} falhou`);
+        return false;
+      }
+    }
+    
+    return true;
+  }
+}
+CAMADA 4: INTEGRAÇÃO COM LLM (AI Agent)
+AI Agent Executor
+Responsabilidade: Preparar prompt com dados reais, chamar LLM, validar resposta.
+
+typescript
+// Capability 3: decidir-atividades-criar.ts
+export async function decidirAtividadesCriar(
+  input: CapabilityInput
+): Promise<CapabilityOutput> {
+  const debug_log: DebugEntry[] = [];
+  
+  try {
+    // 1. OBTER RESULTADO DA CAPABILITY ANTERIOR
+    const catalogResult = input.previous_results?.get('pesquisar_atividades_disponiveis');
+    
+    if (!catalogResult) {
+      throw new Error('Dependency não encontrada: pesquisar_atividades_disponiveis');
+    }
+    
+    if (!catalogResult.success) {
+      throw new Error('Dependency falhou: catálogo não foi carregado');
+    }
+    
+    const catalog = catalogResult.data.catalog;
+    
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'info',
+      narrative: `Recebi catálogo com ${catalog.length} atividades da capability anterior.`
+    });
+    
+    // 2. CONSTRUIR PROMPT COM DADOS REAIS
+    const prompt = buildDecisionPrompt(catalog, input.context);
+    
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'action',
+      narrative: 'Enviando prompt para IA com catálogo completo de atividades.',
+      technical_data: { prompt_length: prompt.length }
+    });
+    
+    // 3. CHAMAR LLM
+    const aiResponse = await callLLM(prompt);
+    
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'discovery',
+      narrative: `IA retornou decisão: ${aiResponse.chosen_activities.length} atividades escolhidas.`
+    });
+    
+    // 4. VALIDAR RESPOSTA
+    const validation = validateAIDecision(aiResponse, catalog);
+    
+    if (!validation.valid) {
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'error',
+        narrative: `❌ VALIDAÇÃO FALHOU: ${validation.error}. IA escolheu IDs que não existem no catálogo.`
+      });
+      
+      throw new Error(`Validação falhou: ${validation.error}`);
+    }
+    
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'decision',
+      narrative: `✅ Decisão validada. Atividades escolhidas: ${aiResponse.chosen_activities.map(a => a.titulo).join(', ')}. Justificativa: ${aiResponse.estrategia}.`
+    });
+    
+    return {
+      success: true,
+      capability_id: 'decidir_atividades_criar',
+      execution_id: input.execution_id,
+      timestamp: new Date().toISOString(),
+      data: {
+        chosen_activities: aiResponse.chosen_activities,
+        estrategia: aiResponse.estrategia,
+        count: aiResponse.chosen_activities.length
+      },
+      error: null,
+      debug_log,
+      metadata: {
+        duration_ms: Date.now() - start,
+        retry_count: 0,
+        data_source: 'llm_decision'
+      }
+    };
+    
+  } catch (error) {
+    // ... handle error
+  }
+}
+
+function buildDecisionPrompt(catalog: Activity[], context: any): string {
+  return `
+# TAREFA: Decidir quais atividades criar
+
+## CATÁLOGO DISPONÍVEL (${catalog.length} atividades)
+
+FONTE DE VERDADE - Você DEVE escolher APENAS daqui:
+
+\`\`\`json
+${JSON.stringify(catalog, null, 2)}
+\`\`\`
+
+## IDs VÁLIDOS
+${catalog.map(a => `- ${a.id}: ${a.titulo} (${a.tipo})`).join('\n')}
+
+## CONTEXTO DO USUÁRIO
+${JSON.stringify(context, null, 2)}
+
+## INSTRUÇÕES
+
+1. Escolha 3-5 atividades do catálogo acima
+2. Use APENAS IDs da lista de IDs VÁLIDOS
+3. Justifique cada escolha
+4. Retorne JSON:
+
+\`\`\`json
+{
+  "chosen_activities": [
+    { "id": "ID_DO_CATALOGO", "titulo": "...", "justificativa": "..." }
+  ],
+  "estrategia": "explicação geral"
+}
+\`\`\`
+
+⚠️ CRÍTICO: Se você mencionar um ID que NÃO está na lista acima, o sistema REJEITARÁ sua resposta.
+`;
+}
+
+function validateAIDecision(aiResponse: any, catalog: Activity[]): ValidationResult {
+  const validIds = new Set(catalog.map(a => a.id));
+  
+  for (const chosen of aiResponse.chosen_activities) {
+    if (!validIds.has(chosen.id)) {
+      return {
+        valid: false,
+        error: `ID inválido: ${chosen.id}. Este ID não existe no catálogo.`
+      };
+    }
+  }
+  
+  return { valid: true };
+}
+CAMADA 5: UI INTEGRATION
+React Component que usa Orchestrator
+typescript
+// JotaChatDevelopment.tsx
+import { WorkflowManager } from '@/api/orchestrator/workflow-manager';
+
+export function JotaChatDevelopment() {
+  const [execution, setExecution] = useState<ExecutionState | null>(null);
+  const workflowManager = useRef(new WorkflowManager());
+  
+  async function executeObjectives(objectives: Objective[]) {
+    try {
+      setExecution({ status: 'running' });
+      
+      const result = await workflowManager.current.executeWorkflow(
+        objectives,
+        userContext
+      );
+      
+      setExecution({
+        status: 'completed',
+        results: result.results
+      });
+      
+    } catch (error) {
+      setExecution({
+        status: 'failed',
+        error: error.message
+      });
+    }
+  }
+  
+  // RENDERIZAR DEBUG
+  const debugLogs = execution?.results?.get('pesquisar_atividades_disponiveis')?.debug_log;
+  
+  return (
+    <div>
+      {/* Cards de capabilities */}
+      {objectives.map(obj => (
+        <ObjectiveCard key={obj.id}>
+          {obj.capabilities.map(cap => (
+            <div key={cap.id}>
+              <CapabilityCard {...cap} />
+              
+              {/* ÍCONE DE DEBUG */}
+              <DebugButton
+                onClick={() => openDebugModal(
+                  execution?.results?.get(cap.id)?.debug_log
+                )}
+              />
+              
+              {/* SE É "CRIAR_ATIVIDADE", RENDERIZAR INTERFACE */}
+              {cap.id === 'criar_atividade' && 
+               execution?.results?.get('decidir_atividades_criar')?.success && (
+                <ConstructionInterface
+                  activities={execution.results.get('decidir_atividades_criar').data.chosen_activities}
+                />
+              )}
+            </div>
+          ))}
+        </ObjectiveCard>
+      ))}
+    </div>
+  );
+}
+TESTES DE VALIDAÇÃO
+Teste Unitário: Capability Isolada
+typescript
+// pesquisar-atividades-disponiveis.test.ts
+describe('pesquisarAtividadesDisponiveis', () => {
+  it('deve carregar catálogo com sucesso', async () => {
+    const input: CapabilityInput = {
+      capability_id: 'pesquisar_atividades_disponiveis',
+      execution_id: 'test-1',
+      context: {}
+    };
+    
+    const result = await pesquisarAtividadesDisponiveis(input);
+    
+    expect(result.success).toBe(true);
+    expect(result.data.count).toBeGreaterThan(0);
+    expect(result.error).toBeNull();
+    expect(result.debug_log.length).toBeGreaterThan(0);
+  });
+  
+  it('deve falhar explicitamente se arquivo não existe', async () => {
+    // Mock file service para retornar erro
+    jest.spyOn(catalogService, 'loadCatalog').mockRejectedValue(
+      new Error('File not found')
+    );
+    
+    const result = await pesquisarAtividadesDisponiveis(input);
+    
+    expect(result.success).toBe(false);
+    expect(result.error?.code).toBe('CATALOG_LOAD_FAILED');
+    expect(result.error?.severity).toBe('critical');
+    expect(result.debug_log).toContain(
+      expect.objectContaining({
+        type: 'error',
+        narrative: expect.stringContaining('ERRO CRÍTICO')
+      })
+    );
+  });
+});
+Teste Integração: Workflow Completo
+typescript
+describe('Workflow: Criar Atividades', () => {
+  it('deve executar capabilities em sequência com dados persistindo', async () => {
+    const manager = new WorkflowManager();
+    
+    const objectives = [
+      {
+        id: 'obj1',
+        title: 'Criar atividades',
+        capabilities: [
+          { id: 'pesquisar_atividades_disponiveis', depends_on: [] },
+          { id: 'decidir_atividades_criar', depends_on: ['pesquisar_atividades_disponiveis'] }
+        ]
+      }
+    ];
+    
+    const result = await manager.executeWorkflow(objectives, {});
+    
+    // Verificar capability 1
+    const cap1Result = result.results.get('pesquisar_atividades_disponiveis');
+    expect(cap1Result?.success).toBe(true);
+    expect(cap1Result?.data.count).toBeGreaterThan(0);
+    
+    // Verificar capability 2 recebeu dados de 1
+    const cap2Result = result.results.get('decidir_atividades_criar');
+    expect(cap2Result?.success).toBe(true);
+    expect(cap2Result?.data.chosen_activities.length).toBeGreaterThan(0);
+    
+    // Verificar IDs escolhidos existem no catálogo
+    const catalogIds = cap1Result.data.catalog.map(a => a.id);
+    const chosenIds = cap2Result.data.chosen_activities.map(a => a.id);
+    
+    for (const id of chosenIds) {
+      expect(catalogIds).toContain(id);
+    }
+  });
+});
+DECISÕES CRÍTICAS PARA VOCÊ
+1. Framework/Runtime
+Next.js API Routes?
+
+Express.js endpoints?
+
+Serverless functions?
+
+tRPC procedures?
+
+2. File Loading
+Baseado no framework:
+
+Next.js: fs no server, fetch no client, ou getStaticProps
+
+Vite: import.meta.glob ou public folder + fetch
+
+CRA: public folder + fetch obrigatório
+
+Remix: loader functions
+
+3. LLM Integration
+OpenAI SDK?
+
+Anthropic SDK?
+
+Vercel AI SDK?
+
+Custom HTTP calls?
+
+4. State Management
+React Context para execution state?
+
+Zustand/Redux para global state?
+
+React Query para server state?
+
+Local state é suficiente?
+
+MIGRAÇÃO: DO ATUAL PARA NOVO
+Passo 1: Criar Service Layer
+text
+1. Criar activity-catalog.service.ts
+2. Testar isoladamente (console.log)
+3. Verificar que retorna dados corretos
+Passo 2: Criar Primeira Capability
+text
+1. Implementar pesquisar-atividades-disponiveis.ts
+2. Usar service layer
+3. Testar retorno (success, data, debug_log)
+Passo 3: Criar Executor
+text
+1. Implementar CapabilityExecutor
+2. Testar executar capability 1
+3. Verificar que result é armazenado
+Passo 4: Integrar com UI
+text
+1. Modificar componente para usar executor
+2. Renderizar debug_log
+3. Verificar que dados aparecem
+Passo 5: Adicionar Mais Capabilities
+text
+1. Implementar decidir-atividades-criar
+2. Testar que recebe dados de capability 1
+3. Validar anti-alucinação funciona
+OUTPUT ESPERADO NO DEBUG
+Quando funcionar corretamente:
+
+text
+🚀 Executando capability: pesquisar_atividades_disponiveis
+📂 Carregando catálogo do arquivo...
+✅ Catálogo carregado: 137 atividades
+✅ Capability pesquisar_atividades_disponiveis: SUCESSO
+
+Debug Log:
+[02:43:04] ACTION: Iniciando carregamento do catálogo...
+[02:43:04] DISCOVERY: ✅ SUCESSO: Carregadas 137 atividades. Tipos: flash-cards, quiz, lista-exercicios...
+
+🚀 Executando capability: decidir_atividades_criar
+[02:43:05] INFO: Recebi catálogo com 137 atividades da capability anterior.
+[02:43:05] ACTION: Enviando prompt para IA com catálogo completo...
+[02:43:06] DISCOVERY: IA retornou decisão: 3 atividades escolhidas.
+[02:43:06] DECISION: ✅ Decisão validada. Atividades: Flash Cards, Quiz, Lista Exercícios.
+✅ Capability decidir_atividades_criar: SUCESSO
+SE AINDA FALHAR
+DEBUGGING WORKFLOW:
+
+Testar Service Isoladamente
+
+typescript
+// Test script standalone
+import catalogService from './activity-catalog.service';
+
+catalogService.loadCatalog()
+  .then(catalog => console.log(`✅ ${catalog.total} atividades`))
+  .catch(error => console.error(`❌ ${error.message}`));
+Testar Capability Isoladamente
+
+typescript
+const result = await pesquisarAtividadesDisponiveis({
+  capability_id: 'test',
+  execution_id: 'test',
+  context: {}
+});
+
+console.log(JSON.stringify(result, null, 2));
+Verificar Path Resolution
+
+typescript
+// Log onde está procurando arquivo
+console.log('CWD:', process.cwd());
+console.log('Trying path:', filePath);
+console.log('Exists?', fs.existsSync(filePath));
+Verificar Build Output
+
+bash
+# Arquivo está no build?
+ls -la dist/data/
+# ou
+ls -la .next/static/data/
+# ou
+ls -la public/data/
+MINDSET CIRÚRGICO
+Isolar Cada Camada: Service → Capability → Executor → UI
+
+Testar Cada Camada: Unitário antes de integração
+
+Falhar Explicitamente: Throw error > Silent failure
+
+Dados Verificáveis: Log tudo, validate tudo
+
+Contrato Rígido: Input/Output padronizado sempre
+
+🚀 ARQUITETURA API-FIRST. CAPABILITIES ISOLADAS. DADOS VERIFICADOS. ZERO ALUCINAÇÃO. GO REBUILD WITH SURGICAL PRECISION.
