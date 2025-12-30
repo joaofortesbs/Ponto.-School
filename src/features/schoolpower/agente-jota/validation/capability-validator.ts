@@ -45,6 +45,9 @@ const CAPABILITY_ALIASES: Record<string, string> = {
   'criar': 'criar_atividade',
   'gerar_atividade': 'criar_atividade',
   'nova_atividade': 'criar_atividade',
+  'criar_atividades': 'criar_atividade',
+  'construir_atividade': 'criar_atividade',
+  'construir_atividades': 'criar_atividade',
 };
 
 export function getValidCapabilityNames(): string[] {
