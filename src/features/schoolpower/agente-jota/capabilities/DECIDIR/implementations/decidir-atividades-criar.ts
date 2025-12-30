@@ -17,7 +17,10 @@ import {
   DecisionValidation,
   SearchAccountActivitiesResult,
   SearchAvailableActivitiesResult,
-  validateAIChoices
+  validateAIChoices,
+  CapabilityInput,
+  CapabilityOutput,
+  DebugEntry
 } from '../../shared/types';
 import { formatAccountActivitiesForPrompt } from '../../../capabilities/PESQUISAR/implementations/pesquisar-atividades-conta';
 import { formatAvailableActivitiesForPrompt, validateActivitySelection } from '../../../capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis';
@@ -380,4 +383,207 @@ ${idx + 1}. ${a.titulo} (ID: ${a.id})
 
 Próximo passo: Capability 4 (criar_atividade) iniciará a construção.
   `.trim();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VERSÃO V2 - API-FIRST CAPABILITY
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function decidirAtividadesCriarV2(
+  input: CapabilityInput
+): Promise<CapabilityOutput> {
+  const debug_log: DebugEntry[] = [];
+  const startTime = Date.now();
+
+  try {
+    // 1. OBTER RESULTADO DA CAPABILITY ANTERIOR
+    const catalogResult = input.previous_results?.get('pesquisar_atividades_disponiveis');
+
+    if (!catalogResult) {
+      throw new Error('Dependency não encontrada: pesquisar_atividades_disponiveis');
+    }
+
+    if (!catalogResult.success) {
+      throw new Error('Dependency falhou: catálogo não foi carregado');
+    }
+
+    const catalog = catalogResult.data.catalog as ActivityFromCatalog[];
+    const validIds = catalogResult.data.valid_ids as string[];
+
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'info',
+      narrative: `Recebi catálogo com ${catalog.length} atividades da capability anterior. IDs válidos: ${validIds.length}`,
+      technical_data: { catalog_count: catalog.length, valid_ids: validIds }
+    });
+
+    // 2. EXTRAIR CONTEXTO
+    const userObjective = input.context.user_objective || input.context.objetivo || 'Criar atividades educacionais';
+    const maxActivities = input.context.max_activities || DEFAULT_MAX_ACTIVITIES;
+    const userContext = input.context.user_context || {};
+
+    // 3. CONSTRUIR CONTEXTO DE DECISÃO
+    const decisionContext: DecisionContext = {
+      user_objective: userObjective,
+      user_context: {
+        disciplina: userContext.disciplina || input.context.disciplina,
+        turma: userContext.turma,
+        objetivo_pedagogico: userContext.objetivo_pedagogico || userObjective
+      },
+      available_activities: catalog,
+      previous_activities: input.context.previous_activities || [],
+      constraints: {
+        max_activities: maxActivities,
+        preferred_types: input.context.preferred_types,
+        avoid_types: input.context.avoid_types
+      }
+    };
+
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'action',
+      narrative: `Construindo prompt de decisão para IA. Objetivo: "${userObjective}". Max atividades: ${maxActivities}`,
+      technical_data: { objective: userObjective, max: maxActivities }
+    });
+
+    // 4. CONSTRUIR PROMPT COM DADOS REAIS
+    const prompt = buildDecisionPrompt(decisionContext);
+
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'action',
+      narrative: `Enviando prompt para IA com catálogo completo de ${catalog.length} atividades.`,
+      technical_data: { prompt_length: prompt.length }
+    });
+
+    // 5. CHAMAR LLM
+    const aiResponse = await executeWithCascadeFallback(prompt);
+
+    if (!aiResponse.success || !aiResponse.data) {
+      throw new Error('Falha na chamada da API');
+    }
+
+    const cleanedText = aiResponse.data.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+
+    if (!jsonMatch) {
+      throw new Error('Resposta não contém JSON válido');
+    }
+
+    const parsedResponse = JSON.parse(jsonMatch[0]);
+
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'discovery',
+      narrative: `IA retornou decisão: ${parsedResponse.atividades_escolhidas?.length || 0} atividades escolhidas.`
+    });
+
+    // 6. VALIDAR RESPOSTA
+    const validation = validateDecision(parsedResponse, catalog, maxActivities);
+
+    if (validation.errors.length > 0) {
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'error',
+        narrative: `❌ VALIDAÇÃO FALHOU: ${validation.errors.join('; ')}. IA escolheu IDs inválidos ou campos incorretos.`,
+        technical_data: { errors: validation.errors }
+      });
+
+      throw new Error(`Validação falhou: ${validation.errors.join('; ')}`);
+    }
+
+    // 7. ENRIQUECER ATIVIDADES ESCOLHIDAS
+    const chosenActivities = enrichChosenActivities(
+      parsedResponse.atividades_escolhidas,
+      catalog
+    );
+
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'decision',
+      narrative: `✅ Decisão validada. Atividades escolhidas: ${chosenActivities.map(a => a.titulo).join(', ')}. Estratégia: ${parsedResponse.estrategia_pedagogica || 'Não especificada'}.`
+    });
+
+    const elapsedTime = Date.now() - startTime;
+
+    return {
+      success: true,
+      capability_id: 'decidir_atividades_criar',
+      execution_id: input.execution_id,
+      timestamp: new Date().toISOString(),
+      data: {
+        chosen_activities: chosenActivities,
+        estrategia: parsedResponse.estrategia_pedagogica || 'Estratégia pedagógica baseada em diversidade',
+        count: chosenActivities.length,
+        validation
+      },
+      error: null,
+      debug_log,
+      metadata: {
+        duration_ms: elapsedTime,
+        retry_count: 0,
+        data_source: aiResponse.modelUsed || 'llm_decision'
+      }
+    };
+
+  } catch (error) {
+    const elapsedTime = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'error',
+      narrative: `❌ ERRO: ${errorMessage}. Usando seleção de fallback.`,
+      technical_data: { error: errorMessage, stack: error instanceof Error ? error.stack : undefined }
+    });
+
+    // FALLBACK: Selecionar primeiras atividades do catálogo
+    const catalogResult = input.previous_results?.get('pesquisar_atividades_disponiveis');
+    const catalog = catalogResult?.data?.catalog || [];
+    const maxActivities = input.context.max_activities || DEFAULT_MAX_ACTIVITIES;
+
+    const fallbackActivities = catalog.slice(0, Math.min(3, maxActivities)).map((a: ActivityFromCatalog, idx: number) => ({
+      id: a.id,
+      titulo: a.titulo,
+      tipo: a.tipo,
+      categoria: a.categoria,
+      materia: a.materia,
+      nivel_dificuldade: a.nivel_dificuldade,
+      tags: a.tags,
+      campos_obrigatorios: a.campos_obrigatorios,
+      campos_opcionais: a.campos_opcionais || [],
+      schema_campos: a.schema_campos,
+      campos_preenchidos: {},
+      justificativa: 'Seleção automática (fallback após erro de IA)',
+      ordem_sugerida: idx + 1,
+      status_construcao: 'aguardando' as const,
+      progresso: 0
+    }));
+
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'warning',
+      narrative: `Usando fallback: ${fallbackActivities.length} atividades selecionadas automaticamente.`
+    });
+
+    return {
+      success: true,
+      capability_id: 'decidir_atividades_criar',
+      execution_id: input.execution_id,
+      timestamp: new Date().toISOString(),
+      data: {
+        chosen_activities: fallbackActivities,
+        estrategia: 'Seleção automática (fallback)',
+        count: fallbackActivities.length,
+        is_fallback: true
+      },
+      error: null,
+      debug_log,
+      metadata: {
+        duration_ms: elapsedTime,
+        retry_count: 0,
+        data_source: 'fallback_selection'
+      }
+    };
+  }
 }

@@ -17,14 +17,12 @@ import type {
   DebugEntry 
 } from './capabilities/shared/types';
 import { pesquisarAtividadesDisponiveisV2 } from './capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis';
-import { pesquisarAtividadesContaV2 } from './capabilities/PESQUISAR/implementations/pesquisar-atividades-conta';
 import { decidirAtividadesCriarV2 } from './capabilities/DECIDIR/implementations/decidir-atividades-criar';
 
 // Registry de capabilities V2 (API-First)
 const capabilityRegistry: Record<string, (input: CapabilityInput) => Promise<CapabilityOutput>> = {
   'pesquisar_atividades_disponiveis': pesquisarAtividadesDisponiveisV2,
-  // 'pesquisar_atividades_conta': pesquisarAtividadesContaV2,
-  // 'decidir_atividades_criar': decidirAtividadesCriarV2,
+  'decidir_atividades_criar': decidirAtividadesCriarV2,
 };
 
 export interface ExecutionConfig {
