@@ -6,6 +6,7 @@ import { AssistantMessage } from './AssistantMessage';
 import { PlanActionCard } from './PlanActionCard';
 import { DeveloperModeCard } from './DeveloperModeCard';
 import { ActivityConstructionCard } from './ActivityConstructionCard';
+import { ContentGenerationCard } from './ContentGenerationCard';
 
 interface MessageStreamProps {
   onApplyPlan?: () => void;
@@ -71,9 +72,36 @@ export function MessageStream({ onApplyPlan }: MessageStreamProps) {
             )}
 
             {message.type === 'construction_card' && (
-              <ActivityConstructionCard 
-                sessionId=""
-                atividades={message.metadata?.cardData?.atividades || []}
+              <>
+                <ActivityConstructionCard 
+                  sessionId={message.metadata?.cardData?.sessionId || ""}
+                  atividades={message.metadata?.cardData?.atividades || []}
+                />
+                <ContentGenerationCard 
+                  sessionId={message.metadata?.cardData?.sessionId || ""}
+                  conversationContext={message.metadata?.cardData?.conversationContext || ""}
+                  userObjective={message.metadata?.cardData?.userObjective || ""}
+                  onComplete={(data) => {
+                    console.log('✅ [ContentGenerationCard] Geração concluída:', data);
+                  }}
+                  onError={(error) => {
+                    console.error('❌ [ContentGenerationCard] Erro na geração:', error);
+                  }}
+                />
+              </>
+            )}
+
+            {message.type === 'content_generation_card' && (
+              <ContentGenerationCard 
+                sessionId={message.metadata?.cardData?.sessionId || ""}
+                conversationContext={message.metadata?.cardData?.conversationContext || ""}
+                userObjective={message.metadata?.cardData?.userObjective || ""}
+                onComplete={(data) => {
+                  console.log('✅ [ContentGenerationCard] Geração concluída:', data);
+                }}
+                onError={(error) => {
+                  console.error('❌ [ContentGenerationCard] Erro na geração:', error);
+                }}
               />
             )}
           </motion.div>
