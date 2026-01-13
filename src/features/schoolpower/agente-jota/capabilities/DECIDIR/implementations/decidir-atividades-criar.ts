@@ -228,19 +228,66 @@ export async function decidirAtividadesCriar(
   params: DecidirAtividadesCriarParams
 ): Promise<DecisionResult> {
   console.log('🎯 [Capability:DECIDIR] Iniciando decisão de atividades');
+  console.log('📊 [Capability:DECIDIR] Parâmetros recebidos:', {
+    hasAvailableActivities: !!params.available_activities,
+    availableCount: params.available_activities?.activities?.length || 0,
+    hasAccountActivities: !!params.account_activities,
+    accountCount: params.account_activities?.activities?.length || 0,
+    userObjective: params.user_objective
+  });
   
   const startTime = Date.now();
   const maxActivities = params.constraints?.max_activities || DEFAULT_MAX_ACTIVITIES;
 
+  // VALIDAR ENTRADAS
+  const availableActivities = params.available_activities?.activities || [];
+  const accountActivities = params.account_activities?.activities || [];
+  
+  if (availableActivities.length === 0) {
+    console.error('❌ [Capability:DECIDIR] ERRO: Nenhuma atividade disponível recebida!');
+    console.error('   Isso significa que pesquisar_atividades_disponiveis não foi executada corretamente.');
+    
+    // Retornar resultado vazio com erro
+    return {
+      success: false,
+      validation: {
+        all_ids_valid: false,
+        count_within_limit: true,
+        has_justification: false,
+        no_duplicates: true,
+        fields_complete: false,
+        errors: ['Nenhuma atividade disponível para decisão - execute pesquisar_atividades_disponiveis primeiro']
+      },
+      chosen_activities: [],
+      estrategia_pedagogica: 'Não foi possível decidir - catálogo vazio',
+      total_escolhidas: 0,
+      metadata: {
+        decision_timestamp: new Date().toISOString(),
+        attempt_number: 0,
+        model_used: 'none'
+      },
+      // Dados de raciocínio para debug
+      raciocinio: {
+        catalogo_consultado: false,
+        atividades_disponiveis: 0,
+        atividades_anteriores: accountActivities.length,
+        erro: 'Catálogo de atividades não foi carregado'
+      }
+    };
+  }
+
+  console.log(`✅ [Capability:DECIDIR] Catálogo recebido com ${availableActivities.length} atividades:`);
+  console.log(`   IDs disponíveis: ${availableActivities.map(a => a.id).join(', ')}`);
+
   const context: DecisionContext = {
-    user_objective: params.user_objective,
+    user_objective: params.user_objective || 'Criar atividades educacionais',
     user_context: {
       disciplina: params.user_context?.disciplina,
       turma: params.user_context?.turma,
       objetivo_pedagogico: params.user_context?.objetivo_pedagogico || params.user_objective
     },
-    available_activities: params.available_activities.activities,
-    previous_activities: params.account_activities.activities || [],
+    available_activities: availableActivities,
+    previous_activities: accountActivities,
     constraints: {
       max_activities: maxActivities,
       preferred_types: params.constraints?.preferred_types,
@@ -296,10 +343,11 @@ Por favor, corrija o erro e responda novamente com IDs VÁLIDOS do catálogo.
       if (validation.errors.length === 0) {
         const chosenActivities = enrichChosenActivities(
           parsedResponse.atividades_escolhidas,
-          params.available_activities.activities
+          availableActivities
         );
 
         console.log(`✅ [Capability:DECIDIR] Decisão aprovada: ${chosenActivities.length} atividades`);
+        console.log(`   📋 Atividades escolhidas: ${chosenActivities.map(a => a.id).join(', ')}`);
 
         return {
           success: true,
@@ -311,6 +359,14 @@ Por favor, corrija o erro e responda novamente com IDs VÁLIDOS do catálogo.
             decision_timestamp: new Date().toISOString(),
             attempt_number: attemptNumber,
             model_used: aiResponse.modelUsed
+          },
+          // Dados de raciocínio para debug
+          raciocinio: {
+            catalogo_consultado: true,
+            atividades_disponiveis: availableActivities.length,
+            atividades_anteriores: accountActivities.length,
+            ids_analisados: availableActivities.map(a => a.id),
+            criterios_usados: ['objetivo_usuario', 'contexto_pedagogico', 'diversidade_tipos']
           }
         };
       }
@@ -363,6 +419,14 @@ Por favor, corrija o erro e responda novamente com IDs VÁLIDOS do catálogo.
       decision_timestamp: new Date().toISOString(),
       attempt_number: attemptNumber,
       model_used: 'fallback'
+    },
+    // Dados de raciocínio para debug (fallback)
+    raciocinio: {
+      catalogo_consultado: true,
+      atividades_disponiveis: availableActivities.length,
+      atividades_anteriores: accountActivities.length,
+      ids_analisados: availableActivities.map(a => a.id),
+      erro: lastError || 'Fallback acionado após falhas de IA'
     }
   };
 }

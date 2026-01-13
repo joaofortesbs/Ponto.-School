@@ -279,6 +279,15 @@ export interface DecisionResult {
     attempt_number: number;
     model_used?: string;
   };
+  // Dados de raciocínio da IA para debug
+  raciocinio?: {
+    catalogo_consultado: boolean;
+    atividades_disponiveis: number;
+    atividades_anteriores: number;
+    ids_analisados?: string[];
+    criterios_usados?: string[];
+    erro?: string;
+  };
 }
 
 // ============================================

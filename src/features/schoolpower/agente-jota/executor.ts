@@ -53,6 +53,10 @@ export class AgentExecutor {
   async executePlan(plan: ExecutionPlan): Promise<string> {
     console.log('▶️ [Executor] Iniciando execução do plano:', plan.planId);
 
+    // Limpar mapa de resultados de execuções anteriores
+    this.capabilityResultsMap.clear();
+    console.log('🧹 [Executor] Mapa de resultados limpo para nova execução');
+
     // Inicializar sessão de debug
     useDebugStore.getState().initSession(this.sessionId);
 
@@ -169,6 +173,9 @@ export class AgentExecutor {
     return relatorio;
   }
 
+  // Mapa para armazenar resultados de capabilities entre etapas
+  private capabilityResultsMap: Map<string, any> = new Map();
+
   private async executeCapabilities(etapa: ExecutionStep): Promise<any[]> {
     const capabilities = etapa.capabilities || [];
     const results: any[] = [];
@@ -177,6 +184,7 @@ export class AgentExecutor {
     reflectionService.setObjectiveTitle(objectiveIndex, etapa.titulo || etapa.descricao);
 
     console.log(`📦 [Executor] Executando ${capabilities.length} capabilities na etapa ${etapa.ordem}`);
+    console.log(`📦 [Executor] Resultados anteriores disponíveis:`, Array.from(this.capabilityResultsMap.keys()));
 
     for (const capability of capabilities) {
       const startTime = Date.now();
@@ -223,7 +231,14 @@ export class AgentExecutor {
             'low'
           );
           
-          resultado = await executeCapability(capName, capability.parametros);
+          // Injetar resultados de capabilities anteriores quando necessário
+          const enrichedParams = this.enrichCapabilityParams(capName, capability.parametros);
+          
+          resultado = await executeCapability(capName, enrichedParams);
+          
+          // Armazenar resultado para uso em capabilities subsequentes
+          this.capabilityResultsMap.set(capName, resultado);
+          console.log(`💾 [Executor] Resultado de "${capName}" armazenado para uso futuro`);
           
           // Debug: Resultado obtido com dados técnicos detalhados
           createDebugEntry(
@@ -366,8 +381,19 @@ export class AgentExecutor {
       return `Consultei o catálogo de atividades. Encontrei ${count} atividade(s) disponível(is) com ${types} tipo(s). IDs válidos: ${ids}.`;
     }
     if (capName.includes('decidir_atividades')) {
-      const chosen = resultado?.chosen_activities?.length || resultado?.decisoes?.length || resultado?.activities_to_create?.length || 0;
-      return `Analisei o contexto pedagógico e decidi criar ${chosen} atividade(s) que melhor atendem às necessidades identificadas.`;
+      const chosen = resultado?.chosen_activities || resultado?.activities_to_create || resultado?.decisoes || [];
+      const chosenCount = chosen.length;
+      const raciocinio = resultado?.raciocinio || {};
+      const catalogCount = raciocinio.atividades_disponiveis || 0;
+      const idsAnalisados = raciocinio.ids_analisados || [];
+      const estrategia = resultado?.estrategia_pedagogica || '';
+      
+      if (chosenCount > 0) {
+        const chosenIds = chosen.map((a: any) => a.id).join(', ');
+        return `Analisei ${catalogCount} atividade(s) do catálogo (IDs: ${idsAnalisados.join(', ')}). Decidi criar ${chosenCount} atividade(s): ${chosenIds}. Estratégia: ${estrategia || 'diversidade pedagógica'}.`;
+      } else {
+        return `Analisei o contexto pedagógico mas não selecionei nenhuma atividade. Catálogo tinha ${catalogCount} opções disponíveis.`;
+      }
     }
     if (capName.includes('criar_atividade')) {
       const built = resultado?.activities_built?.length || resultado?.progress?.completed || 0;
@@ -621,6 +647,58 @@ Seja específico e forneça dados que ajudem o professor.
     };
   }
 
+  /**
+   * Enriquece os parâmetros de uma capability com resultados de capabilities anteriores
+   * Isso permite que decidir_atividades_criar acesse os dados de pesquisar_atividades_disponiveis
+   */
+  private enrichCapabilityParams(capName: string, params: any): any {
+    const enrichedParams = { ...params };
+
+    // Para decidir_atividades_criar, injetar dados das pesquisas anteriores
+    if (capName === 'decidir_atividades_criar') {
+      // Buscar resultado de pesquisar_atividades_disponiveis
+      const catalogResult = this.capabilityResultsMap.get('pesquisar_atividades_disponiveis');
+      if (catalogResult) {
+        console.log(`🔗 [Executor] Injetando catálogo de atividades em decidir_atividades_criar`);
+        enrichedParams.available_activities = {
+          activities: catalogResult.activities || catalogResult.catalog || [],
+          valid_ids: catalogResult.valid_ids || [],
+          types: catalogResult.types || [],
+          categories: catalogResult.categories || []
+        };
+        console.log(`   📦 ${enrichedParams.available_activities.activities.length} atividades disponíveis injetadas`);
+      } else {
+        console.warn(`⚠️ [Executor] Resultado de pesquisar_atividades_disponiveis não encontrado`);
+      }
+
+      // Buscar resultado de pesquisar_atividades_conta
+      const accountResult = this.capabilityResultsMap.get('pesquisar_atividades_conta');
+      if (accountResult) {
+        console.log(`🔗 [Executor] Injetando atividades da conta em decidir_atividades_criar`);
+        enrichedParams.account_activities = {
+          activities: accountResult.atividades || accountResult.activities || [],
+          total: accountResult.total || 0
+        };
+        console.log(`   📦 ${enrichedParams.account_activities.activities.length} atividades da conta injetadas`);
+      } else {
+        console.log(`📝 [Executor] Sem atividades anteriores da conta (professor novo)`);
+        enrichedParams.account_activities = { activities: [], total: 0 };
+      }
+    }
+
+    // Para criar_atividade, injetar decisões
+    if (capName === 'criar_atividade') {
+      const decisionResult = this.capabilityResultsMap.get('decidir_atividades_criar');
+      if (decisionResult) {
+        console.log(`🔗 [Executor] Injetando decisões em criar_atividade`);
+        enrichedParams.activities_to_create = decisionResult.chosen_activities || [];
+        enrichedParams.estrategia = decisionResult.estrategia_pedagogica || decisionResult.estrategia || '';
+      }
+    }
+
+    return enrichedParams;
+  }
+
   private formatTechnicalDataForDebug(capName: string, resultado: any): Record<string, any> {
     // Dados técnicos específicos para pesquisar_atividades_disponiveis
     if (capName.includes('pesquisar_atividades_disponiveis')) {
@@ -670,6 +748,9 @@ Seja específico e forneça dados que ajudem o professor.
     // Dados técnicos específicos para decidir_atividades_criar
     if (capName.includes('decidir_atividades')) {
       const chosen = resultado?.chosen_activities || resultado?.activities_to_create || resultado?.decisoes || [];
+      const raciocinio = resultado?.raciocinio || {};
+      const estrategia = resultado?.estrategia_pedagogica || resultado?.estrategia || '';
+      
       return {
         resultado_resumo: `Decidido criar ${chosen.length} atividade(s)`,
         atividades_escolhidas: chosen.map((a: any) => ({
@@ -677,7 +758,16 @@ Seja específico e forneça dados que ajudem o professor.
           titulo: a.titulo || a.name,
           tipo: a.tipo || a.type,
           justificativa: a.justificativa || a.reason
-        }))
+        })),
+        estrategia_pedagogica: estrategia,
+        raciocinio_ia: {
+          catalogo_consultado: raciocinio.catalogo_consultado ?? 'não informado',
+          atividades_disponiveis: raciocinio.atividades_disponiveis ?? 0,
+          atividades_anteriores_professor: raciocinio.atividades_anteriores ?? 0,
+          ids_analisados: raciocinio.ids_analisados || [],
+          criterios_usados: raciocinio.criterios_usados || [],
+          erro_se_houver: raciocinio.erro || null
+        }
       };
     }
     
