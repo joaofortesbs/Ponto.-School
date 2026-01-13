@@ -33,7 +33,7 @@ export interface CapabilityCall {
   id: string;
   nome: string;
   displayName: string;
-  categoria: 'PESQUISAR' | 'CRIAR' | 'ADICIONAR' | 'EDITAR' | 'ANALISAR';
+  categoria: 'PESQUISAR' | 'CRIAR' | 'ADICIONAR' | 'EDITAR' | 'ANALISAR' | 'GERAR_CONTEUDO';
   parametros: Record<string, any>;
   status: 'pending' | 'executing' | 'completed' | 'failed';
   resultado?: any;

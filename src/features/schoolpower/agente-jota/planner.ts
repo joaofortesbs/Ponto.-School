@@ -227,6 +227,25 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
         },
       ],
     },
+    {
+      ordem: 4,
+      titulo: 'Gerar conteúdo das atividades',
+      descricao: 'Vou preencher os campos de cada atividade com conteúdo pedagógico',
+      funcao: 'gerar_conteudo_atividades',
+      parametros: { contexto: userPrompt },
+      status: 'pendente',
+      capabilities: [
+        {
+          id: `cap-3-0-${timestamp}`,
+          nome: 'gerar_conteudo_atividades',
+          displayName: 'Gerando conteúdo para as atividades',
+          categoria: 'GERAR_CONTEUDO',
+          parametros: { contexto: userPrompt },
+          status: 'pending',
+          ordem: 1,
+        },
+      ],
+    },
   ];
 
   return {
