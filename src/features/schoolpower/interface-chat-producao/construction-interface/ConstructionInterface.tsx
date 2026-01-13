@@ -295,6 +295,49 @@ export function ConstructionInterface({
     }
   }, [autoStart, isBuilding, activities, onBuildAll]);
 
+  // Ref para controlar se já emitimos o evento de conclusão
+  const hasEmittedCompletionRef = React.useRef(false);
+  
+  // Ref para detectar estado anterior (para resetar em novos ciclos)
+  const prevAllCompletedRef = React.useRef(false);
+
+  // Resetar ref quando atividades voltarem a não-completed (novo ciclo de construção)
+  useEffect(() => {
+    // Se estava completo e agora NÃO está, é um novo ciclo
+    if (prevAllCompletedRef.current && !allCompleted) {
+      console.log(`🔄 [ConstructionInterface] Novo ciclo de construção detectado (status regrediu), resetando estado`);
+      hasEmittedCompletionRef.current = false;
+    }
+    
+    // Atualizar referência do estado anterior
+    prevAllCompletedRef.current = allCompleted;
+  }, [allCompleted, activities]);
+
+  // Emitir evento construction:all_completed quando todas as atividades forem concluídas
+  useEffect(() => {
+    if (allCompleted && !hasEmittedCompletionRef.current && activities.length > 0) {
+      hasEmittedCompletionRef.current = true;
+      console.log(`🎉 [ConstructionInterface] Todas as ${activities.length} atividades concluídas! Emitindo evento...`);
+      
+      // Emitir evento com as atividades concluídas
+      window.dispatchEvent(new CustomEvent('agente-jota-progress', {
+        detail: {
+          type: 'construction:all_completed',
+          activities: activities.map(a => ({
+            id: a.id,
+            activity_id: a.activity_id,
+            titulo: a.name,
+            tipo: a.type,
+            status: a.status,
+            progress: a.progress || 100,
+            built_data: a.built_data
+          })),
+          summary: `${activities.length} atividade(s) construída(s) com sucesso`
+        }
+      }));
+    }
+  }, [allCompleted, activities]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.98 }}
