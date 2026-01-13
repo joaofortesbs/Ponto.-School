@@ -41,17 +41,20 @@ interface ChosenActivitiesState {
   totalDecididas: number;
   decisionTimestamp: string | null;
   isDecisionComplete: boolean;
+  isContentGenerationComplete: boolean;
 
   initSession: (sessionId: string) => void;
   setChosenActivities: (activities: ChosenActivity[], estrategia?: string) => void;
   updateActivityStatus: (activityId: string, status: ChosenActivity['status_construcao'], progresso?: number, erro?: string) => void;
   updateActivityProgress: (activityId: string, progresso: number) => void;
   setActivityBuiltData: (activityId: string, dados: Record<string, any>) => void;
+  setActivityGeneratedFields: (activityId: string, fields: Record<string, any>) => void;
   getChosenActivities: () => ChosenActivity[];
   getActivityById: (activityId: string) => ChosenActivity | undefined;
   getActivitiesForConstruction: () => ActivityToBuild[];
   clearSession: () => void;
   markDecisionComplete: () => void;
+  markContentGenerationComplete: () => void;
 }
 
 export const useChosenActivitiesStore = create<ChosenActivitiesState>((set, get) => ({
@@ -61,6 +64,7 @@ export const useChosenActivitiesStore = create<ChosenActivitiesState>((set, get)
   totalDecididas: 0,
   decisionTimestamp: null,
   isDecisionComplete: false,
+  isContentGenerationComplete: false,
 
   initSession: (sessionId) => {
     console.log('🎯 [ChosenActivitiesStore] Inicializando sessão:', sessionId);
@@ -70,7 +74,8 @@ export const useChosenActivitiesStore = create<ChosenActivitiesState>((set, get)
       estrategiaPedagogica: '',
       totalDecididas: 0,
       decisionTimestamp: null,
-      isDecisionComplete: false
+      isDecisionComplete: false,
+      isContentGenerationComplete: false
     });
   },
 
@@ -141,6 +146,26 @@ export const useChosenActivitiesStore = create<ChosenActivitiesState>((set, get)
     }));
   },
 
+  setActivityGeneratedFields: (activityId, fields) => {
+    console.log(`📝 [ChosenActivitiesStore] Campos gerados para ${activityId}:`, Object.keys(fields));
+    
+    set((state) => ({
+      chosenActivities: state.chosenActivities.map(activity =>
+        activity.id === activityId
+          ? {
+              ...activity,
+              campos_preenchidos: { ...activity.campos_preenchidos, ...fields },
+              dados_construidos: { 
+                ...activity.dados_construidos, 
+                generated_fields: fields,
+                generation_timestamp: new Date().toISOString()
+              }
+            }
+          : activity
+      )
+    }));
+  },
+
   getChosenActivities: () => {
     return get().chosenActivities;
   },
@@ -174,12 +199,18 @@ export const useChosenActivitiesStore = create<ChosenActivitiesState>((set, get)
       estrategiaPedagogica: '',
       totalDecididas: 0,
       decisionTimestamp: null,
-      isDecisionComplete: false
+      isDecisionComplete: false,
+      isContentGenerationComplete: false
     });
   },
 
   markDecisionComplete: () => {
     set({ isDecisionComplete: true });
+  },
+
+  markContentGenerationComplete: () => {
+    console.log('✅ [ChosenActivitiesStore] Geração de conteúdo marcada como completa');
+    set({ isContentGenerationComplete: true });
   }
 }));
 

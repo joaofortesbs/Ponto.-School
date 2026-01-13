@@ -302,6 +302,41 @@ const EditActivityModal = ({
     }
   }, [activity?.id]);
 
+  // useEffect para escutar campos gerados pela capability gerar_conteudo_atividades
+  useEffect(() => {
+    const handleFieldsGenerated = (event: CustomEvent) => {
+      const { activity_id, fields } = event.detail;
+      
+      // Verificar se o evento é para esta atividade
+      if (activity_id !== activity?.id) return;
+      
+      console.log('🎯 [MODAL] Campos gerados recebidos para:', activity_id, fields);
+      
+      if (fields && typeof fields === 'object') {
+        setFormData(prev => {
+          const newFormData = { ...prev };
+          
+          // Mapear campos gerados para o formData
+          Object.entries(fields).forEach(([key, value]) => {
+            if (key in newFormData) {
+              (newFormData as any)[key] = value;
+            }
+          });
+          
+          return newFormData;
+        });
+        
+        console.log('✅ [MODAL] Form data atualizado com campos gerados automaticamente');
+      }
+    };
+
+    window.addEventListener('agente-jota-fields-generated', handleFieldsGenerated as EventListener);
+
+    return () => {
+      window.removeEventListener('agente-jota-fields-generated', handleFieldsGenerated as EventListener);
+    };
+  }, [activity?.id]);
+
   // Use isGeneratingDefault for the generic generate activity call
   const isGenerating = isGeneratingDefault;
 
