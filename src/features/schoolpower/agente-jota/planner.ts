@@ -192,7 +192,7 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
     {
       ordem: 2,
       titulo: 'Decidir quais atividades criar',
-      descricao: 'Vou escolher as melhores atividades para seu objetivo',
+      descricao: 'Vou escolher as melhores atividades e gerar conteúdo pedagógico',
       funcao: 'decidir_atividades_criar',
       parametros: { contexto: userPrompt },
       status: 'pendente',
@@ -206,29 +206,19 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
           status: 'pending',
           ordem: 1,
         },
-      ],
-    },
-    {
-      ordem: 3,
-      titulo: 'Gerar conteúdo das atividades',
-      descricao: 'Vou preencher os campos de cada atividade com conteúdo pedagógico',
-      funcao: 'gerar_conteudo_atividades',
-      parametros: { contexto: userPrompt },
-      status: 'pendente',
-      capabilities: [
         {
-          id: `cap-2-0-${timestamp}`,
+          id: `cap-1-1-${timestamp}`,
           nome: 'gerar_conteudo_atividades',
           displayName: 'Gerando conteúdo para as atividades',
           categoria: 'GERAR_CONTEUDO',
           parametros: { contexto: userPrompt },
           status: 'pending',
-          ordem: 1,
+          ordem: 2,
         },
       ],
     },
     {
-      ordem: 4,
+      ordem: 3,
       titulo: 'Criar as atividades personalizadas',
       descricao: 'Vou criar as atividades sob medida para você',
       funcao: 'criar_atividade',
@@ -236,7 +226,7 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
       status: 'pendente',
       capabilities: [
         {
-          id: `cap-3-0-${timestamp}`,
+          id: `cap-2-0-${timestamp}`,
           nome: 'criar_atividade',
           displayName: 'Vou criar atividades engajantes',
           categoria: 'CRIAR',
