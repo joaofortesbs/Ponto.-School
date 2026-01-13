@@ -149,6 +149,27 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
     };
   }, [cardId, updateCardData, updateCapabilityStatus, updateEtapaStatus, addCapabilityToEtapa]);
 
+  // Listener para receber atividades decididas pela capability decidir_atividades_criar
+  useEffect(() => {
+    const handleActivitiesDecided = (event: CustomEvent) => {
+      const { activities, total, estrategia } = event.detail;
+      console.log(`🎯 [DeveloperModeCard] Atividades decididas recebidas: ${total}`);
+      console.log(`   📋 Estratégia: ${estrategia}`);
+      console.log(`   📋 Atividades:`, activities);
+      
+      if (activities && Array.isArray(activities) && activities.length > 0) {
+        setActivitiesToBuild(activities);
+        console.log(`✅ [DeveloperModeCard] activitiesToBuild atualizado com ${activities.length} atividades`);
+      }
+    };
+
+    window.addEventListener('agente-jota-activities-decided', handleActivitiesDecided as EventListener);
+
+    return () => {
+      window.removeEventListener('agente-jota-activities-decided', handleActivitiesDecided as EventListener);
+    };
+  }, []);
+
   const objectivesForProgressiveCard = useMemo((): ObjectiveItem[] => {
     if (!data?.etapas) return [];
 
