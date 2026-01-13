@@ -77,17 +77,20 @@ export function MessageStream({ onApplyPlan }: MessageStreamProps) {
                   sessionId={message.metadata?.cardData?.sessionId || ""}
                   atividades={message.metadata?.cardData?.atividades || []}
                 />
-                <ContentGenerationCard 
-                  sessionId={message.metadata?.cardData?.sessionId || ""}
-                  conversationContext={message.metadata?.cardData?.conversationContext || ""}
-                  userObjective={message.metadata?.cardData?.userObjective || ""}
-                  onComplete={(data) => {
-                    console.log('✅ [ContentGenerationCard] Geração concluída:', data);
-                  }}
-                  onError={(error) => {
-                    console.error('❌ [ContentGenerationCard] Erro na geração:', error);
-                  }}
-                />
+                <div className="mt-4">
+                  <ContentGenerationCard 
+                    sessionId={message.metadata?.cardData?.sessionId || ""}
+                    conversationContext={message.metadata?.cardData?.conversationContext || ""}
+                    userObjective={message.metadata?.cardData?.userObjective || ""}
+                    initialActivities={message.metadata?.cardData?.atividades || []}
+                    onComplete={(data) => {
+                      console.log('✅ [ContentGenerationCard] Geração concluída:', data);
+                    }}
+                    onError={(error) => {
+                      console.error('❌ [ContentGenerationCard] Erro na geração:', error);
+                    }}
+                  />
+                </div>
               </>
             )}
 

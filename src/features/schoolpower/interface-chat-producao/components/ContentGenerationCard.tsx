@@ -27,10 +27,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useChosenActivitiesStore } from '../stores/ChosenActivitiesStore';
 import { gerarConteudoAtividades } from '../../agente-jota/capabilities/GERAR_CONTEUDO/implementations/gerar-conteudo-atividades';
 
+interface ActivityFromCard {
+  id: string;
+  titulo: string;
+  tipo?: string;
+  status?: string;
+  progresso?: number;
+}
+
 interface ContentGenerationCardProps {
   sessionId: string;
   conversationContext: string;
   userObjective: string;
+  initialActivities?: ActivityFromCard[];
   autoStart?: boolean;
   onComplete?: (results: any) => void;
   onError?: (error: string) => void;
@@ -49,6 +58,7 @@ export const ContentGenerationCard: React.FC<ContentGenerationCardProps> = ({
   sessionId,
   conversationContext,
   userObjective,
+  initialActivities = [],
   autoStart = false,
   onComplete,
   onError
@@ -62,25 +72,38 @@ export const ContentGenerationCard: React.FC<ContentGenerationCardProps> = ({
   const [hasError, setHasError] = useState(false);
 
   // Usar selectors para reatividade ao store
-  const activities = useChosenActivitiesStore(state => state.chosenActivities);
+  const storeActivities = useChosenActivitiesStore(state => state.chosenActivities);
   const isContentGenerationComplete = useChosenActivitiesStore(state => state.isContentGenerationComplete);
   const markContentGenerationComplete = useChosenActivitiesStore(state => state.markContentGenerationComplete);
 
-  // Sincronizar progresso local com estado das atividades no store
+  // Usar atividades do store se disponíveis, senão usar initialActivities das props
+  // NÃO modifica o store - apenas para renderização
+  const activitiesSource = storeActivities.length > 0 ? storeActivities : initialActivities;
+  
+  // Determina se temos atividades para exibir (de qualquer fonte)
+  const hasActivities = activitiesSource.length > 0;
+
+  // Sincronizar progresso local com atividades disponíveis
   useEffect(() => {
-    if (activities.length > 0) {
-      setActivitiesProgress(activities.map(a => ({
+    if (activitiesSource.length > 0) {
+      const mapStatus = (a: any): 'waiting' | 'generating' | 'completed' | 'error' => {
+        if ('status_construcao' in a) {
+          if (a.status_construcao === 'concluida') return 'completed';
+          if (a.status_construcao === 'construindo') return 'generating';
+          if (a.status_construcao === 'erro') return 'error';
+        }
+        return 'waiting';
+      };
+
+      setActivitiesProgress(activitiesSource.map(a => ({
         id: a.id,
-        title: a.titulo,
-        status: a.status_construcao === 'concluida' ? 'completed' 
-             : a.status_construcao === 'construindo' ? 'generating'
-             : a.status_construcao === 'erro' ? 'error'
-             : 'waiting',
-        progress: a.progresso || 0,
-        fieldsGenerated: a.campos_preenchidos ? Object.keys(a.campos_preenchidos) : []
+        title: 'titulo' in a ? a.titulo : (a as any).titulo || 'Atividade',
+        status: mapStatus(a),
+        progress: ('progresso' in a ? a.progresso : 0) || 0,
+        fieldsGenerated: ('campos_preenchidos' in a && a.campos_preenchidos) ? Object.keys(a.campos_preenchidos) : []
       })));
     }
-  }, [activities]);
+  }, [activitiesSource]);
 
   // Verificar se geração já foi concluída
   useEffect(() => {
@@ -142,7 +165,7 @@ export const ContentGenerationCard: React.FC<ContentGenerationCardProps> = ({
   }, []);
 
   const startGeneration = async () => {
-    if (isGenerating || activities.length === 0) return;
+    if (isGenerating || !hasActivities) return;
 
     setIsGenerating(true);
     setHasError(false);
@@ -174,11 +197,11 @@ export const ContentGenerationCard: React.FC<ContentGenerationCardProps> = ({
   };
 
   useEffect(() => {
-    if (autoStart && activities.length > 0 && !isGenerating && !generationComplete) {
+    if (autoStart && hasActivities && !isGenerating && !generationComplete) {
       const timer = setTimeout(() => startGeneration(), 1000);
       return () => clearTimeout(timer);
     }
-  }, [autoStart, activities.length, isGenerating, generationComplete]);
+  }, [autoStart, hasActivities, isGenerating, generationComplete]);
 
   const getStatusIcon = (status: ActivityProgress['status']) => {
     switch (status) {
@@ -202,7 +225,7 @@ export const ContentGenerationCard: React.FC<ContentGenerationCardProps> = ({
     }
   };
 
-  if (activities.length === 0) {
+  if (!hasActivities) {
     return null;
   }
 
