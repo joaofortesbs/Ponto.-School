@@ -170,6 +170,56 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
     };
   }, []);
 
+  // Listener para adicionar capability gerar_conteudo_atividades automaticamente
+  useEffect(() => {
+    const handleCapabilityStarted = (event: CustomEvent) => {
+      const { capabilityId, capabilityName, displayName, status } = event.detail;
+      
+      if (capabilityName === 'gerar_conteudo_atividades') {
+        console.log(`🚀 [DeveloperModeCard] Adicionando capability gerar_conteudo_atividades automaticamente`);
+        
+        // Encontrar o índice da etapa "Criar as atividades personalizadas"
+        // Primeiro tenta encontrar uma etapa com título "criar" que esteja ativa/concluída
+        // Se não encontrar, usa a última etapa disponível
+        let etapaCriarIndex = data?.etapas?.findIndex(e => 
+          e.titulo.toLowerCase().includes('criar') && 
+          (e.status === 'executando' || e.status === 'concluido')
+        ) ?? -1;
+        
+        // Se não encontrou etapa ativa com "criar", tenta qualquer etapa com "criar"
+        if (etapaCriarIndex === -1) {
+          etapaCriarIndex = data?.etapas?.findIndex(e => 
+            e.titulo.toLowerCase().includes('criar')
+          ) ?? -1;
+        }
+        
+        // Se ainda não encontrou, usa a última etapa disponível
+        if (etapaCriarIndex === -1) {
+          etapaCriarIndex = (data?.etapas?.length ?? 1) - 1;
+          if (etapaCriarIndex < 0) etapaCriarIndex = 0;
+        }
+        
+        console.log(`📍 [DeveloperModeCard] Etapa alvo para gerar_conteudo: ${etapaCriarIndex}`);
+        
+        const novaCapability: CapabilityState = {
+          id: capabilityId,
+          nome: capabilityName,
+          displayName: displayName || 'Gerar conteúdo das atividades',
+          status: status === 'executing' ? 'executando' : 'pendente'
+        };
+        
+        addCapabilityToEtapa(cardId, etapaCriarIndex, novaCapability);
+        console.log(`✅ [DeveloperModeCard] Capability gerar_conteudo_atividades adicionada à etapa ${etapaCriarIndex}`);
+      }
+    };
+
+    window.addEventListener('agente-jota-capability-started', handleCapabilityStarted as EventListener);
+
+    return () => {
+      window.removeEventListener('agente-jota-capability-started', handleCapabilityStarted as EventListener);
+    };
+  }, [cardId, data?.etapas, addCapabilityToEtapa]);
+
   const objectivesForProgressiveCard = useMemo((): ObjectiveItem[] => {
     if (!data?.etapas) return [];
 
