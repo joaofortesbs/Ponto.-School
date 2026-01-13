@@ -48,24 +48,24 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
           id: update.capability_id || `cap-${update.stepIndex}-${update.capability_name}`,
           nome: update.capability_name,
           displayName: update.displayName,
-          status: 'pendente'
+          status: 'pending'
         };
         addCapabilityToEtapa(cardId, update.stepIndex, novaCapability);
       }
 
       if (update.type === 'capability:iniciou') {
         console.log(`▶️ [DeveloperModeCard] Iniciando capability: ${update.capability_id} na etapa ${update.stepIndex}`);
-        updateCapabilityStatus(cardId, update.stepIndex, update.capability_id, 'executando');
+        updateCapabilityStatus(cardId, update.stepIndex, update.capability_id, 'executing');
       }
 
       if (update.type === 'capability:concluiu') {
         console.log(`✅ [DeveloperModeCard] Concluindo capability: ${update.capability_id} na etapa ${update.stepIndex}`);
-        updateCapabilityStatus(cardId, update.stepIndex, update.capability_id, 'concluido');
+        updateCapabilityStatus(cardId, update.stepIndex, update.capability_id, 'completed');
       }
 
       if (update.type === 'capability:erro') {
         console.log(`❌ [DeveloperModeCard] Erro na capability: ${update.capability_id} na etapa ${update.stepIndex}`);
-        updateCapabilityStatus(cardId, update.stepIndex, update.capability_id, 'erro');
+        updateCapabilityStatus(cardId, update.stepIndex, update.capability_id, 'error');
       }
 
       if (update.type === 'execution:step:started') {

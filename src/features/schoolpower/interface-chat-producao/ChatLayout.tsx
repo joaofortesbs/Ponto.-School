@@ -193,7 +193,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
           id: cap.id || `cap-${idx}-${capIdx}-${Date.now()}`,
           nome: cap.nome,
           displayName: cap.displayName || cap.nome,
-          status: idx === 0 && capIdx === 0 ? 'executando' : 'pendente'
+          status: idx === 0 && capIdx === 0 ? 'executing' : 'pending'
         }))
       }))
     });
