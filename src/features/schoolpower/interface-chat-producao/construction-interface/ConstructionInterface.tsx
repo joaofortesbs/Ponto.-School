@@ -216,19 +216,44 @@ function ActivityCard({ activity, onBuild, onActivityClick }: {
 }
 
 function convertToConstructionActivity(activity: ActivityToBuild): ConstructionActivity {
+  // Extrair campos consolidados do built_data (preparados pelo ChosenActivitiesStore)
+  const builtData = activity.built_data || {};
+  const consolidatedFields = builtData._consolidated_fields || builtData.generated_fields || {};
+  
+  // Mapear título por tipo de atividade com fallbacks apropriados
+  const getGeneratedTitle = (): string => {
+    if (consolidatedFields.theme) return consolidatedFields.theme;
+    if (consolidatedFields.temaRedacao) return consolidatedFields.temaRedacao;
+    if (consolidatedFields.tituloTemaAssunto) return consolidatedFields.tituloTemaAssunto;
+    if (consolidatedFields.centralTheme) return consolidatedFields.centralTheme;
+    if (consolidatedFields.title) return consolidatedFields.title;
+    return activity.name;
+  };
+  
+  // Mapear descrição por tipo de atividade com fallbacks apropriados
+  const getGeneratedDescription = (): string => {
+    if (consolidatedFields.objectives) return consolidatedFields.objectives;
+    if (consolidatedFields.objetivo) return consolidatedFields.objetivo;
+    if (consolidatedFields.objetivosAprendizagem) return consolidatedFields.objetivosAprendizagem;
+    if (consolidatedFields.generalObjective) return consolidatedFields.generalObjective;
+    if (consolidatedFields.description) return consolidatedFields.description;
+    return `Atividade do tipo ${activity.type}`;
+  };
+  
   return {
     id: activity.activity_id || activity.id,
-    title: activity.name,
+    title: getGeneratedTitle(),
     personalizedTitle: activity.name,
-    description: `Atividade do tipo ${activity.type}`,
-    personalizedDescription: `Atividade do tipo ${activity.type}`,
+    description: getGeneratedDescription(),
+    personalizedDescription: getGeneratedDescription(),
     categoryId: activity.type,
     categoryName: activity.type,
     icon: 'FileText',
     tags: [],
-    difficulty: 'medium',
-    estimatedTime: '30 min',
-    customFields: activity.built_data || {},
+    difficulty: consolidatedFields.difficultyLevel || consolidatedFields.nivelDificuldade || 'medium',
+    estimatedTime: consolidatedFields.timeLimit || '30 min',
+    // Passar campos consolidados para o modal (sem metadados internos)
+    customFields: consolidatedFields,
     originalData: activity,
     isBuilt: activity.status === 'completed',
     progress: activity.progress,

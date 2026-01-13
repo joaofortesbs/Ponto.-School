@@ -177,18 +177,41 @@ export const useChosenActivitiesStore = create<ChosenActivitiesState>((set, get)
   getActivitiesForConstruction: () => {
     const state = get();
     
-    return state.chosenActivities.map((activity, idx) => ({
-      id: `build_${activity.id}_${idx}`,
-      activity_id: activity.id,
-      name: activity.titulo,
-      type: activity.tipo,
-      status: mapStatusToActivityToBuild(activity.status_construcao),
-      progress: activity.progresso,
-      fields_completed: activity.dados_construidos ? Object.keys(activity.dados_construidos).length : 0,
-      fields_total: activity.campos_obrigatorios?.length || 5,
-      error_message: activity.erro,
-      built_data: activity.dados_construidos
-    }));
+    return state.chosenActivities.map((activity, idx) => {
+      // Preservar estrutura original do dados_construidos com metadados
+      // Adicionar campos consolidados em campo separado para o modal
+      const generatedFields = activity.dados_construidos?.generated_fields || {};
+      const camposPreenchidos = activity.campos_preenchidos || {};
+      
+      // Consolidar campos para uso no modal (prioridade: generated_fields > campos_preenchidos)
+      const consolidatedFields = {
+        ...camposPreenchidos,
+        ...generatedFields
+      };
+      
+      // Calcular campos preenchidos vs total
+      const fieldsCount = Object.keys(consolidatedFields).filter(k => 
+        consolidatedFields[k] !== undefined && consolidatedFields[k] !== ''
+      ).length;
+      
+      return {
+        id: `build_${activity.id}_${idx}`,
+        activity_id: activity.id,
+        name: activity.titulo,
+        type: activity.tipo,
+        status: mapStatusToActivityToBuild(activity.status_construcao),
+        progress: activity.progresso,
+        fields_completed: fieldsCount,
+        fields_total: activity.campos_obrigatorios?.length || 5,
+        error_message: activity.erro,
+        // Preservar estrutura original com metadados + campos consolidados
+        built_data: {
+          ...activity.dados_construidos,
+          // Adicionar campos consolidados para acesso direto pelo modal
+          _consolidated_fields: consolidatedFields
+        }
+      };
+    });
   },
 
   clearSession: () => {
