@@ -348,8 +348,13 @@ export async function gerarConteudoAtividades(
     results.push(result);
 
     if (result.success) {
+      // Atualizar status para aguardando (campos preenchidos, pronto para construção)
       store.updateActivityStatus(activity.id, 'aguardando', 100);
       
+      // CRÍTICO: Salvar os campos gerados no store
+      store.setActivityGeneratedFields(activity.id, result.generated_fields);
+      
+      // Também atualizar dados construídos para compatibilidade
       const updatedActivity = store.getActivityById(activity.id);
       if (updatedActivity) {
         store.setActivityBuiltData(activity.id, {
@@ -359,6 +364,8 @@ export async function gerarConteudoAtividades(
         });
       }
 
+      // CRÍTICO: Emitir evento para atualizar UI (EditActivityModal)
+      console.log('📤 [GerarConteudo] Emitindo evento agente-jota-fields-generated para:', activity.id);
       window.dispatchEvent(new CustomEvent('agente-jota-fields-generated', {
         detail: {
           activity_id: activity.id,

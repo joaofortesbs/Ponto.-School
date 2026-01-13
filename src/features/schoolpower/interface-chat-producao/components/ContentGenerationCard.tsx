@@ -61,20 +61,35 @@ export const ContentGenerationCard: React.FC<ContentGenerationCardProps> = ({
   const [generationComplete, setGenerationComplete] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  const store = useChosenActivitiesStore();
-  const activities = store.getChosenActivities();
+  // Usar selectors para reatividade ao store
+  const activities = useChosenActivitiesStore(state => state.chosenActivities);
+  const isContentGenerationComplete = useChosenActivitiesStore(state => state.isContentGenerationComplete);
+  const markContentGenerationComplete = useChosenActivitiesStore(state => state.markContentGenerationComplete);
 
+  // Sincronizar progresso local com estado das atividades no store
   useEffect(() => {
     if (activities.length > 0) {
       setActivitiesProgress(activities.map(a => ({
         id: a.id,
         title: a.titulo,
-        status: 'waiting',
-        progress: 0,
-        fieldsGenerated: []
+        status: a.status_construcao === 'concluida' ? 'completed' 
+             : a.status_construcao === 'construindo' ? 'generating'
+             : a.status_construcao === 'erro' ? 'error'
+             : 'waiting',
+        progress: a.progresso || 0,
+        fieldsGenerated: a.campos_preenchidos ? Object.keys(a.campos_preenchidos) : []
       })));
     }
-  }, [activities.length]);
+  }, [activities]);
+
+  // Verificar se geração já foi concluída
+  useEffect(() => {
+    if (isContentGenerationComplete) {
+      setGenerationComplete(true);
+      setOverallProgress(100);
+      setCurrentMessage('Geração de conteúdo concluída!');
+    }
+  }, [isContentGenerationComplete]);
 
   const handleProgressUpdate = useCallback((update: any) => {
     switch (update.type) {
@@ -144,7 +159,7 @@ export const ContentGenerationCard: React.FC<ContentGenerationCardProps> = ({
       });
 
       if (result.success) {
-        store.markContentGenerationComplete();
+        markContentGenerationComplete();
         onComplete?.(result.data);
       } else {
         setHasError(true);
