@@ -1,6 +1,7 @@
 import { executeWithCascadeFallback } from '../../../../services/controle-APIs-gerais-school-power';
 import type { CriarAtividadesInput, CriacaoProgressUpdate } from '../schemas/criar-atividades-schema';
 import type { AtividadeEscolhida } from '../../DECIDIR/schemas/decidir-atividades-schema';
+import { useChosenActivitiesStore } from '../../../../interface-chat-producao/stores/ChosenActivitiesStore';
 
 function generateAtividadeId(): string {
   return `ativ_created_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
@@ -23,13 +24,52 @@ interface AtividadeDecidida {
 }
 
 export async function criarAtividades(
-  params: CriarAtividadesInput & { atividades_decididas: AtividadeDecidida[] },
+  params: CriarAtividadesInput & { atividades_decididas?: AtividadeDecidida[] },
   onProgress?: (update: CriacaoProgressUpdate) => void
 ) {
   console.log('🏗️ [CRIAR] Iniciando capability criar-atividades');
-  console.log(`📊 [CRIAR] Total de atividades a criar: ${params.atividades_decididas.length}`);
+  
+  // Verificar se as atividades foram passadas diretamente ou buscar do store
+  let atividades_decididas: AtividadeDecidida[] = params.atividades_decididas || [];
+  
+  if (!atividades_decididas || atividades_decididas.length === 0) {
+    console.log('📦 [CRIAR] Nenhuma atividade passada diretamente, buscando do ChosenActivitiesStore...');
+    
+    // Usa getChosenActivities() que retorna ChosenActivity[] com todas as propriedades originais
+    const storeActivities = useChosenActivitiesStore.getState().getChosenActivities();
+    console.log(`📦 [CRIAR] Encontradas ${storeActivities.length} atividades no store`);
+    
+    if (storeActivities.length > 0) {
+      atividades_decididas = storeActivities.map(activity => ({
+        id: activity.id,
+        titulo: activity.titulo,
+        tipo: activity.tipo,
+        materia: activity.materia,
+        nivel_dificuldade: activity.nivel_dificuldade,
+        tags: activity.tags,
+        campos_preenchidos: activity.campos_preenchidos,
+        justificativa: activity.justificativa,
+        ordem_sugerida: activity.ordem_sugerida
+      }));
+      
+      console.log(`✅ [CRIAR] ${atividades_decididas.length} atividades carregadas do store com sucesso`);
+    }
+  }
+  
+  if (!atividades_decididas || atividades_decididas.length === 0) {
+    console.error('❌ [CRIAR] Nenhuma atividade encontrada para criar');
+    return {
+      success: false,
+      atividades_criadas: [],
+      total: 0,
+      mensagem: 'Nenhuma atividade foi encontrada para criar. Execute a capability "decidir_atividades_criar" primeiro.',
+      erro: 'NO_ACTIVITIES_FOUND'
+    };
+  }
+  
+  console.log(`📊 [CRIAR] Total de atividades a criar: ${atividades_decididas.length}`);
 
-  const { atividades_decididas, configuracoes_criacao } = params;
+  const { configuracoes_criacao } = params;
 
   onProgress?.({
     type: 'construcao:iniciada',
@@ -61,6 +101,9 @@ export async function criarAtividades(
     
     console.log(`\n🔨 [CRIAR] Construindo atividade ${index + 1}/${atividades_decididas.length}: ${atividadeDecidida.titulo}`);
 
+    // Atualizar status no store
+    useChosenActivitiesStore.getState().updateActivityStatus(atividadeDecidida.id, 'construindo', 0);
+
     onProgress?.({
       type: 'atividade:construindo',
       atividade_index: index,
@@ -82,6 +125,10 @@ export async function criarAtividades(
     try {
       for (let progress = 0; progress <= 75; progress += 25) {
         await delay(300);
+        
+        // Atualizar progresso no store
+        useChosenActivitiesStore.getState().updateActivityProgress(atividadeDecidida.id, progress);
+        
         onProgress?.({
           type: 'atividade:progresso',
           atividade_index: index,
@@ -151,6 +198,9 @@ Retorne em formato JSON com os campos necessários para o tipo de atividade.
         }
       }
 
+      // Atualizar progresso no store para 90%
+      useChosenActivitiesStore.getState().updateActivityProgress(atividadeDecidida.id, 90);
+      
       onProgress?.({
         type: 'atividade:progresso',
         atividade_index: index,
@@ -189,6 +239,9 @@ Retorne em formato JSON com os campos necessários para o tipo de atividade.
 
       console.log(`✅ [CRIAR] Atividade criada com ID: ${atividadeCriada.id}`);
 
+      // Atualizar store com dados construídos
+      useChosenActivitiesStore.getState().setActivityBuiltData(atividadeDecidida.id, conteudoFinal);
+
       onProgress?.({
         type: 'atividade:concluida',
         atividade_index: index,
@@ -209,6 +262,14 @@ Retorne em formato JSON com os campos necessários para o tipo de atividade.
 
     } catch (error) {
       console.error(`❌ [CRIAR] Erro na atividade ${index}:`, error);
+      
+      // Atualizar store com status de erro
+      useChosenActivitiesStore.getState().updateActivityStatus(
+        atividadeDecidida.id, 
+        'erro', 
+        undefined, 
+        error instanceof Error ? error.message : String(error)
+      );
       
       onProgress?.({
         type: 'atividade:erro',
