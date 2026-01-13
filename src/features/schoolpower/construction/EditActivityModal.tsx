@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, Settings, FileText, Play, Download, Edit3, Copy, Save, BookOpen, GamepadIcon, PenTool, Calculator, Beaker, GraduationCap, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -2384,7 +2385,7 @@ const EditActivityModal = ({
 
   if (!isOpen) return null;
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
@@ -2776,6 +2777,9 @@ const EditActivityModal = ({
       </motion.div>
     </AnimatePresence>
   );
+
+  // Usar Portal para renderizar o modal no body, garantindo que fique por cima de todos os componentes
+  return createPortal(modalContent, document.body);
 };
 
 export default EditActivityModal;
