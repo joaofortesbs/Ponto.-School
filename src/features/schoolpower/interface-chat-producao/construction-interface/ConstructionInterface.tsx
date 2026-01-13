@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import EditActivityModal from '../../construction/EditActivityModal';
 import { ConstructionActivity } from '../../construction/types';
+import { ContentGenerationCard } from '../components/ContentGenerationCard';
+import { useChosenActivitiesStore } from '../stores/ChosenActivitiesStore';
 
 export type ActivityBuildStatus = 'waiting' | 'building' | 'completed' | 'error';
 
@@ -246,6 +248,10 @@ export function ConstructionInterface({
   onBuildSingle,
   autoStart = false
 }: ConstructionInterfaceProps) {
+  // Obter sessionId diretamente do store
+  const sessionId = useChosenActivitiesStore(state => state.sessionId) || '';
+  const estrategiaPedagogica = useChosenActivitiesStore(state => state.estrategiaPedagogica);
+  
   const completedCount = activities.filter(a => a.status === 'completed').length;
   const errorCount = activities.filter(a => a.status === 'error').length;
   const buildingCount = activities.filter(a => a.status === 'building').length;
@@ -370,6 +376,31 @@ export function ConstructionInterface({
             <Zap className="w-5 h-5" />
             Construir Todas as Atividades
           </button>
+        </div>
+      )}
+
+      {/* Sub-card de Geração de Conteúdo - sempre visível, auto-start quando sessionId disponível */}
+      {activities.length > 0 && (
+        <div className="p-4 border-t border-purple-500/20">
+          <ContentGenerationCard
+            sessionId={sessionId}
+            conversationContext={estrategiaPedagogica || 'Geração automática de conteúdo para atividades educacionais'}
+            userObjective="Preencher os campos de cada atividade com conteúdo pedagógico gerado por IA"
+            initialActivities={activities.map(a => ({
+              id: a.activity_id || a.id,
+              titulo: a.name,
+              tipo: a.type,
+              status: a.status,
+              progresso: a.progress
+            }))}
+            autoStart={!!sessionId && activities.length > 0}
+            onComplete={(data) => {
+              console.log('✅ [ConstructionInterface] Geração de conteúdo concluída:', data);
+            }}
+            onError={(error) => {
+              console.error('❌ [ConstructionInterface] Erro na geração de conteúdo:', error);
+            }}
+          />
         </div>
       )}
 

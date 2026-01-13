@@ -60,6 +60,9 @@ export class AgentExecutor {
 
     // Inicializar sessão de debug
     useDebugStore.getState().initSession(this.sessionId);
+    
+    // Inicializar sessão do ChosenActivitiesStore para sincronização
+    useChosenActivitiesStore.getState().initSession(this.sessionId);
 
     await this.memory.saveToWorkingMemory({
       tipo: 'objetivo',
