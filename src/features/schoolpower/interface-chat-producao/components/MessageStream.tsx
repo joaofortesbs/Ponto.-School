@@ -6,7 +6,6 @@ import { AssistantMessage } from './AssistantMessage';
 import { PlanActionCard } from './PlanActionCard';
 import { DeveloperModeCard } from './DeveloperModeCard';
 import { ActivityConstructionCard } from './ActivityConstructionCard';
-import { ContentGenerationCard } from './ContentGenerationCard';
 
 interface MessageStreamProps {
   onApplyPlan?: () => void;
@@ -72,41 +71,17 @@ export function MessageStream({ onApplyPlan }: MessageStreamProps) {
             )}
 
             {message.type === 'construction_card' && (
-              <>
-                <ActivityConstructionCard 
-                  sessionId={message.metadata?.cardData?.sessionId || ""}
-                  atividades={message.metadata?.cardData?.atividades || []}
-                />
-                <div className="mt-4">
-                  <ContentGenerationCard 
-                    sessionId={message.metadata?.cardData?.sessionId || ""}
-                    conversationContext={message.metadata?.cardData?.conversationContext || ""}
-                    userObjective={message.metadata?.cardData?.userObjective || ""}
-                    initialActivities={message.metadata?.cardData?.atividades || []}
-                    onComplete={(data) => {
-                      console.log('✅ [ContentGenerationCard] Geração concluída:', data);
-                    }}
-                    onError={(error) => {
-                      console.error('❌ [ContentGenerationCard] Erro na geração:', error);
-                    }}
-                  />
-                </div>
-              </>
-            )}
-
-            {message.type === 'content_generation_card' && (
-              <ContentGenerationCard 
+              <ActivityConstructionCard 
                 sessionId={message.metadata?.cardData?.sessionId || ""}
-                conversationContext={message.metadata?.cardData?.conversationContext || ""}
-                userObjective={message.metadata?.cardData?.userObjective || ""}
-                onComplete={(data) => {
-                  console.log('✅ [ContentGenerationCard] Geração concluída:', data);
-                }}
-                onError={(error) => {
-                  console.error('❌ [ContentGenerationCard] Erro na geração:', error);
-                }}
+                atividades={message.metadata?.cardData?.atividades || []}
               />
             )}
+
+            {/* 
+              content_generation_card type DESATIVADO - geração de conteúdo agora 
+              aparece apenas como sub-card retangular dentro do tópico "Decidir quais 
+              atividades criar" via capability gerar_conteudo_atividades 
+            */}
           </motion.div>
         ))}
       </AnimatePresence>

@@ -8,7 +8,6 @@ import { ConstructionInterface } from '../construction-interface';
 import type { ActivityToBuild } from '../construction-interface';
 import { DataConfirmationBadge } from './DataConfirmationBadge';
 import type { DataConfirmation } from '../../agente-jota/capabilities/shared/types';
-import { ContentGenerationCard } from './ContentGenerationCard';
 import { useChosenActivitiesStore } from '../stores/ChosenActivitiesStore';
 
 export type CapabilityStatus = 'hidden' | 'pending' | 'executing' | 'completed' | 'error';
@@ -375,30 +374,12 @@ const CapabilityCard: React.FC<{
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {shouldShowContentGeneration && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mt-2 mb-3"
-          >
-            <ContentGenerationCard
-              sessionId={sessionId}
-              conversationContext={estrategiaPedagogica || 'Aula interativa'}
-              userObjective="Gerar conteúdo pedagógico para as atividades da aula"
-              initialActivities={activitiesToBuild.map(a => ({
-                id: a.id,
-                titulo: a.name,
-                tipo: a.type,
-                status: 'pending' as const
-              }))}
-              autoStart={true}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* 
+        ContentGenerationCard REMOVIDO daqui - a geração de conteúdo agora é 
+        exibida APENAS como sub-card retangular dentro do tópico "Decidir quais 
+        atividades criar", através do sistema de capabilities (gerar_conteudo_atividades).
+        Não deve haver card roxo separado.
+      */}
     </motion.div>
   );
 };
