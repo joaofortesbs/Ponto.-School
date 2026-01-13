@@ -150,17 +150,11 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
         console.log(`   📋 Atividades locais (ref): ${activitiesToBuildRef.current.length}`);
         setIsBuildingActivities(false);
         
-        // Usar atividades do update ou fallback para activitiesToBuildRef (mais confiável)
+        // Persistir atividades completadas para uso posterior
         const activitiesForGeneration = (update.activities && update.activities.length > 0) 
           ? update.activities 
           : activitiesToBuildRef.current;
-        
-        // Adicionar novo tópico "Gerar conteúdo das atividades" após construção
-        console.log(`📦 [DeveloperModeCard] Disparando evento para criar tópico de geração de conteúdo`);
-        console.log(`   📋 Atividades para geração: ${activitiesForGeneration.length}`);
-        window.dispatchEvent(new CustomEvent('agente-jota-add-content-generation-topic', {
-          detail: { activities: activitiesForGeneration }
-        }));
+        setCompletedActivities(activitiesForGeneration);
       }
     };
 
@@ -192,44 +186,8 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
     };
   }, []);
 
-  // Estado para controlar se o tópico de geração de conteúdo já foi adicionado
-  const [showContentGeneration, setShowContentGeneration] = useState(false);
+  // Estado para atividades completadas (usadas pelo ProgressiveExecutionCard)
   const [completedActivities, setCompletedActivities] = useState<ActivityToBuild[]>([]);
-  
-  // Usar ref para evitar duplicação de tópicos sem causar re-mount do listener
-  const contentGenerationAddedRef = React.useRef(false);
-
-  // Listener para adicionar novo tópico "Gerar conteúdo das atividades" após construção
-  useEffect(() => {
-    const handleAddContentGenerationTopic = (event: CustomEvent) => {
-      if (contentGenerationAddedRef.current) {
-        console.log(`⚠️ [DeveloperModeCard] Tópico de geração de conteúdo já existe, ignorando`);
-        return;
-      }
-      
-      const { activities } = event.detail || {};
-      console.log(`📦 [DeveloperModeCard] Tentando adicionar tópico "Gerar conteúdo das atividades"`);
-      console.log(`   📋 Atividades recebidas: ${activities?.length || 0}`);
-      
-      // Verificar se temos atividades válidas antes de ativar o tópico
-      if (!activities || !Array.isArray(activities) || activities.length === 0) {
-        console.log(`⚠️ [DeveloperModeCard] Nenhuma atividade recebida, não criando tópico de geração`);
-        return;
-      }
-      
-      // Persistir as atividades completadas para uso no ContentGenerationCard
-      setCompletedActivities(activities);
-      contentGenerationAddedRef.current = true;
-      setShowContentGeneration(true);
-      console.log(`✅ [DeveloperModeCard] Tópico de geração de conteúdo criado com ${activities.length} atividades`);
-    };
-
-    window.addEventListener('agente-jota-add-content-generation-topic', handleAddContentGenerationTopic as EventListener);
-
-    return () => {
-      window.removeEventListener('agente-jota-add-content-generation-topic', handleAddContentGenerationTopic as EventListener);
-    };
-  }, []);
 
 
   const objectivesForProgressiveCard = useMemo((): ObjectiveItem[] => {
@@ -264,25 +222,8 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
       };
     });
 
-    // Adicionar tópico sintético "Gerar conteúdo das atividades" quando showContentGeneration = true
-    if (showContentGeneration) {
-      const syntheticContentGenerationObjective: ObjectiveItem = {
-        ordem: baseObjectives.length,
-        titulo: 'Gerar conteúdo das atividades',
-        descricao: 'Preenchendo os campos de cada atividade com conteúdo pedagógico gerado por IA',
-        status: 'active',
-        capabilities: [{
-          id: 'gerar_conteudo_atividades',
-          nome: 'gerar_conteudo_atividades',
-          displayName: 'Gerar conteúdo das atividades',
-          status: 'executing',
-        }],
-      };
-      return [...baseObjectives, syntheticContentGenerationObjective];
-    }
-
     return baseObjectives;
-  }, [data?.etapas, showContentGeneration]);
+  }, [data?.etapas]);
 
   if (!data) return null;
 
