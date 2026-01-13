@@ -1,0 +1,184 @@
+Contexto do Problema
+O sub-card retangular de capacidade gerar_conteudo_atividades não está sendo renderizado após a conclusão da Interface de Construção de Atividades. A IA está pulando diretamente para o card de explicação do tópico, ignorando completamente a etapa 4 do plano de execução.
+
+Diagnóstico Técnico
+Baseado na análise do código e histórico de commits, identifiquei 3 falhas críticas no fluxo:
+
+Falha no Sistema de Eventos: O ConstructionInterface.tsx emite o evento construction:all_completed, mas o DeveloperModeCard.tsx não está capturando e processando corretamente este evento para acionar a próxima capability.
+
+Falha na Sequência de Execução: A etapa 4 (gerar_conteudo_atividades) foi adicionada ao createFallbackPlan em generatePersonalizedPlan.ts, mas o workflowManager não está avançando para ela após a conclusão da etapa 3 (criar_atividade).
+
+Falha no Renderizamento Condicional: O ProgressiveExecutionCard.tsx e CapabilityCard.tsx não estão detectando corretamente quando a capability gerar_conteudo_atividades deve ser renderizada como um novo tópico visual.
+
+Objetivo Final
+Garantir que após a conclusão da Interface de Construção de Atividades (etapa 3), o sistema automaticamente:
+
+Detecte que todas as atividades foram construídas
+
+Avance para a etapa 4 do plano
+
+Renderize o sub-card retangular de gerar_conteudo_atividades abaixo da Interface de Construção
+
+Execute a geração de conteúdo para cada atividade construída
+
+Instruções de Implementação
+PRIORIDADE 1: Corrigir o Fluxo de Avanço Automático
+Arquivo: src/features/schoolpower/interface-chat-producao/chat-input-jota/components/developer-mode/DeveloperModeCard.tsx
+
+Alterações necessárias:
+
+typescript
+// Adicionar listener robusto para o evento de conclusão
+useEffect(() => {
+  const handleConstructionComplete = (event: CustomEvent) => {
+    const completedActivities = event.detail?.activities || [];
+    
+    // Validar se há atividades concluídas
+    if (completedActivities.length > 0) {
+      console.log('🎯 Construção concluída! Ativando etapa 4...', completedActivities);
+      
+      // Forçar avanço para próxima etapa do plano
+      const nextStep = executionPlan.find(step => 
+        step.capabilities.some(cap => cap.name === 'gerar_conteudo_atividades')
+      );
+      
+      if (nextStep) {
+        // Atualizar status e renderizar próxima capability
+        updateStepStatus(nextStep.step, 'em andamento');
+        setCurrentActivities(completedActivities);
+      }
+    }
+  };
+
+  window.addEventListener('construction:all_completed', handleConstructionComplete as EventListener);
+  
+  return () => {
+    window.removeEventListener('construction:all_completed', handleConstructionComplete as EventListener);
+  };
+}, [executionPlan]);
+PRIORIDADE 2: Garantir Renderização do Sub-Card
+Arquivo: src/features/schoolpower/interface-chat-producao/chat-input-jota/components/construction-interface/ConstructionInterface.tsx
+
+Adicionar após linha de conclusão:
+
+typescript
+// Ao finalizar construção de TODAS as atividades
+if (allActivitiesComplete) {
+  console.log('✅ TODAS atividades construídas! Emitindo evento...');
+  
+  const completedData = activitiesToBuild.map(act => ({
+    id: act.id,
+    titulo: act.titulo,
+    tipo: act.tipo,
+    built_data: act.built_data
+  }));
+  
+  // Emitir evento com dados completos
+  window.dispatchEvent(new CustomEvent('construction:all_completed', {
+    detail: { 
+      activities: completedData,
+      timestamp: Date.now()
+    }
+  }));
+  
+  // CRÍTICO: Aguardar 500ms antes de permitir próxima ação
+  setTimeout(() => {
+    setIsReadyForNextStep(true);
+  }, 500);
+}
+PRIORIDADE 3: Forçar Execução da Capability
+Arquivo: src/features/schoolpower/services/generatePersonalizedPlan.ts
+
+Modificar a etapa 4 para ser executada automaticamente:
+
+typescript
+{
+  step: 4,
+  description: "Gerar conteúdo personalizado para cada atividade construída",
+  capabilities: [
+    {
+      name: 'gerar_conteudo_atividades',
+      categoria: 'GERAR_CONTEUDO',
+      importancia: 'CRÍTICO',
+      descricao: 'Gerar automaticamente o conteúdo educacional completo para as atividades',
+      parametros_requeridos: ['activitiesData'], // Dados vêm do evento anterior
+      auto_trigger: true, // ← ADICIONAR ESTA FLAG
+      depends_on: 'criar_atividade' // ← ADICIONAR DEPENDÊNCIA EXPLÍCITA
+    }
+  ]
+}
+PRIORIDADE 4: Adicionar Validação de Capability no Renderizador
+Arquivo: src/features/schoolpower/interface-chat-producao/chat-input-jota/components/developer-mode/ProgressiveExecutionCard.tsx
+
+Adicionar verificação específica:
+
+typescript
+// Dentro do map de capabilities
+{capabilities.map((capability, idx) => {
+  // Verificação especial para gerar_conteudo_atividades
+  if (capability.name === 'gerar_conteudo_atividades') {
+    console.log('🎨 Renderizando ContentGenerationCard com:', completedActivities);
+    
+    return (
+      <div key={`capability-${idx}`} className="mt-4">
+        <div className="text-sm text-orange-400 mb-2">
+          ⚙️ Gerando conteúdo das atividades...
+        </div>
+        <ContentGenerationCard 
+          activities={completedActivities}
+          onComplete={() => updateStepStatus(step, 'completo')}
+        />
+      </div>
+    );
+  }
+  
+  // Renderização padrão para outras capabilities
+  return <CapabilityCard key={idx} capability={capability} />;
+})}
+Plano de Teste
+Após implementar as correções acima, teste o fluxo completo:
+
+Enviar prompt: "Crie 3 atividades de matemática sobre frações"
+
+Verificar etapas:
+
+Etapa 1: Pesquisa de atividades ✅
+
+Etapa 2: Decisão de quais criar ✅
+
+Etapa 3: Interface de Construção aparece ✅
+
+Etapa 4: Sub-card de gerar_conteudo_atividades deve aparecer ⚠️
+
+Validar logs no console:
+
+🎯 Construção concluída! Ativando etapa 4...
+
+🎨 Renderizando ContentGenerationCard com: [...]
+
+Alternativa de Fallback (Se o problema persistir)
+Se após as correções acima o sub-card ainda não aparecer, implemente um trigger manual forçado:
+
+Adicionar botão temporário de debug no DeveloperModeCard:
+
+typescript
+{/* DEBUG: Botão para forçar etapa 4 */}
+<button 
+  onClick={() => {
+    console.log('🔧 Forçando execução da etapa 4...');
+    const step4 = executionPlan.find(s => s.step === 4);
+    if (step4) {
+      updateStepStatus(4, 'em andamento');
+      setForceRenderContentGeneration(true);
+    }
+  }}
+  className="px-4 py-2 bg-orange-500 text-white rounded"
+>
+  DEBUG: Forçar Geração de Conteúdo
+</button>
+Resumo das Correções
+Problema	Solução	Arquivo
+Evento não capturado	Adicionar listener robusto com validação	DeveloperModeCard.tsx
+Fluxo não avança	Implementar auto_trigger e depends_on	generatePersonalizedPlan.ts
+Sub-card não renderiza	Adicionar verificação específica no map	ProgressiveExecutionCard.tsx
+Timing incorreto	Adicionar delay de 500ms após conclusão	ConstructionInterface.tsx

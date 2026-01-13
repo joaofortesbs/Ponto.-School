@@ -303,7 +303,25 @@ Retorne em formato JSON com os campos necessários para o tipo de atividade.
     }
   }));
 
+  // Emitir evento construction:all_completed para acionar geração de conteúdo
   console.log(`🎉 [CRIAR] Construção concluída: ${atividadesCriadas.length}/${atividades_decididas.length} atividades`);
+  console.log(`📦 [CRIAR] Emitindo construction:all_completed com atividades construídas`);
+  
+  window.dispatchEvent(new CustomEvent('agente-jota-progress', {
+    detail: {
+      type: 'construction:all_completed',
+      activities: atividadesCriadas.map(a => ({
+        id: a.original_id || a.id,
+        activity_id: a.id,
+        titulo: a.titulo,
+        tipo: a.tipo,
+        status: 'completed',
+        progress: 100,
+        built_data: a.campos
+      })),
+      summary: `${atividadesCriadas.length} atividade(s) construída(s) com sucesso`
+    }
+  }));
 
   return {
     success: true,
