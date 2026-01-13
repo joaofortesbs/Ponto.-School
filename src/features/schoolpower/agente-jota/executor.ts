@@ -13,6 +13,7 @@ import { reflectionService, type CapabilityInsight, type NarrativeReflection } f
 import type { ExecutionPlan, ExecutionStep, CapabilityCall, ProgressUpdate } from '../interface-chat-producao/types';
 import { createDebugEntry } from '../interface-chat-producao/debug-system/DebugStore';
 import { useDebugStore } from '../interface-chat-producao/debug-system/DebugStore';
+import { useChosenActivitiesStore, saveChosenActivitiesFromDecision } from '../interface-chat-producao/stores/ChosenActivitiesStore';
 
 export type ProgressCallback = (update: ProgressUpdate) => void;
 
@@ -239,6 +240,24 @@ export class AgentExecutor {
           // Armazenar resultado para uso em capabilities subsequentes
           this.capabilityResultsMap.set(capName, resultado);
           console.log(`💾 [Executor] Resultado de "${capName}" armazenado para uso futuro`);
+          
+          // Salvar atividades decididas no store para sincronização com criar_atividade
+          if (capName.includes('decidir_atividades_criar') || capName.includes('decidir_atividades')) {
+            const saved = saveChosenActivitiesFromDecision(resultado);
+            if (saved) {
+              console.log(`🎯 [Executor] Atividades decididas salvas no ChosenActivitiesStore`);
+              
+              // Emitir evento para UI atualizar
+              const chosenActivities = useChosenActivitiesStore.getState().getActivitiesForConstruction();
+              window.dispatchEvent(new CustomEvent('agente-jota-activities-decided', {
+                detail: {
+                  activities: chosenActivities,
+                  total: chosenActivities.length,
+                  estrategia: resultado?.estrategia_pedagogica || ''
+                }
+              }));
+            }
+          }
           
           // Debug: Resultado obtido com dados técnicos detalhados
           createDebugEntry(
