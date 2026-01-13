@@ -59,14 +59,14 @@ export const ContentGenerationCard: React.FC<ContentGenerationCardProps> = ({
   conversationContext,
   userObjective,
   initialActivities = [],
-  autoStart = false,
+  autoStart = true,
   onComplete,
   onError
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [overallProgress, setOverallProgress] = useState(0);
-  const [currentMessage, setCurrentMessage] = useState('Aguardando início...');
+  const [currentMessage, setCurrentMessage] = useState('Preparando geração automática...');
   const [activitiesProgress, setActivitiesProgress] = useState<ActivityProgress[]>([]);
   const [generationComplete, setGenerationComplete] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -247,16 +247,6 @@ export const ContentGenerationCard: React.FC<ContentGenerationCardProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {!isGenerating && !generationComplete && (
-              <Button
-                onClick={startGeneration}
-                size="sm"
-                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white"
-              >
-                <Play className="w-4 h-4 mr-1" />
-                Iniciar
-              </Button>
-            )}
             {hasError && !isGenerating && (
               <Button
                 onClick={startGeneration}
@@ -267,6 +257,9 @@ export const ContentGenerationCard: React.FC<ContentGenerationCardProps> = ({
                 <RefreshCw className="w-4 h-4 mr-1" />
                 Tentar Novamente
               </Button>
+            )}
+            {isGenerating && (
+              <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />
             )}
             <Button
               variant="ghost"
