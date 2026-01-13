@@ -8,6 +8,8 @@ import { ConstructionInterface } from '../construction-interface';
 import type { ActivityToBuild } from '../construction-interface';
 import { DataConfirmationBadge } from './DataConfirmationBadge';
 import type { DataConfirmation } from '../../agente-jota/capabilities/shared/types';
+import { ContentGenerationCard } from './ContentGenerationCard';
+import { useChosenActivitiesStore } from '../stores/ChosenActivitiesStore';
 
 export type CapabilityStatus = 'hidden' | 'pending' | 'executing' | 'completed' | 'error';
 export type ObjectiveStatus = 'pending' | 'active' | 'completed';
@@ -45,6 +47,7 @@ interface ProgressiveExecutionCardProps {
   onObjectiveComplete?: (index: number) => void;
   onAllComplete?: () => void;
   activitiesToBuild?: ActivityToBuild[];
+  completedActivities?: ActivityToBuild[];
   onBuildActivities?: () => void;
   isBuildingActivities?: boolean;
 }
@@ -56,9 +59,10 @@ const ObjectiveCard: React.FC<{
   reflection?: ObjectiveReflection;
   isLoadingReflection?: boolean;
   activitiesToBuild?: ActivityToBuild[];
+  completedActivities?: ActivityToBuild[];
   onBuildActivities?: () => void;
   isBuildingActivities?: boolean;
-}> = ({ objective, index, isVisible, reflection, isLoadingReflection, activitiesToBuild = [], onBuildActivities, isBuildingActivities = false }) => {
+}> = ({ objective, index, isVisible, reflection, isLoadingReflection, activitiesToBuild = [], completedActivities = [], onBuildActivities, isBuildingActivities = false }) => {
   const isCompleted = objective.status === 'completed';
   const isActive = objective.status === 'active';
   const showReflectionSlot = isCompleted || isLoadingReflection;
@@ -141,6 +145,7 @@ const ObjectiveCard: React.FC<{
               capability={capability}
               index={capIndex}
               activitiesToBuild={activitiesToBuild}
+              completedActivities={completedActivities}
               onBuildActivities={onBuildActivities}
               isBuildingActivities={isBuildingActivities}
             />
@@ -181,9 +186,10 @@ const CapabilityCard: React.FC<{
   capability: CapabilityItem;
   index: number;
   activitiesToBuild?: ActivityToBuild[];
+  completedActivities?: ActivityToBuild[];
   onBuildActivities?: () => void;
   isBuildingActivities?: boolean;
-}> = ({ capability, index, activitiesToBuild = [], onBuildActivities, isBuildingActivities = false }) => {
+}> = ({ capability, index, activitiesToBuild = [], completedActivities = [], onBuildActivities, isBuildingActivities = false }) => {
   const debugStore = useDebugStore();
   const isPending = capability.status === 'pending';
   const isExecuting = capability.status === 'executing';
@@ -194,9 +200,20 @@ const CapabilityCard: React.FC<{
                            capability.nome.toLowerCase().includes('criar_atividades') ||
                            capability.id.toLowerCase().includes('criar_atividade');
 
+  const isGerarConteudo = capability.nome.toLowerCase().includes('gerar_conteudo') ||
+                          capability.id.toLowerCase().includes('gerar_conteudo');
+
   const shouldShowConstructionInterface = isCriarAtividade && 
     (isExecuting || isCompleted) && 
     activitiesToBuild.length > 0;
+
+  // Usar completedActivities para ContentGeneration (atividades já construídas)
+  const shouldShowContentGeneration = isGerarConteudo && 
+    (isExecuting || isCompleted) && 
+    completedActivities.length > 0;
+
+  const sessionId = useChosenActivitiesStore(state => state.sessionId) || '';
+  const estrategiaPedagogica = useChosenActivitiesStore(state => state.estrategiaPedagogica);
 
   const debugEntries = debugStore.getEntriesForCapability(capability.id);
 
@@ -355,6 +372,31 @@ const CapabilityCard: React.FC<{
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {shouldShowContentGeneration && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mt-2 mb-3"
+          >
+            <ContentGenerationCard
+              sessionId={sessionId}
+              conversationContext={estrategiaPedagogica || 'Aula interativa'}
+              userObjective="Gerar conteúdo pedagógico para as atividades da aula"
+              initialActivities={completedActivities.map(a => ({
+                id: a.id,
+                titulo: a.titulo,
+                tipo: a.tipo,
+                status: a.status
+              }))}
+              autoStart={true}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
@@ -366,6 +408,7 @@ export function ProgressiveExecutionCard({
   onObjectiveComplete,
   onAllComplete,
   activitiesToBuild = [],
+  completedActivities = [],
   onBuildActivities,
   isBuildingActivities = false,
 }: ProgressiveExecutionCardProps) {
@@ -432,6 +475,7 @@ export function ProgressiveExecutionCard({
             reflection={reflections?.get(idx)}
             isLoadingReflection={loadingReflections?.has(idx)}
             activitiesToBuild={activitiesToBuild}
+            completedActivities={completedActivities}
             onBuildActivities={onBuildActivities}
             isBuildingActivities={isBuildingActivities}
           />

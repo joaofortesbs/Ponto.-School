@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useChatState } from '../state/chatState';
 import { ProgressiveExecutionCard, ObjectiveItem, CapabilityItem, ObjectiveReflection } from './ProgressiveExecutionCard';
@@ -17,6 +17,14 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
   const [loadingReflections, setLoadingReflections] = useState<Set<number>>(new Set());
   const [activitiesToBuild, setActivitiesToBuild] = useState<ActivityToBuild[]>([]);
   const [isBuildingActivities, setIsBuildingActivities] = useState(false);
+  
+  // Ref para manter o valor mais recente de activitiesToBuild acessível em closures
+  const activitiesToBuildRef = useRef<ActivityToBuild[]>([]);
+
+  // Manter ref sincronizado com estado
+  useEffect(() => {
+    activitiesToBuildRef.current = activitiesToBuild;
+  }, [activitiesToBuild]);
 
   const handleBuildActivities = useCallback(() => {
     console.log('🔨 [DeveloperModeCard] Iniciando construção de atividades');
@@ -138,7 +146,21 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
 
       if (update.type === 'construction:all_completed') {
         console.log(`🎉 [DeveloperModeCard] Todas as atividades construídas!`);
+        console.log(`   📋 Atividades do update: ${update.activities?.length || 0}`);
+        console.log(`   📋 Atividades locais (ref): ${activitiesToBuildRef.current.length}`);
         setIsBuildingActivities(false);
+        
+        // Usar atividades do update ou fallback para activitiesToBuildRef (mais confiável)
+        const activitiesForGeneration = (update.activities && update.activities.length > 0) 
+          ? update.activities 
+          : activitiesToBuildRef.current;
+        
+        // Adicionar novo tópico "Gerar conteúdo das atividades" após construção
+        console.log(`📦 [DeveloperModeCard] Disparando evento para criar tópico de geração de conteúdo`);
+        console.log(`   📋 Atividades para geração: ${activitiesForGeneration.length}`);
+        window.dispatchEvent(new CustomEvent('agente-jota-add-content-generation-topic', {
+          detail: { activities: activitiesForGeneration }
+        }));
       }
     };
 
@@ -170,11 +192,50 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
     };
   }, []);
 
+  // Estado para controlar se o tópico de geração de conteúdo já foi adicionado
+  const [showContentGeneration, setShowContentGeneration] = useState(false);
+  const [completedActivities, setCompletedActivities] = useState<ActivityToBuild[]>([]);
+  
+  // Usar ref para evitar duplicação de tópicos sem causar re-mount do listener
+  const contentGenerationAddedRef = React.useRef(false);
+
+  // Listener para adicionar novo tópico "Gerar conteúdo das atividades" após construção
+  useEffect(() => {
+    const handleAddContentGenerationTopic = (event: CustomEvent) => {
+      if (contentGenerationAddedRef.current) {
+        console.log(`⚠️ [DeveloperModeCard] Tópico de geração de conteúdo já existe, ignorando`);
+        return;
+      }
+      
+      const { activities } = event.detail || {};
+      console.log(`📦 [DeveloperModeCard] Tentando adicionar tópico "Gerar conteúdo das atividades"`);
+      console.log(`   📋 Atividades recebidas: ${activities?.length || 0}`);
+      
+      // Verificar se temos atividades válidas antes de ativar o tópico
+      if (!activities || !Array.isArray(activities) || activities.length === 0) {
+        console.log(`⚠️ [DeveloperModeCard] Nenhuma atividade recebida, não criando tópico de geração`);
+        return;
+      }
+      
+      // Persistir as atividades completadas para uso no ContentGenerationCard
+      setCompletedActivities(activities);
+      contentGenerationAddedRef.current = true;
+      setShowContentGeneration(true);
+      console.log(`✅ [DeveloperModeCard] Tópico de geração de conteúdo criado com ${activities.length} atividades`);
+    };
+
+    window.addEventListener('agente-jota-add-content-generation-topic', handleAddContentGenerationTopic as EventListener);
+
+    return () => {
+      window.removeEventListener('agente-jota-add-content-generation-topic', handleAddContentGenerationTopic as EventListener);
+    };
+  }, []);
+
 
   const objectivesForProgressiveCard = useMemo((): ObjectiveItem[] => {
     if (!data?.etapas) return [];
 
-    return data.etapas.map((etapa, idx) => {
+    const baseObjectives = data.etapas.map((etapa, idx) => {
       let objectiveStatus: 'pending' | 'active' | 'completed' = 'pending';
       if (etapa.status === 'concluido') objectiveStatus = 'completed';
       else if (etapa.status === 'executando') objectiveStatus = 'active';
@@ -202,7 +263,26 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
         capabilities,
       };
     });
-  }, [data?.etapas]);
+
+    // Adicionar tópico sintético "Gerar conteúdo das atividades" quando showContentGeneration = true
+    if (showContentGeneration) {
+      const syntheticContentGenerationObjective: ObjectiveItem = {
+        ordem: baseObjectives.length,
+        titulo: 'Gerar conteúdo das atividades',
+        descricao: 'Preenchendo os campos de cada atividade com conteúdo pedagógico gerado por IA',
+        status: 'active',
+        capabilities: [{
+          id: 'gerar_conteudo_atividades',
+          nome: 'gerar_conteudo_atividades',
+          displayName: 'Gerar conteúdo das atividades',
+          status: 'executing',
+        }],
+      };
+      return [...baseObjectives, syntheticContentGenerationObjective];
+    }
+
+    return baseObjectives;
+  }, [data?.etapas, showContentGeneration]);
 
   if (!data) return null;
 
@@ -217,6 +297,7 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
           reflections={reflections}
           loadingReflections={loadingReflections}
           activitiesToBuild={activitiesToBuild}
+          completedActivities={completedActivities}
           onBuildActivities={handleBuildActivities}
           isBuildingActivities={isBuildingActivities}
           onObjectiveComplete={(index) => {
