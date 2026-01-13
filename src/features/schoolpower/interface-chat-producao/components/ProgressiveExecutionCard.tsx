@@ -207,10 +207,12 @@ const CapabilityCard: React.FC<{
     (isExecuting || isCompleted) && 
     activitiesToBuild.length > 0;
 
-  // Usar completedActivities para ContentGeneration (atividades já construídas)
+  // Usar activitiesToBuild para ContentGeneration (atividades decididas, não construídas)
+  // O ContentGenerationCard é exibido DENTRO do tópico "Decidir quais atividades criar",
+  // logo após a capability decidir_atividades_criar completar e ANTES da Interface de Construção
   const shouldShowContentGeneration = isGerarConteudo && 
     (isExecuting || isCompleted) && 
-    completedActivities.length > 0;
+    activitiesToBuild.length > 0;
 
   const sessionId = useChosenActivitiesStore(state => state.sessionId) || '';
   const estrategiaPedagogica = useChosenActivitiesStore(state => state.estrategiaPedagogica);
@@ -386,11 +388,11 @@ const CapabilityCard: React.FC<{
               sessionId={sessionId}
               conversationContext={estrategiaPedagogica || 'Aula interativa'}
               userObjective="Gerar conteúdo pedagógico para as atividades da aula"
-              initialActivities={completedActivities.map(a => ({
+              initialActivities={activitiesToBuild.map(a => ({
                 id: a.id,
                 titulo: a.name,
                 tipo: a.type,
-                status: a.status
+                status: 'pending' as const
               }))}
               autoStart={true}
             />

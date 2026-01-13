@@ -4,7 +4,9 @@
  * Capability que gera conteúdo para preencher automaticamente os campos
  * de cada atividade decidida, mantendo contexto completo da conversa.
  * 
- * Posição no pipeline: DECIDIR → [Interface de Construção] → GERAR_CONTEUDO → CRIAR
+ * Posição no pipeline: DECIDIR → GERAR_CONTEUDO → [Interface de Construção] → CRIAR
+ * Esta capability é executada DENTRO do tópico "Decidir quais atividades criar",
+ * imediatamente após a capability decidir_atividades_criar completar.
  */
 
 import { gerarConteudoAtividades } from './implementations/gerar-conteudo-atividades';
@@ -36,7 +38,6 @@ export const GERAR_CONTEUDO_CAPABILITIES = {
       activities_to_fill: { type: 'array', required: false, description: 'Atividades específicas (opcional)' }
     },
     requiresPreviousCapability: 'decidir_atividades_criar',
-    dependsOnConstructionInterface: true,
     isSequential: true,
     showProgress: true,
     renderComponent: 'ContentGenerationCard',
