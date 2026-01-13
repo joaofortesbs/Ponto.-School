@@ -42,6 +42,11 @@ const CAPABILITY_ALIASES: Record<string, string> = {
   'escolher_atividades': 'decidir_atividades_criar',
   'selecionar_atividades': 'decidir_atividades_criar',
   
+  'gerar_conteudo': 'gerar_conteudo_atividades',
+  'gerar_conteudos': 'gerar_conteudo_atividades',
+  'preencher_campos': 'gerar_conteudo_atividades',
+  'gerar_campos_atividades': 'gerar_conteudo_atividades',
+  
   'criar': 'criar_atividade',
   'gerar_atividade': 'criar_atividade',
   'nova_atividade': 'criar_atividade',
@@ -308,6 +313,7 @@ function getCanonicalCategory(capabilityName: string): string | null {
     'pesquisar_atividades_disponiveis': 'PESQUISAR',
     'pesquisar_atividades_conta': 'PESQUISAR',
     'decidir_atividades_criar': 'ANALISAR',
+    'gerar_conteudo_atividades': 'GERAR_CONTEUDO',
     'criar_atividade': 'CRIAR',
     'planejar_plano_de_acao': 'PLANEJAR'
   };

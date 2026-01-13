@@ -90,6 +90,28 @@ export async function createExecutionPlan(
           return isValid;
         });
         
+        // INJEÇÃO OBRIGATÓRIA: Adicionar gerar_conteudo_atividades após decidir_atividades_criar
+        const hasDecidirAtividades = validatedCapabilities.some(
+          cap => cap.nome === 'decidir_atividades_criar'
+        );
+        const hasGerarConteudo = validatedCapabilities.some(
+          cap => cap.nome === 'gerar_conteudo_atividades'
+        );
+        
+        if (hasDecidirAtividades && !hasGerarConteudo) {
+          const timestamp = Date.now();
+          console.log('🔧 [Planner] Injetando capability gerar_conteudo_atividades na etapa de decisão');
+          validatedCapabilities.push({
+            id: `cap-${idx}-${validatedCapabilities.length}-${timestamp}`,
+            nome: 'gerar_conteudo_atividades',
+            displayName: 'Gerando conteúdo para as atividades',
+            categoria: 'GERAR_CONTEUDO' as CapabilityCall['categoria'],
+            parametros: { contexto: userPrompt },
+            status: 'pending' as const,
+            ordem: validatedCapabilities.length + 1,
+          });
+        }
+        
         return {
           ordem: idx + 1,
           titulo: etapa.titulo,
