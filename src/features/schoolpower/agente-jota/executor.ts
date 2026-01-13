@@ -260,12 +260,6 @@ export class AgentExecutor {
                 }
               }));
               
-              // Agendar execução automática da capability gerar_conteudo_atividades
-              // Isso faz o sub-card aparecer separado no mesmo tópico
-              console.log(`⏳ [Executor] Agendando execução de gerar_conteudo_atividades...`);
-              setTimeout(() => {
-                this.executeAutoContentGeneration(resultado);
-              }, 500);
             }
           }
           
@@ -478,46 +472,6 @@ export class AgentExecutor {
         { progress: resultado.progress }
       );
     }
-  }
-
-  private async executeAutoContentGeneration(decisionResult: any): Promise<void> {
-    console.log(`🚀 [Executor] Iniciando execução automática de gerar_conteudo_atividades`);
-    
-    const chosenActivities = decisionResult?.chosen_activities || [];
-    if (chosenActivities.length === 0) {
-      console.log(`⚠️ [Executor] Nenhuma atividade decidida para gerar conteúdo`);
-      return;
-    }
-
-    const capId = `auto-gerar-conteudo-${Date.now()}`;
-    const capDisplayName = 'Gerar conteúdo das atividades';
-
-    // Emitir evento de capability iniciando (para UI mostrar o card)
-    this.emitProgress({
-      sessionId: this.sessionId,
-      status: 'executando',
-      descricao: `${capDisplayName} - Iniciando`,
-      capabilityId: capId,
-      capabilityName: 'gerar_conteudo_atividades',
-      capabilityStatus: 'executing',
-    } as CapabilityProgressUpdate);
-
-    // Disparar evento customizado para a UI renderizar o ContentGenerationCard
-    window.dispatchEvent(new CustomEvent('agente-jota-capability-started', {
-      detail: {
-        capabilityId: capId,
-        capabilityName: 'gerar_conteudo_atividades',
-        displayName: capDisplayName,
-        status: 'executing',
-        activities: chosenActivities.map((a: any) => ({
-          id: a.id || a.activity_id,
-          titulo: a.titulo || a.name,
-          tipo: a.tipo || a.type
-        }))
-      }
-    }));
-
-    console.log(`📦 [Executor] Evento gerar_conteudo_atividades emitido para UI`);
   }
 
   private extractDiscoveries(resultado: any): string[] {

@@ -8,8 +8,6 @@ import { ConstructionInterface } from '../construction-interface';
 import type { ActivityToBuild } from '../construction-interface';
 import { DataConfirmationBadge } from './DataConfirmationBadge';
 import type { DataConfirmation } from '../../agente-jota/capabilities/shared/types';
-import { ContentGenerationCard } from './ContentGenerationCard';
-import { useChosenActivitiesStore } from '../stores/ChosenActivitiesStore';
 
 export type CapabilityStatus = 'hidden' | 'pending' | 'executing' | 'completed' | 'error';
 export type ObjectiveStatus = 'pending' | 'active' | 'completed';
@@ -196,19 +194,9 @@ const CapabilityCard: React.FC<{
                            capability.nome.toLowerCase().includes('criar_atividades') ||
                            capability.id.toLowerCase().includes('criar_atividade');
 
-  const isGerarConteudo = capability.nome.toLowerCase().includes('gerar_conteudo') ||
-                          capability.id.toLowerCase().includes('gerar_conteudo');
-
   const shouldShowConstructionInterface = isCriarAtividade && 
     (isExecuting || isCompleted) && 
     activitiesToBuild.length > 0;
-
-  const shouldShowContentGeneration = isGerarConteudo && 
-    (isExecuting || isCompleted) && 
-    activitiesToBuild.length > 0;
-
-  const sessionId = useChosenActivitiesStore(state => state.sessionId) || '';
-  const estrategiaPedagogica = useChosenActivitiesStore(state => state.estrategiaPedagogica);
 
   const debugEntries = debugStore.getEntriesForCapability(capability.id);
 
@@ -363,38 +351,6 @@ const CapabilityCard: React.FC<{
               isBuilding={isBuildingActivities}
               onBuildAll={onBuildActivities || (() => {})}
               autoStart={true}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {shouldShowContentGeneration && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mt-2 mb-3"
-          >
-            <ContentGenerationCard
-              sessionId={sessionId}
-              conversationContext={estrategiaPedagogica || 'Geração automática de conteúdo para atividades educacionais'}
-              userObjective="Preencher os campos de cada atividade com conteúdo pedagógico gerado por IA"
-              initialActivities={activitiesToBuild.map(a => ({
-                id: a.activity_id || a.id,
-                titulo: a.name,
-                tipo: a.type,
-                status: a.status,
-                progresso: a.progress
-              }))}
-              autoStart={!!sessionId && activitiesToBuild.length > 0}
-              onComplete={(data) => {
-                console.log('✅ [CapabilityCard] Geração de conteúdo concluída:', data);
-              }}
-              onError={(error) => {
-                console.error('❌ [CapabilityCard] Erro na geração de conteúdo:', error);
-              }}
             />
           </motion.div>
         )}
