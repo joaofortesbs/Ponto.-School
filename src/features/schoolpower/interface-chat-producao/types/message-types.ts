@@ -25,7 +25,7 @@ export interface CapabilityState {
   id: string;
   nome: string;
   displayName?: string;
-  status: 'pendente' | 'executando' | 'concluido' | 'erro' | 'pending' | 'executing' | 'completed' | 'error';
+  status: 'pendente' | 'executando' | 'concluido' | 'erro';
   resultado?: any;
 }
 
