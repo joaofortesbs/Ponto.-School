@@ -5,7 +5,7 @@
  * Mostra as atividades sendo construídas com progresso em tempo real
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Package, 
@@ -18,8 +18,11 @@ import {
   Sparkles,
   FileText,
   Clock,
-  Zap
+  Zap,
+  Edit3
 } from 'lucide-react';
+import EditActivityModal from '../../construction/EditActivityModal';
+import { ConstructionActivity } from '../../construction/types';
 
 export type ActivityBuildStatus = 'waiting' | 'building' | 'completed' | 'error';
 
@@ -75,23 +78,32 @@ const STATUS_CONFIG = {
   }
 };
 
-function ActivityCard({ activity, onBuild }: { 
+function ActivityCard({ activity, onBuild, onActivityClick }: { 
   activity: ActivityToBuild; 
   onBuild?: () => void;
+  onActivityClick?: (activity: ActivityToBuild) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const config = STATUS_CONFIG[activity.status];
   const StatusIcon = config.icon;
 
+  const handleClick = () => {
+    if (onActivityClick) {
+      onActivityClick(activity);
+    } else if (activity.built_data) {
+      setIsExpanded(!isExpanded);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-xl border overflow-hidden ${config.bg} ${config.border}`}
+      className={`rounded-xl border overflow-hidden ${config.bg} ${config.border} hover:border-orange-500/40 transition-colors`}
     >
       <div 
         className="p-3 cursor-pointer"
-        onClick={() => activity.built_data && setIsExpanded(!isExpanded)}
+        onClick={handleClick}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -124,6 +136,18 @@ function ActivityCard({ activity, onBuild }: {
                 title="Construir esta atividade"
               >
                 <Play className="w-4 h-4 text-white/60" />
+              </button>
+            )}
+            {onActivityClick && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onActivityClick(activity);
+                }}
+                className="p-2 hover:bg-orange-500/20 rounded-lg transition-colors"
+                title="Editar atividade"
+              >
+                <Edit3 className="w-4 h-4 text-orange-400" />
               </button>
             )}
             {activity.built_data && (
@@ -191,6 +215,30 @@ function ActivityCard({ activity, onBuild }: {
   );
 }
 
+function convertToConstructionActivity(activity: ActivityToBuild): ConstructionActivity {
+  return {
+    id: activity.activity_id || activity.id,
+    title: activity.name,
+    personalizedTitle: activity.name,
+    description: `Atividade do tipo ${activity.type}`,
+    personalizedDescription: `Atividade do tipo ${activity.type}`,
+    categoryId: activity.type,
+    categoryName: activity.type,
+    icon: 'FileText',
+    tags: [],
+    difficulty: 'medium',
+    estimatedTime: '30 min',
+    customFields: activity.built_data || {},
+    originalData: activity,
+    isBuilt: activity.status === 'completed',
+    progress: activity.progress,
+    status: activity.status === 'waiting' ? 'pending' : 
+            activity.status === 'building' ? 'in_progress' : 
+            activity.status === 'completed' ? 'completed' : 'error',
+    type: activity.type
+  };
+}
+
 export function ConstructionInterface({
   activities,
   isBuilding,
@@ -208,6 +256,31 @@ export function ConstructionInterface({
   const allCompleted = completedCount === activities.length && activities.length > 0;
 
   const hasStartedRef = React.useRef(false);
+  
+  // Estado para o modal de edição
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<ConstructionActivity | null>(null);
+
+  // Handler para abrir o modal ao clicar em uma atividade
+  const handleActivityClick = useCallback((activity: ActivityToBuild) => {
+    console.log('🔧 [ConstructionInterface] Abrindo modal para atividade:', activity.name);
+    const constructionActivity = convertToConstructionActivity(activity);
+    setSelectedActivity(constructionActivity);
+    setIsEditModalOpen(true);
+  }, []);
+
+  // Handler para fechar o modal
+  const handleCloseModal = useCallback(() => {
+    console.log('🔧 [ConstructionInterface] Fechando modal');
+    setIsEditModalOpen(false);
+    setSelectedActivity(null);
+  }, []);
+
+  // Handler para salvar atividade
+  const handleSaveActivity = useCallback((activityData: any) => {
+    console.log('💾 [ConstructionInterface] Salvando atividade:', activityData);
+    handleCloseModal();
+  }, [handleCloseModal]);
 
   useEffect(() => {
     if (
@@ -282,6 +355,7 @@ export function ConstructionInterface({
             <ActivityCard 
               activity={activity}
               onBuild={onBuildSingle ? () => onBuildSingle(activity.activity_id) : undefined}
+              onActivityClick={handleActivityClick}
             />
           </motion.div>
         ))}
@@ -320,6 +394,14 @@ export function ConstructionInterface({
           </div>
         </div>
       )}
+
+      {/* Modal de Edição de Atividade */}
+      <EditActivityModal
+        isOpen={isEditModalOpen}
+        activity={selectedActivity}
+        onClose={handleCloseModal}
+        onSave={handleSaveActivity}
+      />
     </motion.div>
   );
 }
