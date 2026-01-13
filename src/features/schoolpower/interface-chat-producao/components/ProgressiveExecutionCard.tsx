@@ -388,8 +388,8 @@ const CapabilityCard: React.FC<{
               userObjective="Gerar conteúdo pedagógico para as atividades da aula"
               initialActivities={completedActivities.map(a => ({
                 id: a.id,
-                titulo: a.titulo,
-                tipo: a.tipo,
+                titulo: a.name,
+                tipo: a.type,
                 status: a.status
               }))}
               autoStart={true}
