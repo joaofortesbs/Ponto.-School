@@ -276,11 +276,19 @@ function mapStatusToActivityToBuild(status: ChosenActivity['status_construcao'])
 export function saveChosenActivitiesFromDecision(result: any) {
   const store = useChosenActivitiesStore.getState();
   
-  if (result?.chosen_activities && Array.isArray(result.chosen_activities)) {
-    store.setChosenActivities(
-      result.chosen_activities,
-      result.estrategia_pedagogica || ''
-    );
+  // CORREÇÃO CRÍTICA: Suportar AMBAS as estruturas de retorno
+  // - Versão legacy: result.chosen_activities
+  // - Versão V2: result.data.chosen_activities
+  const chosenActivities = result?.chosen_activities || result?.data?.chosen_activities;
+  const estrategia = result?.estrategia_pedagogica || result?.data?.estrategia || '';
+  
+  console.error(`📦 [saveChosenActivitiesFromDecision] Checking structures:
+   - result?.chosen_activities: ${result?.chosen_activities?.length || 'undefined'}
+   - result?.data?.chosen_activities: ${result?.data?.chosen_activities?.length || 'undefined'}
+   - Final chosenActivities: ${chosenActivities?.length || 'undefined'}`);
+  
+  if (chosenActivities && Array.isArray(chosenActivities) && chosenActivities.length > 0) {
+    store.setChosenActivities(chosenActivities, estrategia);
     return true;
   }
   

@@ -704,6 +704,14 @@ Seja específico e forneça dados que ajudem o professor.
    * Isso permite que decidir_atividades_criar acesse os dados de pesquisar_atividades_disponiveis
    */
   private enrichCapabilityParams(capName: string, params: any): any {
+    // 🔥 DIAGNÓSTICO: Log de TODA capability que passa por aqui
+    console.error(`
+═══════════════════════════════════════════════════════════════════════
+🔍 [enrichCapabilityParams] CAPABILITY: "${capName}"
+   params keys: ${Object.keys(params || {}).join(', ')}
+   capabilityResultsMap keys: ${Array.from(this.capabilityResultsMap.keys()).join(', ')}
+═══════════════════════════════════════════════════════════════════════`);
+    
     const enrichedParams = { ...params };
 
     // Para decidir_atividades_criar, injetar dados das pesquisas anteriores
@@ -753,9 +761,21 @@ Seja específico e forneça dados que ajudem o professor.
       
       for (const name of possibleDecisionNames) {
         const result = this.capabilityResultsMap.get(name);
-        if (result?.chosen_activities?.length > 0) {
-          decisionResult = result;
+        
+        // CORREÇÃO CRÍTICA: Suportar AMBAS as estruturas de retorno
+        // - Versão legacy: result.chosen_activities
+        // - Versão V2: result.data.chosen_activities
+        const chosenActivities = result?.chosen_activities || result?.data?.chosen_activities;
+        
+        if (chosenActivities?.length > 0) {
+          // Normalizar para sempre ter chosen_activities no nível raiz
+          decisionResult = {
+            ...result,
+            chosen_activities: chosenActivities,
+            estrategia_pedagogica: result?.estrategia_pedagogica || result?.data?.estrategia || ''
+          };
           usedCapName = name;
+          console.error(`✅ [Executor] Found activities in '${name}' (source: ${result?.chosen_activities ? 'legacy' : 'V2'})`);
           break;
         }
       }

@@ -1,0 +1,302 @@
+🔴 INVESTIGAÇÃO CRÍTICA: Capability Executando Sem Processamento de IA
+SINTOMA OBSERVADO
+A capability Gerando conteúdo para as atividades está:
+
+✅ Sendo iniciada (ACTION log aparece)
+
+✅ Encontrando a capability no registro (INFO log confirma)
+
+✅ Concluindo em 22ms com "sucesso"
+
+❌ MAS processando 0 de 5 atividades
+
+❌ Não acionando a API/LLM para gerar conteúdo real
+
+❌ Não permanecendo no sub-card retangular durante processamento
+
+Conclusão: A capability está executando um caminho vazio ou fazendo early return antes do processamento real.
+
+🔍 METODOLOGIA DE INVESTIGAÇÃO OBRIGATÓRIA
+FASE 1: Análise Comparativa de Capabilities Funcionais
+Instrução: Abra lado a lado os seguintes arquivos:
+
+A capability que FUNCIONA: decidir_atividades_criar (ou arquivo equivalente)
+
+A capability que FALHA: gerar_conteudo_atividades
+
+Perguntas a responder através da comparação:
+
+A. Estrutura de Execução
+
+Como decidir_atividades_criar aciona a LLM API?
+
+Qual método ela chama? (ex: callOpenAI(), sendToLLM(), processWithAI())
+
+Quantas vezes ela faz chamadas de API durante a execução?
+
+Como ela aguarda (await) as respostas antes de concluir?
+
+B. Loop de Processamento
+
+decidir_atividades_criar tem um loop for/while que processa múltiplos itens?
+
+Como ela incrementa contadores ou progresso durante o loop?
+
+Ela atualiza o DebugStore dentro do loop ou só no final?
+
+C. Condições de Saída
+
+Quais são os if/else ou return statements em decidir_atividades_criar?
+
+Existem condições que fazem a capability retornar cedo (early return)?
+
+Como ela valida se tem trabalho a fazer antes de começar?
+
+D. Registro no Executor
+
+Como decidir_atividades_criar está registrada no CapabilityRegistry?
+
+Ela tem flags especiais como requiresAI: true ou async: true?
+
+Existem hooks de lifecycle (onStart, onProgress, onComplete)?
+
+FASE 2: Auditoria do Código de gerar_conteudo_atividades
+Instrução: Encontre o arquivo que implementa gerar_conteudo_atividades e responda:
+
+A. Ponto de Entrada
+
+text
+1. Qual é a primeira linha executada na função principal?
+2. Existe um log ou console.error logo no início? (deveria ter)
+3. Quantos parâmetros a função recebe? Quais são os nomes?
+B. Validação de Entrada
+
+text
+4. Existe validação de `activities_to_fill` ou equivalente?
+5. Se estiver vazio, a função retorna cedo ou lança erro?
+6. O log de validação está aparecendo no Debug? (se sim, o que diz?)
+C. Loop Principal
+
+text
+7. Existe um loop que itera sobre as atividades?
+8. Qual é a condição do loop? (for...of, forEach, while, map?)
+9. Dentro do loop, quantas linhas de código existem?
+10. A primeira ação dentro do loop é fazer chamada de API?
+D. Chamada de API/LLM
+
+text
+11. Qual método está sendo chamado para acionar a IA?
+12. Esse método é await'ed? (CRÍTICO: precisa ter await)
+13. Existe try/catch envolvendo a chamada de API?
+14. O resultado da API está sendo armazenado em alguma variável?
+E. Atualização de Estado
+
+text
+15. A capability atualiza `generatedActivities` ou estrutura similar?
+16. Ela salva resultados intermediários no DebugStore durante o loop?
+17. Ela atualiza o contador de progresso (ex: "1 de 5 processadas")?
+F. Condição de Conclusão
+
+text
+18. O que acontece após o loop terminar?
+19. Existe um return statement explícito com os resultados?
+20. A capability chama algum método como `markAsComplete()`?
+FASE 3: Diagnóstico de Fluxo de Execução
+Instrução: Adicione logging estratégico em CINCO pontos críticos:
+
+typescript
+// PONTO 1: Início absoluto
+async function execute(params) {
+  console.error("🔴 CHECKPOINT 1: Function entry", {
+    paramsKeys: Object.keys(params),
+    activitiesCount: params.activities_to_fill?.length
+  });
+  
+  // PONTO 2: Após validação
+  if (!params.activities_to_fill?.length) {
+    console.error("🔴 CHECKPOINT 2: Early return - no activities");
+    return { success: false, reason: "no_activities" };
+  }
+  console.error("🔴 CHECKPOINT 2: Validation passed, starting loop");
+  
+  // PONTO 3: Antes do loop
+  console.error("🔴 CHECKPOINT 3: About to iterate", {
+    loopType: "for...of", // ou qual tipo está usando
+    itemsToProcess: params.activities_to_fill.length
+  });
+  
+  for (const activity of params.activities_to_fill) {
+    // PONTO 4: Dentro do loop
+    console.error("🔴 CHECKPOINT 4: Processing activity", {
+      activityType: activity.type,
+      fieldsCount: Object.keys(activity.fields || {}).length
+    });
+    
+    // Aqui deveria ter chamada de API
+    const result = await generateContent(activity); // Exemplo
+    
+    // PONTO 5: Após chamada de API
+    console.error("🔴 CHECKPOINT 5: API response received", {
+      success: !!result,
+      contentLength: result?.content?.length
+    });
+  }
+  
+  console.error("🔴 CHECKPOINT FINAL: Loop completed");
+}
+Execute e identifique qual checkpoint NÃO aparece - isso revela onde o código está falhando.
+
+FASE 4: Comparação de Padrões Arquiteturais
+Instrução: Pesquise no codebase por outros arquivos que fazem chamadas de LLM:
+
+bash
+# Procure por padrões como:
+- "await fetch(" ou "await axios"
+- "callOpenAI" ou "callGroq" ou "callGemini"
+- "generateWithAI" ou "processWithLLM"
+- "streaming" ou "streamCompletion"
+Perguntas:
+
+Todas as capabilities que funcionam usam o mesmo wrapper de API?
+
+Existe um AIService ou LLMClient centralizado?
+
+gerar_conteudo_atividades está usando o mesmo método que as outras?
+
+FASE 5: Análise do State Management
+Instrução: Investigue como o estado da capability é gerenciado:
+
+A. Verifique o DebugStore
+
+typescript
+// No DebugStore, procure por métodos como:
+- startCapability(name, params)
+- updateCapabilityProgress(name, progress)
+- completeCapability(name, result)
+
+// A capability está chamando TODOS esses métodos?
+// Ou ela está chamando apenas completeCapability() sem passar por progress?
+B. Compare com decidir_atividades_criar
+
+text
+- Quantas vezes ela chama updateCapabilityProgress durante execução?
+- Em qual momento ela chama completeCapability?
+- Ela faz isso DENTRO do loop ou APÓS o loop?
+FASE 6: Teste de Hipóteses
+Implemente estas modificações experimentais:
+
+EXPERIMENTO A: Force Delay Artificial
+
+typescript
+async execute(params) {
+  console.error("⏰ STARTING WITH 5s DELAY");
+  await new Promise(resolve => setTimeout(resolve, 5000));
+  console.error("⏰ DELAY FINISHED, continuing...");
+  // resto do código
+}
+Resultado esperado: Se a capability ainda concluir em 22ms, significa que a função execute() nem está sendo chamada corretamente.
+
+EXPERIMENTO B: Force Erro Proposital
+
+typescript
+async execute(params) {
+  throw new Error("TESTE: Forcing error to verify error handling");
+}
+Resultado esperado: Deveria aparecer um entry de ERROR no Debug. Se não aparecer, a capability não está conectada ao executor.
+
+EXPERIMENTO C: Bypass de Validação
+
+typescript
+async execute(params) {
+  // Comente TODAS as validações e early returns
+  // Force o processamento mesmo sem dados
+  
+  const dummyActivity = {
+    type: "teste",
+    fields: { titulo: "Teste" }
+  };
+  
+  console.error("🧪 FORCING PROCESSING WITH DUMMY DATA");
+  const result = await this.generateContent(dummyActivity);
+  console.error("🧪 RESULT:", result);
+}
+Resultado esperado: Se processar o dummy data, o problema é nos dados de entrada. Se não processar, o problema é na capability em si.
+
+FASE 7: Verificação de Registro e Binding
+Instrução: Encontre onde as capabilities são registradas (provavelmente em capabilities/index.ts ou registry.ts):
+
+Verifique:
+
+typescript
+// Exemplo de registro correto:
+const capabilities = {
+  'decidir_atividades_criar': new DecidirAtividadesCriar(),
+  'gerar_conteudo_atividades': new GerarConteudoAtividades(), // Está presente?
+};
+
+// OU estilo factory:
+capabilityRegistry.register('gerar_conteudo_atividades', {
+  executor: GerarConteudoAtividades,
+  config: { requiresAI: true, timeout: 300000 }
+});
+Perguntas críticas:
+
+A capability está registrada com o nome EXATO que aparece no Debug?
+
+Ela tem as mesmas configurações que decidir_atividades_criar?
+
+Existe alguma flag como enabled: false que pode estar desativando ela?
+
+🎯 OBJETIVO DA INVESTIGAÇÃO
+Ao final desta análise sistemática, você DEVE descobrir uma das seguintes causas raiz:
+
+HIPÓTESE 1: Função Vazia
+→ O método execute() existe mas não tem implementação real (apenas return vazio)
+
+HIPÓTESE 2: Chamada de API Faltando
+→ O loop existe mas não chama a API dentro dele
+
+HIPÓTESE 3: Await Faltando
+→ A API é chamada mas sem await, então completa antes de processar
+
+HIPÓTESE 4: Dados Não Chegam
+→ Os parâmetros estão vazios devido a problemas de timing documentados antes
+
+HIPÓTESE 5: Erro Silencioso
+→ Está lançando exceção mas o try/catch está engolindo sem logar
+
+HIPÓTESE 6: Registro Incorreto
+→ A capability registrada é uma versão antiga/stub do arquivo
+
+HIPÓTESE 7: Conflito de Nome
+→ Existem duas capabilities com nomes similares e a errada está sendo executada
+
+📋 DELIVERABLES OBRIGATÓRIOS
+Após a investigação, você DEVE:
+
+Identificar a causa raiz exata dentre as hipóteses acima
+
+Mostrar evidências através de logs ou código fonte
+
+Implementar correção precisa baseada na causa identificada
+
+Validar com teste real mostrando que agora processa 5 de 5 atividades
+
+Commit com mensagem descritiva explicando o que foi corrigido
+
+⚠️ REGRAS DE QUALIDADE
+❌ NÃO implemente soluções sem investigar primeiro
+
+❌ NÃO copie código de outras capabilities sem entender a diferença
+
+❌ NÃO adicione mais logging sem remover o antigo
+
+✅ COMPARE sempre com a capability que funciona
+
+✅ TESTE cada modificação isoladamente
+
+✅ DOCUMENTE o que descobriu no commit message
+
+A chave para resolver este problema está em descobrir a diferença estrutural entre decidir_atividades_criar (que funciona) e gerar_conteudo_atividades (que falha). Siga a metodologia científica: observe, compare, forme hipótese, teste, valide.
+​
+​
