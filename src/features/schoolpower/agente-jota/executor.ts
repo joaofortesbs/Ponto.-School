@@ -80,8 +80,16 @@ export class AgentExecutor {
     });
 
     const results: Array<{ etapa: number; resultado: any }> = [];
+    let criticalFailure = false;
+    let criticalErrorMessage = '';
 
     for (const etapa of plan.etapas) {
+      // Se houve falha crítica, não executar mais etapas
+      if (criticalFailure) {
+        console.error(`🛑 [Executor] Skipping etapa ${etapa.ordem} due to critical failure in previous step`);
+        break;
+      }
+      
       try {
         this.emitProgress({
           sessionId: this.sessionId,
@@ -152,11 +160,12 @@ export class AgentExecutor {
         await this.delay(300);
 
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`❌ [Executor] Erro na etapa ${etapa.ordem}:`, error);
 
         await this.memory.saveToWorkingMemory({
           tipo: 'erro',
-          conteudo: `Erro na etapa ${etapa.ordem}: ${error instanceof Error ? error.message : String(error)}`,
+          conteudo: `Erro na etapa ${etapa.ordem}: ${errorMessage}`,
           etapa: etapa.ordem,
           funcao: etapa.funcao,
         });
@@ -165,18 +174,34 @@ export class AgentExecutor {
           sessionId: this.sessionId,
           status: 'erro',
           etapaAtual: etapa.ordem,
-          erro: error instanceof Error ? error.message : String(error),
+          erro: errorMessage,
         });
+        
+        // Verificar se é uma falha crítica (de capability V2)
+        if (errorMessage.includes('Capability crítica') || errorMessage.includes('CRITICAL V2')) {
+          criticalFailure = true;
+          criticalErrorMessage = errorMessage;
+          console.error(`🛑 [Executor] CRITICAL FAILURE detected - halting plan execution`);
+        }
       }
     }
 
     const relatorio = await this.generateFinalReport(plan, results);
 
-    this.emitProgress({
-      sessionId: this.sessionId,
-      status: 'concluido',
-      descricao: 'Plano executado com sucesso!',
-    });
+    // Emitir status final baseado no resultado real
+    if (criticalFailure) {
+      this.emitProgress({
+        sessionId: this.sessionId,
+        status: 'erro',
+        descricao: `Plano interrompido devido a erro crítico: ${criticalErrorMessage}`,
+      });
+    } else {
+      this.emitProgress({
+        sessionId: this.sessionId,
+        status: 'concluido',
+        descricao: 'Plano executado com sucesso!',
+      });
+    }
 
     return relatorio;
   }
@@ -506,6 +531,12 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
 
         // Finalizar debug mesmo com erro
         useDebugStore.getState().endCapability(capId);
+        
+        // Para capabilities V2 críticas, propagar o erro para interromper todo o fluxo
+        if (V2_CAPABILITIES.includes(capName)) {
+          console.error(`🛑 [Executor] CRITICAL V2 capability "${capName}" failed - halting pipeline execution`);
+          throw error; // Re-lançar para interromper executeCapabilitiesForEtapa
+        }
       }
     }
 
