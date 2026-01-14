@@ -1,0 +1,80 @@
+Architectural Context
+The ability to generate_content_activities must operate as a standalone module with bidirectional integration into the activity decision pipeline. The system needs to implement three critical layers: schema mapping, generation orchestration, and state synchronization with the DebugStore.
+
+Fundamental Technical Requirements
+1. Data Pipeline and Synchronization
+
+Implement an event-driven architecture system that consumes outputs from the decide_activities_create capability.
+
+Configure a state manager that contains bidirectional references between activity schemas and generated content.
+
+Use TypeScript interfaces to ensure type safety between the decision and generation modules.
+
+Establish a system of unique IDs (UUIDs) that maps each field of the edit modal to its respective generated content.
+
+2. Integration with DebugStore and Observability
+
+The DebugStore should log structured inputs in three stages: pre-generation (schema mapping), generation (API calls with context), post-generation (validation and formatting).
+
+Implement granular debug logging that exposes: activity type, field schemas (required/optional), API request payloads, raw responses, and processed content.
+
+Ensure that each input is not debugged, including timestamps. Correlation IDs and Stack Trace Context for Troubleshooting
+
+Configure the system to truncate long outputs in visual debugging but keep complete logs in storage
+
+3. Content Generation Engine with LLM
+
+An API/LLM integration needs to be stateful: maintain conversation context through message history that includes the user's initial prompt
+
+Implement outright engineering strategies: utilize specific examples for each activity type, including schema constraints without system prompts, and provide contextual awareness of interdependent fields
+
+Configure robust error handling: retry logic with exponential backoff, fallback to alternative models (Groq, Gemini), and Graceful Degradation
+
+Optimize for latency: consider batch processing of fields when semantically safe, but maintain context consistency
+
+4. Schema Mapping and Validation
+
+Create a centralized schema definition file (JSON Schema or Zod) that describes the structures of all edit modals by activity type
+
+Implement validators that verify: integrity of required fields, data type compliance, dependencies between fields, and compliance with business rules
+
+Configure the system to detect schema deviation: compare the generated outputs with the expected schemas and log inconsistencies
+
+5. Autocomplete Architecture (Preparation)
+
+Design hooks and extension points that allow future autocomplete without refactoring the current system
+
+Structure or output of the generator to be consumed: JSON format with field keys corresponding exactly to the IDs of the entries in the modals
+
+Implement a transformation layer that converts LLM outputs into structures compatible with the state management form
+
+Quality and Governance Criteria
+Zero Regression Policy: Run integration tests that validate all existing capabilities before commit
+
+Code organization: Follow separation of concerns - separate concerns of: data fetching, business logic, API integration, state management, and UI rendering
+
+Error limits: implement strategic try-catch blocks with contextual logging, Avoid silent failures
+
+Performance budgets: monitor API response times, maintain UI responsiveness even across generations (consider web workers or streaming)
+
+Type safety: use strict TypeScript mode, avoid any type, implement runtime validation when necessary
+
+Documentation: Add JSDoc comments to critical functions explaining algorithms and architectural decisions
+
+Implementation Guidelines
+Analyze the data structure returned by decide_create_activities and extract the field schema dynamically
+
+Configure the CapabilityExecutor to insert specific dependencies (DebugStore instance, API clients, conversation context)
+
+Implement intelligent iteration over activity fields: prioritize required fields, group related fields for context sharing
+
+Ensure that the capacity lifecycle (startCapability, endCapability) is managed correctly across all execution paths (success, partial success, failure)
+
+Test edge cases: activities without additional fields, intermittent failures API, timeouts, and malformed responses
+
+Production Considerations
+The system must be resilient: continue processing even if a specific field fails
+
+Implement rate limiting awareness applicable to external APIs
+
+Configure monitoring and alerts to detect
