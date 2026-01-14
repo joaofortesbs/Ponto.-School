@@ -709,6 +709,60 @@ Seja específico e forneça dados que ajudem o professor.
       }
     }
 
+    // Para gerar_conteudo_atividades, injetar atividades decididas e contexto
+    if (capName === 'gerar_conteudo_atividades') {
+      console.log(`🔗 [Executor] Preparando parâmetros para gerar_conteudo_atividades...`);
+      
+      // Buscar atividades do ChosenActivitiesStore (fonte primária - formato ChosenActivity)
+      const storeState = useChosenActivitiesStore.getState();
+      const chosenActivities = storeState.getChosenActivities();
+      
+      if (chosenActivities.length > 0) {
+        console.log(`🔗 [Executor] Injetando ${chosenActivities.length} atividades do ChosenActivitiesStore`);
+        // Usar activities_to_fill com formato ChosenActivity completo
+        enrichedParams.activities_to_fill = chosenActivities;
+        enrichedParams.session_id = storeState.sessionId || this.sessionId;
+        enrichedParams.user_objective = storeState.estrategiaPedagogica || params.contexto || '';
+        enrichedParams.conversation_context = storeState.estrategiaPedagogica || '';
+        
+        console.log(`   📦 Session ID: ${enrichedParams.session_id}`);
+        console.log(`   📦 Atividades: ${chosenActivities.map(a => a.titulo).join(', ')}`);
+        console.log(`   📦 Objetivo: ${enrichedParams.user_objective?.substring(0, 50)}...`);
+      } else {
+        // Fallback: buscar do resultado de decidir_atividades_criar
+        const decisionResult = this.capabilityResultsMap.get('decidir_atividades_criar');
+        if (decisionResult) {
+          const chosenFromDecision = decisionResult.chosen_activities || [];
+          console.log(`🔗 [Executor] Fallback: Injetando ${chosenFromDecision.length} atividades do resultado de decisão`);
+          // Converter para formato ChosenActivity
+          enrichedParams.activities_to_fill = chosenFromDecision.map((a: any) => ({
+            id: a.id || a.activity_id,
+            titulo: a.titulo || a.name,
+            tipo: a.tipo || a.type,
+            categoria: a.categoria || '',
+            materia: a.materia || '',
+            nivel_dificuldade: a.nivel_dificuldade || 'medio',
+            tags: a.tags || [],
+            campos_obrigatorios: a.campos_obrigatorios || [],
+            campos_opcionais: a.campos_opcionais || [],
+            schema_campos: a.schema_campos || {},
+            campos_preenchidos: a.campos_preenchidos || {},
+            justificativa: a.justificativa || a.reason || '',
+            ordem_sugerida: a.ordem_sugerida || 0,
+            status_construcao: 'aguardando' as const,
+            progresso: 0
+          }));
+          enrichedParams.session_id = this.sessionId;
+          enrichedParams.user_objective = decisionResult.estrategia_pedagogica || params.contexto || '';
+          enrichedParams.conversation_context = decisionResult.estrategia_pedagogica || '';
+        } else {
+          console.warn(`⚠️ [Executor] Nenhuma atividade encontrada para gerar conteúdo!`);
+          enrichedParams.activities_to_fill = [];
+          enrichedParams.session_id = this.sessionId;
+        }
+      }
+    }
+
     // Para criar_atividade, injetar decisões
     if (capName === 'criar_atividade') {
       const decisionResult = this.capabilityResultsMap.get('decidir_atividades_criar');

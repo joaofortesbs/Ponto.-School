@@ -1,0 +1,131 @@
+Diagnóstico e Correção: Falha na Execução da Capability de Geração de Conteúdo
+Problema Identificado
+A capability gerar_conteudo_atividades está sendo marcada como "concluída" sem ter sido efetivamente acionada/executada. O sub-card retangular não está sendo renderizado, e nenhum processamento real está ocorrendo após decidir_atividades_criar finalizar.
+
+Áreas Críticas de Investigação
+1. Orquestração e Workflow State Machine
+
+Investigue o orchestrator principal que gerencia o lifecycle das capabilities no card de Desenvolvimento
+
+Verifique se existe um trigger mechanism configurado corretamente para iniciar gerar_conteudo_atividades quando decidir_atividades_criar emite seu evento de conclusão
+
+Analise se há dependencies configuradas entre as capabilities - pode existir uma flag ou condition que está sendo avaliada incorretamente
+
+Procure por race conditions: a capability pode estar sendo marcada como completa antes mesmo de tentar executar
+
+2. Sistema de Eventos e Pub/Sub
+
+Confirme que decidir_atividades_criar está emitindo um evento de conclusão que gerar_conteudo_atividades deveria escutar
+
+Verifique se os event listeners estão registrados corretamente no initialization phase
+
+Teste se o payload do evento contém os dados necessários (activity schemas, fields) para acionar a próxima capability
+
+Procure por event naming mismatches ou typos em event keys que podem causar silent failures
+
+3. Condicionais e Guard Clauses
+
+Examine se existe lógica condicional que está fazendo early return ou skip da execution de gerar_conteudo_atividades
+
+Verifique conditions como: "se não há atividades para processar", "se já existe conteúdo gerado", "se modal de edição não está aberto"
+
+Procure por flags booleanas ou state variables que podem estar incorretamente setadas (ex: isGenerationComplete = true antes mesmo de começar)
+
+Analise validações que podem estar rejeitando a execução silenciosamente
+
+4. Capability Registration e Initialization
+
+Confirme que gerar_conteudo_atividades está corretamente registrada no CapabilityRegistry ou equivalente
+
+Verifique se o initialization code da capability está sendo executado durante app startup
+
+Procure por erros de import/export que podem estar impedindo o module de carregar
+
+Teste se a capability tem todas as dependencies injetadas corretamente (DebugStore, API clients, etc)
+
+5. Execution Context e Async Handling
+
+Investigue se a capability está sendo chamada mas está falhando silenciosamente devido a unhandled promise rejections
+
+Verifique se existe try-catch adequado envolvendo a execution logic
+
+Procure por await statements faltando que podem causar execution flow incorreto
+
+Analise se timeouts ou cancellation tokens estão abortando a execution prematuramente
+
+6. UI State Management
+
+Confirme que o sub-card retangular está configurado para renderizar quando gerar_conteudo_atividades.status === 'running'
+
+Verifique se o component está subscrito ao state correto (Redux, Zustand, Context)
+
+Procure por conditional rendering que pode estar ocultando o sub-card mesmo quando deveria aparecer
+
+Teste se o status da capability está sendo atualizado corretamente no global state
+
+7. Data Flow e Payload Transfer
+
+Analise se os outputs de decidir_atividades_criar estão sendo persistidos corretamente no state ou database
+
+Verifique se gerar_conteudo_atividades está conseguindo acessar esses outputs quando iniciada
+
+Procure por data transformation issues entre as duas capabilities
+
+Confirme que IDs e references estão sendo mantidos consistentemente
+
+Estratégias de Debug Forçado
+Adicione logging extremamente verboso no início da execution de gerar_conteudo_atividades - um console.log ou DebugStore entry com texto único e impossível de ignorar
+
+Implemente health checks: force a capability a registrar no DebugStore imediatamente ao ser instanciada, antes de qualquer lógica
+
+Crie synthetic triggers: adicione um botão de teste que force manualmente a execução de gerar_conteudo_atividades independente do workflow - isso ajuda a isolar se o problema é na capability ou no orchestration
+
+Configure error boundaries específicos ao redor da capability execution com fallback UI que mostre exatamente onde falhou
+
+Checklist de Validação
+Após implementar correções, valide sequencialmente:
+
+✓ decidir_atividades_criar completa e emite evento de conclusão com payload válido
+
+✓ Event listener de gerar_conteudo_atividades recebe o evento e registra log
+
+✓ Capability initialization é executada e dependencies estão disponíveis
+
+✓ Guard clauses permitem a execution continuar (nenhum early return)
+
+✓ Status da capability muda para 'running' no global state
+
+✓ Sub-card retangular renderiza na UI do card de Desenvolvimento
+
+✓ DebugStore mostra entry de início da execution
+
+✓ Loops sobre activity fields começam e chamadas de API são feitas
+
+✓ Conteúdo gerado é retornado e armazenado corretamente
+
+✓ Status muda para 'completed' apenas após processamento real
+
+Diretrizes de Implementação Obrigatórias
+Fail loudly, not silently: Qualquer erro deve ser logado visualmente no DebugStore e console
+
+Atomic operations: Cada stage da execution deve confirmar sucesso antes de prosseguir
+
+State visibility: Exponha o state interno da capability no DebugStore durante toda execução
+
+Idempotency: A capability deve poder ser retriggered manualmente sem side effects indesejados
+
+Rollback safety: Se falhar, deve deixar o system em estado consistente para retry
+
+Considerações Arquiteturais
+O problema sugere que há uma desconexão entre o orchestration layer e a execution layer. A solução ideal envolve:
+
+Garantir que o workflow engine está corretamente mapeando dependencies entre capabilities
+
+Implementar explicit sequencing através de promises chaining ou async/await patterns
+
+Configurar observability hooks que permitam rastrear exatamente quando e por que uma capability foi skipped
+
+Separar concerns de "capability logic" e "workflow coordination" em modules distintos
+
+Ação Imediata Recomendada: Force a IA a implementar logging invasivo no início de gerar_conteudo_atividades e no event handler que deveria triggá-la. Isso revelará imediatamente se o problema é "não está sendo chamada" vs "está sendo chamada mas falha silenciosamente".
+​
