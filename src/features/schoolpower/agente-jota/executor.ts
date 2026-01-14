@@ -278,7 +278,18 @@ export class AgentExecutor {
             console.error(`
 ═══════════════════════════════════════════════════════════════════════
 🚀 [Executor] USING V2 API-FIRST for ${capName}
+═══════════════════════════════════════════════════════════════════════
+📦 Map Status ANTES de executar ${capName}:
+   - Tamanho: ${this.capabilityResultsMap.size}
+   - Chaves: ${Array.from(this.capabilityResultsMap.keys()).join(', ') || 'NENHUMA'}
 ═══════════════════════════════════════════════════════════════════════`);
+            
+            // Log detalhado de cada entrada no Map
+            if (this.capabilityResultsMap.size > 0) {
+              for (const [key, value] of this.capabilityResultsMap.entries()) {
+                console.error(`   📄 [${key}]: success=${value?.success}, hasData=${!!value?.data}, dataKeys=${value?.data ? Object.keys(value.data).join(',') : 'N/A'}`);
+              }
+            }
             
             // Construir CapabilityInput com previous_results
             const capabilityInput: CapabilityInput = {
@@ -355,7 +366,17 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
           
           // Armazenar resultado para uso em capabilities subsequentes
           this.capabilityResultsMap.set(capName, resultado);
-          console.log(`💾 [Executor] Resultado de "${capName}" armazenado para uso futuro`);
+          
+          // LOG DETALHADO após salvar no Map
+          console.error(`
+═══════════════════════════════════════════════════════════════════════
+💾 [Executor] SALVO NO MAP: ${capName}
+═══════════════════════════════════════════════════════════════════════
+   - Map tamanho APÓS: ${this.capabilityResultsMap.size}
+   - Chaves no Map: ${Array.from(this.capabilityResultsMap.keys()).join(', ')}
+   - Resultado salvo: success=${resultado?.success}, hasData=${!!resultado?.data}
+   - Data keys: ${resultado?.data ? Object.keys(resultado.data).join(', ') : 'N/A'}
+═══════════════════════════════════════════════════════════════════════`);
           
           // Salvar atividades decididas no store para sincronização com criar_atividade
           if (capName.includes('decidir_atividades_criar') || capName.includes('decidir_atividades')) {

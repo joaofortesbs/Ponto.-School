@@ -615,16 +615,88 @@ export async function decidirAtividadesCriarV2(
     const elapsedTime = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
 
+    // LOG DETALHADO DO ERRO
+    console.error(`
+═══════════════════════════════════════════════════════════════════════
+❌ [decidirAtividadesCriarV2] ERRO CAPTURADO
+═══════════════════════════════════════════════════════════════════════
+Mensagem: ${errorMessage}
+Previous results disponíveis: ${input.previous_results?.size || 0}
+Chaves no Map: ${input.previous_results ? Array.from(input.previous_results.keys()).join(', ') : 'NENHUMA'}
+═══════════════════════════════════════════════════════════════════════`);
+
     debug_log.push({
       timestamp: new Date().toISOString(),
       type: 'error',
-      narrative: `❌ ERRO: ${errorMessage}. Usando seleção de fallback.`,
-      technical_data: { error: errorMessage, stack: error instanceof Error ? error.stack : undefined }
+      narrative: `❌ ERRO: ${errorMessage}. Tentando seleção de fallback.`,
+      technical_data: { 
+        error: errorMessage, 
+        stack: error instanceof Error ? error.stack : undefined,
+        previous_results_size: input.previous_results?.size || 0,
+        previous_results_keys: input.previous_results ? Array.from(input.previous_results.keys()) : []
+      }
     });
 
-    // FALLBACK: Selecionar primeiras atividades do catálogo
+    // FALLBACK: Tentar obter catálogo do Map
     const catalogResult = input.previous_results?.get('pesquisar_atividades_disponiveis');
+    
+    // Diagnóstico detalhado do catalogResult
+    console.error(`📦 [decidirAtividadesCriarV2] catalogResult:`, {
+      exists: !!catalogResult,
+      success: catalogResult?.success,
+      hasData: !!catalogResult?.data,
+      catalogLength: catalogResult?.data?.catalog?.length || 0
+    });
+    
+    // Verificar se temos catálogo válido
     const catalog = catalogResult?.data?.catalog || [];
+    
+    // Se não temos catálogo, FALHAR - não mascarar o erro
+    if (catalog.length === 0) {
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'error',
+        narrative: `❌ CRÍTICO: Catálogo vazio ou não disponível. Não é possível decidir atividades sem o catálogo.`,
+        technical_data: { 
+          catalog_available: false,
+          original_error: errorMessage
+        }
+      });
+
+      const failureConfirmation = createDataConfirmation([
+        createDataCheck('catalog_available', 'Catálogo disponível', false, 0, '> 0'),
+        createDataCheck('can_proceed', 'Pode continuar', false, 'não', 'sim')
+      ]);
+
+      return {
+        success: false,
+        capability_id: 'decidir_atividades_criar',
+        execution_id: input.execution_id,
+        timestamp: new Date().toISOString(),
+        data: {
+          chosen_activities: [],
+          estrategia: '',
+          count: 0,
+          is_fallback: true
+        },
+        error: {
+          code: 'CATALOG_NOT_AVAILABLE',
+          message: `Não foi possível decidir atividades: ${errorMessage}. O catálogo de atividades não foi carregado corretamente.`,
+          severity: 'critical',
+          recoverable: false,
+          recovery_suggestion: 'Verificar se pesquisar_atividades_disponiveis foi executado com sucesso antes desta capability.'
+        },
+        debug_log,
+        data_confirmation: failureConfirmation,
+        metadata: {
+          duration_ms: elapsedTime,
+          retry_count: 0,
+          data_source: 'none'
+        }
+      };
+    }
+
+    // Se temos catálogo, podemos fazer fallback
     const maxActivities = input.context.max_activities || DEFAULT_MAX_ACTIVITIES;
 
     const fallbackActivities = catalog.slice(0, Math.min(3, maxActivities)).map((a: ActivityFromCatalog, idx: number) => ({
@@ -648,7 +720,7 @@ export async function decidirAtividadesCriarV2(
     debug_log.push({
       timestamp: new Date().toISOString(),
       type: 'warning',
-      narrative: `Usando fallback: ${fallbackActivities.length} atividades selecionadas automaticamente.`
+      narrative: `Usando fallback: ${fallbackActivities.length} atividades selecionadas automaticamente do catálogo.`
     });
 
     // CONFIRMAÇÃO DE FALLBACK
