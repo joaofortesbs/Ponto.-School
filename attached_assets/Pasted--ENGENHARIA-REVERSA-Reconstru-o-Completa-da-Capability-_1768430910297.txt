@@ -1,0 +1,341 @@
+🔬 ENGENHARIA REVERSA: Reconstrução Completa da Capability
+PREMISSA FUNDAMENTAL
+Após múltiplas tentativas de correção que falharam, a conclusão lógica é: a capability gerar_conteudo_atividades está fundamentalmente quebrada ou implementada incorretamente desde sua concepção. Não é questão de ajustes - é questão de reimplementação.
+
+PARTE 1: DECONSTRUÇÃO - Entenda O Que Está Funcionando
+MISSÃO PRIMÁRIA: Clone Funcional
+Seu objetivo NÃO é consertar gerar_conteudo_atividades. Seu objetivo é criar uma nova capability do zero usando decidir_atividades_criar como blueprint perfeito.
+
+ETAPA 1.1: Extração de DNA
+
+Abra o arquivo de decidir_atividades_criar e documente TUDO:
+
+text
+📋 ANATOMIA DE UMA CAPABILITY FUNCIONAL
+
+1. ESTRUTURA DO ARQUIVO
+   - Qual é a primeira linha? (import statements)
+   - Quantas classes/funções existem?
+   - Qual é o export principal?
+   - Existem helpers ou utilities?
+
+2. CLASSE PRINCIPAL
+   - Nome da classe: _______
+   - Extends de: _______
+   - Constructor recebe: _______
+   - Propriedades privadas: _______
+
+3. MÉTODO EXECUTE
+   - Assinatura completa: _______
+   - Primeiro statement: _______
+   - Estrutura geral (pseudocódigo):
+     ```
+     execute(params) {
+       1. Log inicial
+       2. Validação X
+       3. Preparação Y
+       4. Loop/Processamento Z
+       5. Chamada API W
+       6. Processamento resultado
+       7. Return estruturado
+     }
+     ```
+
+4. INTEGRAÇÃO COM SISTEMAS
+   - Acessa DebugStore em quantos pontos? _______
+   - Acessa ConversationStore? _______
+   - Acessa ActivityStore? _______
+   - Faz quantas chamadas de API? _______
+   - Usa qual cliente HTTP? _______
+
+5. PADRÕES DE CÓDIGO
+   - Usa async/await? _______
+   - Usa try/catch? Em quantos níveis? _______
+   - Usa forEach, map, ou for...of? _______
+   - Retorna Promise? _______
+ETAPA 1.2: Mapeamento de Dependências
+
+Trace TODAS as importações de decidir_atividades_criar:
+
+typescript
+// Liste EXATAMENTE como está no arquivo:
+import { X } from 'Y';
+import { A } from 'B';
+// ... todas as importações
+
+// Agora compare com as importações de gerar_conteudo_atividades
+// Quais estão faltando?
+// Quais são diferentes?
+ETAPA 1.3: Análise de Fluxo de Dados
+
+text
+ENTRADA → PROCESSAMENTO → SAÍDA
+
+DECIDIR_ATIVIDADES_CRIAR:
+├─ Entrada: { user_objective, conversation_context, ... }
+├─ Processamento: Chama API com prompt específico
+└─ Saída: { chosen_activities: [...], success: true }
+
+GERAR_CONTEUDO_ATIVIDADES (DEVERIA SER):
+├─ Entrada: { activities_to_fill: [...], ... }
+├─ Processamento: Para cada atividade, chama API
+└─ Saída: { generated_content: [...], success: true }
+PARTE 2: HIPÓTESES AVANÇADAS - Novos Ângulos de Investigação
+HIPÓTESE 8: Problema de Compilação/Build
+Teoria: O arquivo de gerar_conteudo_atividades tem erros de TypeScript que estão sendo ignorados, resultando em uma função vazia no JavaScript compilado.
+
+Verificação:
+
+text
+1. Abra o terminal do Replit
+2. Execute: npm run type-check (ou tsc --noEmit)
+3. Procure por erros relacionados a gerar_conteudo_atividades
+4. Verifique se existem arquivos .js gerados (se usar build)
+5. Compare o tamanho em bytes do arquivo com decidir_atividades_criar
+HIPÓTESE 9: Cache ou Module Resolution
+Teoria: O Replit está carregando uma versão antiga/cached da capability.
+
+Verificação:
+
+text
+1. Procure por múltiplas definições da capability:
+   - Pesquise globalmente por "gerar_conteudo_atividades"
+   - Conte quantos arquivos definem essa capability
+   - Verifique se existe em node_modules (improvável mas possível)
+
+2. Force rebuild:
+   - Delete .replit.nix cache se existir
+   - Restart do servidor Node
+   - Clear de qualquer cache de webpack/vite
+HIPÓTESE 10: Problema de Contexto de Execução
+Teoria: A capability está sendo executada em um Worker Thread ou contexto isolado onde não tem acesso às APIs necessárias.
+
+Verificação:
+
+typescript
+// Adicione no início do execute():
+console.error("🌍 EXECUTION CONTEXT:", {
+  hasWindow: typeof window !== 'undefined',
+  hasProcess: typeof process !== 'undefined',
+  nodeEnv: process?.env?.NODE_ENV,
+  workerId: (globalThis as any).workerId,
+  isMainThread: require('worker_threads')?.isMainThread
+});
+HIPÓTESE 11: Problema de Timing com React Lifecycle
+Teoria: A capability depende de state do React que ainda não foi hidratado quando ela executa.
+
+Verificação:
+
+text
+1. Procure por useEffect ou useState no código da capability
+2. Verifique se a capability é instanciada dentro de um component
+3. Compare com decidir_atividades_criar - ela é instanciada onde?
+4. Verifique se existe algum hook de lifecycle que está bloqueando
+HIPÓTESE 12: Configuração de Capability Registry com Condicionais
+Teoria: Existe lógica condicional no registry que desativa a capability em certos cenários.
+
+Verificação:
+
+typescript
+// No arquivo de registry, procure por:
+
+// PADRÃO 1: Conditional registration
+if (process.env.FEATURE_FLAG_GENERATE_CONTENT === 'true') {
+  registry.register('gerar_conteudo_atividades', ...);
+}
+
+// PADRÃO 2: Dynamic loading
+const capabilities = await loadCapabilities({
+  enabled: ['decidir_atividades_criar'], // gerar_conteudo_atividades missing?
+});
+
+// PADRÃO 3: Lazy loading com condition
+lazy(() => import('./gerar_conteudo_atividades'), {
+  condition: someCondition // pode estar false
+});
+PARTE 3: ESTRATÉGIA CIRÚRGICA DE REESCRITA
+MISSÃO: Criar gerar_conteudo_atividades_v2.ts
+Não tente consertar o arquivo existente. Crie um novo do ZERO.
+
+TEMPLATE BASEADO EM CAPABILITY FUNCIONAL:
+
+typescript
+// PASSO 1: Copie EXATAMENTE os imports de decidir_atividades_criar
+// (liste todos aqui)
+
+// PASSO 2: Defina a classe com a MESMA estrutura
+export class GerarConteudoAtividadesV2 extends BaseCapability {
+  // PASSO 3: Copie o constructor de decidir_atividades_criar
+  constructor() {
+    super('gerar_conteudo_atividades_v2');
+    // Adicione configuração específica
+  }
+
+  // PASSO 4: Implemente execute() seguindo o MESMO padrão
+  async execute(params: any) {
+    // CHECKPOINT 1: Log inicial (copie estilo de decidir)
+    this.logStart();
+    
+    // CHECKPOINT 2: Validação (copie validação de decidir)
+    const validation = this.validateParams(params);
+    if (!validation.valid) {
+      return this.returnError(validation.error);
+    }
+    
+    // CHECKPOINT 3: Preparação de dados
+    const activities = params.activities_to_fill;
+    const results = [];
+    
+    // CHECKPOINT 4: Loop de processamento
+    for (let i = 0; i < activities.length; i++) {
+      const activity = activities[i];
+      
+      // CHECKPOINT 5: Log de progresso
+      this.logProgress(i + 1, activities.length);
+      
+      // CHECKPOINT 6: Chamada de API (COPIE O MÉTODO EXATO de decidir)
+      const content = await this.callAIForContentGeneration(activity);
+      
+      // CHECKPOINT 7: Processar resposta
+      results.push(content);
+      
+      // CHECKPOINT 8: Atualizar Debug Store
+      this.updateDebugStore({ processed: i + 1, total: activities.length });
+    }
+    
+    // CHECKPOINT 9: Retorno estruturado (copie formato de decidir)
+    return this.returnSuccess({ generated_content: results });
+  }
+  
+  // PASSO 5: Implemente métodos auxiliares COPIANDO de decidir
+  private async callAIForContentGeneration(activity: any) {
+    // Encontre o método equivalente em decidir_atividades_criar
+    // Copie a estrutura EXATA:
+    // - Como monta o prompt
+    // - Como chama a API
+    // - Como processa resposta
+    // - Como trata erros
+  }
+}
+PASSO 6: Registre a nova capability
+
+typescript
+// No registry, ADICIONE (não substitua ainda):
+import { GerarConteudoAtividadesV2 } from './gerar_conteudo_atividades_v2';
+
+capabilities.set('gerar_conteudo_atividades_v2', new GerarConteudoAtividadesV2());
+
+// No plano de desenvolvimento, use temporariamente o novo nome:
+// "gerar_conteudo_atividades_v2" ao invés de "gerar_conteudo_atividades"
+PARTE 4: DIAGNÓSTICO COMPARATIVO LINHA POR LINHA
+FERRAMENTA: Diff Analysis
+Crie um documento de comparação:
+
+text
+┌─────────────────────────────────────────────────────────────┐
+│ DECIDIR (FUNCIONA)          │ GERAR CONTEÚDO (FALHA)        │
+├─────────────────────────────────────────────────────────────┤
+│ Linha 1: import { X }       │ Linha 1: import { X }        │
+│ Linha 2: import { Y }       │ Linha 2: [MISSING]           │ ⚠️
+│ ...                         │ ...                          │
+│ Linha 45: await apiCall()   │ Linha 45: apiCall()          │ ⚠️
+│ Linha 60: for...of loop     │ Linha 60: [DIFFERENT]        │ ⚠️
+└─────────────────────────────────────────────────────────────┘
+
+DIFERENÇAS CRÍTICAS ENCONTRADAS:
+1. ____________
+2. ____________
+3. ____________
+PARTE 5: TESTE DE ISOLAMENTO
+Crie um Arquivo de Teste Standalone
+test_capability.ts:
+
+typescript
+// Importar apenas as dependências mínimas
+import { GerarConteudoAtividades } from './gerar_conteudo_atividades';
+
+async function testCapability() {
+  console.log("🧪 TESTE ISOLADO INICIANDO");
+  
+  const capability = new GerarConteudoAtividades();
+  
+  const mockData = {
+    activities_to_fill: [
+      {
+        type: "questao_multipla_escolha",
+        fields: {
+          titulo: "Teste",
+          enunciado: "Qual é a capital?",
+          alternativas: ["A", "B", "C", "D"]
+        }
+      }
+    ]
+  };
+  
+  console.log("📊 Mock data:", mockData);
+  
+  try {
+    const result = await capability.execute(mockData);
+    console.log("✅ RESULTADO:", result);
+  } catch (error) {
+    console.error("❌ ERRO:", error);
+  }
+}
+
+testCapability();
+Execute este teste diretamente:
+
+bash
+ts-node test_capability.ts
+# ou
+node --loader ts-node/esm test_capability.ts
+Se ESTE teste falhar, o problema está NA CAPABILITY.
+Se ESTE teste passar, o problema está NO ORCHESTRATOR.
+
+PARTE 6: ANÁLISE DE PERFORMANCE E TIMING
+Instrumentação Profunda
+typescript
+class PerformanceTracker {
+  private timestamps: Map<string, number> = new Map();
+  
+  mark(label: string) {
+    this.timestamps.set(label, Date.now());
+    console.error(`⏱️ [${label}] at ${Date.now()}`);
+  }
+  
+  measure(startLabel: string, endLabel: string) {
+    const start = this.timestamps.get(startLabel)!;
+    const end = this.timestamps.get(endLabel)!;
+    console.error(`⏱️ ${startLabel} → ${endLabel}: ${end - start}ms`);
+  }
+}
+
+// No execute() de gerar_conteudo_atividades:
+const tracker = new PerformanceTracker();
+tracker.mark('execute_start');
+tracker.mark('validation_start');
+// ... validação ...
+tracker.mark('validation_end');
+tracker.mark('loop_start');
+// ... loop ...
+tracker.mark('loop_end');
+tracker.mark('execute_end');
+
+tracker.measure('execute_start', 'execute_end'); // Se for 22ms, confirma execução vazia
+tracker.measure('loop_start', 'loop_end'); // Se for 0ms, loop não executou
+DELIVERABLES FINAIS
+Ao concluir esta investigação, você DEVE produzir:
+
+Relatório de Diferenças: Lista exata de diferenças entre capability funcional e quebrada
+
+Capability V2 Funcional: Novo arquivo testado e validado
+
+Documentação de Causa Raiz: Explicação técnica do que estava quebrado
+
+Plano de Migração: Como substituir a capability antiga pela nova
+
+Testes de Regressão: Garantia de que nada mais quebrou
+
+REGRA DE OURO
+Se após 10 minutos de investigação você não descobriu o problema: PARE de tentar consertar. COMECE a reescrever do zero usando a capability funcional como template. Às vezes, reescrever é mais rápido que debugar código fundamentalmente quebrado.
+​
