@@ -80,9 +80,20 @@ export const useChosenActivitiesStore = create<ChosenActivitiesState>((set, get)
   },
 
   setChosenActivities: (activities, estrategia = '') => {
+    // 🔥 LOGGING INVASIVO - CONFIRMAR PERSISTÊNCIA
+    console.error(`
+═══════════════════════════════════════════════════════════════════════
+📝 STORING ${activities.length} chosen activities
+═══════════════════════════════════════════════════════════════════════`);
+    
     console.log('🎯 [ChosenActivitiesStore] Salvando atividades decididas:', activities.length);
     console.log('   📋 IDs das atividades:', activities.map(a => a.id).join(', '));
     console.log('   📋 Estratégia pedagógica:', estrategia);
+    
+    // Log detalhado de cada atividade
+    activities.forEach((act, idx) => {
+      console.error(`   Activity ${idx + 1}: ID=${act.id}, Type=${act.tipo}, Title=${act.titulo}`);
+    });
 
     const normalizedActivities = activities.map((activity, idx) => ({
       ...activity,
@@ -99,6 +110,16 @@ export const useChosenActivitiesStore = create<ChosenActivitiesState>((set, get)
       isDecisionComplete: true
     });
 
+    // 🔥 VERIFICAÇÃO IMEDIATA - CONFIRMAR QUE DADOS FORAM SALVOS
+    const verification = get().chosenActivities;
+    console.error(`✅ VERIFICATION: Store now contains ${verification.length} activities`);
+    console.error(`   isDecisionComplete: ${get().isDecisionComplete}`);
+    console.error(`   sessionId: ${get().sessionId}`);
+    
+    if (verification.length === 0) {
+      console.error('❌ CRITICAL: Store verification FAILED - activities not persisted!');
+    }
+    
     console.log('✅ [ChosenActivitiesStore] Atividades salvas com sucesso!');
   },
 

@@ -246,12 +246,35 @@ export class AgentExecutor {
           
           // Salvar atividades decididas no store para sincronização com criar_atividade
           if (capName.includes('decidir_atividades_criar') || capName.includes('decidir_atividades')) {
+            console.error(`
+═══════════════════════════════════════════════════════════════════════
+🎯 [Executor] SAVING CHOSEN ACTIVITIES FROM decidir_atividades_criar
+═══════════════════════════════════════════════════════════════════════`);
+            
             const saved = saveChosenActivitiesFromDecision(resultado);
+            
             if (saved) {
               console.log(`🎯 [Executor] Atividades decididas salvas no ChosenActivitiesStore`);
               
+              // 🔥 VERIFICAÇÃO CRÍTICA: Confirmar que dados foram persistidos
+              const storeState = useChosenActivitiesStore.getState();
+              const verificationActivities = storeState.getChosenActivities();
+              
+              console.error(`
+✅ [Executor] POST-SAVE VERIFICATION:
+   - Store.getChosenActivities(): ${verificationActivities.length} atividades
+   - Store.isDecisionComplete: ${storeState.isDecisionComplete}
+   - Store.sessionId: ${storeState.sessionId}
+              `);
+              
+              if (verificationActivities.length === 0) {
+                console.error('❌ CRITICAL: Activities NOT persisted to store after save!');
+              } else {
+                console.error(`✅ CONFIRMED: ${verificationActivities.length} activities ready for gerar_conteudo_atividades`);
+              }
+              
               // Emitir evento para UI atualizar
-              const chosenActivities = useChosenActivitiesStore.getState().getActivitiesForConstruction();
+              const chosenActivities = storeState.getActivitiesForConstruction();
               window.dispatchEvent(new CustomEvent('agente-jota-activities-decided', {
                 detail: {
                   activities: chosenActivities,
@@ -260,6 +283,12 @@ export class AgentExecutor {
                 }
               }));
               
+              // 🔥 DELAY para garantir que o estado do store seja propagado
+              await new Promise(resolve => setTimeout(resolve, 100));
+              console.error('⏱️ [Executor] 100ms delay after save to ensure store sync');
+              
+            } else {
+              console.error('❌ [Executor] FAILED to save chosen activities!');
             }
           }
           
@@ -711,56 +740,82 @@ Seja específico e forneça dados que ajudem o professor.
 
     // Para gerar_conteudo_atividades, injetar atividades decididas e contexto
     if (capName === 'gerar_conteudo_atividades') {
-      console.log(`🔗 [Executor] Preparando parâmetros para gerar_conteudo_atividades...`);
+      console.error(`
+═══════════════════════════════════════════════════════════════════════
+🔗 [Executor] ENRICHING PARAMS FOR gerar_conteudo_atividades
+═══════════════════════════════════════════════════════════════════════`);
       
-      // Buscar atividades do ChosenActivitiesStore (fonte primária - formato ChosenActivity)
+      // FONTE PRIMÁRIA: Resultado armazenado da capability anterior (mais confiável)
+      // Tentar múltiplos nomes possíveis da capability de decisão
+      const possibleDecisionNames = ['decidir_atividades_criar', 'decidir_atividades'];
+      let decisionResult: any = null;
+      let usedCapName = '';
+      
+      for (const name of possibleDecisionNames) {
+        const result = this.capabilityResultsMap.get(name);
+        if (result?.chosen_activities?.length > 0) {
+          decisionResult = result;
+          usedCapName = name;
+          break;
+        }
+      }
+      
+      // FONTE SECUNDÁRIA: Store (apenas como fallback)
       const storeState = useChosenActivitiesStore.getState();
-      const chosenActivities = storeState.getChosenActivities();
+      const storeActivities = storeState.getChosenActivities();
       
-      if (chosenActivities.length > 0) {
-        console.log(`🔗 [Executor] Injetando ${chosenActivities.length} atividades do ChosenActivitiesStore`);
-        // Usar activities_to_fill com formato ChosenActivity completo
-        enrichedParams.activities_to_fill = chosenActivities;
+      console.error(`📊 [Executor] DATA SOURCES:
+   - capabilityResultsMap keys: ${Array.from(this.capabilityResultsMap.keys()).join(', ')}
+   - Found decision result from: '${usedCapName || 'NONE'}'
+   - decisionResult.chosen_activities: ${decisionResult?.chosen_activities?.length || 0}
+   - Store.getChosenActivities(): ${storeActivities.length} atividades
+   - Store.isDecisionComplete: ${storeState.isDecisionComplete}
+      `);
+      
+      // PRIORIDADE: capabilityResultsMap > Store
+      if (decisionResult?.chosen_activities?.length > 0) {
+        const chosenFromDecision = decisionResult.chosen_activities;
+        console.error(`✅ [Executor] Using ${chosenFromDecision.length} activities from capabilityResultsMap['${usedCapName}']`);
+        // Converter para formato ChosenActivity
+        enrichedParams.activities_to_fill = chosenFromDecision.map((a: any) => ({
+          id: a.id || a.activity_id,
+          titulo: a.titulo || a.name,
+          tipo: a.tipo || a.type,
+          categoria: a.categoria || '',
+          materia: a.materia || '',
+          nivel_dificuldade: a.nivel_dificuldade || 'medio',
+          tags: a.tags || [],
+          campos_obrigatorios: a.campos_obrigatorios || [],
+          campos_opcionais: a.campos_opcionais || [],
+          schema_campos: a.schema_campos || {},
+          campos_preenchidos: a.campos_preenchidos || {},
+          justificativa: a.justificativa || a.reason || '',
+          ordem_sugerida: a.ordem_sugerida || 0,
+          status_construcao: 'aguardando' as const,
+          progresso: 0
+        }));
+        enrichedParams.session_id = this.sessionId;
+        enrichedParams.user_objective = decisionResult.estrategia_pedagogica || params.contexto || '';
+        enrichedParams.conversation_context = decisionResult.estrategia_pedagogica || '';
+        
+        console.error(`   📦 Atividades: ${enrichedParams.activities_to_fill.map((a: any) => a.titulo).join(', ')}`);
+      } else if (storeActivities.length > 0) {
+        console.error(`⚠️ [Executor] Fallback: Using ${storeActivities.length} activities from ChosenActivitiesStore`);
+        enrichedParams.activities_to_fill = storeActivities;
         enrichedParams.session_id = storeState.sessionId || this.sessionId;
         enrichedParams.user_objective = storeState.estrategiaPedagogica || params.contexto || '';
         enrichedParams.conversation_context = storeState.estrategiaPedagogica || '';
-        
-        console.log(`   📦 Session ID: ${enrichedParams.session_id}`);
-        console.log(`   📦 Atividades: ${chosenActivities.map(a => a.titulo).join(', ')}`);
-        console.log(`   📦 Objetivo: ${enrichedParams.user_objective?.substring(0, 50)}...`);
       } else {
-        // Fallback: buscar do resultado de decidir_atividades_criar
-        const decisionResult = this.capabilityResultsMap.get('decidir_atividades_criar');
-        if (decisionResult) {
-          const chosenFromDecision = decisionResult.chosen_activities || [];
-          console.log(`🔗 [Executor] Fallback: Injetando ${chosenFromDecision.length} atividades do resultado de decisão`);
-          // Converter para formato ChosenActivity
-          enrichedParams.activities_to_fill = chosenFromDecision.map((a: any) => ({
-            id: a.id || a.activity_id,
-            titulo: a.titulo || a.name,
-            tipo: a.tipo || a.type,
-            categoria: a.categoria || '',
-            materia: a.materia || '',
-            nivel_dificuldade: a.nivel_dificuldade || 'medio',
-            tags: a.tags || [],
-            campos_obrigatorios: a.campos_obrigatorios || [],
-            campos_opcionais: a.campos_opcionais || [],
-            schema_campos: a.schema_campos || {},
-            campos_preenchidos: a.campos_preenchidos || {},
-            justificativa: a.justificativa || a.reason || '',
-            ordem_sugerida: a.ordem_sugerida || 0,
-            status_construcao: 'aguardando' as const,
-            progresso: 0
-          }));
-          enrichedParams.session_id = this.sessionId;
-          enrichedParams.user_objective = decisionResult.estrategia_pedagogica || params.contexto || '';
-          enrichedParams.conversation_context = decisionResult.estrategia_pedagogica || '';
-        } else {
-          console.warn(`⚠️ [Executor] Nenhuma atividade encontrada para gerar conteúdo!`);
-          enrichedParams.activities_to_fill = [];
-          enrichedParams.session_id = this.sessionId;
-        }
+        console.error(`❌ [Executor] CRITICAL: No activities found from ANY source!`);
+        console.error(`   capabilityResultsMap contents:`);
+        this.capabilityResultsMap.forEach((value, key) => {
+          console.error(`     - ${key}: ${value?.chosen_activities?.length || 'no chosen_activities'}`);
+        });
+        enrichedParams.activities_to_fill = [];
+        enrichedParams.session_id = this.sessionId;
       }
+      
+      console.error(`📦 [Executor] FINAL enrichedParams.activities_to_fill: ${enrichedParams.activities_to_fill?.length || 0} activities`);
     }
 
     // Para criar_atividade, injetar decisões

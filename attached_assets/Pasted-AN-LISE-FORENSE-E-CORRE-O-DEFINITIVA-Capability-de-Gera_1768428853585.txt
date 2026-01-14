@@ -1,0 +1,243 @@
+ANÁLISE FORENSE E CORREÇÃO DEFINITIVA: Capability de Geração de Conteúdo
+DIAGNÓSTICO CONFIRMADO (Baseado em Evidências do Git)
+Pelos commits recentes, vejo que foram feitas tentativas de:
+
+"Improve content generation by correctly passing activity data" (4 min atrás)
+
+"Add logging and retry mechanisms" (20 min atrás)
+
+"Improve activity content generation and debugging" (35 min atrás)
+
+Porém a capability AINDA está completando em 22ms processando 0 de 5 atividades. Isso indica que o problema NÃO é logging ou retry - é data injection failure.
+
+PROBLEMA RAIZ IDENTIFICADO
+O arquivo src/lib/capabilities/executor.ts ou equivalente tem um método enrichCapabilityParams() que está falhando em injetar os parâmetros necessários para gerar_conteudo_atividades.
+
+Evidência Concreta
+A última correção tentou passar activities_to_fill de getChosenActivities(), mas a capability AINDA não está recebendo os dados. Isso significa que:
+
+O método getChosenActivities() está retornando array vazio quando chamado no momento da execução
+
+O timing está errado - a capability está sendo executada ANTES do store ser populado
+
+O fallback implementado não está funcionando porque também não encontra os dados
+
+INSTRUÇÕES CIRÚRGICAS DE CORREÇÃO
+TAREFA 1: Garantir Sequenciamento Correto
+Arquivo a modificar: src/lib/capabilities/CapabilityExecutor.ts (ou nome equivalente)
+
+Problema: A capability gerar_conteudo_atividades está sendo agendada ou marcada como pronta ANTES de decidir_atividades_criar ter salvado os dados no store.
+
+Solução obrigatória:
+
+typescript
+// NO MÉTODO QUE EXECUTA "decidir_atividades_criar"
+// Certifique-se de que ANTES de marcar como completa:
+
+// 1. Salva as atividades no store
+const chosenActivities = result.chosen_activities; // ou campo correto
+await activityStore.setChosenActivities(chosenActivities); // Aguarde persistir!
+
+// 2. AGUARDE confirmação de que dados estão salvos
+const verification = activityStore.getChosenActivities();
+if (!verification || verification.length === 0) {
+  throw new Error("CRITICAL: Failed to persist chosen activities to store");
+}
+
+// 3. SÓ AGORA marque "decidir_atividades_criar" como concluída
+// 4. E então TRIGGER "gerar_conteudo_atividades"
+TAREFA 2: Injeção Explícita de Dados
+Arquivo: enrichCapabilityParams() dentro do executor
+
+Problema: Está usando getChosenActivities() que retorna vazio no momento da chamada.
+
+Solução - FORCE data pass:
+
+typescript
+if (capabilityName === 'gerar_conteudo_atividades') {
+  // OPÇÃO A: Buscar do resultado da capability anterior DIRETAMENTE
+  const previousResult = this.getLastCompletedCapabilityResult('decidir_atividades_criar');
+  
+  if (previousResult?.chosen_activities) {
+    enrichedParams.activities_to_fill = previousResult.chosen_activities;
+  } else {
+    // OPÇÃO B: Buscar de TODOS os stores possíveis
+    const fromActivityStore = activityStore.getChosenActivities();
+    const fromDebugStore = debugStore.getCapabilityData('decidir_atividades_criar');
+    const fromConversation = conversationStore.getLastAIResponse();
+    
+    // Tente extrair de QUALQUER fonte disponível
+    enrichedParams.activities_to_fill = fromActivityStore 
+      || fromDebugStore?.result?.chosen_activities
+      || parseActivitiesFromConversation(fromConversation);
+  }
+  
+  // VALIDAÇÃO OBRIGATÓRIA
+  if (!enrichedParams.activities_to_fill || enrichedParams.activities_to_fill.length === 0) {
+    // NÃO EXECUTE A CAPABILITY - lance erro visível
+    throw new Error(`EXECUTION ABORTED: No activities found to generate content for. 
+      Check if decidir_atividades_criar completed successfully and saved data.`);
+  }
+  
+  // Log extremamente visível
+  console.error(`🔥 GENERATING CONTENT FOR ${enrichedParams.activities_to_fill.length} ACTIVITIES`);
+  enrichedParams.activities_to_fill.forEach((act, idx) => {
+    console.error(`  Activity ${idx + 1}: Type=${act.type}, Fields=${Object.keys(act.fields || {}).length}`);
+  });
+}
+TAREFA 3: Corrigir o Workflow State Machine
+Arquivo: Orquestrador de capabilities (provavelmente em src/lib/capabilities/ ou src/stores/)
+
+Problema: A capability está sendo adicionada à fila de execução mas não está esperando a anterior completar.
+
+Solução - Implement strict dependency chain:
+
+typescript
+// No lugar onde capabilities são enfileiradas:
+
+const capabilityDependencies = {
+  'gerar_conteudo_atividades': {
+    requires: ['decidir_atividades_criar'],
+    awaitDataPersistence: true, // FLAG CRÍTICA
+    validateBeforeRun: (params) => {
+      if (!params.activities_to_fill?.length) {
+        return {
+          canRun: false,
+          reason: "Dependent capability data not available"
+        };
+      }
+      return { canRun: true };
+    }
+  }
+};
+
+// Antes de executar qualquer capability:
+async function executeCapability(name, params) {
+  const deps = capabilityDependencies[name];
+  
+  if (deps) {
+    // Aguarde TODAS as dependências completarem
+    for (const requiredCap of deps.requires) {
+      await this.waitForCapabilityCompletion(requiredCap);
+      
+      if (deps.awaitDataPersistence) {
+        // Aguarde 100ms adicional para garantir store sync
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    // Valide ANTES de executar
+    const validation = deps.validateBeforeRun(params);
+    if (!validation.canRun) {
+      throw new Error(`Cannot execute ${name}: ${validation.reason}`);
+    }
+  }
+  
+  // SÓ AGORA execute
+  return await this.runCapability(name, params);
+}
+TAREFA 4: Debug Forçado na Própria Capability
+Arquivo: src/lib/capabilities/gerar_conteudo_atividades.ts (ou equivalente)
+
+No INÍCIO da função de execução:
+
+typescript
+async execute(params: any) {
+  // LOGGING INVASIVO - NÃO PODE SER IGNORADO
+  const startMessage = `
+  ═══════════════════════════════════════════════════════
+  🚀 STARTING: gerar_conteudo_atividades
+  ═══════════════════════════════════════════════════════
+  Received params keys: ${Object.keys(params).join(', ')}
+  activities_to_fill exists: ${!!params.activities_to_fill}
+  activities_to_fill length: ${params.activities_to_fill?.length || 0}
+  activities_to_fill content: ${JSON.stringify(params.activities_to_fill, null, 2)}
+  ═══════════════════════════════════════════════════════
+  `;
+  
+  console.error(startMessage);
+  await debugStore.addEntry({
+    type: 'ACTION',
+    message: startMessage,
+    capability_id: 'gerar_conteudo_atividades',
+    timestamp: new Date().toISOString()
+  });
+  
+  // SE NÃO TEM DADOS, FALHE LOUDLY
+  if (!params.activities_to_fill || params.activities_to_fill.length === 0) {
+    const errorMsg = "❌ CRITICAL ERROR: No activities received in params!";
+    console.error(errorMsg);
+    await debugStore.addEntry({
+      type: 'ERROR',
+      message: errorMsg,
+      capability_id: 'gerar_conteudo_atividades'
+    });
+    throw new Error(errorMsg);
+  }
+  
+  // CONTINUA execução normal...
+}
+TAREFA 5: Verificar Store de Atividades
+Arquivo: src/stores/activityStore.ts ou equivalente
+
+Adicione logging quando atividades são salvas:
+
+typescript
+setChosenActivities(activities: ChosenActivity[]) {
+  console.error(`📝 STORING ${activities.length} chosen activities`);
+  console.error(`   First activity: ${activities[0]?.type}`);
+  
+  this.chosenActivities = activities;
+  
+  // Verificação imediata
+  const verification = this.getChosenActivities();
+  console.error(`✅ VERIFICATION: Store now contains ${verification.length} activities`);
+  
+  return verification.length > 0; // Retorne sucesso
+}
+CHECKLIST DE VALIDAÇÃO OBRIGATÓRIA
+Execute este teste manual após implementar:
+
+✓ Inicie uma nova conversa no Jota
+
+✓ Acione "decidir_atividades_criar"
+
+✓ No console do navegador (F12), verifique se aparece: 📝 STORING X chosen activities
+
+✓ Verifique se aparece: ✅ VERIFICATION: Store now contains X activities
+
+✓ Quando "gerar_conteudo_atividades" iniciar, DEVE aparecer: 🚀 STARTING: gerar_conteudo_atividades com lista de atividades
+
+✓ Se não aparecer o log 🚀, o problema está no AGENDAMENTO, não na capability
+
+✓ Se aparecer mas mostrar 0 activities, o problema está no TIMING do enrichment
+
+ALTERNATIVA RADICAL: Bypass do Orchestrator
+Se NADA funcionar, implemente execução direta:
+
+No final de decidir_atividades_criar:
+
+typescript
+// Após salvar resultados
+const chosenActivities = this.result.chosen_activities;
+await activityStore.setChosenActivities(chosenActivities);
+
+// EXECUTE IMEDIATAMENTE a próxima capability
+const contentGenerator = new GerarConteudoAtividades();
+await contentGenerator.execute({
+  activities_to_fill: chosenActivities,
+  session_id: this.session_id,
+  user_objective: this.user_objective,
+  conversation_context: this.conversation_context
+});
+Isso garante que os dados estão disponíveis no momento da execução.
+
+REQUISITO FINAL
+Após cada tentativa de correção, a IA DEVE adicionar um commit message DESCRITIVO:
+
+❌ "Saved progress at the end of the loop"
+
+✅ "FIX: Force data persistence verification before triggering content generation"
+
+Isso permite rastrear qual correção específica funcionou.
+​

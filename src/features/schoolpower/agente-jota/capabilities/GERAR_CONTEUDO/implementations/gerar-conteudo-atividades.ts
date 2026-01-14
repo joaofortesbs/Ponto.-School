@@ -490,14 +490,35 @@ export async function gerarConteudoAtividades(
   const CAPABILITY_ID = 'gerar_conteudo_atividades';
   const CAPABILITY_NAME = 'Gerando conteúdo para as atividades';
   
+  // ═══════════════════════════════════════════════════════════════════════
+  // 🔥 LOGGING INVASIVO - DIAGNÓSTICO DE PARÂMETROS RECEBIDOS
+  // ═══════════════════════════════════════════════════════════════════════
+  const diagnosticMessage = `
+═══════════════════════════════════════════════════════════════════════
+🚀 STARTING: gerar_conteudo_atividades
+═══════════════════════════════════════════════════════════════════════
+Received params keys: ${Object.keys(params).join(', ')}
+activities_to_fill exists: ${!!params.activities_to_fill}
+activities_to_fill length: ${params.activities_to_fill?.length || 0}
+session_id: ${params.session_id || 'NOT PROVIDED'}
+user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
+═══════════════════════════════════════════════════════════════════════`;
+  
+  console.error(diagnosticMessage);
+  
   // Inicializar DebugStore
   useDebugStore.getState().startCapability(CAPABILITY_ID, CAPABILITY_NAME);
   
-  // Entry inicial
+  // Entry com diagnóstico completo
   createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'action', 
     `Iniciando execução da capability "${CAPABILITY_NAME}". Objetivo: processar dados conforme parâmetros recebidos.`,
     'low',
-    { session_id: params.session_id, objetivo: params.user_objective?.substring(0, 100) }
+    { 
+      session_id: params.session_id, 
+      objetivo: params.user_objective?.substring(0, 100),
+      params_keys: Object.keys(params),
+      activities_to_fill_count: params.activities_to_fill?.length || 0
+    }
   );
   
   debugLog.push({
@@ -507,13 +528,50 @@ export async function gerarConteudoAtividades(
     technical_data: { session_id: params.session_id }
   });
 
+  // BUSCA DE ATIVIDADES COM MÚLTIPLAS FONTES (FALLBACK ROBUSTO)
   const store = useChosenActivitiesStore.getState();
-  const activities = params.activities_to_fill || store.getChosenActivities();
+  
+  // Fonte 1: Parâmetro activities_to_fill (preferencial - vem do executor)
+  let activities = params.activities_to_fill;
+  let activitySource = 'params.activities_to_fill';
+  
+  // Fonte 2: Fallback para store
+  if (!activities || activities.length === 0) {
+    activities = store.getChosenActivities();
+    activitySource = 'store.getChosenActivities()';
+    console.error(`📦 [GerarConteudo] Fallback para store: ${activities?.length || 0} atividades`);
+  }
+  
+  // Log detalhado das fontes de dados
+  console.error(`
+📊 [GerarConteudo] FONTES DE DADOS:
+   - params.activities_to_fill: ${params.activities_to_fill?.length || 0} atividades
+   - store.getChosenActivities(): ${store.getChosenActivities()?.length || 0} atividades
+   - store.isDecisionComplete: ${store.isDecisionComplete}
+   - store.sessionId: ${store.sessionId}
+   - FONTE USADA: ${activitySource}
+   - TOTAL FINAL: ${activities?.length || 0} atividades
+  `);
 
   if (!activities || activities.length === 0) {
+    const errorDetail = `
+❌ CRITICAL ERROR: No activities received!
+   - params.activities_to_fill: ${params.activities_to_fill?.length || 'undefined'}
+   - store.getChosenActivities(): ${store.getChosenActivities()?.length || 0}
+   - store.isDecisionComplete: ${store.isDecisionComplete}
+   - Possible cause: gerar_conteudo_atividades executed BEFORE decidir_atividades_criar saved data
+    `;
+    console.error(errorDetail);
+    
     createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'error',
-      'Nenhuma atividade encontrada para preencher. Verifique se a capability "decidir_atividades_criar" foi executada.',
-      'high'
+      'Nenhuma atividade encontrada para preencher. Verifique se a capability "decidir_atividades_criar" foi executada e salvou os dados.',
+      'high',
+      {
+        params_activities_count: params.activities_to_fill?.length || 0,
+        store_activities_count: store.getChosenActivities()?.length || 0,
+        store_is_decision_complete: store.isDecisionComplete,
+        diagnostic: 'TIMING ISSUE - capability executed before data persistence'
+      }
     );
     
     // CRÍTICO: Encerrar capability antes de retornar
@@ -522,12 +580,18 @@ export async function gerarConteudoAtividades(
     return {
       success: false,
       capability_id: CAPABILITY_ID,
-      error: 'Nenhuma atividade encontrada para preencher',
+      error: 'Nenhuma atividade encontrada para preencher. A capability decidir_atividades_criar pode não ter salvado os dados corretamente.',
       data: null,
       debug_log: debugLog,
       execution_time_ms: Date.now() - startTime
     };
   }
+  
+  // LOG DE SUCESSO - ATIVIDADES ENCONTRADAS
+  console.error(`🔥 GENERATING CONTENT FOR ${activities.length} ACTIVITIES (source: ${activitySource})`);
+  activities.forEach((act, idx) => {
+    console.error(`  Activity ${idx + 1}: ID=${act.id}, Type=${act.tipo}, Title=${act.titulo}`);
+  });
 
   // Entry informativa sobre capabilities encontradas
   createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'info',
