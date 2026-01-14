@@ -433,6 +433,27 @@ export async function gerarConteudoAtividades(
       console.log(`%c📋 [GerarConteudo] Validação: ${validation.filledFields.length} campos preenchidos, ${validation.missingFields.length} faltando`,
         validation.valid ? 'color: green;' : 'color: orange;');
       
+      // CRIAR DEBUG ENTRY COM CONTEÚDO GERADO
+      const generatedContentSummary = Object.entries(result.generated_fields)
+        .map(([key, value]) => {
+          const valueStr = String(value);
+          const truncatedValue = valueStr.length > 100 ? valueStr.substring(0, 100) + '...' : valueStr;
+          return `• ${key}: "${truncatedValue}"`;
+        })
+        .join('\n');
+      
+      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'action',
+        `✅ Conteúdo gerado para "${activity.titulo}":\n\n${generatedContentSummary}`,
+        'low',
+        {
+          activity_id: activity.id,
+          activity_type: activity.tipo,
+          generated_fields: result.generated_fields,
+          synced_fields: syncedFields,
+          validation: validation
+        }
+      );
+      
       // CRÍTICO: Salvar os campos gerados no store (com formato sincronizado)
       store.setActivityGeneratedFields(activity.id, syncedFields);
       
@@ -476,12 +497,19 @@ export async function gerarConteudoAtividades(
         narrative: `✅ Conteúdo gerado para "${activity.titulo}"`,
         technical_data: { 
           activity_id: activity.id,
-          fields_count: Object.keys(result.generated_fields).length
+          fields_count: Object.keys(result.generated_fields).length,
+          generated_fields: result.generated_fields
         }
       });
 
     } else {
       store.updateActivityStatus(activity.id, 'erro', 0, result.error);
+      
+      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'error',
+        `❌ Erro ao gerar conteúdo para "${activity.titulo}": ${result.error}`,
+        'high',
+        { activity_id: activity.id, error: result.error }
+      );
       
       params.on_progress?.({
         type: 'activity_error',
@@ -502,6 +530,29 @@ export async function gerarConteudoAtividades(
 
   const successCount = results.filter(r => r.success).length;
   const failCount = results.filter(r => !r.success).length;
+  const executionTime = Date.now() - startTime;
+
+  // Resumo final no debug
+  const resultadoResumo = `Resultado com ${Object.keys(results[0]?.generated_fields || {}).length + 2} campos: success, capability_id, data...`;
+  
+  createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'discovery',
+    `Processamento concluído. ${resultadoResumo}`,
+    'low',
+    { resultado_resumo: resultadoResumo }
+  );
+  
+  createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'action',
+    `Capability "${CAPABILITY_NAME}" concluída com sucesso em ${executionTime}ms. Todos os dados foram processados corretamente.`,
+    'low',
+    {
+      success_count: successCount,
+      fail_count: failCount,
+      execution_time_ms: executionTime
+    }
+  );
+  
+  // Finalizar capability no DebugStore
+  useDebugStore.getState().endCapability(CAPABILITY_ID);
 
   params.on_progress?.({
     type: 'all_completed',
@@ -528,7 +579,7 @@ export async function gerarConteudoAtividades(
 
   return {
     success: failCount === 0,
-    capability_id: 'gerar_conteudo_atividades',
+    capability_id: CAPABILITY_ID,
     data: {
       session_id: params.session_id,
       total_activities: totalActivities,
@@ -539,7 +590,7 @@ export async function gerarConteudoAtividades(
     },
     error: failCount > 0 ? `${failCount} atividades falharam` : null,
     debug_log: debugLog,
-    execution_time_ms: Date.now() - startTime,
+    execution_time_ms: executionTime,
     message: `Conteúdo gerado para ${successCount} de ${totalActivities} atividades`
   };
 }
