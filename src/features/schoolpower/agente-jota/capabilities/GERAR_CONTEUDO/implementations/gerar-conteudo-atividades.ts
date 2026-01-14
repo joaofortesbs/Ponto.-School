@@ -868,9 +868,24 @@ input.previous_results keys: ${input.previous_results ? Array.from(input.previou
     // Tentar obter atividades da capability anterior
     const decisionResult = input.previous_results?.get('decidir_atividades_criar');
     
-    console.error(`📊 [V2] decisionResult exists: ${!!decisionResult}`);
-    console.error(`📊 [V2] decisionResult.success: ${decisionResult?.success}`);
-    console.error(`📊 [V2] decisionResult.data: ${JSON.stringify(decisionResult?.data, null, 2).substring(0, 500)}`);
+    // ═══════════════════════════════════════════════════════════════════════
+    // DIAGNÓSTICO COMPLETO DO decisionResult
+    // ═══════════════════════════════════════════════════════════════════════
+    console.error(`
+🔍 [V2] DIAGNOSTIC: decisionResult FULL ANALYSIS
+═══════════════════════════════════════════════════════════════════════
+decisionResult exists: ${!!decisionResult}
+decisionResult type: ${typeof decisionResult}
+decisionResult keys: ${decisionResult ? Object.keys(decisionResult).join(', ') : 'NONE'}
+decisionResult.success: ${decisionResult?.success}
+decisionResult.data exists: ${!!(decisionResult as any)?.data}
+decisionResult.data type: ${typeof (decisionResult as any)?.data}
+decisionResult.data keys: ${(decisionResult as any)?.data ? Object.keys((decisionResult as any).data).join(', ') : 'NONE'}
+decisionResult.chosen_activities exists: ${!!(decisionResult as any)?.chosen_activities}
+decisionResult.chosen_activities length: ${(decisionResult as any)?.chosen_activities?.length || 0}
+decisionResult.data?.chosen_activities exists: ${!!(decisionResult as any)?.data?.chosen_activities}
+decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.chosen_activities?.length || 0}
+═══════════════════════════════════════════════════════════════════════`);
     
     if (!decisionResult) {
       throw new Error('Dependency não encontrada: decidir_atividades_criar. Execute a capability de decisão primeiro.');
@@ -880,14 +895,43 @@ input.previous_results keys: ${input.previous_results ? Array.from(input.previou
       throw new Error(`Dependency falhou: decidir_atividades_criar retornou success=false. Erro: ${decisionResult.error}`);
     }
     
-    // NORMALIZAÇÃO: Suportar ambos os formatos (legacy e V2)
-    // decisionResult pode ser um CapabilityOutput ou uma estrutura legado
+    // ═══════════════════════════════════════════════════════════════════════
+    // NORMALIZAÇÃO ROBUSTA: Suportar TODOS os formatos possíveis
+    // ═══════════════════════════════════════════════════════════════════════
     const resultAsAny = decisionResult as any;
-    const chosenActivities: ChosenActivity[] = 
-      resultAsAny.data?.chosen_activities || 
-      resultAsAny.chosen_activities || 
-      [];
     
+    // Tentar múltiplos caminhos para encontrar as atividades
+    let chosenActivities: ChosenActivity[] = [];
+    let activitySource = 'none';
+    
+    // Caminho 1: V2 format - data.chosen_activities
+    if (resultAsAny.data?.chosen_activities?.length > 0) {
+      chosenActivities = resultAsAny.data.chosen_activities;
+      activitySource = 'data.chosen_activities (V2)';
+    }
+    // Caminho 2: Legacy format - chosen_activities direto
+    else if (resultAsAny.chosen_activities?.length > 0) {
+      chosenActivities = resultAsAny.chosen_activities;
+      activitySource = 'chosen_activities (legacy)';
+    }
+    // Caminho 3: Outro formato possível - activities
+    else if (resultAsAny.activities?.length > 0) {
+      chosenActivities = resultAsAny.activities;
+      activitySource = 'activities (alt)';
+    }
+    // Caminho 4: Outro formato - data.activities
+    else if (resultAsAny.data?.activities?.length > 0) {
+      chosenActivities = resultAsAny.data.activities;
+      activitySource = 'data.activities (alt)';
+    }
+    // Caminho 5: Fallback para store
+    else {
+      const store = useChosenActivitiesStore.getState();
+      chosenActivities = store.getChosenActivities();
+      activitySource = 'store fallback';
+    }
+    
+    console.error(`📊 [V2] chosenActivities source: ${activitySource}`);
     console.error(`📊 [V2] chosenActivities count: ${chosenActivities.length}`);
     
     if (chosenActivities.length === 0) {
