@@ -209,6 +209,13 @@ export class AgentExecutor {
   // Mapa para armazenar resultados de capabilities entre etapas
   private capabilityResultsMap: Map<string, any> = new Map();
 
+  // Capabilities que usam API-First V2 pattern
+  private static readonly V2_CAPABILITIES = [
+    'pesquisar_atividades_disponiveis',
+    'decidir_atividades_criar',
+    'gerar_conteudo_atividades'
+  ];
+
   private async executeCapabilities(etapa: ExecutionStep): Promise<any[]> {
     const capabilities = etapa.capabilities || [];
     const results: any[] = [];
@@ -267,13 +274,7 @@ export class AgentExecutor {
           // ═══════════════════════════════════════════════════════════════════════
           // VERSÃO V2: Usar API-First pattern para capabilities críticas
           // ═══════════════════════════════════════════════════════════════════════
-          const V2_CAPABILITIES = [
-            'pesquisar_atividades_disponiveis',
-            'decidir_atividades_criar',
-            'gerar_conteudo_atividades'
-          ];
-          
-          if (V2_CAPABILITIES.includes(capName)) {
+          if (AgentExecutor.V2_CAPABILITIES.includes(capName)) {
             console.error(`
 ═══════════════════════════════════════════════════════════════════════
 🚀 [Executor] USING V2 API-FIRST for ${capName}
@@ -533,7 +534,7 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
         useDebugStore.getState().endCapability(capId);
         
         // Para capabilities V2 críticas, propagar o erro para interromper todo o fluxo
-        if (V2_CAPABILITIES.includes(capName)) {
+        if (AgentExecutor.V2_CAPABILITIES.includes(capName)) {
           console.error(`🛑 [Executor] CRITICAL V2 capability "${capName}" failed - halting pipeline execution`);
           throw error; // Re-lançar para interromper executeCapabilitiesForEtapa
         }

@@ -1,0 +1,205 @@
+[ERROR] Capability "Gerando conteúdo para as atividades" falhou: 5 atividades falharam na geração de conteúdo
+
+Dados: {
+  "error": {
+    "code": "GENERATION_ERROR",
+    "message": "5 atividades falharam na geração de conteúdo",
+    "severity": "medium",
+    "recoverable": true,
+    "recovery_suggestion": "Tente novamente ou verifique os parâmetros de entrada"
+  },
+  "v2_result": {
+    "success": false,
+    "capability_id": "gerar_conteudo_atividades",
+    "execution_id": "exec_1768432916235_ca9ko",
+    "timestamp": "2026-01-14T23:21:56.245Z",
+    "data": {
+      "generated_content": [
+        {
+          "activity_id": "plano-aula",
+          "activity_type": "atividade",
+          "generated_fields": {},
+          "success": false,
+          "error": "Tipo de atividade \"atividade\" não possui mapeamento de campos"
+        },
+        {
+          "activity_id": "sequencia-didatica",
+          "activity_type": "atividade",
+          "generated_fields": {},
+          "success": false,
+          "error": "Tipo de atividade \"atividade\" não possui mapeamento de campos"
+        },
+        {
+          "activity_id": "lista-exercicios",
+          "activity_type": "atividade",
+          "generated_fields": {},
+          "success": false,
+          "error": "Tipo de atividade \"atividade\" não possui mapeamento de campos"
+        },
+        {
+          "activity_id": "quiz-interativo",
+          "activity_type": "atividade",
+          "generated_fields": {},
+          "success": false,
+          "error": "Tipo de atividade \"atividade\" não possui mapeamento de campos"
+        },
+        {
+          "activity_id": "flash-cards",
+          "activity_type": "atividade",
+          "generated_fields": {},
+          "success": false,
+          "error": "Tipo de atividade \"atividade\" não possui mapeamento de campos"
+        }
+      ],
+      "total_activities": 5,
+      "success_count": 0,
+      "fail_count": 5,
+      "total_fields_generated": 0
+    },
+    "error": {
+      "code": "GENERATION_ERROR",
+      "message": "5 atividades falharam na geração de conteúdo",
+      "severity": "medium",
+      "recoverable": true,
+      "recovery_suggestion": "Tente novamente ou verifique os parâmetros de entrada"
+    },
+    "debug_log": [
+      {
+        "timestamp": "2026-01-14T23:21:56.236Z",
+        "type": "info",
+        "narrative": "Recebido 5 atividades da capability decidir_atividades_criar. Iniciando geração de conteúdo.",
+        "technical_data": {
+          "activities_count": 5,
+          "activity_ids": [
+            "plano-aula",
+            "sequencia-didatica",
+            "lista-exercicios",
+            "quiz-interativo",
+            "flash-cards"
+          ]
+        }
+      },
+      {
+        "timestamp": "2026-01-14T23:21:56.236Z",
+        "type": "action",
+        "narrative": "Contexto extraído. Objetivo: \"Criar atividades educacionais...\". Processando 5 atividades.",
+        "technical_data": {
+          "objective_length": 29,
+          "context_length": 20,
+          "session_id": "session-1768432909952-dupdig62u"
+        }
+      },
+      {
+        "timestamp": "2026-01-14T23:21:56.236Z",
+        "type": "action",
+        "narrative": "[1/5] Gerando conteúdo para \"Plano de Aula\" (atividade)",
+        "technical_data": {
+          "activity_id": "plano-aula",
+          "activity_type": "atividade",
+          "progress": 0
+        }
+      },
+      {
+        "timestamp": "2026-01-14T23:21:56.241Z",
+        "type": "error",
+        "narrative": "❌ Falha ao gerar conteúdo para \"Plano de Aula\": Tipo de atividade \"atividade\" não possui mapeamento de campos",
+        "technical_data": {
+          "activity_id": "plano-aula",
+          "error": "Tipo de atividade \"atividade\" não possui mapeamento de campos"
+        }
+      },
+      {
+        "timestamp": "2026-01-14T23:21:56.241Z",
+        "type": "action",
+        "narrative": "[2/5] Gerando conteúdo para \"Sequência Didática\" (atividade)",
+        "technical_data": {
+          "activity_id": "sequencia-didatica",
+          "activity_type": "atividade",
+          "progress": 20
+        }
+      },
+      {
+        "timestamp": "2026-01-14T23:21:56.242Z",
+        "type": "error",
+        "narrative": "❌ Falha ao gerar conteúdo para \"Sequência Didática\": Tipo de atividade \"atividade\" não possui mapeamento de campos",
+        "technical_data": {
+          "activity_id": "sequencia-didatica",
+          "error": "Tipo de atividade \"atividade\" não possui mapeamento de campos"
+        }
+      },
+      {
+        "timestamp": "2026-01-14T23:21:56.242Z",
+        "type": "action",
+        "narrative": "[3/5] Gerando conteúdo para \"Lista de Exercícios\" (atividade)",
+        "technical_data": {
+          "activity_id": "lista-exercicios",
+          "activity_type": "atividade",
+          "progress": 40
+        }
+      },
+      {
+        "timestamp": "2026-01-14T23:21:56.243Z",
+        "type": "error",
+        "narrative": "❌ Falha ao gerar conteúdo para \"Lista de Exercícios\": Tipo de atividade \"atividade\" não possui mapeamento de campos",
+        "technical_data": {
+          "activity_id": "lista-exercicios",
+          "error": "Tipo de atividade \"atividade\" não possui mapeamento de campos"
+        }
+      },
+      {
+        "timestamp": "2026-01-14T23:21:56.243Z",
+        "type": "action",
+        "narrative": "[4/5] Gerando conteúdo para \"Quiz Interativo\" (atividade)",
+        "technical_data": {
+          "activity_id": "quiz-interativo",
+          "activity_type": "atividade",
+          "progress": 60
+        }
+      },
+      {
+        "timestamp": "2026-01-14T23:21:56.244Z",
+        "type": "error",
+        "narrative": "❌ Falha ao gerar conteúdo para \"Quiz Interativo\": Tipo de atividade \"atividade\" não possui mapeamento de campos",
+        "technical_data": {
+          "activity_id": "quiz-interativo",
+          "error": "Tipo de atividade \"atividade\" não possui mapeamento de campos"
+        }
+      },
+      {
+        "timestamp": "2026-01-14T23:21:56.244Z",
+        "type": "action",
+        "narrative": "[5/5] Gerando conteúdo para \"Flash Cards\" (atividade)",
+        "technical_data": {
+          "activity_id": "flash-cards",
+          "activity_type": "atividade",
+          "progress": 80
+        }
+      },
+      {
+        "timestamp": "2026-01-14T23:21:56.245Z",
+        "type": "error",
+        "narrative": "❌ Falha ao gerar conteúdo para \"Flash Cards\": Tipo de atividade \"atividade\" não possui mapeamento de campos",
+        "technical_data": {
+          "activity_id": "flash-cards",
+          "error": "Tipo de atividade \"atividade\" não possui mapeamento de campos"
+        }
+      },
+      {
+        "timestamp": "2026-01-14T23:21:56.245Z",
+        "type": "confirmation",
+        "narrative": "🏁 Geração concluída: 0/5 atividades processadas com sucesso. Total de campos: 0",
+        "technical_data": {
+          "success_count": 0,
+          "fail_count": 5,
+          "total_fields": 0,
+          "duration_ms": 9
+        }
+      }
+    ],
+    "metadata": {
+      "duration_ms": 9,
+      "retry_count": 0,
+      "data_source": "ai_content_generation"
+    }
+  }
+}
