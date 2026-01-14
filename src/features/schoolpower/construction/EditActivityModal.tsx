@@ -305,26 +305,38 @@ const EditActivityModal = ({
   // useEffect para escutar campos gerados pela capability gerar_conteudo_atividades
   useEffect(() => {
     const handleFieldsGenerated = (event: CustomEvent) => {
-      const { activity_id, fields } = event.detail;
+      const { activity_id, activity_type, fields, validation } = event.detail;
       
       // Verificar se o evento é para esta atividade
       if (activity_id !== activity?.id) return;
       
-      console.log('🎯 [MODAL] Campos gerados recebidos para:', activity_id, fields);
+      console.log('%c🎯 [MODAL] Campos gerados recebidos para:', 'background: #4CAF50; color: white; padding: 2px 5px;', activity_id);
+      console.log('   📋 Campos:', fields);
+      console.log('   ✅ Validação:', validation);
       
       if (fields && typeof fields === 'object') {
         setFormData(prev => {
           const newFormData = { ...prev };
           
-          // Mapear campos gerados para o formData
+          // Mapear campos gerados para o formData (já sincronizados pelo gerar-conteudo-atividades)
           Object.entries(fields).forEach(([key, value]) => {
-            if (key in newFormData) {
+            if (key in newFormData && value !== undefined && value !== null && value !== '') {
               (newFormData as any)[key] = value;
             }
           });
           
+          console.log('%c📝 [MODAL] FormData atualizado:', 'color: #2196F3;', newFormData);
+          
           return newFormData;
         });
+        
+        // Mostrar toast de sucesso se campos foram preenchidos
+        if (validation?.filledFields?.length > 0) {
+          toast({
+            title: "Campos preenchidos automaticamente",
+            description: `${validation.filledFields.length} campo(s) preenchido(s) com sucesso`,
+          });
+        }
         
         console.log('✅ [MODAL] Form data atualizado com campos gerados automaticamente');
       }
@@ -335,7 +347,7 @@ const EditActivityModal = ({
     return () => {
       window.removeEventListener('agente-jota-fields-generated', handleFieldsGenerated as EventListener);
     };
-  }, [activity?.id]);
+  }, [activity?.id, toast]);
 
   // Use isGeneratingDefault for the generic generate activity call
   const isGenerating = isGeneratingDefault;

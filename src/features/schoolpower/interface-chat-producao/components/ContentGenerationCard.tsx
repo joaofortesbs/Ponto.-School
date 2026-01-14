@@ -313,7 +313,7 @@ export const ContentGenerationCard: React.FC<ContentGenerationCardProps> = ({
                           {activity.progress}%
                         </span>
                       )}
-                      {activity.status === 'completed' && (
+                      {activity.status === 'completed' && activity.fieldsGenerated.length > 0 && (
                         <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
                           <Zap className="w-3 h-3" />
                           {activity.fieldsGenerated.length} campos
@@ -339,6 +339,25 @@ export const ContentGenerationCard: React.FC<ContentGenerationCardProps> = ({
                             ))}
                           </div>
                         )}
+                      </div>
+                    )}
+
+                    {/* Debug: Mostrar campos gerados quando completo */}
+                    {activity.status === 'completed' && activity.fieldsGenerated.length > 0 && (
+                      <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
+                        <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-1">
+                          Campos preenchidos automaticamente:
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {activity.fieldsGenerated.map((field, i) => (
+                            <span 
+                              key={i} 
+                              className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full"
+                            >
+                              {field}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     )}
 

@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useChosenActivitiesStore } from '../../interface-chat-producao/stores/ChosenActivitiesStore';
+import { syncSchemaToFormData } from '../utils/activity-fields-sync';
 
 export interface ActivityFormData {
   title?: string;
@@ -27,8 +29,11 @@ export interface AutoLoadResult {
 }
 
 /**
- * Hook para carregar automaticamente dados do localStorage quando o modal abre
- * Suporta múltiplas chaves de armazenamento para flexibilidade
+ * Hook para carregar automaticamente dados quando o modal abre
+ * 
+ * FONTE DE DADOS (em ordem de prioridade):
+ * 1. ChosenActivitiesStore (campos gerados pelo gerar_conteudo_atividades)
+ * 2. localStorage (dados salvos anteriormente)
  */
 export function useActivityAutoLoad(
   activityId: string | null,
@@ -37,6 +42,10 @@ export function useActivityAutoLoad(
   const [formData, setFormData] = useState<ActivityFormData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Acessar o store para buscar atividades com campos gerados
+  const chosenActivities = useChosenActivitiesStore(state => state.chosenActivities);
+  const getActivityById = useChosenActivitiesStore(state => state.getActivityById);
 
   useEffect(() => {
     if (!isOpen || !activityId) {
@@ -49,38 +58,62 @@ export function useActivityAutoLoad(
     console.log(`%c🔄 [AUTO-LOAD] Iniciando carregamento para: ${activityId}`, 'background: #2196F3; color: white; padding: 5px; border-radius: 3px;');
 
     try {
-      // Definir chaves possíveis de acordo com o tipo de atividade
-      const possibleKeys = [
-        `auto_activity_data_${activityId}`,
-        `${activityId}_form_data`,
-        `constructed_${activityId}_content`
-      ];
-
-      console.log('%c📦 [AUTO-LOAD] Chaves a verificar:', 'color: #2196F3; font-weight: bold;', possibleKeys);
-
       let loadedData: ActivityFormData | null = null;
 
-      // Tentar carregar de cada chave
-      for (const key of possibleKeys) {
-        const savedData = localStorage.getItem(key);
+      // PRIORIDADE 1: Buscar no ChosenActivitiesStore (campos gerados automaticamente)
+      const storeActivity = getActivityById(activityId);
+      if (storeActivity) {
+        console.log(`%c🏪 [AUTO-LOAD] Atividade encontrada no Store:`, 'background: #9C27B0; color: white; padding: 3px 5px;', storeActivity.id);
         
-        if (savedData) {
-          console.log(`%c✅ [AUTO-LOAD] Dados encontrados na chave: ${key}`, 'color: #4CAF50; font-weight: bold;');
+        // Verificar se há campos gerados
+        const generatedFields = storeActivity.dados_construidos?.generated_fields || storeActivity.campos_preenchidos;
+        
+        if (generatedFields && Object.keys(generatedFields).length > 0) {
+          console.log('%c📋 [AUTO-LOAD] Campos gerados encontrados:', 'color: #9C27B0; font-weight: bold;', generatedFields);
           
-          try {
-            const parsed = JSON.parse(savedData);
-            const data = parsed.formData || parsed;
+          // Sincronizar campos para formato do formData
+          const syncedFields = syncSchemaToFormData(storeActivity.tipo || activityId, generatedFields);
+          
+          loadedData = processActivityData(activityId, {
+            title: storeActivity.titulo,
+            ...syncedFields
+          });
+          
+          console.log('%c✨ [AUTO-LOAD] Dados sincronizados do Store:', 'background: #4CAF50; color: white; padding: 3px 5px;', loadedData);
+        }
+      }
+
+      // PRIORIDADE 2: Buscar no localStorage (fallback)
+      if (!loadedData) {
+        const possibleKeys = [
+          `auto_activity_data_${activityId}`,
+          `${activityId}_form_data`,
+          `constructed_${activityId}_content`
+        ];
+
+        console.log('%c📦 [AUTO-LOAD] Verificando localStorage:', 'color: #2196F3; font-weight: bold;', possibleKeys);
+
+        for (const key of possibleKeys) {
+          const savedData = localStorage.getItem(key);
+          
+          if (savedData) {
+            console.log(`%c✅ [AUTO-LOAD] Dados encontrados na chave: ${key}`, 'color: #4CAF50; font-weight: bold;');
             
-            console.log('%c📋 [AUTO-LOAD] Dados parseados:', 'color: #4CAF50;', data);
-            
-            loadedData = processActivityData(activityId, data);
-            console.log('%c✨ [AUTO-LOAD] Dados processados:', 'color: #9C27B0;', loadedData);
-            break; // Parar após encontrar dados válidos
-          } catch (parseError) {
-            console.error(`%c❌ [AUTO-LOAD] Erro ao parsear chave ${key}:`, 'color: red;', parseError);
+            try {
+              const parsed = JSON.parse(savedData);
+              const data = parsed.formData || parsed;
+              
+              console.log('%c📋 [AUTO-LOAD] Dados parseados:', 'color: #4CAF50;', data);
+              
+              loadedData = processActivityData(activityId, data);
+              console.log('%c✨ [AUTO-LOAD] Dados processados:', 'color: #9C27B0;', loadedData);
+              break;
+            } catch (parseError) {
+              console.error(`%c❌ [AUTO-LOAD] Erro ao parsear chave ${key}:`, 'color: red;', parseError);
+            }
+          } else {
+            console.log(`%c⚪ [AUTO-LOAD] Chave "${key}": vazia`, 'color: #999;');
           }
-        } else {
-          console.log(`%c⚪ [AUTO-LOAD] Chave "${key}": vazia`, 'color: #999;');
         }
       }
 
@@ -100,7 +133,7 @@ export function useActivityAutoLoad(
     } finally {
       setIsLoading(false);
     }
-  }, [activityId, isOpen]);
+  }, [activityId, isOpen, chosenActivities]);
 
   return { formData, isLoading, error };
 }

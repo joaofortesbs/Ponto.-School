@@ -19,6 +19,11 @@ import {
   type ActivityFieldsMapping,
   type FieldDefinition 
 } from '../schemas/gerar-conteudo-schema';
+import { 
+  syncSchemaToFormData, 
+  validateSyncedFields,
+  generateFieldSyncDebugReport 
+} from '../../../../construction/utils/activity-fields-sync';
 
 interface GerarConteudoParams {
   session_id: string;
@@ -351,16 +356,31 @@ export async function gerarConteudoAtividades(
       // Atualizar status para aguardando (campos preenchidos, pronto para construção)
       store.updateActivityStatus(activity.id, 'aguardando', 100);
       
-      // CRÍTICO: Salvar os campos gerados no store
-      store.setActivityGeneratedFields(activity.id, result.generated_fields);
+      // CRÍTICO: Sincronizar campos gerados para formato do formData
+      const syncedFields = syncSchemaToFormData(activity.tipo, result.generated_fields);
+      
+      // Debug: Mostrar relatório de sincronização
+      console.log('%c📊 [GerarConteudo] Relatório de sincronização:', 
+        'background: #9C27B0; color: white; padding: 2px 5px; border-radius: 3px;');
+      console.log(generateFieldSyncDebugReport(activity.tipo, syncedFields));
+      
+      // Validar campos sincronizados
+      const validation = validateSyncedFields(activity.tipo, syncedFields);
+      console.log(`%c📋 [GerarConteudo] Validação: ${validation.filledFields.length} campos preenchidos, ${validation.missingFields.length} faltando`,
+        validation.valid ? 'color: green;' : 'color: orange;');
+      
+      // CRÍTICO: Salvar os campos gerados no store (com formato sincronizado)
+      store.setActivityGeneratedFields(activity.id, syncedFields);
       
       // Também atualizar dados construídos para compatibilidade
       const updatedActivity = store.getActivityById(activity.id);
       if (updatedActivity) {
         store.setActivityBuiltData(activity.id, {
           ...updatedActivity.dados_construidos,
-          generated_fields: result.generated_fields,
-          generation_timestamp: new Date().toISOString()
+          generated_fields: syncedFields,
+          original_generated_fields: result.generated_fields,
+          generation_timestamp: new Date().toISOString(),
+          sync_validation: validation
         });
       }
 
@@ -370,7 +390,9 @@ export async function gerarConteudoAtividades(
         detail: {
           activity_id: activity.id,
           activity_type: activity.tipo,
-          fields: result.generated_fields
+          fields: syncedFields,
+          original_fields: result.generated_fields,
+          validation: validation
         }
       }));
 
