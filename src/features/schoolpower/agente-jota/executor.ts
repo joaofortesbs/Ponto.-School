@@ -14,6 +14,8 @@ import type { ExecutionPlan, ExecutionStep, CapabilityCall, ProgressUpdate } fro
 import { createDebugEntry } from '../interface-chat-producao/debug-system/DebugStore';
 import { useDebugStore } from '../interface-chat-producao/debug-system/DebugStore';
 import { useChosenActivitiesStore, saveChosenActivitiesFromDecision } from '../interface-chat-producao/stores/ChosenActivitiesStore';
+import { gerarConteudoAtividadesV2 } from './capabilities/GERAR_CONTEUDO/implementations/gerar-conteudo-atividades';
+import type { CapabilityInput } from './capabilities/shared/types';
 
 export type ProgressCallback = (update: ProgressUpdate) => void;
 
@@ -235,10 +237,38 @@ export class AgentExecutor {
             'low'
           );
           
-          // Injetar resultados de capabilities anteriores quando necessário
-          const enrichedParams = this.enrichCapabilityParams(capName, capability.parametros);
-          
-          resultado = await executeCapability(capName, enrichedParams);
+          // ═══════════════════════════════════════════════════════════════════════
+          // VERSÃO V2: Usar API-First pattern para gerar_conteudo_atividades
+          // ═══════════════════════════════════════════════════════════════════════
+          if (capName === 'gerar_conteudo_atividades') {
+            console.error(`
+═══════════════════════════════════════════════════════════════════════
+🚀 [Executor] USING V2 API-FIRST for gerar_conteudo_atividades
+═══════════════════════════════════════════════════════════════════════`);
+            
+            // Construir CapabilityInput com previous_results
+            const capabilityInput: CapabilityInput = {
+              capability_id: capName,
+              execution_id: `exec_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+              context: {
+                ...capability.parametros,
+                conversation_context: capability.parametros?.conversation_context || '',
+                user_objective: capability.parametros?.user_objective || '',
+                session_id: this.sessionId
+              },
+              previous_results: this.capabilityResultsMap
+            };
+            
+            console.error(`📊 [Executor] CapabilityInput built with ${this.capabilityResultsMap.size} previous results:
+   Keys: ${Array.from(this.capabilityResultsMap.keys()).join(', ')}`);
+            
+            resultado = await gerarConteudoAtividadesV2(capabilityInput);
+          } else {
+            // Injetar resultados de capabilities anteriores quando necessário
+            const enrichedParams = this.enrichCapabilityParams(capName, capability.parametros);
+            
+            resultado = await executeCapability(capName, enrichedParams);
+          }
           
           // Armazenar resultado para uso em capabilities subsequentes
           this.capabilityResultsMap.set(capName, resultado);

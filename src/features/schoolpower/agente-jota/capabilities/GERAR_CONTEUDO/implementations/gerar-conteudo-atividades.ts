@@ -820,3 +820,292 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
 }
 
 export default gerarConteudoAtividades;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VERSÃO V2 - API-FIRST CAPABILITY (Seguindo padrão de decidirAtividadesCriarV2)
+// ═══════════════════════════════════════════════════════════════════════════
+
+import type { 
+  CapabilityInput, 
+  CapabilityOutput, 
+  DebugEntry as DebugEntryV2,
+  CapabilityError,
+  ChosenActivity as ChosenActivityFromTypes
+} from '../../shared/types';
+
+// Helper para criar erro estruturado compatível com CapabilityOutput
+function createCapabilityError(message: string, severity: 'low' | 'medium' | 'high' | 'critical' = 'high'): CapabilityError {
+  return {
+    code: 'GENERATION_ERROR',
+    message,
+    severity,
+    recoverable: severity !== 'critical',
+    recovery_suggestion: severity === 'critical' 
+      ? 'Reinicie o fluxo de criação de atividades'
+      : 'Tente novamente ou verifique os parâmetros de entrada'
+  };
+}
+
+export async function gerarConteudoAtividadesV2(
+  input: CapabilityInput
+): Promise<CapabilityOutput> {
+  const debug_log: DebugEntryV2[] = [];
+  const startTime = Date.now();
+  const CAPABILITY_ID = 'gerar_conteudo_atividades';
+  
+  try {
+    // ═══════════════════════════════════════════════════════════════════════
+    // 1. OBTER RESULTADO DA CAPABILITY ANTERIOR (decidir_atividades_criar)
+    // ═══════════════════════════════════════════════════════════════════════
+    console.error(`
+═══════════════════════════════════════════════════════════════════════
+🚀 [V2] STARTING: gerarConteudoAtividadesV2
+═══════════════════════════════════════════════════════════════════════
+input.execution_id: ${input.execution_id}
+input.previous_results keys: ${input.previous_results ? Array.from(input.previous_results.keys()).join(', ') : 'NONE'}
+═══════════════════════════════════════════════════════════════════════`);
+
+    // Tentar obter atividades da capability anterior
+    const decisionResult = input.previous_results?.get('decidir_atividades_criar');
+    
+    console.error(`📊 [V2] decisionResult exists: ${!!decisionResult}`);
+    console.error(`📊 [V2] decisionResult.success: ${decisionResult?.success}`);
+    console.error(`📊 [V2] decisionResult.data: ${JSON.stringify(decisionResult?.data, null, 2).substring(0, 500)}`);
+    
+    if (!decisionResult) {
+      throw new Error('Dependency não encontrada: decidir_atividades_criar. Execute a capability de decisão primeiro.');
+    }
+    
+    if (!decisionResult.success) {
+      throw new Error(`Dependency falhou: decidir_atividades_criar retornou success=false. Erro: ${decisionResult.error}`);
+    }
+    
+    // NORMALIZAÇÃO: Suportar ambos os formatos (legacy e V2)
+    // decisionResult pode ser um CapabilityOutput ou uma estrutura legado
+    const resultAsAny = decisionResult as any;
+    const chosenActivities: ChosenActivity[] = 
+      resultAsAny.data?.chosen_activities || 
+      resultAsAny.chosen_activities || 
+      [];
+    
+    console.error(`📊 [V2] chosenActivities count: ${chosenActivities.length}`);
+    
+    if (chosenActivities.length === 0) {
+      throw new Error('Nenhuma atividade escolhida encontrada no resultado de decidir_atividades_criar');
+    }
+    
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'info',
+      narrative: `Recebido ${chosenActivities.length} atividades da capability decidir_atividades_criar. Iniciando geração de conteúdo.`,
+      technical_data: { 
+        activities_count: chosenActivities.length,
+        activity_ids: chosenActivities.map(a => a.id)
+      }
+    });
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // 2. EXTRAIR CONTEXTO
+    // ═══════════════════════════════════════════════════════════════════════
+    const conversationContext = input.context.conversation_context || 
+                                input.context.conversa || 
+                                'Contexto educacional';
+    const userObjective = input.context.user_objective || 
+                          input.context.objetivo || 
+                          'Criar atividades educacionais';
+    const sessionId = input.context.session_id || input.execution_id;
+    
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'action',
+      narrative: `Contexto extraído. Objetivo: "${userObjective.substring(0, 100)}...". Processando ${chosenActivities.length} atividades.`,
+      technical_data: { 
+        objective_length: userObjective.length,
+        context_length: conversationContext.length,
+        session_id: sessionId
+      }
+    });
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // 3. PROCESSAR CADA ATIVIDADE
+    // ═══════════════════════════════════════════════════════════════════════
+    const results: GeneratedFieldsResult[] = [];
+    const store = useChosenActivitiesStore.getState();
+    
+    // Inicializar DebugStore
+    useDebugStore.getState().startCapability(CAPABILITY_ID, 'Gerando conteúdo V2');
+    
+    for (let i = 0; i < chosenActivities.length; i++) {
+      const activity = chosenActivities[i];
+      
+      console.error(`🔄 [V2] Processing activity ${i + 1}/${chosenActivities.length}: ${activity.titulo}`);
+      
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'action',
+        narrative: `[${i + 1}/${chosenActivities.length}] Gerando conteúdo para "${activity.titulo}" (${activity.tipo})`,
+        technical_data: { 
+          activity_id: activity.id,
+          activity_type: activity.tipo,
+          progress: Math.round((i / chosenActivities.length) * 100)
+        }
+      });
+      
+      // Atualizar status no store
+      store.updateActivityStatus(activity.id, 'construindo', Math.round((i / chosenActivities.length) * 100));
+      
+      // Gerar conteúdo usando a função existente
+      const result = await generateContentForActivity(
+        activity,
+        conversationContext,
+        userObjective,
+        undefined, // on_progress
+        CAPABILITY_ID,
+        'Gerando conteúdo V2'
+      );
+      
+      results.push(result);
+      
+      if (result.success) {
+        // Sincronizar campos e atualizar store
+        const syncedFields = syncSchemaToFormData(activity.tipo, result.generated_fields);
+        const validation = validateSyncedFields(activity.tipo, syncedFields);
+        
+        store.updateActivityStatus(activity.id, 'aguardando', 100);
+        store.setActivityGeneratedFields(activity.id, syncedFields);
+        
+        // Emitir evento para UI
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('agente-jota-fields-generated', {
+            detail: {
+              activity_id: activity.id,
+              activity_type: activity.tipo,
+              fields: syncedFields,
+              original_fields: result.generated_fields,
+              validation: validation
+            }
+          }));
+        }
+        
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'discovery',
+          narrative: `✅ Conteúdo gerado para "${activity.titulo}": ${Object.keys(result.generated_fields).length} campos preenchidos`,
+          technical_data: { 
+            activity_id: activity.id,
+            fields_count: Object.keys(result.generated_fields).length,
+            generated_fields: result.generated_fields
+          }
+        });
+        
+      } else {
+        store.updateActivityStatus(activity.id, 'erro', 0, result.error);
+        
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'error',
+          narrative: `❌ Falha ao gerar conteúdo para "${activity.titulo}": ${result.error}`,
+          technical_data: { 
+            activity_id: activity.id,
+            error: result.error
+          }
+        });
+      }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // 4. CALCULAR RESULTADOS E RETORNAR
+    // ═══════════════════════════════════════════════════════════════════════
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
+    const elapsedTime = Date.now() - startTime;
+    
+    const totalFieldsGenerated = results.reduce((acc, r) => 
+      acc + (r.success ? Object.keys(r.generated_fields || {}).length : 0), 0
+    );
+    
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'confirmation',
+      narrative: `🏁 Geração concluída: ${successCount}/${chosenActivities.length} atividades processadas com sucesso. Total de campos: ${totalFieldsGenerated}`,
+      technical_data: { 
+        success_count: successCount,
+        fail_count: failCount,
+        total_fields: totalFieldsGenerated,
+        duration_ms: elapsedTime
+      }
+    });
+    
+    // Encerrar capability no DebugStore
+    useDebugStore.getState().endCapability(CAPABILITY_ID);
+    
+    // Emitir evento de conclusão
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('agente-jota-content-generation-complete', {
+        detail: {
+          session_id: sessionId,
+          success_count: successCount,
+          fail_count: failCount,
+          results
+        }
+      }));
+    }
+    
+    console.error(`✅ [V2] COMPLETED: ${successCount}/${chosenActivities.length} activities, ${totalFieldsGenerated} fields in ${elapsedTime}ms`);
+    
+    return {
+      success: failCount === 0,
+      capability_id: CAPABILITY_ID,
+      execution_id: input.execution_id,
+      timestamp: new Date().toISOString(),
+      data: {
+        generated_content: results,
+        total_activities: chosenActivities.length,
+        success_count: successCount,
+        fail_count: failCount,
+        total_fields_generated: totalFieldsGenerated
+      },
+      error: failCount > 0 ? createCapabilityError(`${failCount} atividades falharam na geração de conteúdo`, 'medium') : null,
+      debug_log,
+      metadata: {
+        duration_ms: elapsedTime,
+        retry_count: 0,
+        data_source: 'ai_content_generation'
+      }
+    };
+    
+  } catch (error) {
+    const elapsedTime = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    console.error(`❌ [V2] ERROR: ${errorMessage}`);
+    
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'error',
+      narrative: `❌ ERRO CRÍTICO: ${errorMessage}`,
+      technical_data: { 
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack?.substring(0, 500) : undefined
+      }
+    });
+    
+    // Encerrar capability no DebugStore
+    useDebugStore.getState().endCapability(CAPABILITY_ID);
+    
+    return {
+      success: false,
+      capability_id: CAPABILITY_ID,
+      execution_id: input.execution_id,
+      timestamp: new Date().toISOString(),
+      data: null,
+      error: createCapabilityError(errorMessage, 'critical'),
+      debug_log,
+      metadata: {
+        duration_ms: elapsedTime,
+        retry_count: 0,
+        data_source: 'error'
+      }
+    };
+  }
+}
