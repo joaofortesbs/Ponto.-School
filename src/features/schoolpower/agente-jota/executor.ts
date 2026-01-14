@@ -15,7 +15,9 @@ import { createDebugEntry } from '../interface-chat-producao/debug-system/DebugS
 import { useDebugStore } from '../interface-chat-producao/debug-system/DebugStore';
 import { useChosenActivitiesStore, saveChosenActivitiesFromDecision } from '../interface-chat-producao/stores/ChosenActivitiesStore';
 import { gerarConteudoAtividadesV2 } from './capabilities/GERAR_CONTEUDO/implementations/gerar-conteudo-atividades';
-import type { CapabilityInput } from './capabilities/shared/types';
+import { decidirAtividadesCriarV2 } from './capabilities/DECIDIR/implementations/decidir-atividades-criar';
+import { pesquisarAtividadesDisponiveisV2 } from './capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis';
+import type { CapabilityInput, CapabilityOutput } from './capabilities/shared/types';
 
 export type ProgressCallback = (update: ProgressUpdate) => void;
 
@@ -238,12 +240,18 @@ export class AgentExecutor {
           );
           
           // ═══════════════════════════════════════════════════════════════════════
-          // VERSÃO V2: Usar API-First pattern para gerar_conteudo_atividades
+          // VERSÃO V2: Usar API-First pattern para capabilities críticas
           // ═══════════════════════════════════════════════════════════════════════
-          if (capName === 'gerar_conteudo_atividades') {
+          const V2_CAPABILITIES = [
+            'pesquisar_atividades_disponiveis',
+            'decidir_atividades_criar',
+            'gerar_conteudo_atividades'
+          ];
+          
+          if (V2_CAPABILITIES.includes(capName)) {
             console.error(`
 ═══════════════════════════════════════════════════════════════════════
-🚀 [Executor] USING V2 API-FIRST for gerar_conteudo_atividades
+🚀 [Executor] USING V2 API-FIRST for ${capName}
 ═══════════════════════════════════════════════════════════════════════`);
             
             // Construir CapabilityInput com previous_results
@@ -262,7 +270,56 @@ export class AgentExecutor {
             console.error(`📊 [Executor] CapabilityInput built with ${this.capabilityResultsMap.size} previous results:
    Keys: ${Array.from(this.capabilityResultsMap.keys()).join(', ')}`);
             
-            resultado = await gerarConteudoAtividadesV2(capabilityInput);
+            // Executar a capability V2 correspondente
+            let v2Result: CapabilityOutput | null = null;
+            
+            if (capName === 'pesquisar_atividades_disponiveis') {
+              v2Result = await pesquisarAtividadesDisponiveisV2(capabilityInput);
+            } else if (capName === 'decidir_atividades_criar') {
+              v2Result = await decidirAtividadesCriarV2(capabilityInput);
+            } else if (capName === 'gerar_conteudo_atividades') {
+              v2Result = await gerarConteudoAtividadesV2(capabilityInput);
+            }
+            
+            // Validar que temos um resultado
+            if (!v2Result) {
+              throw new Error(`Capability V2 "${capName}" retornou resultado nulo ou indefinido`);
+            }
+            
+            resultado = v2Result;
+            
+            // Log detalhado do resultado V2
+            console.error(`
+═══════════════════════════════════════════════════════════════════════
+${v2Result.success ? '✅' : '❌'} [Executor] V2 RESULT for ${capName}
+═══════════════════════════════════════════════════════════════════════
+success: ${v2Result.success}
+has data: ${!!v2Result.data}
+data keys: ${v2Result.data ? Object.keys(v2Result.data).join(', ') : 'NONE'}
+error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
+═══════════════════════════════════════════════════════════════════════`);
+            
+            // Se a V2 retornou success=false, tratar como erro crítico
+            if (!v2Result.success) {
+              const errorMsg = v2Result.error 
+                ? (typeof v2Result.error === 'string' ? v2Result.error : v2Result.error.message || 'Erro desconhecido')
+                : 'Capability V2 retornou success=false sem mensagem de erro';
+              
+              console.error(`❌ [Executor] V2 capability ${capName} FAILED: ${errorMsg}`);
+              
+              createDebugEntry(
+                capId,
+                capDisplayName,
+                'error',
+                `Capability "${capDisplayName}" falhou: ${errorMsg}`,
+                'high',
+                { error: v2Result.error, v2_result: v2Result }
+              );
+              
+              // Para capabilities críticas, lançar erro para interromper o fluxo
+              // e evitar que capabilities dependentes executem com dados inválidos
+              throw new Error(`Capability crítica "${capName}" falhou: ${errorMsg}`);
+            }
           } else {
             // Injetar resultados de capabilities anteriores quando necessário
             const enrichedParams = this.enrichCapabilityParams(capName, capability.parametros);
@@ -347,15 +404,20 @@ export class AgentExecutor {
         }
 
         const duration = Date.now() - startTime;
+        
+        // Verificar se a capability retornou sucesso (para V2 capabilities)
+        const capabilitySuccess = resultado?.success !== false;
 
-        // Debug: Capability concluída
+        // Debug: Capability concluída (com status correto)
         createDebugEntry(
           capId,
           capDisplayName,
-          'action',
-          `Capability "${capDisplayName}" concluída com sucesso em ${duration}ms. Todos os dados foram processados corretamente.`,
-          'low',
-          { duration_ms: duration, success: true }
+          capabilitySuccess ? 'action' : 'error',
+          capabilitySuccess 
+            ? `Capability "${capDisplayName}" concluída com sucesso em ${duration}ms. Todos os dados foram processados corretamente.`
+            : `Capability "${capDisplayName}" falhou em ${duration}ms. Verifique os logs para mais detalhes.`,
+          capabilitySuccess ? 'low' : 'high',
+          { duration_ms: duration, success: capabilitySuccess }
         );
 
         // Emitir eventos especiais para capability criar_atividade
@@ -367,10 +429,10 @@ export class AgentExecutor {
           sessionId: this.sessionId,
           status: 'executando',
           etapaAtual: etapa.ordem,
-          descricao: `${capDisplayName} - Concluído`,
+          descricao: `${capDisplayName} - ${capabilitySuccess ? 'Concluído' : 'Falhou'}`,
           capabilityId: capId,
           capabilityName: capName,
-          capabilityStatus: 'completed',
+          capabilityStatus: capabilitySuccess ? 'completed' : 'failed',
           capabilityResult: resultado,
           capabilityDuration: duration,
         } as CapabilityProgressUpdate);
@@ -387,7 +449,7 @@ export class AgentExecutor {
           displayName: capDisplayName,
           categoria: capability.categoria,
           duration,
-          success: true,
+          success: capabilitySuccess,
           discovered: this.extractDiscoveries(resultado),
           decided: this.extractDecisions(resultado),
           metrics: this.extractMetrics(resultado),
