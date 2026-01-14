@@ -327,6 +327,9 @@ export async function gerarConteudoAtividades(
       'high'
     );
     
+    // CRÍTICO: Encerrar capability antes de retornar
+    useDebugStore.getState().endCapability(CAPABILITY_ID);
+    
     return {
       success: false,
       capability_id: CAPABILITY_ID,
@@ -532,21 +535,20 @@ export async function gerarConteudoAtividades(
   const failCount = results.filter(r => !r.success).length;
   const executionTime = Date.now() - startTime;
 
-  // Resumo final no debug
-  const resultadoResumo = `Resultado com ${Object.keys(results[0]?.generated_fields || {}).length + 2} campos: success, capability_id, data...`;
-  
-  createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'discovery',
-    `Processamento concluído. ${resultadoResumo}`,
-    'low',
-    { resultado_resumo: resultadoResumo }
+  // Contar total de campos gerados com precisão
+  const totalFieldsGenerated = results.reduce((acc, r) => 
+    acc + (r.success ? Object.keys(r.generated_fields || {}).length : 0), 0
   );
   
   createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'action',
-    `Capability "${CAPABILITY_NAME}" concluída com sucesso em ${executionTime}ms. Todos os dados foram processados corretamente.`,
-    'low',
+    `Capability "${CAPABILITY_NAME}" concluída em ${executionTime}ms.\n` +
+    `Atividades processadas: ${successCount}/${totalActivities}\n` +
+    `Total de campos gerados: ${totalFieldsGenerated}`,
+    failCount > 0 ? 'medium' : 'low',
     {
       success_count: successCount,
       fail_count: failCount,
+      total_fields_generated: totalFieldsGenerated,
       execution_time_ms: executionTime
     }
   );
