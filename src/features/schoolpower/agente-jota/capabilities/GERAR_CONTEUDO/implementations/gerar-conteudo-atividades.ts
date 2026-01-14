@@ -9,6 +9,7 @@
  * 2. Para cada atividade, gera conteúdo baseado no tipo e contexto
  * 3. Atualiza o store com os campos preenchidos
  * 4. Emite eventos para sincronização com UI
+ * 5. Registra debug entries detalhadas para visualização no DebugModal
  */
 
 import { executeWithCascadeFallback } from '../../../../services/controle-APIs-gerais-school-power';
@@ -24,6 +25,7 @@ import {
   validateSyncedFields,
   generateFieldSyncDebugReport 
 } from '../../../../construction/utils/activity-fields-sync';
+import { createDebugEntry, useDebugStore } from '../../../../interface-chat-producao/debug-system/DebugStore';
 
 interface GerarConteudoParams {
   session_id: string;
@@ -296,6 +298,18 @@ export async function gerarConteudoAtividades(
 ): Promise<GerarConteudoOutput> {
   const startTime = Date.now();
   const debugLog: DebugLogEntry[] = [];
+  const CAPABILITY_ID = 'gerar_conteudo_atividades';
+  const CAPABILITY_NAME = 'Gerando conteúdo para as atividades';
+  
+  // Inicializar DebugStore
+  useDebugStore.getState().startCapability(CAPABILITY_ID, CAPABILITY_NAME);
+  
+  // Entry inicial
+  createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'action', 
+    `Iniciando execução da capability "${CAPABILITY_NAME}". Objetivo: processar dados conforme parâmetros recebidos.`,
+    'low',
+    { session_id: params.session_id, objetivo: params.user_objective?.substring(0, 100) }
+  );
   
   debugLog.push({
     timestamp: new Date().toISOString(),
@@ -308,9 +322,14 @@ export async function gerarConteudoAtividades(
   const activities = params.activities_to_fill || store.getChosenActivities();
 
   if (!activities || activities.length === 0) {
+    createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'error',
+      'Nenhuma atividade encontrada para preencher. Verifique se a capability "decidir_atividades_criar" foi executada.',
+      'high'
+    );
+    
     return {
       success: false,
-      capability_id: 'gerar_conteudo_atividades',
+      capability_id: CAPABILITY_ID,
       error: 'Nenhuma atividade encontrada para preencher',
       data: null,
       debug_log: debugLog,
@@ -318,12 +337,57 @@ export async function gerarConteudoAtividades(
     };
   }
 
+  // Entry informativa sobre capabilities encontradas
+  createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'info',
+    `Capability "${CAPABILITY_ID}" encontrada no registro. Iniciando execução com os parâmetros configurados.`,
+    'low'
+  );
+  
+  // Entry com descoberta das atividades
+  const activitySummary = activities.map(a => `• ${a.titulo} (${a.tipo})`).join('\n');
+  createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'discovery',
+    `Encontradas ${activities.length} atividades para gerar conteúdo:\n${activitySummary}`,
+    'low',
+    { 
+      quantidade: activities.length,
+      atividades: activities.map(a => ({ id: a.id, titulo: a.titulo, tipo: a.tipo }))
+    }
+  );
+  
   debugLog.push({
     timestamp: new Date().toISOString(),
     type: 'discovery',
     narrative: `📋 ${activities.length} atividades para preencher`,
     technical_data: { activity_ids: activities.map(a => a.id) }
   });
+  
+  // MOSTRAR CAMPOS QUE PRECISAM SER GERADOS PARA CADA ATIVIDADE
+  for (const activity of activities) {
+    const fieldsMapping = getFieldsForActivityType(activity.tipo);
+    
+    if (fieldsMapping) {
+      const requiredFieldsList = fieldsMapping.requiredFields.map(f => `• ${f.label}: ${f.description}`).join('\n');
+      const optionalFieldsList = fieldsMapping.optionalFields?.map(f => `• ${f.label}: ${f.description}`).join('\n') || '';
+      
+      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'discovery',
+        `📋 Campos para "${activity.titulo}" (${fieldsMapping.displayName}):\n\n` +
+        `CAMPOS OBRIGATÓRIOS:\n${requiredFieldsList}` +
+        (optionalFieldsList ? `\n\nCAMPOS OPCIONAIS:\n${optionalFieldsList}` : ''),
+        'low',
+        {
+          activity_id: activity.id,
+          activity_type: activity.tipo,
+          required_fields: fieldsMapping.requiredFields.map(f => f.name),
+          optional_fields: fieldsMapping.optionalFields?.map(f => f.name) || []
+        }
+      );
+    } else {
+      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'warning',
+        `Tipo de atividade "${activity.tipo}" não possui mapeamento de campos definido.`,
+        'medium'
+      );
+    }
+  }
 
   const results: GeneratedFieldsResult[] = [];
   const totalActivities = activities.length;
