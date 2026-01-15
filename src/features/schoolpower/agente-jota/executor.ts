@@ -217,14 +217,13 @@ export class AgentExecutor {
   private capabilityResultsMap: Map<string, any> = new Map();
 
   // Capabilities que usam API-First V2 pattern
-  // NOTA: criar_atividade DESABILITADA TEMPORARIAMENTE para validação de campos
-  // O modo de construção automático será habilitado apenas quando o mapeamento
-  // de campos entre gerar_conteudo e EditActivityModal for validado
+  // Todas as capabilities V2 do pipeline completo:
+  // pesquisar → decidir → gerar → criar
   private static readonly V2_CAPABILITIES = [
     'pesquisar_atividades_disponiveis',
     'decidir_atividades_criar',
-    'gerar_conteudo_atividades'
-    // 'criar_atividade' // DESABILITADO: Habilitar após validar preenchimento de campos no modal
+    'gerar_conteudo_atividades',
+    'criar_atividade'
   ];
 
   private async executeCapabilities(etapa: ExecutionStep): Promise<any[]> {
@@ -432,6 +431,17 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
                   estrategia: resultado?.estrategia_pedagogica || ''
                 }
               }));
+              
+              // 🔥 EMITIR construction:activities_ready IMEDIATAMENTE após decidir
+              // Isso garante que a ConstructionInterface receba as atividades
+              // independente do resultado da capability criar_atividade
+              console.log(`🏗️ [Executor] Emitindo construction:activities_ready com ${chosenActivities.length} atividades`);
+              this.emitProgress({
+                sessionId: this.sessionId,
+                type: 'construction:activities_ready',
+                activities: chosenActivities,
+                capabilityId: capId
+              } as any);
               
               // 🔥 DELAY para garantir que o estado do store seja propagado
               await new Promise(resolve => setTimeout(resolve, 100));
