@@ -18,11 +18,15 @@ import type {
 } from './capabilities/shared/types';
 import { pesquisarAtividadesDisponiveisV2 } from './capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis';
 import { decidirAtividadesCriarV2 } from './capabilities/DECIDIR/implementations/decidir-atividades-criar';
+import { gerarConteudoAtividadesV2 } from './capabilities/GERAR_CONTEUDO/implementations/gerar-conteudo-atividades';
+import { criarAtividadeV2 } from './capabilities/CRIAR_ATIVIDADES/implementations/criar-atividade-v2';
 
 // Registry de capabilities V2 (API-First)
 const capabilityRegistry: Record<string, (input: CapabilityInput) => Promise<CapabilityOutput>> = {
   'pesquisar_atividades_disponiveis': pesquisarAtividadesDisponiveisV2,
   'decidir_atividades_criar': decidirAtividadesCriarV2,
+  'gerar_conteudo_atividades': gerarConteudoAtividadesV2,
+  'criar_atividade': criarAtividadeV2,
 };
 
 export interface ExecutionConfig {
