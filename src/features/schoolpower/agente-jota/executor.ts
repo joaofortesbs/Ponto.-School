@@ -435,6 +435,28 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
             'low',
             this.formatTechnicalDataForDebug(capName, resultado)
           );
+          
+          // 🔥 PROCESSAR debug_log RETORNADO PELAS CAPABILITIES V2
+          // Isso garante que todos os logs detalhados gerados internamente
+          // pela capability (incluindo campos gerados, validações, etc.)
+          // sejam exibidos no painel de debug
+          if (resultado?.debug_log && Array.isArray(resultado.debug_log)) {
+            console.log(`📝 [Executor] Processing ${resultado.debug_log.length} debug entries from V2 capability`);
+            
+            for (const entry of resultado.debug_log) {
+              // Mapear tipos do debug_log para DebugEntryType
+              const entryType = this.mapDebugLogType(entry.type);
+              
+              createDebugEntry(
+                capId,
+                capDisplayName,
+                entryType,
+                entry.narrative || entry.message || 'Log entry',
+                entry.severity || 'low',
+                entry.technical_data || entry.data || undefined
+              );
+            }
+          }
         } else {
           console.warn(`  ⚠️ [Executor] Capability não encontrada: ${capName}`);
           
@@ -678,6 +700,25 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
         { progress: resultado.progress }
       );
     }
+  }
+
+  private mapDebugLogType(type: string): 'info' | 'action' | 'decision' | 'discovery' | 'error' | 'warning' | 'reflection' | 'confirmation' {
+    const typeMap: Record<string, 'info' | 'action' | 'decision' | 'discovery' | 'error' | 'warning' | 'reflection' | 'confirmation'> = {
+      'info': 'info',
+      'action': 'action',
+      'decision': 'decision',
+      'discovery': 'discovery',
+      'error': 'error',
+      'warning': 'warning',
+      'reflection': 'reflection',
+      'confirmation': 'confirmation',
+      'success': 'discovery',
+      'start': 'action',
+      'end': 'action',
+      'progress': 'info',
+      'validation': 'confirmation'
+    };
+    return typeMap[type?.toLowerCase()] || 'info';
   }
 
   private extractDiscoveries(resultado: any): string[] {
