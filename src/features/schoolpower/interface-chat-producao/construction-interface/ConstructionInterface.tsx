@@ -19,9 +19,11 @@ import {
   FileText,
   Clock,
   Zap,
-  Edit3
+  Edit3,
+  Eye
 } from 'lucide-react';
 import EditActivityModal from '../../construction/EditActivityModal';
+import { ActivityViewModal } from '../../construction/ActivityViewModal';
 import { ConstructionActivity } from '../../construction/types';
 
 export type ActivityBuildStatus = 'waiting' | 'building' | 'completed' | 'error';
@@ -78,10 +80,11 @@ const STATUS_CONFIG = {
   }
 };
 
-function ActivityCard({ activity, onBuild, onActivityClick }: { 
+function ActivityCard({ activity, onBuild, onActivityClick, onViewClick }: { 
   activity: ActivityToBuild; 
   onBuild?: () => void;
   onActivityClick?: (activity: ActivityToBuild) => void;
+  onViewClick?: (activity: ActivityToBuild) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const config = STATUS_CONFIG[activity.status];
@@ -136,6 +139,18 @@ function ActivityCard({ activity, onBuild, onActivityClick }: {
                 title="Construir esta atividade"
               >
                 <Play className="w-4 h-4 text-white/60" />
+              </button>
+            )}
+            {onViewClick && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewClick(activity);
+                }}
+                className="p-2 hover:bg-blue-500/20 rounded-lg transition-colors"
+                title="Visualizar atividade"
+              >
+                <Eye className="w-4 h-4 text-blue-400" />
               </button>
             )}
             {onActivityClick && (
@@ -286,12 +301,24 @@ export function ConstructionInterface({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<ConstructionActivity | null>(null);
 
-  // Handler para abrir o modal ao clicar em uma atividade
+  // Estado para o modal de visualização
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewActivity, setViewActivity] = useState<ConstructionActivity | null>(null);
+
+  // Handler para abrir o modal de edição ao clicar no lápis
   const handleActivityClick = useCallback((activity: ActivityToBuild) => {
-    console.log('🔧 [ConstructionInterface] Abrindo modal para atividade:', activity.name);
+    console.log('🔧 [ConstructionInterface] Abrindo modal de EDIÇÃO para atividade:', activity.name);
     const constructionActivity = convertToConstructionActivity(activity);
     setSelectedActivity(constructionActivity);
     setIsEditModalOpen(true);
+  }, []);
+
+  // Handler para abrir o modal de visualização ao clicar no olho
+  const handleViewClick = useCallback((activity: ActivityToBuild) => {
+    console.log('👁️ [ConstructionInterface] Abrindo modal de VISUALIZAÇÃO para atividade:', activity.name);
+    const constructionActivity = convertToConstructionActivity(activity);
+    setViewActivity(constructionActivity);
+    setIsViewModalOpen(true);
   }, []);
 
   // Handler para fechar o modal
@@ -424,6 +451,7 @@ export function ConstructionInterface({
               activity={activity}
               onBuild={onBuildSingle ? () => onBuildSingle(activity.activity_id) : undefined}
               onActivityClick={handleActivityClick}
+              onViewClick={handleViewClick}
             />
           </motion.div>
         ))}
@@ -469,6 +497,17 @@ export function ConstructionInterface({
         activity={selectedActivity}
         onClose={handleCloseModal}
         onSave={handleSaveActivity}
+      />
+
+      {/* Modal de Visualização de Atividade */}
+      <ActivityViewModal
+        isOpen={isViewModalOpen}
+        activity={viewActivity}
+        onClose={() => {
+          console.log('👁️ [ConstructionInterface] Fechando modal de visualização');
+          setIsViewModalOpen(false);
+          setViewActivity(null);
+        }}
       />
     </motion.div>
   );
