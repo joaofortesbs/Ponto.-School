@@ -504,32 +504,32 @@ const EditActivityModal = ({
       console.log('🎯 Iniciando geração real do Quiz Interativo');
       console.log('📋 FormData completo:', formData);
 
-      // Validar dados obrigatórios
-      if (!formData.title?.trim()) {
+      // Validar dados obrigatórios (usando safeToString para lidar com números)
+      if (!hasValue(formData.title)) {
         throw new Error('Título é obrigatório');
       }
-      if (!formData.theme?.trim()) {
+      if (!hasValue(formData.theme)) {
         throw new Error('Tema é obrigatório');
       }
-      if (!formData.subject?.trim()) {
+      if (!hasValue(formData.subject)) {
         throw new Error('Disciplina é obrigatória');
       }
 
       // Importar o gerador do Quiz Interativo
       const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
 
-      // Preparar dados estruturados para o gerador
+      // Preparar dados estruturados para o gerador (usando safeToString para conversão segura)
       const quizData = {
-        subject: formData.subject?.trim() || 'Matemática',
-        schoolYear: formData.schoolYear?.trim() || '6º Ano - Ensino Fundamental',
-        theme: formData.theme?.trim() || formData.title?.trim() || 'Tema Geral',
-        objectives: formData.objectives?.trim() || formData.description?.trim() || `Avaliar o conhecimento sobre ${formData.theme}`,
-        difficultyLevel: formData.difficultyLevel?.trim() || 'Médio',
-        format: formData.questionModel?.trim() || 'Múltipla Escolha',
-        numberOfQuestions: formData.numberOfQuestions?.trim() || '10',
-        timePerQuestion: formData.timePerQuestion?.trim() || '60',
-        instructions: formData.instructions?.trim() || 'Leia cada questão com atenção e selecione a resposta correta.',
-        evaluation: formData.evaluation?.trim() || 'Avaliação baseada no número de respostas corretas.'
+        subject: safeToString(formData.subject).trim() || 'Matemática',
+        schoolYear: safeToString(formData.schoolYear).trim() || '6º Ano - Ensino Fundamental',
+        theme: safeToString(formData.theme).trim() || safeToString(formData.title).trim() || 'Tema Geral',
+        objectives: safeToString(formData.objectives).trim() || safeToString(formData.description).trim() || `Avaliar o conhecimento sobre ${formData.theme}`,
+        difficultyLevel: safeToString(formData.difficultyLevel).trim() || 'Médio',
+        format: safeToString(formData.questionModel).trim() || 'Múltipla Escolha',
+        numberOfQuestions: safeToString(formData.numberOfQuestions).trim() || '10',
+        timePerQuestion: safeToString(formData.timePerQuestion).trim() || '60',
+        instructions: safeToString(formData.instructions).trim() || 'Leia cada questão com atenção e selecione a resposta correta.',
+        evaluation: safeToString(formData.evaluation).trim() || 'Avaliação baseada no número de respostas corretas.'
       };
 
       console.log('🎯 Dados estruturados para o Gemini:', quizData);
@@ -719,16 +719,16 @@ const EditActivityModal = ({
 
       console.log('🃏 Iniciando geração de Flash Cards...');
 
-      // Validação de campos obrigatórios com mensagens mais claras
-      if (!formData.theme?.trim()) {
+      // Validação de campos obrigatórios com mensagens mais claras (usando hasValue para tipos mistos)
+      if (!hasValue(formData.theme)) {
         throw new Error('Tema é obrigatório para gerar Flash Cards');
       }
 
-      if (!formData.topicos?.trim()) {
+      if (!hasValue(formData.topicos)) {
         throw new Error('Tópicos são obrigatórios para gerar Flash Cards');
       }
 
-      const numberOfCards = parseInt(formData.numberOfFlashcards || '10') || 10;
+      const numberOfCards = parseInt(safeToString(formData.numberOfFlashcards) || '10') || 10;
       if (numberOfCards <= 0 || numberOfCards > 50) {
         throw new Error('Número de Flash Cards deve estar entre 1 e 50');
       }
@@ -742,19 +742,19 @@ const EditActivityModal = ({
         // Importar o gerador de Flash Cards
         const { FlashCardsGenerator } = await import('@/features/schoolpower/activities/flash-cards/FlashCardsGenerator');
 
-        // Preparar dados estruturados para o gerador com validação
+        // Preparar dados estruturados para o gerador com validação (usando safeToString para conversão segura)
         const flashCardData = {
-          title: formData.title.trim(),
-          theme: formData.theme.trim(),
-          subject: formData.subject?.trim() || 'Geral',
-          schoolYear: formData.schoolYear?.trim() || 'Ensino Médio',
-          topicos: formData.topicos.trim(),
+          title: safeToString(formData.title).trim(),
+          theme: safeToString(formData.theme).trim(),
+          subject: safeToString(formData.subject).trim() || 'Geral',
+          schoolYear: safeToString(formData.schoolYear).trim() || 'Ensino Médio',
+          topicos: safeToString(formData.topicos).trim(),
           numberOfFlashcards: numberOfCards.toString(),
-          contextoUso: formData.contextoUso?.trim() || formData.context?.trim() || 'Estudos e revisão',
-          difficultyLevel: formData.difficultyLevel?.trim() || 'Médio',
-          objectives: formData.objectives?.trim() || `Facilitar o aprendizado sobre ${formData.theme.trim()}`,
-          instructions: formData.instructions?.trim() || 'Use os flash cards para estudar e revisar o conteúdo',
-          evaluation: formData.evaluation?.trim() || 'Avalie o conhecimento através da prática com os cards'
+          contextoUso: safeToString(formData.contextoUso).trim() || safeToString(formData.context).trim() || 'Estudos e revisão',
+          difficultyLevel: safeToString(formData.difficultyLevel).trim() || 'Médio',
+          objectives: safeToString(formData.objectives).trim() || `Facilitar o aprendizado sobre ${safeToString(formData.theme).trim()}`,
+          instructions: safeToString(formData.instructions).trim() || 'Use os flash cards para estudar e revisar o conteúdo',
+          evaluation: safeToString(formData.evaluation).trim() || 'Avalie o conhecimento através da prática com os cards'
         };
 
         console.log('🃏 Dados preparados para geração:', flashCardData);

@@ -209,15 +209,15 @@ function processActivityData(activityId: string, data: any): ActivityFormData {
   if (activityId === 'flash-cards') {
     const processed = {
       ...baseData,
-      theme: data.theme || '',
-      topicos: data.topicos || '',
-      numberOfFlashcards: data.numberOfFlashcards || '',
-      contextoUso: data.contextoUso || data.context || '',
+      theme: String(data.theme || ''),
+      topicos: String(data.topicos || ''),
+      numberOfFlashcards: String(data.numberOfFlashcards || ''),
+      contextoUso: String(data.contextoUso || data.context || ''),
       // Campos adicionais de compatibilidade
-      subject: data.subject || '',
-      schoolYear: data.schoolYear || '',
-      difficultyLevel: data.difficultyLevel || '',
-      objectives: data.objectives || ''
+      subject: String(data.subject || ''),
+      schoolYear: String(data.schoolYear || ''),
+      difficultyLevel: String(data.difficultyLevel || ''),
+      objectives: String(data.objectives || '')
     };
 
     console.log('%c🃏 [PROCESSOR] Flash Cards processado:', 'color: #673AB7;');
@@ -231,9 +231,103 @@ function processActivityData(activityId: string, data: any): ActivityFormData {
     return processed;
   }
 
-  // Processamento para outras atividades (pode ser expandido)
-  return {
-    ...baseData,
-    ...data
-  };
+  // Processamento específico para Sequência Didática
+  if (activityId === 'sequencia-didatica') {
+    const processed = {
+      ...baseData,
+      tituloTemaAssunto: String(data.tituloTemaAssunto || ''),
+      anoSerie: String(data.anoSerie || ''),
+      disciplina: String(data.disciplina || ''),
+      publicoAlvo: String(data.publicoAlvo || ''),
+      objetivosAprendizagem: String(data.objetivosAprendizagem || ''),
+      quantidadeAulas: String(data.quantidadeAulas || ''),
+      quantidadeDiagnosticos: String(data.quantidadeDiagnosticos || ''),
+      quantidadeAvaliacoes: String(data.quantidadeAvaliacoes || ''),
+      bnccCompetencias: String(data.bnccCompetencias || ''),
+      cronograma: String(data.cronograma || ''),
+      // Campos de compatibilidade
+      subject: String(data.disciplina || data.subject || ''),
+      theme: String(data.tituloTemaAssunto || data.theme || ''),
+      schoolYear: String(data.anoSerie || data.schoolYear || ''),
+      objectives: String(data.objetivosAprendizagem || data.objectives || '')
+    };
+
+    console.log('%c📚 [PROCESSOR] Sequência Didática processada:', 'color: #673AB7;');
+    console.table({
+      'Título/Tema': processed.tituloTemaAssunto,
+      'Ano/Série': processed.anoSerie,
+      'Disciplina': processed.disciplina,
+      'Qtd Aulas': processed.quantidadeAulas,
+      'Qtd Diagnósticos': processed.quantidadeDiagnosticos,
+      'Qtd Avaliações': processed.quantidadeAvaliacoes
+    });
+
+    return processed;
+  }
+
+  // Processamento específico para Quiz Interativo
+  if (activityId === 'quiz-interativo') {
+    const processed = {
+      ...baseData,
+      numberOfQuestions: String(data.numberOfQuestions || ''),
+      theme: String(data.theme || ''),
+      subject: String(data.subject || ''),
+      schoolYear: String(data.schoolYear || ''),
+      difficultyLevel: String(data.difficultyLevel || ''),
+      questionModel: String(data.questionModel || ''),
+      // Campos de compatibilidade
+      objectives: String(data.objectives || ''),
+      timePerQuestion: String(data.timePerQuestion || '')
+    };
+
+    console.log('%c❓ [PROCESSOR] Quiz Interativo processado:', 'color: #673AB7;');
+    console.table({
+      'Tema': processed.theme,
+      'Disciplina': processed.subject,
+      'Número de Questões': processed.numberOfQuestions,
+      'Nível': processed.difficultyLevel,
+      'Modelo': processed.questionModel
+    });
+
+    return processed;
+  }
+
+  // Processamento específico para Plano de Aula
+  if (activityId === 'plano-aula') {
+    const processed = {
+      ...baseData,
+      subject: String(data.subject || ''),
+      theme: String(data.theme || ''),
+      schoolYear: String(data.schoolYear || ''),
+      objectives: String(data.objectives || ''),
+      materials: String(data.materials || ''),
+      context: String(data.context || ''),
+      // Campos de compatibilidade
+      difficultyLevel: String(data.difficultyLevel || ''),
+      timeLimit: String(data.timeLimit || ''),
+      competencies: String(data.competencies || ''),
+      evaluation: String(data.evaluation || '')
+    };
+
+    console.log('%c📝 [PROCESSOR] Plano de Aula processado:', 'color: #673AB7;');
+    console.table({
+      'Tema': processed.theme,
+      'Disciplina': processed.subject,
+      'Ano Escolar': processed.schoolYear,
+      'Objetivos': processed.objectives,
+      'Materiais': processed.materials
+    });
+
+    return processed;
+  }
+
+  // Processamento para outras atividades - converte todos os valores para strings
+  const genericProcessed: ActivityFormData = { ...baseData };
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) {
+      genericProcessed[key] = String(value);
+    }
+  });
+  
+  return genericProcessed;
 }
