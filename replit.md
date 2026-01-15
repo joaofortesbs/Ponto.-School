@@ -40,8 +40,11 @@ The platform features a modern design utilizing glass-morphism effects, blur bac
     - **Auto-Build System** (Updated Jan 2026):
       - `AutoBuildService.ts` provides automatic construction of all activities via `buildAllActivities()`
       - The `criar_atividade` capability calls `autoBuildService.buildAllActivities()` after marking activities as complete
-      - Auto-build progress events: `construction:auto_build_started`, `construction:auto_build_progress`, `construction:auto_build_completed`, `construction:auto_build_error`
-      - ConstructionInterface displays real-time auto-build progress with animated progress bar, current activity name, and completion count
+      - **Silent auto-build**: Construction happens in the background without visible progress indicators
+      - `buildActivityHelper.ts` provides shared helper function (`buildActivityFromFormData`) used by both EditActivityModal and AutoBuildService for consistent behavior
+      - localStorage keys standardized: `constructed_{type}_{id}`, `constructedActivities` (global object), `activity_{id}` (view sync)
+      - Auto-build events: `activity-data-sync` for modal synchronization, `quadro-interativo-auto-build` for special cases
+      - `useActivityAutoLoad` hook checks multiple localStorage keys to load pre-built content when Edit/View modals open
       - Enabled by default via `context.autoBuild` flag in capability input
     - **Activity Catalog**: Located at `src/features/schoolpower/data/schoolPowerActivities.json`, this catalog defines all available activity types with their required/optional fields. The `campos_obrigatorios` field names must match exactly the `requiredFields` names in `gerar-conteudo-schema.ts` for content generation to work correctly.
     - **Study Groups**: Real-time chat with member management.
