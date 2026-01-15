@@ -33,16 +33,32 @@ class ActivityCatalogService {
    * @returns Catálogo processado com activities, types, categories
    */
   async loadCatalog(): Promise<CatalogData> {
-    console.log('📂 [CatalogService] Iniciando carregamento do catálogo...');
+    console.error('═══════════════════════════════════════════════════════════════════════');
+    console.error('📂 [CatalogService] INICIANDO CARREGAMENTO DO CATÁLOGO');
+    console.error('═══════════════════════════════════════════════════════════════════════');
     
     // Verificar cache válido
     if (this.cache && (Date.now() - this.lastLoadTime < this.CACHE_DURATION_MS)) {
-      console.log(`📦 [CatalogService] Usando cache: ${this.cache.total} atividades`);
+      console.error(`📦 [CatalogService] USANDO CACHE: ${this.cache.total} atividades`);
+      console.error(`📦 [CatalogService] IDs no cache: ${this.cache.activities.map(a => a.id).join(', ')}`);
       return this.cache;
     }
 
     // FASE 1: Validar import existe
+    console.error(`🔍 [CatalogService] FASE 1: Verificando import do JSON...`);
+    console.error(`   - typeof schoolPowerActivitiesData: ${typeof schoolPowerActivitiesData}`);
+    console.error(`   - É null?: ${schoolPowerActivitiesData === null}`);
+    console.error(`   - É undefined?: ${schoolPowerActivitiesData === undefined}`);
+    console.error(`   - É array?: ${Array.isArray(schoolPowerActivitiesData)}`);
+    if (Array.isArray(schoolPowerActivitiesData)) {
+      console.error(`   - Tamanho do array: ${schoolPowerActivitiesData.length}`);
+      if (schoolPowerActivitiesData.length > 0) {
+        console.error(`   - Primeiro item:`, JSON.stringify(schoolPowerActivitiesData[0], null, 2).slice(0, 200) + '...');
+      }
+    }
+    
     if (!schoolPowerActivitiesData) {
+      console.error('❌ [CatalogService] FATAL: Import do JSON falhou!');
       throw new Error('FATAL: Import do JSON falhou. schoolPowerActivitiesData é null.');
     }
 

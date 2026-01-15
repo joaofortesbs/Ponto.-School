@@ -571,29 +571,61 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
       return `Pesquisei as atividades já criadas na conta do professor. Encontrei ${count} atividade(s) registrada(s) no banco de dados.`;
     }
     if (capName.includes('pesquisar_atividades_disponiveis')) {
-      // Estrutura correta do resultado: { catalog: [], count: X, types: [], categories: [], summary: [], valid_ids: [] }
-      const count = resultado?.count || resultado?.catalog?.length || resultado?.activities?.length || resultado?.total || 0;
-      const types = resultado?.types?.length || 0;
-      const ids = resultado?.valid_ids?.length || count;
-      return `Consultei o catálogo de atividades. Encontrei ${count} atividade(s) disponível(is) com ${types} tipo(s). IDs válidos: ${ids}.`;
+      // Suporte para formato V2 (data.catalog) e legado (catalog/activities)
+      const data = resultado?.data || resultado || {};
+      const count = data.count || data.catalog?.length || resultado?.count || resultado?.catalog?.length || resultado?.activities?.length || resultado?.total || 0;
+      const types = data.types?.length || resultado?.types?.length || 0;
+      const ids = data.valid_ids?.length || resultado?.valid_ids?.length || count;
+      const catalogIds = (data.catalog || resultado?.catalog || []).map((a: any) => a?.id).filter(Boolean).join(', ');
+      return `Consultei o catálogo de atividades. Encontrei ${count} atividade(s) disponível(is) com ${types} tipo(s). IDs: ${catalogIds || 'N/A'}.`;
     }
     if (capName.includes('decidir_atividades')) {
-      const chosen = resultado?.chosen_activities || resultado?.activities_to_create || resultado?.decisoes || [];
+      // Suporte para formato V2 (data.chosen_activities) e legado (chosen_activities)
+      const data = resultado?.data || resultado || {};
+      const chosen = data.chosen_activities || resultado?.chosen_activities || resultado?.activities_to_create || resultado?.decisoes || [];
       const chosenCount = chosen.length;
-      const raciocinio = resultado?.raciocinio || {};
-      const catalogCount = raciocinio.atividades_disponiveis || 0;
-      const idsAnalisados = raciocinio.ids_analisados || [];
-      const estrategia = resultado?.estrategia_pedagogica || '';
+      
+      // Para V2, catalogCount vem do data_confirmation ou do context
+      const catalogCount = data.catalog_count || resultado?.metadata?.catalog_count || 
+                           (resultado?.data_confirmation?.checks?.find((c: any) => c.id === 'catalog_has_activities')?.value) || 
+                           'N/A';
+      
+      const estrategia = data.estrategia || resultado?.estrategia_pedagogica || '';
+      const isFallback = data.is_fallback || false;
       
       if (chosenCount > 0) {
         const chosenIds = chosen.map((a: any) => a.id).join(', ');
-        return `Analisei ${catalogCount} atividade(s) do catálogo (IDs: ${idsAnalisados.join(', ')}). Decidi criar ${chosenCount} atividade(s): ${chosenIds}. Estratégia: ${estrategia || 'diversidade pedagógica'}.`;
+        const fallbackNote = isFallback ? ' (seleção automática)' : '';
+        return `Decidi criar ${chosenCount} atividade(s): ${chosenIds}${fallbackNote}. Estratégia: ${estrategia || 'diversidade pedagógica'}.`;
       } else {
-        return `Analisei o contexto pedagógico mas não selecionei nenhuma atividade. Catálogo tinha ${catalogCount} opções disponíveis.`;
+        const success = resultado?.success;
+        if (success === false) {
+          const errorMsg = resultado?.error?.message || 'erro desconhecido';
+          return `Não consegui decidir atividades: ${errorMsg}`;
+        }
+        return `Analisei o contexto pedagógico mas não selecionei nenhuma atividade para criar.`;
       }
     }
+    if (capName.includes('gerar_conteudo')) {
+      // Suporte para formato V2 (data.generated_content) e legado
+      const data = resultado?.data || resultado || {};
+      const generatedCount = data.generated_count || data.activities_with_content?.length || 0;
+      const fieldsFilled = data.total_fields_filled || 0;
+      const success = resultado?.success;
+      
+      if (success === false) {
+        const errorMsg = resultado?.error?.message || 'erro desconhecido';
+        return `Falha ao gerar conteúdo: ${errorMsg}`;
+      }
+      
+      if (generatedCount > 0) {
+        return `Gerei conteúdo para ${generatedCount} atividade(s) com ${fieldsFilled} campo(s) preenchido(s) no total.`;
+      }
+      return `Processamento de geração de conteúdo concluído.`;
+    }
     if (capName.includes('criar_atividade')) {
-      const built = resultado?.activities_built?.length || resultado?.progress?.completed || 0;
+      const data = resultado?.data || resultado || {};
+      const built = data.activities_built?.length || resultado?.activities_built?.length || resultado?.progress?.completed || 0;
       return `Construí ${built} atividade(s) com todos os campos preenchidos pela IA e salvei no banco de dados.`;
     }
     

@@ -463,7 +463,24 @@ export async function decidirAtividadesCriarV2(
 
   try {
     // 1. OBTER RESULTADO DA CAPABILITY ANTERIOR
+    console.error(`
+═══════════════════════════════════════════════════════════════════════
+🔍 [decidirAtividadesCriarV2] VERIFICANDO DEPENDÊNCIAS
+═══════════════════════════════════════════════════════════════════════
+📦 previous_results disponível: ${!!input.previous_results}
+📦 previous_results.size: ${input.previous_results?.size || 0}
+📦 Chaves no Map: ${input.previous_results ? Array.from(input.previous_results.keys()).join(', ') : 'NENHUMA'}
+═══════════════════════════════════════════════════════════════════════`);
+    
     const catalogResult = input.previous_results?.get('pesquisar_atividades_disponiveis');
+
+    console.error(`
+📦 catalogResult existe: ${!!catalogResult}
+📦 catalogResult.success: ${catalogResult?.success}
+📦 catalogResult.data existe: ${!!catalogResult?.data}
+📦 catalogResult.data.catalog existe: ${!!catalogResult?.data?.catalog}
+📦 catalogResult.data.catalog.length: ${catalogResult?.data?.catalog?.length ?? 'N/A'}
+═══════════════════════════════════════════════════════════════════════`);
 
     if (!catalogResult) {
       throw new Error('Dependency não encontrada: pesquisar_atividades_disponiveis');
@@ -473,8 +490,18 @@ export async function decidirAtividadesCriarV2(
       throw new Error('Dependency falhou: catálogo não foi carregado');
     }
 
+    // Verificar se data.catalog existe
+    if (!catalogResult.data || !catalogResult.data.catalog) {
+      console.error(`❌ [decidirAtividadesCriarV2] catalogResult.data.catalog está undefined!`);
+      console.error(`   catalogResult.data:`, JSON.stringify(catalogResult.data, null, 2).slice(0, 500));
+      throw new Error('Dependency inválida: catalogResult.data.catalog está undefined');
+    }
+
     const catalog = catalogResult.data.catalog as ActivityFromCatalog[];
     const validIds = catalogResult.data.valid_ids as string[];
+    
+    console.error(`✅ [decidirAtividadesCriarV2] Catálogo obtido: ${catalog.length} atividades`);
+    console.error(`   IDs: ${catalog.map(a => a.id).join(', ')}`)
 
     debug_log.push({
       timestamp: new Date().toISOString(),
