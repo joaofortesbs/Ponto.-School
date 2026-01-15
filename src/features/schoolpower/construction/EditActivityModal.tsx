@@ -916,7 +916,7 @@ const EditActivityModal = ({
 
   // Chamada genérica de geração (para outros tipos de atividade)
   const handleGenerate = async () => {
-    if (!activity || isGenerating || !isFormValidForBuild()) return;
+    if (!activity || isGenerating) return;
 
     const activityType = activity.type || activity.id || activity.categoryId;
     console.log(`🚀 Iniciando geração genérica para ${activityType}:`, formData);
@@ -2677,7 +2677,7 @@ const EditActivityModal = ({
                       handleBuildActivity();
                     }
                   }}
-                  disabled={isBuilding || isGeneratingQuiz || !isFormValidForBuild()}
+                  disabled={isBuilding || isGeneratingQuiz}
                   className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isBuilding || isGeneratingQuiz ? (
