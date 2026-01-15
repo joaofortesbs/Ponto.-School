@@ -217,14 +217,12 @@ export class AgentExecutor {
   private capabilityResultsMap: Map<string, any> = new Map();
 
   // Capabilities que usam API-First V2 pattern
-  // NOTA: criar_atividade DESABILITADA TEMPORARIAMENTE para validação de campos
-  // O modo de construção automático será habilitado apenas quando o mapeamento
-  // de campos entre gerar_conteudo e EditActivityModal for validado
+  // Pipeline V2 completo: pesquisar → decidir → gerar → criar
   private static readonly V2_CAPABILITIES = [
     'pesquisar_atividades_disponiveis',
     'decidir_atividades_criar',
-    'gerar_conteudo_atividades'
-    // 'criar_atividade' // DESABILITADO: Habilitar após validar preenchimento de campos no modal
+    'gerar_conteudo_atividades',
+    'criar_atividade'  // REABILITADO: Validação de campos concluída
   ];
 
   private async executeCapabilities(etapa: ExecutionStep): Promise<any[]> {
