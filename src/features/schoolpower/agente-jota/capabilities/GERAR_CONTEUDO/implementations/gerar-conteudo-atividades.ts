@@ -421,7 +421,7 @@ async function generateContentForActivity(
         .map(([key, value]) => `• ${key}: "${truncateForDebug(value, 80)}"`)
         .join('\n');
       
-      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'confirmation',
+      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'action',
         `[POST-GEN] Geração concluída para "${activity.titulo}":\n${fieldsGeneratedSummary}`,
         'low',
         { 
@@ -828,7 +828,6 @@ export default gerarConteudoAtividades;
 import type { 
   CapabilityInput, 
   CapabilityOutput, 
-  DebugEntry as DebugEntryV2,
   CapabilityError,
   ChosenActivity as ChosenActivityFromTypes
 } from '../../shared/types';
@@ -849,7 +848,7 @@ function createCapabilityError(message: string, severity: 'low' | 'medium' | 'hi
 export async function gerarConteudoAtividadesV2(
   input: CapabilityInput
 ): Promise<CapabilityOutput> {
-  const debug_log: DebugEntryV2[] = [];
+  const debug_log: DebugLogEntry[] = [];
   const startTime = Date.now();
   const CAPABILITY_ID = 'gerar_conteudo_atividades';
   
@@ -1070,7 +1069,7 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
     
     debug_log.push({
       timestamp: new Date().toISOString(),
-      type: 'confirmation',
+      type: 'action',
       narrative: `🏁 Geração concluída: ${successCount}/${chosenActivities.length} atividades processadas com sucesso. Total de campos: ${totalFieldsGenerated}`,
       technical_data: { 
         success_count: successCount,
