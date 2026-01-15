@@ -56,36 +56,61 @@ export function useActivityAutoLoad(
 
     setIsLoading(true);
     console.log(`%c🔄 [AUTO-LOAD] Iniciando carregamento para: ${activityId}`, 'background: #2196F3; color: white; padding: 5px; border-radius: 3px;');
+    
+    // LOG DE DIAGNÓSTICO: Mostrar estado atual do store
+    console.log(`%c📊 [AUTO-LOAD] Estado do Store:`, 'background: #FF5722; color: white; padding: 3px 5px;');
+    console.log(`   - Total de atividades no store: ${chosenActivities.length}`);
+    console.log(`   - IDs das atividades: ${chosenActivities.map(a => a.id).join(', ') || 'NENHUMA'}`);
+    chosenActivities.forEach(a => {
+      console.log(`   - ${a.id}: campos_preenchidos=${Object.keys(a.campos_preenchidos || {}).length}, generated_fields=${Object.keys(a.dados_construidos?.generated_fields || {}).length}`);
+    });
 
     try {
       let loadedData: ActivityFormData | null = null;
 
       // PRIORIDADE 1: Buscar no ChosenActivitiesStore (campos gerados automaticamente)
       const storeActivity = getActivityById(activityId);
-      if (storeActivity) {
-        console.log(`%c🏪 [AUTO-LOAD] Atividade encontrada no Store:`, 'background: #9C27B0; color: white; padding: 3px 5px;', storeActivity.id);
+      
+      // Se não encontrar diretamente, tentar buscar por tipo
+      let foundActivity = storeActivity;
+      if (!foundActivity) {
+        console.log(`%c⚠️ [AUTO-LOAD] Busca direta falhou, tentando busca por tipo...`, 'color: orange;');
+        foundActivity = chosenActivities.find(a => 
+          a.tipo === activityId || 
+          a.id === activityId ||
+          a.tipo?.toLowerCase() === activityId?.toLowerCase()
+        );
+      }
+      
+      if (foundActivity) {
+        console.log(`%c🏪 [AUTO-LOAD] Atividade encontrada no Store:`, 'background: #9C27B0; color: white; padding: 3px 5px;', foundActivity.id);
         
         // Verificar se há campos gerados
-        const generatedFields = storeActivity.dados_construidos?.generated_fields || storeActivity.campos_preenchidos;
+        const generatedFields = foundActivity.dados_construidos?.generated_fields || foundActivity.campos_preenchidos;
         
         if (generatedFields && Object.keys(generatedFields).length > 0) {
           console.log('%c📋 [AUTO-LOAD] Campos gerados encontrados:', 'color: #9C27B0; font-weight: bold;', generatedFields);
           
           // Sincronizar campos para formato do formData
-          const syncedFields = syncSchemaToFormData(storeActivity.tipo || activityId, generatedFields);
+          const syncedFields = syncSchemaToFormData(foundActivity.tipo || activityId, generatedFields);
           
           loadedData = processActivityData(activityId, {
-            title: storeActivity.titulo,
+            title: foundActivity.titulo,
             ...syncedFields
           });
           
           console.log('%c✨ [AUTO-LOAD] Dados sincronizados do Store:', 'background: #4CAF50; color: white; padding: 3px 5px;', loadedData);
+        } else {
+          console.log('%c⚠️ [AUTO-LOAD] Atividade encontrada mas SEM campos gerados', 'color: orange;');
         }
+      } else {
+        console.log(`%c❌ [AUTO-LOAD] Atividade NÃO encontrada no store para ID: ${activityId}`, 'color: red;');
       }
 
       // PRIORIDADE 2: Buscar no localStorage (fallback)
       if (!loadedData) {
         const possibleKeys = [
+          `generated_content_${activityId}`,  // Chave usada pelo gerar_conteudo_atividades
           `auto_activity_data_${activityId}`,
           `${activityId}_form_data`,
           `constructed_${activityId}_content`
