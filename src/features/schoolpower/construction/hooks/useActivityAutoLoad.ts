@@ -321,6 +321,75 @@ function processActivityData(activityId: string, data: any): ActivityFormData {
     return processed;
   }
 
+  // Processamento específico para Lista de Exercícios
+  if (activityId === 'lista-exercicios') {
+    const processed = {
+      ...baseData,
+      numberOfQuestions: String(data.numberOfQuestions || ''),
+      theme: String(data.theme || ''),
+      subject: String(data.subject || ''),
+      schoolYear: String(data.schoolYear || ''),
+      difficultyLevel: String(data.difficultyLevel || ''),
+      questionModel: String(data.questionModel || ''),
+      objectives: String(data.objectives || ''),
+      context: String(data.context || '')
+    };
+
+    console.log('%c📋 [PROCESSOR] Lista de Exercícios processada:', 'color: #673AB7;');
+    console.table({
+      'Tema': processed.theme,
+      'Disciplina': processed.subject,
+      'Número de Questões': processed.numberOfQuestions
+    });
+
+    return processed;
+  }
+
+  // Processamento específico para Quadro Interativo
+  if (activityId === 'quadro-interativo') {
+    const processed = {
+      ...baseData,
+      subject: String(data.subject || ''),
+      schoolYear: String(data.schoolYear || ''),
+      theme: String(data.theme || ''),
+      objectives: String(data.objectives || ''),
+      difficultyLevel: String(data.difficultyLevel || ''),
+      quadroInterativoCampoEspecifico: String(data.quadroInterativoCampoEspecifico || '')
+    };
+
+    console.log('%c🖼️ [PROCESSOR] Quadro Interativo processado:', 'color: #673AB7;');
+    console.table({
+      'Tema': processed.theme,
+      'Disciplina': processed.subject,
+      'Nível': processed.difficultyLevel
+    });
+
+    return processed;
+  }
+
+  // Processamento específico para Mapa Mental
+  if (activityId === 'mapa-mental') {
+    const processed = {
+      ...baseData,
+      centralTheme: String(data.centralTheme || ''),
+      mainCategories: String(data.mainCategories || ''),
+      generalObjective: String(data.generalObjective || ''),
+      evaluationCriteria: String(data.evaluationCriteria || ''),
+      // Campos de compatibilidade
+      theme: String(data.centralTheme || data.theme || ''),
+      objectives: String(data.generalObjective || data.objectives || '')
+    };
+
+    console.log('%c🧠 [PROCESSOR] Mapa Mental processado:', 'color: #673AB7;');
+    console.table({
+      'Tema Central': processed.centralTheme,
+      'Categorias': processed.mainCategories,
+      'Objetivo': processed.generalObjective
+    });
+
+    return processed;
+  }
+
   // Processamento para outras atividades - converte todos os valores para strings
   const genericProcessed: ActivityFormData = { ...baseData };
   Object.entries(data).forEach(([key, value]) => {
