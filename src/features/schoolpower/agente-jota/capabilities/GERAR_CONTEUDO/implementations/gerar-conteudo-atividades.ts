@@ -801,8 +801,14 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
     technical_data: { success_count: successCount, fail_count: failCount }
   });
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // SUCCESS LOGIC: Lenient approach - success if at least one activity was generated
+  // Partial failures do NOT mark the capability as failed
+  // ═══════════════════════════════════════════════════════════════════════
+  const capabilitySuccess = successCount > 0;
+
   return {
-    success: failCount === 0,
+    success: capabilitySuccess,
     capability_id: CAPABILITY_ID,
     data: {
       session_id: params.session_id,
@@ -812,7 +818,7 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
       results,
       generated_at: new Date().toISOString()
     },
-    error: failCount > 0 ? `${failCount} atividades falharam` : null,
+    error: failCount > 0 && successCount === 0 ? `Todas as ${failCount} atividades falharam` : null,
     debug_log: debugLog,
     execution_time_ms: executionTime,
     message: `Conteúdo gerado para ${successCount} de ${totalActivities} atividades`
@@ -887,10 +893,49 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
 ═══════════════════════════════════════════════════════════════════════`);
     
     if (!decisionResult) {
+      // Log diagnosis information BEFORE throwing
+      const diagnosisMessage = `
+═══════════════════════════════════════════════════════════════════════
+❌ [V2] DIAGNOSTIC: Dependency NOT FOUND - decidir_atividades_criar
+═══════════════════════════════════════════════════════════════════════
+previous_results Map size: ${input.previous_results?.size || 0}
+previous_results keys: ${input.previous_results ? Array.from(input.previous_results.keys()).join(', ') : 'undefined'}
+Checked key: 'decidir_atividades_criar'
+Possible causes:
+  1. decidir_atividades_criar was skipped or not executed
+  2. Results were not stored in capabilityResultsMap
+  3. Capability name mismatch
+═══════════════════════════════════════════════════════════════════════`;
+      
+      console.error(diagnosisMessage);
+      
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'error',
+        narrative: 'Dependency não encontrada: decidir_atividades_criar. A capability de decisão pode não ter sido executada ou seus resultados não foram propagados corretamente.',
+        technical_data: {
+          previous_results_size: input.previous_results?.size || 0,
+          previous_results_keys: input.previous_results ? Array.from(input.previous_results.keys()) : null,
+          diagnosis: 'Missing dependency'
+        }
+      });
+      
       throw new Error('Dependency não encontrada: decidir_atividades_criar. Execute a capability de decisão primeiro.');
     }
     
     if (!decisionResult.success) {
+      // Log diagnosis for failed dependency
+      const failureMessage = `
+═══════════════════════════════════════════════════════════════════════
+⚠️ [V2] DIAGNOSTIC: Dependency FAILED - decidir_atividades_criar
+═══════════════════════════════════════════════════════════════════════
+decisionResult.success: ${decisionResult.success}
+decisionResult.error: ${decisionResult.error}
+decisionResult.data keys: ${(decisionResult as any)?.data ? Object.keys((decisionResult as any).data).join(', ') : 'none'}
+═══════════════════════════════════════════════════════════════════════`;
+      
+      console.error(failureMessage);
+      
       throw new Error(`Dependency falhou: decidir_atividades_criar retornou success=false. Erro: ${decisionResult.error}`);
     }
     
@@ -1127,8 +1172,16 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
     
     console.error(`✅ [V2] COMPLETED: ${successCount}/${chosenActivities.length} activities, ${totalFieldsGenerated} fields in ${elapsedTime}ms`);
     
+    // ═══════════════════════════════════════════════════════════════════════
+    // SUCCESS LOGIC: Lenient approach - success if at least one activity was generated
+    // Partial failures do NOT mark the capability as failed
+    // This allows the pipeline to continue when some activities succeed
+    // ═══════════════════════════════════════════════════════════════════════
+    const capabilitySuccess = successCount > 0;
+    const hasPartialFailure = failCount > 0 && successCount > 0;
+    
     return {
-      success: failCount === 0,
+      success: capabilitySuccess,
       capability_id: CAPABILITY_ID,
       execution_id: input.execution_id,
       timestamp: new Date().toISOString(),
@@ -1139,7 +1192,9 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
         fail_count: failCount,
         total_fields_generated: totalFieldsGenerated
       },
-      error: failCount > 0 ? createCapabilityError(`${failCount} atividades falharam na geração de conteúdo`, 'medium') : null,
+      error: failCount > 0 && successCount === 0 ? createCapabilityError(`Todas as ${failCount} atividades falharam na geração de conteúdo`, 'critical') 
+             : hasPartialFailure ? createCapabilityError(`${failCount} de ${chosenActivities.length} atividades falharam, mas ${successCount} tiveram sucesso`, 'medium')
+             : null,
       debug_log,
       metadata: {
         duration_ms: elapsedTime,
