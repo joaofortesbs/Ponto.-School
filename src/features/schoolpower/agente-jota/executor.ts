@@ -607,10 +607,10 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
       }
     }
     if (capName.includes('gerar_conteudo')) {
-      // Suporte para formato V2 (data.generated_content) e legado
+      // Suporte para formato V2 (data.generated_content) e legado (activities_with_content)
       const data = resultado?.data || resultado || {};
-      const generatedCount = data.generated_count || data.activities_with_content?.length || 0;
-      const fieldsFilled = data.total_fields_filled || 0;
+      const generatedCount = data.success_count || data.generated_count || data.generated_content?.length || data.activities_with_content?.length || 0;
+      const fieldsFilled = data.total_fields_generated || data.total_fields_filled || 0;
       const success = resultado?.success;
       
       if (success === false) {
