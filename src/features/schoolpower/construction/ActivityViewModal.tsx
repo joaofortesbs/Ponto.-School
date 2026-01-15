@@ -62,6 +62,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [generatedContent, setGeneratedContent] = useState<any>(null);
   const [isContentLoaded, setIsContentLoaded] = useState<boolean>(false);
   const [stars, setStars] = useState<number>(100);
+  
+  // Ref para rastrear o último timestamp de atualização e evitar re-renders infinitos
+  const lastUpdateRef = useRef<string | null>(null);
 
   // Listener para sincronização instantânea via eventos customizados
   useEffect(() => {
@@ -109,9 +112,12 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       if (latestData) {
         try {
           const parsed = JSON.parse(latestData);
-          if (parsed.lastUpdate && parsed.lastUpdate !== (activity as any).lastUpdate) {
+          const currentUpdate = parsed.lastUpdate || JSON.stringify(parsed).slice(0, 100);
+          
+          // Só atualizar se o valor realmente mudou (evita loops infinitos)
+          if (currentUpdate && currentUpdate !== lastUpdateRef.current) {
             console.log('🔄 [AUTO-RELOAD] Detectada atualização, recarregando dados...');
-            // Forçar re-render ao invés de reload completo
+            lastUpdateRef.current = currentUpdate;
             setGeneratedContent(parsed.generatedContent || parsed);
             setIsContentLoaded(true);
           }
@@ -119,7 +125,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           console.warn('⚠️ Erro ao verificar atualizações:', e);
         }
       }
-    }, 500); // Verificar a cada 500ms para ser mais responsivo
+    }, 1000); // Verificar a cada 1 segundo para evitar sobrecarga
 
     return () => clearInterval(checkForUpdates);
   }, [activity?.id, isOpen]);
@@ -265,6 +271,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setIsInQuestionView(false);
       setQuizInterativoContent(null);
       setFlashCardsContent(null);
+      
+      // Limpar a ref de atualização para evitar conflitos com dados antigos
+      lastUpdateRef.current = null;
 
       console.log('🔍 ActivityViewModal: Carregando dados para atividade:', activity);
 
