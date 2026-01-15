@@ -87,6 +87,24 @@ interface ActivityFieldsProps {
   onFieldChange: (field: keyof ActivityFormData, value: string) => void;
 }
 
+/**
+ * Helper para converter valores para string antes de chamar .trim()
+ * Resolve erros como "formData.quantidadeAulas?.trim is not a function"
+ * quando campos numéricos são passados pela geração de conteúdo
+ */
+const safeToString = (value: any): string => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  return String(value);
+};
+
+/**
+ * Valida se um campo tem valor preenchido (funciona com strings e números)
+ */
+const hasValue = (value: any): boolean => {
+  return safeToString(value).trim().length > 0;
+};
+
 // Função para obter ícone baseado no tipo de atividade
 const getActivityIcon = (activityId: string) => {
   if (activityId.includes('lista-exercicios')) return BookOpen;
@@ -353,124 +371,125 @@ const EditActivityModal = ({
   const isGenerating = isGeneratingDefault;
 
   // Função para validar se o formulário está pronto para construção
+  // Usa hasValue() para lidar corretamente com valores numéricos
   const isFormValidForBuild = useCallback(() => {
     const activityType = activity?.id || '';
 
     if (activityType === 'lista-exercicios') {
-      return formData.title.trim() &&
-             formData.description.trim() &&
-             formData.subject.trim() &&
-             formData.theme.trim() &&
-             formData.schoolYear.trim() &&
-             formData.numberOfQuestions.trim() &&
-             formData.difficultyLevel.trim() &&
-             formData.questionModel.trim();
+      return hasValue(formData.title) &&
+             hasValue(formData.description) &&
+             hasValue(formData.subject) &&
+             hasValue(formData.theme) &&
+             hasValue(formData.schoolYear) &&
+             hasValue(formData.numberOfQuestions) &&
+             hasValue(formData.difficultyLevel) &&
+             hasValue(formData.questionModel);
     } else if (activityType === 'plano-aula') {
-      return formData.title.trim() &&
-             formData.description.trim() &&
-             formData.theme.trim() &&
-             formData.schoolYear.trim() &&
-             formData.subject.trim() &&
-             formData.objectives.trim() &&
-             formData.materials.trim();
+      return hasValue(formData.title) &&
+             hasValue(formData.description) &&
+             hasValue(formData.theme) &&
+             hasValue(formData.schoolYear) &&
+             hasValue(formData.subject) &&
+             hasValue(formData.objectives) &&
+             hasValue(formData.materials);
     } else if (activityType === 'sequencia-didatica') {
-      return formData.tituloTemaAssunto?.trim() &&
-             formData.anoSerie?.trim() &&
-             formData.disciplina?.trim() &&
-             formData.publicoAlvo?.trim() &&
-             formData.objetivosAprendizagem?.trim() &&
-             formData.quantidadeAulas?.trim() &&
-             formData.quantidadeDiagnosticos?.trim() &&
-             formData.quantidadeAvaliacoes?.trim();
+      return hasValue(formData.tituloTemaAssunto) &&
+             hasValue(formData.anoSerie) &&
+             hasValue(formData.disciplina) &&
+             hasValue(formData.publicoAlvo) &&
+             hasValue(formData.objetivosAprendizagem) &&
+             hasValue(formData.quantidadeAulas) &&
+             hasValue(formData.quantidadeDiagnosticos) &&
+             hasValue(formData.quantidadeAvaliacoes);
     } else if (activityType === 'quiz-interativo') {
-      const isValid = formData.title.trim() &&
-                     formData.description.trim() &&
-                     formData.numberOfQuestions?.trim() &&
-                     formData.theme?.trim() &&
-                     formData.subject?.trim() &&
-                     formData.schoolYear?.trim() &&
-                     formData.difficultyLevel?.trim() &&
-                     formData.questionModel?.trim();
+      const isValid = hasValue(formData.title) &&
+                     hasValue(formData.description) &&
+                     hasValue(formData.numberOfQuestions) &&
+                     hasValue(formData.theme) &&
+                     hasValue(formData.subject) &&
+                     hasValue(formData.schoolYear) &&
+                     hasValue(formData.difficultyLevel) &&
+                     hasValue(formData.questionModel);
 
       console.log('🔍 Validação do Quiz Interativo:', {
-        title: !!formData.title.trim(),
-        description: !!formData.description.trim(),
-        numberOfQuestions: !!formData.numberOfQuestions?.trim(),
-        theme: !!formData.theme?.trim(),
-        subject: !!formData.subject?.trim(),
-        schoolYear: !!formData.schoolYear?.trim(),
-        difficultyLevel: !!formData.difficultyLevel?.trim(),
-        questionModel: !!formData.questionModel?.trim(),
+        title: hasValue(formData.title),
+        description: hasValue(formData.description),
+        numberOfQuestions: hasValue(formData.numberOfQuestions),
+        theme: hasValue(formData.theme),
+        subject: hasValue(formData.subject),
+        schoolYear: hasValue(formData.schoolYear),
+        difficultyLevel: hasValue(formData.difficultyLevel),
+        questionModel: hasValue(formData.questionModel),
         isValid
       });
 
       return isValid;
     } else if (activityType === 'quadro-interativo') {
-      const isValid = formData.title.trim() &&
-                     formData.description.trim() &&
-                     formData.subject?.trim() &&
-                     formData.schoolYear?.trim() &&
-                     formData.theme?.trim() &&
-                     formData.objectives?.trim() &&
-                     formData.difficultyLevel?.trim() &&
-                     formData.quadroInterativoCampoEspecifico?.trim();
+      const isValid = hasValue(formData.title) &&
+                     hasValue(formData.description) &&
+                     hasValue(formData.subject) &&
+                     hasValue(formData.schoolYear) &&
+                     hasValue(formData.theme) &&
+                     hasValue(formData.objectives) &&
+                     hasValue(formData.difficultyLevel) &&
+                     hasValue(formData.quadroInterativoCampoEspecifico);
 
       console.log('🔍 Validação do Quadro Interativo:', {
-        title: !!formData.title.trim(),
-        description: !!formData.description.trim(),
-        subject: !!formData.subject?.trim(),
-        schoolYear: !!formData.schoolYear?.trim(),
-        theme: !!formData.theme?.trim(),
-        objectives: !!formData.objectives?.trim(),
-        difficultyLevel: !!formData.difficultyLevel?.trim(),
-        quadroInterativoCampoEspecifico: !!formData.quadroInterativoCampoEspecifico?.trim(),
+        title: hasValue(formData.title),
+        description: hasValue(formData.description),
+        subject: hasValue(formData.subject),
+        schoolYear: hasValue(formData.schoolYear),
+        theme: hasValue(formData.theme),
+        objectives: hasValue(formData.objectives),
+        difficultyLevel: hasValue(formData.difficultyLevel),
+        quadroInterativoCampoEspecifico: hasValue(formData.quadroInterativoCampoEspecifico),
         isValid
       });
 
       return isValid;
-    } else if (activityType === 'mapa-mental') { // Validar campos específicos do Mapa Mental
-      return formData.title.trim() &&
-             formData.centralTheme?.trim() &&
-             formData.mainCategories?.trim() &&
-             formData.generalObjective?.trim() &&
-             formData.evaluationCriteria?.trim();
-    } else if (activityType === 'flash-cards') { // Validar campos específicos do Flash Cards
-      const isValid = formData.title?.trim() &&
-                     formData.theme?.trim() &&
-                     formData.topicos?.trim() &&
-                     formData.numberOfFlashcards?.trim();
+    } else if (activityType === 'mapa-mental') {
+      return hasValue(formData.title) &&
+             hasValue(formData.centralTheme) &&
+             hasValue(formData.mainCategories) &&
+             hasValue(formData.generalObjective) &&
+             hasValue(formData.evaluationCriteria);
+    } else if (activityType === 'flash-cards') {
+      const isValid = hasValue(formData.title) &&
+                     hasValue(formData.theme) &&
+                     hasValue(formData.topicos) &&
+                     hasValue(formData.numberOfFlashcards);
 
       console.log('🔍 Validação do Flash Cards:', {
-        title: !!formData.title?.trim(),
-        theme: !!formData.theme?.trim(),
-        topicos: !!formData.topicos?.trim(),
-        numberOfFlashcards: !!formData.numberOfFlashcards?.trim(),
+        title: hasValue(formData.title),
+        theme: hasValue(formData.theme),
+        topicos: hasValue(formData.topicos),
+        numberOfFlashcards: hasValue(formData.numberOfFlashcards),
         isValid
       });
 
       return isValid;
-    } else if (activityType === 'tese-redacao') { // Validar campos específicos da Tese da Redação
-      const isValid = formData.title?.trim() &&
-                     formData.temaRedacao?.trim() &&
-                     formData.objetivo?.trim() &&
-                     formData.nivelDificuldade?.trim() &&
-                     formData.competenciasENEM?.trim();
+    } else if (activityType === 'tese-redacao') {
+      const isValid = hasValue(formData.title) &&
+                     hasValue(formData.temaRedacao) &&
+                     hasValue(formData.objetivo) &&
+                     hasValue(formData.nivelDificuldade) &&
+                     hasValue(formData.competenciasENEM);
 
       console.log('🔍 Validação da Tese da Redação:', {
-        title: !!formData.title?.trim(),
-        temaRedacao: !!formData.temaRedacao?.trim(),
-        objetivo: !!formData.objetivo?.trim(),
-        nivelDificuldade: !!formData.nivelDificuldade?.trim(),
-        competenciasENEM: !!formData.competenciasENEM?.trim(),
+        title: hasValue(formData.title),
+        temaRedacao: hasValue(formData.temaRedacao),
+        objetivo: hasValue(formData.objetivo),
+        nivelDificuldade: hasValue(formData.nivelDificuldade),
+        competenciasENEM: hasValue(formData.competenciasENEM),
         isValid
       });
 
       return isValid;
     }
     else {
-      return formData.title.trim() &&
-             formData.description.trim() &&
-             formData.objectives.trim();
+      return hasValue(formData.title) &&
+             hasValue(formData.description) &&
+             hasValue(formData.objectives);
     }
   }, [formData, activity?.id]);
 
