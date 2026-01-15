@@ -108,7 +108,8 @@ export async function processUserPrompt(
 export async function executeAgentPlan(
   plan: ExecutionPlan,
   sessionId: string,
-  onProgress?: (update: ProgressUpdate) => void
+  onProgress?: (update: ProgressUpdate) => void,
+  conversationHistory?: string
 ): Promise<string> {
   console.log('▶️ [Orchestrator] Iniciando execução do plano:', plan.planId);
 
@@ -121,6 +122,11 @@ export async function executeAgentPlan(
 
   if (onProgress) {
     executor.setProgressCallback(onProgress);
+  }
+  
+  // Passar contexto da conversa para o executor
+  if (conversationHistory) {
+    executor.setConversationContext(conversationHistory);
   }
 
   try {

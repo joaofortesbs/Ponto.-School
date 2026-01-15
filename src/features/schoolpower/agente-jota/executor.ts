@@ -38,6 +38,7 @@ export class AgentExecutor {
   private sessionId: string;
   private memory: MemoryManager;
   private onProgress: ProgressCallback | null = null;
+  private conversationContext: string = '';
 
   constructor(sessionId: string, memory: MemoryManager) {
     this.sessionId = sessionId;
@@ -46,6 +47,11 @@ export class AgentExecutor {
 
   setProgressCallback(callback: ProgressCallback): void {
     this.onProgress = callback;
+  }
+  
+  setConversationContext(context: string): void {
+    this.conversationContext = context;
+    console.log(`📝 [Executor] Contexto da conversa definido (${context.length} chars)`);
   }
 
   private emitProgress(update: ProgressUpdate | CapabilityProgressUpdate): void {
@@ -291,18 +297,21 @@ export class AgentExecutor {
               }
             }
             
-            // Construir CapabilityInput com previous_results
+            // Construir CapabilityInput com previous_results e contexto da conversa
             const capabilityInput: CapabilityInput = {
               capability_id: capName,
               execution_id: `exec_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
               context: {
                 ...capability.parametros,
-                conversation_context: capability.parametros?.conversation_context || '',
-                user_objective: capability.parametros?.user_objective || '',
+                // Usar contexto da conversa passado pelo orchestrator, ou fallback para parâmetros
+                conversation_context: this.conversationContext || capability.parametros?.conversation_context || capability.parametros?.contexto || '',
+                user_objective: capability.parametros?.user_objective || capability.parametros?.contexto || '',
                 session_id: this.sessionId
               },
               previous_results: this.capabilityResultsMap
             };
+            
+            console.log(`📝 [Executor] conversation_context length: ${capabilityInput.context.conversation_context?.length || 0}`);
             
             console.error(`📊 [Executor] CapabilityInput built with ${this.capabilityResultsMap.size} previous results:
    Keys: ${Array.from(this.capabilityResultsMap.keys()).join(', ')}`);

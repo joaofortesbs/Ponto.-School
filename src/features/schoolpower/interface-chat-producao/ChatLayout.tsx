@@ -298,10 +298,19 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     };
 
     try {
+      // Formatar histórico da conversa para passar ao executor
+      const conversationHistory = messages
+        .filter(m => m.type === 'user' || m.type === 'assistant')
+        .map(m => `${m.role === 'user' ? 'Usuário' : 'Assistente'}: ${m.content}`)
+        .join('\n\n');
+      
+      console.log(`📝 [ChatLayout] Passing conversation history (${conversationHistory.length} chars) to executor`);
+      
       const relatorio = await executeAgentPlan(
         executionPlan,
         sessionId,
-        handleProgress
+        handleProgress,
+        conversationHistory
       );
 
       setIsExecutingLocal(false);
