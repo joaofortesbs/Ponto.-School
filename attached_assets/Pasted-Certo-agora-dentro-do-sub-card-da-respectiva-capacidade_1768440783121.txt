@@ -1,0 +1,11 @@
+Certo, agora dentro do sub-card da respectiva capacidade de Gerar o conteúdo das atividades já está sendo carregado e pelo que parece os conteúdos de dentro de cada campo já está acontecendo! Agora precisamos ser muito cuidadosos nas próximas ações e alterações que vamos fazer, pois não podemos prejudicar as funcionalidades que a gente já construiu! As coisas que você precisa levar como objetivo agora é:
+
+Garanta que a IA/API nativa dentro da respectiva capacidade de gerar conteúdo esteja funcionando perfeitamente, você precisa confirmar que a chamada está acontecendo, a IA/API está funcionando e gerando respostas, e está perfeitamente alinhada com toda a janela de contexto, para que ela gere um conteúdo com base a toda a janela de contexto dentro da conversa! Faça diferentes testes dentro do fluxo para garantir que a IA está gerando um conteúdo, mas além disso um conteúdo alinhado! Sem prejudicar nenhuma funcionalidade já existente!
+
+Garanta que a capacidade de Criar atividades esteja acontecendo e sendo ativa e acontecendo de maneira verdadeira da maneira correta, e principalmente o card que mostra as atividades que estão sendo criadas (que já existe) está aparecendo da maneira correta dentro da interface do card de Desenvolvimento!
+
+Garanta que dentro da capacidade de gerar conteúdo das respectivas atividades, os campos que a IA está gerando todo o conteúdo, estão corretamente sicronizados com os respectivos modais de Editar atividades de dentro do card que mostra as atividades que vão ser criadas! Garanta principalmente que a IA/sistema que está dentro da capacidade de gerar o conteúdo das atividades, esteja pegando os campos corretamente de dentro desse modal de Editar atividades, das respectivas atividades, para que o mapeamento dos campos e conteúdos esteja acontecendo corretamente!
+
+Lembre-se de atualziar o arquivo de dentro da plataforma que mostra e descreve como a seção de School Power funciona de maneria completa!
+
+Faça uma plano completo de micro-steps em ordem inteligente para fazer todas essas alterações da maneira correta, e incluindo testes e validação, para garantir que tudo seja feito corretamente!

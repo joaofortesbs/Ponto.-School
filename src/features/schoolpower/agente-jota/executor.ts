@@ -17,6 +17,7 @@ import { useChosenActivitiesStore, saveChosenActivitiesFromDecision } from '../i
 import { gerarConteudoAtividadesV2 } from './capabilities/GERAR_CONTEUDO/implementations/gerar-conteudo-atividades';
 import { decidirAtividadesCriarV2 } from './capabilities/DECIDIR/implementations/decidir-atividades-criar';
 import { pesquisarAtividadesDisponiveisV2 } from './capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis';
+import { criarAtividadeV2 } from './capabilities/CRIAR_ATIVIDADES/implementations/criar-atividade-v2';
 import type { CapabilityInput, CapabilityOutput } from './capabilities/shared/types';
 
 export type ProgressCallback = (update: ProgressUpdate) => void;
@@ -219,7 +220,8 @@ export class AgentExecutor {
   private static readonly V2_CAPABILITIES = [
     'pesquisar_atividades_disponiveis',
     'decidir_atividades_criar',
-    'gerar_conteudo_atividades'
+    'gerar_conteudo_atividades',
+    'criar_atividade'
   ];
 
   private async executeCapabilities(etapa: ExecutionStep): Promise<any[]> {
@@ -325,6 +327,8 @@ export class AgentExecutor {
               v2Result = await decidirAtividadesCriarV2(capabilityInput);
             } else if (capName === 'gerar_conteudo_atividades') {
               v2Result = await gerarConteudoAtividadesV2(capabilityInput);
+            } else if (capName === 'criar_atividade') {
+              v2Result = await criarAtividadeV2(capabilityInput);
             }
             
             // Validar que temos um resultado
