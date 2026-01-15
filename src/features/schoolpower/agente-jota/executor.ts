@@ -312,6 +312,8 @@ export class AgentExecutor {
             
             if (capName === 'pesquisar_atividades_disponiveis') {
               v2Result = await pesquisarAtividadesDisponiveisV2(capabilityInput);
+            } else if (capName === 'gerar_conteudo_atividades') {
+              v2Result = await gerarConteudoAtividadesV2(capabilityInput);
             } else if (capName === 'decidir_atividades_criar') {
               v2Result = await decidirAtividadesCriarV2(capabilityInput);
             } else if (capName === 'gerar_conteudo_atividades') {
