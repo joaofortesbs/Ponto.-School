@@ -8,6 +8,10 @@
  * 
  * NOTA: O salvamento no banco de dados foi removido temporariamente.
  * As atividades são apenas marcadas como criadas para exibição na UI.
+ * 
+ * FEATURE: Auto-Build Automático
+ * Quando autoBuild=true, após marcar atividades como concluídas,
+ * o sistema automaticamente aciona a construção de conteúdo via AutoBuildService.
  */
 
 import type { 
@@ -18,6 +22,8 @@ import type {
 } from '../../shared/types';
 import { createDataConfirmation, createDataCheck } from '../../shared/types';
 import { useChosenActivitiesStore } from '../../../../interface-chat-producao/stores/ChosenActivitiesStore';
+import { autoBuildService } from '../../../../construction/services/autoBuildService';
+import type { ConstructionActivity } from '../../../../construction/types';
 
 const CAPABILITY_ID = 'criar_atividade';
 
@@ -217,7 +223,138 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // 3. GERAR RESULTADO FINAL
+    // 3. AUTO-BUILD: CONSTRUIR ATIVIDADES AUTOMATICAMENTE (SE HABILITADO)
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    // Verificar se auto-build está habilitado (sempre true por padrão agora)
+    // Pode ser desabilitado via context.autoBuild = false
+    const autoBuildEnabled = input.context?.autoBuild !== false; // Habilitado por padrão
+    
+    if (autoBuildEnabled && builtActivities.length > 0) {
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'action',
+        narrative: `🔨 Iniciando construção automática de ${builtActivities.length} atividade(s)...`,
+        technical_data: { 
+          auto_build_enabled: true,
+          activities_to_build: builtActivities.map(a => a.original_id)
+        }
+      });
+      
+      console.error(`
+═══════════════════════════════════════════════════════════════════════
+🔨 [V2] AUTO-BUILD: Iniciando construção automática
+═══════════════════════════════════════════════════════════════════════
+Atividades: ${builtActivities.length}
+═══════════════════════════════════════════════════════════════════════`);
+
+      // Emitir evento informando início do auto-build
+      window.dispatchEvent(new CustomEvent('agente-jota-progress', {
+        detail: {
+          type: 'construction:auto_build_started',
+          totalActivities: builtActivities.length,
+          message: `Iniciando construção automática de ${builtActivities.length} atividade(s)...`
+        }
+      }));
+      
+      // Converter BuiltActivity para ConstructionActivity
+      const constructionActivities: ConstructionActivity[] = builtActivities.map(built => ({
+        id: built.original_id,
+        title: built.titulo,
+        personalizedTitle: built.titulo,
+        description: built.conteudo_gerado || '',
+        personalizedDescription: built.conteudo_gerado || '',
+        categoryId: built.tipo,
+        categoryName: built.categoria || 'Geral',
+        icon: '📚',
+        tags: [],
+        difficulty: built.nivel_dificuldade || 'medio',
+        estimatedTime: '30 min',
+        customFields: built.campos_preenchidos || {},
+        originalData: {
+          type: built.tipo,
+          fields: built.campos_preenchidos
+        },
+        preenchidoAutomaticamente: true,
+        isBuilt: false, // Ainda não construída
+        status: 'pending',
+        progress: 0,
+        type: built.tipo
+      }));
+      
+      // Configurar callback de progresso
+      autoBuildService.setProgressCallback((progress) => {
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'info',
+          narrative: `[Auto-Build] ${progress.currentActivity} (${progress.current}/${progress.total})`,
+          technical_data: { progress }
+        });
+        
+        // Emitir progresso para UI
+        window.dispatchEvent(new CustomEvent('agente-jota-progress', {
+          detail: {
+            type: 'construction:auto_build_progress',
+            current: progress.current,
+            total: progress.total,
+            currentActivity: progress.currentActivity,
+            status: progress.status
+          }
+        }));
+      });
+      
+      try {
+        // Executar construção automática de todas as atividades
+        await autoBuildService.buildAllActivities(constructionActivities);
+        
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'discovery',
+          narrative: `✅ Construção automática concluída com sucesso!`,
+          technical_data: { activities_built: constructionActivities.length }
+        });
+        
+        // Emitir evento de conclusão do auto-build
+        window.dispatchEvent(new CustomEvent('agente-jota-progress', {
+          detail: {
+            type: 'construction:auto_build_completed',
+            success: true,
+            totalBuilt: constructionActivities.length
+          }
+        }));
+        
+        console.error(`
+═══════════════════════════════════════════════════════════════════════
+✅ [V2] AUTO-BUILD: Construção automática CONCLUÍDA
+═══════════════════════════════════════════════════════════════════════
+Atividades construídas: ${constructionActivities.length}
+═══════════════════════════════════════════════════════════════════════`);
+
+      } catch (autoBuildError) {
+        const errorMsg = autoBuildError instanceof Error ? autoBuildError.message : String(autoBuildError);
+        
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'error',
+          narrative: `⚠️ Erro no auto-build: ${errorMsg}`,
+          technical_data: { error: errorMsg }
+        });
+        
+        // Emitir evento de erro do auto-build
+        window.dispatchEvent(new CustomEvent('agente-jota-progress', {
+          detail: {
+            type: 'construction:auto_build_error',
+            error: errorMsg
+          }
+        }));
+        
+        console.error(`⚠️ [V2] AUTO-BUILD Error:`, autoBuildError);
+        // Não lançar erro - continuar mesmo se auto-build falhar
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // 4. GERAR RESULTADO FINAL
     // ═══════════════════════════════════════════════════════════════════════
     
     const duration = Date.now() - startTime;

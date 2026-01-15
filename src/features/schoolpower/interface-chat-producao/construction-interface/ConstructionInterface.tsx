@@ -305,6 +305,51 @@ export function ConstructionInterface({
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewActivity, setViewActivity] = useState<ConstructionActivity | null>(null);
 
+  // Estado para o auto-build automático
+  const [autoBuildStatus, setAutoBuildStatus] = useState<{
+    isRunning: boolean;
+    currentActivity: string;
+    current: number;
+    total: number;
+  } | null>(null);
+
+  // Listener para eventos de auto-build
+  useEffect(() => {
+    const handleAutoBuildProgress = (event: CustomEvent) => {
+      const { type, ...data } = event.detail;
+      
+      if (type === 'construction:auto_build_started') {
+        console.log('🔨 [ConstructionInterface] Auto-build iniciado:', data);
+        setAutoBuildStatus({
+          isRunning: true,
+          currentActivity: 'Iniciando...',
+          current: 0,
+          total: data.totalActivities || 0
+        });
+      } else if (type === 'construction:auto_build_progress') {
+        console.log('⚙️ [ConstructionInterface] Auto-build progresso:', data);
+        setAutoBuildStatus({
+          isRunning: true,
+          currentActivity: data.currentActivity || '',
+          current: data.current || 0,
+          total: data.total || 0
+        });
+      } else if (type === 'construction:auto_build_completed') {
+        console.log('✅ [ConstructionInterface] Auto-build concluído:', data);
+        setAutoBuildStatus(null);
+      } else if (type === 'construction:auto_build_error') {
+        console.log('❌ [ConstructionInterface] Auto-build erro:', data);
+        setAutoBuildStatus(null);
+      }
+    };
+
+    window.addEventListener('agente-jota-progress', handleAutoBuildProgress as EventListener);
+    
+    return () => {
+      window.removeEventListener('agente-jota-progress', handleAutoBuildProgress as EventListener);
+    };
+  }, []);
+
   // Handler para abrir o modal de edição ao clicar no lápis
   const handleActivityClick = useCallback((activity: ActivityToBuild) => {
     console.log('🔧 [ConstructionInterface] Abrindo modal de EDIÇÃO para atividade:', activity.name);
@@ -436,6 +481,39 @@ export function ConstructionInterface({
               />
             </div>
           </div>
+        )}
+
+        {/* Indicador de Auto-Build em andamento */}
+        {autoBuildStatus?.isRunning && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 p-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl border border-blue-500/30"
+          >
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+              <div className="flex-1">
+                <p className="text-blue-300 font-medium text-sm">
+                  🔨 Construção Automática em Andamento
+                </p>
+                <p className="text-white/60 text-xs mt-1">
+                  {autoBuildStatus.currentActivity}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-blue-400 font-bold text-sm">
+                  {autoBuildStatus.current}/{autoBuildStatus.total}
+                </p>
+              </div>
+            </div>
+            <div className="mt-2 h-1.5 bg-black/30 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: autoBuildStatus.total > 0 ? `${(autoBuildStatus.current / autoBuildStatus.total) * 100}%` : '0%' }}
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+              />
+            </div>
+          </motion.div>
         )}
       </div>
 
