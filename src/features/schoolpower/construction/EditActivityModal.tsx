@@ -504,16 +504,16 @@ const EditActivityModal = ({
       console.log('🎯 Iniciando geração real do Quiz Interativo');
       console.log('📋 FormData completo:', formData);
 
-      // Validar dados obrigatórios (usando safeToString para lidar com números)
-      if (!hasValue(formData.title)) {
-        throw new Error('Título é obrigatório');
-      }
-      if (!hasValue(formData.theme)) {
-        throw new Error('Tema é obrigatório');
-      }
-      if (!hasValue(formData.subject)) {
-        throw new Error('Disciplina é obrigatória');
-      }
+      // Usar valores padrão se campos não estiverem preenchidos (geração flexível)
+      const defaultTitle = 'Quiz Interativo';
+      const defaultTheme = 'Conhecimentos Gerais';
+      const defaultSubject = 'Matemática';
+      
+      console.log('📝 Campos verificados - usando valores padrão se vazios:', {
+        title: hasValue(formData.title) ? formData.title : `(padrão: ${defaultTitle})`,
+        theme: hasValue(formData.theme) ? formData.theme : `(padrão: ${defaultTheme})`,
+        subject: hasValue(formData.subject) ? formData.subject : `(padrão: ${defaultSubject})`
+      });
 
       // Importar o gerador do Quiz Interativo
       const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
@@ -546,11 +546,17 @@ const EditActivityModal = ({
       });
 
 
-      // Validar campos críticos
-      const requiredFields = ['subject', 'theme', 'numberOfQuestions'];
-      for (const field of requiredFields) {
+      // Verificar campos críticos (usando valores padrão, sem bloquear geração)
+      const fieldDefaults: Record<string, string> = {
+        subject: defaultSubject,
+        theme: defaultTheme,
+        numberOfQuestions: '10'
+      };
+      
+      for (const [field, defaultValue] of Object.entries(fieldDefaults)) {
         if (!quizData[field as keyof typeof quizData]) {
-          throw new Error(`Campo obrigatório não preenchido: ${field}`);
+          console.log(`⚠️ Campo "${field}" vazio, usando valor padrão: ${defaultValue}`);
+          (quizData as any)[field] = defaultValue;
         }
       }
 
@@ -719,19 +725,20 @@ const EditActivityModal = ({
 
       console.log('🃏 Iniciando geração de Flash Cards...');
 
-      // Validação de campos obrigatórios com mensagens mais claras (usando hasValue para tipos mistos)
-      if (!hasValue(formData.theme)) {
-        throw new Error('Tema é obrigatório para gerar Flash Cards');
-      }
-
-      if (!hasValue(formData.topicos)) {
-        throw new Error('Tópicos são obrigatórios para gerar Flash Cards');
-      }
+      // Usar valores padrão se campos não estiverem preenchidos (geração flexível)
+      const defaultTheme = 'Conhecimentos Gerais';
+      const defaultTopicos = 'Conceitos básicos, Definições importantes, Exemplos práticos';
+      
+      const effectiveTheme = hasValue(formData.theme) ? safeToString(formData.theme).trim() : defaultTheme;
+      const effectiveTopicos = hasValue(formData.topicos) ? safeToString(formData.topicos).trim() : defaultTopicos;
+      
+      console.log('📝 Campos verificados - usando valores padrão se vazios:', {
+        theme: hasValue(formData.theme) ? formData.theme : `(padrão: ${defaultTheme})`,
+        topicos: hasValue(formData.topicos) ? formData.topicos : `(padrão: ${defaultTopicos})`
+      });
 
       const numberOfCards = parseInt(safeToString(formData.numberOfFlashcards) || '10') || 10;
-      if (numberOfCards <= 0 || numberOfCards > 50) {
-        throw new Error('Número de Flash Cards deve estar entre 1 e 50');
-      }
+      const validNumberOfCards = Math.max(1, Math.min(numberOfCards, 50)); // Garantir entre 1 e 50
 
       // Progress timer
       const progressTimer = setInterval(() => {
@@ -742,17 +749,17 @@ const EditActivityModal = ({
         // Importar o gerador de Flash Cards
         const { FlashCardsGenerator } = await import('@/features/schoolpower/activities/flash-cards/FlashCardsGenerator');
 
-        // Preparar dados estruturados para o gerador com validação (usando safeToString para conversão segura)
+        // Preparar dados estruturados para o gerador com validação (usando valores efetivos com fallbacks)
         const flashCardData = {
-          title: safeToString(formData.title).trim(),
-          theme: safeToString(formData.theme).trim(),
+          title: safeToString(formData.title).trim() || 'Flash Cards',
+          theme: effectiveTheme,
           subject: safeToString(formData.subject).trim() || 'Geral',
           schoolYear: safeToString(formData.schoolYear).trim() || 'Ensino Médio',
-          topicos: safeToString(formData.topicos).trim(),
-          numberOfFlashcards: numberOfCards.toString(),
+          topicos: effectiveTopicos,
+          numberOfFlashcards: validNumberOfCards.toString(),
           contextoUso: safeToString(formData.contextoUso).trim() || safeToString(formData.context).trim() || 'Estudos e revisão',
           difficultyLevel: safeToString(formData.difficultyLevel).trim() || 'Médio',
-          objectives: safeToString(formData.objectives).trim() || `Facilitar o aprendizado sobre ${safeToString(formData.theme).trim()}`,
+          objectives: safeToString(formData.objectives).trim() || `Facilitar o aprendizado sobre ${effectiveTheme}`,
           instructions: safeToString(formData.instructions).trim() || 'Use os flash cards para estudar e revisar o conteúdo',
           evaluation: safeToString(formData.evaluation).trim() || 'Avalie o conhecimento através da prática com os cards'
         };
