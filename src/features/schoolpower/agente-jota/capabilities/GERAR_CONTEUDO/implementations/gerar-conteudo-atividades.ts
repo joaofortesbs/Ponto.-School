@@ -1017,6 +1017,26 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
         store.updateActivityStatus(activity.id, 'aguardando', 100);
         store.setActivityGeneratedFields(activity.id, syncedFields);
         
+        // 🔥 SALVAR NO LOCALSTORAGE PARA INTERFACE DE CONSTRUÇÃO
+        // A interface verifica localStorage para preencher campos automaticamente
+        if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+          try {
+            const storageKey = `generated_content_${activity.id}`;
+            const storageData = {
+              activity_id: activity.id,
+              activity_type: activity.tipo,
+              fields: syncedFields,
+              original_fields: result.generated_fields,
+              validation: validation,
+              timestamp: new Date().toISOString()
+            };
+            localStorage.setItem(storageKey, JSON.stringify(storageData));
+            console.log(`💾 [V2] Saved to localStorage: ${storageKey}`);
+          } catch (e) {
+            console.warn(`⚠️ [V2] Failed to save to localStorage:`, e);
+          }
+        }
+        
         // Emitir evento para UI
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('agente-jota-fields-generated', {
@@ -1030,14 +1050,25 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
           }));
         }
         
+        // 📋 CRIAR LOG DETALHADO COM CADA CAMPO E SEU VALOR
+        const fieldDetails = Object.entries(syncedFields).map(([key, value]) => {
+          const displayValue = typeof value === 'string' 
+            ? (value.length > 100 ? value.substring(0, 100) + '...' : value)
+            : JSON.stringify(value);
+          return `• ${key}: ${displayValue}`;
+        }).join('\n');
+        
         debug_log.push({
           timestamp: new Date().toISOString(),
           type: 'discovery',
-          narrative: `✅ Conteúdo gerado para "${activity.titulo}": ${Object.keys(result.generated_fields).length} campos preenchidos`,
+          narrative: `✅ Conteúdo gerado para "${activity.titulo}": ${Object.keys(result.generated_fields).length} campos preenchidos\n\n📋 CAMPOS GERADOS:\n${fieldDetails}`,
           technical_data: { 
             activity_id: activity.id,
+            activity_type: activity.tipo,
             fields_count: Object.keys(result.generated_fields).length,
-            generated_fields: result.generated_fields
+            generated_fields: result.generated_fields,
+            synced_fields: syncedFields,
+            validation_result: validation
           }
         });
         
