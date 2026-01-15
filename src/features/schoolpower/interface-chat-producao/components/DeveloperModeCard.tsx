@@ -156,6 +156,20 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
           : activitiesToBuildRef.current;
         setCompletedActivities(activitiesForGeneration);
       }
+
+      // Handler para erro no pipeline - MANTER cards visíveis com status de erro
+      if (update.type === 'construction:pipeline_error') {
+        console.log(`⚠️ [DeveloperModeCard] Pipeline error - mantendo cards visíveis:`, update.error);
+        setIsBuildingActivities(false);
+        
+        // Marcar todas as atividades pendentes/building como erro, mas NÃO limpar a lista
+        // ActivityBuildStatus é 'waiting' | 'building' | 'completed' | 'error'
+        setActivitiesToBuild(prev => prev.map(a => 
+          a.status === 'waiting' || a.status === 'building'
+            ? { ...a, status: 'error' as const, error_message: update.error || 'Erro ao salvar atividade' }
+            : a
+        ));
+      }
     };
 
     window.addEventListener('agente-jota-progress', handleProgress as EventListener);

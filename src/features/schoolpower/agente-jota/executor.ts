@@ -351,7 +351,7 @@ data keys: ${v2Result.data ? Object.keys(v2Result.data).join(', ') : 'NONE'}
 error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
 ═══════════════════════════════════════════════════════════════════════`);
             
-            // Se a V2 retornou success=false, tratar como erro crítico
+            // Se a V2 retornou success=false, tratar como erro (crítico ou não dependendo da capability)
             if (!v2Result.success) {
               const errorMsg = v2Result.error 
                 ? (typeof v2Result.error === 'string' ? v2Result.error : v2Result.error.message || 'Erro desconhecido')
@@ -368,9 +368,23 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
                 { error: v2Result.error, v2_result: v2Result }
               );
               
-              // Para capabilities críticas, lançar erro para interromper o fluxo
-              // e evitar que capabilities dependentes executem com dados inválidos
-              throw new Error(`Capability crítica "${capName}" falhou: ${errorMsg}`);
+              // criar_atividade NÃO é crítica - manter cards visíveis com status de erro
+              if (capName === 'criar_atividade') {
+                console.error(`⚠️ [Executor] criar_atividade failed but NOT throwing - cards will remain visible`);
+                
+                // Emitir evento para marcar atividades com erro mas mantê-las visíveis
+                this.emitProgress({
+                  sessionId: this.sessionId,
+                  type: 'construction:pipeline_error',
+                  error: errorMsg,
+                  keepCardsVisible: true
+                } as any);
+                
+                // NÃO lançar exceção - continuar fluxo normalmente
+              } else {
+                // Para outras capabilities críticas, lançar erro para interromper o fluxo
+                throw new Error(`Capability crítica "${capName}" falhou: ${errorMsg}`);
+              }
             }
           } else {
             // Injetar resultados de capabilities anteriores quando necessário
@@ -602,10 +616,24 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
         // Finalizar debug mesmo com erro
         useDebugStore.getState().endCapability(capId);
         
-        // Para capabilities V2 críticas, propagar o erro para interromper todo o fluxo
-        if (AgentExecutor.V2_CAPABILITIES.includes(capName)) {
+        // Para capabilities V2 críticas (exceto criar_atividade), propagar o erro para interromper todo o fluxo
+        // criar_atividade NÃO é crítica - os cards de construção devem permanecer visíveis mesmo após falha
+        if (AgentExecutor.V2_CAPABILITIES.includes(capName) && capName !== 'criar_atividade') {
           console.error(`🛑 [Executor] CRITICAL V2 capability "${capName}" failed - halting pipeline execution`);
           throw error; // Re-lançar para interromper executeCapabilitiesForEtapa
+        }
+        
+        // Para criar_atividade, emitir evento de erro mas manter cards visíveis
+        if (capName === 'criar_atividade') {
+          console.error(`⚠️ [Executor] criar_atividade failed but continuing - cards will remain visible with error status`);
+          
+          // Emitir evento para marcar atividades com erro mas mantê-las visíveis
+          this.emitProgress({
+            sessionId: this.sessionId,
+            type: 'construction:pipeline_error',
+            error: errorMessage,
+            keepCardsVisible: true
+          } as any);
         }
       }
     }
