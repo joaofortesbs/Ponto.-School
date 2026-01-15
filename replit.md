@@ -34,6 +34,7 @@ The platform features a modern design utilizing glass-morphism effects, blur bac
       - All 4 capabilities are now ENABLED in V2_CAPABILITIES: pesquisar → decidir → gerar → criar
       - Field names are confirmed aligned across: `gerar-conteudo-schema.ts`, `activity-fields-sync.ts`, `EditActivityModal.tsx`, and `schoolPowerActivities.json`
       - The executor now emits `construction:activities_ready` immediately after `decidir_atividades_criar` completes, ensuring the ConstructionInterface receives activities regardless of `criar_atividade` result
+      - **criar_atividade** now does NOT save to database - it only marks activities as completed for UI display. Database persistence was removed to prevent failures.
       - Example validated mappings: tese-redacao uses `temaRedacao`, `objetivo`, `nivelDificuldade`, `competenciasENEM`; flash-cards uses `theme`, `topicos`, `numberOfFlashcards`
     - **Activity Catalog**: Located at `src/features/schoolpower/data/schoolPowerActivities.json`, this catalog defines all available activity types with their required/optional fields. The `campos_obrigatorios` field names must match exactly the `requiredFields` names in `gerar-conteudo-schema.ts` for content generation to work correctly.
     - **Study Groups**: Real-time chat with member management.
