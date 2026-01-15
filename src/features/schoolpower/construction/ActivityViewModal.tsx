@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap, Calculator, Beaker, PenTool, GamepadIcon } from "lucide-react"; // Import Eye component
 import { Button } from '@/components/ui/button';
@@ -895,13 +896,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   };
 
-  return (
+  // Conteúdo do modal
+  const modalContent = (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-[99999] p-4"
         onClick={onClose}
       >
         <motion.div
@@ -1003,6 +1005,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       </motion.div>
     </AnimatePresence>
   );
+
+  // Usar Portal para renderizar o modal no body, garantindo que fique por cima de todos os componentes
+  return createPortal(modalContent, document.body);
 }
 
 // Default export for compatibility
