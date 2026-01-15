@@ -2,6 +2,7 @@ import { ConstructionActivity } from '../types';
 import { quadroInterativoFieldMapping, prepareQuadroInterativoDataForModal } from '../../activities/quadro-interativo';
 import { activitiesApi } from '../../../../services/activitiesApiService';
 import { profileService } from '../../../../services/profileService';
+import { buildActivityFromFormData } from './buildActivityHelper';
 
 export interface AutoBuildProgress {
   current: number;
@@ -720,33 +721,14 @@ export class AutoBuildService {
       } else {
         // Lógica padrão para outras atividades que não sejam Tese da Redação ou Quadro Interativo
         const formData = await this.prepareFormDataExactlyLikeModal(activity);
-        const { generateActivityContent } = await import('../api/generateActivity');
         const activityType = activity.type || activity.id || 'lista-exercicios';
 
-        console.log(`🤖 [AUTO-BUILD] Chamando generateActivityContent: ${activityType}`);
-        const result = await generateActivityContent(activityType, formData);
+        console.log(`🤖 [AUTO-BUILD] Chamando buildActivityFromFormData: ${activityType}`);
+        
+        const result = await buildActivityFromFormData(activity.id, activityType, formData);
 
         if (result) {
-          const saveKey = `activity_${activity.id}`;
-          const savedContent = {
-            ...result,
-            generatedAt: new Date().toISOString(),
-            activityId: activity.id,
-            activityType: activityType,
-            formData: formData
-          };
-
-          localStorage.setItem(saveKey, JSON.stringify(savedContent));
-
-          const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-          constructedActivities[activity.id] = {
-            isBuilt: true,
-            builtAt: new Date().toISOString(),
-            formData: formData,
-            generatedContent: result
-          };
-          localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-
+          // Update activity properties
           activity.isBuilt = true;
           activity.builtAt = new Date().toISOString();
           activity.progress = 100;

@@ -110,6 +110,8 @@ export function useActivityAutoLoad(
       // PRIORIDADE 2: Buscar no localStorage (fallback)
       if (!loadedData) {
         const possibleKeys = [
+          `activity_${activityId}`,           // Chave usada pelo buildActivityHelper (sync com ViewModal)
+          `constructedActivities`,            // Objeto global com todas as atividades construídas
           `generated_content_${activityId}`,  // Chave usada pelo gerar_conteudo_atividades
           `auto_activity_data_${activityId}`,
           `${activityId}_form_data`,
@@ -126,7 +128,22 @@ export function useActivityAutoLoad(
             
             try {
               const parsed = JSON.parse(savedData);
-              const data = parsed.formData || parsed;
+              
+              // Tratamento especial para constructedActivities (objeto global)
+              if (key === 'constructedActivities') {
+                const activityData = parsed[activityId];
+                if (activityData) {
+                  console.log('%c📋 [AUTO-LOAD] Dados de constructedActivities:', 'color: #4CAF50;', activityData);
+                  const data = activityData.generatedContent?.data || activityData.formData || activityData;
+                  loadedData = processActivityData(activityId, data);
+                  console.log('%c✨ [AUTO-LOAD] Dados processados de constructedActivities:', 'color: #9C27B0;', loadedData);
+                  break;
+                }
+                continue; // Continuar se não encontrar nesta chave
+              }
+              
+              // Tratamento normal para outras chaves
+              const data = parsed.generatedContent?.data || parsed.formData || parsed;
               
               console.log('%c📋 [AUTO-LOAD] Dados parseados:', 'color: #4CAF50;', data);
               
