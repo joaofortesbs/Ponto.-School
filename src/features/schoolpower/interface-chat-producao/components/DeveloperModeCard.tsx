@@ -118,19 +118,40 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
       }
 
       if (update.type === 'construction:activity_progress') {
-        console.log(`📊 [DeveloperModeCard] Progresso da atividade:`, update.activityId, update.progress);
+        console.log(`📊 [DeveloperModeCard] Progresso da atividade:`, update.activityId, update.progress, update.fields_completed);
         setActivitiesToBuild(prev => prev.map(a => 
-          a.id === update.activityId 
-            ? { ...a, status: 'building' as const, progress: update.progress }
+          a.id === update.activityId || a.activity_id === update.activityId
+            ? { 
+                ...a, 
+                status: 'building' as const, 
+                progress: update.progress,
+                // CORREÇÃO: Atualizar contagem de campos se disponível
+                fields_completed: update.fields_completed ?? a.fields_completed
+              }
             : a
         ));
       }
 
       if (update.type === 'construction:activity_completed') {
-        console.log(`✅ [DeveloperModeCard] Atividade concluída:`, update.activityId);
+        // CORREÇÃO CRÍTICA: Calcular campos a partir de update.data.fields
+        const fields = update.data?.fields || {};
+        const fieldsCompleted = update.data?.fields_completed ?? Object.keys(fields).filter((k: string) => 
+          fields[k] !== undefined && fields[k] !== ''
+        ).length;
+        
+        console.log(`✅ [DeveloperModeCard] Atividade concluída:`, update.activityId, `- ${fieldsCompleted} campos`);
+        
         setActivitiesToBuild(prev => prev.map(a => 
-          a.id === update.activityId 
-            ? { ...a, status: 'completed' as const, progress: 100, built_data: update.data }
+          a.id === update.activityId || a.activity_id === update.activityId
+            ? { 
+                ...a, 
+                status: 'completed' as const, 
+                progress: 100, 
+                built_data: update.data,
+                // CORREÇÃO: Incluir contagem de campos correta
+                fields_completed: fieldsCompleted,
+                fields_total: a.fields_total || Object.keys(fields).length || 5
+              }
             : a
         ));
       }
