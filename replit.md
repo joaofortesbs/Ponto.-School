@@ -35,8 +35,15 @@ The platform features a modern design utilizing glass-morphism effects, blur bac
       - All 4 capabilities are now ENABLED in V2_CAPABILITIES: pesquisar → decidir → gerar → criar
       - Field names are confirmed aligned across: `gerar-conteudo-schema.ts`, `activity-fields-sync.ts`, `EditActivityModal.tsx`, and `schoolPowerActivities.json`
       - The executor now emits `construction:activities_ready` immediately after `decidir_atividades_criar` completes, ensuring the ConstructionInterface receives activities regardless of `criar_atividade` result
-      - **criar_atividade** now does NOT save to database - it only marks activities as completed for UI display. Database persistence was removed to prevent failures.
+      - **criar_atividade V2 now performs REAL AI generation per activity** - each activity has its own API call to Groq/Gemini with detailed debug logging
       - Example validated mappings: tese-redacao uses `temaRedacao`, `objetivo`, `nivelDificuldade`, `competenciasENEM`; flash-cards uses `theme`, `topicos`, `numberOfFlashcards`
+    - **Individual Activity Construction Pipeline** (Updated Jan 2026):
+      - **7-Phase Individual Construction**: Each activity goes through: initialization (10%) → form data preparation (20%) → API call to AI (30-60%) → validation (70%) → localStorage persistence (80%) → store update (90%) → completion (100%)
+      - **Real AI Calls**: Uses `buildActivityFromFormData` which calls `generateActivityContent` for real Groq/Gemini API calls
+      - **Detailed Debug Logging**: Every phase logs to ActivityDebugStore with timestamps, API durations, response validation, and storage keys
+      - **Multi-Key localStorage**: Saves to 4 keys per activity: `constructed_{type}_{id}`, `activity_{id}`, `generated_content_{id}`, `constructedActivities`
+      - **Event Emission**: Emits `construction:activity_progress` and `construction:activity_completed` for UI updates
+      - **ViewActivityModal Sync**: Listens for `activity-data-sync` events and polls localStorage for real-time content updates
     - **Activity Construction Flow** (Updated Jan 2026):
       - **Bifurcated Pipeline**: Clear separation between content generation and visual construction
       - **Phase 1 - gerar_conteudo_atividades**: Generates AI content, saves to localStorage, marks status as "aguardando" (80% progress), logs to ActivityDebugStore
