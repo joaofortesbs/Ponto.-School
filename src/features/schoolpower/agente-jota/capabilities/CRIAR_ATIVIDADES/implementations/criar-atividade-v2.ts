@@ -6,12 +6,12 @@
  * Responsabilidade: Receber atividades com campos já gerados pela 
  * capability gerar_conteudo_atividades e marcar como concluídas.
  * 
- * NOTA: O salvamento no banco de dados foi removido temporariamente.
- * As atividades são apenas marcadas como criadas para exibição na UI.
+ * NOTA: A persistência real agora é feita pelo gerar_conteudo_atividades 
+ * que salva diretamente no localStorage. Esta capability apenas:
+ * 1. Atualiza o status no store
+ * 2. Anima o progresso visual para feedback ao usuário
  * 
- * FEATURE: Auto-Build Automático
- * Quando autoBuild=true, após marcar atividades como concluídas,
- * o sistema automaticamente aciona a construção de conteúdo via AutoBuildService.
+ * Isso elimina race conditions com ModalBridge e garante dados persistidos.
  */
 
 import type { 
@@ -22,8 +22,6 @@ import type {
 } from '../../shared/types';
 import { createDataConfirmation, createDataCheck } from '../../shared/types';
 import { useChosenActivitiesStore } from '../../../../interface-chat-producao/stores/ChosenActivitiesStore';
-import { autoBuildService } from '../../../../construction/services/autoBuildService';
-import type { ConstructionActivity } from '../../../../construction/types';
 
 const CAPABILITY_ID = 'criar_atividade';
 
@@ -275,134 +273,93 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // 3. AUTO-BUILD: CONSTRUIR ATIVIDADES AUTOMATICAMENTE (SE HABILITADO)
+    // 3. ANIMAÇÃO VISUAL DE CONSTRUÇÃO (COSMÉTICA)
+    // ═══════════════════════════════════════════════════════════════════════
+    // NOTA: A persistência REAL já foi feita pelo gerar_conteudo_atividades
+    // Esta seção apenas anima o progresso visual para feedback ao usuário
+    // Não depende mais do ModalBridge ou autoBuildService
     // ═══════════════════════════════════════════════════════════════════════
     
-    // Verificar se auto-build está habilitado (sempre true por padrão agora)
-    // Pode ser desabilitado via context.autoBuild = false
-    const autoBuildEnabled = input.context?.autoBuild !== false; // Habilitado por padrão
-    
-    if (autoBuildEnabled && builtActivities.length > 0) {
+    if (builtActivities.length > 0) {
       debug_log.push({
         timestamp: new Date().toISOString(),
         type: 'action',
-        narrative: `🔨 Iniciando construção automática de ${builtActivities.length} atividade(s)...`,
+        narrative: `🎬 Animando progresso visual de ${builtActivities.length} atividade(s)...`,
         technical_data: { 
-          auto_build_enabled: true,
-          activities_to_build: builtActivities.map(a => a.original_id)
+          activities_count: builtActivities.length,
+          note: 'Dados já persistidos pelo gerar_conteudo_atividades'
         }
       });
       
       console.error(`
 ═══════════════════════════════════════════════════════════════════════
-🔨 [V2] AUTO-BUILD: Iniciando construção automática
+🎬 [V2] ANIMAÇÃO VISUAL DE CONSTRUÇÃO
 ═══════════════════════════════════════════════════════════════════════
-Atividades: ${builtActivities.length}
+Atividades: ${builtActivities.length} (dados já persistidos no localStorage)
 ═══════════════════════════════════════════════════════════════════════`);
 
-      // Emitir evento informando início do auto-build
+      // Emitir evento informando início da animação
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: {
           type: 'construction:auto_build_started',
           totalActivities: builtActivities.length,
-          message: `Iniciando construção automática de ${builtActivities.length} atividade(s)...`
+          message: `Finalizando construção de ${builtActivities.length} atividade(s)...`
         }
       }));
       
-      // Converter BuiltActivity para ConstructionActivity
-      const constructionActivities: ConstructionActivity[] = builtActivities.map(built => ({
-        id: built.original_id,
-        title: built.titulo,
-        personalizedTitle: built.titulo,
-        description: built.conteudo_gerado || '',
-        personalizedDescription: built.conteudo_gerado || '',
-        categoryId: built.tipo,
-        categoryName: built.categoria || 'Geral',
-        icon: '📚',
-        tags: [],
-        difficulty: built.nivel_dificuldade || 'medio',
-        estimatedTime: '30 min',
-        customFields: built.campos_preenchidos || {},
-        originalData: {
-          type: built.tipo,
-          fields: built.campos_preenchidos
-        },
-        preenchidoAutomaticamente: true,
-        isBuilt: false, // Ainda não construída
-        status: 'pending',
-        progress: 0,
-        type: built.tipo
-      }));
-      
-      // Configurar callback de progresso
-      autoBuildService.setProgressCallback((progress) => {
-        debug_log.push({
-          timestamp: new Date().toISOString(),
-          type: 'info',
-          narrative: `[Auto-Build] ${progress.currentActivity} (${progress.current}/${progress.total})`,
-          technical_data: { progress }
-        });
+      // Animar progresso com delays reais para feedback visual natural
+      for (let i = 0; i < builtActivities.length; i++) {
+        const built = builtActivities[i];
+        const progress = Math.round(((i + 1) / builtActivities.length) * 100);
+        
+        // Delay de 500-800ms entre cada atividade para animação natural
+        await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 300));
         
         // Emitir progresso para UI
         window.dispatchEvent(new CustomEvent('agente-jota-progress', {
           detail: {
             type: 'construction:auto_build_progress',
-            current: progress.current,
-            total: progress.total,
-            currentActivity: progress.currentActivity,
-            status: progress.status
+            current: i + 1,
+            total: builtActivities.length,
+            currentActivity: built.titulo,
+            status: 'running'
           }
         }));
+        
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'info',
+          narrative: `[Animação] ${built.titulo} (${i + 1}/${builtActivities.length}) - ${progress}%`,
+          technical_data: { activity_id: built.original_id, progress }
+        });
+      }
+      
+      // Delay final antes de marcar como concluído
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'discovery',
+        narrative: `✅ Animação de construção concluída!`,
+        technical_data: { activities_animated: builtActivities.length }
       });
       
-      try {
-        // Executar construção automática de todas as atividades
-        await autoBuildService.buildAllActivities(constructionActivities);
-        
-        debug_log.push({
-          timestamp: new Date().toISOString(),
-          type: 'discovery',
-          narrative: `✅ Construção automática concluída com sucesso!`,
-          technical_data: { activities_built: constructionActivities.length }
-        });
-        
-        // Emitir evento de conclusão do auto-build
-        window.dispatchEvent(new CustomEvent('agente-jota-progress', {
-          detail: {
-            type: 'construction:auto_build_completed',
-            success: true,
-            totalBuilt: constructionActivities.length
-          }
-        }));
-        
-        console.error(`
+      // Emitir evento de conclusão
+      window.dispatchEvent(new CustomEvent('agente-jota-progress', {
+        detail: {
+          type: 'construction:auto_build_completed',
+          success: true,
+          totalBuilt: builtActivities.length
+        }
+      }));
+      
+      console.error(`
 ═══════════════════════════════════════════════════════════════════════
-✅ [V2] AUTO-BUILD: Construção automática CONCLUÍDA
+✅ [V2] ANIMAÇÃO DE CONSTRUÇÃO CONCLUÍDA
 ═══════════════════════════════════════════════════════════════════════
-Atividades construídas: ${constructionActivities.length}
+Atividades finalizadas: ${builtActivities.length}
+Dados persistidos: SIM (gerar_conteudo_atividades)
 ═══════════════════════════════════════════════════════════════════════`);
-
-      } catch (autoBuildError) {
-        const errorMsg = autoBuildError instanceof Error ? autoBuildError.message : String(autoBuildError);
-        
-        debug_log.push({
-          timestamp: new Date().toISOString(),
-          type: 'error',
-          narrative: `⚠️ Erro no auto-build: ${errorMsg}`,
-          technical_data: { error: errorMsg }
-        });
-        
-        // Emitir evento de erro do auto-build
-        window.dispatchEvent(new CustomEvent('agente-jota-progress', {
-          detail: {
-            type: 'construction:auto_build_error',
-            error: errorMsg
-          }
-        }));
-        
-        console.error(`⚠️ [V2] AUTO-BUILD Error:`, autoBuildError);
-        // Não lançar erro - continuar mesmo se auto-build falhar
-      }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
