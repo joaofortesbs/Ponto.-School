@@ -288,27 +288,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           console.log(`💰 Stars carregados do localStorage: ${points} STs`);
           setStars(points);
         } else {
-          // Se não encontrou no localStorage, tentar do banco Neon
-          const userId = localStorage.getItem('user_id');
-          if (userId && activity.userId === userId) {
-            try {
-              const { atividadesNeonService } = await import('@/services/atividadesNeonService');
-              const result = await atividadesNeonService.buscarAtividade(activity.id);
-
-              if (result.success && result.data?.stars) {
-                console.log(`💰 Stars carregados do banco: ${result.data.stars} STs`);
-                setStars(result.data.stars);
-              } else {
-                console.log('💰 Usando valor padrão: 100 STs');
-                setStars(100);
-              }
-            } catch (error) {
-              console.warn('⚠️ Erro ao carregar STs do banco:', error);
-              setStars(100);
-            }
-          } else {
-            setStars(100);
-          }
+          console.log('💰 Usando valor padrão: 100 STs');
+          setStars(100);
         }
       };
 
@@ -897,9 +878,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       default:
         return (
           <ActivityPreview
-            data={previewData}
-            activityType={activityType}
-            customFields={previewData.customFields}
+            content={previewData}
+            activityData={{ type: activityType, customFields: previewData.customFields }}
           />
         );
     }
@@ -922,15 +902,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           exit={{ scale: 0.9, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Aplicar background laranja no cabeçalho quando for Plano de Aula */}
-          <style jsx>{`
-            .modal-header {
-              background: ${activityType === 'plano-aula'
-                ? 'linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%)'
-                : 'transparent'
-              };
-            }
-          `}</style>
 
           {/* Cabeçalho Universal para todas as atividades */}
           <UniversalActivityHeader

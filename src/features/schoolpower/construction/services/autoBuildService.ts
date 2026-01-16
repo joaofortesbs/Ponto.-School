@@ -484,6 +484,179 @@ export class AutoBuildService {
       return;
     }
 
+    // Para Quiz Interativo, usar gerador específico com tratamento robusto
+    if (activity.id === 'quiz-interativo') {
+      console.log('🎮 [QUIZ INTERATIVO] Sistema exclusivo de auto-build');
+
+      try {
+        const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo');
+        const generator = new QuizInterativoGenerator();
+
+        // Preparar dados do quiz com fallback robusto
+        const quizData = {
+          subject: activity.customFields?.['Disciplina'] || 
+                  activity.customFields?.['subject'] || 
+                  'Geral',
+          schoolYear: activity.customFields?.['Ano de Escolaridade'] || 
+                     activity.customFields?.['schoolYear'] || 
+                     activity.customFields?.['anoEscolaridade'] ||
+                     'Ensino Médio',
+          theme: activity.customFields?.['Tema'] || 
+                activity.customFields?.['theme'] || 
+                activity.title || 
+                'Tema Geral',
+          objectives: activity.customFields?.['Objetivos'] || 
+                     activity.customFields?.['objectives'] || 
+                     activity.description ||
+                     'Avaliação de conhecimentos',
+          difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || 
+                          activity.customFields?.['difficultyLevel'] || 
+                          'Médio',
+          format: activity.customFields?.['Formato'] || 
+                 activity.customFields?.['format'] || 
+                 'multipla-escolha',
+          numberOfQuestions: activity.customFields?.['Número de Questões'] || 
+                            activity.customFields?.['numberOfQuestions'] || 
+                            activity.customFields?.['quantidadeQuestoes'] ||
+                            '5',
+          timePerQuestion: activity.customFields?.['Tempo por Questão'] || 
+                          activity.customFields?.['timePerQuestion'] || 
+                          '60',
+          instructions: activity.customFields?.['Instruções'] || 
+                       activity.customFields?.['instructions'] || 
+                       'Responda as questões com atenção',
+          evaluation: activity.customFields?.['Avaliação'] || 
+                     activity.customFields?.['evaluation'] || 
+                     'Avaliação automática'
+        };
+
+        console.log('🎮 [QUIZ INTERATIVO] Dados preparados:', quizData);
+
+        const result = await generator.generateQuizContent(quizData);
+
+        // Validar e sanitizar questões
+        const sanitizedQuestions = this.sanitizeQuizQuestions(result?.questions || [], activity.title);
+
+        if (sanitizedQuestions.length > 0) {
+          console.log(`✅ [QUIZ INTERATIVO] ${sanitizedQuestions.length} questões geradas com sucesso`);
+
+          const finalResult = {
+            ...result,
+            questions: sanitizedQuestions,
+            totalQuestions: sanitizedQuestions.length
+          };
+
+          // Salvar dados gerados com múltiplas chaves para compatibilidade
+          const storageKey = `constructed_quiz-interativo_${activity.id}`;
+          const constructedData = {
+            success: true,
+            data: finalResult,
+            timestamp: new Date().toISOString()
+          };
+
+          localStorage.setItem(storageKey, JSON.stringify(constructedData));
+          localStorage.setItem(`activity_${activity.id}`, JSON.stringify(finalResult));
+
+          // Salvar no constructedActivities GLOBAL
+          const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+          constructedActivities[activity.id] = {
+            isBuilt: true,
+            builtAt: new Date().toISOString(),
+            formData: quizData,
+            generatedContent: finalResult
+          };
+          localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+          console.log('✅ [QUIZ INTERATIVO] Salvo em constructedActivities global');
+
+          activity.isBuilt = true;
+          activity.builtAt = new Date().toISOString();
+          activity.progress = 100;
+          activity.status = 'completed';
+
+          // Salvamento automático no banco
+          try {
+            await this.saveActivityToDatabase(activity);
+          } catch (saveError) {
+            console.error('💥 [QUIZ INTERATIVO] Erro no salvamento automático:', saveError);
+          }
+
+          if (this.onActivityBuilt) {
+            this.onActivityBuilt(activity.id);
+          }
+
+          console.log(`✅ [AUTO-BUILD] Quiz Interativo construído: ${activity.title}`);
+          return;
+        } else {
+          console.error('❌ [QUIZ INTERATIVO] Resultado inválido:', result);
+          throw new Error('Nenhuma questão foi gerada pela IA');
+        }
+      } catch (error) {
+        console.error('❌ [QUIZ INTERATIVO] Erro no sistema exclusivo:', error);
+
+        // Fallback manual em caso de erro total
+        console.log('🛡️ [QUIZ INTERATIVO] Ativando fallback manual');
+        const fallbackQuestions = Array.from({ length: 5 }, (_, i) => ({
+          id: i + 1,
+          question: `Questão ${i + 1} sobre ${activity.title}`,
+          type: 'multipla-escolha' as const,
+          options: ['Opção A', 'Opção B', 'Opção C', 'Opção D'],
+          correctAnswer: 'Opção A',
+          explanation: `Esta é a questão ${i + 1} do quiz sobre ${activity.title}`
+        }));
+
+        const fallbackResult = {
+          title: activity.title || 'Quiz Interativo',
+          description: activity.description || `Quiz sobre ${activity.title}`,
+          questions: fallbackQuestions,
+          totalQuestions: fallbackQuestions.length,
+          timePerQuestion: 60,
+          isFallback: true,
+          isGeneratedByAI: false,
+          generatedAt: new Date().toISOString()
+        };
+
+        localStorage.setItem(`constructed_quiz-interativo_${activity.id}`, JSON.stringify({
+          success: true,
+          data: fallbackResult,
+          isFallback: true,
+          timestamp: new Date().toISOString()
+        }));
+
+        localStorage.setItem(`activity_${activity.id}`, JSON.stringify(fallbackResult));
+
+        // Salvar no constructedActivities GLOBAL
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+        constructedActivities[activity.id] = {
+          isBuilt: true,
+          builtAt: new Date().toISOString(),
+          formData: { theme: activity.title },
+          generatedContent: fallbackResult,
+          isFallback: true
+        };
+        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+        console.log('✅ [QUIZ INTERATIVO FALLBACK] Salvo em constructedActivities global');
+
+        activity.isBuilt = true;
+        activity.builtAt = new Date().toISOString();
+        activity.progress = 100;
+        activity.status = 'completed';
+
+        // Salvamento automático no banco
+        try {
+          await this.saveActivityToDatabase(activity);
+        } catch (saveError) {
+          console.error('💥 [QUIZ INTERATIVO FALLBACK] Erro no salvamento automático:', saveError);
+        }
+
+        if (this.onActivityBuilt) {
+          this.onActivityBuilt(activity.id);
+        }
+
+        console.log(`✅ [AUTO-BUILD] Quiz Interativo construído com fallback: ${activity.title}`);
+        return;
+      }
+    }
+
     // Para Flash Cards, usar gerador específico com tratamento robusto
     if (activity.id === 'flash-cards') {
       console.log('🃏 [FLASH CARDS] Sistema exclusivo de auto-build');
@@ -848,6 +1021,51 @@ export class AutoBuildService {
 
       throw error;
     }
+  }
+
+  /**
+   * Sanitiza e normaliza questões de quiz para garantir estrutura válida
+   */
+  private sanitizeQuizQuestions(questions: any[], activityTitle: string): any[] {
+    if (!questions || !Array.isArray(questions)) {
+      console.warn('⚠️ [QUIZ] questions não é um array válido');
+      return [];
+    }
+
+    return questions
+      .filter(q => q && (q.question || q.text || q.pergunta))
+      .map((q, index) => {
+        // Extrair texto da questão
+        const questionText = q.question || q.text || q.pergunta || `Questão ${index + 1}`;
+        
+        // Extrair opções com fallback
+        let options = q.options || q.alternativas || q.opcoes || ['Opção A', 'Opção B', 'Opção C', 'Opção D'];
+        if (!Array.isArray(options) || options.length === 0) {
+          options = ['Opção A', 'Opção B', 'Opção C', 'Opção D'];
+        }
+        
+        // Extrair resposta correta
+        let correctAnswer = q.correctAnswer || q.correct || q.answer || q.resposta || q.respostaCorreta;
+        if (!correctAnswer || (typeof correctAnswer !== 'string')) {
+          correctAnswer = options[0]; // Fallback para primeira opção
+        }
+        
+        // Determinar tipo
+        let type: 'multipla-escolha' | 'verdadeiro-falso' = 'multipla-escolha';
+        if (q.type === 'verdadeiro-falso' || q.tipo === 'verdadeiro-falso' || 
+            (options.length === 2 && options.every(o => ['Verdadeiro', 'Falso', 'V', 'F', 'true', 'false'].includes(String(o))))) {
+          type = 'verdadeiro-falso';
+        }
+
+        return {
+          id: q.id || index + 1,
+          question: questionText,
+          type,
+          options,
+          correctAnswer,
+          explanation: q.explanation || q.explicacao || `Explicação da questão ${index + 1}`
+        };
+      });
   }
 
   /**

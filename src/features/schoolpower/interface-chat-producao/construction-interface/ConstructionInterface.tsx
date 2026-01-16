@@ -330,6 +330,26 @@ function convertToConstructionActivity(activity: ActivityToBuild): ConstructionA
   };
 }
 
+/**
+ * Ordenação por prioridade de status:
+ * 1. completed (verde) - aparecem primeiro
+ * 2. building (amarelo) - atividade em construção  
+ * 3. error (vermelho) - atividades com falha
+ * 4. waiting (cinza) - aparecem por último
+ */
+function sortByStatusPriority(activities: ActivityToBuild[]): ActivityToBuild[] {
+  const statusPriority: Record<ActivityBuildStatus, number> = {
+    'completed': 0,
+    'building': 1,
+    'error': 2,
+    'waiting': 3
+  };
+  
+  return [...activities].sort((a, b) => {
+    return statusPriority[a.status] - statusPriority[b.status];
+  });
+}
+
 export function ConstructionInterface({
   activities,
   isBuilding,
@@ -338,6 +358,8 @@ export function ConstructionInterface({
   onActivityStatusChange,
   autoStart = false
 }: ConstructionInterfaceProps) {
+  const sortedActivities = sortByStatusPriority(activities);
+  
   const completedCount = activities.filter(a => a.status === 'completed').length;
   const errorCount = activities.filter(a => a.status === 'error').length;
   const buildingCount = activities.filter(a => a.status === 'building').length;
@@ -417,6 +439,42 @@ export function ConstructionInterface({
     };
   }, [onActivityStatusChange]);
 
+  useEffect(() => {
+    const handleActivityBuilding = (event: CustomEvent) => {
+      const { activity_id, position, total } = event.detail;
+      console.log(`🔨 [ConstructionInterface] Evento: Construindo atividade ${position}/${total}: ${activity_id}`);
+      onActivityStatusChange?.(activity_id, 'building', 25, `Construindo atividade ${position}/${total}...`);
+    };
+
+    const handleActivityCompleted = (event: CustomEvent) => {
+      const { activity_id, position, total } = event.detail;
+      console.log(`✅ [ConstructionInterface] Evento: Atividade ${position}/${total} concluída: ${activity_id}`);
+      onActivityStatusChange?.(activity_id, 'completed', 100, 'Construção concluída!');
+    };
+
+    const handleActivityError = (event: CustomEvent) => {
+      const { activity_id, error } = event.detail;
+      console.error(`❌ [ConstructionInterface] Evento: Erro na atividade: ${activity_id} - ${error}`);
+      onActivityStatusChange?.(activity_id, 'error', 0, error || 'Erro na construção');
+    };
+
+    const handleQueueCompleted = (event: CustomEvent) => {
+      console.log('🎉 [ConstructionInterface] Evento: Fila de construção concluída!', event.detail);
+    };
+
+    window.addEventListener('construction:activity_building', handleActivityBuilding as EventListener);
+    window.addEventListener('construction:activity_completed', handleActivityCompleted as EventListener);
+    window.addEventListener('construction:activity_error', handleActivityError as EventListener);
+    window.addEventListener('construction:queue_completed', handleQueueCompleted as EventListener);
+
+    return () => {
+      window.removeEventListener('construction:activity_building', handleActivityBuilding as EventListener);
+      window.removeEventListener('construction:activity_completed', handleActivityCompleted as EventListener);
+      window.removeEventListener('construction:activity_error', handleActivityError as EventListener);
+      window.removeEventListener('construction:queue_completed', handleQueueCompleted as EventListener);
+    };
+  }, [onActivityStatusChange]);
+
   const handleActivityClick = useCallback((activity: ActivityToBuild) => {
     console.log('🔧 [ConstructionInterface] Abrindo modal de EDIÇÃO para atividade:', activity.name);
     const constructionActivity = convertToConstructionActivity(activity);
@@ -458,7 +516,10 @@ export function ConstructionInterface({
       !hasStartedRef.current
     ) {
       hasStartedRef.current = true;
-      onBuildAll();
+      console.log('🚀 [ConstructionInterface] AutoStart: iniciando construção automática');
+      setTimeout(() => {
+        onBuildAll();
+      }, 500);
     }
   }, [autoStart, isBuilding, activities, onBuildAll]);
 
@@ -551,12 +612,13 @@ export function ConstructionInterface({
       </div>
 
       <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto">
-        {activities.map((activity, idx) => (
+        {sortedActivities.map((activity, idx) => (
           <motion.div
             key={activity.id}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.05 }}
+            layout
           >
             <ActivityCard 
               activity={activity}
