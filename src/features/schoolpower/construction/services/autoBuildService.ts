@@ -209,23 +209,42 @@ export class AutoBuildService {
 
   /**
    * Recupera dados construídos do localStorage
+   * Busca em múltiplas chaves para garantir compatibilidade
    */
-  private getConstructedDataFromStorage(activityId: string): any {
+  private getConstructedDataFromStorage(activityId: string, activityType?: string): any {
     try {
+      // Primeiro, tentar chave simples
       const storageKey = `constructed_${activityId}`;
       const content = localStorage.getItem(storageKey);
       if (content) return JSON.parse(content);
 
-      // Tentar chaves alternativas
+      // Tentar chaves com tipo de atividade (padrão novo)
+      const activityTypes = activityType 
+        ? [activityType]
+        : ['quiz-interativo', 'flash-cards', 'plano-aula', 'sequencia-didatica', 
+           'quadro-interativo', 'lista-exercicios', 'mapa-mental', 'tese-redacao'];
+      
+      for (const type of activityTypes) {
+        const typeKey = `constructed_${type}_${activityId}`;
+        const typeContent = localStorage.getItem(typeKey);
+        if (typeContent) {
+          console.log(`✅ [STORAGE] Encontrado em ${typeKey}`);
+          return JSON.parse(typeContent);
+        }
+      }
+
+      // Tentar chaves alternativas legacy
       const alternativeKeys = [
         `constructed_${activityId}_${activityId}`,
         `schoolpower_${activityId}_content`,
-        `generated_content_${activityId}`
+        `generated_content_${activityId}`,
+        `activity_${activityId}`
       ];
 
       for (const key of alternativeKeys) {
         const altContent = localStorage.getItem(key);
         if (altContent) {
+          console.log(`✅ [STORAGE] Encontrado em fallback: ${key}`);
           return JSON.parse(altContent);
         }
       }
@@ -272,8 +291,7 @@ export class AutoBuildService {
         source: 'gerar_conteudo_atividades'
       };
       
-      // 1. Salvar em constructed_{type}_{id}
-      const constructedKey = `constructed_${activityType}_${activity.id}`;
+      // 1. Salvar em constructed_{type}_{id} E constructed_{id} (compatibilidade dupla)
       const constructedData = {
         success: true,
         data: generatedContent,
@@ -281,8 +299,16 @@ export class AutoBuildService {
         timestamp,
         isPreGenerated: true
       };
-      localStorage.setItem(constructedKey, JSON.stringify(constructedData));
-      console.log(`✅ [PRE-GENERATED] Salvo em ${constructedKey}`);
+      
+      // Chave com tipo (novo padrão)
+      const constructedKeyWithType = `constructed_${activityType}_${activity.id}`;
+      localStorage.setItem(constructedKeyWithType, JSON.stringify(constructedData));
+      console.log(`✅ [PRE-GENERATED] Salvo em ${constructedKeyWithType}`);
+      
+      // Chave simples (compatibilidade legacy)
+      const constructedKeySimple = `constructed_${activity.id}`;
+      localStorage.setItem(constructedKeySimple, JSON.stringify(constructedData));
+      console.log(`✅ [PRE-GENERATED] Salvo em ${constructedKeySimple}`);
       
       // 2. Salvar em activity_{id}
       localStorage.setItem(`activity_${activity.id}`, JSON.stringify(generatedContent));
