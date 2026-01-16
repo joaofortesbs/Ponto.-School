@@ -221,6 +221,35 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
     };
   }, []);
 
+  // CORREÇÃO CRÍTICA: Listener para atualizar contagem de campos quando gerar_conteudo_atividades emite campos gerados
+  useEffect(() => {
+    const handleFieldsGenerated = (event: CustomEvent) => {
+      const { activity_id, fields, validation } = event.detail;
+      const fieldsCount = Object.keys(fields || {}).filter((k: string) => 
+        fields[k] !== undefined && fields[k] !== ''
+      ).length;
+      
+      console.log(`📝 [DeveloperModeCard] Campos gerados para ${activity_id}: ${fieldsCount} campos`);
+      
+      setActivitiesToBuild(prev => prev.map(a => 
+        a.id === activity_id || a.activity_id === activity_id
+          ? { 
+              ...a, 
+              fields_completed: fieldsCount,
+              fields_total: validation?.required_count || fieldsCount || a.fields_total || 5,
+              built_data: { ...a.built_data, fields }
+            }
+          : a
+      ));
+    };
+
+    window.addEventListener('agente-jota-fields-generated', handleFieldsGenerated as EventListener);
+
+    return () => {
+      window.removeEventListener('agente-jota-fields-generated', handleFieldsGenerated as EventListener);
+    };
+  }, []);
+
   // Estado para atividades completadas (usadas pelo ProgressiveExecutionCard)
   const [completedActivities, setCompletedActivities] = useState<ActivityToBuild[]>([]);
 
