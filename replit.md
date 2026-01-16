@@ -37,6 +37,13 @@ The platform features a modern design utilizing glass-morphism effects, blur bac
       - The executor now emits `construction:activities_ready` immediately after `decidir_atividades_criar` completes, ensuring the ConstructionInterface receives activities regardless of `criar_atividade` result
       - **criar_atividade** now does NOT save to database - it only marks activities as completed for UI display. Database persistence was removed to prevent failures.
       - Example validated mappings: tese-redacao uses `temaRedacao`, `objetivo`, `nivelDificuldade`, `competenciasENEM`; flash-cards uses `theme`, `topicos`, `numberOfFlashcards`
+    - **Activity Construction Flow** (Updated Jan 2026):
+      - **Bifurcated Pipeline**: Clear separation between content generation and visual construction
+      - **Phase 1 - gerar_conteudo_atividades**: Generates AI content, saves to localStorage, marks status as "aguardando" (80% progress), logs to ActivityDebugStore
+      - **Phase 2 - criar_atividade**: Handles progressive visual construction with 800ms delay per activity, transitions status from "construindo" to "concluída", logs each phase to ActivityDebugStore
+      - **Status Flow**: pending → building → aguardando (after content gen) → construindo (during visual build) → concluída (after animation)
+      - **Debug Logging**: Both capabilities log detailed entries to ActivityDebugStore with initialization, progress, and completion phases for visibility in ActivityDebugModal
+      - **Event Emission**: `construction:build_started`, `construction:activity_progress`, `construction:activity_completed`, `construction:all_completed` events for UI synchronization
     - **Auto-Build System with ModalBridge** (Updated Jan 2026):
       - **ModalBridge Pattern**: Singleton at `construction/bridge/ModalBridge.ts` that provides programmatic control of EditActivityModal
       - **Event-Driven Architecture**: `constructionEventBus.ts` enables decoupled communication between criar_atividade capability and UI components
