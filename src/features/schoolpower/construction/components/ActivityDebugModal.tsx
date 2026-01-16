@@ -40,12 +40,13 @@ const LEVEL_CONFIG: Record<DebugLogLevel, { icon: React.ElementType; color: stri
 };
 
 function formatTime(date: Date): string {
-  return date.toLocaleTimeString('pt-BR', { 
+  const timeStr = date.toLocaleTimeString('pt-BR', { 
     hour: '2-digit', 
     minute: '2-digit', 
-    second: '2-digit',
-    fractionalSecondDigits: 3
+    second: '2-digit'
   });
+  const ms = date.getMilliseconds().toString().padStart(3, '0');
+  return `${timeStr}.${ms}`;
 }
 
 function formatDuration(startTime?: Date, endTime?: Date): string {

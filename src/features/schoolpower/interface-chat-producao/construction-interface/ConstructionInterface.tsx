@@ -26,14 +26,17 @@ import {
   Zap,
   Edit3,
   Eye,
-  Loader2
+  Loader2,
+  Bug
 } from 'lucide-react';
 import EditActivityModal, { EditActivityModalHandle } from '../../construction/EditActivityModal';
 import { ActivityViewModal } from '../../construction/ActivityViewModal';
+import { ActivityDebugModal } from '../../construction/components/ActivityDebugModal';
 import { ConstructionActivity } from '../../construction/types';
 import { createBuildController } from '../../construction/controllers/BuildController';
 import { onBuildProgress, BuildProgressUpdate } from '../../construction/events/constructionEventBus';
 import { ModalBridge } from '../../construction/bridge/ModalBridge';
+import { useActivityDebugStore } from '../../construction/stores/activityDebugStore';
 
 export type ActivityBuildStatus = 'waiting' | 'building' | 'completed' | 'error';
 
@@ -60,54 +63,67 @@ interface ConstructionInterfaceProps {
   autoStart?: boolean;
 }
 
+/**
+ * CONFIGURAÇÃO DE STATUS DAS ATIVIDADES
+ * 
+ * 4 estados distintos com identidade visual clara:
+ * - PENDENTE (cinza): Aguardando sua vez, nenhuma ação acontecendo
+ * - CONSTRUINDO (amarelo): Sistema ativo, atividade sendo construída
+ * - CONSTRUÍDA (verde): Atividade pronta com conteúdo gerado
+ * - FALHA (vermelho): Erro detectado que impediu a construção
+ */
 const STATUS_CONFIG = {
   waiting: {
     icon: Clock,
     color: 'text-gray-400',
     bg: 'bg-gray-500/10',
-    border: 'border-gray-500/20',
-    label: 'Aguardando',
-    opacity: 'opacity-50',
-    saturate: 'saturate-50'
+    border: 'border-gray-500/30',
+    label: 'Pendente',
+    description: 'Aguardando sua vez',
+    cardStyle: 'opacity-60 grayscale-[30%]'
   },
   building: {
     icon: Loader2,
     color: 'text-yellow-400',
-    bg: 'bg-yellow-500/10',
-    border: 'border-yellow-500/20',
+    bg: 'bg-yellow-500/15',
+    border: 'border-yellow-500/40',
     label: 'Construindo',
-    opacity: 'opacity-100',
-    saturate: 'saturate-100'
+    description: 'Sistema ativo',
+    cardStyle: 'opacity-100'
   },
   completed: {
     icon: Check,
     color: 'text-green-400',
-    bg: 'bg-green-500/10',
-    border: 'border-green-500/20',
-    label: 'Concluído',
-    opacity: 'opacity-100',
-    saturate: 'saturate-100'
+    bg: 'bg-green-500/15',
+    border: 'border-green-500/40',
+    label: 'Construída',
+    description: 'Pronta para uso',
+    cardStyle: 'opacity-100'
   },
   error: {
     icon: AlertCircle,
     color: 'text-red-400',
-    bg: 'bg-red-500/10',
-    border: 'border-red-500/20',
-    label: 'Erro',
-    opacity: 'opacity-100',
-    saturate: 'saturate-100'
+    bg: 'bg-red-500/15',
+    border: 'border-red-500/40',
+    label: 'Falha',
+    description: 'Erro na construção',
+    cardStyle: 'opacity-100'
   }
 };
 
-function ActivityCard({ activity, onBuild, onActivityClick, onViewClick }: { 
+function ActivityCard({ activity, onBuild, onActivityClick, onViewClick, onDebugClick }: { 
   activity: ActivityToBuild; 
   onBuild?: () => void;
   onActivityClick?: (activity: ActivityToBuild) => void;
   onViewClick?: (activity: ActivityToBuild) => void;
+  onDebugClick?: (activity: ActivityToBuild) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const config = STATUS_CONFIG[activity.status];
   const StatusIcon = config.icon;
+  const debugStore = useActivityDebugStore();
+  const activityDebug = debugStore.getActivityDebug(activity.activity_id || activity.id);
+  const hasDebugLogs = activityDebug && activityDebug.entries.length > 0;
 
   const handleClick = () => {
     if (onActivityClick) {
@@ -117,13 +133,11 @@ function ActivityCard({ activity, onBuild, onActivityClick, onViewClick }: {
     }
   };
 
-  const isInactive = activity.status === 'waiting';
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-xl border overflow-hidden transition-all duration-300 ${config.bg} ${config.border} hover:border-orange-500/40 ${isInactive ? 'opacity-60 grayscale-[30%]' : ''}`}
+      className={`rounded-xl border overflow-hidden transition-all duration-300 ${config.bg} ${config.border} hover:border-orange-500/40 ${config.cardStyle}`}
     >
       <div 
         className="p-3 cursor-pointer"
@@ -135,9 +149,9 @@ function ActivityCard({ activity, onBuild, onActivityClick, onViewClick }: {
               <StatusIcon className={`w-5 h-5 ${config.color} ${activity.status === 'building' ? 'animate-spin' : ''}`} />
             </div>
             <div>
-              <h4 className={`font-medium text-sm transition-colors ${isInactive ? 'text-white/60' : 'text-white'}`}>{activity.name}</h4>
+              <h4 className={`font-medium text-sm transition-colors ${activity.status === 'waiting' ? 'text-white/60' : 'text-white'}`}>{activity.name}</h4>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className={`text-xs ${config.color}`}>
+                <span className={`text-xs font-medium ${config.color}`}>
                   {config.label}
                 </span>
                 {activity.fields_completed !== undefined && activity.fields_total && (
@@ -184,6 +198,25 @@ function ActivityCard({ activity, onBuild, onActivityClick, onViewClick }: {
                 title="Editar atividade"
               >
                 <Edit3 className="w-4 h-4 text-orange-400" />
+              </button>
+            )}
+            {onDebugClick && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDebugClick(activity);
+                }}
+                className={`p-2 rounded-lg transition-colors relative ${
+                  hasDebugLogs 
+                    ? 'hover:bg-purple-500/20' 
+                    : 'hover:bg-white/10'
+                }`}
+                title="Ver logs de debug"
+              >
+                <Bug className={`w-4 h-4 ${hasDebugLogs ? 'text-purple-400' : 'text-white/40'}`} />
+                {hasDebugLogs && activityDebug && activityDebug.entries.some(e => e.level === 'error') && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
+                )}
               </button>
             )}
             {activity.built_data && (
@@ -329,6 +362,9 @@ export function ConstructionInterface({
   const [selectedActivity, setSelectedActivity] = useState<ConstructionActivity | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewActivity, setViewActivity] = useState<ConstructionActivity | null>(null);
+  const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
+  const [debugActivityId, setDebugActivityId] = useState<string | null>(null);
+  const [debugActivityName, setDebugActivityName] = useState<string>('');
 
   // Callback ref para registrar o modal quando ele for montado
   const setEditModalRef = useCallback((handle: EditActivityModalHandle | null) => {
@@ -405,6 +441,13 @@ export function ConstructionInterface({
     console.log('💾 [ConstructionInterface] Salvando atividade:', activityData);
     handleCloseModal();
   }, [handleCloseModal]);
+
+  const handleDebugClick = useCallback((activity: ActivityToBuild) => {
+    console.log('🐛 [ConstructionInterface] Abrindo modal de DEBUG para atividade:', activity.name);
+    setDebugActivityId(activity.activity_id || activity.id);
+    setDebugActivityName(activity.name);
+    setIsDebugModalOpen(true);
+  }, []);
 
   useEffect(() => {
     if (
@@ -520,6 +563,7 @@ export function ConstructionInterface({
               onBuild={onBuildSingle ? () => onBuildSingle(activity.activity_id) : undefined}
               onActivityClick={handleActivityClick}
               onViewClick={handleViewClick}
+              onDebugClick={handleDebugClick}
             />
           </motion.div>
         ))}
@@ -574,6 +618,18 @@ export function ConstructionInterface({
           console.log('👁️ [ConstructionInterface] Fechando modal de visualização');
           setIsViewModalOpen(false);
           setViewActivity(null);
+        }}
+      />
+
+      <ActivityDebugModal
+        isOpen={isDebugModalOpen}
+        activityId={debugActivityId}
+        activityName={debugActivityName}
+        onClose={() => {
+          console.log('🐛 [ConstructionInterface] Fechando modal de debug');
+          setIsDebugModalOpen(false);
+          setDebugActivityId(null);
+          setDebugActivityName('');
         }}
       />
     </motion.div>
