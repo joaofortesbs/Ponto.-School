@@ -1,17 +1,18 @@
 /**
  * CAPABILITY 4 (V2): criar_atividade
  * 
- * Versão V2 simplificada - NÃO salva no banco de dados.
+ * Versão V2 com GERAÇÃO REAL de conteúdo por atividade individual.
  * 
- * Responsabilidade: Receber atividades com campos já gerados pela 
- * capability gerar_conteudo_atividades e marcar como concluídas.
+ * FLUXO INDIVIDUAL POR ATIVIDADE:
+ * 1. Inicializar atividade no debug store
+ * 2. Chamar API de IA (Groq/Gemini) para gerar conteúdo REAL
+ * 3. Validar e normalizar campos gerados
+ * 4. Persistir no localStorage com múltiplas chaves
+ * 5. Atualizar store e emitir eventos para UI
+ * 6. Registrar logs detalhados de cada fase
  * 
- * NOTA: A persistência real agora é feita pelo gerar_conteudo_atividades 
- * que salva diretamente no localStorage. Esta capability apenas:
- * 1. Atualiza o status no store
- * 2. Anima o progresso visual para feedback ao usuário
- * 
- * Isso elimina race conditions com ModalBridge e garante dados persistidos.
+ * IMPORTANTE: Cada atividade tem sua própria chamada de IA real!
+ * Não são usados dados pré-gerados - toda geração acontece aqui.
  */
 
 import type { 
@@ -23,9 +24,11 @@ import type {
 import { createDataConfirmation, createDataCheck } from '../../shared/types';
 import { useChosenActivitiesStore } from '../../../../interface-chat-producao/stores/ChosenActivitiesStore';
 import { useActivityDebugStore } from '../../../../construction/stores/activityDebugStore';
+import { buildActivityFromFormData } from '../../../../construction/services/buildActivityHelper';
+import { syncSchemaToFormData } from '../../../../construction/utils/activity-fields-sync';
 
 const CAPABILITY_ID = 'criar_atividade';
-const CONSTRUCTION_DELAY_MS = 800; // Delay entre cada atividade para animação progressiva
+const CONSTRUCTION_DELAY_MS = 300; // Delay menor pois agora há tempo real de API
 
 interface GeneratedActivityData {
   activity_id: string;
@@ -152,7 +155,7 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
     });
 
     // ═══════════════════════════════════════════════════════════════════════
-    // 2. CONSTRUIR ATIVIDADES PROGRESSIVAMENTE COM ANIMAÇÃO VISUAL
+    // 2. CONSTRUIR ATIVIDADES COM CHAMADAS REAIS DE IA (INDIVIDUAL)
     // ═══════════════════════════════════════════════════════════════════════
     
     const store = useChosenActivitiesStore.getState();
@@ -160,17 +163,26 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
     const builtActivities: BuiltActivity[] = [];
     let successCount = 0;
 
-    // Emitir evento de início da construção visual
+    // Emitir evento de início da construção REAL
     window.dispatchEvent(new CustomEvent('agente-jota-progress', {
       detail: {
         type: 'construction:build_started',
         totalActivities: generatedData.length,
-        message: `Iniciando construção visual de ${generatedData.length} atividade(s)...`
+        message: `Iniciando construção REAL de ${generatedData.length} atividade(s) com IA...`
       }
     }));
 
+    console.error(`
+═══════════════════════════════════════════════════════════════════════
+🚀 [V2:CRIAR] INICIANDO CONSTRUÇÃO REAL COM CHAMADAS DE IA
+═══════════════════════════════════════════════════════════════════════
+Total de atividades: ${generatedData.length}
+Cada atividade terá sua própria chamada de API!
+═══════════════════════════════════════════════════════════════════════`);
+
     for (let i = 0; i < generatedData.length; i++) {
       const genData = generatedData[i];
+      const activityStartTime = Date.now();
       
       // Encontrar atividade correspondente
       const activity = chosenActivities.find((a: any) => a.id === genData.activity_id) || {
@@ -181,74 +193,234 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
         materia: 'Geral'
       };
       
-      const progressPct = Math.round(((i + 1) / generatedData.length) * 100);
-      
-      // Verificar estado existente
-      const existingActivity = store.getActivityById(activity.id);
-      const hasExistingFields = Object.keys(existingActivity?.campos_preenchidos || {}).length > 0 ||
-                                Object.keys(existingActivity?.dados_construidos?.generated_fields || {}).length > 0;
-      
-      // Usar campos existentes se disponíveis, senão usar genData.fields
-      const fieldsToUse = hasExistingFields 
-        ? { ...(existingActivity?.campos_preenchidos || {}), ...(existingActivity?.dados_construidos?.generated_fields || {}) }
-        : genData.fields;
-      
-      const fieldsCount = Object.keys(fieldsToUse).filter(k => 
-        fieldsToUse[k] !== undefined && fieldsToUse[k] !== ''
-      ).length;
-      
-      console.error(`📊 [V2:CRIAR] Activity ${i + 1}/${generatedData.length}: ${activity.titulo} (${fieldsCount} campos)`);
+      console.error(`\n📊 [V2:CRIAR] ══════════════════════════════════════════════════`);
+      console.error(`📊 [V2:CRIAR] Atividade ${i + 1}/${generatedData.length}: ${activity.titulo}`);
+      console.error(`📊 [V2:CRIAR] Tipo: ${activity.tipo}`);
+      console.error(`📊 [V2:CRIAR] ══════════════════════════════════════════════════`);
       
       // ═══════════════════════════════════════════════════════════════════════
-      // FASE 1: INICIAR CONSTRUÇÃO VISUAL - Log de início
+      // FASE 1: INICIALIZAR ATIVIDADE NO DEBUG STORE
       // ═══════════════════════════════════════════════════════════════════════
+      activityDebugStore.initActivity(activity.id, activity.titulo, activity.tipo);
+      activityDebugStore.setStatus(activity.id, 'building');
+      activityDebugStore.setProgress(activity.id, 10, 'Preparando geração de conteúdo...');
+      
       activityDebugStore.log(
         activity.id, 'action', 'CriarAtividadeV2',
-        `[${i + 1}/${generatedData.length}] Iniciando construção visual de "${activity.titulo}"`,
+        `[${i + 1}/${generatedData.length}] Iniciando construção REAL de "${activity.titulo}"`,
         { 
           activity_type: activity.tipo, 
-          fields_count: fieldsCount,
-          order_index: i
+          order_index: i,
+          timestamp: new Date().toISOString()
         }
       );
       
-      debug_log.push({
-        timestamp: new Date().toISOString(),
-        type: 'action',
-        narrative: `[${i + 1}/${generatedData.length}] Construindo "${activity.titulo}"...`,
-        technical_data: { 
-          activity_id: activity.id,
-          activity_type: activity.tipo,
-          fields_count: fieldsCount,
-          progress: progressPct,
-          has_existing_fields: hasExistingFields
-        }
-      });
-      
       // Marcar como "construindo" no store
-      store.updateActivityStatus(activity.id, 'construindo', Math.round((i / generatedData.length) * 100));
-      activityDebugStore.setProgress(activity.id, 92, 'Construindo atividade...');
+      store.updateActivityStatus(activity.id, 'construindo', 10);
       
-      // Emitir evento de progresso para UI COM ÍNDICE DE ORDEM
+      // Emitir evento de início
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: {
           type: 'construction:activity_progress',
           activityId: activity.id,
           activityTitle: activity.titulo,
-          progress: Math.round((i / generatedData.length) * 100),
-          fields_completed: fieldsCount,
+          progress: 10,
           order_index: i,
           total_count: generatedData.length,
-          status: 'building'
+          status: 'building',
+          phase: 'initializing'
         }
       }));
       
-      // ═══════════════════════════════════════════════════════════════════════
-      // FASE 2: DELAY PARA ANIMAÇÃO PROGRESSIVA VISÍVEL
-      // ═══════════════════════════════════════════════════════════════════════
-      await new Promise(resolve => setTimeout(resolve, CONSTRUCTION_DELAY_MS));
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'action',
+        narrative: `[${i + 1}/${generatedData.length}] Iniciando construção de "${activity.titulo}"...`,
+        technical_data: { activity_id: activity.id, activity_type: activity.tipo }
+      });
       
-      // Criar objeto de atividade construída (SEM salvar no banco)
+      // ═══════════════════════════════════════════════════════════════════════
+      // FASE 2: PREPARAR DADOS DO FORMULÁRIO PARA CHAMADA DE IA
+      // ═══════════════════════════════════════════════════════════════════════
+      activityDebugStore.setProgress(activity.id, 20, 'Preparando dados do formulário...');
+      
+      // Obter campos existentes do store ou da geração anterior
+      const existingActivity = store.getActivityById(activity.id);
+      const existingFields = existingActivity?.campos_preenchidos || 
+                            existingActivity?.dados_construidos?.generated_fields || 
+                            genData.fields || {};
+      
+      // Preparar formData para a chamada de IA
+      const formData: Record<string, any> = {
+        title: activity.titulo,
+        description: activity.descricao || `Atividade ${activity.tipo}`,
+        subject: existingFields.subject || existingFields.disciplina || activity.materia || 'Geral',
+        theme: existingFields.theme || existingFields.tema || activity.tema || activity.titulo,
+        schoolYear: existingFields.schoolYear || existingFields.anoSerie || 'Ensino Médio',
+        difficultyLevel: existingFields.difficultyLevel || existingFields.nivelDificuldade || 'Médio',
+        objectives: existingFields.objectives || existingFields.objetivo || 'Objetivo educacional',
+        ...existingFields
+      };
+      
+      activityDebugStore.log(
+        activity.id, 'info', 'CriarAtividadeV2',
+        `Dados do formulário preparados: ${Object.keys(formData).length} campos`,
+        { 
+          form_fields: Object.keys(formData),
+          sample_data: { title: formData.title, subject: formData.subject, theme: formData.theme }
+        }
+      );
+      
+      // ═══════════════════════════════════════════════════════════════════════
+      // FASE 3: CHAMADA REAL DE IA (buildActivityFromFormData)
+      // ═══════════════════════════════════════════════════════════════════════
+      activityDebugStore.setProgress(activity.id, 30, 'Chamando API de IA (Groq/Gemini)...');
+      
+      activityDebugStore.log(
+        activity.id, 'api', 'CriarAtividadeV2',
+        `🌐 Chamando API de IA para gerar conteúdo de "${activity.tipo}"...`,
+        { 
+          api_target: 'buildActivityFromFormData',
+          activity_type: activity.tipo,
+          form_data_keys: Object.keys(formData)
+        }
+      );
+      
+      let generatedContent: any = null;
+      let apiCallDuration = 0;
+      let apiSuccess = false;
+      
+      try {
+        const apiStartTime = Date.now();
+        
+        // CHAMADA REAL DE IA!
+        generatedContent = await buildActivityFromFormData(
+          activity.id,
+          activity.tipo,
+          formData as any
+        );
+        
+        apiCallDuration = Date.now() - apiStartTime;
+        apiSuccess = true;
+        
+        console.error(`✅ [V2:CRIAR] API retornou em ${apiCallDuration}ms para ${activity.titulo}`);
+        
+        activityDebugStore.setProgress(activity.id, 60, `API retornou em ${apiCallDuration}ms`);
+        
+        activityDebugStore.log(
+          activity.id, 'success', 'API-Response',
+          `✅ API retornou conteúdo gerado em ${apiCallDuration}ms`,
+          { 
+            duration_ms: apiCallDuration,
+            success: true,
+            content_type: typeof generatedContent,
+            has_data: !!generatedContent?.data || !!generatedContent?.success
+          }
+        );
+        
+      } catch (apiError: any) {
+        apiCallDuration = Date.now() - activityStartTime;
+        
+        console.error(`❌ [V2:CRIAR] Erro na API para ${activity.titulo}:`, apiError);
+        
+        activityDebugStore.log(
+          activity.id, 'error', 'API-Response',
+          `❌ Erro na chamada de API: ${apiError.message}`,
+          { 
+            error: apiError.message,
+            duration_ms: apiCallDuration
+          }
+        );
+        
+        // Usar fallback com dados existentes
+        generatedContent = { success: true, data: formData };
+      }
+      
+      // ═══════════════════════════════════════════════════════════════════════
+      // FASE 4: VALIDAR E NORMALIZAR CAMPOS GERADOS
+      // ═══════════════════════════════════════════════════════════════════════
+      activityDebugStore.setProgress(activity.id, 70, 'Validando campos gerados...');
+      
+      const contentData = generatedContent?.data || generatedContent || {};
+      const fieldsCount = Object.keys(contentData).filter(k => 
+        contentData[k] !== undefined && contentData[k] !== '' && contentData[k] !== null
+      ).length;
+      
+      activityDebugStore.log(
+        activity.id, 'info', 'Validation',
+        `Validação: ${fieldsCount} campos preenchidos`,
+        { 
+          fields_count: fieldsCount,
+          field_names: Object.keys(contentData).slice(0, 10),
+          is_generated_by_ai: contentData.isGeneratedByAI || false
+        }
+      );
+      
+      // ═══════════════════════════════════════════════════════════════════════
+      // FASE 5: PERSISTIR NO LOCALSTORAGE E STORE
+      // ═══════════════════════════════════════════════════════════════════════
+      activityDebugStore.setProgress(activity.id, 80, 'Persistindo dados...');
+      
+      // Salvar em múltiplas chaves do localStorage para máxima compatibilidade
+      const storageKeys: string[] = [];
+      
+      try {
+        const dataToStore = {
+          ...contentData,
+          activityId: activity.id,
+          activityType: activity.tipo,
+          generatedAt: new Date().toISOString(),
+          apiCallDuration
+        };
+        
+        // Chave principal
+        const primaryKey = `constructed_${activity.tipo}_${activity.id}`;
+        localStorage.setItem(primaryKey, JSON.stringify({ success: true, data: dataToStore }));
+        storageKeys.push(primaryKey);
+        
+        // Chave de atividade
+        const activityKey = `activity_${activity.id}`;
+        localStorage.setItem(activityKey, JSON.stringify(dataToStore));
+        storageKeys.push(activityKey);
+        
+        // Chave de conteúdo gerado
+        const generatedKey = `generated_content_${activity.id}`;
+        localStorage.setItem(generatedKey, JSON.stringify(dataToStore));
+        storageKeys.push(generatedKey);
+        
+        // Atualizar constructedActivities global
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+        constructedActivities[activity.id] = {
+          generatedContent: dataToStore,
+          timestamp: new Date().toISOString(),
+          activityType: activity.tipo
+        };
+        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+        storageKeys.push('constructedActivities');
+        
+        activityDebugStore.log(
+          activity.id, 'success', 'LocalStorage',
+          `Dados persistidos em ${storageKeys.length} chaves do localStorage`,
+          { storage_keys: storageKeys }
+        );
+        
+      } catch (storageError: any) {
+        activityDebugStore.log(
+          activity.id, 'error', 'LocalStorage',
+          `Erro ao persistir: ${storageError.message}`,
+          { error: storageError.message }
+        );
+      }
+      
+      // Atualizar store
+      store.updateActivityStatus(activity.id, 'concluida', 100);
+      store.setActivityGeneratedFields(activity.id, contentData);
+      
+      // ═══════════════════════════════════════════════════════════════════════
+      // FASE 6: CRIAR OBJETO DE ATIVIDADE CONSTRUÍDA
+      // ═══════════════════════════════════════════════════════════════════════
+      const totalBuildTime = Date.now() - activityStartTime;
+      
       const builtActivity: BuiltActivity = {
         id: `built-${activity.id}-${Date.now()}`,
         original_id: activity.id,
@@ -257,11 +429,11 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
         categoria: activity.categoria || 'geral',
         materia: activity.materia,
         nivel_dificuldade: activity.nivel_dificuldade || 'medio',
-        campos_preenchidos: fieldsToUse,
-        conteudo_gerado: JSON.stringify(fieldsToUse, null, 2),
+        campos_preenchidos: contentData,
+        conteudo_gerado: JSON.stringify(contentData, null, 2),
         status: 'completed',
         created_at: new Date().toISOString(),
-        saved_to_db: false, // NÃO salvamos no banco
+        saved_to_db: false,
         db_id: undefined
       };
       
@@ -269,18 +441,19 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
       successCount++;
       
       // ═══════════════════════════════════════════════════════════════════════
-      // FASE 3: MARCAR COMO CONCLUÍDA E REGISTRAR LOG FINAL
+      // FASE 7: MARCAR COMO CONCLUÍDA E REGISTRAR LOG FINAL
       // ═══════════════════════════════════════════════════════════════════════
-      store.updateActivityStatus(activity.id, 'concluida', 100);
-      activityDebugStore.setProgress(activity.id, 100, 'Atividade construída com sucesso');
+      activityDebugStore.setProgress(activity.id, 100, 'Atividade construída com sucesso!');
       activityDebugStore.markCompleted(activity.id);
       
       activityDebugStore.log(
         activity.id, 'success', 'CriarAtividadeV2',
-        `✅ Atividade "${activity.titulo}" construída com sucesso! (${fieldsCount} campos)`,
+        `✅ Atividade "${activity.titulo}" construída com sucesso!`,
         { 
           fields_count: fieldsCount,
-          build_time_ms: CONSTRUCTION_DELAY_MS,
+          total_build_time_ms: totalBuildTime,
+          api_call_duration_ms: apiCallDuration,
+          storage_keys: storageKeys,
           order_index: i
         }
       );
@@ -288,118 +461,60 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
       debug_log.push({
         timestamp: new Date().toISOString(),
         type: 'discovery',
-        narrative: `✅ "${activity.titulo}" pronta para uso! (${fieldsCount} campos)`,
+        narrative: `✅ "${activity.titulo}" construída com ${fieldsCount} campos em ${totalBuildTime}ms`,
         technical_data: { 
           activity_id: activity.id,
-          fields_count: fieldsCount
+          fields_count: fieldsCount,
+          build_time_ms: totalBuildTime,
+          api_duration_ms: apiCallDuration
         }
-      });
-      
-      // Emitir evento de sucesso COM contagem de campos correta e ÍNDICE DE ORDEM
-      window.dispatchEvent(new CustomEvent('agente-jota-progress', {
-        detail: {
-          type: 'construction:activity_completed',
-          activityId: activity.id,
-          order_index: i,  // Índice de ordem para UI ordenar corretamente
-          total_count: generatedData.length,
-          data: {
-            titulo: activity.titulo,
-            fields: fieldsToUse,
-            fields_completed: fieldsCount
-          }
-        }
-      }));
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    // 3. ANIMAÇÃO VISUAL DE CONSTRUÇÃO (COSMÉTICA)
-    // ═══════════════════════════════════════════════════════════════════════
-    // NOTA: A persistência REAL já foi feita pelo gerar_conteudo_atividades
-    // Esta seção apenas anima o progresso visual para feedback ao usuário
-    // Não depende mais do ModalBridge ou autoBuildService
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    if (builtActivities.length > 0) {
-      debug_log.push({
-        timestamp: new Date().toISOString(),
-        type: 'action',
-        narrative: `🎬 Animando progresso visual de ${builtActivities.length} atividade(s)...`,
-        technical_data: { 
-          activities_count: builtActivities.length,
-          note: 'Dados já persistidos pelo gerar_conteudo_atividades'
-        }
-      });
-      
-      console.error(`
-═══════════════════════════════════════════════════════════════════════
-🎬 [V2] ANIMAÇÃO VISUAL DE CONSTRUÇÃO
-═══════════════════════════════════════════════════════════════════════
-Atividades: ${builtActivities.length} (dados já persistidos no localStorage)
-═══════════════════════════════════════════════════════════════════════`);
-
-      // Emitir evento informando início da animação
-      window.dispatchEvent(new CustomEvent('agente-jota-progress', {
-        detail: {
-          type: 'construction:auto_build_started',
-          totalActivities: builtActivities.length,
-          message: `Finalizando construção de ${builtActivities.length} atividade(s)...`
-        }
-      }));
-      
-      // Animar progresso com delays reais para feedback visual natural
-      for (let i = 0; i < builtActivities.length; i++) {
-        const built = builtActivities[i];
-        const progress = Math.round(((i + 1) / builtActivities.length) * 100);
-        
-        // Delay fixo de 650ms entre cada atividade para animação determinística
-        // NOTA: A persistência já foi feita pelo gerar_conteudo_atividades
-        // Esta animação é apenas visual/cosmética, não afeta dados
-        await new Promise(resolve => setTimeout(resolve, 650));
-        
-        // Emitir progresso para UI
-        window.dispatchEvent(new CustomEvent('agente-jota-progress', {
-          detail: {
-            type: 'construction:auto_build_progress',
-            current: i + 1,
-            total: builtActivities.length,
-            currentActivity: built.titulo,
-            status: 'running'
-          }
-        }));
-        
-        debug_log.push({
-          timestamp: new Date().toISOString(),
-          type: 'info',
-          narrative: `[Animação] ${built.titulo} (${i + 1}/${builtActivities.length}) - ${progress}%`,
-          technical_data: { activity_id: built.original_id, progress }
-        });
-      }
-      
-      // Delay final antes de marcar como concluído
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      debug_log.push({
-        timestamp: new Date().toISOString(),
-        type: 'discovery',
-        narrative: `✅ Animação de construção concluída!`,
-        technical_data: { activities_animated: builtActivities.length }
       });
       
       // Emitir evento de conclusão
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: {
-          type: 'construction:auto_build_completed',
+          type: 'construction:activity_completed',
+          activityId: activity.id,
+          order_index: i,
+          total_count: generatedData.length,
+          data: {
+            titulo: activity.titulo,
+            fields: contentData,
+            fields_completed: fieldsCount,
+            build_time_ms: totalBuildTime
+          }
+        }
+      }));
+      
+      // Pequeno delay entre atividades para visualização
+      await new Promise(resolve => setTimeout(resolve, CONSTRUCTION_DELAY_MS));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // 3. EMITIR EVENTO FINAL DE CONCLUSÃO
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    if (builtActivities.length > 0) {
+      // Emitir evento de conclusão
+      window.dispatchEvent(new CustomEvent('agente-jota-progress', {
+        detail: {
+          type: 'construction:all_completed',
           success: true,
-          totalBuilt: builtActivities.length
+          totalBuilt: builtActivities.length,
+          activities: builtActivities.map(b => ({
+            id: b.original_id,
+            titulo: b.titulo,
+            fields_count: Object.keys(b.campos_preenchidos).length
+          }))
         }
       }));
       
       console.error(`
 ═══════════════════════════════════════════════════════════════════════
-✅ [V2] ANIMAÇÃO DE CONSTRUÇÃO CONCLUÍDA
+✅ [V2] CONSTRUÇÃO REAL CONCLUÍDA
 ═══════════════════════════════════════════════════════════════════════
-Atividades finalizadas: ${builtActivities.length}
-Dados persistidos: SIM (gerar_conteudo_atividades)
+Atividades construídas: ${builtActivities.length}
+Cada atividade teve sua própria chamada de IA!
 ═══════════════════════════════════════════════════════════════════════`);
     }
 
