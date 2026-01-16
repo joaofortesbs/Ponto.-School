@@ -28,11 +28,12 @@ import {
   Eye,
   Loader2
 } from 'lucide-react';
-import EditActivityModal from '../../construction/EditActivityModal';
+import EditActivityModal, { EditActivityModalHandle } from '../../construction/EditActivityModal';
 import { ActivityViewModal } from '../../construction/ActivityViewModal';
 import { ConstructionActivity } from '../../construction/types';
 import { createBuildController } from '../../construction/controllers/BuildController';
 import { onBuildProgress, BuildProgressUpdate } from '../../construction/events/constructionEventBus';
+import { ModalBridge } from '../../construction/bridge/ModalBridge';
 
 export type ActivityBuildStatus = 'waiting' | 'building' | 'completed' | 'error';
 
@@ -322,11 +323,29 @@ export function ConstructionInterface({
 
   const hasStartedRef = useRef(false);
   const buildControllerRef = useRef<(() => void) | null>(null);
+  const editModalRef = useRef<EditActivityModalHandle>(null);
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<ConstructionActivity | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewActivity, setViewActivity] = useState<ConstructionActivity | null>(null);
+
+  // Callback ref para registrar o modal quando ele for montado
+  const setEditModalRef = useCallback((handle: EditActivityModalHandle | null) => {
+    editModalRef.current = handle;
+    if (handle) {
+      console.log('🌉 [ConstructionInterface] Modal ref recebido, registrando no ModalBridge');
+      ModalBridge.register(handle);
+    }
+  }, []);
+
+  // Cleanup no unmount
+  useEffect(() => {
+    return () => {
+      console.log('🌉 [ConstructionInterface] Desmontando, desregistrando ModalBridge');
+      ModalBridge.unregister();
+    };
+  }, []);
 
   useEffect(() => {
     console.log('🎮 [ConstructionInterface] Inicializando BuildController...');
@@ -541,6 +560,7 @@ export function ConstructionInterface({
       )}
 
       <EditActivityModal
+        ref={setEditModalRef}
         isOpen={isEditModalOpen}
         activity={selectedActivity}
         onClose={handleCloseModal}

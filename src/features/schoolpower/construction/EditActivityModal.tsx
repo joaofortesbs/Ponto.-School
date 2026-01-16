@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, Settings, FileText, Play, Download, Edit3, Copy, Save, BookOpen, GamepadIcon, PenTool, Calculator, Beaker, GraduationCap, Sparkles } from 'lucide-react';
@@ -51,6 +51,14 @@ import {
  * - FlashCardsEditActivity
  * - TeseRedacaoEditActivity (em src/features/schoolpower/activities/tese-redacao/)
  */
+
+export interface EditActivityModalHandle {
+  open: (activityId: string, activityType: string, customFields?: Record<string, any>) => void;
+  setFields: (formData: Record<string, any>) => void;
+  build: () => Promise<{ success: boolean; result?: any; error?: string; storageKeys?: string[] }>;
+  close: () => void;
+  isOpen: () => boolean;
+}
 
 // Função para processar dados da lista de exercícios
 const processExerciseListData = (formData: ActivityFormData, generatedContent: any) => {
@@ -120,14 +128,160 @@ const getActivityIcon = (activityId: string) => {
 
 /**
  * Modal de Edição de Atividades com Agente Interno de Execução
+ * 
+ * MODAL BRIDGE INTEGRATION:
+ * Este componente expõe métodos via forwardRef para que o BuildController
+ * possa acionar o modal programaticamente através do ModalBridge.
  */
-const EditActivityModal = ({
+const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalProps>(({
   isOpen,
   activity,
   onClose,
   onSave,
   onUpdateActivity
-}: EditActivityModalProps) => {
+}, ref) => {
+  const [programmaticActivity, setProgrammaticActivity] = useState<ConstructionActivity | null>(null);
+  const [isProgrammaticOpen, setIsProgrammaticOpen] = useState(false);
+  const buildPromiseRef = useRef<{
+    resolve: (result: { success: boolean; result?: any; error?: string; storageKeys?: string[] }) => void;
+    reject: (error: Error) => void;
+  } | null>(null);
+  
+  const effectiveActivity = programmaticActivity || activity;
+  const effectiveIsOpen = isProgrammaticOpen || isOpen;
+  
+  const buildFnRef = useRef<(() => Promise<any>) | null>(null);
+
+  const collectLocalStorageKeys = useCallback((activityId: string, activityType: string): string[] => {
+    const keys: string[] = [];
+    const keysToCheck = [
+      `constructed_${activityType}_${activityId}`,
+      `activity_${activityId}`,
+      `constructedActivities`,
+      `quadro_interativo_data_${activityId}`
+    ];
+    keysToCheck.forEach(key => {
+      if (key === 'constructedActivities') {
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed[activityId]) {
+              keys.push(`constructedActivities[${activityId}]`);
+            }
+          } catch {}
+        }
+      } else if (localStorage.getItem(key)) {
+        keys.push(key);
+      }
+    });
+    return keys;
+  }, []);
+
+  const injectFieldsIntoForm = useCallback((fields: Record<string, any>) => {
+    console.log('📝 [EditActivityModal] SET_FIELDS chamado via ModalBridge:', Object.keys(fields));
+    setFormData(prev => ({
+      ...prev,
+      title: fields.title || fields.titulo || prev.title,
+      description: fields.description || fields.descricao || prev.description,
+      subject: fields.subject || fields.disciplina || prev.subject,
+      theme: fields.theme || fields.tema || fields.temaRedacao || prev.theme,
+      schoolYear: fields.schoolYear || fields.anoSerie || fields.anoEscolaridade || prev.schoolYear,
+      numberOfQuestions: fields.numberOfQuestions || fields.quantidadeQuestoes || prev.numberOfQuestions,
+      difficultyLevel: fields.difficultyLevel || fields.nivelDificuldade || prev.difficultyLevel,
+      questionModel: fields.questionModel || fields.formato || prev.questionModel,
+      sources: fields.sources || fields.fontes || prev.sources,
+      objectives: fields.objectives || fields.objetivo || fields.objetivosAprendizagem || prev.objectives,
+      materials: fields.materials || fields.materiais || prev.materials,
+      instructions: fields.instructions || fields.instrucoes || prev.instructions,
+      evaluation: fields.evaluation || fields.avaliacao || prev.evaluation,
+      timeLimit: fields.timeLimit || fields.tempoLimite || prev.timeLimit,
+      context: fields.context || fields.contexto || prev.context,
+      competencies: fields.competencies || fields.competencias || fields.bnccCompetencias || prev.competencies,
+      tituloTemaAssunto: fields.tituloTemaAssunto || fields.theme || prev.tituloTemaAssunto,
+      anoSerie: fields.anoSerie || fields.schoolYear || prev.anoSerie,
+      disciplina: fields.disciplina || fields.subject || prev.disciplina,
+      bnccCompetencias: fields.bnccCompetencias || fields.competencies || prev.bnccCompetencias,
+      publicoAlvo: fields.publicoAlvo || prev.publicoAlvo,
+      objetivosAprendizagem: fields.objetivosAprendizagem || fields.objectives || prev.objetivosAprendizagem,
+      quantidadeAulas: fields.quantidadeAulas || prev.quantidadeAulas,
+      quantidadeDiagnosticos: fields.quantidadeDiagnosticos || prev.quantidadeDiagnosticos,
+      quantidadeAvaliacoes: fields.quantidadeAvaliacoes || prev.quantidadeAvaliacoes,
+      cronograma: fields.cronograma || prev.cronograma,
+      quadroInterativoCampoEspecifico: fields.quadroInterativoCampoEspecifico || fields.atividadeMostrada || prev.quadroInterativoCampoEspecifico,
+      format: fields.format || fields.formato || prev.format,
+      timePerQuestion: fields.timePerQuestion || prev.timePerQuestion,
+      centralTheme: fields.centralTheme || fields.theme || prev.centralTheme,
+      mainCategories: fields.mainCategories || prev.mainCategories,
+      generalObjective: fields.generalObjective || fields.objectives || prev.generalObjective,
+      evaluationCriteria: fields.evaluationCriteria || prev.evaluationCriteria,
+      topicos: fields.topicos || prev.topicos,
+      numberOfFlashcards: fields.numberOfFlashcards || prev.numberOfFlashcards,
+      temaRedacao: fields.temaRedacao || fields.theme || prev.temaRedacao,
+      objetivo: fields.objetivo || fields.objectives || prev.objetivo,
+      nivelDificuldade: fields.nivelDificuldade || fields.difficultyLevel || prev.nivelDificuldade,
+      competenciasENEM: fields.competenciasENEM || prev.competenciasENEM,
+      contextoAdicional: fields.contextoAdicional || fields.context || prev.contextoAdicional
+    }));
+    console.log('✅ [EditActivityModal] Campos injetados no formulário');
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    open: (activityId: string, activityType: string, customFields?: Record<string, any>) => {
+      console.log('🌉 [EditActivityModal] OPEN chamado via ModalBridge:', activityId, activityType);
+      const syntheticActivity: ConstructionActivity = {
+        id: activityId,
+        title: customFields?.title || activityId,
+        personalizedTitle: customFields?.title || activityId,
+        description: customFields?.description || '',
+        personalizedDescription: customFields?.description || '',
+        categoryId: activityType,
+        categoryName: activityType,
+        icon: 'FileText',
+        tags: [],
+        difficulty: customFields?.difficultyLevel || 'medium',
+        estimatedTime: customFields?.timeLimit || '30 min',
+        customFields: customFields || {},
+        type: activityType,
+        preenchidoAutomaticamente: true
+      };
+      setProgrammaticActivity(syntheticActivity);
+      setIsProgrammaticOpen(true);
+      console.log('📖 [EditActivityModal] Modal aberto programaticamente');
+    },
+    setFields: injectFieldsIntoForm,
+    build: () => {
+      console.log('🔨 [EditActivityModal] BUILD chamado via ModalBridge - acionando handleBuildActivity');
+      return new Promise((resolve) => {
+        buildPromiseRef.current = { resolve, reject: () => {} };
+        setTimeout(() => {
+          if (buildFnRef.current) {
+            buildFnRef.current()
+              .then(result => {
+                console.log('✅ [EditActivityModal] Build programático concluído:', result ? 'sucesso' : 'sem resultado');
+                const storageKeys = collectLocalStorageKeys(effectiveActivity?.id || '', effectiveActivity?.type || effectiveActivity?.id || '');
+                resolve({ success: true, result, storageKeys });
+              })
+              .catch(error => {
+                console.error('❌ [EditActivityModal] Erro no build programático:', error);
+                resolve({ success: false, error: error.message });
+              });
+          } else {
+            console.error('❌ [EditActivityModal] buildFnRef não disponível');
+            resolve({ success: false, error: 'Função de build não inicializada' });
+          }
+        }, 100);
+      });
+    },
+    close: () => {
+      console.log('🔒 [EditActivityModal] CLOSE chamado via ModalBridge');
+      setIsProgrammaticOpen(false);
+      setProgrammaticActivity(null);
+      buildPromiseRef.current = null;
+    },
+    isOpen: () => effectiveIsOpen
+  }), [effectiveActivity, effectiveIsOpen, injectFieldsIntoForm, collectLocalStorageKeys]);
+
   // Estado para controlar qual aba está ativa
   const [activeTab, setActiveTab] = useState<'editar' | 'preview'>('editar');
 
@@ -2316,6 +2470,111 @@ const EditActivityModal = ({
     }
   }, [activity, formData, isBuilding, toast, generateActivity, handleGenerateQuizInterativo, handleGenerateFlashCards]);
 
+  const handleBuildActivityProgrammatic = useCallback(async (): Promise<any> => {
+    const targetActivity = effectiveActivity;
+    if (!targetActivity) {
+      throw new Error('Nenhuma atividade disponível para construção');
+    }
+
+    console.log('🌉 [Programmatic] Iniciando construção programática:', targetActivity.id);
+    console.log('📊 [Programmatic] Dados do formulário:', formData);
+
+    setIsBuilding(true);
+    setError(null);
+
+    try {
+      const activityType = targetActivity.type || targetActivity.id || targetActivity.categoryId;
+      console.log('🎯 [Programmatic] Tipo de atividade:', activityType);
+
+      let result;
+      if (activityType === 'quiz-interativo') {
+        result = await handleGenerateQuizInterativo();
+      } else if (activityType === 'flash-cards') {
+        result = await handleGenerateFlashCards();
+      } else {
+        result = await generateActivity(formData);
+      }
+
+      if (result === undefined) {
+        throw new Error('Geração não retornou resultado');
+      }
+
+      console.log('✅ [Programmatic] Atividade construída:', result);
+
+      const storageKey = `constructed_${activityType}_${targetActivity.id}`;
+      localStorage.setItem(storageKey, JSON.stringify(result));
+      console.log('💾 [Programmatic] Salvo em:', storageKey);
+
+      if (activityType === 'quadro-interativo') {
+        const quadroData = {
+          ...result.data || result,
+          isBuilt: true,
+          builtAt: new Date().toISOString(),
+          generatedByModal: true
+        };
+        localStorage.setItem(`quadro_interativo_data_${targetActivity.id}`, JSON.stringify(quadroData));
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('quadro-interativo-auto-build', {
+            detail: { activityId: targetActivity.id, data: quadroData }
+          }));
+        }, 100);
+      }
+
+      if (activityType === 'quiz-interativo') {
+        setQuizInterativoContent(result.data || result);
+      }
+      if (activityType === 'flash-cards') {
+        setFlashCardsContent(result.data || result);
+      }
+      if (activityType === 'tese-redacao') {
+        setTeseRedacaoContent(result.data || result);
+      }
+
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      constructedActivities[targetActivity.id] = {
+        generatedContent: result,
+        timestamp: new Date().toISOString(),
+        activityType
+      };
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+
+      setGeneratedContent(result);
+      setBuiltContent(result);
+      setIsContentLoaded(true);
+
+      const activityStorageKey = `activity_${targetActivity.id}`;
+      localStorage.setItem(activityStorageKey, JSON.stringify({
+        title: formData.title,
+        description: formData.description,
+        customFields: { ...targetActivity.customFields, ...formData },
+        generatedContent: result,
+        formData,
+        lastSync: new Date().toISOString()
+      }));
+
+      window.dispatchEvent(new CustomEvent('activity-data-sync', {
+        detail: {
+          activityId: targetActivity.id,
+          data: { title: formData.title, description: formData.description, generatedContent: result, formData },
+          timestamp: Date.now()
+        }
+      }));
+
+      console.log('🌉 [Programmatic] Build concluído com sucesso');
+      return result;
+
+    } catch (error) {
+      console.error('❌ [Programmatic] Erro:', error);
+      throw error;
+    } finally {
+      setIsBuilding(false);
+    }
+  }, [effectiveActivity, formData, generateActivity, handleGenerateQuizInterativo, handleGenerateFlashCards]);
+
+  useEffect(() => {
+    buildFnRef.current = handleBuildActivityProgrammatic;
+  }, [handleBuildActivityProgrammatic]);
+
   // Agente Interno de Execução - Automação da Construção de Atividades
   useEffect(() => {
     if (!activity || !isOpen) return;
@@ -2846,7 +3105,10 @@ const EditActivityModal = ({
 
   // Usar Portal para renderizar o modal no body, garantindo que fique por cima de todos os componentes
   return createPortal(modalContent, document.body);
-};
+});
+
+EditActivityModal.displayName = 'EditActivityModal';
 
 export default EditActivityModal;
 export { EditActivityModal };
+export type { EditActivityModalHandle };

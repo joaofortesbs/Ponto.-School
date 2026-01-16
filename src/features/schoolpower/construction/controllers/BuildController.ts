@@ -2,11 +2,18 @@
  * BUILD CONTROLLER
  * 
  * Controlador que gerencia a construção programática de atividades.
- * Escuta eventos de construction:build_activity e executa a construção real
- * usando buildActivityFromFormData.
+ * Usa ModalBridge para acionar o EditActivityModal real e executar
+ * a construção através da interface do modal.
+ * 
+ * FLUXO:
+ * 1. Recebe evento construction:build_activity
+ * 2. Usa ModalBridge para abrir modal programaticamente
+ * 3. Injeta campos no formulário
+ * 4. Aciona build() que clica no botão "Gerar atividades"
+ * 5. Aguarda resultado e fecha modal
  */
 
-import { buildActivityFromFormData } from '../services/buildActivityHelper';
+import { ModalBridge } from '../bridge/ModalBridge';
 import { ActivityFormData } from '../types/ActivityTypes';
 import {
   BuildActivityRequest,
@@ -29,7 +36,7 @@ export function createBuildController(callbacks?: BuildControllerCallbacks): () 
     const { activityId, activityType, fields, requestId } = request;
     
     console.log(`\n🔨 ════════════════════════════════════════════════════════`);
-    console.log(`🔨 [BuildController] CONSTRUÇÃO REAL INICIADA`);
+    console.log(`🔨 [BuildController] CONSTRUÇÃO VIA MODAL_BRIDGE INICIADA`);
     console.log(`🔨 ════════════════════════════════════════════════════════`);
     console.log(`🔨 [BuildController] Atividade: ${activityId}`);
     console.log(`🔨 [BuildController] Tipo: ${activityType}`);
@@ -39,6 +46,22 @@ export function createBuildController(callbacks?: BuildControllerCallbacks): () 
     callbacks?.onBuildStart?.(activityId, requestId);
 
     try {
+      // Aguardar ModalBridge ficar pronto com polling (até 5 segundos)
+      let attempts = 0;
+      const maxAttempts = 10;
+      while (!ModalBridge.isReady() && attempts < maxAttempts) {
+        console.log(`⚠️ [BuildController] ModalBridge não disponível, aguardando... (tentativa ${attempts + 1}/${maxAttempts})`);
+        await sleep(500);
+        attempts++;
+      }
+      
+      if (!ModalBridge.isReady()) {
+        throw new Error('ModalBridge não está disponível após 5s - EditActivityModal não registrado');
+      }
+      
+      console.log(`✅ [BuildController] ModalBridge pronto após ${attempts} tentativa(s)`);
+
+      console.log(`🌉 [BuildController] FASE 1: Abrindo modal via ModalBridge`);
       emitBuildProgress({
         activityId,
         requestId,
@@ -48,8 +71,18 @@ export function createBuildController(callbacks?: BuildControllerCallbacks): () 
       });
       callbacks?.onBuildProgress?.(activityId, 25, 'Abrindo modal...');
 
-      await sleep(100);
+      const bridge = ModalBridge.getHandle();
+      if (!bridge) {
+        throw new Error('Handle do modal não disponível');
+      }
 
+      const formData: ActivityFormData = mapFieldsToFormData(fields, activityType);
+      bridge.open(activityId, activityType, formData);
+      console.log(`📖 [BuildController] Modal aberto programaticamente`);
+
+      await sleep(200);
+
+      console.log(`🌉 [BuildController] FASE 2: Injetando campos no formulário`);
       emitBuildProgress({
         activityId,
         requestId,
@@ -59,10 +92,12 @@ export function createBuildController(callbacks?: BuildControllerCallbacks): () 
       });
       callbacks?.onBuildProgress?.(activityId, 50, 'Campos injetados...');
 
-      console.log(`📋 [BuildController] Preparando formData para construção...`);
-      const formData: ActivityFormData = mapFieldsToFormData(fields, activityType);
-      console.log(`📋 [BuildController] FormData preparado:`, formData);
+      bridge.setFields(formData);
+      console.log(`📝 [BuildController] Campos injetados:`, Object.keys(formData));
 
+      await sleep(100);
+
+      console.log(`🌉 [BuildController] FASE 3: Acionando botão "Gerar Atividades"`);
       emitBuildProgress({
         activityId,
         requestId,
@@ -72,14 +107,21 @@ export function createBuildController(callbacks?: BuildControllerCallbacks): () 
       });
       callbacks?.onBuildProgress?.(activityId, 75, 'Construindo atividade...');
 
-      console.log(`🚀 [BuildController] Chamando buildActivityFromFormData (MESMA LÓGICA DO MODAL)`);
-      const result = await buildActivityFromFormData(activityId, activityType, formData);
+      console.log(`🚀 [BuildController] Chamando bridge.build() - MODAL REAL EXECUTANDO`);
+      const buildResult = await bridge.build();
 
-      console.log(`✅ [BuildController] Construção concluída com sucesso!`);
-      console.log(`✅ [BuildController] Resultado:`, result ? 'Conteúdo gerado' : 'Sem conteúdo');
+      console.log(`✅ [BuildController] Resultado do build:`, buildResult);
 
-      const storageKeys = collectStorageKeys(activityId, activityType);
+      if (!buildResult.success) {
+        throw new Error(buildResult.error || 'Falha na construção da atividade');
+      }
+
+      const storageKeys = buildResult.storageKeys || collectStorageKeys(activityId, activityType);
       console.log(`💾 [BuildController] Chaves localStorage criadas:`, storageKeys);
+
+      console.log(`🌉 [BuildController] FASE 4: Fechando modal`);
+      bridge.close();
+      console.log(`🔒 [BuildController] Modal fechado`);
 
       emitBuildProgress({
         activityId,
@@ -93,21 +135,26 @@ export function createBuildController(callbacks?: BuildControllerCallbacks): () 
         activityId,
         requestId,
         success: true,
-        result,
+        result: buildResult.result,
         storageKeys,
         timestamp: new Date().toISOString()
       });
 
-      callbacks?.onBuildComplete?.(activityId, result);
+      callbacks?.onBuildComplete?.(activityId, buildResult.result);
       callbacks?.onBuildProgress?.(activityId, 100, 'Concluído!');
 
       console.log(`🎉 [BuildController] ════════════════════════════════════════════════════════`);
-      console.log(`🎉 [BuildController] CONSTRUÇÃO REAL CONCLUÍDA: ${activityId}`);
+      console.log(`🎉 [BuildController] CONSTRUÇÃO VIA MODAL CONCLUÍDA: ${activityId}`);
       console.log(`🎉 [BuildController] ════════════════════════════════════════════════════════\n`);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error(`❌ [BuildController] Erro na construção de ${activityId}:`, error);
+
+      const bridge = ModalBridge.getHandle();
+      if (bridge) {
+        try { bridge.close(); } catch {}
+      }
 
       emitBuildResult({
         activityId,
