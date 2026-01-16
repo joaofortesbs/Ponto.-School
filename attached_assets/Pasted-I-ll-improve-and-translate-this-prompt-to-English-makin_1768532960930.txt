@@ -1,0 +1,143 @@
+I'll improve and translate this prompt to English, making it more technical and complete while maintaining the original logic and structure:
+
+CRITICAL ISSUE: Activities within the Construction Interface card are not being properly built.
+
+Core Problem:
+Activities must be constructed through the Edit Activities modal to ensure all field content within the modal is properly utilized for activity content generation. Currently, the system is not following this essential workflow.
+
+System Architecture Clarification:
+
+The implementation consists of three distinct, independent systems that must work in isolation while complementing each other sequentially:
+
+Content Generation System
+
+Purpose: Exclusive, individual configuration system dedicated to generating content for respective fields
+
+Scope: Isolated content creation functionality
+
+Input: Field specifications and parameters
+
+Output: Generated content for each designated field
+
+Edit Activities Modal System
+
+Purpose: Serves as the dedicated activity builder and content repository
+
+Functionality: Stores all field contents within their respective fields
+
+Role: Acts as an isolated, self-contained activity constructor
+
+Responsibility: Maintains complete activity data structure
+
+Activity Creation/Activation System
+
+Purpose: Integration layer for activating existing functionalities and system calls
+
+Functionality: Directly triggers the "Generate Activities" button within each Edit Activities modal
+
+Scope: Handles activation for each activity within the Construction Interface card
+
+Role: Orchestration and invocation layer, not construction layer
+
+Critical Design Principle:
+These systems do NOT need to operate within a single continuous activation flow, but they MUST function independently and reliably, as each stage completes the next in sequence.
+
+Outstanding Issues Requiring Resolution:
+
+Issue #1: Progress Bar Functionality
+
+Location: Construction Interface card
+
+Current State: Non-functional or inaccurate
+
+Required Behavior: Must be truly progressive, updating in real-time as activities within the card are successfully generated
+
+Expected Result: Accurate visual representation of completion status
+
+Issue #2: Debug Output Lacks Verification
+
+Location: Activity Creation capability debug logs
+
+Current Behavior: Shows "Finalizing" and "Completion" messages for each activity WITHOUT specific confirmation that:
+
+The respective Edit Activities modal was actually accessed
+
+The modal's internal "Generate" button was properly triggered
+
+The construction process completed successfully with real confirmation
+
+Problem: System appears to be simulating construction without performing actual, verifiable operations
+
+CRITICAL: No real confirmation or validation of successful execution is occurring
+
+Issue #3: Visual Identity and State Representation
+
+Location: Construction Interface card (visible UI only, not internal activity state)
+
+Current State: Activities show incorrect visual states
+
+Required Implementation:
+
+Initial State: All activities must display with "inactive" design style
+
+Post-Creation State: Activities transition to "completed" design style only after successful generation
+
+Scope: Visual changes apply ONLY to the visible Construction Interface card, NOT to internal activity components
+
+REQUIRED: Complete Micro-Step Implementation Plan
+
+Please provide a comprehensive, intelligently ordered micro-step plan that includes:
+
+Analysis Phase
+
+System dependency mapping
+
+Current state assessment
+
+Architecture verification points
+
+Implementation Phase (in logical execution order)
+
+Step-by-step modifications for each identified issue
+
+Integration points between systems
+
+State management updates
+
+UI/UX visual state transitions
+
+Verification Phase
+
+Unit tests for each independent system
+
+Integration tests for system handoffs
+
+Debug logging enhancements for real confirmation
+
+Progress bar accuracy validation
+
+Visual state transition testing
+
+Validation Phase
+
+End-to-end workflow testing
+
+Edge case scenarios
+
+Rollback procedures if failures occur
+
+Success Criteria:
+
+Edit Activities modal is properly invoked for each activity
+
+Real confirmation of button activation within modals
+
+Progress bar accurately reflects actual completion
+
+Visual states correctly represent activity status
+
+Debug logs provide verifiable execution confirmation
+
+All three systems operate independently without false positives
+
+Please structure the plan with clear, actionable micro-steps that ensure correct implementation and thorough validation at each stage.

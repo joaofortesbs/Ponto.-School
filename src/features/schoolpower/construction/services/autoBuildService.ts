@@ -3,6 +3,12 @@ import { quadroInterativoFieldMapping, prepareQuadroInterativoDataForModal } fro
 import { activitiesApi } from '../../../../services/activitiesApiService';
 import { profileService } from '../../../../services/profileService';
 import { buildActivityFromFormData } from './buildActivityHelper';
+import { ModalBridge } from '../bridge/ModalBridge';
+import { 
+  emitBuildActivityRequest, 
+  waitForBuildResult,
+  emitBuildProgress 
+} from '../events/constructionEventBus';
 
 export interface AutoBuildProgress {
   current: number;
@@ -877,12 +883,83 @@ export class AutoBuildService {
     };
   }
 
+  /**
+   * Constrói uma atividade via ModalBridge (modal real)
+   */
+  private async buildViaModalBridge(activity: ConstructionActivity): Promise<boolean> {
+    const requestId = `modal-build-${activity.id}-${Date.now()}`;
+    
+    console.log(`\n🌉 ════════════════════════════════════════════════════════`);
+    console.log(`🌉 [AUTO-BUILD] CONSTRUÇÃO VIA MODAL_BRIDGE`);
+    console.log(`🌉 ════════════════════════════════════════════════════════`);
+    console.log(`🌉 [AUTO-BUILD] Atividade: ${activity.id}`);
+    console.log(`🌉 [AUTO-BUILD] Título: ${activity.title}`);
+    console.log(`🌉 [AUTO-BUILD] ModalBridge.isReady(): ${ModalBridge.isReady()}`);
+
+    // Preparar campos do formulário
+    const formData = await this.prepareFormDataExactlyLikeModal(activity);
+    
+    // Emitir evento para BuildController
+    const buildRequest = {
+      activityId: activity.id,
+      activityType: activity.type || activity.id,
+      fields: {
+        ...formData,
+        ...activity.customFields,
+        title: activity.title,
+        tema: activity.title,
+        theme: activity.title,
+        subject: activity.categoryName || 'Geral',
+        disciplina: activity.categoryName || 'Geral',
+        objectives: activity.description,
+        objetivo: activity.description
+      },
+      requestId
+    };
+
+    console.log(`📡 [AUTO-BUILD] Emitindo evento construction:build_activity...`);
+    console.log(`📡 [AUTO-BUILD] Campos:`, Object.keys(buildRequest.fields));
+    
+    emitBuildActivityRequest(buildRequest);
+
+    try {
+      console.log(`⏳ [AUTO-BUILD] Aguardando confirmação (timeout: 90s)...`);
+      const result = await waitForBuildResult(requestId, 90000);
+      
+      console.log(`\n🎉 ════════════════════════════════════════════════════════`);
+      console.log(`🎉 [AUTO-BUILD] CONSTRUÇÃO VIA MODAL CONFIRMADA!`);
+      console.log(`🎉 ════════════════════════════════════════════════════════`);
+      console.log(`🎉 [AUTO-BUILD] Activity ID: ${result.activityId}`);
+      console.log(`🎉 [AUTO-BUILD] Sucesso: ${result.success}`);
+      console.log(`🎉 [AUTO-BUILD] Chaves localStorage:`);
+      result.storageKeys.forEach(key => console.log(`   💾 ${key}`));
+
+      // Atualizar estado da atividade
+      activity.isBuilt = true;
+      activity.builtAt = new Date().toISOString();
+      activity.progress = 100;
+      activity.status = 'completed';
+
+      // Callback de conclusão
+      if (this.onActivityBuilt) {
+        this.onActivityBuilt(activity.id);
+      }
+
+      return true;
+    } catch (error) {
+      console.error(`❌ [AUTO-BUILD] Erro na construção via ModalBridge:`, error);
+      return false;
+    }
+  }
+
   async buildAllActivities(activities: ConstructionActivity[]): Promise<void> {
     console.log('🚀 [AUTO-BUILD] Iniciando construção automática');
     console.log(`📋 [AUTO-BUILD] ${activities.length} atividades para processar`);
+    console.log(`🌉 [AUTO-BUILD] ModalBridge disponível: ${ModalBridge.isReady()}`);
 
     const errors: string[] = [];
     let processedCount = 0;
+    const useModalBridge = ModalBridge.isReady();
 
     this.updateProgress({
       current: 0,
@@ -928,7 +1005,19 @@ export class AutoBuildService {
       console.log(`🔨 [AUTO-BUILD] Construindo (${i + 1}/${activities.length}): ${activity.title}`);
 
       try {
-        await this.buildActivityWithExactModalLogic(activity);
+        let buildSuccess = false;
+
+        // Tentar usar ModalBridge primeiro (modal real)
+        if (useModalBridge || ModalBridge.isReady()) {
+          console.log(`🌉 [AUTO-BUILD] Usando ModalBridge para ${activity.title}`);
+          buildSuccess = await this.buildViaModalBridge(activity);
+        }
+
+        // Fallback para lógica antiga se ModalBridge não funcionou
+        if (!buildSuccess) {
+          console.log(`📦 [AUTO-BUILD] Usando lógica interna para ${activity.title}`);
+          await this.buildActivityWithExactModalLogic(activity);
+        }
 
         processedCount++;
         console.log(`✅ [AUTO-BUILD] Atividade ${i + 1}/${activities.length} construída: ${activity.title}`);
@@ -941,8 +1030,8 @@ export class AutoBuildService {
           errors
         });
 
-        // Delay para não sobrecarregar a API
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Delay para permitir UI atualizar
+        await new Promise(resolve => setTimeout(resolve, 500));
 
       } catch (error) {
         console.error(`❌ [AUTO-BUILD] Erro ao construir ${activity.title}:`, error);

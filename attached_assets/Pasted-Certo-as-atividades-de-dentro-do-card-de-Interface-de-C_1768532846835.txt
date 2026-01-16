@@ -1,0 +1,17 @@
+Certo, as atividades de dentro do card de Interface de Construção ainda não estão sendo contruidas! Lembre-se que para as atividades estarem verdadeideramente construidas, elas precisam serem construidas através do modal de Editar atividades, para que todo o conteúdo de dentro de cada campo de dentro do modal, seja util para a criação do conteúdo da atividade quando construida! Lembre-se também que são sistemas diferentes:
+
+A capacidade de gerar conteúdo tem uma confiugração e sistema exclusivo e individual, com o objetivo de gerar conteúdo dos respectivos campos!
+
+O modal de Editar atividades tem o objetivo de armazenar os campos com todos os conteúdos de dentro de cada respectivo campo, e servir como o construtor de atividades próprio e isolado!
+
+A capacidade de criar atividades, tem o objetivo de ser um sistema de integração para ativação de funcionalidades e chamadas já existentes dentro do sistemas, nesse caso para a ativação direta do botão de Gerar atividades de dentro de cada um dos modais de Editar atividades, de dentro de cada uma das atividades de dentro do card de Interface de Construção!
+
+Os sistemas não precisam trabalhar juntos dentro de um mesmo flow continuo de ativação, mas precisam trabalhar muito bem de maneira independente, pois cada etapa completa a outra!
+
+Uma das coisas que precisamos fazer para garantir ainda mais a visão desse sistema, é fazer que a barra de progresso de dentro do card de Interface de Construção funcione perfeitamente, para ser verdadeiramente progressiva quando as atividades de dentro do card forem sendo geradas!
+
+Outra coisa muito importante é que dentro do debug da capacidade de criar atividades, aparece uma chamda de Finalizando e conclusão de cada atividade, sem a confirmação especifica de que a chamada acessou o respectivo modal de Editar atividades de dentro da respectiva atividade, e confirmou a criação via botão de dentro do próprio modal aconteceu da maneira correta! É como se o ssitema estivesse simulando uma construção, mas na verdade nada de maneira efetiva e verdadeira foi feita, com confirmação real!!!!!!!
+
+Outra coisa que precisa ser feita é que a identidade visual do card de Interface de Construção, precisa mostrar todas as atividades de dentro dele inicialmente com o desing com o estilo de inativo, até que as respectivas atividades sejam criadas, e o desing fique com o estilo de concluido, dentro de cada atividade! Essa alteração é somente no card visivel de Interface de Construção, e não internamente de dentro das atividades!
+
+Faça uma plano completo de micro-steps em ordem inteligente para fazer todas essas alterações da maneira correta, e incluindo testes e validação, para garantir que tudo seja feito corretamente!
