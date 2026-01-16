@@ -183,6 +183,9 @@ export function ExecutionPlanCardEnhanced({
                     activities={activitiesToBuild}
                     isBuilding={isBuildingActivities}
                     onBuildAll={onBuildActivities || (() => {})}
+                    onActivityStatusChange={(activityId, status, progress, message) => {
+                      console.log(`📊 [ExecutionPlan] Status update: ${activityId} -> ${status} (${progress}%)`);
+                    }}
                     autoStart={true}
                   />
                 </motion.div>

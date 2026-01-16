@@ -195,6 +195,74 @@ const CapabilityCard: React.FC<{
   const isCompleted = capability.status === 'completed';
   const isError = capability.status === 'error';
 
+  // Estado local para gerenciar status das atividades com eventos de progresso
+  const [localActivities, setLocalActivities] = useState<ActivityToBuild[]>(activitiesToBuild);
+
+  // Sincronizar com props quando mudarem
+  useEffect(() => {
+    setLocalActivities(activitiesToBuild);
+  }, [activitiesToBuild]);
+
+  // Escutar eventos de progresso do BuildController
+  useEffect(() => {
+    const handleProgress = (event: CustomEvent) => {
+      const { activityId, progress, message } = event.detail || {};
+      if (!activityId) return;
+      
+      setLocalActivities(prev => prev.map(a => 
+        (a.activity_id === activityId || a.id === activityId)
+          ? { ...a, status: 'building' as const, progress, progressMessage: message }
+          : a
+      ));
+    };
+
+    const handleCompleted = (event: CustomEvent) => {
+      const { activityId, data } = event.detail || {};
+      if (!activityId) return;
+      
+      setLocalActivities(prev => prev.map(a => 
+        (a.activity_id === activityId || a.id === activityId)
+          ? { ...a, status: 'completed' as const, progress: 100, built_data: data }
+          : a
+      ));
+    };
+
+    const handleError = (event: CustomEvent) => {
+      const { activityId, error } = event.detail || {};
+      if (!activityId) return;
+      
+      setLocalActivities(prev => prev.map(a => 
+        (a.activity_id === activityId || a.id === activityId)
+          ? { ...a, status: 'error' as const, error_message: error }
+          : a
+      ));
+    };
+
+    window.addEventListener('construction:activity_progress', handleProgress as EventListener);
+    window.addEventListener('construction:activity_completed', handleCompleted as EventListener);
+    window.addEventListener('construction:activity_error', handleError as EventListener);
+
+    return () => {
+      window.removeEventListener('construction:activity_progress', handleProgress as EventListener);
+      window.removeEventListener('construction:activity_completed', handleCompleted as EventListener);
+      window.removeEventListener('construction:activity_error', handleError as EventListener);
+    };
+  }, []);
+
+  // Callback para atualizar status via ConstructionInterface
+  const handleActivityStatusChange = (activityId: string, status: string, progress?: number, message?: string) => {
+    setLocalActivities(prev => prev.map(a => 
+      (a.activity_id === activityId || a.id === activityId)
+        ? { 
+            ...a, 
+            status: status as ActivityToBuild['status'], 
+            progress, 
+            progressMessage: message 
+          }
+        : a
+    ));
+  };
+
   const isCriarAtividade = capability.nome.toLowerCase().includes('criar_atividade') || 
                            capability.nome.toLowerCase().includes('criar_atividades') ||
                            capability.id.toLowerCase().includes('criar_atividade');
@@ -365,9 +433,10 @@ const CapabilityCard: React.FC<{
             className="mt-2 mb-3"
           >
             <ConstructionInterface
-              activities={activitiesToBuild}
+              activities={localActivities}
               isBuilding={isBuildingActivities}
               onBuildAll={onBuildActivities || (() => {})}
+              onActivityStatusChange={handleActivityStatusChange}
               autoStart={true}
             />
           </motion.div>
