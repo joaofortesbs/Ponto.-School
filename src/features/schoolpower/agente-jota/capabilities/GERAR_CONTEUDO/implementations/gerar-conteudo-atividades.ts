@@ -801,8 +801,16 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
     technical_data: { success_count: successCount, fail_count: failCount }
   });
 
+  // PARTIAL SUCCESS: Se pelo menos 1 atividade foi gerada, consideramos sucesso
+  const isPartialOrFullSuccess = successCount > 0;
+  const successfulResults = results.filter(r => r.success);
+  
+  if (failCount > 0 && successCount > 0) {
+    console.log(`📊 [GerarConteudo] PARTIAL SUCCESS: ${successCount} succeeded, ${failCount} failed. Pipeline continues.`);
+  }
+  
   return {
-    success: failCount === 0,
+    success: isPartialOrFullSuccess, // ← MUDANÇA: sucesso se pelo menos 1 atividade gerada
     capability_id: CAPABILITY_ID,
     data: {
       session_id: params.session_id,
@@ -810,9 +818,13 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
       success_count: successCount,
       fail_count: failCount,
       results,
+      successful_results: successfulResults, // ← NOVO: apenas atividades bem-sucedidas
+      partial_success: failCount > 0 && successCount > 0,
       generated_at: new Date().toISOString()
     },
-    error: failCount > 0 ? `${failCount} atividades falharam` : null,
+    error: failCount > 0 && successCount === 0 
+      ? `Todas as ${failCount} atividades falharam` 
+      : (failCount > 0 ? `${failCount} falharam, ${successCount} bem-sucedidas` : null),
     debug_log: debugLog,
     execution_time_ms: executionTime,
     message: `Conteúdo gerado para ${successCount} de ${totalActivities} atividades`
@@ -1127,19 +1139,50 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
     
     console.error(`✅ [V2] COMPLETED: ${successCount}/${chosenActivities.length} activities, ${totalFieldsGenerated} fields in ${elapsedTime}ms`);
     
+    // ═══════════════════════════════════════════════════════════════════════
+    // PARTIAL SUCCESS: Se QUALQUER atividade foi gerada com sucesso, 
+    // consideramos a capability como bem-sucedida e passamos para a próxima etapa.
+    // Apenas se TODAS falharem é que consideramos falha total.
+    // ═══════════════════════════════════════════════════════════════════════
+    const isPartialOrFullSuccess = successCount > 0;
+    const successfulResults = results.filter(r => r.success);
+    
+    // Log do status de sucesso parcial
+    if (failCount > 0 && successCount > 0) {
+      console.error(`📊 [V2] PARTIAL SUCCESS: ${successCount} succeeded, ${failCount} failed. Pipeline will CONTINUE with successful activities.`);
+      
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'warning',
+        narrative: `⚠️ SUCESSO PARCIAL: ${failCount} atividades falharam, mas ${successCount} foram geradas com sucesso. O pipeline continuará com as atividades bem-sucedidas.`,
+        technical_data: { 
+          success_count: successCount,
+          fail_count: failCount,
+          failed_activities: results.filter(r => !r.success).map(r => ({ id: r.activity_id, error: r.error })),
+          successful_activities: successfulResults.map(r => r.activity_id)
+        }
+      });
+    }
+    
     return {
-      success: failCount === 0,
+      success: isPartialOrFullSuccess, // ← MUDANÇA CRÍTICA: sucesso se pelo menos 1 atividade foi gerada
       capability_id: CAPABILITY_ID,
       execution_id: input.execution_id,
       timestamp: new Date().toISOString(),
       data: {
         generated_content: results,
+        successful_content: successfulResults, // ← NOVO: apenas atividades bem-sucedidas para próxima etapa
         total_activities: chosenActivities.length,
         success_count: successCount,
         fail_count: failCount,
-        total_fields_generated: totalFieldsGenerated
+        total_fields_generated: totalFieldsGenerated,
+        partial_success: failCount > 0 && successCount > 0 // ← NOVO: flag de sucesso parcial
       },
-      error: failCount > 0 ? createCapabilityError(`${failCount} atividades falharam na geração de conteúdo`, 'medium') : null,
+      error: failCount > 0 && successCount === 0 
+        ? createCapabilityError(`Todas as ${failCount} atividades falharam na geração de conteúdo`, 'critical') 
+        : (failCount > 0 
+            ? createCapabilityError(`${failCount} de ${chosenActivities.length} atividades falharam (${successCount} bem-sucedidas)`, 'low')
+            : null),
       debug_log,
       metadata: {
         duration_ms: elapsedTime,
