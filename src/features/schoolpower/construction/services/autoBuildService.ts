@@ -11,6 +11,7 @@ import {
 } from '../events/constructionEventBus';
 import { useActivityDebugStore, logActivityDebug } from '../stores/activityDebugStore';
 import { BuildQueueController, type QueueProgress } from '../queue/BuildQueueController';
+import { normalizeFieldKeys, getFieldByAnyName } from '../utils/activity-fields-sync';
 
 export interface AutoBuildProgress {
   current: number;
@@ -566,10 +567,19 @@ export class AutoBuildService {
     console.log(`🎯 [AUTO-BUILD] Construindo: ${activity.title}`);
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // NORMALIZAÇÃO: Unificar nomenclatura de campos antes de processar
+    // ═══════════════════════════════════════════════════════════════════════════
+    const rawFields = activity.customFields || {};
+    const normalizedFields = normalizeFieldKeys(rawFields);
+    
+    // Atualizar activity com campos normalizados para uso consistente
+    activity.customFields = { ...rawFields, ...normalizedFields };
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // OTIMIZAÇÃO: Verificar se campos já foram pré-gerados por gerar_conteudo_atividades
     // Se sim, usar diretamente sem regenerar (evita duplicação de geração)
     // ═══════════════════════════════════════════════════════════════════════════
-    const preGeneratedFields = activity.customFields || {};
+    const preGeneratedFields = normalizedFields;
     const preGeneratedFieldsCount = Object.keys(preGeneratedFields).filter(k => 
       preGeneratedFields[k] !== undefined && 
       preGeneratedFields[k] !== '' && 
