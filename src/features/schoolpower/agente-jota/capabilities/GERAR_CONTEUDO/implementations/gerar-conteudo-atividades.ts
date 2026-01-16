@@ -27,6 +27,7 @@ import {
   persistActivityToStorage
 } from '../../../../construction/utils/activity-fields-sync';
 import { createDebugEntry, useDebugStore } from '../../../../interface-chat-producao/debug-system/DebugStore';
+import { useActivityDebugStore } from '../../../../construction/stores/activityDebugStore';
 
 interface GerarConteudoParams {
   session_id: string;
@@ -649,8 +650,29 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
   const results: GeneratedFieldsResult[] = [];
   const totalActivities = activities.length;
 
+  // Obter referência do ActivityDebugStore para logs detalhados por atividade
+  const activityDebugStore = useActivityDebugStore.getState();
+
   for (let i = 0; i < activities.length; i++) {
     const activity = activities[i];
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // INICIALIZAR DEBUG DA ATIVIDADE - Logs aparecerão no ActivityDebugModal
+    // ═══════════════════════════════════════════════════════════════════════
+    activityDebugStore.initActivity(activity.id, activity.titulo, activity.tipo);
+    activityDebugStore.setStatus(activity.id, 'building');
+    activityDebugStore.setProgress(activity.id, 0, 'Iniciando geração de conteúdo');
+    
+    activityDebugStore.log(
+      activity.id, 'action', 'GerarConteudo',
+      `Iniciando geração de conteúdo para "${activity.titulo}"`,
+      { 
+        activity_type: activity.tipo, 
+        index: i + 1, 
+        total: totalActivities,
+        fields_to_generate: getFieldsForActivityType(activity.tipo)?.requiredFields?.map(f => f.name) || []
+      }
+    );
     
     params.on_progress?.({
       type: 'activity_started',
@@ -663,6 +685,13 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
     });
 
     store.updateActivityStatus(activity.id, 'construindo', Math.round((i / totalActivities) * 100));
+    
+    activityDebugStore.setProgress(activity.id, 10, 'Preparando chamada à API de IA');
+    activityDebugStore.log(
+      activity.id, 'api', 'GerarConteudo',
+      'Chamando API de IA (Groq/Gemini) para gerar campos...',
+      { model_cascade: ['llama3.3-70b', 'llama3.1-8b', 'gemini-1.5-flash'] }
+    );
 
     const result = await generateContentForActivity(
       activity,
@@ -677,11 +706,38 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
     // Aqui só atualizamos o store e emitimos eventos
 
     results.push(result);
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // LOGS DE DEBUG PÓS-GERAÇÃO - Mostrar resultado da API
+    // ═══════════════════════════════════════════════════════════════════════
+    activityDebugStore.setProgress(activity.id, 50, 'Processando resposta da IA');
+    
+    if (result.success) {
+      activityDebugStore.log(
+        activity.id, 'success', 'API-Response',
+        `API retornou ${Object.keys(result.generated_fields).length} campos gerados`,
+        { 
+          fields_generated: Object.keys(result.generated_fields),
+          sample_values: Object.fromEntries(
+            Object.entries(result.generated_fields).slice(0, 3).map(([k, v]) => 
+              [k, typeof v === 'string' ? v.substring(0, 100) + (v.length > 100 ? '...' : '') : v]
+            )
+          )
+        }
+      );
+    } else {
+      activityDebugStore.log(
+        activity.id, 'error', 'API-Response',
+        `Falha na geração: ${result.error}`,
+        { error: result.error }
+      );
+    }
 
     if (result.success) {
       // CORREÇÃO: Primeiro salvamos os campos, DEPOIS atualizamos o status para 'concluida'
       // Isso garante que o contador de campos esteja correto quando o status mudar
       
+      activityDebugStore.setProgress(activity.id, 60, 'Sincronizando campos com formulário');
       const syncedFields = syncSchemaToFormData(activity.tipo, result.generated_fields);
       
       console.log('%c📊 [GerarConteudo] Relatório de sincronização:', 
@@ -691,6 +747,17 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
       const validation = validateSyncedFields(activity.tipo, syncedFields);
       console.log(`%c📋 [GerarConteudo] Validação: ${validation.filledFields.length} campos preenchidos, ${validation.missingFields.length} faltando`,
         validation.valid ? 'color: green;' : 'color: orange;');
+      
+      activityDebugStore.setProgress(activity.id, 70, 'Validando campos gerados');
+      activityDebugStore.log(
+        activity.id, 'info', 'Validation',
+        `Validação: ${validation.filledFields.length} campos preenchidos, ${validation.missingFields.length} faltando`,
+        { 
+          filled_fields: validation.filledFields,
+          missing_fields: validation.missingFields,
+          is_valid: validation.valid
+        }
+      );
       
       store.setActivityGeneratedFields(activity.id, syncedFields);
       
@@ -710,6 +777,13 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
       // Esta é a correção crítica: salvar no localStorage AGORA, não depender
       // do autoBuildService/ModalBridge que pode ter race conditions
       // ═══════════════════════════════════════════════════════════════════════
+      activityDebugStore.setProgress(activity.id, 80, 'Salvando no localStorage');
+      activityDebugStore.log(
+        activity.id, 'action', 'LocalStorage',
+        'Persistindo dados no localStorage...',
+        { keys_to_save: ['activity_*', 'constructed_*', 'generated_content_*'] }
+      );
+      
       const savedKeys = persistActivityToStorage(
         activity.id,
         activity.tipo,
@@ -724,6 +798,12 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
       
       console.log(`%c💾 [GerarConteudo] Atividade persistida em ${savedKeys.length} chaves do localStorage`,
         'background: #FF5722; color: white; padding: 2px 5px; border-radius: 3px;');
+      
+      activityDebugStore.log(
+        activity.id, 'success', 'LocalStorage',
+        `Dados persistidos em ${savedKeys.length} chaves do localStorage`,
+        { saved_keys: savedKeys }
+      );
 
       // CORREÇÃO CRÍTICA: Usar contagens diretamente do syncedFields que acabamos de criar
       // NÃO depender do store pois pode não ter atualizado ainda
@@ -738,6 +818,12 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
       
       // Status 'concluida' só é definido DEPOIS que os campos foram salvos
       store.updateActivityStatus(activity.id, 'concluida', 100);
+      
+      // ═══════════════════════════════════════════════════════════════════════
+      // MARCAR DEBUG COMO CONCLUÍDO - ActivityDebugModal mostrará status verde
+      // ═══════════════════════════════════════════════════════════════════════
+      activityDebugStore.setProgress(activity.id, 100, 'Atividade construída com sucesso');
+      activityDebugStore.markCompleted(activity.id);
 
       console.log('📤 [GerarConteudo] Emitindo evento agente-jota-fields-generated para:', activity.id);
       window.dispatchEvent(new CustomEvent('agente-jota-fields-generated', {
@@ -775,6 +861,11 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
       });
 
     } else {
+      // ═══════════════════════════════════════════════════════════════════════
+      // MARCAR DEBUG COMO ERRO - ActivityDebugModal mostrará status vermelho
+      // ═══════════════════════════════════════════════════════════════════════
+      activityDebugStore.setError(activity.id, result.error || 'Erro desconhecido na geração');
+      
       store.updateActivityStatus(activity.id, 'erro', 0, result.error);
       
       params.on_progress?.({
