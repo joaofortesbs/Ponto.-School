@@ -1,0 +1,28 @@
+🔍 Diagnóstico Técnico: A Anatomia da Falha
+O sistema atual sofre de uma desconexão entre a geração de dados e a execução da interface, causada por três problemas principais:
+
+1. O "Vácuo" entre o Agente e o Modal (ModalBridge)
+Embora tenhamos o ModalBridge e o BuildController, o Agente Jota (em criar-atividade-v2.ts) chama o autoBuildService.buildAllActivities. O problema é que o Agente Jota roda em um contexto de execução de capability que nem sempre tem o ModalBridge registrado ou pronto no momento exato em que a mensagem é processada.
+
+Consequência: A IA termina a tarefa, o status muda para "Concluído", mas o comando para o modal abrir e "digitar" o conteúdo nunca chega ou falha silenciosamente porque o modal não estava "ouvindo".
+2. Animação Express vs. Construção Real
+A animação "rápida e instantânea" que você mencionou ocorre porque o criar-atividade-v2.ts emite o evento construction:activity_completed assim que recebe os campos da IA.
+
+O Erro de Lógica: O sistema marca a atividade como "Concluída" na UI baseando-se apenas no fato de que a IA gerou o texto, e não no fato de que o modal processou e salvou esse texto no banco/localStorage. Para o usuário, a barra de progresso voa para 100%, mas o trabalho de "construção" (que deveria ser o modal preenchendo os campos) foi ignorado.
+3. Conflito de Chaves de Armazenamento (Storage Drift)
+Existem múltiplas chaves sendo usadas: generated_content_{id}, constructed_{id}, activity_{id}.
+
+O Problema: Quando você clica no "olho" (Visualizar), o modal de visualização busca os dados em uma chave (ex: activity_{id}), mas o pipeline de geração pode estar salvando em outra (ex: generated_content_{id}). Se o mapeamento de campos (ex: temaRedacao vs theme) falhar na sincronização, o modal abre vazio mesmo com os dados existindo no sistema.
+📋 Principais Motivos da Falha
+Race Condition no Registro do Modal: O ConstructionInterface registra o modal no ModalBridge via useEffect, mas a execução da capability da IA pode disparar antes que o React complete esse registro, resultando em um ModalBridge vazio.
+Falta de "Handshake" (Aperto de Mão): Não há uma confirmação de que o Modal realmente recebeu e salvou os dados antes de disparar o all_completed. O pipeline da IA "atira e esquece".
+Mapeamento Assimétrico de Campos: Se a IA gera quantidade_questoes e o modal espera numQuestions, e o activity-fields-sync.ts falha em traduzir isso no momento da "construção automática", o modal não terá o que exibir.
+💡 Conclusão e Solução Logicamente Garantida
+Para que a construção seja real e literal, precisamos inverter a responsabilidade:
+
+Sincronização de Estado Real: O status "Concluída" no card só deve aparecer após o ModalBridge retornar success: true. Atualmente, o card fica verde antes mesmo do modal tentar abrir.
+Atraso Deliberado (Humanização): Para evitar a sensação de "fictício", o BuildController deve ter tempos de espera (delay) reais entre abrir o modal, preencher os campos e salvar, simulando a construção que o usuário espera ver.
+Unificação do Store: Forçar que tanto o autoBuildService quanto o EditActivityModal usem rigorosamente a mesma função de salvamento (savePreGeneratedActivityToStorage), garantindo que o "olho" (View) sempre encontre os dados.
+**Se resolvermos esses pontos, a construção deixará de ser uma animação e passará a ser um processo de persistência de dados real, onde o conteúdo gerado pela IA "
+
+pousa" com segurança no formulário da atividade.**

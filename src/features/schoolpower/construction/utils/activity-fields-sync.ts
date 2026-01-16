@@ -413,6 +413,160 @@ export function generateFieldSyncDebugReport(
   return lines.join('\n');
 }
 
+/**
+ * PERSISTÊNCIA UNIFICADA DE ATIVIDADES NO LOCALSTORAGE
+ * 
+ * Esta função salva os campos gerados em TODAS as chaves necessárias
+ * para garantir que o modal de visualização sempre encontre os dados.
+ * 
+ * Chaves salvas:
+ * - `activity_{id}`: Usado pelo ViewModal e buildActivityHelper
+ * - `constructed_{type}_{id}`: Padrão novo com tipo
+ * - `constructed_{id}`: Padrão legacy
+ * - `generated_content_{id}`: Compatibilidade com useActivityAutoLoad
+ * - `constructedActivities`: Objeto global
+ * 
+ * @returns Lista de chaves salvas para debug
+ */
+export function persistActivityToStorage(
+  activityId: string,
+  activityType: string,
+  activityTitle: string,
+  fields: Record<string, any>,
+  metadata?: {
+    description?: string;
+    isPreGenerated?: boolean;
+    source?: string;
+  }
+): string[] {
+  const savedKeys: string[] = [];
+  const timestamp = new Date().toISOString();
+  const normalizedType = normalizeActivityType(activityType);
+  
+  console.log(`%c💾 [PERSIST] Salvando atividade no localStorage`, 
+    'background: #FF5722; color: white; padding: 5px; border-radius: 5px; font-weight: bold;');
+  console.log(`💾 [PERSIST] ID: ${activityId}`);
+  console.log(`💾 [PERSIST] Tipo: ${normalizedType}`);
+  console.log(`💾 [PERSIST] Título: ${activityTitle}`);
+  console.log(`💾 [PERSIST] Campos:`, Object.keys(fields));
+
+  try {
+    // Estrutura completa de conteúdo gerado
+    const generatedContent = {
+      title: activityTitle,
+      type: normalizedType,
+      description: metadata?.description || '',
+      formData: fields,
+      isPreGenerated: metadata?.isPreGenerated ?? true,
+      isGeneratedByAI: true,
+      generatedAt: timestamp,
+      source: metadata?.source || 'gerar_conteudo_atividades'
+    };
+
+    // Estrutura de dados construídos
+    const constructedData = {
+      success: true,
+      data: generatedContent,
+      formData: fields,
+      timestamp,
+      isPreGenerated: metadata?.isPreGenerated ?? true
+    };
+
+    // 1. Salvar em activity_{id} (chave principal para ViewModal)
+    const activityKey = `activity_${activityId}`;
+    localStorage.setItem(activityKey, JSON.stringify(generatedContent));
+    savedKeys.push(activityKey);
+    console.log(`✅ [PERSIST] Salvo em ${activityKey}`);
+
+    // 2. Salvar em constructed_{type}_{id} (novo padrão)
+    const constructedKeyWithType = `constructed_${normalizedType}_${activityId}`;
+    localStorage.setItem(constructedKeyWithType, JSON.stringify(constructedData));
+    savedKeys.push(constructedKeyWithType);
+    console.log(`✅ [PERSIST] Salvo em ${constructedKeyWithType}`);
+
+    // 3. Salvar em constructed_{id} (legacy)
+    const constructedKeySimple = `constructed_${activityId}`;
+    localStorage.setItem(constructedKeySimple, JSON.stringify(constructedData));
+    savedKeys.push(constructedKeySimple);
+    console.log(`✅ [PERSIST] Salvo em ${constructedKeySimple}`);
+
+    // 4. Salvar em generated_content_{id} (compatibilidade com useActivityAutoLoad)
+    const generatedContentKey = `generated_content_${activityId}`;
+    localStorage.setItem(generatedContentKey, JSON.stringify(fields));
+    savedKeys.push(generatedContentKey);
+    console.log(`✅ [PERSIST] Salvo em ${generatedContentKey}`);
+
+    // 5. Atualizar constructedActivities GLOBAL
+    const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+    constructedActivities[activityId] = {
+      isBuilt: true,
+      builtAt: timestamp,
+      formData: fields,
+      generatedContent,
+      isPreGenerated: metadata?.isPreGenerated ?? true,
+      type: normalizedType
+    };
+    localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+    savedKeys.push('constructedActivities');
+    console.log(`✅ [PERSIST] Atualizado constructedActivities global`);
+
+    console.log(`%c🎉 [PERSIST] ${activityTitle} persistida com sucesso em ${savedKeys.length} chaves!`,
+      'background: #4CAF50; color: white; padding: 5px; border-radius: 5px; font-weight: bold;');
+
+    return savedKeys;
+
+  } catch (error) {
+    console.error(`❌ [PERSIST] Erro ao persistir atividade:`, error);
+    return savedKeys;
+  }
+}
+
+/**
+ * Carrega dados de atividade do localStorage
+ * Busca em múltiplas chaves para máxima compatibilidade
+ */
+export function loadActivityFromStorage(
+  activityId: string,
+  activityType?: string
+): Record<string, any> | null {
+  const normalizedType = activityType ? normalizeActivityType(activityType) : null;
+  
+  // Lista de chaves para buscar (em ordem de prioridade)
+  const keysToCheck = [
+    `activity_${activityId}`,
+    ...(normalizedType ? [`constructed_${normalizedType}_${activityId}`] : []),
+    `constructed_${activityId}`,
+    `generated_content_${activityId}`
+  ];
+
+  for (const key of keysToCheck) {
+    try {
+      const data = localStorage.getItem(key);
+      if (data) {
+        const parsed = JSON.parse(data);
+        console.log(`%c✅ [LOAD] Dados encontrados em: ${key}`, 'color: #4CAF50; font-weight: bold;');
+        return parsed.formData || parsed.data?.formData || parsed;
+      }
+    } catch (error) {
+      console.warn(`⚠️ [LOAD] Erro ao ler ${key}:`, error);
+    }
+  }
+
+  // Tentar em constructedActivities global
+  try {
+    const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+    if (constructedActivities[activityId]) {
+      console.log(`%c✅ [LOAD] Dados encontrados em constructedActivities`, 'color: #4CAF50; font-weight: bold;');
+      return constructedActivities[activityId].formData;
+    }
+  } catch (error) {
+    console.warn(`⚠️ [LOAD] Erro ao ler constructedActivities:`, error);
+  }
+
+  console.log(`%c❌ [LOAD] Nenhum dado encontrado para ${activityId}`, 'color: red;');
+  return null;
+}
+
 export default {
   ACTIVITY_SYNC_CONFIGS,
   syncSchemaToFormData,
@@ -422,5 +576,7 @@ export default {
   normalizeActivityType,
   validateSyncedFields,
   mergeGeneratedFields,
-  generateFieldSyncDebugReport
+  generateFieldSyncDebugReport,
+  persistActivityToStorage,
+  loadActivityFromStorage
 };

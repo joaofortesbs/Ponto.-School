@@ -23,7 +23,8 @@ import {
 import { 
   syncSchemaToFormData, 
   validateSyncedFields,
-  generateFieldSyncDebugReport 
+  generateFieldSyncDebugReport,
+  persistActivityToStorage
 } from '../../../../construction/utils/activity-fields-sync';
 import { createDebugEntry, useDebugStore } from '../../../../interface-chat-producao/debug-system/DebugStore';
 
@@ -703,6 +704,26 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
           sync_validation: validation
         });
       }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // PERSISTÊNCIA IMEDIATA NO LOCALSTORAGE
+      // Esta é a correção crítica: salvar no localStorage AGORA, não depender
+      // do autoBuildService/ModalBridge que pode ter race conditions
+      // ═══════════════════════════════════════════════════════════════════════
+      const savedKeys = persistActivityToStorage(
+        activity.id,
+        activity.tipo,
+        activity.titulo,
+        syncedFields,
+        {
+          description: (activity as any).descricao || activity.titulo,
+          isPreGenerated: true,
+          source: 'gerar_conteudo_atividades'
+        }
+      );
+      
+      console.log(`%c💾 [GerarConteudo] Atividade persistida em ${savedKeys.length} chaves do localStorage`,
+        'background: #FF5722; color: white; padding: 2px 5px; border-radius: 3px;');
 
       // CORREÇÃO CRÍTICA: Usar contagens diretamente do syncedFields que acabamos de criar
       // NÃO depender do store pois pode não ter atualizado ainda
