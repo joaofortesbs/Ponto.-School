@@ -1,7 +1,7 @@
 # Ponto. School
 
 ## Overview
-Ponto. School is an AI-powered educational platform designed to provide personalized learning experiences and streamline educational workflows for students and teachers. Key capabilities include an AI assistant (Epictus), study groups, digital notebooks, smart worksheets, interactive quizzes, and automated lesson planning through its "School Power" feature. The platform aims to significantly enhance educational engagement and efficiency.
+Ponto. School is an AI-powered educational platform designed to provide personalized learning experiences and streamline educational workflows for students and teachers. Its core purpose is to enhance educational engagement and efficiency through features like an AI assistant (Epictus), study groups, digital notebooks, smart worksheets, interactive quizzes, and automated lesson planning ("School Power").
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -9,72 +9,36 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### UI/UX Decisions
-The platform features a modern design utilizing glass-morphism effects, blur backgrounds, and a defined color scheme (Primary Orange, Secondary Blue, Dark Navy text). It incorporates custom, responsive typography, smooth CSS animations, and a mobile-first approach. Accessibility features include presentation mode with multi-language translation, dynamic font sizing, and voice reading support.
+The platform features a modern design with glass-morphism effects, blur backgrounds, and a defined color scheme (Primary Orange, Secondary Blue, Dark Navy text). It uses custom, responsive typography, smooth CSS animations, and a mobile-first approach. Accessibility features include presentation mode with multi-language translation, dynamic font sizing, and voice reading support.
 
 ### Technical Implementations
 - **Frontend**: React 18 with TypeScript, Vite, Tailwind CSS with shadcn/ui, and Zustand for state management.
 - **Backend**: Express.js for API endpoints.
-- **AI Integration**: A resilient multi-model fallback system is used, primarily with Groq API (Llama 3.3 70B, Llama 3.1 8B, Llama 4 Scout, Qwen3 32B) and Google Gemini API as a final fallback. This system handles content generation, lesson planning, and AI assistance with automatic retries, rate limit detection, and intelligent model switching.
-- **Authentication & User Management**: Supabase manages authentication, user sessions, role-based access, and profiles.
+- **AI Integration**: A resilient multi-model fallback system primarily uses Groq API (Llama 3.3 70B, Llama 3.1 8B, Llama 4 Scout, Qwen3 32B) and Google Gemini API as a final fallback. This system manages content generation, lesson planning, and AI assistance with automatic retries and intelligent model switching.
+- **Authentication & User Management**: Supabase handles authentication, user sessions, role-based access, and profiles.
 - **Core Features**:
-    - **School Power**: AI-powered lesson planning with 5 dynamic templates that generate custom section structures.
-    - **Multi-Agent Lesson Orchestrator v4.0**: A highly reliable, observable, and self-correcting system that coordinates AI agents through a 7-step workflow to generate lessons with embedded educational activities. It includes a StepLogger, StepValidation, and an AutoRecoveryEngine for robust execution.
-    - **Agente Jota Chat Interface**: A modern chat-based interface for School Power, replacing the previous card-based contextualization. It features an orchestrator, planner, executor, and 3-layer memory manager. Key capabilities include searching for existing activities, researching available activities from a catalog, deciding which activities to create using AI, generating content for activity fields, and creating new activities. It incorporates a 4-layer Anti-Hallucination System, a Rules Engine, and an isolated typewriter effect for chat responses. New additions include a Debug System for AI actions, a Construction Interface for visualizing activity creation progress, and a Content Generation capability that auto-fills activity fields based on conversation context with real-time UI feedback via Zustand selectors and CustomEvents.
-    - **API-First Architecture (V2)**: Standardized contracts (CapabilityInput, CapabilityOutput, DebugEntry) are used with a central CapabilityExecutor that manages execution, validation, and context enrichment. A DataConfirmation System ensures critical checks are passed before proceeding, with detailed logging and UI integration. The V2 capability system uses a `capabilityResultsMap` to pass data between capabilities (pesquisar → decidir → gerar → criar), with proper failure handling that halts the pipeline when critical capabilities fail.
-    - **V2 Pipeline Completo**: O pipeline V2 inclui 4 capabilities que se comunicam via `capabilityResultsMap`:
-      1. `pesquisar_atividades_disponiveis`: Pesquisa atividades disponíveis no catálogo
-      2. `decidir_atividades_criar`: Decide quais atividades criar baseado no contexto
-      3. `gerar_conteudo_atividades`: Gera conteúdo AI para os campos obrigatórios
-      4. `criar_atividade`: Persiste as atividades no banco de dados
-    - **Conversation Context Flow**: O histórico completo da conversa é passado do ChatLayout → executeAgentPlan → executor.setConversationContext → CapabilityInput.context.conversation_context, permitindo que a geração de conteúdo seja contextualizada com toda a discussão.
-    - **Content Generation Pipeline (V2)**: The `gerar_conteudo_atividades` capability receives chosen activities from `decidir_atividades_criar` via `capabilityResultsMap`, generates AI content for each required field using `executeWithCascadeFallback`, validates and normalizes fields using `activity-fields-sync.ts`, stores results in both `ChosenActivitiesStore` and `localStorage` (key: `generated_content_{activityId}`), and emits detailed debug logs that appear in the Debug Panel. The executor processes all V2 `debug_log` entries and displays them in the UI.
-    - **Activity Creation Pipeline (V2)**: A capability `criar_atividade` (V2) recebe os campos gerados via `capabilityResultsMap`, persiste no banco de dados via `/api/atividades`, e emite eventos para a ConstructionInterface via `agente-jota-progress` com tipos: `construction:activity_progress`, `construction:activity_completed`, `construction:activity_error`, e `construction:all_completed`.
-    - **Field Synchronization System**: Located at `src/features/schoolpower/construction/utils/activity-fields-sync.ts`, this system provides bidirectional mapping between AI-generated field names and form field names. The `syncSchemaToFormData` function converts AI output to modal-compatible format. The `useActivityAutoLoad` hook automatically loads generated fields when editing activities, with enhanced diagnostic logging, fallback search by activity type if direct ID search fails, and multiple localStorage key support including `generated_content_{activityId}`. All activity types have specific processors that convert numeric fields to strings: sequencia-didatica, quiz-interativo, flash-cards, plano-aula, lista-exercicios, quadro-interativo, mapa-mental, and tese-redacao.
-    - **Type-Safe Field Handling**: The `EditActivityModal.tsx` uses `safeToString()` and `hasValue()` helper functions to safely handle mixed types (numbers and strings) in form fields. This prevents runtime errors like "formData.quantidadeAulas?.trim is not a function" when AI-generated content contains numeric values for quantity fields.
-    - **V2 Pipeline Status** (Updated Jan 2026):
-      - All 4 capabilities are now ENABLED in V2_CAPABILITIES: pesquisar → decidir → gerar → criar
-      - Field names are confirmed aligned across: `gerar-conteudo-schema.ts`, `activity-fields-sync.ts`, `EditActivityModal.tsx`, and `schoolPowerActivities.json`
-      - The executor now emits `construction:activities_ready` immediately after `decidir_atividades_criar` completes, ensuring the ConstructionInterface receives activities regardless of `criar_atividade` result
-      - **criar_atividade V2 now performs REAL AI generation per activity** - each activity has its own API call to Groq/Gemini with detailed debug logging
-      - Example validated mappings: tese-redacao uses `temaRedacao`, `objetivo`, `nivelDificuldade`, `competenciasENEM`; flash-cards uses `theme`, `topicos`, `numberOfFlashcards`
-    - **Individual Activity Construction Pipeline** (Updated Jan 2026):
-      - **7-Phase Individual Construction**: Each activity goes through: initialization (10%) → form data preparation (20%) → API call to AI (30-60%) → validation (70%) → localStorage persistence (80%) → store update (90%) → completion (100%)
-      - **Real AI Calls**: Uses `buildActivityFromFormData` which calls `generateActivityContent` for real Groq/Gemini API calls
-      - **Detailed Debug Logging**: Every phase logs to ActivityDebugStore with timestamps, API durations, response validation, and storage keys
-      - **Multi-Key localStorage**: Saves to 4 keys per activity: `constructed_{type}_{id}`, `activity_{id}`, `generated_content_{id}`, `constructedActivities`
-      - **Event Emission**: Emits `construction:activity_progress` and `construction:activity_completed` for UI updates
-      - **ViewActivityModal Sync**: Listens for `activity-data-sync` events and polls localStorage for real-time content updates
-    - **Activity Construction Flow** (Updated Jan 2026):
-      - **Bifurcated Pipeline**: Clear separation between content generation and visual construction
-      - **Phase 1 - gerar_conteudo_atividades**: Generates AI content, saves to localStorage, marks status as "aguardando" (80% progress), logs to ActivityDebugStore
-      - **Phase 2 - criar_atividade**: Handles progressive visual construction with 800ms delay per activity, transitions status from "construindo" to "concluída", logs each phase to ActivityDebugStore
-      - **Status Flow**: pending → building → aguardando (after content gen) → construindo (during visual build) → concluída (after animation)
-      - **Debug Logging**: Both capabilities log detailed entries to ActivityDebugStore with initialization, progress, and completion phases for visibility in ActivityDebugModal
-      - **Event Emission**: `construction:build_started`, `construction:activity_progress`, `construction:activity_completed`, `construction:all_completed` events for UI synchronization
-    - **Auto-Build System with ModalBridge** (Updated Jan 2026):
-      - **ModalBridge Pattern**: Singleton at `construction/bridge/ModalBridge.ts` that provides programmatic control of EditActivityModal
-      - **Event-Driven Architecture**: `constructionEventBus.ts` enables decoupled communication between criar_atividade capability and UI components
-      - **BuildController**: Controller at `construction/controllers/BuildController.ts` orchestrates the build process with 4-phase progress (25%→50%→75%→100%)
-      - **EditActivityModal imperative API**: Uses forwardRef/useImperativeHandle exposing open(), setFields(), build(), close() methods
-      - **Registration via callback ref**: ConstructionInterface uses callback ref pattern to register modal with ModalBridge when mounted
-      - **Polling mechanism**: BuildController waits up to 5 seconds (10 attempts × 500ms) for ModalBridge readiness before executing build phases
-      - **Visual states**: Activities show inactive (opacity-60, grayscale) → building (spinner, yellow progress) → completed (green) → error (red)
-      - `buildActivityHelper.ts` provides shared helper function (`buildActivityFromFormData`) used by both EditActivityModal and AutoBuildService for consistent behavior
-      - localStorage keys standardized: `constructed_{type}_{id}`, `constructed_{id}` (legacy), `constructedActivities` (global object), `activity_{id}` (view sync), `generated_content_{id}`
-      - `useActivityAutoLoad` hook checks multiple localStorage keys to load pre-built content when Edit/View modals open
-      - **Pre-Generated Content Detection**: autoBuildService detects when ≥3 fields are pre-generated from `gerar_conteudo_atividades` and skips regeneration, using AI content directly
-      - **Field Normalization**: `normalizeFieldKeys()` function in `activity-fields-sync.ts` unifies Portuguese/English naming conventions (e.g., 'Tema' → 'theme', 'Disciplina' → 'subject') with 20+ alias mappings
-      - **Dual Storage Keys**: `savePreGeneratedActivityToStorage` saves to both `constructed_{type}_{id}` AND `constructed_{id}` for maximum compatibility; `getConstructedDataFromStorage` searches all possible keys
-    - **Activity Catalog**: Located at `src/features/schoolpower/data/schoolPowerActivities.json`, this catalog defines all available activity types with their required/optional fields. The `campos_obrigatorios` field names must match exactly the `requiredFields` names in `gerar-conteudo-schema.ts` for content generation to work correctly.
-    - **Study Groups**: Real-time chat with member management.
+    - **School Power**: AI-powered lesson planning with dynamic templates.
+    - **Multi-Agent Lesson Orchestrator v4.0**: A robust, observable, and self-correcting system that coordinates AI agents through a 7-step workflow for lesson generation, including educational activities, with built-in StepLogger, StepValidation, and AutoRecoveryEngine.
+    - **Agente Jota Chat Interface**: A chat-based interface for School Power featuring an orchestrator, planner, executor, and 3-layer memory manager. It can search, research, decide, generate, and create activities with a 4-layer Anti-Hallucination System, Rules Engine, and an isolated typewriter effect. It includes a Debug System for AI actions, a Construction Interface, and Context-aware Content Generation.
+    - **API-First Architecture (V2)**: Uses standardized contracts and a central CapabilityExecutor for managing execution, validation, and context enrichment. A DataConfirmation System ensures critical checks. The V2 capability system uses a `capabilityResultsMap` for data flow between `pesquisar`, `decidir`, `gerar`, and `criar` capabilities, with robust failure handling.
+    - **Conversation Context Flow**: The full conversation history is maintained and passed to AI generation for contextualized content.
+    - **Content Generation Pipeline (V2)**: The `gerar_conteudo_atividades` capability generates AI content for selected activities, validates and normalizes fields, stores results, and emits debug logs.
+    - **Activity Creation Pipeline (V2)**: The `criar_atividade` capability persists generated activity fields to the database and emits events for UI updates on the ConstructionInterface.
+    - **Field Synchronization System**: Provides bidirectional mapping between AI-generated field names and form field names, located at `src/features/schoolpower/construction/utils/activity-fields-sync.ts`. It includes a `useActivityAutoLoad` hook for loading generated fields and specific processors for various activity types to handle field conversions.
+    - **Type-Safe Field Handling**: Utilizes `safeToString()` and `hasValue()` to manage mixed data types in form fields, preventing runtime errors.
+    - **V2 Pipeline Enhancements**: All 4 capabilities are enabled, field names are aligned, `criar_atividade` performs real AI generation per activity, and a 7-Phase Individual Construction process ensures detailed logging and multi-key localStorage persistence.
+    - **Auto-Build System with ModalBridge**: An event-driven architecture using `ModalBridge.ts` and `constructionEventBus.ts` orchestrates the build process. A BuildController manages progressive visual construction of activities within the `EditActivityModal`, with visual states indicating progress and errors. Pre-generated content detection skips AI regeneration when sufficient fields are already present. Field normalization unifies naming conventions.
+    - **StorageSyncService v2.0**: A centralized service at `src/features/schoolpower/services/storage-sync-service.ts` manages activity storage across multiple key prefixes, tracks origin and pipeline metadata, and provides event emission for UI synchronization.
+    - **Activity Catalog**: `schoolPowerActivities.json` defines activity types and required fields, ensuring alignment with content generation schemas.
+    - **Study Groups**: Real-time chat and member management.
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.
     - **School Points**: Persisted and synchronized point system.
     - **Calendário School**: Comprehensive calendar event management.
-    - **Lesson Publishing System**: Manages the transformation of lessons to a published state.
+    - **Lesson Publishing System**: Manages lesson publication.
 
 ### System Design Choices
-The architecture prioritizes a modular component design using shadcn/ui patterns. Data persistence is managed with Neon PostgreSQL for primary data, Supabase PostgreSQL for authentication, and Supabase Storage for file assets. Supabase Realtime enables live features. The system is configured for VM deployment, ensuring backend state maintenance and real-time database connections. A dynamic section system ensures synchronization between template selection and section display, and lesson creation sessions are isolated to prevent data bleed.
+The architecture emphasizes a modular component design based on shadcn/ui patterns. Data persistence uses Neon PostgreSQL for primary data, Supabase PostgreSQL for authentication, and Supabase Storage for file assets. Supabase Realtime supports live features. The system is designed for VM deployment to maintain backend state and real-time database connections. Dynamic section synchronization and isolated lesson creation sessions prevent data conflicts.
 
 ## External Dependencies
 
