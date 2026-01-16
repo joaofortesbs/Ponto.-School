@@ -82,7 +82,7 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
       console.error(`✅ [V2:CRIAR] Found ${chosenActivities.length} chosen activities from decidir`);
     }
     
-    // Caminho 2: Fallback para store
+    // Caminho 2: Fallback para store (CORRIGIDO - buscar campos corretamente)
     if (generatedData.length === 0) {
       const store = useChosenActivitiesStore.getState();
       const storeActivities = store.getChosenActivities();
@@ -90,17 +90,42 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
       if (storeActivities.length > 0) {
         chosenActivities = storeActivities;
         
+        // CORREÇÃO CRÍTICA: Campos estão em campos_preenchidos OU dados_construidos.generated_fields
+        // NÃO em generatedFields (que não existe)
         generatedData = storeActivities
-          .filter(a => (a as any).generatedFields && Object.keys((a as any).generatedFields).length > 0)
-          .map(a => ({
-            activity_id: a.id,
-            activity_type: a.tipo,
-            fields: (a as any).generatedFields || {},
-            validation: { required_count: 0, filled_count: Object.keys((a as any).generatedFields || {}).length, is_complete: true }
-          }));
+          .filter(a => {
+            const camposPreenchidos = a.campos_preenchidos || {};
+            const dadosConstruidos = a.dados_construidos?.generated_fields || {};
+            const hasFields = Object.keys(camposPreenchidos).length > 0 || Object.keys(dadosConstruidos).length > 0;
+            return hasFields;
+          })
+          .map(a => {
+            // Consolidar campos: prioridade para dados_construidos.generated_fields (mais recentes)
+            const camposPreenchidos = a.campos_preenchidos || {};
+            const dadosConstruidos = a.dados_construidos?.generated_fields || {};
+            const consolidatedFields = { ...camposPreenchidos, ...dadosConstruidos };
+            
+            console.error(`📊 [V2:CRIAR] Activity ${a.id} consolidated fields:`, Object.keys(consolidatedFields));
+            
+            return {
+              activity_id: a.id,
+              activity_type: a.tipo,
+              fields: consolidatedFields,
+              validation: { 
+                required_count: 0, 
+                filled_count: Object.keys(consolidatedFields).length, 
+                is_complete: Object.keys(consolidatedFields).length > 0 
+              }
+            };
+          });
         
-        dataSource = 'store fallback';
+        dataSource = 'store fallback (campos_preenchidos + dados_construidos)';
         console.error(`📦 [V2:CRIAR] Using store fallback: ${generatedData.length} activities with fields`);
+        
+        // Log detalhado para debug
+        storeActivities.forEach(a => {
+          console.error(`   📋 ${a.id}: campos_preenchidos=${Object.keys(a.campos_preenchidos || {}).length}, dados_construidos.generated_fields=${Object.keys(a.dados_construidos?.generated_fields || {}).length}`);
+        });
       }
     }
     
