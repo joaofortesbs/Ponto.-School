@@ -242,6 +242,94 @@ export class AutoBuildService {
     }
   }
 
+  /**
+   * Salva atividade com campos PRÉ-GERADOS diretamente no localStorage
+   * Usado quando gerar_conteudo_atividades já gerou os campos via IA
+   * Evita regeneração duplicada de conteúdo
+   */
+  private async savePreGeneratedActivityToStorage(
+    activity: ConstructionActivity, 
+    preGeneratedFields: Record<string, any>
+  ): Promise<boolean> {
+    try {
+      const activityType = activity.type || activity.id || 'atividade';
+      const timestamp = new Date().toISOString();
+      
+      console.log(`💾 [PRE-GENERATED] Salvando ${activity.title} com campos pré-gerados...`);
+      console.log(`💾 [PRE-GENERATED] Tipo: ${activityType}`);
+      console.log(`💾 [PRE-GENERATED] Campos:`, Object.keys(preGeneratedFields));
+      
+      // Criar estrutura de conteúdo baseada nos campos pré-gerados
+      const generatedContent = {
+        title: activity.title,
+        type: activityType,
+        description: activity.description,
+        formData: preGeneratedFields,
+        isPreGenerated: true,
+        isGeneratedByAI: true,
+        generatedAt: timestamp,
+        source: 'gerar_conteudo_atividades'
+      };
+      
+      // 1. Salvar em constructed_{type}_{id}
+      const constructedKey = `constructed_${activityType}_${activity.id}`;
+      const constructedData = {
+        success: true,
+        data: generatedContent,
+        formData: preGeneratedFields,
+        timestamp,
+        isPreGenerated: true
+      };
+      localStorage.setItem(constructedKey, JSON.stringify(constructedData));
+      console.log(`✅ [PRE-GENERATED] Salvo em ${constructedKey}`);
+      
+      // 2. Salvar em activity_{id}
+      localStorage.setItem(`activity_${activity.id}`, JSON.stringify(generatedContent));
+      console.log(`✅ [PRE-GENERATED] Salvo em activity_${activity.id}`);
+      
+      // 3. Salvar em generated_content_{id} (compatibilidade com useActivityAutoLoad)
+      localStorage.setItem(`generated_content_${activity.id}`, JSON.stringify(preGeneratedFields));
+      console.log(`✅ [PRE-GENERATED] Salvo em generated_content_${activity.id}`);
+      
+      // 4. Atualizar constructedActivities GLOBAL
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      constructedActivities[activity.id] = {
+        isBuilt: true,
+        builtAt: timestamp,
+        formData: preGeneratedFields,
+        generatedContent,
+        isPreGenerated: true
+      };
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+      console.log(`✅ [PRE-GENERATED] Atualizado constructedActivities global`);
+      
+      // 5. Atualizar status da atividade
+      activity.isBuilt = true;
+      activity.builtAt = timestamp;
+      activity.progress = 100;
+      activity.status = 'completed';
+      
+      // 6. Tentar salvar no banco de dados
+      try {
+        await this.saveActivityToDatabase(activity);
+      } catch (saveError) {
+        console.warn('⚠️ [PRE-GENERATED] Erro ao salvar no banco (não crítico):', saveError);
+      }
+      
+      // 7. Callback de atividade construída
+      if (this.onActivityBuilt) {
+        this.onActivityBuilt(activity.id);
+      }
+      
+      console.log(`🎉 [PRE-GENERATED] ${activity.title} salva com sucesso!`);
+      return true;
+      
+    } catch (error) {
+      console.error('❌ [PRE-GENERATED] Erro ao salvar atividade:', error);
+      return false;
+    }
+  }
+
   private async prepareFormDataExactlyLikeModal(activity: ConstructionActivity): Promise<any> {
     console.log(`🎯 [AUTO-BUILD] Preparando formData para: ${activity.title}`);
 
@@ -476,6 +564,38 @@ export class AutoBuildService {
 
   private async buildActivityWithExactModalLogic(activity: ConstructionActivity): Promise<void> {
     console.log(`🎯 [AUTO-BUILD] Construindo: ${activity.title}`);
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // OTIMIZAÇÃO: Verificar se campos já foram pré-gerados por gerar_conteudo_atividades
+    // Se sim, usar diretamente sem regenerar (evita duplicação de geração)
+    // ═══════════════════════════════════════════════════════════════════════════
+    const preGeneratedFields = activity.customFields || {};
+    const preGeneratedFieldsCount = Object.keys(preGeneratedFields).filter(k => 
+      preGeneratedFields[k] !== undefined && 
+      preGeneratedFields[k] !== '' && 
+      preGeneratedFields[k] !== null
+    ).length;
+    
+    const hasPreGeneratedContent = preGeneratedFieldsCount >= 3; // Mínimo 3 campos preenchidos indica geração prévia
+    
+    console.log(`📊 [AUTO-BUILD] Campos pré-gerados detectados: ${preGeneratedFieldsCount}`);
+    console.log(`📊 [AUTO-BUILD] Campos:`, Object.keys(preGeneratedFields));
+    
+    if (hasPreGeneratedContent) {
+      console.log(`✅ [AUTO-BUILD] Usando campos PRÉ-GERADOS (sem regeneração)!`);
+      
+      // Salvar diretamente no localStorage usando os campos já gerados
+      const activityType = activity.type || activity.id || 'atividade';
+      const savedSuccessfully = await this.savePreGeneratedActivityToStorage(activity, preGeneratedFields);
+      
+      if (savedSuccessfully) {
+        console.log(`🎉 [AUTO-BUILD] ${activity.title} salva com campos pré-gerados!`);
+        return;
+      }
+      
+      // Se falhar, continuar com o fluxo normal
+      console.log(`⚠️ [AUTO-BUILD] Fallback: executar geração normal...`);
+    }
 
     // SISTEMA EXCLUSIVO PARA QUADRO INTERATIVO
     if (activity.id === 'quadro-interativo') {

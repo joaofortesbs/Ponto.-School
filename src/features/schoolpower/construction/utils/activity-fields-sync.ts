@@ -235,6 +235,99 @@ export function normalizeActivityType(activityType: string): string {
 }
 
 /**
+ * MAPEAMENTO UNIVERSAL DE NOMES DE CAMPOS
+ * Unifica diferentes convenções de nomenclatura:
+ * - 'Tema' (português com maiúscula)
+ * - 'theme' (inglês minúsculo)
+ * - 'tema' (português minúsculo)
+ */
+const FIELD_NAME_ALIASES: Record<string, string[]> = {
+  'theme': ['Tema', 'tema', 'theme', 'Theme', 'Tema Central', 'temaCentral'],
+  'subject': ['Disciplina', 'disciplina', 'subject', 'Subject', 'Componente Curricular', 'componenteCurricular'],
+  'schoolYear': ['Ano de Escolaridade', 'anoEscolaridade', 'schoolYear', 'anoSerie', 'Ano/Série', 'ano_serie'],
+  'objectives': ['Objetivos', 'objetivos', 'objectives', 'Objetivo', 'objetivo', 'Objetivo Geral', 'objetivoGeral'],
+  'difficultyLevel': ['Nível de Dificuldade', 'nivelDificuldade', 'difficultyLevel', 'Dificuldade', 'dificuldade'],
+  'numberOfQuestions': ['Número de Questões', 'numeroQuestoes', 'numberOfQuestions', 'quantidadeQuestoes', 'Quantidade de Questões'],
+  'topicos': ['Tópicos', 'topicos', 'Tópicos Principais', 'topicosPrincipais'],
+  'numberOfFlashcards': ['Número de Flash Cards', 'numeroFlashcards', 'numberOfFlashcards', 'quantidadeFlashcards'],
+  'context': ['Contexto', 'contexto', 'context', 'Contexto de Uso', 'contextoUso', 'Contexto de Aplicação', 'contextoAplicacao'],
+  'materials': ['Materiais', 'materiais', 'materials', 'Materiais/Recursos', 'materiaisRecursos'],
+  'competencies': ['Competências', 'competencias', 'competencies', 'Habilidades BNCC', 'habilidadesBNCC', 'bnccCompetencias'],
+  'timeLimit': ['Tempo', 'tempo', 'timeLimit', 'Carga Horária', 'cargaHoraria', 'Tempo Estimado', 'tempoEstimado'],
+  'evaluation': ['Avaliação', 'avaliacao', 'evaluation', 'Observações', 'observacoes'],
+  'temaRedacao': ['Tema da Redação', 'temaRedacao', 'Tema Redação'],
+  'nivelDificuldade': ['Nível de Dificuldade', 'nivelDificuldade', 'difficultyLevel'],
+  'competenciasENEM': ['Competências ENEM', 'competenciasENEM', 'competencias_enem'],
+  'questionModel': ['Formato', 'formato', 'questionModel', 'Modelo de Questões', 'modeloQuestoes'],
+  'centralTheme': ['Tema Central', 'temaCentral', 'centralTheme'],
+  'mainCategories': ['Categorias Principais', 'categoriasPrincipais', 'mainCategories'],
+  'generalObjective': ['Objetivo Geral', 'objetivoGeral', 'generalObjective'],
+  'quadroInterativoCampoEspecifico': ['Atividade mostrada', 'atividadeMostrada', 'quadroInterativoCampoEspecifico', 'Campo Específico']
+};
+
+/**
+ * Normaliza chaves de campos para o formato padrão (camelCase)
+ * Aceita qualquer formato de entrada e retorna formato unificado
+ * 
+ * @example
+ * normalizeFieldKeys({ 'Tema': 'Física', 'Disciplina': 'Ciências' })
+ * // Retorna: { theme: 'Física', subject: 'Ciências' }
+ */
+export function normalizeFieldKeys(fields: Record<string, any>): Record<string, any> {
+  const normalized: Record<string, any> = {};
+  
+  for (const [key, value] of Object.entries(fields)) {
+    if (value === undefined || value === null) continue;
+    
+    let normalizedKey = key;
+    
+    // Procurar se a chave é um alias conhecido
+    for (const [standardKey, aliases] of Object.entries(FIELD_NAME_ALIASES)) {
+      if (aliases.includes(key) || key.toLowerCase() === standardKey.toLowerCase()) {
+        normalizedKey = standardKey;
+        break;
+      }
+    }
+    
+    // Se não encontrou, usar a chave original em camelCase
+    if (normalizedKey === key && key.includes(' ')) {
+      normalizedKey = key
+        .split(' ')
+        .map((word, idx) => idx === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join('');
+    }
+    
+    normalized[normalizedKey] = value;
+  }
+  
+  console.log(`%c🔧 [NORMALIZE] Campos normalizados:`, 
+    'background: #FF5722; color: white; padding: 2px 5px; border-radius: 3px;',
+    { input: Object.keys(fields), output: Object.keys(normalized) }
+  );
+  
+  return normalized;
+}
+
+/**
+ * Extrai valor de campo buscando por múltiplos aliases
+ * Útil para quando não sabemos qual formato de chave foi usado
+ */
+export function getFieldByAnyName(
+  fields: Record<string, any>, 
+  standardFieldName: string
+): any {
+  const aliases = FIELD_NAME_ALIASES[standardFieldName] || [standardFieldName];
+  
+  for (const alias of [...aliases, standardFieldName]) {
+    if (fields[alias] !== undefined && fields[alias] !== null && fields[alias] !== '') {
+      return fields[alias];
+    }
+  }
+  
+  return undefined;
+}
+
+/**
  * Verifica se todos os campos obrigatórios estão preenchidos
  */
 export function validateSyncedFields(
