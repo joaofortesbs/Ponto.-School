@@ -10,6 +10,7 @@ import {
   emitBuildProgress 
 } from '../events/constructionEventBus';
 import { useActivityDebugStore, logActivityDebug } from '../stores/activityDebugStore';
+import { BuildQueueController, type QueueProgress } from '../queue/BuildQueueController';
 
 export interface AutoBuildProgress {
   current: number;
@@ -987,131 +988,118 @@ export class AutoBuildService {
     }
   }
 
+  /**
+   * Constrói uma única atividade (usado pelo BuildQueueController)
+   * @returns true se sucesso, false se falha
+   */
+  async buildSingleActivity(activity: ConstructionActivity): Promise<boolean> {
+    const debugStore = useActivityDebugStore.getState();
+    const useModalBridge = ModalBridge.isReady();
+
+    try {
+      let buildSuccess = false;
+
+      if (useModalBridge || ModalBridge.isReady()) {
+        debugStore.log(activity.id, 'info', 'Strategy', 'Tentando ModalBridge (modal real)');
+        buildSuccess = await this.buildViaModalBridge(activity);
+      }
+
+      if (!buildSuccess) {
+        debugStore.log(activity.id, 'warning', 'Fallback', 'ModalBridge falhou, usando lógica interna');
+        debugStore.setProgress(activity.id, 60, 'Usando lógica alternativa...');
+        await this.buildActivityWithExactModalLogic(activity);
+        debugStore.markCompleted(activity.id);
+        return true;
+      }
+
+      return buildSuccess;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      debugStore.log(activity.id, 'error', 'BuildFail', `Erro crítico: ${errorMessage}`);
+      debugStore.setError(activity.id, errorMessage);
+      throw error;
+    }
+  }
+
+  /**
+   * Constrói todas as atividades usando o BuildQueueController
+   * Processamento SEQUENCIAL: uma atividade por vez, em ordem
+   */
   async buildAllActivities(activities: ConstructionActivity[]): Promise<void> {
-    console.log('🚀 [AUTO-BUILD] Iniciando construção automática');
-    console.log(`📋 [AUTO-BUILD] ${activities.length} atividades para processar`);
-    console.log(`🌉 [AUTO-BUILD] ModalBridge disponível: ${ModalBridge.isReady()}`);
+    console.log(`
+═══════════════════════════════════════════════════════════════════════
+🚀 [AUTO-BUILD] INICIANDO CONSTRUÇÃO SEQUENCIAL ORDENADA
+═══════════════════════════════════════════════════════════════════════
+Total de atividades: ${activities.length}
+ModalBridge disponível: ${ModalBridge.isReady()}
+Modo: SEQUENCIAL (1 por vez, em ordem)
+═══════════════════════════════════════════════════════════════════════`);
 
     const errors: string[] = [];
-    let processedCount = 0;
-    const useModalBridge = ModalBridge.isReady();
-    const debugStore = useActivityDebugStore.getState();
 
-    // Inicializar debug para todas as atividades
-    activities.forEach(activity => {
-      debugStore.initActivity(activity.id, activity.title, activity.type || activity.id);
-      debugStore.log(activity.id, 'info', 'BuildQueue', 'Atividade adicionada à fila de construção', {
-        position: activities.indexOf(activity) + 1,
-        total: activities.length
-      });
+    const queueController = BuildQueueController.getInstance({
+      delayBetweenActivities: 800,
+      maxRetries: 2,
+      timeout: 120000,
+      onProgress: (progress: QueueProgress) => {
+        this.updateProgress({
+          current: progress.completedCount + progress.failedCount + progress.skippedCount,
+          total: progress.totalActivities,
+          currentActivity: progress.currentActivity 
+            ? `${progress.status === 'running' ? 'Construindo' : 'Processando'}: ${progress.currentActivity.activity.title}`
+            : 'Processando...',
+          status: progress.status === 'completed' ? 'completed' : 
+                  progress.status === 'error' ? 'error' : 'running',
+          errors
+        });
+      },
+      onActivityStart: (queuedItem) => {
+        console.log(`🔨 [AUTO-BUILD] Iniciando: ${queuedItem.activity.title} (${queuedItem.position}/${activities.length})`);
+      },
+      onActivityComplete: (queuedItem, success) => {
+        if (!success && queuedItem.error) {
+          errors.push(`Erro em "${queuedItem.activity.title}": ${queuedItem.error}`);
+        }
+        console.log(`${success ? '✅' : '❌'} [AUTO-BUILD] ${queuedItem.activity.title}: ${success ? 'Concluída' : 'Falhou'}`);
+      },
+      onQueueComplete: (summary) => {
+        console.log(`
+═══════════════════════════════════════════════════════════════════════
+🎉 [AUTO-BUILD] CONSTRUÇÃO SEQUENCIAL FINALIZADA
+═══════════════════════════════════════════════════════════════════════
+Concluídas: ${summary.completedCount}/${summary.totalActivities}
+Falhas: ${summary.failedCount}
+Puladas: ${summary.skippedCount}
+Duração total: ${summary.totalDuration}ms
+═══════════════════════════════════════════════════════════════════════`);
+      }
     });
+
+    queueController.setBuildFunction(async (activity) => {
+      return this.buildSingleActivity(activity);
+    });
+
+    queueController.initQueue(activities);
 
     this.updateProgress({
       current: 0,
       total: activities.length,
-      currentActivity: 'Iniciando construção automática...',
+      currentActivity: 'Iniciando fila de construção sequencial...',
       status: 'running',
       errors: []
     });
 
-    for (let i = 0; i < activities.length; i++) {
-      const activity = activities[i];
+    const summary = await queueController.start();
 
-      // Verificar se atividade já foi construída
-      if (activity.isBuilt || activity.status === 'completed') {
-        console.log(`⏭️ [AUTO-BUILD] Pulando atividade já construída: ${activity.title}`);
-        debugStore.log(activity.id, 'info', 'SkipBuild', 'Atividade já construída, pulando');
-        debugStore.markCompleted(activity.id);
-        processedCount++;
-        this.updateProgress({
-          current: processedCount,
-          total: activities.length,
-          currentActivity: `Pulando: ${activity.title}`,
-          status: 'running',
-          errors
-        });
-        continue;
-      }
+    this.updateProgress({
+      current: activities.length,
+      total: activities.length,
+      currentActivity: 'Construção sequencial finalizada!',
+      status: errors.length > 0 && summary.completedCount === 0 ? 'error' : 'completed',
+      errors
+    });
 
-      // Verificar se atividade tem dados mínimos necessários
-      if (!activity.title || !activity.description) {
-        console.warn(`⚠️ [AUTO-BUILD] Pulando atividade sem dados: ${activity.title || 'Sem título'}`);
-        const errorMsg = 'Dados insuficientes para construção (título ou descrição ausentes)';
-        debugStore.log(activity.id, 'error', 'Validation', errorMsg);
-        debugStore.setError(activity.id, errorMsg);
-        errors.push(`Atividade "${activity.title || 'Sem título'}" não possui dados suficientes`);
-        processedCount++;
-        continue;
-      }
-
-      debugStore.log(activity.id, 'action', 'BuildStart', `Iniciando construção (${i + 1}/${activities.length})`, {
-        modalBridgeAvailable: useModalBridge || ModalBridge.isReady()
-      });
-      debugStore.setStatus(activity.id, 'building');
-
-      this.updateProgress({
-        current: processedCount,
-        total: activities.length,
-        currentActivity: `Construindo: ${activity.title}`,
-        status: 'running',
-        errors
-      });
-
-      console.log(`🔨 [AUTO-BUILD] Construindo (${i + 1}/${activities.length}): ${activity.title}`);
-
-      try {
-        let buildSuccess = false;
-
-        // Tentar usar ModalBridge primeiro (modal real)
-        if (useModalBridge || ModalBridge.isReady()) {
-          console.log(`🌉 [AUTO-BUILD] Usando ModalBridge para ${activity.title}`);
-          debugStore.log(activity.id, 'info', 'Strategy', 'Tentando ModalBridge (modal real)');
-          buildSuccess = await this.buildViaModalBridge(activity);
-        }
-
-        // Fallback para lógica antiga se ModalBridge não funcionou
-        if (!buildSuccess) {
-          console.log(`📦 [AUTO-BUILD] Usando lógica interna para ${activity.title}`);
-          debugStore.log(activity.id, 'warning', 'Fallback', 'ModalBridge falhou, usando lógica interna');
-          debugStore.setProgress(activity.id, 60, 'Usando lógica alternativa...');
-          await this.buildActivityWithExactModalLogic(activity);
-          debugStore.markCompleted(activity.id);
-        }
-
-        processedCount++;
-        console.log(`✅ [AUTO-BUILD] Atividade ${i + 1}/${activities.length} construída: ${activity.title}`);
-
-        this.updateProgress({
-          current: processedCount,
-          total: activities.length,
-          currentActivity: `Concluída: ${activity.title}`,
-          status: 'running',
-          errors
-        });
-
-        // Delay para permitir UI atualizar
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-      } catch (error) {
-        console.error(`❌ [AUTO-BUILD] Erro ao construir ${activity.title}:`, error);
-        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-        debugStore.log(activity.id, 'error', 'BuildFail', `Erro crítico: ${errorMessage}`, {
-          error: errorMessage,
-          stack: error instanceof Error ? error.stack : undefined
-        });
-        debugStore.setError(activity.id, errorMessage);
-        errors.push(`Erro em "${activity.title}": ${errorMessage}`);
-
-        processedCount++;
-        this.updateProgress({
-          current: processedCount,
-          total: activities.length,
-          currentActivity: `Erro em: ${activity.title}`,
-          status: 'running',
-          errors
-        });
-      }
-    }
+    console.log(`📊 [AUTO-BUILD] Resultado: ${summary.completedCount}/${summary.totalActivities} atividades construídas`);
 
     // Progresso final
     this.updateProgress({
