@@ -46,8 +46,11 @@ The platform features a modern design utilizing glass-morphism effects, blur bac
       - **Polling mechanism**: BuildController waits up to 5 seconds (10 attempts × 500ms) for ModalBridge readiness before executing build phases
       - **Visual states**: Activities show inactive (opacity-60, grayscale) → building (spinner, yellow progress) → completed (green) → error (red)
       - `buildActivityHelper.ts` provides shared helper function (`buildActivityFromFormData`) used by both EditActivityModal and AutoBuildService for consistent behavior
-      - localStorage keys standardized: `constructed_{type}_{id}`, `constructedActivities` (global object), `activity_{id}` (view sync)
+      - localStorage keys standardized: `constructed_{type}_{id}`, `constructed_{id}` (legacy), `constructedActivities` (global object), `activity_{id}` (view sync), `generated_content_{id}`
       - `useActivityAutoLoad` hook checks multiple localStorage keys to load pre-built content when Edit/View modals open
+      - **Pre-Generated Content Detection**: autoBuildService detects when ≥3 fields are pre-generated from `gerar_conteudo_atividades` and skips regeneration, using AI content directly
+      - **Field Normalization**: `normalizeFieldKeys()` function in `activity-fields-sync.ts` unifies Portuguese/English naming conventions (e.g., 'Tema' → 'theme', 'Disciplina' → 'subject') with 20+ alias mappings
+      - **Dual Storage Keys**: `savePreGeneratedActivityToStorage` saves to both `constructed_{type}_{id}` AND `constructed_{id}` for maximum compatibility; `getConstructedDataFromStorage` searches all possible keys
     - **Activity Catalog**: Located at `src/features/schoolpower/data/schoolPowerActivities.json`, this catalog defines all available activity types with their required/optional fields. The `campos_obrigatorios` field names must match exactly the `requiredFields` names in `gerar-conteudo-schema.ts` for content generation to work correctly.
     - **Study Groups**: Real-time chat with member management.
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
