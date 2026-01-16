@@ -11,11 +11,14 @@ Preferred communication style: Simple, everyday language.
 ### UI/UX Decisions
 The platform features a modern design with glass-morphism effects, blur backgrounds, and a defined color scheme (Primary Orange, Secondary Blue, Dark Navy text). It uses custom, responsive typography, smooth CSS animations, and a mobile-first approach. Accessibility features include presentation mode with multi-language translation, dynamic font sizing, and voice reading support.
 
-#### School Power Chat Interface Design (v2.0 - Jan 2026)
-- **JotaAvatarChat Component**: Custom avatar component at `src/features/schoolpower/interface-chat-producao/components/JotaAvatarChat.tsx` with animated gradient border, pulse animation, and uses `/images/avatar11-sobreposto-pv.webp`.
-- **AssistantMessage**: Shows avatar + "Jota" name label above the message bubble with left-aligned layout.
-- **Card Alignment**: PlanActionCard and DeveloperModeCard are left-aligned (no center mx-auto) to match chat message flow.
-- **NarrativeReflectionCard**: Explanations are limited to 3 lines (line-clamp-3) with "Ver mais..." expand button for longer texts.
+#### School Power Chat Interface Design (v3.0 - Jan 2026)
+- **JotaAvatarChat Component**: Custom avatar component at `src/features/schoolpower/interface-chat-producao/components/JotaAvatarChat.tsx` with entrance animation (scale 0.8→1), gradient border on hover, subtle lift animation, and uses `/images/avatar11-sobreposto-pv.webp`. No constant pulse animation.
+- **AssistantMessage**: Free-flowing text without card background, vertically aligned with avatar. Avatar + "Jota" label positioned to the left of message text.
+- **NarrativeReflectionCard**: Plain text without container card, icons, or badges. Typewriter effect preserved. Tone-based colors (celebratory=emerald, cautious=amber, explanatory=blue, reassuring=purple). "Ver mais..." expand for long texts.
+- **PlanActionCard**: Ultra-modern glassmorphism design with radial gradients, smooth hover micro-interactions on steps, numbered step indicators, and single "Aplicar Plano" button (EDIT button removed).
+- **ProgressiveExecutionCard (ObjectiveCard)**: Fully rounded cards with collapse/expand toggle. ChevronDown icon animates on toggle. Click to minimize/expand capabilities.
+- **CapabilityCard**: Fully rounded (rounded-full) inline cards with dynamic width (w-fit). Vertically aligned (no ml-8 offset). Uses capability-specific icons from `CapabilityIcons.ts` instead of generic checkmarks.
+- **CapabilityIcons.ts**: New file at `src/features/schoolpower/interface-chat-producao/components/CapabilityIcons.ts` maps capability names to Lucide icons with specific colors (Search=blue, Brain=purple, Sparkles=amber, Hammer=orange, etc.).
 
 ### Technical Implementations
 - **Frontend**: React 18 with TypeScript, Vite, Tailwind CSS with shadcn/ui, and Zustand for state management.
