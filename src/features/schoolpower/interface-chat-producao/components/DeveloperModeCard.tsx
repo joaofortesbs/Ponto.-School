@@ -139,7 +139,10 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
           fields[k] !== undefined && fields[k] !== ''
         ).length;
         
-        console.log(`✅ [DeveloperModeCard] Atividade concluída:`, update.activityId, `- ${fieldsCompleted} campos`);
+        // Calcular total - usar o existente ou o número de campos preenchidos (não defaultar para 5)
+        const fieldsTotal = Object.keys(fields).length;
+        
+        console.log(`✅ [DeveloperModeCard] Atividade concluída:`, update.activityId, `- ${fieldsCompleted}/${fieldsTotal || 'N/A'} campos`);
         
         setActivitiesToBuild(prev => prev.map(a => 
           a.id === update.activityId || a.activity_id === update.activityId
@@ -148,9 +151,9 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
                 status: 'completed' as const, 
                 progress: 100, 
                 built_data: update.data,
-                // CORREÇÃO: Incluir contagem de campos correta
+                // CORREÇÃO: Incluir contagem de campos correta (sem fallback para 5)
                 fields_completed: fieldsCompleted,
-                fields_total: a.fields_total || Object.keys(fields).length || 5
+                fields_total: a.fields_total || fieldsTotal || fieldsCompleted
               }
             : a
         ));
@@ -224,20 +227,29 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
   // CORREÇÃO CRÍTICA: Listener para atualizar contagem de campos quando gerar_conteudo_atividades emite campos gerados
   useEffect(() => {
     const handleFieldsGenerated = (event: CustomEvent) => {
-      const { activity_id, fields, validation } = event.detail;
-      const fieldsCount = Object.keys(fields || {}).filter((k: string) => 
+      const { activity_id, fields, validation, fields_completed, fields_total } = event.detail;
+      
+      // Usar contagens explícitas do evento, ou calcular a partir dos campos
+      const finalFieldsCount = fields_completed ?? Object.keys(fields || {}).filter((k: string) => 
         fields[k] !== undefined && fields[k] !== ''
       ).length;
       
-      console.log(`📝 [DeveloperModeCard] Campos gerados para ${activity_id}: ${fieldsCount} campos`);
+      // Usar fields_total do evento, ou validation.required_count, ou campos preenchidos
+      const finalFieldsTotal = fields_total ?? validation?.required_count ?? finalFieldsCount;
+      
+      console.log(`📝 [DeveloperModeCard] Campos gerados para ${activity_id}: ${finalFieldsCount}/${finalFieldsTotal} campos`);
       
       setActivitiesToBuild(prev => prev.map(a => 
         a.id === activity_id || a.activity_id === activity_id
           ? { 
               ...a, 
-              fields_completed: fieldsCount,
-              fields_total: validation?.required_count || fieldsCount || a.fields_total || 5,
-              built_data: { ...a.built_data, fields }
+              fields_completed: finalFieldsCount,
+              fields_total: finalFieldsTotal || a.fields_total,
+              // CORREÇÃO: Preservar estrutura existente de built_data, adicionar generated_fields
+              built_data: { 
+                ...(a.built_data || {}), 
+                generated_fields: fields 
+              }
             }
           : a
       ));

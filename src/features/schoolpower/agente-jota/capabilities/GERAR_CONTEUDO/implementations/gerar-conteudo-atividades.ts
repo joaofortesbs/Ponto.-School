@@ -704,16 +704,18 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
         });
       }
 
-      // CORREÇÃO CRÍTICA: Atualizar status para 'concluida' APÓS os campos estarem salvos no store
-      // Isso garante que o contador de campos seja correto quando a UI verificar
-      const fieldsCount = Object.keys(syncedFields).filter(k => 
-        syncedFields[k] !== undefined && syncedFields[k] !== ''
-      ).length;
+      // CORREÇÃO CRÍTICA: Usar contagens diretamente do syncedFields que acabamos de criar
+      // NÃO depender do store pois pode não ter atualizado ainda
+      const actualFieldsCount = validation.filledFields.length; // Contagem exata do validation
+      const totalRequiredFields = activity.campos_obrigatorios?.length || validation.filledFields.length + validation.missingFields.length;
       
-      console.log(`%c✅ [GerarConteudo] Campos salvos para ${activity.id}: ${fieldsCount} campos. Atualizando status para 'concluida'`,
+      console.log(`%c✅ [GerarConteudo] Campos gerados para ${activity.id}: ${actualFieldsCount}/${totalRequiredFields} campos. Atualizando status para 'concluida'`,
         'background: #4CAF50; color: white; padding: 2px 5px; border-radius: 3px;');
       
-      // Status 'concluida' só é definido DEPOIS que os campos estão no store
+      // Aguardar próximo tick para garantir que o store foi atualizado
+      await Promise.resolve();
+      
+      // Status 'concluida' só é definido DEPOIS que os campos foram salvos
       store.updateActivityStatus(activity.id, 'concluida', 100);
 
       console.log('📤 [GerarConteudo] Emitindo evento agente-jota-fields-generated para:', activity.id);
@@ -723,7 +725,10 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
           activity_type: activity.tipo,
           fields: syncedFields,
           original_fields: result.generated_fields,
-          validation: validation
+          validation: validation,
+          // CORREÇÃO: Usar contagens diretamente do syncedFields/validation, não do store
+          fields_completed: actualFieldsCount,
+          fields_total: totalRequiredFields
         }
       }));
 
