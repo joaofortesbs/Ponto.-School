@@ -312,8 +312,10 @@ Atividades: ${builtActivities.length} (dados já persistidos no localStorage)
         const built = builtActivities[i];
         const progress = Math.round(((i + 1) / builtActivities.length) * 100);
         
-        // Delay de 500-800ms entre cada atividade para animação natural
-        await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 300));
+        // Delay fixo de 650ms entre cada atividade para animação determinística
+        // NOTA: A persistência já foi feita pelo gerar_conteudo_atividades
+        // Esta animação é apenas visual/cosmética, não afeta dados
+        await new Promise(resolve => setTimeout(resolve, 650));
         
         // Emitir progresso para UI
         window.dispatchEvent(new CustomEvent('agente-jota-progress', {
