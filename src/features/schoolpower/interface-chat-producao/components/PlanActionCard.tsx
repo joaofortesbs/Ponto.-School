@@ -28,7 +28,7 @@ export function PlanActionCard({ cardId, data, isStatic = true, onApplyPlan }: P
   return (
     <motion.div
       layout={isStatic}
-      className="w-full max-w-2xl mx-auto my-2"
+      className="w-full max-w-2xl my-2"
     >
       <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-orange-500/30 rounded-xl p-5 shadow-lg">
         <div className="flex items-center gap-3 mb-4">

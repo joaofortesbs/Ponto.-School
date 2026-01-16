@@ -306,7 +306,7 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
   return (
     <motion.div
       layout={isStatic}
-      className="w-full max-w-2xl mx-auto my-2"
+      className="w-full max-w-2xl my-2"
     >
       <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/95 border border-[#FF6B35]/30 rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm p-5">
         <ProgressiveExecutionCard

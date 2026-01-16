@@ -149,9 +149,12 @@ const NarrativeReflectionCardInner: React.FC<NarrativeReflectionProps> = ({
     isLoading,
     onComplete
   );
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const config = toneConfig[tone];
   const Icon = config.icon;
+
+  const shouldTruncate = !isTyping && displayedText.length > 150;
 
   console.log(`🎨 [ReflectionCard] Render id=${id}, isTyping=${isTyping}, chars=${displayedText.length}/${narrative.length}`);
 
@@ -208,16 +211,38 @@ const NarrativeReflectionCardInner: React.FC<NarrativeReflectionProps> = ({
                 <span className="text-sm italic">Refletindo sobre os resultados...</span>
               </motion.div>
             ) : (
-              <p className="text-white/90 text-sm md:text-base leading-relaxed">
-                {displayedText}
-                {isTyping && (
-                  <motion.span
-                    animate={{ opacity: [1, 0] }}
-                    transition={{ duration: 0.5, repeat: Infinity }}
-                    className={`inline-block w-0.5 h-4 ml-0.5 ${config.iconColor} bg-current`}
-                  />
+              <div>
+                <p 
+                  className={`text-white/90 text-sm md:text-base leading-relaxed ${
+                    shouldTruncate && !isExpanded ? 'line-clamp-3' : ''
+                  }`}
+                >
+                  {displayedText}
+                  {isTyping && (
+                    <motion.span
+                      animate={{ opacity: [1, 0] }}
+                      transition={{ duration: 0.5, repeat: Infinity }}
+                      className={`inline-block w-0.5 h-4 ml-0.5 ${config.iconColor} bg-current`}
+                    />
+                  )}
+                </p>
+                {shouldTruncate && !isExpanded && (
+                  <button
+                    onClick={() => setIsExpanded(true)}
+                    className={`mt-1 text-xs font-medium ${config.accentColor} hover:underline transition-colors`}
+                  >
+                    Ver mais...
+                  </button>
                 )}
-              </p>
+                {shouldTruncate && isExpanded && (
+                  <button
+                    onClick={() => setIsExpanded(false)}
+                    className={`mt-1 text-xs font-medium ${config.accentColor} hover:underline transition-colors`}
+                  >
+                    Ver menos
+                  </button>
+                )}
+              </div>
             )}
           </div>
 
