@@ -208,14 +208,16 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
         store.updateActivityStatus(activity.id, 'construindo', progressPct);
       }
       
-      // Emitir evento de progresso para UI
+      // Emitir evento de progresso para UI COM ÍNDICE DE ORDEM
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: {
           type: 'construction:activity_progress',
           activityId: activity.id,
           activityTitle: activity.titulo,
           progress: progressPct,
-          fields_completed: fieldsCount
+          fields_completed: fieldsCount,
+          order_index: i,  // Índice de ordem para UI ordenar corretamente
+          total_count: generatedData.length
         }
       }));
       
@@ -258,11 +260,13 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
         }
       });
       
-      // Emitir evento de sucesso COM contagem de campos correta
+      // Emitir evento de sucesso COM contagem de campos correta e ÍNDICE DE ORDEM
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: {
           type: 'construction:activity_completed',
           activityId: activity.id,
+          order_index: i,  // Índice de ordem para UI ordenar corretamente
+          total_count: generatedData.length,
           data: {
             titulo: activity.titulo,
             fields: fieldsToUse,
