@@ -22,8 +22,10 @@ import type {
 } from '../../shared/types';
 import { createDataConfirmation, createDataCheck } from '../../shared/types';
 import { useChosenActivitiesStore } from '../../../../interface-chat-producao/stores/ChosenActivitiesStore';
+import { useActivityDebugStore } from '../../../../construction/stores/activityDebugStore';
 
 const CAPABILITY_ID = 'criar_atividade';
+const CONSTRUCTION_DELAY_MS = 800; // Delay entre cada atividade para animação progressiva
 
 interface GeneratedActivityData {
   activity_id: string;
@@ -150,12 +152,22 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
     });
 
     // ═══════════════════════════════════════════════════════════════════════
-    // 2. MARCAR ATIVIDADES COMO CONCLUÍDAS (SEM SALVAR NO BANCO)
+    // 2. CONSTRUIR ATIVIDADES PROGRESSIVAMENTE COM ANIMAÇÃO VISUAL
     // ═══════════════════════════════════════════════════════════════════════
     
     const store = useChosenActivitiesStore.getState();
+    const activityDebugStore = useActivityDebugStore.getState();
     const builtActivities: BuiltActivity[] = [];
     let successCount = 0;
+
+    // Emitir evento de início da construção visual
+    window.dispatchEvent(new CustomEvent('agente-jota-progress', {
+      detail: {
+        type: 'construction:build_started',
+        totalActivities: generatedData.length,
+        message: `Iniciando construção visual de ${generatedData.length} atividade(s)...`
+      }
+    }));
 
     for (let i = 0; i < generatedData.length; i++) {
       const genData = generatedData[i];
@@ -171,10 +183,8 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
       
       const progressPct = Math.round(((i + 1) / generatedData.length) * 100);
       
-      // CORREÇÃO CRÍTICA: Verificar se a atividade já está concluída com campos
-      // Se gerar_conteudo_atividades já marcou como 'concluida', não devemos sobrescrever
+      // Verificar estado existente
       const existingActivity = store.getActivityById(activity.id);
-      const alreadyComplete = existingActivity?.status_construcao === 'concluida';
       const hasExistingFields = Object.keys(existingActivity?.campos_preenchidos || {}).length > 0 ||
                                 Object.keys(existingActivity?.dados_construidos?.generated_fields || {}).length > 0;
       
@@ -187,26 +197,37 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
         fieldsToUse[k] !== undefined && fieldsToUse[k] !== ''
       ).length;
       
-      console.error(`📊 [V2:CRIAR] Activity ${activity.id}: alreadyComplete=${alreadyComplete}, hasExistingFields=${hasExistingFields}, fieldsCount=${fieldsCount}`);
+      console.error(`📊 [V2:CRIAR] Activity ${i + 1}/${generatedData.length}: ${activity.titulo} (${fieldsCount} campos)`);
+      
+      // ═══════════════════════════════════════════════════════════════════════
+      // FASE 1: INICIAR CONSTRUÇÃO VISUAL - Log de início
+      // ═══════════════════════════════════════════════════════════════════════
+      activityDebugStore.log(
+        activity.id, 'action', 'CriarAtividadeV2',
+        `[${i + 1}/${generatedData.length}] Iniciando construção visual de "${activity.titulo}"`,
+        { 
+          activity_type: activity.tipo, 
+          fields_count: fieldsCount,
+          order_index: i
+        }
+      );
       
       debug_log.push({
         timestamp: new Date().toISOString(),
         type: 'action',
-        narrative: `[${i + 1}/${generatedData.length}] Finalizando "${activity.titulo}"...`,
+        narrative: `[${i + 1}/${generatedData.length}] Construindo "${activity.titulo}"...`,
         technical_data: { 
           activity_id: activity.id,
           activity_type: activity.tipo,
           fields_count: fieldsCount,
           progress: progressPct,
-          already_complete: alreadyComplete,
           has_existing_fields: hasExistingFields
         }
       });
       
-      // CORREÇÃO: NÃO sobrescrever status se já está concluída com campos
-      if (!alreadyComplete) {
-        store.updateActivityStatus(activity.id, 'construindo', progressPct);
-      }
+      // Marcar como "construindo" no store
+      store.updateActivityStatus(activity.id, 'construindo', Math.round((i / generatedData.length) * 100));
+      activityDebugStore.setProgress(activity.id, 92, 'Construindo atividade...');
       
       // Emitir evento de progresso para UI COM ÍNDICE DE ORDEM
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
@@ -214,15 +235,18 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
           type: 'construction:activity_progress',
           activityId: activity.id,
           activityTitle: activity.titulo,
-          progress: progressPct,
+          progress: Math.round((i / generatedData.length) * 100),
           fields_completed: fieldsCount,
-          order_index: i,  // Índice de ordem para UI ordenar corretamente
-          total_count: generatedData.length
+          order_index: i,
+          total_count: generatedData.length,
+          status: 'building'
         }
       }));
       
-      // Pequeno delay para mostrar progresso na UI
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // ═══════════════════════════════════════════════════════════════════════
+      // FASE 2: DELAY PARA ANIMAÇÃO PROGRESSIVA VISÍVEL
+      // ═══════════════════════════════════════════════════════════════════════
+      await new Promise(resolve => setTimeout(resolve, CONSTRUCTION_DELAY_MS));
       
       // Criar objeto de atividade construída (SEM salvar no banco)
       const builtActivity: BuiltActivity = {
@@ -244,10 +268,22 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
       builtActivities.push(builtActivity);
       successCount++;
       
-      // CORREÇÃO: Só atualizar status se ainda não está concluída
-      if (!alreadyComplete) {
-        store.updateActivityStatus(activity.id, 'concluida', 100);
-      }
+      // ═══════════════════════════════════════════════════════════════════════
+      // FASE 3: MARCAR COMO CONCLUÍDA E REGISTRAR LOG FINAL
+      // ═══════════════════════════════════════════════════════════════════════
+      store.updateActivityStatus(activity.id, 'concluida', 100);
+      activityDebugStore.setProgress(activity.id, 100, 'Atividade construída com sucesso');
+      activityDebugStore.markCompleted(activity.id);
+      
+      activityDebugStore.log(
+        activity.id, 'success', 'CriarAtividadeV2',
+        `✅ Atividade "${activity.titulo}" construída com sucesso! (${fieldsCount} campos)`,
+        { 
+          fields_count: fieldsCount,
+          build_time_ms: CONSTRUCTION_DELAY_MS,
+          order_index: i
+        }
+      );
       
       debug_log.push({
         timestamp: new Date().toISOString(),
@@ -255,8 +291,7 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
         narrative: `✅ "${activity.titulo}" pronta para uso! (${fieldsCount} campos)`,
         technical_data: { 
           activity_id: activity.id,
-          fields_count: fieldsCount,
-          was_already_complete: alreadyComplete
+          fields_count: fieldsCount
         }
       });
       

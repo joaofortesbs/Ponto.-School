@@ -1,0 +1,15 @@
+Você precisa garantir que a verdadeira "construção" das atividades seja um processo separado, pois acredito que o sistema marca as atividades como concluidas e construidas quando verifica se o conteúdo de dentro dos campos foi gerado, e colocado dentro dos campos, mas são coisas diferentes! Isso que eu te falei de gerar o conteúdo e colocar eles dentro dos seus respectivos campos de dentro do modal de Editar atividades, é um fluxo, e uma etapa! O outro fluxo que confirma que a atividade foi realmente construida, é um fluxo dedicado e exclusivo que verifica pontos como:
+
+- O comando para ativar o botão de Gerar atividades de dentro do modal de Editar atividades foi executado corretamente e recebeu um fallback/resposta congruente?
+
+- O modal de Editar atividades iniciou a criação das atividades processando os conteúdos reais de dentro de cada respectivo campo?
+
+- A IA/API gerou todo o conteúdo e o sistema conseguiu organizar esse conteúdo de maneira mapeada e correta e super robusta e organizada/alinhada?
+
+- O sistema conseguiu captar esse conteúdo gerado e colocou dentro do modal de Visualizar atividades dentro de cada respectiva atividade? Para que quando o usuário clicar em alguma atividade de dentro do card de Interface de Construção, dentro do icone de olho de dentro de alguma atividade, o modal de Visualizar atividades seja aberto mostrando a atividade gerada na hora?
+
+-  O sistema garantiu que a atividade gerada tem todos os conteúdos sendo mostrados e configurados no back-end e front-ent, e na UI e UX? Tudo precisa ser perfeito para o usuário
+
+- O sistema garantiu que o status da respectiva atividade e principalmente o debug e logs estão aparecendo corretamente dentro de cada respectiva atividade?
+
+No final, me diga detalhadamente como funciona o fluxo de criação das atividades, citando comandos/chamadas, e mostrando exatamente o que deve acontecer, e o que está acontecendo atualmente! Você precisa focar incansavelmente em deixar uma funcionalidade muito boa, impedindo todos os erros, e depois montar um sistema de fluxo que deixe tudo isso ligado e automatizado, porque se você quer fazer mais coisas com menos qualidade, vai dar errado! É melhor você garantir que em 5 áreas não tenha nenhum erro, do que fazer 10 áreas com incertezas!

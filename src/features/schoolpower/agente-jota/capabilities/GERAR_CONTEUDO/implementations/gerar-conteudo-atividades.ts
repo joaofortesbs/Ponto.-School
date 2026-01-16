@@ -1220,7 +1220,8 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
           }
         );
         
-        store.updateActivityStatus(activity.id, 'aguardando', 100);
+        // Status 'aguardando' indica que conteúdo foi gerado, mas construção visual ainda não iniciou
+        store.updateActivityStatus(activity.id, 'aguardando', 80);
         store.setActivityGeneratedFields(activity.id, syncedFields);
         
         // 🔥 SALVAR NO LOCALSTORAGE PARA INTERFACE DE CONSTRUÇÃO
@@ -1315,10 +1316,17 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
         });
         
         // ═══════════════════════════════════════════════════════════════════════
-        // MARCAR ATIVIDADE COMO CONCLUÍDA NO DEBUG STORE
+        // MARCAR ATIVIDADE COMO "AGUARDANDO CONSTRUÇÃO" (NÃO CONCLUÍDA)
+        // A capability criar_atividade será responsável por marcar como concluída
+        // após a animação visual de construção progressiva
         // ═══════════════════════════════════════════════════════════════════════
-        activityDebugStore.setProgress(activity.id, 100, 'Atividade construída com sucesso');
-        activityDebugStore.markCompleted(activity.id);
+        activityDebugStore.setProgress(activity.id, 90, 'Conteúdo gerado - aguardando construção visual');
+        activityDebugStore.log(
+          activity.id, 'success', 'GerarConteudoV2',
+          `Geração concluída! Aguardando etapa de construção visual...`,
+          { fields_count: Object.keys(syncedFields).length, status: 'content_ready' }
+        );
+        // NÃO chamar markCompleted aqui - deixar para criar_atividade
         
       } else {
         // Log de erro da API
