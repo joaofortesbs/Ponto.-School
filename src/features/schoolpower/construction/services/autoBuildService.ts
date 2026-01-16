@@ -9,6 +9,7 @@ import {
   waitForBuildResult,
   emitBuildProgress 
 } from '../events/constructionEventBus';
+import { useActivityDebugStore, logActivityDebug } from '../stores/activityDebugStore';
 
 export interface AutoBuildProgress {
   current: number;
@@ -888,6 +889,7 @@ export class AutoBuildService {
    */
   private async buildViaModalBridge(activity: ConstructionActivity): Promise<boolean> {
     const requestId = `modal-build-${activity.id}-${Date.now()}`;
+    const debugStore = useActivityDebugStore.getState();
     
     console.log(`\n🌉 ════════════════════════════════════════════════════════`);
     console.log(`🌉 [AUTO-BUILD] CONSTRUÇÃO VIA MODAL_BRIDGE`);
@@ -896,8 +898,19 @@ export class AutoBuildService {
     console.log(`🌉 [AUTO-BUILD] Título: ${activity.title}`);
     console.log(`🌉 [AUTO-BUILD] ModalBridge.isReady(): ${ModalBridge.isReady()}`);
 
+    debugStore.log(activity.id, 'action', 'ModalBridge', 'Iniciando construção via ModalBridge', {
+      requestId,
+      modalBridgeReady: ModalBridge.isReady()
+    });
+    debugStore.setStatus(activity.id, 'building');
+    debugStore.setProgress(activity.id, 10, 'Preparando campos...');
+
     // Preparar campos do formulário
     const formData = await this.prepareFormDataExactlyLikeModal(activity);
+    debugStore.log(activity.id, 'info', 'FormData', 'Campos preparados', { 
+      fieldCount: Object.keys(formData).length 
+    });
+    debugStore.setProgress(activity.id, 25, 'Campos preparados');
     
     // Emitir evento para BuildController
     const buildRequest = {
@@ -920,10 +933,19 @@ export class AutoBuildService {
     console.log(`📡 [AUTO-BUILD] Emitindo evento construction:build_activity...`);
     console.log(`📡 [AUTO-BUILD] Campos:`, Object.keys(buildRequest.fields));
     
+    debugStore.log(activity.id, 'api', 'EventEmitter', 'Emitindo construction:build_activity', {
+      requestId,
+      fieldKeys: Object.keys(buildRequest.fields)
+    });
+    debugStore.setProgress(activity.id, 40, 'Enviando para BuildController...');
+    
     emitBuildActivityRequest(buildRequest);
 
     try {
       console.log(`⏳ [AUTO-BUILD] Aguardando confirmação (timeout: 90s)...`);
+      debugStore.log(activity.id, 'info', 'WaitResult', 'Aguardando confirmação do BuildController (timeout: 90s)');
+      debugStore.setProgress(activity.id, 50, 'Aguardando resposta...');
+      
       const result = await waitForBuildResult(requestId, 90000);
       
       console.log(`\n🎉 ════════════════════════════════════════════════════════`);
@@ -934,11 +956,19 @@ export class AutoBuildService {
       console.log(`🎉 [AUTO-BUILD] Chaves localStorage:`);
       result.storageKeys.forEach(key => console.log(`   💾 ${key}`));
 
+      debugStore.log(activity.id, 'success', 'BuildResult', 'Construção concluída com sucesso', {
+        activityId: result.activityId,
+        success: result.success,
+        storageKeys: result.storageKeys
+      });
+
       // Atualizar estado da atividade
       activity.isBuilt = true;
       activity.builtAt = new Date().toISOString();
       activity.progress = 100;
       activity.status = 'completed';
+
+      debugStore.markCompleted(activity.id);
 
       // Callback de conclusão
       if (this.onActivityBuilt) {
@@ -948,6 +978,11 @@ export class AutoBuildService {
       return true;
     } catch (error) {
       console.error(`❌ [AUTO-BUILD] Erro na construção via ModalBridge:`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      debugStore.log(activity.id, 'error', 'BuildError', `Falha na construção: ${errorMessage}`, {
+        error: errorMessage
+      });
+      debugStore.setError(activity.id, errorMessage);
       return false;
     }
   }
@@ -960,6 +995,16 @@ export class AutoBuildService {
     const errors: string[] = [];
     let processedCount = 0;
     const useModalBridge = ModalBridge.isReady();
+    const debugStore = useActivityDebugStore.getState();
+
+    // Inicializar debug para todas as atividades
+    activities.forEach(activity => {
+      debugStore.initActivity(activity.id, activity.title, activity.type || activity.id);
+      debugStore.log(activity.id, 'info', 'BuildQueue', 'Atividade adicionada à fila de construção', {
+        position: activities.indexOf(activity) + 1,
+        total: activities.length
+      });
+    });
 
     this.updateProgress({
       current: 0,
@@ -975,6 +1020,8 @@ export class AutoBuildService {
       // Verificar se atividade já foi construída
       if (activity.isBuilt || activity.status === 'completed') {
         console.log(`⏭️ [AUTO-BUILD] Pulando atividade já construída: ${activity.title}`);
+        debugStore.log(activity.id, 'info', 'SkipBuild', 'Atividade já construída, pulando');
+        debugStore.markCompleted(activity.id);
         processedCount++;
         this.updateProgress({
           current: processedCount,
@@ -989,10 +1036,18 @@ export class AutoBuildService {
       // Verificar se atividade tem dados mínimos necessários
       if (!activity.title || !activity.description) {
         console.warn(`⚠️ [AUTO-BUILD] Pulando atividade sem dados: ${activity.title || 'Sem título'}`);
+        const errorMsg = 'Dados insuficientes para construção (título ou descrição ausentes)';
+        debugStore.log(activity.id, 'error', 'Validation', errorMsg);
+        debugStore.setError(activity.id, errorMsg);
         errors.push(`Atividade "${activity.title || 'Sem título'}" não possui dados suficientes`);
         processedCount++;
         continue;
       }
+
+      debugStore.log(activity.id, 'action', 'BuildStart', `Iniciando construção (${i + 1}/${activities.length})`, {
+        modalBridgeAvailable: useModalBridge || ModalBridge.isReady()
+      });
+      debugStore.setStatus(activity.id, 'building');
 
       this.updateProgress({
         current: processedCount,
@@ -1010,13 +1065,17 @@ export class AutoBuildService {
         // Tentar usar ModalBridge primeiro (modal real)
         if (useModalBridge || ModalBridge.isReady()) {
           console.log(`🌉 [AUTO-BUILD] Usando ModalBridge para ${activity.title}`);
+          debugStore.log(activity.id, 'info', 'Strategy', 'Tentando ModalBridge (modal real)');
           buildSuccess = await this.buildViaModalBridge(activity);
         }
 
         // Fallback para lógica antiga se ModalBridge não funcionou
         if (!buildSuccess) {
           console.log(`📦 [AUTO-BUILD] Usando lógica interna para ${activity.title}`);
+          debugStore.log(activity.id, 'warning', 'Fallback', 'ModalBridge falhou, usando lógica interna');
+          debugStore.setProgress(activity.id, 60, 'Usando lógica alternativa...');
           await this.buildActivityWithExactModalLogic(activity);
+          debugStore.markCompleted(activity.id);
         }
 
         processedCount++;
@@ -1036,6 +1095,11 @@ export class AutoBuildService {
       } catch (error) {
         console.error(`❌ [AUTO-BUILD] Erro ao construir ${activity.title}:`, error);
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        debugStore.log(activity.id, 'error', 'BuildFail', `Erro crítico: ${errorMessage}`, {
+          error: errorMessage,
+          stack: error instanceof Error ? error.stack : undefined
+        });
+        debugStore.setError(activity.id, errorMessage);
         errors.push(`Erro em "${activity.title}": ${errorMessage}`);
 
         processedCount++;
