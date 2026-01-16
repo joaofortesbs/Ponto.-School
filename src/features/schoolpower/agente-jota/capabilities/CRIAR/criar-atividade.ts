@@ -2,10 +2,17 @@
  * CAPABILITY 4: criar_atividade
  * 
  * Responsabilidade: Receber as atividades decididas pela capability 3,
- * preencher os campos obrigatórios com IA e salvar no banco de dados.
+ * preencher os campos obrigatórios com IA e ACIONAR a construção real
+ * através do sistema de eventos que dispara o BuildController.
  * 
  * Input: Decisões da capability 3 (ChosenActivity[])
- * Output: Atividades construídas e persistidas
+ * Output: Atividades construídas e persistidas via modal
+ * 
+ * ARQUITETURA:
+ * 1. Gera campos via IA (fillActivityFields)
+ * 2. Emite evento construction:build_activity
+ * 3. BuildController recebe e executa buildActivityFromFormData (mesma lógica do modal)
+ * 4. Aguarda evento construction:activity_built com confirmação
  */
 
 import { executeWithCascadeFallback } from '../../../services/controle-APIs-gerais-school-power';
@@ -16,6 +23,11 @@ import {
   ConstructionProgress,
   DecisionResult
 } from '../shared/types';
+import {
+  emitBuildActivityRequest,
+  waitForBuildResult,
+  BuildActivityResult
+} from '../../../construction/events/constructionEventBus';
 
 interface CriarAtividadeParams {
   decision_result: DecisionResult;
@@ -24,7 +36,7 @@ interface CriarAtividadeParams {
   on_progress?: (progress: ConstructionProgress) => void;
 }
 
-const MAX_CONCURRENT = 1;
+const BUILD_TIMEOUT = 90000;
 
 function buildFieldFillingPrompt(activity: ChosenActivity, userContext?: string): string {
   const schemaDescriptions = activity.campos_obrigatorios.map(campo => {
@@ -93,7 +105,7 @@ async function fillActivityFields(
   activity: ChosenActivity,
   userContext?: string
 ): Promise<Record<string, any>> {
-  console.log(`📝 [CRIAR] Preenchendo campos para: ${activity.titulo}`);
+  console.log(`📝 [CRIAR] Gerando campos via IA para: ${activity.titulo}`);
   
   const prompt = buildFieldFillingPrompt(activity, userContext);
   
@@ -130,10 +142,11 @@ async function fillActivityFields(
       });
     }
 
+    console.log(`✅ [CRIAR] Campos gerados com sucesso:`, Object.keys(parsed.campos_preenchidos));
     return parsed.campos_preenchidos;
 
   } catch (error) {
-    console.error(`❌ [CRIAR] Erro ao preencher campos:`, error);
+    console.error(`❌ [CRIAR] Erro ao gerar campos:`, error);
     
     const fallbackFields: Record<string, any> = {};
     activity.campos_obrigatorios.forEach(campo => {
@@ -166,6 +179,63 @@ function getDefaultValue(schema: any): any {
       return schema.default ?? true;
     default:
       return 'Valor padrão';
+  }
+}
+
+async function buildActivityViaEventSystem(
+  activity: ChosenActivity,
+  filledFields: Record<string, any>
+): Promise<BuildActivityResult> {
+  const requestId = `build-${activity.id}-${Date.now()}`;
+  
+  console.log(`\n🔨 ════════════════════════════════════════════════════════`);
+  console.log(`🔨 [CRIAR] ACIONANDO CONSTRUÇÃO REAL via EventBus`);
+  console.log(`🔨 ════════════════════════════════════════════════════════`);
+  console.log(`🔨 [CRIAR] Activity ID: ${activity.id}`);
+  console.log(`🔨 [CRIAR] Tipo: ${activity.tipo}`);
+  console.log(`🔨 [CRIAR] Request ID: ${requestId}`);
+  console.log(`🔨 [CRIAR] Campos a injetar:`, Object.keys(filledFields));
+
+  const buildRequest = {
+    activityId: activity.id,
+    activityType: activity.tipo,
+    fields: {
+      ...filledFields,
+      title: activity.titulo,
+      tema: activity.titulo,
+      theme: activity.titulo,
+      subject: activity.materia,
+      disciplina: activity.materia,
+      objectives: activity.justificativa,
+      objetivo: activity.justificativa
+    },
+    requestId
+  };
+
+  console.log(`📡 [CRIAR] Emitindo evento construction:build_activity...`);
+  emitBuildActivityRequest(buildRequest);
+
+  console.log(`⏳ [CRIAR] Aguardando confirmação de construção (timeout: ${BUILD_TIMEOUT}ms)...`);
+  
+  try {
+    const result = await waitForBuildResult(requestId, BUILD_TIMEOUT);
+    
+    console.log(`\n🎉 ════════════════════════════════════════════════════════`);
+    console.log(`🎉 [CRIAR] CONSTRUÇÃO CONFIRMADA!`);
+    console.log(`🎉 ════════════════════════════════════════════════════════`);
+    console.log(`🎉 [CRIAR] Activity ID: ${result.activityId}`);
+    console.log(`🎉 [CRIAR] Sucesso: ${result.success}`);
+    console.log(`🎉 [CRIAR] Chaves localStorage criadas:`);
+    result.storageKeys.forEach(key => {
+      console.log(`   💾 ${key}`);
+    });
+    console.log(`🎉 [CRIAR] Timestamp: ${result.timestamp}`);
+    
+    return result;
+    
+  } catch (error) {
+    console.error(`❌ [CRIAR] Erro na construção via eventos:`, error);
+    throw error;
   }
 }
 
@@ -208,7 +278,10 @@ async function saveActivityToDB(
 export async function criarAtividade(
   params: CriarAtividadeParams
 ): Promise<CreateActivityResult> {
-  console.log('🔨 [Capability:CRIAR] Iniciando construção de atividades');
+  console.log('\n');
+  console.log('🔨 ╔═══════════════════════════════════════════════════════════════╗');
+  console.log('🔨 ║     CAPABILITY 4: CRIAR_ATIVIDADE (Construção Real)           ║');
+  console.log('🔨 ╚═══════════════════════════════════════════════════════════════╝');
   
   const startTime = Date.now();
   const { decision_result, professor_id, auto_save = true, on_progress } = params;
@@ -235,15 +308,23 @@ export async function criarAtividade(
   };
 
   console.log(`📦 [CRIAR] Total de atividades para construir: ${activitiesToBuild.length}`);
+  console.log(`📦 [CRIAR] Atividades:`, activitiesToBuild.map(a => a.titulo).join(', '));
 
-  for (const activity of activitiesToBuild) {
+  for (let i = 0; i < activitiesToBuild.length; i++) {
+    const activity = activitiesToBuild[i];
     progress.current = activity.id;
     updateProgress();
 
-    console.log(`\n🔧 [CRIAR] Construindo: ${activity.titulo}`);
+    console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.log(`🔧 [CRIAR] [${i + 1}/${activitiesToBuild.length}] Construindo: ${activity.titulo}`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
 
     try {
+      console.log(`📝 [CRIAR] PASSO 1: Gerando campos via IA...`);
       const filledFields = await fillActivityFields(activity);
+
+      console.log(`🔨 [CRIAR] PASSO 2: Acionando construção real via BuildController...`);
+      const buildResult = await buildActivityViaEventSystem(activity, filledFields);
 
       const builtActivity: BuiltActivity = {
         id: `built-${activity.id}-${Date.now()}`,
@@ -254,28 +335,35 @@ export async function criarAtividade(
         materia: activity.materia,
         nivel_dificuldade: activity.nivel_dificuldade,
         campos_preenchidos: filledFields,
-        conteudo_gerado: JSON.stringify(filledFields, null, 2),
+        conteudo_gerado: buildResult.result ? JSON.stringify(buildResult.result) : JSON.stringify(filledFields),
         status: 'completed',
         created_at: new Date().toISOString(),
-        saved_to_db: false
+        saved_to_db: false,
+        storage_keys: buildResult.storageKeys
       };
 
       if (auto_save) {
+        console.log(`💾 [CRIAR] PASSO 3: Salvando no banco de dados...`);
         const saveResult = await saveActivityToDB(builtActivity, professor_id);
         builtActivity.saved_to_db = saveResult.success;
         builtActivity.db_id = saveResult.db_id;
         
         if (!saveResult.success) {
-          console.warn(`⚠️ [CRIAR] Falha ao salvar ${activity.titulo}: ${saveResult.error}`);
+          console.warn(`⚠️ [CRIAR] Aviso: Falha ao salvar no DB, mas atividade foi construída`);
+        } else {
+          console.log(`✅ [CRIAR] Salvo no banco com ID: ${saveResult.db_id}`);
         }
       }
 
       builtActivities.push(builtActivity);
       progress.completed++;
-      console.log(`✅ [CRIAR] Concluída: ${activity.titulo}`);
+      
+      console.log(`\n✅ [CRIAR] ATIVIDADE CONSTRUÍDA COM SUCESSO: ${activity.titulo}`);
+      console.log(`   📋 Campos preenchidos: ${Object.keys(filledFields).length}`);
+      console.log(`   💾 Chaves localStorage: ${buildResult.storageKeys.length}`);
 
     } catch (error) {
-      console.error(`❌ [CRIAR] Falha ao construir ${activity.titulo}:`, error);
+      console.error(`\n❌ [CRIAR] FALHA ao construir ${activity.titulo}:`, error);
       
       builtActivities.push({
         id: `failed-${activity.id}-${Date.now()}`,
@@ -303,9 +391,31 @@ export async function criarAtividade(
   updateProgress();
 
   const elapsedTime = Date.now() - startTime;
-  console.log(`\n🎉 [Capability:CRIAR] Construção finalizada em ${elapsedTime}ms`);
-  console.log(`   ✅ Sucesso: ${progress.completed}`);
-  console.log(`   ❌ Falhas: ${progress.failed}`);
+  
+  console.log(`\n`);
+  console.log(`🎉 ╔═══════════════════════════════════════════════════════════════╗`);
+  console.log(`🎉 ║              CONSTRUÇÃO FINALIZADA                            ║`);
+  console.log(`🎉 ╚═══════════════════════════════════════════════════════════════╝`);
+  console.log(`   ⏱️  Tempo total: ${elapsedTime}ms`);
+  console.log(`   ✅ Sucesso: ${progress.completed} atividade(s)`);
+  console.log(`   ❌ Falhas: ${progress.failed} atividade(s)`);
+  
+  if (progress.completed > 0) {
+    console.log(`\n   📋 ATIVIDADES CONSTRUÍDAS:`);
+    builtActivities
+      .filter(a => a.status === 'completed')
+      .forEach(a => {
+        console.log(`      • ${a.titulo}`);
+        if (a.storage_keys) {
+          a.storage_keys.forEach(key => console.log(`        💾 ${key}`));
+        }
+      });
+  }
+  
+  if (errors.length > 0) {
+    console.log(`\n   ⚠️  ERROS:`);
+    errors.forEach(err => console.log(`      • ${err}`));
+  }
 
   return {
     success: progress.failed === 0,

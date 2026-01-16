@@ -3,9 +3,15 @@
  * 
  * Card visual que aparece quando a capability "criar_atividade" executa
  * Mostra as atividades sendo construídas com progresso em tempo real
+ * 
+ * INTEGRAÇÃO COM BuildController:
+ * - Escuta eventos construction:build_activity
+ * - Executa construção real via buildActivityFromFormData
+ * - Atualiza progresso progressivamente
+ * - Emite confirmações reais com chaves localStorage
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Package, 
@@ -25,6 +31,8 @@ import {
 import EditActivityModal from '../../construction/EditActivityModal';
 import { ActivityViewModal } from '../../construction/ActivityViewModal';
 import { ConstructionActivity } from '../../construction/types';
+import { createBuildController } from '../../construction/controllers/BuildController';
+import { onBuildProgress, BuildProgressUpdate } from '../../construction/events/constructionEventBus';
 
 export type ActivityBuildStatus = 'waiting' | 'building' | 'completed' | 'error';
 
@@ -39,6 +47,7 @@ export interface ActivityToBuild {
   fields_total?: number;
   error_message?: string;
   built_data?: Record<string, any>;
+  progressMessage?: string;
 }
 
 interface ConstructionInterfaceProps {
@@ -46,6 +55,7 @@ interface ConstructionInterfaceProps {
   isBuilding: boolean;
   onBuildAll: () => void;
   onBuildSingle?: (activityId: string) => void;
+  onActivityStatusChange?: (activityId: string, status: ActivityBuildStatus, progress?: number, message?: string) => void;
   autoStart?: boolean;
 }
 
@@ -55,28 +65,36 @@ const STATUS_CONFIG = {
     color: 'text-gray-400',
     bg: 'bg-gray-500/10',
     border: 'border-gray-500/20',
-    label: 'Aguardando'
+    label: 'Aguardando',
+    opacity: 'opacity-50',
+    saturate: 'saturate-50'
   },
   building: {
     icon: Loader2,
     color: 'text-yellow-400',
     bg: 'bg-yellow-500/10',
     border: 'border-yellow-500/20',
-    label: 'Construindo'
+    label: 'Construindo',
+    opacity: 'opacity-100',
+    saturate: 'saturate-100'
   },
   completed: {
     icon: Check,
     color: 'text-green-400',
     bg: 'bg-green-500/10',
     border: 'border-green-500/20',
-    label: 'Concluído'
+    label: 'Concluído',
+    opacity: 'opacity-100',
+    saturate: 'saturate-100'
   },
   error: {
     icon: AlertCircle,
     color: 'text-red-400',
     bg: 'bg-red-500/10',
     border: 'border-red-500/20',
-    label: 'Erro'
+    label: 'Erro',
+    opacity: 'opacity-100',
+    saturate: 'saturate-100'
   }
 };
 
@@ -98,11 +116,13 @@ function ActivityCard({ activity, onBuild, onActivityClick, onViewClick }: {
     }
   };
 
+  const isInactive = activity.status === 'waiting';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-xl border overflow-hidden ${config.bg} ${config.border} hover:border-orange-500/40 transition-colors`}
+      className={`rounded-xl border overflow-hidden transition-all duration-300 ${config.bg} ${config.border} hover:border-orange-500/40 ${isInactive ? 'opacity-60 grayscale-[30%]' : ''}`}
     >
       <div 
         className="p-3 cursor-pointer"
@@ -110,11 +130,11 @@ function ActivityCard({ activity, onBuild, onActivityClick, onViewClick }: {
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${config.bg} border ${config.border}`}>
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${config.bg} border ${config.border} transition-all duration-300`}>
               <StatusIcon className={`w-5 h-5 ${config.color} ${activity.status === 'building' ? 'animate-spin' : ''}`} />
             </div>
             <div>
-              <h4 className="text-white font-medium text-sm">{activity.name}</h4>
+              <h4 className={`font-medium text-sm transition-colors ${isInactive ? 'text-white/60' : 'text-white'}`}>{activity.name}</h4>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className={`text-xs ${config.color}`}>
                   {config.label}
@@ -179,11 +199,12 @@ function ActivityCard({ activity, onBuild, onActivityClick, onViewClick }: {
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${activity.progress}%` }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
                 className="h-full bg-gradient-to-r from-yellow-500 to-orange-500"
               />
             </div>
             <p className="text-yellow-400/70 text-xs mt-1">
-              Preenchendo campos com IA... {activity.progress}%
+              {activity.progressMessage || `Construindo atividade... ${activity.progress}%`}
             </p>
           </div>
         )}
@@ -231,11 +252,9 @@ function ActivityCard({ activity, onBuild, onActivityClick, onViewClick }: {
 }
 
 function convertToConstructionActivity(activity: ActivityToBuild): ConstructionActivity {
-  // Extrair campos consolidados do built_data (preparados pelo ChosenActivitiesStore)
   const builtData = activity.built_data || {};
   const consolidatedFields = builtData._consolidated_fields || builtData.generated_fields || {};
   
-  // Mapear título por tipo de atividade com fallbacks apropriados
   const getGeneratedTitle = (): string => {
     if (consolidatedFields.theme) return consolidatedFields.theme;
     if (consolidatedFields.temaRedacao) return consolidatedFields.temaRedacao;
@@ -245,7 +264,6 @@ function convertToConstructionActivity(activity: ActivityToBuild): ConstructionA
     return activity.name;
   };
   
-  // Mapear descrição por tipo de atividade com fallbacks apropriados
   const getGeneratedDescription = (): string => {
     if (consolidatedFields.objectives) return consolidatedFields.objectives;
     if (consolidatedFields.objetivo) return consolidatedFields.objetivo;
@@ -267,7 +285,6 @@ function convertToConstructionActivity(activity: ActivityToBuild): ConstructionA
     tags: [],
     difficulty: consolidatedFields.difficultyLevel || consolidatedFields.nivelDificuldade || 'medium',
     estimatedTime: consolidatedFields.timeLimit || '30 min',
-    // Passar campos consolidados para o modal (sem metadados internos)
     customFields: consolidatedFields,
     originalData: activity,
     isBuilt: activity.status === 'completed',
@@ -284,28 +301,67 @@ export function ConstructionInterface({
   isBuilding,
   onBuildAll,
   onBuildSingle,
+  onActivityStatusChange,
   autoStart = false
 }: ConstructionInterfaceProps) {
   const completedCount = activities.filter(a => a.status === 'completed').length;
   const errorCount = activities.filter(a => a.status === 'error').length;
   const buildingCount = activities.filter(a => a.status === 'building').length;
-  const progress = activities.length > 0 
-    ? Math.round((completedCount / activities.length) * 100) 
+  
+  const overallProgress = activities.length > 0 
+    ? Math.round(
+        activities.reduce((acc, a) => {
+          if (a.status === 'completed') return acc + 100;
+          if (a.status === 'building') return acc + (a.progress || 50);
+          return acc;
+        }, 0) / activities.length
+      )
     : 0;
 
   const allCompleted = completedCount === activities.length && activities.length > 0;
 
-  const hasStartedRef = React.useRef(false);
+  const hasStartedRef = useRef(false);
+  const buildControllerRef = useRef<(() => void) | null>(null);
   
-  // Estado para o modal de edição
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<ConstructionActivity | null>(null);
-
-  // Estado para o modal de visualização
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewActivity, setViewActivity] = useState<ConstructionActivity | null>(null);
 
-  // Handler para abrir o modal de edição ao clicar no lápis
+  useEffect(() => {
+    console.log('🎮 [ConstructionInterface] Inicializando BuildController...');
+    
+    buildControllerRef.current = createBuildController({
+      onBuildStart: (activityId, requestId) => {
+        console.log(`🔧 [ConstructionInterface] Build iniciado: ${activityId}`);
+        onActivityStatusChange?.(activityId, 'building', 10, 'Iniciando construção...');
+      },
+      onBuildProgress: (activityId, progress, message) => {
+        console.log(`📊 [ConstructionInterface] Progresso ${activityId}: ${progress}% - ${message}`);
+        onActivityStatusChange?.(activityId, 'building', progress, message);
+      },
+      onBuildComplete: (activityId, result) => {
+        console.log(`✅ [ConstructionInterface] Build concluído: ${activityId}`);
+        onActivityStatusChange?.(activityId, 'completed', 100, 'Construção concluída!');
+      },
+      onBuildError: (activityId, error) => {
+        console.error(`❌ [ConstructionInterface] Erro no build: ${activityId} - ${error}`);
+        onActivityStatusChange?.(activityId, 'error', 0, error);
+      }
+    });
+
+    const unsubscribeProgress = onBuildProgress((update: BuildProgressUpdate) => {
+      onActivityStatusChange?.(update.activityId, 'building', update.progress, update.message);
+    });
+
+    return () => {
+      if (buildControllerRef.current) {
+        buildControllerRef.current();
+      }
+      unsubscribeProgress();
+    };
+  }, [onActivityStatusChange]);
+
   const handleActivityClick = useCallback((activity: ActivityToBuild) => {
     console.log('🔧 [ConstructionInterface] Abrindo modal de EDIÇÃO para atividade:', activity.name);
     const constructionActivity = convertToConstructionActivity(activity);
@@ -313,7 +369,6 @@ export function ConstructionInterface({
     setIsEditModalOpen(true);
   }, []);
 
-  // Handler para abrir o modal de visualização ao clicar no olho
   const handleViewClick = useCallback((activity: ActivityToBuild) => {
     console.log('👁️ [ConstructionInterface] Abrindo modal de VISUALIZAÇÃO para atividade:', activity.name);
     const constructionActivity = convertToConstructionActivity(activity);
@@ -321,14 +376,12 @@ export function ConstructionInterface({
     setIsViewModalOpen(true);
   }, []);
 
-  // Handler para fechar o modal
   const handleCloseModal = useCallback(() => {
     console.log('🔧 [ConstructionInterface] Fechando modal');
     setIsEditModalOpen(false);
     setSelectedActivity(null);
   }, []);
 
-  // Handler para salvar atividade
   const handleSaveActivity = useCallback((activityData: any) => {
     console.log('💾 [ConstructionInterface] Salvando atividade:', activityData);
     handleCloseModal();
@@ -347,31 +400,22 @@ export function ConstructionInterface({
     }
   }, [autoStart, isBuilding, activities, onBuildAll]);
 
-  // Ref para controlar se já emitimos o evento de conclusão
-  const hasEmittedCompletionRef = React.useRef(false);
-  
-  // Ref para detectar estado anterior (para resetar em novos ciclos)
-  const prevAllCompletedRef = React.useRef(false);
+  const hasEmittedCompletionRef = useRef(false);
+  const prevAllCompletedRef = useRef(false);
 
-  // Resetar ref quando atividades voltarem a não-completed (novo ciclo de construção)
   useEffect(() => {
-    // Se estava completo e agora NÃO está, é um novo ciclo
     if (prevAllCompletedRef.current && !allCompleted) {
-      console.log(`🔄 [ConstructionInterface] Novo ciclo de construção detectado (status regrediu), resetando estado`);
+      console.log(`🔄 [ConstructionInterface] Novo ciclo de construção detectado, resetando estado`);
       hasEmittedCompletionRef.current = false;
     }
-    
-    // Atualizar referência do estado anterior
     prevAllCompletedRef.current = allCompleted;
   }, [allCompleted, activities]);
 
-  // Emitir evento construction:all_completed quando todas as atividades forem concluídas
   useEffect(() => {
     if (allCompleted && !hasEmittedCompletionRef.current && activities.length > 0) {
       hasEmittedCompletionRef.current = true;
       console.log(`🎉 [ConstructionInterface] Todas as ${activities.length} atividades concluídas! Emitindo evento...`);
       
-      // Emitir evento com as atividades concluídas
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: {
           type: 'construction:all_completed',
@@ -418,7 +462,7 @@ export function ConstructionInterface({
             <p className={`text-lg font-bold ${
               allCompleted ? 'text-green-400' : 'text-orange-400'
             }`}>
-              {progress}%
+              {overallProgress}%
             </p>
             <p className="text-white/40 text-xs">
               {completedCount}/{activities.length} concluídas
@@ -431,10 +475,14 @@ export function ConstructionInterface({
             <div className="h-2 bg-black/30 rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
+                animate={{ width: `${overallProgress}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
                 className="h-full bg-gradient-to-r from-orange-500 to-amber-500"
               />
             </div>
+            <p className="text-white/40 text-xs mt-1 text-center">
+              Progresso geral de construção
+            </p>
           </div>
         )}
 
@@ -492,7 +540,6 @@ export function ConstructionInterface({
         </div>
       )}
 
-      {/* Modal de Edição de Atividade */}
       <EditActivityModal
         isOpen={isEditModalOpen}
         activity={selectedActivity}
@@ -500,7 +547,6 @@ export function ConstructionInterface({
         onSave={handleSaveActivity}
       />
 
-      {/* Modal de Visualização de Atividade */}
       <ActivityViewModal
         isOpen={isViewModalOpen}
         activity={viewActivity}

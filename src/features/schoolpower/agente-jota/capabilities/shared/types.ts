@@ -317,6 +317,7 @@ export interface BuiltActivity {
   created_at: string;
   saved_to_db: boolean;
   db_id?: string;
+  storage_keys?: string[];
 }
 
 export interface CreateActivityResult {
