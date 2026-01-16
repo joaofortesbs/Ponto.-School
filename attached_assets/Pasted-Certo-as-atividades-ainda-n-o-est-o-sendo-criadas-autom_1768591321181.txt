@@ -1,0 +1,31 @@
+Certo, as atividades ainda não estão sendo criadas automaticamente, mas agora para continuar essa correção, precisamos ser muitos cuidados nas próximas alterações, sme prejudicar funcionalidades negativamente já funconais!
+
+CONTEXTO ATUAL:
+
+Eu percebi que depois das suas alterações anteriores, o sistema parece ter ficado mais organizado, mas você precisa confirmar isso para mim, pois agora dentro do card retangular que representa as respectivas atividades de dentro do card de Interface de construção, o debug não está aparecendo nada, como eu te representei dentro da imagem que eu te enviei agora! Talvez você tenha alterado alguma função/chamada/comando/ação/sistema que impede o debug de receber dados e acompanhar o fluxo de criação individual das respectivas atividades!
+
+Eu percebi que antes das suas alterações anteriores, quando a capacidade de criar atividades estava sendo executada, posteriormente aparecia notificações que as atividades estavam sendo geradas no canto inferior direito de dentro da plataforma, o que eu imaginava é que as atividades já estavam sendo geradas, mas acaabvam ficando perdidas dentro de todo esses sistema, pois não apareciam com o real conteúdo geral, depois que a atividade apareceu como concluida, dentro do modal de Visualizar, quando o usuário clicava dentro do icone de olho!
+
+Eu percebi que as atividades ainda não estam sendo corretamente construidas em ordem aarente dentro do card de Interface de Construção, pois quando a capacidade de criar atividades é ativa, acontece uma animação de carregamento dentro do sub-card retangular que representa a capacidade, e dentro do card de Interface de Construção, as atividades são construidas em ordem aleatória, sem uma ordem exata e correspondente!
+
+SEU OBJETIVO ATUAL:
+
+Você precisa garantir que cada atividade tenha os debugs aparecendo, cada debug vai ser detalhadamento mostrado, com cada etapa exata, tendo a opção de exportar esse debug, e esse debug deve mostrar a chamada individual de execução da atividade, todo o fluxo da IA gerando o conteúdo da respectiva atividade, que está diretamente ligada com o modal de Editar atividades, e esse debug precisa mostrar status sólidos desse fluxo individual, que está diretamente relacionado a criação da respectiva atividade! Esse debug também deve mostrar aonde está acontecendo os erros, como por exemplos, servidores, cahamdas, comandos, arquivos da plataforma, absoltumente tudo! O objetivo aqui é fazer que tenhamos uma visão de como as atividades são construidas, com todo o fluxo de criação individual, se por acaso acontecer algum erro, vamos saber exatamente aonde!
+
+Você também precisa garantir que todo o fluxo de criação das atividades está funcionando corretamente, porque eu não sei se as ativiades estão sendo realmente criadas de maneira real, ou e algo ficticio! Você também precisa garantir que se o conteúdo estiver sendo gerado, ele não está sendo perdido, e está sendo guardado com todas as identfiicações corretas, pronto parar ser usado ou mostrado!
+
+Você também precisa deixar o sistema de status de cada atividade muito mais robusto, sem nenhum tip de erro, e para isso você vai prever e analisar todos os possiveis cenários de casos de uso da seção School Power, para garantir que não tenhas erros no front-end e no back-end!
+
+[ - Garanta que todas as sicronizações de sistemas, dados, conteúdos, chamadas e comandos estejam funcionando corretamente!
+
+Garanta que todo o sistema macro e micro esteja bem organizado e alinhado com linguagens sicronizadas, para que não tenha chamadas ou ações perdidas!
+
+Garanta que todas as integrações e conexões estejam funcionando perfeitamente, e stão bem configuradas, de maneira robusta!
+
+Garanta que todo o sistema esteja bem mapeado, com linguagens claras e sistemas sicronizados e bem organizados!
+
+Garanta que todo o salvamento e coleta de dados esteja funcionando perfeitamente e de maneira robusta, principalmente organização de Localstorege e mapeamento de dados/conteúdos!]
+
+Seu principal objetivo depois dessas alterações é garantir que o sistema esteja bem organizado e com todas as etapas funcionando bem, sem alterar coisas fora de contexto, e principalmente, as atividades precisam estar sendo criadas/geradas pela IA/API da maneira correta, e sendo mostradas nos lugares corretos, com todos os dados organizados!
+
+No final, me diga detalhadamente como funciona o fluxo de criação das atividades, citando comandos/chamadas, e mostrando exatamente o que deve acontecer, e o que está acontecendo atualmente! Você precisa focar incansavelmente em deixar uma funcionalidade muito boa, impedindo todos os erros, e depois montar um sistema de fluxo que deixe tudo isso ligado e automatizado, porque se você quer fazer mais coisas com menos qualidade, vai dar errado! É melhor você garantir que em 5 áreas não tenha nenhum erro, do que fazer 10 áreas com incertezas!
