@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Loader2, ChevronRight, AlertCircle, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Check, Loader2, ChevronDown, AlertCircle } from 'lucide-react';
 import { NarrativeReflectionCard, LoadingReflection } from './NarrativeReflectionCard';
 import { DebugIcon } from '../debug-system/DebugIcon';
 import { useDebugStore } from '../debug-system/DebugStore';
@@ -9,6 +9,7 @@ import type { ActivityToBuild } from '../construction-interface';
 import { DataConfirmationBadge } from './DataConfirmationBadge';
 import type { DataConfirmation } from '../../agente-jota/capabilities/shared/types';
 import { useChosenActivitiesStore } from '../stores/ChosenActivitiesStore';
+import { getCapabilityIcon } from './CapabilityIcons';
 
 export type CapabilityStatus = 'hidden' | 'pending' | 'executing' | 'completed' | 'error';
 export type ObjectiveStatus = 'pending' | 'active' | 'completed';
@@ -62,11 +63,16 @@ const ObjectiveCard: React.FC<{
   onBuildActivities?: () => void;
   isBuildingActivities?: boolean;
 }> = ({ objective, index, isVisible, reflection, isLoadingReflection, activitiesToBuild = [], completedActivities = [], onBuildActivities, isBuildingActivities = false }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
   const isCompleted = objective.status === 'completed';
   const isActive = objective.status === 'active';
   const showReflectionSlot = isCompleted || isLoadingReflection;
 
   if (!isVisible) return null;
+
+  const handleToggle = () => {
+    setIsExpanded(prev => !prev);
+  };
 
   return (
     <motion.div
@@ -76,16 +82,20 @@ const ObjectiveCard: React.FC<{
       transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
       className="w-full"
     >
-      <div
+      <motion.div
+        onClick={handleToggle}
         className={`
-          relative flex items-center gap-4 px-6 py-4 rounded-full
-          border-2 transition-all duration-500 mb-3
+          relative flex items-center gap-4 px-6 py-4 rounded-full cursor-pointer
+          border-2 transition-all duration-300 mb-3 select-none
           ${isCompleted 
             ? 'bg-emerald-500/20 border-emerald-400 shadow-lg shadow-emerald-500/20' 
             : isActive 
             ? 'bg-[#FF6B35]/20 border-[#FF6B35] shadow-lg shadow-[#FF6B35]/20' 
             : 'bg-gray-700/30 border-gray-600/50'}
+          hover:scale-[1.01] active:scale-[0.99]
         `}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
       >
         <motion.div
           className={`
@@ -109,7 +119,7 @@ const ObjectiveCard: React.FC<{
                 exit={{ scale: 0 }}
                 transition={{ duration: 0.3, ease: 'backOut' }}
               >
-                <Check className="w-4 h-4 text-emerald-500 stroke-[3]" />
+                <Check className="w-4 h-4 text-white stroke-[3]" />
               </motion.div>
             ) : isActive ? (
               <motion.div
@@ -127,53 +137,65 @@ const ObjectiveCard: React.FC<{
         </span>
 
         <motion.div
-          animate={isActive ? { x: [0, 4, 0] } : {}}
-          transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+          animate={{ rotate: isExpanded ? 180 : 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
           className="absolute right-4"
         >
-          <ChevronRight className="w-5 h-5 text-white/80" />
+          <ChevronDown className="w-5 h-5 text-white/80" />
         </motion.div>
-      </div>
-
-      <AnimatePresence mode="sync">
-        {objective.capabilities
-          .filter(cap => cap.status !== 'hidden')
-          .map((capability, capIndex) => (
-            <CapabilityCard 
-              key={capability.id} 
-              capability={capability}
-              index={capIndex}
-              activitiesToBuild={activitiesToBuild}
-              completedActivities={completedActivities}
-              onBuildActivities={onBuildActivities}
-              isBuildingActivities={isBuildingActivities}
-            />
-          ))}
-      </AnimatePresence>
+      </motion.div>
 
       <AnimatePresence>
-        {showReflectionSlot && (
+        {isExpanded && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="mt-2"
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="overflow-hidden"
           >
-            {isLoadingReflection && !reflection ? (
-              <LoadingReflection />
-            ) : reflection ? (
-              <NarrativeReflectionCard
-                id={reflection.id}
-                objectiveTitle={reflection.objectiveTitle}
-                narrative={reflection.narrative}
-                tone={reflection.tone}
-                highlights={reflection.highlights}
-                onComplete={() => {
-                  console.log(`📝 [ObjectiveCard] Reflexão ${index} exibida`);
-                }}
-              />
-            ) : null}
+            <AnimatePresence mode="sync">
+              {objective.capabilities
+                .filter(cap => cap.status !== 'hidden')
+                .map((capability, capIndex) => (
+                  <CapabilityCard 
+                    key={capability.id} 
+                    capability={capability}
+                    index={capIndex}
+                    activitiesToBuild={activitiesToBuild}
+                    completedActivities={completedActivities}
+                    onBuildActivities={onBuildActivities}
+                    isBuildingActivities={isBuildingActivities}
+                  />
+                ))}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {showReflectionSlot && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  className="mt-2"
+                >
+                  {isLoadingReflection && !reflection ? (
+                    <LoadingReflection />
+                  ) : reflection ? (
+                    <NarrativeReflectionCard
+                      id={reflection.id}
+                      objectiveTitle={reflection.objectiveTitle}
+                      narrative={reflection.narrative}
+                      tone={reflection.tone}
+                      highlights={reflection.highlights}
+                      onComplete={() => {
+                        console.log(`📝 [ObjectiveCard] Reflexão ${index} exibida`);
+                      }}
+                    />
+                  ) : null}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
@@ -195,15 +217,12 @@ const CapabilityCard: React.FC<{
   const isCompleted = capability.status === 'completed';
   const isError = capability.status === 'error';
 
-  // Estado local para gerenciar status das atividades com eventos de progresso
   const [localActivities, setLocalActivities] = useState<ActivityToBuild[]>(activitiesToBuild);
 
-  // Sincronizar com props quando mudarem
   useEffect(() => {
     setLocalActivities(activitiesToBuild);
   }, [activitiesToBuild]);
 
-  // Escutar eventos de progresso do BuildController
   useEffect(() => {
     const handleProgress = (event: CustomEvent) => {
       const { activityId, progress, message } = event.detail || {};
@@ -249,7 +268,6 @@ const CapabilityCard: React.FC<{
     };
   }, []);
 
-  // Callback para atualizar status via ConstructionInterface
   const handleActivityStatusChange = (activityId: string, status: string, progress?: number, message?: string) => {
     setLocalActivities(prev => prev.map(a => 
       (a.activity_id === activityId || a.id === activityId)
@@ -274,9 +292,6 @@ const CapabilityCard: React.FC<{
     (isExecuting || isCompleted) && 
     activitiesToBuild.length > 0;
 
-  // Usar activitiesToBuild para ContentGeneration (atividades decididas, não construídas)
-  // O ContentGenerationCard é exibido DENTRO do tópico "Decidir quais atividades criar",
-  // logo após a capability decidir_atividades_criar completar e ANTES da Interface de Construção
   const shouldShowContentGeneration = isGerarConteudo && 
     (isExecuting || isCompleted) && 
     activitiesToBuild.length > 0;
@@ -286,34 +301,37 @@ const CapabilityCard: React.FC<{
 
   const debugEntries = debugStore.getEntriesForCapability(capability.id);
 
+  const iconConfig = getCapabilityIcon(capability.nome || capability.id);
+  const IconComponent = iconConfig.icon;
+
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20, height: 0 }}
+      initial={{ opacity: 0, x: -10, height: 0 }}
       animate={{ opacity: 1, x: 0, height: 'auto' }}
-      exit={{ opacity: 0, x: 20, height: 0 }}
+      exit={{ opacity: 0, x: 10, height: 0 }}
       transition={{ 
-        duration: 0.35, 
-        delay: index * 0.08,
-        ease: [0.25, 0.46, 0.45, 0.94]
+        duration: 0.3, 
+        delay: index * 0.06,
+        ease: 'easeOut'
       }}
-      className="ml-8 overflow-hidden"
+      className="overflow-hidden mb-2"
     >
       <div
         className={`
-          relative flex items-center gap-3 px-4 py-3 rounded-2xl
-          border-2 transition-all duration-300 mb-2
+          inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full
+          border transition-all duration-300
           ${isCompleted 
-            ? 'border-emerald-400 bg-emerald-500/15 border-solid' 
+            ? 'border-emerald-400/50 bg-emerald-500/10' 
             : isError
-            ? 'border-red-400/60 bg-red-500/10 border-dashed'
+            ? 'border-red-400/50 bg-red-500/10'
             : isExecuting
-            ? 'border-[#FF6B35]/60 bg-[#FF6B35]/10 border-dashed'
+            ? 'border-[#FF6B35]/50 bg-[#FF6B35]/10'
             : isPending
-            ? 'border-gray-500/40 bg-gray-500/5 border-dashed'
-            : 'border-[#FF6B35]/40 bg-[#FF6B35]/5 border-dashed'}
+            ? 'border-gray-500/30 bg-gray-500/5'
+            : 'border-[#FF6B35]/30 bg-[#FF6B35]/5'}
         `}
       >
-        <div className="flex items-center justify-center w-6 h-6">
+        <div className="flex items-center justify-center w-5 h-5">
           <AnimatePresence mode="wait">
             {isPending && (
               <motion.div
@@ -321,7 +339,7 @@ const CapabilityCard: React.FC<{
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0 }}
-                className="w-4 h-4 rounded-full border-2 border-gray-500/50"
+                className="w-3 h-3 rounded-full border-2 border-gray-500/50"
               />
             )}
             {isExecuting && (
@@ -336,12 +354,12 @@ const CapabilityCard: React.FC<{
             )}
             {isCompleted && (
               <motion.div
-                key="check"
+                key="icon"
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 25 }}
               >
-                <Check className="w-4 h-4 text-emerald-400 stroke-[3]" />
+                <IconComponent className={`w-4 h-4 ${iconConfig.color}`} />
               </motion.div>
             )}
             {isError && (
@@ -358,14 +376,14 @@ const CapabilityCard: React.FC<{
 
         <span
           className={`
-            flex-1 text-sm font-medium transition-colors duration-300
+            text-sm font-medium transition-colors duration-300
             ${isCompleted 
               ? 'text-emerald-300' 
               : isError
               ? 'text-red-300'
               : isExecuting
               ? 'text-[#FF6B35]'
-              : 'text-gray-500'}
+              : 'text-gray-400'}
           `}
         >
           {capability.displayName || capability.nome}
@@ -373,14 +391,14 @@ const CapabilityCard: React.FC<{
 
         {isExecuting && (
           <motion.div
-            className="flex gap-1"
+            className="flex gap-1 ml-1"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={i}
-                className="w-1.5 h-1.5 rounded-full bg-[#FF6B35]"
+                className="w-1 h-1 rounded-full bg-[#FF6B35]"
                 animate={{ opacity: [0.3, 1, 0.3] }}
                 transition={{
                   duration: 1,
@@ -396,7 +414,7 @@ const CapabilityCard: React.FC<{
           capabilityId={capability.id}
           capabilityName={capability.displayName || capability.nome}
           entries={debugEntries}
-          className="ml-2"
+          className="ml-1"
         />
 
         {isCompleted && capability.dataConfirmation && (
@@ -412,7 +430,7 @@ const CapabilityCard: React.FC<{
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="ml-4 mt-1 mb-2"
+          className="mt-1 mb-2 pl-1"
         >
           <DataConfirmationBadge
             confirmation={capability.dataConfirmation}
@@ -442,13 +460,6 @@ const CapabilityCard: React.FC<{
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* 
-        ContentGenerationCard REMOVIDO daqui - a geração de conteúdo agora é 
-        exibida APENAS como sub-card retangular dentro do tópico "Decidir quais 
-        atividades criar", através do sistema de capabilities (gerar_conteudo_atividades).
-        Não deve haver card roxo separado.
-      */}
     </motion.div>
   );
 };
@@ -506,14 +517,6 @@ export function ProgressiveExecutionCard({
       window.removeEventListener('agente-jota-progress', handleStepStarted as EventListener);
     };
   }, []);
-
-  console.log('📊 [ProgressiveExecutionCard] Renderizando com objectives:', 
-    objectives.map(o => ({
-      titulo: o.titulo,
-      status: o.status,
-      caps: o.capabilities.map(c => ({ id: c.id, status: c.status }))
-    }))
-  );
 
   return (
     <div className="w-full space-y-4">

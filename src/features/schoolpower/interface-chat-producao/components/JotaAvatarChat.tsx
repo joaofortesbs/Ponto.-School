@@ -7,19 +7,16 @@ interface JotaAvatarChatProps {
 }
 
 export function JotaAvatarChat({ size = 'md', showAnimation = true }: JotaAvatarChatProps) {
-  const [isHoverActive, setIsHoverActive] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
 
   useEffect(() => {
-    if (showAnimation) {
-      const hoverTimer = setTimeout(() => {
-        setIsHoverActive(true);
-      }, 300);
-
-      return () => clearTimeout(hoverTimer);
-    } else {
-      setIsHoverActive(true);
+    if (showAnimation && !hasAnimated) {
+      const timer = setTimeout(() => {
+        setHasAnimated(true);
+      }, 600);
+      return () => clearTimeout(timer);
     }
-  }, [showAnimation]);
+  }, [showAnimation, hasAnimated]);
 
   const sizeConfig = {
     sm: { container: 32, image: 28 },
@@ -33,45 +30,28 @@ export function JotaAvatarChat({ size = 'md', showAnimation = true }: JotaAvatar
     <motion.div
       initial={showAnimation ? { scale: 0.8, opacity: 0 } : { scale: 1, opacity: 1 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      transition={{ 
+        duration: 0.4, 
+        delay: 0,
+        ease: [0.34, 1.56, 0.64, 1]
+      }}
       className="flex-shrink-0"
     >
-      <div
-        className={`
-          relative rounded-full overflow-visible cursor-pointer
-          flex items-center justify-center
-          transition-all duration-300 ease-out
-          ${isHoverActive 
-            ? 'scale-105 shadow-lg shadow-orange-500/30' 
-            : ''}
-        `}
+      <motion.div
+        className="relative rounded-full overflow-visible cursor-pointer flex items-center justify-center"
+        initial={{ y: 0 }}
+        animate={hasAnimated ? { y: -4 } : { y: 0 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
         style={{
           width: config.container,
           height: config.container,
-          background: isHoverActive 
+          background: hasAnimated 
             ? 'linear-gradient(135deg, #FF6F32 0%, #FF8C5A 50%, #FFB088 100%)'
             : '#FF6F32',
           padding: '3px',
+          boxShadow: hasAnimated ? '0 8px 16px rgba(255, 111, 50, 0.3)' : 'none',
         }}
       >
-        <motion.div
-          className="absolute inset-0 rounded-full"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={isHoverActive ? { 
-            opacity: [0, 0.6, 0],
-            scale: [1, 1.3, 1.5],
-          } : { opacity: 0 }}
-          transition={{ 
-            duration: 1.2, 
-            repeat: Infinity,
-            ease: 'easeOut'
-          }}
-          style={{
-            background: 'linear-gradient(135deg, #FF6F32, #FF8C5A)',
-            zIndex: -1,
-          }}
-        />
-        
         <div 
           className="rounded-full overflow-hidden bg-[#000822]"
           style={{
@@ -89,7 +69,7 @@ export function JotaAvatarChat({ size = 'md', showAnimation = true }: JotaAvatar
             loading="eager"
           />
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }

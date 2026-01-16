@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Lightbulb, Sparkles, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, memo } from 'react';
+import { motion } from 'framer-motion';
 
 export interface NarrativeReflectionProps {
   id: string;
@@ -22,41 +21,16 @@ function calculateTypewriterInterval(textLength: number): number {
   return 8;
 }
 
-const toneConfig = {
-  celebratory: {
-    icon: Sparkles,
-    iconColor: 'text-emerald-400',
-    bgColor: 'bg-emerald-500/10',
-    borderColor: 'border-emerald-400/30',
-    accentColor: 'text-emerald-300',
-  },
-  cautious: {
-    icon: Lightbulb,
-    iconColor: 'text-amber-400',
-    bgColor: 'bg-amber-500/10',
-    borderColor: 'border-amber-400/30',
-    accentColor: 'text-amber-300',
-  },
-  explanatory: {
-    icon: Lightbulb,
-    iconColor: 'text-blue-400',
-    bgColor: 'bg-blue-500/10',
-    borderColor: 'border-blue-400/30',
-    accentColor: 'text-blue-300',
-  },
-  reassuring: {
-    icon: CheckCircle2,
-    iconColor: 'text-purple-400',
-    bgColor: 'bg-purple-500/10',
-    borderColor: 'border-purple-400/30',
-    accentColor: 'text-purple-300',
-  },
+const toneColors = {
+  celebratory: 'text-emerald-300',
+  cautious: 'text-amber-300',
+  explanatory: 'text-blue-300',
+  reassuring: 'text-purple-300',
 };
 
 function useStableTypewriter(narrative: string, isLoading: boolean, onComplete?: () => void) {
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [showHighlights, setShowHighlights] = useState(false);
   
   const isTypingRef = useRef(false);
   const hasCompletedRef = useRef(false);
@@ -71,19 +45,16 @@ function useStableTypewriter(narrative: string, isLoading: boolean, onComplete?:
     if (isLoading) {
       setDisplayedText('');
       setIsTyping(false);
-      setShowHighlights(false);
       isTypingRef.current = false;
       hasCompletedRef.current = false;
       return;
     }
 
     if (narrative === currentNarrativeRef.current && isTypingRef.current) {
-      console.log('🔒 [Typewriter] Já digitando, ignorando re-render');
       return;
     }
 
     if (narrative === currentNarrativeRef.current && hasCompletedRef.current) {
-      console.log('✅ [Typewriter] Já completou, mantendo estado');
       return;
     }
 
@@ -94,7 +65,6 @@ function useStableTypewriter(narrative: string, isLoading: boolean, onComplete?:
     if (intervalRef.current) clearInterval(intervalRef.current);
 
     const intervalMs = calculateTypewriterInterval(narrative.length);
-    console.log(`⌨️ [Typewriter] Iniciando para: "${narrative.substring(0, 30)}..." (${intervalMs}ms/char)`);
 
     timerRef.current = setTimeout(() => {
       isTypingRef.current = true;
@@ -113,8 +83,6 @@ function useStableTypewriter(narrative: string, isLoading: boolean, onComplete?:
           isTypingRef.current = false;
           hasCompletedRef.current = true;
           setIsTyping(false);
-          setShowHighlights(true);
-          console.log('🏁 [Typewriter] Completou!');
           onCompleteRef.current?.();
         }
       }, intervalMs);
@@ -132,204 +100,107 @@ function useStableTypewriter(narrative: string, isLoading: boolean, onComplete?:
     };
   }, [narrative, isLoading]);
 
-  return { displayedText, isTyping, showHighlights };
+  return { displayedText, isTyping };
 }
 
 const NarrativeReflectionCardInner: React.FC<NarrativeReflectionProps> = ({
   id,
-  objectiveTitle,
   narrative,
   tone,
-  highlights = [],
   isLoading = false,
   onComplete,
 }) => {
-  const { displayedText, isTyping, showHighlights } = useStableTypewriter(
+  const { displayedText, isTyping } = useStableTypewriter(
     narrative,
     isLoading,
     onComplete
   );
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const config = toneConfig[tone];
-  const Icon = config.icon;
-
+  const textColor = toneColors[tone];
   const shouldTruncate = !isTyping && displayedText.length > 150;
-
-  console.log(`🎨 [ReflectionCard] Render id=${id}, isTyping=${isTyping}, chars=${displayedText.length}/${narrative.length}`);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-      transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className={`
-        relative w-full mx-auto my-4
-        ${config.bgColor} ${config.borderColor}
-        border-l-4 rounded-lg p-4 md:p-5
-        backdrop-blur-sm
-      `}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -5 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      className="w-full my-3 pl-1"
       data-reflection-id={id}
     >
-      <div className="flex items-start gap-3">
+      {isLoading ? (
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: 'spring', stiffness: 400, damping: 20 }}
-          className={`
-            flex-shrink-0 w-8 h-8 rounded-full
-            flex items-center justify-center
-            ${config.bgColor} ${config.borderColor} border
-          `}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex items-center gap-2 text-gray-400"
         >
-          <Icon className={`w-4 h-4 ${config.iconColor}`} />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full"
+          />
+          <span className="text-sm italic">Refletindo...</span>
         </motion.div>
-
-        <div className="flex-1 min-w-0">
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="text-xs text-gray-500 mb-1 uppercase tracking-wider"
+      ) : (
+        <div>
+          <p 
+            className={`${textColor} text-sm leading-relaxed ${
+              shouldTruncate && !isExpanded ? 'line-clamp-3' : ''
+            }`}
           >
-            Reflexão
-          </motion.p>
-
-          <div className="relative">
-            {isLoading ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center gap-2 text-gray-400"
-              >
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"
-                />
-                <span className="text-sm italic">Refletindo sobre os resultados...</span>
-              </motion.div>
-            ) : (
-              <div>
-                <p 
-                  className={`text-white/90 text-sm md:text-base leading-relaxed ${
-                    shouldTruncate && !isExpanded ? 'line-clamp-3' : ''
-                  }`}
-                >
-                  {displayedText}
-                  {isTyping && (
-                    <motion.span
-                      animate={{ opacity: [1, 0] }}
-                      transition={{ duration: 0.5, repeat: Infinity }}
-                      className={`inline-block w-0.5 h-4 ml-0.5 ${config.iconColor} bg-current`}
-                    />
-                  )}
-                </p>
-                {shouldTruncate && !isExpanded && (
-                  <button
-                    onClick={() => setIsExpanded(true)}
-                    className={`mt-1 text-xs font-medium ${config.accentColor} hover:underline transition-colors`}
-                  >
-                    Ver mais...
-                  </button>
-                )}
-                {shouldTruncate && isExpanded && (
-                  <button
-                    onClick={() => setIsExpanded(false)}
-                    className={`mt-1 text-xs font-medium ${config.accentColor} hover:underline transition-colors`}
-                  >
-                    Ver menos
-                  </button>
-                )}
-              </div>
+            {displayedText}
+            {isTyping && (
+              <motion.span
+                animate={{ opacity: [1, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity }}
+                className="inline-block w-0.5 h-4 ml-0.5 bg-current"
+              />
             )}
-          </div>
-
-          <AnimatePresence>
-            {showHighlights && highlights.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ delay: 0.3, duration: 0.3 }}
-                className="mt-3 pt-3 border-t border-white/10"
-              >
-                <div className="flex flex-wrap gap-2">
-                  {highlights.map((highlight, idx) => (
-                    <motion.span
-                      key={idx}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.4 + idx * 0.1 }}
-                      className={`
-                        inline-flex items-center gap-1 px-2 py-1 rounded-full
-                        text-xs ${config.accentColor} ${config.bgColor}
-                        border ${config.borderColor}
-                      `}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                      {highlight}
-                    </motion.span>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          </p>
+          {shouldTruncate && !isExpanded && (
+            <button
+              onClick={() => setIsExpanded(true)}
+              className={`mt-1 text-xs font-medium ${textColor} opacity-70 hover:opacity-100 hover:underline transition-all`}
+            >
+              Ver mais...
+            </button>
+          )}
+          {shouldTruncate && isExpanded && (
+            <button
+              onClick={() => setIsExpanded(false)}
+              className={`mt-1 text-xs font-medium ${textColor} opacity-70 hover:opacity-100 hover:underline transition-all`}
+            >
+              Ver menos
+            </button>
+          )}
         </div>
-      </div>
-
-      <motion.div
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: isTyping ? displayedText.length / narrative.length : 1 }}
-        className={`
-          absolute bottom-0 left-0 right-0 h-0.5 origin-left
-          ${isLoading ? 'bg-gray-500/30' : config.iconColor.replace('text-', 'bg-')}/30
-        `}
-      />
+      )}
     </motion.div>
   );
 };
 
 export const NarrativeReflectionCard = memo(NarrativeReflectionCardInner, (prevProps, nextProps) => {
-  const isSame = prevProps.id === nextProps.id &&
+  return prevProps.id === nextProps.id &&
     prevProps.narrative === nextProps.narrative &&
     prevProps.isLoading === nextProps.isLoading &&
     prevProps.tone === nextProps.tone;
-  
-  if (!isSame) {
-    console.log('🔄 [ReflectionCard] Props mudaram, re-render permitido');
-  }
-  
-  return isSame;
 });
 
 export function LoadingReflection() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full mx-auto my-4 bg-gray-800/30 border-l-4 border-gray-500/30 rounded-lg p-4"
+      className="w-full my-3 pl-1"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 text-gray-400">
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-          className="w-8 h-8 rounded-full border-2 border-gray-500 border-t-transparent"
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+          className="w-3 h-3 border-2 border-gray-500 border-t-transparent rounded-full"
         />
-        <div className="flex-1">
-          <p className="text-xs text-gray-500 mb-1 uppercase tracking-wider">Reflexão</p>
-          <div className="flex gap-1">
-            {[0, 1, 2].map(i => (
-              <motion.span
-                key={i}
-                animate={{ opacity: [0.3, 1, 0.3] }}
-                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-                className="w-2 h-2 rounded-full bg-gray-500"
-              />
-            ))}
-          </div>
-        </div>
+        <span className="text-sm italic text-gray-500">Refletindo...</span>
       </div>
     </motion.div>
   );

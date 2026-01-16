@@ -12,16 +12,22 @@ export function AssistantMessage({ content }: AssistantMessageProps) {
       className="flex justify-start"
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
     >
-      <div className="flex flex-col max-w-[80%]">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-start gap-3 max-w-[85%]">
+        <div className="flex flex-col items-center gap-1 flex-shrink-0">
           <JotaAvatarChat size="md" showAnimation={true} />
-          <span className="text-white font-semibold text-sm">Jota</span>
+          <span className="text-white/80 font-medium text-xs">Jota</span>
         </div>
         
-        <div className="ml-1 bg-gray-800 text-white px-4 py-3 rounded-2xl rounded-tl-md shadow-md">
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
-        </div>
+        <motion.p 
+          className="text-white/90 text-sm leading-relaxed whitespace-pre-wrap pt-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+        >
+          {content}
+        </motion.p>
       </div>
     </motion.div>
   );

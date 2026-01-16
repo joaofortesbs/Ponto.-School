@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, Circle, Play, Edit3, Loader2 } from 'lucide-react';
+import { Sparkles, Play, Loader2, ChevronRight } from 'lucide-react';
 import type { PlanCardData } from '../types/message-types';
 
 interface PlanActionCardProps {
@@ -12,6 +12,7 @@ interface PlanActionCardProps {
 
 export function PlanActionCard({ cardId, data, isStatic = true, onApplyPlan }: PlanActionCardProps) {
   const [isApplying, setIsApplying] = useState(false);
+  const [hoveredStep, setHoveredStep] = useState<number | null>(null);
 
   const handleApplyPlan = () => {
     if (isApplying) {
@@ -28,46 +29,143 @@ export function PlanActionCard({ cardId, data, isStatic = true, onApplyPlan }: P
   return (
     <motion.div
       layout={isStatic}
-      className="w-full max-w-2xl my-2"
+      initial={{ opacity: 0, y: 20, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="w-full max-w-2xl my-3"
     >
-      <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-orange-500/30 rounded-xl p-5 shadow-lg">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-            <Bot className="w-5 h-5 text-white" />
-          </div>
-          <h3 className="text-white font-semibold text-lg">Plano de Ação</h3>
-        </div>
+      <div 
+        className="relative overflow-hidden rounded-2xl"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.08) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(15, 23, 42, 0.98) 100%)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 107, 53, 0.15)',
+          boxShadow: '0 4px 24px -4px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.03) inset',
+        }}
+      >
+        <div 
+          className="absolute inset-0 opacity-30"
+          style={{
+            background: 'radial-gradient(ellipse at top left, rgba(255, 107, 53, 0.15) 0%, transparent 50%)',
+          }}
+        />
 
-        <p className="text-gray-300 text-sm mb-4">{data.objetivo}</p>
-
-        <div className="space-y-3 mb-5">
-          {data.etapas.map((etapa) => (
-            <div key={etapa.ordem} className="flex items-center gap-3 text-gray-200">
-              <Circle size={18} className="text-orange-400 flex-shrink-0" />
-              <span className="text-sm">{etapa.titulo}</span>
+        <div className="relative p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <motion.div 
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
+                boxShadow: '0 4px 12px rgba(255, 107, 53, 0.3)',
+              }}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Sparkles className="w-5 h-5 text-white" />
+            </motion.div>
+            <div>
+              <h3 className="text-white font-semibold text-base tracking-tight">Plano de Ação</h3>
+              <p className="text-gray-400 text-xs">{data.etapas.length} etapas para executar</p>
             </div>
-          ))}
-        </div>
+          </div>
 
-        <div className="flex gap-3">
-          <button
+          <p className="text-gray-300 text-sm mb-5 leading-relaxed">{data.objetivo}</p>
+
+          <div className="space-y-2 mb-6">
+            {data.etapas.map((etapa, index) => (
+              <motion.div 
+                key={etapa.ordem}
+                className="group flex items-center gap-3 p-3 rounded-xl transition-all duration-300 cursor-default"
+                style={{
+                  background: hoveredStep === index 
+                    ? 'rgba(255, 107, 53, 0.1)' 
+                    : 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid',
+                  borderColor: hoveredStep === index 
+                    ? 'rgba(255, 107, 53, 0.2)' 
+                    : 'rgba(255, 255, 255, 0.05)',
+                }}
+                onMouseEnter={() => setHoveredStep(index)}
+                onMouseLeave={() => setHoveredStep(null)}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.08, duration: 0.3 }}
+              >
+                <div 
+                  className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300"
+                  style={{
+                    background: hoveredStep === index 
+                      ? 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)'
+                      : 'rgba(255, 107, 53, 0.15)',
+                    boxShadow: hoveredStep === index 
+                      ? '0 2px 8px rgba(255, 107, 53, 0.3)'
+                      : 'none',
+                  }}
+                >
+                  <span className={`text-xs font-medium transition-colors duration-300 ${
+                    hoveredStep === index ? 'text-white' : 'text-orange-400'
+                  }`}>
+                    {index + 1}
+                  </span>
+                </div>
+                <span className="text-sm text-gray-200 flex-1">{etapa.titulo}</span>
+                <ChevronRight 
+                  className={`w-4 h-4 transition-all duration-300 ${
+                    hoveredStep === index 
+                      ? 'text-orange-400 translate-x-0 opacity-100' 
+                      : 'text-gray-600 -translate-x-2 opacity-0'
+                  }`}
+                />
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.button
             onClick={handleApplyPlan}
             disabled={isApplying}
-            className={`flex-1 flex items-center justify-center gap-2 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 shadow-md ${
-              isApplying 
-                ? 'bg-gray-600 cursor-not-allowed opacity-70' 
-                : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 hover:shadow-lg'
-            }`}
+            className="w-full relative overflow-hidden group"
+            whileHover={!isApplying ? { scale: 1.01 } : {}}
+            whileTap={!isApplying ? { scale: 0.99 } : {}}
           >
-            {isApplying ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
-            {isApplying ? 'APLICANDO...' : 'APLICAR PLANO'}
-          </button>
-          <button
-            className="flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium py-2.5 px-4 rounded-lg transition-all duration-200"
-          >
-            <Edit3 size={16} />
-            EDITAR
-          </button>
+            <div 
+              className={`
+                flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl
+                font-medium text-sm transition-all duration-300
+                ${isApplying 
+                  ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed' 
+                  : 'text-white'
+                }
+              `}
+              style={!isApplying ? {
+                background: 'linear-gradient(135deg, #FF6B35 0%, #FF5722 100%)',
+                boxShadow: '0 4px 16px rgba(255, 107, 53, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset',
+              } : {}}
+            >
+              {isApplying ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  <span>Aplicando plano...</span>
+                </>
+              ) : (
+                <>
+                  <Play size={18} className="fill-current" />
+                  <span>Aplicar Plano</span>
+                </>
+              )}
+            </div>
+            
+            {!isApplying && (
+              <motion.div
+                className="absolute inset-0 rounded-xl"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%)',
+                }}
+                initial={{ x: '-100%', opacity: 0 }}
+                whileHover={{ x: '100%', opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              />
+            )}
+          </motion.button>
         </div>
       </div>
     </motion.div>
