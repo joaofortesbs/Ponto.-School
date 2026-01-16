@@ -678,7 +678,8 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
     results.push(result);
 
     if (result.success) {
-      store.updateActivityStatus(activity.id, 'aguardando', 100);
+      // CORREÇÃO: Primeiro salvamos os campos, DEPOIS atualizamos o status para 'concluida'
+      // Isso garante que o contador de campos esteja correto quando o status mudar
       
       const syncedFields = syncSchemaToFormData(activity.tipo, result.generated_fields);
       
@@ -702,6 +703,18 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
           sync_validation: validation
         });
       }
+
+      // CORREÇÃO CRÍTICA: Atualizar status para 'concluida' APÓS os campos estarem salvos no store
+      // Isso garante que o contador de campos seja correto quando a UI verificar
+      const fieldsCount = Object.keys(syncedFields).filter(k => 
+        syncedFields[k] !== undefined && syncedFields[k] !== ''
+      ).length;
+      
+      console.log(`%c✅ [GerarConteudo] Campos salvos para ${activity.id}: ${fieldsCount} campos. Atualizando status para 'concluida'`,
+        'background: #4CAF50; color: white; padding: 2px 5px; border-radius: 3px;');
+      
+      // Status 'concluida' só é definido DEPOIS que os campos estão no store
+      store.updateActivityStatus(activity.id, 'concluida', 100);
 
       console.log('📤 [GerarConteudo] Emitindo evento agente-jota-fields-generated para:', activity.id);
       window.dispatchEvent(new CustomEvent('agente-jota-fields-generated', {
