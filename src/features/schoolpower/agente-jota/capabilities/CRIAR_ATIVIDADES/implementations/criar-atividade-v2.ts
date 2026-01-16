@@ -173,6 +173,24 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
       
       const progressPct = Math.round(((i + 1) / generatedData.length) * 100);
       
+      // CORREÇÃO CRÍTICA: Verificar se a atividade já está concluída com campos
+      // Se gerar_conteudo_atividades já marcou como 'concluida', não devemos sobrescrever
+      const existingActivity = store.getActivityById(activity.id);
+      const alreadyComplete = existingActivity?.status_construcao === 'concluida';
+      const hasExistingFields = Object.keys(existingActivity?.campos_preenchidos || {}).length > 0 ||
+                                Object.keys(existingActivity?.dados_construidos?.generated_fields || {}).length > 0;
+      
+      // Usar campos existentes se disponíveis, senão usar genData.fields
+      const fieldsToUse = hasExistingFields 
+        ? { ...(existingActivity?.campos_preenchidos || {}), ...(existingActivity?.dados_construidos?.generated_fields || {}) }
+        : genData.fields;
+      
+      const fieldsCount = Object.keys(fieldsToUse).filter(k => 
+        fieldsToUse[k] !== undefined && fieldsToUse[k] !== ''
+      ).length;
+      
+      console.error(`📊 [V2:CRIAR] Activity ${activity.id}: alreadyComplete=${alreadyComplete}, hasExistingFields=${hasExistingFields}, fieldsCount=${fieldsCount}`);
+      
       debug_log.push({
         timestamp: new Date().toISOString(),
         type: 'action',
@@ -180,13 +198,17 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
         technical_data: { 
           activity_id: activity.id,
           activity_type: activity.tipo,
-          fields_count: Object.keys(genData.fields).length,
-          progress: progressPct
+          fields_count: fieldsCount,
+          progress: progressPct,
+          already_complete: alreadyComplete,
+          has_existing_fields: hasExistingFields
         }
       });
       
-      // Atualizar status no store
-      store.updateActivityStatus(activity.id, 'construindo', progressPct);
+      // CORREÇÃO: NÃO sobrescrever status se já está concluída com campos
+      if (!alreadyComplete) {
+        store.updateActivityStatus(activity.id, 'construindo', progressPct);
+      }
       
       // Emitir evento de progresso para UI
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
@@ -194,7 +216,8 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
           type: 'construction:activity_progress',
           activityId: activity.id,
           activityTitle: activity.titulo,
-          progress: progressPct
+          progress: progressPct,
+          fields_completed: fieldsCount
         }
       }));
       
@@ -210,8 +233,8 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
         categoria: activity.categoria || 'geral',
         materia: activity.materia,
         nivel_dificuldade: activity.nivel_dificuldade || 'medio',
-        campos_preenchidos: genData.fields,
-        conteudo_gerado: JSON.stringify(genData.fields, null, 2),
+        campos_preenchidos: fieldsToUse,
+        conteudo_gerado: JSON.stringify(fieldsToUse, null, 2),
         status: 'completed',
         created_at: new Date().toISOString(),
         saved_to_db: false, // NÃO salvamos no banco
@@ -221,27 +244,31 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
       builtActivities.push(builtActivity);
       successCount++;
       
-      // Atualizar status para concluída
-      store.updateActivityStatus(activity.id, 'concluida', 100);
+      // CORREÇÃO: Só atualizar status se ainda não está concluída
+      if (!alreadyComplete) {
+        store.updateActivityStatus(activity.id, 'concluida', 100);
+      }
       
       debug_log.push({
         timestamp: new Date().toISOString(),
         type: 'discovery',
-        narrative: `✅ "${activity.titulo}" pronta para uso!`,
+        narrative: `✅ "${activity.titulo}" pronta para uso! (${fieldsCount} campos)`,
         technical_data: { 
           activity_id: activity.id,
-          fields_count: Object.keys(genData.fields).length
+          fields_count: fieldsCount,
+          was_already_complete: alreadyComplete
         }
       });
       
-      // Emitir evento de sucesso
+      // Emitir evento de sucesso COM contagem de campos correta
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: {
           type: 'construction:activity_completed',
           activityId: activity.id,
           data: {
             titulo: activity.titulo,
-            fields: genData.fields
+            fields: fieldsToUse,
+            fields_completed: fieldsCount
           }
         }
       }));
