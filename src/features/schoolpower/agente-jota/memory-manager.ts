@@ -12,6 +12,18 @@ import type { WorkingMemoryItem, ExecutionPlan } from '../interface-chat-produca
 const STORAGE_PREFIX = 'agente_jota_';
 const SESSION_EXPIRY = 60 * 60 * 1000;
 
+// ============================================================================
+// OTIMIZAÇÃO DE CONTEXT WINDOW - Performance Engineering
+// ============================================================================
+const CONTEXT_LIMITS = {
+  MAX_SHORT_TERM_ITEMS: 10,
+  MAX_WORKING_MEMORY_ITEMS: 20,
+  MAX_CONTEXT_CHARS: 8000,
+  MAX_PLANS_IN_CONTEXT: 2,
+  MAX_DISCOVERIES: 5,
+  MAX_ACTIONS: 5,
+};
+
 export interface MemoryState {
   sessionId: string;
   userId: string;
@@ -119,8 +131,8 @@ export class MemoryManager {
 
     this.state.shortTermMemory.push(newItem);
 
-    if (this.state.shortTermMemory.length > 50) {
-      this.state.shortTermMemory = this.state.shortTermMemory.slice(-50);
+    if (this.state.shortTermMemory.length > CONTEXT_LIMITS.MAX_SHORT_TERM_ITEMS) {
+      this.state.shortTermMemory = this.state.shortTermMemory.slice(-CONTEXT_LIMITS.MAX_SHORT_TERM_ITEMS);
     }
 
     this.saveState();
@@ -158,25 +170,31 @@ export class MemoryManager {
     };
   }
 
+  private truncateText(text: string, maxLength: number): string {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength - 3) + '...';
+  }
+
   formatContextForPrompt(): string {
     const objectives = this.state.workingMemory
       .filter(item => item.tipo === 'objetivo')
-      .map(item => `- ${item.conteudo}`)
+      .slice(-3)
+      .map(item => `- ${this.truncateText(item.conteudo, 200)}`)
       .join('\n');
 
     const discoveries = this.state.workingMemory
       .filter(item => item.tipo === 'descoberta')
-      .slice(-5)
-      .map(item => `- ${item.conteudo}`)
+      .slice(-CONTEXT_LIMITS.MAX_DISCOVERIES)
+      .map(item => `- ${this.truncateText(item.conteudo, 150)}`)
       .join('\n');
 
     const actions = this.state.workingMemory
       .filter(item => item.tipo === 'acao')
-      .slice(-5)
-      .map(item => `- ${item.conteudo}`)
+      .slice(-CONTEXT_LIMITS.MAX_ACTIONS)
+      .map(item => `- ${this.truncateText(item.conteudo, 150)}`)
       .join('\n');
 
-    return `
+    let context = `
 OBJETIVOS ATUAIS:
 ${objectives || 'Nenhum objetivo definido'}
 
@@ -186,6 +204,12 @@ ${discoveries || 'Nenhuma descoberta ainda'}
 AÇÕES REALIZADAS:
 ${actions || 'Nenhuma ação realizada'}
     `.trim();
+
+    if (context.length > CONTEXT_LIMITS.MAX_CONTEXT_CHARS) {
+      context = context.substring(0, CONTEXT_LIMITS.MAX_CONTEXT_CHARS - 50) + '\n[...contexto truncado para otimização]';
+    }
+
+    return context;
   }
 
   async clearSession(): Promise<void> {

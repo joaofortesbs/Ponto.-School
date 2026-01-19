@@ -88,6 +88,138 @@ export const API_CONFIG = {
 };
 
 // ============================================================================
+// SISTEMA DE CACHE IN-MEMORY - Performance Engineering
+// ============================================================================
+
+interface CacheEntry {
+  data: string;
+  model: string;
+  provider: string;
+  timestamp: number;
+  hitCount: number;
+}
+
+const CACHE_CONFIG = {
+  MAX_ENTRIES: 100,
+  TTL_MS: 5 * 60 * 1000,
+  MIN_PROMPT_LENGTH_FOR_CACHE: 50,
+};
+
+const responseCache = new Map<string, CacheEntry>();
+
+function generateCacheKey(prompt: string): string {
+  const normalized = prompt.toLowerCase().trim().replace(/\s+/g, ' ');
+  let hash = 0;
+  for (let i = 0; i < normalized.length; i++) {
+    const char = normalized.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return `cache_${hash.toString(36)}`;
+}
+
+function getCachedResponse(prompt: string): CacheEntry | null {
+  if (prompt.length < CACHE_CONFIG.MIN_PROMPT_LENGTH_FOR_CACHE) return null;
+  
+  const key = generateCacheKey(prompt);
+  const entry = responseCache.get(key);
+  
+  if (!entry) return null;
+  
+  if (Date.now() - entry.timestamp > CACHE_CONFIG.TTL_MS) {
+    responseCache.delete(key);
+    return null;
+  }
+  
+  entry.hitCount++;
+  console.log(`⚡ [CACHE] Hit para query (${entry.hitCount}x usado)`);
+  return entry;
+}
+
+function setCacheResponse(prompt: string, data: string, model: string, provider: string): void {
+  if (prompt.length < CACHE_CONFIG.MIN_PROMPT_LENGTH_FOR_CACHE) return;
+  if (!data || data.length < 10) return;
+  
+  if (responseCache.size >= CACHE_CONFIG.MAX_ENTRIES) {
+    const oldestKey = responseCache.keys().next().value;
+    if (oldestKey) responseCache.delete(oldestKey);
+  }
+  
+  const key = generateCacheKey(prompt);
+  responseCache.set(key, {
+    data,
+    model,
+    provider,
+    timestamp: Date.now(),
+    hitCount: 0,
+  });
+  console.log(`💾 [CACHE] Resposta armazenada (${responseCache.size} entradas)`);
+}
+
+// ============================================================================
+// CLASSIFICADOR DE COMPLEXIDADE - Roteamento Inteligente
+// ============================================================================
+
+type QueryComplexity = 'simple' | 'moderate' | 'complex';
+
+function classifyQueryComplexity(prompt: string): QueryComplexity {
+  const wordCount = prompt.split(/\s+/).length;
+  const hasCodeKeywords = /\b(código|code|implementar|algoritmo|função|class|script)\b/i.test(prompt);
+  const hasComplexKeywords = /\b(analise|análise|compare|avalie|profundo|detalhado|completo|extenso)\b/i.test(prompt);
+  const hasSimpleKeywords = /\b(o que é|defina|liste|enumere|quanto|quando|onde|quem)\b/i.test(prompt);
+  
+  if (hasSimpleKeywords && wordCount < 30 && !hasComplexKeywords) {
+    return 'simple';
+  }
+  
+  if (hasCodeKeywords || hasComplexKeywords || wordCount > 150) {
+    return 'complex';
+  }
+  
+  return 'moderate';
+}
+
+function getOptimalModelForComplexity(complexity: QueryComplexity): string[] {
+  switch (complexity) {
+    case 'simple':
+      return ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile'];
+    case 'moderate':
+      return ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    case 'complex':
+      return ['llama-3.3-70b-versatile', 'gemini-2.0-flash'];
+  }
+}
+
+// ============================================================================
+// VALIDAÇÃO DE INPUT - Proteção e Sanitização
+// ============================================================================
+
+const INPUT_CONFIG = {
+  MAX_PROMPT_LENGTH: 4000,
+};
+
+function validateAndSanitizePrompt(prompt: string): { valid: boolean; sanitized: string; error?: string } {
+  if (!prompt || typeof prompt !== 'string') {
+    return { valid: false, sanitized: '', error: 'Prompt inválido' };
+  }
+  
+  const trimmed = prompt.trim();
+  
+  if (trimmed.length === 0) {
+    return { valid: false, sanitized: '', error: 'Prompt vazio' };
+  }
+  
+  if (trimmed.length > INPUT_CONFIG.MAX_PROMPT_LENGTH) {
+    return {
+      valid: true,
+      sanitized: trimmed.substring(0, INPUT_CONFIG.MAX_PROMPT_LENGTH) + '...[truncado]',
+    };
+  }
+  
+  return { valid: true, sanitized: trimmed };
+}
+
+// ============================================================================
 // TIPOS
 // ============================================================================
 
@@ -369,6 +501,11 @@ function generateLocalFallback(prompt: string): string {
  * Executa chamada com fallback em cascata.
  * Tenta cada modelo na ordem de prioridade até obter sucesso.
  * Se todos falharem, retorna resultado local garantido.
+ * 
+ * OTIMIZAÇÕES APLICADAS:
+ * - Cache in-memory para queries frequentes
+ * - Classificação de complexidade para roteamento inteligente
+ * - Validação e sanitização de input
  */
 export async function executeWithCascadeFallback(
   prompt: string,
@@ -376,11 +513,49 @@ export async function executeWithCascadeFallback(
     skipModels?: string[];
     maxAttempts?: number;
     onProgress?: (status: string) => void;
+    userId?: string;
+    bypassCache?: boolean;
   }
 ): Promise<CascadeResult> {
   const startTime = Date.now();
   const errors: Array<{ model: string; error: string }> = [];
   let attemptsMade = 0;
+  
+  const validation = validateAndSanitizePrompt(prompt);
+  if (!validation.valid) {
+    console.warn(`⚠️ [CASCADE] Prompt inválido: ${validation.error}, usando fallback local`);
+    const localData = generateLocalFallback('prompt inválido');
+    return {
+      success: true,
+      data: localData,
+      modelUsed: 'local-fallback-validation',
+      providerUsed: 'local',
+      attemptsMade: 0,
+      errors: [{ model: 'validation', error: validation.error || 'Erro de validação' }],
+      totalLatency: Date.now() - startTime,
+    };
+  }
+  
+  const sanitizedPrompt = validation.sanitized;
+  
+  if (!options?.bypassCache) {
+    const cached = getCachedResponse(sanitizedPrompt);
+    if (cached) {
+      return {
+        success: true,
+        data: cached.data,
+        modelUsed: `${cached.model}-cached`,
+        providerUsed: cached.provider,
+        attemptsMade: 0,
+        errors: [],
+        totalLatency: Date.now() - startTime,
+      };
+    }
+  }
+  
+  const complexity = classifyQueryComplexity(sanitizedPrompt);
+  const preferredModels = getOptimalModelForComplexity(complexity);
+  console.log(`🧠 [CASCADE] Complexidade: ${complexity} → Modelos preferidos: ${preferredModels.join(', ')}`);
   
   const groqApiKey = getGroqApiKey();
   const geminiApiKey = getGeminiApiKey();
@@ -389,15 +564,22 @@ export async function executeWithCascadeFallback(
   const maxAttempts = options?.maxAttempts || API_MODELS_CASCADE.length;
   const onProgress = options?.onProgress;
   
-  const activeModels = API_MODELS_CASCADE
+  let activeModels = API_MODELS_CASCADE
     .filter(m => m.isActive && !skipModels.includes(m.id))
-    .sort((a, b) => a.priority - b.priority)
+    .sort((a, b) => {
+      const aPreferred = preferredModels.indexOf(a.id);
+      const bPreferred = preferredModels.indexOf(b.id);
+      if (aPreferred !== -1 && bPreferred !== -1) return aPreferred - bPreferred;
+      if (aPreferred !== -1) return -1;
+      if (bPreferred !== -1) return 1;
+      return a.priority - b.priority;
+    })
     .slice(0, maxAttempts);
 
   console.log('🎯 [CASCADE] Iniciando sistema de fallback...');
-  console.log(`📋 [CASCADE] Modelos disponíveis: ${activeModels.map(m => m.name).join(', ')}`);
+  console.log(`📋 [CASCADE] Modelos ordenados: ${activeModels.map(m => m.name).join(', ')}`);
 
-  geminiLogger.logRequest(prompt, { cascade: true, models: activeModels.map(m => m.id) });
+  geminiLogger.logRequest(sanitizedPrompt, { cascade: true, models: activeModels.map(m => m.id), complexity });
 
   for (const model of activeModels) {
     attemptsMade++;
@@ -412,10 +594,14 @@ export async function executeWithCascadeFallback(
       }
       
       for (let retry = 0; retry < API_CONFIG.maxRetriesPerModel; retry++) {
-        result = await callGroqAPI(model, prompt, groqApiKey);
+        result = await callGroqAPI(model, sanitizedPrompt, groqApiKey);
         
         if (result.success) {
           geminiLogger.logResponse({ model: model.id, success: true }, Date.now() - startTime);
+          
+          if (result.data) {
+            setCacheResponse(sanitizedPrompt, result.data, model.id, 'groq');
+          }
           
           return {
             success: true,
@@ -445,10 +631,14 @@ export async function executeWithCascadeFallback(
         continue;
       }
       
-      result = await callGeminiAPI(model, prompt, geminiApiKey);
+      result = await callGeminiAPI(model, sanitizedPrompt, geminiApiKey);
       
       if (result.success) {
         geminiLogger.logResponse({ model: model.id, success: true }, Date.now() - startTime);
+        
+        if (result.data) {
+          setCacheResponse(sanitizedPrompt, result.data, model.id, 'gemini');
+        }
         
         return {
           success: true,
@@ -468,7 +658,7 @@ export async function executeWithCascadeFallback(
   console.warn('⚠️ [CASCADE] Todos os modelos falharam, usando fallback local');
   onProgress?.('Usando resposta local...');
   
-  const localData = generateLocalFallback(prompt);
+  const localData = generateLocalFallback(sanitizedPrompt);
   
   geminiLogger.error('error', 'Todos os modelos falharam no cascade', { errors });
 
@@ -557,12 +747,39 @@ export function getAvailableModels(): APIModel[] {
 // EXPORT DEFAULT
 // ============================================================================
 
+/**
+ * Retorna estatísticas do cache para monitoramento.
+ */
+export function getCacheStats(): {
+  entries: number;
+  maxEntries: number;
+  ttlMs: number;
+} {
+  return {
+    entries: responseCache.size,
+    maxEntries: CACHE_CONFIG.MAX_ENTRIES,
+    ttlMs: CACHE_CONFIG.TTL_MS,
+  };
+}
+
+/**
+ * Limpa o cache manualmente (útil para debug).
+ */
+export function clearCache(): void {
+  responseCache.clear();
+  console.log('🧹 [CACHE] Cache limpo manualmente');
+}
+
 export default {
   executeWithCascadeFallback,
   generateEducationalPlan,
   generateActivityContent,
   getAPIStatus,
   getAvailableModels,
+  getCacheStats,
+  clearCache,
   API_MODELS_CASCADE,
   API_CONFIG,
+  CACHE_CONFIG,
+  INPUT_CONFIG,
 };
