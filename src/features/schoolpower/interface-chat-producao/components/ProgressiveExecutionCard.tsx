@@ -12,6 +12,7 @@ import { useChosenActivitiesStore } from '../stores/ChosenActivitiesStore';
 import { getCapabilityIcon } from './CapabilityIcons';
 
 const CAPABILITY_CARD_HEIGHT = 32;
+const OBJECTIVE_CARD_PADDING_Y = '10px';
 const OBJECTIVE_CARD_BG_COLOR = 'rgba(249, 115, 22, 0.15)';
 const CAPABILITY_CARD_BG_COLOR = 'rgba(249, 115, 22, 0.10)';
 const CAPABILITY_ICON_COLOR = '#FF6800';
@@ -90,7 +91,7 @@ const ObjectiveCard: React.FC<{
       <motion.div
         onClick={handleToggle}
         className={`
-          relative flex items-center gap-4 px-6 py-4 rounded-full cursor-pointer
+          relative flex items-center gap-4 px-6 rounded-full cursor-pointer
           transition-all duration-300 mb-3 select-none
           ${isCompleted 
             ? 'shadow-lg shadow-emerald-500/20' 
@@ -100,6 +101,8 @@ const ObjectiveCard: React.FC<{
           hover:scale-[1.01] active:scale-[0.99]
         `}
         style={{
+          paddingTop: OBJECTIVE_CARD_PADDING_Y,
+          paddingBottom: OBJECTIVE_CARD_PADDING_Y,
           background: isCompleted 
             ? 'rgba(16, 185, 129, 0.2)' 
             : `linear-gradient(${OBJECTIVE_CARD_BG_COLOR}, ${OBJECTIVE_CARD_BG_COLOR}) padding-box, linear-gradient(135deg, #FFD05A, #E3560B, #A62F00) border-box`,
