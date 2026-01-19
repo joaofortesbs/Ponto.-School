@@ -11,6 +11,7 @@ interface ChatState {
   activeDevModeCardId: string | null;
   isExecuting: boolean;
   executionStarted: boolean;
+  isLoading: boolean;
 
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
   addTextMessage: (role: 'user' | 'assistant', content: string) => void;
@@ -23,6 +24,7 @@ interface ChatState {
   updateEtapaStatus: (cardId: string, etapaIndex: number, status: 'pendente' | 'executando' | 'concluido') => void;
   addCapabilityToEtapa: (cardId: string, etapaIndex: number, capability: CapabilityState) => void;
   setExecuting: (isExecuting: boolean) => void;
+  setLoading: (isLoading: boolean) => void;
   clearMessages: () => void;
 
   getPlanCard: () => Message | null;
@@ -35,6 +37,7 @@ export const useChatState = create<ChatState>((set, get) => ({
   activeDevModeCardId: null,
   isExecuting: false,
   executionStarted: false,
+  isLoading: false,
 
   addMessage: (message) => {
     const newMessage: Message = {
@@ -321,6 +324,10 @@ export const useChatState = create<ChatState>((set, get) => ({
         get().updateCardData(state.activeDevModeCardId, { status: 'concluido' });
       }
     }
+  },
+
+  setLoading: (isLoading) => {
+    set({ isLoading });
   },
 
   clearMessages: () => {

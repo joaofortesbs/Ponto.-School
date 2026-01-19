@@ -79,6 +79,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     addPlanCard, 
     addDevModeCard,
     setExecuting,
+    setLoading,
     clearMessages,
     activeDevModeCardId,
     startExecution
@@ -115,6 +116,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
     addTextMessage('user', userInput);
     setIsLoading(true);
+    setLoading(true);
 
     try {
       const { plan, initialMessage: aiMessage } = await processUserPrompt(
@@ -124,6 +126,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         workingMemory
       );
 
+      setLoading(false);
       addTextMessage('assistant', aiMessage);
 
       if (plan) {
@@ -147,6 +150,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       setIsLoading(false);
     } catch (error) {
       console.error('❌ [ChatLayout] Erro ao processar prompt:', error);
+      setLoading(false);
       addTextMessage('assistant', 'Desculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.');
       setIsLoading(false);
     }

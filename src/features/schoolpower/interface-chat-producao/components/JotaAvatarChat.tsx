@@ -8,6 +8,7 @@ interface JotaAvatarChatProps {
 
 export function JotaAvatarChat({ size = 'md', showAnimation = true }: JotaAvatarChatProps) {
   const [hasAnimated, setHasAnimated] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     if (showAnimation && !hasAnimated) {
@@ -28,32 +29,53 @@ export function JotaAvatarChat({ size = 'md', showAnimation = true }: JotaAvatar
 
   return (
     <motion.div
-      initial={showAnimation ? { scale: 0.8, opacity: 0 } : { scale: 1, opacity: 1 }}
-      animate={{ scale: 1, opacity: 1 }}
+      initial={showAnimation ? { scale: 0, opacity: 0, rotate: -180 } : { scale: 1, opacity: 1, rotate: 0 }}
+      animate={{ scale: 1, opacity: 1, rotate: 0 }}
       transition={{ 
-        duration: 0.4, 
+        duration: 0.6, 
         delay: 0,
-        ease: [0.34, 1.56, 0.64, 1]
+        type: "spring",
+        stiffness: 260,
+        damping: 20
       }}
       className="flex-shrink-0"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <motion.div
         className="relative rounded-full overflow-visible cursor-pointer flex items-center justify-center"
         initial={{ y: 0 }}
-        animate={hasAnimated ? { y: -4 } : { y: 0 }}
+        animate={{ 
+          y: hasAnimated ? -2 : 0,
+          scale: isHovered ? 1.05 : 1
+        }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
         style={{
           width: config.container,
           height: config.container,
-          background: hasAnimated 
-            ? 'linear-gradient(135deg, #FF6F32 0%, #FF8C5A 50%, #FFB088 100%)'
-            : '#FF6F32',
+          background: 'linear-gradient(135deg, #FF6F32 0%, #FF8C5A 50%, #FFB088 100%)',
           padding: '3px',
-          boxShadow: hasAnimated ? '0 8px 16px rgba(255, 111, 50, 0.3)' : 'none',
+          boxShadow: hasAnimated 
+            ? '0 8px 20px rgba(255, 111, 50, 0.4), 0 0 30px rgba(255, 111, 50, 0.2)' 
+            : '0 4px 12px rgba(255, 111, 50, 0.3)',
         }}
       >
+        <motion.div 
+          className="absolute inset-0 rounded-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.5, 0] }}
+          transition={{ 
+            duration: 2, 
+            repeat: Infinity, 
+            ease: "easeInOut",
+            delay: 0.5
+          }}
+          style={{
+            background: 'radial-gradient(circle, rgba(255, 111, 50, 0.4) 0%, transparent 70%)',
+          }}
+        />
         <div 
-          className="rounded-full overflow-hidden bg-[#000822]"
+          className="rounded-full overflow-hidden bg-[#000822] relative z-10"
           style={{
             width: config.image,
             height: config.image,

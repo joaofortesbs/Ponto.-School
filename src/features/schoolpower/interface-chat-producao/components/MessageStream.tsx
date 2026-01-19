@@ -13,13 +13,14 @@ interface MessageStreamProps {
 
 export function MessageStream({ onApplyPlan }: MessageStreamProps) {
   const messages = useChatState((state) => state.messages);
+  const isLoading = useChatState((state) => state.isLoading);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
   useEffect(() => {
     const devModeCards = messages.filter(m => m.type === 'dev_mode_card');
@@ -84,6 +85,19 @@ export function MessageStream({ onApplyPlan }: MessageStreamProps) {
             */}
           </motion.div>
         ))}
+        
+        {isLoading && (
+          <motion.div
+            key="thinking-indicator"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="w-full flex flex-col"
+          >
+            <AssistantMessage content="" isThinking={true} />
+          </motion.div>
+        )}
       </AnimatePresence>
 
       <div className="h-4" />
