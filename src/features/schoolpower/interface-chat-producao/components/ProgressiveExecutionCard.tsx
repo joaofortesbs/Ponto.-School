@@ -11,6 +11,11 @@ import type { DataConfirmation } from '../../agente-jota/capabilities/shared/typ
 import { useChosenActivitiesStore } from '../stores/ChosenActivitiesStore';
 import { getCapabilityIcon } from './CapabilityIcons';
 
+const CAPABILITY_CARD_HEIGHT = 32;
+const OBJECTIVE_CARD_BG_COLOR = 'rgba(249, 115, 22, 0.15)';
+const CAPABILITY_CARD_BG_COLOR = 'rgba(249, 115, 22, 0.10)';
+const CAPABILITY_ICON_COLOR = '#FF6800';
+
 export type CapabilityStatus = 'hidden' | 'pending' | 'executing' | 'completed' | 'error';
 export type ObjectiveStatus = 'pending' | 'active' | 'completed';
 
@@ -86,14 +91,22 @@ const ObjectiveCard: React.FC<{
         onClick={handleToggle}
         className={`
           relative flex items-center gap-4 px-6 py-4 rounded-full cursor-pointer
-          border-2 transition-all duration-300 mb-3 select-none
+          transition-all duration-300 mb-3 select-none
           ${isCompleted 
-            ? 'bg-emerald-500/20 border-emerald-400 shadow-lg shadow-emerald-500/20' 
+            ? 'shadow-lg shadow-emerald-500/20' 
             : isActive 
-            ? 'bg-[#FF6B35]/20 border-[#FF6B35] shadow-lg shadow-[#FF6B35]/20' 
-            : 'bg-gray-700/30 border-gray-600/50'}
+            ? 'shadow-lg shadow-[#FF6B35]/20' 
+            : ''}
           hover:scale-[1.01] active:scale-[0.99]
         `}
+        style={{
+          background: isCompleted 
+            ? 'rgba(16, 185, 129, 0.2)' 
+            : `linear-gradient(${OBJECTIVE_CARD_BG_COLOR}, ${OBJECTIVE_CARD_BG_COLOR}) padding-box, linear-gradient(135deg, #FFD05A, #E3560B, #A62F00) border-box`,
+          border: isCompleted 
+            ? '2px solid #34d399' 
+            : '2px solid transparent',
+        }}
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}
       >
@@ -318,18 +331,25 @@ const CapabilityCard: React.FC<{
     >
       <div
         className={`
-          inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full
-          border transition-all duration-300
-          ${isCompleted 
-            ? 'border-emerald-400/50 bg-emerald-500/10' 
-            : isError
-            ? 'border-red-400/50 bg-red-500/10'
-            : isExecuting
-            ? 'border-[#FF6B35]/50 bg-[#FF6B35]/10'
-            : isPending
-            ? 'border-gray-500/30 bg-gray-500/5'
-            : 'border-[#FF6B35]/30 bg-[#FF6B35]/5'}
+          inline-flex items-center gap-2.5 px-4 rounded-full
+          transition-all duration-300
+          ${isError ? 'border border-red-400/50 bg-red-500/10' : ''}
         `}
+        style={{
+          height: `${CAPABILITY_CARD_HEIGHT}px`,
+          paddingTop: '4px',
+          paddingBottom: '4px',
+          background: isCompleted 
+            ? 'rgba(16, 185, 129, 0.1)' 
+            : isError 
+            ? undefined 
+            : `linear-gradient(${CAPABILITY_CARD_BG_COLOR}, ${CAPABILITY_CARD_BG_COLOR}) padding-box, linear-gradient(135deg, #7F5009, #772200) border-box`,
+          border: isCompleted 
+            ? '1px solid rgba(52, 211, 153, 0.5)' 
+            : isError 
+            ? undefined 
+            : '1px solid transparent',
+        }}
       >
         <div className="flex items-center justify-center w-5 h-5">
           <AnimatePresence mode="wait">
@@ -359,7 +379,7 @@ const CapabilityCard: React.FC<{
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 25 }}
               >
-                <IconComponent className={`w-4 h-4 ${iconConfig.color}`} />
+                <IconComponent className="w-4 h-4" style={{ color: CAPABILITY_ICON_COLOR }} />
               </motion.div>
             )}
             {isError && (

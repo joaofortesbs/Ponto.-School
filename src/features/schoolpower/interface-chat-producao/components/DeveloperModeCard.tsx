@@ -308,7 +308,7 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
       layout={isStatic}
       className="w-full max-w-2xl my-2"
     >
-      <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/95 border border-[#FF6B35]/30 rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm p-5">
+      <div className="rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm p-5" style={{ backgroundColor: '#040b2a', borderWidth: '1px', borderStyle: 'solid', borderColor: '#1e2440' }}>
         <ProgressiveExecutionCard
           objectives={objectivesForProgressiveCard}
           reflections={reflections}
