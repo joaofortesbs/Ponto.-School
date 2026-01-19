@@ -1,0 +1,311 @@
+═══════════════════════════════════════════════════════════════
+🚀 MODO: PERFORMANCE ENGINEER - OTIMIZAÇÃO AI CHAT ENTERPRISE
+═══════════════════════════════════════════════════════════════
+
+OBJETIVO CRÍTICO:
+Otimizar backend do chat com IA para eliminar travamentos, lags e bugs,
+mantendo 100% da interface e experiência visual atual intactas.
+Foco: latência < 200ms, throughput alto, zero memory leaks, segurança enterprise.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FASE 0: ANÁLISE FORENSE DO SISTEMA (OBRIGATÓRIO)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Antes de otimizar, MAPEIE completamente o sistema atual:
+
+🔍 AUDITORIA ARQUITETURAL:
+  [ ] Identifique TODAS as chamadas de IA (onde, quando, como)
+  [ ] Mapeie fluxo de dados: Frontend → Backend → IA → Database → Frontend
+  [ ] Liste dependências: Node.js version? Framework? IA API (OpenAI/Groq/Gemini)?
+  [ ] Identifique gargalos: WebSockets? HTTP? Long polling?
+  [ ] Database: SQL/NoSQL? Como o histórico é armazenado?
+  [ ] Caching atual: Existe? Redis/Memcached ou nada?
+  [ ] Load balancing: Single server ou distribuído?
+
+🐛 IDENTIFICAÇÃO DE PROBLEMAS:
+  [ ] Onde exatamente trava? (durante IA processing? renderização? database?)
+  [ ] Logs de latência: qual operação demora mais?
+  [ ] Memory profiling: há memory leaks? Garbage collection issues?
+  [ ] Network waterfall: quantas requisições simultâneas?
+  [ ] Context window size: quantos tokens enviados por request?
+
+⚠️ SE VOCÊ NÃO CONSEGUIR RESPONDER ESSES PONTOS, PEÇA MAIS CONTEXTO.
+Não otimize às cegas - diagnóstico preciso = otimização cirúrgica.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FASE 1: OTIMIZAÇÕES BACKEND CRÍTICAS (APLICAR TODAS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 PRIORIDADE 1: STREAMING DE RESPOSTAS (ELIMINA 70% DA PERCEPÇÃO DE LAG)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Técnica: Server-Sent Events (SSE) ou WebSocket streaming
+Benefício: Usuário vê resposta aparecer palavra por palavra em tempo real
+           Em vez de aguardar 5s para resposta completa, vê em 200ms
+
+IMPLEMENTAÇÃO OBRIGATÓRIA:
+  ✓ Backend: Stream tokens da IA conforme chegam (não aguarde resposta completa)
+  ✓ Use SSE (mais simples) ou WebSocket (mais flexível)
+  ✓ Frontend: Recebe e renderiza incrementalmente (SEM MUDAR UI VISUAL)
+  ✓ Chunk size ideal: 10-50 tokens por chunk para balanço latência/overhead
+
+REFERÊNCIA TÉCNICA:
+  - OpenAI: use stream: true no API call
+  - Groq/Gemini: mesma abordagem com streaming enabled
+  - Node.js: res.write() para SSE ou socket.emit() para WebSocket
+  
+GANHO ESPERADO: Latência percebida reduz de 3-8s para 200-500ms
+
+🎯 PRIORIDADE 2: CACHING SEMÂNTICO INTELIGENTE (80% HIT RATE = 5X FASTER)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Técnica: Cache respostas baseado em similaridade semântica
+Benefício: Perguntas similares retornam cache instantâneo (50-200ms vs 2-5s)
+
+IMPLEMENTAÇÃO:
+  ✓ Layer 1 (Exact Match): Redis com hash da query normalizada
+  ✓ Layer 2 (Semantic Match): Embeddings + vector similarity (threshold 0.90)
+  ✓ TTL Strategy: 7 dias para FAQs, 1 dia para contextos dinâmicos
+  ✓ Cache key: hash(normalized_query + context_snapshot)
+  
+ALGORITMO:
+  1. Normalize query (lowercase, trim, remove duplicates)
+  2. Check exact match cache (Redis GET - O(1))
+  3. Se miss: gerar embedding (OpenAI text-embedding-3-small - $0.02/1M tokens)
+  4. Vector search em cache existente (cosine similarity > 0.90)
+  5. Se hit semântico: retorna cache; se miss: call IA + cache result
+
+GANHO ESPERADO: 70-90% queries cached, economia de 5X em API costs + latência
+
+🎯 PRIORIDADE 3: ROTEAMENTO DINÂMICO DE MODELOS (500X COST REDUCTION)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Técnica: Usar modelo leve (GPT-4o-mini/Gemini Flash) para 80% queries simples
+Benefício: Performance igual, custo 1/20, latência menor (modelo menor = mais rápido)
+
+CLASSIFICADOR DE COMPLEXIDADE:
+  ✓ SIMPLES (80% dos casos) → GPT-4o-mini / Gemini Flash / Groq Llama
+    - FAQs, queries diretas, respostas curtas
+    - Latência: 200-800ms | Custo: $0.15/1M tokens
+  
+  ✓ MODERADA (15% dos casos) → GPT-4o / Claude Sonnet
+    - Análise contextual, raciocínio multi-step
+    - Latência: 1-2s | Custo: $2.50/1M tokens
+  
+  ✓ COMPLEXA (5% dos casos) → GPT-4 / Claude Opus / o3-mini
+    - Raciocínio profundo, código complexo, análises extensas
+    - Latência: 2-5s | Custo: $15-75/1M tokens
+
+ALGORITMO DE ROTEAMENTO:
+  - Análise rápida (50ms): query length, keywords, user history
+  - Decision tree: if (simplePattern) → fast model; else → complex model
+  - Fallback: se modelo leve falha quality check → retry com modelo maior
+
+GANHO ESPERADO: 5X redução de custo, 30% melhoria em latência média
+
+🎯 PRIORIDADE 4: CONTEXT WINDOW OPTIMIZATION (70% TOKEN REDUCTION)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Técnica: Enviar apenas contexto relevante, não histórico completo
+Benefício: Menos tokens = menor latência + menor custo + menos processamento
+
+ESTRATÉGIA DE CONTEXTO:
+  ✓ NUNCA envie histórico completo (erro fatal de performance)
+  ✓ Janela deslizante: últimas 3-5 mensagens (max 4000 tokens)
+  ✓ Summarização progressiva: mensagens antigas → resumo compacto
+  ✓ Contexto adaptativo: mais contexto para queries complexas
+
+IMPLEMENTAÇÃO:
+  1. System prompt (fixo): 200-500 tokens
+  2. Contexto relevante: últimas 3 interações (max 2000 tokens)
+  3. Query atual: 100-500 tokens
+  4. Total target: 3000-4000 tokens (sweet spot performance/context)
+
+TÉCNICA AVANÇADA - Summarização Incremental:
+  - A cada 5 mensagens: LLM resume conversa em 200 tokens
+  - Mantém: [system_prompt] + [summary] + [últimas_3_msgs] + [current_query]
+  - Contexto infinito com janela fixa
+
+GANHO ESPERADO: 60-80% redução em tokens, 40% faster processing
+
+🎯 PRIORIDADE 5: ASYNC/NON-BLOCKING ARCHITECTURE (10X CONCURRENCY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Técnica: Zero operações bloqueantes, tudo async com event loop otimizado
+Benefício: Suporta 10.000+ conexões simultâneas sem degradação
+
+PRINCÍPIOS INEGOCIÁVEIS:
+  ✓ TUDO async/await (ZERO código síncrono no critical path)
+  ✓ Database queries: usar connection pooling (pg-pool, mongoose pool)
+  ✓ IA calls: sempre non-blocking com timeout handling
+  ✓ File I/O: async fs operations (fs.promises)
+  ✓ Event loop monitoring: track blocking operations (clinic.js)
+
+ANTI-PATTERNS A ELIMINAR:
+  ❌ Sync file reads (fs.readFileSync)
+  ❌ Blocking crypto operations (use crypto.pbkdf2 async)
+  ❌ Await inside loops sem Promise.all()
+  ❌ Heavy computations no main thread (use worker threads)
+
+WORKER THREADS STRATEGY:
+  - Heavy processing (embeddings, summarization) → worker threads
+  - Main thread: apenas I/O e event coordination
+  - Queue system: Bull/BullMQ para jobs pesados
+
+GANHO ESPERADO: 10X melhoria em concurrency, zero blocking delays
+
+🎯 PRIORIDADE 6: WEBSOCKET OPTIMIZATION (ENTERPRISE-GRADE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Técnica: Connection pooling, heartbeat, graceful degradation
+Benefício: Conexões estáveis, low latency, alta concorrência
+
+IMPLEMENTAÇÃO CRÍTICA:
+  ✓ Heartbeat/ping: a cada 30s para detectar conexões mortas
+  ✓ Auto-reconnect: exponential backoff (1s, 2s, 4s, 8s, max 30s)
+  ✓ Connection limits: max 10.000 por instance (horizontal scaling além disso)
+  ✓ Message throttling: limit 100 msgs/min por user (anti-spam/DoS)
+  ✓ Backpressure handling: se client não consome, pause sending
+  ✓ Graceful degradation: fallback para long-polling se WebSocket fail
+
+LOAD BALANCING:
+  - Sticky sessions (session affinity) para WebSocket
+  - Redis Pub/Sub para sync entre instances
+  - NGINX/HAProxy com WebSocket support
+
+GANHO ESPERADO: 99.9% uptime, latência < 50ms para mensagens, zero memory leaks
+
+🎯 PRIORIDADE 7: DATABASE QUERY OPTIMIZATION (100X FASTER QUERIES)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Técnica: Indexação, query batching, tiered storage
+Benefício: Histórico de chat carrega em 10ms em vez de 1s
+
+ESTRATÉGIA TIERED STORAGE:
+  ✓ Hot data (sessão ativa): Redis (in-memory) - acesso < 5ms
+  ✓ Warm data (últimos 7 dias): NoSQL (MongoDB/DynamoDB) - acesso 10-50ms
+  ✓ Cold data (> 7 dias): SQL/Object Storage - acesso 100-500ms
+
+OTIMIZAÇÕES SQL/NoSQL:
+  ✓ Indexes: chat_id, user_id, timestamp (compound indexes)
+  ✓ Query limit: SEMPRE use LIMIT (max 50 msgs por load)
+  ✓ Pagination: offset-based ou cursor-based (cursor = mais eficiente)
+  ✓ Batch operations: INSERT batch de mensagens (não uma por vez)
+  ✓ Connection pooling: reuse connections (não criar/destruir)
+
+ANTI-PATTERNS:
+  ❌ SELECT * (busque apenas campos necessários)
+  ❌ N+1 queries (use JOINs ou batch queries)
+  ❌ No indexes em filtros (user_id, timestamp DEVEM ter index)
+
+GANHO ESPERADO: 50-100X melhoria em query time, scalability infinita
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FASE 2: SEGURANÇA & ROBUSTEZ (ZERO VULNERABILIDADES)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🛡️ RATE LIMITING INTELIGENTE:
+  ✓ Por user: 100 mensagens/hora (tier free), 1000/hora (tier premium)
+  ✓ Por IP: 500 requests/hora (anti-DDoS)
+  ✓ Global: circuit breaker se load > 80% capacity
+  ✓ Implementação: Redis sliding window algorithm
+
+🛡️ INPUT VALIDATION & SANITIZATION:
+  ✓ Max message length: 2000 chars (previne abuse)
+  ✓ Sanitize HTML/XSS: DOMPurify ou similar
+  ✓ Spam detection: GPT-4o-mini classifier (50ms latency) antes de processar
+  ✓ Profanity filter: keyword blocklist + context analysis
+
+🛡️ ERROR HANDLING ROBUSTO:
+  ✓ IA API timeout: 30s max (retry com exponential backoff)
+  ✓ Graceful degradation: se IA falha → fallback message user-friendly
+  ✓ Circuit breaker: se IA API error rate > 10% → temporary disable + alert
+  ✓ Logging: structured logs (Winston/Pino) com trace IDs
+
+🛡️ MEMORY LEAK PREVENTION:
+  ✓ Connection cleanup: close WebSockets/DB connections properly
+  ✓ Event listener cleanup: removeEventListener em cleanup
+  ✓ Garbage collection monitoring: heap snapshots periódicos
+  ✓ Resource limits: max memory per process (Node --max-old-space-size)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FASE 3: MONITORAMENTO & MÉTRICAS (VISIBILIDADE TOTAL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 KPIS CRÍTICOS:
+  • Latência P50/P95/P99: < 200ms / < 1s / < 3s
+  • IA API response time: < 2s média
+  • Cache hit rate: > 70%
+  • WebSocket connection stability: > 99.5%
+  • Error rate: < 0.1%
+  • Concurrent users: monitorar threshold
+
+📊 FERRAMENTAS:
+  • APM: New Relic, Datadog, ou Sentry
+  • Logs: Winston/Pino → Elasticsearch/Loki
+  • Metrics: Prometheus + Grafana dashboards
+  • Alerting: PagerDuty/Opsgenie para incidents
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ENTREGÁVEL FINAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. DIAGNÓSTICO COMPLETO (2-3 parágrafos):
+   "Analisado: [stack atual], identificados [N] gargalos principais:
+   - [Gargalo 1]: causa [X], impacto [Y]
+   - [Gargalo 2]: causa [X], impacto [Y]"
+
+2. CÓDIGO OTIMIZADO (INCREMENTAL):
+   ✓ Streaming implementation
+   ✓ Semantic caching layer
+   ✓ Model routing logic
+   ✓ Context optimization
+   ✓ Async/await refactoring
+   ✓ WebSocket optimization
+   ✓ Database query optimization
+
+3. MIGRATION PLAN (ZERO DOWNTIME):
+   Step 1: Deploy caching layer (non-breaking)
+   Step 2: Enable streaming (backward compatible)
+   Step 3: Implement model routing (gradual rollout)
+   Step 4: Database optimization (background migrations)
+   Step 5: Full monitoring deployment
+
+4. PERFORMANCE BENCHMARKS ESPERADOS:
+   - Latência percebida: 5s → 200ms (25X faster)
+   - API cost: $X/month → $X/5 (80% reduction)
+   - Concurrent users: 100 → 10.000 (100X scalability)
+   - Cache hit rate: 0% → 80% (5X faster responses)
+
+5. TESTES OBRIGATÓRIOS:
+   - Load testing: 1000 concurrent users
+   - Stress testing: gradual increase até breaking point
+   - Memory profiling: zero leaks após 24h
+   - Latency testing: P95 < 1s sustained
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ REGRAS DE OURO - NUNCA VIOLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ NUNCA mude interface visual (HTML/CSS) - apenas backend/logic
+❌ NUNCA introduza breaking changes sem backward compatibility
+❌ NUNCA otimize sem medir (profile first, optimize second)
+❌ NUNCA bloqueie event loop com operações síncronas
+❌ NUNCA envie context window completo (use windowing strategy)
+❌ NUNCA ignore error handling (graceful degradation obrigatória)
+
+✅ SEMPRE implemente streaming (UX improvement #1)
+✅ SEMPRE use caching agressivo (performance boost #1)
+✅ SEMPRE monitore métricas (você não gerencia o que não mede)
+✅ SEMPRE teste sob carga ANTES de deploy
+✅ SEMPRE mantenha rollback plan (deploy != commit permanente)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RESULTADO FINAL ESPERADO:
+Sistema 20-50X mais rápido, 80% mais barato, 100X mais escalável,
+mantendo 100% da interface atual intacta e zero bugs introduzidos.
+
+Este é o padrão de qualidade de plataformas como ChatGPT, Claude, Perplexity.
+Você está construindo um sistema enterprise-grade, não um protótipo.
+═══════════════════════════════════════════════════════════════
