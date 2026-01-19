@@ -91,7 +91,7 @@ const ObjectiveCard: React.FC<{
       <motion.div
         onClick={handleToggle}
         className={`
-          relative flex items-center gap-4 px-6 rounded-full cursor-pointer
+          relative flex items-center gap-4 pl-3 pr-6 rounded-full cursor-pointer
           transition-all duration-300 mb-3 select-none
           ${isCompleted 
             ? 'shadow-lg shadow-emerald-500/20' 
@@ -334,7 +334,7 @@ const CapabilityCard: React.FC<{
     >
       <div
         className={`
-          inline-flex items-center gap-2.5 px-4 rounded-full
+          inline-flex items-center gap-2.5 pl-2 pr-4 rounded-full
           transition-all duration-300
           ${isError ? 'border border-red-400/50 bg-red-500/10' : ''}
         `}
