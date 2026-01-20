@@ -34,6 +34,11 @@ The platform features a modern design with glass-morphism effects, blur backgrou
     - **School Power**: AI-powered lesson planning with dynamic templates.
     - **Multi-Agent Lesson Orchestrator v4.0**: A robust, observable, and self-correcting system that coordinates AI agents through a 7-step workflow for lesson generation, including educational activities, with built-in StepLogger, StepValidation, and AutoRecoveryEngine.
     - **Agente Jota Chat Interface**: A chat-based interface for School Power featuring an orchestrator, planner, executor, and 3-layer memory manager. It can search, research, decide, generate, and create activities with a 4-layer Anti-Hallucination System, Rules Engine, and an isolated typewriter effect. It includes a Debug System for AI actions, a Construction Interface, and Context-aware Content Generation.
+    - **Multi-Turn Conversation System (Jan 2026)**: Enables unlimited consecutive plan executions within the same chat session. Key components:
+        - **State Reset System**: Automatic reset of `executionStarted`, `activePlanCardId`, `activeDevModeCardId` flags when execution completes.
+        - **prepararParaNovoPlano Method**: Context manager method that preserves conversation history (activities, discoveries, decisions) while resetting execution state.
+        - **Executor Reset**: `resetForNewExecution()` clears capability results between plan executions.
+        - **History Preservation**: Previous inputs and created activities are included in AI context for intelligent multi-turn conversations.
     - **3-Call Context Architecture (Jan 2026)**: A unified context management system with 3 specialized AI calls:
         - **Call 1 - Initial Response**: Exclusive call for user input interpretation and first response generation. Uses `initial-response-service.ts` with specialized prompts for contextual understanding.
         - **Call 2 - Development Card**: Single context window for ALL reflections within the development card. Maintains cumulative context across all steps/objectives for narrative coherence. Uses `development-card-service.ts` with `ContextManager` integration.
