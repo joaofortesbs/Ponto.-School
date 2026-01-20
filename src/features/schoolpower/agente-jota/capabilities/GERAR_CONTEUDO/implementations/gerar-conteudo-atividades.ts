@@ -102,6 +102,154 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// ============================================================
+// HELPER: Robust JSON Parser com múltiplas estratégias de fallback
+// ============================================================
+interface JsonParseResult {
+  success: boolean;
+  data: any;
+  method: string;
+  error?: string;
+}
+
+function robustJsonParse(rawText: string, activityType?: string, fieldsMapping?: ActivityFieldsMapping): JsonParseResult {
+  if (!rawText || typeof rawText !== 'string') {
+    return { success: false, data: null, method: 'none', error: 'Input inválido ou vazio' };
+  }
+
+  // MÉTODO 1: Limpeza básica e parse direto
+  try {
+    const cleaned = rawText
+      .replace(/```json\s*/gi, '')
+      .replace(/```\s*/g, '')
+      .replace(/^\s*[\r\n]/gm, '')
+      .trim();
+    
+    // Tentar parse direto se começa com {
+    if (cleaned.startsWith('{')) {
+      const parsed = JSON.parse(cleaned);
+      return { success: true, data: parsed, method: 'direct_clean_parse' };
+    }
+  } catch (e) {
+    // Continuar para próximo método
+  }
+
+  // MÉTODO 2: Extração de JSON com regex aprimorada
+  try {
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const jsonStr = jsonMatch[0];
+      const parsed = JSON.parse(jsonStr);
+      return { success: true, data: parsed, method: 'regex_extraction' };
+    }
+  } catch (e) {
+    // Continuar para próximo método
+  }
+
+  // MÉTODO 3: Busca específica por generated_fields
+  try {
+    const generatedFieldsMatch = rawText.match(/"generated_fields"\s*:\s*(\{[\s\S]*?\})/);
+    if (generatedFieldsMatch) {
+      const fieldsJson = generatedFieldsMatch[1];
+      const parsed = JSON.parse(fieldsJson);
+      return { 
+        success: true, 
+        data: { generated_fields: parsed }, 
+        method: 'generated_fields_extraction' 
+      };
+    }
+  } catch (e) {
+    // Continuar para próximo método
+  }
+
+  // MÉTODO 4: Reparação de JSON com correções seguras (sem substituições agressivas)
+  try {
+    let repairedJson = rawText
+      .replace(/```json\s*/gi, '')
+      .replace(/```\s*/g, '')
+      .replace(/[\r\n]+/g, ' ')
+      .replace(/,\s*}/g, '}')
+      .replace(/,\s*]/g, ']')
+      .trim();
+    
+    const jsonMatch = repairedJson.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return { success: true, data: parsed, method: 'json_repair' };
+    }
+  } catch (e) {
+    // Continuar para próximo método
+  }
+
+  // MÉTODO 5: Extração de campos individuais via regex
+  // NOTA: Este método só é usado se os métodos anteriores falharam
+  // Requer pelo menos 2 campos obrigatórios para considerar sucesso
+  try {
+    const fields: Record<string, any> = {};
+    
+    // Padrões para campos comuns (separando strings de números)
+    const stringPatterns = [
+      { key: 'theme', pattern: /"theme"\s*:\s*"([^"]+)"/i },
+      { key: 'topicos', pattern: /"topicos"\s*:\s*"([^"]+)"/i },
+      { key: 'contextoUso', pattern: /"contextoUso"\s*:\s*"([^"]+)"/i },
+      { key: 'subject', pattern: /"subject"\s*:\s*"([^"]+)"/i },
+      { key: 'schoolYear', pattern: /"schoolYear"\s*:\s*"([^"]+)"/i },
+      { key: 'difficultyLevel', pattern: /"difficultyLevel"\s*:\s*"([^"]+)"/i },
+      { key: 'objectives', pattern: /"objectives"\s*:\s*"([^"]+)"/i },
+      { key: 'context', pattern: /"context"\s*:\s*"([^"]+)"/i },
+    ];
+    
+    const numberPatterns = [
+      { key: 'numberOfFlashcards', pattern: /"numberOfFlashcards"\s*:\s*(\d+)/i },
+      { key: 'numberOfQuestions', pattern: /"numberOfQuestions"\s*:\s*(\d+)/i },
+    ];
+    
+    for (const { key, pattern } of stringPatterns) {
+      const match = rawText.match(pattern);
+      if (match && match[1]) {
+        fields[key] = match[1];
+      }
+    }
+    
+    for (const { key, pattern } of numberPatterns) {
+      const match = rawText.match(pattern);
+      if (match && match[1]) {
+        fields[key] = Number(match[1]);
+      }
+    }
+    
+    // Verificar se temos campos suficientes para considerar sucesso
+    // Requer pelo menos 2 campos obrigatórios extraídos
+    const requiredFieldNames = fieldsMapping?.requiredFields.map(f => f.name) || [];
+    const extractedRequiredCount = requiredFieldNames.filter(name => fields[name] !== undefined).length;
+    
+    if (extractedRequiredCount >= 2 && Object.keys(fields).length >= 2) {
+      console.log(`📊 [RobustJsonParse] Método 5: Extraídos ${extractedRequiredCount}/${requiredFieldNames.length} campos obrigatórios`);
+      return { 
+        success: true, 
+        data: { generated_fields: fields }, 
+        method: 'field_extraction' 
+      };
+    }
+  } catch (e) {
+    // Continuar para próximo método
+  }
+
+  // MÉTODO 6: NÃO usar fallback com valores padrão - isso mascara erros reais
+  // Em vez disso, retornar falha para permitir retry pelo sistema de tentativas
+  // Os valores padrão serão usados apenas se TODAS as tentativas falharem,
+  // e isso será tratado no nível superior (após MAX_RETRIES)
+  
+  console.warn(`⚠️ [RobustJsonParse] Todas as 5 estratégias de parsing falharam para ${activityType || 'unknown'}`);
+
+  return { 
+    success: false, 
+    data: null, 
+    method: 'all_methods_failed', 
+    error: `Todas as 5 estratégias de parsing falharam. Tipo: ${activityType || 'unknown'}` 
+  };
+}
+
 function buildContentGenerationPrompt(
   activity: ChosenActivity,
   fieldsMapping: ActivityFieldsMapping,
@@ -155,19 +303,28 @@ ${optionalFieldsDescription}` : ''}
 4. **QUALIDADE PEDAGÓGICA**: Conteúdo deve ser educacionalmente válido
 5. **CAMPOS SELECT**: Use APENAS as opções listadas
 6. **CAMPOS TEXTAREA**: Gere texto rico e detalhado (mínimo 50 caracteres)
-7. **CAMPOS NUMBER**: Use valores numéricos apropriados
+7. **CAMPOS NUMBER**: Use valores numéricos apropriados (ex: 10, 15, 20)
 
-## FORMATO DE RESPOSTA (JSON VÁLIDO)
+## FORMATO DE RESPOSTA - JSON ESTRITO
+
+ATENÇÃO: Você DEVE retornar EXATAMENTE este formato JSON. NÃO inclua markdown, comentários, ou texto antes/depois.
+NÃO use aspas simples. Use APENAS aspas duplas para strings.
+NÃO inclua vírgulas após o último campo de um objeto.
 
 {
   "generated_fields": {
-    "${fieldsMapping.requiredFields[0]?.name || 'campo1'}": "valor gerado...",
-    "${fieldsMapping.requiredFields[1]?.name || 'campo2'}": "valor gerado..."
+    "${fieldsMapping.requiredFields[0]?.name || 'campo1'}": "valor gerado aqui",
+    "${fieldsMapping.requiredFields[1]?.name || 'campo2'}": "valor gerado aqui"${fieldsMapping.requiredFields.length > 2 ? `,
+    "${fieldsMapping.requiredFields[2]?.name || 'campo3'}": "valor gerado aqui"` : ''}
   },
-  "reasoning": "Breve explicação de como o conteúdo foi pensado pedagogicamente"
+  "reasoning": "Breve explicação pedagógica"
 }
 
-⚠️ Retorne APENAS o JSON válido, sem texto adicional antes ou depois.
+⚠️ REGRAS OBRIGATÓRIAS:
+- Retorne APENAS o JSON puro, sem \`\`\`json ou \`\`\` 
+- Todas as strings devem usar aspas duplas (")
+- Números devem ser escritos sem aspas (ex: 10, não "10")
+- NÃO inclua comentários no JSON
 `.trim();
 }
 
@@ -350,39 +507,50 @@ async function generateContentForActivity(
       // ========================================
       // ESTÁGIO 3: POST-GENERATION (Validation & Formatting)
       // ========================================
-      let parsed: any;
-      try {
-        const jsonMatch = response.data.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-          lastError = 'Resposta não contém JSON válido';
-          
-          createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'warning',
-            `[POST-GEN] Falha ao extrair JSON da resposta`,
-            'medium',
-            { 
-              correlation_id: correlationId, 
-              stage: 'post_generation',
-              raw_response_preview: truncateForDebug(response.data, 300)
-            }
-          );
-          
-          continue;
-        }
-        parsed = JSON.parse(jsonMatch[0]);
-      } catch (parseError) {
-        lastError = 'Erro ao parsear JSON da resposta';
+      // USANDO NOVO PARSER ROBUSTO com múltiplas estratégias de fallback
+      const parseResult = robustJsonParse(response.data, activity.tipo, fieldsMapping);
+      
+      if (!parseResult.success) {
+        lastError = parseResult.error || 'Falha ao parsear JSON com todas as estratégias';
         
         createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'warning',
-          `[POST-GEN] Erro de parse JSON: ${parseError instanceof Error ? parseError.message : 'unknown'}`,
+          `[POST-GEN] Falha no parsing robusto: ${parseResult.method}`,
           'medium',
-          { correlation_id: correlationId, stage: 'post_generation' }
+          { 
+            correlation_id: correlationId, 
+            stage: 'post_generation',
+            parse_method: parseResult.method,
+            error: parseResult.error,
+            raw_response_preview: truncateForDebug(response.data, 300)
+          }
         );
         
         continue;
       }
+      
+      const parsed = parseResult.data;
+      
+      // Log de sucesso do parsing
+      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'info',
+        `[POST-GEN] JSON parseado com sucesso via método: ${parseResult.method}`,
+        'low',
+        { 
+          correlation_id: correlationId, 
+          stage: 'post_generation',
+          parse_method: parseResult.method,
+          has_generated_fields: !!parsed.generated_fields
+        }
+      );
 
       if (!parsed.generated_fields || typeof parsed.generated_fields !== 'object') {
         lastError = 'Resposta não contém generated_fields';
+        
+        createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'warning',
+          `[POST-GEN] JSON válido mas sem generated_fields. Keys: ${Object.keys(parsed).join(', ')}`,
+          'medium',
+          { correlation_id: correlationId, stage: 'post_generation', parsed_keys: Object.keys(parsed) }
+        );
+        
         continue;
       }
 
