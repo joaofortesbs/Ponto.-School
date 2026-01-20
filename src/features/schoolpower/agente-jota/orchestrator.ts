@@ -1,17 +1,25 @@
 /**
  * ORCHESTRATOR - Orquestrador Principal do Agente Jota
  * 
- * Coordena todo o fluxo do agente:
- * 1. Recebe prompts do usuário
- * 2. Aciona o Planner para criar planos
- * 3. Aciona o Executor para executar planos
- * 4. Gerencia a memória durante todo o processo
+ * Coordena todo o fluxo do agente com arquitetura de 3 chamadas:
+ * 1. Chamada 1: Resposta Inicial (InitialResponseService)
+ * 2. Chamada 2: Card de Desenvolvimento (DevelopmentCardService) 
+ * 3. Chamada 3: Resposta Final (FinalResponseService)
+ * 
+ * O ContextManager mantém a visão unificada de toda a conversa.
  */
 
 import { createExecutionPlan, generatePlanMessage } from './planner';
 import { AgentExecutor } from './executor';
 import { MemoryManager, createMemoryManager } from './memory-manager';
 import type { ExecutionPlan, WorkingMemoryItem, ProgressUpdate } from '../interface-chat-producao/types';
+import { 
+  getContextManager,
+  generateInitialResponse,
+  generateFinalResponse,
+  type InitialResponseResult,
+  type FinalResponseResult,
+} from './context';
 
 const memoryManagers: Map<string, MemoryManager> = new Map();
 const executors: Map<string, AgentExecutor> = new Map();
@@ -51,6 +59,7 @@ function getOrCreateExecutor(sessionId: string, memory: MemoryManager): AgentExe
 export interface ProcessPromptResult {
   plan: ExecutionPlan | null;
   initialMessage: string;
+  initialResponseData?: InitialResponseResult;
 }
 
 export async function processUserPrompt(
@@ -63,6 +72,9 @@ export async function processUserPrompt(
   console.log('📌 [Orchestrator] Session:', sessionId, 'User:', userId);
 
   const memory = getOrCreateMemoryManager(sessionId, userId);
+  const contextManager = getContextManager(sessionId);
+
+  contextManager.obterOuCriar(userPrompt);
 
   await memory.addToShortTermMemory({
     type: 'interaction',
@@ -80,8 +92,18 @@ export async function processUserPrompt(
     });
 
     await memory.savePlan(plan);
+    contextManager.definirPlano(plan.planId, plan.objetivo, plan.etapas.length);
 
-    const initialMessage = generatePlanMessage(plan);
+    let initialMessage = generatePlanMessage(plan);
+    let initialResponseData: InitialResponseResult | undefined;
+
+    try {
+      initialResponseData = await generateInitialResponse(sessionId, userPrompt);
+      initialMessage = initialResponseData.resposta;
+      console.log('💡 [Orchestrator] Interpretação:', initialResponseData.interpretacao);
+    } catch (initialError) {
+      console.warn('⚠️ [Orchestrator] Erro ao gerar resposta inicial, usando fallback:', initialError);
+    }
 
     await memory.addToShortTermMemory({
       type: 'interaction',
@@ -89,11 +111,12 @@ export async function processUserPrompt(
       metadata: { role: 'assistant', planId: plan.planId },
     });
 
-    console.log('✅ [Orchestrator] Plano criado e salvo:', plan.planId);
+    console.log('✅ [Orchestrator] Plano criado e resposta inicial gerada:', plan.planId);
 
     return {
       plan,
       initialMessage,
+      initialResponseData,
     };
   } catch (error) {
     console.error('❌ [Orchestrator] Erro ao processar prompt:', error);
@@ -103,6 +126,12 @@ export async function processUserPrompt(
       initialMessage: 'Desculpe, não consegui processar sua solicitação no momento. Por favor, tente novamente ou reformule seu pedido.',
     };
   }
+}
+
+export interface ExecutePlanResult {
+  relatorio: string;
+  respostaFinal: string;
+  finalResponseData?: FinalResponseResult;
 }
 
 export async function executeAgentPlan(
@@ -124,7 +153,6 @@ export async function executeAgentPlan(
     executor.setProgressCallback(onProgress);
   }
   
-  // Passar contexto da conversa para o executor
   if (conversationHistory) {
     executor.setConversationContext(conversationHistory);
   }
@@ -132,14 +160,33 @@ export async function executeAgentPlan(
   try {
     const relatorio = await executor.executePlan(plan);
 
+    console.log('🏁 [Orchestrator] Execução completa, gerando resposta final...');
+    
+    let respostaFinal = relatorio;
+    try {
+      const finalResponseData = await generateFinalResponse(sessionId);
+      respostaFinal = finalResponseData.resposta;
+      
+      await memory.addToShortTermMemory({
+        type: 'interaction',
+        content: finalResponseData.resposta,
+        metadata: { role: 'assistant', type: 'final_response' },
+      });
+      
+      console.log('📊 [Orchestrator] Resumo:', finalResponseData.resumo);
+    } catch (finalError) {
+      console.warn('⚠️ [Orchestrator] Erro ao gerar resposta final, usando relatório:', finalError);
+    }
+
     await memory.addToShortTermMemory({
       type: 'result',
       content: `Plano ${plan.planId} executado com sucesso`,
       metadata: { planId: plan.planId },
     });
 
-    console.log('✅ [Orchestrator] Plano executado com sucesso');
-    return relatorio;
+    console.log('✅ [Orchestrator] Plano executado e resposta final gerada');
+    
+    return respostaFinal;
 
   } catch (error) {
     console.error('❌ [Orchestrator] Erro na execução:', error);
@@ -149,6 +196,70 @@ export async function executeAgentPlan(
       conteudo: `Erro na execução do plano: ${error instanceof Error ? error.message : String(error)}`,
     });
 
+    throw error;
+  }
+}
+
+export async function executeAgentPlanWithDetails(
+  plan: ExecutionPlan,
+  sessionId: string,
+  onProgress?: (update: ProgressUpdate) => void,
+  conversationHistory?: string
+): Promise<ExecutePlanResult> {
+  console.log('▶️ [Orchestrator] Iniciando execução do plano (com detalhes):', plan.planId);
+
+  const memory = memoryManagers.get(sessionId);
+  if (!memory) {
+    throw new Error(`Sessão não encontrada: ${sessionId}`);
+  }
+
+  const executor = getOrCreateExecutor(sessionId, memory);
+
+  if (onProgress) {
+    executor.setProgressCallback(onProgress);
+  }
+  
+  if (conversationHistory) {
+    executor.setConversationContext(conversationHistory);
+  }
+
+  try {
+    const relatorio = await executor.executePlan(plan);
+
+    console.log('🏁 [Orchestrator] Execução completa, gerando resposta final...');
+    
+    let respostaFinal = relatorio;
+    let finalResponseData: FinalResponseResult | undefined;
+    
+    try {
+      finalResponseData = await generateFinalResponse(sessionId);
+      respostaFinal = finalResponseData.resposta;
+      
+      await memory.addToShortTermMemory({
+        type: 'interaction',
+        content: finalResponseData.resposta,
+        metadata: { role: 'assistant', type: 'final_response' },
+      });
+    } catch (finalError) {
+      console.warn('⚠️ [Orchestrator] Erro ao gerar resposta final, usando relatório:', finalError);
+    }
+
+    await memory.addToShortTermMemory({
+      type: 'result',
+      content: `Plano ${plan.planId} executado com sucesso`,
+      metadata: { planId: plan.planId },
+    });
+
+    console.log('✅ [Orchestrator] Plano executado e resposta final gerada');
+    
+    return {
+      relatorio,
+      respostaFinal,
+      finalResponseData,
+    };
+
+  } catch (error) {
+    console.error('❌ [Orchestrator] Erro na execução:', error);
     throw error;
   }
 }

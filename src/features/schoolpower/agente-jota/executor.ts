@@ -2,7 +2,11 @@
  * EXECUTOR - Executador de Planos com Capabilities
  * 
  * Executa cada etapa do plano de forma sequencial,
- * processando as capabilities de cada etapa em ordem
+ * processando as capabilities de cada etapa em ordem.
+ * 
+ * INTEGRAÇÃO COM ARQUITETURA DE 3 CHAMADAS:
+ * - Usa DevelopmentCardService (Chamada 2) para reflexões com contexto acumulativo
+ * - Alimenta o ContextManager após cada capability executada
  */
 
 import { executeWithCascadeFallback } from '../services/controle-APIs-gerais-school-power';
@@ -19,6 +23,12 @@ import { decidirAtividadesCriarV2 } from './capabilities/DECIDIR/implementations
 import { pesquisarAtividadesDisponiveisV2 } from './capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis';
 import { criarAtividadeV2 } from './capabilities/CRIAR_ATIVIDADES/implementations/criar-atividade-v2';
 import type { CapabilityInput, CapabilityOutput } from './capabilities/shared/types';
+import { 
+  generateDevelopmentReflection,
+  convertCapabilityInsightToResultado,
+  registerActivityCreated,
+  type ResultadoCapability,
+} from './context';
 
 export type ProgressCallback = (update: ProgressUpdate) => void;
 
@@ -40,6 +50,7 @@ export class AgentExecutor {
   private memory: MemoryManager;
   private onProgress: ProgressCallback | null = null;
   private conversationContext: string = '';
+  private currentEtapaCapabilities: ResultadoCapability[] = [];
 
   constructor(sessionId: string, memory: MemoryManager) {
     this.sessionId = sessionId;
@@ -97,6 +108,9 @@ export class AgentExecutor {
         break;
       }
       
+      // Limpar array de capabilities da etapa anterior para contexto limpo
+      this.currentEtapaCapabilities = [];
+      
       try {
         this.emitProgress({
           sessionId: this.sessionId,
@@ -148,7 +162,22 @@ export class AgentExecutor {
         } as ReflectionProgressUpdate);
 
         try {
-          const reflection = await reflectionService.generateReflection(etapa.ordem - 1);
+          const devCardResult = await generateDevelopmentReflection(
+            this.sessionId,
+            etapa.ordem,
+            etapa.titulo || etapa.descricao,
+            this.currentEtapaCapabilities
+          );
+          
+          const reflection: NarrativeReflection = {
+            id: `reflection-${etapa.ordem}-${Date.now()}`,
+            objectiveIndex: etapa.ordem - 1,
+            objectiveTitle: etapa.titulo || etapa.descricao,
+            narrative: devCardResult.reflexao,
+            tone: 'celebratory',
+            highlights: [],
+            timestamp: Date.now(),
+          };
           
           this.emitProgress({
             sessionId: this.sessionId,
@@ -159,9 +188,12 @@ export class AgentExecutor {
             reflectionLoading: false,
           } as ReflectionProgressUpdate);
           
-          console.log('💡 [Executor] Reflexão gerada:', reflection.narrative.substring(0, 100) + '...');
+          console.log('💡 [Executor] Reflexão gerada (Chamada 2 - DevelopmentCard):', devCardResult.reflexao.substring(0, 100) + '...');
+          
+          this.currentEtapaCapabilities = [];
         } catch (reflectionError) {
           console.warn('⚠️ [Executor] Erro ao gerar reflexão:', reflectionError);
+          this.currentEtapaCapabilities = [];
         }
 
         await this.delay(300);
@@ -565,6 +597,10 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
         };
         reflectionService.addCapabilityInsight(objectiveIndex, insight);
 
+        const resultadoCapability: ResultadoCapability = convertCapabilityInsightToResultado(insight, resultado);
+        this.currentEtapaCapabilities.push(resultadoCapability);
+        console.log(`📦 [Executor] Capability ${capName} adicionada ao contexto da etapa (${this.currentEtapaCapabilities.length} total)`);
+
         // Finalizar debug para esta capability
         useDebugStore.getState().endCapability(capId);
 
@@ -612,6 +648,10 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
           success: false,
         };
         reflectionService.addCapabilityInsight(objectiveIndex, insight);
+
+        const resultadoCapability: ResultadoCapability = convertCapabilityInsightToResultado(insight);
+        this.currentEtapaCapabilities.push(resultadoCapability);
+        console.log(`📦 [Executor] Capability ${capName} (ERRO) adicionada ao contexto da etapa`);
 
         // Finalizar debug mesmo com erro
         useDebugStore.getState().endCapability(capId);
