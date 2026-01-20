@@ -74,10 +74,60 @@ previous_results keys: ${input.previous_results ? Array.from(input.previous_resu
     const gerarResult = input.previous_results?.get('gerar_conteudo_atividades');
     const decidirResult = input.previous_results?.get('decidir_atividades_criar');
     
-    if (gerarResult?.success && gerarResult?.data?.generated_fields) {
-      generatedData = gerarResult.data.generated_fields;
-      dataSource = 'previous_results.gerar_conteudo_atividades';
-      console.error(`✅ [V2:CRIAR] Found ${generatedData.length} generated activities from gerar_conteudo`);
+    // CORREÇÃO CRÍTICA: gerar_conteudo_atividades retorna data.results ou data.successful_results
+    // NÃO data.generated_fields (que era o formato esperado anteriormente)
+    if (gerarResult?.success) {
+      // Diagnóstico detalhado do resultado de gerar_conteudo
+      console.error(`
+🔍 [V2:CRIAR] DIAGNÓSTICO gerar_conteudo_atividades:
+   - success: ${gerarResult.success}
+   - data exists: ${!!gerarResult.data}
+   - data.results: ${gerarResult.data?.results?.length || 0} items
+   - data.successful_results: ${gerarResult.data?.successful_results?.length || 0} items
+   - data.generated_fields: ${gerarResult.data?.generated_fields?.length || 0} items (legacy)
+      `);
+      
+      // Tentar múltiplos caminhos para encontrar os dados gerados
+      const gerarData = gerarResult.data as any;
+      
+      // Prioridade 1: successful_results (atividades que geraram com sucesso)
+      if (gerarData?.successful_results?.length > 0) {
+        generatedData = gerarData.successful_results.map((r: any) => ({
+          activity_id: r.activity_id,
+          activity_type: r.activity_type,
+          fields: r.generated_fields || {},
+          validation: {
+            required_count: 0,
+            filled_count: Object.keys(r.generated_fields || {}).length,
+            is_complete: Object.keys(r.generated_fields || {}).length > 0
+          }
+        }));
+        dataSource = 'previous_results.gerar_conteudo_atividades.successful_results';
+        console.error(`✅ [V2:CRIAR] Found ${generatedData.length} activities from successful_results`);
+      }
+      // Prioridade 2: results (todos os resultados)
+      else if (gerarData?.results?.length > 0) {
+        generatedData = gerarData.results
+          .filter((r: any) => r.success)
+          .map((r: any) => ({
+            activity_id: r.activity_id,
+            activity_type: r.activity_type,
+            fields: r.generated_fields || {},
+            validation: {
+              required_count: 0,
+              filled_count: Object.keys(r.generated_fields || {}).length,
+              is_complete: Object.keys(r.generated_fields || {}).length > 0
+            }
+          }));
+        dataSource = 'previous_results.gerar_conteudo_atividades.results';
+        console.error(`✅ [V2:CRIAR] Found ${generatedData.length} activities from results`);
+      }
+      // Prioridade 3: generated_fields (formato legacy, para compatibilidade)
+      else if (gerarData?.generated_fields?.length > 0) {
+        generatedData = gerarData.generated_fields;
+        dataSource = 'previous_results.gerar_conteudo_atividades.generated_fields (legacy)';
+        console.error(`✅ [V2:CRIAR] Found ${generatedData.length} activities from generated_fields (legacy)`);
+      }
     }
     
     if (decidirResult?.success && decidirResult?.data?.chosen_activities) {

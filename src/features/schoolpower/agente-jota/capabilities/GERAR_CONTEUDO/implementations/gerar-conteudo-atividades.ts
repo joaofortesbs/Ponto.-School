@@ -939,6 +939,22 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
     console.log(`📊 [GerarConteudo] PARTIAL SUCCESS: ${successCount} succeeded, ${failCount} failed. Pipeline continues.`);
   }
   
+  // CORREÇÃO: Criar generated_fields para compatibilidade com criar_atividade
+  // Isso garante que a próxima capability receba os dados no formato esperado
+  const generated_fields = successfulResults.map(r => ({
+    activity_id: r.activity_id,
+    activity_type: r.activity_type,
+    fields: r.generated_fields || {},
+    generated_fields: r.generated_fields || {},
+    validation: {
+      required_count: 0,
+      filled_count: Object.keys(r.generated_fields || {}).length,
+      is_complete: Object.keys(r.generated_fields || {}).length > 0
+    }
+  }));
+  
+  console.log(`📊 [GerarConteudo] Returning ${generated_fields.length} activities in generated_fields format`);
+  
   return {
     success: isPartialOrFullSuccess, // ← MUDANÇA: sucesso se pelo menos 1 atividade gerada
     capability_id: CAPABILITY_ID,
@@ -949,6 +965,7 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
       fail_count: failCount,
       results,
       successful_results: successfulResults, // ← NOVO: apenas atividades bem-sucedidas
+      generated_fields, // ← NOVO: formato compatível com criar_atividade
       partial_success: failCount > 0 && successCount > 0,
       generated_at: new Date().toISOString()
     },
