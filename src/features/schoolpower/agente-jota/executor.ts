@@ -66,6 +66,19 @@ export class AgentExecutor {
     console.log(`📝 [Executor] Contexto da conversa definido (${context.length} chars)`);
   }
 
+  /**
+   * Reseta o estado do executor para permitir nova execução na mesma sessão
+   * Chamado pelo orchestrator antes de cada nova execução
+   */
+  resetForNewExecution(): void {
+    console.log('🔄 [Executor] Resetando estado para nova execução');
+    this.capabilityResultsMap.clear();
+    this.currentEtapaCapabilities = [];
+    this.conversationContext = '';
+    this.onProgress = null;
+    console.log('✅ [Executor] Estado limpo para nova execução');
+  }
+
   private emitProgress(update: ProgressUpdate | CapabilityProgressUpdate): void {
     console.log('📊 [Executor] Progresso:', update);
     if (this.onProgress) {

@@ -125,6 +125,70 @@ export class ContextManager {
     return this.inicializar(inputTexto || '');
   }
 
+  /**
+   * Prepara o contexto para um novo plano, preservando o histórico da conversa
+   * mas resetando o estado de execução para permitir nova interação
+   */
+  prepararParaNovoPlano(novoInput: string): ContextoMacro {
+    const contextoExistente = this.obterContexto();
+    
+    if (!contextoExistente) {
+      // Primeira interação - apenas inicializar
+      return this.inicializar(novoInput);
+    }
+
+    console.log(`🔄 [ContextManager] Preparando para novo plano na sessão: ${this.sessionId}`);
+    console.log(`   📝 Input anterior: "${contextoExistente.inputOriginal.texto.substring(0, 50)}..."`);
+    console.log(`   📝 Novo input: "${novoInput.substring(0, 50)}..."`);
+    console.log(`   📊 Histórico: ${contextoExistente.etapasExecutadas.length} etapas anteriores`);
+
+    // Preservar histórico importante para contexto contínuo
+    const historicoPreservado = {
+      etapasAnteriores: contextoExistente.etapasExecutadas.length,
+      atividadesCriadas: [...contextoExistente.resumoProgressivo.atividadesCriadas],
+      descobertasAnteriores: [...contextoExistente.resumoProgressivo.principaisDescobertas],
+      decisoesAnteriores: [...contextoExistente.resumoProgressivo.principaisDecisoes],
+      inputAnterior: contextoExistente.inputOriginal.texto,
+      respostaAnterior: contextoExistente.respostaInicial,
+    };
+
+    // Criar novo contexto com histórico preservado
+    const novoContexto: ContextoMacro = {
+      sessionId: this.sessionId,
+      inputOriginal: {
+        texto: novoInput,
+        timestamp: Date.now(),
+      },
+      respostaInicial: undefined,
+      etapasExecutadas: [], // Limpar para nova execução
+      resumoProgressivo: {
+        totalEtapas: 0,
+        etapasCompletas: 0,
+        // Preservar histórico de atividades criadas e descobertas
+        principaisDescobertas: historicoPreservado.descobertasAnteriores.slice(-5),
+        principaisDecisoes: historicoPreservado.decisoesAnteriores.slice(-5),
+        atividadesCriadas: historicoPreservado.atividadesCriadas,
+        dadosRelevantes: {
+          historicoConversa: true,
+          etapasAnteriores: historicoPreservado.etapasAnteriores,
+          inputAnterior: historicoPreservado.inputAnterior,
+        },
+      },
+      planId: undefined, // Novo plano será definido
+      objetivoGeral: undefined,
+      estadoAtual: 'aguardando_input',
+      criadoEm: contextoExistente.criadoEm, // Manter timestamp original da sessão
+      atualizadoEm: Date.now(),
+    };
+
+    contextStore.set(this.sessionId, novoContexto);
+    
+    console.log(`✅ [ContextManager] Contexto preparado para novo plano`);
+    console.log(`   📊 Atividades preservadas: ${novoContexto.resumoProgressivo.atividadesCriadas.length}`);
+    
+    return novoContexto;
+  }
+
   atualizarEstado(novoEstado: ContextoMacro['estadoAtual']): void {
     const contexto = this.obterContexto();
     if (contexto) {
@@ -234,10 +298,20 @@ export class ContextManager {
   }
 
   private gerarContextoInicial(contexto: ContextoMacro): string {
-    return `
-PEDIDO DO USUÁRIO:
-"${contexto.inputOriginal.texto}"
+    // Incluir histórico de atividades anteriores se existir
+    const historicoAtividades = contexto.resumoProgressivo.atividadesCriadas.length > 0
+      ? `\nATIVIDADES JÁ CRIADAS NESTA CONVERSA:\n${contexto.resumoProgressivo.atividadesCriadas.map(a => `- ${a}`).join('\n')}`
+      : '';
+    
+    const historicoAnterior = contexto.resumoProgressivo.dadosRelevantes.inputAnterior
+      ? `\nPEDIDO ANTERIOR DO USUÁRIO:\n"${contexto.resumoProgressivo.dadosRelevantes.inputAnterior}"`
+      : '';
 
+    return `
+PEDIDO ATUAL DO USUÁRIO:
+"${contexto.inputOriginal.texto}"
+${historicoAnterior}
+${historicoAtividades}
 TIMESTAMP: ${new Date(contexto.inputOriginal.timestamp).toLocaleString('pt-BR')}
 `.trim();
   }

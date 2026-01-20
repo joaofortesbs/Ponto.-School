@@ -74,7 +74,9 @@ export async function processUserPrompt(
   const memory = getOrCreateMemoryManager(sessionId, userId);
   const contextManager = getContextManager(sessionId);
 
-  contextManager.obterOuCriar(userPrompt);
+  // CRÍTICO: Usar prepararParaNovoPlano para permitir múltiplas interações
+  // Isso preserva o histórico da conversa mas reseta o estado de execução
+  contextManager.prepararParaNovoPlano(userPrompt);
 
   await memory.addToShortTermMemory({
     type: 'interaction',
@@ -149,6 +151,9 @@ export async function executeAgentPlan(
 
   const executor = getOrCreateExecutor(sessionId, memory);
 
+  // CRÍTICO: Resetar executor para nova execução
+  executor.resetForNewExecution();
+
   if (onProgress) {
     executor.setProgressCallback(onProgress);
   }
@@ -214,6 +219,9 @@ export async function executeAgentPlanWithDetails(
   }
 
   const executor = getOrCreateExecutor(sessionId, memory);
+
+  // CRÍTICO: Resetar executor para nova execução
+  executor.resetForNewExecution();
 
   if (onProgress) {
     executor.setProgressCallback(onProgress);

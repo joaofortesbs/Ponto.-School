@@ -320,9 +320,12 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       setIsExecutingLocal(false);
       setExecuting(false);
       setCurrentStep(null);
-      setExecutionPlan(prev => prev ? { ...prev, status: 'concluido' } : null);
+      // CRÍTICO: Limpar executionPlan completamente para permitir novo plano
+      setExecutionPlan(null);
       isExecutingPlanRef.current = false;
       releaseExecutionLock();
+      
+      console.log('🔄 [ChatLayout] Execução finalizada - estado limpo para permitir nova interação');
 
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: { type: 'execution:completed' }

@@ -67,12 +67,9 @@ export const useChatState = create<ChatState>((set, get) => ({
 
   addPlanCard: (planData) => {
     set((state) => {
-      const existingPlanCard = state.messages.find(m => m.type === 'plan_card');
-      if (existingPlanCard) {
-        console.warn('⚠️ [chatState.addPlanCard] PlanCard já existe! ID:', existingPlanCard.id);
-        return state;
-      }
-
+      // REMOVIDO: Bloqueio que impedia múltiplos planos na mesma conversa
+      // Agora permitimos criar novos PlanCards - cada um representa um novo plano na conversa contínua
+      
       const planCard: Message = {
         id: generateId(),
         type: 'plan_card',
@@ -110,17 +107,9 @@ export const useChatState = create<ChatState>((set, get) => ({
 
   addDevModeCard: (devModeData) => {
     set((state) => {
-      if (state.activeDevModeCardId) {
-        console.warn('⚠️ [chatState.addDevModeCard] activeDevModeCardId já existe! Ignorando.');
-        return state;
-      }
-
-      const existingDevModeCard = state.messages.find(m => m.type === 'dev_mode_card');
-      if (existingDevModeCard) {
-        console.warn('⚠️ [chatState.addDevModeCard] DevModeCard já existe! ID:', existingDevModeCard.id);
-        return state;
-      }
-
+      // REMOVIDO: Bloqueios que impediam múltiplos cards de desenvolvimento na mesma conversa
+      // Agora permitimos criar novos DevModeCards - cada um representa uma nova execução
+      
       const textMessage: Message = {
         id: generateId(),
         type: 'assistant',
@@ -323,6 +312,14 @@ export const useChatState = create<ChatState>((set, get) => ({
       if (state.activeDevModeCardId) {
         get().updateCardData(state.activeDevModeCardId, { status: 'concluido' });
       }
+      
+      // CRÍTICO: Resetar flags para permitir novas execuções na mesma conversa
+      console.log('🔄 [chatState] Execução finalizada - resetando flags para permitir novas execuções');
+      set({ 
+        executionStarted: false,
+        activePlanCardId: null,
+        activeDevModeCardId: null
+      });
     }
   },
 
