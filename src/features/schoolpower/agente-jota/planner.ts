@@ -258,6 +258,25 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
         },
       ],
     },
+    {
+      ordem: 4,
+      titulo: 'Salvar no banco de dados',
+      descricao: 'Vou salvar permanentemente as atividades criadas',
+      funcao: 'salvar_atividades_bd',
+      parametros: {},
+      status: 'pendente',
+      capabilities: [
+        {
+          id: `cap-3-0-${timestamp}`,
+          nome: 'salvar_atividades_bd',
+          displayName: 'Vou salvar suas atividades no banco de dados',
+          categoria: 'SALVAR_BD',
+          parametros: {},
+          status: 'pending',
+          ordem: 1,
+        },
+      ],
+    },
   ];
 
   return {

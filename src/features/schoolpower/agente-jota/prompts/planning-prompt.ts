@@ -20,24 +20,25 @@ FUNÇÕES DISPONÍVEIS (CAPABILITIES):
 {capabilities}
 
 ═══════════════════════════════════════════════════════════════════════════
-⚠️ ATENÇÃO CRÍTICA: USE APENAS ESTAS 5 CAPABILITIES (NOMES EXATOS) ⚠️
+⚠️ ATENÇÃO CRÍTICA: USE APENAS ESTAS 6 CAPABILITIES (NOMES EXATOS) ⚠️
 ═══════════════════════════════════════════════════════════════════════════
 
 1. "pesquisar_atividades_disponiveis" - Pesquisa atividades no catálogo
 2. "pesquisar_atividades_conta" - Busca atividades já criadas pelo professor
 3. "decidir_atividades_criar" - Decide quais atividades criar
 4. "criar_atividade" - Cria as atividades selecionadas
-5. "planejar_plano_de_acao" - Monta um plano estruturado
+5. "salvar_atividades_bd" - Salva as atividades criadas no banco de dados
+6. "planejar_plano_de_acao" - Monta um plano estruturado
 
 ❌ NÃO INVENTE NOMES como: pesquisar_tipos_atividades, criar_plano_aula, etc.
 ❌ NÃO MODIFIQUE os nomes acima de nenhuma forma!
-✅ COPIE exatamente um dos 5 nomes listados!
+✅ COPIE exatamente um dos 6 nomes listados!
 
 ═══════════════════════════════════════════════════════════════════════════
 
 INSTRUÇÕES:
-Crie um plano de ação SIMPLES com no máximo 3 etapas seguindo o pipeline:
-PESQUISAR → DECIDIR → CRIAR
+Crie um plano de ação SIMPLES com no máximo 4 etapas seguindo o pipeline:
+PESQUISAR → DECIDIR → CRIAR → SALVAR
 
 RESPONDA APENAS COM UM JSON VÁLIDO no seguinte formato:
 {
@@ -105,7 +106,20 @@ EXEMPLO DE PLANO CORRETO PARA "Preciso criar atividades de matemática":
           "displayName": "Vou criar as atividades selecionadas",
           "categoria": "CRIAR",
           "parametros": {},
-          "justificativa": "Construir e salvar atividades"
+          "justificativa": "Construir atividades"
+        }
+      ]
+    },
+    {
+      "titulo": "Salvar no banco de dados",
+      "descricao": "Vou salvar permanentemente as atividades criadas",
+      "capabilities": [
+        {
+          "nome": "salvar_atividades_bd",
+          "displayName": "Vou salvar suas atividades no banco de dados",
+          "categoria": "SALVAR_BD",
+          "parametros": {},
+          "justificativa": "Persistir atividades criadas"
         }
       ]
     }
@@ -114,8 +128,9 @@ EXEMPLO DE PLANO CORRETO PARA "Preciso criar atividades de matemática":
 
 IMPORTANTE: 
 - Retorne APENAS o JSON, sem explicações adicionais
-- Use APENAS os 5 nomes de capabilities listados acima
+- Use APENAS os 6 nomes de capabilities listados acima
 - NÃO invente novos nomes de capabilities!
+- SEMPRE inclua "salvar_atividades_bd" como ÚLTIMA capability após "criar_atividade"!
 `.trim();
 
 export interface Capability {

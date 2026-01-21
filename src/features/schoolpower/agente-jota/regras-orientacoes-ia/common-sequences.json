@@ -1,6 +1,6 @@
 {
-  "version": "2.0.0",
-  "description": "Sequências padrão de execução das 4 Capabilities Core",
+  "version": "3.0.0",
+  "description": "Sequências padrão de execução das 5 Capabilities Core (inclui salvar_atividades_bd)",
 
   "common_sequences": {
     
@@ -8,7 +8,7 @@
       "id": "seq_criar_completo",
       "description": "Fluxo completo para criar atividades personalizadas",
       "trigger_keywords": ["criar", "atividade", "exercício", "quiz", "avaliação", "gerar"],
-      "estimated_duration_ms": 15000,
+      "estimated_duration_ms": 18000,
       "sequence": [
         {
           "step": 1,
@@ -38,7 +38,15 @@
           "required": true,
           "inputs_from": [3],
           "fallback_on_error": "retry_failed_individually",
-          "description": "Constrói e salva as atividades"
+          "description": "Constrói as atividades"
+        },
+        {
+          "step": 5,
+          "capability": "salvar_atividades_bd",
+          "required": true,
+          "inputs_from": [4],
+          "fallback_on_error": "retry_save",
+          "description": "Salva as atividades no banco de dados"
         }
       ]
     },
@@ -47,7 +55,7 @@
       "id": "seq_criar_rapido",
       "description": "Fluxo rápido sem consulta de histórico",
       "trigger_keywords": ["rápido", "urgente", "simples", "básico"],
-      "estimated_duration_ms": 10000,
+      "estimated_duration_ms": 12000,
       "sequence": [
         {
           "step": 1,
@@ -69,6 +77,13 @@
           "required": true,
           "inputs_from": [2],
           "description": "Criação"
+        },
+        {
+          "step": 4,
+          "capability": "salvar_atividades_bd",
+          "required": true,
+          "inputs_from": [3],
+          "description": "Salvar no banco de dados"
         }
       ]
     },
