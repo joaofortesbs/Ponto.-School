@@ -11,6 +11,7 @@ import {
   Layers,
   Zap,
   CheckCircle,
+  Database,
   type LucideIcon
 } from 'lucide-react';
 
@@ -70,6 +71,11 @@ const capabilityIconMap: Record<string, CapabilityIconConfig> = {
     icon: Lightbulb,
     color: 'text-teal-400',
     bgColor: 'bg-teal-500/20',
+  },
+  salvar_atividades_bd: {
+    icon: Database,
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/20',
   },
 };
 

@@ -22,6 +22,7 @@ import { gerarConteudoAtividadesV2 } from './capabilities/GERAR_CONTEUDO/impleme
 import { decidirAtividadesCriarV2 } from './capabilities/DECIDIR/implementations/decidir-atividades-criar';
 import { pesquisarAtividadesDisponiveisV2 } from './capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis';
 import { criarAtividadeV2 } from './capabilities/CRIAR_ATIVIDADES/implementations/criar-atividade-v2';
+import { salvarAtividadesBdV2 } from './capabilities/SALVAR_BD/implementations/salvar-atividades-bd';
 import type { CapabilityInput, CapabilityOutput } from './capabilities/shared/types';
 import { 
   generateDevelopmentReflection,
@@ -263,12 +264,13 @@ export class AgentExecutor {
 
   // Capabilities que usam API-First V2 pattern
   // Todas as capabilities V2 do pipeline completo:
-  // pesquisar → decidir → gerar → criar
+  // pesquisar → decidir → gerar → criar → salvar
   private static readonly V2_CAPABILITIES = [
     'pesquisar_atividades_disponiveis',
     'decidir_atividades_criar',
     'gerar_conteudo_atividades',
-    'criar_atividade'
+    'criar_atividade',
+    'salvar_atividades_bd'
   ];
 
   private async executeCapabilities(etapa: ExecutionStep): Promise<any[]> {
@@ -376,6 +378,8 @@ export class AgentExecutor {
               v2Result = await gerarConteudoAtividadesV2(capabilityInput);
             } else if (capName === 'criar_atividade') {
               v2Result = await criarAtividadeV2(capabilityInput);
+            } else if (capName === 'salvar_atividades_bd') {
+              v2Result = await salvarAtividadesBdV2(capabilityInput);
             }
             
             // Validar que temos um resultado

@@ -131,6 +131,39 @@
       "rule": "Salvar atividades no banco assim que construídas",
       "action": "auto_save_on_complete",
       "rationale": "Evita perda de dados se houver falha"
+    },
+
+    {
+      "id": "rule_013",
+      "type": "mandatory",
+      "priority": 1,
+      "capability": "salvar_atividades_bd",
+      "rule": "SEMPRE executar salvar_atividades_bd APÓS criar_atividade",
+      "rationale": "Persiste atividades criadas no banco de dados Neon",
+      "violates_if": "salvar_atividades_bd executado sem criar_atividade",
+      "action_on_violation": "auto_execute_dependency"
+    },
+
+    {
+      "id": "rule_014",
+      "type": "mandatory",
+      "priority": 1,
+      "capability": "salvar_atividades_bd",
+      "rule": "SEMPRE validar dados antes de persistir no banco",
+      "validation": "all activities have id, tipo, campos_preenchidos",
+      "action_on_fail": "skip_invalid_and_continue",
+      "rationale": "Evita persistir dados corrompidos ou incompletos"
+    },
+
+    {
+      "id": "rule_015",
+      "type": "mandatory",
+      "priority": 1,
+      "capability": "salvar_atividades_bd",
+      "rule": "SEMPRE verificar resposta do banco após salvamento",
+      "validation": "api_response.success === true",
+      "action_on_fail": "retry_once_then_report",
+      "rationale": "Garante que dados foram realmente persistidos"
     }
   ],
 
