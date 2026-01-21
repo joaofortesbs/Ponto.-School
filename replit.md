@@ -44,7 +44,12 @@ The platform features a modern design with glass-morphism effects, blur backgrou
         - **Call 2 - Development Card**: Single context window for ALL reflections within the development card. Maintains cumulative context across all steps/objectives for narrative coherence. Uses `development-card-service.ts` with `ContextManager` integration.
         - **Call 3 - Final Response**: Consolidated response analyzing all execution results and reflections. Uses `final-response-service.ts` to generate comprehensive completion messages.
         - **Context Manager**: Central `context-manager.ts` maintains macro context across all calls, storing input interpretation, step results, capability metrics, and progressive summaries. Prevents context overflow with intelligent summarization.
-    - **API-First Architecture (V2)**: Uses standardized contracts and a central CapabilityExecutor for managing execution, validation, and context enrichment. A DataConfirmation System ensures critical checks. The V2 capability system uses a `capabilityResultsMap` for data flow between `pesquisar`, `decidir`, `gerar`, and `criar` capabilities, with robust failure handling.
+    - **API-First Architecture (V2)**: Uses standardized contracts and a central CapabilityExecutor for managing execution, validation, and context enrichment. A DataConfirmation System ensures critical checks. The V2 capability system uses a `capabilityResultsMap` for data flow between `pesquisar`, `decidir`, `gerar`, `criar`, and `salvar` capabilities, with robust failure handling.
+    - **Database Persistence Pipeline (Jan 2026)**: The `salvar_atividades_bd` capability persists created activities to the Neon database. It follows a 4-phase architecture:
+        - **Phase 1 - COLLECT**: Gathers activities from localStorage, ChosenActivitiesStore, and previous_results
+        - **Phase 2 - VALIDATE**: Verifies required fields (id, tipo, campos_preenchidos) and data integrity
+        - **Phase 3 - PERSIST**: Calls `/api/atividades-neon` API for each activity with timeout handling
+        - **Phase 4 - VERIFY**: Confirms successful saves and emits completion events
     - **Conversation Context Flow**: The full conversation history is maintained and passed to AI generation for contextualized content.
     - **Content Generation Pipeline (V2)**: The `gerar_conteudo_atividades` capability generates AI content for selected activities, validates and normalizes fields, stores results, and emits debug logs.
     - **Activity Creation Pipeline (V2)**: The `criar_atividade` capability persists generated activity fields to the database and emits events for UI updates on the ConstructionInterface.
