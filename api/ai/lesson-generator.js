@@ -20,7 +20,7 @@
  * ====================================================================
  */
 
-import { generateWithCascade, GROQ_MODELS_CASCADE, GEMINI_MODEL } from '../groq.js';
+import { generateWithCascade, GROQ_MODELS_CASCADE, GEMINI_MODEL, getGroqClient } from '../groq.js';
 import {
   SYSTEM_PROMPT,
   SECTION_DESCRIPTIONS,
@@ -36,6 +36,7 @@ import {
  */
 const MAX_RETRIES = 3;
 const TIMEOUT_MS = 60000;
+const GROQ_MODEL = GROQ_MODELS_CASCADE[0].id;
 
 /**
  * ====================================================================
