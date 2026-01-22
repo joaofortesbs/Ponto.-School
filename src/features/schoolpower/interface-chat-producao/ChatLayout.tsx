@@ -60,7 +60,6 @@ const CHAT_CONFIG = {
 };
 
 export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: ChatLayoutProps) {
-  const [sessionId, setSessionId] = useState(() => generateSessionId());
   const [executionPlan, setExecutionPlan] = useState<ExecutionPlan | null>(null);
   const [workingMemory, setWorkingMemory] = useState<WorkingMemoryItem[]>([]);
   const [isExecuting, setIsExecutingLocal] = useState(false);
@@ -70,7 +69,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   const [showContextModal, setShowContextModal] = useState(false);
   const [isCardExpanded, setIsCardExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const hasProcessedInitialMessage = useRef(false);
   const isExecutingPlanRef = useRef(false);
 
   const { 
@@ -82,8 +80,24 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     setLoading,
     clearMessages,
     activeDevModeCardId,
-    startExecution
+    startExecution,
+    sessionId: storedSessionId,
+    setSessionId: setStoredSessionId,
+    initialMessageProcessed,
+    setInitialMessageProcessed,
+    hasActiveSession
   } = useChatState();
+
+  const sessionId = storedSessionId || generateSessionId();
+  
+  useEffect(() => {
+    if (!storedSessionId) {
+      setStoredSessionId(sessionId);
+      console.log('🆔 [ChatLayout] Nova sessão criada:', sessionId);
+    } else {
+      console.log('🔄 [ChatLayout] Sessão restaurada:', storedSessionId);
+    }
+  }, [storedSessionId, sessionId, setStoredSessionId]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -94,11 +108,14 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   }, [messages, scrollToBottom]);
 
   useEffect(() => {
-    if (initialMessage && !hasProcessedInitialMessage.current) {
-      hasProcessedInitialMessage.current = true;
+    if (initialMessage && !initialMessageProcessed) {
+      console.log('📨 [ChatLayout] Processando mensagem inicial (primeira vez):', initialMessage);
+      setInitialMessageProcessed(true);
       handleUserPrompt(initialMessage);
+    } else if (initialMessageProcessed) {
+      console.log('🔄 [ChatLayout] Sessão restaurada - NÃO reenviando mensagem inicial');
     }
-  }, [initialMessage]);
+  }, [initialMessage, initialMessageProcessed, setInitialMessageProcessed]);
 
   const addMemory = useCallback((item: Omit<WorkingMemoryItem, 'id' | 'timestamp'>) => {
     const newItem: WorkingMemoryItem = {
@@ -354,7 +371,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   const handleExit = () => {
     clearMessages();
     releaseExecutionLock();
-    setSessionId(generateSessionId());
     setExecutionPlan(null);
     setWorkingMemory([]);
     setIsExecutingLocal(false);
@@ -362,7 +378,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     setCurrentStep(null);
     setShowContextModal(false);
     setIsCardExpanded(false);
-    hasProcessedInitialMessage.current = false;
     isExecutingPlanRef.current = false;
     
     onBack();

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Message, DevModeCardData, PlanCardData, CapabilityState } from '../types/message-types';
 
 function generateId(): string {
@@ -12,6 +13,8 @@ interface ChatState {
   isExecuting: boolean;
   executionStarted: boolean;
   isLoading: boolean;
+  sessionId: string | null;
+  initialMessageProcessed: boolean;
 
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
   addTextMessage: (role: 'user' | 'assistant', content: string) => void;
@@ -26,18 +29,25 @@ interface ChatState {
   setExecuting: (isExecuting: boolean) => void;
   setLoading: (isLoading: boolean) => void;
   clearMessages: () => void;
+  setSessionId: (sessionId: string) => void;
+  setInitialMessageProcessed: (processed: boolean) => void;
+  hasActiveSession: () => boolean;
 
   getPlanCard: () => Message | null;
   getDevModeCard: () => Message | null;
 }
 
-export const useChatState = create<ChatState>((set, get) => ({
+export const useChatState = create<ChatState>()(
+  persist(
+    (set, get) => ({
   messages: [],
   activePlanCardId: null,
   activeDevModeCardId: null,
   isExecuting: false,
   executionStarted: false,
   isLoading: false,
+  sessionId: null,
+  initialMessageProcessed: false,
 
   addMessage: (message) => {
     const newMessage: Message = {
@@ -333,8 +343,23 @@ export const useChatState = create<ChatState>((set, get) => ({
       activePlanCardId: null,
       activeDevModeCardId: null,
       isExecuting: false,
-      executionStarted: false
+      executionStarted: false,
+      sessionId: null,
+      initialMessageProcessed: false
     });
+  },
+
+  setSessionId: (sessionId) => {
+    set({ sessionId });
+  },
+
+  setInitialMessageProcessed: (processed) => {
+    set({ initialMessageProcessed: processed });
+  },
+
+  hasActiveSession: () => {
+    const state = get();
+    return state.messages.length > 0 && state.sessionId !== null;
   },
 
   getPlanCard: () => {
@@ -346,6 +371,21 @@ export const useChatState = create<ChatState>((set, get) => ({
     const state = get();
     return state.messages.find(m => m.id === state.activeDevModeCardId) || null;
   }
-}));
+}),
+    {
+      name: 'jota-chat-session',
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({
+        messages: state.messages,
+        activePlanCardId: state.activePlanCardId,
+        activeDevModeCardId: state.activeDevModeCardId,
+        sessionId: state.sessionId,
+        initialMessageProcessed: state.initialMessageProcessed,
+        executionStarted: state.executionStarted,
+        isExecuting: state.isExecuting
+      })
+    }
+  )
+);
 
 export default useChatState;
