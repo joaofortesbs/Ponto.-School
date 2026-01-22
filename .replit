@@ -218,7 +218,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node api/server.js & npm run dev"
+args = "bash -c \"node api/server.js & npm run dev\""
 waitForPort = 5000
 
 [auth]
