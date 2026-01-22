@@ -12,6 +12,7 @@
  */
 
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { ActivityToBuild } from '../construction-interface';
 
 export interface ChosenActivity {
@@ -42,6 +43,7 @@ interface ChosenActivitiesState {
   decisionTimestamp: string | null;
   isDecisionComplete: boolean;
   isContentGenerationComplete: boolean;
+  _hasHydrated: boolean;
 
   initSession: (sessionId: string) => void;
   setChosenActivities: (activities: ChosenActivity[], estrategia?: string) => void;
@@ -55,9 +57,12 @@ interface ChosenActivitiesState {
   clearSession: () => void;
   markDecisionComplete: () => void;
   markContentGenerationComplete: () => void;
+  setHasHydrated: (hasHydrated: boolean) => void;
 }
 
-export const useChosenActivitiesStore = create<ChosenActivitiesState>((set, get) => ({
+export const useChosenActivitiesStore = create<ChosenActivitiesState>()(
+  persist(
+    (set, get) => ({
   sessionId: null,
   chosenActivities: [],
   estrategiaPedagogica: '',
@@ -65,6 +70,11 @@ export const useChosenActivitiesStore = create<ChosenActivitiesState>((set, get)
   decisionTimestamp: null,
   isDecisionComplete: false,
   isContentGenerationComplete: false,
+  _hasHydrated: false,
+
+  setHasHydrated: (hasHydrated) => {
+    set({ _hasHydrated: hasHydrated });
+  },
 
   initSession: (sessionId) => {
     console.log('🎯 [ChosenActivitiesStore] Inicializando sessão:', sessionId);
@@ -256,7 +266,28 @@ export const useChosenActivitiesStore = create<ChosenActivitiesState>((set, get)
     console.log('✅ [ChosenActivitiesStore] Geração de conteúdo marcada como completa');
     set({ isContentGenerationComplete: true });
   }
-}));
+}),
+    {
+      name: 'jota-chosen-activities',
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({
+        sessionId: state.sessionId,
+        chosenActivities: state.chosenActivities,
+        estrategiaPedagogica: state.estrategiaPedagogica,
+        totalDecididas: state.totalDecididas,
+        decisionTimestamp: state.decisionTimestamp,
+        isDecisionComplete: state.isDecisionComplete,
+        isContentGenerationComplete: state.isContentGenerationComplete
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          console.log('🔄 [ChosenActivitiesStore] Hydration complete - activities:', state.chosenActivities?.length || 0);
+          state.setHasHydrated(true);
+        }
+      }
+    }
+  )
+);
 
 function mapStatusToActivityToBuild(status: ChosenActivity['status_construcao']): ActivityToBuild['status'] {
   switch (status) {

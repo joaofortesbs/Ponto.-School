@@ -4,6 +4,7 @@ import { useChatState } from '../state/chatState';
 import { ProgressiveExecutionCard, ObjectiveItem, CapabilityItem, ObjectiveReflection } from './ProgressiveExecutionCard';
 import type { DevModeCardData, CapabilityState } from '../types/message-types';
 import type { ActivityToBuild } from '../construction-interface';
+import { useChosenActivitiesStore } from '../stores/ChosenActivitiesStore';
 
 interface DeveloperModeCardProps {
   cardId: string;
@@ -18,13 +19,31 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
   const [activitiesToBuild, setActivitiesToBuild] = useState<ActivityToBuild[]>([]);
   const [isBuildingActivities, setIsBuildingActivities] = useState(false);
   
-  // Ref para manter o valor mais recente de activitiesToBuild acessível em closures
+  const getActivitiesForConstruction = useChosenActivitiesStore(state => state.getActivitiesForConstruction);
+  const chosenActivitiesHydrated = useChosenActivitiesStore(state => state._hasHydrated);
+  const chosenActivitiesCount = useChosenActivitiesStore(state => state.chosenActivities.length);
+  
+  const hasRestoredFromStoreRef = useRef(false);
+  
   const activitiesToBuildRef = useRef<ActivityToBuild[]>([]);
 
-  // Manter ref sincronizado com estado
   useEffect(() => {
     activitiesToBuildRef.current = activitiesToBuild;
   }, [activitiesToBuild]);
+
+  useEffect(() => {
+    if (
+      chosenActivitiesHydrated && 
+      chosenActivitiesCount > 0 && 
+      activitiesToBuild.length === 0 &&
+      !hasRestoredFromStoreRef.current
+    ) {
+      hasRestoredFromStoreRef.current = true;
+      const restoredActivities = getActivitiesForConstruction();
+      console.log('🔄 [DeveloperModeCard] Restaurando atividades do store persistido:', restoredActivities.length);
+      setActivitiesToBuild(restoredActivities);
+    }
+  }, [chosenActivitiesHydrated, chosenActivitiesCount, activitiesToBuild.length, getActivitiesForConstruction]);
 
   const handleBuildActivities = useCallback(() => {
     console.log('🔨 [DeveloperModeCard] Iniciando construção de atividades');
