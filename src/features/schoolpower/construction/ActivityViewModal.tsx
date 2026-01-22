@@ -130,39 +130,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     return () => clearInterval(checkForUpdates);
   }, [activity?.id, isOpen]);
 
-  // Carregar conteúdo construído quando o modal abrir
-  useEffect(() => {
-    if (activity && isOpen) {
-      console.log(`🔍 Verificando conteúdo construído para atividade: ${activity.id}`);
-      console.log(`📋 Dados da atividade recebida:`, activity);
-
-      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-      const savedContent = localStorage.getItem(`activity_${activity.id}`);
-
-      // Tentar carregar dados diretamente do localStorage se disponíveis
-      if (savedContent) {
-        try {
-          const parsedContent = JSON.parse(savedContent);
-          console.log(`✅ Conteúdo encontrado no localStorage para ${activity.id}:`, parsedContent);
-
-          // Apenas para tipos específicos que precisam de um estado dedicado
-          if (activity.type === 'quiz-interativo') {
-            setQuizInterativoContent(parsedContent);
-          }
-          if (activity.type === 'flash-cards') {
-            setFlashCardsContent(parsedContent);
-          }
-        } catch (error) {
-          console.warn(`⚠️ Erro ao parsear conteúdo do localStorage para ${activity.id}:`, error);
-        }
-      } else if (constructedActivities[activity.id]) {
-        console.log(`✅ Conteúdo construído encontrado para ${activity.id}:`, constructedActivities[activity.id]);
-        // Similarmente, carregar para tipos específicos se necessário
-      } else {
-        console.log(`ℹ️ Nenhum conteúdo construído ou salvo encontrado para ${activity.id}. Usando dados originais.`);
-      }
-    }
-  }, [isOpen, activity?.id]); // Dependências: reexecuta quando o modal abre ou a atividade muda
+  // NOTA: A lógica de carregamento de Quiz e Flash Cards foi consolidada no useEffect principal
+  // que executa quando o modal abre (ver "Resetar estado do sidebar quando o modal abre")
+  // Isso evita duplicação de setState e possíveis conflitos
 
 
   const handleDownload = async () => {
@@ -269,8 +239,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
       setIsInQuestionView(false);
-      setQuizInterativoContent(null);
-      setFlashCardsContent(null);
       
       // Limpar a ref de atualização para evitar conflitos com dados antigos
       lastUpdateRef.current = null;
@@ -294,9 +262,108 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       };
 
       loadStars();
+      
+      // Determinar o tipo de atividade
+      const activityType = activity.originalData?.type || activity.categoryId || activity.type || '';
+      
+      // Carregar dados de Quiz Interativo
+      if (activityType === 'quiz-interativo') {
+        let loadedContent = null;
+        
+        // Primeiro, tentar localStorage
+        const quizSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`);
+        if (quizSavedContent) {
+          try {
+            const parsedContent = JSON.parse(quizSavedContent);
+            const data = parsedContent.data || parsedContent;
+            if (data?.questions?.length > 0) {
+              const validQuestions = data.questions.filter((q: any) =>
+                q && (q.question || q.text) && (q.options || q.type === 'verdadeiro-falso') && q.correctAnswer
+              );
+              if (validQuestions.length > 0) {
+                loadedContent = { ...data, questions: validQuestions };
+                console.log(`✅ Quiz: ${validQuestions.length} questões carregadas do localStorage`);
+              }
+            }
+          } catch (e) {
+            console.warn('⚠️ Erro ao parsear Quiz do localStorage:', e);
+          }
+        }
+        
+        // Fallback: banco de dados
+        if (!loadedContent && activity.originalData) {
+          const dbData = activity.originalData.campos || activity.originalData;
+          if (dbData?.questions?.length > 0) {
+            const validQuestions = dbData.questions.filter((q: any) =>
+              q && (q.question || q.text) && (q.options || q.type === 'verdadeiro-falso') && q.correctAnswer
+            );
+            if (validQuestions.length > 0) {
+              loadedContent = {
+                ...dbData,
+                questions: validQuestions,
+                title: dbData.title || activity.originalData.titulo || 'Quiz Interativo',
+                description: dbData.description || 'Atividade criada na plataforma'
+              };
+              console.log(`✅ Quiz: ${validQuestions.length} questões carregadas do banco de dados`);
+            }
+          }
+        }
+        
+        setQuizInterativoContent(loadedContent);
+      } else {
+        setQuizInterativoContent(null);
+      }
+      
+      // Carregar dados de Flash Cards
+      if (activityType === 'flash-cards') {
+        let loadedContent = null;
+        
+        // Primeiro, tentar localStorage
+        const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
+        if (flashCardsSavedContent) {
+          try {
+            const parsedContent = JSON.parse(flashCardsSavedContent);
+            const data = parsedContent.data || parsedContent;
+            if (data?.cards?.length > 0) {
+              const validCards = data.cards.filter((card: any) =>
+                card && typeof card === 'object' && card.front && card.back
+              );
+              if (validCards.length > 0) {
+                loadedContent = { ...data, cards: validCards };
+                console.log(`✅ Flash Cards: ${validCards.length} cards carregados do localStorage`);
+              }
+            }
+          } catch (e) {
+            console.warn('⚠️ Erro ao parsear Flash Cards do localStorage:', e);
+          }
+        }
+        
+        // Fallback: banco de dados
+        if (!loadedContent && activity.originalData) {
+          const dbData = activity.originalData.campos || activity.originalData;
+          if (dbData?.cards?.length > 0) {
+            const validCards = dbData.cards.filter((card: any) =>
+              card && typeof card === 'object' && card.front && card.back
+            );
+            if (validCards.length > 0) {
+              loadedContent = {
+                ...dbData,
+                cards: validCards,
+                title: dbData.title || activity.originalData.titulo || 'Flash Cards',
+                description: dbData.description || 'Atividade criada na plataforma'
+              };
+              console.log(`✅ Flash Cards: ${validCards.length} cards carregados do banco de dados`);
+            }
+          }
+        }
+        
+        setFlashCardsContent(loadedContent);
+      } else {
+        setFlashCardsContent(null);
+      }
 
       // Se for plano-aula, tentar carregar dados específicos
-      if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
+      if (activityType === 'plano-aula') {
         const planoData = loadPlanoAulaData(activity.id);
         if (planoData) {
           console.log('📚 Dados do plano-aula carregados com sucesso:', planoData);
@@ -308,7 +375,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('📋 Carregando dados de atividade do histórico:', activity.originalData);
       }
     }
-  }, [isOpen, activity?.id]); // Usar apenas activity.id para evitar loops
+  }, [isOpen, activity?.id]); // Usar apenas activity.id para evitar loops - type e originalData são acessados via activity
 
   if (!isOpen || !activity) return null;
 
@@ -614,7 +681,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             if (validQuestions.length > 0) {
               contentToLoad.questions = validQuestions;
               console.log(`✅ Quiz Interativo carregado com ${validQuestions.length} questões válidas para: ${activity.id}`);
-              setQuizInterativoContent(contentToLoad);
+              // REMOVIDO: setQuizInterativoContent(contentToLoad) - causa loop infinito se chamado durante render
             } else {
               console.warn('⚠️ Nenhuma questão válida encontrada no Quiz');
               contentToLoad = null;
@@ -647,7 +714,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
               description: dbData.description || 'Atividade criada na plataforma'
             };
             console.log(`✅ Quiz Interativo: ${validQuestions.length} questões carregadas do banco de dados`);
-            setQuizInterativoContent(contentToLoad);
+            // REMOVIDO: setQuizInterativoContent(contentToLoad) - causa loop infinito se chamado durante render
           }
         }
       }
@@ -710,7 +777,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
               description: dbData.description || 'Atividade criada na plataforma'
             };
             console.log(`✅ Flash Cards: ${validCards.length} cards carregados do banco de dados`);
-            setFlashCardsContent(contentToLoad);
+            // REMOVIDO: setFlashCardsContent(contentToLoad) - causa loop infinito se chamado durante render
           }
         }
       }
