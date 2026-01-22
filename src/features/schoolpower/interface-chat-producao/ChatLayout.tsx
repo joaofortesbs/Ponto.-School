@@ -85,7 +85,8 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     setSessionId: setStoredSessionId,
     initialMessageProcessed,
     setInitialMessageProcessed,
-    hasActiveSession
+    hasActiveSession,
+    _hasHydrated
   } = useChatState();
 
   const sessionId = storedSessionId || generateSessionId();
@@ -108,6 +109,11 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   }, [messages, scrollToBottom]);
 
   useEffect(() => {
+    if (!_hasHydrated) {
+      console.log('⏳ [ChatLayout] Aguardando hidratação do sessionStorage...');
+      return;
+    }
+    
     if (initialMessage && !initialMessageProcessed) {
       console.log('📨 [ChatLayout] Processando mensagem inicial (primeira vez):', initialMessage);
       setInitialMessageProcessed(true);
@@ -115,7 +121,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     } else if (initialMessageProcessed) {
       console.log('🔄 [ChatLayout] Sessão restaurada - NÃO reenviando mensagem inicial');
     }
-  }, [initialMessage, initialMessageProcessed, setInitialMessageProcessed]);
+  }, [initialMessage, initialMessageProcessed, setInitialMessageProcessed, _hasHydrated]);
 
   const addMemory = useCallback((item: Omit<WorkingMemoryItem, 'id' | 'timestamp'>) => {
     const newItem: WorkingMemoryItem = {

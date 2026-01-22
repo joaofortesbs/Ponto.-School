@@ -15,7 +15,9 @@ interface ChatState {
   isLoading: boolean;
   sessionId: string | null;
   initialMessageProcessed: boolean;
+  _hasHydrated: boolean;
 
+  setHasHydrated: (state: boolean) => void;
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
   addTextMessage: (role: 'user' | 'assistant', content: string) => void;
   addPlanCard: (planData: PlanCardData) => void;
@@ -48,6 +50,11 @@ export const useChatState = create<ChatState>()(
   isLoading: false,
   sessionId: null,
   initialMessageProcessed: false,
+  _hasHydrated: false,
+
+  setHasHydrated: (state) => {
+    set({ _hasHydrated: state });
+  },
 
   addMessage: (message) => {
     const newMessage: Message = {
@@ -383,7 +390,13 @@ export const useChatState = create<ChatState>()(
         initialMessageProcessed: state.initialMessageProcessed,
         executionStarted: state.executionStarted,
         isExecuting: state.isExecuting
-      })
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          console.log('🔄 [chatState] Hydration complete - initialMessageProcessed:', state.initialMessageProcessed);
+          state.setHasHydrated(true);
+        }
+      }
     }
   )
 );
