@@ -62,9 +62,34 @@ function isValidActivityId(id: string): boolean {
   if (!id || typeof id !== 'string') return false;
   if (id === 'fields' || id === 'unknown') return false;
   if (id.startsWith('built-')) return false;
-  if (id.includes('-') && id.split('-').length > 2) return false;
-  const alphanumericPattern = /^[A-Za-z0-9]{6,12}$/;
+  if (id.includes('-')) return false;
+  if (/\d{10,}/.test(id)) return false;
+  const alphanumericPattern = /^[A-Za-z0-9]{8}$/;
   return alphanumericPattern.test(id);
+}
+
+function ensureValidActivityId(id: string | undefined): string {
+  if (id && isValidActivityId(id)) {
+    return id;
+  }
+  return generateActivityId();
+}
+
+function mergeActivityFields(
+  existingFields: Record<string, any>,
+  newFields: Record<string, any>
+): Record<string, any> {
+  const merged = { ...existingFields };
+  
+  for (const [key, value] of Object.entries(newFields)) {
+    if (value !== undefined && value !== null && value !== '') {
+      if (!merged[key] || merged[key] === '' || merged[key] === null) {
+        merged[key] = value;
+      }
+    }
+  }
+  
+  return merged;
 }
 
 function normalizeActivityType(tipo: string): string {
@@ -488,26 +513,29 @@ async function collectActivitiesFromAllSources(
         continue;
       }
       
-      const newId = generateActivityId();
+      const newId = ensureValidActivityId(undefined);
+      const newFields = built.campos_preenchidos || built.fields || {};
       
-      const activity: AtividadeParaSalvar = {
-        id: newId,
-        tipo: tipo,
-        titulo: built.titulo || built.name || `Atividade ${tipo}`,
-        campos_preenchidos: built.campos_preenchidos || built.fields || {},
-        metadata: {
-          criado_em: new Date().toISOString(),
-          pipeline_version: 'v2',
-          model_used: built.model_used,
-          original_id: built.id || built.original_id
-        }
-      };
-      
-      if (!activitiesByType.has(tipo) || hasMoreFields(activity, activitiesByType.get(tipo)!)) {
-        activitiesByType.set(tipo, activity);
-        console.error(`✅ [COLETA] previous_results: ${tipo} -> ID ${newId} (campos: ${Object.keys(activity.campos_preenchidos).length})`);
+      if (activitiesByType.has(tipo)) {
+        const existing = activitiesByType.get(tipo)!;
+        const mergedFields = mergeActivityFields(existing.campos_preenchidos, newFields);
+        existing.campos_preenchidos = mergedFields;
+        console.error(`🔄 [COLETA] MERGE previous_results -> ${tipo}: ${Object.keys(mergedFields).length} campos totais`);
       } else {
-        console.error(`⚠️ [COLETA] Ignorando duplicata de previous_results: ${tipo} (menos campos)`);
+        const activity: AtividadeParaSalvar = {
+          id: newId,
+          tipo: tipo,
+          titulo: built.titulo || built.name || `Atividade ${tipo}`,
+          campos_preenchidos: newFields,
+          metadata: {
+            criado_em: new Date().toISOString(),
+            pipeline_version: 'v2',
+            model_used: built.model_used,
+            original_id: built.id || built.original_id
+          }
+        };
+        activitiesByType.set(tipo, activity);
+        console.error(`✅ [COLETA] previous_results: ${tipo} -> ID ${newId} (campos: ${Object.keys(newFields).length})`);
       }
     }
     console.error(`📦 [COLETA] ${builtActivities.length} atividades de previous_results.criar_atividade`);
@@ -527,8 +555,13 @@ async function collectActivitiesFromAllSources(
     
     if (Object.keys(consolidatedFields).length === 0) continue;
     
-    if (!activitiesByType.has(tipo)) {
-      const newId = generateActivityId();
+    if (activitiesByType.has(tipo)) {
+      const existing = activitiesByType.get(tipo)!;
+      const mergedFields = mergeActivityFields(existing.campos_preenchidos, consolidatedFields);
+      existing.campos_preenchidos = mergedFields;
+      console.error(`🔄 [COLETA] MERGE Store -> ${tipo}: ${Object.keys(mergedFields).length} campos totais`);
+    } else {
+      const newId = ensureValidActivityId(undefined);
       
       activitiesByType.set(tipo, {
         id: newId,
@@ -542,8 +575,6 @@ async function collectActivitiesFromAllSources(
         }
       });
       console.error(`✅ [COLETA] Store: ${tipo} -> ID ${newId}`);
-    } else {
-      console.error(`⚠️ [COLETA] Ignorando duplicata do Store: ${tipo} (já existe de previous_results)`);
     }
   }
   console.error(`📦 [COLETA] ${storeActivities.length} atividades do ChosenActivitiesStore`);
@@ -596,8 +627,13 @@ async function collectActivitiesFromAllSources(
         
         if (Object.keys(fields).length === 0) continue;
         
-        if (!activitiesByType.has(tipo)) {
-          const newId = generateActivityId();
+        if (activitiesByType.has(tipo)) {
+          const existing = activitiesByType.get(tipo)!;
+          const mergedFields = mergeActivityFields(existing.campos_preenchidos, fields);
+          existing.campos_preenchidos = mergedFields;
+          console.error(`🔄 [COLETA] MERGE localStorage -> ${tipo}: ${Object.keys(mergedFields).length} campos totais (key: ${key})`);
+        } else {
+          const newId = ensureValidActivityId(undefined);
           
           activitiesByType.set(tipo, {
             id: newId,
@@ -612,8 +648,6 @@ async function collectActivitiesFromAllSources(
             }
           });
           console.error(`✅ [COLETA] localStorage: ${tipo} -> ID ${newId} (key: ${key})`);
-        } else {
-          console.error(`⚠️ [COLETA] Ignorando duplicata do localStorage: ${tipo} (key: ${key})`);
         }
       }
     }
