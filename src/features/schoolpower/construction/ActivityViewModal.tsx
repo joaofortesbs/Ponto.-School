@@ -614,7 +614,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             if (validQuestions.length > 0) {
               contentToLoad.questions = validQuestions;
               console.log(`✅ Quiz Interativo carregado com ${validQuestions.length} questões válidas para: ${activity.id}`);
-              setQuizInterativoContent(contentToLoad); // Define o estado específico para Quiz Interativo
+              setQuizInterativoContent(contentToLoad);
             } else {
               console.warn('⚠️ Nenhuma questão válida encontrada no Quiz');
               contentToLoad = null;
@@ -627,7 +627,32 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           console.error('❌ Erro ao processar conteúdo do Quiz Interativo:', error);
           contentToLoad = null;
         }
-      } else {
+      }
+      
+      // FALLBACK: Se não encontrou no localStorage, usar dados do banco (originalData)
+      if (!contentToLoad && activity.originalData) {
+        console.log('📊 Quiz Interativo: Usando dados do banco (originalData) como fallback');
+        const dbData = activity.originalData.campos || activity.originalData;
+        
+        if (dbData && dbData.questions && Array.isArray(dbData.questions) && dbData.questions.length > 0) {
+          const validQuestions = dbData.questions.filter(q =>
+            q && (q.question || q.text) && (q.options || q.type === 'verdadeiro-falso') && q.correctAnswer
+          );
+          
+          if (validQuestions.length > 0) {
+            contentToLoad = {
+              ...dbData,
+              questions: validQuestions,
+              title: dbData.title || activity.originalData.titulo || 'Quiz Interativo',
+              description: dbData.description || 'Atividade criada na plataforma'
+            };
+            console.log(`✅ Quiz Interativo: ${validQuestions.length} questões carregadas do banco de dados`);
+            setQuizInterativoContent(contentToLoad);
+          }
+        }
+      }
+      
+      if (!contentToLoad) {
         console.log('ℹ️ Nenhum conteúdo específico encontrado para Quiz Interativo. Usando dados gerais.');
       }
     }
@@ -652,8 +677,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
             if (validCards.length > 0) {
               console.log(`✅ Flash Cards carregado com ${validCards.length} cards válidos para: ${activity.id}`);
-              contentToLoad.cards = validCards; // Garantir apenas cards válidos
-              // Não usar setFlashCardsContent aqui para evitar loops
+              contentToLoad.cards = validCards;
             } else {
               console.warn('⚠️ Nenhum card válido encontrado');
               contentToLoad = null;
@@ -666,7 +690,32 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           console.error('❌ Erro ao processar conteúdo de Flash Cards:', error);
           contentToLoad = null;
         }
-      } else {
+      }
+      
+      // FALLBACK: Se não encontrou no localStorage, usar dados do banco (originalData)
+      if (!contentToLoad && activity.originalData) {
+        console.log('🃏 Flash Cards: Usando dados do banco (originalData) como fallback');
+        const dbData = activity.originalData.campos || activity.originalData;
+        
+        if (dbData && dbData.cards && Array.isArray(dbData.cards) && dbData.cards.length > 0) {
+          const validCards = dbData.cards.filter(card =>
+            card && typeof card === 'object' && card.front && card.back
+          );
+          
+          if (validCards.length > 0) {
+            contentToLoad = {
+              ...dbData,
+              cards: validCards,
+              title: dbData.title || activity.originalData.titulo || 'Flash Cards',
+              description: dbData.description || 'Atividade criada na plataforma'
+            };
+            console.log(`✅ Flash Cards: ${validCards.length} cards carregados do banco de dados`);
+            setFlashCardsContent(contentToLoad);
+          }
+        }
+      }
+      
+      if (!contentToLoad) {
         console.log('ℹ️ Nenhum conteúdo específico encontrado para Flash Cards. Usando dados gerais.');
       }
     }
@@ -780,7 +829,35 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           }
         };
         console.log('📚 Dados da Sequência Didática processados para visualização:', contentToLoad);
-      } else {
+      }
+      
+      // FALLBACK: Se não encontrou no localStorage, usar dados do banco (originalData)
+      if (!contentToLoad && activity.originalData) {
+        console.log('📚 Sequência Didática: Usando dados do banco (originalData) como fallback');
+        const dbData = activity.originalData.campos || activity.originalData;
+        
+        if (dbData && (dbData.aulas || dbData.cronograma || dbData.objetivosAprendizagem)) {
+          contentToLoad = {
+            ...previewData,
+            ...dbData,
+            id: activity.id,
+            type: activityType,
+            title: dbData.title || activity.originalData.titulo || 'Sequência Didática',
+            description: dbData.description || 'Atividade criada na plataforma',
+            sequenciaDidatica: dbData,
+            metadados: {
+              totalAulas: dbData.quantidadeAulas || dbData.aulas?.length || 0,
+              totalDiagnosticos: dbData.quantidadeDiagnosticos || 0,
+              totalAvaliacoes: dbData.quantidadeAvaliacoes || 0,
+              isGeneratedByAI: true,
+              generatedAt: new Date().toISOString()
+            }
+          };
+          console.log('✅ Sequência Didática: Dados carregados do banco de dados');
+        }
+      }
+      
+      if (!contentToLoad) {
         console.log('⚠️ Nenhum conteúdo específico da Sequência Didática encontrado');
         // Criar estrutura básica a partir dos dados do formulário
         contentToLoad = {
