@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web", "python-3.11", "postgresql-16"]
+modules = ["nodejs-20", "web", "python-3.11"]
 run = "npm run dev"
 
 [nix]
@@ -218,7 +218,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "bash -c \"node api/server.js & npm run dev\""
+args = "npm run dev"
 waitForPort = 5000
 
 [auth]
