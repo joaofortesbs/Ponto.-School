@@ -12,6 +12,13 @@
 
 import { executeWithCascadeFallback } from '../../services/controle-APIs-gerais-school-power';
 import { getContextManager, type ResultadoEtapa, type ResultadoCapability } from './context-manager';
+import { 
+  sanitizeAiOutput, 
+  sanitizeContextForPrompt, 
+  validateReflectionOutput,
+  generateGenericFallback,
+  containsRawJson,
+} from './output-sanitizer';
 
 const DEVELOPMENT_REFLECTION_PROMPT = `
 Você é o Jota, assistente de IA do Ponto School.
@@ -45,7 +52,13 @@ EXEMPLOS BOM:
 - "Encontrei 12 tipos de atividades compatíveis com seu objetivo. Priorizei Flash Cards e Quiz Gamificado por serem mais engajantes para essa faixa etária."
 - "Já defini as atividades, agora estou personalizando o conteúdo. Incluí 15 questões variadas sobre o tema que você pediu."
 
-RETORNE APENAS A REFLEXÃO, sem formatação extra.
+REGRAS CRÍTICAS DE FORMATO:
+- NUNCA retorne JSON, arrays ou objetos
+- NUNCA retorne dados técnicos como [{"id":"...", "title":"..."}]
+- SEMPRE retorne texto narrativo em primeira pessoa
+- Se você recebeu dados JSON no contexto, SINTETIZE-OS em texto natural
+
+RETORNE APENAS A REFLEXÃO NARRATIVA, sem formatação extra, sem JSON, sem código.
 `.trim();
 
 export interface DevelopmentReflectionResult {
@@ -86,7 +99,8 @@ export async function generateDevelopmentReflection(
   };
   contextManager.salvarResultadoEtapa(resultadoEtapa);
 
-  const contextText = contextManager.gerarContextoParaChamada('desenvolvimento');
+  const rawContextText = contextManager.gerarContextoParaChamada('desenvolvimento');
+  const contextText = sanitizeContextForPrompt(rawContextText);
   
   const capabilitiesSummary = capabilities
     .map(c => `- ${c.displayName}: ${c.sucesso ? 'Sucesso' : 'Erro'}`)
@@ -96,17 +110,23 @@ export async function generateDevelopmentReflection(
     .flatMap(c => {
       const items: string[] = [];
       if (c.descobertas) {
-        items.push(...c.descobertas.map(d => `Descoberta: ${d}`));
+        items.push(...c.descobertas.filter(d => !containsRawJson(d)).map(d => `Descoberta: ${d}`));
       }
       if (c.decisoes) {
-        items.push(...c.decisoes.map(d => `Decisão: ${d}`));
+        items.push(...c.decisoes.filter(d => !containsRawJson(d)).map(d => `Decisão: ${d}`));
       }
       if (c.metricas) {
-        items.push(...Object.entries(c.metricas).map(([k, v]) => `${k}: ${v}`));
+        const sanitizedMetrics = Object.entries(c.metricas)
+          .filter(([_, v]) => {
+            const strVal = String(v);
+            return !containsRawJson(strVal) && !strVal.includes('{') && !strVal.includes('[');
+          })
+          .map(([k, v]) => `${k}: ${v}`);
+        items.push(...sanitizedMetrics);
       }
       if (c.dados) {
         const dadosStr = formatDadosForPrompt(c.dados);
-        if (dadosStr) {
+        if (dadosStr && !containsRawJson(dadosStr)) {
           items.push(`Dados: ${dadosStr}`);
         }
       }
@@ -126,10 +146,31 @@ export async function generateDevelopmentReflection(
       onProgress: (status) => console.log(`📝 [DevelopmentCard] ${status}`),
     });
 
-    let reflexao = `Concluí "${titulo}" com sucesso. Todas as ações necessárias foram realizadas.`;
+    let reflexao = generateGenericFallback({ etapaTitulo: titulo, capabilityName: capabilities[0]?.capabilityName });
 
     if (result.success && result.data) {
-      reflexao = result.data.trim();
+      const rawReflexao = result.data.trim();
+      
+      const sanitized = sanitizeAiOutput(rawReflexao, {
+        etapaTitulo: titulo,
+        capabilityName: capabilities[0]?.capabilityName,
+        expectedType: 'narrative',
+      });
+      
+      if (sanitized.wasModified) {
+        console.warn(`⚠️ [DevelopmentCard] Output sanitizado - Issues: ${sanitized.detectedIssues.join(', ')}`);
+      }
+      
+      const validation = validateReflectionOutput(sanitized.sanitized);
+      
+      if (validation.isValid) {
+        reflexao = validation.sanitized;
+      } else {
+        console.warn(`⚠️ [DevelopmentCard] Reflexão inválida, usando fallback - Issues: ${validation.issues.join(', ')}`);
+        if (validation.sanitized && validation.sanitized.length > 20) {
+          reflexao = validation.sanitized;
+        }
+      }
     }
 
     contextManager.salvarReflexaoEtapa(etapaIndex, reflexao);
@@ -144,7 +185,7 @@ export async function generateDevelopmentReflection(
   } catch (error) {
     console.error('❌ [DevelopmentCard] Erro ao gerar reflexão:', error);
     
-    const fallbackReflexao = `Concluí a etapa "${titulo}". Seguindo para a próxima fase do processo.`;
+    const fallbackReflexao = generateGenericFallback({ etapaTitulo: titulo, capabilityName: capabilities[0]?.capabilityName });
     contextManager.salvarReflexaoEtapa(etapaIndex, fallbackReflexao);
 
     return {
@@ -170,14 +211,25 @@ export function convertCapabilityInsightToResultado(
   },
   rawData?: any
 ): ResultadoCapability {
+  const sanitizedMetrics: Record<string, number | string> | undefined = insight.metrics
+    ? Object.fromEntries(
+        Object.entries(insight.metrics)
+          .filter(([_, v]) => {
+            const strVal = String(v);
+            return !containsRawJson(strVal) && !strVal.includes('{') && !strVal.includes('[');
+          })
+          .map(([k, v]) => [k, v])
+      )
+    : undefined;
+
   const resultado: ResultadoCapability = {
     capabilityName: insight.capabilityName,
     displayName: insight.displayName,
     categoria: insight.categoria,
     sucesso: insight.success,
-    descobertas: insight.discovered,
-    decisoes: insight.decided,
-    metricas: insight.metrics,
+    descobertas: insight.discovered?.filter(d => !containsRawJson(d)),
+    decisoes: insight.decided?.filter(d => !containsRawJson(d)),
+    metricas: sanitizedMetrics,
     duracao: insight.duration,
   };
 

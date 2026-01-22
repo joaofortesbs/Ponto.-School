@@ -36,3 +36,14 @@ export {
   generateQuickFinalResponse,
   type FinalResponseResult,
 } from './final-response-service';
+
+export {
+  containsRawJson,
+  isCleanNarrativeText,
+  sanitizeAiOutput,
+  sanitizeContextForPrompt,
+  validateReflectionOutput,
+  generateGenericFallback,
+  jsonToNarrative,
+  type SanitizationResult,
+} from './output-sanitizer';

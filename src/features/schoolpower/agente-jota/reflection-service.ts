@@ -3,9 +3,17 @@
  * 
  * Gera reflexões narrativas contextuais após cada objetivo ser concluído.
  * Usa abordagem híbrida: template base + LLM para detalhes específicos.
+ * 
+ * PROTEÇÃO ANTI-JSON: Inclui sanitização e retry automático para
+ * prevenir vazamento de dados técnicos para a UI.
  */
 
 import { executeWithCascadeFallback } from '../services/controle-APIs-gerais-school-power';
+import { 
+  containsRawJson, 
+  sanitizeAiOutput, 
+  validateReflectionOutput 
+} from './context/output-sanitizer';
 
 export interface CapabilityInsight {
   capabilityName: string;
@@ -126,31 +134,80 @@ class NarrativeReflectionService {
     }
   }
 
-  private async generateWithLLM(insights: ObjectiveInsights): Promise<string> {
+  private async generateWithLLM(insights: ObjectiveInsights, retryCount = 0): Promise<string> {
+    const MAX_RETRIES = 2;
+    
     const capabilitiesSummary = insights.capabilities
       .map(c => `- ${c.displayName}: ${c.success ? 'Sucesso' : 'Erro'}`)
       .join('\n');
 
     const insightsData = insights.capabilities
-      .flatMap(c => [
-        ...(c.discovered || []).map(d => `Descoberta: ${d}`),
-        ...(c.decided || []).map(d => `Decisão: ${d}`),
-        ...(c.learned || []).map(l => `Aprendizado: ${l}`),
-        ...Object.entries(c.metrics || {}).map(([k, v]) => `${k}: ${v}`),
-      ])
+      .flatMap(c => {
+        const items: string[] = [];
+        
+        (c.discovered || []).filter(d => !containsRawJson(d)).forEach(d => {
+          items.push(`Descoberta: ${d}`);
+        });
+        
+        (c.decided || []).filter(d => !containsRawJson(d)).forEach(d => {
+          items.push(`Decisão: ${d}`);
+        });
+        
+        (c.learned || []).filter(l => !containsRawJson(l)).forEach(l => {
+          items.push(`Aprendizado: ${l}`);
+        });
+        
+        Object.entries(c.metrics || {}).forEach(([k, v]) => {
+          const valueStr = String(v);
+          if (!containsRawJson(valueStr) && !valueStr.includes('{') && !valueStr.includes('[')) {
+            items.push(`${k}: ${valueStr}`);
+          }
+        });
+        
+        return items;
+      })
       .join('\n') || 'Nenhum dado específico coletado';
+
+    const retryWarning = retryCount > 0 
+      ? '\n\nAVISO CRÍTICO: Sua resposta anterior continha JSON. RETORNE APENAS TEXTO NARRATIVO.'
+      : '';
 
     const prompt = REFLECTION_PROMPT
       .replace('{objective_title}', insights.objectiveTitle)
       .replace('{capabilities_summary}', capabilitiesSummary)
-      .replace('{insights_data}', insightsData);
+      .replace('{insights_data}', insightsData) + retryWarning;
 
     const result = await executeWithCascadeFallback(prompt, {
       onProgress: (status) => console.log(`📝 [Reflection] ${status}`),
     });
 
     if (result.success && result.data) {
-      return result.data.trim();
+      const rawNarrative = result.data.trim();
+      
+      if (containsRawJson(rawNarrative)) {
+        console.warn(`⚠️ [ReflectionService] Output contém JSON bruto (tentativa ${retryCount + 1}/${MAX_RETRIES})`);
+        
+        if (retryCount < MAX_RETRIES) {
+          console.log(`🔄 [ReflectionService] Retentando geração de reflexão...`);
+          return this.generateWithLLM(insights, retryCount + 1);
+        }
+        
+        console.warn('⚠️ [ReflectionService] Max retries atingido, sanitizando output...');
+        const sanitized = sanitizeAiOutput(rawNarrative, {
+          etapaTitulo: insights.objectiveTitle,
+          capabilityName: insights.capabilities[0]?.capabilityName,
+          expectedType: 'narrative',
+        });
+        return sanitized.sanitized;
+      }
+      
+      const validation = validateReflectionOutput(rawNarrative);
+      if (!validation.isValid) {
+        console.warn(`⚠️ [ReflectionService] Reflexão inválida: ${validation.issues.join(', ')}`);
+        return validation.sanitized || rawNarrative;
+      }
+      
+      return rawNarrative;
     }
 
     throw new Error('Falha ao gerar reflexão com LLM');
@@ -229,11 +286,17 @@ class NarrativeReflectionService {
     for (const cap of insights.capabilities) {
       if (cap.metrics) {
         for (const [key, value] of Object.entries(cap.metrics)) {
-          highlights.push(`${key}: ${value}`);
+          const valueStr = String(value);
+          if (!containsRawJson(valueStr) && !valueStr.includes('{') && !valueStr.includes('[')) {
+            highlights.push(`${key}: ${valueStr}`);
+          }
         }
       }
       if (cap.discovered && cap.discovered.length > 0) {
-        highlights.push(cap.discovered[0]);
+        const firstDiscovery = cap.discovered[0];
+        if (!containsRawJson(firstDiscovery)) {
+          highlights.push(firstDiscovery);
+        }
       }
     }
     

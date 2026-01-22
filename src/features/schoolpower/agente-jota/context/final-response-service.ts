@@ -9,6 +9,11 @@
 
 import { executeWithCascadeFallback } from '../../services/controle-APIs-gerais-school-power';
 import { getContextManager, type ContextoMacro } from './context-manager';
+import { 
+  sanitizeAiOutput, 
+  sanitizeContextForPrompt, 
+  containsRawJson,
+} from './output-sanitizer';
 
 const FINAL_RESPONSE_PROMPT = `
 Você é o Jota, assistente de IA do Ponto School.
@@ -30,6 +35,12 @@ REGRAS:
 - Conecte com o pedido ORIGINAL do usuário
 - NÃO repita as reflexões anteriores verbatim
 - Sintetize os resultados de forma nova
+
+REGRAS CRÍTICAS DE FORMATO:
+- NUNCA retorne JSON, arrays ou objetos técnicos
+- NUNCA retorne dados como [{"id":"...", "title":"..."}]
+- SEMPRE responda em texto narrativo natural
+- Se você recebeu dados técnicos no contexto, SINTETIZE-OS em linguagem natural
 
 FORMATO SUGERIDO:
 "[Frase de conclusão com dados específicos]. [O que foi criado]. [Destaque ou dica útil]. [Próximo passo opcional]."
@@ -85,7 +96,8 @@ export async function generateFinalResponse(
 
   contextManager.atualizarEstado('gerando_final');
 
-  const fullContext = contextManager.gerarContextoParaChamada('final');
+  const rawContext = contextManager.gerarContextoParaChamada('final');
+  const fullContext = sanitizeContextForPrompt(rawContext);
   const prompt = FINAL_RESPONSE_PROMPT.replace('{full_context}', fullContext);
 
   try {
@@ -96,7 +108,15 @@ export async function generateFinalResponse(
     let resposta = gerarRespostaFallback(contexto);
 
     if (result.success && result.data) {
-      resposta = result.data.trim();
+      const rawResposta = result.data.trim();
+      
+      if (containsRawJson(rawResposta)) {
+        console.warn('⚠️ [FinalResponse] Resposta contém JSON bruto, sanitizando...');
+        const sanitized = sanitizeAiOutput(rawResposta, { expectedType: 'narrative' });
+        resposta = sanitized.sanitized;
+      } else {
+        resposta = rawResposta;
+      }
     }
 
     contextManager.finalizarSessao();
@@ -159,10 +179,23 @@ export async function generateQuickFinalResponse(
   atividadesCriadas: string[],
   dadosAdicionais?: Record<string, any>
 ): Promise<string> {
+  const dadosLimpos: Record<string, any> = {};
+  if (dadosAdicionais) {
+    for (const [key, value] of Object.entries(dadosAdicionais)) {
+      if (typeof value === 'string' && containsRawJson(value)) {
+        continue;
+      }
+      if (typeof value === 'object' && value !== null) {
+        continue;
+      }
+      dadosLimpos[key] = value;
+    }
+  }
+
   const contextoSimplificado = `
 PEDIDO ORIGINAL: "${inputOriginal}"
 ATIVIDADES CRIADAS: ${atividadesCriadas.join(', ') || 'Nenhuma'}
-DADOS ADICIONAIS: ${JSON.stringify(dadosAdicionais || {})}
+TOTAL DE ATIVIDADES: ${atividadesCriadas.length}
 `.trim();
 
   const prompt = FINAL_RESPONSE_PROMPT.replace('{full_context}', contextoSimplificado);
@@ -172,7 +205,18 @@ DADOS ADICIONAIS: ${JSON.stringify(dadosAdicionais || {})}
   });
 
   if (result.success && result.data) {
-    return result.data.trim();
+    const rawResponse = result.data.trim();
+    
+    if (containsRawJson(rawResponse)) {
+      console.warn('⚠️ [FinalResponse] Quick response contém JSON, sanitizando...');
+      const sanitized = sanitizeAiOutput(rawResponse, {
+        etapaTitulo: 'Resposta Final',
+        expectedType: 'narrative',
+      });
+      return sanitized.sanitized;
+    }
+    
+    return rawResponse;
   }
 
   if (atividadesCriadas.length > 0) {
