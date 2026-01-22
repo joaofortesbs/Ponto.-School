@@ -47,6 +47,31 @@ const DELAY_BETWEEN_SAVES_MS = 200;
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+const ALPHANUMERIC_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const ACTIVITY_ID_LENGTH = 8;
+
+function generateActivityId(): string {
+  let result = '';
+  for (let i = 0; i < ACTIVITY_ID_LENGTH; i++) {
+    result += ALPHANUMERIC_CHARS.charAt(Math.floor(Math.random() * ALPHANUMERIC_CHARS.length));
+  }
+  return result;
+}
+
+function isValidActivityId(id: string): boolean {
+  if (!id || typeof id !== 'string') return false;
+  if (id === 'fields' || id === 'unknown') return false;
+  if (id.startsWith('built-')) return false;
+  if (id.includes('-') && id.split('-').length > 2) return false;
+  const alphanumericPattern = /^[A-Za-z0-9]{6,12}$/;
+  return alphanumericPattern.test(id);
+}
+
+function normalizeActivityType(tipo: string): string {
+  if (!tipo) return 'unknown';
+  return tipo.toLowerCase().replace(/[_\s]/g, '-').trim();
+}
+
 function isValidUUID(value: string | null | undefined): boolean {
   if (!value || typeof value !== 'string') return false;
   return UUID_REGEX.test(value);
@@ -442,30 +467,47 @@ duration: ${duration}ms
 async function collectActivitiesFromAllSources(
   input: CapabilityInput
 ): Promise<{ activities: AtividadeParaSalvar[]; storageKeys: StorageKeys }> {
-  const activities: AtividadeParaSalvar[] = [];
   const storageKeys: StorageKeys = { constructed: [], compartilhada: [], activity: [] };
-  const seenIds = new Set<string>();
+  
+  const activitiesByType = new Map<string, AtividadeParaSalvar>();
+  
+  console.error(`
+═══════════════════════════════════════════════════════════════════════
+📦 [COLETA V2] Iniciando coleta com deduplicação por TIPO
+═══════════════════════════════════════════════════════════════════════`);
 
   const criarResult = input.previous_results?.get('criar_atividade');
   if (criarResult?.success && criarResult?.data?.activities_built) {
     const builtActivities = criarResult.data.activities_built as any[];
     
     for (const built of builtActivities) {
-      if (!seenIds.has(built.id || built.original_id)) {
-        const id = built.id || built.original_id;
-        seenIds.add(id);
-        
-        activities.push({
-          id: id,
-          tipo: built.tipo || built.activity_type || 'unknown',
-          titulo: built.titulo || built.name || `Atividade ${id}`,
-          campos_preenchidos: built.campos_preenchidos || built.fields || {},
-          metadata: {
-            criado_em: new Date().toISOString(),
-            pipeline_version: 'v2',
-            model_used: built.model_used
-          }
-        });
+      const tipo = normalizeActivityType(built.tipo || built.activity_type || 'unknown');
+      
+      if (tipo === 'unknown' || tipo === 'fields') {
+        console.error(`⚠️ [COLETA] Ignorando atividade com tipo inválido: ${tipo}`);
+        continue;
+      }
+      
+      const newId = generateActivityId();
+      
+      const activity: AtividadeParaSalvar = {
+        id: newId,
+        tipo: tipo,
+        titulo: built.titulo || built.name || `Atividade ${tipo}`,
+        campos_preenchidos: built.campos_preenchidos || built.fields || {},
+        metadata: {
+          criado_em: new Date().toISOString(),
+          pipeline_version: 'v2',
+          model_used: built.model_used,
+          original_id: built.id || built.original_id
+        }
+      };
+      
+      if (!activitiesByType.has(tipo) || hasMoreFields(activity, activitiesByType.get(tipo)!)) {
+        activitiesByType.set(tipo, activity);
+        console.error(`✅ [COLETA] previous_results: ${tipo} -> ID ${newId} (campos: ${Object.keys(activity.campos_preenchidos).length})`);
+      } else {
+        console.error(`⚠️ [COLETA] Ignorando duplicata de previous_results: ${tipo} (menos campos)`);
       }
     }
     console.error(`📦 [COLETA] ${builtActivities.length} atividades de previous_results.criar_atividade`);
@@ -475,25 +517,33 @@ async function collectActivitiesFromAllSources(
   const storeActivities = store.getChosenActivities();
   
   for (const activity of storeActivities) {
-    if (!seenIds.has(activity.id)) {
-      seenIds.add(activity.id);
+    const tipo = normalizeActivityType(activity.tipo);
+    
+    if (tipo === 'unknown' || tipo === 'fields') continue;
+    
+    const camposPreenchidos = activity.campos_preenchidos || {};
+    const dadosConstruidos = activity.dados_construidos?.generated_fields || {};
+    const consolidatedFields = { ...camposPreenchidos, ...dadosConstruidos };
+    
+    if (Object.keys(consolidatedFields).length === 0) continue;
+    
+    if (!activitiesByType.has(tipo)) {
+      const newId = generateActivityId();
       
-      const camposPreenchidos = activity.campos_preenchidos || {};
-      const dadosConstruidos = activity.dados_construidos?.generated_fields || {};
-      const consolidatedFields = { ...camposPreenchidos, ...dadosConstruidos };
-      
-      if (Object.keys(consolidatedFields).length > 0) {
-        activities.push({
-          id: activity.id,
-          tipo: activity.tipo,
-          titulo: consolidatedFields.titulo || consolidatedFields.name || `Atividade ${activity.id}`,
-          campos_preenchidos: consolidatedFields,
-          metadata: {
-            criado_em: new Date().toISOString(),
-            pipeline_version: 'v2'
-          }
-        });
-      }
+      activitiesByType.set(tipo, {
+        id: newId,
+        tipo: tipo,
+        titulo: consolidatedFields.titulo || consolidatedFields.name || `Atividade ${tipo}`,
+        campos_preenchidos: consolidatedFields,
+        metadata: {
+          criado_em: new Date().toISOString(),
+          pipeline_version: 'v2',
+          original_id: activity.id
+        }
+      });
+      console.error(`✅ [COLETA] Store: ${tipo} -> ID ${newId}`);
+    } else {
+      console.error(`⚠️ [COLETA] Ignorando duplicata do Store: ${tipo} (já existe de previous_results)`);
     }
   }
   console.error(`📦 [COLETA] ${storeActivities.length} atividades do ChosenActivitiesStore`);
@@ -531,37 +581,77 @@ async function collectActivitiesFromAllSources(
       if (activityData && keyType) {
         storageKeys[keyType].push(key);
         
-        const id = activityData.id || activityData.activity_id || key.split('_').pop();
+        const tipo = normalizeActivityType(
+          activityData.tipo || activityData.type || activityData.activity_type || 
+          extractTypeFromKey(key) || 'unknown'
+        );
         
-        if (id && !seenIds.has(id)) {
-          seenIds.add(id);
+        if (tipo === 'unknown' || tipo === 'fields') continue;
+        
+        const fields = activityData.campos_preenchidos || 
+                      activityData.formData || 
+                      activityData.fields || 
+                      activityData.generated_fields ||
+                      {};
+        
+        if (Object.keys(fields).length === 0) continue;
+        
+        if (!activitiesByType.has(tipo)) {
+          const newId = generateActivityId();
           
-          const fields = activityData.campos_preenchidos || 
-                        activityData.formData || 
-                        activityData.fields || 
-                        activityData.generated_fields ||
-                        {};
-          
-          if (Object.keys(fields).length > 0) {
-            activities.push({
-              id: id,
-              tipo: activityData.tipo || activityData.type || activityData.activity_type || 'unknown',
-              titulo: fields.titulo || activityData.titulo || activityData.name || `Atividade ${id}`,
-              campos_preenchidos: fields,
-              metadata: {
-                criado_em: activityData.criadoEm || new Date().toISOString(),
-                pipeline_version: activityData.pipeline_version || 'v2'
-              }
-            });
-          }
+          activitiesByType.set(tipo, {
+            id: newId,
+            tipo: tipo,
+            titulo: fields.titulo || activityData.titulo || activityData.name || `Atividade ${tipo}`,
+            campos_preenchidos: fields,
+            metadata: {
+              criado_em: activityData.criadoEm || new Date().toISOString(),
+              pipeline_version: 'v2',
+              original_id: activityData.id || activityData.activity_id,
+              storage_key: key
+            }
+          });
+          console.error(`✅ [COLETA] localStorage: ${tipo} -> ID ${newId} (key: ${key})`);
+        } else {
+          console.error(`⚠️ [COLETA] Ignorando duplicata do localStorage: ${tipo} (key: ${key})`);
         }
       }
     }
   }
 
-  console.error(`📦 [COLETA] Total consolidado: ${activities.length} atividades únicas`);
+  const activities = Array.from(activitiesByType.values());
+  
+  console.error(`
+═══════════════════════════════════════════════════════════════════════
+📦 [COLETA V2] RESULTADO FINAL
+═══════════════════════════════════════════════════════════════════════
+Total de atividades únicas: ${activities.length}
+Tipos coletados: ${Array.from(activitiesByType.keys()).join(', ')}
+═══════════════════════════════════════════════════════════════════════`);
   
   return { activities, storageKeys };
+}
+
+function extractTypeFromKey(key: string): string | null {
+  const patterns = [
+    /^constructed_(.+?)(?:_|$)/,
+    /^activity_(.+?)(?:_fields)?$/,
+    /^atividade_compartilhada_(.+?)$/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = key.match(pattern);
+    if (match && match[1]) {
+      return match[1].replace(/_/g, '-');
+    }
+  }
+  return null;
+}
+
+function hasMoreFields(a: AtividadeParaSalvar, b: AtividadeParaSalvar): boolean {
+  const aCount = Object.keys(a.campos_preenchidos || {}).length;
+  const bCount = Object.keys(b.campos_preenchidos || {}).length;
+  return aCount > bCount;
 }
 
 function validateActivities(

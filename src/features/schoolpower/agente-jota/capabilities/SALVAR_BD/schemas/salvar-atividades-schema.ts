@@ -46,6 +46,8 @@ export interface AtividadeParaSalvar {
     criado_em: string;
     pipeline_version: string;
     model_used?: string;
+    original_id?: string;
+    storage_key?: string;
   };
 }
 
