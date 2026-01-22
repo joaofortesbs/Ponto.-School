@@ -20,11 +20,11 @@ export function AssistantMessage({ content, isThinking = false }: AssistantMessa
           <JotaAvatarChat size="md" showAnimation={true} />
         </div>
         
-        <div className="flex flex-col justify-between min-h-[48px]">
-          <span className="text-white font-bold text-sm leading-none pt-0.5">Jota</span>
+        <div className="flex flex-col min-h-[48px] py-1">
+          <span className="text-white font-bold text-[15px] leading-tight mb-1">Jota</span>
           
           <motion.div 
-            className="pb-0.5"
+            className="mt-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.3 }}
