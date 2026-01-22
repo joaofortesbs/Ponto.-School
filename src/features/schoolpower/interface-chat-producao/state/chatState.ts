@@ -15,9 +15,11 @@ interface ChatState {
   isLoading: boolean;
   sessionId: string | null;
   initialMessageProcessed: boolean;
+  lastProcessedInitialMessage: string | null;
   _hasHydrated: boolean;
 
   setHasHydrated: (state: boolean) => void;
+  setLastProcessedInitialMessage: (message: string) => void;
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
   addTextMessage: (role: 'user' | 'assistant', content: string) => void;
   addPlanCard: (planData: PlanCardData) => void;
@@ -50,10 +52,15 @@ export const useChatState = create<ChatState>()(
   isLoading: false,
   sessionId: null,
   initialMessageProcessed: false,
+  lastProcessedInitialMessage: null,
   _hasHydrated: false,
 
   setHasHydrated: (state) => {
     set({ _hasHydrated: state });
+  },
+
+  setLastProcessedInitialMessage: (message) => {
+    set({ lastProcessedInitialMessage: message, initialMessageProcessed: true });
   },
 
   addMessage: (message) => {
@@ -352,7 +359,8 @@ export const useChatState = create<ChatState>()(
       isExecuting: false,
       executionStarted: false,
       sessionId: null,
-      initialMessageProcessed: false
+      initialMessageProcessed: false,
+      lastProcessedInitialMessage: null
     });
   },
 
@@ -388,6 +396,7 @@ export const useChatState = create<ChatState>()(
         activeDevModeCardId: state.activeDevModeCardId,
         sessionId: state.sessionId,
         initialMessageProcessed: state.initialMessageProcessed,
+        lastProcessedInitialMessage: state.lastProcessedInitialMessage,
         executionStarted: state.executionStarted,
         isExecuting: state.isExecuting
       }),

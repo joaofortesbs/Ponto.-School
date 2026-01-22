@@ -70,6 +70,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   const [isCardExpanded, setIsCardExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isExecutingPlanRef = useRef(false);
+  const hasProcessedInitialMessageRef = useRef(false);
 
   const { 
     messages,
@@ -85,6 +86,8 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     setSessionId: setStoredSessionId,
     initialMessageProcessed,
     setInitialMessageProcessed,
+    lastProcessedInitialMessage,
+    setLastProcessedInitialMessage,
     hasActiveSession,
     _hasHydrated
   } = useChatState();
@@ -114,14 +117,38 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       return;
     }
     
+    if (hasProcessedInitialMessageRef.current) {
+      console.log('🛡️ [ChatLayout] Ref bloqueou reprocessamento (StrictMode protection)');
+      return;
+    }
+    
+    if (lastProcessedInitialMessage === initialMessage) {
+      console.log('🔒 [ChatLayout] Mesma mensagem já processada anteriormente - NÃO reenviando');
+      hasProcessedInitialMessageRef.current = true;
+      return;
+    }
+    
+    const messageAlreadyExists = messages.some(
+      msg => msg.type === 'user' && msg.content === initialMessage
+    );
+    
+    if (messageAlreadyExists) {
+      console.log('🔒 [ChatLayout] Mensagem já existe no histórico - NÃO reenviando');
+      hasProcessedInitialMessageRef.current = true;
+      setLastProcessedInitialMessage(initialMessage);
+      return;
+    }
+    
     if (initialMessage && !initialMessageProcessed) {
       console.log('📨 [ChatLayout] Processando mensagem inicial (primeira vez):', initialMessage);
-      setInitialMessageProcessed(true);
+      hasProcessedInitialMessageRef.current = true;
+      setLastProcessedInitialMessage(initialMessage);
       handleUserPrompt(initialMessage);
     } else if (initialMessageProcessed) {
       console.log('🔄 [ChatLayout] Sessão restaurada - NÃO reenviando mensagem inicial');
+      hasProcessedInitialMessageRef.current = true;
     }
-  }, [initialMessage, initialMessageProcessed, setInitialMessageProcessed, _hasHydrated]);
+  }, [initialMessage, initialMessageProcessed, lastProcessedInitialMessage, setLastProcessedInitialMessage, _hasHydrated, messages]);
 
   const addMemory = useCallback((item: Omit<WorkingMemoryItem, 'id' | 'timestamp'>) => {
     const newItem: WorkingMemoryItem = {
