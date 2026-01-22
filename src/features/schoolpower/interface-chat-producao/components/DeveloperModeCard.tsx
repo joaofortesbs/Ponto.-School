@@ -5,6 +5,7 @@ import { ProgressiveExecutionCard, ObjectiveItem, CapabilityItem, ObjectiveRefle
 import type { DevModeCardData, CapabilityState } from '../types/message-types';
 import type { ActivityToBuild } from '../construction-interface';
 import { useChosenActivitiesStore } from '../stores/ChosenActivitiesStore';
+import { useReflectionsStore, saveReflectionFromEvent } from '../stores/ReflectionsStore';
 
 interface DeveloperModeCardProps {
   cardId: string;
@@ -23,13 +24,44 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
   const chosenActivitiesHydrated = useChosenActivitiesStore(state => state._hasHydrated);
   const chosenActivitiesCount = useChosenActivitiesStore(state => state.chosenActivities.length);
   
+  const getCardReflections = useReflectionsStore(state => state.getCardReflections);
+  const reflectionsHydrated = useReflectionsStore(state => state._hasHydrated);
+  
   const hasRestoredFromStoreRef = useRef(false);
+  const hasRestoredReflectionsRef = useRef(false);
   
   const activitiesToBuildRef = useRef<ActivityToBuild[]>([]);
 
   useEffect(() => {
     activitiesToBuildRef.current = activitiesToBuild;
   }, [activitiesToBuild]);
+
+  useEffect(() => {
+    if (reflectionsHydrated && !hasRestoredReflectionsRef.current) {
+      hasRestoredReflectionsRef.current = true;
+      const storedReflections = getCardReflections(cardId);
+      
+      if (storedReflections.size > 0) {
+        console.log(`🔄 [DeveloperModeCard] Restaurando ${storedReflections.size} reflexões persistidas para card ${cardId}`);
+        
+        const restoredMap = new Map<number, ObjectiveReflection>();
+        storedReflections.forEach((stored) => {
+          const targetIndex = stored.objectiveIndex;
+          restoredMap.set(targetIndex, {
+            id: stored.id,
+            objectiveTitle: stored.objectiveTitle,
+            narrative: stored.narrative,
+            tone: stored.tone,
+            highlights: stored.highlights || [],
+          });
+          console.log(`   ✅ Reflexão restaurada: objetivo ${targetIndex} - "${stored.objectiveTitle.substring(0, 30)}..."`);
+        });
+        
+        setReflections(restoredMap);
+        console.log(`✅ [DeveloperModeCard] ${restoredMap.size} reflexões restauradas com sucesso`);
+      }
+    }
+  }, [reflectionsHydrated, cardId, getCardReflections]);
 
   useEffect(() => {
     if (
@@ -111,17 +143,23 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
         });
         
         if (update.reflection) {
+          const reflectionData = {
+            id: update.reflection.id,
+            objectiveIndex: update.stepIndex,
+            objectiveTitle: update.reflection.objectiveTitle,
+            narrative: update.reflection.narrative,
+            tone: update.reflection.tone,
+            highlights: update.reflection.highlights || [],
+          };
+          
           setReflections(prev => {
             const next = new Map(prev);
-            next.set(update.stepIndex, {
-              id: update.reflection.id,
-              objectiveTitle: update.reflection.objectiveTitle,
-              narrative: update.reflection.narrative,
-              tone: update.reflection.tone,
-              highlights: update.reflection.highlights || [],
-            });
+            next.set(update.stepIndex, reflectionData);
             return next;
           });
+          
+          saveReflectionFromEvent(cardId, update.stepIndex, reflectionData);
+          console.log(`💾 [DeveloperModeCard] Reflexão persistida para card ${cardId}, etapa ${update.stepIndex}`);
         }
       }
 
