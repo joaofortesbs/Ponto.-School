@@ -45,6 +45,59 @@ const CAPABILITY_ID = 'salvar_atividades_bd';
 const API_TIMEOUT_MS = 10000;
 const DELAY_BETWEEN_SAVES_MS = 200;
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isValidUUID(value: string | null | undefined): boolean {
+  if (!value || typeof value !== 'string') return false;
+  return UUID_REGEX.test(value);
+}
+
+function getUserIdFromAllSources(input: CapabilityInput): string {
+  let userId: string | null = null;
+  const sources: string[] = [];
+
+  if (typeof localStorage !== 'undefined') {
+    const localStorageUserId = localStorage.getItem('user_id');
+    if (localStorageUserId && isValidUUID(localStorageUserId)) {
+      userId = localStorageUserId;
+      sources.push('localStorage.user_id');
+    }
+
+    if (!userId) {
+      const neonUser = localStorage.getItem('neon_user');
+      if (neonUser) {
+        try {
+          const parsed = JSON.parse(neonUser);
+          if (parsed?.id && isValidUUID(parsed.id)) {
+            userId = parsed.id;
+            sources.push('localStorage.neon_user.id');
+          }
+        } catch (e) {
+        }
+      }
+    }
+  }
+
+  if (!userId && input.context?.user_id && isValidUUID(input.context.user_id)) {
+    userId = input.context.user_id;
+    sources.push('input.context.user_id');
+  }
+
+  if (!userId && input.context?.professor_id && isValidUUID(input.context.professor_id)) {
+    userId = input.context.professor_id;
+    sources.push('input.context.professor_id');
+  }
+
+  console.error(`🔍 [AUTH] getUserIdFromAllSources:
+   - user_id encontrado: ${userId || 'NÃO'}
+   - fontes verificadas: ${sources.length > 0 ? sources.join(', ') : 'nenhuma válida'}
+   - localStorage.user_id: ${typeof localStorage !== 'undefined' ? localStorage.getItem('user_id') : 'N/A'}
+   - input.context.user_id: ${input.context?.user_id || 'N/A'}
+   - input.context.professor_id: ${input.context?.professor_id || 'N/A'}`);
+
+  return userId || 'unknown';
+}
+
 interface StorageKeys {
   constructed: string[];
   compartilhada: string[];
@@ -55,7 +108,7 @@ export async function salvarAtividadesBdV2(input: CapabilityInput): Promise<Capa
   const startTime = Date.now();
   const debug_log: DebugEntry[] = [];
   
-  const userId = input.context?.user_id || input.context?.professor_id || 'unknown';
+  const userId = getUserIdFromAllSources(input);
   const skipValidation = input.context?.skip_validation === true;
   const forceSave = input.context?.force_save === true;
 
@@ -69,10 +122,42 @@ skip_validation: ${skipValidation}
 force_save: ${forceSave}
 ═══════════════════════════════════════════════════════════════════════`);
 
+  if (!userId || userId === 'unknown' || !isValidUUID(userId)) {
+    console.error(`❌ [V2] User ID inválido ou ausente: "${userId}"`);
+    
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'error',
+      narrative: `Usuário não autenticado ou ID inválido. Não é possível salvar atividades sem identificação do usuário.`,
+      technical_data: { user_id: userId, source: 'validation' }
+    });
+
+    return {
+      success: false,
+      capability_id: CAPABILITY_ID,
+      execution_id: input.execution_id,
+      timestamp: new Date().toISOString(),
+      data: null,
+      error: {
+        code: 'USER_NOT_AUTHENTICATED',
+        message: 'Usuário não autenticado. Faça login para salvar suas atividades.',
+        severity: 'high',
+        recoverable: true,
+        recovery_suggestion: 'Faça login na plataforma e tente novamente.'
+      },
+      debug_log,
+      metadata: {
+        duration_ms: Date.now() - startTime,
+        retry_count: 0,
+        data_source: 'auth_validation'
+      }
+    };
+  }
+
   debug_log.push({
     timestamp: new Date().toISOString(),
     type: 'action',
-    narrative: `Iniciando persistência de atividades no banco de dados para usuário "${userId}".`,
+    narrative: `Iniciando persistência de atividades no banco de dados para usuário autenticado.`,
     technical_data: { execution_id: input.execution_id, user_id: userId }
   });
 

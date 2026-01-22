@@ -80,6 +80,36 @@ export class AgentExecutor {
     console.log('✅ [Executor] Estado limpo para nova execução');
   }
 
+  /**
+   * Obtém o user_id autenticado do localStorage
+   * Retorna null se o usuário não estiver autenticado
+   */
+  private getAuthenticatedUserId(): string | null {
+    if (typeof localStorage === 'undefined') {
+      console.warn('⚠️ [Executor] localStorage não disponível');
+      return null;
+    }
+
+    const userId = localStorage.getItem('user_id');
+    if (userId) {
+      return userId;
+    }
+
+    const neonUser = localStorage.getItem('neon_user');
+    if (neonUser) {
+      try {
+        const parsed = JSON.parse(neonUser);
+        if (parsed?.id) {
+          return parsed.id;
+        }
+      } catch (e) {
+      }
+    }
+
+    console.warn('⚠️ [Executor] Usuário não autenticado - user_id não encontrado');
+    return null;
+  }
+
   private emitProgress(update: ProgressUpdate | CapabilityProgressUpdate): void {
     console.log('📊 [Executor] Progresso:', update);
     if (this.onProgress) {
@@ -348,12 +378,18 @@ export class AgentExecutor {
               }
             }
             
+            // Obter user_id do localStorage (onde o sistema de autenticação salva)
+            const authenticatedUserId = this.getAuthenticatedUserId();
+            
             // Construir CapabilityInput com previous_results e contexto da conversa
             const capabilityInput: CapabilityInput = {
               capability_id: capName,
               execution_id: `exec_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
               context: {
                 ...capability.parametros,
+                // Passar user_id autenticado para todas as capabilities V2
+                user_id: authenticatedUserId,
+                professor_id: authenticatedUserId,
                 // Usar contexto da conversa passado pelo orchestrator, ou fallback para parâmetros
                 conversation_context: this.conversationContext || capability.parametros?.conversation_context || capability.parametros?.contexto || '',
                 user_objective: capability.parametros?.user_objective || capability.parametros?.contexto || '',
@@ -361,6 +397,8 @@ export class AgentExecutor {
               },
               previous_results: this.capabilityResultsMap
             };
+            
+            console.error(`🔐 [Executor] user_id para ${capName}: ${authenticatedUserId || 'NÃO AUTENTICADO'}`);
             
             console.log(`📝 [Executor] conversation_context length: ${capabilityInput.context.conversation_context?.length || 0}`);
             
