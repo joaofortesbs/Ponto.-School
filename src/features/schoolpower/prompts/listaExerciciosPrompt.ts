@@ -119,14 +119,47 @@ IMPORTANTE: O conteúdo deve ser específico para "${tema}" em ${disciplina}, ad
 };
 
 export const validateListaExerciciosResponse = (response: any): boolean => {
-  if (!response || typeof response !== 'object') return false;
+  console.log('🔍 [validateListaExerciciosResponse] Validando resposta...');
+  
+  if (!response || typeof response !== 'object') {
+    console.error('❌ [validateListaExerciciosResponse] Resposta não é um objeto válido');
+    return false;
+  }
 
-  if (!response.questoes || !Array.isArray(response.questoes)) return false;
+  if (!response.questoes || !Array.isArray(response.questoes)) {
+    console.error('❌ [validateListaExerciciosResponse] Propriedade "questoes" não existe ou não é array');
+    console.log('🔍 [validateListaExerciciosResponse] Chaves disponíveis:', Object.keys(response));
+    return false;
+  }
 
-  return response.questoes.every((questao: any) =>
-    questao.id &&
-    questao.type &&
-    questao.enunciado &&
-    (questao.type === 'discursiva' || questao.alternativas)
-  );
+  if (response.questoes.length === 0) {
+    console.error('❌ [validateListaExerciciosResponse] Array de questões está vazio');
+    return false;
+  }
+
+  // Validação mais leniente - pelo menos deve ter algum conteúdo no enunciado
+  let validCount = 0;
+  for (let i = 0; i < response.questoes.length; i++) {
+    const questao = response.questoes[i];
+    
+    // Verificar se tem algum campo de enunciado (suporta múltiplos formatos)
+    const temEnunciado = questao.enunciado || questao.pergunta || questao.question || questao.statement || questao.texto;
+    const temConteudo = temEnunciado && temEnunciado.trim().length > 10;
+    
+    if (temConteudo) {
+      validCount++;
+    } else {
+      console.warn(`⚠️ [validateListaExerciciosResponse] Questão ${i + 1} sem enunciado válido:`, questao);
+    }
+  }
+
+  console.log(`✅ [validateListaExerciciosResponse] ${validCount}/${response.questoes.length} questões válidas`);
+  
+  // Aceitar se pelo menos 50% das questões são válidas
+  const percentualValido = validCount / response.questoes.length;
+  const isValid = percentualValido >= 0.5;
+  
+  console.log(`✅ [validateListaExerciciosResponse] Resultado: ${isValid ? 'VÁLIDO' : 'INVÁLIDO'} (${Math.round(percentualValido * 100)}% válidas)`);
+  
+  return isValid;
 };

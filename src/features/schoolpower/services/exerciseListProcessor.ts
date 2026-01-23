@@ -253,28 +253,38 @@ function cleanExplanationText(text: string): string {
 
 /**
  * Gera questões padrão caso a IA não retorne conteúdo válido
+ * NOTA: Este fallback só deve ser acionado em caso de erro na API.
+ * Se você estiver vendo este conteúdo, significa que houve um problema
+ * na geração com IA. Tente regenerar a lista de exercícios.
  */
 export function generateFallbackQuestions(formData: any): Question[] {
+  console.warn('⚠️ [generateFallbackQuestions] FALLBACK ACIONADO - IA não retornou conteúdo válido');
+  console.warn('⚠️ [generateFallbackQuestions] Dados recebidos:', formData);
+  
   const numeroQuestoes = parseInt(formData.numeroQuestoes) || 5;
   const questoes: Question[] = [];
+  const tema = formData.tema || formData.theme || formData.disciplina || 'tema solicitado';
   
   for (let i = 1; i <= numeroQuestoes; i++) {
-    const tipoQuestao = determineQuestionType({}, formData.tipoQuestoes);
+    const tipoQuestao = determineQuestionType({}, formData.tipoQuestoes || formData.modeloQuestoes);
     
     questoes.push({
-      id: `questao-${i}`,
+      id: `questao-fallback-${i}`,
       type: tipoQuestao,
-      enunciado: `Questão ${i} sobre ${formData.tema || formData.disciplina}. [Conteúdo será gerado pela IA]`,
+      enunciado: `[ERRO NA GERAÇÃO] Questão ${i} sobre "${tema}" não foi gerada corretamente. Por favor, clique em "Regenerar" para tentar novamente.`,
       alternativas: tipoQuestao === 'multipla-escolha' ? [
-        'Alternativa A',
-        'Alternativa B',
-        'Alternativa C',
-        'Alternativa D'
+        'Opção de exemplo A - Regenere para conteúdo real',
+        'Opção de exemplo B - Regenere para conteúdo real',
+        'Opção de exemplo C - Regenere para conteúdo real',
+        'Opção de exemplo D - Regenere para conteúdo real'
       ] : tipoQuestao === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : undefined,
-      dificuldade: formData.dificuldade?.toLowerCase() || 'medio',
-      tema: formData.tema
+      dificuldade: formData.dificuldade?.toLowerCase() || formData.nivelDificuldade?.toLowerCase() || 'medio',
+      tema: tema,
+      explicacao: 'Esta questão foi gerada como fallback devido a um erro. Clique em regenerar para obter questões personalizadas pela IA.'
     });
   }
+  
+  console.warn(`⚠️ [generateFallbackQuestions] Geradas ${questoes.length} questões de fallback`);
   
   return questoes;
 }

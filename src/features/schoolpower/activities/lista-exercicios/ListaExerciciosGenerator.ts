@@ -129,14 +129,25 @@ export class ListaExerciciosGenerator {
     try {
       let cleanedResponse = response.trim();
       
-      if (cleanedResponse.startsWith('```json')) {
-        cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-      } else if (cleanedResponse.startsWith('```')) {
-        cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      // Remover markdown se presente (igual ao FlashCardsGenerator)
+      cleanedResponse = cleanedResponse.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+      
+      // IMPORTANTE: Extrair JSON do meio do texto (igual ao FlashCardsGenerator que funciona)
+      const jsonStart = cleanedResponse.indexOf('{');
+      const jsonEnd = cleanedResponse.lastIndexOf('}');
+      
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
+        console.log('🧹 [parseGeminiResponse] JSON extraído do texto, tamanho:', cleanedResponse.length);
+      } else {
+        console.warn('⚠️ [parseGeminiResponse] Não foi possível encontrar delimitadores JSON { }');
       }
+
+      console.log('📝 [parseGeminiResponse] Tentando parsear JSON (primeiros 500 chars):', cleanedResponse.substring(0, 500));
 
       const parsed = JSON.parse(cleanedResponse);
       console.log('✅ [ListaExerciciosGenerator] JSON parseado com sucesso');
+      console.log('✅ [parseGeminiResponse] Questões na resposta parseada:', parsed.questoes?.length || 0);
 
       if (parsed.questoes && Array.isArray(parsed.questoes)) {
         console.log('🔍 [parseGeminiResponse] Processando', parsed.questoes.length, 'questões');
