@@ -86,7 +86,7 @@ export class ListaExerciciosGenerator {
       console.log('📡 [ListaExerciciosGenerator] Resposta recebida em', executionTime, 'ms');
       console.log('📡 [ListaExerciciosGenerator] Resposta bruta (primeiros 500 chars):', response?.substring(0, 500));
 
-      const parsedContent = this.parseGeminiResponse(response, normalizedData);
+      const parsedContent = ListaExerciciosGenerator.parseGeminiResponse(response, normalizedData);
       console.log('✅ [ListaExerciciosGenerator] Conteúdo parseado:', {
         titulo: parsedContent.titulo,
         questoesCount: parsedContent.questoes?.length || 0
@@ -170,7 +170,7 @@ export class ListaExerciciosGenerator {
     return text;
   }
 
-  private parseGeminiResponse(response: string, data: any): any {
+  private static parseGeminiResponse(response: string, data: any): any {
     try {
       let cleanedResponse = response.trim();
       
@@ -205,10 +205,10 @@ export class ListaExerciciosGenerator {
           
           return {
             id: q.id || `questao-${index + 1}`,
-            type: this.normalizeQuestionType(q.type || data.modeloQuestoes),
+            type: ListaExerciciosGenerator.normalizeQuestionType(q.type || data.modeloQuestoes),
             enunciado: enunciadoEncontrado,
-            alternativas: this.normalizeAlternativas(q.alternativas || q.options || q.alternatives, q.type || data.modeloQuestoes),
-            respostaCorreta: this.normalizeRespostaCorreta(q.respostaCorreta || q.correctAnswer || q.correct_answer || q.gabarito, q.type),
+            alternativas: ListaExerciciosGenerator.normalizeAlternativas(q.alternativas || q.options || q.alternatives, q.type || data.modeloQuestoes),
+            respostaCorreta: ListaExerciciosGenerator.normalizeRespostaCorreta(q.respostaCorreta || q.correctAnswer || q.correct_answer || q.gabarito, q.type),
             explicacao: q.explicacao || q.explanation || q.justificativa || '',
             dificuldade: q.dificuldade || q.difficulty || data.nivelDificuldade,
             tema: q.tema || q.topic || data.tema,
@@ -228,7 +228,7 @@ export class ListaExerciciosGenerator {
     }
   }
 
-  private normalizeQuestionType(type: string): 'multipla-escolha' | 'discursiva' | 'verdadeiro-falso' {
+  private static normalizeQuestionType(type: string): 'multipla-escolha' | 'discursiva' | 'verdadeiro-falso' {
     const typeLower = (type || '').toLowerCase();
     
     if (typeLower.includes('discursiva') || typeLower.includes('dissertativa') || typeLower.includes('aberta')) {
@@ -240,8 +240,8 @@ export class ListaExerciciosGenerator {
     return 'multipla-escolha';
   }
 
-  private normalizeAlternativas(alternativas: any, type: string): string[] | undefined {
-    const questionType = this.normalizeQuestionType(type);
+  private static normalizeAlternativas(alternativas: any, type: string): string[] | undefined {
+    const questionType = ListaExerciciosGenerator.normalizeQuestionType(type);
     
     if (questionType === 'discursiva') {
       return undefined;
@@ -258,8 +258,8 @@ export class ListaExerciciosGenerator {
     return ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'];
   }
 
-  private normalizeRespostaCorreta(resposta: any, type: string): number | string | boolean {
-    const questionType = this.normalizeQuestionType(type);
+  private static normalizeRespostaCorreta(resposta: any, type: string): number | string | boolean {
+    const questionType = ListaExerciciosGenerator.normalizeQuestionType(type);
     
     if (questionType === 'verdadeiro-falso') {
       if (typeof resposta === 'boolean') return resposta;
@@ -299,10 +299,10 @@ export class ListaExerciciosGenerator {
     questoes = questoes.map((q: any, index: number) => ({
       ...q,
       id: q.id || `questao-${index + 1}`,
-      type: this.normalizeQuestionType(q.type || data.modeloQuestoes),
+      type: ListaExerciciosGenerator.normalizeQuestionType(q.type || data.modeloQuestoes),
       enunciado: q.enunciado || `Questão ${index + 1} sobre ${data.tema}`,
-      alternativas: this.normalizeAlternativas(q.alternativas, q.type || data.modeloQuestoes),
-      respostaCorreta: this.normalizeRespostaCorreta(q.respostaCorreta, q.type),
+      alternativas: ListaExerciciosGenerator.normalizeAlternativas(q.alternativas, q.type || data.modeloQuestoes),
+      respostaCorreta: ListaExerciciosGenerator.normalizeRespostaCorreta(q.respostaCorreta, q.type),
       explicacao: q.explicacao || '',
       dificuldade: q.dificuldade || data.nivelDificuldade?.toLowerCase() || 'medio',
       tema: q.tema || data.tema
