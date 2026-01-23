@@ -38,6 +38,7 @@ import {
   QuizInterativoEditActivity,
   QuadroInterativoEditActivity
 } from './components/EditFields';
+import { processExerciseListWithUnifiedPipeline, UnifiedExerciseListResponse } from '@/features/schoolpower/activities/lista-exercicios/unified-exercise-pipeline';
 
 
 /**
@@ -60,114 +61,78 @@ export interface EditActivityModalHandle {
   isOpen: () => boolean;
 }
 
-// Função para processar dados da lista de exercícios
+/**
+ * PIPELINE UNIFICADO 6 CAMADAS - Lista de Exercícios
+ * Usa o novo sistema robusto com fallback múltiplo
+ */
 const processExerciseListData = (formData: ActivityFormData, generatedContent: any) => {
-  console.log('📋 [processExerciseListData] ====== INÍCIO DO PROCESSAMENTO ======');
-  console.log('📋 [processExerciseListData] generatedContent recebido:', JSON.stringify(generatedContent, null, 2)?.substring(0, 1000));
+  console.log('🎯 [processExerciseListData] ====== PIPELINE UNIFICADO 6 CAMADAS ======');
   
-  // PASSO 1: Extrair dados do wrapper { success, data } se existir
-  let content = generatedContent;
-  if (generatedContent?.success && generatedContent?.data) {
-    console.log('📋 [processExerciseListData] Detectado wrapper { success, data }, extraindo...');
-    content = generatedContent.data;
-  } else if (generatedContent?.data) {
-    console.log('📋 [processExerciseListData] Detectado .data sem success, extraindo...');
-    content = generatedContent.data;
-  }
+  const inputData = {
+    id: (formData as any).id || undefined,
+    titulo: formData.title,
+    disciplina: formData.subject,
+    tema: formData.theme,
+    modeloQuestoes: formData.questionModel,
+    nivelDificuldade: formData.difficultyLevel,
+    numQuestoes: formData.numberOfQuestions
+  };
   
-  console.log('📋 [processExerciseListData] Conteúdo após extração:', {
-    hasQuestoes: !!content?.questoes,
-    questoesLength: content?.questoes?.length,
-    hasQuestions: !!content?.questions,
-    questionsLength: content?.questions?.length,
-    hasContentQuestoes: !!content?.content?.questoes,
-    isGeneratedByAI: content?.isGeneratedByAI
+  const unifiedResult: UnifiedExerciseListResponse = processExerciseListWithUnifiedPipeline(
+    generatedContent,
+    inputData
+  );
+  
+  console.log('✅ [processExerciseListData] Pipeline completo:', {
+    success: unifiedResult.success,
+    totalQuestoes: unifiedResult.metadata.totalQuestoes,
+    validQuestoes: unifiedResult.metadata.validQuestoes,
+    extractionMethod: unifiedResult.metadata.extractionMethod
   });
-  
-  // PASSO 2: Buscar questões em múltiplos locais possíveis (prioridade para arrays não vazios)
-  let questoes: any[] = [];
-  
-  // Tentar content.questoes primeiro
-  if (Array.isArray(content?.questoes) && content.questoes.length > 0) {
-    questoes = content.questoes;
-    console.log('📋 [processExerciseListData] Questões encontradas em content.questoes:', questoes.length);
-  }
-  // Tentar content.questions
-  else if (Array.isArray(content?.questions) && content.questions.length > 0) {
-    questoes = content.questions;
-    console.log('📋 [processExerciseListData] Questões encontradas em content.questions:', questoes.length);
-  }
-  // Tentar content.content.questoes (nested)
-  else if (Array.isArray(content?.content?.questoes) && content.content.questoes.length > 0) {
-    questoes = content.content.questoes;
-    console.log('📋 [processExerciseListData] Questões encontradas em content.content.questoes:', questoes.length);
-  }
-  // Tentar content.content.questions (nested)
-  else if (Array.isArray(content?.content?.questions) && content.content.questions.length > 0) {
-    questoes = content.content.questions;
-    console.log('📋 [processExerciseListData] Questões encontradas em content.content.questions:', questoes.length);
-  }
-  
-  // PASSO 3: Validar que as questões têm conteúdo real (não são placeholders)
-  const questoesValidas = questoes.filter((q: any) => {
-    const enunciado = q?.enunciado || q?.statement || q?.question || '';
-    const isPlaceholder = enunciado.includes('[Conteúdo será gerado pela IA]') || 
-                          enunciado.includes('Questão simulada') ||
-                          !enunciado.trim();
-    if (isPlaceholder) {
-      console.log('⚠️ [processExerciseListData] Questão placeholder detectada:', enunciado?.substring(0, 50));
-    }
-    return !isPlaceholder;
-  });
-  
-  console.log('📋 [processExerciseListData] Questões válidas após filtro:', questoesValidas.length, 'de', questoes.length);
-  
-  // Se tivermos questões válidas, usar elas; senão usar todas (incluindo placeholders para mostrar algo)
-  const questoesFinais = questoesValidas.length > 0 ? questoesValidas : questoes;
-  
-  // PASSO 4: Log detalhado da primeira questão para debug
-  if (questoesFinais.length > 0) {
-    console.log('📋 [processExerciseListData] Primeira questão:', JSON.stringify(questoesFinais[0], null, 2));
-  }
   
   const resultado = {
-    titulo: content?.titulo || formData.title,
-    title: content?.titulo || formData.title,
-    descricao: content?.descricao || formData.description,
-    description: content?.descricao || formData.description,
-    disciplina: content?.disciplina || formData.subject,
-    subject: content?.disciplina || formData.subject,
-    tema: content?.tema || formData.theme,
-    theme: content?.tema || formData.theme,
-    anoEscolaridade: content?.anoEscolaridade || formData.schoolYear,
-    schoolYear: content?.anoEscolaridade || formData.schoolYear,
-    numeroQuestoes: questoesFinais.length || content?.numeroQuestoes || formData.numberOfQuestions,
-    numberOfQuestions: questoesFinais.length || content?.numeroQuestoes || formData.numberOfQuestions,
-    dificuldade: content?.dificuldade || formData.difficultyLevel,
-    difficultyLevel: content?.dificuldade || formData.difficultyLevel,
-    tipoQuestoes: content?.tipoQuestoes || formData.questionModel,
-    questionModel: content?.tipoQuestoes || formData.questionModel,
-    objetivos: content?.objetivos || formData.objectives,
-    objectives: content?.objetivos || formData.objectives,
+    titulo: unifiedResult.titulo || formData.title,
+    title: unifiedResult.titulo || formData.title,
+    descricao: formData.description,
+    description: formData.description,
+    disciplina: unifiedResult.disciplina || formData.subject,
+    subject: unifiedResult.disciplina || formData.subject,
+    tema: formData.theme,
+    theme: formData.theme,
+    anoEscolaridade: formData.schoolYear,
+    schoolYear: formData.schoolYear,
+    numeroQuestoes: unifiedResult.metadata.totalQuestoes || formData.numberOfQuestions,
+    numberOfQuestions: unifiedResult.metadata.totalQuestoes || formData.numberOfQuestions,
+    dificuldade: formData.difficultyLevel,
+    difficultyLevel: formData.difficultyLevel,
+    tipoQuestoes: formData.questionModel,
+    questionModel: formData.questionModel,
+    objetivos: formData.objectives,
+    objectives: formData.objectives,
+    conteudoPrograma: formData.objectives || '',
     sources: formData.sources,
     materials: formData.materials,
     instructions: formData.instructions,
     evaluation: formData.evaluation,
     timeLimit: formData.timeLimit,
     context: formData.context,
-    questoes: questoesFinais,
-    questions: questoesFinais,
+    questoes: unifiedResult.questoes,
+    questions: unifiedResult.questoes,
     content: {
-      questoes: questoesFinais,
-      questions: questoesFinais
+      questoes: unifiedResult.questoes,
+      questions: unifiedResult.questoes
     },
-    isGeneratedByAI: content?.isGeneratedByAI !== undefined ? content.isGeneratedByAI : questoesValidas.length > 0,
-    generatedAt: content?.generatedAt || new Date().toISOString()
+    isGeneratedByAI: unifiedResult.success && unifiedResult.metadata.validQuestoes > 0,
+    generatedAt: new Date().toISOString(),
+    _pipelineMetadata: unifiedResult.metadata
   };
   
-  console.log('📋 [processExerciseListData] ====== RESULTADO FINAL ======');
-  console.log('📋 [processExerciseListData] Questões retornadas:', resultado.questoes.length);
-  console.log('📋 [processExerciseListData] isGeneratedByAI:', resultado.isGeneratedByAI);
+  if (unifiedResult.errors?.length) {
+    console.warn('⚠️ [processExerciseListData] Erros:', unifiedResult.errors);
+  }
+  if (unifiedResult.warnings?.length) {
+    console.log('📝 [processExerciseListData] Avisos:', unifiedResult.warnings);
+  }
   
   return resultado;
 };
