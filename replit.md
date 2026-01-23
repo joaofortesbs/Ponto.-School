@@ -101,21 +101,23 @@ The architecture emphasizes a modular component design based on shadcn/ui patter
 
 ## Recent Changes (Jan 2026)
 
-### Lista de Exercícios API Unification Fix (Latest)
-**Problem**: Exercise list questions were showing placeholder text "[Conteúdo será gerado pela IA]" instead of AI-generated content.
+### Lista de Exercícios - Specialized Generator Integration (Latest)
+**Problem**: Exercise list questions were showing placeholder text "[Conteúdo será gerado pela IA]" instead of AI-generated content, even after API unification.
 
-**Root Cause**: `ListaExerciciosGenerator` used a direct Gemini API call with `VITE_GEMINI_API_KEY`, while `FlashCardsGenerator` (which worked correctly) used the centralized `geminiClient` (Groq API). When the API key was missing or unavailable on the client, the generator immediately returned fallback placeholder content.
+**Root Cause Analysis**:
+1. **First Issue**: `ListaExerciciosGenerator` used direct Gemini API call instead of centralized `geminiClient`
+2. **Second Issue (Critical)**: The chat Jota pipeline (`gerar_conteudo_atividades` capability) used a GENERIC LLM prompt for ALL activity types, which only generated metadata fields (numberOfQuestions, theme, etc.) but NOT the actual questions. The specialized `ListaExerciciosGenerator` was NEVER being called in the chat flow.
 
-**Solution Implemented**:
-1. **Unified API Client**: Refactored `ListaExerciciosGenerator` to use `geminiClient.generateContent(prompt)` - the same centralized client that FlashCards uses successfully.
-2. **Removed Direct API Call**: Eliminated the custom `callGeminiAPI` method and `apiKey` property that bypassed the centralized system.
-3. **Enhanced Logging**: Added detailed console logging throughout the generation pipeline for easier debugging.
+**Solution Implemented (Two-Phase Fix)**:
+1. **Phase 1 - API Unification**: Refactored `ListaExerciciosGenerator` to use `geminiClient.generateContent(prompt)` instead of direct Gemini API.
+2. **Phase 2 - Specialized Handler**: Added a dedicated handler in `gerar_conteudo_atividades.ts` that detects `lista-exercicios` activities and calls `ListaExerciciosGenerator.generateListaExerciciosContent()` directly, bypassing the generic prompt system.
+3. **Field Alignment**: Both input and output fields now include bilingual keys (PT/EN) for compatibility with the full pipeline: theme/tema, subject/disciplina, schoolYear/anoEscolar, etc.
 
 **Key Architectural Change**:
-- Before: `ListaExerciciosGenerator → fetch(Gemini API) → VITE_GEMINI_API_KEY` (broken)
-- After: `ListaExerciciosGenerator → geminiClient.generateContent() → Groq API` (unified)
+- Before: `Chat Jota → gerar_conteudo_atividades → generic LLM prompt → metadata only (NO questions)`
+- After: `Chat Jota → gerar_conteudo_atividades → [lista-exercicios handler] → ListaExerciciosGenerator → geminiClient → REAL questions`
 
 **Key Files**:
-- `src/features/schoolpower/activities/lista-exercicios/ListaExerciciosGenerator.ts`
-- `src/utils/api/geminiClient.ts`
-- `src/features/schoolpower/activities/flash-cards/FlashCardsGenerator.ts` (reference implementation)
+- `src/features/schoolpower/agente-jota/capabilities/GERAR_CONTEUDO/implementations/gerar-conteudo-atividades.ts` (specialized handler added)
+- `src/features/schoolpower/activities/lista-exercicios/ListaExerciciosGenerator.ts` (uses geminiClient)
+- `src/utils/api/geminiClient.ts` (centralized Groq API client)
