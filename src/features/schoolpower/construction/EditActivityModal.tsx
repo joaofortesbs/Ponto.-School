@@ -62,23 +62,52 @@ export interface EditActivityModalHandle {
 
 // Função para processar dados da lista de exercícios
 const processExerciseListData = (formData: ActivityFormData, generatedContent: any) => {
+  console.log('📋 [processExerciseListData] Processando dados:', { formData, generatedContent });
+  
+  // Extrair dados do generatedContent (pode vir como { success, data } ou diretamente)
+  const content = generatedContent?.data || generatedContent;
+  
+  // Buscar questões em múltiplos locais possíveis
+  const questoes = content?.questoes || 
+                   content?.questions || 
+                   content?.content?.questoes ||
+                   content?.content?.questions ||
+                   [];
+  
+  console.log('📋 [processExerciseListData] Questões encontradas:', questoes?.length);
+  
   return {
-    title: formData.title,
-    description: formData.description,
-    subject: formData.subject,
-    schoolYear: formData.schoolYear,
-    numberOfQuestions: formData.numberOfQuestions,
-    difficultyLevel: formData.difficultyLevel,
-    questionModel: formData.questionModel,
+    titulo: content?.titulo || formData.title,
+    title: content?.titulo || formData.title,
+    descricao: content?.descricao || formData.description,
+    description: content?.descricao || formData.description,
+    disciplina: content?.disciplina || formData.subject,
+    subject: content?.disciplina || formData.subject,
+    tema: content?.tema || formData.theme,
+    theme: content?.tema || formData.theme,
+    anoEscolaridade: content?.anoEscolaridade || formData.schoolYear,
+    schoolYear: content?.anoEscolaridade || formData.schoolYear,
+    numeroQuestoes: content?.numeroQuestoes || formData.numberOfQuestions,
+    numberOfQuestions: content?.numeroQuestoes || formData.numberOfQuestions,
+    dificuldade: content?.dificuldade || formData.difficultyLevel,
+    difficultyLevel: content?.dificuldade || formData.difficultyLevel,
+    tipoQuestoes: content?.tipoQuestoes || formData.questionModel,
+    questionModel: content?.tipoQuestoes || formData.questionModel,
+    objetivos: content?.objetivos || formData.objectives,
+    objectives: content?.objetivos || formData.objectives,
     sources: formData.sources,
-    objectives: formData.objectives,
     materials: formData.materials,
     instructions: formData.instructions,
     evaluation: formData.evaluation,
     timeLimit: formData.timeLimit,
     context: formData.context,
-    questions: generatedContent?.questions || [],
-    ...generatedContent
+    questoes: questoes,
+    questions: questoes,
+    content: {
+      questoes: questoes
+    },
+    isGeneratedByAI: content?.isGeneratedByAI || false,
+    ...content
   };
 };
 
@@ -2426,6 +2455,40 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
         console.log('💾 Tese de Redação processada e salva:', teseRedacaoData);
       }
 
+      // Trigger específico para Lista de Exercícios
+      if (activityType === 'lista-exercicios') {
+        console.log('📚 Processamento específico concluído para Lista de Exercícios');
+        
+        // Extrair o conteúdo correto (pode vir como { success, data } ou diretamente)
+        const listaExerciciosData = result.data || result;
+        
+        console.log('📋 [Lista Exercícios] Dados extraídos:', {
+          hasQuestoes: !!listaExerciciosData?.questoes,
+          questoesCount: listaExerciciosData?.questoes?.length || 0,
+          hasQuestions: !!listaExerciciosData?.questions,
+          questionsCount: listaExerciciosData?.questions?.length || 0,
+          isGeneratedByAI: listaExerciciosData?.isGeneratedByAI
+        });
+        
+        // Garantir que questoes e questions estejam presentes
+        const normalizedData = {
+          ...listaExerciciosData,
+          questoes: listaExerciciosData?.questoes || listaExerciciosData?.questions || [],
+          questions: listaExerciciosData?.questoes || listaExerciciosData?.questions || [],
+          content: {
+            questoes: listaExerciciosData?.questoes || listaExerciciosData?.questions || listaExerciciosData?.content?.questoes || []
+          },
+          isGeneratedByAI: listaExerciciosData?.isGeneratedByAI || true
+        };
+        
+        // Salvar no localStorage
+        localStorage.setItem(`lista_exercicios_data_${activity?.id}`, JSON.stringify(normalizedData));
+        
+        // Atualizar o estado com os dados normalizados
+        result = normalizedData;
+        
+        console.log('💾 Lista de Exercícios processada e salva:', normalizedData);
+      }
 
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       constructedActivities[activity.id] = {
