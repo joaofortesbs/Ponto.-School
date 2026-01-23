@@ -101,18 +101,21 @@ The architecture emphasizes a modular component design based on shadcn/ui patter
 
 ## Recent Changes (Jan 2026)
 
-### Lista de Exercícios Data Flow Fix
+### Lista de Exercícios API Unification Fix (Latest)
 **Problem**: Exercise list questions were showing placeholder text "[Conteúdo será gerado pela IA]" instead of AI-generated content.
 
-**Root Cause**: Data structure inconsistency between generator and preview components. The `generateListaExercicios` function returned `{ success: true, data: {...} }` wrapper, but the preview expected direct data.
+**Root Cause**: `ListaExerciciosGenerator` used a direct Gemini API call with `VITE_GEMINI_API_KEY`, while `FlashCardsGenerator` (which worked correctly) used the centralized `geminiClient` (Groq API). When the API key was missing or unavailable on the client, the generator immediately returned fallback placeholder content.
 
 **Solution Implemented**:
-1. **processExerciseListData** (EditActivityModal.tsx): Robust function that extracts data from wrapper, searches multiple locations for questions (questoes, questions, content.questoes), validates content is not placeholder text, and normalizes the data structure.
-2. **generateListaExercicios** (generateActivityContent.ts): Now returns data directly without wrapper for consistency.
-3. **Data Flow Pipeline**: Generator → generateActivityContent → useGenerateActivity → handleBuildActivity → processExerciseListData → ExerciseListPreview - all components now use consistent data shapes.
+1. **Unified API Client**: Refactored `ListaExerciciosGenerator` to use `geminiClient.generateContent(prompt)` - the same centralized client that FlashCards uses successfully.
+2. **Removed Direct API Call**: Eliminated the custom `callGeminiAPI` method and `apiKey` property that bypassed the centralized system.
+3. **Enhanced Logging**: Added detailed console logging throughout the generation pipeline for easier debugging.
+
+**Key Architectural Change**:
+- Before: `ListaExerciciosGenerator → fetch(Gemini API) → VITE_GEMINI_API_KEY` (broken)
+- After: `ListaExerciciosGenerator → geminiClient.generateContent() → Groq API` (unified)
 
 **Key Files**:
-- `src/features/schoolpower/construction/EditActivityModal.tsx`
-- `src/features/schoolpower/construction/api/generateActivityContent.ts`
 - `src/features/schoolpower/activities/lista-exercicios/ListaExerciciosGenerator.ts`
-- `src/features/schoolpower/activities/lista-exercicios/ExerciseListPreview.tsx`
+- `src/utils/api/geminiClient.ts`
+- `src/features/schoolpower/activities/flash-cards/FlashCardsGenerator.ts` (reference implementation)
