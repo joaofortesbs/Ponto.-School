@@ -422,30 +422,63 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
 
   const processQuestions = useCallback((activityData: any) => {
-    console.log('🔄 Processando questões no ExerciseListPreview:', activityData);
-    console.log('🔍 Estrutura completa dos dados:', JSON.stringify(activityData, null, 2));
+    console.log('🔄 ====== PROCESSANDO QUESTÕES NO ExerciseListPreview ======');
+    console.log('🔄 activityData recebido:', activityData);
+    console.log('🔄 Tipo de activityData:', typeof activityData);
+    console.log('🔄 Chaves disponíveis:', activityData ? Object.keys(activityData) : 'null/undefined');
+    
+    // Log detalhado para debug
+    if (activityData) {
+      console.log('🔍 [DEBUG] Verificando locais de questões:');
+      console.log('   - activityData.questoes:', activityData.questoes?.length || 'não existe');
+      console.log('   - activityData.questions:', activityData.questions?.length || 'não existe');
+      console.log('   - activityData.content:', activityData.content ? 'existe' : 'não existe');
+      console.log('   - activityData.content?.questoes:', activityData.content?.questoes?.length || 'não existe');
+      console.log('   - activityData.content?.questions:', activityData.content?.questions?.length || 'não existe');
+      console.log('   - activityData.isGeneratedByAI:', activityData.isGeneratedByAI);
+      
+      // Mostrar TODAS as questões para debug
+      const todasQuestoes = activityData.questoes || activityData.questions || activityData.content?.questoes || [];
+      console.log('🔍 [DEBUG] Total de questões encontradas:', todasQuestoes.length);
+      if (todasQuestoes.length > 0) {
+        console.log('🔍 [DEBUG] PRIMEIRA QUESTÃO COMPLETA:', JSON.stringify(todasQuestoes[0], null, 2));
+        console.log('🔍 [DEBUG] Campos da primeira questão:', Object.keys(todasQuestoes[0]));
+      }
+    }
 
-    // Verificar se existe conteúdo gerado pela IA ou questões diretamente
+    // IMPORTANTE: Buscar questões em TODOS os locais possíveis (ordem de prioridade)
+    let questoesEncontradas: any[] = [];
+    
+    // 1. Tentar questoes diretamente
+    if (Array.isArray(activityData?.questoes) && activityData.questoes.length > 0) {
+      questoesEncontradas = activityData.questoes;
+      console.log('✅ Questões encontradas em activityData.questoes:', questoesEncontradas.length);
+    }
+    // 2. Tentar questions diretamente
+    else if (Array.isArray(activityData?.questions) && activityData.questions.length > 0) {
+      questoesEncontradas = activityData.questions;
+      console.log('✅ Questões encontradas em activityData.questions:', questoesEncontradas.length);
+    }
+    // 3. Tentar content.questoes
+    else if (Array.isArray(activityData?.content?.questoes) && activityData.content.questoes.length > 0) {
+      questoesEncontradas = activityData.content.questoes;
+      console.log('✅ Questões encontradas em activityData.content.questoes:', questoesEncontradas.length);
+    }
+    // 4. Tentar content.questions
+    else if (Array.isArray(activityData?.content?.questions) && activityData.content.questions.length > 0) {
+      questoesEncontradas = activityData.content.questions;
+      console.log('✅ Questões encontradas em activityData.content.questions:', questoesEncontradas.length);
+    }
+    
+    // Verificar se encontrou questões válidas
     let questionsData = null;
-
-    if (activityData?.content?.questoes && Array.isArray(activityData.content.questoes) && activityData.content.questoes.length > 0) {
-      console.log('✅ Questões encontradas na IA (content.questoes):', activityData.content.questoes.length);
-      questionsData = { ...activityData, questoes: activityData.content.questoes };
-      questionsData.isGeneratedByAI = true; // Marcar como gerado por IA
-    } else if (activityData?.content?.questions && Array.isArray(activityData.content.questions) && activityData.content.questions.length > 0) {
-      console.log('✅ Questões encontradas na IA (content.questions):', activityData.content.questions.length);
-      questionsData = { ...activityData, questoes: activityData.content.questions };
-      questionsData.isGeneratedByAI = true; // Marcar como gerado por IA
-    } else if (activityData?.questoes && Array.isArray(activityData.questoes) && activityData.questoes.length > 0) {
-      console.log('✅ Questões encontradas diretamente (questoes):', activityData.questoes.length);
-      questionsData = activityData;
-      questionsData.isGeneratedByAI = activityData.isGeneratedByAI || false; // Manter se já estiver definido
-    } else if (activityData?.questions && Array.isArray(activityData.questions) && activityData.questions.length > 0) {
-      console.log('✅ Questões encontradas diretamente (questions):', activityData.questions.length);
-      questionsData = { ...activityData, questoes: activityData.questions };
-      questionsData.isGeneratedByAI = activityData.isGeneratedByAI || false;
+    
+    if (questoesEncontradas.length > 0) {
+      console.log('✅ Total de questões para processar:', questoesEncontradas.length);
+      questionsData = { ...activityData, questoes: questoesEncontradas };
+      questionsData.isGeneratedByAI = activityData.isGeneratedByAI !== undefined ? activityData.isGeneratedByAI : true;
     } else {
-      console.log('⚠️ Conteúdo de questões não encontrado, gerando questões simuladas como fallback');
+      console.log('⚠️ ====== NENHUMA QUESTÃO ENCONTRADA - GERANDO FALLBACK ======');
 
       // Fallback para questões simuladas
       const simulatedQuestions: Question[] = [];
@@ -508,18 +541,42 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
     // Processar e normalizar as questões encontradas ou simuladas
     if (questionsData && questionsData.questoes) {
-      console.log(`✨ Normalizando ${questionsData.questoes.length} questões.`);
+      console.log(`✨ ====== NORMALIZANDO ${questionsData.questoes.length} QUESTÕES ======`);
       questionsData.questoes = questionsData.questoes.map((questao: any, index: number) => {
+        // DEBUG: Mostrar questão original
+        console.log(`🔍 [NORMALIZAÇÃO] Questão ${index + 1} original:`, JSON.stringify(questao, null, 2)?.substring(0, 500));
+        
+        // Buscar enunciado em TODOS os formatos possíveis (ordem de prioridade)
+        const enunciadoOriginal = 
+          questao.enunciado ||           // Formato padrão português
+          questao.statement ||           // Formato inglês
+          questao.question ||            // Formato alternativo inglês  
+          questao.pergunta ||            // Formato alternativo português
+          questao.texto ||               // Texto da questão
+          questao.text ||                // Text em inglês
+          questao.content ||             // Conteúdo
+          questao.title ||               // Título pode ser usado
+          questao.descricao ||           // Descrição
+          questao.description ||         // Description em inglês
+          '';
+          
+        // Se ainda não encontrou enunciado, usar fallback
+        const enunciadoFinal = enunciadoOriginal && enunciadoOriginal.trim() !== '' 
+          ? enunciadoOriginal 
+          : `Questão ${index + 1} sobre ${questionsData?.tema || 'o tema'}`;
+        
+        console.log(`✏️ [NORMALIZAÇÃO] Questão ${index + 1} - Enunciado encontrado:`, enunciadoFinal.substring(0, 100));
+        
         // Mapeamento de propriedades comuns
         const normalizedQuestion: Question = {
           id: questao.id || questao.statement_id || `questao-${index}-${Date.now()}`,
-          type: (questao.type || questao.tipo || questao.question || 'multipla-escolha').toLowerCase().replace('_', '-').replace(' ', '-'),
-          enunciado: questao.enunciado || questao.statement || questao.question || questao.title || `Questão ${index + 1} sobre ${questionsData?.tema || 'o tema'}`,
+          type: (questao.type || questao.tipo || 'multipla-escolha').toLowerCase().replace('_', '-').replace(' ', '-'),
+          enunciado: enunciadoFinal,
           dificuldade: (questao.dificuldade || questao.difficulty || questao.nivel || 'medio').toLowerCase(),
           tema: questao.tema || questao.topic || questionsData?.tema || 'Tema não especificado',
-          explicacao: questao.explicacao || questao.explanation || questao.detail || 'Sem explicação detalhada.',
+          explicacao: questao.explicacao || questao.explanation || questao.detail || questao.justificativa || '',
           // Mapeamento de alternativas e resposta correta
-          alternativas: questao.alternativas || questao.alternatives || questao.options,
+          alternativas: questao.alternativas || questao.alternatives || questao.options || questao.opcoes,
           respostaCorreta: typeof questao.respostaCorreta === 'number' ? questao.respostaCorreta :
                            typeof questao.correctAnswer === 'number' ? questao.correctAnswer :
                            typeof questao.correct_answer === 'number' ? questao.correct_answer :
@@ -529,7 +586,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                            typeof questao.correct_answer === 'string' && !isNaN(parseInt(questao.correct_answer)) ? parseInt(questao.correct_answer) :
                            typeof questao.gabarito === 'string' && !isNaN(parseInt(questao.gabarito)) ? parseInt(questao.gabarito) :
                            (questao.type === 'verdadeiro-falso' || questao.type === 'true-false') ? (questao.resposta === true || questao.correct === true || questao.correct_answer === 'Verdadeiro' ? 0 : 1) :
-                           (questao.type === 'discursiva' || questao.type === 'essay') ? undefined : 0, // Default para 0 se não especificado e for Múltipla Escolha
+                           (questao.type === 'discursiva' || questao.type === 'essay') ? undefined : 0,
           // Mapeamento para questões V/F e Discursivas
           resposta: questao.resposta !== undefined ? questao.resposta : questao.texto,
           criteriosAvaliacao: questao.criteriosAvaliacao,
@@ -538,6 +595,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           pontos: questao.pontos,
           tempo_estimado: questao.tempo_estimado,
         };
+        
+        console.log(`✅ [NORMALIZAÇÃO] Questão ${index + 1} normalizada com enunciado:`, normalizedQuestion.enunciado?.substring(0, 80));
 
         // Normalização do tipo de questão para os 3 tipos permitidos
         const normalizedType = normalizedQuestion.type.toLowerCase().replace(/[\s_-]/g, '');
