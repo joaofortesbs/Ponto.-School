@@ -1,4 +1,5 @@
 import { geminiLogger } from '@/utils/geminiDebugLogger';
+import { geminiClient } from '@/utils/api/geminiClient';
 import { buildListaExerciciosPrompt, validateListaExerciciosResponse } from '../../prompts/listaExerciciosPrompt';
 import { processAIGeneratedContent, generateFallbackQuestions } from '../../services/exerciseListProcessor';
 
@@ -54,42 +55,36 @@ interface ListaExerciciosContent {
 }
 
 export class ListaExerciciosGenerator {
-  private apiKey: string;
-
   constructor() {
-    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-
-    if (!this.apiKey) {
-      console.warn('⚠️ API Key do Gemini não configurada para Lista de Exercícios');
-    }
+    console.log('📝 [ListaExerciciosGenerator] Usando geminiClient centralizado (Groq API)');
   }
 
   async generateListaExerciciosContent(data: ListaExerciciosData): Promise<ListaExerciciosContent> {
-    console.log('📝 [ListaExerciciosGenerator] Iniciando geração da Lista de Exercícios com dados:', data);
+    console.log('📝 [ListaExerciciosGenerator] ====== INICIANDO GERAÇÃO COM IA ======');
+    console.log('📝 [ListaExerciciosGenerator] Dados recebidos:', JSON.stringify(data, null, 2).substring(0, 500));
 
     const normalizedData = this.normalizeData(data);
     console.log('📝 [ListaExerciciosGenerator] Dados normalizados:', normalizedData);
 
-    if (!this.apiKey) {
-      console.warn('🔑 [ListaExerciciosGenerator] API Key não disponível, usando fallback');
-      return this.createFallbackContent(normalizedData);
-    }
-
     try {
       const prompt = buildListaExerciciosPrompt(normalizedData);
       console.log('📝 [ListaExerciciosGenerator] Prompt gerado com', prompt.length, 'caracteres');
+      console.log('📝 [ListaExerciciosGenerator] Prompt (primeiros 500 chars):', prompt.substring(0, 500));
 
       const startTime = Date.now();
-      const response = await this.callGeminiAPI(prompt);
+      
+      console.log('🤖 [ListaExerciciosGenerator] Chamando geminiClient.generateContent()...');
+      const response = await geminiClient.generateContent(prompt);
       const executionTime = Date.now() - startTime;
 
-      console.log('📡 [ListaExerciciosGenerator] Resposta recebida em', executionTime, 'ms');
-      console.log('📡 [ListaExerciciosGenerator] Resposta bruta (primeiros 500 chars):', response?.substring(0, 500));
+      console.log('📡 [ListaExerciciosGenerator] ✅ Resposta recebida em', executionTime, 'ms');
+      console.log('📡 [ListaExerciciosGenerator] Resposta bruta (primeiros 800 chars):', response?.substring(0, 800));
 
       const parsedContent = ListaExerciciosGenerator.parseGeminiResponse(response, normalizedData);
       console.log('✅ [ListaExerciciosGenerator] Conteúdo parseado:', {
         titulo: parsedContent.titulo,
-        questoesCount: parsedContent.questoes?.length || 0
+        questoesCount: parsedContent.questoes?.length || 0,
+        primeiraQuestao: parsedContent.questoes?.[0]?.enunciado?.substring(0, 100)
       });
 
       const isValid = validateListaExerciciosResponse(parsedContent);
@@ -99,14 +94,18 @@ export class ListaExerciciosGenerator {
       }
 
       const finalContent = this.ensureDataCompatibility(parsedContent, normalizedData);
-      console.log('🎉 [ListaExerciciosGenerator] Lista gerada com sucesso:', {
-        questoesCount: finalContent.questoes.length,
-        isGeneratedByAI: finalContent.isGeneratedByAI
-      });
+      console.log('🎉 [ListaExerciciosGenerator] ====== LISTA GERADA COM SUCESSO ======');
+      console.log('🎉 [ListaExerciciosGenerator] Questões:', finalContent.questoes.length);
+      console.log('🎉 [ListaExerciciosGenerator] isGeneratedByAI:', finalContent.isGeneratedByAI);
+      
+      if (finalContent.questoes.length > 0) {
+        console.log('🎉 [ListaExerciciosGenerator] Primeira questão:', finalContent.questoes[0].enunciado?.substring(0, 150));
+      }
 
       return finalContent;
     } catch (error) {
       console.error('❌ [ListaExerciciosGenerator] Erro na geração:', error);
+      console.log('⚠️ [ListaExerciciosGenerator] Usando conteúdo fallback...');
       return this.createFallbackContent(normalizedData);
     }
   }
@@ -124,50 +123,6 @@ export class ListaExerciciosGenerator {
       objetivos: data.objetivos || data.objectives || '',
       fontes: data.fontes || data.sources || ''
     };
-  }
-
-  private async callGeminiAPI(prompt: string): Promise<string> {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
-
-    const requestBody = {
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-        responseMimeType: "application/json"
-      }
-    };
-
-    console.log('📡 [ListaExerciciosGenerator] Chamando Gemini API...');
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ [ListaExerciciosGenerator] Erro na API:', response.status, errorText);
-      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
-    }
-
-    const result = await response.json();
-    const text = result?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-    if (!text) {
-      throw new Error('Resposta vazia da API Gemini');
-    }
-
-    return text;
   }
 
   private static parseGeminiResponse(response: string, data: any): any {
