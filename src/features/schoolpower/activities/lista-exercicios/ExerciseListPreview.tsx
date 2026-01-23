@@ -546,28 +546,37 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         // DEBUG: Mostrar questão original
         console.log(`🔍 [NORMALIZAÇÃO] Questão ${index + 1} original:`, JSON.stringify(questao, null, 2)?.substring(0, 500));
         
-        // Buscar enunciado em TODOS os formatos possíveis (ordem de prioridade)
-        const enunciadoOriginal = 
-          questao.enunciado ||           // Formato padrão português
-          questao.statement ||           // Formato inglês
-          questao.question ||            // Formato alternativo inglês  
-          questao.pergunta ||            // Formato alternativo português
-          questao.texto ||               // Texto da questão
-          questao.text ||                // Text em inglês
-          questao.content ||             // Conteúdo
-          questao.title ||               // Título pode ser usado
-          questao.descricao ||           // Descrição
-          questao.description ||         // Description em inglês
-          '';
+        // IMPORTANTE: Se o enunciado já existe e não é vazio, NÃO sobrescrever!
+        // Isso evita perder dados já processados pelo ListaExerciciosGenerator
+        const enunciadoExistente = questao.enunciado && typeof questao.enunciado === 'string' && questao.enunciado.trim().length > 0;
+        
+        // Só buscar em outros campos se enunciado não existe
+        let enunciadoFinal = questao.enunciado;
+        
+        if (!enunciadoExistente) {
+          // Buscar enunciado em TODOS os formatos possíveis (fallback apenas se necessário)
+          const enunciadoAlternativo = 
+            questao.statement ||           // Formato inglês
+            questao.question ||            // Formato alternativo inglês  
+            questao.pergunta ||            // Formato alternativo português
+            questao.texto ||               // Texto da questão
+            questao.text ||                // Text em inglês
+            questao.content ||             // Conteúdo
+            questao.title ||               // Título pode ser usado
+            questao.descricao ||           // Descrição
+            questao.description ||         // Description em inglês
+            '';
           
-        // Se ainda não encontrou enunciado, usar fallback
-        const enunciadoFinal = enunciadoOriginal && enunciadoOriginal.trim() !== '' 
-          ? enunciadoOriginal 
-          : `Questão ${index + 1} sobre ${questionsData?.tema || 'o tema'}`;
+          enunciadoFinal = enunciadoAlternativo && enunciadoAlternativo.trim() !== '' 
+            ? enunciadoAlternativo 
+            : `Questão ${index + 1} sobre ${questionsData?.tema || 'o tema'}`;
+            
+          console.log(`⚠️ [NORMALIZAÇÃO] Questão ${index + 1} - Enunciado não encontrado, usando fallback`);
+        } else {
+          console.log(`✅ [NORMALIZAÇÃO] Questão ${index + 1} - Enunciado já existe:`, enunciadoFinal?.substring(0, 80));
+        }
         
-        console.log(`✏️ [NORMALIZAÇÃO] Questão ${index + 1} - Enunciado encontrado:`, enunciadoFinal.substring(0, 100));
-        
-        // Mapeamento de propriedades comuns
+        // Mapeamento de propriedades comuns - preservar dados existentes
         const normalizedQuestion: Question = {
           id: questao.id || questao.statement_id || `questao-${index}-${Date.now()}`,
           type: (questao.type || questao.tipo || 'multipla-escolha').toLowerCase().replace('_', '-').replace(' ', '-'),

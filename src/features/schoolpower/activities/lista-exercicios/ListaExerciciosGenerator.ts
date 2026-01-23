@@ -184,16 +184,38 @@ export class ListaExerciciosGenerator {
       console.log('✅ [ListaExerciciosGenerator] JSON parseado com sucesso');
 
       if (parsed.questoes && Array.isArray(parsed.questoes)) {
-        parsed.questoes = parsed.questoes.map((q: any, index: number) => ({
-          id: q.id || `questao-${index + 1}`,
-          type: this.normalizeQuestionType(q.type || data.modeloQuestoes),
-          enunciado: q.enunciado || q.pergunta || q.question || '',
-          alternativas: this.normalizeAlternativas(q.alternativas || q.options, q.type || data.modeloQuestoes),
-          respostaCorreta: this.normalizeRespostaCorreta(q.respostaCorreta || q.correctAnswer || q.gabarito, q.type),
-          explicacao: q.explicacao || q.explanation || '',
-          dificuldade: q.dificuldade || data.nivelDificuldade,
-          tema: q.tema || data.tema
-        }));
+        console.log('🔍 [parseGeminiResponse] Processando', parsed.questoes.length, 'questões');
+        
+        parsed.questoes = parsed.questoes.map((q: any, index: number) => {
+          // IMPORTANTE: Buscar enunciado em TODOS os campos possíveis (ordem de prioridade)
+          const enunciadoEncontrado = 
+            q.enunciado ||           // Formato padrão português
+            q.pergunta ||            // Alternativa português
+            q.question ||            // Formato inglês
+            q.statement ||           // Statement em inglês
+            q.texto ||               // Texto da questão
+            q.text ||                // Text em inglês
+            q.content ||             // Conteúdo
+            q.title ||               // Título
+            q.descricao ||           // Descrição
+            q.description ||         // Description em inglês
+            '';
+          
+          console.log(`📝 [parseGeminiResponse] Questão ${index + 1}: enunciado encontrado =`, enunciadoEncontrado?.substring(0, 80));
+          
+          return {
+            id: q.id || `questao-${index + 1}`,
+            type: this.normalizeQuestionType(q.type || data.modeloQuestoes),
+            enunciado: enunciadoEncontrado,
+            alternativas: this.normalizeAlternativas(q.alternativas || q.options || q.alternatives, q.type || data.modeloQuestoes),
+            respostaCorreta: this.normalizeRespostaCorreta(q.respostaCorreta || q.correctAnswer || q.correct_answer || q.gabarito, q.type),
+            explicacao: q.explicacao || q.explanation || q.justificativa || '',
+            dificuldade: q.dificuldade || q.difficulty || data.nivelDificuldade,
+            tema: q.tema || q.topic || data.tema,
+            // Preservar objeto original para debug
+            _original: q
+          };
+        });
       }
 
       return parsed;
