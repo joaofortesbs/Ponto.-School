@@ -1,5 +1,6 @@
 
 import { ActivityFormData } from '../types/ActivityTypes';
+import { generateListaExerciciosContent } from '../../activities/lista-exercicios/ListaExerciciosGenerator';
 
 /**
  * Gera conteúdo para diferentes tipos de atividades
@@ -45,29 +46,91 @@ export async function generateActivityContent(activityType: string, formData: Ac
 
 // Geradores específicos para cada tipo de atividade
 async function generateListaExercicios(formData: ActivityFormData) {
-  const content = {
-    title: formData.title,
-    description: formData.description,
-    subject: formData.subject,
-    schoolYear: formData.schoolYear,
-    numberOfQuestions: parseInt(formData.numberOfQuestions) || 10,
-    difficultyLevel: formData.difficultyLevel,
-    questionModel: formData.questionModel,
-    objectives: formData.objectives,
-    materials: formData.materials,
-    instructions: formData.instructions,
-    evaluation: formData.evaluation,
-    questions: Array.from({ length: parseInt(formData.numberOfQuestions) || 10 }, (_, i) => ({
-      id: i + 1,
-      question: `Questão ${i + 1} sobre ${formData.theme || formData.title}`,
-      type: 'open',
-      points: 1
-    })),
-    generatedAt: new Date().toISOString(),
-    isGeneratedByAI: true
-  };
+  console.log('📝 [generateListaExercicios] Iniciando geração com IA...');
+  
+  try {
+    const generatedContent = await generateListaExerciciosContent({
+      titulo: formData.title,
+      title: formData.title,
+      descricao: formData.description,
+      description: formData.description,
+      disciplina: formData.subject,
+      subject: formData.subject,
+      tema: formData.theme,
+      theme: formData.theme,
+      anoEscolaridade: formData.schoolYear,
+      schoolYear: formData.schoolYear,
+      numeroQuestoes: formData.numberOfQuestions,
+      numberOfQuestions: formData.numberOfQuestions,
+      nivelDificuldade: formData.difficultyLevel,
+      difficultyLevel: formData.difficultyLevel,
+      modeloQuestoes: formData.questionModel,
+      questionModel: formData.questionModel,
+      objetivos: formData.objectives,
+      objectives: formData.objectives,
+      fontes: formData.sources,
+      sources: formData.sources
+    });
 
-  return { success: true, data: content };
+    console.log('✅ [generateListaExercicios] Conteúdo gerado com sucesso:', {
+      titulo: generatedContent.titulo,
+      questoesCount: generatedContent.questoes?.length || 0,
+      isGeneratedByAI: generatedContent.isGeneratedByAI
+    });
+
+    return { 
+      success: true, 
+      data: {
+        ...generatedContent,
+        title: generatedContent.titulo,
+        description: formData.description,
+        subject: generatedContent.disciplina,
+        theme: generatedContent.tema,
+        schoolYear: generatedContent.anoEscolaridade,
+        numberOfQuestions: generatedContent.numeroQuestoes,
+        difficultyLevel: generatedContent.dificuldade,
+        questionModel: generatedContent.tipoQuestoes,
+        objectives: generatedContent.objetivos,
+        materials: formData.materials,
+        instructions: formData.instructions,
+        evaluation: formData.evaluation,
+        questions: generatedContent.questoes,
+        content: {
+          questoes: generatedContent.questoes
+        }
+      }
+    };
+  } catch (error) {
+    console.error('❌ [generateListaExercicios] Erro na geração:', error);
+    
+    const fallbackContent = {
+      title: formData.title,
+      description: formData.description,
+      subject: formData.subject,
+      schoolYear: formData.schoolYear,
+      numberOfQuestions: parseInt(formData.numberOfQuestions) || 10,
+      difficultyLevel: formData.difficultyLevel,
+      questionModel: formData.questionModel,
+      objectives: formData.objectives,
+      materials: formData.materials,
+      instructions: formData.instructions,
+      evaluation: formData.evaluation,
+      questions: Array.from({ length: parseInt(formData.numberOfQuestions) || 10 }, (_, i) => ({
+        id: `questao-${i + 1}`,
+        enunciado: `Questão ${i + 1} sobre ${formData.theme || formData.title}. [Erro na geração - regenere para obter questões personalizadas]`,
+        type: 'multipla-escolha',
+        alternativas: ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'],
+        respostaCorreta: 0,
+        dificuldade: formData.difficultyLevel?.toLowerCase() || 'medio',
+        tema: formData.theme
+      })),
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false,
+      isFallback: true
+    };
+
+    return { success: true, data: fallbackContent };
+  }
 }
 
 async function generatePlanoAula(formData: ActivityFormData) {
