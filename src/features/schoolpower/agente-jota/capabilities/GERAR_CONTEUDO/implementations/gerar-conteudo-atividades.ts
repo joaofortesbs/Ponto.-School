@@ -28,6 +28,7 @@ import {
 } from '../../../../construction/utils/activity-fields-sync';
 import { createDebugEntry, useDebugStore } from '../../../../interface-chat-producao/debug-system/DebugStore';
 import { useActivityDebugStore } from '../../../../construction/stores/activityDebugStore';
+import { ListaExerciciosGenerator } from '../../../../activities/lista-exercicios/ListaExerciciosGenerator';
 
 interface GerarConteudoParams {
   session_id: string;
@@ -413,6 +414,107 @@ async function generateContentForActivity(
       success: false,
       error: `Tipo de atividade "${activity.tipo}" não possui mapeamento de campos`
     };
+  }
+
+  // ========================================
+  // HANDLER ESPECIALIZADO: LISTA DE EXERCÍCIOS
+  // Usa ListaExerciciosGenerator para gerar questões REAIS
+  // ========================================
+  if (activity.tipo === 'lista-exercicios') {
+    console.log(`📝 [GerarConteudo] ====== HANDLER ESPECIALIZADO: LISTA DE EXERCÍCIOS ======`);
+    console.log(`📝 [GerarConteudo] Atividade: ${activity.titulo} (${activity.id})`);
+    
+    createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'action',
+      `[LISTA-EXERCICIOS] Usando gerador especializado para "${activity.titulo}"`,
+      'high',
+      { correlation_id: correlationId, activity_id: activity.id, activity_type: activity.tipo }
+    );
+    
+    try {
+      const generator = new ListaExerciciosGenerator();
+      
+      const listaData = {
+        titulo: activity.titulo || 'Lista de Exercícios',
+        tema: activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || userObjective || 'Matemática',
+        disciplina: activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina || 'Matemática',
+        anoEscolar: activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.anoEscolar || '7º Ano',
+        nivelDificuldade: activity.campos_preenchidos?.difficultyLevel || activity.campos_preenchidos?.nivelDificuldade || 'Médio',
+        quantidadeQuestoes: activity.campos_preenchidos?.numberOfQuestions || activity.campos_preenchidos?.quantidadeQuestoes || 10,
+        modeloQuestao: activity.campos_preenchidos?.questionModel || activity.campos_preenchidos?.modeloQuestao || 'Múltipla Escolha',
+        objetivos: activity.campos_preenchidos?.objectives || activity.campos_preenchidos?.objetivos || `Avaliar conhecimentos sobre ${userObjective}`,
+        contexto: conversationContext
+      };
+      
+      console.log(`📝 [GerarConteudo] Dados para geração:`, JSON.stringify(listaData, null, 2).substring(0, 500));
+      
+      const generatedContent = await generator.generateListaExerciciosContent(listaData);
+      
+      console.log(`✅ [GerarConteudo] Lista gerada com sucesso!`);
+      console.log(`✅ [GerarConteudo] Questões geradas: ${generatedContent.questoes?.length || 0}`);
+      
+      if (generatedContent.questoes && generatedContent.questoes.length > 0) {
+        console.log(`✅ [GerarConteudo] Primeira questão:`, generatedContent.questoes[0]?.enunciado?.substring(0, 100));
+      }
+      
+      const generatedFields = {
+        titulo: generatedContent.titulo,
+        tema: generatedContent.tema,
+        disciplina: generatedContent.disciplina,
+        anoEscolar: generatedContent.anoEscolaridade,
+        nivelDificuldade: generatedContent.dificuldade,
+        quantidadeQuestoes: generatedContent.questoes?.length || 10,
+        modeloQuestao: generatedContent.tipoQuestoes,
+        questoes: generatedContent.questoes,
+        isGeneratedByAI: true,
+        generatedAt: new Date().toISOString()
+      };
+      
+      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'info',
+        `[LISTA-EXERCICIOS] Geração concluída: ${generatedContent.questoes?.length || 0} questões reais geradas pela IA`,
+        'high',
+        { 
+          correlation_id: correlationId, 
+          activity_id: activity.id,
+          questions_count: generatedContent.questoes?.length || 0,
+          first_question_preview: generatedContent.questoes?.[0]?.enunciado?.substring(0, 100)
+        }
+      );
+      
+      const executionTime = Date.now() - activityStartTime;
+      
+      if (onProgress) {
+        onProgress({
+          type: 'activity_completed',
+          activity_id: activity.id,
+          activity_title: activity.titulo,
+          message: `Lista de exercícios gerada com ${generatedContent.questoes?.length || 0} questões reais`
+        });
+      }
+      
+      return {
+        activity_id: activity.id,
+        activity_type: activity.tipo,
+        generated_fields: generatedFields,
+        success: true
+      };
+      
+    } catch (error) {
+      console.error(`❌ [GerarConteudo] Erro ao gerar lista de exercícios:`, error);
+      
+      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'error',
+        `[LISTA-EXERCICIOS] Erro na geração: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        'critical',
+        { correlation_id: correlationId, activity_id: activity.id, error: String(error) }
+      );
+      
+      return {
+        activity_id: activity.id,
+        activity_type: activity.tipo,
+        generated_fields: {},
+        success: false,
+        error: `Erro ao gerar lista de exercícios: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+      };
+    }
   }
 
   // ========================================
