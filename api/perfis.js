@@ -322,5 +322,114 @@ router.get('/list', async (req, res) => {
   }
 });
 
+// Reset de senha - atualiza a senha no Neon DB
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, nova_senha } = req.body;
+
+    if (!email || !nova_senha) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Email e nova senha são obrigatórios' 
+      });
+    }
+
+    // Validar nova senha (mínimo 6 caracteres)
+    if (nova_senha.length < 6) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'A nova senha deve ter pelo menos 6 caracteres' 
+      });
+    }
+
+    console.log('🔄 Solicitação de reset de senha para:', email);
+
+    // Verificar se o usuário existe
+    const userResult = await neonDB.findProfileByEmail(email);
+    
+    if (!userResult.success || userResult.data.length === 0) {
+      console.log('❌ Usuário não encontrado para reset:', email);
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Usuário não encontrado' 
+      });
+    }
+
+    // Hash da nova senha
+    const nova_senha_hash = await bcrypt.hash(nova_senha, 12);
+
+    // Atualizar senha no banco
+    const query = `
+      UPDATE usuarios 
+      SET senha_hash = $1, updated_at = NOW()
+      WHERE email = $2
+      RETURNING id, nome_completo, email, updated_at
+    `;
+
+    const result = await neonDB.executeQuery(query, [nova_senha_hash, email]);
+
+    if (result.success && result.data.length > 0) {
+      console.log('✅ Senha atualizada com sucesso para:', email);
+      res.json({ 
+        success: true, 
+        message: 'Senha atualizada com sucesso',
+        data: {
+          id: result.data[0].id,
+          email: result.data[0].email
+        }
+      });
+    } else {
+      console.log('❌ Falha ao atualizar senha:', result.error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Erro ao atualizar senha' 
+      });
+    }
+  } catch (error) {
+    console.error('❌ Erro no reset de senha:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erro interno do servidor',
+      details: error.message 
+    });
+  }
+});
+
+// Verificar se email existe (para recuperação de senha)
+router.post('/check-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Email é obrigatório' 
+      });
+    }
+
+    const result = await neonDB.findProfileByEmail(email);
+    
+    if (result.success && result.data.length > 0) {
+      res.json({ 
+        success: true, 
+        exists: true,
+        message: 'Email encontrado'
+      });
+    } else {
+      res.json({ 
+        success: true, 
+        exists: false,
+        message: 'Email não encontrado'
+      });
+    }
+  } catch (error) {
+    console.error('❌ Erro ao verificar email:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erro interno do servidor'
+    });
+  }
+});
+
 
 export default router;
