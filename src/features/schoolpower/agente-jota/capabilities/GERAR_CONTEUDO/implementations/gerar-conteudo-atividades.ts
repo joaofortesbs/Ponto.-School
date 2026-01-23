@@ -435,14 +435,21 @@ async function generateContentForActivity(
       
       const listaData = {
         titulo: activity.titulo || 'Lista de Exercícios',
+        title: activity.titulo || 'Lista de Exercícios',
         tema: activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || userObjective || 'Matemática',
+        theme: activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || userObjective || 'Matemática',
         disciplina: activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina || 'Matemática',
-        anoEscolar: activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.anoEscolar || '7º Ano',
+        subject: activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina || 'Matemática',
+        anoEscolaridade: activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.anoEscolaridade || '7º Ano',
+        schoolYear: activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.anoEscolaridade || '7º Ano',
         nivelDificuldade: activity.campos_preenchidos?.difficultyLevel || activity.campos_preenchidos?.nivelDificuldade || 'Médio',
-        quantidadeQuestoes: activity.campos_preenchidos?.numberOfQuestions || activity.campos_preenchidos?.quantidadeQuestoes || 10,
-        modeloQuestao: activity.campos_preenchidos?.questionModel || activity.campos_preenchidos?.modeloQuestao || 'Múltipla Escolha',
+        difficultyLevel: activity.campos_preenchidos?.difficultyLevel || activity.campos_preenchidos?.nivelDificuldade || 'Médio',
+        numeroQuestoes: String(activity.campos_preenchidos?.numberOfQuestions || activity.campos_preenchidos?.numeroQuestoes || 10),
+        numberOfQuestions: String(activity.campos_preenchidos?.numberOfQuestions || activity.campos_preenchidos?.numeroQuestoes || 10),
+        modeloQuestoes: activity.campos_preenchidos?.questionModel || activity.campos_preenchidos?.modeloQuestoes || 'Múltipla Escolha',
+        questionModel: activity.campos_preenchidos?.questionModel || activity.campos_preenchidos?.modeloQuestoes || 'Múltipla Escolha',
         objetivos: activity.campos_preenchidos?.objectives || activity.campos_preenchidos?.objetivos || `Avaliar conhecimentos sobre ${userObjective}`,
-        contexto: conversationContext
+        objectives: activity.campos_preenchidos?.objectives || activity.campos_preenchidos?.objetivos || `Avaliar conhecimentos sobre ${userObjective}`
       };
       
       console.log(`📝 [GerarConteudo] Dados para geração:`, JSON.stringify(listaData, null, 2).substring(0, 500));
@@ -458,12 +465,20 @@ async function generateContentForActivity(
       
       const generatedFields = {
         titulo: generatedContent.titulo,
+        theme: generatedContent.tema,
         tema: generatedContent.tema,
+        subject: generatedContent.disciplina,
         disciplina: generatedContent.disciplina,
+        schoolYear: generatedContent.anoEscolaridade,
         anoEscolar: generatedContent.anoEscolaridade,
+        difficultyLevel: generatedContent.dificuldade,
         nivelDificuldade: generatedContent.dificuldade,
+        numberOfQuestions: generatedContent.questoes?.length || 10,
         quantidadeQuestoes: generatedContent.questoes?.length || 10,
+        questionModel: generatedContent.tipoQuestoes,
         modeloQuestao: generatedContent.tipoQuestoes,
+        objectives: generatedContent.objetivos,
+        objetivos: generatedContent.objetivos,
         questoes: generatedContent.questoes,
         isGeneratedByAI: true,
         generatedAt: new Date().toISOString()
