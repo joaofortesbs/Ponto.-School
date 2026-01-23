@@ -1,0 +1,107 @@
+Prompt de Engenharia para Correção de Lista de Exercícios
+Contexto e Problema Atual
+A funcionalidade de geração de "Lista de Exercícios" apresenta inconsistências críticas no fluxo de dados entre o backend (geração via LLM) e o frontend (renderização no preview). Analise a imagem anexada para compreender os sintomas específicos do erro.
+
+Requisitos de Investigação Profunda
+Antes de implementar qualquer correção, você deve:
+
+Mapeamento Completo da Arquitetura
+
+Trace o fluxo de dados end-to-end: desde a chamada da API de geração até a renderização final no componente
+
+Identifique todos os arquivos envolvidos (generators, processors, modals, previews)
+
+Documente as estruturas de dados em cada etapa da pipeline
+
+Análise de Dependências e Contratos de Dados
+
+Verifique inconsistências de nomenclatura (português vs. inglês nos campos: questoes vs. questions, alternativas vs. alternatives)
+
+Identifique quebras de contrato entre módulos (formato de resposta esperado vs. formato retornado)
+
+Analise transformações de dados intermediárias que possam estar corrompendo a estrutura
+
+Debugging Sistemático com Logging Granular
+
+Implemente console.log estratégicos em pontos críticos (não abuse, seja cirúrgico)
+
+Valide o payload em cada etapa: geração → processamento → estado → renderização
+
+Use JSON.stringify() para inspecionar objetos complexos
+
+Restrições Técnicas e Padrões de Código
+Imutabilidade: Não modifique funcionalidades fora do escopo do problema
+
+Compatibilidade: Preserve a estrutura de dados existente para outros tipos de atividade (Quiz, Flash Cards)
+
+TypeScript: Respeite tipos definidos; ajuste interfaces se necessário
+
+Estado: Garanta persistência consistente no localStorage e state management (React hooks/Context)
+
+Error Handling: Adicione validações e fallbacks para evitar crashes silenciosos
+
+Metodologia de Correção
+Aplique esta sequência iterativa:
+
+Isolamento do Bug
+
+Identifique o ponto exato onde os dados são perdidos ou malformados
+
+Compare com os tipos de atividade funcionais (quiz-interativo, flash-cards)
+
+Testes Incrementais
+
+Após cada modificação, execute testes com diferentes cenários:
+
+Geração de nova atividade
+
+Edição de atividade existente
+
+Diferentes quantidades de questões
+
+Use tanto dados mockados quanto chamadas reais à LLM
+
+Validação de Integridade
+
+Confirme que o objeto final possui todas as propriedades esperadas pelo componente de preview
+
+Verifique se não há efeitos colaterais (bugs em outros fluxos)
+
+Capacidades e Ferramentas Disponíveis
+Stack: React + TypeScript + Vite + Node.js (Express/API Routes)
+
+LLM: Gemini/Groq para geração de conteúdo
+
+Persistência: Supabase + localStorage
+
+DevTools: Browser console, React DevTools, Network tab para inspeção de chamadas
+
+Critérios de Sucesso
+A solução será considerada correta quando:
+
+As questões renderizarem com conteúdo real da IA (sem placeholders)
+
+O preview mostrar textos de enunciado, alternativas e gabarito completos
+
+Nenhuma regressão for introduzida em outras funcionalidades
+
+O código permanecer manutenível e bem documentado
+
+Abordagem de Resolução
+Não forneça soluções prontas. Sua missão é:
+
+Raciocinar sobre as causas raiz através de investigação metódica
+
+Propor hipóteses e testá-las sistematicamente
+
+Desenvolver a correção com base em evidências coletadas durante o debugging
+
+Aplicar princípios de engenharia de software (DRY, SOLID) na refatoração
+
+Você possui autonomia técnica para:
+
+Refatorar funções se isso melhorar a robustez
+
+Adicionar testes unitários/integração se julgar necessário
+
+Propor melhorias arquiteturais para evitar problemas similares no futuro

@@ -62,21 +62,75 @@ export interface EditActivityModalHandle {
 
 // Função para processar dados da lista de exercícios
 const processExerciseListData = (formData: ActivityFormData, generatedContent: any) => {
-  console.log('📋 [processExerciseListData] Processando dados:', { formData, generatedContent });
+  console.log('📋 [processExerciseListData] ====== INÍCIO DO PROCESSAMENTO ======');
+  console.log('📋 [processExerciseListData] generatedContent recebido:', JSON.stringify(generatedContent, null, 2)?.substring(0, 1000));
   
-  // Extrair dados do generatedContent (pode vir como { success, data } ou diretamente)
-  const content = generatedContent?.data || generatedContent;
+  // PASSO 1: Extrair dados do wrapper { success, data } se existir
+  let content = generatedContent;
+  if (generatedContent?.success && generatedContent?.data) {
+    console.log('📋 [processExerciseListData] Detectado wrapper { success, data }, extraindo...');
+    content = generatedContent.data;
+  } else if (generatedContent?.data) {
+    console.log('📋 [processExerciseListData] Detectado .data sem success, extraindo...');
+    content = generatedContent.data;
+  }
   
-  // Buscar questões em múltiplos locais possíveis
-  const questoes = content?.questoes || 
-                   content?.questions || 
-                   content?.content?.questoes ||
-                   content?.content?.questions ||
-                   [];
+  console.log('📋 [processExerciseListData] Conteúdo após extração:', {
+    hasQuestoes: !!content?.questoes,
+    questoesLength: content?.questoes?.length,
+    hasQuestions: !!content?.questions,
+    questionsLength: content?.questions?.length,
+    hasContentQuestoes: !!content?.content?.questoes,
+    isGeneratedByAI: content?.isGeneratedByAI
+  });
   
-  console.log('📋 [processExerciseListData] Questões encontradas:', questoes?.length);
+  // PASSO 2: Buscar questões em múltiplos locais possíveis (prioridade para arrays não vazios)
+  let questoes: any[] = [];
   
-  return {
+  // Tentar content.questoes primeiro
+  if (Array.isArray(content?.questoes) && content.questoes.length > 0) {
+    questoes = content.questoes;
+    console.log('📋 [processExerciseListData] Questões encontradas em content.questoes:', questoes.length);
+  }
+  // Tentar content.questions
+  else if (Array.isArray(content?.questions) && content.questions.length > 0) {
+    questoes = content.questions;
+    console.log('📋 [processExerciseListData] Questões encontradas em content.questions:', questoes.length);
+  }
+  // Tentar content.content.questoes (nested)
+  else if (Array.isArray(content?.content?.questoes) && content.content.questoes.length > 0) {
+    questoes = content.content.questoes;
+    console.log('📋 [processExerciseListData] Questões encontradas em content.content.questoes:', questoes.length);
+  }
+  // Tentar content.content.questions (nested)
+  else if (Array.isArray(content?.content?.questions) && content.content.questions.length > 0) {
+    questoes = content.content.questions;
+    console.log('📋 [processExerciseListData] Questões encontradas em content.content.questions:', questoes.length);
+  }
+  
+  // PASSO 3: Validar que as questões têm conteúdo real (não são placeholders)
+  const questoesValidas = questoes.filter((q: any) => {
+    const enunciado = q?.enunciado || q?.statement || q?.question || '';
+    const isPlaceholder = enunciado.includes('[Conteúdo será gerado pela IA]') || 
+                          enunciado.includes('Questão simulada') ||
+                          !enunciado.trim();
+    if (isPlaceholder) {
+      console.log('⚠️ [processExerciseListData] Questão placeholder detectada:', enunciado?.substring(0, 50));
+    }
+    return !isPlaceholder;
+  });
+  
+  console.log('📋 [processExerciseListData] Questões válidas após filtro:', questoesValidas.length, 'de', questoes.length);
+  
+  // Se tivermos questões válidas, usar elas; senão usar todas (incluindo placeholders para mostrar algo)
+  const questoesFinais = questoesValidas.length > 0 ? questoesValidas : questoes;
+  
+  // PASSO 4: Log detalhado da primeira questão para debug
+  if (questoesFinais.length > 0) {
+    console.log('📋 [processExerciseListData] Primeira questão:', JSON.stringify(questoesFinais[0], null, 2));
+  }
+  
+  const resultado = {
     titulo: content?.titulo || formData.title,
     title: content?.titulo || formData.title,
     descricao: content?.descricao || formData.description,
@@ -87,8 +141,8 @@ const processExerciseListData = (formData: ActivityFormData, generatedContent: a
     theme: content?.tema || formData.theme,
     anoEscolaridade: content?.anoEscolaridade || formData.schoolYear,
     schoolYear: content?.anoEscolaridade || formData.schoolYear,
-    numeroQuestoes: content?.numeroQuestoes || formData.numberOfQuestions,
-    numberOfQuestions: content?.numeroQuestoes || formData.numberOfQuestions,
+    numeroQuestoes: questoesFinais.length || content?.numeroQuestoes || formData.numberOfQuestions,
+    numberOfQuestions: questoesFinais.length || content?.numeroQuestoes || formData.numberOfQuestions,
     dificuldade: content?.dificuldade || formData.difficultyLevel,
     difficultyLevel: content?.dificuldade || formData.difficultyLevel,
     tipoQuestoes: content?.tipoQuestoes || formData.questionModel,
@@ -101,14 +155,21 @@ const processExerciseListData = (formData: ActivityFormData, generatedContent: a
     evaluation: formData.evaluation,
     timeLimit: formData.timeLimit,
     context: formData.context,
-    questoes: questoes,
-    questions: questoes,
+    questoes: questoesFinais,
+    questions: questoesFinais,
     content: {
-      questoes: questoes
+      questoes: questoesFinais,
+      questions: questoesFinais
     },
-    isGeneratedByAI: content?.isGeneratedByAI || false,
-    ...content
+    isGeneratedByAI: content?.isGeneratedByAI !== undefined ? content.isGeneratedByAI : questoesValidas.length > 0,
+    generatedAt: content?.generatedAt || new Date().toISOString()
   };
+  
+  console.log('📋 [processExerciseListData] ====== RESULTADO FINAL ======');
+  console.log('📋 [processExerciseListData] Questões retornadas:', resultado.questoes.length);
+  console.log('📋 [processExerciseListData] isGeneratedByAI:', resultado.isGeneratedByAI);
+  
+  return resultado;
 };
 
 interface EditActivityModalProps {
@@ -2457,37 +2518,23 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
 
       // Trigger específico para Lista de Exercícios
       if (activityType === 'lista-exercicios') {
-        console.log('📚 Processamento específico concluído para Lista de Exercícios');
+        console.log('📚 ====== PROCESSAMENTO LISTA DE EXERCÍCIOS ======');
         
-        // Extrair o conteúdo correto (pode vir como { success, data } ou diretamente)
-        const listaExerciciosData = result.data || result;
+        // Log completo do resultado para debug
+        console.log('📚 [Lista Exercícios] Resultado bruto:', JSON.stringify(result, null, 2)?.substring(0, 2000));
         
-        console.log('📋 [Lista Exercícios] Dados extraídos:', {
-          hasQuestoes: !!listaExerciciosData?.questoes,
-          questoesCount: listaExerciciosData?.questoes?.length || 0,
-          hasQuestions: !!listaExerciciosData?.questions,
-          questionsCount: listaExerciciosData?.questions?.length || 0,
-          isGeneratedByAI: listaExerciciosData?.isGeneratedByAI
-        });
+        // Verificar estrutura do resultado
+        const questoes = result?.questoes || result?.questions || result?.data?.questoes || [];
+        console.log('📚 [Lista Exercícios] Questões encontradas:', questoes.length);
         
-        // Garantir que questoes e questions estejam presentes
-        const normalizedData = {
-          ...listaExerciciosData,
-          questoes: listaExerciciosData?.questoes || listaExerciciosData?.questions || [],
-          questions: listaExerciciosData?.questoes || listaExerciciosData?.questions || [],
-          content: {
-            questoes: listaExerciciosData?.questoes || listaExerciciosData?.questions || listaExerciciosData?.content?.questoes || []
-          },
-          isGeneratedByAI: listaExerciciosData?.isGeneratedByAI || true
-        };
+        if (questoes.length > 0) {
+          console.log('📚 [Lista Exercícios] Primeira questão:', JSON.stringify(questoes[0], null, 2));
+        }
         
-        // Salvar no localStorage
-        localStorage.setItem(`lista_exercicios_data_${activity?.id}`, JSON.stringify(normalizedData));
+        // Salvar no localStorage para persistência
+        localStorage.setItem(`lista_exercicios_data_${activity?.id}`, JSON.stringify(result));
         
-        // Atualizar o estado com os dados normalizados
-        result = normalizedData;
-        
-        console.log('💾 Lista de Exercícios processada e salva:', normalizedData);
+        console.log('💾 Lista de Exercícios salva no localStorage');
       }
 
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');

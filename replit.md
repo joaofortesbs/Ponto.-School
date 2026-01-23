@@ -98,3 +98,21 @@ The architecture emphasizes a modular component design based on shadcn/ui patter
 - **docx**, **jsPDF**, **file-saver**: For document generation and download.
 - **bcrypt**: For password hashing.
 - **Framer Motion**: For animations.
+
+## Recent Changes (Jan 2026)
+
+### Lista de Exercícios Data Flow Fix
+**Problem**: Exercise list questions were showing placeholder text "[Conteúdo será gerado pela IA]" instead of AI-generated content.
+
+**Root Cause**: Data structure inconsistency between generator and preview components. The `generateListaExercicios` function returned `{ success: true, data: {...} }` wrapper, but the preview expected direct data.
+
+**Solution Implemented**:
+1. **processExerciseListData** (EditActivityModal.tsx): Robust function that extracts data from wrapper, searches multiple locations for questions (questoes, questions, content.questoes), validates content is not placeholder text, and normalizes the data structure.
+2. **generateListaExercicios** (generateActivityContent.ts): Now returns data directly without wrapper for consistency.
+3. **Data Flow Pipeline**: Generator → generateActivityContent → useGenerateActivity → handleBuildActivity → processExerciseListData → ExerciseListPreview - all components now use consistent data shapes.
+
+**Key Files**:
+- `src/features/schoolpower/construction/EditActivityModal.tsx`
+- `src/features/schoolpower/construction/api/generateActivityContent.ts`
+- `src/features/schoolpower/activities/lista-exercicios/ListaExerciciosGenerator.ts`
+- `src/features/schoolpower/activities/lista-exercicios/ExerciseListPreview.tsx`

@@ -78,29 +78,38 @@ async function generateListaExercicios(formData: ActivityFormData) {
       isGeneratedByAI: generatedContent.isGeneratedByAI
     });
 
-    return { 
-      success: true, 
-      data: {
-        ...generatedContent,
-        title: generatedContent.titulo,
-        description: formData.description || generatedContent.descricao,
-        subject: generatedContent.disciplina,
-        theme: generatedContent.tema,
-        schoolYear: generatedContent.anoEscolaridade,
-        numberOfQuestions: generatedContent.numeroQuestoes,
-        difficultyLevel: generatedContent.dificuldade,
-        questionModel: generatedContent.tipoQuestoes,
-        objectives: generatedContent.objetivos,
-        materials: formData.materials,
-        instructions: formData.instructions,
-        evaluation: formData.evaluation,
+    // Log detalhado das primeiras questões para debug
+    if (generatedContent.questoes && generatedContent.questoes.length > 0) {
+      console.log('📋 [generateListaExercicios] Primeira questão:', JSON.stringify(generatedContent.questoes[0], null, 2));
+    }
+
+    // IMPORTANTE: Retornar dados diretamente (sem wrapper { success, data })
+    // para consistência com o que o ExerciseListPreview espera
+    const resultado = {
+      ...generatedContent,
+      title: generatedContent.titulo,
+      description: formData.description || generatedContent.descricao,
+      subject: generatedContent.disciplina,
+      theme: generatedContent.tema,
+      schoolYear: generatedContent.anoEscolaridade,
+      numberOfQuestions: generatedContent.numeroQuestoes,
+      difficultyLevel: generatedContent.dificuldade,
+      questionModel: generatedContent.tipoQuestoes,
+      objectives: generatedContent.objetivos,
+      materials: formData.materials,
+      instructions: formData.instructions,
+      evaluation: formData.evaluation,
+      questoes: generatedContent.questoes,
+      questions: generatedContent.questoes,
+      content: {
         questoes: generatedContent.questoes,
-        questions: generatedContent.questoes,
-        content: {
-          questoes: generatedContent.questoes
-        }
-      }
+        questions: generatedContent.questoes
+      },
+      isGeneratedByAI: true
     };
+
+    console.log('✅ [generateListaExercicios] Retornando resultado com', resultado.questoes?.length, 'questões');
+    return resultado;
   } catch (error) {
     console.error('❌ [generateListaExercicios] Erro na geração:', error);
     
@@ -151,7 +160,9 @@ async function generateListaExercicios(formData: ActivityFormData) {
       isFallback: true
     };
 
-    return { success: true, data: fallbackContent };
+    // Retornar diretamente (sem wrapper) para consistência
+    console.log('⚠️ [generateListaExercicios] Retornando fallback com', fallbackContent.questoes?.length, 'questões');
+    return fallbackContent;
   }
 }
 
