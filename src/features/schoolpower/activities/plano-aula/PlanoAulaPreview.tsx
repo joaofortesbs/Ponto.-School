@@ -33,7 +33,9 @@ import {
   MessageSquare,
   Video,
   Mic,
-  Group
+  Group,
+  Wrench,
+  Mail
 } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 
@@ -52,9 +54,10 @@ import { DesenvolvimentoIntegrator } from './sections/desenvolvimento/Desenvolvi
 interface PlanoAulaPreviewProps {
   data: any;
   activityData?: any;
+  showDevelopmentOverlay?: boolean;
 }
 
-const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData }) => {
+const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData, showDevelopmentOverlay = true }) => {
   // Estado para armazenar dados específicos de cada seção
   const [secaoAtual, setSecaoAtual] = useState('visao-geral');
   const [dadosSessao, setDadosSessao] = useState<any>({});
@@ -333,9 +336,37 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
 
   return (
-    <div className="h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+    <div className="h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden relative">
+      {/* Overlay "Em Desenvolvimento" */}
+      {showDevelopmentOverlay && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-3xl shadow-2xl border border-white/20 p-8 max-w-lg mx-4 text-center transform hover:scale-[1.02] transition-transform duration-300">
+            <div className="p-4 bg-orange-500/20 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+              <Wrench className="w-10 h-10 text-orange-400 animate-pulse" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-3">
+              Interface em Desenvolvimento
+            </h2>
+            <p className="text-gray-300 mb-6 leading-relaxed">
+              A versão interativa do Plano de Aula está sendo aprimorada para oferecer 
+              a melhor experiência possível. Enquanto isso, você pode acessar o conteúdo 
+              completo em formato texto.
+            </p>
+            <div className="flex items-center justify-center gap-2 text-blue-400 mb-4">
+              <Mail className="w-5 h-5" />
+              <span className="text-sm font-medium">
+                Clique no botão "Extrato" no cabeçalho para ver o conteúdo
+              </span>
+            </div>
+            <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30 px-4 py-2">
+              Versão em Texto Disponível
+            </Badge>
+          </div>
+        </div>
+      )}
+
       {/* Layout Principal */}
-      <div className="flex flex-1 h-full">
+      <div className={`flex flex-1 h-full ${showDevelopmentOverlay ? 'filter blur-[2px]' : ''}`}>
         {/* Sidebar de Navegação */}
         <div className="w-80 bg-orange-50 dark:bg-orange-900/20 border-r border-orange-200 dark:border-orange-700 overflow-y-auto">
           <div className="p-6 space-y-6">
