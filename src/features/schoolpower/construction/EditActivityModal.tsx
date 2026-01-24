@@ -2407,7 +2407,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
         result = await handleGenerateFlashCards();
       } else if (activityType === 'plano-aula') {
         // Usar TextVersionGenerator para plano-aula (versão texto)
-        console.log('📚 [Plano de Aula] Gerando conteúdo em texto longo...');
+        console.log('📚 ========== [Plano de Aula] INICIANDO GERAÇÃO ==========');
         
         const textVersionInput: TextVersionInput = {
           activityType: 'plano-aula',
@@ -2428,7 +2428,14 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
           userObjective: `Criar um plano de aula detalhado sobre ${formData.theme || formData.tema || 'o tema especificado'}`
         };
 
+        console.log('📋 [Plano de Aula] Input para TextVersionGenerator:', JSON.stringify(textVersionInput, null, 2));
         const textResult = await generateTextVersionContent(textVersionInput);
+        console.log('📨 [Plano de Aula] Resultado do TextVersionGenerator:', {
+          success: textResult.success,
+          textContentLength: textResult.textContent?.length || 0,
+          sectionsCount: textResult.sections?.length || 0,
+          error: textResult.error
+        });
         
         if (textResult.success) {
           // Armazenar conteúdo para o ContentExtractModal
