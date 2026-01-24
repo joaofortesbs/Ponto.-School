@@ -212,8 +212,25 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const loadPlanoAulaData = (activityId: string) => {
     console.log('🔍 ActivityViewModal: Carregando dados específicos do Plano de Aula para:', activityId);
 
+    // Priorizar chave do TextVersionGenerator para versão texto
+    const textVersionKey = `text_content_plano-aula_${activityId}`;
+    const textVersionData = localStorage.getItem(textVersionKey);
+    
+    if (textVersionData) {
+      try {
+        const parsed = JSON.parse(textVersionData);
+        console.log(`✅ [Plano de Aula] Dados encontrados em ${textVersionKey}:`, {
+          hasTextContent: !!parsed.textContent,
+          sectionsCount: parsed.sections?.length || 0
+        });
+        return parsed;
+      } catch (error) {
+        console.warn(`⚠️ Erro ao parsear dados de ${textVersionKey}:`, error);
+      }
+    }
+
     const cacheKeys = [
-      `constructed_plano-aula_${activity.id}`, // Use activity.id for specificity
+      `constructed_plano-aula_${activity.id}`,
       `schoolpower_plano-aula_content`,
       `activity_${activity.id}`,
       `activity_fields_${activity.id}`

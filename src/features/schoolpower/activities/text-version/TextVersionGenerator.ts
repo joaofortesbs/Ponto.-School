@@ -269,11 +269,28 @@ function parseAIResponse(rawResponse: string): {
       console.log('✅ [TextVersionGenerator] JSON encontrado na resposta');
       const parsed = JSON.parse(jsonMatch[0]);
       
+      // Verificar se é um fallback de atividades padrão (incompatível)
+      // Detectar pelo formato de array de atividades que vem do local fallback
+      if (Array.isArray(parsed) || parsed.activities || parsed.defaultActivities) {
+        console.warn('⚠️ [TextVersionGenerator] JSON detectado como fallback de atividades padrão, ignorando');
+        return null;
+      }
+      
+      // Verificar se tem campos válidos para versão texto
+      const hasValidFields = parsed.titulo || parsed.title || parsed.sections || 
+                             parsed.textContent || parsed.text_content || 
+                             parsed.conteudo || parsed.planoAula || parsed.content;
+      
+      if (!hasValidFields) {
+        console.warn('⚠️ [TextVersionGenerator] JSON não tem campos válidos para versão texto');
+        return null;
+      }
+      
       // Verificar se tem os campos esperados
       const result = {
         titulo: parsed.titulo || parsed.title || 'Conteúdo Gerado',
         sections: parsed.sections || [],
-        textContent: parsed.textContent || parsed.text_content || ''
+        textContent: parsed.textContent || parsed.text_content || parsed.conteudo || parsed.content || ''
       };
       
       // Se não tiver textContent mas tiver sections, gerar textContent a partir das sections
@@ -282,6 +299,12 @@ function parseAIResponse(rawResponse: string): {
           .map((s: TextSection) => `${s.title}\n\n${s.content}`)
           .join('\n\n---\n\n');
         console.log('📄 [TextVersionGenerator] textContent gerado a partir das sections');
+      }
+      
+      // Se ainda não tiver conteúdo significativo, retornar null
+      if (!result.textContent && result.sections.length === 0) {
+        console.warn('⚠️ [TextVersionGenerator] JSON parseado mas sem conteúdo útil');
+        return null;
       }
       
       console.log('✅ [TextVersionGenerator] Parse bem-sucedido:', {
