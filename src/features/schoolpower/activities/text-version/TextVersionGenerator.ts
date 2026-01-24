@@ -252,52 +252,120 @@ function parseAIResponse(rawResponse: string): {
   sections: TextSection[]; 
   textContent: string 
 } | null {
+  console.log('🔍 [TextVersionGenerator] Parseando resposta da IA...');
+  console.log('📝 [TextVersionGenerator] Resposta bruta (primeiros 500 chars):', rawResponse?.substring(0, 500));
+  
   try {
-    const cleanedResponse = rawResponse
+    // Limpar a resposta de markdown code blocks
+    let cleanedResponse = rawResponse
       .replace(/```json\s*/gi, '')
+      .replace(/```javascript\s*/gi, '')
       .replace(/```\s*/g, '')
       .trim();
     
+    // Tentar encontrar JSON na resposta
     const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
+      console.log('✅ [TextVersionGenerator] JSON encontrado na resposta');
       const parsed = JSON.parse(jsonMatch[0]);
-      return {
-        titulo: parsed.titulo || 'Conteúdo Gerado',
+      
+      // Verificar se tem os campos esperados
+      const result = {
+        titulo: parsed.titulo || parsed.title || 'Conteúdo Gerado',
         sections: parsed.sections || [],
-        textContent: parsed.textContent || ''
+        textContent: parsed.textContent || parsed.text_content || ''
+      };
+      
+      // Se não tiver textContent mas tiver sections, gerar textContent a partir das sections
+      if (!result.textContent && result.sections.length > 0) {
+        result.textContent = result.sections
+          .map((s: TextSection) => `${s.title}\n\n${s.content}`)
+          .join('\n\n---\n\n');
+        console.log('📄 [TextVersionGenerator] textContent gerado a partir das sections');
+      }
+      
+      console.log('✅ [TextVersionGenerator] Parse bem-sucedido:', {
+        titulo: result.titulo,
+        sectionsCount: result.sections.length,
+        textContentLength: result.textContent.length
+      });
+      
+      return result;
+    }
+    
+    // Se não encontrar JSON, tentar usar a resposta como texto puro
+    if (cleanedResponse.length > 100) {
+      console.log('⚠️ [TextVersionGenerator] JSON não encontrado, usando resposta como texto puro');
+      return {
+        titulo: 'Plano de Aula',
+        sections: [],
+        textContent: cleanedResponse
       };
     }
+    
+    console.warn('⚠️ [TextVersionGenerator] Resposta muito curta ou inválida');
   } catch (error) {
-    console.error('❌ TextVersionGenerator: Erro ao parsear resposta:', error);
+    console.error('❌ [TextVersionGenerator] Erro ao parsear resposta:', error);
+    console.error('❌ [TextVersionGenerator] Resposta que causou erro:', rawResponse?.substring(0, 1000));
   }
   return null;
 }
 
 function generateFallbackContent(input: TextVersionInput): TextVersionOutput {
+  console.log('⚠️ [TextVersionGenerator] Gerando conteúdo de fallback para:', input.activityType);
+  
   const config = getActivityInfo(input.activityType);
   const displayName = config?.name || input.activityType;
   
+  // Gerar conteúdo mais completo baseado nos dados do formulário
+  const tema = input.context.tema || input.context.theme || 'Tema não especificado';
+  const disciplina = input.context.disciplina || input.context.subject || 'Disciplina não especificada';
+  const serie = input.context.serie || input.context.schoolYear || 'Série não especificada';
+  const objetivos = input.context.objetivos || input.context.objectives || 'Desenvolver competências relacionadas ao tema';
+  const duracao = input.context.duracao || '50 minutos';
+  const materiais = input.context.materiais || 'Quadro branco, projetor, materiais didáticos';
+  
   const fallbackSections: TextSection[] = [
     {
-      title: '🎯 Objetivos',
-      content: input.context.objetivos || input.context.objectives || 'Objetivos a serem definidos.',
+      title: '🎯 Objetivos de Aprendizagem',
+      content: `- ${objetivos}\n- Compreender os conceitos fundamentais relacionados ao tema\n- Aplicar o conhecimento adquirido em situações práticas`,
       icon: 'target'
     },
     {
-      title: '📚 Tema',
-      content: input.context.tema || input.context.theme || 'Tema a ser definido.',
+      title: '📚 Informações da Aula',
+      content: `**Tema:** ${tema}\n**Disciplina:** ${disciplina}\n**Série/Ano:** ${serie}\n**Duração:** ${duracao}`,
+      icon: 'info'
+    },
+    {
+      title: '📖 Metodologia',
+      content: `Esta aula utiliza uma abordagem ativa de ensino, incentivando a participação dos alunos através de:\n- Exposição dialogada do conteúdo\n- Atividades práticas e exercícios\n- Discussão em grupo`,
       icon: 'book'
     },
     {
-      title: '📝 Descrição',
-      content: input.context.description || 'Descrição da atividade a ser elaborada.',
-      icon: 'edit'
+      title: '🔄 Desenvolvimento da Aula',
+      content: `**Momento 1 - Introdução (10 min):**\nApresentação do tema e levantamento de conhecimentos prévios.\n\n**Momento 2 - Desenvolvimento (30 min):**\nExposição do conteúdo com exemplos práticos e atividades interativas.\n\n**Momento 3 - Conclusão (10 min):**\nSíntese do conteúdo e esclarecimento de dúvidas.`,
+      icon: 'activity'
+    },
+    {
+      title: '✅ Avaliação',
+      content: `A avaliação será contínua, observando:\n- Participação nas atividades\n- Compreensão dos conceitos apresentados\n- Capacidade de aplicação do conhecimento`,
+      icon: 'check'
+    },
+    {
+      title: '📋 Recursos e Materiais',
+      content: materiais,
+      icon: 'clipboard'
     }
   ];
 
-  const fallbackText = fallbackSections
-    .map(s => `${s.title}\n${s.content}`)
-    .join('\n\n');
+  const fallbackText = `# ${displayName}: ${tema}\n\n` + 
+    `**Disciplina:** ${disciplina} | **Série:** ${serie} | **Duração:** ${duracao}\n\n` +
+    '---\n\n' +
+    fallbackSections
+      .map(s => `## ${s.title}\n\n${s.content}`)
+      .join('\n\n');
+
+  console.log('📄 [TextVersionGenerator] Fallback gerado com', fallbackSections.length, 'seções');
 
   return {
     success: true,
@@ -312,10 +380,13 @@ function generateFallbackContent(input: TextVersionInput): TextVersionOutput {
 export async function generateTextVersionContent(
   input: TextVersionInput
 ): Promise<TextVersionOutput> {
-  console.log('📝 TextVersionGenerator: Iniciando geração para', input.activityType);
+  console.log('📝 ========== TextVersionGenerator: INICIANDO GERAÇÃO ==========');
+  console.log('📝 [TextVersionGenerator] Tipo de atividade:', input.activityType);
+  console.log('📝 [TextVersionGenerator] ID da atividade:', input.activityId);
+  console.log('📝 [TextVersionGenerator] Contexto recebido:', JSON.stringify(input.context, null, 2));
   
   if (!isTextVersionActivity(input.activityType)) {
-    console.warn('⚠️ TextVersionGenerator: Tipo de atividade não é versão texto:', input.activityType);
+    console.warn('⚠️ [TextVersionGenerator] Tipo de atividade não é versão texto:', input.activityType);
     return {
       success: false,
       activityId: input.activityId,
@@ -331,23 +402,36 @@ export async function generateTextVersionContent(
     const promptFn = PROMPTS_BY_ACTIVITY_TYPE[input.activityType] || getDefaultPrompt;
     const fullPrompt = promptFn(input);
 
-    console.log('🤖 TextVersionGenerator: Chamando API com fallback em cascata...');
+    console.log('🤖 [TextVersionGenerator] Chamando API com fallback em cascata...');
+    console.log('📋 [TextVersionGenerator] Prompt (primeiros 300 chars):', fullPrompt.substring(0, 300));
     
     const response = await executeWithCascadeFallback(fullPrompt);
 
+    console.log('📨 [TextVersionGenerator] Resposta da API:', {
+      success: response.success,
+      modelUsed: response.modelUsed,
+      providerUsed: response.providerUsed,
+      dataLength: response.data?.length || 0,
+      attemptsMade: response.attemptsMade
+    });
+
     if (!response.success || !response.data) {
-      console.warn('⚠️ TextVersionGenerator: Resposta da API falhou, usando fallback');
+      console.warn('⚠️ [TextVersionGenerator] Resposta da API falhou, usando fallback');
+      console.warn('⚠️ [TextVersionGenerator] Erros:', response.errors);
       return generateFallbackContent(input);
     }
 
     const parsed = parseAIResponse(response.data);
     
     if (!parsed) {
-      console.warn('⚠️ TextVersionGenerator: Não foi possível parsear resposta, usando fallback');
+      console.warn('⚠️ [TextVersionGenerator] Não foi possível parsear resposta, usando fallback');
       return generateFallbackContent(input);
     }
 
-    console.log('✅ TextVersionGenerator: Conteúdo gerado com sucesso');
+    console.log('✅ ========== TextVersionGenerator: CONTEÚDO GERADO COM SUCESSO ==========');
+    console.log('✅ [TextVersionGenerator] Título:', parsed.titulo);
+    console.log('✅ [TextVersionGenerator] Seções:', parsed.sections.length);
+    console.log('✅ [TextVersionGenerator] TextContent (primeiros 200 chars):', parsed.textContent.substring(0, 200));
     
     return {
       success: true,
@@ -360,7 +444,7 @@ export async function generateTextVersionContent(
     };
 
   } catch (error) {
-    console.error('❌ TextVersionGenerator: Erro na geração:', error);
+    console.error('❌ [TextVersionGenerator] Erro na geração:', error);
     return generateFallbackContent(input);
   }
 }
