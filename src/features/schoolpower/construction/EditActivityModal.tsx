@@ -39,6 +39,8 @@ import {
   QuadroInterativoEditActivity
 } from './components/EditFields';
 import { processExerciseListWithUnifiedPipeline, UnifiedExerciseListResponse } from '@/features/schoolpower/activities/lista-exercicios/unified-exercise-pipeline';
+import { generateTextVersionContent, storeTextVersionContent, TextVersionInput } from '@/features/schoolpower/activities/text-version/TextVersionGenerator';
+import { isTextVersionActivity } from '@/features/schoolpower/config/activityVersionConfig';
 
 
 /**
@@ -2403,6 +2405,48 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
         result = await handleGenerateQuizInterativo();
       } else if (activityType === 'flash-cards') {
         result = await handleGenerateFlashCards();
+      } else if (activityType === 'plano-aula') {
+        // Usar TextVersionGenerator para plano-aula (versão texto)
+        console.log('📚 [Plano de Aula] Gerando conteúdo em texto longo...');
+        
+        const textVersionInput: TextVersionInput = {
+          activityType: 'plano-aula',
+          activityId: activity?.id || 'plano-aula',
+          context: {
+            tema: formData.theme || formData.tema,
+            disciplina: formData.subject || formData.disciplina,
+            serie: formData.schoolYear || formData.anoSerie,
+            objetivos: formData.objectives || formData.objetivoGeral,
+            metodologia: formData.difficultyLevel || formData.tipoAula,
+            duracao: formData.timeLimit || formData.cargaHoraria,
+            materiais: formData.materials || formData.materiaisRecursos,
+            contexto: formData.context || formData.perfilTurma,
+            avaliacao: formData.evaluation || formData.observacoesProfessor,
+            competencias: formData.competencies || formData.habilidadesBNCC,
+            description: formData.description
+          },
+          userObjective: `Criar um plano de aula detalhado sobre ${formData.theme || formData.tema || 'o tema especificado'}`
+        };
+
+        const textResult = await generateTextVersionContent(textVersionInput);
+        
+        if (textResult.success) {
+          // Armazenar conteúdo para o ContentExtractModal
+          storeTextVersionContent(activity?.id || 'plano-aula', 'plano-aula', textResult);
+          
+          result = {
+            success: true,
+            data: textResult,
+            textContent: textResult.textContent,
+            sections: textResult.sections,
+            generatedAt: textResult.generatedAt,
+            isTextVersion: true
+          };
+          
+          console.log('✅ [Plano de Aula] Conteúdo texto gerado com sucesso');
+        } else {
+          throw new Error(textResult.error || 'Erro ao gerar conteúdo do plano de aula');
+        }
       } else {
         // Use the generic generateActivity for other types
         result = await generateActivity(formData);
@@ -2566,6 +2610,47 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
         result = await handleGenerateQuizInterativo();
       } else if (activityType === 'flash-cards') {
         result = await handleGenerateFlashCards();
+      } else if (activityType === 'plano-aula') {
+        // Usar TextVersionGenerator para plano-aula (versão texto)
+        console.log('📚 [Programmatic/Plano de Aula] Gerando conteúdo em texto longo...');
+        
+        const textVersionInput: TextVersionInput = {
+          activityType: 'plano-aula',
+          activityId: targetActivity?.id || 'plano-aula',
+          context: {
+            tema: formData.theme || formData.tema,
+            disciplina: formData.subject || formData.disciplina,
+            serie: formData.schoolYear || formData.anoSerie,
+            objetivos: formData.objectives || formData.objetivoGeral,
+            metodologia: formData.difficultyLevel || formData.tipoAula,
+            duracao: formData.timeLimit || formData.cargaHoraria,
+            materiais: formData.materials || formData.materiaisRecursos,
+            contexto: formData.context || formData.perfilTurma,
+            avaliacao: formData.evaluation || formData.observacoesProfessor,
+            competencias: formData.competencies || formData.habilidadesBNCC,
+            description: formData.description
+          },
+          userObjective: `Criar um plano de aula detalhado sobre ${formData.theme || formData.tema || 'o tema especificado'}`
+        };
+
+        const textResult = await generateTextVersionContent(textVersionInput);
+        
+        if (textResult.success) {
+          storeTextVersionContent(targetActivity?.id || 'plano-aula', 'plano-aula', textResult);
+          
+          result = {
+            success: true,
+            data: textResult,
+            textContent: textResult.textContent,
+            sections: textResult.sections,
+            generatedAt: textResult.generatedAt,
+            isTextVersion: true
+          };
+          
+          console.log('✅ [Programmatic/Plano de Aula] Conteúdo texto gerado com sucesso');
+        } else {
+          throw new Error(textResult.error || 'Erro ao gerar conteúdo do plano de aula');
+        }
       } else {
         result = await generateActivity(formData);
       }

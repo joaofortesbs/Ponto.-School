@@ -387,10 +387,41 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const generateTextExtract = (activityType: string, activityId: string): string => {
     const storedData = JSON.parse(localStorage.getItem(`activity_${activityId}`) || '{}');
     const constructedData = JSON.parse(localStorage.getItem(`constructed_${activityType}_${activityId}`) || '{}');
-    const textContent = localStorage.getItem(`text_content_${activityId}`) || '';
     
-    if (textContent) {
-      return textContent;
+    // Priorizar conteúdo gerado pelo TextVersionGenerator ou salvo pelo ContentExtractModal
+    const textVersionKey = `text_content_${activityType}_${activityId}`;
+    const textVersionData = localStorage.getItem(textVersionKey);
+    
+    if (textVersionData) {
+      try {
+        const parsed = JSON.parse(textVersionData);
+        // Aceitar textContent (ContentExtractModal) ou content (legado)
+        if (parsed.textContent) {
+          console.log('📄 [generateTextExtract] Usando conteúdo salvo (textContent)');
+          return parsed.textContent;
+        }
+        if (parsed.content) {
+          console.log('📄 [generateTextExtract] Usando conteúdo salvo (content)');
+          return parsed.content;
+        }
+        // Se tiver sections, formatar como texto
+        if (parsed.sections && Array.isArray(parsed.sections)) {
+          console.log('📄 [generateTextExtract] Formatando sections como texto');
+          return parsed.sections
+            .map((s: any) => `${s.title}\n\n${s.content}`)
+            .join('\n\n---\n\n');
+        }
+      } catch (e) {
+        // Se não for JSON, pode ser texto puro
+        console.log('📄 [generateTextExtract] Usando conteúdo como texto puro');
+        return textVersionData;
+      }
+    }
+    
+    // Fallback para chave antiga
+    const legacyTextContent = localStorage.getItem(`text_content_${activityId}`) || '';
+    if (legacyTextContent) {
+      return legacyTextContent;
     }
     
     const data = constructedData.data || constructedData || storedData;
@@ -1237,14 +1268,19 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   );
 
   // Usar Portal para renderizar o modal no body, garantindo que fique por cima de todos os componentes
+  // Quando o ContentExtractModal está aberto, não renderizamos o ActivityViewModal para evitar sobreposição
   return (
     <>
-      {createPortal(modalContent, document.body)}
+      {!isContentExtractOpen && createPortal(modalContent, document.body)}
       
       {/* Modal de Extrato de Conteúdo para atividades versão texto */}
       <ContentExtractModal
         isOpen={isContentExtractOpen}
-        onClose={() => setIsContentExtractOpen(false)}
+        onClose={() => {
+          setIsContentExtractOpen(false);
+          // Fechar também o ActivityViewModal ao fechar o ContentExtractModal
+          onClose();
+        }}
         activityType={activityType}
         activityTitle={getActivityTitle()}
         textContent={textVersionContent}
