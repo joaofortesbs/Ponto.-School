@@ -21,7 +21,7 @@ import {
   Gamepad2, Puzzle, Award, Star, Flag, Compass,
   Upload, Share2 as ShareIcon, MessageSquare, ThumbsUp,
   Pause, SkipForward, Volume2, Wifi, Battery,
-  Shield, Key, Mail, Phone, Home, Car, Plane,
+  Shield, Key, Phone, Home, Car, Plane,
   TreePine, Sun, Moon, Cloud, Umbrella, Snowflake, Triangle,
   BookOpen, FileText, Target, Users, Calendar, Lightbulb,
   Edit3, Eye, CheckCircle, Clock, Building2, Play
