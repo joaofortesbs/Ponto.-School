@@ -17,6 +17,8 @@ import TeseRedacaoPreview from '@/features/schoolpower/activities/tese-redacao/T
 import { UniversalActivityHeader } from './components/UniversalActivityHeader';
 import { useUserInfo } from './hooks/useUserInfo';
 import { downloadActivity, isDownloadSupported, getDownloadFormatLabel } from '../Sistema-baixar-atividades';
+import { ContentExtractModal } from '../components/ContentExtractModal';
+import { isTextVersionActivity } from '../config/activityVersionConfig';
 
 // Helper function to get activity icon based on activity type
 const getActivityIcon = (activityId: string) => {
@@ -62,6 +64,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [generatedContent, setGeneratedContent] = useState<any>(null);
   const [isContentLoaded, setIsContentLoaded] = useState<boolean>(false);
   const [stars, setStars] = useState<number>(100);
+  const [isContentExtractOpen, setIsContentExtractOpen] = useState<boolean>(false);
+  const [textVersionContent, setTextVersionContent] = useState<string>('');
   
   // Ref para rastrear o último timestamp de atualização e evitar re-renders infinitos
   const lastUpdateRef = useRef<string | null>(null);
@@ -378,6 +382,107 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   }, [isOpen, activity?.id]); // Usar apenas activity.id para evitar loops - type e originalData são acessados via activity
 
   if (!isOpen || !activity) return null;
+
+  // Função para gerar texto do extrato de conteúdo
+  const generateTextExtract = (activityType: string, activityId: string): string => {
+    const storedData = JSON.parse(localStorage.getItem(`activity_${activityId}`) || '{}');
+    const constructedData = JSON.parse(localStorage.getItem(`constructed_${activityType}_${activityId}`) || '{}');
+    const textContent = localStorage.getItem(`text_content_${activityId}`) || '';
+    
+    if (textContent) {
+      return textContent;
+    }
+    
+    const data = constructedData.data || constructedData || storedData;
+    
+    let text = '';
+    
+    if (activityType === 'plano-aula') {
+      const titulo = data.titulo || data.title || storedData.titulo || 'Plano de Aula';
+      const tema = data.tema || storedData['Tema ou Tópico Central'] || '';
+      const disciplina = data.disciplina || storedData['Componente Curricular'] || '';
+      const anoEscolar = data.ano_escolar || storedData['Ano Escolar'] || '';
+      const duracao = data.duracao || storedData['Duração da Aula'] || '';
+      const objetivos = data.objetivos || storedData.objetivos || [];
+      const metodologia = data.metodologia || storedData.metodologia || '';
+      const desenvolvimento = data.desenvolvimento || [];
+      const avaliacao = data.avaliacao || storedData.avaliacao || '';
+      const recursos = data.recursos || storedData.recursos || [];
+      
+      text = `📋 ${titulo}\n\n`;
+      if (tema) text += `🎯 Tema: ${tema}\n`;
+      if (disciplina) text += `📚 Disciplina: ${disciplina}\n`;
+      if (anoEscolar) text += `🎓 Ano Escolar: ${anoEscolar}\n`;
+      if (duracao) text += `⏰ Duração: ${duracao}\n`;
+      text += '\n';
+      
+      if (objetivos && (Array.isArray(objetivos) ? objetivos.length > 0 : objetivos)) {
+        text += `🎯 OBJETIVOS:\n`;
+        if (Array.isArray(objetivos)) {
+          objetivos.forEach((obj: any, i: number) => {
+            const desc = typeof obj === 'string' ? obj : obj.descricao || obj;
+            text += `  ${i + 1}. ${desc}\n`;
+          });
+        } else {
+          text += `  • ${objetivos}\n`;
+        }
+        text += '\n';
+      }
+      
+      if (metodologia) {
+        text += `📖 METODOLOGIA:\n`;
+        text += `  ${typeof metodologia === 'string' ? metodologia : metodologia.nome || JSON.stringify(metodologia)}\n\n`;
+      }
+      
+      if (desenvolvimento && Array.isArray(desenvolvimento) && desenvolvimento.length > 0) {
+        text += `📝 DESENVOLVIMENTO:\n`;
+        desenvolvimento.forEach((etapa: any, i: number) => {
+          const nome = etapa.nome || etapa.titulo || `Etapa ${i + 1}`;
+          const descricao = etapa.descricao || etapa.atividade || '';
+          text += `  ${i + 1}. ${nome}\n`;
+          if (descricao) text += `     ${descricao}\n`;
+        });
+        text += '\n';
+      }
+      
+      if (avaliacao) {
+        text += `📊 AVALIAÇÃO:\n`;
+        text += `  ${typeof avaliacao === 'string' ? avaliacao : JSON.stringify(avaliacao)}\n\n`;
+      }
+      
+      if (recursos && (Array.isArray(recursos) ? recursos.length > 0 : recursos)) {
+        text += `🛠️ RECURSOS:\n`;
+        if (Array.isArray(recursos)) {
+          recursos.forEach((rec: string) => {
+            text += `  • ${rec}\n`;
+          });
+        } else {
+          text += `  • ${recursos}\n`;
+        }
+      }
+    } else if (activityType === 'sequencia-didatica') {
+      text = `📚 Sequência Didática\n\n`;
+      text += `Este é o extrato de conteúdo da Sequência Didática.\n`;
+      text += `Os dados serão formatados quando a geração de texto for implementada.`;
+    } else if (activityType === 'tese-redacao') {
+      text = `📝 Tese de Redação\n\n`;
+      text += `Este é o extrato de conteúdo da Tese de Redação.\n`;
+      text += `Os dados serão formatados quando a geração de texto for implementada.`;
+    } else {
+      text = `Conteúdo em texto para ${activityType} ainda não está disponível.`;
+    }
+    
+    return text;
+  };
+
+  // Função para abrir o modal de extrato de conteúdo
+  const handleContentExtract = () => {
+    const activityType = activity.originalData?.type || activity.categoryId || activity.type || '';
+    const content = generateTextExtract(activityType, activity.id);
+    setTextVersionContent(content);
+    setIsContentExtractOpen(true);
+    console.log('📄 [ContentExtract] Abrindo modal de extrato para:', activityType);
+  };
 
   // Função para lidar com seleção de questão
   const handleQuestionSelect = (questionIndex: number, questionId: string) => {
@@ -1058,6 +1163,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             stars={stars}
             onStarsChange={(newSTs) => setStars(newSTs)}
             onDownload={handleDownload}
+            onContentExtract={isTextVersionActivity(activityType) ? handleContentExtract : undefined}
             onMoreOptions={() => {
               console.log('Menu de opções clicado');
             }}
@@ -1131,7 +1237,21 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   );
 
   // Usar Portal para renderizar o modal no body, garantindo que fique por cima de todos os componentes
-  return createPortal(modalContent, document.body);
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      
+      {/* Modal de Extrato de Conteúdo para atividades versão texto */}
+      <ContentExtractModal
+        isOpen={isContentExtractOpen}
+        onClose={() => setIsContentExtractOpen(false)}
+        activityType={activityType}
+        activityTitle={getActivityTitle()}
+        textContent={textVersionContent}
+        activityData={activity}
+      />
+    </>
+  );
 }
 
 // Default export for compatibility

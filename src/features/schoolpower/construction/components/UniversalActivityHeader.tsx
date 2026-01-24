@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { MoreHorizontal, Pencil, Route, Plus, Download, Share2, Send, Lock, Trash2, Link } from 'lucide-react';
+import { MoreHorizontal, Pencil, Route, Plus, Download, Share2, Send, Lock, Trash2, Link, Mail } from 'lucide-react';
+import { isTextVersionActivity } from '../../config/activityVersionConfig';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,7 @@ interface UniversalActivityHeaderProps {
   onMakePrivate?: () => void;
   onDelete?: () => void;
   isSharedActivity?: boolean; // Nova prop para identificar página de compartilhamento
+  onContentExtract?: () => void; // Callback para abrir interface de extrato de conteúdo (atividades versão texto)
 }
 
 // Sistema de sincronização de ícones - EXATAMENTE igual ao CardDeConstrucao.tsx
@@ -177,7 +179,8 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   onSendMaterial,
   onMakePrivate,
   onDelete,
-  isSharedActivity = false // Nova prop com valor padrão
+  isSharedActivity = false, // Nova prop com valor padrão
+  onContentExtract // Callback para interface de extrato
 }) => {
   const userInfo = useUserInfo();
   const [isEditingSTs, setIsEditingSTs] = React.useState(false);
@@ -435,6 +438,20 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
 
         {/* Lado Direito - Controles */}
         <div className="flex items-center gap-3">
+          {/* Botão de Extrato de Conteúdo - Apenas para atividades versão texto */}
+          {activityType && isTextVersionActivity(activityType) && onContentExtract && (
+            <div 
+              onClick={onContentExtract}
+              className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-2xl px-3 py-2 border border-blue-200 dark:border-blue-700/50 shadow-sm cursor-pointer hover:from-blue-100 hover:to-blue-150 dark:hover:from-blue-800/40 dark:hover:to-blue-700/30 transition-all duration-300 hover:shadow-md hover:scale-105 group"
+              title="Ver extrato de conteúdo"
+            >
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300" />
+                <span className="text-sm font-semibold text-blue-700 dark:text-blue-400 hidden sm:inline">Extrato</span>
+              </div>
+            </div>
+          )}
+
           {/* Card de Trilha */}
           <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm">
             <div className="flex items-center gap-2">
