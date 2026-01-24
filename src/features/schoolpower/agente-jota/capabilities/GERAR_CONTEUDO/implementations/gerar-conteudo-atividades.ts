@@ -29,6 +29,12 @@ import {
 import { createDebugEntry, useDebugStore } from '../../../../interface-chat-producao/debug-system/DebugStore';
 import { useActivityDebugStore } from '../../../../construction/stores/activityDebugStore';
 import { ListaExerciciosGenerator } from '../../../../activities/lista-exercicios/ListaExerciciosGenerator';
+import { 
+  generateTextVersionContent, 
+  storeTextVersionContent,
+  type TextVersionInput 
+} from '../../../../activities/text-version/TextVersionGenerator';
+import { isTextVersionActivity } from '../../../../config/activityVersionConfig';
 
 interface GerarConteudoParams {
   session_id: string;
@@ -528,6 +534,122 @@ async function generateContentForActivity(
         generated_fields: {},
         success: false,
         error: `Erro ao gerar lista de exercícios: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+      };
+    }
+  }
+
+  // ========================================
+  // HANDLER ESPECIALIZADO: ATIVIDADES VERSÃO TEXTO
+  // Usa TextVersionGenerator para gerar conteúdo em formato texto
+  // Atividades: plano-aula, sequencia-didatica, tese-redacao
+  // ========================================
+  if (isTextVersionActivity(activity.tipo)) {
+    console.log(`📄 [GerarConteudo] ====== HANDLER ESPECIALIZADO: ATIVIDADE VERSÃO TEXTO ======`);
+    console.log(`📄 [GerarConteudo] Tipo: ${activity.tipo} - "${activity.titulo}" (${activity.id})`);
+    
+    createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'action',
+      `[VERSÃO-TEXTO] Usando gerador de texto para "${activity.titulo}" (${activity.tipo})`,
+      'high',
+      { correlation_id: correlationId, activity_id: activity.id, activity_type: activity.tipo }
+    );
+    
+    try {
+      const textInput: TextVersionInput = {
+        activityType: activity.tipo,
+        activityId: activity.id,
+        context: {
+          tema: activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || userObjective,
+          disciplina: activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina,
+          serie: activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.serie,
+          objetivos: activity.campos_preenchidos?.objectives || activity.campos_preenchidos?.objetivos,
+          metodologia: activity.campos_preenchidos?.tipoAula || activity.campos_preenchidos?.metodologia,
+          duracao: activity.campos_preenchidos?.tempoLimite || activity.campos_preenchidos?.duracao,
+          description: activity.campos_preenchidos?.description || activity.campos_preenchidos?.descricao,
+          ...activity.campos_preenchidos
+        },
+        conversationContext,
+        userObjective
+      };
+      
+      console.log(`📄 [GerarConteudo] Input para geração de texto:`, JSON.stringify(textInput.context, null, 2).substring(0, 500));
+      
+      const textVersionResult = await generateTextVersionContent(textInput);
+      
+      if (textVersionResult.success) {
+        console.log(`✅ [GerarConteudo] Conteúdo texto gerado com sucesso!`);
+        console.log(`✅ [GerarConteudo] Seções geradas: ${textVersionResult.sections?.length || 0}`);
+        
+        storeTextVersionContent(activity.id, activity.tipo, textVersionResult);
+        
+        const generatedFields = {
+          titulo: activity.titulo || textVersionResult.rawData?.titulo || 'Atividade Gerada',
+          theme: textInput.context.tema,
+          tema: textInput.context.tema,
+          subject: textInput.context.disciplina,
+          disciplina: textInput.context.disciplina,
+          schoolYear: textInput.context.serie,
+          serie: textInput.context.serie,
+          objectives: textInput.context.objetivos,
+          objetivos: textInput.context.objetivos,
+          textContent: textVersionResult.textContent,
+          sections: textVersionResult.sections,
+          versionType: 'text',
+          isTextVersion: true,
+          isGeneratedByAI: true,
+          generatedAt: textVersionResult.generatedAt
+        };
+        
+        createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'info',
+          `[VERSÃO-TEXTO] Geração concluída: ${textVersionResult.sections?.length || 0} seções geradas`,
+          'high',
+          { 
+            correlation_id: correlationId, 
+            activity_id: activity.id,
+            sections_count: textVersionResult.sections?.length || 0,
+            text_preview: textVersionResult.textContent?.substring(0, 200)
+          }
+        );
+        
+        const executionTime = Date.now() - activityStartTime;
+        
+        if (onProgress) {
+          onProgress({
+            type: 'activity_completed',
+            activity_id: activity.id,
+            activity_title: activity.titulo,
+            message: `Conteúdo em texto gerado com ${textVersionResult.sections?.length || 0} seções`
+          });
+        }
+        
+        return {
+          activity_id: activity.id,
+          activity_type: activity.tipo,
+          generated_fields: generatedFields,
+          success: true
+        };
+      } else {
+        throw new Error(textVersionResult.error || 'Falha na geração de conteúdo texto');
+      }
+      
+    } catch (error) {
+      console.error(`❌ [GerarConteudo] Erro ao gerar conteúdo texto:`, error);
+      
+      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'error',
+        `[VERSÃO-TEXTO] Erro na geração: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        'critical',
+        { correlation_id: correlationId, activity_id: activity.id, error: String(error) }
+      );
+      
+      return {
+        activity_id: activity.id,
+        activity_type: activity.tipo,
+        generated_fields: {
+          versionType: 'text',
+          isTextVersion: true,
+          error: String(error)
+        },
+        success: false,
+        error: `Erro ao gerar conteúdo texto: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
       };
     }
   }
