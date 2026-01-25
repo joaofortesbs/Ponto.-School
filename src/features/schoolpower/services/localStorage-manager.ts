@@ -271,54 +271,67 @@ export function initLocalStorageManager(): void {
 }
 
 /**
- * Limpa dados antigos especificamente para plano-aula
+ * Limpa dados antigos de atividades de versão texto (plano-aula, sequencia-didatica, tese-redacao)
  */
 export function cleanupPlanoAulaData(): void {
-  console.log('🧹 [LocalStorageManager] Limpando dados antigos de plano-aula...');
+  console.log('🧹 [LocalStorageManager] Limpando dados antigos de atividades de versão texto...');
   
-  const planoAulaKeys: string[] = [];
+  const textVersionPatterns = [
+    'plano-aula', 'plano_aula',
+    'sequencia-didatica', 'sequencia_didatica',
+    'tese-redacao', 'tese_redacao'
+  ];
+  
+  const textVersionKeys: string[] = [];
   
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && key.includes('plano-aula') || key?.includes('plano_aula')) {
-      planoAulaKeys.push(key);
+    if (!key) continue;
+    
+    const isTextVersionKey = textVersionPatterns.some(pattern => key.includes(pattern));
+    if (isTextVersionKey) {
+      textVersionKeys.push(key);
     }
   }
   
-  // Manter apenas a última versão de cada tipo
   const keysByType: Record<string, string[]> = {};
   
-  planoAulaKeys.forEach(key => {
-    const type = key.split('_')[0];
+  textVersionKeys.forEach(key => {
+    let type = 'other';
+    if (key.includes('plano-aula') || key.includes('plano_aula')) type = 'plano-aula';
+    else if (key.includes('sequencia-didatica') || key.includes('sequencia_didatica')) type = 'sequencia-didatica';
+    else if (key.includes('tese-redacao') || key.includes('tese_redacao')) type = 'tese-redacao';
+    
     if (!keysByType[type]) keysByType[type] = [];
     keysByType[type].push(key);
   });
   
   let removedCount = 0;
-  Object.values(keysByType).forEach(keys => {
-    if (keys.length > 2) {
-      // Ordenar por timestamp e remover mais antigos
+  Object.entries(keysByType).forEach(([type, keys]) => {
+    if (keys.length > 3) {
       const keysWithTimestamp = keys.map(key => {
         const value = localStorage.getItem(key);
         let timestamp = 0;
         try {
           const parsed = JSON.parse(value || '{}');
-          timestamp = parsed.timestamp || parsed.storedAt || 0;
+          timestamp = parsed.storedAt ? new Date(parsed.storedAt).getTime() :
+                      parsed.generatedAt ? new Date(parsed.generatedAt).getTime() :
+                      parsed.timestamp || 0;
         } catch {}
         return { key, timestamp };
       });
       
       keysWithTimestamp.sort((a, b) => b.timestamp - a.timestamp);
       
-      // Manter apenas os 2 mais recentes
-      keysWithTimestamp.slice(2).forEach(({ key }) => {
+      keysWithTimestamp.slice(3).forEach(({ key }) => {
         localStorage.removeItem(key);
         removedCount++;
+        console.log(`   🗑️ Removido: ${key}`);
       });
     }
   });
   
-  console.log(`✅ [LocalStorageManager] ${removedCount} chaves antigas de plano-aula removidas`);
+  console.log(`✅ [LocalStorageManager] ${removedCount} chaves antigas de atividades de texto removidas`);
 }
 
 export default {
