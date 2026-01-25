@@ -1,5 +1,6 @@
 import { ActivityFormData } from '../types/ActivityTypes';
 import { generateActivityContent } from '../api/generateActivityContent';
+import { safeSetJSON, cleanupOldStorage, getStorageUsagePercent } from '../../services/localStorage-manager';
 
 /**
  * Helper function to build an activity from form data
@@ -21,6 +22,13 @@ export async function buildActivityFromFormData(
   console.log('🎯 [buildActivityHelper] Tipo de atividade:', activityType);
   console.log('📊 [buildActivityHelper] Dados do formulário:', formData);
 
+  // Verificar uso do localStorage antes de continuar
+  const usagePercent = getStorageUsagePercent();
+  if (usagePercent > 70) {
+    console.log('⚠️ [buildActivityHelper] Uso alto do localStorage detectado, limpando...');
+    cleanupOldStorage();
+  }
+
   try {
     // 1. Generate content using the API
     console.log(`📌 [buildActivityHelper] Chamando generateActivityContent para tipo: ${activityType}`);
@@ -34,24 +42,30 @@ export async function buildActivityFromFormData(
 
     // 2. Save to localStorage with the SAME key used in EditActivityModal
     const storageKey = `constructed_${activityType}_${activityId}`;
-    localStorage.setItem(storageKey, JSON.stringify(result));
-    console.log(`💾 [buildActivityHelper] Dados salvos no localStorage: ${storageKey}`);
+    const saved = safeSetJSON(storageKey, result);
+    if (!saved) {
+      console.warn(`⚠️ [buildActivityHelper] Não foi possível salvar no localStorage: ${storageKey}`);
+    } else {
+      console.log(`💾 [buildActivityHelper] Dados salvos no localStorage: ${storageKey}`);
+    }
 
-    // 3. Save to constructedActivities object (used by EditActivityModal)
-    const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-    constructedActivities[activityId] = {
-      generatedContent: result,
-      timestamp: new Date().toISOString(),
-      activityType: activityType
-    };
-    localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-    console.log('💾 [buildActivityHelper] Atividade adicionada a constructedActivities');
+    // 3. Save to constructedActivities object (used by EditActivityModal) - SKIP for plano-aula
+    // Plano-aula é uma atividade de versão texto e não precisa deste armazenamento duplicado
+    if (activityType !== 'plano-aula') {
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      constructedActivities[activityId] = {
+        generatedContent: result,
+        timestamp: new Date().toISOString(),
+        activityType: activityType
+      };
+      safeSetJSON('constructedActivities', constructedActivities);
+      console.log('💾 [buildActivityHelper] Atividade adicionada a constructedActivities');
+    }
 
     // 4. Special handling for quadro-interativo
     if (activityType === 'quadro-interativo') {
       console.log('🎯 [buildActivityHelper] Processamento especial para Quadro Interativo');
 
-      // Save quadro-specific data with additional metadata
       const quadroData = {
         ...result.data || result,
         isBuilt: true,
@@ -59,10 +73,9 @@ export async function buildActivityFromFormData(
         generatedByModal: true
       };
 
-      localStorage.setItem(`quadro_interativo_data_${activityId}`, JSON.stringify(quadroData));
+      safeSetJSON(`quadro_interativo_data_${activityId}`, quadroData);
       console.log(`💾 [buildActivityHelper] Dados do Quadro Interativo salvos: quadro_interativo_data_${activityId}`);
 
-      // Dispatch the quadro-interativo-auto-build event
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('quadro-interativo-auto-build', {
           detail: { 
@@ -75,24 +88,28 @@ export async function buildActivityFromFormData(
     }
 
     // 5. Dispatch activity-data-sync event for view modal synchronization
-    // This replicates the syncToViewModal function from EditActivityModal
-    const viewSyncData = {
-      title: formData.title,
-      description: formData.description,
-      customFields: {
-        ...formData
-      },
-      generatedContent: result,
-      formData,
-      lastUpdate: new Date().toISOString()
-    };
+    // Para plano-aula, criar dados mais leves (apenas essenciais)
+    const viewSyncData = activityType === 'plano-aula' 
+      ? {
+          title: formData.title || formData.tema || 'Plano de Aula',
+          type: 'plano-aula',
+          lastUpdate: new Date().toISOString()
+        }
+      : {
+          title: formData.title,
+          description: formData.description,
+          customFields: { ...formData },
+          generatedContent: result,
+          formData,
+          lastUpdate: new Date().toISOString()
+        };
 
-    // Save to activity storage key
+    // Save to activity storage key - dados mínimos para plano-aula
     const activityStorageKey = `activity_${activityId}`;
-    localStorage.setItem(activityStorageKey, JSON.stringify({
+    safeSetJSON(activityStorageKey, {
       ...viewSyncData,
       lastSync: new Date().toISOString()
-    }));
+    });
 
     // Dispatch the activity-data-sync event
     window.dispatchEvent(new CustomEvent('activity-data-sync', {
