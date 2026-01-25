@@ -40,18 +40,22 @@ export async function buildActivityFromFormData(
 
     console.log('✅ [buildActivityHelper] Atividade construída com sucesso:', result);
 
-    // 2. Save to localStorage with the SAME key used in EditActivityModal
-    const storageKey = `constructed_${activityType}_${activityId}`;
-    const saved = safeSetJSON(storageKey, result);
-    if (!saved) {
-      console.warn(`⚠️ [buildActivityHelper] Não foi possível salvar no localStorage: ${storageKey}`);
-    } else {
-      console.log(`💾 [buildActivityHelper] Dados salvos no localStorage: ${storageKey}`);
-    }
+    // TEXT VERSION ACTIVITIES: plano-aula, sequencia-didatica, tese-redacao
+    // Para atividades de versão texto, NÃO armazenar dados duplicados
+    // O conteúdo é armazenado apenas na chave text_content_ pelo TextVersionGenerator
+    const isTextVersionActivity = ['plano-aula', 'sequencia-didatica', 'tese-redacao'].includes(activityType);
+    
+    if (!isTextVersionActivity) {
+      // 2. Save to localStorage with the SAME key used in EditActivityModal (ONLY for interactive activities)
+      const storageKey = `constructed_${activityType}_${activityId}`;
+      const saved = safeSetJSON(storageKey, result);
+      if (!saved) {
+        console.warn(`⚠️ [buildActivityHelper] Não foi possível salvar no localStorage: ${storageKey}`);
+      } else {
+        console.log(`💾 [buildActivityHelper] Dados salvos no localStorage: ${storageKey}`);
+      }
 
-    // 3. Save to constructedActivities object (used by EditActivityModal) - SKIP for plano-aula
-    // Plano-aula é uma atividade de versão texto e não precisa deste armazenamento duplicado
-    if (activityType !== 'plano-aula') {
+      // 3. Save to constructedActivities object (used by EditActivityModal)
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       constructedActivities[activityId] = {
         generatedContent: result,
@@ -60,6 +64,8 @@ export async function buildActivityFromFormData(
       };
       safeSetJSON('constructedActivities', constructedActivities);
       console.log('💾 [buildActivityHelper] Atividade adicionada a constructedActivities');
+    } else {
+      console.log('📝 [buildActivityHelper] Atividade de versão texto - armazenamento mínimo apenas');
     }
 
     // 4. Special handling for quadro-interativo

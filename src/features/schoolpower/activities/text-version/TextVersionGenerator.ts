@@ -13,6 +13,7 @@
 
 import { executeWithCascadeFallback } from '../../services/controle-APIs-gerais-school-power';
 import { isTextVersionActivity, getActivityInfo } from '../../config/activityVersionConfig';
+import { safeSetJSON, cleanupPlanoAulaData } from '../../services/localStorage-manager';
 
 export interface TextVersionInput {
   activityType: string;
@@ -493,131 +494,48 @@ export function storeTextVersionContent(
 ): void {
   const storageKey = `text_content_${activityType}_${activityId}`;
   
-  try {
-    // Limpar dados antigos de plano-aula antes de salvar novos
-    if (activityType === 'plano-aula') {
-      cleanupPlanoAulaStorage();
-    }
-    
-    // Preparar dados otimizados para armazenamento
-    const optimizedContent = {
+  console.log('💾 [TextVersionGenerator] Salvando conteúdo:', storageKey);
+  
+  // Limpar dados antigos de plano-aula antes de salvar novos
+  // Usa o gerenciador centralizado de localStorage
+  if (activityType === 'plano-aula' || activityType === 'sequencia-didatica' || activityType === 'tese-redacao') {
+    cleanupPlanoAulaData();
+  }
+  
+  // Preparar dados otimizados para armazenamento
+  let optimizedContent = {
+    success: content.success,
+    activityId: content.activityId,
+    activityType: content.activityType,
+    textContent: content.textContent,
+    sections: content.sections,
+    generatedAt: content.generatedAt,
+    storedAt: new Date().toISOString()
+  };
+  
+  // Verificar tamanho e truncar se necessário (500KB limite)
+  const jsonString = JSON.stringify(optimizedContent);
+  if (jsonString.length > 500000) {
+    console.warn('⚠️ [TextVersionGenerator] Conteúdo muito grande, truncando...');
+    optimizedContent = {
       success: content.success,
       activityId: content.activityId,
       activityType: content.activityType,
-      textContent: content.textContent,
-      sections: content.sections,
+      textContent: content.textContent.substring(0, 50000),
+      sections: [],
       generatedAt: content.generatedAt,
       storedAt: new Date().toISOString()
     };
-    
-    const jsonString = JSON.stringify(optimizedContent);
-    
-    // Verificar tamanho antes de salvar
-    if (jsonString.length > 500000) { // 500KB limite
-      console.warn('⚠️ TextVersionGenerator: Conteúdo muito grande, truncando...');
-      // Manter apenas textContent para economizar espaço
-      const reducedContent = {
-        success: content.success,
-        activityId: content.activityId,
-        activityType: content.activityType,
-        textContent: content.textContent.substring(0, 50000), // Limitar a 50K chars
-        sections: [],
-        generatedAt: content.generatedAt,
-        storedAt: new Date().toISOString()
-      };
-      localStorage.setItem(storageKey, JSON.stringify(reducedContent));
-    } else {
-      localStorage.setItem(storageKey, jsonString);
-    }
-    
-    console.log('💾 [TextVersionGenerator] Conteúdo salvo em localStorage:', storageKey);
-    console.log('💾 [TextVersionGenerator] Tamanho:', (jsonString.length / 1024).toFixed(2), 'KB');
-    
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-      console.error('❌ [TextVersionGenerator] Quota do localStorage excedida!');
-      console.log('🧹 [TextVersionGenerator] Tentando limpar espaço...');
-      cleanupPlanoAulaStorage();
-      
-      // Tentar salvar versão mínima
-      try {
-        const minimalContent = {
-          success: content.success,
-          activityId: content.activityId,
-          activityType: content.activityType,
-          textContent: content.textContent.substring(0, 10000),
-          sections: [],
-          generatedAt: content.generatedAt,
-          storedAt: new Date().toISOString()
-        };
-        localStorage.setItem(storageKey, JSON.stringify(minimalContent));
-        console.log('✅ [TextVersionGenerator] Conteúdo mínimo salvo após limpeza');
-      } catch (retryError) {
-        console.error('❌ [TextVersionGenerator] Falha ao salvar mesmo após limpeza:', retryError);
-      }
-    } else {
-      console.error('❌ [TextVersionGenerator] Erro ao salvar em localStorage:', error);
-    }
-  }
-}
-
-function cleanupPlanoAulaStorage(): void {
-  console.log('🧹 [TextVersionGenerator] Limpando armazenamento antigo de plano-aula...');
-  
-  const keysToRemove: string[] = [];
-  const planoAulaKeys: {key: string, timestamp: number}[] = [];
-  
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key) continue;
-    
-    // Encontrar todas as chaves relacionadas a plano-aula
-    if (key.includes('plano-aula') || key.includes('plano_aula')) {
-      const value = localStorage.getItem(key);
-      let timestamp = 0;
-      
-      try {
-        if (value) {
-          const parsed = JSON.parse(value);
-          timestamp = parsed.storedAt ? new Date(parsed.storedAt).getTime() : 
-                      parsed.generatedAt ? new Date(parsed.generatedAt).getTime() :
-                      parsed.timestamp || Date.now();
-        }
-      } catch {
-        timestamp = 0;
-      }
-      
-      planoAulaKeys.push({ key, timestamp });
-    }
   }
   
-  // Ordenar por timestamp (mais recente primeiro) e manter apenas as 2 mais recentes
-  planoAulaKeys.sort((a, b) => b.timestamp - a.timestamp);
+  // Usar safeSetJSON do localStorage-manager (com tratamento de quota)
+  const saved = safeSetJSON(storageKey, optimizedContent);
   
-  if (planoAulaKeys.length > 3) {
-    const toRemove = planoAulaKeys.slice(3);
-    toRemove.forEach(({ key }) => {
-      localStorage.removeItem(key);
-      keysToRemove.push(key);
-    });
-  }
-  
-  // Também remover chaves muito grandes
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key) continue;
-    
-    const value = localStorage.getItem(key);
-    if (value && value.length > 1000000) { // 1MB
-      if (!key.includes('supabase')) {
-        localStorage.removeItem(key);
-        keysToRemove.push(key);
-      }
-    }
-  }
-  
-  if (keysToRemove.length > 0) {
-    console.log(`🗑️ [TextVersionGenerator] Removidas ${keysToRemove.length} chaves antigas`);
+  if (saved) {
+    console.log('✅ [TextVersionGenerator] Conteúdo salvo:', storageKey);
+    console.log('📊 [TextVersionGenerator] Tamanho:', (JSON.stringify(optimizedContent).length / 1024).toFixed(2), 'KB');
+  } else {
+    console.error('❌ [TextVersionGenerator] Falha ao salvar conteúdo após tentativas');
   }
 }
 
