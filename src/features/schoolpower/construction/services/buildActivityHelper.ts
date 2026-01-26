@@ -94,23 +94,37 @@ export async function buildActivityFromFormData(
     }
 
     // 5. Dispatch activity-data-sync event for view modal synchronization
-    // Para plano-aula, criar dados mais leves (apenas essenciais)
-    const viewSyncData = activityType === 'plano-aula' 
+    // OTIMIZAÇÃO: Dados leves para TODAS as atividades - evitar QuotaExceededError
+    // O generatedContent completo fica APENAS na chave constructed_${type}_${id}
+    const isHeavyActivity = ['lista-exercicios', 'quiz-interativo', 'flash-cards'].includes(activityType);
+    
+    const viewSyncData = isTextVersionActivity 
       ? {
-          title: formData.title || formData.tema || 'Plano de Aula',
-          type: 'plano-aula',
+          title: formData.title || formData.tema || 'Atividade',
+          type: activityType,
+          isTextVersion: true,
           lastUpdate: new Date().toISOString()
         }
-      : {
-          title: formData.title,
-          description: formData.description,
-          customFields: { ...formData },
-          generatedContent: result,
-          formData,
-          lastUpdate: new Date().toISOString()
-        };
+      : isHeavyActivity
+        ? {
+            title: formData.title,
+            description: formData.description,
+            type: activityType,
+            subject: formData.subject,
+            schoolYear: formData.schoolYear,
+            questionsCount: result?.questoes?.length || result?.questions?.length || result?.cards?.length || 0,
+            lastUpdate: new Date().toISOString()
+          }
+        : {
+            title: formData.title,
+            description: formData.description,
+            customFields: { ...formData },
+            generatedContent: result,
+            formData,
+            lastUpdate: new Date().toISOString()
+          };
 
-    // Save to activity storage key - dados mínimos para plano-aula
+    // Save to activity storage key - dados mínimos para evitar quota
     const activityStorageKey = `activity_${activityId}`;
     safeSetJSON(activityStorageKey, {
       ...viewSyncData,

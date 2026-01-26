@@ -19,6 +19,7 @@ import { useUserInfo } from './hooks/useUserInfo';
 import { downloadActivity, isDownloadSupported, getDownloadFormatLabel } from '../Sistema-baixar-atividades';
 import { ContentExtractModal } from '../components/ContentExtractModal';
 import { isTextVersionActivity } from '../config/activityVersionConfig';
+import { retrieveTextVersionContent } from '../activities/text-version/TextVersionGenerator';
 
 // Helper function to get activity icon based on activity type
 const getActivityIcon = (activityId: string) => {
@@ -526,10 +527,42 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   // Função para abrir o modal de extrato de conteúdo
   const handleContentExtract = () => {
     const activityType = activity.originalData?.type || activity.categoryId || activity.type || '';
-    const content = generateTextExtract(activityType, activity.id);
+    const activityId = activity.id;
+    
+    console.log('📄 [ContentExtract] Buscando conteúdo para:', activityType, activityId);
+    
+    // PRIORIDADE 1: Usar retrieveTextVersionContent para atividades de versão texto
+    if (isTextVersionActivity(activityType)) {
+      const textVersionData = retrieveTextVersionContent(activityId, activityType);
+      
+      if (textVersionData && textVersionData.textContent) {
+        console.log('✅ [ContentExtract] Usando retrieveTextVersionContent:', {
+          hasTextContent: !!textVersionData.textContent,
+          length: textVersionData.textContent.length
+        });
+        setTextVersionContent(textVersionData.textContent);
+        setIsContentExtractOpen(true);
+        return;
+      }
+      
+      // Tentar também com activityId como fallback (para casos onde o ID foi usado diretamente)
+      const fallbackData = retrieveTextVersionContent(activityType, activityType);
+      if (fallbackData && fallbackData.textContent) {
+        console.log('✅ [ContentExtract] Usando fallback (activityType as ID):', {
+          hasTextContent: !!fallbackData.textContent,
+          length: fallbackData.textContent.length
+        });
+        setTextVersionContent(fallbackData.textContent);
+        setIsContentExtractOpen(true);
+        return;
+      }
+    }
+    
+    // PRIORIDADE 2: Fallback para generateTextExtract (busca manual no localStorage)
+    const content = generateTextExtract(activityType, activityId);
     setTextVersionContent(content);
     setIsContentExtractOpen(true);
-    console.log('📄 [ContentExtract] Abrindo modal de extrato para:', activityType);
+    console.log('📄 [ContentExtract] Usando generateTextExtract fallback para:', activityType);
   };
 
   // Função para lidar com seleção de questão

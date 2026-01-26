@@ -428,15 +428,29 @@ Cada atividade terá sua própria chamada de API!
         localStorage.setItem(primaryKey, JSON.stringify({ success: true, data: dataToStore }));
         storageKeys.push(primaryKey);
         
-        // Chave de atividade
+        // Chave de atividade - APENAS METADADOS LEVES para evitar QuotaExceededError
+        const isHeavyActivity = ['lista-exercicios', 'quiz-interativo', 'flash-cards'].includes(activity.tipo);
+        const activityMetadata = {
+          title: activity.titulo,
+          type: activity.tipo,
+          isBuilt: true,
+          generatedAt: new Date().toISOString(),
+          ...(isHeavyActivity ? {
+            questionsCount: dataToStore?.questoes?.length || dataToStore?.questions?.length || dataToStore?.cards?.length || 0
+          } : {})
+        };
         const activityKey = `activity_${activity.id}`;
-        localStorage.setItem(activityKey, JSON.stringify(dataToStore));
+        localStorage.setItem(activityKey, JSON.stringify(activityMetadata));
         storageKeys.push(activityKey);
         
-        // Chave de conteúdo gerado
-        const generatedKey = `generated_content_${activity.id}`;
-        localStorage.setItem(generatedKey, JSON.stringify(dataToStore));
-        storageKeys.push(generatedKey);
+        // Chave de conteúdo gerado - APENAS para atividades NÃO pesadas
+        if (!isHeavyActivity) {
+          const generatedKey = `generated_content_${activity.id}`;
+          localStorage.setItem(generatedKey, JSON.stringify(dataToStore));
+          storageKeys.push(generatedKey);
+        } else {
+          console.log(`⚠️ [criar-atividade-v2] Pulando generated_content_ para ${activity.tipo} (evitar quota)`);
+        }
         
         // Atualizar constructedActivities global
         const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');

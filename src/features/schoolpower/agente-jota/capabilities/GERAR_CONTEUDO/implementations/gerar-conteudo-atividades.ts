@@ -1660,17 +1660,25 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
         let savedKeys: string[] = [];
         if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
           try {
-            const storageKey = `generated_content_${activity.id}`;
-            const storageData = {
-              activity_id: activity.id,
-              activity_type: activity.tipo,
-              fields: syncedFields,
-              original_fields: result.generated_fields,
-              validation: validation,
-              timestamp: new Date().toISOString()
-            };
-            localStorage.setItem(storageKey, JSON.stringify(storageData));
-            savedKeys.push(storageKey);
+            // OTIMIZAÇÃO: Não salvar em generated_content_ para atividades pesadas
+            // Para lista-exercicios, quiz-interativo, flash-cards: dados ficam APENAS em constructed_
+            const isHeavyActivity = ['lista-exercicios', 'quiz-interativo', 'flash-cards'].includes(activity.tipo);
+            
+            if (!isHeavyActivity) {
+              const storageKey = `generated_content_${activity.id}`;
+              const storageData = {
+                activity_id: activity.id,
+                activity_type: activity.tipo,
+                fields: syncedFields,
+                original_fields: result.generated_fields,
+                validation: validation,
+                timestamp: new Date().toISOString()
+              };
+              localStorage.setItem(storageKey, JSON.stringify(storageData));
+              savedKeys.push(storageKey);
+            } else {
+              console.log(`⚠️ [V2] Pulando generated_content_ para ${activity.tipo} (evitar QuotaExceededError)`);
+            }
             
             // Também usar persistActivityToStorage para chaves adicionais
             const additionalKeys = persistActivityToStorage(

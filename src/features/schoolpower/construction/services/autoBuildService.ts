@@ -310,13 +310,28 @@ export class AutoBuildService {
       localStorage.setItem(constructedKeySimple, JSON.stringify(constructedData));
       console.log(`✅ [PRE-GENERATED] Salvo em ${constructedKeySimple}`);
       
-      // 2. Salvar em activity_{id}
-      localStorage.setItem(`activity_${activity.id}`, JSON.stringify(generatedContent));
-      console.log(`✅ [PRE-GENERATED] Salvo em activity_${activity.id}`);
+      // 2. Salvar em activity_{id} - APENAS METADADOS LEVES para evitar QuotaExceededError
+      const isHeavyActivity = ['lista-exercicios', 'quiz-interativo', 'flash-cards'].includes(activityType);
+      const activityMetadata = {
+        title: activity.title,
+        type: activityType,
+        isPreGenerated: true,
+        generatedAt: timestamp,
+        ...(isHeavyActivity ? {
+          questionsCount: preGeneratedFields?.questoes?.length || preGeneratedFields?.questions?.length || preGeneratedFields?.cards?.length || 0
+        } : {})
+      };
+      localStorage.setItem(`activity_${activity.id}`, JSON.stringify(activityMetadata));
+      console.log(`✅ [PRE-GENERATED] Salvo em activity_${activity.id} (metadados leves)`);
       
-      // 3. Salvar em generated_content_{id} (compatibilidade com useActivityAutoLoad)
-      localStorage.setItem(`generated_content_${activity.id}`, JSON.stringify(preGeneratedFields));
-      console.log(`✅ [PRE-GENERATED] Salvo em generated_content_${activity.id}`);
+      // 3. Salvar em generated_content_{id} - APENAS para atividades NÃO pesadas
+      // Para lista-exercicios, quiz-interativo, flash-cards: dados ficam APENAS em constructed_
+      if (!isHeavyActivity) {
+        localStorage.setItem(`generated_content_${activity.id}`, JSON.stringify(preGeneratedFields));
+        console.log(`✅ [PRE-GENERATED] Salvo em generated_content_${activity.id}`);
+      } else {
+        console.log(`⚠️ [PRE-GENERATED] Pulando generated_content_ para ${activityType} (evitar quota)`);
+      }
       
       // 4. Atualizar constructedActivities GLOBAL
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');

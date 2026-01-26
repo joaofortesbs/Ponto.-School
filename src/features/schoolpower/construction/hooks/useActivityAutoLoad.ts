@@ -108,11 +108,41 @@ export function useActivityAutoLoad(
       }
 
       // PRIORIDADE 2: Buscar no localStorage (fallback)
+      // NOTA: Para atividades pesadas (lista-exercicios, quiz-interativo, flash-cards),
+      // os dados completos ficam APENAS em constructed_${type}_${id}
       if (!loadedData) {
+        const heavyActivityTypes = ['lista-exercicios', 'quiz-interativo', 'flash-cards'];
+        
+        // ETAPA 2.1: Tentar determinar o tipo da atividade a partir de metadados
+        let detectedType: string | null = null;
+        const activityMetadata = localStorage.getItem(`activity_${activityId}`);
+        if (activityMetadata) {
+          try {
+            const metadata = JSON.parse(activityMetadata);
+            detectedType = metadata.type || metadata.activityType || null;
+            console.log(`%c🔍 [AUTO-LOAD] Tipo detectado via activity_: ${detectedType}`, 'color: #9C27B0;');
+          } catch (e) {
+            console.log('%c⚠️ [AUTO-LOAD] Erro ao parsear metadados de activity_', 'color: orange;');
+          }
+        }
+        
+        // Se activityId for o próprio tipo (ex: lista-exercicios), usar ele
+        if (!detectedType && heavyActivityTypes.includes(activityId)) {
+          detectedType = activityId;
+        }
+        
+        const isHeavyActivity = detectedType ? heavyActivityTypes.includes(detectedType) : false;
+        
+        // Construir lista de chaves com prioridade baseada no tipo detectado
         const possibleKeys = [
+          // PRIORIDADE ALTA: Chave com tipo detectado
+          ...(detectedType ? [`constructed_${detectedType}_${activityId}`] : []),
+          // PRIORIDADE MÉDIA: Tentar todas as combinações de atividades pesadas
+          ...heavyActivityTypes.map(type => `constructed_${type}_${activityId}`),
           `activity_${activityId}`,           // Chave usada pelo buildActivityHelper (sync com ViewModal)
           `constructedActivities`,            // Objeto global com todas as atividades construídas
-          `generated_content_${activityId}`,  // Chave usada pelo gerar_conteudo_atividades
+          // PRIORIDADE BAIXA: generated_content_ (pode estar vazio para atividades pesadas)
+          ...(isHeavyActivity ? [] : [`generated_content_${activityId}`]),
           `auto_activity_data_${activityId}`,
           `${activityId}_form_data`,
           `constructed_${activityId}_content`
