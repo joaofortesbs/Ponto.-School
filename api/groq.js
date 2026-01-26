@@ -16,8 +16,13 @@ const GEMINI_MODEL = 'gemini-2.0-flash';
 
 export function getGroqClient() {
   if (!groqClient) {
-    if (!apiKey || !apiKey.startsWith('gsk_')) {
-      throw new Error('❌ GROQ_API_KEY inválida! Verifique a variável de ambiente.');
+    if (!apiKey) {
+      throw new Error('❌ GROQ_API_KEY não encontrada! Verifique a variável de ambiente.');
+    }
+    
+    // Suporte a chaves Groq (gsk_...) ou OpenRouter (sk-or-...) ou outras compatíveis
+    if (!apiKey.startsWith('gsk_') && !apiKey.startsWith('sk-')) {
+      console.warn('⚠️ GROQ_API_KEY pode ter formato inesperado, tentando mesmo assim...');
     }
     
     groqClient = new Groq({
