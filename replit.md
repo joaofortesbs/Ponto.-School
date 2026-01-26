@@ -69,3 +69,27 @@ The architecture emphasizes a modular component design based on shadcn/ui patter
 - **docx**, **jsPDF**, **file-saver**: For document generation and download.
 - **bcrypt**: For password hashing.
 - **Framer Motion**: For animations.
+
+## Recent Changes (January 2026)
+
+### Storage Optimization for Heavy Activities
+- **Problem Solved**: QuotaExceededError for `lista-exercicios`, `quiz-interativo`, `flash-cards`
+- **Solution**: Heavy activities now store only lightweight metadata in `activity_${id}` and skip `generated_content_${id}`. Full payloads are stored exclusively in `constructed_${type}_${id}`.
+- **Files Changed**: `buildActivityHelper.ts`, `autoBuildService.ts`, `gerar-conteudo-atividades.ts`, `criar-atividade-v2.ts`
+
+### ContentExtractModal Data Flow Fix
+- **Problem Solved**: Plano de Aula modal showing empty content
+- **Solution**: `ActivityViewModal` now uses `retrieveTextVersionContent()` as primary method to fetch text-version activity content, with fallback to `generateTextExtract()`.
+- **Files Changed**: `ActivityViewModal.tsx`
+
+### Activity Auto-Load Enhancement
+- **Enhancement**: `useActivityAutoLoad` now detects activity type via `activity_` metadata before constructing `constructed_${type}_${id}` lookup keys.
+- **Files Changed**: `useActivityAutoLoad.ts`
+
+### Heavy Activity Storage Pattern
+- Activities classified as "heavy" (large payload): `lista-exercicios`, `quiz-interativo`, `flash-cards`
+- Storage pattern for heavy activities:
+  - `constructed_${type}_${id}`: Full content (questions, cards, etc.)
+  - `activity_${id}`: Metadata only (title, type, questionsCount)
+  - `generated_content_${id}`: SKIPPED for heavy activities
+- Text-version activities (`plano-aula`, `sequencia-didatica`, `tese-redacao`) use `text_content_${type}_${id}` exclusively.
