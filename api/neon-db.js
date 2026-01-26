@@ -3,7 +3,7 @@ import { Client, Pool } from 'pg';
 class NeonDBManager {
   constructor() {
     // FALLBACK HARDCODED - URL POOLED CORRETA (última opção)
-    const FALLBACK_POOLED_URL = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require';
+    const FALLBACK_POOLED_URL = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require';
     
     // Detectar ambiente de PRODUÇÃO (deployment/publicado)
     const isProduction = process.env.NODE_ENV === 'production' || 
