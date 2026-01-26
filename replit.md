@@ -93,3 +93,9 @@ The architecture emphasizes a modular component design based on shadcn/ui patter
   - `activity_${id}`: Metadata only (title, type, questionsCount)
   - `generated_content_${id}`: SKIPPED for heavy activities
 - Text-version activities (`plano-aula`, `sequencia-didatica`, `tese-redacao`) use `text_content_${type}_${id}` exclusively.
+
+### Jota Response Sanitization
+- **Problem Solved**: Raw JSON arrays being displayed in Jota chat instead of formatted text
+- **Solution**: Added sanitization layer to `initial-response-service.ts` using `containsRawJson()` + `sanitizeAiOutput()` to detect and convert JSON to narrative text before displaying to users.
+- **Files Changed**: `initial-response-service.ts`
+- **Sanitization Flow**: AI Response → `containsRawJson()` detection → `sanitizeAiOutput()` → `jsonToNarrative()` → Clean text for UI

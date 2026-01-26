@@ -9,6 +9,7 @@
 
 import { executeWithCascadeFallback } from '../../services/controle-APIs-gerais-school-power';
 import { getContextManager, type ContextoMacro } from './context-manager';
+import { sanitizeAiOutput, containsRawJson } from './output-sanitizer';
 
 const INITIAL_RESPONSE_PROMPT = `
 Você é o Jota, assistente de IA do Ponto School especializado em ajudar professores.
@@ -102,7 +103,17 @@ export async function generateInitialResponse(
     let entidades: Record<string, any> = {};
 
     if (responseResult.success && responseResult.data) {
-      resposta = responseResult.data.trim();
+      const rawResponse = responseResult.data.trim();
+      
+      // SANITIZAÇÃO CRÍTICA: Garantir que JSON bruto nunca chegue à UI
+      if (containsRawJson(rawResponse)) {
+        console.warn('⚠️ [InitialResponse] Resposta da IA contém JSON bruto! Sanitizando...');
+        const sanitized = sanitizeAiOutput(rawResponse, { capabilityName: 'resposta_inicial' });
+        resposta = sanitized.sanitized;
+        console.log(`✅ [InitialResponse] Resposta sanitizada: "${resposta.substring(0, 100)}..."`);
+      } else {
+        resposta = rawResponse;
+      }
     }
 
     if (interpretationResult.success && interpretationResult.data) {
@@ -160,7 +171,16 @@ export async function getInitialResponseOnly(userInput: string): Promise<string>
   });
 
   if (result.success && result.data) {
-    return result.data.trim();
+    const rawResponse = result.data.trim();
+    
+    // SANITIZAÇÃO CRÍTICA: Garantir que JSON bruto nunca chegue à UI
+    if (containsRawJson(rawResponse)) {
+      console.warn('⚠️ [InitialResponseOnly] Resposta contém JSON bruto! Sanitizando...');
+      const sanitized = sanitizeAiOutput(rawResponse, { capabilityName: 'resposta_inicial' });
+      return sanitized.sanitized;
+    }
+    
+    return rawResponse;
   }
 
   return `Entendi seu pedido! Vou trabalhar em "${userInput}" agora.`;
