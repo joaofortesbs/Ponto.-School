@@ -581,6 +581,26 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       return { key: legacyKey, content: { textContent: legacyStored } };
     }
     
+    // ESTRATÉGIA 4: Buscar chaves onde ID = tipo (fallback do EditActivityModal quando activity?.id era undefined)
+    for (const type of textVersionTypes) {
+      const wrongIdKey = `text_content_${type}_${type}`;
+      const wrongIdStored = localStorage.getItem(wrongIdKey);
+      if (wrongIdStored) {
+        try {
+          const parsed = JSON.parse(wrongIdStored);
+          if (parsed.textContent && parsed.textContent.length > 50) {
+            console.log('✅ [SmartSearch] Encontrado via chave com ID incorreto:', wrongIdKey);
+            return { key: wrongIdKey, content: parsed };
+          }
+        } catch (e) {
+          if (wrongIdStored.length > 50) {
+            console.log('✅ [SmartSearch] Encontrado como texto puro (ID incorreto):', wrongIdKey);
+            return { key: wrongIdKey, content: { textContent: wrongIdStored } };
+          }
+        }
+      }
+    }
+    
     console.log('⚠️ [SmartSearch] Nenhum conteúdo encontrado para:', activityId);
     return null;
   };
