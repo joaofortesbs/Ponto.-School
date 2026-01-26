@@ -526,13 +526,22 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
   // Função para abrir o modal de extrato de conteúdo
   const handleContentExtract = () => {
-    const activityType = activity.originalData?.type || activity.categoryId || activity.type || '';
+    // CORRIGIDO: Priorizar activity.originalData?.tipo que é o campo correto do ChosenActivity
+    const activityType = activity.originalData?.tipo || activity.originalData?.type || activity.categoryId || activity.type || '';
     const activityId = activity.id;
     
-    console.log('📄 [ContentExtract] Buscando conteúdo para:', activityType, activityId);
+    console.log('📄 [ContentExtract] ===== DEBUG RECUPERAÇÃO =====');
+    console.log('📄 [ContentExtract] activityId:', activityId);
+    console.log('📄 [ContentExtract] activityType resolvido:', activityType);
+    console.log('📄 [ContentExtract] activity.originalData?.tipo:', activity.originalData?.tipo);
+    console.log('📄 [ContentExtract] activity.originalData?.type:', activity.originalData?.type);
+    console.log('📄 [ContentExtract] activity.categoryId:', activity.categoryId);
+    console.log('📄 [ContentExtract] activity.type:', activity.type);
+    console.log('📄 [ContentExtract] Chave esperada: text_content_' + activityType + '_' + activityId);
     
     // PRIORIDADE 1: Usar retrieveTextVersionContent para atividades de versão texto
     if (isTextVersionActivity(activityType)) {
+      console.log('📄 [ContentExtract] É atividade de versão texto, tentando recuperar...');
       const textVersionData = retrieveTextVersionContent(activityId, activityType);
       
       if (textVersionData && textVersionData.textContent) {
@@ -543,6 +552,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         setTextVersionContent(textVersionData.textContent);
         setIsContentExtractOpen(true);
         return;
+      } else {
+        console.log('⚠️ [ContentExtract] retrieveTextVersionContent retornou vazio');
       }
       
       // Tentar também com activityId como fallback (para casos onde o ID foi usado diretamente)

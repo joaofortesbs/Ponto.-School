@@ -41,6 +41,13 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
   const convertToConstructionActivity = async (activity: any): Promise<ConstructionActivity> => {
     console.log('🔄 Convertendo atividade:', activity);
 
+    // CORREÇÃO CRÍTICA: Preservar o tipo correto da atividade
+    // O campo 'tipo' vem do ChosenActivity (ex: "plano-aula")
+    // O campo 'id' é o identificador único (ex: "abc123")
+    const activityType = activity.tipo || activity.type || activity.id;
+    
+    console.log(`🔄 [convertToConstructionActivity] Tipo detectado: ${activityType} (tipo=${activity.tipo}, type=${activity.type}, id=${activity.id})`);
+
     // Verificar se atividade está no banco de dados
     const isBuiltInDatabase = builtActivitiesCache.has(activity.id);
 
@@ -63,21 +70,27 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
 
     return {
       id: activity.id,
-      title: activity.title,
-      description: activity.description,
-      type: activity.id, // usar id como tipo para compatibilidade
-      customFields: activity.customFields || {},
+      title: activity.titulo || activity.title,
+      description: activity.descricao || activity.description || activity.justificativa || '',
+      type: activityType, // CORRIGIDO: Usar tipo real da atividade
+      customFields: activity.customFields || activity.campos_preenchidos || {},
       isBuilt: isBuilt,
       builtAt: localStorageBuiltAt || new Date().toISOString(),
       progress: isBuilt ? 100 : 0,
       status: isBuilt ? 'completed' : 'pending',
       // Propriedades obrigatórias adicionais
-      categoryId: activity.id,
-      categoryName: activity.title,
-      icon: activity.id,
-      tags: [],
-      difficulty: 'Médio',
-      estimatedTime: '30 min'
+      categoryId: activityType, // CORRIGIDO: Usar tipo real
+      categoryName: activity.titulo || activity.title,
+      icon: activityType, // CORRIGIDO: Usar tipo real
+      tags: activity.tags || [],
+      difficulty: activity.nivel_dificuldade || 'Médio',
+      estimatedTime: '30 min',
+      // CRÍTICO: Preservar dados originais para recuperação correta
+      originalData: {
+        ...activity,
+        type: activityType, // Garantir que type está disponível para recuperação
+        tipo: activityType
+      }
     };
   };
 
