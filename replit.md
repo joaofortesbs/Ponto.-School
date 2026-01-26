@@ -125,13 +125,19 @@ All heavy activities (lista-exercicios, quiz-interativo, flash-cards) now follow
 5. Fall back to `activity.originalData` (database) if localStorage empty
 6. Apply any deletion filters
 
-### Plano de Aula Personalization Fix (January 2026)
-- **Problem Solved**: Plano de Aula showing generic fallback content ("Disciplina não especificada") instead of personalized content based on user's theme
-- **Root Cause**: When `activity.campos_preenchidos` didn't have the tema field, the system was using generic fallback content instead of the userObjective
-- **Solution**: Updated `TextVersionGenerator.ts` to:
-  - Automatically populate `input.context.tema` from `userObjective` when tema is not set
-  - Add cache bypass specifically for plano-aula activity type to ensure fresh AI generation
-  - Added better logging for debugging tema/userObjective flow
-- **Files Changed**: `src/features/schoolpower/activities/text-version/TextVersionGenerator.ts`, `src/features/schoolpower/construction/api/generateActivityContent.ts`
-- **Type Fixes**: Fixed LSP errors in `generateActivityContent.ts` by using correct ActivityFormData field names (anoSerie, tipoAula, cargaHoraria, materiaisRecursos)
-- **Data Flow**: userObjective → tema mapping ensures the user's requested theme is always present in the AI prompt for plano-aula generation
+### Plano de Aula Complete Generation System (January 2026)
+- **Problem Solved**: Plano de Aula showing generic fallback content or JSON-formatted response instead of complete, professional lesson plan text
+- **Root Causes**: 
+  1. Prompt requested JSON schema which constrained AI output
+  2. parseAIResponse was forcing JSON parsing even when text was more appropriate
+  3. When `activity.campos_preenchidos` didn't have tema field, system used generic fallback
+- **Solution - Complete Refactor**:
+  1. **New Pure Text Prompt**: Redesigned plano-aula prompt to request Markdown/text output following PDF example structure (Title, Duration, Objectives, Methodology, Resources, Detailed Lesson Plan with numbered sections, Avaliação, Observações)
+  2. **Intelligent Response Parsing**: Modified `parseAIResponse()` to accept `activityType` parameter; for plano-aula, now prioritizes Markdown detection (# headers, specific patterns) and returns textContent directly
+  3. **Personalization**: Automatically populate `input.context.tema` from `userObjective` when tema is not set
+  4. **Cache Bypass**: Active only for plano-aula to ensure fresh AI generation
+  5. **Increased Prompt Limit**: Changed `MAX_PROMPT_LENGTH` from 4000 to 8000 chars in `controle-APIs-gerais-school-power.ts`
+- **Files Changed**: `TextVersionGenerator.ts`, `controle-APIs-gerais-school-power.ts`, `generateActivityContent.ts`
+- **Type Fixes**: Fixed LSP errors in `generateActivityContent.ts` by using correct ActivityFormData field names
+- **Data Flow**: User request → Agente Jota → gerar-conteudo-atividades.ts → generateTextVersionContent → executeWithCascadeFallback → AI API (pure text) → parseAIResponse (Markdown detection for plano-aula) → storeTextVersionContent → ContentExtractModal
+- **Important**: Other text-version activities (sequencia-didatica, tese-redacao) still use JSON format; only plano-aula uses pure text
