@@ -88,7 +88,7 @@ async function generateListaExercicios(formData: ActivityFormData) {
     const resultado = {
       ...generatedContent,
       title: generatedContent.titulo,
-      description: formData.description || generatedContent.descricao,
+      description: formData.description || (generatedContent as Record<string, unknown>).descricao as string || '',
       subject: generatedContent.disciplina,
       theme: generatedContent.tema,
       schoolYear: generatedContent.anoEscolaridade,
@@ -172,26 +172,28 @@ async function generatePlanoAula(formData: ActivityFormData) {
   try {
     const { generateTextVersionContent } = await import('@/features/schoolpower/activities/text-version/TextVersionGenerator');
     
+    const extendedData = formData as ActivityFormData & Record<string, unknown>;
+    
     const textVersionInput = {
       activityType: 'plano-aula',
-      activityId: formData.id || `plano-aula-${Date.now()}`,
+      activityId: (extendedData.id as string) || `plano-aula-${Date.now()}`,
       context: {
-        tema: formData.theme || formData.tema,
-        theme: formData.theme || formData.tema,
-        disciplina: formData.subject || formData.disciplina,
-        subject: formData.subject || formData.disciplina,
-        serie: formData.schoolYear || formData.serie,
-        schoolYear: formData.schoolYear || formData.serie,
-        objetivos: formData.objectives || formData.objetivos,
-        objectives: formData.objectives || formData.objetivos,
-        metodologia: formData.methodology || formData.metodologia || formData.difficultyLevel,
-        duracao: formData.timeLimit || formData.duracao || '50 minutos',
-        materiais: formData.materials || formData.materiais,
+        tema: formData.theme || formData.tema || '',
+        theme: formData.theme || formData.tema || '',
+        disciplina: formData.subject || formData.disciplina || '',
+        subject: formData.subject || formData.disciplina || '',
+        serie: formData.schoolYear || formData.anoSerie || '',
+        schoolYear: formData.schoolYear || formData.anoSerie || '',
+        objetivos: formData.objectives || formData.objetivo || '',
+        objectives: formData.objectives || formData.objetivo || '',
+        metodologia: formData.tipoAula || formData.difficultyLevel || '',
+        duracao: formData.timeLimit || formData.cargaHoraria || '50 minutos',
+        materiais: formData.materials || formData.materiaisRecursos || '',
         description: formData.description,
         title: formData.title
       },
-      conversationContext: formData.conversationContext || '',
-      userObjective: formData.userObjective || formData.objectives || ''
+      conversationContext: (extendedData.conversationContext as string) || '',
+      userObjective: (extendedData.userObjective as string) || formData.objectives || ''
     };
     
     console.log('📝 [generatePlanoAula] Dados preparados para TextVersionGenerator:', textVersionInput);

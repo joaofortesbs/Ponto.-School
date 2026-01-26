@@ -423,13 +423,26 @@ export async function generateTextVersionContent(
   }
 
   try {
+    const tema = input.context.tema || input.context.theme || input.userObjective || '';
+    if (!input.context.tema && input.userObjective) {
+      input.context.tema = input.userObjective;
+      input.context.theme = input.userObjective;
+      console.log('📋 [TextVersionGenerator] Tema preenchido a partir do userObjective:', input.userObjective);
+    }
+    
     const promptFn = PROMPTS_BY_ACTIVITY_TYPE[input.activityType] || getDefaultPrompt;
     const fullPrompt = promptFn(input);
 
     console.log('🤖 [TextVersionGenerator] Chamando API com fallback em cascata...');
     console.log('📋 [TextVersionGenerator] Prompt (primeiros 300 chars):', fullPrompt.substring(0, 300));
+    console.log('📋 [TextVersionGenerator] Tema/UserObjective:', tema || 'Não especificado');
+    console.log('📋 [TextVersionGenerator] Tipo de atividade:', input.activityType);
     
-    const response = await executeWithCascadeFallback(fullPrompt);
+    const shouldBypassCache = input.activityType === 'plano-aula';
+    
+    const response = await executeWithCascadeFallback(fullPrompt, {
+      bypassCache: shouldBypassCache
+    });
 
     console.log('📨 [TextVersionGenerator] Resposta da API:', {
       success: response.success,

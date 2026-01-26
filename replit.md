@@ -124,3 +124,14 @@ All heavy activities (lista-exercicios, quiz-interativo, flash-cards) now follow
 4. Merge with previewData
 5. Fall back to `activity.originalData` (database) if localStorage empty
 6. Apply any deletion filters
+
+### Plano de Aula Personalization Fix (January 2026)
+- **Problem Solved**: Plano de Aula showing generic fallback content ("Disciplina não especificada") instead of personalized content based on user's theme
+- **Root Cause**: When `activity.campos_preenchidos` didn't have the tema field, the system was using generic fallback content instead of the userObjective
+- **Solution**: Updated `TextVersionGenerator.ts` to:
+  - Automatically populate `input.context.tema` from `userObjective` when tema is not set
+  - Add cache bypass specifically for plano-aula activity type to ensure fresh AI generation
+  - Added better logging for debugging tema/userObjective flow
+- **Files Changed**: `src/features/schoolpower/activities/text-version/TextVersionGenerator.ts`, `src/features/schoolpower/construction/api/generateActivityContent.ts`
+- **Type Fixes**: Fixed LSP errors in `generateActivityContent.ts` by using correct ActivityFormData field names (anoSerie, tipoAula, cargaHoraria, materiaisRecursos)
+- **Data Flow**: userObjective → tema mapping ensures the user's requested theme is always present in the AI prompt for plano-aula generation
