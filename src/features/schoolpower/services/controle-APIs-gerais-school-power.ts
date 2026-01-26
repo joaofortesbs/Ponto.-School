@@ -195,7 +195,7 @@ function getOptimalModelForComplexity(complexity: QueryComplexity): string[] {
 // ============================================================================
 
 const INPUT_CONFIG = {
-  MAX_PROMPT_LENGTH: 4000,
+  MAX_PROMPT_LENGTH: 8000,
 };
 
 function validateAndSanitizePrompt(prompt: string): { valid: boolean; sanitized: string; error?: string } {

@@ -50,64 +50,110 @@ export interface TextSection {
 }
 
 const PROMPTS_BY_ACTIVITY_TYPE: Record<string, (input: TextVersionInput) => string> = {
-  'plano-aula': (input) => `
-Você é um especialista em pedagogia e criação de planos de aula.
+  'plano-aula': (input) => {
+    const tema = input.context.tema || input.context.theme || input.userObjective || 'Não especificado';
+    const disciplina = input.context.disciplina || input.context.subject || 'Não especificada';
+    const serie = input.context.serie || input.context.schoolYear || 'Não especificado';
+    const objetivos = input.context.objetivos || input.context.objectives || '';
+    const metodologia = input.context.metodologia || input.context.tipoAula || 'Expositiva dialogada';
+    const duracao = input.context.duracao || input.context.tempoLimite || '50 minutos';
+    const materiais = input.context.materiais || input.context.recursos || '';
+    
+    return `Você é um professor especialista e pedagogo experiente. Sua tarefa é criar um PLANO DE AULA COMPLETO, DETALHADO e PROFISSIONAL.
 
-Crie um plano de aula completo e detalhado com as seguintes informações:
+INFORMAÇÕES DA AULA:
+- Tema Central: ${tema}
+- Disciplina: ${disciplina}
+- Série/Ano: ${serie}
+- Duração Total: ${duracao}
+- Metodologia: ${metodologia}
+${objetivos ? `- Objetivos Específicos: ${objetivos}` : ''}
+${materiais ? `- Materiais Sugeridos: ${materiais}` : ''}
+${input.userObjective ? `- Solicitação do Professor: ${input.userObjective}` : ''}
 
-**Contexto:**
-- Tema: ${input.context.tema || input.context.theme || 'Não especificado'}
-- Disciplina: ${input.context.disciplina || input.context.subject || 'Não especificada'}
-- Série/Ano: ${input.context.serie || input.context.schoolYear || 'Não especificado'}
-- Objetivos: ${input.context.objetivos || input.context.objectives || 'Não especificados'}
-- Metodologia: ${input.context.metodologia || input.context.tipoAula || 'Metodologia ativa'}
-- Duração: ${input.context.duracao || input.context.tempoLimite || '50 minutos'}
+INSTRUÇÕES IMPORTANTES:
+Crie um plano de aula COMPLETO e DETALHADO seguindo EXATAMENTE esta estrutura profissional:
 
-${input.conversationContext ? `**Contexto da conversa:**\n${input.conversationContext}` : ''}
-${input.userObjective ? `**Objetivo do usuário:**\n${input.userObjective}` : ''}
+1. TÍTULO: "Plano de Aula: [Tema] ([Série])"
+2. DURAÇÃO: Tempo total da aula
+3. OBJETIVO GERAL: Um parágrafo claro e completo
+4. OBJETIVOS ESPECÍFICOS: Lista com 4-6 objetivos usando verbos de ação (Compreender, Aplicar, Analisar, Desenvolver, etc.)
+5. METODOLOGIA: Tipo de abordagem pedagógica
+6. RECURSOS E MATERIAIS: Lista detalhada de todos os materiais necessários
 
-**FORMATO DE RESPOSTA (OBRIGATÓRIO):**
-Responda APENAS com um JSON no seguinte formato:
+7. PLANO DE AULA DETALHADO:
+   Divida a aula em momentos cronológicos com tempo específico para cada:
+   
+   - 1. Introdução (X minutos): Descrição detalhada de como iniciar, perguntas motivadoras, conexão com conhecimento prévio
+   - 2. Desenvolvimento (Y minutos): Múltiplas seções numeradas com explicações, exemplos práticos, fórmulas, analogias, atividades
+   - 3. Atividade Prática (Z minutos): Descrição da atividade em grupo ou individual
+   - 4. Discussão e Conclusão (W minutos): Como encerrar, síntese, esclarecimento de dúvidas
 
-{
-  "titulo": "Título do Plano de Aula",
-  "sections": [
-    {
-      "title": "🎯 Objetivos de Aprendizagem",
-      "content": "Texto detalhado dos objetivos...",
-      "icon": "target"
-    },
-    {
-      "title": "📚 Metodologia",
-      "content": "Descrição detalhada da metodologia...",
-      "icon": "book"
-    },
-    {
-      "title": "🔄 Desenvolvimento da Aula",
-      "content": "Passo a passo detalhado com momentos, atividades e tempos...",
-      "icon": "activity"
-    },
-    {
-      "title": "✅ Avaliação",
-      "content": "Critérios e instrumentos de avaliação...",
-      "icon": "check"
-    },
-    {
-      "title": "📋 Recursos e Materiais",
-      "content": "Lista de recursos necessários...",
-      "icon": "clipboard"
-    }
-  ],
-  "textContent": "Versão completa em texto corrido formatado para impressão..."
-}
+8. AVALIAÇÃO: Critérios de avaliação contínua e sugestão de exercício
+9. OBSERVAÇÕES: Dicas para o professor, adaptações possíveis, sugestões extras
 
-IMPORTANTE:
-1. O campo "textContent" deve ter todo o conteúdo formatado como texto corrido
-2. Use formatação com marcadores (-, *) e quebras de linha
-3. Seja detalhado e prático
-4. Inclua exemplos concretos quando possível
-5. Mantenha alinhamento com a BNCC quando aplicável
-`,
+REGRAS OBRIGATÓRIAS:
+- Escreva TUDO em português brasileiro formal e profissional
+- Seja EXTREMAMENTE detalhado - cada seção deve ter múltiplos parágrafos
+- Inclua EXEMPLOS CONCRETOS e práticos relacionados ao tema "${tema}"
+- Use formatação clara com marcadores (•, -, ▪) e numeração
+- Distribua o tempo de forma realista entre os momentos da aula
+- Inclua perguntas motivadoras e analogias que o professor pode usar
+- Alinhe com a BNCC quando aplicável
+- O conteúdo deve ser COMPLETO para o professor usar diretamente em sala
+- NÃO use abreviações ou resumos - escreva o conteúdo COMPLETO
+
+FORMATO DE RESPOSTA (TEXTO PURO):
+Escreva o plano de aula COMPLETO em formato de texto, seguindo esta estrutura:
+
+# Plano de Aula: ${tema} (${serie})
+Duração: ${duracao}
+
+## Objetivo Geral
+[Parágrafo completo descrevendo o objetivo principal]
+
+## Objetivos Específicos
+• [Objetivo 1 com verbo de ação]
+• [Objetivo 2 com verbo de ação]
+• [Objetivo 3 com verbo de ação]
+• [Objetivo 4 com verbo de ação]
+
+## Metodologia
+[Descrição da abordagem pedagógica]
+
+## Recursos e Materiais
+• [Material 1]
+• [Material 2]
+• [Lista completa de materiais necessários]
+
+## Plano de Aula Detalhado
+
+### 1. Introdução (X minutos)
+[Descrição detalhada do momento inicial - perguntas, contextualização, exemplos]
+
+### 2. Desenvolvimento (Y minutos)
+[Conteúdo principal MUITO detalhado com:
+- Explicações completas
+- Exemplos práticos sobre ${tema}
+- Fórmulas quando aplicável
+- Analogias para facilitar compreensão
+- Atividades interativas]
+
+### 3. Atividade Prática (Z minutos)
+[Descrição completa da atividade - instruções, materiais, como conduzir]
+
+### 4. Discussão e Conclusão (W minutos)
+[Como encerrar a aula - síntese, perguntas, esclarecimento de dúvidas]
+
+## Avaliação
+[Critérios de avaliação contínua e sugestão de exercício]
+
+## Observações
+[Dicas para o professor, adaptações possíveis, sugestões extras]
+
+---
+IMPORTANTE: Escreva TODO o conteúdo de forma COMPLETA e DETALHADA. NÃO use placeholders como "[...]" - escreva o texto real.`;
+  },
 
   'sequencia-didatica': (input) => `
 Você é um especialista em sequências didáticas e planejamento pedagógico.
@@ -248,23 +294,51 @@ Responda APENAS com um JSON no seguinte formato:
 `;
 }
 
-function parseAIResponse(rawResponse: string): { 
+function parseAIResponse(rawResponse: string, activityType?: string): { 
   titulo: string; 
   sections: TextSection[]; 
   textContent: string 
 } | null {
   console.log('🔍 [TextVersionGenerator] Parseando resposta da IA...');
   console.log('📝 [TextVersionGenerator] Resposta bruta (primeiros 500 chars):', rawResponse?.substring(0, 500));
+  console.log('📝 [TextVersionGenerator] Tipo de atividade:', activityType);
+  console.log('📝 [TextVersionGenerator] Tamanho total da resposta:', rawResponse?.length || 0, 'chars');
   
   try {
     // Limpar a resposta de markdown code blocks
     let cleanedResponse = rawResponse
       .replace(/```json\s*/gi, '')
       .replace(/```javascript\s*/gi, '')
+      .replace(/```markdown\s*/gi, '')
       .replace(/```\s*/g, '')
       .trim();
     
-    // Tentar encontrar JSON na resposta
+    // PARA PLANO-AULA: Priorizar texto puro (Markdown) em vez de JSON
+    // Se a resposta começa com # ou ## (Markdown heading), é texto puro
+    const isMarkdownResponse = cleanedResponse.startsWith('#') || 
+                               cleanedResponse.startsWith('Plano de Aula') ||
+                               cleanedResponse.includes('## Objetivo Geral') ||
+                               cleanedResponse.includes('### 1. Introdução');
+    
+    if (isMarkdownResponse && activityType === 'plano-aula') {
+      console.log('✅ [TextVersionGenerator] Resposta Markdown detectada para plano-aula');
+      
+      // Extrair título da primeira linha (# Plano de Aula: ...)
+      const lines = cleanedResponse.split('\n');
+      const firstLine = lines[0].replace(/^#+\s*/, '').trim();
+      const titulo = firstLine.length > 10 ? firstLine : 'Plano de Aula';
+      
+      console.log('📄 [TextVersionGenerator] Título extraído:', titulo);
+      console.log('📄 [TextVersionGenerator] Conteúdo completo:', cleanedResponse.length, 'chars');
+      
+      return {
+        titulo: titulo,
+        sections: [],
+        textContent: cleanedResponse
+      };
+    }
+    
+    // Tentar encontrar JSON na resposta (para outros tipos de atividade)
     const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       console.log('✅ [TextVersionGenerator] JSON encontrado na resposta');
@@ -318,16 +392,25 @@ function parseAIResponse(rawResponse: string): {
     }
     
     // Se não encontrar JSON, tentar usar a resposta como texto puro
-    if (cleanedResponse.length > 100) {
-      console.log('⚠️ [TextVersionGenerator] JSON não encontrado, usando resposta como texto puro');
+    // Aceitar qualquer resposta com mais de 50 caracteres como texto válido
+    if (cleanedResponse.length > 50) {
+      console.log('✅ [TextVersionGenerator] JSON não encontrado, usando resposta como texto puro');
+      console.log('📄 [TextVersionGenerator] Tamanho do texto puro:', cleanedResponse.length, 'caracteres');
+      
+      // Tentar extrair título do início do texto
+      const firstLine = cleanedResponse.split('\n')[0].trim();
+      const titulo = firstLine.length > 10 && firstLine.length < 200 
+        ? firstLine.replace(/^#+\s*/, '').replace(/^\*+/, '').trim()
+        : 'Plano de Aula';
+      
       return {
-        titulo: 'Plano de Aula',
+        titulo: titulo,
         sections: [],
         textContent: cleanedResponse
       };
     }
     
-    console.warn('⚠️ [TextVersionGenerator] Resposta muito curta ou inválida');
+    console.warn('⚠️ [TextVersionGenerator] Resposta muito curta ou inválida:', cleanedResponse.length, 'chars');
   } catch (error) {
     console.error('❌ [TextVersionGenerator] Erro ao parsear resposta:', error);
     console.error('❌ [TextVersionGenerator] Resposta que causou erro:', rawResponse?.substring(0, 1000));
@@ -341,13 +424,15 @@ function generateFallbackContent(input: TextVersionInput): TextVersionOutput {
   const config = getActivityInfo(input.activityType);
   const displayName = config?.name || input.activityType;
   
-  // Gerar conteúdo mais completo baseado nos dados do formulário
-  const tema = input.context.tema || input.context.theme || 'Tema não especificado';
+  // PRIORIZAR userObjective para o tema - garantir personalização
+  const tema = input.userObjective || input.context.tema || input.context.theme || 'Tema não especificado';
   const disciplina = input.context.disciplina || input.context.subject || 'Disciplina não especificada';
   const serie = input.context.serie || input.context.schoolYear || 'Série não especificada';
-  const objetivos = input.context.objetivos || input.context.objectives || 'Desenvolver competências relacionadas ao tema';
+  const objetivos = input.context.objetivos || input.context.objectives || `Desenvolver competências relacionadas a ${tema}`;
   const duracao = input.context.duracao || '50 minutos';
   const materiais = input.context.materiais || 'Quadro branco, projetor, materiais didáticos';
+  
+  console.log('📋 [TextVersionGenerator] Fallback usando tema:', tema);
   
   const fallbackSections: TextSection[] = [
     {
@@ -458,7 +543,7 @@ export async function generateTextVersionContent(
       return generateFallbackContent(input);
     }
 
-    const parsed = parseAIResponse(response.data);
+    const parsed = parseAIResponse(response.data, input.activityType);
     
     if (!parsed) {
       console.warn('⚠️ [TextVersionGenerator] Não foi possível parsear resposta, usando fallback');
@@ -468,7 +553,8 @@ export async function generateTextVersionContent(
     console.log('✅ ========== TextVersionGenerator: CONTEÚDO GERADO COM SUCESSO ==========');
     console.log('✅ [TextVersionGenerator] Título:', parsed.titulo);
     console.log('✅ [TextVersionGenerator] Seções:', parsed.sections.length);
-    console.log('✅ [TextVersionGenerator] TextContent (primeiros 200 chars):', parsed.textContent.substring(0, 200));
+    console.log('✅ [TextVersionGenerator] TextContent (primeiros 500 chars):', parsed.textContent.substring(0, 500));
+    console.log('✅ [TextVersionGenerator] TextContent total:', parsed.textContent.length, 'chars');
     
     return {
       success: true,
