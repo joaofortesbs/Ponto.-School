@@ -1,0 +1,282 @@
+Entendi perfeitamente o desafio! Você precisa de um prompt estratégico que oriente sem entregar a solução pronta, forçando a IA a raciocinar e desenvolver a correção do bug onde o conteúdo do "Plano de Aula" está sendo gerado mas não aparece no modal.
+
+Aqui está o prompt melhorado para o modelo de código:
+
+🎯 Missão Principal: Diagnosticar e Resolver Falha de Renderização de Conteúdo
+Contexto do Problema
+A funcionalidade criar_atividade do tipo "Plano de Aula" apresenta um comportamento específico:
+
+✅ O spinner de carregamento é acionado (indica que a requisição LLM está sendo processada)
+
+✅ A API está gerando o conteúdo via fluxo de LLMs
+
+❌ O conteúdo gerado não está sendo renderizado no modal "Versão em Texto"
+
+🔍 Análise Obrigatória Pré-Execução
+Antes de qualquer modificação, você DEVE:
+
+Mapeamento de Fluxo Completo
+
+Trace toda a cadeia: User Action → API Call → LLM Response → State Management → UI Render
+
+Identifique todos os arquivos envolvidos no ciclo de vida dessa feature
+
+Documente as dependências entre componentes (React state, context, props drilling)
+
+Hipóteses de Falha Possíveis
+
+Problema de sincronização assíncrona (Promise handling, async/await)
+
+Estado não atualizado após resposta da API (useState, useEffect dependencies)
+
+Referências stale no closure do React
+
+Tipagem incorreta que causa silent failures (TypeScript any, optional chaining issues)
+
+Event listeners não disparados ou removidos prematuramente
+
+Condicional de renderização bloqueando display (falsy values, undefined checks)
+
+Cache de dados corrompido ou não invalidado
+
+Websocket/SSE stream não conectado ao componente correto
+
+Arquitetura de Estado
+
+Verifique se utiliza Context API, Redux, Zustand, ou estado local
+
+Analise se há múltiplas fontes de verdade conflitando
+
+Observe patterns de stale closures em callbacks
+
+⚙️ Macro-Steps de Execução (Ordem Lógica)
+STEP 1: Diagnóstico Profundo
+Objetivo: Compreender onde o fluxo está quebrando
+
+Ações Necessárias:
+
+Adicione logging estratégico em todos os pontos críticos do fluxo
+
+Use console.group() para organizar logs por fase: Request → Response → State Update → Render
+
+Inspecione Network Tab: valide payload, status codes, response body structure
+
+Verifique React DevTools: confirme se o state está sendo atualizado
+
+Analise erros silenciosos no console (warnings de React, unhandled promises)
+
+Critérios de Sucesso:
+
+Identificar exatamente ONDE o dado está sendo perdido
+
+Ter evidência clara de qual camada está falhando
+
+STEP 2: Análise de Componentes UI
+Objetivo: Garantir que o componente está preparado para receber e exibir dados
+
+Investigações Obrigatórias:
+
+O componente do modal está subscrito ao estado correto?
+
+As props estão sendo passadas corretamente através da árvore de componentes?
+
+Existe algum loading state que nunca é desativado?
+
+O conteúdo está sendo renderizado condicionalmente de forma incorreta?
+
+O componente está sendo desmontado antes de receber os dados?
+
+Técnicas Avançadas:
+
+Implemente useEffect com logs de dependências para identificar re-renders
+
+Verifique se há memo() ou useMemo() bloqueando updates
+
+Teste render forçado para isolar o problema
+
+STEP 3: Validação de Integração API
+Objetivo: Confirmar que a resposta da LLM está chegando e sendo processada
+
+Checklist Técnico:
+
+Valide o contrato da API: response schema está sendo respeitado?
+
+A transformação de dados (parsing, mapping) está correta?
+
+Existe tratamento de erro que pode estar engolindo exceptions?
+
+O streaming de dados (se aplicável) está funcionando corretamente?
+
+Headers de resposta estão corretos (Content-Type, encoding)?
+
+Padrões a Considerar:
+
+Fetch API vs Axios (diferentes error handling)
+
+Response interceptors que podem estar modificando dados
+
+Timeout configurations que podem estar muito curtas
+
+STEP 4: State Management Deep Dive
+Objetivo: Garantir propagação correta de dados
+
+Análise Obrigatória:
+
+Se usa Context: Provider está no nível correto da árvore?
+
+Se usa Redux/Zustand: Actions estão sendo dispatched? Reducers estão atualizando corretamente?
+
+Estado local: setState está sendo chamado após a resposta assíncrona?
+
+Há race conditions entre múltiplos updates?
+
+Debugging Estratégico:
+
+Implemente middleware/logging no state manager
+
+Use React DevTools Profiler para identificar renders perdidos
+
+Verifique se há batching de updates causando delays
+
+STEP 5: Implementação da Correção
+Objetivo: Aplicar a solução de forma cirúrgica e robusta
+
+Princípios de Execução:
+
+Imutabilidade: Garanta que state updates não mutam objetos diretamente
+
+Tipo-Segurança: Adicione type guards e validações
+
+Error Boundaries: Implemente fallbacks adequados
+
+Acessibilidade: Mantenha ARIA attributes e semantic HTML
+
+Performance: Evite re-renders desnecessários
+
+Padrões de Código Esperados:
+
+Separation of concerns (lógica de negócio separada de UI)
+
+Single Responsibility Principle em cada função/componente
+
+Proper cleanup de effects e listeners
+
+Null-safety e defensive programming
+
+STEP 6: Testes e Validação Rigorosa
+Objetivo: Garantir que a correção funciona em todos os cenários
+
+Casos de Teste Obrigatórios:
+
+Happy path: geração bem-sucedida de Plano de Aula
+
+Error handling: falha na API
+
+Edge cases: conteúdo vazio, caracteres especiais, conteúdo muito longo
+
+Concorrência: múltiplas requisições simultâneas
+
+Recuperação: tentar novamente após falha
+
+Performance: tempo de resposta aceitável
+
+Validações Finais:
+
+Nenhum erro/warning no console
+
+State atualizado corretamente em todas as etapas
+
+UI responsiva e acessível
+
+Backwards compatibility mantida
+
+Nenhum side effect em outras features
+
+STEP 7: Refactoring e Otimização
+Objetivo: Melhorar código sem quebrar funcionalidade
+
+Oportunidades de Melhoria:
+
+Extrair lógica duplicada em custom hooks
+
+Implementar memoization onde apropriado
+
+Adicionar loading skeletons para melhor UX
+
+Implementar retry logic com exponential backoff
+
+Adicionar analytics/telemetry para monitoramento
+
+🛡️ Considerações Críticas de Segurança
+Sanitização de Input: Garanta que conteúdo gerado por LLM não introduz XSS
+
+Rate Limiting: Proteja contra abuso da funcionalidade
+
+Error Messages: Não exponha informações sensíveis em logs/UI
+
+Data Persistence: Valide que dados não são perdidos em caso de refresh
+
+📊 Métricas de Sucesso
+Sua implementação deve atingir:
+
+✅ 100% de taxa de renderização de conteúdo gerado
+
+✅ 0 erros no console relacionados a esta feature
+
+✅ Tempo de resposta < 3s (ou feedback adequado se maior)
+
+✅ Experiência de usuário fluida e intuitiva
+
+✅ Código maintainable e bem documentado
+
+🎓 Expectativas de Aprendizado
+Ao finalizar, você deve ser capaz de explicar:
+
+Root cause exata do problema
+
+Por que a solução escolhida é a mais apropriada
+
+Trade-offs considerados
+
+Possíveis melhorias futuras
+
+Lições aprendidas para prevenir problemas similares
+
+📝 Deliverables Finais
+Relatório de Diagnóstico: O que foi encontrado e por quê ocorreu
+
+Diff de Código: Todas as mudanças realizadas com comentários explicativos
+
+Testes de Validação: Evidência de que a correção funciona
+
+Documentação de Aprendizados: Insights para evitar regressões futuras
+
+Roadmap de Melhorias: Sugestões de próximas iterações
+
+⚠️ Restrições Absolutas
+NÃO faça alterações especulativas sem diagnóstico confirmado
+
+NÃO quebre funcionalidades existentes em outros módulos
+
+NÃO ignore warnings/errors do TypeScript
+
+NÃO commit código comentado ou logs de debug
+
+NÃO implemente soluções temporárias ("gambiarras")
+
+🚀 Mentalidade de Execução
+Você está operando como Senior Full-Stack Engineer especializado em:
+
+React/Next.js architecture patterns
+
+State management complexo
+
+API integration e error handling
+
+Performance optimization
+
+Debugging sistemático
+
+Pense como se estivesse corrigindo um bug crítico em produção que afeta usuários reais. Cada decisão deve ser fundamentada tecnicamente e cada alteração deve ser testada rigorosamente.
+
+A excelência técnica não é negociável. A solução deve ser robusta, elegante e maintainable.

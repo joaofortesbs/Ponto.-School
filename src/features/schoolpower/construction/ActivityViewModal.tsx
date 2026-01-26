@@ -524,6 +524,67 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     return text;
   };
 
+  // Função de busca inteligente no localStorage
+  const smartLocalStorageSearch = (activityId: string): { key: string; content: any } | null => {
+    console.log('🔍 [SmartSearch] Iniciando busca inteligente para:', activityId);
+    
+    // Lista de tipos possíveis para atividades de versão texto
+    const textVersionTypes = ['plano-aula', 'sequencia-didatica', 'tese-redacao'];
+    
+    // ESTRATÉGIA 1: Busca direta por tipos conhecidos
+    for (const type of textVersionTypes) {
+      const key = `text_content_${type}_${activityId}`;
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.textContent && parsed.textContent.length > 50) {
+            console.log('✅ [SmartSearch] Encontrado via tipo conhecido:', key);
+            return { key, content: parsed };
+          }
+        } catch (e) {
+          if (stored.length > 50) {
+            console.log('✅ [SmartSearch] Encontrado como texto puro:', key);
+            return { key, content: { textContent: stored } };
+          }
+        }
+      }
+    }
+    
+    // ESTRATÉGIA 2: Varrer localStorage procurando chaves que contenham o activityId
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.includes('text_content_') && key.includes(activityId)) {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed.textContent && parsed.textContent.length > 50) {
+              console.log('✅ [SmartSearch] Encontrado via varredura:', key);
+              return { key, content: parsed };
+            }
+          } catch (e) {
+            if (stored.length > 50) {
+              console.log('✅ [SmartSearch] Encontrado como texto puro via varredura:', key);
+              return { key, content: { textContent: stored } };
+            }
+          }
+        }
+      }
+    }
+    
+    // ESTRATÉGIA 3: Buscar em chaves legacy
+    const legacyKey = `text_content_${activityId}`;
+    const legacyStored = localStorage.getItem(legacyKey);
+    if (legacyStored && legacyStored.length > 50) {
+      console.log('✅ [SmartSearch] Encontrado via chave legacy:', legacyKey);
+      return { key: legacyKey, content: { textContent: legacyStored } };
+    }
+    
+    console.log('⚠️ [SmartSearch] Nenhum conteúdo encontrado para:', activityId);
+    return null;
+  };
+
   // Função para abrir o modal de extrato de conteúdo
   const handleContentExtract = () => {
     // CORRIGIDO: Priorizar activity.originalData?.tipo que é o campo correto do ChosenActivity
@@ -533,8 +594,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     console.log('📄 [ContentExtract] ===== DEBUG RECUPERAÇÃO =====');
     console.log('📄 [ContentExtract] activityId:', activityId);
     console.log('📄 [ContentExtract] activityType resolvido:', activityType);
-    console.log('📄 [ContentExtract] activity.originalData?.tipo:', activity.originalData?.tipo);
-    console.log('📄 [ContentExtract] activity.originalData?.type:', activity.originalData?.type);
+    console.log('📄 [ContentExtract] activity.originalData:', JSON.stringify(activity.originalData || {}).substring(0, 200));
     console.log('📄 [ContentExtract] activity.categoryId:', activity.categoryId);
     console.log('📄 [ContentExtract] activity.type:', activity.type);
     console.log('📄 [ContentExtract] Chave esperada: text_content_' + activityType + '_' + activityId);
@@ -544,7 +604,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       console.log('📄 [ContentExtract] É atividade de versão texto, tentando recuperar...');
       const textVersionData = retrieveTextVersionContent(activityId, activityType);
       
-      if (textVersionData && textVersionData.textContent) {
+      if (textVersionData && textVersionData.textContent && textVersionData.textContent.length > 50) {
         console.log('✅ [ContentExtract] Usando retrieveTextVersionContent:', {
           hasTextContent: !!textVersionData.textContent,
           length: textVersionData.textContent.length
@@ -553,23 +613,20 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         setIsContentExtractOpen(true);
         return;
       } else {
-        console.log('⚠️ [ContentExtract] retrieveTextVersionContent retornou vazio');
-      }
-      
-      // Tentar também com activityId como fallback (para casos onde o ID foi usado diretamente)
-      const fallbackData = retrieveTextVersionContent(activityType, activityType);
-      if (fallbackData && fallbackData.textContent) {
-        console.log('✅ [ContentExtract] Usando fallback (activityType as ID):', {
-          hasTextContent: !!fallbackData.textContent,
-          length: fallbackData.textContent.length
-        });
-        setTextVersionContent(fallbackData.textContent);
-        setIsContentExtractOpen(true);
-        return;
+        console.log('⚠️ [ContentExtract] retrieveTextVersionContent retornou vazio ou muito curto');
       }
     }
     
-    // PRIORIDADE 2: Fallback para generateTextExtract (busca manual no localStorage)
+    // PRIORIDADE 2: Busca inteligente no localStorage
+    const smartResult = smartLocalStorageSearch(activityId);
+    if (smartResult && smartResult.content.textContent) {
+      console.log('✅ [ContentExtract] Usando busca inteligente:', smartResult.key);
+      setTextVersionContent(smartResult.content.textContent);
+      setIsContentExtractOpen(true);
+      return;
+    }
+    
+    // PRIORIDADE 3: Fallback para generateTextExtract (busca manual no localStorage)
     const content = generateTextExtract(activityType, activityId);
     setTextVersionContent(content);
     setIsContentExtractOpen(true);

@@ -1,0 +1,11 @@
+Os erros que eu te falei ainda não foram corrigidos, analise e reflita sobre todos os arquivos de dentro da plataforma! Analise e pense o porque esses erros acontecem, analise todas as alternativas e age como se você fosse o seu melhor modelo, na versão mais poderosa, e mais estratégica! Analise todas as possibilidades, e altere os arquivos com a absoluta precisão!!!!!!!
+
+O conteúdo da atividade de Plano de aula que acontece dentro da capacidade de criar_atividade, vindo de dentro do modal de Editar materiais depois da execução da respectiva capacidade, provavelmente está fucionando, porque a atividade de Plano de aula de dentro do card de Interface de Construção fica carregando, o que provavelmente significa que o conteúdo está sendo gerado pela a API da IA com o fluxo/ecossistema de LLMs, porém esse conteúdo ainda não está aparecendo dentro do modal de atividades em versão em texto, como eu te representei dentro da imagem que eu te enviei agora!
+
+Considerações: - Faça uma plano completo com Macro-steps de objetivos principais de execução e micro-steps em ordem inteligente para fazer todas essas alterações da maneira correta, e incluindo testes e validação, para garantir que tudo seja feito corretamente!
+
+Reflita antes de cada alteração, e faça um mapeamento completo para identificar a melhor forma, de maneira segura, robusta, alinhada, profissional, avançada e sofisticada!
+Revise todas as suas modificações depois de cada finalização, não deixe brechas pra erros, não prejudique o funcionamento geral, refine as alterações, e garanta que nenhum sistema consideravel foi influenciado ou modificado negativamente! Teste tudo que voc6e fez para garantir o funcionamento perfeito!
+No final de tudo, me explique todas as alterações que você fez, como elas foram feitas, e principalmente porque você decidiu fazer essas alterações!
+No final de tudo, liste todos os seus aprendizados com base em todas as alterações que você fez, para que você possa ir se aprimorando conforme as próximas alterações, e melhorando a sua janela de contexto, para que esses erros em hipotese alguma acontecem novamente dentro da plataforma!
+No final, me sugira as próximas alterações que a gente precisa fazer, ou que seria muito bom, para deixar a plataforma ainda mais completa, sem nenhum erro ou perigo!
