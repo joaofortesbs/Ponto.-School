@@ -262,6 +262,150 @@ Responda APENAS com um JSON no seguinte formato:
 `
 };
 
+// ============================================================================
+// EXTRAÇÃO DE CONTEXTO - Detectar disciplina/série de textos livres
+// ============================================================================
+
+interface ExtractedContext {
+  disciplina: string | null;
+  serie: string | null;
+  tema: string | null;
+}
+
+/**
+ * Extrai disciplina, série e tema de textos livres (userObjective, conversationContext)
+ */
+function extractContextFromText(text: string): ExtractedContext {
+  if (!text) return { disciplina: null, serie: null, tema: null };
+  
+  const lowerText = text.toLowerCase();
+  
+  // Detectar disciplina
+  let disciplina: string | null = null;
+  const disciplinaPatterns: { pattern: RegExp; name: string }[] = [
+    { pattern: /matem[aá]tica/i, name: 'Matemática' },
+    { pattern: /portugu[eê]s/i, name: 'Português' },
+    { pattern: /l[ií]ngua portuguesa/i, name: 'Língua Portuguesa' },
+    { pattern: /ci[eê]ncias/i, name: 'Ciências' },
+    { pattern: /hist[oó]ria/i, name: 'História' },
+    { pattern: /geografia/i, name: 'Geografia' },
+    { pattern: /f[ií]sica/i, name: 'Física' },
+    { pattern: /qu[ií]mica/i, name: 'Química' },
+    { pattern: /biologia/i, name: 'Biologia' },
+    { pattern: /ingl[eê]s/i, name: 'Inglês' },
+    { pattern: /espanhol/i, name: 'Espanhol' },
+    { pattern: /educa[çc][aã]o f[ií]sica/i, name: 'Educação Física' },
+    { pattern: /artes/i, name: 'Artes' },
+    { pattern: /filosofia/i, name: 'Filosofia' },
+    { pattern: /sociologia/i, name: 'Sociologia' },
+    { pattern: /literatura/i, name: 'Literatura' },
+    { pattern: /reda[çc][aã]o/i, name: 'Redação' },
+    { pattern: /gram[aá]tica/i, name: 'Gramática' },
+  ];
+  
+  for (const { pattern, name } of disciplinaPatterns) {
+    if (pattern.test(text)) {
+      disciplina = name;
+      break;
+    }
+  }
+  
+  // Detectar série/ano
+  let serie: string | null = null;
+  const seriePatterns = [
+    { pattern: /(\d+)[ºª°]\s*ano(?:\s+(?:do\s+)?(?:ensino\s+)?(?:fundamental|médio))?/i, extract: (m: RegExpMatchArray) => `${m[1]}º ano` },
+    { pattern: /ensino\s+m[eé]dio/i, extract: () => 'Ensino Médio' },
+    { pattern: /ensino\s+fundamental(?:\s+(?:I|II|1|2))?/i, extract: (m: RegExpMatchArray) => 'Ensino Fundamental' },
+    { pattern: /educa[çc][aã]o\s+infantil/i, extract: () => 'Educação Infantil' },
+    { pattern: /pr[eé]-escola/i, extract: () => 'Pré-escola' },
+    { pattern: /primeiro\s+ano/i, extract: () => '1º ano' },
+    { pattern: /segundo\s+ano/i, extract: () => '2º ano' },
+    { pattern: /terceiro\s+ano/i, extract: () => '3º ano' },
+    { pattern: /quarto\s+ano/i, extract: () => '4º ano' },
+    { pattern: /quinto\s+ano/i, extract: () => '5º ano' },
+    { pattern: /sexto\s+ano/i, extract: () => '6º ano' },
+    { pattern: /s[eé]timo\s+ano/i, extract: () => '7º ano' },
+    { pattern: /oitavo\s+ano/i, extract: () => '8º ano' },
+    { pattern: /nono\s+ano/i, extract: () => '9º ano' },
+  ];
+  
+  for (const { pattern, extract } of seriePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      serie = extract(match);
+      break;
+    }
+  }
+  
+  // Tentar extrair tema do texto (padrões comuns)
+  let tema: string | null = null;
+  const temaPatterns = [
+    /sobre\s+["']?([^"'\n,]+?)["']?(?:\s+para|\s+de|\s+em|\s+do|\s*,|\s*$)/i,
+    /tema[:\s]+["']?([^"'\n,]+)["']?/i,
+    /assunto[:\s]+["']?([^"'\n,]+)["']?/i,
+    /conte[úu]do[:\s]+["']?([^"'\n,]+)["']?/i,
+  ];
+  
+  for (const pattern of temaPatterns) {
+    const match = text.match(pattern);
+    if (match && match[1] && match[1].length > 3 && match[1].length < 200) {
+      tema = match[1].trim();
+      break;
+    }
+  }
+  
+  return { disciplina, serie, tema };
+}
+
+/**
+ * Mescla contexto extraído com contexto existente (prioriza valores existentes)
+ */
+function enrichContextWithExtraction(
+  context: TextVersionInput['context'],
+  userObjective?: string,
+  conversationContext?: string
+): TextVersionInput['context'] {
+  const enrichedContext = { ...context };
+  
+  // Extrair de userObjective primeiro
+  const fromObjective = extractContextFromText(userObjective || '');
+  
+  // Depois de conversationContext
+  const fromConversation = extractContextFromText(conversationContext || '');
+  
+  // Preencher disciplina se não existir
+  if (!enrichedContext.disciplina && !enrichedContext.subject) {
+    const extracted = fromObjective.disciplina || fromConversation.disciplina;
+    if (extracted) {
+      enrichedContext.disciplina = extracted;
+      enrichedContext.subject = extracted;
+      console.log('📋 [TextVersionGenerator] Disciplina extraída:', extracted);
+    }
+  }
+  
+  // Preencher série se não existir
+  if (!enrichedContext.serie && !enrichedContext.schoolYear) {
+    const extracted = fromObjective.serie || fromConversation.serie;
+    if (extracted) {
+      enrichedContext.serie = extracted;
+      enrichedContext.schoolYear = extracted;
+      console.log('📋 [TextVersionGenerator] Série extraída:', extracted);
+    }
+  }
+  
+  // Preencher tema se não existir
+  if (!enrichedContext.tema && !enrichedContext.theme) {
+    const extracted = fromObjective.tema || fromConversation.tema;
+    if (extracted) {
+      enrichedContext.tema = extracted;
+      enrichedContext.theme = extracted;
+      console.log('📋 [TextVersionGenerator] Tema extraído:', extracted);
+    }
+  }
+  
+  return enrichedContext;
+}
+
 function getDefaultPrompt(input: TextVersionInput): string {
   return `
 Você é um assistente educacional especializado.
@@ -419,68 +563,288 @@ function parseAIResponse(rawResponse: string, activityType?: string): {
 }
 
 function generateFallbackContent(input: TextVersionInput): TextVersionOutput {
-  console.log('⚠️ [TextVersionGenerator] Gerando conteúdo de fallback para:', input.activityType);
+  console.log('⚠️ [TextVersionGenerator] Gerando conteúdo de fallback DETALHADO para:', input.activityType);
   
   const config = getActivityInfo(input.activityType);
-  const displayName = config?.name || input.activityType;
+  const displayName = config?.name || 'Plano de Aula';
   
   // PRIORIZAR userObjective para o tema - garantir personalização
-  const tema = input.userObjective || input.context.tema || input.context.theme || 'Tema não especificado';
-  const disciplina = input.context.disciplina || input.context.subject || 'Disciplina não especificada';
-  const serie = input.context.serie || input.context.schoolYear || 'Série não especificada';
-  const objetivos = input.context.objetivos || input.context.objectives || `Desenvolver competências relacionadas a ${tema}`;
-  const duracao = input.context.duracao || '50 minutos';
-  const materiais = input.context.materiais || 'Quadro branco, projetor, materiais didáticos';
+  const tema = input.userObjective || input.context.tema || input.context.theme || 'Conteúdo educacional';
   
-  console.log('📋 [TextVersionGenerator] Fallback usando tema:', tema);
+  // USAR CONTEXTO ENRIQUECIDO (já foi processado pelo enrichContextWithExtraction)
+  const disciplina = input.context.disciplina || input.context.subject || 'Interdisciplinar';
+  const serie = input.context.serie || input.context.schoolYear || 'Ensino Fundamental/Médio';
+  const objetivos = input.context.objetivos || input.context.objectives || `Desenvolver competências e habilidades relacionadas a ${tema}`;
+  const duracao = input.context.duracao || input.context.tempoLimite || '50 minutos';
+  const metodologia = input.context.metodologia || input.context.tipoAula || 'Expositiva dialogada';
+  const materiais = input.context.materiais || input.context.recursos || '';
   
+  console.log('📋 [TextVersionGenerator] Fallback usando:', { tema, disciplina, serie, duracao });
+  
+  // Gerar plano de aula COMPLETO e DETALHADO
+  const fallbackTextContent = `# Plano de Aula: ${tema} (${serie})
+
+**Disciplina:** ${disciplina} | **Série/Ano:** ${serie} | **Duração:** ${duracao}
+
+---
+
+## Objetivo Geral
+
+Proporcionar aos alunos uma compreensão abrangente e aprofundada sobre ${tema}, desenvolvendo habilidades de análise crítica, interpretação e aplicação prática dos conceitos fundamentais. A aula visa promover a construção ativa do conhecimento, incentivando a participação engajada dos estudantes e conectando o conteúdo teórico com situações reais do cotidiano, alinhando-se às competências previstas na Base Nacional Comum Curricular (BNCC).
+
+## Objetivos Específicos
+
+• Compreender os conceitos fundamentais e definições relacionados a ${tema}
+• Identificar as principais características e elementos que compõem o tema estudado
+• Analisar diferentes perspectivas e abordagens sobre ${tema}
+• Relacionar o conteúdo estudado com situações práticas do dia a dia dos alunos
+• Aplicar os conhecimentos adquiridos na resolução de problemas e atividades práticas
+• Desenvolver habilidades de trabalho colaborativo e comunicação efetiva
+• Construir argumentos fundamentados para discussões sobre o tema
+• Avaliar criticamente informações relacionadas a ${tema}
+
+## Metodologia
+
+**Abordagem pedagógica:** ${metodologia}
+
+A aula será conduzida utilizando estratégias ativas de ensino-aprendizagem, promovendo:
+
+• **Exposição dialogada:** Apresentação dos conceitos com constante interação e questionamentos para verificar compreensão
+• **Aprendizagem colaborativa:** Atividades em duplas ou pequenos grupos para discussão e construção coletiva do conhecimento
+• **Problematização:** Uso de situações-problema contextualizadas para aplicação prática dos conceitos
+• **Recursos visuais:** Apresentações, imagens, vídeos e materiais de apoio para facilitar a compreensão
+• **Avaliação formativa:** Verificação contínua da aprendizagem ao longo de toda a aula
+
+## Recursos e Materiais
+
+• Quadro branco ou lousa com marcadores/giz colorido
+• Projetor multimídia e computador (quando disponível)
+• Apresentação de slides sobre ${tema}
+• Material impresso com roteiro de atividades e exercícios
+• Folhas de papel sulfite para anotações e produções
+• Lápis, canetas coloridas e borracha
+${materiais ? `• ${materiais}` : '• Materiais didáticos específicos relacionados ao tema'}
+• Livro didático de ${disciplina}
+• Recursos digitais (vídeos, animações, simulações)
+
+## Plano de Aula Detalhado
+
+### 1. Introdução e Contextualização (10 minutos)
+
+**Momento de acolhimento (2 min):**
+Inicie a aula cumprimentando os alunos e criando um ambiente receptivo para a aprendizagem. Verifique se todos estão acomodados e prontos para iniciar.
+
+**Ativação de conhecimentos prévios (5 min):**
+Faça perguntas motivadoras para despertar o interesse e verificar o que os alunos já sabem:
+• "O que vocês já sabem sobre ${tema}?"
+• "Onde vocês já viram ou ouviram falar sobre esse assunto no dia a dia?"
+• "Por que vocês acham que é importante estudar ${tema}?"
+• "Quem pode dar um exemplo relacionado ao tema?"
+
+Registre as respostas dos alunos no quadro, criando um mapa conceitual inicial. Isso valoriza as experiências prévias e ajuda a identificar o ponto de partida.
+
+**Apresentação dos objetivos (3 min):**
+Explique claramente o que será estudado na aula:
+• O que vamos aprender hoje
+• Por que esse conteúdo é importante
+• Como vamos trabalhar durante a aula
+• O que esperamos alcançar ao final
+
+### 2. Desenvolvimento do Conteúdo (25 minutos)
+
+**Exposição dialogada - Parte 1: Conceitos básicos (10 min):**
+
+Apresente os fundamentos de ${tema}:
+
+• **Definição clara:** Explique o que é ${tema} de forma acessível, usando linguagem adequada à faixa etária
+• **Contexto histórico:** Apresente brevemente como o conhecimento sobre esse tema evoluiu ao longo do tempo
+• **Importância atual:** Destaque a relevância do tema na sociedade contemporânea
+
+Durante a exposição:
+- Faça pausas para perguntas de verificação
+- Use exemplos concretos e próximos da realidade dos alunos
+- Utilize recursos visuais para ilustrar conceitos abstratos
+- Incentive a participação com questionamentos
+
+**Exposição dialogada - Parte 2: Aprofundamento (10 min):**
+
+Explore os aspectos mais específicos:
+
+• **Características principais:** Detalhe os elementos que compõem ${tema}
+• **Relações e conexões:** Mostre como o tema se relaciona com outros conteúdos já estudados
+• **Aplicações práticas:** Apresente como o conhecimento sobre ${tema} é usado no cotidiano
+• **Casos concretos:** Traga exemplos reais que ilustrem os conceitos apresentados
+
+**Atividade interativa em grupos (5 min):**
+
+Divida a turma em pequenos grupos (3-4 alunos) e proponha:
+• Cada grupo recebe uma pergunta ou situação relacionada a ${tema}
+• Os grupos discutem e registram suas conclusões em uma folha
+• Ao final, um representante de cada grupo compartilha brevemente as ideias principais
+
+### 3. Atividade Prática de Fixação (10 minutos)
+
+**Distribuição e orientações (2 min):**
+Entregue a folha de atividades explicando claramente as instruções e o tempo disponível.
+
+**Resolução individual/em duplas (6 min):**
+
+Exercícios práticos sobre ${tema}:
+• Questões objetivas para verificar compreensão dos conceitos básicos
+• Questões discursivas para desenvolvimento de argumentação
+• Situações-problema para aplicação dos conhecimentos
+• Atividade de análise ou interpretação relacionada ao tema
+
+Durante a atividade:
+- Circule pela sala auxiliando os alunos com dificuldades
+- Observe as principais dúvidas para esclarecimento posterior
+- Incentive a colaboração respeitosa entre colegas
+- Valorize diferentes estratégias de resolução
+
+**Correção participativa (2 min):**
+Corrija as principais questões com participação da turma, esclarecendo dúvidas comuns.
+
+### 4. Síntese e Encerramento (5 minutos)
+
+**Recapitulação do conteúdo (2 min):**
+Faça uma síntese destacando:
+• Os conceitos mais importantes sobre ${tema}
+• As principais conexões estabelecidas durante a aula
+• As aplicações práticas discutidas
+
+**Verificação final de aprendizagem (1 min):**
+Pergunte aos alunos:
+• "O que vocês aprenderam de mais importante hoje?"
+• "Ficou alguma dúvida sobre ${tema}?"
+
+**Encerramento e conexão com próximas aulas (2 min):**
+• Responda dúvidas finais
+• Apresente brevemente o que será estudado na próxima aula
+• Indique possíveis materiais para estudo complementar (se aplicável)
+• Parabenize a participação da turma
+
+## Avaliação
+
+A avaliação será **contínua e formativa**, considerando múltiplos aspectos do processo de aprendizagem:
+
+**Critérios de avaliação:**
+
+• **Participação (25%):** Engajamento nas discussões, contribuições relevantes, respostas às perguntas motivadoras
+• **Compreensão conceitual (30%):** Demonstração de entendimento dos conceitos fundamentais sobre ${tema}
+• **Aplicação prática (25%):** Capacidade de utilizar o conhecimento em situações-problema e exercícios
+• **Trabalho colaborativo (20%):** Contribuição nas atividades em grupo, respeito às ideias dos colegas
+
+**Instrumentos de avaliação:**
+• Observação direta durante as atividades
+• Análise das respostas nos exercícios escritos
+• Participação nas discussões coletivas
+• Produções individuais e em grupo
+
+**Indicadores de sucesso:**
+O aluno alcançou os objetivos quando consegue:
+• Explicar com suas palavras os principais conceitos sobre ${tema}
+• Identificar exemplos práticos relacionados ao conteúdo
+• Resolver situações-problema aplicando o conhecimento adquirido
+
+## Observações e Dicas para o Professor
+
+**Adaptações sugeridas:**
+
+• **Para turmas com mais tempo disponível:**
+  - Inclua uma atividade de pesquisa ou produção mais elaborada
+  - Proponha debates sobre aplicações do tema na atualidade
+  - Adicione momento para apresentação de trabalhos pelos alunos
+
+• **Para turmas com menos tempo:**
+  - Foque nos conceitos essenciais e exemplos mais significativos
+  - Reduza o número de exercícios, priorizando os mais importantes
+  - A discussão em grupos pode ser feita em duplas para agilizar
+
+• **Para alunos com dificuldades de aprendizagem:**
+  - Ofereça materiais de apoio com linguagem simplificada
+  - Proponha atividades diferenciadas com mais suporte visual
+  - Permita trabalho em pares para apoio mútuo
+
+**Considerações pedagógicas:**
+
+• Mantenha um ambiente acolhedor que incentive perguntas
+• Utilize exemplos atuais e relevantes para o contexto dos alunos
+• Tenha flexibilidade para ajustar o planejamento conforme as necessidades da turma
+• Prepare um plano alternativo caso os recursos tecnológicos não funcionem
+• Valorize todas as contribuições dos alunos, criando um ambiente seguro para participação
+
+**Conexões interdisciplinares:**
+Considere fazer conexões com outras disciplinas para enriquecer a aprendizagem e mostrar a aplicabilidade do conhecimento em diferentes contextos.
+
+**Para a próxima aula:**
+• Retome os principais conceitos como forma de revisão
+• Conecte o novo conteúdo com o que foi estudado nesta aula
+• Observe as dificuldades apresentadas para planejar reforços necessários
+
+---
+*Plano de aula completo - Adapte conforme as necessidades específicas da sua turma e contexto escolar.*`;
+
+  // Criar seções estruturadas a partir do texto completo
   const fallbackSections: TextSection[] = [
     {
-      title: '🎯 Objetivos de Aprendizagem',
-      content: `- ${objetivos}\n- Compreender os conceitos fundamentais relacionados ao tema\n- Aplicar o conhecimento adquirido em situações práticas`,
+      title: '🎯 Objetivo Geral',
+      content: `Proporcionar aos alunos uma compreensão abrangente e aprofundada sobre ${tema}, desenvolvendo habilidades de análise crítica, interpretação e aplicação prática dos conceitos fundamentais.`,
       icon: 'target'
     },
     {
-      title: '📚 Informações da Aula',
-      content: `**Tema:** ${tema}\n**Disciplina:** ${disciplina}\n**Série/Ano:** ${serie}\n**Duração:** ${duracao}`,
-      icon: 'info'
+      title: '📋 Objetivos Específicos',
+      content: `• Compreender os conceitos fundamentais relacionados a ${tema}\n• Identificar as principais características do tema\n• Analisar diferentes perspectivas e abordagens\n• Relacionar o conteúdo com situações práticas do cotidiano\n• Aplicar conhecimentos na resolução de problemas\n• Desenvolver habilidades de trabalho colaborativo\n• Construir argumentos fundamentados\n• Avaliar criticamente informações sobre o tema`,
+      icon: 'list'
     },
     {
       title: '📖 Metodologia',
-      content: `Esta aula utiliza uma abordagem ativa de ensino, incentivando a participação dos alunos através de:\n- Exposição dialogada do conteúdo\n- Atividades práticas e exercícios\n- Discussão em grupo`,
+      content: `**Abordagem:** ${metodologia}\n\n• Exposição dialogada com interação constante\n• Aprendizagem colaborativa em grupos\n• Problematização com situações contextualizadas\n• Uso de recursos visuais e multimídia\n• Avaliação formativa contínua`,
       icon: 'book'
     },
     {
-      title: '🔄 Desenvolvimento da Aula',
-      content: `**Momento 1 - Introdução (10 min):**\nApresentação do tema e levantamento de conhecimentos prévios.\n\n**Momento 2 - Desenvolvimento (30 min):**\nExposição do conteúdo com exemplos práticos e atividades interativas.\n\n**Momento 3 - Conclusão (10 min):**\nSíntese do conteúdo e esclarecimento de dúvidas.`,
-      icon: 'activity'
+      title: '📚 Recursos e Materiais',
+      content: `• Quadro branco e marcadores coloridos\n• Projetor multimídia e computador\n• Apresentação de slides sobre ${tema}\n• Material impresso com atividades\n• Folhas para anotações\n• Livro didático de ${disciplina}\n${materiais ? `• ${materiais}` : '• Materiais específicos do tema'}`,
+      icon: 'package'
+    },
+    {
+      title: '🕐 1. Introdução (10 min)',
+      content: `**Acolhimento:** Cumprimente os alunos e crie ambiente receptivo.\n\n**Ativação de conhecimentos prévios:**\n• "O que vocês já sabem sobre ${tema}?"\n• "Onde viram esse assunto no dia a dia?"\n• Registre respostas no quadro.\n\n**Apresentação dos objetivos:** Explique o que será estudado e sua importância.`,
+      icon: 'play'
+    },
+    {
+      title: '📖 2. Desenvolvimento (25 min)',
+      content: `**Conceitos básicos (10 min):**\n• Definição clara de ${tema}\n• Contexto histórico e evolução\n• Importância atual do tema\n\n**Aprofundamento (10 min):**\n• Características principais\n• Relações com outros conteúdos\n• Aplicações práticas e exemplos reais\n\n**Atividade em grupos (5 min):**\n• Grupos de 3-4 alunos discutem situações propostas\n• Registro de conclusões e compartilhamento`,
+      icon: 'book-open'
+    },
+    {
+      title: '✍️ 3. Atividade Prática (10 min)',
+      content: `**Exercícios sobre ${tema}:**\n• Questões objetivas de compreensão\n• Questões discursivas de argumentação\n• Situações-problema para aplicação\n\n**Durante a atividade:**\n• Circule auxiliando dúvidas\n• Observe dificuldades comuns\n• Incentive colaboração respeitosa\n\n**Correção participativa:** Esclareça dúvidas coletivamente.`,
+      icon: 'edit'
+    },
+    {
+      title: '🔄 4. Síntese e Conclusão (5 min)',
+      content: `**Recapitulação:**\n• Destaque conceitos mais importantes\n• Reforce conexões estabelecidas\n• Relembre aplicações práticas\n\n**Verificação:** "O que vocês aprenderam de mais importante hoje?"\n\n**Encerramento:** Responda dúvidas finais e apresente próximo conteúdo.`,
+      icon: 'check-circle'
     },
     {
       title: '✅ Avaliação',
-      content: `A avaliação será contínua, observando:\n- Participação nas atividades\n- Compreensão dos conceitos apresentados\n- Capacidade de aplicação do conhecimento`,
+      content: `**Avaliação contínua e formativa:**\n\n• Participação nas discussões (25%)\n• Compreensão conceitual (30%)\n• Aplicação em exercícios (25%)\n• Trabalho colaborativo (20%)\n\n**Instrumentos:** Observação direta, análise de exercícios, participação.`,
       icon: 'check'
     },
     {
-      title: '📋 Recursos e Materiais',
-      content: materiais,
-      icon: 'clipboard'
+      title: '💡 Observações para o Professor',
+      content: `**Adaptações sugeridas:**\n• Para mais tempo: inclua pesquisa ou debates\n• Para menos tempo: foque nos conceitos essenciais\n• Para alunos com dificuldades: materiais simplificados\n\n**Dicas:**\n• Mantenha ambiente acolhedor\n• Use exemplos atuais e relevantes\n• Tenha plano alternativo para recursos\n• Valorize todas as contribuições`,
+      icon: 'lightbulb'
     }
   ];
 
-  const fallbackText = `# ${displayName}: ${tema}\n\n` + 
-    `**Disciplina:** ${disciplina} | **Série:** ${serie} | **Duração:** ${duracao}\n\n` +
-    '---\n\n' +
-    fallbackSections
-      .map(s => `## ${s.title}\n\n${s.content}`)
-      .join('\n\n');
-
-  console.log('📄 [TextVersionGenerator] Fallback gerado com', fallbackSections.length, 'seções');
+  console.log('📄 [TextVersionGenerator] Fallback DETALHADO gerado com', fallbackSections.length, 'seções e', fallbackTextContent.length, 'caracteres');
 
   return {
     success: true,
     activityId: input.activityId,
     activityType: input.activityType,
-    textContent: fallbackText,
+    textContent: fallbackTextContent,
     sections: fallbackSections,
     generatedAt: new Date().toISOString()
   };
@@ -508,6 +872,15 @@ export async function generateTextVersionContent(
   }
 
   try {
+    // ENRIQUECIMENTO DE CONTEXTO: Extrair disciplina, série, tema de textos livres
+    console.log('🔍 [TextVersionGenerator] Enriquecendo contexto com extração...');
+    input.context = enrichContextWithExtraction(
+      input.context, 
+      input.userObjective, 
+      input.conversationContext
+    );
+    console.log('📋 [TextVersionGenerator] Contexto enriquecido:', JSON.stringify(input.context, null, 2));
+    
     const tema = input.context.tema || input.context.theme || input.userObjective || '';
     if (!input.context.tema && input.userObjective) {
       input.context.tema = input.userObjective;

@@ -439,9 +439,310 @@ async function callGeminiAPI(
 // FALLBACK LOCAL (NUNCA FALHA)
 // ============================================================================
 
+/**
+ * Detecta se o prompt é para uma atividade de texto (plano-aula, sequencia-didatica, tese-redacao)
+ * e extrai informações contextuais do prompt
+ */
+function detectTextVersionPrompt(prompt: string): {
+  isTextVersion: boolean;
+  activityType: 'plano-aula' | 'sequencia-didatica' | 'tese-redacao' | null;
+  tema: string;
+  disciplina: string;
+  serie: string;
+  duracao: string;
+} {
+  const lowerPrompt = prompt.toLowerCase();
+  
+  // Detectar tipo de atividade
+  let activityType: 'plano-aula' | 'sequencia-didatica' | 'tese-redacao' | null = null;
+  if (lowerPrompt.includes('plano de aula') || lowerPrompt.includes('plano-aula') || 
+      lowerPrompt.includes('criar um plano') || lowerPrompt.includes('plano detalhado')) {
+    activityType = 'plano-aula';
+  } else if (lowerPrompt.includes('sequência didática') || lowerPrompt.includes('sequencia didatica') ||
+             lowerPrompt.includes('sequencia-didatica')) {
+    activityType = 'sequencia-didatica';
+  } else if (lowerPrompt.includes('tese') || lowerPrompt.includes('redação') || lowerPrompt.includes('redacao') ||
+             lowerPrompt.includes('tese-redacao')) {
+    activityType = 'tese-redacao';
+  }
+  
+  // Extrair tema - procurar padrões comuns
+  let tema = 'Tema não especificado';
+  const temaPatterns = [
+    /tema[:\s]+["']?([^"\n,]+)["']?/i,
+    /tema central[:\s]+["']?([^"\n,]+)["']?/i,
+    /sobre\s+["']?([^"\n,]+?)["']?(?:\s+para|\s+de|\s+em|\s*$)/i,
+    /assunto[:\s]+["']?([^"\n,]+)["']?/i,
+  ];
+  for (const pattern of temaPatterns) {
+    const match = prompt.match(pattern);
+    if (match && match[1] && match[1].length > 3) {
+      tema = match[1].trim();
+      break;
+    }
+  }
+  
+  // Extrair disciplina
+  let disciplina = 'Não especificada';
+  const disciplinaPatterns: { pattern: RegExp; name: string }[] = [
+    { pattern: /matem[aá]tica/i, name: 'Matemática' },
+    { pattern: /portugu[eê]s/i, name: 'Português' },
+    { pattern: /l[ií]ngua portuguesa/i, name: 'Língua Portuguesa' },
+    { pattern: /ci[eê]ncias/i, name: 'Ciências' },
+    { pattern: /hist[oó]ria/i, name: 'História' },
+    { pattern: /geografia/i, name: 'Geografia' },
+    { pattern: /f[ií]sica/i, name: 'Física' },
+    { pattern: /qu[ií]mica/i, name: 'Química' },
+    { pattern: /biologia/i, name: 'Biologia' },
+    { pattern: /ingl[eê]s/i, name: 'Inglês' },
+    { pattern: /educa[çc][aã]o f[ií]sica/i, name: 'Educação Física' },
+    { pattern: /artes/i, name: 'Artes' },
+    { pattern: /filosofia/i, name: 'Filosofia' },
+    { pattern: /sociologia/i, name: 'Sociologia' },
+    { pattern: /literatura/i, name: 'Literatura' },
+  ];
+  for (const { pattern, name } of disciplinaPatterns) {
+    if (pattern.test(prompt)) {
+      disciplina = name;
+      break;
+    }
+  }
+  
+  // Também verificar campo explícito de disciplina
+  const disciplinaMatch = prompt.match(/disciplina[:\s]+["']?([^"\n,]+)["']?/i);
+  if (disciplinaMatch && disciplinaMatch[1] && disciplinaMatch[1].length > 2) {
+    disciplina = disciplinaMatch[1].trim();
+  }
+  
+  // Extrair série
+  let serie = 'Não especificada';
+  const seriePatterns = [
+    /(\d+)[ºª°]\s*ano/i,
+    /ensino\s+(fundamental|m[eé]dio)/i,
+    /s[eé]rie[:\s]+["']?([^"\n,]+)["']?/i,
+    /ano[:\s]+["']?(\d+[ºª°]?\s*(?:ano)?)/i,
+  ];
+  for (const pattern of seriePatterns) {
+    const match = prompt.match(pattern);
+    if (match) {
+      if (match[1] && /^\d+$/.test(match[1])) {
+        serie = `${match[1]}º ano`;
+      } else if (match[1]) {
+        serie = match[1].charAt(0).toUpperCase() + match[1].slice(1);
+      }
+      break;
+    }
+  }
+  
+  // Extrair duração
+  let duracao = '50 minutos';
+  const duracaoMatch = prompt.match(/dura[çc][aã]o[:\s]+["']?([^"\n,]+)["']?/i);
+  if (duracaoMatch && duracaoMatch[1]) {
+    duracao = duracaoMatch[1].trim();
+  }
+  
+  return {
+    isTextVersion: activityType !== null,
+    activityType,
+    tema,
+    disciplina,
+    serie,
+    duracao
+  };
+}
+
+/**
+ * Gera um plano de aula local completo e detalhado
+ */
+function generateLocalPlanoAula(tema: string, disciplina: string, serie: string, duracao: string): string {
+  console.log(`📝 [LOCAL] Gerando plano de aula local para: ${tema}`);
+  
+  return `# Plano de Aula: ${tema} (${serie})
+
+**Disciplina:** ${disciplina} | **Série/Ano:** ${serie} | **Duração:** ${duracao}
+
+---
+
+## Objetivo Geral
+
+Proporcionar aos alunos uma compreensão abrangente sobre ${tema}, desenvolvendo habilidades de análise crítica, interpretação e aplicação prática dos conceitos fundamentais relacionados ao tema, promovendo a construção ativa do conhecimento e a participação engajada durante todo o processo de aprendizagem.
+
+## Objetivos Específicos
+
+• Compreender os conceitos fundamentais relacionados a ${tema} e sua importância no contexto educacional
+• Analisar as diferentes perspectivas e abordagens sobre o tema proposto
+• Aplicar os conhecimentos adquiridos na resolução de situações-problema contextualizadas
+• Desenvolver habilidades de trabalho colaborativo e comunicação efetiva
+• Relacionar o conteúdo estudado com situações do cotidiano dos alunos
+• Construir argumentos fundamentados para discussões sobre o tema
+
+## Metodologia
+
+A aula será conduzida utilizando uma abordagem ativa de ensino-aprendizagem, combinando:
+
+• **Exposição dialogada:** Apresentação dos conceitos com constante interação e questionamentos
+• **Aprendizagem colaborativa:** Atividades em pequenos grupos para discussão e construção coletiva
+• **Resolução de problemas:** Situações-problema contextualizadas para aplicação prática
+• **Uso de recursos visuais:** Apresentações, vídeos e materiais de apoio para facilitar a compreensão
+
+## Recursos e Materiais
+
+• Quadro branco ou lousa e marcadores/giz
+• Projetor multimídia e computador
+• Apresentação de slides sobre ${tema}
+• Material impresso com atividades e exercícios
+• Folhas de papel sulfite para anotações
+• Canetas, lápis e borracha
+• Materiais específicos relacionados ao tema
+
+## Plano de Aula Detalhado
+
+### 1. Introdução e Contextualização (10 minutos)
+
+**Acolhimento e motivação inicial:**
+Inicie a aula cumprimentando os alunos e criando um ambiente receptivo. Faça perguntas motivadoras para despertar o interesse:
+
+• "O que vocês já sabem sobre ${tema}?"
+• "Onde vocês já viram ou ouviram falar sobre esse assunto?"
+• "Por que vocês acham que é importante estudar ${tema}?"
+
+**Levantamento de conhecimentos prévios:**
+Registre as respostas dos alunos no quadro, criando um mapa conceitual inicial. Isso ajuda a identificar o que já sabem e o que precisam aprender, além de valorizar as experiências prévias dos estudantes.
+
+**Apresentação dos objetivos:**
+Explique claramente o que será estudado na aula e quais são os objetivos de aprendizagem esperados. Isso ajuda os alunos a compreenderem o propósito da aula e aumenta o engajamento.
+
+### 2. Desenvolvimento do Conteúdo (25 minutos)
+
+**Exposição dialogada (15 minutos):**
+
+Apresente os conceitos principais relacionados a ${tema} de forma clara e organizada:
+
+• Inicie pelos conceitos mais básicos, construindo gradualmente para os mais complexos
+• Utilize exemplos concretos e próximos da realidade dos alunos
+• Faça pausas estratégicas para verificar a compreensão
+• Incentive perguntas e comentários dos alunos
+
+**Pontos-chave a abordar sobre ${tema}:**
+
+1. Definição e conceitos fundamentais do tema
+2. Contexto histórico e evolução do conhecimento sobre o assunto
+3. Principais características e elementos importantes
+4. Relações com outros conteúdos já estudados
+5. Aplicações práticas no cotidiano
+
+**Exemplos práticos e analogias:**
+
+• Apresente situações reais que exemplifiquem os conceitos teóricos
+• Use comparações com elementos familiares aos alunos
+• Demonstre a aplicabilidade do conteúdo em diferentes contextos
+
+**Atividade interativa (10 minutos):**
+
+Divida a turma em pequenos grupos (3-4 alunos) e proponha uma atividade de discussão:
+
+• Cada grupo recebe um tema relacionado a ${tema} para discussão
+• Os grupos devem registrar suas principais conclusões
+• Ao final, cada grupo apresenta brevemente suas ideias
+
+### 3. Atividade Prática (10 minutos)
+
+**Exercício de aplicação:**
+
+Distribua uma folha de atividades com exercícios práticos sobre ${tema}:
+
+• Questões de múltipla escolha para verificar compreensão básica
+• Questões discursivas para desenvolvimento de argumentação
+• Situações-problema para aplicação dos conceitos
+
+**Orientações para a atividade:**
+
+• Explique claramente as instruções antes de iniciar
+• Circule pela sala auxiliando os alunos com dificuldades
+• Incentive a colaboração entre colegas
+• Observe as principais dúvidas para esclarecimento posterior
+
+### 4. Discussão e Conclusão (5 minutos)
+
+**Correção coletiva:**
+Corrija as principais questões da atividade com participação da turma, esclarecendo dúvidas e reforçando conceitos importantes.
+
+**Síntese do conteúdo:**
+Recapitule os principais pontos abordados na aula, destacando:
+
+• Os conceitos fundamentais sobre ${tema}
+• As conexões com o cotidiano dos alunos
+• A importância do tema para o desenvolvimento acadêmico
+
+**Encerramento:**
+Finalize a aula respondendo dúvidas finais e apresentando uma prévia do próximo conteúdo a ser estudado.
+
+## Avaliação
+
+A avaliação será contínua e formativa, considerando:
+
+• **Participação:** Engajamento nas discussões e atividades propostas (30%)
+• **Atividade prática:** Resolução dos exercícios e situações-problema (40%)
+• **Trabalho em grupo:** Colaboração e contribuição nas atividades coletivas (30%)
+
+**Instrumentos de avaliação:**
+• Observação direta durante as atividades
+• Correção das atividades escritas
+• Autoavaliação dos alunos sobre seu aprendizado
+
+## Observações e Dicas para o Professor
+
+• Adapte o ritmo da aula conforme a resposta da turma
+• Prepare materiais extras para alunos que terminarem as atividades antes
+• Considere as diferentes formas de aprendizagem dos alunos
+• Mantenha um ambiente acolhedor que incentive a participação
+• Utilize exemplos atuais e relevantes para o contexto dos alunos
+• Tenha um plano B caso os recursos tecnológicos falhem
+
+**Sugestões de adaptação:**
+• Para turmas com mais tempo: inclua uma atividade de pesquisa adicional
+• Para turmas com menos tempo: foque nos conceitos essenciais
+• Para alunos com dificuldades: ofereça materiais de apoio simplificados
+
+---
+*Plano de aula gerado automaticamente. Adapte conforme necessário para sua turma.*`;
+}
+
 function generateLocalFallback(prompt: string): string {
   console.log('🔄 [LOCAL] Gerando fallback local...');
   
+  // DETECTAR SE É UMA ATIVIDADE DE TEXTO (plano-aula, sequencia-didatica, tese-redacao)
+  const detection = detectTextVersionPrompt(prompt);
+  
+  if (detection.isTextVersion && detection.activityType === 'plano-aula') {
+    console.log('📝 [LOCAL] Detectado prompt de PLANO DE AULA - gerando Markdown');
+    console.log('📝 [LOCAL] Contexto extraído:', {
+      tema: detection.tema,
+      disciplina: detection.disciplina,
+      serie: detection.serie,
+      duracao: detection.duracao
+    });
+    
+    return generateLocalPlanoAula(
+      detection.tema,
+      detection.disciplina,
+      detection.serie,
+      detection.duracao
+    );
+  }
+  
+  // Para outros tipos de texto, retornar formato compatível
+  if (detection.isTextVersion && detection.activityType === 'sequencia-didatica') {
+    console.log('📝 [LOCAL] Detectado prompt de SEQUÊNCIA DIDÁTICA');
+    // Retornar JSON compatível para sequencia-didatica (não modificar fluxo)
+  }
+  
+  if (detection.isTextVersion && detection.activityType === 'tese-redacao') {
+    console.log('📝 [LOCAL] Detectado prompt de TESE/REDAÇÃO');
+    // Retornar JSON compatível para tese-redacao (não modificar fluxo)
+  }
+  
+  // Fallback padrão para outras atividades
   const defaultActivities = [
     {
       id: 'lista-exercicios',
