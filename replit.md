@@ -125,19 +125,25 @@ All heavy activities (lista-exercicios, quiz-interativo, flash-cards) now follow
 5. Fall back to `activity.originalData` (database) if localStorage empty
 6. Apply any deletion filters
 
-### Plano de Aula Complete Generation System (January 2026)
-- **Problem Solved**: Plano de Aula showing generic fallback content or JSON-formatted response instead of complete, professional lesson plan text
-- **Root Causes**: 
-  1. Prompt requested JSON schema which constrained AI output
-  2. parseAIResponse was forcing JSON parsing even when text was more appropriate
-  3. When `activity.campos_preenchidos` didn't have tema field, system used generic fallback
-- **Solution - Complete Refactor**:
-  1. **New Pure Text Prompt**: Redesigned plano-aula prompt to request Markdown/text output following PDF example structure (Title, Duration, Objectives, Methodology, Resources, Detailed Lesson Plan with numbered sections, Avaliação, Observações)
-  2. **Intelligent Response Parsing**: Modified `parseAIResponse()` to accept `activityType` parameter; for plano-aula, now prioritizes Markdown detection (# headers, specific patterns) and returns textContent directly
-  3. **Personalization**: Automatically populate `input.context.tema` from `userObjective` when tema is not set
-  4. **Cache Bypass**: Active only for plano-aula to ensure fresh AI generation
-  5. **Increased Prompt Limit**: Changed `MAX_PROMPT_LENGTH` from 4000 to 8000 chars in `controle-APIs-gerais-school-power.ts`
-- **Files Changed**: `TextVersionGenerator.ts`, `controle-APIs-gerais-school-power.ts`, `generateActivityContent.ts`
-- **Type Fixes**: Fixed LSP errors in `generateActivityContent.ts` by using correct ActivityFormData field names
-- **Data Flow**: User request → Agente Jota → gerar-conteudo-atividades.ts → generateTextVersionContent → executeWithCascadeFallback → AI API (pure text) → parseAIResponse (Markdown detection for plano-aula) → storeTextVersionContent → ContentExtractModal
-- **Important**: Other text-version activities (sequencia-didatica, tese-redacao) still use JSON format; only plano-aula uses pure text
+### Plano de Aula Complete Generation System V2 (January 2026)
+- **Problem Solved**: Plano de Aula showing generic fallback content ("Disciplina não especificada", "Série não especificada") instead of personalized, detailed lesson plans
+- **Root Causes Identified**: 
+  1. Local fallback (`generateLocalFallback`) returned JSON array of activities that was rejected by `parseAIResponse`
+  2. This triggered `generateFallbackContent` with empty context (disciplina, serie undefined)
+  3. No context extraction from userObjective to populate disciplina/serie
+  4. Prompt requested JSON which constrained AI output
+- **Solution - Multi-Layer Fix**:
+  1. **Smart Local Fallback**: Added `detectTextVersionPrompt()` and `generateLocalPlanoAula()` in `controle-APIs-gerais-school-power.ts` to return complete Markdown plano de aula (~200 lines) when API fails
+  2. **Context Extraction from Prompts**: New `extractContextFromText()` function with regex patterns for 18+ disciplines (matemática, português, ciências, etc.) and 12+ grade levels (1º-9º ano, ensino médio/fundamental)
+  3. **Context Enrichment**: Added `enrichContextWithExtraction()` that merges extracted context with input BEFORE generating prompt
+  4. **Detailed Fallback Content**: Rewrote `generateFallbackContent()` to generate ~250 lines of personalized content with:
+     - 8 Objetivos Específicos with action verbs
+     - Metodologia with 5 active learning strategies
+     - Complete 4-section timed Plano de Aula Detalhado
+     - Avaliação with percentages and instruments
+  5. **Pure Text Prompt**: Plano-aula prompt requests Markdown output
+  6. **Markdown Detection**: `parseAIResponse()` prioritizes Markdown for plano-aula
+- **Files Changed**: `TextVersionGenerator.ts`, `controle-APIs-gerais-school-power.ts`
+- **Data Flow**: User request → context extraction → enrichContextWithExtraction → generateTextVersionContent → executeWithCascadeFallback → (AI success OR smart local fallback) → parseAIResponse (Markdown detection) → storeTextVersionContent → ContentExtractModal
+- **Important**: sequencia-didatica and tese-redacao still use JSON format; only plano-aula uses pure Markdown
+- **Fallback Hierarchy**: API (Groq/Gemini) → Smart Local Fallback (Markdown) → generateFallbackContent (personalized)
