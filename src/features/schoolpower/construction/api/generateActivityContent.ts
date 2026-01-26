@@ -167,71 +167,219 @@ async function generateListaExercicios(formData: ActivityFormData) {
 }
 
 async function generatePlanoAula(formData: ActivityFormData) {
-  const content = {
-    title: formData.title,
-    description: formData.description,
-    subject: formData.subject,
-    theme: formData.theme,
-    schoolYear: formData.schoolYear,
-    objectives: formData.objectives,
-    materials: formData.materials,
-    context: formData.context,
-    timeLimit: formData.timeLimit,
-    methodology: formData.difficultyLevel,
-    evaluation: formData.evaluation,
-    competencies: formData.competencies,
-    development: {
-      introduction: "Introdução ao tema",
-      activities: ["Atividade prática", "Discussão em grupo"],
-      conclusion: "Conclusão e avaliação"
-    },
-    generatedAt: new Date().toISOString(),
-    isGeneratedByAI: true
-  };
+  console.log('📝 [generatePlanoAula] Iniciando geração com IA via TextVersionGenerator...');
+  
+  try {
+    const { generateTextVersionContent } = await import('@/features/schoolpower/activities/text-version/TextVersionGenerator');
+    
+    const textVersionInput = {
+      activityType: 'plano-aula',
+      activityId: formData.id || `plano-aula-${Date.now()}`,
+      context: {
+        tema: formData.theme || formData.tema,
+        theme: formData.theme || formData.tema,
+        disciplina: formData.subject || formData.disciplina,
+        subject: formData.subject || formData.disciplina,
+        serie: formData.schoolYear || formData.serie,
+        schoolYear: formData.schoolYear || formData.serie,
+        objetivos: formData.objectives || formData.objetivos,
+        objectives: formData.objectives || formData.objetivos,
+        metodologia: formData.methodology || formData.metodologia || formData.difficultyLevel,
+        duracao: formData.timeLimit || formData.duracao || '50 minutos',
+        materiais: formData.materials || formData.materiais,
+        description: formData.description,
+        title: formData.title
+      },
+      conversationContext: formData.conversationContext || '',
+      userObjective: formData.userObjective || formData.objectives || ''
+    };
+    
+    console.log('📝 [generatePlanoAula] Dados preparados para TextVersionGenerator:', textVersionInput);
+    
+    const generatedResult = await generateTextVersionContent(textVersionInput);
+    
+    console.log('✅ [generatePlanoAula] Conteúdo gerado pela IA:', {
+      success: generatedResult.success,
+      sectionsCount: generatedResult.sections?.length || 0,
+      textContentLength: generatedResult.textContent?.length || 0
+    });
+    
+    if (generatedResult.success) {
+      const content = {
+        title: formData.title || generatedResult.sections?.[0]?.title || 'Plano de Aula',
+        description: formData.description,
+        subject: formData.subject,
+        theme: formData.theme,
+        schoolYear: formData.schoolYear,
+        objectives: formData.objectives,
+        materials: formData.materials,
+        context: formData.context,
+        timeLimit: formData.timeLimit,
+        methodology: formData.difficultyLevel,
+        evaluation: formData.evaluation,
+        competencies: formData.competencies,
+        sections: generatedResult.sections,
+        textContent: generatedResult.textContent,
+        development: {
+          introduction: generatedResult.sections?.find(s => s.title?.includes('Desenvolvimento'))?.content || 'Introdução ao tema',
+          activities: generatedResult.sections?.filter(s => s.title?.includes('Atividade') || s.title?.includes('Metodologia'))?.map(s => s.content) || ['Atividade prática'],
+          conclusion: generatedResult.sections?.find(s => s.title?.includes('Conclusão') || s.title?.includes('Avaliação'))?.content || 'Conclusão e avaliação'
+        },
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true,
+        isFallback: false
+      };
+      
+      return { success: true, data: content };
+    }
+    
+    throw new Error('TextVersionGenerator retornou success: false');
+    
+  } catch (error) {
+    console.error('❌ [generatePlanoAula] Erro na geração com IA:', error);
+    
+    const fallbackContent = {
+      title: formData.title,
+      description: formData.description,
+      subject: formData.subject,
+      theme: formData.theme,
+      schoolYear: formData.schoolYear,
+      objectives: formData.objectives,
+      materials: formData.materials,
+      context: formData.context,
+      timeLimit: formData.timeLimit,
+      methodology: formData.difficultyLevel,
+      evaluation: formData.evaluation,
+      competencies: formData.competencies,
+      development: {
+        introduction: 'Introdução ao tema (regenere para conteúdo personalizado)',
+        activities: ['Atividade prática', 'Discussão em grupo'],
+        conclusion: 'Conclusão e avaliação'
+      },
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false,
+      isFallback: true
+    };
 
-  return { success: true, data: content };
+    return { success: true, data: fallbackContent };
+  }
 }
 
 async function generateSequenciaDidatica(formData: ActivityFormData) {
-  const content = {
-    title: formData.title || formData.tituloTemaAssunto,
-    description: formData.description,
-    tituloTemaAssunto: formData.tituloTemaAssunto,
-    anoSerie: formData.anoSerie,
-    disciplina: formData.disciplina,
-    bnccCompetencias: formData.bnccCompetencias,
-    publicoAlvo: formData.publicoAlvo,
-    objetivosAprendizagem: formData.objetivosAprendizagem,
-    quantidadeAulas: parseInt(formData.quantidadeAulas) || 4,
-    quantidadeDiagnosticos: parseInt(formData.quantidadeDiagnosticos) || 1,
-    quantidadeAvaliacoes: parseInt(formData.quantidadeAvaliacoes) || 2,
-    cronograma: formData.cronograma,
-    aulas: Array.from({ length: parseInt(formData.quantidadeAulas) || 4 }, (_, i) => ({
-      numero: i + 1,
-      titulo: `Aula ${i + 1}: ${formData.tituloTemaAssunto}`,
-      objetivos: formData.objetivosAprendizagem,
-      conteudo: `Conteúdo da aula ${i + 1}`,
-      metodologia: "Metodologia ativa",
-      recursos: "Recursos pedagógicos",
-      avaliacao: "Avaliação formativa"
-    })),
-    diagnosticos: Array.from({ length: parseInt(formData.quantidadeDiagnosticos) || 1 }, (_, i) => ({
-      numero: i + 1,
-      titulo: `Diagnóstico ${i + 1}`,
-      objetivo: "Avaliar conhecimentos prévios",
-      instrumento: "Questionário diagnóstico"
-    })),
-    avaliacoes: Array.from({ length: parseInt(formData.quantidadeAvaliacoes) || 2 }, (_, i) => ({
-      numero: i + 1,
-      titulo: `Avaliação ${i + 1}`,
-      tipo: i === 0 ? "Formativa" : "Somativa",
-      criterios: "Critérios de avaliação"
-    })),
-    generatedAt: new Date().toISOString(),
-    isGeneratedByAI: true
-  };
+  console.log('📚 [generateSequenciaDidatica] Iniciando geração com IA via TextVersionGenerator...');
+  
+  try {
+    const { generateTextVersionContent } = await import('@/features/schoolpower/activities/text-version/TextVersionGenerator');
+    
+    const textVersionInput = {
+      activityType: 'sequencia-didatica',
+      activityId: formData.id || `sequencia-didatica-${Date.now()}`,
+      context: {
+        tema: formData.tituloTemaAssunto || formData.theme,
+        theme: formData.tituloTemaAssunto || formData.theme,
+        disciplina: formData.disciplina || formData.subject,
+        subject: formData.disciplina || formData.subject,
+        serie: formData.anoSerie || formData.schoolYear,
+        schoolYear: formData.anoSerie || formData.schoolYear,
+        objetivos: formData.objetivosAprendizagem || formData.objectives,
+        objectives: formData.objetivosAprendizagem || formData.objectives,
+        numeroAulas: formData.quantidadeAulas || '4',
+        bnccCompetencias: formData.bnccCompetencias,
+        publicoAlvo: formData.publicoAlvo,
+        description: formData.description
+      },
+      conversationContext: formData.conversationContext || '',
+      userObjective: formData.userObjective || formData.objetivosAprendizagem || ''
+    };
+    
+    console.log('📚 [generateSequenciaDidatica] Dados preparados para TextVersionGenerator:', textVersionInput);
+    
+    const generatedResult = await generateTextVersionContent(textVersionInput);
+    
+    console.log('✅ [generateSequenciaDidatica] Conteúdo gerado pela IA:', {
+      success: generatedResult.success,
+      sectionsCount: generatedResult.sections?.length || 0,
+      textContentLength: generatedResult.textContent?.length || 0
+    });
+    
+    if (generatedResult.success) {
+      const content = {
+        title: formData.title || formData.tituloTemaAssunto,
+        description: formData.description,
+        tituloTemaAssunto: formData.tituloTemaAssunto,
+        anoSerie: formData.anoSerie,
+        disciplina: formData.disciplina,
+        bnccCompetencias: formData.bnccCompetencias,
+        publicoAlvo: formData.publicoAlvo,
+        objetivosAprendizagem: formData.objetivosAprendizagem,
+        quantidadeAulas: parseInt(formData.quantidadeAulas) || 4,
+        quantidadeDiagnosticos: parseInt(formData.quantidadeDiagnosticos) || 1,
+        quantidadeAvaliacoes: parseInt(formData.quantidadeAvaliacoes) || 2,
+        cronograma: formData.cronograma,
+        sections: generatedResult.sections,
+        textContent: generatedResult.textContent,
+        aulas: generatedResult.sections?.filter(s => s.title?.includes('Aula'))?.map((s, i) => ({
+          numero: i + 1,
+          titulo: s.title,
+          conteudo: s.content,
+          metodologia: 'Metodologia ativa',
+          recursos: 'Recursos pedagógicos',
+          avaliacao: 'Avaliação formativa'
+        })) || [],
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true,
+        isFallback: false
+      };
 
-  return { success: true, data: content };
+      return { success: true, data: content };
+    }
+    
+    throw new Error('TextVersionGenerator retornou success: false');
+    
+  } catch (error) {
+    console.error('❌ [generateSequenciaDidatica] Erro na geração com IA:', error);
+    
+    const fallbackContent = {
+      title: formData.title || formData.tituloTemaAssunto,
+      description: formData.description,
+      tituloTemaAssunto: formData.tituloTemaAssunto,
+      anoSerie: formData.anoSerie,
+      disciplina: formData.disciplina,
+      bnccCompetencias: formData.bnccCompetencias,
+      publicoAlvo: formData.publicoAlvo,
+      objetivosAprendizagem: formData.objetivosAprendizagem,
+      quantidadeAulas: parseInt(formData.quantidadeAulas) || 4,
+      quantidadeDiagnosticos: parseInt(formData.quantidadeDiagnosticos) || 1,
+      quantidadeAvaliacoes: parseInt(formData.quantidadeAvaliacoes) || 2,
+      cronograma: formData.cronograma,
+      aulas: Array.from({ length: parseInt(formData.quantidadeAulas) || 4 }, (_, i) => ({
+        numero: i + 1,
+        titulo: `Aula ${i + 1}: ${formData.tituloTemaAssunto} (regenere para conteúdo personalizado)`,
+        objetivos: formData.objetivosAprendizagem,
+        conteudo: `Conteúdo da aula ${i + 1}`,
+        metodologia: 'Metodologia ativa',
+        recursos: 'Recursos pedagógicos',
+        avaliacao: 'Avaliação formativa'
+      })),
+      diagnosticos: Array.from({ length: parseInt(formData.quantidadeDiagnosticos) || 1 }, (_, i) => ({
+        numero: i + 1,
+        titulo: `Diagnóstico ${i + 1}`,
+        objetivo: 'Avaliar conhecimentos prévios',
+        instrumento: 'Questionário diagnóstico'
+      })),
+      avaliacoes: Array.from({ length: parseInt(formData.quantidadeAvaliacoes) || 2 }, (_, i) => ({
+        numero: i + 1,
+        titulo: `Avaliação ${i + 1}`,
+        tipo: i === 0 ? 'Formativa' : 'Somativa',
+        criterios: 'Critérios de avaliação'
+      })),
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false,
+      isFallback: true
+    };
+
+    return { success: true, data: fallbackContent };
+  }
 }
 
 async function generateQuadroInterativo(formData: ActivityFormData) {
@@ -267,37 +415,89 @@ async function generateQuadroInterativo(formData: ActivityFormData) {
 }
 
 async function generateQuizInterativo(formData: ActivityFormData) {
-  const numberOfQuestions = parseInt(formData.numberOfQuestions) || 10;
+  console.log('🎯 [generateQuizInterativo] Iniciando geração com IA via QuizInterativoGenerator...');
   
-  const content = {
-    title: formData.title,
-    description: formData.description,
-    subject: formData.subject,
-    theme: formData.theme,
-    schoolYear: formData.schoolYear,
-    difficultyLevel: formData.difficultyLevel,
-    questionModel: formData.questionModel,
-    format: formData.format || formData.questionModel,
-    timePerQuestion: parseInt(formData.timePerQuestion) || 60,
-    numberOfQuestions: numberOfQuestions,
-    questions: Array.from({ length: numberOfQuestions }, (_, i) => ({
-      id: i + 1,
-      question: `Questão ${i + 1}: Sobre ${formData.theme || formData.subject}, qual conceito é mais importante?`,
-      type: 'multipla-escolha',
-      options: [
-        `A) Conceito básico de ${formData.theme || formData.subject}`,
-        `B) Aplicação prática`,
-        `C) Teoria avançada`,
-        `D) Exercícios práticos`
-      ],
-      correctAnswer: `A) Conceito básico de ${formData.theme || formData.subject}`,
-      explanation: `O conceito básico é fundamental para o entendimento em ${formData.subject}.`
-    })),
-    generatedAt: new Date().toISOString(),
-    isGeneratedByAI: true
-  };
+  try {
+    const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
+    
+    const quizData = {
+      subject: formData.subject || 'Geral',
+      schoolYear: formData.schoolYear || 'Ensino Médio',
+      theme: formData.theme || formData.title || 'Tema',
+      objectives: formData.objectives || `Avaliar conhecimentos sobre ${formData.theme}`,
+      difficultyLevel: formData.difficultyLevel || 'Médio',
+      format: formData.format || formData.questionModel || 'multipla-escolha',
+      numberOfQuestions: formData.numberOfQuestions || '10',
+      timePerQuestion: formData.timePerQuestion || '60',
+      instructions: formData.instructions || 'Responda cada questão selecionando a alternativa correta',
+      evaluation: formData.evaluation || 'Cada resposta correta vale 1 ponto'
+    };
+    
+    console.log('🎯 [generateQuizInterativo] Dados preparados para QuizInterativoGenerator:', quizData);
+    
+    const generator = new QuizInterativoGenerator();
+    const generatedContent = await generator.generateQuizContent(quizData);
+    
+    console.log('✅ [generateQuizInterativo] Conteúdo gerado pela IA:', {
+      questionsCount: generatedContent.questions?.length || 0,
+      isGeneratedByAI: generatedContent.isGeneratedByAI,
+      isFallback: generatedContent.isFallback
+    });
+    
+    const content = {
+      title: formData.title || generatedContent.title,
+      description: formData.description || generatedContent.description,
+      subject: formData.subject,
+      theme: formData.theme,
+      schoolYear: formData.schoolYear,
+      difficultyLevel: formData.difficultyLevel,
+      questionModel: formData.questionModel,
+      format: formData.format || formData.questionModel,
+      timePerQuestion: generatedContent.timePerQuestion,
+      numberOfQuestions: generatedContent.totalQuestions,
+      questions: generatedContent.questions,
+      generatedAt: generatedContent.generatedAt,
+      isGeneratedByAI: generatedContent.isGeneratedByAI,
+      isFallback: generatedContent.isFallback || false
+    };
 
-  return { success: true, data: content };
+    return { success: true, data: content };
+    
+  } catch (error) {
+    console.error('❌ [generateQuizInterativo] Erro na geração com IA:', error);
+    
+    const numberOfQuestions = parseInt(formData.numberOfQuestions) || 10;
+    const fallbackContent = {
+      title: formData.title,
+      description: formData.description,
+      subject: formData.subject,
+      theme: formData.theme,
+      schoolYear: formData.schoolYear,
+      difficultyLevel: formData.difficultyLevel,
+      questionModel: formData.questionModel,
+      format: formData.format || formData.questionModel,
+      timePerQuestion: parseInt(formData.timePerQuestion) || 60,
+      numberOfQuestions: numberOfQuestions,
+      questions: Array.from({ length: numberOfQuestions }, (_, i) => ({
+        id: i + 1,
+        question: `Questão ${i + 1}: Sobre ${formData.theme || formData.subject} (regenere para conteúdo personalizado)`,
+        type: 'multipla-escolha',
+        options: [
+          `A) Conceito básico de ${formData.theme || formData.subject}`,
+          `B) Aplicação prática`,
+          `C) Teoria avançada`,
+          `D) Exercícios práticos`
+        ],
+        correctAnswer: `A) Conceito básico de ${formData.theme || formData.subject}`,
+        explanation: `O conceito básico é fundamental para o entendimento em ${formData.subject}.`
+      })),
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false,
+      isFallback: true
+    };
+
+    return { success: true, data: fallbackContent };
+  }
 }
 
 async function generateFlashCards(formData: ActivityFormData) {

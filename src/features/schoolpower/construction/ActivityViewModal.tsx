@@ -972,8 +972,108 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('ℹ️ Nenhum conteúdo específico encontrado para Flash Cards. Usando dados gerais.');
       }
     }
-    // 4. Lista de Exercícios (com filtro de exclusão)
+    // 4. Lista de Exercícios (com carregamento de dados da IA e filtro de exclusão)
     else if (activityType === 'lista-exercicios') {
+      console.log('📝 ActivityViewModal: Carregando dados para Lista de Exercícios');
+      
+      // PRIORIDADE 1: Carregar dados construídos (gerados pela IA)
+      const listaExerciciosSavedContent = localStorage.getItem(`constructed_lista-exercicios_${activity.id}`);
+      console.log(`📝 Lista de Exercícios: Verificando conteúdo salvo para ${activity.id}. Existe?`, !!listaExerciciosSavedContent);
+
+      if (listaExerciciosSavedContent) {
+        try {
+          const parsedContent = JSON.parse(listaExerciciosSavedContent);
+          contentToLoad = parsedContent.data || parsedContent;
+
+          console.log('📝 Lista de Exercícios - Conteúdo parseado no modal de visualização:', contentToLoad);
+
+          // Validar se o conteúdo tem questões válidas
+          const questoes = contentToLoad?.questoes || contentToLoad?.questions || contentToLoad?.content?.questoes || [];
+          if (Array.isArray(questoes) && questoes.length > 0) {
+            // Validar estrutura de cada questão
+            const validQuestions = questoes.filter(q =>
+              q && typeof q === 'object' && (q.enunciado || q.question || q.statement || q.texto)
+            );
+
+            if (validQuestions.length > 0) {
+              console.log(`✅ Lista de Exercícios carregada com ${validQuestions.length} questões válidas para: ${activity.id}`);
+              contentToLoad.questoes = validQuestions;
+              contentToLoad.questions = validQuestions;
+              contentToLoad.content = { questoes: validQuestions, questions: validQuestions };
+              
+              // Mesclar com previewData
+              previewData = {
+                ...previewData,
+                ...contentToLoad,
+                questoes: validQuestions,
+                questions: validQuestions,
+                content: { questoes: validQuestions, questions: validQuestions },
+                isGeneratedByAI: contentToLoad.isGeneratedByAI ?? true
+              };
+            } else {
+              console.warn('⚠️ Nenhuma questão válida encontrada na Lista de Exercícios');
+              contentToLoad = null;
+            }
+          } else {
+            console.warn('⚠️ Lista de Exercícios sem questões válidas');
+            contentToLoad = null;
+          }
+        } catch (error) {
+          console.error('❌ Erro ao processar conteúdo de Lista de Exercícios:', error);
+          contentToLoad = null;
+        }
+      }
+      
+      // PRIORIDADE 2: Se não encontrou no localStorage, usar dados do banco (originalData)
+      if (!contentToLoad && activity.originalData) {
+        console.log('📝 Lista de Exercícios: Usando dados do banco (originalData) como fallback');
+        const dbData = activity.originalData.campos || activity.originalData;
+        
+        const questoes = dbData?.questoes || dbData?.questions || [];
+        if (Array.isArray(questoes) && questoes.length > 0) {
+          const validQuestions = questoes.filter(q =>
+            q && typeof q === 'object' && (q.enunciado || q.question || q.statement)
+          );
+          
+          if (validQuestions.length > 0) {
+            previewData = {
+              ...previewData,
+              ...dbData,
+              questoes: validQuestions,
+              questions: validQuestions,
+              content: { questoes: validQuestions, questions: validQuestions },
+              title: dbData.title || activity.originalData.titulo || 'Lista de Exercícios',
+              description: dbData.description || 'Atividade criada na plataforma',
+              isGeneratedByAI: true
+            };
+            console.log(`✅ Lista de Exercícios: ${validQuestions.length} questões carregadas do banco de dados`);
+          }
+        }
+      }
+      
+      // Normalizar IDs de questões antes de aplicar filtros de exclusão
+      // Isso garante que questões sem ID recebam um ID padrão baseado no índice
+      const normalizeQuestionIds = (questions: any[]) => {
+        return questions.map((q, index) => ({
+          ...q,
+          id: q.id || `questao-${index + 1}`
+        }));
+      };
+      
+      if (previewData.questoes && Array.isArray(previewData.questoes)) {
+        previewData.questoes = normalizeQuestionIds(previewData.questoes);
+      }
+      if (previewData.questions && Array.isArray(previewData.questions)) {
+        previewData.questions = normalizeQuestionIds(previewData.questions);
+      }
+      if (previewData.content?.questoes && Array.isArray(previewData.content.questoes)) {
+        previewData.content.questoes = normalizeQuestionIds(previewData.content.questoes);
+      }
+      if (previewData.content?.questions && Array.isArray(previewData.content.questions)) {
+        previewData.content.questions = normalizeQuestionIds(previewData.content.questions);
+      }
+      
+      // Aplicar filtro de exclusões
       try {
         const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
         if (deletedQuestionsJson) {
@@ -1006,6 +1106,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         }
       } catch (error) {
         console.warn('⚠️ Erro ao aplicar filtro de exclusões no ActivityViewModal:', error);
+      }
+      
+      if (!previewData.questoes?.length && !previewData.questions?.length) {
+        console.log('ℹ️ Nenhum conteúdo específico encontrado para Lista de Exercícios. Preview usará fallback.');
       }
     }
     // 5. Sequência Didática (com carregamento de dados da IA)

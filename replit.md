@@ -99,3 +99,28 @@ The architecture emphasizes a modular component design based on shadcn/ui patter
 - **Solution**: Added sanitization layer to `initial-response-service.ts` using `containsRawJson()` + `sanitizeAiOutput()` to detect and convert JSON to narrative text before displaying to users.
 - **Files Changed**: `initial-response-service.ts`
 - **Sanitization Flow**: AI Response → `containsRawJson()` detection → `sanitizeAiOutput()` → `jsonToNarrative()` → Clean text for UI
+
+### Activity Content Generation Fix (January 2026)
+- **Problem Solved**: `generatePlanoAula`, `generateQuizInterativo`, and `generateSequenciaDidatica` were returning static hardcoded content instead of calling AI generators
+- **Solution**: Updated `generateActivityContent.ts` to dynamically import and call the real generators:
+  - `generatePlanoAula` → Now calls `TextVersionGenerator.generateTextVersionContent()`
+  - `generateQuizInterativo` → Now calls `QuizInterativoGenerator.generateQuizContent()`
+  - `generateSequenciaDidatica` → Now calls `TextVersionGenerator.generateTextVersionContent()`
+- **Files Changed**: `src/features/schoolpower/construction/api/generateActivityContent.ts`
+- **Pattern**: Each generator now has try/catch with fallback to static content only on error
+
+### Lista de Exercícios Data Loading Fix
+- **Problem Solved**: Lista de Exercícios showing "Questão simulada" fallback instead of AI-generated questions
+- **Root Cause**: `ActivityViewModal.tsx` was not loading data from `constructed_lista-exercicios_${id}` like it does for quiz-interativo and flash-cards
+- **Solution**: Added explicit localStorage loading for lista-exercicios in `ActivityViewModal.renderActivityPreview()` with same pattern as quiz/flash-cards
+- **Files Changed**: `src/features/schoolpower/construction/ActivityViewModal.tsx`
+- **Data Flow**: `constructed_lista-exercicios_${id}` → Parse JSON → Validate questions → Merge into previewData → Pass to ExerciseListPreview
+
+### Activity Data Loading Pattern
+All heavy activities (lista-exercicios, quiz-interativo, flash-cards) now follow the same data loading pattern in `ActivityViewModal`:
+1. Check `constructed_${type}_${id}` in localStorage (primary source)
+2. Parse and validate content structure (questoes/questions/cards)
+3. Filter valid items
+4. Merge with previewData
+5. Fall back to `activity.originalData` (database) if localStorage empty
+6. Apply any deletion filters
