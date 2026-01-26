@@ -206,27 +206,40 @@ router.post('/login', async (req, res) => {
     // Verificar senha com tratamento de erros e logs precisos
     console.log('🔒 Verificando senha para:', email);
     
-    try {
-      // Normalização extrema da senha para evitar problemas de encoding ou espaços invisíveis
-      const senhaLimpa = String(senha).normalize('NFC').trim();
-      const hashLimpo = String(profile.senha_hash).trim();
+    // Normalização extrema da senha para evitar problemas de encoding ou espaços invisíveis
+    const senhaLimpa = String(senha).normalize('NFC').trim();
+    const hashLimpo = String(profile.senha_hash).trim();
 
-      console.log('🔒 Comparando hashes...');
+    console.log('🔒 Debug de Comparação:');
+    console.log('   - Senha Raw:', senha);
+    console.log('   - Senha Limpa:', senhaLimpa);
+    console.log('   - Hash Limpo:', hashLimpo);
+
+    try {
+      console.log('🔒 Comparando hashes (BcryptJS)...');
       const senhaValida = await bcrypt.compare(senhaLimpa, hashLimpo);
+      console.log('   - Resultado 1 (Limpa):', senhaValida);
 
       if (!senhaValida) {
-        console.log('❌ Senha inválida para:', email);
-        // Fallback: Tentativa sem trim (caso o erro seja um espaço no cadastro)
+        console.log('❌ Tentativa 1 falhou. Tentando com senha original...');
         const senhaOriginal = String(senha).normalize('NFC');
         const segundaTentativa = await bcrypt.compare(senhaOriginal, hashLimpo);
+        console.log('   - Resultado 2 (Original):', segundaTentativa);
         
         if (!segundaTentativa) {
-          return res.status(401).json({ 
-            success: false,
-            error: 'Credenciais inválidas' 
-          });
+          // Última tentativa: força bruta de normalização se houver caracteres especiais
+          console.log('❌ Tentativa 2 falhou. Tentando normalização NFD...');
+          const senhaNFD = String(senha).normalize('NFD');
+          const terceiraTentativa = await bcrypt.compare(senhaNFD, hashLimpo);
+          console.log('   - Resultado 3 (NFD):', terceiraTentativa);
+
+          if (!terceiraTentativa) {
+            return res.status(401).json({ 
+              success: false,
+              error: 'Credenciais inválidas' 
+            });
+          }
         }
-        console.log('⚠️ Login bem-sucedido com senha original (com espaços)');
       }
 
       // Login bem-sucedido

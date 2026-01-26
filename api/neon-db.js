@@ -19,10 +19,11 @@ class NeonDBManager {
     // Tentar encontrar a melhor URL nas variáveis de ambiente
     for (const envVar of dbEnvVars) {
       const url = process.env[envVar];
-      if (url) {
+      if (url && url.length > 10) { // Validar se não é uma string vazia ou placeholder
         connectionString = url;
         selectedSecret = envVar;
-        break; // Pega a primeira que encontrar
+        console.log(`🎯 [NeonDB] Encontrada variável válida: ${envVar}`);
+        break; 
       }
     }
 
