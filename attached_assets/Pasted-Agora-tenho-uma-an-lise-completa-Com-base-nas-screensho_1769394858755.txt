@@ -1,0 +1,49 @@
+Agora tenho uma análise completa. Com base nas screenshots e nos logs, identifiquei os seguintes problemas:
+Análise Completa dos Problemas
+Problema 1: ErrAgora tenho uma análise completa. Com base nas screenshots e nos logs, identifiquei os seguintes problemas:
+Análise Completa dos Problemas
+Problema 1: Erro de localStorage Quota
+Os screenshots mostram erro em generated_content_lista-exercicios e activity_lista-exercicios, NÃO em plano-aula. Isso indica que minhas alterações anteriores afetaram OUTRAS atividades (lista-exercicios) que não deveriam ter sido alteradas.
+Problema 2: Modal de Plano de Aula Vazio
+O ContentExtractModal está vazio porque:
+1. O generateTextExtract busca de text_content_plano-aula_${activityId}
+2. Mas há um problema no fluxo de armazenamento/recuperação
+3. O conteúdo pode estar sendo gerado mas não está chegando corretamente ao localStorage
+Problema 3: Minha alteração anterior no buildActivityHelper
+Ao verificar atividades de "versão texto", posso ter incluído incorretamente outras atividades ou quebrado o fluxo normal.
+Plano de Correção Estratégico
+Vou criar um plano com micro-passos para corrigir EXCLUSIVAMENTE o plano-aula sem afetar outras atividades:
+o de localStorage Quota
+Os screenshots mostram erro em generated_content_lista-exercicios e activity_lista-exercicios, NÃO em plano-aula. Isso indica que minhas alterações anteriores afetaram OUTRAS atividades (lista-exercicios) que não deveriam ter sido alteradas.
+Problema 2: Modal de Plano de Aula Vazio
+O ContentExtractModal está vazio porque:
+1. O generateTextExtract busca de text_content_plano-aula_${activityId}
+2. Mas há um problema no fluxo de armazenamento/recuperação
+3. O conteúdo pode estar sendo gerado mas não está chegando corretamente ao localStorage
+Problema 3: Minha alteração anterior no buildActivityHelper
+Ao verificar atividades de "versão texto", posso ter incluído incorretamente outras atividades ou quebrado o fluxo normal.
+Plano de Correção Estratégico
+Vou criar um plano com micro-passos para corrigir EXCLUSIVAMENTE o plano-aula sem afetar outras atividades:
+ Seu plano de ação atual:  Check if past changes broke features
+Review text condition in activity helper
+Ensure exercises aren't treated as text
+Undo changes affecting interactive activities
+Fully check lesson plan flow
+Track where lesson content is made
+Confirm saving of lesson content
+Confirm retrieving of text extract
+Check if modal gets correct content
+Fix lesson plan generation flow
+Ensure content generation and saving
+Ensure activity view gets content
+Ensure extract modal shows content
+Fix redundant data saving
+Remove direct saving in edit activity
+Use only text content for plan
+Validate and test everything
+Check for type errors
+Restart workflows and check logs
+Review changes with architect
+Document and share learnings
+Update document with learnings
+Write down fixes made
