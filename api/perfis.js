@@ -203,34 +203,49 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Verificar senha
-    console.log('🔒 Verificando senha...');
-    console.log('🔒 Senha fornecida:', senha ? 'Presente' : 'Ausente');
-    console.log('🔒 Senha (comprimento):', senha?.length);
-    console.log('🔒 Senha (primeiros 3 chars):', senha ? senha.substring(0, 3) : 'N/A');
-    console.log('🔒 Senha (últimos 3 chars):', senha ? senha.substring(senha.length - 3) : 'N/A');
-    console.log('🔒 Senha (tem espaços):', senha ? (senha.trim() !== senha) : 'N/A');
-    console.log('🔒 Hash armazenado:', profile.senha_hash ? 'Presente' : 'Ausente');
+    // Verificar senha com tratamento de erros e logs precisos
+    console.log('🔒 Verificando senha para:', email);
     
-    const senhaValida = await bcrypt.compare(senha, profile.senha_hash);
+    try {
+      // Normalização extrema da senha para evitar problemas de encoding ou espaços invisíveis
+      const senhaLimpa = String(senha).normalize('NFC').trim();
+      const hashLimpo = String(profile.senha_hash).trim();
 
-    if (!senhaValida) {
-      console.log('❌ Senha inválida para:', email);
-      return res.status(401).json({ 
+      console.log('🔒 Comparando hashes...');
+      const senhaValida = await bcrypt.compare(senhaLimpa, hashLimpo);
+
+      if (!senhaValida) {
+        console.log('❌ Senha inválida para:', email);
+        // Fallback: Tentativa sem trim (caso o erro seja um espaço no cadastro)
+        const senhaOriginal = String(senha).normalize('NFC');
+        const segundaTentativa = await bcrypt.compare(senhaOriginal, hashLimpo);
+        
+        if (!segundaTentativa) {
+          return res.status(401).json({ 
+            success: false,
+            error: 'Credenciais inválidas' 
+          });
+        }
+        console.log('⚠️ Login bem-sucedido com senha original (com espaços)');
+      }
+
+      // Login bem-sucedido
+      delete profile.senha_hash;
+      console.log('✅ Login realizado com sucesso para:', email);
+
+      res.json({ 
+        success: true,
+        message: 'Login realizado com sucesso',
+        profile 
+      });
+
+    } catch (bcryptError) {
+      console.error('❌ Erro na comparação de bcrypt:', bcryptError);
+      return res.status(500).json({ 
         success: false,
-        error: 'Credenciais inválidas' 
+        error: 'Erro na autenticação' 
       });
     }
-
-    // Login bem-sucedido
-    delete profile.senha_hash;
-    console.log('✅ Login realizado com sucesso para:', email);
-
-    res.json({ 
-      success: true,
-      message: 'Login realizado com sucesso',
-      profile 
-    });
 
   } catch (error) {
     console.error('❌ Erro no login:', error);

@@ -2,208 +2,43 @@ import { Client, Pool } from 'pg';
 
 class NeonDBManager {
   constructor() {
-    // FALLBACK HARDCODED - URL POOLED CORRETA (última opção)
-    const FALLBACK_POOLED_URL = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require';
+    // URL POOLED - PRIORIDADE TOTAL AO AMBIENTE
+    const FALLBACK_POOLED_URL = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require';
     
-    // Detectar ambiente de PRODUÇÃO (deployment/publicado)
+    // Lista de variáveis de ambiente que podem conter a URL do banco
+    const dbEnvVars = [
+      'DATABASE_URL',
+      'DEPLOYMENT_DB_URL',
+      'PRODUCTION_DB_URL',
+      'NEON_DATABASE_URL'
+    ];
+
+    let connectionString = null;
+    let selectedSecret = null;
+
+    // Tentar encontrar a melhor URL nas variáveis de ambiente
+    for (const envVar of dbEnvVars) {
+      const url = process.env[envVar];
+      if (url) {
+        connectionString = url;
+        selectedSecret = envVar;
+        break; // Pega a primeira que encontrar
+      }
+    }
+
+    // Se não encontrou em nenhuma env var, usa o fallback hardcoded
+    if (!connectionString) {
+      connectionString = FALLBACK_POOLED_URL;
+      selectedSecret = 'FALLBACK_HARDCODED';
+    }
+
     const isProduction = process.env.NODE_ENV === 'production' || 
                          process.env.REPLIT_DEPLOYMENT === '1' ||
-                         process.env.REPL_DEPLOYMENT === '1' ||
-                         process.env.REPLIT_ENV === 'production';
-    
-    let connectionString = null;
-    let environment = isProduction ? 'PRODUCTION (Deployment)' : 'DEVELOPMENT (Local)';
-    let selectedSecret = null;
-    let fallbackReason = null;
-    
+                         process.env.REPL_DEPLOYMENT === '1';
+
     console.log('🔗 [NeonDB] ==========================================');
-    console.log('🔗 [NeonDB] Configuração de Conexão:');
-    console.log(`   - NODE_ENV: ${process.env.NODE_ENV || 'não definido'}`);
-    console.log(`   - REPLIT_DEPLOYMENT: ${process.env.REPLIT_DEPLOYMENT || 'não definido'}`);
-    console.log(`   - Ambiente: ${environment}`);
-    console.log('🔗 [NeonDB] ------------------------------------------');
-    console.log('📋 [NeonDB] Secrets Disponíveis:');
-    console.log(`   - DEPLOYMENT_DB_URL: ${process.env.DEPLOYMENT_DB_URL ? '✅ configurado' : '❌ não configurado'}`);
-    console.log(`   - PRODUCTION_DB_URL: ${process.env.PRODUCTION_DB_URL ? '✅ configurado' : '❌ não configurado'}`);
-    console.log(`   - DATABASE_URL: ${process.env.DATABASE_URL ? '✅ configurado' : '❌ não configurado'}`);
-    console.log(`   - PGHOST: ${process.env.PGHOST ? '✅ configurado' : '❌ não configurado'}`);
-    console.log(`   - PGUSER: ${process.env.PGUSER ? '✅ configurado' : '❌ não configurado'}`);
-    console.log(`   - PGPASSWORD: ${process.env.PGPASSWORD ? '✅ configurado' : '❌ não configurado'}`);
-    console.log('🔗 [NeonDB] ------------------------------------------');
-    
-    // Função para validar se URL é pooled
-    const isPooledURL = (url) => {
-      if (!url) return false;
-      const hostMatch = url.match(/@([^:/]+)/);
-      if (!hostMatch) return false;
-      return hostMatch[1].includes('-pooler');
-    };
-    
-    // Função para extrair hostname da URL
-    const extractHostname = (url) => {
-      if (!url) return 'unknown';
-      const hostMatch = url.match(/@([^:/]+)/);
-      return hostMatch ? hostMatch[1] : 'unknown';
-    };
-    
-    // PRIORIDADE DE FALLBACK CORRIGIDA
-    if (isProduction) {
-      console.log('🔍 [NeonDB] Tentando conexões em PRODUCTION (ordem de prioridade):');
-      
-      // 1ª TENTATIVA: DEPLOYMENT_DB_URL
-      if (process.env.DEPLOYMENT_DB_URL) {
-        console.log('   1️⃣ Testando DEPLOYMENT_DB_URL...');
-        if (isPooledURL(process.env.DEPLOYMENT_DB_URL)) {
-          connectionString = process.env.DEPLOYMENT_DB_URL;
-          selectedSecret = 'DEPLOYMENT_DB_URL';
-          console.log('      ✅ DEPLOYMENT_DB_URL é POOLED - USANDO!');
-        } else {
-          console.log(`      ⚠️ DEPLOYMENT_DB_URL NÃO é pooled (host: ${extractHostname(process.env.DEPLOYMENT_DB_URL)}) - PULANDO`);
-          fallbackReason = 'DEPLOYMENT_DB_URL não é pooled';
-        }
-      } else {
-        console.log('   1️⃣ DEPLOYMENT_DB_URL não configurado - PULANDO');
-      }
-      
-      // 2ª TENTATIVA: PRODUCTION_DB_URL
-      if (!connectionString && process.env.PRODUCTION_DB_URL) {
-        console.log('   2️⃣ Testando PRODUCTION_DB_URL...');
-        if (isPooledURL(process.env.PRODUCTION_DB_URL)) {
-          connectionString = process.env.PRODUCTION_DB_URL;
-          selectedSecret = 'PRODUCTION_DB_URL';
-          console.log('      ✅ PRODUCTION_DB_URL é POOLED - USANDO!');
-        } else {
-          console.log(`      ⚠️ PRODUCTION_DB_URL NÃO é pooled (host: ${extractHostname(process.env.PRODUCTION_DB_URL)}) - PULANDO`);
-          fallbackReason = fallbackReason || 'PRODUCTION_DB_URL não é pooled';
-        }
-      } else if (!connectionString) {
-        console.log('   2️⃣ PRODUCTION_DB_URL não configurado - PULANDO');
-      }
-      
-      // 3ª TENTATIVA: DATABASE_URL
-      if (!connectionString && process.env.DATABASE_URL) {
-        console.log('   3️⃣ Testando DATABASE_URL...');
-        if (isPooledURL(process.env.DATABASE_URL)) {
-          connectionString = process.env.DATABASE_URL;
-          selectedSecret = 'DATABASE_URL';
-          console.log('      ✅ DATABASE_URL é POOLED - USANDO!');
-        } else {
-          console.log(`      ⚠️ DATABASE_URL NÃO é pooled (host: ${extractHostname(process.env.DATABASE_URL)}) - PULANDO`);
-          fallbackReason = fallbackReason || 'DATABASE_URL não é pooled';
-        }
-      } else if (!connectionString) {
-        console.log('   3️⃣ DATABASE_URL não configurado - PULANDO');
-      }
-      
-      // 4ª TENTATIVA: FALLBACK HARDCODED (GARANTIDO POOLED)
-      if (!connectionString) {
-        console.log('   4️⃣ ⚠️ TODAS as tentativas falharam! Usando FALLBACK HARDCODED...');
-        console.log(`      Razão: ${fallbackReason || 'Nenhum Secret configurado'}`);
-        connectionString = FALLBACK_POOLED_URL;
-        selectedSecret = 'FALLBACK_HARDCODED';
-        console.log('      ✅ FALLBACK HARDCODED é POOLED (garantido) - USANDO!');
-      }
-      
-      // 🛡️ PROTEÇÃO: Deletar PG* vars para evitar Replit re-injetar valores antigos
-      console.log('🛡️ [SEGURANÇA] Removendo PG* vars do ambiente em PRODUCTION...');
-      delete process.env.PGHOST;
-      delete process.env.PGUSER;
-      delete process.env.PGPASSWORD;
-      delete process.env.PGDATABASE;
-      delete process.env.PGPORT;
-      console.log('✅ [SEGURANÇA] PG* vars removidas com sucesso');
-      
-    } else {
-      // DEVELOPMENT - Mesma lógica, prioridade: URLs primeiro, MANUAL por último
-      console.log('🔍 [NeonDB] Tentando conexões em DEVELOPMENT (ordem de prioridade):');
-      
-      // 1ª TENTATIVA: DATABASE_URL
-      if (process.env.DATABASE_URL) {
-        console.log('   1️⃣ Testando DATABASE_URL...');
-        if (isPooledURL(process.env.DATABASE_URL)) {
-          connectionString = process.env.DATABASE_URL;
-          selectedSecret = 'DATABASE_URL';
-          console.log('      ✅ DATABASE_URL é POOLED - USANDO!');
-        } else {
-          console.log(`      ⚠️ DATABASE_URL NÃO é pooled (host: ${extractHostname(process.env.DATABASE_URL)}) - PULANDO`);
-          fallbackReason = 'DATABASE_URL não é pooled';
-        }
-      } else {
-        console.log('   1️⃣ DATABASE_URL não configurado - PULANDO');
-      }
-      
-      // 2ª TENTATIVA: DEPLOYMENT_DB_URL
-      if (!connectionString && process.env.DEPLOYMENT_DB_URL) {
-        console.log('   2️⃣ Testando DEPLOYMENT_DB_URL...');
-        if (isPooledURL(process.env.DEPLOYMENT_DB_URL)) {
-          connectionString = process.env.DEPLOYMENT_DB_URL;
-          selectedSecret = 'DEPLOYMENT_DB_URL';
-          console.log('      ✅ DEPLOYMENT_DB_URL é POOLED - USANDO!');
-        } else {
-          console.log(`      ⚠️ DEPLOYMENT_DB_URL NÃO é pooled (host: ${extractHostname(process.env.DEPLOYMENT_DB_URL)}) - PULANDO`);
-          fallbackReason = fallbackReason || 'DEPLOYMENT_DB_URL não é pooled';
-        }
-      } else if (!connectionString) {
-        console.log('   2️⃣ DEPLOYMENT_DB_URL não configurado - PULANDO');
-      }
-      
-      // 3ª TENTATIVA: PRODUCTION_DB_URL
-      if (!connectionString && process.env.PRODUCTION_DB_URL) {
-        console.log('   3️⃣ Testando PRODUCTION_DB_URL...');
-        if (isPooledURL(process.env.PRODUCTION_DB_URL)) {
-          connectionString = process.env.PRODUCTION_DB_URL;
-          selectedSecret = 'PRODUCTION_DB_URL';
-          console.log('      ✅ PRODUCTION_DB_URL é POOLED - USANDO!');
-        } else {
-          console.log(`      ⚠️ PRODUCTION_DB_URL NÃO é pooled (host: ${extractHostname(process.env.PRODUCTION_DB_URL)}) - PULANDO`);
-          fallbackReason = fallbackReason || 'PRODUCTION_DB_URL não é pooled';
-        }
-      } else if (!connectionString) {
-        console.log('   3️⃣ PRODUCTION_DB_URL não configurado - PULANDO');
-      }
-      
-      // 4ª TENTATIVA: FALLBACK HARDCODED
-      if (!connectionString) {
-        console.log('   4️⃣ ⚠️ TODAS as tentativas falharam! Usando FALLBACK HARDCODED...');
-        console.log(`      Razão: ${fallbackReason || 'Nenhum Secret configurado'}`);
-        connectionString = FALLBACK_POOLED_URL;
-        selectedSecret = 'FALLBACK_HARDCODED';
-        console.log('      ✅ FALLBACK HARDCODED é POOLED (garantido) - USANDO!');
-      }
-    }
-    
-    // Validação final e logs
-    const finalHostname = extractHostname(connectionString);
-    const finalIsPooled = isPooledURL(connectionString);
-    
-    console.log('🔗 [NeonDB] ------------------------------------------');
-    console.log('✅ [NeonDB] CONEXÃO SELECIONADA:');
-    console.log(`   - Secret Usado: ${selectedSecret}`);
-    console.log(`   - Database Host: ${finalHostname}`);
-    console.log(`   - Pooled Connection: ${finalIsPooled ? 'SIM ✅' : 'NÃO ⚠️ PROBLEMA!'}`);
-    console.log(`   - Tipo de Conexão: ${finalIsPooled ? 'POOLED (PgBouncer)' : 'DIRECT (pode ter auto-suspend!)'}`);
-    
-    // ⚡ ASSERTION FAIL-FAST: Garantir URL POOLED em PRODUCTION
-    if (isProduction && !finalIsPooled) {
-      console.error('');
-      console.error('❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌');
-      console.error('❌ ERRO FATAL: URL NÃO-POOLED detectada em PRODUCTION!');
-      console.error('❌ Host:', finalHostname);
-      console.error('❌ Secret:', selectedSecret);
-      console.error('❌ ');
-      console.error('❌ PRODUCTION requer conexão POOLED (com -pooler)!');
-      console.error('❌ URLs não-pooled causam auto-suspend após 5min de idle!');
-      console.error('❌ ');
-      console.error('❌ TERMINANDO PROCESSO IMEDIATAMENTE!');
-      console.error('❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌');
-      console.error('');
-      process.exit(1);
-    }
-    
-    if (!finalIsPooled) {
-      console.error('⚠️⚠️⚠️ [NeonDB] AVISO: Usando conexão NÃO-POOLED! Isso pode causar auto-suspend após 5min!');
-    }
-    
+    console.log(`   - Ambiente: ${isProduction ? 'PRODUÇÃO' : 'DESENVOLVIMENTO'}`);
+    console.log(`   - Secret Selecionado: ${selectedSecret}`);
     console.log('🔗 [NeonDB] ==========================================');
     
     // Configuração do Pool
