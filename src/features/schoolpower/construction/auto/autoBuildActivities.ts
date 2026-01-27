@@ -289,27 +289,12 @@ export const autoBuildFromChosenActivities = async (
 
       console.log(`✅ [AutoBuild] Conteúdo gerado:`, result);
 
-      // CORREÇÃO: Extrair dados corretamente do resultado
-      const actualData = result.data || result;
-      
-      // 3. Salvar dados construídos no store - DUPLO SALVAMENTO PARA GARANTIR COMPATIBILIDADE
-      // 3a. Salvar em generated_fields para compatibilidade com ActivityViewModal
-      store.setActivityGeneratedFields(activityId, actualData);
-      
-      // 3b. Salvar dados completos construídos
+      // 3. Salvar dados construídos no store
       store.setActivityBuiltData(activityId, {
-        ...actualData,
-        generated_fields: actualData,
+        ...(result.data || result),
         formData,
         builtAt: new Date().toISOString(),
         autoBuilt: true
-      });
-      
-      console.log(`📦 [AutoBuild] Dados salvos na store Zustand para ${activityId}:`, {
-        hasCards: !!(actualData.cards?.length),
-        cardsCount: actualData.cards?.length || 0,
-        hasQuestions: !!(actualData.questoes?.length || actualData.questions?.length),
-        questionsCount: actualData.questoes?.length || actualData.questions?.length || 0
       });
 
       // 4. Marcar como construída visualmente

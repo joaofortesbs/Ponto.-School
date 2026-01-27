@@ -434,11 +434,6 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
 
   const { toast } = useToast();
 
-  // CORREÇÃO: Determinar tipo de atividade corretamente (type > categoryId > id)
-  const getActivityType = useCallback(() => {
-    return activity?.type || activity?.categoryId || activity?.id || '';
-  }, [activity?.type, activity?.categoryId, activity?.id]);
-  
   // Hook para geração de atividades
   const {
     generateActivity,
@@ -447,7 +442,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
     isGenerating: isGeneratingDefault, // Renomeado para evitar conflito
   } = useGenerateActivity({
     activityId: activity?.id || '',
-    activityType: getActivityType()
+    activityType: activity?.id || ''
   });
 
   // Hook para carregamento automático de dados do localStorage
@@ -477,7 +472,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
         console.log('%c📝 [MODAL] Estado NOVO do formData após merge:', 'background: #2196F3; color: white; font-size: 12px; padding: 5px;', newFormData);
         
         // Log específico para Tese de Redação
-        if (getActivityType() === 'tese-redacao') {
+        if (activity?.id === 'tese-redacao') {
           console.log('%c📚 [MODAL - TESE] Campos da Tese de Redação aplicados:', 'background: #9C27B0; color: white; font-size: 14px; padding: 5px; font-weight: bold;');
           console.table({
             'Tema da Redação': newFormData.temaRedacao,
@@ -509,7 +504,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
 
   // useEffect para escutar eventos de dados salvos (Tese da Redação)
   useEffect(() => {
-    if (getActivityType() === 'tese-redacao') {
+    if (activity?.id === 'tese-redacao') {
       const handleDataSaved = (event: CustomEvent) => {
         console.log('🔔 [MODAL] Evento de dados salvos recebido:', event.detail);
 
@@ -590,7 +585,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
   // Função para validar se o formulário está pronto para construção
   // Usa hasValue() para lidar corretamente com valores numéricos
   const isFormValidForBuild = useCallback(() => {
-    const activityType = getActivityType();
+    const activityType = activity?.id || '';
 
     if (activityType === 'lista-exercicios') {
       return hasValue(formData.title) &&
@@ -1189,7 +1184,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
 
   // Regenerar conteúdo específico para lista de exercícios
   const handleRegenerateContent = async () => {
-    if (getActivityType() === 'lista-exercicios') {
+    if (activity?.id === 'lista-exercicios') {
       try {
         const newContent = await generateActivity(formData); // Use the hook's generateActivity
         setGeneratedContent(newContent);
@@ -1655,7 +1650,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
 
             let enrichedFormData: ActivityFormData;
 
-            if (getActivityType() === 'plano-aula') {
+            if (activity?.id === 'plano-aula') {
               console.log('📚 Processando dados específicos de Plano de Aula');
 
               enrichedFormData = {
@@ -1735,7 +1730,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
               };
 
               console.log('✅ Dados do Plano de Aula processados:', enrichedFormData);
-            } else if (getActivityType() === 'sequencia-didatica') {
+            } else if (activity?.id === 'sequencia-didatica') {
               console.log('📚 Processando dados específicos de Sequência Didática');
 
               enrichedFormData = {
@@ -1764,7 +1759,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
               };
 
               console.log('✅ Dados da Sequência Didática processados:', enrichedFormData);
-            } else if (getActivityType() === 'quiz-interativo') {
+            } else if (activity?.id === 'quiz-interativo') {
               console.log('🎯 Processando dados específicos de Quiz Interativo');
 
               enrichedFormData = {
@@ -1790,7 +1785,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
 
               console.log('🎯 Dados finais do Quiz Interativo processados:', enrichedFormData);
 
-            } else if (getActivityType() === 'quadro-interativo') {
+            } else if (activity?.id === 'quadro-interativo') {
               console.log('🖼️ Processando dados específicos de Quadro Interativo');
 
               // Importar o processador específico do Quadro Interativo
@@ -1835,7 +1830,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
               console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
 
             }
-            else if (getActivityType() === 'mapa-mental') {
+            else if (activity?.id === 'mapa-mental') {
               console.log('🧠 Processando dados específicos de Mapa Mental');
               enrichedFormData = {
                 ...formData,
@@ -1848,7 +1843,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
               };
               console.log('🧠 Dados do Mapa Mental processados:', enrichedFormData);
             }
-            else if (getActivityType() === 'flash-cards') { // Preenchimento direto para Flash Cards
+            else if (activity?.id === 'flash-cards') { // Preenchimento direto para Flash Cards
               console.log('🃏 Processando dados específicos de Flash Cards');
               enrichedFormData = {
                 ...formData,
@@ -1867,7 +1862,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
               };
               console.log('🃏 Dados do Flash Cards processados:', enrichedFormData);
             }
-            else if (getActivityType() === 'tese-redacao') {
+            else if (activity?.id === 'tese-redacao') {
               console.log('📝 Processando dados específicos de Tese da Redação');
 
               // Importar o processador específico
@@ -1960,12 +1955,12 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
               const activityWithAutoFlag = {
                 ...activity,
                 preenchidoAutomaticamente: true,
-                dataSource: getActivityType() === 'plano-aula' ? 'action-plan-plano-aula' : 'action-plan-generic'
+                dataSource: activity?.id === 'plano-aula' ? 'action-plan-plano-aula' : 'action-plan-generic'
               };
               onUpdateActivity(activityWithAutoFlag);
               console.log('🏷️ Atividade marcada como preenchida automaticamente');
 
-              if (getActivityType() === 'plano-aula') {
+              if (activity?.id === 'plano-aula') {
                 console.log('📚 Plano de Aula configurado com dados específicos do Action Plan');
               }
             }
@@ -2037,7 +2032,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
 
           let directFormData: ActivityFormData;
 
-          if (getActivityType() === 'plano-aula') {
+          if (activity?.id === 'plano-aula') {
             console.log('📚 Processando dados diretos de Plano de Aula');
 
             directFormData = {
@@ -2115,7 +2110,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
             };
 
             console.log('📝 Dados diretos processados para plano-aula:', directFormData);
-          } else if (getActivityType() === 'sequencia-didatica') {
+          } else if (activity?.id === 'sequencia-didatica') {
             console.log('📚 Processando dados diretos de Sequência Didática');
 
             directFormData = {
@@ -2144,7 +2139,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
             };
 
             console.log('✅ Dados da Sequência Didática processados:', directFormData);
-          } else if (getActivityType() === 'quiz-interativo') {
+          } else if (activity?.id === 'quiz-interativo') {
             console.log('🎯 Processando dados diretos de Quiz Interativo');
 
             directFormData = {
@@ -2169,7 +2164,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
             };
 
             console.log('🎯 Dados diretos do Quiz Interativo processados:', directFormData);
-          } else if (getActivityType() === 'quadro-interativo') {
+          } else if (activity?.id === 'quadro-interativo') {
             console.log('🖼️ Processando dados diretos de Quadro Interativo');
 
             // Usar o processador específico para dados diretos também
@@ -2278,7 +2273,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
 
             console.log('🖼️ Dados diretos do Quadro Interativo processados:', directFormData);
           }
-          else if (getActivityType() === 'mapa-mental') { // Preenchimento direto para Mapa Mental
+          else if (activity?.id === 'mapa-mental') { // Preenchimento direto para Mapa Mental
             console.log('🧠 Processando dados diretos de Mapa Mental');
             directFormData = {
               ...formData,
@@ -2291,7 +2286,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
             };
             console.log('🧠 Dados diretos do Mapa Mental processados:', directFormData);
           }
-          else if (getActivityType() === 'tese-redacao') { // Preenchimento direto para Tese de Redação
+          else if (activity?.id === 'tese-redacao') { // Preenchimento direto para Tese de Redação
               console.log('📝 Processando dados diretos de Tese de Redação');
               directFormData = {
                 ...formData,
@@ -2305,7 +2300,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
               };
               console.log('📝 Dados diretos da Tese de Redação processados:', directFormData);
             }
-          else if (getActivityType() === 'flash-cards') { // Preenchimento direto para Flash Cards
+          else if (activity?.id === 'flash-cards') { // Preenchimento direto para Flash Cards
               console.log('🃏 Processando dados diretos de Flash Cards');
               directFormData = {
                 ...formData,
@@ -2376,7 +2371,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
 
   const handleInputChange = (field: keyof ActivityFormData, value: string) => {
     // Log crítico para Tese da Redação
-    if (getActivityType() === 'tese-redacao') {
+    if (activity?.id === 'tese-redacao') {
       console.log(`🔧 [TESE REDAÇÃO] Campo "${field}" alterado para:`, value);
     }
     
@@ -3115,12 +3110,12 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
                   {isBuilding || isGeneratingQuiz ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      {isGeneratingQuiz ? 'Gerando Quiz...' : (getActivityType() === 'quiz-interativo' ? 'Gerando Quiz...' : 'Gerando Atividade...')}
+                      {isGeneratingQuiz ? 'Gerando Quiz...' : (activity?.id === 'quiz-interativo' ? 'Gerando Quiz...' : 'Gerando Atividade...')}
                     </>
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4 mr-2" />
-                      {getActivityType() === 'quiz-interativo' ? 'Gerar Quiz com IA' : (getActivityType() === 'flash-cards' ? 'Gerar Flash Cards' : 'Construir Atividade')}
+                      {activity?.id === 'quiz-interativo' ? 'Gerar Quiz com IA' : (activity?.id === 'flash-cards' ? 'Gerar Flash Cards' : 'Construir Atividade')}
                     </>
                   )}
                 </Button>
@@ -3132,33 +3127,33 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
               <div className="h-full">
                 <div className="border rounded-lg h-full overflow-hidden bg-white dark:bg-gray-800">
                   {(isContentLoaded && (generatedContent || quizInterativoContent || flashCardsContent || teseRedacaoContent)) ? (
-                    getActivityType() === 'plano-aula' ? (
+                    activity?.id === 'plano-aula' ? (
                       <PlanoAulaPreview
                         data={generatedContent}
                         activityData={activity}
                       />
-                    ) : getActivityType() === 'lista-exercicios' ? (
+                    ) : activity?.id === 'lista-exercicios' ? (
                       <ExerciseListPreview
                         data={processExerciseListData(formData, generatedContent)}
                         content={generatedContent}
                         activityData={activity}
                         onRegenerateContent={handleRegenerateContent}
                       />
-                    ) : getActivityType() === 'sequencia-didatica' ? (
+                    ) : activity?.id === 'sequencia-didatica' ? (
                       <SequenciaDidaticaPreview
                         data={generatedContent || formData}
                       />
-                    ) : getActivityType() === 'quadro-interativo' ? (
+                    ) : activity?.id === 'quadro-interativo' ? (
                       <QuadroInterativoPreview
                         data={generatedContent?.data || generatedContent || formData}
                         activityData={activity}
                       />
-                    ) : getActivityType() === 'quiz-interativo' ? (
+                    ) : activity?.id === 'quiz-interativo' ? (
                       <QuizInterativoPreview // Use the specific preview component for Quiz Interativo
                         content={quizInterativoContent || generatedContent}
                         isLoading={isGeneratingQuiz}
                       />
-                    ) : getActivityType() === 'mapa-mental' ? ( // Preview para Mapa Mental
+                    ) : activity?.id === 'mapa-mental' ? ( // Preview para Mapa Mental
                       <div className="p-6 flex flex-col items-center justify-center h-full text-center">
                         <FileText className="h-16 w-16 text-gray-400 mb-4" />
                         <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
@@ -3176,12 +3171,12 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
                           Esta é uma pré-visualização textual. A representação visual do Mapa Mental será gerada em uma ferramenta específica.
                         </p>
                       </div>
-                    ) : getActivityType() === 'flash-cards' ? ( // Preview para Flash Cards
+                    ) : activity?.id === 'flash-cards' ? ( // Preview para Flash Cards
                       <FlashCardsPreview // Use the specific preview component for Flash Cards
                         content={flashCardsContent || generatedContent}
                         isLoading={isBuilding}
                       />
-                    ) : getActivityType() === 'tese-redacao' ? ( // Preview para Tese da Redação
+                    ) : activity?.id === 'tese-redacao' ? ( // Preview para Tese da Redação
                       <TeseRedacaoPreview // Use the specific preview component for Tese de Redação
                         content={teseRedacaoContent || generatedContent}
                         isLoading={isBuilding}
