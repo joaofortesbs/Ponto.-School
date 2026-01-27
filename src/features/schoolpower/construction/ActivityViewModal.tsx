@@ -125,6 +125,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   // Auto-reload ao detectar mudanças no localStorage (fallback)
   useEffect(() => {
     if (!activity?.id || !isOpen) return;
+    const activityType = activity.type || (typeof activity.id === 'string' ? activity.id.split('-')[0] : '');
 
     const checkForUpdates = setInterval(() => {
       const latestData = localStorage.getItem(`activity_${activity.id}`);
@@ -137,7 +138,24 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           if (currentUpdate && currentUpdate !== lastUpdateRef.current) {
             console.log('🔄 [AUTO-RELOAD] Detectada atualização, recarregando dados...');
             lastUpdateRef.current = currentUpdate;
-            setGeneratedContent(parsed.generatedContent || parsed);
+            
+            const contentToUse = parsed.generatedContent || parsed;
+            setGeneratedContent(contentToUse);
+            
+            // CORREÇÃO: Normalizar dados de Flash Cards no auto-reload
+            if (activityType === 'flash-cards') {
+              const flashContent = contentToUse.cards 
+                ? contentToUse 
+                : parsed.cards 
+                  ? { ...parsed, cards: parsed.cards }
+                  : contentToUse;
+              
+              if (flashContent?.cards?.length > 0) {
+                console.log(`🃏 [AUTO-RELOAD] Flash Cards: ${flashContent.cards.length} cards atualizados`);
+                setFlashCardsContent(flashContent);
+              }
+            }
+            
             setIsContentLoaded(true);
           }
         } catch (e) {
@@ -484,14 +502,34 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         if (flashCardsSavedContent) {
           try {
             const parsedContent = JSON.parse(flashCardsSavedContent);
-            const data = parsedContent.data || parsedContent;
-            if (data?.cards?.length > 0) {
-              const validCards = data.cards.filter((card: any) =>
-                card && typeof card === 'object' && card.front && card.back
-              );
-              if (validCards.length > 0) {
-                loadedContent = { ...data, cards: validCards };
-                console.log(`✅ Flash Cards: ${validCards.length} cards carregados do localStorage`);
+            
+            // CORREÇÃO: Verificar se localStorage tem apenas metadados leves
+            if (parsedContent.hasFullDataInStore === true) {
+              console.log('📦 [INIT] Flash Cards: localStorage tem metadados leves, buscando da store Zustand...');
+              const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
+              if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
+                const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
+                if (fullData.cards && Array.isArray(fullData.cards) && fullData.cards.length > 0) {
+                  const validCards = fullData.cards.filter((card: any) =>
+                    card && typeof card === 'object' && card.front && card.back
+                  );
+                  if (validCards.length > 0) {
+                    loadedContent = { ...fullData, cards: validCards };
+                    console.log(`✅ Flash Cards: ${validCards.length} cards carregados da store Zustand`);
+                  }
+                }
+              }
+            } else {
+              // Dados completos no localStorage
+              const data = parsedContent.data || parsedContent;
+              if (data?.cards?.length > 0) {
+                const validCards = data.cards.filter((card: any) =>
+                  card && typeof card === 'object' && card.front && card.back
+                );
+                if (validCards.length > 0) {
+                  loadedContent = { ...data, cards: validCards };
+                  console.log(`✅ Flash Cards: ${validCards.length} cards carregados do localStorage`);
+                }
               }
             }
           } catch (e) {
@@ -499,7 +537,25 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           }
         }
         
-        // Fallback: banco de dados
+        // Fallback 1: store Zustand (se localStorage não tinha dados)
+        if (!loadedContent) {
+          console.log('📦 [INIT] Flash Cards: Buscando da store Zustand como fallback...');
+          const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
+          if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
+            const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
+            if (fullData.cards && Array.isArray(fullData.cards) && fullData.cards.length > 0) {
+              const validCards = fullData.cards.filter((card: any) =>
+                card && typeof card === 'object' && card.front && card.back
+              );
+              if (validCards.length > 0) {
+                loadedContent = { ...fullData, cards: validCards };
+                console.log(`✅ Flash Cards: ${validCards.length} cards carregados da store Zustand (fallback)`);
+              }
+            }
+          }
+        }
+        
+        // Fallback 2: banco de dados
         if (!loadedContent && activity.originalData) {
           const dbData = activity.originalData.campos || activity.originalData;
           if (dbData?.cards?.length > 0) {
