@@ -28,6 +28,7 @@ The platform features a modern design with glass-morphism effects, blur backgrou
     - **Field Synchronization System**: Provides bidirectional mapping between AI-generated and form field names, including a `useActivityAutoLoad` hook.
     - **Auto-Build System with ModalBridge**: An event-driven architecture orchestrates the build process, managing progressive visual construction of activities within the `EditActivityModal`.
     - **StorageSyncService v2.0**: A centralized service for managing activity storage, tracking origin and pipeline metadata, and emitting events for UI synchronization.
+    - **Hybrid Storage System**: Prevents localStorage QuotaExceededError by storing lightweight metadata in localStorage for heavy activities (quiz-interativo, flash-cards, lista-exercicios, plano-aula, sequencia-didatica) while keeping full data in Zustand store. ActivityViewModal uses a 3-tier fallback chain: localStorage → Zustand store → originalData (database).
     - **Activity Version System**: Dual-version system categorizing activities into Interactive (fully functional UI) and Text Version (content delivered as formatted text) for various activity types, with robust AI response parsing and professional 6-section fallback content generation.
     - **Study Groups**: Real-time chat and member management.
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
