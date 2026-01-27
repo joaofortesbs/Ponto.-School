@@ -29,6 +29,8 @@ import {
 import { createDebugEntry, useDebugStore } from '../../../../interface-chat-producao/debug-system/DebugStore';
 import { useActivityDebugStore } from '../../../../construction/stores/activityDebugStore';
 import { ListaExerciciosGenerator } from '../../../../activities/lista-exercicios/ListaExerciciosGenerator';
+import { QuizInterativoGenerator } from '../../../../activities/quiz-interativo/QuizInterativoGenerator';
+import { FlashCardsGenerator } from '../../../../activities/flash-cards/FlashCardsGenerator';
 import { 
   generateTextVersionContent, 
   storeTextVersionContent,
@@ -61,6 +63,8 @@ interface GeneratedFieldsResult {
   activity_id: string;
   activity_type: string;
   generated_fields: Record<string, any>;
+  schema_fields?: Record<string, any>;    // Campos do ACTIVITY_FIELDS_MAPPING (para sync preciso)
+  text_metadata?: Record<string, any>;    // Metadados de texto (não são campos do formulário)
   success: boolean;
   error?: string;
 }
@@ -593,23 +597,65 @@ async function generateContentForActivity(
     try {
       const generator = new ListaExerciciosGenerator();
       
+      // MELHORIA: Inferir valores padrão quando não especificados (mesma abordagem das outras atividades)
+      const inferredSubject = activity.campos_preenchidos?.subject || 
+                              activity.campos_preenchidos?.disciplina || 
+                              activity.materia || 
+                              inferSubjectFromObjective(userObjective) || 
+                              'Matemática';
+      
+      const inferredTheme = activity.campos_preenchidos?.theme || 
+                            activity.campos_preenchidos?.tema || 
+                            generateThemeFromObjective(userObjective, inferredSubject);
+      
+      const inferredSchoolYear = activity.campos_preenchidos?.schoolYear || 
+                                  activity.campos_preenchidos?.anoEscolaridade || 
+                                  '7º Ano - Ensino Fundamental';
+      
+      // Validar difficultyLevel contra valores válidos do schema
+      const rawDifficulty = activity.campos_preenchidos?.difficultyLevel || 
+                            activity.campos_preenchidos?.nivelDificuldade || 
+                            'Médio';
+      const validDifficulties = ['Fácil', 'Médio', 'Difícil'];
+      const inferredDifficultyLevel = validDifficulties.includes(rawDifficulty) ? rawDifficulty : 'Médio';
+      
+      // Validar questionModel contra valores válidos do schema
+      const rawQuestionModel = activity.campos_preenchidos?.questionModel || 
+                               activity.campos_preenchidos?.modeloQuestoes || 
+                               'Múltipla Escolha';
+      const validQuestionModels = ['Múltipla Escolha', 'Dissertativa', 'Misto'];
+      const inferredQuestionModel = validQuestionModels.includes(rawQuestionModel) ? rawQuestionModel : 'Múltipla Escolha';
+      
+      const inferredNumberOfQuestions = String(
+        activity.campos_preenchidos?.numberOfQuestions || 
+        activity.campos_preenchidos?.numeroQuestoes || 
+        10
+      );
+      
+      const inferredObjectives = activity.campos_preenchidos?.objectives || 
+                                  activity.campos_preenchidos?.objetivos || 
+                                  generateDefaultObjectives(inferredTheme, inferredSubject);
+      
+      const inferredContext = activity.campos_preenchidos?.context ||
+                               `Turma de ${inferredSchoolYear} com conhecimentos básicos em ${inferredSubject}`;
+      
       const listaData = {
         titulo: activity.titulo || 'Lista de Exercícios',
         title: activity.titulo || 'Lista de Exercícios',
-        tema: activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || userObjective || 'Matemática',
-        theme: activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || userObjective || 'Matemática',
-        disciplina: activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina || 'Matemática',
-        subject: activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina || 'Matemática',
-        anoEscolaridade: activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.anoEscolaridade || '7º Ano',
-        schoolYear: activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.anoEscolaridade || '7º Ano',
-        nivelDificuldade: activity.campos_preenchidos?.difficultyLevel || activity.campos_preenchidos?.nivelDificuldade || 'Médio',
-        difficultyLevel: activity.campos_preenchidos?.difficultyLevel || activity.campos_preenchidos?.nivelDificuldade || 'Médio',
-        numeroQuestoes: String(activity.campos_preenchidos?.numberOfQuestions || activity.campos_preenchidos?.numeroQuestoes || 10),
-        numberOfQuestions: String(activity.campos_preenchidos?.numberOfQuestions || activity.campos_preenchidos?.numeroQuestoes || 10),
-        modeloQuestoes: activity.campos_preenchidos?.questionModel || activity.campos_preenchidos?.modeloQuestoes || 'Múltipla Escolha',
-        questionModel: activity.campos_preenchidos?.questionModel || activity.campos_preenchidos?.modeloQuestoes || 'Múltipla Escolha',
-        objetivos: activity.campos_preenchidos?.objectives || activity.campos_preenchidos?.objetivos || `Avaliar conhecimentos sobre ${userObjective}`,
-        objectives: activity.campos_preenchidos?.objectives || activity.campos_preenchidos?.objetivos || `Avaliar conhecimentos sobre ${userObjective}`
+        tema: inferredTheme,
+        theme: inferredTheme,
+        disciplina: inferredSubject,
+        subject: inferredSubject,
+        anoEscolaridade: inferredSchoolYear,
+        schoolYear: inferredSchoolYear,
+        nivelDificuldade: inferredDifficultyLevel,
+        difficultyLevel: inferredDifficultyLevel,
+        numeroQuestoes: inferredNumberOfQuestions,
+        numberOfQuestions: inferredNumberOfQuestions,
+        modeloQuestoes: inferredQuestionModel,
+        questionModel: inferredQuestionModel,
+        objetivos: inferredObjectives,
+        objectives: inferredObjectives
       };
       
       console.log(`📝 [GerarConteudo] Dados para geração:`, JSON.stringify(listaData, null, 2).substring(0, 500));
@@ -623,22 +669,22 @@ async function generateContentForActivity(
         console.log(`✅ [GerarConteudo] Primeira questão:`, generatedContent.questoes[0]?.enunciado?.substring(0, 100));
       }
       
+      // Campos do schema ACTIVITY_FIELDS_MAPPING para lista-exercicios
+      const schemaFields = {
+        numberOfQuestions: Number(inferredNumberOfQuestions),
+        theme: inferredTheme,
+        subject: inferredSubject,
+        schoolYear: inferredSchoolYear,
+        difficultyLevel: inferredDifficultyLevel,
+        questionModel: inferredQuestionModel,
+        objectives: inferredObjectives,
+        context: inferredContext
+      };
+      
+      // Campos completos para o sistema (inclui schema + conteúdo gerado)
       const generatedFields = {
+        ...schemaFields,
         titulo: generatedContent.titulo,
-        theme: generatedContent.tema,
-        tema: generatedContent.tema,
-        subject: generatedContent.disciplina,
-        disciplina: generatedContent.disciplina,
-        schoolYear: generatedContent.anoEscolaridade,
-        anoEscolar: generatedContent.anoEscolaridade,
-        difficultyLevel: generatedContent.dificuldade,
-        nivelDificuldade: generatedContent.dificuldade,
-        numberOfQuestions: generatedContent.questoes?.length || 10,
-        quantidadeQuestoes: generatedContent.questoes?.length || 10,
-        questionModel: generatedContent.tipoQuestoes,
-        modeloQuestao: generatedContent.tipoQuestoes,
-        objectives: generatedContent.objetivos,
-        objetivos: generatedContent.objetivos,
         questoes: generatedContent.questoes,
         isGeneratedByAI: true,
         generatedAt: new Date().toISOString()
@@ -651,6 +697,8 @@ async function generateContentForActivity(
           correlation_id: correlationId, 
           activity_id: activity.id,
           questions_count: generatedContent.questoes?.length || 0,
+          schema_fields_count: Object.keys(schemaFields).length,
+          schema_fields_keys: Object.keys(schemaFields),
           first_question_preview: generatedContent.questoes?.[0]?.enunciado?.substring(0, 100)
         }
       );
@@ -662,7 +710,7 @@ async function generateContentForActivity(
           type: 'activity_completed',
           activity_id: activity.id,
           activity_title: activity.titulo,
-          message: `Lista de exercícios gerada com ${generatedContent.questoes?.length || 0} questões reais`
+          message: `Lista de exercícios gerada com ${generatedContent.questoes?.length || 0} questões e ${Object.keys(schemaFields).length} campos do modal`
         });
       }
       
@@ -670,6 +718,7 @@ async function generateContentForActivity(
         activity_id: activity.id,
         activity_type: activity.tipo,
         generated_fields: generatedFields,
+        schema_fields: schemaFields,
         success: true
       };
       
@@ -688,6 +737,294 @@ async function generateContentForActivity(
         generated_fields: {},
         success: false,
         error: `Erro ao gerar lista de exercícios: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+      };
+    }
+  }
+
+  // ========================================
+  // HANDLER ESPECIALIZADO: QUIZ INTERATIVO
+  // Usa QuizInterativoGenerator para gerar questões de quiz REAIS
+  // ========================================
+  if (activity.tipo === 'quiz-interativo') {
+    console.log(`🎯 [GerarConteudo] ====== HANDLER ESPECIALIZADO: QUIZ INTERATIVO ======`);
+    console.log(`🎯 [GerarConteudo] Atividade: ${activity.titulo} (${activity.id})`);
+    
+    createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'action',
+      `[QUIZ-INTERATIVO] Usando gerador especializado para "${activity.titulo}"`,
+      'high',
+      { correlation_id: correlationId, activity_id: activity.id, activity_type: activity.tipo }
+    );
+    
+    try {
+      const generator = new QuizInterativoGenerator();
+      
+      // MELHORIA: Inferir valores padrão quando não especificados (mesma abordagem das versões texto)
+      const inferredSubject = activity.campos_preenchidos?.subject || 
+                              activity.campos_preenchidos?.disciplina || 
+                              activity.materia || 
+                              inferSubjectFromObjective(userObjective) || 
+                              'Matemática';
+      
+      const inferredTheme = activity.campos_preenchidos?.theme || 
+                            activity.campos_preenchidos?.tema || 
+                            generateThemeFromObjective(userObjective, inferredSubject);
+      
+      const inferredSchoolYear = activity.campos_preenchidos?.schoolYear || 
+                                  activity.campos_preenchidos?.anoEscolaridade || 
+                                  '7º Ano - Ensino Fundamental';
+      
+      const inferredObjectives = activity.campos_preenchidos?.objectives || 
+                                  activity.campos_preenchidos?.objetivos || 
+                                  generateDefaultObjectives(inferredTheme, inferredSubject);
+      
+      // Validar difficultyLevel contra valores válidos
+      const rawDifficulty = activity.campos_preenchidos?.difficultyLevel || 
+                            activity.campos_preenchidos?.nivelDificuldade || 
+                            'Médio';
+      const validDifficulties = ['Fácil', 'Médio', 'Difícil'];
+      const inferredDifficultyLevel = validDifficulties.includes(rawDifficulty) ? rawDifficulty : 'Médio';
+      
+      // Validar questionModel contra valores válidos
+      const rawQuestionModel = activity.campos_preenchidos?.questionModel || 
+                               activity.campos_preenchidos?.formato || 
+                               activity.campos_preenchidos?.format ||
+                               'Múltipla Escolha';
+      const validFormats = ['Múltipla Escolha', 'Verdadeiro ou Falso', 'Misto'];
+      const inferredQuestionModel = validFormats.includes(rawQuestionModel) ? rawQuestionModel : 'Múltipla Escolha';
+      
+      const inferredNumberOfQuestions = String(
+        activity.campos_preenchidos?.numberOfQuestions || 
+        activity.campos_preenchidos?.numeroQuestoes || 
+        10
+      );
+      
+      const quizData = {
+        subject: inferredSubject,
+        schoolYear: inferredSchoolYear,
+        theme: inferredTheme,
+        objectives: inferredObjectives,
+        difficultyLevel: inferredDifficultyLevel,
+        format: inferredQuestionModel,
+        numberOfQuestions: inferredNumberOfQuestions,
+        timePerQuestion: activity.campos_preenchidos?.timePerQuestion || '60',
+        instructions: activity.campos_preenchidos?.instructions || 'Leia cada questão atentamente e selecione a resposta correta.',
+        evaluation: activity.campos_preenchidos?.evaluation || 'Pontuação baseada no número de acertos.'
+      };
+      
+      console.log(`🎯 [GerarConteudo] Dados para geração do Quiz:`, JSON.stringify(quizData, null, 2).substring(0, 500));
+      
+      const generatedContent = await generator.generateQuizContent(quizData);
+      
+      console.log(`✅ [GerarConteudo] Quiz gerado com sucesso!`);
+      console.log(`✅ [GerarConteudo] Questões geradas: ${generatedContent.questions?.length || 0}`);
+      
+      // Campos do schema ACTIVITY_FIELDS_MAPPING para quiz-interativo
+      const schemaFields = {
+        numberOfQuestions: Number(inferredNumberOfQuestions),
+        theme: inferredTheme,
+        subject: inferredSubject,
+        schoolYear: inferredSchoolYear,
+        difficultyLevel: inferredDifficultyLevel,
+        questionModel: inferredQuestionModel
+      };
+      
+      // Campos completos para o sistema (inclui schema + conteúdo gerado)
+      const generatedFields = {
+        ...schemaFields,
+        titulo: generatedContent.title,
+        questions: generatedContent.questions,
+        totalQuestions: generatedContent.totalQuestions,
+        timePerQuestion: generatedContent.timePerQuestion,
+        description: generatedContent.description,
+        isGeneratedByAI: true,
+        generatedAt: new Date().toISOString()
+      };
+      
+      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'info',
+        `[QUIZ-INTERATIVO] Geração concluída: ${generatedContent.questions?.length || 0} questões reais geradas`,
+        'high',
+        { 
+          correlation_id: correlationId, 
+          activity_id: activity.id,
+          questions_count: generatedContent.questions?.length || 0,
+          schema_fields_count: Object.keys(schemaFields).length,
+          schema_fields_keys: Object.keys(schemaFields)
+        }
+      );
+      
+      const executionTime = Date.now() - activityStartTime;
+      
+      if (onProgress) {
+        onProgress({
+          type: 'activity_completed',
+          activity_id: activity.id,
+          activity_title: activity.titulo,
+          message: `Quiz interativo gerado com ${generatedContent.questions?.length || 0} questões`
+        });
+      }
+      
+      return {
+        activity_id: activity.id,
+        activity_type: activity.tipo,
+        generated_fields: generatedFields,
+        schema_fields: schemaFields,
+        success: true
+      };
+      
+    } catch (error) {
+      console.error(`❌ [GerarConteudo] Erro ao gerar quiz interativo:`, error);
+      
+      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'error',
+        `[QUIZ-INTERATIVO] Erro na geração: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        'critical',
+        { correlation_id: correlationId, activity_id: activity.id, error: String(error) }
+      );
+      
+      return {
+        activity_id: activity.id,
+        activity_type: activity.tipo,
+        generated_fields: {},
+        success: false,
+        error: `Erro ao gerar quiz interativo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+      };
+    }
+  }
+
+  // ========================================
+  // HANDLER ESPECIALIZADO: FLASH CARDS
+  // Usa FlashCardsGenerator para gerar cartões de estudo REAIS
+  // ========================================
+  if (activity.tipo === 'flash-cards') {
+    console.log(`🃏 [GerarConteudo] ====== HANDLER ESPECIALIZADO: FLASH CARDS ======`);
+    console.log(`🃏 [GerarConteudo] Atividade: ${activity.titulo} (${activity.id})`);
+    
+    createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'action',
+      `[FLASH-CARDS] Usando gerador especializado para "${activity.titulo}"`,
+      'high',
+      { correlation_id: correlationId, activity_id: activity.id, activity_type: activity.tipo }
+    );
+    
+    try {
+      const generator = new FlashCardsGenerator();
+      
+      // MELHORIA: Inferir valores padrão quando não especificados
+      const inferredSubject = activity.campos_preenchidos?.subject || 
+                              activity.campos_preenchidos?.disciplina || 
+                              activity.materia || 
+                              inferSubjectFromObjective(userObjective) || 
+                              'Português';
+      
+      const inferredTheme = activity.campos_preenchidos?.theme || 
+                            activity.campos_preenchidos?.tema || 
+                            generateThemeFromObjective(userObjective, inferredSubject);
+      
+      const inferredSchoolYear = activity.campos_preenchidos?.schoolYear || 
+                                  activity.campos_preenchidos?.anoEscolaridade || 
+                                  '7º Ano - Ensino Fundamental';
+      
+      // Inferir tópicos a partir do objetivo quando não especificado
+      const inferredTopicos = activity.campos_preenchidos?.topicos || 
+                              activity.campos_preenchidos?.topics ||
+                              `- Conceitos fundamentais de ${inferredTheme}\n- Definições e termos-chave\n- Exemplos práticos e aplicações\n- Resumo dos principais pontos`;
+      
+      const inferredNumberOfFlashcards = String(
+        activity.campos_preenchidos?.numberOfFlashcards || 
+        activity.campos_preenchidos?.numeroFlashcards || 
+        10
+      );
+      
+      const inferredContextoUso = activity.campos_preenchidos?.contextoUso ||
+                                   activity.campos_preenchidos?.context ||
+                                   `Estudos e revisão para ${inferredSchoolYear} na disciplina de ${inferredSubject}`;
+      
+      const flashCardsData = {
+        title: activity.titulo || `Flash Cards: ${inferredTheme}`,
+        theme: inferredTheme,
+        subject: inferredSubject,
+        schoolYear: inferredSchoolYear,
+        topicos: inferredTopicos,
+        numberOfFlashcards: inferredNumberOfFlashcards,
+        context: inferredContextoUso,
+        difficultyLevel: activity.campos_preenchidos?.difficultyLevel || 'Médio',
+        objectives: activity.campos_preenchidos?.objectives || generateDefaultObjectives(inferredTheme, inferredSubject),
+        instructions: activity.campos_preenchidos?.instructions || 'Use os flash cards para estudar e revisar o conteúdo',
+        evaluation: activity.campos_preenchidos?.evaluation || 'Avalie o conhecimento através da prática com os cards'
+      };
+      
+      console.log(`🃏 [GerarConteudo] Dados para geração de Flash Cards:`, JSON.stringify(flashCardsData, null, 2).substring(0, 500));
+      
+      const generatedContent = await generator.generateFlashCardsContent(flashCardsData);
+      
+      console.log(`✅ [GerarConteudo] Flash Cards gerados com sucesso!`);
+      console.log(`✅ [GerarConteudo] Cards gerados: ${generatedContent.cards?.length || 0}`);
+      
+      // Campos do schema ACTIVITY_FIELDS_MAPPING para flash-cards
+      const schemaFields = {
+        theme: inferredTheme,
+        topicos: inferredTopicos,
+        numberOfFlashcards: Number(inferredNumberOfFlashcards),
+        contextoUso: inferredContextoUso
+      };
+      
+      // Campos completos para o sistema (inclui schema + conteúdo gerado)
+      const generatedFields = {
+        ...schemaFields,
+        titulo: generatedContent.title,
+        cards: generatedContent.cards,
+        totalCards: generatedContent.totalCards,
+        description: generatedContent.description,
+        subject: inferredSubject,
+        schoolYear: inferredSchoolYear,
+        isGeneratedByAI: true,
+        generatedAt: new Date().toISOString()
+      };
+      
+      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'info',
+        `[FLASH-CARDS] Geração concluída: ${generatedContent.cards?.length || 0} cards reais gerados`,
+        'high',
+        { 
+          correlation_id: correlationId, 
+          activity_id: activity.id,
+          cards_count: generatedContent.cards?.length || 0,
+          schema_fields_count: Object.keys(schemaFields).length,
+          schema_fields_keys: Object.keys(schemaFields)
+        }
+      );
+      
+      const executionTime = Date.now() - activityStartTime;
+      
+      if (onProgress) {
+        onProgress({
+          type: 'activity_completed',
+          activity_id: activity.id,
+          activity_title: activity.titulo,
+          message: `Flash cards gerados com ${generatedContent.cards?.length || 0} cartões`
+        });
+      }
+      
+      return {
+        activity_id: activity.id,
+        activity_type: activity.tipo,
+        generated_fields: generatedFields,
+        schema_fields: schemaFields,
+        success: true
+      };
+      
+    } catch (error) {
+      console.error(`❌ [GerarConteudo] Erro ao gerar flash cards:`, error);
+      
+      createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'error',
+        `[FLASH-CARDS] Erro na geração: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        'critical',
+        { correlation_id: correlationId, activity_id: activity.id, error: String(error) }
+      );
+      
+      return {
+        activity_id: activity.id,
+        activity_type: activity.tipo,
+        generated_fields: {},
+        success: false,
+        error: `Erro ao gerar flash cards: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
       };
     }
   }
