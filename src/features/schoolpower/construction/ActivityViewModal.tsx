@@ -83,15 +83,28 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('⚡ [INSTANT-SYNC] Dados recebidos do modal de edição:', data);
         
         // Atualizar estados instantaneamente
-        if (data.generatedContent) {
-          setGeneratedContent(data.generatedContent);
+        const contentToUse = data.generatedContent || data;
+        
+        if (contentToUse) {
+          setGeneratedContent(contentToUse);
           
           // Atualizar conteúdos específicos
           if (activity.type === 'quiz-interativo' || activity.id === 'quiz-interativo') {
-            setQuizInterativoContent(data.generatedContent);
+            setQuizInterativoContent(contentToUse);
           }
+          
+          // CORREÇÃO: Flash Cards - aceitar cards diretamente do evento
           if (activity.type === 'flash-cards' || activity.id === 'flash-cards') {
-            setFlashCardsContent(data.generatedContent);
+            const flashContent = contentToUse.cards 
+              ? contentToUse 
+              : data.cards 
+                ? { ...data, cards: data.cards } 
+                : contentToUse;
+            
+            if (flashContent?.cards?.length > 0) {
+              console.log(`🃏 [INSTANT-SYNC] Flash Cards: ${flashContent.cards.length} cards recebidos`);
+            }
+            setFlashCardsContent(flashContent);
           }
         }
         
