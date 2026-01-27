@@ -507,8 +507,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             if (parsedContent.hasFullDataInStore === true) {
               console.log('📦 [INIT] Flash Cards: localStorage tem metadados leves, buscando da store Zustand...');
               const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-              if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-                const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
+              
+              if (storeData) {
+                // CORREÇÃO: Buscar em MÚLTIPLOS caminhos possíveis na store
+                const fullData = 
+                  storeData.dados_construidos?.generated_fields || 
+                  storeData.dados_construidos || 
+                  storeData.campos_preenchidos || 
+                  {};
+                
                 if (fullData.cards && Array.isArray(fullData.cards) && fullData.cards.length > 0) {
                   const validCards = fullData.cards.filter((card: any) =>
                     card && typeof card === 'object' && card.front && card.back
@@ -541,8 +548,21 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         if (!loadedContent) {
           console.log('📦 [INIT] Flash Cards: Buscando da store Zustand como fallback...');
           const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-          if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-            const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
+          
+          if (storeData) {
+            // CORREÇÃO: Buscar em MÚLTIPLOS caminhos possíveis na store
+            const fullData = 
+              storeData.dados_construidos?.generated_fields || 
+              storeData.dados_construidos || 
+              storeData.campos_preenchidos || 
+              {};
+            
+            console.log('📦 [INIT] Flash Cards: Dados encontrados na store:', {
+              hasGeneratedFields: !!storeData.dados_construidos?.generated_fields,
+              hasDadosConstruidos: !!storeData.dados_construidos,
+              hasCamposPreenchidos: !!storeData.campos_preenchidos
+            });
+            
             if (fullData.cards && Array.isArray(fullData.cards) && fullData.cards.length > 0) {
               const validCards = fullData.cards.filter((card: any) =>
                 card && typeof card === 'object' && card.front && card.back
@@ -1274,8 +1294,25 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       if (!contentToLoad) {
         console.log('📦 Flash Cards: Buscando dados da store Zustand como fallback...');
         const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-        if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-          const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
+        
+        if (storeData) {
+          // CORREÇÃO: Buscar em MÚLTIPLOS caminhos possíveis na store
+          // 1. dados_construidos.generated_fields (setActivityGeneratedFields)
+          // 2. dados_construidos diretamente (setActivityBuiltData)
+          // 3. campos_preenchidos (formulário)
+          const fullData = 
+            storeData.dados_construidos?.generated_fields || 
+            storeData.dados_construidos || 
+            storeData.campos_preenchidos || 
+            {};
+          
+          console.log('📦 Flash Cards: Dados encontrados na store:', {
+            hasGeneratedFields: !!storeData.dados_construidos?.generated_fields,
+            hasDadosConstruidos: !!storeData.dados_construidos,
+            hasCamposPreenchidos: !!storeData.campos_preenchidos,
+            fullDataKeys: Object.keys(fullData)
+          });
+          
           if (fullData.cards && Array.isArray(fullData.cards) && fullData.cards.length > 0) {
             const validCards = fullData.cards.filter(card =>
               card && typeof card === 'object' && card.front && card.back
