@@ -22,6 +22,7 @@
  */
 
 import { DataSyncService, AtividadeDados } from './data-sync-service';
+import { storageSet, storageGet, storageSetJSON, safeSetItem, safeSetJSON, isHeavyActivityType } from '@/features/schoolpower/services/StorageOrchestrator';
 
 export const STORAGE_VERSION = '2.0.0';
 
@@ -122,8 +123,8 @@ export class StorageSyncService {
       const chaveStorage = `${this.STORAGE_PREFIX}${atividadeSincronizada.id}`;
       const chaveMetadata = `${this.METADATA_PREFIX}${atividadeSincronizada.id}`;
 
-      localStorage.setItem(chaveStorage, JSON.stringify(atividadeArmazenada));
-      localStorage.setItem(chaveMetadata, JSON.stringify(metadata));
+      safeSetJSON(chaveStorage, atividadeArmazenada);
+      safeSetJSON(chaveMetadata, metadata);
 
       this.emitEvent('storage-sync:activity-saved', {
         activityId: atividadeSincronizada.id,
@@ -177,7 +178,13 @@ export class StorageSyncService {
       ];
 
       keys.forEach(key => {
-        localStorage.setItem(key, JSON.stringify(constructedData));
+        if (isHeavyActivityType(activityType)) {
+          storageSet(key, constructedData, { activityType }).catch(err => 
+            console.error(`[StorageSync] Error storing ${key}:`, err)
+          );
+        } else {
+          safeSetJSON(key, constructedData);
+        }
       });
 
       this.atualizarGlobalConstructed(activityId, activityType, constructedData);
@@ -228,7 +235,13 @@ export class StorageSyncService {
         }
       };
 
-      localStorage.setItem(`${this.GENERATED_PREFIX}${activityId}`, JSON.stringify(contentData));
+      if (isHeavyActivityType(activityType)) {
+        storageSet(`${this.GENERATED_PREFIX}${activityId}`, contentData, { activityType }).catch(err => 
+          console.error(`[StorageSync] Error storing generated content:`, err)
+        );
+      } else {
+        safeSetJSON(`${this.GENERATED_PREFIX}${activityId}`, contentData);
+      }
 
       this.emitEvent('storage-sync:content-generated', {
         activityId,
@@ -259,7 +272,7 @@ export class StorageSyncService {
         updated_at: new Date().toISOString()
       };
 
-      localStorage.setItem(this.GLOBAL_CONSTRUCTED_KEY, JSON.stringify(globalData));
+      safeSetJSON(this.GLOBAL_CONSTRUCTED_KEY, globalData);
     } catch (error) {
       console.error('❌ [StorageSync] Erro ao atualizar global constructed:', error);
     }
@@ -484,7 +497,7 @@ export class StorageSyncService {
           const parsed = JSON.parse(globalData);
           if (parsed[id]) {
             delete parsed[id];
-            localStorage.setItem(this.GLOBAL_CONSTRUCTED_KEY, JSON.stringify(parsed));
+            safeSetJSON(this.GLOBAL_CONSTRUCTED_KEY, parsed);
           }
         }
       } catch (e) {

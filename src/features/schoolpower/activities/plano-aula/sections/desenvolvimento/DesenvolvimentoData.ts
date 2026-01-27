@@ -1,3 +1,5 @@
+import { storageSet, storageGet } from '@/features/schoolpower/services/StorageOrchestrator';
+
 export interface EtapaDesenvolvimento {
   id: string;
   titulo: string;
@@ -411,25 +413,24 @@ Gere o desenvolvimento da aula agora:`;
     return dadosBase;
   }
 
-  static salvarEtapasDesenvolvimento(planoId: string, dados: DesenvolvimentoData): void {
+  static async salvarEtapasDesenvolvimento(planoId: string, dados: DesenvolvimentoData): Promise<void> {
     try {
       const key = `plano_desenvolvimento_${planoId}`;
-      localStorage.setItem(key, JSON.stringify(dados));
+      await storageSet(key, dados, { activityType: 'plano-aula' });
       console.log('💾 Etapas de desenvolvimento salvas:', key);
     } catch (error) {
       console.error('❌ Erro ao salvar etapas de desenvolvimento:', error);
     }
   }
 
-  static carregarEtapasDesenvolvimento(planoId: string): DesenvolvimentoData | null {
+  static async carregarEtapasDesenvolvimento(planoId: string): Promise<DesenvolvimentoData | null> {
     try {
       const key = `plano_desenvolvimento_${planoId}`;
-      const dados = localStorage.getItem(key);
+      const dados = await storageGet<DesenvolvimentoData>(key);
 
       if (dados) {
-        const parsedData = JSON.parse(dados);
         console.log('📂 Etapas de desenvolvimento carregadas:', key);
-        return parsedData;
+        return dados;
       }
 
       return null;
