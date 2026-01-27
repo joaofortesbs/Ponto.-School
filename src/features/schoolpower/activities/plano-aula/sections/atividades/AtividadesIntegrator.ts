@@ -1,6 +1,5 @@
 
 import { AtividadesDataProcessor, AtividadesData } from './AtividadesData';
-import { storageSet, storageGet } from '@/features/schoolpower/services/StorageOrchestrator';
 
 export class AtividadesIntegrator {
   private static readonly STORAGE_KEY = 'plano_aula_atividades_data';
@@ -32,7 +31,7 @@ export class AtividadesIntegrator {
   /**
    * Sincroniza dados das atividades quando há mudanças no desenvolvimento
    */
-  static async sincronizarComDesenvolvimento(desenvolvimentoData: any, planoId: string): Promise<AtividadesData> {
+  static sincronizarComDesenvolvimento(desenvolvimentoData: any, planoId: string): AtividadesData {
     this.debugLog('Sincronizando com dados de desenvolvimento');
     
     if (!this.validarDados(desenvolvimentoData, 'desenvolvimento')) {
@@ -54,8 +53,8 @@ export class AtividadesIntegrator {
         throw new Error('Dados processados são inválidos');
       }
 
-      // Salvar no StorageOrchestrator para persistência
-      await this.salvarDadosAtividades(planoId, atividadesData);
+      // Salvar no localStorage para persistência
+      this.salvarDadosAtividades(planoId, atividadesData);
 
       this.debugLog('Sincronização concluída', {
         totalItems: atividadesData.total_items,
@@ -73,11 +72,11 @@ export class AtividadesIntegrator {
   /**
    * Carrega dados de atividades salvos
    */
-  static async carregarDadosAtividades(planoId: string): Promise<AtividadesData | null> {
+  static carregarDadosAtividades(planoId: string): AtividadesData | null {
     try {
-      const dadosSalvos = await storageGet<AtividadesData>(`${this.STORAGE_KEY}_${planoId}`);
+      const dadosSalvos = localStorage.getItem(`${this.STORAGE_KEY}_${planoId}`);
       if (dadosSalvos) {
-        return dadosSalvos;
+        return JSON.parse(dadosSalvos);
       }
     } catch (error) {
       console.error('Erro ao carregar dados de atividades:', error);
@@ -88,9 +87,9 @@ export class AtividadesIntegrator {
   /**
    * Salva dados de atividades
    */
-  static async salvarDadosAtividades(planoId: string, dados: AtividadesData): Promise<void> {
+  static salvarDadosAtividades(planoId: string, dados: AtividadesData): void {
     try {
-      await storageSet(`${this.STORAGE_KEY}_${planoId}`, dados, { activityType: 'plano-aula' });
+      localStorage.setItem(`${this.STORAGE_KEY}_${planoId}`, JSON.stringify(dados));
     } catch (error) {
       console.error('Erro ao salvar dados de atividades:', error);
     }
@@ -133,7 +132,7 @@ export class AtividadesIntegrator {
   /**
    * Força uma nova sincronização
    */
-  static async forcarSincronizacao(planoData: any, planoId: string): Promise<AtividadesData> {
+  static forcarSincronizacao(planoData: any, planoId: string): AtividadesData {
     console.log('🔄 AtividadesIntegrator: Forçando nova sincronização completa');
     
     // Limpar dados antigos
@@ -143,7 +142,7 @@ export class AtividadesIntegrator {
     const atividadesData = AtividadesDataProcessor.processarDadosAtividades(planoData);
     
     // Salvar novos dados
-    await this.salvarDadosAtividades(planoId, atividadesData);
+    this.salvarDadosAtividades(planoId, atividadesData);
     
     return atividadesData;
   }

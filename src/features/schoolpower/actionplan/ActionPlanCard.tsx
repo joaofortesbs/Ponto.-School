@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, BookOpen, Target, Trash2, Plus, X } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/toast";
-import { storageSet, safeSetJSON } from '@/features/schoolpower/services/StorageOrchestrator';
 
 // Dummy types for demonstration, replace with actual types if available
 type ActionPlanActivity = {
@@ -681,7 +680,7 @@ export function ActionPlanCard({ actionPlan, onApprove, onEdit, isLoading = fals
       timestamp: Date.now()
     };
 
-    storageSet(autoDataKey, autoData, { activityType: activity.id });
+    localStorage.setItem(autoDataKey, JSON.stringify(autoData));
     console.log(`💾 Dados salvos para preenchimento automático (${activity.id}):`, autoData);
   };
 
@@ -791,9 +790,9 @@ export function ActionPlanCard({ actionPlan, onApprove, onEdit, isLoading = fals
         };
 
         // Salvar em todas as chaves
-        storageSet(autoDataKey1, autoData, { activityType: 'tese-redacao' });
-        storageSet(autoDataKey2, autoData, { activityType: 'tese-redacao' });
-        safeSetJSON(autoDataKey3, autoFormData);
+        localStorage.setItem(autoDataKey1, JSON.stringify(autoData));
+        localStorage.setItem(autoDataKey2, JSON.stringify(autoData));
+        localStorage.setItem(autoDataKey3, JSON.stringify(autoFormData));
 
         console.log('%c✅ [TESE REDAÇÃO] DADOS SALVOS COM SUCESSO EM 3 CHAVES!', 'background: #4CAF50; color: white; font-size: 16px; padding: 10px; font-weight: bold; border-radius: 5px;');
         console.log('%c📍 [TESE REDAÇÃO] Chaves do localStorage:', 'color: #4CAF50; font-weight: bold;', {
@@ -849,7 +848,7 @@ export function ActionPlanCard({ actionPlan, onApprove, onEdit, isLoading = fals
           timestamp: Date.now()
         };
 
-        storageSet(autoDataKey, autoData, { activityType: 'plano-aula' });
+        localStorage.setItem(autoDataKey, JSON.stringify(autoData));
         console.log('💾 Dados salvos para preenchimento automático:', autoData);
       }
 
@@ -857,7 +856,7 @@ export function ActionPlanCard({ actionPlan, onApprove, onEdit, isLoading = fals
       // Salvar no localStorage
       const existingActivities = JSON.parse(localStorage.getItem('approvedActivities') || '[]');
       const updatedActivities = [...existingActivities.filter((a: any) => a.id !== activity.id), approvedActivity];
-      storageSet('approvedActivities', updatedActivities, { activityType: 'approved-activities' });
+      localStorage.setItem('approvedActivities', JSON.stringify(updatedActivities));
 
       // Atualizar estado local
       onApprove(approvedActivity);

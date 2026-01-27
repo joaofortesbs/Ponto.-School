@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap, Calculator, Beaker, PenTool, GamepadIcon } from "lucide-react";
+import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap, Calculator, Beaker, PenTool, GamepadIcon } from "lucide-react"; // Import Eye component
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,7 +20,6 @@ import { downloadActivity, isDownloadSupported, getDownloadFormatLabel } from '.
 import { ContentExtractModal } from '../components/ContentExtractModal';
 import { isTextVersionActivity } from '../config/activityVersionConfig';
 import { retrieveTextVersionContent } from '../activities/text-version/TextVersionGenerator';
-import { useChosenActivitiesStore } from '../interface-chat-producao/stores/ChosenActivitiesStore';
 
 // Helper function to get activity icon based on activity type
 const getActivityIcon = (activityId: string) => {
@@ -175,154 +174,29 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
         downloadData.deletedQuestionIds = deletedQuestionIds;
       }
-      
-      // Fallback chain: localStorage → store → originalData
-      const listaContent = localStorage.getItem(`constructed_lista-exercicios_${activity.id}`);
-      if (listaContent) {
-        try {
-          const parsed = JSON.parse(listaContent);
-          if (parsed.hasFullDataInStore === true) {
-            console.log('📥 Download Lista de Exercícios: localStorage tem metadados leves, buscando da store...');
-            const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-            if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-              const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-              downloadData = { ...downloadData, ...fullData };
-            }
-          } else {
-            downloadData = { ...downloadData, ...(parsed.data || parsed) };
-          }
-        } catch (e) {
-          console.warn('⚠️ Erro ao processar lista-exercicios para download:', e);
-        }
-      }
-      
-      // Fallback para originalData se ainda não tem questoes
-      if (!downloadData.questoes || downloadData.questoes.length === 0) {
-        if (activity.originalData?.campos?.questoes || activity.originalData?.questoes) {
-          const dbQuestoes = activity.originalData?.campos?.questoes || activity.originalData?.questoes;
-          downloadData.questoes = dbQuestoes;
-          console.log('📥 Download Lista de Exercícios: Usando questões do banco de dados');
-        }
-      }
     }
 
     if (activityType === 'quiz-interativo') {
       const quizContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`);
       if (quizContent) {
-        try {
-          const parsed = JSON.parse(quizContent);
-          if (parsed.hasFullDataInStore === true) {
-            console.log('📥 Download Quiz: localStorage tem metadados leves, buscando da store...');
-            const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-            if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-              const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-              downloadData = { ...downloadData, ...fullData };
-            }
-          } else {
-            downloadData = { ...downloadData, ...(parsed.data || parsed) };
-          }
-        } catch (e) {
-          console.warn('⚠️ Erro ao processar quiz para download:', e);
-        }
-      }
-      
-      // Fallback para originalData
-      if (!downloadData.questions || downloadData.questions.length === 0) {
-        if (activity.originalData?.campos?.questions || activity.originalData?.questions) {
-          const dbQuestions = activity.originalData?.campos?.questions || activity.originalData?.questions;
-          downloadData.questions = dbQuestions;
-          console.log('📥 Download Quiz: Usando questões do banco de dados');
-        }
+        const parsed = JSON.parse(quizContent);
+        downloadData = { ...downloadData, ...(parsed.data || parsed) };
       }
     }
 
     if (activityType === 'flash-cards') {
       const flashCardsContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
       if (flashCardsContent) {
-        try {
-          const parsed = JSON.parse(flashCardsContent);
-          if (parsed.hasFullDataInStore === true) {
-            console.log('📥 Download Flash Cards: localStorage tem metadados leves, buscando da store...');
-            const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-            if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-              const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-              downloadData = { ...downloadData, ...fullData };
-            }
-          } else {
-            downloadData = { ...downloadData, ...(parsed.data || parsed) };
-          }
-        } catch (e) {
-          console.warn('⚠️ Erro ao processar flash-cards para download:', e);
-        }
-      }
-      
-      // Fallback para originalData
-      if (!downloadData.cards || downloadData.cards.length === 0) {
-        if (activity.originalData?.campos?.cards || activity.originalData?.cards) {
-          const dbCards = activity.originalData?.campos?.cards || activity.originalData?.cards;
-          downloadData.cards = dbCards;
-          console.log('📥 Download Flash Cards: Usando cards do banco de dados');
-        }
+        const parsed = JSON.parse(flashCardsContent);
+        downloadData = { ...downloadData, ...(parsed.data || parsed) };
       }
     }
 
     if (activityType === 'sequencia-didatica') {
       const sequenciaContent = localStorage.getItem(`constructed_sequencia-didatica_${activity.id}`);
       if (sequenciaContent) {
-        try {
-          const parsed = JSON.parse(sequenciaContent);
-          if (parsed.hasFullDataInStore === true) {
-            console.log('📥 Download Sequência Didática: localStorage tem metadados leves, buscando da store...');
-            const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-            if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-              const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-              downloadData = { ...downloadData, ...fullData };
-            }
-          } else {
-            downloadData = { ...downloadData, ...(parsed.data || parsed) };
-          }
-        } catch (e) {
-          console.warn('⚠️ Erro ao processar sequencia-didatica para download:', e);
-        }
-      }
-      
-      // Fallback para originalData
-      if (!downloadData.aulas && !downloadData.sequenciaDidatica) {
-        if (activity.originalData?.campos || activity.originalData) {
-          const dbData = activity.originalData?.campos || activity.originalData;
-          downloadData = { ...downloadData, ...dbData };
-          console.log('📥 Download Sequência Didática: Usando dados do banco de dados');
-        }
-      }
-    }
-    
-    if (activityType === 'plano-aula') {
-      const planoContent = localStorage.getItem(`constructed_plano-aula_${activity.id}`);
-      if (planoContent) {
-        try {
-          const parsed = JSON.parse(planoContent);
-          if (parsed.hasFullDataInStore === true) {
-            console.log('📥 Download Plano de Aula: localStorage tem metadados leves, buscando da store...');
-            const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-            if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-              const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-              downloadData = { ...downloadData, ...fullData };
-            }
-          } else {
-            downloadData = { ...downloadData, ...(parsed.data || parsed) };
-          }
-        } catch (e) {
-          console.warn('⚠️ Erro ao processar plano-aula para download:', e);
-        }
-      }
-      
-      // Fallback para originalData
-      if (!downloadData.objetivos && !downloadData.metodologia) {
-        if (activity.originalData?.campos || activity.originalData) {
-          const dbData = activity.originalData?.campos || activity.originalData;
-          downloadData = { ...downloadData, ...dbData };
-          console.log('📥 Download Plano de Aula: Usando dados do banco de dados');
-        }
+        const parsed = JSON.parse(sequenciaContent);
+        downloadData = { ...downloadData, ...(parsed.data || parsed) };
       }
     }
 
@@ -1069,24 +943,11 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       if (quizInterativoSavedContent) {
         try {
           const parsedContent = JSON.parse(quizInterativoSavedContent);
-          
-          // VERIFICAÇÃO: Se localStorage tem apenas metadados leves, buscar da store
-          if (parsedContent.hasFullDataInStore === true) {
-            console.log('📦 Quiz Interativo: localStorage tem metadados leves, buscando da store Zustand...');
-            const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-            if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-              const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-              if (fullData.questions && Array.isArray(fullData.questions) && fullData.questions.length > 0) {
-                contentToLoad = fullData;
-                console.log(`✅ Quiz Interativo: ${fullData.questions.length} questões carregadas da store Zustand`);
-              }
-            }
-          } else {
-            contentToLoad = parsedContent.data || parsedContent;
-          }
+          contentToLoad = parsedContent.data || parsedContent;
 
           // Validar estrutura das questões
           if (contentToLoad && contentToLoad.questions && Array.isArray(contentToLoad.questions) && contentToLoad.questions.length > 0) {
+            // Validar cada questão individualmente
             const validQuestions = contentToLoad.questions.filter(q =>
               q && (q.question || q.text) && (q.options || q.type === 'verdadeiro-falso') && q.correctAnswer
             );
@@ -1094,11 +955,12 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             if (validQuestions.length > 0) {
               contentToLoad.questions = validQuestions;
               console.log(`✅ Quiz Interativo carregado com ${validQuestions.length} questões válidas para: ${activity.id}`);
+              // REMOVIDO: setQuizInterativoContent(contentToLoad) - causa loop infinito se chamado durante render
             } else {
               console.warn('⚠️ Nenhuma questão válida encontrada no Quiz');
               contentToLoad = null;
             }
-          } else if (!contentToLoad?.questions) {
+          } else {
             console.warn('⚠️ Estrutura de dados inválida para Quiz Interativo');
             contentToLoad = null;
           }
@@ -1108,25 +970,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         }
       }
       
-      // FALLBACK 1: Buscar dados da store Zustand
-      if (!contentToLoad) {
-        console.log('📦 Quiz Interativo: Buscando dados da store Zustand como fallback...');
-        const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-        if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-          const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-          if (fullData.questions && Array.isArray(fullData.questions) && fullData.questions.length > 0) {
-            const validQuestions = fullData.questions.filter(q =>
-              q && (q.question || q.text) && (q.options || q.type === 'verdadeiro-falso') && q.correctAnswer
-            );
-            if (validQuestions.length > 0) {
-              contentToLoad = { ...fullData, questions: validQuestions };
-              console.log(`✅ Quiz Interativo: ${validQuestions.length} questões carregadas da store Zustand (fallback)`);
-            }
-          }
-        }
-      }
-      
-      // FALLBACK 2: Se não encontrou na store, usar dados do banco (originalData)
+      // FALLBACK: Se não encontrou no localStorage, usar dados do banco (originalData)
       if (!contentToLoad && activity.originalData) {
         console.log('📊 Quiz Interativo: Usando dados do banco (originalData) como fallback');
         const dbData = activity.originalData.campos || activity.originalData;
@@ -1144,6 +988,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
               description: dbData.description || 'Atividade criada na plataforma'
             };
             console.log(`✅ Quiz Interativo: ${validQuestions.length} questões carregadas do banco de dados`);
+            // REMOVIDO: setQuizInterativoContent(contentToLoad) - causa loop infinito se chamado durante render
           }
         }
       }
@@ -1160,26 +1005,13 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       if (flashCardsSavedContent) {
         try {
           const parsedContent = JSON.parse(flashCardsSavedContent);
-          
-          // VERIFICAÇÃO: Se localStorage tem apenas metadados leves, buscar da store
-          if (parsedContent.hasFullDataInStore === true) {
-            console.log('📦 Flash Cards: localStorage tem metadados leves, buscando da store Zustand...');
-            const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-            if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-              const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-              if (fullData.cards && Array.isArray(fullData.cards) && fullData.cards.length > 0) {
-                contentToLoad = fullData;
-                console.log(`✅ Flash Cards: ${fullData.cards.length} cards carregados da store Zustand`);
-              }
-            }
-          } else {
-            contentToLoad = parsedContent.data || parsedContent;
-          }
+          contentToLoad = parsedContent.data || parsedContent;
 
           console.log('🃏 Flash Cards - Conteúdo parseado no modal de visualização:', contentToLoad);
 
           // Validar se o conteúdo tem cards válidos
           if (contentToLoad?.cards && Array.isArray(contentToLoad.cards) && contentToLoad.cards.length > 0) {
+            // Validar estrutura de cada card
             const validCards = contentToLoad.cards.filter(card =>
               card && typeof card === 'object' && card.front && card.back
             );
@@ -1191,7 +1023,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
               console.warn('⚠️ Nenhum card válido encontrado');
               contentToLoad = null;
             }
-          } else if (!contentToLoad?.cards) {
+          } else {
             console.warn('⚠️ Conteúdo de Flash Cards sem cards válidos');
             contentToLoad = null;
           }
@@ -1201,25 +1033,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         }
       }
       
-      // FALLBACK 1: Buscar dados da store Zustand
-      if (!contentToLoad) {
-        console.log('📦 Flash Cards: Buscando dados da store Zustand como fallback...');
-        const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-        if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-          const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-          if (fullData.cards && Array.isArray(fullData.cards) && fullData.cards.length > 0) {
-            const validCards = fullData.cards.filter(card =>
-              card && typeof card === 'object' && card.front && card.back
-            );
-            if (validCards.length > 0) {
-              contentToLoad = { ...fullData, cards: validCards };
-              console.log(`✅ Flash Cards: ${validCards.length} cards carregados da store Zustand (fallback)`);
-            }
-          }
-        }
-      }
-      
-      // FALLBACK 2: Se não encontrou na store, usar dados do banco (originalData)
+      // FALLBACK: Se não encontrou no localStorage, usar dados do banco (originalData)
       if (!contentToLoad && activity.originalData) {
         console.log('🃏 Flash Cards: Usando dados do banco (originalData) como fallback');
         const dbData = activity.originalData.campos || activity.originalData;
@@ -1237,6 +1051,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
               description: dbData.description || 'Atividade criada na plataforma'
             };
             console.log(`✅ Flash Cards: ${validCards.length} cards carregados do banco de dados`);
+            // REMOVIDO: setFlashCardsContent(contentToLoad) - causa loop infinito se chamado durante render
           }
         }
       }
@@ -1245,179 +1060,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('ℹ️ Nenhum conteúdo específico encontrado para Flash Cards. Usando dados gerais.');
       }
     }
-    // 4. Plano de Aula (com fallback para store e originalData)
-    else if (activityType === 'plano-aula') {
-      console.log('📚 ActivityViewModal: Processando Plano de Aula');
-      
-      // PRIORIDADE 1: Verificar localStorage com hasFullDataInStore check
-      const planoContent = localStorage.getItem(`constructed_plano-aula_${activity.id}`);
-      if (planoContent) {
-        try {
-          const parsedContent = JSON.parse(planoContent);
-          
-          // VERIFICAÇÃO: Se localStorage tem apenas metadados leves, buscar da store Zustand
-          if (parsedContent.hasFullDataInStore === true) {
-            console.log('📦 Plano de Aula: localStorage tem metadados leves, buscando da store Zustand...');
-            const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-            if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-              const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-              if (fullData.objetivos || fullData.metodologia || fullData.desenvolvimento) {
-                contentToLoad = {
-                  ...previewData,
-                  ...fullData,
-                  id: activity.id,
-                  type: activityType,
-                  title: fullData.titulo || fullData.title || previewData.title,
-                  tema: fullData.tema || fullData['Tema ou Tópico Central'] || previewData.tema,
-                  disciplina: fullData.disciplina || fullData['Componente Curricular'] || previewData.disciplina,
-                  ano_escolar: fullData.ano_escolar || fullData['Ano Escolar'] || previewData.ano_escolar,
-                  duracao: fullData.duracao || fullData['Duração da Aula'] || previewData.duracao
-                };
-                console.log(`✅ Plano de Aula: Dados carregados da store Zustand`);
-              }
-            }
-          } else {
-            // Dados completos no localStorage
-            const data = parsedContent.data || parsedContent;
-            if (data.objetivos || data.metodologia || data.desenvolvimento) {
-              contentToLoad = { ...previewData, ...data };
-              console.log(`✅ Plano de Aula: Dados carregados do localStorage`);
-            }
-          }
-        } catch (e) {
-          console.warn('⚠️ Erro ao processar constructed_plano-aula:', e);
-        }
-      }
-      
-      // PRIORIDADE 2: Tentar outras chaves do localStorage
-      if (!contentToLoad) {
-        const planoCacheKeys = [
-          `activity_${activity.id}`,
-          `schoolpower_plano-aula_content`,
-          `activity_fields_${activity.id}`
-        ];
-        
-        for (const key of planoCacheKeys) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            try {
-              const parsedData = JSON.parse(data);
-              if (parsedData.objetivos || parsedData.metodologia || parsedData.desenvolvimento) {
-                contentToLoad = { ...previewData, ...parsedData };
-                console.log(`✅ Plano de Aula: Dados encontrados em ${key}`);
-                break;
-              }
-            } catch (error) {
-              console.warn(`⚠️ Erro ao parsear dados de ${key}:`, error);
-            }
-          }
-        }
-      }
-      
-      // PRIORIDADE 3: Buscar dados da store Zustand (fallback)
-      if (!contentToLoad) {
-        console.log('📦 Plano de Aula: Buscando dados da store Zustand como fallback...');
-        const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-        if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-          const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-          if (fullData.objetivos || fullData.metodologia || fullData.desenvolvimento) {
-            contentToLoad = {
-              ...previewData,
-              ...fullData,
-              id: activity.id,
-              type: activityType
-            };
-            console.log(`✅ Plano de Aula: Dados carregados da store Zustand (fallback)`);
-          }
-        }
-      }
-      
-      // PRIORIDADE 4: Fallback para originalData (banco de dados)
-      if (!contentToLoad && activity.originalData) {
-        console.log('📊 Plano de Aula: Usando dados do banco (originalData) como fallback');
-        const dbData = activity.originalData.campos || activity.originalData;
-        
-        if (dbData && (dbData.objetivos || dbData.metodologia || dbData.desenvolvimento)) {
-          contentToLoad = {
-            ...previewData,
-            ...dbData,
-            id: activity.id,
-            type: activityType,
-            title: dbData.title || activity.originalData.titulo || 'Plano de Aula',
-            description: dbData.description || 'Atividade criada na plataforma'
-          };
-          console.log(`✅ Plano de Aula: Dados carregados do banco de dados`);
-        }
-      }
-      
-      if (!contentToLoad) {
-        console.log('ℹ️ Nenhum conteúdo específico encontrado para Plano de Aula. Usando dados gerais.');
-      }
-    }
-    // 5. Lista de Exercícios (com filtro de exclusão e fallback para store)
+    // 4. Lista de Exercícios (com filtro de exclusão)
     else if (activityType === 'lista-exercicios') {
-      // FALLBACK PARA STORE: Se previewData não tem questões, tentar buscar da store Zustand
-      if ((!previewData.questoes || previewData.questoes.length === 0) && 
-          (!previewData.questions || previewData.questions.length === 0)) {
-        console.log('📦 Lista de Exercícios: previewData sem questões, buscando da store Zustand...');
-        
-        // Tentar localStorage primeiro
-        const listaContent = localStorage.getItem(`constructed_lista-exercicios_${activity.id}`);
-        if (listaContent) {
-          try {
-            const parsedContent = JSON.parse(listaContent);
-            
-            // Se localStorage tem metadados leves, buscar da store
-            if (parsedContent.hasFullDataInStore === true) {
-              const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-              if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-                const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-                if (fullData.questoes && Array.isArray(fullData.questoes) && fullData.questoes.length > 0) {
-                  previewData.questoes = fullData.questoes;
-                  console.log(`✅ Lista de Exercícios: ${fullData.questoes.length} questões carregadas da store Zustand`);
-                }
-              }
-            } else {
-              // Dados completos no localStorage
-              const data = parsedContent.data || parsedContent;
-              if (data.questoes && Array.isArray(data.questoes) && data.questoes.length > 0) {
-                previewData.questoes = data.questoes;
-                console.log(`✅ Lista de Exercícios: ${data.questoes.length} questões carregadas do localStorage`);
-              }
-            }
-          } catch (e) {
-            console.warn('⚠️ Erro ao parsear localStorage para Lista de Exercícios:', e);
-          }
-        }
-        
-        // Se ainda não tem questões, tentar store diretamente
-        if (!previewData.questoes || previewData.questoes.length === 0) {
-          const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-          if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-            const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-            if (fullData.questoes && Array.isArray(fullData.questoes) && fullData.questoes.length > 0) {
-              previewData.questoes = fullData.questoes;
-              console.log(`✅ Lista de Exercícios: ${fullData.questoes.length} questões carregadas da store (fallback direto)`);
-            }
-          }
-        }
-        
-        // FALLBACK 3: Se ainda não tem questões, usar dados do banco (originalData)
-        if (!previewData.questoes || previewData.questoes.length === 0) {
-          if (activity.originalData) {
-            console.log('📊 Lista de Exercícios: Usando dados do banco (originalData) como fallback');
-            const dbData = activity.originalData.campos || activity.originalData;
-            
-            if (dbData && dbData.questoes && Array.isArray(dbData.questoes) && dbData.questoes.length > 0) {
-              previewData.questoes = dbData.questoes;
-              previewData.title = dbData.title || activity.originalData.titulo || previewData.title;
-              previewData.description = dbData.description || previewData.description;
-              console.log(`✅ Lista de Exercícios: ${dbData.questoes.length} questões carregadas do banco de dados`);
-            }
-          }
-        }
-      }
-      
       try {
         const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
         if (deletedQuestionsJson) {
@@ -1456,78 +1100,38 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     else if (activityType === 'sequencia-didatica') {
       console.log('📚 ActivityViewModal: Processando Sequência Didática');
 
-      // PRIORIDADE 1: Verificar localStorage com hasFullDataInStore check
-      const sequenciaMainContent = localStorage.getItem(`constructed_sequencia-didatica_${activity.id}`);
-      if (sequenciaMainContent) {
-        try {
-          const parsedContent = JSON.parse(sequenciaMainContent);
-          
-          // VERIFICAÇÃO: Se localStorage tem apenas metadados leves, buscar da store Zustand
-          if (parsedContent.hasFullDataInStore === true) {
-            console.log('📦 Sequência Didática: localStorage tem metadados leves, buscando da store Zustand...');
-            const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-            if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-              const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-              if (fullData.aulas || fullData.sequenciaDidatica || fullData.cronograma) {
-                contentToLoad = {
-                  ...previewData,
-                  ...fullData,
-                  id: activity.id,
-                  type: activityType,
-                  sequenciaDidatica: fullData.sequenciaDidatica || fullData,
-                  metadados: {
-                    totalAulas: fullData.quantidadeAulas || fullData.aulas?.length || 0,
-                    totalDiagnosticos: fullData.quantidadeDiagnosticos || 0,
-                    totalAvaliacoes: fullData.quantidadeAvaliacoes || 0,
-                    isGeneratedByAI: true,
-                    generatedAt: new Date().toISOString()
-                  }
-                };
-                console.log(`✅ Sequência Didática: Dados carregados da store Zustand`);
-              }
+      // Verificar múltiplas fontes de dados em ordem de prioridade
+      const sequenciaCacheKeys = [
+        `constructed_sequencia-didatica_${activity.id}`,
+        `schoolpower_sequencia-didatica_content`,
+        `activity_${activity.id}`,
+        `activity_fields_${activity.id}`
+      ];
+
+      let sequenciaContent = null;
+      for (const key of sequenciaCacheKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            const parsedData = JSON.parse(data);
+            // Verificar se tem estrutura válida de sequência didática
+            if (parsedData.sequenciaDidatica ||
+                parsedData.aulas ||
+                parsedData.diagnosticos ||
+                parsedData.avaliacoes ||
+                parsedData.data?.sequenciaDidatica ||
+                parsedData.success) {
+              sequenciaContent = parsedData;
+              console.log(`✅ Dados da Sequência Didática encontrados em ${key}:`, parsedData);
+              break;
             }
+          } catch (error) {
+            console.warn(`⚠️ Erro ao parsear dados de ${key}:`, error);
           }
-        } catch (e) {
-          console.warn('⚠️ Erro ao processar constructed_sequencia-didatica:', e);
         }
       }
 
-      // PRIORIDADE 2: Verificar múltiplas fontes de dados em ordem de prioridade
-      if (!contentToLoad) {
-        const sequenciaCacheKeys = [
-          `constructed_sequencia-didatica_${activity.id}`,
-          `schoolpower_sequencia-didatica_content`,
-          `activity_${activity.id}`,
-          `activity_fields_${activity.id}`
-        ];
-
-        let sequenciaContent = null;
-        for (const key of sequenciaCacheKeys) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            try {
-              const parsedData = JSON.parse(data);
-              // Pular se já foi verificado acima e tem hasFullDataInStore
-              if (parsedData.hasFullDataInStore === true) continue;
-              
-              // Verificar se tem estrutura válida de sequência didática
-              if (parsedData.sequenciaDidatica ||
-                  parsedData.aulas ||
-                  parsedData.diagnosticos ||
-                  parsedData.avaliacoes ||
-                  parsedData.data?.sequenciaDidatica ||
-                  parsedData.success) {
-                sequenciaContent = parsedData;
-                console.log(`✅ Dados da Sequência Didática encontrados em ${key}:`, parsedData);
-                break;
-              }
-            } catch (error) {
-              console.warn(`⚠️ Erro ao parsear dados de ${key}:`, error);
-            }
-          }
-        }
-
-        if (sequenciaContent) {
+      if (sequenciaContent) {
         // Processar dados de acordo com a estrutura encontrada
         let processedData = sequenciaContent;
 
@@ -1566,7 +1170,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           }
         };
         console.log('📚 Dados da Sequência Didática processados para visualização:', contentToLoad);
-        }
       }
       
       // FALLBACK: Se não encontrou no localStorage, usar dados do banco (originalData)
