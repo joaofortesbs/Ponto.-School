@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { storageSet, safeSetJSON } from '@/features/schoolpower/services/StorageOrchestrator';
 
 interface TeseRedacaoContent {
   title: string;
@@ -331,9 +330,9 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
       };
 
       // Salvar em múltiplas chaves para garantir persistência
-      storageSet(`tese_redacao_results_${activityId}`, dataToSave, { activityType: 'tese-redacao' });
-      storageSet(`activity_${activityId}_results`, dataToSave, { activityType: 'tese-redacao' });
-      safeSetJSON(`tese_redacao_latest_results`, dataToSave);
+      localStorage.setItem(`tese_redacao_results_${activityId}`, JSON.stringify(dataToSave));
+      localStorage.setItem(`activity_${activityId}_results`, JSON.stringify(dataToSave));
+      localStorage.setItem(`tese_redacao_latest_results`, JSON.stringify(dataToSave));
 
       console.log('💾 [Storage] Resultados salvos com sucesso em 3 chaves diferentes');
       console.log('📊 [Storage] Pontuação total:', feedbackData.pontuacaoTotal);
@@ -398,9 +397,9 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
       };
 
       // Salvar em múltiplas chaves
-      storageSet(`tese_redacao_results_${activityId}`, dataToSave, { activityType: 'tese-redacao' });
-      storageSet(`activity_${activityId}_results`, dataToSave, { activityType: 'tese-redacao' });
-      safeSetJSON(`tese_redacao_latest_results`, dataToSave);
+      localStorage.setItem(`tese_redacao_results_${activityId}`, JSON.stringify(dataToSave));
+      localStorage.setItem(`activity_${activityId}_results`, JSON.stringify(dataToSave));
+      localStorage.setItem(`tese_redacao_latest_results`, JSON.stringify(dataToSave));
 
       console.log('💾 [Storage] Fallback salvo com sucesso');
     } finally {
@@ -593,7 +592,7 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
                         etapa: 'etapa1',
                         savedAt: new Date().toISOString()
                       };
-                      safeSetJSON(progressKey, progressData);
+                      localStorage.setItem(progressKey, JSON.stringify(progressData));
                       console.log('💾 [TeseRedacao] Tese do usuário salva');
                     } catch (error) {
                       console.error('❌ [TeseRedacao] Erro ao salvar progresso:', error);

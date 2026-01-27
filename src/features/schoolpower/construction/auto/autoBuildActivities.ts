@@ -21,7 +21,6 @@ import { generateActivityContent } from '../api/generateActivityContent';
 import { getActivityDataFromPlan } from '../utils/getActivityDataFromPlan';
 import { ActivityFormData } from '../types/ActivityTypes';
 import { useChosenActivitiesStore, ChosenActivity } from '../../interface-chat-producao/stores/ChosenActivitiesStore';
-import { storageSet, storageGet, storageSetJSON, safeSetItem, safeSetJSON, isHeavyActivityType } from '@/features/schoolpower/services/StorageOrchestrator';
 
 export interface AutoBuildProgress {
   total: number;
@@ -109,42 +108,28 @@ export const autoBuildActivities = async (
       // 3. Salvar no localStorage com as MESMAS chaves do sistema manual
       // buildActivityFromFormData já salva nas chaves corretas, mas vamos garantir
       const storageKey = `schoolpower_${activityType}_content`;
-      const dataToStore = result.data || result;
-      
-      if (isHeavyActivityType(activityType)) {
-        await storageSet(storageKey, dataToStore, { activityType });
-      } else {
-        safeSetJSON(storageKey, dataToStore);
-      }
+      localStorage.setItem(storageKey, JSON.stringify(result.data || result));
       console.log(`💾 [AutoBuild] Salvo em: ${storageKey}`);
 
       // 4. Salvar chave específica para visualização (todos os tipos)
       const viewStorageKey = `constructed_${activityType}_${activityId}`;
-      if (isHeavyActivityType(activityType)) {
-        await storageSet(viewStorageKey, dataToStore, { activityType });
-      } else {
-        safeSetJSON(viewStorageKey, dataToStore);
-      }
+      localStorage.setItem(viewStorageKey, JSON.stringify(result.data || result));
       console.log(`💾 [AutoBuild] Salvo para visualização: ${viewStorageKey}`);
 
       // 5. Salvar também com o activity.id original para compatibilidade
       const originalIdKey = `constructed_${activityType}_${activity.id}`;
-      if (isHeavyActivityType(activityType)) {
-        await storageSet(originalIdKey, dataToStore, { activityType });
-      } else {
-        safeSetJSON(originalIdKey, dataToStore);
-      }
+      localStorage.setItem(originalIdKey, JSON.stringify(result.data || result));
       console.log(`💾 [AutoBuild] Salvo com ID original: ${originalIdKey}`);
 
       // 6. Atualizar lista de atividades construídas
       let constructedActivitiesRecord = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       constructedActivitiesRecord[activity.id] = {
-        generatedContent: dataToStore,
+        generatedContent: result.data || result,
         timestamp: new Date().toISOString(),
         activityType: activityType,
         autoBuilt: true
       };
-      safeSetJSON('constructedActivities', constructedActivitiesRecord);
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivitiesRecord));
 
       // 7. Disparar evento de sincronização (mesmo evento do modal)
       window.dispatchEvent(new CustomEvent('activity-data-sync', {

@@ -53,7 +53,6 @@ import { PlanoAulaProcessor } from '../activities/plano-aula/planoAulaProcessor'
 import { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping } from '../activities/sequencia-didatica';
 import { processQuadroInterativoData } from '../activities/quadro-interativo/quadroInterativoProcessor';
 import { processMapaMentalData } from '../activities/mapa-mental/mapaMentalProcessor';
-import { storageSet, safeSetJSON } from '@/features/schoolpower/services/StorageOrchestrator';
 
 // Get activities array from the new JSON structure
 const schoolPowerActivitiesData = (schoolPowerActivitiesRaw as any).atividades || schoolPowerActivitiesRaw;
@@ -1378,7 +1377,7 @@ export function CardDeConstrucao({
       timestamp: Date.now()
     };
 
-    storageSet(autoDataKey, autoData, { activityType: activity.id });
+    localStorage.setItem(autoDataKey, JSON.stringify(autoData));
     console.log('💾 Dados automáticos salvos para:', activity.id);
     console.log('📋 Form data preparado:', processedFormData);
     console.log('🔧 Custom fields salvos:', customFields);
@@ -1535,7 +1534,7 @@ export function CardDeConstrucao({
       const flowData = JSON.parse(localStorage.getItem('schoolPowerFlow') || '{}');
       if (flowData.actionPlan) {
         flowData.actionPlan = newActionPlan;
-        safeSetJSON('schoolPowerFlow', flowData);
+        localStorage.setItem('schoolPowerFlow', JSON.stringify(flowData));
         console.log('✅ Plano de ação data synchronized in localStorage');
       }
     } catch (error) {
@@ -1553,7 +1552,7 @@ export function CardDeConstrucao({
       const flowData = JSON.parse(localStorage.getItem('schoolPowerFlow') || '{}');
       if (flowData.actionPlan) {
         flowData.actionPlan = newActionPlan;
-        safeSetJSON('schoolPowerFlow', flowData);
+        localStorage.setItem('schoolPowerFlow', JSON.stringify(flowData));
         console.log('✅ Activity removed and action plan synchronized in localStorage');
       }
     } catch (error) {

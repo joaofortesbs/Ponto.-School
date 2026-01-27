@@ -37,7 +37,6 @@ import {
   type TextVersionInput 
 } from '../../../../activities/text-version/TextVersionGenerator';
 import { isTextVersionActivity } from '../../../../config/activityVersionConfig';
-import { storageSet, isHeavyActivityType } from '@/features/schoolpower/services/StorageOrchestrator';
 
 interface GerarConteudoParams {
   session_id: string;
@@ -2301,7 +2300,7 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
                 validation: validation,
                 timestamp: new Date().toISOString()
               };
-              await storageSet(storageKey, storageData, { activityType: activity.tipo });
+              localStorage.setItem(storageKey, JSON.stringify(storageData));
               savedKeys.push(storageKey);
             } else {
               console.log(`⚠️ [V2] Pulando generated_content_ para ${activity.tipo} (evitar QuotaExceededError)`);

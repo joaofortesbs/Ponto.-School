@@ -9,8 +9,6 @@
  * FUNÇÃO: Garantir que campos gerados pela IA apareçam corretamente nos modais
  */
 
-import { storageSet, storageGet, storageSetJSON, safeSetItem, safeSetJSON, isHeavyActivityType } from '@/features/schoolpower/services/StorageOrchestrator';
-
 export interface FieldSyncMapping {
   schemaName: string;      // Nome usado no schema/IA
   formDataName: string;    // Nome usado no formData do modal
@@ -476,49 +474,25 @@ export function persistActivityToStorage(
 
     // 1. Salvar em activity_{id} (chave principal para ViewModal)
     const activityKey = `activity_${activityId}`;
-    if (isHeavyActivityType(normalizedType)) {
-      storageSet(activityKey, generatedContent, { activityType: normalizedType }).catch(err => 
-        console.error(`[PERSIST] Error storing ${activityKey}:`, err)
-      );
-    } else {
-      safeSetJSON(activityKey, generatedContent);
-    }
+    localStorage.setItem(activityKey, JSON.stringify(generatedContent));
     savedKeys.push(activityKey);
     console.log(`✅ [PERSIST] Salvo em ${activityKey}`);
 
     // 2. Salvar em constructed_{type}_{id} (novo padrão)
     const constructedKeyWithType = `constructed_${normalizedType}_${activityId}`;
-    if (isHeavyActivityType(normalizedType)) {
-      storageSet(constructedKeyWithType, constructedData, { activityType: normalizedType }).catch(err => 
-        console.error(`[PERSIST] Error storing ${constructedKeyWithType}:`, err)
-      );
-    } else {
-      safeSetJSON(constructedKeyWithType, constructedData);
-    }
+    localStorage.setItem(constructedKeyWithType, JSON.stringify(constructedData));
     savedKeys.push(constructedKeyWithType);
     console.log(`✅ [PERSIST] Salvo em ${constructedKeyWithType}`);
 
     // 3. Salvar em constructed_{id} (legacy)
     const constructedKeySimple = `constructed_${activityId}`;
-    if (isHeavyActivityType(normalizedType)) {
-      storageSet(constructedKeySimple, constructedData, { activityType: normalizedType }).catch(err => 
-        console.error(`[PERSIST] Error storing ${constructedKeySimple}:`, err)
-      );
-    } else {
-      safeSetJSON(constructedKeySimple, constructedData);
-    }
+    localStorage.setItem(constructedKeySimple, JSON.stringify(constructedData));
     savedKeys.push(constructedKeySimple);
     console.log(`✅ [PERSIST] Salvo em ${constructedKeySimple}`);
 
     // 4. Salvar em generated_content_{id} (compatibilidade com useActivityAutoLoad)
     const generatedContentKey = `generated_content_${activityId}`;
-    if (isHeavyActivityType(normalizedType)) {
-      storageSet(generatedContentKey, fields, { activityType: normalizedType }).catch(err => 
-        console.error(`[PERSIST] Error storing ${generatedContentKey}:`, err)
-      );
-    } else {
-      safeSetJSON(generatedContentKey, fields);
-    }
+    localStorage.setItem(generatedContentKey, JSON.stringify(fields));
     savedKeys.push(generatedContentKey);
     console.log(`✅ [PERSIST] Salvo em ${generatedContentKey}`);
 
@@ -532,7 +506,7 @@ export function persistActivityToStorage(
       isPreGenerated: metadata?.isPreGenerated ?? true,
       type: normalizedType
     };
-    safeSetJSON('constructedActivities', constructedActivities);
+    localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
     savedKeys.push('constructedActivities');
     console.log(`✅ [PERSIST] Atualizado constructedActivities global`);
 

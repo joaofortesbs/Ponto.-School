@@ -3,8 +3,6 @@
  * e coleta de contexto para geração via IA
  */
 
-import { storageSet, storageGet } from '@/features/schoolpower/services/StorageOrchestrator';
-
 export interface ContextoPlanoCompleto {
   // Dados básicos
   id?: string;
@@ -86,7 +84,7 @@ export class DesenvolvimentoIntegrator {
   /**
    * Processa e salva dados do desenvolvimento do plano de aula
    */
-  static async processarDados(planoData: any, planoId: string): Promise<DesenvolvimentoData> {
+  static processarDados(planoData: any, planoId: string): DesenvolvimentoData {
     console.log('🚀 Processando dados de desenvolvimento...');
 
     const desenvolvimentoData: DesenvolvimentoData = {
@@ -99,7 +97,7 @@ export class DesenvolvimentoIntegrator {
     };
 
     // Salvar dados processados
-    await this.salvarDados(planoId, desenvolvimentoData);
+    this.salvarDados(planoId, desenvolvimentoData);
 
     // Notificar listeners sobre a mudança
     this.notifyListeners(desenvolvimentoData);
@@ -113,14 +111,15 @@ export class DesenvolvimentoIntegrator {
   }
 
   /**
-   * Carrega dados de desenvolvimento do StorageOrchestrator
+   * Carrega dados de desenvolvimento do localStorage
    */
-  static async carregarDados(planoId: string): Promise<DesenvolvimentoData | null> {
+  static carregarDados(planoId: string): DesenvolvimentoData | null {
     try {
-      const data = await storageGet<DesenvolvimentoData>(`${this.STORAGE_KEY}_${planoId}`);
+      const data = localStorage.getItem(`${this.STORAGE_KEY}_${planoId}`);
       if (data) {
-        console.log('💾 Dados de desenvolvimento carregados:', data);
-        return data;
+        const parsedData: DesenvolvimentoData = JSON.parse(data);
+        console.log('💾 Dados de desenvolvimento carregados:', parsedData);
+        return parsedData;
       }
     } catch (error) {
       console.error('❌ Erro ao carregar dados de desenvolvimento:', error);
@@ -129,12 +128,12 @@ export class DesenvolvimentoIntegrator {
   }
 
   /**
-   * Salva dados de desenvolvimento no StorageOrchestrator
+   * Salva dados de desenvolvimento no localStorage
    */
-  private static async salvarDados(planoId: string, data: DesenvolvimentoData): Promise<void> {
+  private static salvarDados(planoId: string, data: DesenvolvimentoData): void {
     try {
-      const result = await storageSet(`${this.STORAGE_KEY}_${planoId}`, data, { activityType: 'plano-aula' });
-      console.log('💾 Dados de desenvolvimento salvos:', { planoId, layer: result.layer });
+      localStorage.setItem(`${this.STORAGE_KEY}_${planoId}`, JSON.stringify(data));
+      console.log('💾 Dados de desenvolvimento salvos:', { planoId });
     } catch (error) {
       console.error('❌ Erro ao salvar dados de desenvolvimento:', error);
     }
@@ -331,7 +330,7 @@ export class DesenvolvimentoIntegrator {
   /**
    * Sincroniza dados com outras seções do plano de aula
    */
-  static async sincronizarComOutrasSecoes(desenvolvimentoData: any, planoId: string): Promise<void> {
+  static sincronizarComOutrasSecoes(desenvolvimentoData: any, planoId: string): void {
     console.log('🔗 DesenvolvimentoIntegrator: Sincronizando com outras seções');
 
     // Sincronizar com a seção de Atividades
@@ -346,11 +345,11 @@ export class DesenvolvimentoIntegrator {
 
     // Salvar dados para outras seções acessarem
     try {
-      await storageSet(`plano_desenvolvimento_${planoId}`, {
+      localStorage.setItem(`plano_desenvolvimento_${planoId}`, JSON.stringify({
         data: desenvolvimentoData,
         timestamp: new Date().toISOString(),
         planoId
-      }, { activityType: 'plano-aula' });
+      }));
 
       console.log('✅ DesenvolvimentoIntegrator: Dados sincronizados com outras seções');
     } catch (error) {
@@ -412,7 +411,7 @@ export class DesenvolvimentoIntegrator {
   /**
    * Salva dados de contexto para debug e auditoria
    */
-  static async salvarContextoDebug(contexto: ContextoPlanoCompleto, planoId: string): Promise<void> {
+  static salvarContextoDebug(contexto: ContextoPlanoCompleto, planoId: string): void {
     try {
       const debugData = {
         contexto,
@@ -420,7 +419,7 @@ export class DesenvolvimentoIntegrator {
         planoId
       };
 
-      await storageSet(`debug_contexto_${planoId}`, debugData, { activityType: 'plano-aula' });
+      localStorage.setItem(`debug_contexto_${planoId}`, JSON.stringify(debugData));
       console.log('🐛 Contexto salvo para debug:', `debug_contexto_${planoId}`);
 
     } catch (error) {
