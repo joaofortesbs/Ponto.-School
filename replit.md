@@ -36,6 +36,11 @@ The platform features a modern design with glass-morphism effects, blur backgrou
       - Heavy activity types (quiz-interativo, flash-cards, lista-exercicios, plano-aula, sequencia-didatica) automatically route to IndexedDB
       - API: `storageSet(key, data, { activityType })`, `storageGet<T>(key)`, `safeSetJSON()`, `initGlobalStorageGuard()`
     - **Activity Version System**: Dual-version system categorizing activities into Interactive (fully functional UI) and Text Version (content delivered as formatted text) for various activity types, with robust AI response parsing and professional 6-section fallback content generation.
+    - **Flash Cards Data Flow (Fixed Jan 2026)**: Complete data propagation system for Flash Cards:
+      - `buildActivityHelper.ts`: Extracts actual data from wrapper objects (`result.data || result`) before saving
+      - Saves complete cards array to localStorage at `constructed_flash-cards_{id}`
+      - Dispatches `activity-data-sync` event with full cards data for instant UI sync
+      - Fallback chain in `ActivityViewModal`: localStorage → Zustand store (when `hasFullDataInStore` flag) → originalData (database)
     - **Study Groups**: Real-time chat and member management.
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.
