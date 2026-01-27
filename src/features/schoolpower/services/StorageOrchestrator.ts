@@ -99,31 +99,8 @@ function getDataSize(data: unknown): number {
   }
 }
 
-function compressData(data: string): string {
-  try {
-    const encoder = new TextEncoder();
-    const bytes = encoder.encode(data);
-    const base64 = btoa(String.fromCharCode(...bytes));
-    return `__COMPRESSED__${base64}`;
-  } catch {
-    return data;
-  }
-}
-
-function decompressData(data: string): string {
-  if (!data.startsWith('__COMPRESSED__')) return data;
-  try {
-    const base64 = data.slice(14);
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return new TextDecoder().decode(bytes);
-  } catch {
-    return data;
-  }
-}
+// Note: Real compression would require a library like lz-string
+// For now, we rely on IndexedDB for large data instead of compression
 
 export function isHeavyActivityType(type: string): boolean {
   const heavyTypes = [
@@ -583,5 +560,95 @@ setInterval(async () => {
     await performGarbageCollection();
   }
 }, 5 * 60 * 1000);
+
+// GLOBAL GUARD: Intercept localStorage.setItem to prevent quota errors
+const GUARD_SIZE_THRESHOLD = 100 * 1024; // 100KB
+const originalSetItem = localStorage.setItem.bind(localStorage);
+let guardInitialized = false;
+
+export function initGlobalStorageGuard(): void {
+  if (guardInitialized) return;
+  guardInitialized = true;
+  
+  localStorage.setItem = function(key: string, value: string): void {
+    const size = value.length * 2;
+    
+    // Check if this is activity-related data that should go to IndexedDB
+    const isActivityData = 
+      key.includes('activity') ||
+      key.includes('constructed') ||
+      key.includes('quiz') ||
+      key.includes('flash') ||
+      key.includes('plano') ||
+      key.includes('lista') ||
+      key.includes('sequencia') ||
+      key.includes('generated');
+    
+    // For large activity data, route to IndexedDB
+    if (size > GUARD_SIZE_THRESHOLD && isActivityData) {
+      console.log(`[StorageOrchestrator] Guard intercepted large data: ${key} (${Math.round(size/1024)}KB) -> IndexedDB`);
+      
+      try {
+        const parsedData = JSON.parse(value);
+        const activityType = extractActivityType(key);
+        storageSet(key, parsedData, { activityType }).catch((err) => {
+          console.error('[StorageOrchestrator] IndexedDB fallback failed:', err);
+        });
+        
+        // Store only a reference in localStorage
+        const reference = JSON.stringify({
+          __storage_ref__: true,
+          layer: 'indexeddb',
+          timestamp: Date.now(),
+          size
+        });
+        
+        try {
+          originalSetItem(key, reference);
+        } catch {
+          // localStorage full, reference not saved but data is in IndexedDB
+        }
+        return;
+      } catch {
+        // Not JSON, proceed with original but with error handling
+      }
+    }
+    
+    // Normal path: try localStorage with quota protection
+    try {
+      originalSetItem(key, value);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.warn(`[StorageOrchestrator] Guard caught QuotaExceededError for ${key}`);
+        
+        // Emergency cleanup
+        performEmergencyCleanup();
+        
+        // Retry once
+        try {
+          originalSetItem(key, value);
+        } catch {
+          // If still failing, try IndexedDB for large data
+          if (size > 10000) {
+            try {
+              const parsedData = JSON.parse(value);
+              storageSet(key, parsedData).catch(console.error);
+              console.log(`[StorageOrchestrator] Guard redirected to IndexedDB after quota error: ${key}`);
+            } catch {
+              console.error(`[StorageOrchestrator] Failed to save ${key} - data may be lost`);
+            }
+          }
+        }
+      } else {
+        throw error;
+      }
+    }
+  };
+  
+  console.log('[StorageOrchestrator] Global storage guard installed');
+}
+
+// Auto-initialize guard
+initGlobalStorageGuard();
 
 console.log('[StorageOrchestrator] Enterprise Storage System initialized');
