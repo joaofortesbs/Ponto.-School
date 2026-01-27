@@ -40,7 +40,9 @@ The platform features a modern design with glass-morphism effects, blur backgrou
       - `buildActivityHelper.ts`: Extracts actual data from wrapper objects (`result.data || result`) before saving
       - Saves complete cards array to localStorage at `constructed_flash-cards_{id}`
       - Dispatches `activity-data-sync` event with full cards data for instant UI sync
-      - Fallback chain in `ActivityViewModal`: localStorage → Zustand store (when `hasFullDataInStore` flag) → originalData (database)
+      - `autoBuildActivities.ts`: Now calls BOTH `setActivityGeneratedFields` AND `setActivityBuiltData` to ensure data is available in multiple paths
+      - Fallback chain in `ActivityViewModal`: localStorage → Zustand store (multi-path: `generated_fields` → `dados_construidos` → `campos_preenchidos`) → originalData (database)
+      - ROOT CAUSE FIX: Previously data was saved to `dados_construidos` root but searched in `dados_construidos.generated_fields` - now both paths are populated and searched
     - **Study Groups**: Real-time chat and member management.
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.
