@@ -110,6 +110,100 @@ function sleep(ms: number): Promise<void> {
 }
 
 // ============================================================
+// HELPERS: Inferência e Geração de Valores Padrão
+// Usados quando o input do usuário é vago/incompleto
+// ============================================================
+
+function inferSubjectFromObjective(objective: string): string {
+  if (!objective) return 'Não especificada';
+  
+  const lowercaseObj = objective.toLowerCase();
+  
+  const subjectPatterns: Record<string, string[]> = {
+    'Matemática': ['matemática', 'matemat', 'cálculo', 'álgebra', 'geometria', 'equação', 'fração', 'número', 'conta', 'porcentagem'],
+    'Língua Portuguesa': ['português', 'redação', 'gramática', 'texto', 'leitura', 'escrita', 'literatura', 'ortografia', 'verbo', 'substantivo'],
+    'Ciências': ['ciência', 'biologia', 'física', 'química', 'natureza', 'experimento', 'célula', 'átomo', 'energia'],
+    'História': ['história', 'histórico', 'revolução', 'guerra', 'período', 'civilização', 'século', 'era'],
+    'Geografia': ['geografia', 'geográfico', 'mapa', 'país', 'continente', 'clima', 'relevo', 'população'],
+    'Arte': ['arte', 'artístico', 'pintura', 'música', 'desenho', 'escultura', 'teatro'],
+    'Educação Física': ['educação física', 'esporte', 'exercício', 'movimento', 'jogo', 'atividade física'],
+    'Inglês': ['inglês', 'english', 'vocabulary', 'grammar']
+  };
+  
+  for (const [subject, patterns] of Object.entries(subjectPatterns)) {
+    if (patterns.some(p => lowercaseObj.includes(p))) {
+      return subject;
+    }
+  }
+  
+  return 'Não especificada';
+}
+
+function generateThemeFromObjective(objective: string, subject: string): string {
+  if (!objective || objective.length < 5) {
+    // Temas padrão por disciplina
+    const defaultThemes: Record<string, string> = {
+      'Matemática': 'Operações com Números Inteiros',
+      'Língua Portuguesa': 'Interpretação de Textos',
+      'Ciências': 'O Corpo Humano e seus Sistemas',
+      'História': 'As Grandes Civilizações Antigas',
+      'Geografia': 'Aspectos Físicos do Brasil',
+      'Arte': 'Expressão Artística Contemporânea',
+      'Educação Física': 'Jogos Cooperativos',
+      'Inglês': 'Basic Vocabulary and Expressions'
+    };
+    return defaultThemes[subject] || 'Tema a ser definido';
+  }
+  
+  // Limpar e formatar o objetivo como tema
+  let theme = objective
+    .replace(/^(preciso|quero|gostaria de|criar|fazer|desenvolver)\s+/gi, '')
+    .replace(/^(as|os|a|o|um|uma|uns|umas)\s+/gi, '')
+    .replace(/^próximas?\s+atividades?\s+(de|sobre|para)\s+/gi, '')
+    .trim();
+  
+  // Capitalizar primeira letra
+  theme = theme.charAt(0).toUpperCase() + theme.slice(1);
+  
+  return theme || objective;
+}
+
+function generateDefaultObjectives(theme: string, subject: string): string {
+  return `• Compreender os conceitos fundamentais de ${theme}
+• Aplicar os conhecimentos adquiridos em situações práticas do cotidiano
+• Desenvolver habilidades de análise crítica e resolução de problemas em ${subject}
+• Relacionar os conteúdos aprendidos com outras áreas do conhecimento
+• Participar ativamente das atividades propostas, demonstrando engajamento e colaboração`;
+}
+
+function generateDefaultMaterials(subject: string): string {
+  const baseMaterials = '• Quadro branco e marcadores\n• Projetor multimídia\n• Material impresso (atividades)';
+  
+  const subjectSpecificMaterials: Record<string, string> = {
+    'Matemática': '• Calculadora\n• Régua e compasso\n• Material concreto (blocos lógicos)',
+    'Língua Portuguesa': '• Livros didáticos\n• Dicionários\n• Textos complementares',
+    'Ciências': '• Materiais para experimentos\n• Modelos anatômicos\n• Lupas e microscópios',
+    'História': '• Mapas históricos\n• Imagens e documentos de época\n• Linha do tempo',
+    'Geografia': '• Mapas e globo terrestre\n• Atlas geográfico\n• Imagens de satélite',
+    'Arte': '• Materiais de desenho e pintura\n• Instrumentos musicais\n• Recursos audiovisuais',
+    'Educação Física': '• Bolas e equipamentos esportivos\n• Cones e marcadores\n• Colchonetes'
+  };
+  
+  const specific = subjectSpecificMaterials[subject] || '• Recursos audiovisuais\n• Material de apoio complementar';
+  
+  return `${baseMaterials}\n${specific}`;
+}
+
+function generateDefaultEvaluation(theme: string): string {
+  return `Avaliação contínua através de:
+• Participação e engajamento durante as atividades
+• Exercícios práticos sobre ${theme}
+• Trabalho em grupo com apresentação oral
+• Avaliação escrita ao final da unidade
+• Auto-avaliação reflexiva pelos alunos`;
+}
+
+// ============================================================
 // HELPER: Robust JSON Parser com múltiplas estratégias de fallback
 // ============================================================
 interface JsonParseResult {
@@ -264,7 +358,7 @@ function buildContentGenerationPrompt(
   userObjective: string
 ): string {
   const fieldsDescription = fieldsMapping.requiredFields.map((field, idx) => `
-${idx + 1}. "${field.name}" (${field.label})
+${idx + 1}. "${field.name}" (${field.label}) [OBRIGATÓRIO]
    - Descrição: ${field.description}
    - Tipo: ${field.type}
    ${field.options ? `- Opções válidas: ${field.options.join(', ')}` : ''}
@@ -272,16 +366,61 @@ ${idx + 1}. "${field.name}" (${field.label})
 `).join('');
 
   const optionalFieldsDescription = fieldsMapping.optionalFields?.map((field, idx) => `
-${idx + 1}. "${field.name}" (${field.label})
+${idx + 1}. "${field.name}" (${field.label}) [OPCIONAL - MAS GERE]
    - Descrição: ${field.description}
    - Tipo: ${field.type}
    ${field.options ? `- Opções válidas: ${field.options.join(', ')}` : ''}
 `).join('') || '';
 
-  return `
-# TAREFA: Gerar Conteúdo para Atividade Educacional
+  // Gera valores de exemplo realistas para o template JSON (evitando placeholders literais)
+  const getExampleValueForField = (field: FieldDefinition): string => {
+    if (field.type === 'number') {
+      return field.validation?.min ? String(field.validation.min + 5) : '10';
+    }
+    if (field.type === 'select' && field.options?.length) {
+      return `"${field.options[0]}"`;
+    }
+    // Valores de exemplo realistas para evitar que a IA ecoe placeholders
+    const exampleValues: Record<string, string> = {
+      'subject': 'Matemática',
+      'disciplina': 'Língua Portuguesa',
+      'theme': 'Operações com Frações',
+      'tema': 'Substantivos e Adjetivos',
+      'schoolYear': '7º Ano - Ensino Fundamental',
+      'anoSerie': '6º Ano do Ensino Fundamental',
+      'objectives': 'Compreender os conceitos fundamentais e aplicar em situações práticas do cotidiano',
+      'objetivos': 'Desenvolver habilidades de análise crítica e resolução de problemas',
+      'materials': 'Quadro branco, projetor, material impresso, calculadora',
+      'materiais': 'Livro didático, caderno, lápis, borracha',
+      'context': 'Turma de 25 alunos com conhecimentos básicos na disciplina',
+      'perfilTurma': 'Alunos engajados com interesse em atividades práticas',
+      'tituloTemaAssunto': 'Substantivos Próprios e Comuns',
+      'publicoAlvo': 'Alunos do 6º ano com perfil heterogêneo',
+      'objetivosAprendizagem': 'Identificar e classificar substantivos em textos diversos',
+      'temaRedacao': 'Desafios da mobilidade urbana no Brasil',
+      'objetivo': 'Desenvolver argumentação crítica sobre o tema proposto',
+      'competenciasENEM': 'C1, C2, C3, C4, C5',
+      'contextoAdicional': 'Contexto histórico e social relevante para o tema'
+    };
+    
+    if (exampleValues[field.name]) {
+      return `"${exampleValues[field.name]}"`;
+    }
+    
+    if (field.type === 'textarea') {
+      return `"Conteúdo detalhado sobre ${field.label.toLowerCase()}"`;
+    }
+    return `"Valor para ${field.label}"`;
+  };
+  
+  const allRequiredFields = fieldsMapping.requiredFields.map(f => `    "${f.name}": ${getExampleValueForField(f)}`).join(',\n');
+  const allOptionalFields = fieldsMapping.optionalFields?.map(f => `    "${f.name}": ${getExampleValueForField(f)}`).join(',\n') || '';
+  const allFieldsJson = allOptionalFields ? `${allRequiredFields},\n${allOptionalFields}` : allRequiredFields;
 
-Você é um especialista pedagógico gerando conteúdo detalhado para uma atividade educacional.
+  return `
+# TAREFA: Gerar Conteúdo Completo para Atividade Educacional
+
+Você é um especialista pedagógico brasileiro gerando conteúdo detalhado para uma atividade educacional.
 
 ## CONTEXTO COMPLETO DA CONVERSA
 ${conversationContext}
@@ -296,42 +435,57 @@ ${userObjective}
 - **Categoria**: ${activity.categoria || 'Não especificada'}
 - **Matéria**: ${activity.materia || 'Não especificada'}
 
-## CAMPOS OBRIGATÓRIOS A GERAR
+## TODOS OS CAMPOS A GERAR (OBRIGATÓRIOS)
 ${fieldsDescription}
 
-${optionalFieldsDescription ? `## CAMPOS OPCIONAIS (gere se relevante)
+${optionalFieldsDescription ? `## CAMPOS OPCIONAIS (GERE TODOS TAMBÉM)
 ${optionalFieldsDescription}` : ''}
 
-## INSTRUÇÕES CRÍTICAS
+## INSTRUÇÕES CRÍTICAS PARA GERAÇÃO DE CONTEÚDO
 
-1. **MANTENHA COERÊNCIA**: Todo conteúdo deve estar alinhado com o objetivo original do usuário
-2. **SEJA ESPECÍFICO**: Gere conteúdo detalhado e pronto para uso, não genérico
-3. **RESPEITE O CONTEXTO**: Use informações da conversa (disciplina, série, tema) 
-4. **QUALIDADE PEDAGÓGICA**: Conteúdo deve ser educacionalmente válido
-5. **CAMPOS SELECT**: Use APENAS as opções listadas
-6. **CAMPOS TEXTAREA**: Gere texto rico e detalhado (mínimo 50 caracteres)
-7. **CAMPOS NUMBER**: Use valores numéricos apropriados (ex: 10, 15, 20)
+### REGRA DE EXPANSÃO DE CONTEXTO
+Se o objetivo do usuário for vago ou curto (ex: "matemática aplicada", "criar atividades"), você DEVE:
+1. Inferir a disciplina mais provável com base no contexto
+2. Sugerir uma série/ano escolar apropriada (padrão: Ensino Fundamental II ou Ensino Médio)
+3. Criar um tema específico e concreto relacionado ao objetivo
+4. Gerar conteúdo rico e detalhado que seria útil para um professor real
+5. Incluir exemplos práticos, metodologias pedagógicas modernas e alinhamento com BNCC
 
-## FORMATO DE RESPOSTA - JSON ESTRITO
+### PADRÕES DE QUALIDADE PARA CADA TIPO DE CAMPO
+1. **CAMPOS TEXT**: Gere texto claro e específico (mínimo 10 caracteres)
+2. **CAMPOS TEXTAREA**: Gere texto RICO E DETALHADO (mínimo 100 caracteres) com:
+   - Múltiplos pontos ou tópicos quando aplicável
+   - Linguagem pedagógica profissional
+   - Exemplos práticos quando relevante
+3. **CAMPOS NUMBER**: Use valores numéricos apropriados (ex: 10, 15, 20)
+4. **CAMPOS SELECT**: Use EXATAMENTE uma das opções listadas
 
-ATENÇÃO: Você DEVE retornar EXATAMENTE este formato JSON. NÃO inclua markdown, comentários, ou texto antes/depois.
-NÃO use aspas simples. Use APENAS aspas duplas para strings.
-NÃO inclua vírgulas após o último campo de um objeto.
+### REGRAS DE COERÊNCIA
+1. **DISCIPLINA**: Se não especificada, infira do contexto (Matemática, Português, Ciências, etc.)
+2. **SÉRIE/ANO**: Se não especificado, use "7º Ano - Ensino Fundamental" como padrão
+3. **TEMA**: Seja específico! Em vez de "matemática", use "Operações com Frações" ou "Equações do 1º Grau"
+4. **OBJETIVOS**: Liste múltiplos objetivos de aprendizagem mensuráveis
+5. **MATERIAIS**: Liste recursos concretos que serão utilizados
+
+## FORMATO DE RESPOSTA - JSON COMPLETO
+
+⚠️ ATENÇÃO MÁXIMA: Você DEVE preencher ABSOLUTAMENTE TODOS os campos listados abaixo.
+Retorne EXATAMENTE este formato JSON com TODOS os campos preenchidos.
 
 {
   "generated_fields": {
-    "${fieldsMapping.requiredFields[0]?.name || 'campo1'}": "valor gerado aqui",
-    "${fieldsMapping.requiredFields[1]?.name || 'campo2'}": "valor gerado aqui"${fieldsMapping.requiredFields.length > 2 ? `,
-    "${fieldsMapping.requiredFields[2]?.name || 'campo3'}": "valor gerado aqui"` : ''}
+${allFieldsJson}
   },
-  "reasoning": "Breve explicação pedagógica"
+  "reasoning": "Breve explicação pedagógica da geração"
 }
 
-⚠️ REGRAS OBRIGATÓRIAS:
-- Retorne APENAS o JSON puro, sem \`\`\`json ou \`\`\` 
+## REGRAS OBRIGATÓRIAS DO JSON
+- Retorne APENAS o JSON puro, sem \`\`\`json ou \`\`\`
 - Todas as strings devem usar aspas duplas (")
 - Números devem ser escritos sem aspas (ex: 10, não "10")
 - NÃO inclua comentários no JSON
+- NÃO deixe NENHUM campo vazio ou com valores placeholder
+- Gere conteúdo REAL e ÚTIL para cada campo
 `.trim();
 }
 
@@ -554,16 +708,63 @@ async function generateContentForActivity(
     );
     
     try {
+      // MELHORIA: Inferir valores padrão quando não especificados
+      const inferredSubject = activity.campos_preenchidos?.subject || 
+                              activity.campos_preenchidos?.disciplina || 
+                              activity.materia || 
+                              inferSubjectFromObjective(userObjective) || 
+                              'Matemática';
+      
+      const inferredSchoolYear = activity.campos_preenchidos?.schoolYear || 
+                                  activity.campos_preenchidos?.serie || 
+                                  '7º Ano - Ensino Fundamental';
+      
+      const inferredTheme = activity.campos_preenchidos?.theme || 
+                            activity.campos_preenchidos?.tema || 
+                            generateThemeFromObjective(userObjective, inferredSubject);
+      
+      const inferredObjectives = activity.campos_preenchidos?.objectives || 
+                                  activity.campos_preenchidos?.objetivos || 
+                                  generateDefaultObjectives(inferredTheme, inferredSubject);
+      
+      const inferredMaterials = activity.campos_preenchidos?.materials || 
+                                activity.campos_preenchidos?.materiais || 
+                                generateDefaultMaterials(inferredSubject);
+      
+      const inferredContext = activity.campos_preenchidos?.context || 
+                              activity.campos_preenchidos?.perfilTurma || 
+                              `Turma de ${inferredSchoolYear} com conhecimentos básicos em ${inferredSubject}`;
+      
+      const inferredCompetencies = activity.campos_preenchidos?.competencies || 
+                                    activity.campos_preenchidos?.habilidadesBNCC || 
+                                    '';
+      
+      const inferredTimeLimit = activity.campos_preenchidos?.timeLimit || 
+                                activity.campos_preenchidos?.tempoLimite || 
+                                activity.campos_preenchidos?.duracao || 
+                                '2 aulas de 50 minutos';
+      
+      const inferredDifficultyLevel = activity.campos_preenchidos?.difficultyLevel || 
+                                      activity.campos_preenchidos?.tipoAula || 
+                                      activity.campos_preenchidos?.metodologia || 
+                                      'Expositiva';
+      
+      const inferredEvaluation = activity.campos_preenchidos?.evaluation || 
+                                  activity.campos_preenchidos?.observacoesProfessor || 
+                                  generateDefaultEvaluation(inferredTheme);
+      
       const textInput: TextVersionInput = {
         activityType: activity.tipo,
         activityId: activity.id,
         context: {
-          tema: activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || userObjective,
-          disciplina: activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina,
-          serie: activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.serie,
-          objetivos: activity.campos_preenchidos?.objectives || activity.campos_preenchidos?.objetivos,
-          metodologia: activity.campos_preenchidos?.tipoAula || activity.campos_preenchidos?.metodologia,
-          duracao: activity.campos_preenchidos?.tempoLimite || activity.campos_preenchidos?.duracao,
+          tema: inferredTheme,
+          disciplina: inferredSubject,
+          serie: inferredSchoolYear,
+          objetivos: inferredObjectives,
+          materiais: inferredMaterials,
+          perfilTurma: inferredContext,
+          metodologia: inferredDifficultyLevel,
+          duracao: inferredTimeLimit,
           description: activity.campos_preenchidos?.description || activity.campos_preenchidos?.descricao,
           ...activity.campos_preenchidos
         },
@@ -581,16 +782,10 @@ async function generateContentForActivity(
         
         storeTextVersionContent(activity.id, activity.tipo, textVersionResult);
         
-        const generatedFields = {
+        // METADADOS DE TEXTO (não são campos do modal, mas necessários para exibição)
+        // Estes campos são armazenados separadamente e usados pelo ContentExtractModal
+        const textVersionMetadata = {
           titulo: activity.titulo || textVersionResult.rawData?.titulo || 'Atividade Gerada',
-          theme: textInput.context.tema,
-          tema: textInput.context.tema,
-          subject: textInput.context.disciplina,
-          disciplina: textInput.context.disciplina,
-          schoolYear: textInput.context.serie,
-          serie: textInput.context.serie,
-          objectives: textInput.context.objetivos,
-          objetivos: textInput.context.objetivos,
           textContent: textVersionResult.textContent,
           sections: textVersionResult.sections,
           versionType: 'text',
@@ -599,13 +794,105 @@ async function generateContentForActivity(
           generatedAt: textVersionResult.generatedAt
         };
         
+        // Mapeamento de campos específicos por tipo de atividade
+        let activityTypeFields: Record<string, any> = {};
+        
+        if (activity.tipo === 'plano-aula') {
+          // CAMPOS DO MODAL PLANO DE AULA - SOMENTE campos conforme ACTIVITY_FIELDS_MAPPING
+          // Required: subject, theme, schoolYear, objectives, materials, context
+          // Optional: competencies, timeLimit, difficultyLevel, evaluation
+          activityTypeFields = {
+            // Campos obrigatórios (exatamente como no schema)
+            subject: inferredSubject,
+            theme: inferredTheme,
+            schoolYear: inferredSchoolYear,
+            objectives: inferredObjectives,
+            materials: inferredMaterials,
+            context: inferredContext,
+            // Campos opcionais (exatamente como no schema)
+            competencies: inferredCompetencies,
+            timeLimit: inferredTimeLimit,
+            difficultyLevel: inferredDifficultyLevel,
+            evaluation: inferredEvaluation,
+          };
+        } else if (activity.tipo === 'sequencia-didatica') {
+          // CAMPOS DO MODAL SEQUÊNCIA DIDÁTICA (conforme ACTIVITY_FIELDS_MAPPING em gerar-conteudo-schema.ts)
+          // Campos obrigatórios: tituloTemaAssunto, anoSerie, disciplina, publicoAlvo, objetivosAprendizagem, quantidadeAulas, quantidadeDiagnosticos, quantidadeAvaliacoes
+          // Campos opcionais: bnccCompetencias, cronograma
+          activityTypeFields = {
+            // Campos obrigatórios
+            tituloTemaAssunto: inferredTheme,
+            anoSerie: inferredSchoolYear,
+            disciplina: inferredSubject,
+            publicoAlvo: `Turma de ${inferredSchoolYear} em ${inferredSubject}, com perfil heterogêneo e conhecimentos prévios básicos. Os alunos demonstram interesse em atividades práticas e colaborativas.`,
+            objetivosAprendizagem: inferredObjectives,
+            quantidadeAulas: Number(activity.campos_preenchidos?.quantidadeAulas) || 4,
+            quantidadeDiagnosticos: Number(activity.campos_preenchidos?.quantidadeDiagnosticos) || 1,
+            quantidadeAvaliacoes: Number(activity.campos_preenchidos?.quantidadeAvaliacoes) || 2,
+            // Campos opcionais
+            bnccCompetencias: inferredCompetencies || '',
+            cronograma: activity.campos_preenchidos?.cronograma || `Aula 1: Introdução ao tema e diagnóstico inicial\nAula 2: Desenvolvimento do conteúdo principal\nAula 3: Atividades práticas e fixação\nAula 4: Avaliação formativa e fechamento`,
+          };
+        } else if (activity.tipo === 'tese-redacao') {
+          // CAMPOS DO MODAL TESE REDAÇÃO - SOMENTE campos conforme ACTIVITY_FIELDS_MAPPING
+          // Required: temaRedacao, objetivo, nivelDificuldade (select), competenciasENEM
+          // Optional: contextoAdicional
+          
+          // Validar nível de dificuldade contra opções válidas do select
+          const validNivelOptions = ['Fundamental', 'Médio', 'ENEM', 'Vestibular'];
+          const userNivel = activity.campos_preenchidos?.nivelDificuldade || '';
+          
+          // Verificar se o valor do usuário corresponde exatamente a uma opção válida
+          let mappedNivelDificuldade = validNivelOptions.find(
+            opt => opt.toLowerCase() === userNivel.toLowerCase()
+          );
+          
+          // Se não corresponder exatamente, tentar inferir
+          if (!mappedNivelDificuldade) {
+            const lowerNivel = userNivel.toLowerCase();
+            if (lowerNivel.includes('fundamental')) {
+              mappedNivelDificuldade = 'Fundamental';
+            } else if (lowerNivel.includes('enem')) {
+              mappedNivelDificuldade = 'ENEM';
+            } else if (lowerNivel.includes('vestibular')) {
+              mappedNivelDificuldade = 'Vestibular';
+            } else {
+              // Padrão se nenhuma correspondência
+              mappedNivelDificuldade = 'Médio';
+            }
+          }
+          
+          activityTypeFields = {
+            // Campos obrigatórios (exatamente como no schema)
+            temaRedacao: inferredTheme,
+            objetivo: inferredObjectives || `Desenvolver uma tese argumentativa sólida sobre "${inferredTheme}", utilizando argumentos coerentes e propondo uma intervenção que respeite os direitos humanos.`,
+            nivelDificuldade: mappedNivelDificuldade,
+            competenciasENEM: inferredCompetencies || 'C1, C2, C3, C4, C5',
+            // Campos opcionais (exatamente como no schema)
+            contextoAdicional: inferredContext || `O tema "${inferredTheme}" é relevante no contexto atual da sociedade brasileira e exige reflexão crítica sobre aspectos sociais, econômicos e culturais.`,
+          };
+        }
+        
+        // Separação clara: campos do schema vs metadados de texto
+        // 1. schema_fields: Campos do ACTIVITY_FIELDS_MAPPING para preencher o modal
+        // 2. text_metadata: Metadados para exibição de texto (não são campos do formulário)
+        const schemaFields = { ...activityTypeFields };
+        
+        // Combinar para backward compatibility (sistema existente espera todos os campos juntos)
+        const generatedFields = {
+          ...schemaFields,           // Campos do ACTIVITY_FIELDS_MAPPING
+          ...textVersionMetadata     // Metadados para exibição de texto
+        };
+        
         createDebugEntry(CAPABILITY_ID, CAPABILITY_NAME, 'info',
-          `[VERSÃO-TEXTO] Geração concluída: ${textVersionResult.sections?.length || 0} seções geradas`,
+          `[VERSÃO-TEXTO] Geração concluída: ${textVersionResult.sections?.length || 0} seções, ${Object.keys(schemaFields).length} campos do schema`,
           'high',
           { 
             correlation_id: correlationId, 
             activity_id: activity.id,
             sections_count: textVersionResult.sections?.length || 0,
+            schema_fields_count: Object.keys(schemaFields).length,
+            schema_fields_keys: Object.keys(schemaFields),
             text_preview: textVersionResult.textContent?.substring(0, 200)
           }
         );
@@ -617,7 +904,7 @@ async function generateContentForActivity(
             type: 'activity_completed',
             activity_id: activity.id,
             activity_title: activity.titulo,
-            message: `Conteúdo em texto gerado com ${textVersionResult.sections?.length || 0} seções`
+            message: `Conteúdo em texto gerado com ${textVersionResult.sections?.length || 0} seções e ${Object.keys(schemaFields).length} campos do modal`
           });
         }
         
@@ -625,6 +912,8 @@ async function generateContentForActivity(
           activity_id: activity.id,
           activity_type: activity.tipo,
           generated_fields: generatedFields,
+          schema_fields: schemaFields,    // Campos separados para sync preciso
+          text_metadata: textVersionMetadata,  // Metadados separados
           success: true
         };
       } else {
