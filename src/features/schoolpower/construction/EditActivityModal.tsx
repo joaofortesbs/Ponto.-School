@@ -41,6 +41,7 @@ import {
 import { processExerciseListWithUnifiedPipeline, UnifiedExerciseListResponse } from '@/features/schoolpower/activities/lista-exercicios/unified-exercise-pipeline';
 import { generateTextVersionContent, storeTextVersionContent, TextVersionInput } from '@/features/schoolpower/activities/text-version/TextVersionGenerator';
 import { isTextVersionActivity } from '@/features/schoolpower/config/activityVersionConfig';
+import { storageSet, storageSetJSON, safeSetJSON, isHeavyActivityType } from '@/features/schoolpower/services/StorageOrchestrator';
 
 
 /**
@@ -810,8 +811,8 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
         data: finalContent
       };
 
-      localStorage.setItem(quizStorageKey, JSON.stringify(storageData));
-      console.log('💾 Quiz Interativo salvo no localStorage:', quizStorageKey);
+      storageSet(quizStorageKey, storageData, { activityType: 'quiz-interativo' });
+      console.log('💾 Quiz Interativo salvo via StorageOrchestrator:', quizStorageKey);
 
       // SINCRONIZAÇÃO ADICIONAL: Salvar também no cache de atividades construídas para modal de visualização
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
@@ -820,7 +821,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
         timestamp: new Date().toISOString(),
         activityType: 'quiz-interativo'
       };
-      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+      safeSetJSON('constructedActivities', constructedActivities);
       console.log('💾 Quiz Interativo sincronizado com cache de atividades construídas');
 
       // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados
@@ -1007,8 +1008,8 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
           activityId: activity?.id
         };
 
-        localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
-        console.log('💾 Flash Cards salvos no localStorage:', flashCardsStorageKey);
+        storageSet(flashCardsStorageKey, storageData, { activityType: 'flash-cards' });
+        console.log('💾 Flash Cards salvos via StorageOrchestrator:', flashCardsStorageKey);
 
         // Sincronização com cache de atividades
         const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
@@ -1017,7 +1018,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
           timestamp: new Date().toISOString(),
           activityType: 'flash-cards'
         };
-        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+        safeSetJSON('constructedActivities', constructedActivities);
 
         // Atualizar estados de forma controlada
         setFlashCardsContent(finalContent);
@@ -1086,7 +1087,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
           isFallback: true
         };
 
-        localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
+        storageSet(flashCardsStorageKey, storageData, { activityType: 'flash-cards' });
 
         const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
         constructedActivities[activity?.id || ''] = {
@@ -1094,7 +1095,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
           timestamp: new Date().toISOString(),
           activityType: 'flash-cards'
         };
-        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+        safeSetJSON('constructedActivities', constructedActivities);
 
         setFlashCardsContent(fallbackContent);
         setGeneratedContent(fallbackContent);
@@ -1154,7 +1155,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
         timestamp: new Date().toISOString(),
         activityType: activityType
       };
-      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+      safeSetJSON('constructedActivities', constructedActivities);
 
       setGeneratedContent(result);
       setBuiltContent(result);
@@ -1218,9 +1219,9 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
           ...data,
           lastSync: new Date().toISOString()
         };
-        localStorage.setItem(key, JSON.stringify(existing));
+        safeSetJSON(key, existing);
       } else {
-        localStorage.setItem(key, JSON.stringify(data));
+        storageSet(key, data, { activityType: activityId.split('_')[0] || 'default' });
       }
     });
 
@@ -1259,11 +1260,11 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
     const storageKey = `activity_${activity?.id}`;
     const viewSyncKey = `activity_view_sync_${activity?.id}`;
     
-    // Salvar dados no localStorage
-    localStorage.setItem(storageKey, JSON.stringify({
+    // Salvar dados via StorageOrchestrator
+    storageSet(storageKey, {
       ...data,
       lastSync: new Date().toISOString()
-    }));
+    }, { activityType: activity?.type || activity?.id || 'default' });
     
     // Disparar evento customizado para sincronização instantânea
     window.dispatchEvent(new CustomEvent('activity-data-sync', {
@@ -1439,7 +1440,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
               syncedToNeon: true,
               neonSyncAt: new Date().toISOString()
             };
-            localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+            safeSetJSON('constructedActivities', constructedActivities);
 
           } else {
             console.warn('⚠️ Erro ao salvar no banco Neon, mantendo apenas no localStorage');
@@ -2473,10 +2474,10 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
 
       console.log('✅ Atividade construída com sucesso:', result);
 
-      // Salvar no localStorage para persistência
+      // Salvar via StorageOrchestrator para persistência
       const storageKey = `constructed_${activityType}_${activity?.id}`;
-      localStorage.setItem(storageKey, JSON.stringify(result));
-      console.log('💾 Dados da sequência didática salvos para visualização:', storageKey);
+      storageSet(storageKey, result, { activityType });
+      console.log('💾 Dados da sequência didática salvos via StorageOrchestrator:', storageKey);
 
       // Trigger específico para Quadro Interativo
       if (activityType === 'quadro-interativo') {
@@ -2490,7 +2491,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
           generatedByModal: true
         };
 
-        localStorage.setItem(`quadro_interativo_data_${activity?.id}`, JSON.stringify(quadroData));
+        storageSet(`quadro_interativo_data_${activity?.id}`, quadroData, { activityType: 'quadro-interativo' });
 
         // Disparar evento customizado para notificar o Preview
         setTimeout(() => {
@@ -2547,10 +2548,10 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
           console.log('📚 [Lista Exercícios] Primeira questão:', JSON.stringify(questoes[0], null, 2));
         }
         
-        // Salvar no localStorage para persistência
-        localStorage.setItem(`lista_exercicios_data_${activity?.id}`, JSON.stringify(result));
+        // Salvar via StorageOrchestrator para persistência
+        storageSet(`lista_exercicios_data_${activity?.id}`, result, { activityType: 'lista-exercicios' });
         
-        console.log('💾 Lista de Exercícios salva no localStorage');
+        console.log('💾 Lista de Exercícios salva via StorageOrchestrator');
       }
 
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
@@ -2559,7 +2560,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
         timestamp: new Date().toISOString(),
         activityType: activityType
       };
-      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+      safeSetJSON('constructedActivities', constructedActivities);
 
       setGeneratedContent(result);
       setBuiltContent(result);
@@ -2669,8 +2670,8 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
       console.log('✅ [Programmatic] Atividade construída:', result);
 
       const storageKey = `constructed_${activityType}_${targetActivity.id}`;
-      localStorage.setItem(storageKey, JSON.stringify(result));
-      console.log('💾 [Programmatic] Salvo em:', storageKey);
+      storageSet(storageKey, result, { activityType });
+      console.log('💾 [Programmatic] Salvo via StorageOrchestrator:', storageKey);
 
       if (activityType === 'quadro-interativo') {
         const quadroData = {
@@ -2679,7 +2680,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
           builtAt: new Date().toISOString(),
           generatedByModal: true
         };
-        localStorage.setItem(`quadro_interativo_data_${targetActivity.id}`, JSON.stringify(quadroData));
+        storageSet(`quadro_interativo_data_${targetActivity.id}`, quadroData, { activityType: 'quadro-interativo' });
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('quadro-interativo-auto-build', {
             detail: { activityId: targetActivity.id, data: quadroData }
@@ -2703,21 +2704,21 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
         timestamp: new Date().toISOString(),
         activityType
       };
-      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+      safeSetJSON('constructedActivities', constructedActivities);
 
       setGeneratedContent(result);
       setBuiltContent(result);
       setIsContentLoaded(true);
 
       const activityStorageKey = `activity_${targetActivity.id}`;
-      localStorage.setItem(activityStorageKey, JSON.stringify({
+      storageSet(activityStorageKey, {
         title: formData.title,
         description: formData.description,
         customFields: { ...targetActivity.customFields, ...formData },
         generatedContent: result,
         formData,
         lastSync: new Date().toISOString()
-      }));
+      }, { activityType });
 
       window.dispatchEvent(new CustomEvent('activity-data-sync', {
         detail: {
