@@ -26,6 +26,12 @@ import { useChosenActivitiesStore } from '../../../../interface-chat-producao/st
 import { useActivityDebugStore } from '../../../../construction/stores/activityDebugStore';
 import { buildActivityFromFormData } from '../../../../construction/services/buildActivityHelper';
 import { syncSchemaToFormData } from '../../../../construction/utils/activity-fields-sync';
+import { 
+  safeSetJSON, 
+  cleanupOldStorage, 
+  getStorageUsagePercent,
+  initLocalStorageManager 
+} from '../../../../services/localStorage-manager';
 
 const CAPABILITY_ID = 'criar_atividade';
 const CONSTRUCTION_DELAY_MS = 300; // Delay menor pois agora há tempo real de API
@@ -407,12 +413,22 @@ Cada atividade terá sua própria chamada de API!
       );
       
       // ═══════════════════════════════════════════════════════════════════════
-      // FASE 5: PERSISTIR NO LOCALSTORAGE E STORE
+      // FASE 5: PERSISTIR NO LOCALSTORAGE E STORE (COM TRATAMENTO DE QUOTA)
       // ═══════════════════════════════════════════════════════════════════════
       activityDebugStore.setProgress(activity.id, 80, 'Persistindo dados...');
       
-      // Salvar em múltiplas chaves do localStorage para máxima compatibilidade
+      // MELHORIA: Verificar uso do localStorage e limpar se necessário ANTES de salvar
+      const storageUsage = getStorageUsagePercent();
+      console.log(`📊 [criar-atividade-v2] localStorage usage: ${storageUsage.toFixed(1)}%`);
+      
+      if (storageUsage > 70) {
+        console.log(`⚠️ [criar-atividade-v2] localStorage acima de 70%, limpando dados antigos...`);
+        cleanupOldStorage();
+      }
+      
+      // Salvar em memória local - O Zustand store é a fonte principal agora
       const storageKeys: string[] = [];
+      let localStorageSuccess = true;
       
       try {
         const dataToStore = {
@@ -423,56 +439,61 @@ Cada atividade terá sua própria chamada de API!
           apiCallDuration
         };
         
-        // Chave principal
+        // OTIMIZAÇÃO: Salvar apenas na chave principal com dados ESSENCIAIS
+        // Evitar duplicação que causa QuotaExceededError
         const primaryKey = `constructed_${activity.tipo}_${activity.id}`;
-        localStorage.setItem(primaryKey, JSON.stringify({ success: true, data: dataToStore }));
-        storageKeys.push(primaryKey);
         
-        // Chave de atividade - APENAS METADADOS LEVES para evitar QuotaExceededError
-        const isHeavyActivity = ['lista-exercicios', 'quiz-interativo', 'flash-cards'].includes(activity.tipo);
-        const activityMetadata = {
-          title: activity.titulo,
-          type: activity.tipo,
-          isBuilt: true,
-          generatedAt: new Date().toISOString(),
-          ...(isHeavyActivity ? {
-            questionsCount: dataToStore?.questoes?.length || dataToStore?.questions?.length || dataToStore?.cards?.length || 0
-          } : {})
-        };
-        const activityKey = `activity_${activity.id}`;
-        localStorage.setItem(activityKey, JSON.stringify(activityMetadata));
-        storageKeys.push(activityKey);
+        // Para atividades pesadas, armazenar apenas metadados no localStorage
+        // Os dados completos ficam na store Zustand
+        const isHeavyActivity = ['lista-exercicios', 'quiz-interativo', 'flash-cards', 'plano-aula', 'sequencia-didatica'].includes(activity.tipo);
         
-        // Chave de conteúdo gerado - APENAS para atividades NÃO pesadas
-        if (!isHeavyActivity) {
-          const generatedKey = `generated_content_${activity.id}`;
-          localStorage.setItem(generatedKey, JSON.stringify(dataToStore));
-          storageKeys.push(generatedKey);
+        if (isHeavyActivity) {
+          // Armazenar apenas referência e metadados leves
+          const lightData = {
+            success: true,
+            activityId: activity.id,
+            activityType: activity.tipo,
+            titulo: activity.titulo,
+            generatedAt: new Date().toISOString(),
+            fieldsCount: Object.keys(contentData).filter(k => !k.startsWith('_')).length,
+            hasFullDataInStore: true
+          };
+          const saved = safeSetJSON(primaryKey, lightData);
+          if (saved) storageKeys.push(primaryKey);
+          localStorageSuccess = saved;
+          console.log(`💾 [criar-atividade-v2] Atividade pesada ${activity.tipo}: salvando metadados leves`);
         } else {
-          console.log(`⚠️ [criar-atividade-v2] Pulando generated_content_ para ${activity.tipo} (evitar quota)`);
+          // Para atividades leves, salvar dados completos
+          const saved = safeSetJSON(primaryKey, { success: true, data: dataToStore });
+          if (saved) storageKeys.push(primaryKey);
+          localStorageSuccess = saved;
         }
         
-        // Atualizar constructedActivities global
-        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-        constructedActivities[activity.id] = {
-          generatedContent: dataToStore,
-          timestamp: new Date().toISOString(),
-          activityType: activity.tipo
-        };
-        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-        storageKeys.push('constructedActivities');
+        // NÃO duplicar em múltiplas chaves - evitar QuotaExceededError
+        // Removendo: activity_{id}, generated_content_{id}
+        // Removendo: constructedActivities global (muito grande)
         
-        activityDebugStore.log(
-          activity.id, 'success', 'LocalStorage',
-          `Dados persistidos em ${storageKeys.length} chaves do localStorage`,
-          { storage_keys: storageKeys }
-        );
+        if (localStorageSuccess) {
+          activityDebugStore.log(
+            activity.id, 'success', 'LocalStorage',
+            `Dados persistidos com sucesso (${storageKeys.length} chave${storageKeys.length > 1 ? 's' : ''})`,
+            { storage_keys: storageKeys, is_heavy: isHeavyActivity }
+          );
+        } else {
+          activityDebugStore.log(
+            activity.id, 'warning', 'LocalStorage',
+            `localStorage cheio - dados mantidos apenas na memória (store Zustand)`,
+            { storage_keys: [], fallback: 'zustand_store' }
+          );
+        }
         
       } catch (storageError: any) {
+        localStorageSuccess = false;
+        console.warn(`⚠️ [criar-atividade-v2] Erro no localStorage (usando fallback):`, storageError.message);
         activityDebugStore.log(
-          activity.id, 'error', 'LocalStorage',
-          `Erro ao persistir: ${storageError.message}`,
-          { error: storageError.message }
+          activity.id, 'warning', 'LocalStorage',
+          `Usando fallback para memória: ${storageError.message}`,
+          { error: storageError.message, fallback: 'zustand_store' }
         );
       }
       

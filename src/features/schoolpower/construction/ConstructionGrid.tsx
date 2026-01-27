@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Zap, Loader2, CheckCircle, AlertCircle, Building2, History, ArrowLeft, Save } from 'lucide-react';
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
+import { storageSet, safeSetJSON } from '@/features/schoolpower/services/StorageOrchestrator';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
@@ -260,7 +261,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
                 ...constructedActivities[activityId],
                 codigoUnico: codigoUnico
               };
-              localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+              storageSet('constructedActivities', constructedActivities, { activityType: 'constructed-activities' });
             } else {
               console.log(`🔑 Usando código único existente para ${activityId}:`, codigoUnico);
             }

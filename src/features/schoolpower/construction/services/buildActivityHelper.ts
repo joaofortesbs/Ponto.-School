@@ -46,9 +46,23 @@ export async function buildActivityFromFormData(
     const isTextVersionActivity = ['plano-aula', 'sequencia-didatica', 'tese-redacao'].includes(activityType);
     
     if (!isTextVersionActivity) {
+      // CORREÇÃO: Extrair dados corretos do resultado (pode vir como { success, data } ou direto)
+      const actualData = result?.data || result;
+      
       // 2. Save to localStorage with the SAME key used in EditActivityModal (ONLY for interactive activities)
       const storageKey = `constructed_${activityType}_${activityId}`;
-      const saved = safeSetJSON(storageKey, result);
+      
+      // Para Flash Cards: garantir que os cards estejam no formato correto
+      if (activityType === 'flash-cards') {
+        console.log(`🃏 [buildActivityHelper] Flash Cards - Dados a salvar:`, {
+          hasCards: !!actualData?.cards,
+          cardsCount: actualData?.cards?.length || 0,
+          title: actualData?.title,
+          theme: actualData?.theme
+        });
+      }
+      
+      const saved = safeSetJSON(storageKey, actualData);
       if (!saved) {
         console.warn(`⚠️ [buildActivityHelper] Não foi possível salvar no localStorage: ${storageKey}`);
       } else {
@@ -58,7 +72,7 @@ export async function buildActivityFromFormData(
       // 3. Save to constructedActivities object (used by EditActivityModal)
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       constructedActivities[activityId] = {
-        generatedContent: result,
+        generatedContent: actualData,
         timestamp: new Date().toISOString(),
         activityType: activityType
       };
@@ -94,10 +108,11 @@ export async function buildActivityFromFormData(
     }
 
     // 5. Dispatch activity-data-sync event for view modal synchronization
-    // OTIMIZAÇÃO: Dados leves para TODAS as atividades - evitar QuotaExceededError
-    // O generatedContent completo fica APENAS na chave constructed_${type}_${id}
+    // CORREÇÃO: Extrair dados corretamente (pode vir como { success, data } ou direto)
+    const actualData = result?.data || result;
     const isHeavyActivity = ['lista-exercicios', 'quiz-interativo', 'flash-cards'].includes(activityType);
     
+    // Para Flash Cards: incluir dados completos para sincronização instantânea
     const viewSyncData = isTextVersionActivity 
       ? {
           title: formData.title || formData.tema || 'Atividade',
@@ -105,6 +120,20 @@ export async function buildActivityFromFormData(
           isTextVersion: true,
           lastUpdate: new Date().toISOString()
         }
+      : activityType === 'flash-cards'
+        ? {
+            title: actualData?.title || formData.title,
+            description: actualData?.description || formData.description,
+            type: activityType,
+            subject: actualData?.subject || formData.subject,
+            schoolYear: actualData?.schoolYear || formData.schoolYear,
+            theme: actualData?.theme || formData.theme,
+            cards: actualData?.cards || [],
+            totalCards: actualData?.cards?.length || 0,
+            generatedContent: actualData,
+            isGeneratedByAI: actualData?.isGeneratedByAI || actualData?.generatedByAI || false,
+            lastUpdate: new Date().toISOString()
+          }
       : isHeavyActivity
         ? {
             title: formData.title,
@@ -112,14 +141,15 @@ export async function buildActivityFromFormData(
             type: activityType,
             subject: formData.subject,
             schoolYear: formData.schoolYear,
-            questionsCount: result?.questoes?.length || result?.questions?.length || result?.cards?.length || 0,
+            questionsCount: actualData?.questoes?.length || actualData?.questions?.length || actualData?.cards?.length || 0,
+            generatedContent: actualData,
             lastUpdate: new Date().toISOString()
           }
         : {
             title: formData.title,
             description: formData.description,
             customFields: { ...formData },
-            generatedContent: result,
+            generatedContent: actualData,
             formData,
             lastUpdate: new Date().toISOString()
           };
