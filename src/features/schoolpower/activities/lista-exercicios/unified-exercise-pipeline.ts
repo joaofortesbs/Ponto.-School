@@ -1,3 +1,39 @@
+// ============================================================================
+// CAMADA 0 - CONTRATO DE BLINDAGEM (ISOLAMENTO)
+// ============================================================================
+
+export interface ExerciseListContract {
+  readonly id: string;
+  readonly tema: string;
+  readonly disciplina: string;
+  readonly anoEscolaridade: string;
+  readonly numeroQuestoes: number;
+  readonly nivelDificuldade: 'facil' | 'medio' | 'dificil';
+  readonly modeloQuestoes: 'multipla-escolha' | 'discursiva' | 'verdadeiro-falso';
+}
+
+export class ExerciseListSanitizer {
+  static sanitize(input: any): ExerciseListContract {
+    console.log('🛡️ [Sanitizer] Blindando entrada de dados externa');
+    return {
+      id: String(input.id || input.activityId || Date.now()),
+      tema: String(input.tema || input.theme || 'Geral'),
+      disciplina: String(input.disciplina || input.subject || 'Geral'),
+      anoEscolaridade: String(input.anoEscolaridade || input.schoolYear || 'Não Informado'),
+      numeroQuestoes: Math.min(Math.max(Number(input.numeroQuestoes || input.numberOfQuestions || 10), 1), 50),
+      nivelDificuldade: this.sanitizeDifficulty(input.nivelDificuldade || input.difficultyLevel),
+      modeloQuestoes: UnifiedNormalizer.normalizeType(input.modeloQuestoes || input.questionModel)
+    };
+  }
+
+  private static sanitizeDifficulty(val: any): 'facil' | 'medio' | 'dificil' {
+    const d = String(val).toLowerCase();
+    if (d.includes('facil') || d.includes('easy')) return 'facil';
+    if (d.includes('dificil') || d.includes('hard')) return 'dificil';
+    return 'medio';
+  }
+}
+
 /**
  * UNIFIED EXERCISE LIST PIPELINE - Solução Robusta 6 Camadas
  * Resolve definitivamente o problema de geração de Lista de Exercícios
@@ -490,11 +526,12 @@ export class ProgressiveFallback {
    * Pipeline completo com fallbacks
    */
   static processWithFallbacks(data: any, inputData: any): UnifiedExerciseListResponse {
-    const cacheKey = `${inputData.id || 'default'}_${inputData.tema}_${inputData.modeloQuestoes}`;
+    const sanitizedInput = ExerciseListSanitizer.sanitize(inputData);
+    const cacheKey = `sp_le_v2_${sanitizedInput.id}_${sanitizedInput.tema}_${sanitizedInput.modeloQuestoes}`;
 
     // Tentar processar dados recebidos
     if (data) {
-      const result = UnifiedNormalizer.processFullResponse(data, inputData);
+      const result = UnifiedNormalizer.processFullResponse(data, sanitizedInput);
       if (result.success && result.metadata.validQuestoes > 0) {
         this.saveToCache(cacheKey, result);
         return result;
@@ -504,13 +541,13 @@ export class ProgressiveFallback {
     // Fallback 1: Cache
     const cached = this.getFromCache(cacheKey);
     if (cached && cached.success) {
-      console.log('🔄 [ProgressiveFallback] Usando cache como fallback');
+      console.log('🔄 [ProgressiveFallback] Usando cache como fallback (Blindagem Ativa)');
       return cached;
     }
 
     // Fallback 2: Template parcial
-    console.log('🔄 [ProgressiveFallback] Usando template como fallback');
-    return this.generatePartialTemplate(inputData, inputData.numQuestoes || 5);
+    console.log('🔄 [ProgressiveFallback] Usando template como fallback (Blindagem Ativa)');
+    return this.generatePartialTemplate(sanitizedInput, sanitizedInput.numeroQuestoes);
   }
 }
 
