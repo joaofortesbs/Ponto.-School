@@ -82,9 +82,12 @@ export const LISTA_EXERCICIOS_CONFIG = {
   STORAGE_PREFIX: 'sp_le_v2_',
   MIN_QUESTIONS: 1,
   MAX_QUESTIONS: 50,
-  MIN_ENUNCIADO_LENGTH: 10,
-  VERSION: '2.0.0',
-  PROTECTED: true
+  MIN_ENUNCIADO_LENGTH: 5,
+  MIN_ALTERNATIVAS: 2,
+  VALIDATION_THRESHOLD: 0.5,
+  VERSION: '2.1.0',
+  PROTECTED: true,
+  EXTRACTION_PRIORITY: ['questoes', 'questions', 'enunciado', 'question']
 } as const;
 
 // ============================================================================

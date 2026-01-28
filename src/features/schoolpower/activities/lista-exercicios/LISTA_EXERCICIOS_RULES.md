@@ -4,6 +4,7 @@
 
 ## Status: FUNCIONANDO CORRETAMENTE ✅
 Data da última validação: Janeiro 2026
+Versão: 2.1.0
 
 ---
 
@@ -52,12 +53,28 @@ interface ExerciseListContract {
 interface QuestionContract {
   readonly id: string;
   readonly type: 'multipla-escolha' | 'discursiva' | 'verdadeiro-falso';
-  readonly enunciado: string;                // Mínimo 10 caracteres
-  readonly alternativas?: readonly string[]; // Para múltipla escolha
-  readonly respostaCorreta?: number | string | boolean;
+  readonly enunciado: string;                // Mínimo 5 caracteres (v2.1.0)
+  readonly alternativas?: readonly string[]; // Para múltipla escolha (mínimo 2)
+  readonly respostaCorreta?: number | string | boolean;  // OBRIGATÓRIO
   readonly explicacao?: string;
   readonly dificuldade?: string;
   readonly tema?: string;
+  readonly _validated?: boolean;             // Flag de validação
+}
+```
+
+### 3. Constantes de Configuração (v2.1.0)
+```typescript
+LISTA_EXERCICIOS_CONFIG = {
+  STORAGE_PREFIX: 'sp_le_v2_',
+  MIN_QUESTIONS: 1,
+  MAX_QUESTIONS: 50,
+  MIN_ENUNCIADO_LENGTH: 5,       // Mínimo 5 caracteres
+  MIN_ALTERNATIVAS: 2,            // Mínimo 2 alternativas para múltipla-escolha
+  VALIDATION_THRESHOLD: 0.5,      // 50% das questões devem ser válidas
+  VERSION: '2.1.0',
+  PROTECTED: true,
+  EXTRACTION_PRIORITY: ['questoes', 'questions', 'enunciado', 'question']
 }
 ```
 
@@ -171,6 +188,40 @@ A Lista de Exercícios depende dos seguintes serviços globais. Se alterá-los, 
 | Jan 2026 | Implementação do sistema de blindagem | Agent |
 | Jan 2026 | Adição do ExerciseListSanitizer | Agent |
 | Jan 2026 | Namespace dedicado sp_le_v2_ | Agent |
+| Jan 2026 | **Extração JSON schema-aware** - Bracket matching robusto que prioriza blocos com "questoes" | Agent |
+| Jan 2026 | **Validação rigorosa** - Exige enunciado + respostaCorreta + alternativas (50% threshold) | Agent |
+| Jan 2026 | **Prompt minimalista** - Apenas 2 linhas para forçar resposta JSON pura | Agent |
+
+---
+
+## 🔧 ESPECIFICAÇÕES TÉCNICAS ATUALIZADAS (Jan 2026)
+
+### Extração de JSON (ListaExerciciosGenerator.ts)
+O sistema agora usa **bracket matching inteligente** para extrair JSON:
+
+1. `findAllMatchingBrackets()` - Encontra TODOS os blocos balanceados no texto
+2. `extractFirstValidJSON()` - Prioriza blocos que contêm:
+   - `"questoes"` ou `"questions"` (primeira escolha)
+   - `"enunciado"` ou `"question"` (segunda escolha)
+   - Primeiro bloco encontrado (fallback)
+
+### Validação de Questões (validateListaExerciciosResponse)
+Cada questão DEVE ter:
+- `enunciado` com >= 5 caracteres
+- `respostaCorreta` definida (não null/undefined)
+- Para múltipla-escolha: `alternativas` array com >= 2 itens
+
+**Threshold de aprovação**: 50% das questões devem ser totalmente válidas.
+
+### Fluxo de Parsing (parseGeminiResponse)
+1. Remove markdown/code blocks
+2. Extrai JSON usando bracket matching schema-aware
+3. Limpa caracteres problemáticos
+4. Converte arrays na raiz para `{questoes: [...]}`
+5. Normaliza campos com múltiplos aliases
+6. Marca questões como `_validated` se tiverem campos obrigatórios
+7. Filtra questões inválidas (lança erro se nenhuma válida)
+8. Verifica esquema final
 
 ---
 

@@ -164,6 +164,31 @@
       "validation": "api_response.success === true",
       "action_on_fail": "retry_once_then_report",
       "rationale": "Garante que dados foram realmente persistidos"
+    },
+
+    {
+      "id": "rule_016",
+      "type": "validation",
+      "priority": 1,
+      "capability": "criar_atividade",
+      "activity_type": "lista-exercicios",
+      "rule": "Lista de Exercícios DEVE ter questões com campos obrigatórios: enunciado (>=5 chars), respostaCorreta, alternativas (>=2 para multipla-escolha)",
+      "validation": "cada questão tem enunciado + respostaCorreta + alternativas válidas",
+      "threshold": "50% das questões devem ser válidas",
+      "action_on_fail": "trigger_fallback_generation",
+      "rationale": "Validação rigorosa previne propagação de dados malformados para UI"
+    },
+
+    {
+      "id": "rule_017",
+      "type": "mandatory",
+      "priority": 1,
+      "capability": "criar_atividade",
+      "activity_type": "lista-exercicios",
+      "rule": "Extração de JSON deve priorizar blocos que contêm 'questoes' ou 'enunciado'",
+      "extraction_priority": ["questoes", "questions", "enunciado", "question"],
+      "action_on_fail": "use_first_balanced_block",
+      "rationale": "Schema-aware extraction evita selecionar fragmentos JSON incorretos"
     }
   ],
 
