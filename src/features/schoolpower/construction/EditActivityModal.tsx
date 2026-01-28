@@ -38,7 +38,11 @@ import {
   QuizInterativoEditActivity,
   QuadroInterativoEditActivity
 } from './components/EditFields';
-import { processExerciseListWithUnifiedPipeline, UnifiedExerciseListResponse } from '@/features/schoolpower/activities/lista-exercicios/unified-exercise-pipeline';
+import { 
+  processExerciseListWithUnifiedPipeline, 
+  saveExerciseListData,
+  type UnifiedExerciseListResponse 
+} from '@/features/schoolpower/activities/lista-exercicios';
 import { generateTextVersionContent, storeTextVersionContent, TextVersionInput } from '@/features/schoolpower/activities/text-version/TextVersionGenerator';
 import { isTextVersionActivity } from '@/features/schoolpower/config/activityVersionConfig';
 import { storageSet, storageSetJSON, safeSetJSON, isHeavyActivityType } from '@/features/schoolpower/services/StorageOrchestrator';
@@ -2538,25 +2542,54 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
         console.log('💾 Tese de Redação processada e salva:', teseRedacaoData);
       }
 
-      // Trigger específico para Lista de Exercícios
+      // Trigger específico para Lista de Exercícios - BLINDAGEM V2.0
       if (activityType === 'lista-exercicios') {
-        console.log('📚 ====== PROCESSAMENTO LISTA DE EXERCÍCIOS ======');
+        console.log('📚 ====== PROCESSAMENTO LISTA DE EXERCÍCIOS (BLINDAGEM V2.0) ======');
         
         // Log completo do resultado para debug
         console.log('📚 [Lista Exercícios] Resultado bruto:', JSON.stringify(result, null, 2)?.substring(0, 2000));
         
-        // Verificar estrutura do resultado
-        const questoes = result?.questoes || result?.questions || result?.data?.questoes || [];
-        console.log('📚 [Lista Exercícios] Questões encontradas:', questoes.length);
+        // Processar pela pipeline unificada antes de salvar
+        const processedResult = processExerciseListWithUnifiedPipeline(result, {
+          id: activity?.id,
+          tema: formData.theme || formData.tema,
+          disciplina: formData.subject || formData.disciplina,
+          numeroQuestoes: formData.numberOfQuestions || formData.numeroQuestoes,
+          modeloQuestoes: formData.questionModel || formData.modeloQuestoes,
+          nivelDificuldade: formData.difficultyLevel || formData.nivelDificuldade,
+          titulo: formData.title || formData.titulo
+        });
         
-        if (questoes.length > 0) {
-          console.log('📚 [Lista Exercícios] Primeira questão:', JSON.stringify(questoes[0], null, 2));
+        console.log('📚 [Lista Exercícios] Pipeline processou:', {
+          success: processedResult.success,
+          questoesValidas: processedResult.metadata.validQuestoes,
+          questoesTotais: processedResult.metadata.totalQuestoes,
+          metodo: processedResult.metadata.extractionMethod
+        });
+        
+        // Atualizar result com questões processadas
+        const enhancedResult = {
+          ...result,
+          titulo: processedResult.titulo || result.titulo,
+          disciplina: processedResult.disciplina || result.disciplina,
+          questoes: processedResult.questoes,
+          questions: processedResult.questoes,
+          _processedByPipeline: true,
+          _pipelineMetadata: processedResult.metadata
+        };
+        
+        // Salvar via função centralizada de storage
+        const saved = saveExerciseListData(activity?.id || '', enhancedResult);
+        if (saved) {
+          console.log('💾 Lista de Exercícios salva via storage centralizado');
+        } else {
+          // Fallback para StorageOrchestrator
+          storageSet(`lista_exercicios_data_${activity?.id}`, enhancedResult, { activityType: 'lista-exercicios' });
+          console.log('💾 Lista de Exercícios salva via StorageOrchestrator (fallback)');
         }
         
-        // Salvar via StorageOrchestrator para persistência
-        storageSet(`lista_exercicios_data_${activity?.id}`, result, { activityType: 'lista-exercicios' });
-        
-        console.log('💾 Lista de Exercícios salva via StorageOrchestrator');
+        // Atualizar o result para o restante do fluxo
+        Object.assign(result, enhancedResult);
       }
 
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
