@@ -36,7 +36,7 @@ The platform features a modern design with glass-morphism effects, blur backgrou
       - Heavy activity types (quiz-interativo, flash-cards, lista-exercicios, plano-aula, sequencia-didatica) automatically route to IndexedDB
       - API: `storageSet(key, data, { activityType })`, `storageGet<T>(key)`, `safeSetJSON()`, `initGlobalStorageGuard()`
     - **Activity Version System**: Dual-version system categorizing activities into Interactive (fully functional UI) and Text Version (content delivered as formatted text) for various activity types, with robust AI response parsing and professional 6-section fallback content generation.
-    - **Lista de Exercícios Blindagem System (Jan 2026)**: Enterprise-grade isolation and protection system:
+    - **Lista de Exercícios Blindagem System v2.1.0 (Jan 2026)**: Enterprise-grade isolation and protection system:
       - **Bounded Context Architecture**: Fully isolated module with dedicated contracts and sanitizers
       - **Protected Files**: `ListaExerciciosGenerator.ts`, `unified-exercise-pipeline.ts`, `ExerciseListPreview.tsx`, `useExerciseListSync.ts`
       - **Contracts**: `ExerciseListContract`, `QuestionContract`, `ExerciseListResponseContract` with readonly properties
@@ -45,6 +45,9 @@ The platform features a modern design with glass-morphism effects, blur backgrou
       - **6-Layer Pipeline**: Normalization → Intelligent Extraction (7 fallback methods) → Validation → Synchronization → Testing → Progressive Fallback
       - **Agent Rules File**: `LISTA_EXERCICIOS_RULES.md` contains mandatory guidelines for any modifications
       - **Configuration**: `LISTA_EXERCICIOS_CONFIG` with version tracking and protection flags
+      - **Schema-Aware JSON Extraction (v2.1.0)**: Bracket matching algorithm that prioritizes blocks containing "questoes" or "enunciado"
+      - **Rigorous Validation (v2.1.0)**: Requires enunciado (>=5 chars), respostaCorreta, and alternativas (>=2 for multipla-escolha) with 50% threshold
+      - **Execution Rules**: `execution-rules.json` includes rule_016/017 for Lista de Exercícios validation specifications
     - **Flash Cards Blindagem System (Jan 2026)**: Enterprise-grade isolation and protection system:
       - **Bounded Context Architecture**: Fully isolated module with dedicated contracts and sanitizers
       - **Protected Files**: `FlashCardsGenerator.ts`, `FlashCardsPreview.tsx`, `contracts.ts`
