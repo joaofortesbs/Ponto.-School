@@ -36,6 +36,15 @@ The platform features a modern design with glass-morphism effects, blur backgrou
       - Heavy activity types (quiz-interativo, flash-cards, lista-exercicios, plano-aula, sequencia-didatica) automatically route to IndexedDB
       - API: `storageSet(key, data, { activityType })`, `storageGet<T>(key)`, `safeSetJSON()`, `initGlobalStorageGuard()`
     - **Activity Version System**: Dual-version system categorizing activities into Interactive (fully functional UI) and Text Version (content delivered as formatted text) for various activity types, with robust AI response parsing and professional 6-section fallback content generation.
+    - **Lista de Exercícios Blindagem System (Jan 2026)**: Enterprise-grade isolation and protection system:
+      - **Bounded Context Architecture**: Fully isolated module with dedicated contracts and sanitizers
+      - **Protected Files**: `ListaExerciciosGenerator.ts`, `unified-exercise-pipeline.ts`, `ExerciseListPreview.tsx`, `useExerciseListSync.ts`
+      - **Contracts**: `ExerciseListContract`, `QuestionContract`, `ExerciseListResponseContract` with readonly properties
+      - **Sanitizer**: `ExerciseListInputSanitizer` validates ALL external data before processing
+      - **Dedicated Storage Namespace**: Uses `sp_le_v2_` prefix to prevent storage collisions
+      - **6-Layer Pipeline**: Normalization → Intelligent Extraction (7 fallback methods) → Validation → Synchronization → Testing → Progressive Fallback
+      - **Agent Rules File**: `LISTA_EXERCICIOS_RULES.md` contains mandatory guidelines for any modifications
+      - **Configuration**: `LISTA_EXERCICIOS_CONFIG` with version tracking and protection flags
     - **Flash Cards Data Flow (Fixed Jan 2026)**: Complete data propagation system for Flash Cards:
       - `buildActivityHelper.ts`: Extracts actual data from wrapper objects (`result.data || result`) before saving
       - Saves complete cards array to localStorage at `constructed_flash-cards_{id}`
