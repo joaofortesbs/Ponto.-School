@@ -14,12 +14,6 @@ interface QuizQuestion {
   options?: string[];
   correctAnswer: string;
   explanation?: string;
-  // Campos alternativos que podem vir da IA (para compatibilidade)
-  text?: string;
-  texto?: string;
-  alternativas?: string[];
-  resposta_correta?: number | string;
-  feedback?: string;
 }
 
 interface QuizInterativoPreviewProps {
