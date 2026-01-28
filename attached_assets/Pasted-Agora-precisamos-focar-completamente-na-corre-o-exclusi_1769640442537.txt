@@ -1,0 +1,41 @@
+Agora precisamos focar completamente na correção exclusiva e individual da atividade de Quiz interativo, pois atualmente com o system e códigos atuais a respectiva atividade de Quiz interativo ainda não está sendo construida corretamente, com todos os conteúdos que compõem a atividade de Quiz interativo, sendo mostrados dentro da arquiterura visual do front-end dentro da interface que mostra a visualização da respectiva atividade dentro do modal de Visualizar atividades, como eu te representei dentro da imagem que eu te enviei!!!!!!!
+Preciso que você verifique duas coisas principais e identifique todos os furos e gargalos do fluxo/funil que você tem CERTEZA ABSOLUTA que influenciam no resultado construtivo da atividade de Quiz interativo:
+1. Verifique todo o fluxo de atividade e sistems do front-end e d back-end de toda a criação da atividade de dentro do chat com o Jota, com todas as etapas envolvidas e ecossistemas completos, faça um mapeamento completo de todos os componentes, arquivos, systems, parametros e sistemas envolvidos e faça uma investigação e pesquisa completa dentro de cada um deles!
+2. Verifique todo o fluxo especifico de dentro da atividade e sistems do front-end e d back-end de toda a atividade exclusiva e individual de Quiz interativo de dentro do chat com o Jota, com todas as etapas envolvidas e ecossistemas completos, faça um mapeamento completo de todos os componentes, arquivos, systems, parametros, e sistemas envolvidos e faça uma investigação e pesquisa completa dentro de cada um deles!
+ Os erros que eu te falei ainda não foram corrigidos, analise e reflita sobre todos os arquivos de dentro da plataforma! Analise e pense o porque esses erros acontecem, analise todas as alternativas e age como se você fosse o seu melhor modelo, na versão mais poderosa, e mais estratégica! Analise todas as possibilidades, e altere os arquivos com a absoluta precisão!!!!!!!
+Considerações: - Faça uma plano completo com Macro-steps de objetivos principais de execução e micro-steps em ordem inteligente para fazer todas essas alterações da maneira correta, e incluindo testes e validação, para garantir que tudo seja feito corretamente!
+* Reflita antes de cada alteração, e faça um mapeamento completo para identificar a melhor forma, de maneira segura, robusta, alinhada, profissional, avançada e sofisticada! Não cometa erros ou bugs dentro do código, e não deixe o código ser corrompido! Garanta também que todo o sistema não tenha brechas para erros ou bugs!
+* Revise todas as suas modificações depois de cada finalização, não deixe brechas pra erros, não prejudique o funcionamento geral, refine as alterações, e garanta que nenhum sistema considerável foi influenciado ou modificado negativamente! Teste tudo que voc6e fez para garantir o funcionamento perfeito!
+* No final de tudo, me explique todas as alterações que você fez, como elas foram feitas, e principalmente porque você decidiu fazer essas alterações!
+* No final de tudo, liste todos os seus aprendizados com base em todas as alterações que você fez, para que você possa ir se aprimorando conforme as próximas alterações, e melhorando a sua janela de contexto, para que esses erros em hipotese alguma acontecem novamente dentro da plataforma!
+* No final, me sugira as próximas alterações dentro da própria plataforma que a gente precisa fazer, ou que seria muito bom, para deixar a plataforma ainda mais completa, sem nenhum erro ou perigo!
+
+Antes de qualquer alteração ou otimização, realize um mapeamento completo de todos os componentes, arquivos, sistemas, parâmetros e ecossistemas envolvidos na atividade de Quiz interativo. Inclua:
+- Todos os arquivos do front-end e back-end que participam do fluxo
+- Endpoints da API e suas responsabilidades
+- Estrutura de banco de dados e relacionamentos
+- Parâmetros de configuração relevantes
+- Sistemas de cache, autenticação e autorização envolvidos
+- Eventos e listeners (WebSockets, listeners de DOM, etc.)
+
+Realize uma investigação detalhada em cada um desses pontos, verificando:
+- Possíveis inconsistências de dados ou estrutura
+- Vazamentos de memória ou recursos
+- Chamadas desnecessárias ou redundantes
+- Falhas de segurança ou autorização
+- Problemas de sincronização entre front-end e back-end
+
+Antes de cada alteração, reflita sobre:
+- O impacto em outros sistemas e funcionalidades
+- A necessidade de rollback ou fallback
+- O risco de introduzir novos bugs
+
+Após cada alteração:
+- Valide o funcionamento da atividade em ambiente de teste
+- Execute testes de regressão para garantir que nenhum sistema foi afetado negativamente
+- Revise as alterações em busca de brechas ou falhas de segurança
+
+No final de tudo:
+- Liste todas as alterações feitas, explicando como e por que foram feitas
+- Liste os aprendizados obtidos com base nas alterações
+- Sugira próximas melhorias para a plataforma, focando em segurança, robustez e escalabilidade
