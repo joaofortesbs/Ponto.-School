@@ -160,17 +160,74 @@ function generateThemeFromObjective(objective: string, subject: string): string 
     return defaultThemes[subject] || 'Tema a ser definido';
   }
   
-  // Limpar e formatar o objetivo como tema
+  // PRIORIDADE 1: Extrair tema de dentro de aspas (ex: "a descoberta do brasil")
+  const quotedMatch = objective.match(/[""''"]([^"""''']+)[""''']/);
+  if (quotedMatch && quotedMatch[1] && quotedMatch[1].length >= 5) {
+    let extractedTheme = quotedMatch[1].trim();
+    // Capitalizar primeira letra
+    extractedTheme = extractedTheme.charAt(0).toUpperCase() + extractedTheme.slice(1);
+    console.log(`📌 [generateThemeFromObjective] Tema extraído de aspas: "${extractedTheme}"`);
+    return extractedTheme;
+  }
+  
+  // PRIORIDADE 2: Extrair tema após padrões comuns como "sobre", "tema", "de"
+  const themePatterns = [
+    /(?:sobre\s+o\s+tema|sobre\s+a\s+tema|sobre|tema|de)\s*[:""]?\s*([^"!?.]+)/i,
+    /atividades?\s+(?:de|sobre|para)\s+([^"!?.]+)/i,
+    /quiz\s+(?:de|sobre|para)\s+([^"!?.]+)/i
+  ];
+  
+  for (const pattern of themePatterns) {
+    const match = objective.match(pattern);
+    if (match && match[1] && match[1].trim().length >= 5) {
+      let extractedTheme = match[1].trim()
+        // Remover pontuação final e palavras de instrução
+        .replace(/[!?.]+$/, '')
+        .replace(/^\s*(criar|fazer|desenvolver|preciso|quero)\s*/gi, '')
+        .trim();
+      
+      if (extractedTheme.length >= 5) {
+        extractedTheme = extractedTheme.charAt(0).toUpperCase() + extractedTheme.slice(1);
+        console.log(`📌 [generateThemeFromObjective] Tema extraído via padrão: "${extractedTheme}"`);
+        return extractedTheme;
+      }
+    }
+  }
+  
+  // PRIORIDADE 3: Limpar instruções e verbos do início (fallback original melhorado)
   let theme = objective
-    .replace(/^(preciso|quero|gostaria de|criar|fazer|desenvolver)\s+/gi, '')
+    // Remover instruções de comando comuns
+    .replace(/^(preciso|quero|gostaria\s+de|criar|fazer|desenvolver|gere|gerar|produza|faça)\s+/gi, '')
     .replace(/^(as|os|a|o|um|uma|uns|umas)\s+/gi, '')
-    .replace(/^próximas?\s+atividades?\s+(de|sobre|para)\s+/gi, '')
+    .replace(/^próximas?\s+atividades?\s+(de|sobre|para)\s*/gi, '')
+    .replace(/^atividades?\s+(de|sobre|para)\s*/gi, '')
+    .replace(/^quiz\s+(de|sobre|para)\s*/gi, '')
+    .replace(/^conteúdo\s+(de|sobre|para)\s*/gi, '')
+    // Remover pontuação final
+    .replace(/[!?.]+$/, '')
     .trim();
+  
+  // Se ainda ficou muito longo ou contém instruções, usar tema padrão
+  if (theme.length > 100 || /^(criar|fazer|gerar|preciso)/i.test(theme)) {
+    const defaultThemes: Record<string, string> = {
+      'Matemática': 'Operações com Números Inteiros',
+      'Língua Portuguesa': 'Interpretação de Textos',
+      'Ciências': 'O Corpo Humano e seus Sistemas',
+      'História': 'As Grandes Civilizações Antigas',
+      'Geografia': 'Aspectos Físicos do Brasil',
+      'Arte': 'Expressão Artística Contemporânea',
+      'Educação Física': 'Jogos Cooperativos',
+      'Inglês': 'Basic Vocabulary and Expressions'
+    };
+    console.log(`⚠️ [generateThemeFromObjective] Tema muito longo ou com instruções, usando padrão para ${subject}`);
+    return defaultThemes[subject] || 'Conhecimentos Gerais';
+  }
   
   // Capitalizar primeira letra
   theme = theme.charAt(0).toUpperCase() + theme.slice(1);
   
-  return theme || objective;
+  console.log(`📌 [generateThemeFromObjective] Tema final: "${theme}"`);
+  return theme || 'Conhecimentos Gerais';
 }
 
 function generateDefaultObjectives(theme: string, subject: string): string {
