@@ -202,6 +202,53 @@ export class QuizInterativoGenerator {
     }
   }
 
+  /**
+   * Detecta se um texto contém instruções de prompt do usuário ao invés de conteúdo educacional real
+   */
+  private containsUserPromptPatterns(text: string): boolean {
+    if (!text || typeof text !== 'string') return false;
+    
+    const promptPatterns = [
+      /^criar\s+(as\s+)?próximas?\s+atividades?/i,
+      /^fazer\s+(as\s+)?próximas?\s+atividades?/i,
+      /^gerar\s+(as\s+)?atividades?/i,
+      /^preciso\s+(de\s+)?atividades?/i,
+      /^quero\s+(criar|fazer|gerar)/i,
+      /próximas?\s+atividades?\s+sobre/i,
+      /conceito\s+de\s+criar\s+as\s+próximas?/i,
+      /aplicação\s+prática\s+de\s+criar/i,
+      /teoria\s+avançada\s+de\s+criar/i,
+      /exercícios\s+sobre\s+criar\s+as/i
+    ];
+    
+    return promptPatterns.some(pattern => pattern.test(text));
+  }
+
+  /**
+   * Valida uma questão para garantir que não contém prompts do usuário
+   * Retorna true se a questão é válida (não contém prompts)
+   */
+  private isValidQuestion(question: any): boolean {
+    const questionText = question.texto || question.question || question.pergunta || '';
+    const options = question.alternativas || question.options || question.opcoes || [];
+    
+    // Verificar se a questão contém padrões de prompt
+    if (this.containsUserPromptPatterns(questionText)) {
+      console.warn(`⚠️ [QuizGenerator] Questão inválida detectada (contém prompt): "${questionText.substring(0, 50)}..."`);
+      return false;
+    }
+    
+    // Verificar se alguma opção contém padrões de prompt
+    for (const option of options) {
+      if (typeof option === 'string' && this.containsUserPromptPatterns(option)) {
+        console.warn(`⚠️ [QuizGenerator] Opção inválida detectada (contém prompt): "${option.substring(0, 50)}..."`);
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
   private extractQuestions(parsed: any): QuizQuestion[] {
     console.log('🔍 Extraindo questões de:', parsed);
 
@@ -222,7 +269,19 @@ export class QuizInterativoGenerator {
 
     console.log('📋 Array de questões encontrado:', questionsArray);
 
-    return questionsArray.map((q: any, index: number) => ({
+    // Filtrar questões inválidas que contêm prompts do usuário
+    const validQuestions = questionsArray.filter((q: any) => this.isValidQuestion(q));
+    
+    if (validQuestions.length < questionsArray.length) {
+      console.warn(`⚠️ [QuizGenerator] ${questionsArray.length - validQuestions.length} questões removidas por conter prompts do usuário`);
+    }
+    
+    if (validQuestions.length === 0) {
+      console.warn('⚠️ [QuizGenerator] Nenhuma questão válida encontrada após validação');
+      return [];
+    }
+
+    return validQuestions.map((q: any, index: number) => ({
       id: q.id || (index + 1),
       question: q.texto || q.question || q.pergunta || `Questão ${index + 1}`,
       type: 'multipla-escolha' as const,

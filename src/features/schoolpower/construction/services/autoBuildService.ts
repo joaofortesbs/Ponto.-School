@@ -1197,6 +1197,28 @@ export class AutoBuildService {
   /**
    * Sanitiza e normaliza questões de quiz para garantir estrutura válida
    */
+  /**
+   * Detecta se um texto contém padrões de prompt/instrução do usuário
+   */
+  private containsUserPromptPatterns(text: string): boolean {
+    if (!text || typeof text !== 'string') return false;
+    
+    const promptPatterns = [
+      /^criar\s+(as\s+)?próximas?\s+atividades?/i,
+      /^fazer\s+(as\s+)?próximas?\s+atividades?/i,
+      /^gerar\s+(as\s+)?atividades?/i,
+      /^preciso\s+(de\s+)?atividades?/i,
+      /^quero\s+(criar|fazer|gerar)/i,
+      /próximas?\s+atividades?\s+sobre/i,
+      /conceito\s+de\s+criar\s+as\s+próximas?/i,
+      /aplicação\s+prática\s+de\s+criar/i,
+      /teoria\s+avançada\s+de\s+criar/i,
+      /exercícios\s+sobre\s+criar\s+as/i
+    ];
+    
+    return promptPatterns.some(pattern => pattern.test(text));
+  }
+
   private sanitizeQuizQuestions(questions: any[], activityTitle: string): any[] {
     if (!questions || !Array.isArray(questions)) {
       console.warn('⚠️ [QUIZ] questions não é um array válido');
@@ -1205,6 +1227,27 @@ export class AutoBuildService {
 
     return questions
       .filter(q => q && (q.question || q.text || q.pergunta))
+      // Filtrar questões que contêm prompts do usuário
+      .filter(q => {
+        const questionText = q.question || q.text || q.pergunta || '';
+        const options = q.options || q.alternativas || q.opcoes || [];
+        
+        // Verificar se a questão contém prompts
+        if (this.containsUserPromptPatterns(questionText)) {
+          console.warn(`⚠️ [QUIZ] Questão filtrada (contém prompt): "${questionText.substring(0, 50)}..."`);
+          return false;
+        }
+        
+        // Verificar se alguma opção contém prompts
+        for (const option of options) {
+          if (typeof option === 'string' && this.containsUserPromptPatterns(option)) {
+            console.warn(`⚠️ [QUIZ] Questão filtrada (opção contém prompt): "${option.substring(0, 50)}..."`);
+            return false;
+          }
+        }
+        
+        return true;
+      })
       .map((q, index) => {
         // Extrair texto da questão
         const questionText = q.question || q.text || q.pergunta || `Questão ${index + 1}`;
