@@ -25,6 +25,7 @@ import {
   Trophy,
   Target
 } from 'lucide-react';
+import { FlashCardsSanitizer, FlashCardsOutputContract, FLASH_CARDS_CONFIG } from './contracts';
 
 interface FlashCard {
   id: number;
@@ -83,74 +84,39 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   const intervalRef = useRef<NodeJS.Timeout>();
 
   // Normalizar dados com memoização ESTÁVEL usando JSON.stringify
+  // BLINDAGEM: Usa FlashCardsSanitizer para garantir formato correto independente da fonte
   const normalizedContent = useMemo(() => {
     if (!content) {
       console.log('🃏 FlashCardsPreview - Sem conteúdo');
       return null;
     }
 
-    console.log('🃏 FlashCardsPreview - Processando conteúdo:', content);
+    console.log('🃏 FlashCardsPreview - Processando conteúdo via Sanitizer (Blindagem Ativa v' + FLASH_CARDS_CONFIG.VERSION + ')');
 
-    // Extrair dados da estrutura mais profunda possível
-    let actualContent = content;
-
-    if (content.success && content.data) {
-      actualContent = content.data;
-    } else if (content.data && typeof content.data === 'object') {
-      actualContent = content.data;
+    // BLINDAGEM: Usar o sanitizador centralizado para normalizar dados
+    const sanitizedOutput = FlashCardsSanitizer.sanitizeOutput(content);
+    
+    if (sanitizedOutput && sanitizedOutput.cards.length > 0) {
+      console.log('✅ [FlashCardsPreview] Dados sanitizados com sucesso:', {
+        title: sanitizedOutput.title,
+        totalCards: sanitizedOutput.totalCards,
+        generatedByAI: sanitizedOutput.generatedByAI
+      });
+      return sanitizedOutput;
     }
 
-    // Buscar cards em diferentes propriedades possíveis
-    let cards = actualContent.cards || 
-                actualContent.flashcards || 
-                actualContent.flashCards ||
-                content.cards ||
-                content.flashcards ||
-                [];
+    // FALLBACK: Se o sanitizador não conseguiu extrair cards, tentar gerar do tópicos
+    console.log('⚠️ [FlashCardsPreview] Sanitizador não encontrou cards, tentando fallback de tópicos');
+    
+    const actualContent = content?.data || content;
+    const topicos = actualContent?.topicos || content?.topicos || '';
+    const theme = actualContent?.theme || content?.theme || 'Flash Cards';
+    const subject = actualContent?.subject || content?.subject || 'Geral';
 
-    // Se cards não é um array, tentar converter
-    if (!Array.isArray(cards)) {
-      if (typeof cards === 'object' && cards !== null) {
-        const cardObj = cards as any;
-        if (cardObj.front && cardObj.back) {
-          cards = [cardObj];
-        } else {
-          cards = [];
-        }
-      } else {
-        cards = [];
-      }
-    }
-
-    // Validar e processar cada card
-    const validCards = cards
-      .filter((card: any) => {
-        return card && 
-               typeof card === 'object' && 
-               card.front && 
-               card.back &&
-               typeof card.front === 'string' &&
-               typeof card.back === 'string' &&
-               card.front.trim() !== '' &&
-               card.back.trim() !== '';
-      })
-      .map((card: any, index: number) => ({
-        id: card.id || index + 1,
-        front: card.front.trim(),
-        back: card.back.trim(),
-        category: card.category || actualContent.subject || content.subject || 'Geral',
-        difficulty: card.difficulty || actualContent.difficultyLevel || content.difficultyLevel || 'Médio'
-      }));
-
-    // Se não temos cards válidos, tentar gerar fallback dos tópicos
-    if (validCards.length === 0) {
-      const topicos = actualContent.topicos || content.topicos || '';
-      const theme = actualContent.theme || content.theme || 'Flash Cards';
-      const subject = actualContent.subject || content.subject || 'Geral';
-
-      if (topicos && typeof topicos === 'string') {
-        const topicosList = topicos.split('\n').filter(t => t.trim());
-        const fallbackCards = topicosList.slice(0, 10).map((topic, index) => ({
+    if (topicos && typeof topicos === 'string') {
+      const topicosList = topicos.split('\n').filter((t: string) => t.trim());
+      if (topicosList.length > 0) {
+        const fallbackCards = topicosList.slice(0, 10).map((topic: string, index: number) => ({
           id: index + 1,
           front: `O que é ${topic.trim()}?`,
           back: `${topic.trim()} é um conceito importante em ${subject} que deve ser estudado e compreendido.`,
@@ -158,41 +124,51 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
           difficulty: 'Médio'
         }));
 
-        if (fallbackCards.length > 0) {
-          validCards.push(...fallbackCards);
-        }
+        const fallbackResult: FlashCardsOutputContract = {
+          title: `Flash Cards: ${theme}`,
+          description: `Flash cards para estudo de ${theme}`,
+          cards: fallbackCards,
+          totalCards: fallbackCards.length,
+          theme: theme,
+          subject: subject,
+          schoolYear: actualContent?.schoolYear || 'Ensino Médio',
+          numberOfFlashcards: fallbackCards.length,
+          difficultyLevel: 'Médio',
+          generatedByAI: false,
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: false,
+          isFallback: true
+        };
+
+        console.log('🔄 [FlashCardsPreview] Fallback gerado:', fallbackResult.totalCards, 'cards');
+        return fallbackResult;
       }
     }
 
-    // Se ainda não há cards, criar pelo menos um exemplo
-    if (validCards.length === 0) {
-      validCards.push({
+    // ÚLTIMO FALLBACK: Card de exemplo
+    const exampleResult: FlashCardsOutputContract = {
+      title: 'Flash Cards',
+      description: 'Configure o conteúdo para ver seus flash cards',
+      cards: [{
         id: 1,
         front: 'Flash Cards Criados com Sucesso!',
         back: 'Seus flash cards foram gerados e estão prontos para uso. Configure o conteúdo adequadamente para ver mais cards personalizados.',
         category: 'Sistema',
         difficulty: 'Básico'
-      });
-    }
-
-    const result = {
-      ...actualContent,
-      ...content,
-      cards: validCards,
-      totalCards: validCards.length,
-      numberOfFlashcards: validCards.length,
-      title: actualContent.title || content.title || `Flash Cards: ${actualContent.theme || content.theme || 'Estudo'}`,
-      description: actualContent.description || content.description || `Flash cards para estudo`,
-      theme: actualContent.theme || content.theme || 'Tema Geral',
-      subject: actualContent.subject || content.subject || 'Geral',
-      schoolYear: actualContent.schoolYear || content.schoolYear || 'Ensino Médio',
-      difficultyLevel: actualContent.difficultyLevel || content.difficultyLevel || 'Médio'
+      }],
+      totalCards: 1,
+      theme: 'Exemplo',
+      subject: 'Sistema',
+      numberOfFlashcards: 1,
+      difficultyLevel: 'Básico',
+      generatedByAI: false,
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false,
+      isFallback: true
     };
 
-    console.log('🃏 FlashCardsPreview - Conteúdo final normalizado:', result);
-    console.log('🃏 Total de cards processados:', result.cards.length);
-
-    return result;
+    console.log('🔄 [FlashCardsPreview] Usando card de exemplo');
+    return exampleResult;
   }, [JSON.stringify(content)]);
 
   // Inicializar ordem dos cards - APENAS uma vez quando há cards válidos

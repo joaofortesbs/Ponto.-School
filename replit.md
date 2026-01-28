@@ -45,13 +45,16 @@ The platform features a modern design with glass-morphism effects, blur backgrou
       - **6-Layer Pipeline**: Normalization → Intelligent Extraction (7 fallback methods) → Validation → Synchronization → Testing → Progressive Fallback
       - **Agent Rules File**: `LISTA_EXERCICIOS_RULES.md` contains mandatory guidelines for any modifications
       - **Configuration**: `LISTA_EXERCICIOS_CONFIG` with version tracking and protection flags
-    - **Flash Cards Data Flow (Fixed Jan 2026)**: Complete data propagation system for Flash Cards:
-      - `buildActivityHelper.ts`: Extracts actual data from wrapper objects (`result.data || result`) before saving
-      - Saves complete cards array to localStorage at `constructed_flash-cards_{id}`
-      - Dispatches `activity-data-sync` event with full cards data for instant UI sync
-      - `autoBuildActivities.ts`: Now calls BOTH `setActivityGeneratedFields` AND `setActivityBuiltData` to ensure data is available in multiple paths
-      - Fallback chain in `ActivityViewModal`: localStorage → Zustand store (multi-path: `generated_fields` → `dados_construidos` → `campos_preenchidos`) → originalData (database)
-      - ROOT CAUSE FIX: Previously data was saved to `dados_construidos` root but searched in `dados_construidos.generated_fields` - now both paths are populated and searched
+    - **Flash Cards Blindagem System (Jan 2026)**: Enterprise-grade isolation and protection system:
+      - **Bounded Context Architecture**: Fully isolated module with dedicated contracts and sanitizers
+      - **Protected Files**: `FlashCardsGenerator.ts`, `FlashCardsPreview.tsx`, `contracts.ts`
+      - **Contracts**: `FlashCardContract`, `FlashCardsInputContract`, `FlashCardsOutputContract` with readonly properties
+      - **Sanitizer**: `FlashCardsSanitizer` validates ALL external data with methods: `sanitizeInput()`, `sanitizeCards()`, `sanitizeOutput()`
+      - **Dedicated Storage Namespace**: Uses `sp_fc_v2_` prefix (with `sp_fc_v2_cache_` for cache) to prevent storage collisions
+      - **Legacy Compatibility**: Maintains backward compatibility with `constructed_flash-cards_` prefix
+      - **Agent Rules File**: `FLASH_CARDS_RULES.md` contains mandatory guidelines for any modifications
+      - **Configuration**: `FLASH_CARDS_CONFIG` with version tracking and protection flags
+      - **Data Flow**: External Data → FlashCardsSanitizer.sanitize() → FlashCardsInputContract → FlashCardsGenerator → FlashCardsOutputContract → FlashCardsPreview
     - **Study Groups**: Real-time chat and member management.
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.
