@@ -30,14 +30,21 @@ export class GeminiClient {
   async generate(request: GeminiRequest): Promise<GeminiResponse> {
     const startTime = Date.now();
     
+    console.log('🤖 [GeminiClient] Iniciando chamada à API Groq...');
+    console.log('🤖 [GeminiClient] Prompt (primeiros 300 chars):', request.prompt?.substring(0, 300));
+    
     try {
       if (!this.apiKey) {
+        console.error('❌ [GeminiClient] API Key não configurada!');
         throw new Error('Chave da API Groq não configurada');
       }
 
       if (!validateGroqApiKey(this.apiKey)) {
+        console.error('❌ [GeminiClient] API Key inválida! Deve começar com "gsk_"');
         throw new Error('Chave da API Groq inválida. A chave deve começar com "gsk_"');
       }
+
+      console.log('✅ [GeminiClient] API Key válida, fazendo requisição...');
 
       const maxTokens = Math.min(request.maxTokens || API_CONFIG.maxTokens, 7000);
 
@@ -56,21 +63,31 @@ export class GeminiClient {
         }),
       });
 
+      console.log('📡 [GeminiClient] Status da resposta:', response.status, response.statusText);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('❌ [GeminiClient] Erro na API:', errorData);
         throw new Error(`Erro na API Groq: ${response.status} ${response.statusText} - ${errorData.error?.message || ''}`);
       }
 
       const data = await response.json();
       const executionTime = Date.now() - startTime;
 
+      console.log('📡 [GeminiClient] Resposta recebida em', executionTime, 'ms');
+
       if (!data.choices || !data.choices[0]?.message?.content) {
+        console.error('❌ [GeminiClient] Resposta sem conteúdo válido:', data);
         throw new Error('Resposta inválida da API Groq');
       }
 
       const responseText = data.choices[0].message.content;
       const estimatedTokens = this.estimateTokens(request.prompt + responseText);
       const estimatedPowerCost = estimatedTokens * TOKEN_COSTS.GROQ;
+
+      console.log('✅ [GeminiClient] Resposta bem-sucedida!');
+      console.log('✅ [GeminiClient] Tamanho da resposta:', responseText.length, 'caracteres');
+      console.log('✅ [GeminiClient] Primeiros 500 chars:', responseText.substring(0, 500));
 
       return {
         success: true,
@@ -82,7 +99,8 @@ export class GeminiClient {
 
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      console.error('Erro na API Groq:', error);
+      console.error('❌ [GeminiClient] ERRO FATAL na API Groq:', error);
+      console.error('❌ [GeminiClient] Tempo até falha:', executionTime, 'ms');
       
       return {
         success: false,

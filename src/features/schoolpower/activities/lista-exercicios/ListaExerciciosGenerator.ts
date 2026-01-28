@@ -110,6 +110,114 @@ export class ListaExerciciosGenerator {
     }
   }
 
+  /**
+   * Extrai bloco JSON válido que contenha o schema esperado (questoes)
+   */
+  private static extractFirstValidJSON(text: string): { json: string; isArray: boolean } | null {
+    // Buscar TODOS os blocos JSON possíveis e selecionar o que contém questoes
+    const allObjects = ListaExerciciosGenerator.findAllMatchingBrackets(text, '{', '}');
+    const allArrays = ListaExerciciosGenerator.findAllMatchingBrackets(text, '[', ']');
+    
+    // Primeiro: tentar encontrar objeto com "questoes"
+    for (const obj of allObjects) {
+      if (obj.content.includes('"questoes"') || obj.content.includes('"questions"')) {
+        console.log('🎯 [extractFirstValidJSON] Encontrado objeto com "questoes"');
+        return { json: obj.content, isArray: false };
+      }
+    }
+    
+    // Segundo: tentar encontrar objeto com "enunciado" (provavelmente questões)
+    for (const obj of allObjects) {
+      if (obj.content.includes('"enunciado"') || obj.content.includes('"question"')) {
+        console.log('🎯 [extractFirstValidJSON] Encontrado objeto com "enunciado"');
+        return { json: obj.content, isArray: false };
+      }
+    }
+    
+    // Terceiro: tentar encontrar array com objetos de questões
+    for (const arr of allArrays) {
+      if (arr.content.includes('"enunciado"') || arr.content.includes('"question"')) {
+        console.log('🎯 [extractFirstValidJSON] Encontrado array com questões');
+        return { json: arr.content, isArray: true };
+      }
+    }
+    
+    // Fallback: primeiro bloco encontrado
+    if (allObjects.length > 0) {
+      console.log('⚠️ [extractFirstValidJSON] Usando primeiro objeto encontrado');
+      return { json: allObjects[0].content, isArray: false };
+    }
+    
+    if (allArrays.length > 0) {
+      console.log('⚠️ [extractFirstValidJSON] Usando primeiro array encontrado');
+      return { json: allArrays[0].content, isArray: true };
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Encontra TODOS os blocos balanceados no texto
+   */
+  private static findAllMatchingBrackets(text: string, open: string, close: string): { start: number; content: string }[] {
+    const results: { start: number; content: string }[] = [];
+    let searchStart = 0;
+    
+    while (searchStart < text.length) {
+      const match = ListaExerciciosGenerator.findMatchingBracketsFrom(text, open, close, searchStart);
+      if (!match) break;
+      results.push(match);
+      searchStart = match.start + match.content.length;
+    }
+    
+    return results;
+  }
+  
+  /**
+   * Encontra primeiro par balanceado a partir de uma posição
+   */
+  private static findMatchingBracketsFrom(text: string, open: string, close: string, fromIndex: number): { start: number; content: string } | null {
+    const start = text.indexOf(open, fromIndex);
+    if (start === -1) return null;
+    
+    let depth = 0;
+    let inString = false;
+    let escapeNext = false;
+    
+    for (let i = start; i < text.length; i++) {
+      const char = text[i];
+      
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+      
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+      
+      if (char === '"') {
+        inString = !inString;
+        continue;
+      }
+      
+      if (inString) continue;
+      
+      if (char === open) {
+        depth++;
+      } else if (char === close) {
+        depth--;
+        if (depth === 0) {
+          return { start, content: text.substring(start, i + 1) };
+        }
+      }
+    }
+    
+    return null;
+  }
+  
+
   private normalizeData(data: ListaExerciciosData): any {
     return {
       titulo: data.titulo || data.title || 'Lista de Exercícios',
@@ -127,27 +235,64 @@ export class ListaExerciciosGenerator {
 
   private static parseGeminiResponse(response: string, data: any): any {
     try {
+      console.log('🔍 [parseGeminiResponse] Resposta bruta recebida (primeiros 1000 chars):', response?.substring(0, 1000));
+      
       let cleanedResponse = response.trim();
       
-      // Remover markdown se presente (igual ao FlashCardsGenerator)
-      cleanedResponse = cleanedResponse.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+      // PASSO 1: Remover blocos de código markdown (múltiplos formatos)
+      cleanedResponse = cleanedResponse
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/\s*```$/i, '')
+        .replace(/```json/gi, '')
+        .replace(/```/g, '');
       
-      // IMPORTANTE: Extrair JSON do meio do texto (igual ao FlashCardsGenerator que funciona)
-      const jsonStart = cleanedResponse.indexOf('{');
-      const jsonEnd = cleanedResponse.lastIndexOf('}');
+      // PASSO 2: Extrair primeiro bloco JSON válido usando bracket matching
+      let isArray = false;
+      const extracted = ListaExerciciosGenerator.extractFirstValidJSON(cleanedResponse);
       
-      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-        cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
-        console.log('🧹 [parseGeminiResponse] JSON extraído do texto, tamanho:', cleanedResponse.length);
+      if (extracted) {
+        cleanedResponse = extracted.json;
+        isArray = extracted.isArray;
+        console.log(`🧹 [parseGeminiResponse] ${isArray ? 'Array' : 'Objeto'} JSON extraído, tamanho:`, cleanedResponse.length);
       } else {
-        console.warn('⚠️ [parseGeminiResponse] Não foi possível encontrar delimitadores JSON { }');
+        console.error('❌ [parseGeminiResponse] Nenhum JSON válido encontrado');
+        console.error('❌ [parseGeminiResponse] Resposta:', response?.substring(0, 500));
+        throw new Error('JSON não encontrado na resposta');
       }
 
-      console.log('📝 [parseGeminiResponse] Tentando parsear JSON (primeiros 500 chars):', cleanedResponse.substring(0, 500));
+      // PASSO 3: Limpar caracteres problemáticos que quebram o JSON
+      cleanedResponse = cleanedResponse
+        .replace(/[\x00-\x1F\x7F]/g, ' ')  // Remove caracteres de controle
+        .replace(/\n\s*\n/g, ' ')          // Remove linhas em branco múltiplas
+        .replace(/,\s*}/g, '}')            // Remove vírgulas antes de }
+        .replace(/,\s*]/g, ']')            // Remove vírgulas antes de ]
+        .replace(/"\s*:\s*undefined/g, '": null')  // Substitui undefined por null
+        .replace(/"\s*:\s*NaN/g, '": 0');  // Substitui NaN por 0
 
-      const parsed = JSON.parse(cleanedResponse);
-      console.log('✅ [ListaExerciciosGenerator] JSON parseado com sucesso');
-      console.log('✅ [parseGeminiResponse] Questões na resposta parseada:', parsed.questoes?.length || 0);
+      console.log('📝 [parseGeminiResponse] JSON limpo (primeiros 500 chars):', cleanedResponse.substring(0, 500));
+
+      let parsed = JSON.parse(cleanedResponse);
+      console.log('✅ [ListaExerciciosGenerator] JSON parseado com sucesso!');
+      
+      // PASSO 4: Tratar array na raiz (quando IA retorna array direto de questões)
+      if (Array.isArray(parsed) || isArray) {
+        console.log('🔄 [parseGeminiResponse] Resposta é array, convertendo para objeto...');
+        parsed = {
+          titulo: data.titulo || 'Lista de Exercícios',
+          disciplina: data.disciplina,
+          tema: data.tema,
+          questoes: Array.isArray(parsed) ? parsed : []
+        };
+      }
+      
+      // PASSO 5: Normalizar campo de questões (questions -> questoes)
+      if (!parsed.questoes && parsed.questions) {
+        console.log('🔄 [parseGeminiResponse] Normalizando questions -> questoes');
+        parsed.questoes = parsed.questions;
+      }
+      
+      console.log('✅ [parseGeminiResponse] Questões encontradas:', parsed.questoes?.length || 0);
 
       if (parsed.questoes && Array.isArray(parsed.questoes)) {
         console.log('🔍 [parseGeminiResponse] Processando', parsed.questoes.length, 'questões');
@@ -169,20 +314,64 @@ export class ListaExerciciosGenerator {
           
           console.log(`📝 [parseGeminiResponse] Questão ${index + 1}: enunciado encontrado =`, enunciadoEncontrado?.substring(0, 80));
           
-          return {
+          const respostaCorreta = ListaExerciciosGenerator.normalizeRespostaCorreta(
+            q.respostaCorreta || q.correctAnswer || q.correct_answer || q.gabarito || q.resposta, 
+            q.type || data.modeloQuestoes
+          );
+          
+          // Validar se tem enunciado E resposta correta (campos obrigatórios)
+          const hasValidEnunciado = Boolean(enunciadoEncontrado && enunciadoEncontrado.length >= 5);
+          const hasValidResposta = respostaCorreta !== undefined && respostaCorreta !== null;
+          
+          const questaoNormalizada = {
             id: q.id || `questao-${index + 1}`,
             type: ListaExerciciosGenerator.normalizeQuestionType(q.type || data.modeloQuestoes),
             enunciado: enunciadoEncontrado,
             alternativas: ListaExerciciosGenerator.normalizeAlternativas(q.alternativas || q.options || q.alternatives, q.type || data.modeloQuestoes),
-            respostaCorreta: ListaExerciciosGenerator.normalizeRespostaCorreta(q.respostaCorreta || q.correctAnswer || q.correct_answer || q.gabarito, q.type),
+            respostaCorreta: respostaCorreta,
             explicacao: q.explicacao || q.explanation || q.justificativa || '',
             dificuldade: q.dificuldade || q.difficulty || data.nivelDificuldade,
             tema: q.tema || q.topic || data.tema,
-            // Preservar objeto original para debug
-            _original: q
+            _validated: hasValidEnunciado && hasValidResposta
           };
+          
+          console.log(`📝 [parseGeminiResponse] Questão ${index + 1}: válida=${questaoNormalizada._validated}, enunciado=${hasValidEnunciado}, resposta=${hasValidResposta}`);
+          
+          return questaoNormalizada;
         });
+        
+        // PASSO 6: Filtrar questões inválidas
+        const questoesValidas = parsed.questoes.filter((q: any) => q._validated);
+        console.log(`🔍 [parseGeminiResponse] Questões válidas: ${questoesValidas.length}/${parsed.questoes.length}`);
+        
+        if (questoesValidas.length > 0) {
+          parsed.questoes = questoesValidas;
+        } else {
+          console.warn('⚠️ [parseGeminiResponse] Nenhuma questão válida encontrada');
+          throw new Error('Nenhuma questão válida na resposta da IA');
+        }
       }
+      
+      // PASSO 7: Verificação de esquema obrigatório
+      if (!parsed.questoes || !Array.isArray(parsed.questoes) || parsed.questoes.length === 0) {
+        console.error('❌ [parseGeminiResponse] Esquema inválido: questoes ausente ou vazio');
+        throw new Error('JSON não contém array de questões válido');
+      }
+      
+      // Verificar campos obrigatórios em cada questão para múltipla escolha
+      for (let i = 0; i < parsed.questoes.length; i++) {
+        const q = parsed.questoes[i];
+        if (!q.enunciado || q.enunciado.length < 5) {
+          console.warn(`⚠️ [parseGeminiResponse] Questão ${i + 1} sem enunciado válido`);
+        }
+        if (q.type === 'multipla-escolha' && (!q.alternativas || q.alternativas.length < 2)) {
+          console.warn(`⚠️ [parseGeminiResponse] Questão ${i + 1} multipla-escolha sem alternativas suficientes`);
+          // Gerar alternativas padrão se não existirem
+          q.alternativas = q.alternativas || ['Opção A', 'Opção B', 'Opção C', 'Opção D'];
+        }
+      }
+      
+      console.log('✅ [parseGeminiResponse] Esquema validado com sucesso!');
 
       return parsed;
     } catch (error) {

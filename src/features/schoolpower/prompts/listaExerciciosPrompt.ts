@@ -63,103 +63,65 @@ export const buildListaExerciciosPrompt = (contextData: any): string => {
     }`;
   }
 
-  return `Você é um especialista em educação brasileira. Crie uma lista de exercícios REAL e PERSONALIZADA baseada nos dados específicos fornecidos.
-
-DADOS ESPECÍFICOS DA ATIVIDADE:
-- Título: ${titulo}
-- Descrição: ${descricao}
-- Disciplina: ${disciplina}
-- Tema Específico: ${tema}
-- Ano de Escolaridade: ${anoEscolar}
-- Número de Questões: ${numeroQuestoes}
-- Nível de Dificuldade: ${dificuldade}
-- Modelo de Questões: ${modeloQuestoes}
-- Objetivos: ${objetivos}
-- Fontes de Referência: ${fontes}
-
-INSTRUÇÕES OBRIGATÓRIAS:
-1. Crie EXATAMENTE ${numeroQuestoes} questões reais e específicas sobre "${tema}" em ${disciplina}
-2. Adeque o vocabulário e complexidade para estudantes do ${anoEscolar}
-3. Use nível de dificuldade: ${dificuldade}
-4. Tipo de questões: ${tipoQuestao}
-5. Cada questão deve abordar aspectos diferentes do tema "${tema}"
-6. Conteúdo deve ser educacionalmente válido e contextualizado
-
-EXEMPLO DE QUESTÃO PARA SEGUIR:
-${exemploQuestao}
-
-FORMATO DE RESPOSTA OBRIGATÓRIO - JSON VÁLIDO:
-{
-  "titulo": "${titulo}",
-  "disciplina": "${disciplina}",
-  "tema": "${tema}",
-  "anoEscolaridade": "${anoEscolar}",
-  "numeroQuestoes": ${numeroQuestoes},
-  "dificuldade": "${dificuldade}",
-  "tipoQuestoes": "${modeloQuestoes}",
-  "objetivos": "Desenvolver o conhecimento sobre ${tema} adequado ao ${anoEscolar}",
-  "conteudoPrograma": "Conteúdo programático específico sobre ${tema} em ${disciplina}",
-  "observacoes": "Instruções importantes para a resolução dos exercícios",
-  "questoes": [
-    // Array com ${numeroQuestoes} questões seguindo o exemplo acima
-  ]
-}
-
-REGRAS CRÍTICAS:
-- Responda APENAS com JSON válido, sem caracteres extras ou texto adicional
-- Crie ${numeroQuestoes} questões diferentes e específicas sobre "${tema}"
-- Para múltipla escolha: exatamente 4 alternativas
-- Para verdadeiro/falso: ["Verdadeiro", "Falso"]
-- Para discursiva: sem alternativas
-- IDs únicos: "questao-1", "questao-2", etc.
-- Enunciados específicos do tema, não genéricos
-- Adequar ao nível escolar e dificuldade solicitados
-
-IMPORTANTE: O conteúdo deve ser específico para "${tema}" em ${disciplina}, adequado ao ${anoEscolar}.`;
+  return `Gere ${numeroQuestoes} questões de ${tipoQuestao} sobre "${tema}" em ${disciplina} para ${anoEscolar}, dificuldade ${dificuldade}. Retorne SOMENTE JSON, sem texto extra:
+{"titulo":"${titulo}","disciplina":"${disciplina}","tema":"${tema}","questoes":[{"id":"questao-1","type":"${tipoQuestao}","enunciado":"Questão aqui","alternativas":["A","B","C","D"],"respostaCorreta":0,"explicacao":"Explicação","dificuldade":"${dificuldade.toLowerCase()}","tema":"${tema}"}]}`;
 };
 
 export const validateListaExerciciosResponse = (response: any): boolean => {
   console.log('🔍 [validateListaExerciciosResponse] Validando resposta...');
   
   if (!response || typeof response !== 'object') {
-    console.error('❌ [validateListaExerciciosResponse] Resposta não é um objeto válido');
+    console.error('❌ [validateListaExerciciosResponse] Resposta não é objeto');
     return false;
   }
 
-  if (!response.questoes || !Array.isArray(response.questoes)) {
-    console.error('❌ [validateListaExerciciosResponse] Propriedade "questoes" não existe ou não é array');
-    console.log('🔍 [validateListaExerciciosResponse] Chaves disponíveis:', Object.keys(response));
+  const questoesArray = response.questoes || response.questions || [];
+  
+  if (!Array.isArray(questoesArray) || questoesArray.length === 0) {
+    console.error('❌ [validateListaExerciciosResponse] Sem questões válidas');
     return false;
   }
 
-  if (response.questoes.length === 0) {
-    console.error('❌ [validateListaExerciciosResponse] Array de questões está vazio');
-    return false;
-  }
+  console.log(`📊 [validateListaExerciciosResponse] Questões: ${questoesArray.length}`);
 
-  // Validação mais leniente - pelo menos deve ter algum conteúdo no enunciado
-  let validCount = 0;
-  for (let i = 0; i < response.questoes.length; i++) {
-    const questao = response.questoes[i];
+  // Validação RIGOROSA: cada questão deve ter enunciado E respostaCorreta
+  let fullyValidCount = 0;
+  
+  for (let i = 0; i < questoesArray.length; i++) {
+    const q = questoesArray[i];
+    if (!q || typeof q !== 'object') continue;
     
-    // Verificar se tem algum campo de enunciado (suporta múltiplos formatos)
-    const temEnunciado = questao.enunciado || questao.pergunta || questao.question || questao.statement || questao.texto;
-    const temConteudo = temEnunciado && temEnunciado.trim().length > 10;
+    // Buscar enunciado
+    const enunciado = q.enunciado || q.pergunta || q.question || q.statement || q.texto || '';
+    const hasEnunciado = String(enunciado).trim().length >= 5;
     
-    if (temConteudo) {
-      validCount++;
+    // Buscar resposta correta
+    const resposta = q.respostaCorreta ?? q.correctAnswer ?? q.correct_answer ?? q.gabarito ?? q.resposta;
+    const hasResposta = resposta !== undefined && resposta !== null;
+    
+    // Para múltipla escolha, verificar alternativas
+    const tipo = (q.type || 'multipla-escolha').toLowerCase();
+    let hasAlternativas = true;
+    if (tipo.includes('multipla') || tipo.includes('multiple')) {
+      const alts = q.alternativas || q.options || q.alternatives || [];
+      hasAlternativas = Array.isArray(alts) && alts.length >= 2;
+    }
+    
+    const isFullyValid = hasEnunciado && hasResposta && hasAlternativas;
+    
+    if (isFullyValid) {
+      fullyValidCount++;
+      console.log(`✅ [validate] Questão ${i + 1}: VÁLIDA`);
     } else {
-      console.warn(`⚠️ [validateListaExerciciosResponse] Questão ${i + 1} sem enunciado válido:`, questao);
+      console.warn(`⚠️ [validate] Questão ${i + 1}: enunciado=${hasEnunciado}, resposta=${hasResposta}, alternativas=${hasAlternativas}`);
     }
   }
 
-  console.log(`✅ [validateListaExerciciosResponse] ${validCount}/${response.questoes.length} questões válidas`);
+  // Requer pelo menos 50% das questões totalmente válidas
+  const minRequired = Math.max(1, Math.floor(questoesArray.length * 0.5));
+  const isValid = fullyValidCount >= minRequired;
   
-  // Aceitar se pelo menos 50% das questões são válidas
-  const percentualValido = validCount / response.questoes.length;
-  const isValid = percentualValido >= 0.5;
-  
-  console.log(`✅ [validateListaExerciciosResponse] Resultado: ${isValid ? 'VÁLIDO' : 'INVÁLIDO'} (${Math.round(percentualValido * 100)}% válidas)`);
+  console.log(`📊 [validate] ${fullyValidCount}/${questoesArray.length} válidas, mínimo=${minRequired}: ${isValid ? 'APROVADO ✅' : 'REPROVADO ❌'}`);
   
   return isValid;
 };
