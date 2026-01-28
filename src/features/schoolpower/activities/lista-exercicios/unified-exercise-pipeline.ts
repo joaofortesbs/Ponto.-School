@@ -1,36 +1,41 @@
 // ============================================================================
 // CAMADA 0 - CONTRATO DE BLINDAGEM (ISOLAMENTO)
+// Re-exporta contratos centralizados de contracts.ts
 // ============================================================================
 
-export interface ExerciseListContract {
-  readonly id: string;
-  readonly tema: string;
-  readonly disciplina: string;
-  readonly anoEscolaridade: string;
-  readonly numeroQuestoes: number;
-  readonly nivelDificuldade: 'facil' | 'medio' | 'dificil';
-  readonly modeloQuestoes: 'multipla-escolha' | 'discursiva' | 'verdadeiro-falso';
-}
+import {
+  ExerciseListInputSanitizer as ContractsSanitizer,
+  LISTA_EXERCICIOS_CONFIG,
+  generateExerciseListCacheKey,
+  isExerciseListKey,
+  type ExerciseListContract,
+  type QuestionContract,
+  type ExerciseListResponseContract,
+  type DifficultyLevel,
+  type QuestionType
+} from './contracts';
+
+export type { ExerciseListContract, QuestionContract, DifficultyLevel, QuestionType };
 
 export class ExerciseListSanitizer {
   static sanitize(input: any): ExerciseListContract {
-    console.log('🛡️ [Sanitizer] Blindando entrada de dados externa');
-    return {
-      id: String(input.id || input.activityId || Date.now()),
-      tema: String(input.tema || input.theme || 'Geral'),
-      disciplina: String(input.disciplina || input.subject || 'Geral'),
-      anoEscolaridade: String(input.anoEscolaridade || input.schoolYear || 'Não Informado'),
-      numeroQuestoes: Math.min(Math.max(Number(input.numeroQuestoes || input.numberOfQuestions || 10), 1), 50),
-      nivelDificuldade: this.sanitizeDifficulty(input.nivelDificuldade || input.difficultyLevel),
-      modeloQuestoes: UnifiedNormalizer.normalizeType(input.modeloQuestoes || input.questionModel)
-    };
+    return ContractsSanitizer.sanitize(input);
   }
 
-  private static sanitizeDifficulty(val: any): 'facil' | 'medio' | 'dificil' {
-    const d = String(val).toLowerCase();
-    if (d.includes('facil') || d.includes('easy')) return 'facil';
-    if (d.includes('dificil') || d.includes('hard')) return 'dificil';
-    return 'medio';
+  static validate(contract: ExerciseListContract): { valid: boolean; errors: string[] } {
+    return ContractsSanitizer.validate(contract);
+  }
+
+  static getCacheKey(contract: ExerciseListContract): string {
+    return generateExerciseListCacheKey(contract);
+  }
+
+  static isExerciseListStorageKey(key: string): boolean {
+    return isExerciseListKey(key);
+  }
+
+  static get CONFIG() {
+    return LISTA_EXERCICIOS_CONFIG;
   }
 }
 
@@ -527,7 +532,13 @@ export class ProgressiveFallback {
    */
   static processWithFallbacks(data: any, inputData: any): UnifiedExerciseListResponse {
     const sanitizedInput = ExerciseListSanitizer.sanitize(inputData);
-    const cacheKey = `sp_le_v2_${sanitizedInput.id}_${sanitizedInput.tema}_${sanitizedInput.modeloQuestoes}`;
+    
+    const validation = ExerciseListSanitizer.validate(sanitizedInput);
+    if (!validation.valid) {
+      console.warn('⚠️ [ProgressiveFallback] Contrato de entrada inválido:', validation.errors);
+    }
+    
+    const cacheKey = ExerciseListSanitizer.getCacheKey(sanitizedInput);
 
     // Tentar processar dados recebidos
     if (data) {

@@ -14,7 +14,6 @@ export {
   QuestionValidator,
   UnifiedNormalizer,
   ProgressiveFallback,
-  type ExerciseListContract,
   type UnifiedQuestion,
   type UnifiedExerciseListResponse,
   type ExtractionResult
@@ -27,6 +26,7 @@ export {
   LISTA_EXERCICIOS_CONFIG,
   generateExerciseListCacheKey,
   isExerciseListKey,
+  type ExerciseListContract,
   type QuestionContract,
   type ExerciseListResponseContract,
   type DifficultyLevel,

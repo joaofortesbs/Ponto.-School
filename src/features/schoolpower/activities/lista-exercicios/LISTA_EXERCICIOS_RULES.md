@@ -68,9 +68,9 @@ interface QuestionContract {
 ```
 [Dados Externos] 
        ↓
-[ExerciseListSanitizer.sanitize()] ← OBRIGATÓRIO
+[ExerciseListSanitizer.sanitize()] ← OBRIGATÓRIO (delegado internamente para ExerciseListInputSanitizer)
        ↓
-[ExerciseListContract] (dados validados)
+[ExerciseListContract] (dados validados e imutáveis - definidos em contracts.ts)
        ↓
 [ListaExerciciosGenerator] (geração IA)
        ↓
@@ -78,6 +78,8 @@ interface QuestionContract {
        ↓
 [ExerciseListPreview] (renderização)
 ```
+
+**IMPORTANTE**: A fonte única de verdade para contratos é `contracts.ts`. O `unified-exercise-pipeline.ts` re-exporta e delega para esses contratos.
 
 ---
 
