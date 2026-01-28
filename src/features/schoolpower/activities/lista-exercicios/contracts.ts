@@ -249,3 +249,139 @@ export function generateExerciseListCacheKey(contract: ExerciseListContract): st
 export function isExerciseListKey(key: string): boolean {
   return key.startsWith(LISTA_EXERCICIOS_CONFIG.STORAGE_PREFIX);
 }
+
+// ============================================================================
+// FUNÇÕES CENTRALIZADAS DE STORAGE - BLINDAGEM V2.0
+// ============================================================================
+
+/**
+ * Interface para dados processados e salvos de Lista de Exercícios
+ */
+export interface ProcessedExerciseListData {
+  id: string;
+  titulo: string;
+  disciplina: string;
+  tema: string;
+  tipoQuestoes: string;
+  numeroQuestoes: number;
+  dificuldade: string;
+  questoes: QuestionContract[];
+  isGeneratedByAI: boolean;
+  generatedAt: string;
+  _processedByPipeline: boolean;
+  _pipelineVersion: string;
+}
+
+/**
+ * Salva dados de Lista de Exercícios usando o namespace protegido
+ * IMPORTANTE: Esta função deve ser usada por TODOS os pontos de salvamento
+ */
+export function saveExerciseListData(activityId: string, data: any): boolean {
+  try {
+    const storageKey = `${LISTA_EXERCICIOS_CONFIG.STORAGE_PREFIX}${activityId}`;
+    const legacyKey = `constructed_lista-exercicios_${activityId}`;
+    
+    // Adicionar metadados de processamento
+    const dataToSave = {
+      ...data,
+      _processedByPipeline: true,
+      _pipelineVersion: LISTA_EXERCICIOS_CONFIG.VERSION,
+      _savedAt: new Date().toISOString()
+    };
+    
+    // Salvar no novo namespace
+    localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+    
+    // Também salvar no legacy para compatibilidade retroativa
+    localStorage.setItem(legacyKey, JSON.stringify(dataToSave));
+    
+    console.log(`💾 [ExerciseListStorage] Dados salvos com sucesso:`, {
+      newKey: storageKey,
+      legacyKey,
+      questoesCount: data.questoes?.length || 0,
+      titulo: data.titulo
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('❌ [ExerciseListStorage] Erro ao salvar:', error);
+    return false;
+  }
+}
+
+/**
+ * Carrega dados de Lista de Exercícios do namespace protegido
+ * Tenta o novo namespace primeiro, depois o legacy
+ * IMPORTANTE: Esta função deve ser usada por TODOS os pontos de carregamento
+ */
+export function loadExerciseListData(activityId: string): ProcessedExerciseListData | null {
+  try {
+    const storageKey = `${LISTA_EXERCICIOS_CONFIG.STORAGE_PREFIX}${activityId}`;
+    const legacyKey = `constructed_lista-exercicios_${activityId}`;
+    
+    // Tentar novo namespace primeiro
+    let rawData = localStorage.getItem(storageKey);
+    let source = 'new';
+    
+    // Fallback para legacy
+    if (!rawData) {
+      rawData = localStorage.getItem(legacyKey);
+      source = 'legacy';
+    }
+    
+    if (!rawData) {
+      console.log(`📭 [ExerciseListStorage] Nenhum dado encontrado para: ${activityId}`);
+      return null;
+    }
+    
+    const parsed = JSON.parse(rawData);
+    
+    console.log(`📂 [ExerciseListStorage] Dados carregados de ${source}:`, {
+      activityId,
+      titulo: parsed.titulo,
+      questoesCount: parsed.questoes?.length || 0,
+      processedByPipeline: parsed._processedByPipeline
+    });
+    
+    // Se veio do legacy e não foi processado, migrar para novo namespace
+    if (source === 'legacy' && !parsed._processedByPipeline) {
+      console.log(`🔄 [ExerciseListStorage] Migrando dados legacy para novo namespace`);
+      saveExerciseListData(activityId, parsed);
+    }
+    
+    return parsed as ProcessedExerciseListData;
+  } catch (error) {
+    console.error('❌ [ExerciseListStorage] Erro ao carregar:', error);
+    return null;
+  }
+}
+
+/**
+ * Verifica se existem dados salvos para uma atividade
+ */
+export function hasExerciseListData(activityId: string): boolean {
+  const storageKey = `${LISTA_EXERCICIOS_CONFIG.STORAGE_PREFIX}${activityId}`;
+  const legacyKey = `constructed_lista-exercicios_${activityId}`;
+  
+  return localStorage.getItem(storageKey) !== null || 
+         localStorage.getItem(legacyKey) !== null;
+}
+
+/**
+ * Remove dados de Lista de Exercícios (ambos namespaces)
+ */
+export function removeExerciseListData(activityId: string): boolean {
+  try {
+    const storageKey = `${LISTA_EXERCICIOS_CONFIG.STORAGE_PREFIX}${activityId}`;
+    const legacyKey = `constructed_lista-exercicios_${activityId}`;
+    
+    localStorage.removeItem(storageKey);
+    localStorage.removeItem(legacyKey);
+    
+    console.log(`🗑️ [ExerciseListStorage] Dados removidos: ${activityId}`);
+    return true;
+  } catch (error) {
+    console.error('❌ [ExerciseListStorage] Erro ao remover:', error);
+    return false;
+  }
+}

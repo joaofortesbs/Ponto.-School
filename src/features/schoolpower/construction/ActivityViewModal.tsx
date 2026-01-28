@@ -21,6 +21,7 @@ import { ContentExtractModal } from '../components/ContentExtractModal';
 import { isTextVersionActivity } from '../config/activityVersionConfig';
 import { retrieveTextVersionContent } from '../activities/text-version/TextVersionGenerator';
 import { useChosenActivitiesStore } from '../interface-chat-producao/stores/ChosenActivitiesStore';
+import { loadExerciseListData, processExerciseListWithUnifiedPipeline } from '../activities/lista-exercicios';
 
 // Helper function to get activity icon based on activity type
 const getActivityIcon = (activityId: string) => {
@@ -1460,50 +1461,43 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('ℹ️ Nenhum conteúdo específico encontrado para Plano de Aula. Usando dados gerais.');
       }
     }
-    // 5. Lista de Exercícios (com filtro de exclusão e fallback para store)
+    // 5. Lista de Exercícios (BLINDAGEM V2.0 - usando funções centralizadas)
     else if (activityType === 'lista-exercicios') {
-      // FALLBACK PARA STORE: Se previewData não tem questões, tentar buscar da store Zustand
-      if ((!previewData.questoes || previewData.questoes.length === 0) && 
-          (!previewData.questions || previewData.questions.length === 0)) {
-        console.log('📦 Lista de Exercícios: previewData sem questões, buscando da store Zustand...');
+      console.log('📝 [ActivityViewModal] Carregando Lista de Exercícios via storage centralizado...');
+      
+      // PASSO 1: Usar função centralizada para carregar dados
+      const storedData = loadExerciseListData(activity.id);
+      
+      if (storedData && storedData.questoes && storedData.questoes.length > 0) {
+        // Dados já processados pela pipeline - usar diretamente
+        previewData.questoes = storedData.questoes;
+        previewData.titulo = storedData.titulo || previewData.title;
+        previewData.disciplina = storedData.disciplina;
+        previewData.tema = storedData.tema;
+        previewData.isGeneratedByAI = storedData.isGeneratedByAI;
+        previewData._processedByPipeline = storedData._processedByPipeline;
+        console.log(`✅ Lista de Exercícios: ${storedData.questoes.length} questões carregadas via storage centralizado`);
+      } else {
+        // FALLBACK PARA STORE: Se storage centralizado não tem dados
+        console.log('📦 Lista de Exercícios: Storage centralizado sem dados, tentando store Zustand...');
         
-        // Tentar localStorage primeiro
-        const listaContent = localStorage.getItem(`constructed_lista-exercicios_${activity.id}`);
-        if (listaContent) {
-          try {
-            const parsedContent = JSON.parse(listaContent);
+        const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
+        if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
+          const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
+          
+          // Processar pela pipeline unificada antes de usar
+          if (fullData.questoes && Array.isArray(fullData.questoes) && fullData.questoes.length > 0) {
+            console.log('🔄 Lista de Exercícios: Processando dados da store pela pipeline unificada...');
+            const processedResult = processExerciseListWithUnifiedPipeline(fullData, {
+              id: activity.id,
+              tema: fullData.tema || previewData.theme,
+              disciplina: fullData.disciplina || previewData.subject,
+              titulo: fullData.titulo || previewData.title
+            });
             
-            // Se localStorage tem metadados leves, buscar da store
-            if (parsedContent.hasFullDataInStore === true) {
-              const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-              if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-                const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-                if (fullData.questoes && Array.isArray(fullData.questoes) && fullData.questoes.length > 0) {
-                  previewData.questoes = fullData.questoes;
-                  console.log(`✅ Lista de Exercícios: ${fullData.questoes.length} questões carregadas da store Zustand`);
-                }
-              }
-            } else {
-              // Dados completos no localStorage
-              const data = parsedContent.data || parsedContent;
-              if (data.questoes && Array.isArray(data.questoes) && data.questoes.length > 0) {
-                previewData.questoes = data.questoes;
-                console.log(`✅ Lista de Exercícios: ${data.questoes.length} questões carregadas do localStorage`);
-              }
-            }
-          } catch (e) {
-            console.warn('⚠️ Erro ao parsear localStorage para Lista de Exercícios:', e);
-          }
-        }
-        
-        // Se ainda não tem questões, tentar store diretamente
-        if (!previewData.questoes || previewData.questoes.length === 0) {
-          const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-          if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-            const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-            if (fullData.questoes && Array.isArray(fullData.questoes) && fullData.questoes.length > 0) {
-              previewData.questoes = fullData.questoes;
-              console.log(`✅ Lista de Exercícios: ${fullData.questoes.length} questões carregadas da store (fallback direto)`);
+            if (processedResult.success && processedResult.questoes.length > 0) {
+              previewData.questoes = processedResult.questoes as any;
+              console.log(`✅ Lista de Exercícios: ${processedResult.questoes.length} questões processadas pela pipeline`);
             }
           }
         }
@@ -1515,10 +1509,20 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             const dbData = activity.originalData.campos || activity.originalData;
             
             if (dbData && dbData.questoes && Array.isArray(dbData.questoes) && dbData.questoes.length > 0) {
-              previewData.questoes = dbData.questoes;
-              previewData.title = dbData.title || activity.originalData.titulo || previewData.title;
-              previewData.description = dbData.description || previewData.description;
-              console.log(`✅ Lista de Exercícios: ${dbData.questoes.length} questões carregadas do banco de dados`);
+              // Processar pela pipeline unificada
+              const processedResult = processExerciseListWithUnifiedPipeline(dbData, {
+                id: activity.id,
+                tema: dbData.tema || previewData.theme,
+                disciplina: dbData.disciplina || previewData.subject,
+                titulo: dbData.titulo || previewData.title
+              });
+              
+              if (processedResult.success && processedResult.questoes.length > 0) {
+                previewData.questoes = processedResult.questoes as any;
+                previewData.title = dbData.title || activity.originalData.titulo || previewData.title;
+                previewData.description = dbData.description || previewData.description;
+                console.log(`✅ Lista de Exercícios: ${processedResult.questoes.length} questões do banco processadas pela pipeline`);
+              }
             }
           }
         }

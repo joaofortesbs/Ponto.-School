@@ -26,9 +26,14 @@ export {
   LISTA_EXERCICIOS_CONFIG,
   generateExerciseListCacheKey,
   isExerciseListKey,
+  saveExerciseListData,
+  loadExerciseListData,
+  hasExerciseListData,
+  removeExerciseListData,
   type ExerciseListContract,
   type QuestionContract,
   type ExerciseListResponseContract,
+  type ProcessedExerciseListData,
   type DifficultyLevel,
   type QuestionType
 } from './contracts';

@@ -1,6 +1,10 @@
 import { ActivityFormData } from '../types/ActivityTypes';
 import { generateActivityContent } from '../api/generateActivityContent';
 import { safeSetJSON, cleanupOldStorage, getStorageUsagePercent } from '../../services/localStorage-manager';
+import { 
+  processExerciseListWithUnifiedPipeline, 
+  saveExerciseListData 
+} from '../../activities/lista-exercicios';
 
 /**
  * Helper function to build an activity from form data
@@ -47,26 +51,92 @@ export async function buildActivityFromFormData(
     
     if (!isTextVersionActivity) {
       // CORREÇÃO: Extrair dados corretos do resultado (pode vir como { success, data } ou direto)
-      const actualData = result?.data || result;
+      let actualData = result?.data || result;
       
-      // 2. Save to localStorage with the SAME key used in EditActivityModal (ONLY for interactive activities)
-      const storageKey = `constructed_${activityType}_${activityId}`;
-      
-      // Para Flash Cards: garantir que os cards estejam no formato correto
-      if (activityType === 'flash-cards') {
+      // ============================================================================
+      // PROCESSAMENTO ESPECIAL PARA LISTA DE EXERCÍCIOS - BLINDAGEM V2.0
+      // ============================================================================
+      if (activityType === 'lista-exercicios') {
+        console.log('📝 [buildActivityHelper] Lista de Exercícios - Processando pela pipeline unificada...');
+        console.log('📝 [buildActivityHelper] Dados brutos recebidos:', {
+          hasQuestoes: !!actualData?.questoes,
+          questoesCount: actualData?.questoes?.length || 0,
+          primeiraQuestaoEnunciado: actualData?.questoes?.[0]?.enunciado?.substring(0, 100)
+        });
+        
+        // Processar dados pela pipeline unificada para garantir normalização
+        const processedResult = processExerciseListWithUnifiedPipeline(actualData, {
+          id: activityId,
+          tema: formData.theme || formData.tema,
+          disciplina: formData.subject || formData.disciplina,
+          numeroQuestoes: formData.numberOfQuestions || formData.numeroQuestoes,
+          modeloQuestoes: formData.questionModel || formData.modeloQuestoes,
+          nivelDificuldade: formData.difficultyLevel || formData.nivelDificuldade,
+          titulo: formData.title || formData.titulo
+        });
+        
+        console.log('✅ [buildActivityHelper] Pipeline unificada processou:', {
+          success: processedResult.success,
+          questoesValidas: processedResult.metadata.validQuestoes,
+          questoesTotais: processedResult.metadata.totalQuestoes,
+          metodo: processedResult.metadata.extractionMethod
+        });
+        
+        // Atualizar actualData com as questões processadas
+        actualData = {
+          ...actualData,
+          titulo: processedResult.titulo || actualData.titulo,
+          disciplina: processedResult.disciplina || actualData.disciplina,
+          questoes: processedResult.questoes,
+          questions: processedResult.questoes,
+          content: {
+            questoes: processedResult.questoes,
+            questions: processedResult.questoes
+          },
+          _processedByPipeline: true,
+          _pipelineMetadata: processedResult.metadata
+        };
+        
+        // Usar função centralizada de storage para Lista de Exercícios
+        const saved = saveExerciseListData(activityId, actualData);
+        if (!saved) {
+          console.warn(`⚠️ [buildActivityHelper] Falha ao salvar Lista de Exercícios: ${activityId}`);
+        } else {
+          console.log(`💾 [buildActivityHelper] Lista de Exercícios salva via storage centralizado: ${activityId}`);
+        }
+      } 
+      // ============================================================================
+      // PROCESSAMENTO PARA FLASH CARDS (já funcionando)
+      // ============================================================================
+      else if (activityType === 'flash-cards') {
         console.log(`🃏 [buildActivityHelper] Flash Cards - Dados a salvar:`, {
           hasCards: !!actualData?.cards,
           cardsCount: actualData?.cards?.length || 0,
           title: actualData?.title,
           theme: actualData?.theme
         });
+        
+        const storageKey = `constructed_${activityType}_${activityId}`;
+        const saved = safeSetJSON(storageKey, actualData);
+        if (!saved) {
+          console.warn(`⚠️ [buildActivityHelper] Não foi possível salvar no localStorage: ${storageKey}`);
+        } else {
+          console.log(`💾 [buildActivityHelper] Dados salvos no localStorage: ${storageKey}`);
+        }
       }
-      
-      const saved = safeSetJSON(storageKey, actualData);
-      if (!saved) {
-        console.warn(`⚠️ [buildActivityHelper] Não foi possível salvar no localStorage: ${storageKey}`);
-      } else {
-        console.log(`💾 [buildActivityHelper] Dados salvos no localStorage: ${storageKey}`);
+      // ============================================================================
+      // PROCESSAMENTO PADRÃO PARA OUTRAS ATIVIDADES
+      // ============================================================================
+      else {
+        // 2. Save to localStorage with the SAME key used in EditActivityModal (ONLY for interactive activities)
+        const storageKey = `constructed_${activityType}_${activityId}`;
+        
+        const saved = safeSetJSON(storageKey, actualData);
+        if (!saved) {
+          console.warn(`⚠️ [buildActivityHelper] Não foi possível salvar no localStorage: ${storageKey}`);
+        } else {
+          console.log(`💾 [buildActivityHelper] Dados salvos no localStorage: ${storageKey}`);
+        }
       }
 
       // 3. Save to constructedActivities object (used by EditActivityModal)
