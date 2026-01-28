@@ -2,18 +2,22 @@
 // Configuração centralizada das chaves de API
 export const API_KEYS = {
   GROQ: import.meta.env.VITE_GROQ_API_KEY || '',
+  GEMINI: import.meta.env.VITE_GEMINI_API_KEY || '',
   CLAUDE: '',
 } as const;
 
 // URLs base das APIs
 export const API_URLS = {
   GROQ: 'https://api.groq.com/openai/v1/chat/completions',
+  GEMINI: 'https://generativelanguage.googleapis.com/v1beta/models',
   CLAUDE: 'https://api.anthropic.com/v1/messages',
 } as const;
 
 // Modelos disponíveis
 export const API_MODELS = {
   GROQ: 'llama-3.3-70b-versatile',
+  GROQ_FALLBACK: 'llama-3.1-8b-instant',
+  GEMINI: 'gemini-1.5-flash',
 } as const;
 
 // Configurações de timeout e retry
@@ -28,6 +32,7 @@ export const API_CONFIG = {
 export const TOKEN_COSTS = {
   CLAUDE: 0.002,
   GROQ: 0.0005,
+  GEMINI: 0.0003,
 } as const;
 
 export function validateGroqApiKey(apiKey: string): boolean {
@@ -35,8 +40,17 @@ export function validateGroqApiKey(apiKey: string): boolean {
   return trimmedKey.startsWith('gsk_') && trimmedKey.length > 10;
 }
 
+export function validateGeminiApiKey(apiKey: string): boolean {
+  const trimmedKey = (apiKey || '').trim();
+  return trimmedKey.startsWith('AIza') && trimmedKey.length > 20;
+}
+
 export function isGroqApiKeyConfigured(): boolean {
   return validateGroqApiKey(API_KEYS.GROQ);
+}
+
+export function isGeminiApiKeyConfigured(): boolean {
+  return validateGeminiApiKey(API_KEYS.GEMINI);
 }
 
 export async function fetchWithRetry(
