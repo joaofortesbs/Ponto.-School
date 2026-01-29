@@ -2,6 +2,7 @@ import { geminiLogger } from '@/utils/geminiDebugLogger';
 import { geminiClient } from '@/utils/api/geminiClient';
 import { buildListaExerciciosPrompt, validateListaExerciciosResponse } from '../../prompts/listaExerciciosPrompt';
 import { processAIGeneratedContent, generateFallbackQuestions } from '../../services/exerciseListProcessor';
+import { normalizeAlternativeToString } from './contracts';
 
 export interface ListaExerciciosData {
   titulo?: string;
@@ -407,7 +408,7 @@ export class ListaExerciciosGenerator {
     }
     
     if (Array.isArray(alternativas) && alternativas.length >= 2) {
-      return alternativas.slice(0, 5).map((alt: any) => String(alt).trim());
+      return alternativas.slice(0, 5).map((alt: any, index: number) => normalizeAlternativeToString(alt, index));
     }
     
     return ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'];

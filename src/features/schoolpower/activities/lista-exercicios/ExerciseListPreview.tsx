@@ -39,6 +39,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { generateContent } from '@/services/llm-orchestrator';
+import { normalizeAlternativeToString } from './contracts';
 
 // Sistema de mapeamento de dificuldade
 const DIFFICULTY_LEVELS = {
@@ -659,14 +660,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         }
 
         // Garantir que as alternativas sejam strings válidas para múltipla escolha
+        // Usa função robusta que extrai texto de qualquer formato de objeto
         if (normalizedQuestion.type === 'multipla-escolha' && normalizedQuestion.alternativas) {
-          normalizedQuestion.alternativas = normalizedQuestion.alternativas.map((alt, altIndex) => {
-            if (typeof alt === 'string') return alt;
-            if (alt && typeof alt === 'object' && alt.texto) return alt.texto;
-            if (alt && typeof alt === 'object' && alt.text) return alt.text;
-            if (alt && typeof alt === 'object' && alt.content) return alt.content;
-            return `Alternativa ${String.fromCharCode(65 + altIndex)} Inválida`;
-          });
+          normalizedQuestion.alternativas = normalizedQuestion.alternativas.map((alt, altIndex) => 
+            normalizeAlternativeToString(alt, altIndex)
+          );
         }
 
         return normalizedQuestion;
@@ -1186,13 +1184,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     let alternativasProcessadas: string[] = [];
     if (questao.type === 'multipla-escolha') {
       if (questao.alternativas && Array.isArray(questao.alternativas) && questao.alternativas.length > 0) {
-        alternativasProcessadas = questao.alternativas.map((alt, altIndex) => {
-          if (typeof alt === 'string') return alt;
-          if (alt && typeof alt === 'object' && alt.texto) return alt.texto;
-          if (alt && typeof alt === 'object' && alt.text) return alt.text;
-          if (alt && typeof alt === 'object' && alt.content) return alt.content;
-          return `Alternativa ${String.fromCharCode(65 + altIndex)} Inválida`;
-        });
+        // Usa função robusta que extrai texto de qualquer formato de objeto
+        alternativasProcessadas = questao.alternativas.map((alt, altIndex) => 
+          normalizeAlternativeToString(alt, altIndex)
+        );
       } else {
         alternativasProcessadas = ['Opção A', 'Opção B', 'Opção C', 'Opção D']; // Fallback
       }

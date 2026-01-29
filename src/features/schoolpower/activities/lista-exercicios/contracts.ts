@@ -91,6 +91,135 @@ export const LISTA_EXERCICIOS_CONFIG = {
 } as const;
 
 // ============================================================================
+// NORMALIZADOR ROBUSTO DE ALTERNATIVAS
+// ============================================================================
+
+/**
+ * Lista de campos que podem conter o texto de uma alternativa quando ela é um objeto
+ * Ordem de prioridade: mais específico → mais genérico
+ */
+const ALTERNATIVE_TEXT_FIELDS = [
+  'texto', 'text', 'content', 'value', 'label', 
+  'alternativa', 'alternative', 'option', 'opcao',
+  'resposta', 'answer', 'description', 'descricao',
+  'enunciado', 'statement', 'body', 'message', 'msg'
+] as const;
+
+/**
+ * Normaliza uma alternativa de qualquer formato para string
+ * 
+ * RESOLVE o problema de [object Object] em alternativas
+ * 
+ * Formatos suportados:
+ * - String simples: "Alternativa A"
+ * - Objeto com texto: { texto: "Alternativa A", correta: false }
+ * - Objeto com text: { text: "Alternativa A", correct: false }
+ * - Objeto com value: { value: "Alternativa A", id: 1 }
+ * - Objeto com content: { content: "Alternativa A" }
+ * - Array (pega primeiro elemento): ["Alternativa A"]
+ * - Número: 42 → "42"
+ * 
+ * @param alt - Alternativa em qualquer formato
+ * @param fallbackIndex - Índice para fallback (A, B, C, D...)
+ * @returns String normalizada ou fallback
+ */
+export function normalizeAlternativeToString(alt: unknown, fallbackIndex: number = 0): string {
+  // Caso 1: já é string
+  if (typeof alt === 'string') {
+    const trimmed = alt.trim();
+    if (trimmed.length > 0) {
+      return trimmed;
+    }
+  }
+
+  // Caso 2: é número
+  if (typeof alt === 'number') {
+    return String(alt);
+  }
+
+  // Caso 3: é booleano
+  if (typeof alt === 'boolean') {
+    return alt ? 'Verdadeiro' : 'Falso';
+  }
+
+  // Caso 4: é null ou undefined
+  if (alt === null || alt === undefined) {
+    return `Alternativa ${String.fromCharCode(65 + fallbackIndex)}`;
+  }
+
+  // Caso 5: é array - pega primeiro elemento
+  if (Array.isArray(alt)) {
+    if (alt.length > 0) {
+      return normalizeAlternativeToString(alt[0], fallbackIndex);
+    }
+    return `Alternativa ${String.fromCharCode(65 + fallbackIndex)}`;
+  }
+
+  // Caso 6: é objeto - busca campo de texto
+  if (typeof alt === 'object') {
+    const obj = alt as Record<string, unknown>;
+    
+    // Buscar em ordem de prioridade
+    for (const field of ALTERNATIVE_TEXT_FIELDS) {
+      const value = obj[field];
+      if (value !== undefined && value !== null && value !== '') {
+        if (typeof value === 'string') {
+          const trimmed = value.trim();
+          if (trimmed.length > 0) {
+            return trimmed;
+          }
+        } else if (typeof value === 'number') {
+          return String(value);
+        }
+      }
+    }
+
+    // Se nenhum campo conhecido, tentar Object.values
+    const values = Object.values(obj).filter(v => 
+      typeof v === 'string' && v.trim().length > 0
+    );
+    
+    if (values.length > 0) {
+      // Pegar a string mais longa (provavelmente é o texto principal)
+      const longestValue = values.reduce((a, b) => 
+        (a as string).length > (b as string).length ? a : b
+      ) as string;
+      
+      if (longestValue.trim().length > 0) {
+        console.log(`🔧 [normalizeAlternativeToString] Extraído texto de objeto via Object.values: "${longestValue.substring(0, 50)}..."`);
+        return longestValue.trim();
+      }
+    }
+
+    // Log de debug para entender o formato não reconhecido
+    console.warn(`⚠️ [normalizeAlternativeToString] Formato de objeto não reconhecido:`, JSON.stringify(obj).substring(0, 200));
+  }
+
+  // Fallback final
+  console.warn(`⚠️ [normalizeAlternativeToString] Fallback para alternativa ${fallbackIndex}, tipo original: ${typeof alt}`);
+  return `Alternativa ${String.fromCharCode(65 + fallbackIndex)}`;
+}
+
+/**
+ * Normaliza um array de alternativas para array de strings
+ * 
+ * @param alternativas - Array de alternativas em qualquer formato
+ * @returns Array de strings normalizadas
+ */
+export function normalizeAlternativasArray(alternativas: unknown): string[] {
+  if (!alternativas) {
+    return [];
+  }
+
+  if (!Array.isArray(alternativas)) {
+    console.warn('⚠️ [normalizeAlternativasArray] Entrada não é array:', typeof alternativas);
+    return [];
+  }
+
+  return alternativas.map((alt, index) => normalizeAlternativeToString(alt, index));
+}
+
+// ============================================================================
 // SANITIZADOR DE ENTRADA
 // ============================================================================
 

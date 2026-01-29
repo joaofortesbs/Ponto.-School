@@ -8,6 +8,7 @@ import {
   LISTA_EXERCICIOS_CONFIG,
   generateExerciseListCacheKey,
   isExerciseListKey,
+  normalizeAlternativeToString,
   type ExerciseListContract,
   type QuestionContract,
   type ExerciseListResponseContract,
@@ -258,7 +259,7 @@ export class IntelligentExtractor {
     for (const field of ALTERNATIVAS_FIELDS) {
       const value = question[field];
       if (Array.isArray(value) && value.length > 0) {
-        return value.map(v => typeof v === 'string' ? v : String(v));
+        return value.map((v, index) => normalizeAlternativeToString(v, index));
       }
     }
     return undefined;
