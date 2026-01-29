@@ -71,3 +71,29 @@ The architecture emphasizes a modular component design based on shadcn/ui patter
 - **docx**, **jsPDF**, **file-saver**: For document generation and download.
 - **bcrypt**: For password hashing.
 - **Framer Motion**: For animations.
+
+## Component Protection System (Blindagem)
+
+### Protected Components
+The following components have protection rules to prevent accidental breakage:
+
+| Component | Rules File | Version |
+|-----------|-----------|---------|
+| Lista de Exercícios | `src/features/schoolpower/activities/lista-exercicios/LISTA_EXERCICIOS_RULES.md` | v2.1.2 |
+| Flash Cards | `src/features/schoolpower/activities/flash-cards/FLASH_CARDS_RULES.md` | Active |
+
+### AI Orchestration Guide
+- **Location**: `src/features/schoolpower/AI_ORCHESTRATION_GUIDE.md`
+- **Purpose**: Provides mandatory guidelines for the Replit Agent when modifying School Power components
+- **Key Principle**: Changes to one component should NEVER affect other components
+
+### Required Actions Before Modifying Protected Components
+1. Read the component's RULES.md file
+2. Follow the modification rules listed
+3. Test according to the checklist
+4. Document changes in the history section
+
+## Recent Changes (Jan 29, 2026)
+- **v2.1.2 Lista de Exercícios Blindagem**: Updated with comprehensive protection rules
+- **AI Orchestration Guide**: Created to guide Replit Agent on safe modifications
+- **Fallback JSON Schema Fix**: Local fallback now generates compatible JSON structure

@@ -85,7 +85,7 @@ export const LISTA_EXERCICIOS_CONFIG = {
   MIN_ENUNCIADO_LENGTH: 5,
   MIN_ALTERNATIVAS: 2,
   VALIDATION_THRESHOLD: 0.5,
-  VERSION: '2.1.0',
+  VERSION: '2.1.2',
   PROTECTED: true,
   EXTRACTION_PRIORITY: ['questoes', 'questions', 'enunciado', 'question']
 } as const;

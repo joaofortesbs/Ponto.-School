@@ -1,228 +1,311 @@
-# Lista de Exercícios - Regras de Proteção e Orquestração
+# Lista de Exercícios - Sistema de Blindagem v2.1.2 Enterprise
 
-> **ATENÇÃO AGENTE DO REPLIT**: Este arquivo contém regras OBRIGATÓRIAS para qualquer modificação na atividade de Lista de Exercícios. Leia completamente antes de fazer alterações.
+> **⚠️ ATENÇÃO AGENTE DO REPLIT**: Este arquivo contém regras OBRIGATÓRIAS para qualquer modificação na atividade de Lista de Exercícios. **LEIA COMPLETAMENTE** antes de fazer QUALQUER alteração em arquivos relacionados.
 
-## Status: FUNCIONANDO CORRETAMENTE ✅
-Data da última validação: Janeiro 2026
-Versão: 2.1.0
+## 🟢 Status: FUNCIONANDO CORRETAMENTE ✅
+- **Data da última validação**: 29 Janeiro 2026
+- **Versão**: 2.1.2
+- **Estado**: ESTÁVEL - NÃO MODIFICAR SEM NECESSIDADE CRÍTICA
 
 ---
 
-## 🛡️ ARQUIVOS PROTEGIDOS - NÃO MODIFICAR SEM VALIDAÇÃO
+## 🚨 REGRA DE OURO - LEIA PRIMEIRO
 
-Os seguintes arquivos são considerados **CRÍTICOS** e NÃO devem ser alterados sem extrema necessidade:
+**ANTES de alterar QUALQUER arquivo listado neste documento:**
+1. Pergunte-se: "Esta alteração é REALMENTE necessária para a Lista de Exercícios?"
+2. Se a alteração é em outro sistema (Agente Jota, Quiz, Flash Cards, etc.), **NÃO TOQUE** nos arquivos da Lista de Exercícios
+3. Se precisar alterar, faça backup mental do comportamento atual e teste ANTES e DEPOIS
 
-### Arquivos Core (Máxima Proteção)
+---
+
+## 🛡️ ARQUIVOS PROTEGIDOS - ZONA DE MÁXIMA PROTEÇÃO
+
+### Nível 1: CRÍTICO (🔴 NÃO MODIFICAR)
+Estes arquivos controlam a geração e validação de questões. **Qualquer erro aqui causa falha total**.
+
 ```
 src/features/schoolpower/activities/lista-exercicios/
-├── ListaExerciciosGenerator.ts      # Gerador de conteúdo IA - NÃO ALTERAR
-├── unified-exercise-pipeline.ts     # Pipeline de 6 camadas - NÃO ALTERAR
-├── ExerciseListPreview.tsx          # Componente de visualização - CUIDADO
-├── useExerciseListSync.ts           # Hook de sincronização - NÃO ALTERAR
-└── index.ts                         # Exportações - MANTER ESTÁVEL
+├── ListaExerciciosGenerator.ts      # 🔴 GERADOR IA - NUNCA ALTERAR
+├── contracts.ts                      # 🔴 CONTRATOS IMUTÁVEIS - NUNCA ALTERAR
+├── unified-exercise-pipeline.ts      # 🔴 PIPELINE 6 CAMADAS - NUNCA ALTERAR
+├── useExerciseListSync.ts            # 🔴 HOOK SINCRONIZAÇÃO - NUNCA ALTERAR
+├── ExerciseListPreview.tsx           # 🔴 RENDERIZAÇÃO - NUNCA ALTERAR
+└── index.ts                          # 🔴 EXPORTAÇÕES - MANTER ESTÁVEL
 ```
 
-### Arquivos de Suporte (Proteção Moderada)
+### Nível 2: ALTO RISCO (🟠 ALTERAR COM EXTREMO CUIDADO)
+```
+src/services/llm-orchestrator/
+├── fallback.ts                       # 🟠 FALLBACK LOCAL - SCHEMA CRÍTICO
+├── orchestrator.ts                   # 🟠 ORQUESTRADOR LLM - AFETA GERAÇÃO
+└── router.ts                         # 🟠 ROTEADOR - DETECTA TIPO ATIVIDADE
+
+src/features/schoolpower/prompts/
+└── listaExerciciosPrompt.ts          # 🟠 PROMPT IA - DEFINE FORMATO RESPOSTA
+
+src/utils/api/
+└── geminiClient.ts                   # 🟠 WRAPPER LLM - INTERFACE DE GERAÇÃO
+```
+
+### Nível 3: MODERADO (🟡 VERIFICAR IMPACTO)
 ```
 src/features/schoolpower/construction/
-├── components/EditFields/ListaExerciciosEditActivity.tsx
-└── modalBinder/fieldMaps/atividade_lista_exercicios.ts
+├── EditActivityModal.tsx             # 🟡 Modal de edição
+├── components/EditFields/ListaExerciciosEditActivity.tsx  # 🟡 Campos de edição
+└── modalBinder/fieldMaps/atividade_lista_exercicios.ts    # 🟡 Mapeamento campos
+
+src/features/schoolpower/services/
+├── exerciseListProcessor.ts          # 🟡 Processador de conteúdo
+└── controle-APIs-gerais-school-power.ts  # 🟡 Controle legado APIs
 ```
 
 ---
 
-## 📋 CONTRATOS DE INTERFACE OBRIGATÓRIOS
+## 📋 CONTRATOS DE INTERFACE OBRIGATÓRIOS (v2.1.2)
 
-### 1. Contrato de Entrada (ExerciseListContract)
-Qualquer dado que entre no pipeline DEVE passar pelo `ExerciseListSanitizer`:
-
-```typescript
-interface ExerciseListContract {
-  readonly id: string;
-  readonly tema: string;
-  readonly disciplina: string;
-  readonly anoEscolaridade: string;
-  readonly numeroQuestoes: number;           // Entre 1 e 50
-  readonly nivelDificuldade: 'facil' | 'medio' | 'dificil';
-  readonly modeloQuestoes: 'multipla-escolha' | 'discursiva' | 'verdadeiro-falso';
-}
-```
-
-### 2. Contrato de Questão (QuestionContract)
+### 1. Contrato de Questão (IMUTÁVEL)
 ```typescript
 interface QuestionContract {
-  readonly id: string;
+  readonly id: string;                    // Formato: "questao-N" ou UUID
   readonly type: 'multipla-escolha' | 'discursiva' | 'verdadeiro-falso';
-  readonly enunciado: string;                // Mínimo 5 caracteres (v2.1.0)
-  readonly alternativas?: readonly string[]; // Para múltipla escolha (mínimo 2)
-  readonly respostaCorreta?: number | string | boolean;  // OBRIGATÓRIO
+  readonly enunciado: string;             // Mínimo 5 caracteres
+  readonly alternativas?: string[];       // ARRAY DE STRINGS (não objetos!)
+  readonly respostaCorreta?: number | string | boolean;  // INDEX numérico para múltipla
   readonly explicacao?: string;
-  readonly dificuldade?: string;
+  readonly dificuldade?: string;          // 'facil' | 'medio' | 'dificil'
   readonly tema?: string;
-  readonly _validated?: boolean;             // Flag de validação
+  readonly _validated?: boolean;
 }
 ```
 
-### 3. Constantes de Configuração (v2.1.0)
+### 2. Formato de Resposta da IA (CRÍTICO)
+A IA DEVE retornar JSON neste formato EXATO:
+```json
+{
+  "titulo": "Lista de Exercícios - [Tema]",
+  "disciplina": "Matemática",
+  "tema": "Frações",
+  "questoes": [
+    {
+      "id": "questao-1",
+      "type": "multipla-escolha",
+      "enunciado": "Texto da pergunta com pelo menos 5 caracteres",
+      "alternativas": ["Opção A texto", "Opção B texto", "Opção C texto", "Opção D texto"],
+      "respostaCorreta": 0,
+      "explicacao": "Explicação da resposta",
+      "dificuldade": "medio",
+      "tema": "Frações"
+    }
+  ]
+}
+```
+
+### 3. ⚠️ ERROS COMUNS QUE QUEBRAM O SISTEMA
+
+| ❌ ERRADO | ✅ CORRETO |
+|-----------|-----------|
+| `"alternativas": [{"letra": "A", "texto": "..."}]` | `"alternativas": ["Texto opção A", "Texto opção B"]` |
+| `"respostaCorreta": "A"` | `"respostaCorreta": 0` |
+| `"numero": 1` | `"id": "questao-1"` |
+| `"tipo": "multipla-escolha"` | `"type": "multipla-escolha"` |
+
+---
+
+## 🔄 FLUXO DE DADOS (NÃO ALTERAR ORDEM)
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    FLUXO DE GERAÇÃO DE LISTA                        │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  [1] Dados do Usuário                                               │
+│       ↓                                                              │
+│  [2] ExerciseListInputSanitizer.sanitize() ← OBRIGATÓRIO            │
+│       ↓                                                              │
+│  [3] ExerciseListContract (dados validados e imutáveis)             │
+│       ↓                                                              │
+│  [4] ListaExerciciosGenerator.generateContent()                     │
+│       ↓                                                              │
+│  [5] geminiClient.generateContent() → LLM Orchestrator              │
+│       ↓                                                              │
+│  [6] parseGeminiResponse() (extração JSON schema-aware)             │
+│       ↓                                                              │
+│  [7] validateListaExerciciosResponse() (validação 50% threshold)    │
+│       ↓                                                              │
+│  [8] UnifiedPipeline.processFullResponse()                          │
+│       ↓                                                              │
+│  [9] ExerciseListPreview (renderização)                             │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔗 MAPA DE DEPENDÊNCIAS EXTERNAS
+
+A Lista de Exercícios depende destes serviços. **SE ALTERÁ-LOS, VALIDE A LISTA**:
+
+| Serviço | Arquivo | Impacto | Ação Requerida |
+|---------|---------|---------|----------------|
+| LLM Orchestrator | `src/services/llm-orchestrator/orchestrator.ts` | 🔴 CRÍTICO | Testar geração após alteração |
+| Local Fallback | `src/services/llm-orchestrator/fallback.ts` | 🔴 CRÍTICO | Manter schema JSON compatível |
+| geminiClient | `src/utils/api/geminiClient.ts` | 🔴 CRÍTICO | Não alterar interface |
+| StorageOrchestrator | `src/features/schoolpower/services/StorageOrchestrator.ts` | 🟠 ALTO | Manter prefixo `sp_le_v2_` |
+| Global StorageOrchestrator | `src/utils/storageOrchestrator.ts` | 🟠 ALTO | Backup - IndexedDB layer |
+| EditActivityModal | `src/features/schoolpower/construction/EditActivityModal.tsx` | 🟡 MÉDIO | Testar fluxo de edição |
+| Agente Jota Executor | `src/features/schoolpower/agente-jota/executor.ts` | 🟡 MÉDIO | Verificar capability GERAR |
+
+---
+
+## ⛔ REGRAS DE MODIFICAÇÃO
+
+### ✅ PERMITIDO
+- Adicionar novos campos OPCIONAIS às interfaces (com `?`)
+- Melhorar mensagens de log (console.log/warn/error)
+- Adicionar novas validações que NÃO quebrem compatibilidade
+- Corrigir bugs ESPECÍFICOS da Lista de Exercícios
+- Atualizar este arquivo de documentação
+
+### ❌ PROIBIDO
+- Alterar tipos de campos existentes (string → number, etc)
+- Remover campos obrigatórios das interfaces
+- Modificar a estrutura do JSON de questões
+- Alterar prefixos de storage (`sp_le_v2_`)
+- Modificar ordem de fallback do IntelligentExtractor
+- Alterar thresholds de validação (MIN_ENUNCIADO=5, VALIDATION_THRESHOLD=0.5)
+- Modificar o parseGeminiResponse sem testes extensivos
+
+---
+
+## 🧪 CHECKLIST DE VALIDAÇÃO OBRIGATÓRIA
+
+Antes de fazer commit em QUALQUER arquivo relacionado:
+
+### Teste Funcional
+- [ ] Gerar uma lista de exercícios com 5 questões múltipla-escolha
+- [ ] Verificar se as questões aparecem no Preview (não "[ERRO NA GERAÇÃO]")
+- [ ] Verificar se alternativas são TEXTOS (não "[object Object]")
+- [ ] Verificar se os dados persistem após refresh da página
+
+### Verificar Logs
+- [ ] `🛡️ [ExerciseListInputSanitizer]` deve aparecer
+- [ ] `✅ [parseGeminiResponse]` deve mostrar questões válidas
+- [ ] `✅ [UnifiedPipeline]` deve indicar sucesso
+- [ ] NÃO deve aparecer `❌ [ListaExerciciosGenerator] Estrutura inválida`
+
+### Verificar Contratos
+- [ ] Campo `id` presente em cada questão
+- [ ] Campo `type` (não `tipo`)
+- [ ] Campo `alternativas` é array de strings
+- [ ] Campo `respostaCorreta` é número (para múltipla-escolha)
+
+---
+
+## 📊 CONSTANTES DE CONFIGURAÇÃO (v2.1.2)
+
 ```typescript
 LISTA_EXERCICIOS_CONFIG = {
-  STORAGE_PREFIX: 'sp_le_v2_',
-  MIN_QUESTIONS: 1,
-  MAX_QUESTIONS: 50,
-  MIN_ENUNCIADO_LENGTH: 5,       // Mínimo 5 caracteres
-  MIN_ALTERNATIVAS: 2,            // Mínimo 2 alternativas para múltipla-escolha
-  VALIDATION_THRESHOLD: 0.5,      // 50% das questões devem ser válidas
-  VERSION: '2.1.0',
-  PROTECTED: true,
+  STORAGE_PREFIX: 'sp_le_v2_',           // Namespace isolado
+  MIN_QUESTIONS: 1,                       // Mínimo de questões
+  MAX_QUESTIONS: 50,                      // Máximo de questões
+  MIN_ENUNCIADO_LENGTH: 5,               // Mínimo caracteres enunciado
+  MIN_ALTERNATIVAS: 2,                    // Mínimo alternativas múltipla-escolha
+  VALIDATION_THRESHOLD: 0.5,              // 50% questões devem ser válidas
+  VERSION: '2.1.2',                       // Versão atual
+  PROTECTED: true,                        // Flag de proteção
   EXTRACTION_PRIORITY: ['questoes', 'questions', 'enunciado', 'question']
 }
 ```
 
 ---
 
-## 🔄 FLUXO DE DADOS ESPERADO
-
-```
-[Dados Externos] 
-       ↓
-[ExerciseListSanitizer.sanitize()] ← OBRIGATÓRIO (delegado internamente para ExerciseListInputSanitizer)
-       ↓
-[ExerciseListContract] (dados validados e imutáveis - definidos em contracts.ts)
-       ↓
-[ListaExerciciosGenerator] (geração IA)
-       ↓
-[unified-exercise-pipeline] (processamento)
-       ↓
-[ExerciseListPreview] (renderização)
-```
-
-**IMPORTANTE**: A fonte única de verdade para contratos é `contracts.ts`. O `unified-exercise-pipeline.ts` re-exporta e delega para esses contratos.
-
----
-
-## ⚠️ REGRAS DE MODIFICAÇÃO
-
-### PERMITIDO ✅
-- Adicionar novos campos OPCIONAIS às interfaces
-- Melhorar mensagens de log
-- Adicionar novas validações que NÃO quebrem compatibilidade
-- Corrigir bugs específicos da Lista de Exercícios
-
-### PROIBIDO ❌
-- Alterar tipos de campos existentes
-- Remover campos obrigatórios
-- Modificar a ordem de fallback do IntelligentExtractor
-- Alterar prefixos de storage (`sp_le_v2_`)
-- Modificar a lógica de sanitização sem testes
-
----
-
-## 🔑 CHAVES DE STORAGE
-
-A Lista de Exercícios usa prefixos DEDICADOS para evitar colisões:
+## 🔑 CHAVES DE STORAGE (NAMESPACE ISOLADO)
 
 | Tipo | Prefixo | Exemplo |
 |------|---------|---------|
-| Cache de Pipeline | `sp_le_v2_` | `sp_le_v2_abc123_Matemática_multipla-escolha` |
+| Cache Pipeline | `sp_le_v2_` | `sp_le_v2_abc123_Matemática_multipla-escolha` |
 | Questões Excluídas | `activity_deleted_questions_` | `activity_deleted_questions_abc123` |
-| Dados da Atividade | `activity_` | `activity_abc123` |
-
----
-
-## 🧪 VALIDAÇÃO ANTES DE COMMIT
-
-Antes de fazer commit em qualquer arquivo relacionado à Lista de Exercícios:
-
-1. **Verificar se o pipeline funciona**:
-   - Gerar uma lista de exercícios com 5 questões
-   - Verificar se as questões aparecem no Preview
-   - Verificar se os dados persistem após refresh
-
-2. **Verificar contratos**:
-   - Todos os campos obrigatórios estão presentes?
-   - Os tipos estão corretos?
-   - O sanitizador está sendo chamado?
-
-3. **Verificar logs**:
-   - `🛡️ [Sanitizer]` deve aparecer nos logs
-   - `✅ [UnifiedPipeline]` deve indicar sucesso
-
----
-
-## 📊 DEPENDÊNCIAS EXTERNAS
-
-A Lista de Exercícios depende dos seguintes serviços globais. Se alterá-los, VALIDE a Lista de Exercícios:
-
-| Serviço | Arquivo | Impacto |
-|---------|---------|---------|
-| geminiClient | `src/utils/api/geminiClient.ts` | Alto - Geração de conteúdo |
-| StorageOrchestrator | `src/utils/storageOrchestrator.ts` | Alto - Persistência |
-| EditActivityModal | `src/features/schoolpower/construction/EditActivityModal.tsx` | Médio - Fluxo de edição |
-| autoBuildActivities | `src/features/schoolpower/construction/auto/autoBuildActivities.ts` | Médio - Construção automática |
+| Dados Legacy | `constructed_lista-exercicios_` | `constructed_lista-exercicios_abc123` |
 
 ---
 
 ## 🆘 SOLUÇÃO DE PROBLEMAS
 
-### Questões não aparecem no Preview
-1. Verificar se `processExerciseListWithUnifiedPipeline` está sendo chamado
-2. Verificar logs do `IntelligentExtractor`
-3. Verificar se os dados estão no formato correto
+### "[ERRO NA GERAÇÃO]" aparece em vez de questões
+1. ✅ Verificar se `fallback.ts` está gerando JSON compatível
+2. ✅ Verificar se `alternativas` são strings (não objetos)
+3. ✅ Verificar se `respostaCorreta` é número (não letra)
+4. ✅ Verificar logs de `validateListaExerciciosResponse`
 
-### Dados não persistem
-1. Verificar se o prefixo `sp_le_v2_` está sendo usado
-2. Verificar se o `StorageOrchestrator` está funcionando
-3. Verificar quota do IndexedDB
+### "[object Object]" nas alternativas
+1. ✅ Verificar `normalizeAlternativeToString()` em contracts.ts
+2. ✅ Verificar formato retornado pela IA
+3. ✅ Verificar `normalizeAlternativas()` no Generator
 
-### Geração IA falha
-1. Verificar conexão com geminiClient
-2. Verificar se o prompt está sendo construído corretamente
-3. Verificar fallback para questões simuladas
+### Questões não persistem
+1. ✅ Verificar prefixo `sp_le_v2_` no storage
+2. ✅ Verificar StorageOrchestrator funcionando
+3. ✅ Verificar quota do IndexedDB
+
+### Geração IA falha completamente
+1. ✅ Verificar chaves API (VITE_GROQ_API_KEY, VITE_GEMINI_API_KEY)
+2. ✅ Verificar fallback local em fallback.ts
+3. ✅ Verificar logs do LLM Orchestrator
 
 ---
 
 ## 📝 HISTÓRICO DE ALTERAÇÕES
 
-| Data | Alteração | Autor |
-|------|-----------|-------|
-| Jan 2026 | Implementação do sistema de blindagem | Agent |
-| Jan 2026 | Adição do ExerciseListSanitizer | Agent |
-| Jan 2026 | Namespace dedicado sp_le_v2_ | Agent |
-| Jan 2026 | **Extração JSON schema-aware** - Bracket matching robusto que prioriza blocos com "questoes" | Agent |
-| Jan 2026 | **Validação rigorosa** - Exige enunciado + respostaCorreta + alternativas (50% threshold) | Agent |
-| Jan 2026 | **Prompt minimalista** - Apenas 2 linhas para forçar resposta JSON pura | Agent |
+| Data | Versão | Alteração | Status |
+|------|--------|-----------|--------|
+| Jan 2026 | 2.0.0 | Implementação do sistema de blindagem | ✅ |
+| Jan 2026 | 2.0.1 | Adição do ExerciseListSanitizer | ✅ |
+| Jan 2026 | 2.1.0 | Namespace dedicado sp_le_v2_ | ✅ |
+| Jan 2026 | 2.1.1 | Extração JSON schema-aware + validação rigorosa | ✅ |
+| Jan 29, 2026 | 2.1.2 | **CORREÇÃO CRÍTICA**: Fallback local com schema compatível | ✅ |
+
+### Correção v2.1.2 (29 Jan 2026)
+**Problema**: Quando APIs falhavam, o fallback local em `fallback.ts` gerava JSON com estrutura incompatível, causando "[ERRO NA GERAÇÃO]".
+
+**Solução**: Atualizamos `generateListaExercicios()` para gerar:
+- `id` em vez de `numero`
+- `type` em vez de `tipo`
+- `alternativas` como array de strings
+- `respostaCorreta` como índice numérico
+- Campos `explicacao`, `tema`, `dificuldade` adicionados
 
 ---
 
-## 🔧 ESPECIFICAÇÕES TÉCNICAS ATUALIZADAS (Jan 2026)
+## 🎯 ESPECIFICAÇÕES TÉCNICAS ATUAIS
 
 ### Extração de JSON (ListaExerciciosGenerator.ts)
-O sistema agora usa **bracket matching inteligente** para extrair JSON:
-
-1. `findAllMatchingBrackets()` - Encontra TODOS os blocos balanceados no texto
-2. `extractFirstValidJSON()` - Prioriza blocos que contêm:
-   - `"questoes"` ou `"questions"` (primeira escolha)
-   - `"enunciado"` ou `"question"` (segunda escolha)
-   - Primeiro bloco encontrado (fallback)
+- `findAllMatchingBrackets()` - Encontra TODOS os blocos balanceados
+- `extractFirstValidJSON()` - Prioriza blocos com "questoes" ou "questions"
+- Suporta markdown code blocks (```json)
 
 ### Validação de Questões (validateListaExerciciosResponse)
-Cada questão DEVE ter:
-- `enunciado` com >= 5 caracteres
+- `enunciado` >= 5 caracteres
 - `respostaCorreta` definida (não null/undefined)
 - Para múltipla-escolha: `alternativas` array com >= 2 itens
+- **Threshold**: 50% das questões devem ser válidas
 
-**Threshold de aprovação**: 50% das questões devem ser totalmente válidas.
-
-### Fluxo de Parsing (parseGeminiResponse)
-1. Remove markdown/code blocks
-2. Extrai JSON usando bracket matching schema-aware
-3. Limpa caracteres problemáticos
-4. Converte arrays na raiz para `{questoes: [...]}`
-5. Normaliza campos com múltiplos aliases
-6. Marca questões como `_validated` se tiverem campos obrigatórios
-7. Filtra questões inválidas (lança erro se nenhuma válida)
-8. Verifica esquema final
+### Normalização de Alternativas (contracts.ts)
+- Suporta 15+ formatos de entrada
+- Campos buscados: texto, text, content, value, label, alternativa, etc.
+- Fallback: `[Aguardando IA] Opção X - regenere para conteúdo real`
 
 ---
 
-**LEMBRE-SE**: A Lista de Exercícios está funcionando. Qualquer alteração deve ser feita com extremo cuidado e validação completa.
+## ⚡ REGRAS PARA O AGENTE DO REPLIT
+
+1. **SEMPRE leia este arquivo** antes de modificar qualquer coisa relacionada a listas de exercícios
+2. **NUNCA modifique** arquivos Nível 1 (🔴) sem necessidade CRÍTICA documentada
+3. **SEMPRE teste** a geração de questões após qualquer alteração em dependências
+4. **SE algo quebrar**, reverta a alteração imediatamente e investigue
+5. **MANTENHA o schema JSON** exatamente como documentado acima
+6. **ATUALIZE este arquivo** se fizer alterações que afetem o comportamento
+
+---
+
+**LEMBRE-SE**: A Lista de Exercícios está **FUNCIONANDO CORRETAMENTE**. 
+Qualquer alteração deve ser feita com **EXTREMO CUIDADO** e **VALIDAÇÃO COMPLETA**.
