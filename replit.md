@@ -126,3 +126,35 @@ The architecture emphasizes a modular component design based on shadcn/ui patter
 - **docx**, **jsPDF**, **file-saver**: For document generation and download.
 - **bcrypt**: For password hashing.
 - **Framer Motion**: For animations.
+
+## Debugging Guide (Jan 2026)
+
+### Capability Chain Debugging
+The capability execution chain now includes comprehensive logging. To debug issues:
+
+1. **Open Browser DevTools Console (F12)**
+2. **Trigger the action** (e.g., request lista de exercícios via chat)
+3. **Look for these key logs in order:**
+   - `🚀 CHAT LAYOUT` - UI handler triggered
+   - `🎯 ORCHESTRATOR` - Plan received by orchestrator
+   - `📊 [Executor]` - Capability execution started
+   - `✅ decidirAtividadesCriarV2` - Activities chosen
+   - `🔥 GENERATING CONTENT` - Content generation started
+   - `✅ POST-SAVE VERIFICATION` - Activities persisted
+
+4. **Identify failure point:**
+   - Missing CHAT LAYOUT = UI handler not called
+   - Missing ORCHESTRATOR = orchestrator not invoked
+   - `chosen_activities.length = 0` = LLM decision failed
+   - Missing gerar logs = Error before generation
+   - `🚨 UNHANDLED PROMISE REJECTION` = Silent failure
+
+### API Key Validation
+On system startup, the console shows:
+- `🔑 [Config] getGroqApiKey(): gsk_...` (should be válida: true)
+- `🔑 [Config] getGeminiApiKey(): AIza...` (should be válida: true)
+
+### Recent Changes (Jan 29, 2026)
+- Added comprehensive instrumentation to executor.ts, orchestrator.ts, ChatLayout.tsx
+- Added global unhandled promise rejection handler
+- Enhanced capability logging with data source tracking
