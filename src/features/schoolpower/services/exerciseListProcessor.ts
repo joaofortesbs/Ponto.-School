@@ -1,3 +1,4 @@
+import { normalizeAlternativeToString } from '../activities/lista-exercicios/contracts';
 
 interface Question {
   id: string;
@@ -59,16 +60,22 @@ function extractQuestionsFromContent(content: string, formData: any): Question[]
     if (content.trim().startsWith('{') || content.trim().startsWith('[')) {
       const parsedContent = JSON.parse(content);
       if (parsedContent.questoes) {
-        return parsedContent.questoes.map((q: any, index: number) => ({
-          id: `questao-${index + 1}`,
-          type: determineQuestionType(q, formData.tipoQuestoes),
-          enunciado: q.enunciado || q.pergunta || q.questao || '',
-          alternativas: q.alternativas || q.opcoes,
-          respostaCorreta: q.respostaCorreta || q.gabarito,
-          explicacao: q.explicacao || q.justificativa,
-          dificuldade: q.dificuldade || formData.dificuldade?.toLowerCase(),
-          tema: formData.tema
-        }));
+        return parsedContent.questoes.map((q: any, index: number) => {
+          const rawAlternativas = q.alternativas || q.opcoes || [];
+          const normalizedAlternativas = Array.isArray(rawAlternativas) 
+            ? rawAlternativas.map((alt: any, altIdx: number) => normalizeAlternativeToString(alt, altIdx))
+            : [];
+          return {
+            id: `questao-${index + 1}`,
+            type: determineQuestionType(q, formData.tipoQuestoes),
+            enunciado: q.enunciado || q.pergunta || q.questao || '',
+            alternativas: normalizedAlternativas,
+            respostaCorreta: q.respostaCorreta || q.gabarito,
+            explicacao: q.explicacao || q.justificativa,
+            dificuldade: q.dificuldade || formData.dificuldade?.toLowerCase(),
+            tema: formData.tema
+          };
+        });
       }
     }
 
@@ -99,11 +106,14 @@ function extractQuestionsFromText(content: string, formData: any): Question[] {
     if (isQuestionStart(line)) {
       // Salvar questão anterior se existir
       if (currentQuestion && currentQuestion.enunciado) {
+        const normalizedAlts = currentQuestion.alternativas?.map((alt: any, idx: number) => 
+          normalizeAlternativeToString(alt, idx)
+        );
         questoes.push({
           id: `questao-${questionCounter}`,
           type: currentQuestion.type || determineQuestionType(currentQuestion, formData.tipoQuestoes),
           enunciado: currentQuestion.enunciado,
-          alternativas: currentQuestion.alternativas,
+          alternativas: normalizedAlts,
           respostaCorreta: currentQuestion.respostaCorreta,
           explicacao: currentQuestion.explicacao,
           dificuldade: formData.dificuldade?.toLowerCase() || 'medio',
@@ -137,11 +147,14 @@ function extractQuestionsFromText(content: string, formData: any): Question[] {
   
   // Adicionar última questão
   if (currentQuestion && currentQuestion.enunciado) {
+    const normalizedAlts = currentQuestion.alternativas?.map((alt: any, idx: number) => 
+      normalizeAlternativeToString(alt, idx)
+    );
     questoes.push({
       id: `questao-${questionCounter}`,
       type: currentQuestion.type || determineQuestionType(currentQuestion, formData.tipoQuestoes),
       enunciado: currentQuestion.enunciado,
-      alternativas: currentQuestion.alternativas,
+      alternativas: normalizedAlts,
       respostaCorreta: currentQuestion.respostaCorreta,
       explicacao: currentQuestion.explicacao,
       dificuldade: formData.dificuldade?.toLowerCase() || 'medio',

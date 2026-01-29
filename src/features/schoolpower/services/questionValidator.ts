@@ -1,3 +1,4 @@
+import { normalizeAlternativeToString } from '../activities/lista-exercicios/contracts';
 
 export interface ValidatedQuestion {
   id: string;
@@ -77,7 +78,10 @@ export const validateAndNormalizeQuestions = (
     let alternativas: string[] | undefined = undefined;
     
     if (tipoNormalizado === 'multipla-escolha') {
-      alternativas = questao.alternativas || questao.alternatives || questao.options || [];
+      const rawAlternativas = questao.alternativas || questao.alternatives || questao.options || [];
+      alternativas = Array.isArray(rawAlternativas) 
+        ? rawAlternativas.map((alt: any, altIdx: number) => normalizeAlternativeToString(alt, altIdx))
+        : [];
       
       // Garantir que há pelo menos 2 alternativas
       if (alternativas.length < 2) {

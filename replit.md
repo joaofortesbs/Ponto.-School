@@ -55,15 +55,16 @@ The platform features a modern design with glass-morphism effects, blur backgrou
       - Heavy activity types (quiz-interativo, flash-cards, lista-exercicios, plano-aula, sequencia-didatica) automatically route to IndexedDB
       - API: `storageSet(key, data, { activityType })`, `storageGet<T>(key)`, `safeSetJSON()`, `initGlobalStorageGuard()`
     - **Activity Version System**: Dual-version system categorizing activities into Interactive (fully functional UI) and Text Version (content delivered as formatted text) for various activity types, with robust AI response parsing and professional 6-section fallback content generation.
-    - **Lista de Exercícios Blindagem System v2.1.1 (Jan 2026)**: Enterprise-grade isolation and protection system:
+    - **Lista de Exercícios Blindagem System v2.1.2 (Jan 2026)**: Enterprise-grade isolation and protection system:
       - **Bounded Context Architecture**: Fully isolated module with dedicated contracts and sanitizers
-      - **Protected Files**: `ListaExerciciosGenerator.ts`, `unified-exercise-pipeline.ts`, `ExerciseListPreview.tsx`, `useExerciseListSync.ts`
+      - **Protected Files**: `ListaExerciciosGenerator.ts`, `unified-exercise-pipeline.ts`, `ExerciseListPreview.tsx`, `useExerciseListSync.ts`, `exerciseListProcessor.ts`, `questionValidator.ts`
       - **Contracts**: `ExerciseListContract`, `QuestionContract`, `ExerciseListResponseContract` with readonly properties
       - **Sanitizer**: `ExerciseListInputSanitizer` validates ALL external data before processing
-      - **Alternative Normalization (v2.1.1)**: `normalizeAlternativeToString()` function in contracts.ts robustly extracts text from any AI response format:
+      - **Alternative Normalization (v2.1.2)**: `normalizeAlternativeToString()` function in contracts.ts applied across ENTIRE pipeline:
+        - **Coverage**: Applied in ListaExerciciosGenerator.ts, unified-exercise-pipeline.ts, ExerciseListPreview.tsx (3 locations), exerciseListProcessor.ts, questionValidator.ts
         - Handles: strings, numbers, booleans, null/undefined, nested arrays, objects with 15+ field variants (texto, text, content, value, label, etc.)
         - Fallback: Uses Object.values to find longest string when no known fields match
-        - Eliminates [object Object] display bug across all pipeline stages
+        - **Eliminates [object Object] bug** in ALL rendering contexts including: question cards, detailed view, edit mode, and validation
       - **Dedicated Storage Namespace**: Uses `sp_le_v2_` prefix to prevent storage collisions
       - **6-Layer Pipeline**: Normalization → Intelligent Extraction (7 fallback methods) → Validation → Synchronization → Testing → Progressive Fallback
       - **Agent Rules File**: `LISTA_EXERCICIOS_RULES.md` contains mandatory guidelines for any modifications

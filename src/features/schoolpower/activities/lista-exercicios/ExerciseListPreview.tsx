@@ -2071,10 +2071,11 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
       <CardContent className="pt-0 flex-1 flex flex-col">
         {question.type === 'multipla-escolha' && (
           <div className="space-y-3">
-            {(question.alternativas || []).map((alternativa, altIndex) => {
+            {(question.alternativas || []).map((altRaw, altIndex) => {
+              const alternativa = normalizeAlternativeToString(altRaw, altIndex);
               const letter = String.fromCharCode(65 + altIndex);
               const isCorrect = question.respostaCorreta === altIndex;
-              const isSelected = false; // Lógica de seleção do usuário não implementada aqui
+              const isSelected = false;
 
               return (
                 <div
