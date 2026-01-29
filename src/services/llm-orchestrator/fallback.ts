@@ -151,25 +151,32 @@ function extractContextFromPrompt(prompt: string): ContextInfo {
 function generateListaExercicios(ctx: ContextInfo): string {
   const questoes = [];
   for (let i = 1; i <= ctx.quantidade; i++) {
+    const isMultiplaEscolha = i % 3 !== 0;
+    const dificuldade = i <= 2 ? 'facil' : i <= 4 ? 'medio' : 'dificil';
+    
     questoes.push({
-      numero: i,
-      tipo: i % 2 === 0 ? 'multipla-escolha' : 'dissertativa',
-      enunciado: `Questão ${i} sobre ${ctx.tema}: Considerando os conceitos fundamentais estudados em ${ctx.disciplina}, responda de forma completa e fundamentada.`,
-      alternativas: i % 2 === 0 ? [
-        { letra: 'A', texto: `Primeira alternativa relacionada a ${ctx.tema}` },
-        { letra: 'B', texto: `Segunda alternativa sobre o conteúdo de ${ctx.disciplina}` },
-        { letra: 'C', texto: `Terceira alternativa com aplicação prática do tema` },
-        { letra: 'D', texto: `Quarta alternativa com conceito complementar` },
-      ] : null,
-      respostaCorreta: i % 2 === 0 ? 'A' : `Resposta modelo para a questão ${i} sobre ${ctx.tema}.`,
-      nivel: i <= 2 ? 'fácil' : i <= 4 ? 'médio' : 'difícil',
+      id: `questao-${i}`,
+      type: isMultiplaEscolha ? 'multipla-escolha' : 'discursiva',
+      enunciado: `Considerando os conceitos fundamentais de ${ctx.tema} estudados em ${ctx.disciplina} para alunos do ${ctx.serie}, responda à seguinte questão: Qual é a importância e aplicação prática do conceito ${i} relacionado a ${ctx.tema}?`,
+      alternativas: isMultiplaEscolha ? [
+        `A aplicação de ${ctx.tema} é fundamental para o desenvolvimento de habilidades em ${ctx.disciplina}`,
+        `O conceito de ${ctx.tema} não possui aplicação prática no contexto educacional`,
+        `${ctx.tema} é um tema secundário que não requer aprofundamento`,
+        `O estudo de ${ctx.tema} é relevante apenas para níveis avançados de ensino`
+      ] : undefined,
+      respostaCorreta: isMultiplaEscolha ? 0 : `O aluno deve elaborar uma resposta que demonstre compreensão do conceito ${i} de ${ctx.tema}, incluindo exemplos práticos e sua aplicação no contexto de ${ctx.disciplina}.`,
+      explicacao: isMultiplaEscolha 
+        ? `A primeira alternativa está correta porque ${ctx.tema} é um conceito fundamental em ${ctx.disciplina} que desenvolve habilidades essenciais para os alunos do ${ctx.serie}.`
+        : `Esta questão visa avaliar a capacidade do aluno de articular conhecimentos sobre ${ctx.tema} de forma autônoma.`,
+      dificuldade: dificuldade,
+      tema: ctx.tema
     });
   }
 
   return JSON.stringify({
     titulo: `Lista de Exercícios - ${ctx.tema}`,
     disciplina: ctx.disciplina,
-    serie: ctx.serie,
+    tema: ctx.tema,
     questoes,
     totalQuestoes: ctx.quantidade,
   }, null, 2);

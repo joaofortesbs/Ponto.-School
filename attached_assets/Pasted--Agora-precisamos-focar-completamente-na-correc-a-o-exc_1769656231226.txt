@@ -1,0 +1,24 @@
+
+Agora precisamos focar completamente na correção exclusiva e individual da atividade de Lista de exercícios, pois atualmente com o system e códigos atuais a respectiva atividade de Lista de exercícios ainda não está sendo construída corretamente, com todos os conteúdos que compõem a atividade de Lista de exercícios, sendo mostrados dentro da arquitetura visual do front-end dentro da interface que mostra a visualização da respectiva atividade dentro do modal de Visualizar atividades, como eu te representei dentro da imagem que eu te enviei!!!!!!!
+
+Preciso que você verifique duas coisas principais e identifique todos os furos e gargalos do fluxo/funil que você tem CERTEZA ABSOLUTA que influenciam no resultado construtivo da atividade de Lista de exercícios:
+
+Verifique todo o fluxo de atividade e systems do front-end e do back-end de toda a criação da atividade de dentro do chat com o Jota, com todas as etapas envolvidas e ecossistemas completos, faça um mapeamento completo de todos os componentes, arquivos, systems, parâmetros e sistemas envolvidos e faça uma investigação e pesquisa completa dentro de cada um deles!
+
+Verifique todo o fluxo específico de dentro da atividade e systems do front-end e do back-end de toda a atividade exclusiva e individual de Lista de exercícios de dentro do chat com o Jota, com todas as etapas envolvidas e ecossistemas completos, faça um mapeamento completo de todos os componentes, arquivos, systems, parâmetros e sistemas envolvidos e faça uma investigação e pesquisa completa dentro de cada um deles!
+
+Os erros que eu te falei ainda não foram corrigidos, analise e reflita sobre todos os arquivos de dentro da plataforma! Analise e pense o porquê esses erros acontecem, analise todas as alternativas e aja como se você fosse o seu melhor modelo, na versão mais poderosa e mais estratégica! Analise todas as possibilidades e altere os arquivos com a absoluta precisão!!!!!!!
+
+Considerações:
+
+Faça um plano completo com macro-steps de objetivos principais de execução e micro-steps em ordem inteligente para fazer todas essas alterações da maneira correta, incluindo testes e validação, para garantir que tudo seja feito corretamente.
+
+Reflita antes de cada alteração e faça um mapeamento completo para identificar a melhor forma, de maneira segura, robusta, alinhada, profissional, avançada e sofisticada. Não cometa erros ou bugs dentro do código e não deixe o código ser corrompido! Garanta também que todo o sistema não tenha brechas para erros ou bugs.
+
+Revise todas as suas modificações depois de cada finalização, não deixe brechas para erros, não prejudique o funcionamento geral, refine as alterações e garanta que nenhum sistema considerável foi influenciado ou modificado negativamente. Teste tudo o que você fez para garantir o funcionamento perfeito!
+
+No final de tudo, me explique todas as alterações que você fez, como elas foram feitas e, principalmente, por que você decidiu fazer essas alterações!
+
+No final de tudo, liste todos os seus aprendizados com base em todas as alterações que você fez, para que você possa ir se aprimorando conforme as próximas alterações e melhorando a sua janela de contexto, para que esses erros em hipótese alguma aconteçam novamente dentro da plataforma!
+
+No final, me sugira as próximas alterações dentro da própria plataforma que a gente precisa fazer ou que seria muito bom fazer, para deixar a plataforma ainda mais completa, sem nenhum erro ou perigo!
