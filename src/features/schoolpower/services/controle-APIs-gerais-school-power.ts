@@ -1,22 +1,39 @@
 /**
  * CONTROLE DE APIs GERAIS - SCHOOL POWER
  * 
- * Sistema de persistência multi-API com fallback em cascata.
- * Garante que SEMPRE haverá uma resposta, independente de falhas.
+ * v2.0 - INTEGRADO COM LLM ORCHESTRATOR v3.0 ENTERPRISE
  * 
- * Arquitetura:
+ * Este módulo agora é um WRAPPER do LLM Orchestrator v3.0, mantendo
+ * a mesma API pública para compatibilidade com os 16+ arquivos que o importam.
+ * 
+ * Arquitetura Unificada:
  * ┌─────────────────────────────────────────────────────────────┐
- * │ SISTEMA DE PERSISTÊNCIA                                     │
+ * │ LLM ORCHESTRATOR v3.0 ENTERPRISE                            │
  * ├─────────────────────────────────────────────────────────────┤
- * │ Nível 1: llama-3.3-70b-versatile (principal)               │
- * │ Nível 2: llama-3.1-8b-instant (rápido e leve)              │
- * │ Nível 3: llama-4-scout-17b-16e-instruct (novo)             │
- * │ Nível 4: gemini-2.0-flash (fallback externo)               │
- * │ Nível 5: Resultado local pré-definido (nunca falha)        │
+ * │ TIER 1 (Ultra-Fast): llama-3.1-8b, gemma2-9b               │
+ * │ TIER 2 (Fast): llama-3.3-70b, mixtral-8x7b, llama3-70b     │
+ * │ TIER 3 (Balanced): llama-3-tool-use, llama-4-scout         │
+ * │ TIER 4 (Powerful): gemini-2.5-flash, gemini-2.0-flash      │
+ * │ TIER 5 (Local): Fallback local que NUNCA FALHA             │
  * └─────────────────────────────────────────────────────────────┘
+ * 
+ * Sistemas de Proteção:
+ * - Circuit Breaker por modelo (threshold: 5, cooldown: 60s)
+ * - Rate Limiter por provider (Groq: 30/min, Gemini: 15/min)
+ * - Retry com backoff exponencial (3 tentativas)
+ * - Cache in-memory (TTL: 5min, max: 200 entradas)
  */
 
 import { geminiLogger } from '@/utils/geminiDebugLogger';
+import { 
+  generateContent, 
+  getOrchestratorStats,
+  getCacheStats as getOrchestratorCacheStats,
+  clearCache as clearOrchestratorCache,
+  getActiveModels as getOrchestratorModels,
+  LLM_MODELS,
+  type GenerateContentOptions,
+} from '@/services/llm-orchestrator';
 
 // ============================================================================
 // CONFIGURAÇÃO DE APIs
@@ -799,14 +816,18 @@ function generateLocalFallback(prompt: string): string {
 // ============================================================================
 
 /**
- * Executa chamada com fallback em cascata.
- * Tenta cada modelo na ordem de prioridade até obter sucesso.
- * Se todos falharem, retorna resultado local garantido.
+ * Executa chamada com fallback em cascata usando LLM Orchestrator v3.0 Enterprise.
  * 
- * OTIMIZAÇÕES APLICADAS:
- * - Cache in-memory para queries frequentes
- * - Classificação de complexidade para roteamento inteligente
- * - Validação e sanitização de input
+ * Esta função agora é um WRAPPER do LLM Orchestrator v3.0, mantendo
+ * a mesma API pública para compatibilidade com os 16+ arquivos que a importam.
+ * 
+ * O Orchestrator v3.0 oferece:
+ * - 10 modelos em 5 tiers de fallback
+ * - Circuit breaker por modelo
+ * - Rate limiter por provider
+ * - Cache in-memory otimizado
+ * - Smart routing por complexidade
+ * - Fallback local que NUNCA FALHA
  */
 export async function executeWithCascadeFallback(
   prompt: string,
@@ -816,162 +837,65 @@ export async function executeWithCascadeFallback(
     onProgress?: (status: string) => void;
     userId?: string;
     bypassCache?: boolean;
+    activityType?: 'general' | 'lista-exercicios' | 'quiz-interativo' | 'flash-cards' | 'plano-aula' | 'sequencia-didatica' | 'tese-redacao' | 'quadro-interativo';
   }
 ): Promise<CascadeResult> {
   const startTime = Date.now();
-  const errors: Array<{ model: string; error: string }> = [];
-  let attemptsMade = 0;
   
-  const validation = validateAndSanitizePrompt(prompt);
-  if (!validation.valid) {
-    console.warn(`⚠️ [CASCADE] Prompt inválido: ${validation.error}, usando fallback local`);
-    const localData = generateLocalFallback('prompt inválido');
+  console.log('🎯 [CASCADE v2.0] Delegando para LLM Orchestrator v3.0 Enterprise...');
+  
+  // Log para debug
+  geminiLogger.logRequest(prompt, { 
+    cascade: true, 
+    orchestrator: 'v3.0',
+    activityType: options?.activityType || 'general',
+  });
+
+  try {
+    // Delegar para o LLM Orchestrator v3.0
+    const orchestratorOptions: GenerateContentOptions = {
+      activityType: options?.activityType || 'general',
+      onProgress: options?.onProgress,
+      skipCache: options?.bypassCache,
+    };
+
+    const result = await generateContent(prompt, orchestratorOptions);
+
+    // Log de sucesso
+    geminiLogger.logResponse({ 
+      model: result.model, 
+      success: result.success,
+      provider: result.provider,
+    }, Date.now() - startTime);
+
+    // Converter resultado do orchestrator para CascadeResult
+    return {
+      success: result.success,
+      data: result.data,
+      modelUsed: result.model,
+      providerUsed: result.provider,
+      attemptsMade: result.attemptsMade,
+      errors: result.errors.map(e => ({ model: e.model, error: e.error })),
+      totalLatency: Date.now() - startTime,
+    };
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('❌ [CASCADE v2.0] Erro inesperado:', errorMessage);
+    
+    // Fallback de emergência (nunca deveria chegar aqui)
+    const localData = generateLocalFallback(prompt);
+    
     return {
       success: true,
       data: localData,
-      modelUsed: 'local-fallback-validation',
+      modelUsed: 'local-emergency-fallback',
       providerUsed: 'local',
       attemptsMade: 0,
-      errors: [{ model: 'validation', error: validation.error || 'Erro de validação' }],
+      errors: [{ model: 'orchestrator', error: errorMessage }],
       totalLatency: Date.now() - startTime,
     };
   }
-  
-  const sanitizedPrompt = validation.sanitized;
-  
-  if (!options?.bypassCache) {
-    const cached = getCachedResponse(sanitizedPrompt);
-    if (cached) {
-      return {
-        success: true,
-        data: cached.data,
-        modelUsed: `${cached.model}-cached`,
-        providerUsed: cached.provider,
-        attemptsMade: 0,
-        errors: [],
-        totalLatency: Date.now() - startTime,
-      };
-    }
-  }
-  
-  const complexity = classifyQueryComplexity(sanitizedPrompt);
-  const preferredModels = getOptimalModelForComplexity(complexity);
-  console.log(`🧠 [CASCADE] Complexidade: ${complexity} → Modelos preferidos: ${preferredModels.join(', ')}`);
-  
-  const groqApiKey = getGroqApiKey();
-  const geminiApiKey = getGeminiApiKey();
-  
-  const skipModels = options?.skipModels || [];
-  const maxAttempts = options?.maxAttempts || API_MODELS_CASCADE.length;
-  const onProgress = options?.onProgress;
-  
-  let activeModels = API_MODELS_CASCADE
-    .filter(m => m.isActive && !skipModels.includes(m.id))
-    .sort((a, b) => {
-      const aPreferred = preferredModels.indexOf(a.id);
-      const bPreferred = preferredModels.indexOf(b.id);
-      if (aPreferred !== -1 && bPreferred !== -1) return aPreferred - bPreferred;
-      if (aPreferred !== -1) return -1;
-      if (bPreferred !== -1) return 1;
-      return a.priority - b.priority;
-    })
-    .slice(0, maxAttempts);
-
-  console.log('🎯 [CASCADE] Iniciando sistema de fallback...');
-  console.log(`📋 [CASCADE] Modelos ordenados: ${activeModels.map(m => m.name).join(', ')}`);
-
-  geminiLogger.logRequest(sanitizedPrompt, { cascade: true, models: activeModels.map(m => m.id), complexity });
-
-  for (const model of activeModels) {
-    attemptsMade++;
-    onProgress?.(`Tentando ${model.name}...`);
-    
-    let result: APICallResult;
-    
-    if (model.provider === 'groq') {
-      if (!validateApiKey(groqApiKey, 'groq')) {
-        errors.push({ model: model.id, error: 'API Key Groq não configurada' });
-        continue;
-      }
-      
-      for (let retry = 0; retry < API_CONFIG.maxRetriesPerModel; retry++) {
-        result = await callGroqAPI(model, sanitizedPrompt, groqApiKey);
-        
-        if (result.success) {
-          geminiLogger.logResponse({ model: model.id, success: true }, Date.now() - startTime);
-          
-          if (result.data) {
-            setCacheResponse(sanitizedPrompt, result.data, model.id, 'groq');
-          }
-          
-          return {
-            success: true,
-            data: result.data,
-            modelUsed: model.id,
-            providerUsed: 'groq',
-            attemptsMade,
-            errors,
-            totalLatency: Date.now() - startTime,
-          };
-        }
-        
-        if (result.error?.includes('429') && retry < API_CONFIG.maxRetriesPerModel - 1) {
-          const delay = API_CONFIG.retryDelay * Math.pow(2, retry);
-          console.log(`⏳ [CASCADE] Rate limit, aguardando ${delay}ms...`);
-          await sleep(delay);
-          continue;
-        }
-        
-        errors.push({ model: model.id, error: result.error || 'Erro desconhecido' });
-        break;
-      }
-    } 
-    else if (model.provider === 'gemini') {
-      if (!validateApiKey(geminiApiKey, 'gemini')) {
-        errors.push({ model: model.id, error: 'API Key Gemini não configurada' });
-        continue;
-      }
-      
-      result = await callGeminiAPI(model, sanitizedPrompt, geminiApiKey);
-      
-      if (result.success) {
-        geminiLogger.logResponse({ model: model.id, success: true }, Date.now() - startTime);
-        
-        if (result.data) {
-          setCacheResponse(sanitizedPrompt, result.data, model.id, 'gemini');
-        }
-        
-        return {
-          success: true,
-          data: result.data,
-          modelUsed: model.id,
-          providerUsed: 'gemini',
-          attemptsMade,
-          errors,
-          totalLatency: Date.now() - startTime,
-        };
-      }
-      
-      errors.push({ model: model.id, error: result.error || 'Erro desconhecido' });
-    }
-  }
-
-  console.warn('⚠️ [CASCADE] Todos os modelos falharam, usando fallback local');
-  onProgress?.('Usando resposta local...');
-  
-  const localData = generateLocalFallback(sanitizedPrompt);
-  
-  geminiLogger.error('error', 'Todos os modelos falharam no cascade', { errors });
-
-  return {
-    success: true,
-    data: localData,
-    modelUsed: 'local-fallback',
-    providerUsed: 'local',
-    attemptsMade,
-    errors,
-    totalLatency: Date.now() - startTime,
-  };
 }
 
 // ============================================================================
