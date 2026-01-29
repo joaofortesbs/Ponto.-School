@@ -14,7 +14,12 @@ The platform features a modern design with glass-morphism effects, blur backgrou
 ### Technical Implementations
 - **Frontend**: React 18 with TypeScript, Vite, Tailwind CSS with shadcn/ui, and Zustand for state management.
 - **Backend**: Express.js for API endpoints.
-- **AI Integration**: A resilient multi-model fallback system primarily uses Groq API (Llama 3.3 70B, Llama 3.1 8B, Llama 4 Scout) and Google Gemini API as a final fallback. This system includes automatic retries, intelligent model switching, in-memory caching, a query complexity classifier, context window optimization, and input validation.
+- **AI Integration**: A resilient multi-model fallback system (v2.0 - Jan 2026) implemented via `GeminiClient` class in `src/utils/api/geminiClient.ts`:
+    - **Provider Chain**: Groq (llama-3.3-70b-versatile) → Groq-fallback (llama-3.1-8b-instant) → Gemini (gemini-1.5-flash)
+    - **Configuration**: `src/config/apiKeys.ts` centralizes API keys, URLs, models, and validation functions
+    - **Features**: Automatic retries with exponential backoff, intelligent model switching, API key validation per provider, detailed logging for diagnostics
+    - **Required Secrets**: `VITE_GROQ_API_KEY` (prefix: gsk_), `VITE_GEMINI_API_KEY` (prefix: AIza)
+    - **Logging**: Each provider attempt is logged with status codes and response snippets for debugging
 - **Authentication & User Management**: Supabase handles authentication, user sessions, role-based access, and profiles.
 - **Core Features**:
     - **School Power**: AI-powered lesson planning orchestrated by a robust, observable, and self-correcting Multi-Agent Lesson Orchestrator (v4.0) through a 7-step workflow.
