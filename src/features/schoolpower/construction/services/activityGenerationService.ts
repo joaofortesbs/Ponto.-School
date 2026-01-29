@@ -164,10 +164,10 @@ export class ActivityGenerationService {
         id: i,
         question: `Questão ${i} sobre ${tema}`,
         options: [
-          'Alternativa A',
-          'Alternativa B', 
-          'Alternativa C',
-          'Alternativa D'
+          `Primeira opção sobre ${tema} - regenere para conteúdo real`,
+          `Segunda opção relacionada ao tema - clique em regenerar`,
+          `Terceira alternativa do exercício - aguardando regeneração`,
+          `Quarta opção do conteúdo - por favor, regenere`
         ],
         correctAnswer: 0,
         explanation: `Explicação da questão ${i}`

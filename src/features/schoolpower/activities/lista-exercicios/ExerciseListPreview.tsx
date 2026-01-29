@@ -949,7 +949,12 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       // Em caso de erro, criar uma questão de fallback estruturada localmente
       const modeloLower = newQuestionData.modelo.toLowerCase();
       let tipoFallback: Question['type'] = 'multipla-escolha';
-      let alternativasFallback: string[] | undefined = ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'];
+      let alternativasFallback: string[] | undefined = [
+        `Primeira opção sobre ${newQuestionData.tema || 'o tema'} - regenere para conteúdo real`,
+        `Segunda opção relacionada ao conteúdo - clique em regenerar`,
+        `Terceira alternativa sobre o assunto - aguardando regeneração`,
+        `Quarta opção do exercício - por favor, regenere`
+      ];
 
       if (modeloLower.includes('verdadeiro') || modeloLower.includes('falso')) {
         tipoFallback = 'verdadeiro-falso';

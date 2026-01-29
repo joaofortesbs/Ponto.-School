@@ -115,15 +115,16 @@ async function generateListaExercicios(formData: ActivityFormData) {
     
     const fallbackQuestions = Array.from({ length: parseInt(formData.numberOfQuestions) || 10 }, (_, i) => ({
       id: `questao-${i + 1}`,
-      enunciado: `Questão ${i + 1} sobre ${formData.theme || formData.title}. [Erro na geração - regenere para obter questões personalizadas]`,
+      enunciado: `Questão ${i + 1} sobre ${formData.theme || formData.title}: Considerando os conceitos fundamentais estudados, analise e responda a seguinte pergunta. [Erro na geração - clique em "Regenerar" para obter questões personalizadas com conteúdo real]`,
       type: 'multipla-escolha',
       alternativas: [
-        { id: 'a', texto: 'Alternativa A', correta: true },
-        { id: 'b', texto: 'Alternativa B', correta: false },
-        { id: 'c', texto: 'Alternativa C', correta: false },
-        { id: 'd', texto: 'Alternativa D', correta: false }
+        `Primeira opção sobre ${formData.theme || 'o tema'} - clique em Regenerar`,
+        `Segunda opção relacionada ao conteúdo - regeneração necessária`,
+        `Terceira alternativa sobre o assunto - aguardando regeneração`,
+        `Quarta opção do exercício - por favor, regenere`
       ],
       respostaCorreta: 0,
+      explicacao: 'Este é um conteúdo de fallback. Por favor, clique em "Regenerar" para obter questões com conteúdo educativo real.',
       dificuldade: formData.difficultyLevel?.toLowerCase() || 'medio',
       tema: formData.theme
     }));

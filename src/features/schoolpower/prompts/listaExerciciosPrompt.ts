@@ -22,21 +22,21 @@ export const buildListaExerciciosPrompt = (contextData: any): string => {
     tipoQuestao = 'multipla-escolha';
   }
 
-  // Exemplo de questão baseado no tipo
+  // Exemplo de questão baseado no tipo - com conteúdo real para guiar a IA
   let exemploQuestao = '';
   if (tipoQuestao === 'multipla-escolha') {
     exemploQuestao = `{
       "id": "questao-1",
       "type": "multipla-escolha",
-      "enunciado": "Questão específica sobre ${tema} para ${anoEscolar}",
+      "enunciado": "De acordo com os estudos sobre ${tema} em ${disciplina}, qual das seguintes afirmações está correta?",
       "alternativas": [
-        "Alternativa A específica do tema",
-        "Alternativa B específica do tema",
-        "Alternativa C específica do tema",
-        "Alternativa D específica do tema"
+        "A primeira opção correta e detalhada sobre ${tema}",
+        "Uma alternativa plausível mas incorreta sobre o conteúdo",
+        "Outra opção relacionada ao tema mas com erro conceitual",
+        "Uma quarta opção que também aborda ${tema} incorretamente"
       ],
       "respostaCorreta": 0,
-      "explicacao": "Explicação detalhada da resposta correta",
+      "explicacao": "A primeira alternativa está correta porque explica corretamente o conceito de ${tema}. As demais alternativas apresentam erros conceituais específicos.",
       "dificuldade": "${dificuldade.toLowerCase()}",
       "tema": "${tema}"
     }`;
@@ -44,10 +44,10 @@ export const buildListaExerciciosPrompt = (contextData: any): string => {
     exemploQuestao = `{
       "id": "questao-1",
       "type": "verdadeiro-falso",
-      "enunciado": "Afirmação sobre ${tema} para avaliar se é verdadeira ou falsa",
+      "enunciado": "Considerando os conceitos fundamentais de ${tema} estudados em ${disciplina}, a seguinte afirmação é verdadeira ou falsa: [afirmação específica sobre ${tema}].",
       "alternativas": ["Verdadeiro", "Falso"],
-      "respostaCorreta": "true",
-      "explicacao": "Explicação sobre por que a afirmação é verdadeira ou falsa",
+      "respostaCorreta": true,
+      "explicacao": "Esta afirmação é verdadeira/falsa porque...",
       "dificuldade": "${dificuldade.toLowerCase()}",
       "tema": "${tema}"
     }`;
@@ -55,16 +55,35 @@ export const buildListaExerciciosPrompt = (contextData: any): string => {
     exemploQuestao = `{
       "id": "questao-1",
       "type": "discursiva",
-      "enunciado": "Questão dissertativa sobre ${tema} que exige desenvolvimento de resposta",
-      "respostaCorreta": "Resposta esperada detalhada",
-      "explicacao": "Critérios de avaliação e pontos importantes",
+      "enunciado": "Com base nos conhecimentos adquiridos sobre ${tema}, desenvolva uma resposta explicando [aspecto específico do tema].",
+      "respostaCorreta": "Resposta esperada: O aluno deve abordar os seguintes pontos...",
+      "explicacao": "Critérios de avaliação: clareza, coerência, uso correto dos conceitos de ${tema}",
       "dificuldade": "${dificuldade.toLowerCase()}",
       "tema": "${tema}"
     }`;
   }
 
-  return `Gere ${numeroQuestoes} questões de ${tipoQuestao} sobre "${tema}" em ${disciplina} para ${anoEscolar}, dificuldade ${dificuldade}. Retorne SOMENTE JSON, sem texto extra:
-{"titulo":"${titulo}","disciplina":"${disciplina}","tema":"${tema}","questoes":[{"id":"questao-1","type":"${tipoQuestao}","enunciado":"Questão aqui","alternativas":["A","B","C","D"],"respostaCorreta":0,"explicacao":"Explicação","dificuldade":"${dificuldade.toLowerCase()}","tema":"${tema}"}]}`;
+  return `Você é um professor especialista em ${disciplina}. Gere EXATAMENTE ${numeroQuestoes} questões de ${tipoQuestao} para alunos do ${anoEscolar} sobre o tema "${tema}", com nível de dificuldade ${dificuldade}.
+
+REGRAS OBRIGATÓRIAS:
+1. Cada questão DEVE ter um enunciado completo e educativo (mínimo 30 caracteres)
+2. Cada alternativa DEVE conter texto real e específico sobre o tema (NÃO use "Alternativa A", "Opção B" etc.)
+3. As alternativas devem ser plausíveis e educativas
+4. A resposta correta deve ser indicada pelo índice (0=primeira, 1=segunda, etc.)
+5. Inclua explicação detalhada para cada resposta
+
+Retorne SOMENTE um JSON válido, sem markdown, sem texto adicional:
+
+{
+  "titulo": "${titulo}",
+  "disciplina": "${disciplina}",
+  "tema": "${tema}",
+  "questoes": [
+    ${exemploQuestao}
+  ]
+}
+
+IMPORTANTE: Substitua o exemplo acima por ${numeroQuestoes} questões REAIS e DIFERENTES sobre ${tema}. Cada alternativa deve ter conteúdo específico e educativo.`;
 };
 
 export const validateListaExerciciosResponse = (response: any): boolean => {

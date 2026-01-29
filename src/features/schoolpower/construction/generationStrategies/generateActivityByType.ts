@@ -214,10 +214,10 @@ const generateQuestionsBasedOnUserData = (data: ActivityFormData) => {
       type: questionType,
       enunciado: `Questão ${i} sobre ${data.theme}`,
       alternativas: questionType === 'multipla-escolha' ? [
-        'Alternativa A',
-        'Alternativa B',
-        'Alternativa C',
-        'Alternativa D'
+        `Primeira opção sobre ${data.theme || 'o tema'} - regenere para conteúdo real`,
+        `Segunda opção relacionada ao tema - clique em regenerar`,
+        `Terceira alternativa do exercício - aguardando regeneração`,
+        `Quarta opção do conteúdo - por favor, regenere`
       ] : questionType === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : undefined,
       respostaCorreta: 0,
       dificuldade: data.difficultyLevel?.toLowerCase() || 'medio',

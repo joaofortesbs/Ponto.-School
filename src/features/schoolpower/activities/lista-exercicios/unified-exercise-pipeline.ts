@@ -502,7 +502,12 @@ export class ProgressiveFallback {
         id: `template-${i + 1}`,
         type,
         enunciado: `[Aguardando geração] Questão ${i + 1} sobre ${inputData.tema || 'o tema selecionado'}`,
-        alternativas: type === 'multipla-escolha' ? ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'] : undefined,
+        alternativas: type === 'multipla-escolha' ? [
+          `Primeira opção sobre ${inputData.tema || 'o tema'} - aguardando geração`,
+          `Segunda opção - processando conteúdo`,
+          `Terceira alternativa - em carregamento`,
+          `Quarta opção - regenere se persistir`
+        ] : undefined,
         respostaCorreta: type === 'multipla-escolha' ? 0 : undefined,
         explicacao: '',
         dificuldade: inputData.nivelDificuldade || 'medio',

@@ -366,9 +366,8 @@ export class ListaExerciciosGenerator {
           console.warn(`⚠️ [parseGeminiResponse] Questão ${i + 1} sem enunciado válido`);
         }
         if (q.type === 'multipla-escolha' && (!q.alternativas || q.alternativas.length < 2)) {
-          console.warn(`⚠️ [parseGeminiResponse] Questão ${i + 1} multipla-escolha sem alternativas suficientes`);
-          // Gerar alternativas padrão se não existirem
-          q.alternativas = q.alternativas || ['Opção A', 'Opção B', 'Opção C', 'Opção D'];
+          console.warn(`⚠️ [parseGeminiResponse] Questão ${i + 1} multipla-escolha sem alternativas suficientes - marcando como inválida`);
+          q._validated = false;
         }
       }
       
@@ -411,7 +410,8 @@ export class ListaExerciciosGenerator {
       return alternativas.slice(0, 5).map((alt: any, index: number) => normalizeAlternativeToString(alt, index));
     }
     
-    return ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'];
+    console.warn('⚠️ [normalizeAlternativas] Alternativas ausentes ou inválidas - retornando array vazio para forçar regeneração');
+    return [];
   }
 
   private static normalizeRespostaCorreta(resposta: any, type: string): number | string | boolean {
