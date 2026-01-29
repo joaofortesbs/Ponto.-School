@@ -88,7 +88,7 @@ async function generateListaExercicios(formData: ActivityFormData) {
     const resultado = {
       ...generatedContent,
       title: generatedContent.titulo,
-      description: formData.description || (generatedContent as Record<string, unknown>).descricao as string || '',
+      description: formData.description || (generatedContent as unknown as Record<string, unknown>).descricao as string || '',
       subject: generatedContent.disciplina,
       theme: generatedContent.tema,
       schoolYear: generatedContent.anoEscolaridade,

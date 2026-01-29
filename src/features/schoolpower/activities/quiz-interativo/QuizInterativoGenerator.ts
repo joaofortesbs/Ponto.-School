@@ -337,7 +337,7 @@ FORMATO OBRIGATÓRIO (COPIE EXATAMENTE):
       {
         "id": 1,
         "texto": "Pergunta sobre ${data.theme}?",
-        "alternativas": ["Alternativa A", "Alternativa B", "Alternativa C", "Alternativa D"],
+        "alternativas": ["Primeira opção correta sobre o tema", "Segunda opção plausível mas incorreta", "Terceira opção relacionada ao conteúdo", "Quarta opção do exercício"],
         "resposta_correta": 0,
         "feedback": "Explicação educativa"
       }
