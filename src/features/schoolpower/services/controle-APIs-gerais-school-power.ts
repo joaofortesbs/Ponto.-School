@@ -17,10 +17,9 @@
  */
 
 import { geminiLogger } from '@/utils/geminiDebugLogger';
-import { generateContent } from '@/services/llm-orchestrator';
 
 // ============================================================================
-// CONFIGURAÇÃO DE APIs - SCHOOL POWER ENTERPRISE v3.0
+// CONFIGURAÇÃO DE APIs
 // ============================================================================
 
 export interface APIModel {
@@ -817,61 +816,96 @@ export async function executeWithCascadeFallback(
     onProgress?: (status: string) => void;
     userId?: string;
     bypassCache?: boolean;
-    activityType?: string;
   }
 ): Promise<CascadeResult> {
   const startTime = Date.now();
-  const activityType = options?.activityType || 'general';
+  const errors: Array<{ model: string; error: string }> = [];
+  let attemptsMade = 0;
   
-  console.log(`🚀 [Controle-APIs] Migrado para LLM Orchestrator v3.0 Enterprise [${activityType}]`);
-
-  try {
-    const result = await generateContent(prompt, {
-      activityType: activityType as any,
-      onProgress: options?.onProgress,
-    });
-
-    const totalLatency = Date.now() - startTime;
-
-    if (result.success && result.data) {
-      return {
-        success: true,
-        data: result.data,
-        modelUsed: result.model || 'orchestrator',
-        providerUsed: result.provider || 'enterprise',
-        attemptsMade: 1,
-        errors: [],
-        totalLatency,
-      };
-    }
-
-    throw new Error('LLM Orchestrator não retornou dados');
-  } catch (error) {
-    console.error('❌ [Controle-APIs] Erro fatal no Orquestrador:', error);
-    
-    // Fallback de segurança máxima usando a lógica interna original simplificada
-    const detection = detectTextVersionPrompt(prompt);
-    let fallbackData = '';
-    
-    if (detection.isTextVersion && detection.activityType) {
-      fallbackData = handleLocalFallback(prompt);
-    } else {
-      fallbackData = JSON.stringify({ error: "Erro na geração", message: String(error) });
-    }
-
+  const validation = validateAndSanitizePrompt(prompt);
+  if (!validation.valid) {
+    console.warn(`⚠️ [CASCADE] Prompt inválido: ${validation.error}, usando fallback local`);
+    const localData = generateLocalFallback('prompt inválido');
     return {
       success: true,
-      data: fallbackData,
-      modelUsed: 'local-emergency-fallback',
+      data: localData,
+      modelUsed: 'local-fallback-validation',
       providerUsed: 'local',
-      attemptsMade: 1,
-      errors: [{ model: 'orchestrator', error: String(error) }],
+      attemptsMade: 0,
+      errors: [{ model: 'validation', error: validation.error || 'Erro de validação' }],
       totalLatency: Date.now() - startTime,
     };
   }
-}
+  
+  const sanitizedPrompt = validation.sanitized;
+  
+  if (!options?.bypassCache) {
+    const cached = getCachedResponse(sanitizedPrompt);
+    if (cached) {
+      return {
+        success: true,
+        data: cached.data,
+        modelUsed: `${cached.model}-cached`,
+        providerUsed: cached.provider,
+        attemptsMade: 0,
+        errors: [],
+        totalLatency: Date.now() - startTime,
+      };
+    }
+  }
+  
+  const complexity = classifyQueryComplexity(sanitizedPrompt);
+  const preferredModels = getOptimalModelForComplexity(complexity);
+  console.log(`🧠 [CASCADE] Complexidade: ${complexity} → Modelos preferidos: ${preferredModels.join(', ')}`);
+  
+  const groqApiKey = getGroqApiKey();
+  const geminiApiKey = getGeminiApiKey();
+  
+  const skipModels = options?.skipModels || [];
+  const maxAttempts = options?.maxAttempts || API_MODELS_CASCADE.length;
+  const onProgress = options?.onProgress;
+  
+  let activeModels = API_MODELS_CASCADE
+    .filter(m => m.isActive && !skipModels.includes(m.id))
+    .sort((a, b) => {
+      const aPreferred = preferredModels.indexOf(a.id);
+      const bPreferred = preferredModels.indexOf(b.id);
+      if (aPreferred !== -1 && bPreferred !== -1) return aPreferred - bPreferred;
+      if (aPreferred !== -1) return -1;
+      if (bPreferred !== -1) return 1;
+      return a.priority - b.priority;
+    })
+    .slice(0, maxAttempts);
 
-async function callGroqAPI(
+  console.log('🎯 [CASCADE] Iniciando sistema de fallback...');
+  console.log(`📋 [CASCADE] Modelos ordenados: ${activeModels.map(m => m.name).join(', ')}`);
+
+  geminiLogger.logRequest(sanitizedPrompt, { cascade: true, models: activeModels.map(m => m.id), complexity });
+
+  for (const model of activeModels) {
+    attemptsMade++;
+    onProgress?.(`Tentando ${model.name}...`);
+    
+    let result: APICallResult;
+    
+    if (model.provider === 'groq') {
+      if (!validateApiKey(groqApiKey, 'groq')) {
+        errors.push({ model: model.id, error: 'API Key Groq não configurada' });
+        continue;
+      }
+      
+      for (let retry = 0; retry < API_CONFIG.maxRetriesPerModel; retry++) {
+        result = await callGroqAPI(model, sanitizedPrompt, groqApiKey);
+        
+        if (result.success) {
+          geminiLogger.logResponse({ model: model.id, success: true }, Date.now() - startTime);
+          
+          if (result.data) {
+            setCacheResponse(sanitizedPrompt, result.data, model.id, 'groq');
+          }
+          
+          return {
+            success: true,
             data: result.data,
             modelUsed: model.id,
             providerUsed: 'groq',
