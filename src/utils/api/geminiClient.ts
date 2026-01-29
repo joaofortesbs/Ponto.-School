@@ -112,20 +112,38 @@ export class GeminiClient {
   }
 
   async generateContent(prompt: string): Promise<string> {
-    console.log('🤖 [GeminiClient] generateContent() chamado');
+    console.log('%c🤖 [GeminiClient] generateContent() CHAMADO', 'background: #FF5722; color: white; font-size: 14px; padding: 5px;');
+    console.log('🤖 [GeminiClient] Prompt length:', prompt?.length);
     
-    const result = await generateContent(prompt, {
-      onProgress: (status) => console.log(`📝 [GeminiClient] ${status}`),
-    });
-    
-    if (!result.success || !result.data) {
-      const errorMsg = result.errors.map(e => e.error).join('; ') || 'Erro ao gerar conteúdo';
-      console.error('❌ [GeminiClient] generateContent falhou:', errorMsg);
-      throw new Error(errorMsg);
+    try {
+      console.log('🤖 [GeminiClient] Chamando orchestrator generateContent...');
+      const result = await generateContent(prompt, {
+        onProgress: (status) => console.log(`📝 [GeminiClient] Progress: ${status}`),
+      });
+      
+      console.log('🤖 [GeminiClient] Resultado do orchestrator:', {
+        success: result.success,
+        model: result.model,
+        provider: result.provider,
+        dataLength: result.data?.length || 0,
+        errorsCount: result.errors?.length || 0
+      });
+      
+      if (!result.success || !result.data) {
+        const errorMsg = result.errors.map(e => e.error).join('; ') || 'Erro ao gerar conteúdo';
+        console.error('%c❌ [GeminiClient] generateContent FALHOU', 'background: red; color: white; font-size: 14px; padding: 5px;');
+        console.error('❌ [GeminiClient] Erros:', result.errors);
+        throw new Error(errorMsg);
+      }
+      
+      console.log(`%c✅ [GeminiClient] generateContent SUCESSO com ${result.model}`, 'background: green; color: white; font-size: 14px; padding: 5px;');
+      console.log(`✅ [GeminiClient] Resposta (${result.data.length} chars):`, result.data.substring(0, 500));
+      return result.data;
+    } catch (error) {
+      console.error('%c💥 [GeminiClient] EXCEÇÃO CAPTURADA', 'background: darkred; color: white; font-size: 14px; padding: 5px;');
+      console.error('💥 [GeminiClient] Erro:', error);
+      throw error;
     }
-    
-    console.log(`✅ [GeminiClient] generateContent sucesso com ${result.model} (${result.data.length} chars)`);
-    return result.data;
   }
 
   private estimateTokens(text: string): number {

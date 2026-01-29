@@ -44,11 +44,17 @@ import type {
 // ============================================================================
 
 export function getGroqApiKey(): string {
-  return (import.meta.env.VITE_GROQ_API_KEY || '').trim();
+  const key = (import.meta.env.VITE_GROQ_API_KEY || '').trim();
+  const isValid = key.startsWith('gsk_') && key.length > 20;
+  console.log(`🔑 [Config] getGroqApiKey(): ${key ? `${key.substring(0, 8)}...${key.substring(key.length - 4)}` : 'NÃO CONFIGURADA'} (válida: ${isValid})`);
+  return key;
 }
 
 export function getGeminiApiKey(): string {
-  return (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
+  const key = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
+  const isValid = key.startsWith('AIza') && key.length > 20;
+  console.log(`🔑 [Config] getGeminiApiKey(): ${key ? `${key.substring(0, 8)}...${key.substring(key.length - 4)}` : 'NÃO CONFIGURADA'} (válida: ${isValid})`);
+  return key;
 }
 
 export function validateGroqApiKey(key: string): boolean {

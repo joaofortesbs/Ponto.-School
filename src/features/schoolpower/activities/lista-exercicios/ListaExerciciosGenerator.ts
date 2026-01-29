@@ -61,7 +61,7 @@ export class ListaExerciciosGenerator {
   }
 
   async generateListaExerciciosContent(data: ListaExerciciosData): Promise<ListaExerciciosContent> {
-    console.log('📝 [ListaExerciciosGenerator] ====== INICIANDO GERAÇÃO COM IA ======');
+    console.log('%c📝 [ListaExerciciosGenerator] ====== INICIANDO GERAÇÃO COM IA ======', 'background: #4CAF50; color: white; font-size: 14px; padding: 5px;');
     console.log('📝 [ListaExerciciosGenerator] Dados recebidos:', JSON.stringify(data, null, 2).substring(0, 500));
 
     const normalizedData = this.normalizeData(data);
@@ -74,7 +74,10 @@ export class ListaExerciciosGenerator {
 
       const startTime = Date.now();
       
-      console.log('🤖 [ListaExerciciosGenerator] Chamando geminiClient.generateContent()...');
+      console.log('%c🤖 [ListaExerciciosGenerator] CHAMANDO geminiClient.generateContent()...', 'background: #2196F3; color: white; font-size: 12px; padding: 3px;');
+      console.log('🤖 [ListaExerciciosGenerator] geminiClient disponível:', !!geminiClient);
+      console.log('🤖 [ListaExerciciosGenerator] geminiClient.generateContent disponível:', typeof geminiClient.generateContent);
+      
       const response = await geminiClient.generateContent(prompt);
       const executionTime = Date.now() - startTime;
 

@@ -1,4 +1,5 @@
 import { ActivityFormData, GeneratedActivity, ActivityType } from '../types/ActivityTypes';
+import { generateListaExerciciosContent } from '../../activities/lista-exercicios/ListaExerciciosGenerator';
 
 // Gerar questão de múltipla escolha
 const generateMultipleChoiceQuestion = (questionNumber: number, data: ActivityFormData) => {

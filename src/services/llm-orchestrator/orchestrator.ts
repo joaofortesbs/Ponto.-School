@@ -95,7 +95,16 @@ export async function generateContent(
   const errors: ModelError[] = [];
   let attemptsMade = 0;
 
-  console.log(`\n🤖 [LLM-Orchestrator] Nova requisição (${prompt.length} chars)`);
+  console.log(`\n🤖 [LLM-Orchestrator] ====== NOVA REQUISIÇÃO ======`);
+  console.log(`🤖 [LLM-Orchestrator] Prompt length: ${prompt.length} chars`);
+  console.log(`🤖 [LLM-Orchestrator] Verificando API keys...`);
+  
+  // Log detalhado das API keys
+  const groqKey = (import.meta.env.VITE_GROQ_API_KEY || '').trim();
+  const geminiKey = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
+  console.log(`🔑 [LLM-Orchestrator] VITE_GROQ_API_KEY: ${groqKey ? `${groqKey.substring(0, 8)}...` : 'NÃO ENCONTRADA'}`);
+  console.log(`🔑 [LLM-Orchestrator] VITE_GEMINI_API_KEY: ${geminiKey ? `${geminiKey.substring(0, 8)}...` : 'NÃO ENCONTRADA'}`);
+  console.log(`📊 [LLM-Orchestrator] Modelos ativos: ${getActiveModels().length}`);
 
   const sanitized = sanitizePrompt(prompt);
   if (!sanitized.valid) {

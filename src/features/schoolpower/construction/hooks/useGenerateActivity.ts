@@ -56,8 +56,22 @@ export const useGenerateActivity = ({ activityId, activityType }: UseGenerateAct
 
       // Lógica específica para lista de exercícios
       if (activityId === 'lista-exercicios') {
-        console.log('📚 [useGenerateActivity] Gerando Lista de Exercícios...');
-        return await generateExerciseList(formData);
+        console.log('%c📚 [useGenerateActivity] GERANDO LISTA DE EXERCÍCIOS COM IA!', 'background: #4CAF50; color: white; font-size: 16px; padding: 5px;');
+        console.log('📚 [useGenerateActivity] Dados do formulário:', formData);
+        try {
+          const result = await generateExerciseList(formData);
+          console.log('%c✅ [useGenerateActivity] LISTA GERADA COM SUCESSO!', 'background: green; color: white; font-size: 16px; padding: 5px;');
+          console.log('📚 [useGenerateActivity] Resultado:', {
+            titulo: result?.titulo,
+            questoesCount: result?.questoes?.length || 0,
+            isGeneratedByAI: result?.isGeneratedByAI
+          });
+          return result;
+        } catch (listError) {
+          console.error('%c❌ [useGenerateActivity] ERRO NA GERAÇÃO DA LISTA!', 'background: red; color: white; font-size: 16px; padding: 5px;');
+          console.error('📚 [useGenerateActivity] Erro:', listError);
+          throw listError;
+        }
       }
 
       // Lógica genérica para outras atividades
