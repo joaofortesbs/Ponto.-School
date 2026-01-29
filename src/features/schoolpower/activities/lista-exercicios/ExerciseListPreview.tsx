@@ -411,7 +411,12 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         id: `simulated-id-${i}-${Date.now()}`,
         enunciado: `Questão simulada ${i + 1} sobre ${data.tema || 'o tema'}`,
         type: 'multipla-escolha',
-        alternativas: ['A', 'B', 'C', 'D'],
+        alternativas: [
+          `Opção sobre ${data.tema || 'o tema'} - aguardando geração pela IA`,
+          `Segunda alternativa - conteúdo será gerado`,
+          `Terceira alternativa - em processamento`,
+          `Quarta alternativa - clique em regenerar se persistir`
+        ],
         respostaCorreta: i % 2,
         dificuldade: 'medio',
         explicacao: `Explicação para a questão simulada ${i + 1}.`,
@@ -501,13 +506,13 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
         if (questionType === 'multipla-escolha') {
           baseQuestion.alternativas = [
-            `Alternativa A para a questão ${i}`,
-            `Alternativa B para a questão ${i}`,
-            `Alternativa C para a questão ${i}`,
-            `Alternativa D para a questão ${i}`
+            `[Aguardando IA] Primeira opção sobre o tema - regenere para conteúdo real`,
+            `[Aguardando IA] Segunda opção plausível - clique em regenerar`,
+            `[Aguardando IA] Terceira alternativa - em processamento`,
+            `[Aguardando IA] Quarta opção do exercício - regenere se persistir`
           ];
-          baseQuestion.respostaCorreta = 0; // Alternativa A como correta por padrão
-          baseQuestion.explicacao = `Explicação para a questão ${i}: Esta é uma explicação simulada detalhando por que a alternativa A é a correta.`;
+          baseQuestion.respostaCorreta = 0;
+          baseQuestion.explicacao = `[Aguardando IA] Explicação para a questão ${i} será gerada automaticamente.`;
         } else if (questionType === 'verdadeiro-falso') {
           baseQuestion.resposta = true; // Verdadeiro como padrão
           baseQuestion.explicacao = `Explicação para a questão ${i}: Esta é uma explicação simulada para a afirmação.`;
@@ -791,10 +796,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
               "type": "multipla-escolha",
               "enunciado": "Crie aqui um enunciado específico e claro...",
               "alternativas": [
-                "Alternativa A plausível",
-                "Alternativa B plausível",
-                "Alternativa C plausível",
-                "Alternativa D plausível"
+                "Primeira opção com conteúdo específico sobre o tema da questão",
+                "Segunda opção plausível mas incorreta relacionada ao assunto",
+                "Terceira alternativa com texto educativo sobre o tema",
+                "Quarta opção do exercício com conteúdo real"
               ],
               "respostaCorreta": 0, // Índice da alternativa correta (0 para A, 1 para B, etc.)
               "explicacao": "Explicação detalhada sobre a resposta correta e o porquê das incorretas.",

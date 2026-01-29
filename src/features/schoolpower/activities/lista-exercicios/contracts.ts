@@ -111,12 +111,12 @@ const ALTERNATIVE_TEXT_FIELDS = [
  * RESOLVE o problema de [object Object] em alternativas
  * 
  * Formatos suportados:
- * - String simples: "Alternativa A"
- * - Objeto com texto: { texto: "Alternativa A", correta: false }
- * - Objeto com text: { text: "Alternativa A", correct: false }
- * - Objeto com value: { value: "Alternativa A", id: 1 }
- * - Objeto com content: { content: "Alternativa A" }
- * - Array (pega primeiro elemento): ["Alternativa A"]
+ * - String simples: "O processo de fotossíntese"
+ * - Objeto com texto: { texto: "O processo de fotossíntese", correta: false }
+ * - Objeto com text: { text: "O processo de fotossíntese", correct: false }
+ * - Objeto com value: { value: "O processo de fotossíntese", id: 1 }
+ * - Objeto com content: { content: "O processo de fotossíntese" }
+ * - Array (pega primeiro elemento): ["O processo de fotossíntese"]
  * - Número: 42 → "42"
  * 
  * @param alt - Alternativa em qualquer formato
@@ -144,7 +144,7 @@ export function normalizeAlternativeToString(alt: unknown, fallbackIndex: number
 
   // Caso 4: é null ou undefined
   if (alt === null || alt === undefined) {
-    return `Alternativa ${String.fromCharCode(65 + fallbackIndex)}`;
+    return `[Aguardando IA] Opção ${String.fromCharCode(65 + fallbackIndex)} - regenere para conteúdo real`;
   }
 
   // Caso 5: é array - pega primeiro elemento
@@ -152,7 +152,7 @@ export function normalizeAlternativeToString(alt: unknown, fallbackIndex: number
     if (alt.length > 0) {
       return normalizeAlternativeToString(alt[0], fallbackIndex);
     }
-    return `Alternativa ${String.fromCharCode(65 + fallbackIndex)}`;
+    return `[Aguardando IA] Opção ${String.fromCharCode(65 + fallbackIndex)} - regenere para conteúdo real`;
   }
 
   // Caso 6: é objeto - busca campo de texto
@@ -197,7 +197,7 @@ export function normalizeAlternativeToString(alt: unknown, fallbackIndex: number
 
   // Fallback final
   console.warn(`⚠️ [normalizeAlternativeToString] Fallback para alternativa ${fallbackIndex}, tipo original: ${typeof alt}`);
-  return `Alternativa ${String.fromCharCode(65 + fallbackIndex)}`;
+  return `[Aguardando IA] Opção ${String.fromCharCode(65 + fallbackIndex)} - regenere para conteúdo real`;
 }
 
 /**

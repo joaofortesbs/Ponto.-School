@@ -58,10 +58,10 @@ const generateExerciseListContent = (formData: ActivityFormData): string => {
   for (let i = 1; i <= numQuestions; i++) {
     if (formData.questionModel === 'Múltipla Escolha') {
       exercises.push(`${i}. Questão sobre ${formData.theme} - ${formData.difficultyLevel}
-      a) Alternativa A
-      b) Alternativa B  
-      c) Alternativa C
-      d) Alternativa D`);
+      a) [Aguardando IA] Primeira opção sobre ${formData.theme} - regenere para conteúdo real
+      b) [Aguardando IA] Segunda opção plausível - clique em regenerar
+      c) [Aguardando IA] Terceira alternativa - em processamento
+      d) [Aguardando IA] Quarta opção - regenere se persistir`);
     } else {
       exercises.push(`${i}. Questão dissertativa sobre ${formData.theme} (${formData.difficultyLevel})`);
     }

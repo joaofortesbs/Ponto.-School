@@ -200,10 +200,10 @@ ${formData.description}
 
 ${Array.from({length: parseInt(quantidade)}, (_, i) => `
 **${i + 1}.** Questão sobre ${tema} - nível ${nivelDificuldade}
-   a) Alternativa A
-   b) Alternativa B  
-   c) Alternativa C
-   d) Alternativa D
+   a) [Aguardando IA] Primeira opção sobre ${tema} - regenere para conteúdo real
+   b) [Aguardando IA] Segunda opção plausível - clique em regenerar
+   c) [Aguardando IA] Terceira alternativa sobre ${tema} - em processamento
+   d) [Aguardando IA] Quarta opção - regenere se persistir
 `).join('\n')}
 
 ---
@@ -230,10 +230,10 @@ ${Array.from({length: parseInt(quantidade)}, (_, i) => `
 
 ${Array.from({length: parseInt(quantidade)}, (_, i) => `
 **Questão ${i + 1}**: Sobre ${tema}...
-a) Alternativa A
-b) Alternativa B
-c) Alternativa C  
-d) Alternativa D
+a) [Aguardando IA] Primeira opção sobre ${tema} - regenere para conteúdo real
+b) [Aguardando IA] Segunda opção plausível - clique em regenerar
+c) [Aguardando IA] Terceira alternativa - em processamento
+d) [Aguardando IA] Quarta opção - regenere se persistir
 `).join('\n')}
 
 ---

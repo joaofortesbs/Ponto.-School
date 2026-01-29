@@ -60,11 +60,16 @@ The platform features a modern design with glass-morphism effects, blur backgrou
       - **Protected Files**: `ListaExerciciosGenerator.ts`, `unified-exercise-pipeline.ts`, `ExerciseListPreview.tsx`, `useExerciseListSync.ts`, `exerciseListProcessor.ts`, `questionValidator.ts`
       - **Contracts**: `ExerciseListContract`, `QuestionContract`, `ExerciseListResponseContract` with readonly properties
       - **Sanitizer**: `ExerciseListInputSanitizer` validates ALL external data before processing
-      - **Alternative Normalization (v2.1.2)**: `normalizeAlternativeToString()` function in contracts.ts applied across ENTIRE pipeline:
-        - **Coverage**: Applied in ListaExerciciosGenerator.ts, unified-exercise-pipeline.ts, ExerciseListPreview.tsx (3 locations), exerciseListProcessor.ts, questionValidator.ts
+      - **Alternative Normalization (v2.1.3 - Jan 2026)**: `normalizeAlternativeToString()` function in contracts.ts applied across ENTIRE pipeline:
+        - **Coverage**: Applied in ListaExerciciosGenerator.ts, unified-exercise-pipeline.ts, ExerciseListPreview.tsx (4 locations), exerciseListProcessor.ts, questionValidator.ts
         - Handles: strings, numbers, booleans, null/undefined, nested arrays, objects with 15+ field variants (texto, text, content, value, label, etc.)
         - Fallback: Uses Object.values to find longest string when no known fields match
         - **Eliminates [object Object] bug** in ALL rendering contexts including: question cards, detailed view, edit mode, and validation
+      - **Prompt Engineering Fix (v2.1.3)**: All AI prompts now require real educational content:
+        - listaExerciciosPrompt.ts: Explicit rule forbidding "Alternativa A/B/C/D" as text
+        - QuestionSimulator.tsx: Example alternatives with descriptive content
+        - FloatingChatSupport.tsx: Quiz prompts with educational alternative examples
+        - All fallback generators use "[Aguardando IA]" placeholder instead of generic alternatives
       - **Dedicated Storage Namespace**: Uses `sp_le_v2_` prefix to prevent storage collisions
       - **6-Layer Pipeline**: Normalization → Intelligent Extraction (7 fallback methods) → Validation → Synchronization → Testing → Progressive Fallback
       - **Agent Rules File**: `LISTA_EXERCICIOS_RULES.md` contains mandatory guidelines for any modifications

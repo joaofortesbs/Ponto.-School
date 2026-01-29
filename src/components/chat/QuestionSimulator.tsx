@@ -69,10 +69,10 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
           "type": "multiple-choice",
           "text": "Enunciado da pergunta",
           "options": [
-            { "id": "q1-a", "text": "Alternativa A", "isCorrect": false },
-            { "id": "q1-b", "text": "Alternativa B", "isCorrect": true },
-            { "id": "q1-c", "text": "Alternativa C", "isCorrect": false },
-            { "id": "q1-d", "text": "Alternativa D", "isCorrect": false }
+            { "id": "q1-a", "text": "Primeira opção com conteúdo específico sobre o tema", "isCorrect": false },
+            { "id": "q1-b", "text": "Segunda opção correta com texto educativo real", "isCorrect": true },
+            { "id": "q1-c", "text": "Terceira opção plausível mas incorreta", "isCorrect": false },
+            { "id": "q1-d", "text": "Quarta opção relacionada ao assunto", "isCorrect": false }
           ],
           "explanation": "Explicação da resposta correta"
         }

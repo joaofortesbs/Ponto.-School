@@ -402,10 +402,10 @@ export const generateActivityByType = (type: ActivityType, data: ActivityFormDat
         // Adicionar campos específicos por tipo
         if (questionType === 'multipla-escolha') {
           question.alternativas = [
-            `Alternativa A relacionada ao tema ${data.theme || 'proposto'}`,
-            `Alternativa B relacionada ao tema ${data.theme || 'proposto'}`,
-            `Alternativa C relacionada ao tema ${data.theme || 'proposto'}`,
-            `Alternativa D relacionada ao tema ${data.theme || 'proposto'}`
+            `[Aguardando IA] Primeira opção sobre ${data.theme || 'o tema'} - regenere para conteúdo real`,
+            `[Aguardando IA] Segunda opção plausível - clique em regenerar`,
+            `[Aguardando IA] Terceira alternativa sobre ${data.theme || 'o tema'} - em processamento`,
+            `[Aguardando IA] Quarta opção - regenere se persistir`
           ];
           question.respostaCorreta = 0;
           question.explicacao = `Explicação detalhada para a questão ${i} sobre ${data.theme || 'o tema'}.`;

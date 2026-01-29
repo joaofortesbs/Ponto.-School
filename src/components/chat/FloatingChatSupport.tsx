@@ -2676,18 +2676,20 @@ Exemplo de formato da resposta:
                                                   - Cada pergunta deve ter 4 alternativas, com apenas uma correta
                                                   - Forneça uma explicação concisa para cada resposta
                                                   
+                                                  IMPORTANTE: Cada alternativa DEVE conter texto real e educativo relacionado ao tema (NUNCA use "Alternativa A/B/C/D" como texto).
+                                                  
                                                   Responda APENAS com um array JSON com as 5 perguntas no formato a seguir, sem qualquer texto ou explicação adicional:
                                                   [
                                                     {
                                                       "id": "q1",
-                                                      "text": "Enunciado da pergunta",
+                                                      "text": "Enunciado da pergunta com contexto real",
                                                       "options": [
-                                                        { "id": "q1-a", "text": "Alternativa A", "isCorrect": false },
-                                                        { "id": "q1-b", "text": "Alternativa B", "isCorrect": true },
-                                                        { "id": "q1-c", "text": "Alternativa C", "isCorrect": false },
-                                                        { "id": "q1-d", "text": "Alternativa D", "isCorrect": false }
+                                                        { "id": "q1-a", "text": "Texto descritivo da primeira opção relacionada ao tema", "isCorrect": false },
+                                                        { "id": "q1-b", "text": "Texto descritivo da opção correta com conteúdo real", "isCorrect": true },
+                                                        { "id": "q1-c", "text": "Texto descritivo da terceira opção plausível", "isCorrect": false },
+                                                        { "id": "q1-d", "text": "Texto descritivo da quarta opção relacionada", "isCorrect": false }
                                                       ],
-                                                      "explanation": "Explicação da resposta correta"
+                                                      "explanation": "Explicação detalhada da resposta correta"
                                                     }
                                                   ]
                                                   `;
