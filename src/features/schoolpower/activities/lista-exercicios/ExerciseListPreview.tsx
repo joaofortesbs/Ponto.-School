@@ -38,6 +38,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { generateContent } from '@/services/llm-orchestrator';
 
 // Sistema de mapeamento de dificuldade
 const DIFFICULTY_LEVELS = {
@@ -750,22 +751,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       return;
     }
 
-    console.log('🚀 Iniciando geração de questão com IA:', newQuestionData);
+    console.log('🚀 Iniciando geração de questão com LLM Orchestrator v3.0:', newQuestionData);
     setIsGeneratingQuestion(true);
 
     try {
-      // Use uma chave API válida ou passe-a de forma segura (ex: via contexto ou env var)
-      // Substitua 'SUA_API_KEY_AQUI' pela sua chave real
-      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || 'SUA_API_KEY_AQUI';
-      if (apiKey === 'SUA_API_KEY_AQUI') {
-        console.error('❌ Chave da API do Gemini não configurada. Verifique as variáveis de ambiente.');
-        alert('Erro de configuração: Chave da API indisponível.');
-        setIsGeneratingQuestion(false);
-        return;
-      }
-
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
-
       // Determinar o tipo de questão para o prompt
       let questionTypeForPrompt = 'multipla-escolha';
       const modeloLower = newQuestionData.modelo.toLowerCase();
@@ -845,34 +834,21 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         **Instrução Final:** Gere o JSON correspondente ao tipo de questão solicitado.
       `;
 
-      console.log('📝 Enviando prompt para Gemini...');
+      console.log('📝 [ExerciseListPreview] Enviando para LLM Orchestrator v3.0...');
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }]
-        })
+      const result = await generateContent(prompt, {
+        activityType: 'lista-exercicios',
+        onProgress: (status) => console.log(`📝 [ExerciseListPreview] ${status}`),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error(`❌ Erro HTTP ${response.status}:`, errorData);
-        throw new Error(`Erro na API do Gemini: ${response.status} - ${errorData.error?.message || response.statusText}`);
+      if (!result.success || !result.data) {
+        throw new Error('LLM Orchestrator falhou ao gerar questão');
       }
 
-      const result = await response.json();
-      console.log('📥 Resposta bruta do Gemini:', result);
+      const generatedText = result.data;
+      console.log('📝 Texto gerado pela IA:', generatedText);
 
-      if (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts) {
-        const generatedText = result.candidates[0].content.parts[0].text;
-        console.log('📝 Texto gerado pela IA:', generatedText);
+      if (generatedText) {
 
         // Tentar extrair o JSON de forma robusta
         let jsonText = generatedText.trim();

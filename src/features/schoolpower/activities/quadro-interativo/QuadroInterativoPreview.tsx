@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +9,7 @@ import {
   Sparkles,
   AlertCircle
 } from 'lucide-react';
+import { generateContent } from '@/services/llm-orchestrator';
 
 interface QuadroInterativoPreviewProps {
   data: any;
@@ -136,43 +136,19 @@ FORMATO DE RESPOSTA (APENAS JSON):
 
 Gere o conteúdo agora:`;
 
-      console.log('📝 [QUADRO INTERATIVO] Enviando para API Gemini');
+      console.log('📝 [QUADRO INTERATIVO] Enviando para LLM Orchestrator v3.0');
 
-      // Fazer requisição para API Gemini
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          }
-        })
+      const result = await generateContent(prompt, {
+        activityType: 'quadro-interativo',
+        onProgress: (status) => console.log(`🎨 [QuadroInterativo Preview] ${status}`),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ [QUADRO INTERATIVO] Erro HTTP:', response.status, errorText);
-        throw new Error(`Erro na API Gemini: ${response.status} - ${response.statusText}`);
+      if (!result.success || !result.data) {
+        throw new Error('LLM Orchestrator retornou erro');
       }
 
-      const apiData = await response.json();
-      console.log('📦 [QUADRO INTERATIVO] Resposta da API:', apiData);
-      
-      const responseText = apiData?.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (!responseText) {
-        throw new Error('Resposta vazia da API Gemini');
-      }
+      const responseText = result.data;
+      console.log('📦 [QUADRO INTERATIVO] Resposta do Orchestrator:', responseText);
 
       // Processar resposta JSON
       let cleanedResponse = responseText

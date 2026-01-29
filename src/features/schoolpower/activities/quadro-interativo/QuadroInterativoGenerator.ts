@@ -1,5 +1,5 @@
-
 import { geminiLogger } from '@/utils/geminiDebugLogger';
+import { generateContent } from '@/services/llm-orchestrator';
 
 interface QuadroInterativoData {
   subject: string;
@@ -22,10 +22,8 @@ interface QuadroInterativoContent {
 }
 
 export class QuadroInterativoGenerator {
-  private apiKey: string;
-
   constructor() {
-    this.apiKey = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
+    console.log('🎨 [QuadroInterativoGenerator] Usando LLM Orchestrator v3.0 Enterprise');
   }
 
   async generateQuadroInterativoContent(data: QuadroInterativoData): Promise<QuadroInterativoContent> {
@@ -33,10 +31,19 @@ export class QuadroInterativoGenerator {
     
     try {
       const prompt = this.buildPrompt(data);
-      const response = await this.callGeminiAPI(prompt);
-      const parsedContent = this.parseGeminiResponse(response);
       
-      const result: QuadroInterativoContent = {
+      const result = await generateContent(prompt, {
+        activityType: 'quadro-interativo',
+        onProgress: (status) => console.log(`🎨 [QuadroInterativo] ${status}`),
+      });
+      
+      if (!result.success || !result.data) {
+        throw new Error('LLM Orchestrator falhou');
+      }
+      
+      const parsedContent = this.parseGeminiResponse(result.data);
+      
+      const content: QuadroInterativoContent = {
         title: data.theme || 'Quadro Interativo',
         description: data.objectives || 'Atividade de quadro interativo',
         cardContent: {
@@ -63,9 +70,9 @@ export class QuadroInterativoGenerator {
         }
       };
 
-      geminiLogger.logResponse(result, Date.now());
-      console.log('✅ Conteúdo do Quadro Interativo gerado:', result);
-      return result;
+      geminiLogger.logResponse(content, Date.now());
+      console.log('✅ Conteúdo do Quadro Interativo gerado:', content);
+      return content;
     } catch (error) {
       geminiLogger.logError(error as Error, { data });
       
@@ -151,52 +158,12 @@ Para "Equação do 1º Grau":
 AGORA GERE O CONTEÚDO EDUCATIVO:`;
   }
 
-  private async callGeminiAPI(prompt: string): Promise<any> {
-    const startTime = Date.now();
-    
+  private parseGeminiResponse(response: string): { title: string; text: string } {
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.8,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 2048,
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const executionTime = Date.now() - startTime;
-      
-      geminiLogger.logResponse(data, executionTime);
-      
-      return data;
-    } catch (error) {
-      geminiLogger.logError(error as Error, { prompt: prompt.substring(0, 200) });
-      throw error;
-    }
-  }
-
-  private parseGeminiResponse(response: any): { title: string; text: string } {
-    try {
-      const responseText = response?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const responseText = response;
       
       if (!responseText) {
-        throw new Error('Resposta vazia da API Gemini');
+        throw new Error('Resposta vazia');
       }
 
       // Limpar a resposta removendo markdown e extraindo JSON
@@ -223,17 +190,11 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
       return { title, text };
       
     } catch (error) {
-      geminiLogger.logValidation(response, false, [error.message]);
-      
-      // Fallback com conteúdo educativo baseado nos dados fornecidos
-      const educationalTitle = data.theme || 'Conteúdo Educativo';
-      const educationalText = data.objectives 
-        ? `${data.objectives} - Tema: ${data.theme}. Explore este conceito através de atividades interativas que facilitam o aprendizado.`
-        : `Explore o tema "${data.theme}" através de atividades educativas interativas que facilitam a compreensão e aplicação dos conceitos fundamentais.`;
+      geminiLogger.logValidation(response, false, [(error as Error).message]);
       
       return {
-        title: educationalTitle.substring(0, 70),
-        text: educationalText.substring(0, 450)
+        title: 'Conteúdo Educativo',
+        text: 'Explore este tema através de atividades interativas que facilitam o aprendizado e compreensão.'
       };
     }
   }

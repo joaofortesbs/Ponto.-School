@@ -14,12 +14,24 @@ The platform features a modern design with glass-morphism effects, blur backgrou
 ### Technical Implementations
 - **Frontend**: React 18 with TypeScript, Vite, Tailwind CSS with shadcn/ui, and Zustand for state management.
 - **Backend**: Express.js for API endpoints.
-- **AI Integration**: A resilient multi-model fallback system (v2.0 - Jan 2026) implemented via `GeminiClient` class in `src/utils/api/geminiClient.ts`:
-    - **Provider Chain**: Groq (llama-3.3-70b-versatile) → Groq-fallback (llama-3.1-8b-instant) → Gemini (gemini-1.5-flash)
-    - **Configuration**: `src/config/apiKeys.ts` centralizes API keys, URLs, models, and validation functions
-    - **Features**: Automatic retries with exponential backoff, intelligent model switching, API key validation per provider, detailed logging for diagnostics
+- **AI Integration - LLM Orchestrator v3.0 Enterprise (Jan 2026)**: A unified, resilient multi-model cascade system in `src/services/llm-orchestrator/`:
+    - **Architecture**: 10 models organized in 5 tiers for maximum reliability
+      - TIER 1 (Ultra-Fast): llama-3.1-8b-instant, gemma2-9b-it
+      - TIER 2 (Fast): llama-3.3-70b-versatile, mixtral-8x7b-32768, llama3-70b-8192
+      - TIER 3 (Balanced): llama-3-groq-70b-8192-tool-use-preview, llama-4-scout-17b-16e-instruct
+      - TIER 4 (Powerful): gemini-2.5-flash-preview-04-17, gemini-2.0-flash
+      - TIER 5 (Local Fallback): NUNCA FALHA - gera conteúdo educativo local
+    - **Protection Systems**:
+      - Circuit Breaker per model (threshold: 5 failures, cooldown: 60s)
+      - Rate Limiter per provider (Groq: 30 req/min, Gemini: 15 req/min)
+      - Retry with exponential backoff (3 attempts, base: 1000ms, factor: 2x)
+      - Input sanitization with 50k char limit
+    - **Smart Routing**: Automatic routing based on activity type complexity
+    - **Cache System**: In-memory cache with 5min TTL and 200 max entries
+    - **API Usage**: `import { generateContent } from '@/services/llm-orchestrator'`
+    - **Files**: orchestrator.ts, config.ts, types.ts, providers/groq.ts, providers/gemini.ts, cache.ts, guards.ts, router.ts, fallback.ts
+    - **Legacy Wrapper**: `geminiClient.ts` now wraps the orchestrator for backward compatibility
     - **Required Secrets**: `VITE_GROQ_API_KEY` (prefix: gsk_), `VITE_GEMINI_API_KEY` (prefix: AIza)
-    - **Logging**: Each provider attempt is logged with status codes and response snippets for debugging
 - **Authentication & User Management**: Supabase handles authentication, user sessions, role-based access, and profiles.
 - **Core Features**:
     - **School Power**: AI-powered lesson planning orchestrated by a robust, observable, and self-correcting Multi-Agent Lesson Orchestrator (v4.0) through a 7-step workflow.

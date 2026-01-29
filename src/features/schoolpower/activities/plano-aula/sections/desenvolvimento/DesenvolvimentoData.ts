@@ -1,4 +1,5 @@
 import { storageSet, storageGet } from '@/features/schoolpower/services/StorageOrchestrator';
+import { generateContent } from '@/services/llm-orchestrator';
 
 export interface EtapaDesenvolvimento {
   id: string;
@@ -109,9 +110,8 @@ export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
   ]
 };
 
-// Service para API do Gemini
+// Service para geração de etapas de desenvolvimento via LLM Orchestrator
 export class DesenvolvimentoGeminiService {
-  private static readonly GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
 
   static async gerarEtapasDesenvolvimento(contextoPlano: any): Promise<DesenvolvimentoData> {
     try {
@@ -275,36 +275,19 @@ Gere o desenvolvimento da aula agora:`;
   }
 
   private static async chamarGeminiAPI(prompt: string): Promise<string> {
-    const { API_KEYS } = await import('@/config/apiKeys');
-
-    if (!API_KEYS.GEMINI) {
-      throw new Error('Chave da API Gemini não configurada');
-    }
-
-    const response = await fetch(`${this.GEMINI_API_URL}?key=${API_KEYS.GEMINI}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.8,
-          topK: 40,
-          maxOutputTokens: 2048,
-        }
-      })
+    console.log('🤖 [DesenvolvimentoData] Chamando LLM Orchestrator v3.0...');
+    
+    const result = await generateContent(prompt, {
+      activityType: 'plano-aula',
+      onProgress: (status) => console.log(`📋 [Desenvolvimento] ${status}`),
     });
 
-    if (!response.ok) {
-      throw new Error(`Erro na API Gemini: ${response.status}`);
+    if (!result.success || !result.data) {
+      throw new Error('LLM Orchestrator falhou ao gerar etapas de desenvolvimento');
     }
 
-    const data = await response.json();
-    return data.candidates[0].content.parts[0].text;
+    console.log(`✅ [DesenvolvimentoData] Resposta recebida do modelo: ${result.model}`);
+    return result.data;
   }
 
   private static processarResposta(responseText: string): DesenvolvimentoData {

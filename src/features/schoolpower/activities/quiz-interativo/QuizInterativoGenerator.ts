@@ -1,4 +1,5 @@
 import { geminiLogger } from '@/utils/geminiDebugLogger';
+import { generateContent } from '@/services/llm-orchestrator';
 
 export interface QuizInterativoData {
   subject: string;
@@ -39,25 +40,13 @@ interface QuizInterativoContent {
 }
 
 export class QuizInterativoGenerator {
-  private apiKey: string;
-
   constructor() {
-    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-
-    if (!this.apiKey) {
-      console.warn('⚠️ API Key do Gemini não configurada para Quiz Interativo');
-    }
+    console.log('🎯 [QuizInterativoGenerator] Usando LLM Orchestrator v3.0 Enterprise');
   }
 
   async generateQuizContent(data: QuizInterativoData): Promise<QuizInterativoContent> {
     geminiLogger.logQuizGeneration(data);
     console.log('🎯 Iniciando geração do Quiz Interativo com dados:', data);
-
-    if (!this.apiKey) {
-      geminiLogger.warn('request', 'API Key não disponível para Quiz Interativo');
-      console.warn('🔑 API Key não disponível, usando fallback');
-      return this.createFallbackContent(data);
-    }
 
     try {
       const prompt = this.buildPrompt(data);
@@ -65,9 +54,18 @@ export class QuizInterativoGenerator {
       console.log('📝 Prompt gerado:', prompt);
 
       const startTime = Date.now();
-      const response = await this.callGeminiAPI(prompt);
+      const result = await generateContent(prompt, {
+        activityType: 'quiz-interativo',
+        onProgress: (status) => console.log(`🎯 [QuizInterativo] ${status}`),
+      });
       const executionTime = Date.now() - startTime;
 
+      if (!result.success || !result.data) {
+        console.warn('⚠️ LLM Orchestrator falhou, usando fallback');
+        return this.createFallbackContent(data);
+      }
+
+      const response = result.data;
       geminiLogger.logResponse(response, executionTime);
       console.log('📡 Resposta bruta da API:', response);
 
@@ -357,43 +355,4 @@ VALIDAÇÕES:
 Gere ${data.numberOfQuestions} questões seguindo essas especificações.
 `;
   }
-
-  private async callGeminiAPI(prompt: string): Promise<string> {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${this.apiKey}`;
-
-    const payload = {
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      }
-    };
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erro na API do Gemini: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      throw new Error('Resposta inválida da API do Gemini');
-    }
-
-    return data.candidates[0].content.parts[0].text;
-  }
-
 }

@@ -1,5 +1,5 @@
-
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
+import { generateContent } from '@/services/llm-orchestrator';
 
 export interface ActionPlanActivity {
   id: string;
@@ -14,8 +14,6 @@ export interface GenerateActionPlanParams {
   initialMessage: string;
   contextualizationData: ContextualizationData;
 }
-
-const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
 
 export async function generateActionPlan(params: GenerateActionPlanParams): Promise<ActionPlanActivity[]> {
   const { initialMessage, contextualizationData } = params;
@@ -81,34 +79,18 @@ Exemplo:
 
 Responda APENAS com o JSON, sem texto adicional.`;
 
-    console.log('📤 Enviando requisição para Gemini API...');
+    console.log('📤 [ActionPlanService] Enviando para LLM Orchestrator v3.0...');
 
-    // Fazer requisição para API Gemini
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }]
-      })
+    const result = await generateContent(prompt, {
+      activityType: 'general',
+      onProgress: (status) => console.log(`📋 [ActionPlan] ${status}`),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Erro na API Gemini: ${response.status} - ${errorText}`);
+    if (!result.success || !result.data) {
+      throw new Error('LLM Orchestrator falhou ao gerar plano de ação');
     }
 
-    const result = await response.json();
-    const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!generatedText) {
-      throw new Error('Nenhum conteúdo foi gerado pela IA Gemini');
-    }
+    const generatedText = result.data;
 
     console.log('📥 Resposta bruta da IA:', generatedText);
 
