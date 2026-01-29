@@ -143,6 +143,19 @@ export async function executeAgentPlan(
   conversationHistory?: string
 ): Promise<string> {
   console.log('▶️ [Orchestrator] Iniciando execução do plano:', plan.planId);
+  console.error(`
+╔════════════════════════════════════════════════════════════════════════╗
+║ 🎯 ORCHESTRATOR.executeAgentPlan() ENTRY POINT
+║════════════════════════════════════════════════════════════════════════║
+║ sessionId: ${sessionId}
+║ planId: ${plan.planId}
+║ objetivo: ${plan.objetivo.substring(0, 80)}...
+║ etapas: ${plan.etapas.length}
+║ conversationHistory provided: ${!!conversationHistory}
+║ conversationHistory length: ${conversationHistory?.length || 0}
+║ onProgress callback provided: ${!!onProgress}
+║════════════════════════════════════════════════════════════════════════║
+  `);
 
   const memory = memoryManagers.get(sessionId);
   if (!memory) {
@@ -153,13 +166,16 @@ export async function executeAgentPlan(
 
   // CRÍTICO: Resetar executor para nova execução
   executor.resetForNewExecution();
+  console.error('✅ [Orchestrator] Executor resetado para nova execução');
 
   if (onProgress) {
     executor.setProgressCallback(onProgress);
+    console.error('✅ [Orchestrator] onProgress callback registrado');
   }
   
   if (conversationHistory) {
     executor.setConversationContext(conversationHistory);
+    console.error(`✅ [Orchestrator] conversationContext definido (${conversationHistory.length} chars)`);
   }
 
   try {

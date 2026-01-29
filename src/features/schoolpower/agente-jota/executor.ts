@@ -56,6 +56,25 @@ export class AgentExecutor {
   constructor(sessionId: string, memory: MemoryManager) {
     this.sessionId = sessionId;
     this.memory = memory;
+    
+    // 🔥 HANDLER GLOBAL: Capturar unhandled promise rejections
+    if (typeof window !== 'undefined' && !AgentExecutor.globalHandlerRegistered) {
+      window.addEventListener('unhandledrejection', (event) => {
+        console.error(`
+╔════════════════════════════════════════════════════════════════════════╗
+║ 🚨 UNHANDLED PROMISE REJECTION - CAPTURED BY GLOBAL HANDLER
+║════════════════════════════════════════════════════════════════════════║
+║ reason: ${event.reason}
+║ reason type: ${typeof event.reason}
+║ reason.message: ${event.reason?.message || 'N/A'}
+║ reason.stack: ${event.reason?.stack?.substring(0, 300) || 'N/A'}
+║════════════════════════════════════════════════════════════════════════║
+        `);
+        // NÃO previne o erro padrão - deixar o browser logar também
+      });
+      AgentExecutor.globalHandlerRegistered = true;
+      console.log('✅ [Executor] Global unhandledrejection handler registered');
+    }
   }
 
   setProgressCallback(callback: ProgressCallback): void {
@@ -119,6 +138,15 @@ export class AgentExecutor {
 
   async executePlan(plan: ExecutionPlan): Promise<string> {
     console.log('▶️ [Executor] Iniciando execução do plano:', plan.planId);
+    console.error(`
+╔════════════════════════════════════════════════════════════════════════╗
+║ 🎯 EXECUTOR.executePlan() ENTRY POINT - SESSION: ${this.sessionId}
+║════════════════════════════════════════════════════════════════════════║
+║ planId: ${plan.planId}
+║ objetivo: ${plan.objetivo.substring(0, 80)}...
+║ etapas: ${plan.etapas.length}
+║════════════════════════════════════════════════════════════════════════║
+    `);
 
     // Limpar mapa de resultados de execuções anteriores
     this.capabilityResultsMap.clear();
@@ -129,6 +157,8 @@ export class AgentExecutor {
     
     // Inicializar sessão do ChosenActivitiesStore para sincronização
     useChosenActivitiesStore.getState().initSession(this.sessionId);
+    
+    console.error('✅ [Executor] Stores initialized');
 
     await this.memory.saveToWorkingMemory({
       tipo: 'objetivo',
@@ -244,6 +274,17 @@ export class AgentExecutor {
 
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : 'No stack trace';
+        
+        console.error(`
+╔════════════════════════════════════════════════════════════════════════╗
+║ ❌ EXECUTOR.executePlan() CAUGHT ERROR IN ETAPA ${etapa.ordem}
+║════════════════════════════════════════════════════════════════════════║
+║ message: ${errorMessage}
+║ type: ${error instanceof Error ? error.constructor.name : typeof error}
+║════════════════════════════════════════════════════════════════════════║
+        `);
+        
         console.error(`❌ [Executor] Erro na etapa ${etapa.ordem}:`, error);
 
         await this.memory.saveToWorkingMemory({
@@ -302,6 +343,9 @@ export class AgentExecutor {
     'criar_atividade',
     'salvar_atividades_bd'
   ];
+  
+  // Flag para registrar o handler global apenas uma vez
+  private static globalHandlerRegistered: boolean = false;
 
   private async executeCapabilities(etapa: ExecutionStep): Promise<any[]> {
     const capabilities = etapa.capabilities || [];
@@ -312,6 +356,23 @@ export class AgentExecutor {
 
     console.log(`📦 [Executor] Executando ${capabilities.length} capabilities na etapa ${etapa.ordem}`);
     console.log(`📦 [Executor] Resultados anteriores disponíveis:`, Array.from(this.capabilityResultsMap.keys()));
+    
+    // 🔥 GUARD LOG: Confirmar entrada de executeCapabilities
+    console.error(`
+╔════════════════════════════════════════════════════════════════════════╗
+║ 🚀 ENTER executeCapabilities() - ETAPA ${etapa.ordem}
+║════════════════════════════════════════════════════════════════════════║
+║ Etapa: ${etapa.titulo || etapa.descricao}
+║ Número de capabilities: ${capabilities.length}
+║ Nomes das capabilities: ${capabilities.map(c => c.nome).join(', ') || 'NENHUMA'}
+║ Map status: ${this.capabilityResultsMap.size} resultados anteriores
+║════════════════════════════════════════════════════════════════════════║
+    `);
+    
+    if (capabilities.length === 0) {
+      console.warn('⚠️ [Executor] AVISO: Esta etapa não tem capabilities! Retornando array vazio.');
+      return [];
+    }
 
     for (const capability of capabilities) {
       const startTime = Date.now();
@@ -664,6 +725,21 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
       } catch (error) {
         const duration = Date.now() - startTime;
         const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : '';
+
+        console.error(`
+╔════════════════════════════════════════════════════════════════════════╗
+║ ❌ CAPABILITY "${capName}" - EXCEPTION CAUGHT
+║════════════════════════════════════════════════════════════════════════║
+║ capId: ${capId}
+║ capName: ${capName}
+║ capDisplayName: ${capDisplayName}
+║ errorMessage: ${errorMessage}
+║ errorType: ${error instanceof Error ? error.constructor.name : typeof error}
+║ duration: ${duration}ms
+║ etapa: ${etapa.ordem}
+║════════════════════════════════════════════════════════════════════════║
+        `);
 
         // Debug: Erro na capability
         createDebugEntry(
@@ -672,7 +748,7 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
           'error',
           `Erro ao executar "${capDisplayName}": ${errorMessage}. A execução foi interrompida para esta capability.`,
           'high',
-          { error: errorMessage, duration_ms: duration, stack: error instanceof Error ? error.stack : undefined }
+          { error: errorMessage, duration_ms: duration, stack: errorStack }
         );
 
         this.emitProgress({

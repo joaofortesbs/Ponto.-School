@@ -358,7 +358,17 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         .map(m => `${m.role === 'user' ? 'Usuário' : 'Assistente'}: ${m.content}`)
         .join('\n\n');
       
-      console.log(`📝 [ChatLayout] Passing conversation history (${conversationHistory.length} chars) to executor`);
+      console.error(`
+╔════════════════════════════════════════════════════════════════════════╗
+║ 🚀 CHAT LAYOUT - handleExecutePlan() CALLING executeAgentPlan
+║════════════════════════════════════════════════════════════════════════║
+║ sessionId: ${sessionId}
+║ executionPlan.planId: ${executionPlan.planId}
+║ executionPlan.etapas: ${executionPlan.etapas.length}
+║ conversationHistory length: ${conversationHistory.length}
+║ handleProgress callback: ${typeof handleProgress === 'function' ? 'YES' : 'NO'}
+║════════════════════════════════════════════════════════════════════════║
+      `);
       
       const relatorio = await executeAgentPlan(
         executionPlan,
@@ -366,6 +376,8 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         handleProgress,
         conversationHistory
       );
+      
+      console.error('✅ [ChatLayout] executeAgentPlan() retornou com sucesso');
 
       setIsExecutingLocal(false);
       setExecuting(false);

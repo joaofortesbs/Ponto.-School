@@ -617,6 +617,19 @@ export async function decidirAtividadesCriarV2(
       technical_data: { checks: dataConfirmation.checks.map(c => ({ id: c.id, passed: c.passed, value: c.value })) }
     });
 
+    console.error(`
+╔════════════════════════════════════════════════════════════════════════╗
+║ ✅ decidirAtividadesCriarV2 - RETURNING SUCCESS RESPONSE
+║════════════════════════════════════════════════════════════════════════║
+║ execution_id: ${input.execution_id}
+║ chosen_activities.length: ${chosenActivities.length}
+║ estrategia: ${parsedResponse.estrategia_pedagogica?.substring(0, 50) || 'default'}
+║════════════════════════════════════════════════════════════════════════║
+ATIVIDADES SELECIONADAS:
+${chosenActivities.map((a, i) => `  ${i+1}. ${a.titulo} (ID: ${a.id}, Tipo: ${a.tipo})`).join('\n')}
+║════════════════════════════════════════════════════════════════════════║
+    `);
+
     return {
       success: true,
       capability_id: 'decidir_atividades_criar',
