@@ -30,7 +30,9 @@ The platform features a modern design with glass-morphism effects, blur backgrou
     - **Cache System**: In-memory cache with 5min TTL and 200 max entries
     - **API Usage**: `import { generateContent } from '@/services/llm-orchestrator'`
     - **Files**: orchestrator.ts, config.ts, types.ts, providers/groq.ts, providers/gemini.ts, cache.ts, guards.ts, router.ts, fallback.ts
-    - **Legacy Wrapper**: `geminiClient.ts` now wraps the orchestrator for backward compatibility
+    - **Legacy Wrappers**: 
+      - `geminiClient.ts` wraps the orchestrator for backward compatibility with direct generators
+      - `controle-APIs-gerais-school-power.ts` wraps the orchestrator maintaining original API for 16+ consumer files
     - **Required Secrets**: `VITE_GROQ_API_KEY` (prefix: gsk_), `VITE_GEMINI_API_KEY` (prefix: AIza)
 - **Authentication & User Management**: Supabase handles authentication, user sessions, role-based access, and profiles.
 - **Core Features**:

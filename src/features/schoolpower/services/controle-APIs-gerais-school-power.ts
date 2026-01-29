@@ -842,13 +842,22 @@ export async function executeWithCascadeFallback(
 ): Promise<CascadeResult> {
   const startTime = Date.now();
   
+  // DEPRECATED OPTIONS LOG - estas opções agora são gerenciadas pelo orchestrator
+  if (options?.skipModels?.length) {
+    console.warn('⚠️ [CASCADE v2.0] DEPRECATED: skipModels não é mais suportado. O orchestrator gerencia modelos automaticamente.');
+  }
+  if (options?.maxAttempts) {
+    console.warn('⚠️ [CASCADE v2.0] DEPRECATED: maxAttempts não é mais suportado. O orchestrator usa todos os tiers disponíveis.');
+  }
+  
   console.log('🎯 [CASCADE v2.0] Delegando para LLM Orchestrator v3.0 Enterprise...');
   
-  // Log para debug
+  // Log para debug com userId se fornecido
   geminiLogger.logRequest(prompt, { 
     cascade: true, 
     orchestrator: 'v3.0',
     activityType: options?.activityType || 'general',
+    userId: options?.userId,
   });
 
   try {
@@ -936,16 +945,21 @@ export async function generateActivityContent(
 
 /**
  * Verifica status das APIs disponíveis.
+ * Agora usa dados do LLM Orchestrator v3.0 para consistência.
  */
 export function getAPIStatus(): {
   groq: { configured: boolean; modelsAvailable: number };
   gemini: { configured: boolean };
   totalModels: number;
+  orchestratorVersion: string;
 } {
   const groqKey = getGroqApiKey();
   const geminiKey = getGeminiApiKey();
   
-  const groqModels = API_MODELS_CASCADE.filter(m => m.provider === 'groq' && m.isActive);
+  // Usar modelos do orchestrator
+  const orchestratorModels = getOrchestratorModels();
+  const groqModels = orchestratorModels.filter(m => m.provider === 'groq');
+  const geminiModels = orchestratorModels.filter(m => m.provider === 'gemini');
   
   return {
     groq: {
@@ -955,18 +969,49 @@ export function getAPIStatus(): {
     gemini: {
       configured: validateApiKey(geminiKey, 'gemini'),
     },
-    totalModels: API_MODELS_CASCADE.filter(m => m.isActive).length,
+    totalModels: orchestratorModels.length,
+    orchestratorVersion: '3.0',
   };
 }
 
 /**
  * Lista modelos disponíveis ordenados por prioridade.
+ * Retorna modelos do LLM Orchestrator v3.0 convertidos para formato legado APIModel.
+ * 
+ * NOTA: Esta função agora reflete a configuração real do orchestrator,
+ * não mais a lista estática API_MODELS_CASCADE.
  */
 export function getAvailableModels(): APIModel[] {
-  return API_MODELS_CASCADE
+  const orchestratorModels = getOrchestratorModels();
+  
+  // Mapear modelos do orchestrator para formato legado APIModel
+  return orchestratorModels
     .filter(m => m.isActive)
+    .map(m => ({
+      id: m.id,
+      name: m.name,
+      provider: m.provider as 'groq' | 'gemini' | 'local',
+      endpoint: m.endpoint,
+      maxTokens: m.maxTokens,
+      contextWindow: m.contextWindow,
+      priority: m.priority,
+      isActive: m.isActive,
+    }))
     .sort((a, b) => a.priority - b.priority);
 }
+
+/**
+ * Lista modelos do LLM Orchestrator v3.0 (formato novo com tier e bestFor).
+ */
+export function getOrchestratorAvailableModels() {
+  return getOrchestratorModels();
+}
+
+/**
+ * @deprecated Use getAvailableModels() que agora usa dados do orchestrator.
+ * Mantido apenas para referência legacy.
+ */
+export const LEGACY_API_MODELS_CASCADE = API_MODELS_CASCADE;
 
 // ============================================================================
 // EXPORT DEFAULT
@@ -974,25 +1019,30 @@ export function getAvailableModels(): APIModel[] {
 
 /**
  * Retorna estatísticas do cache para monitoramento.
+ * Combina cache local e cache do orchestrator.
  */
 export function getCacheStats(): {
   entries: number;
   maxEntries: number;
   ttlMs: number;
+  orchestratorCache: ReturnType<typeof getOrchestratorCacheStats>;
 } {
   return {
     entries: responseCache.size,
     maxEntries: CACHE_CONFIG.MAX_ENTRIES,
     ttlMs: CACHE_CONFIG.TTL_MS,
+    orchestratorCache: getOrchestratorCacheStats(),
   };
 }
 
 /**
  * Limpa o cache manualmente (útil para debug).
+ * Limpa tanto o cache local quanto o cache do orchestrator.
  */
 export function clearCache(): void {
   responseCache.clear();
-  console.log('🧹 [CACHE] Cache limpo manualmente');
+  clearOrchestratorCache();
+  console.log('🧹 [CACHE] Cache local e orchestrator limpos manualmente');
 }
 
 export default {
@@ -1001,9 +1051,12 @@ export default {
   generateActivityContent,
   getAPIStatus,
   getAvailableModels,
+  getOrchestratorAvailableModels,
   getCacheStats,
   clearCache,
+  // Legacy exports (deprecated - usar getAvailableModels() que agora usa orchestrator)
   API_MODELS_CASCADE,
+  LEGACY_API_MODELS_CASCADE,
   API_CONFIG,
   CACHE_CONFIG,
   INPUT_CONFIG,
