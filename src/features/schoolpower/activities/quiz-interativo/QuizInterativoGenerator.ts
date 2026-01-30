@@ -21,6 +21,12 @@ export interface QuizQuestion {
   options?: string[];
   correctAnswer: string;
   explanation?: string;
+  // Aliases para compatibilidade com respostas da IA em português
+  texto?: string;
+  alternativas?: string[];
+  resposta_correta?: number | string;
+  feedback?: string;
+  pergunta?: string;
 }
 
 interface QuizInterativoContent {
@@ -125,9 +131,10 @@ export class QuizInterativoGenerator {
         question: q.question || q.texto || `Questão ${index + 1}`,
         type: this.mapQuestionType(originalData.format),
         options: q.options || q.alternativas || [],
-        correctAnswer: q.correctAnswer || q.resposta_correta || (q.options?.[0] || 'Opção A'),
+        correctAnswer: this.normalizeCorrectAnswer(q.correctAnswer, q.resposta_correta, q.options || q.alternativas || []),
         explanation: q.explanation || q.feedback || `Explicação para a questão ${index + 1}`
-      })) || []
+      })) || [],
+      generatedAt: content.generatedAt || new Date().toISOString()
     };
   }
 
@@ -136,6 +143,45 @@ export class QuizInterativoGenerator {
       return 'verdadeiro-falso';
     }
     return 'multipla-escolha';
+  }
+
+  private normalizeCorrectAnswer(
+    correctAnswer: string | undefined,
+    resposta_correta: number | string | undefined,
+    options: string[]
+  ): string {
+    // Se já temos correctAnswer como string válida, usar diretamente
+    if (typeof correctAnswer === 'string' && correctAnswer.length > 0) {
+      return correctAnswer;
+    }
+
+    // Se resposta_correta é um índice numérico, pegar a alternativa correspondente
+    if (typeof resposta_correta === 'number') {
+      const option = options[resposta_correta];
+      if (option) {
+        return option;
+      }
+    }
+
+    // Se resposta_correta é uma string, usar diretamente
+    if (typeof resposta_correta === 'string' && resposta_correta.length > 0) {
+      // Verificar se é um índice em forma de string
+      const index = parseInt(resposta_correta);
+      if (!isNaN(index) && options[index]) {
+        return options[index];
+      }
+      // Se é uma letra (A, B, C, D), converter para índice
+      const letterMap: Record<string, number> = { 'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4 };
+      const letter = resposta_correta.toLowerCase().charAt(0);
+      if (letterMap[letter] !== undefined && options[letterMap[letter]]) {
+        return options[letterMap[letter]];
+      }
+      // Usar o valor como string diretamente
+      return resposta_correta;
+    }
+
+    // Fallback: primeira opção ou valor padrão
+    return options[0] || 'Opção A';
   }
 
   private parseGeminiResponse(response: string, originalData: QuizInterativoData): QuizInterativoContent {
@@ -170,12 +216,13 @@ export class QuizInterativoGenerator {
         return this.createFallbackContent(originalData);
       }
 
-      const content = {
+      const content: QuizInterativoContent = {
         title: parsed.quiz?.titulo || parsed.titulo || parsed.title || `Quiz: ${originalData.theme}`,
         description: parsed.quiz?.descricao || parsed.descricao || parsed.description || `Quiz sobre ${originalData.theme} para ${originalData.schoolYear}`,
         questions: questions,
         timePerQuestion: parseInt(originalData.timePerQuestion) || 60,
         totalQuestions: questions.length,
+        generatedAt: new Date().toISOString(),
         isGeneratedByAI: true,
         isFallback: false,
         subject: originalData.subject,
