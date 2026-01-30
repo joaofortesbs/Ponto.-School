@@ -24,7 +24,7 @@ Cada atividade do School Power é um **Bounded Context** independente:
 ```
 src/features/schoolpower/activities/
 ├── lista-exercicios/       # 🔴 BLINDADO - Ver LISTA_EXERCICIOS_RULES.md
-├── quiz-interativo/        # 🔴 BLINDADO - Ver FLASH_CARDS_RULES.md (se existir)
+├── quiz-interativo/        # 🔴 BLINDADO - Ver QUIZ_INTERATIVO_RULES.md
 ├── flash-cards/            # 🔴 BLINDADO - Ver FLASH_CARDS_RULES.md
 ├── plano-aula/
 ├── sequencia-didatica/
@@ -74,7 +74,7 @@ Os seguintes componentes possuem arquivos de RULES.md que DEVEM ser lidos:
 |------------|-------------------|--------|
 | Lista de Exercícios | `LISTA_EXERCICIOS_RULES.md` | ✅ ATIVO |
 | Flash Cards | `FLASH_CARDS_RULES.md` | ✅ ATIVO |
-| Quiz Interativo | (a ser criado) | ⏳ PENDENTE |
+| Quiz Interativo | `QUIZ_INTERATIVO_RULES.md` | ✅ ATIVO |
 
 ### Protocolo de Blindagem
 1. **SEMPRE** leia o arquivo RULES.md antes de modificar

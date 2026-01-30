@@ -80,6 +80,7 @@ The following components have protection rules to prevent accidental breakage:
 | Component | Rules File | Version |
 |-----------|-----------|---------|
 | Lista de Exercícios | `src/features/schoolpower/activities/lista-exercicios/LISTA_EXERCICIOS_RULES.md` | v2.1.2 |
+| Quiz Interativo | `src/features/schoolpower/activities/quiz-interativo/QUIZ_INTERATIVO_RULES.md` | v1.0.0 |
 | Flash Cards | `src/features/schoolpower/activities/flash-cards/FLASH_CARDS_RULES.md` | Active |
 
 ### AI Orchestration Guide
@@ -94,6 +95,13 @@ The following components have protection rules to prevent accidental breakage:
 4. Document changes in the history section
 
 ## Recent Changes (Jan 30, 2026)
+- **Quiz Interativo Blindagem v1.0.0**: Enterprise-grade protection system for Quiz Interativo activity
+  - Created QUIZ_INTERATIVO_RULES.md with comprehensive modification rules
+  - Implemented robust multi-path JSON parsing (bracket matching, validation, multiple extraction paths)
+  - Added contextualized fallback with real question banks per subject (Matemática, Português, História, Ciências, Geografia)
+  - Added QuizQuestion interface aliases (texto, alternativas, resposta_correta, feedback) for AI response compatibility
+  - Added mandatory generatedAt field for timestamp tracking
+  - Updated AI_ORCHESTRATION_GUIDE.md with Quiz Interativo reference
 - **Critical Fix - LLM Orchestrator Models**: Corrected invalid Groq model IDs that were causing Agente Jota failures
   - Removed deprecated models: `gemma2-9b-it`, `mixtral-8x7b-32768`, `llama3-70b-8192`, `llama-3-groq-70b-tool-use`
   - Fixed Llama 4 Scout ID: `llama-4-scout-17b-16e-instruct` → `meta-llama/llama-4-scout-17b-16e-instruct`
@@ -103,7 +111,7 @@ The following components have protection rules to prevent accidental breakage:
   - Fixed `TypeError: calls.slice is not a function` in DebugPanel.tsx - added safe array validation for localStorage data
   - Fixed `TypeError: this.logs.push is not a function` in geminiDebugLogger.ts - added array validation when restoring logs
   - Fixed type errors in checkAPIStatus function (DebugPanel.tsx)
-- **System Status**: LLM Orchestrator v3.0 and Agente Jota chat now functioning correctly
+- **System Status**: LLM Orchestrator v3.0, Agente Jota chat, and Quiz Interativo now functioning correctly
 
 ## Previous Changes (Jan 29, 2026)
 - **v2.1.2 Lista de Exercícios Blindagem**: Updated with comprehensive protection rules
