@@ -14,7 +14,7 @@ The platform features a modern design with glass-morphism effects, blur backgrou
 ### Technical Implementations
 - **Frontend**: React 18 with TypeScript, Vite, Tailwind CSS with shadcn/ui, and Zustand for state management.
 - **Backend**: Express.js for API endpoints.
-- **AI Integration - LLM Orchestrator v3.0 Enterprise**: A unified, resilient multi-model cascade system providing a scalable and protected approach to AI content generation using a 5-tier architecture with 10 models. It includes circuit breakers, rate limiters, retry mechanisms with exponential backoff, input sanitization, smart routing, and an in-memory cache system.
+- **AI Integration - LLM Orchestrator v3.0 Enterprise**: A unified, resilient multi-model cascade system providing a scalable and protected approach to AI content generation using a 5-tier architecture with 7 models. It includes circuit breakers, rate limiters, retry mechanisms with exponential backoff, input sanitization, smart routing, and an in-memory cache system.
 - **Authentication & User Management**: Supabase handles authentication, user sessions, role-based access, and profiles.
 - **Core Features**:
     - **School Power**: AI-powered lesson planning managed by a robust, observable, and self-correcting Multi-Agent Lesson Orchestrator (v4.0) through a 7-step workflow.
@@ -93,7 +93,15 @@ The following components have protection rules to prevent accidental breakage:
 3. Test according to the checklist
 4. Document changes in the history section
 
-## Recent Changes (Jan 29, 2026)
+## Recent Changes (Jan 30, 2026)
+- **Critical Fix - LLM Orchestrator Models**: Corrected invalid Groq model IDs that were causing Agente Jota failures
+  - Removed deprecated models: `gemma2-9b-it`, `mixtral-8x7b-32768`, `llama3-70b-8192`, `llama-3-groq-70b-tool-use`
+  - Fixed Llama 4 Scout ID: `llama-4-scout-17b-16e-instruct` → `meta-llama/llama-4-scout-17b-16e-instruct`
+  - Added `llama-3.3-70b-specdec` and `gemini-2.0-flash-lite`
+  - Reduced model count from 10 (with invalid IDs) to 7 valid models
+- **System Status**: LLM Orchestrator v3.0 now functioning correctly with all 7 models
+
+## Previous Changes (Jan 29, 2026)
 - **v2.1.2 Lista de Exercícios Blindagem**: Updated with comprehensive protection rules
 - **AI Orchestration Guide**: Created to guide Replit Agent on safe modifications
 - **Fallback JSON Schema Fix**: Local fallback now generates compatible JSON structure
