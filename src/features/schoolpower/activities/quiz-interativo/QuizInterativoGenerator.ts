@@ -185,43 +185,76 @@ export class QuizInterativoGenerator {
   }
 
   private parseGeminiResponse(response: string, originalData: QuizInterativoData): QuizInterativoContent {
-    console.log('🔍 Parseando resposta do Gemini...');
+    console.log('🔍 [QuizInterativoGenerator] ====== PARSING ROBUSTO v2.0 ======');
+    console.log('🔍 [QuizInterativoGenerator] Resposta bruta (primeiros 500 chars):', response?.substring(0, 500));
 
     try {
-      // Limpar e extrair JSON da resposta
-      let cleanResponse = response.trim();
-
-      // Remover markdown e formatação extra
-      cleanResponse = cleanResponse.replace(/```json\s*|\s*```/g, '');
-      cleanResponse = cleanResponse.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
-
-      // Tentar extrair JSON da resposta
-      let jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.warn('⚠️ Nenhum JSON encontrado na resposta');
+      let cleanedResponse = response.trim();
+      
+      // PASSO 1: Remover blocos de código markdown (múltiplos formatos)
+      cleanedResponse = cleanedResponse
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/\s*```$/i, '')
+        .replace(/```json/gi, '')
+        .replace(/```/g, '');
+      
+      // PASSO 2: Extrair primeiro bloco JSON válido usando bracket matching
+      const extracted = this.extractFirstValidJSON(cleanedResponse);
+      
+      if (!extracted) {
+        console.error('❌ [QuizInterativoGenerator] Nenhum JSON válido encontrado');
         return this.createFallbackContent(originalData);
       }
+      
+      cleanedResponse = extracted.json;
+      console.log(`🧹 [QuizInterativoGenerator] ${extracted.isArray ? 'Array' : 'Objeto'} JSON extraído, tamanho:`, cleanedResponse.length);
 
-      const jsonStr = jsonMatch[0];
-      console.log('📄 JSON extraído:', jsonStr);
+      // PASSO 3: Limpar caracteres problemáticos que quebram o JSON
+      cleanedResponse = cleanedResponse
+        .replace(/[\x00-\x1F\x7F]/g, ' ')  // Remove caracteres de controle
+        .replace(/\n\s*\n/g, ' ')          // Remove linhas em branco múltiplas
+        .replace(/,\s*}/g, '}')            // Remove vírgulas antes de }
+        .replace(/,\s*]/g, ']')            // Remove vírgulas antes de ]
+        .replace(/"\s*:\s*undefined/g, '": null')  // Substitui undefined por null
+        .replace(/"\s*:\s*NaN/g, '": 0');  // Substitui NaN por 0
 
-      const parsed = JSON.parse(jsonStr);
-      console.log('✅ JSON parseado:', parsed);
+      console.log('📝 [QuizInterativoGenerator] JSON limpo (primeiros 300 chars):', cleanedResponse.substring(0, 300));
+
+      let parsed = JSON.parse(cleanedResponse);
+      console.log('✅ [QuizInterativoGenerator] JSON parseado com sucesso!');
+      
+      // PASSO 4: Tratar array na raiz (quando IA retorna array direto de questões)
+      if (Array.isArray(parsed) || extracted.isArray) {
+        console.log('🔄 [QuizInterativoGenerator] Resposta é array, convertendo para objeto...');
+        parsed = {
+          titulo: `Quiz: ${originalData.theme}`,
+          perguntas: Array.isArray(parsed) ? parsed : []
+        };
+      }
 
       // Mapear para o formato esperado
-      const questions = this.extractQuestions(parsed);
+      const questions = this.extractQuestions(parsed, originalData);
+      
+      // PASSO 5: Validar questões extraídas
+      const validQuestions = questions.filter(q => 
+        q.question && q.question.length >= 5 && 
+        q.options && q.options.length >= 2
+      );
+      
+      console.log(`🔍 [QuizInterativoGenerator] Questões válidas: ${validQuestions.length}/${questions.length}`);
 
-      if (!questions || questions.length === 0) {
-        console.warn('⚠️ Nenhuma questão extraída, usando fallback');
+      if (validQuestions.length === 0) {
+        console.warn('⚠️ [QuizInterativoGenerator] Nenhuma questão válida, usando fallback');
         return this.createFallbackContent(originalData);
       }
 
       const content: QuizInterativoContent = {
         title: parsed.quiz?.titulo || parsed.titulo || parsed.title || `Quiz: ${originalData.theme}`,
         description: parsed.quiz?.descricao || parsed.descricao || parsed.description || `Quiz sobre ${originalData.theme} para ${originalData.schoolYear}`,
-        questions: questions,
+        questions: validQuestions,
         timePerQuestion: parseInt(originalData.timePerQuestion) || 60,
-        totalQuestions: questions.length,
+        totalQuestions: validQuestions.length,
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: true,
         isFallback: false,
@@ -232,18 +265,121 @@ export class QuizInterativoGenerator {
         format: originalData.format
       };
 
-      console.log('📦 Conteúdo final parseado:', content);
+      console.log('📦 [QuizInterativoGenerator] Conteúdo final:', {
+        title: content.title,
+        questionsCount: content.questions.length,
+        firstQuestion: content.questions[0]?.question?.substring(0, 80)
+      });
+      
       return content;
 
     } catch (error) {
-      console.error('❌ Erro ao parsear resposta:', error);
-      console.log('📄 Resposta que causou erro:', response);
+      console.error('❌ [QuizInterativoGenerator] Erro ao parsear resposta:', error);
+      console.log('📄 [QuizInterativoGenerator] Resposta que causou erro:', response?.substring(0, 500));
       return this.createFallbackContent(originalData);
     }
   }
 
-  private extractQuestions(parsed: any): QuizQuestion[] {
-    console.log('🔍 Extraindo questões de:', parsed);
+  private extractFirstValidJSON(text: string): { json: string; isArray: boolean } | null {
+    // Buscar TODOS os blocos JSON possíveis e selecionar o que contém perguntas/questions
+    const allObjects = this.findAllMatchingBrackets(text, '{', '}');
+    const allArrays = this.findAllMatchingBrackets(text, '[', ']');
+    
+    // Primeiro: tentar encontrar objeto com "perguntas" ou "questions"
+    for (const obj of allObjects) {
+      if (obj.content.includes('"perguntas"') || obj.content.includes('"questions"')) {
+        console.log('🎯 [extractFirstValidJSON] Encontrado objeto com "perguntas/questions"');
+        return { json: obj.content, isArray: false };
+      }
+    }
+    
+    // Segundo: tentar encontrar objeto com "texto" ou "question" (provavelmente questões)
+    for (const obj of allObjects) {
+      if (obj.content.includes('"texto"') || obj.content.includes('"question"')) {
+        console.log('🎯 [extractFirstValidJSON] Encontrado objeto com "texto/question"');
+        return { json: obj.content, isArray: false };
+      }
+    }
+    
+    // Terceiro: tentar encontrar array com objetos de questões
+    for (const arr of allArrays) {
+      if (arr.content.includes('"texto"') || arr.content.includes('"question"')) {
+        console.log('🎯 [extractFirstValidJSON] Encontrado array com questões');
+        return { json: arr.content, isArray: true };
+      }
+    }
+    
+    // Fallback: primeiro bloco encontrado
+    if (allObjects.length > 0) {
+      console.log('⚠️ [extractFirstValidJSON] Usando primeiro objeto encontrado');
+      return { json: allObjects[0].content, isArray: false };
+    }
+    
+    if (allArrays.length > 0) {
+      console.log('⚠️ [extractFirstValidJSON] Usando primeiro array encontrado');
+      return { json: allArrays[0].content, isArray: true };
+    }
+    
+    return null;
+  }
+  
+  private findAllMatchingBrackets(text: string, open: string, close: string): { start: number; content: string }[] {
+    const results: { start: number; content: string }[] = [];
+    let searchStart = 0;
+    
+    while (searchStart < text.length) {
+      const match = this.findMatchingBracketsFrom(text, open, close, searchStart);
+      if (!match) break;
+      results.push(match);
+      searchStart = match.start + match.content.length;
+    }
+    
+    return results;
+  }
+  
+  private findMatchingBracketsFrom(text: string, open: string, close: string, fromIndex: number): { start: number; content: string } | null {
+    const start = text.indexOf(open, fromIndex);
+    if (start === -1) return null;
+    
+    let depth = 0;
+    let inString = false;
+    let escapeNext = false;
+    
+    for (let i = start; i < text.length; i++) {
+      const char = text[i];
+      
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+      
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+      
+      if (char === '"') {
+        inString = !inString;
+        continue;
+      }
+      
+      if (inString) continue;
+      
+      if (char === open) {
+        depth++;
+      } else if (char === close) {
+        depth--;
+        if (depth === 0) {
+          return { start, content: text.substring(start, i + 1) };
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  private extractQuestions(parsed: any, originalData?: QuizInterativoData): QuizQuestion[] {
+    console.log('🔍 [QuizInterativoGenerator] Extraindo questões de:', parsed);
 
     let questionsArray = [];
 
@@ -311,38 +447,32 @@ export class QuizInterativoGenerator {
   }
 
   private createFallbackContent(data: QuizInterativoData): QuizInterativoContent {
+    console.log('🔄 [QuizInterativoGenerator] ====== CRIANDO FALLBACK CONTEXTUALIZADO ======');
+    console.log('🔄 [QuizInterativoGenerator] Disciplina:', data.subject, '| Tema:', data.theme);
+    
     const numQuestions = parseInt(data.numberOfQuestions) || 5;
     const timePerQuestion = parseInt(data.timePerQuestion) || 60;
 
-    const fallbackQuestions: QuizQuestion[] = Array.from({ length: numQuestions }, (_, index) => {
-      const questionNumber = index + 1;
-      const isMultipleChoice = data.format !== 'Verdadeiro/Falso' && (data.format === 'Múltipla Escolha' || index % 2 === 0);
+    // Banco de questões contextualizadas por disciplina
+    const questionBank = this.getContextualizedQuestionBank(data.subject, data.theme, data.schoolYear);
+    
+    // Selecionar questões do banco até atingir o número desejado
+    const fallbackQuestions: QuizQuestion[] = [];
+    for (let i = 0; i < numQuestions; i++) {
+      const questionIndex = i % questionBank.length;
+      const baseQuestion = questionBank[questionIndex];
+      
+      fallbackQuestions.push({
+        id: i + 1,
+        question: baseQuestion.question,
+        type: 'multipla-escolha' as const,
+        options: baseQuestion.options,
+        correctAnswer: baseQuestion.correctAnswer,
+        explanation: baseQuestion.explanation
+      });
+    }
 
-      if (isMultipleChoice) {
-        return {
-          id: questionNumber,
-          question: `Questão ${questionNumber}: Sobre ${data.theme} em ${data.subject}, qual conceito é fundamental para o ${data.schoolYear}?`,
-          type: 'multipla-escolha',
-          options: [
-            `A) Conceito básico de ${data.theme}`,
-            `B) Aplicação prática de ${data.theme}`,
-            `C) Teoria avançada de ${data.theme}`,
-            `D) Exercícios sobre ${data.theme}`
-          ],
-          correctAnswer: `A) Conceito básico de ${data.theme}`,
-          explanation: `O conceito básico de ${data.theme} é fundamental para compreender o assunto em ${data.subject}.`
-        };
-      } else {
-        return {
-          id: questionNumber,
-          question: `Questão ${questionNumber}: É verdade que ${data.theme} é um conteúdo importante para ${data.schoolYear} em ${data.subject}?`,
-          type: 'verdadeiro-falso',
-          options: ['Verdadeiro', 'Falso'],
-          correctAnswer: 'Verdadeiro',
-          explanation: `Sim, ${data.theme} é um conteúdo fundamental para o desenvolvimento acadêmico em ${data.subject}.`
-        };
-      }
-    });
+    console.log('✅ [QuizInterativoGenerator] Fallback gerado com', fallbackQuestions.length, 'questões contextualizadas');
 
     return {
       title: `Quiz Interativo: ${data.theme}`,
@@ -354,6 +484,250 @@ export class QuizInterativoGenerator {
       isGeneratedByAI: false,
       isFallback: true
     };
+  }
+
+  private getContextualizedQuestionBank(subject: string, theme: string, schoolYear: string): Array<{
+    question: string;
+    options: string[];
+    correctAnswer: string;
+    explanation: string;
+  }> {
+    const subjectLower = subject.toLowerCase();
+    
+    // Banco de questões por disciplina
+    if (subjectLower.includes('matemática') || subjectLower.includes('math')) {
+      return [
+        {
+          question: `Qual é o resultado de 3/4 + 1/4?`,
+          options: ['1', '2/4', '4/8', '3/8'],
+          correctAnswer: '1',
+          explanation: 'Quando somamos frações com denominadores iguais, somamos apenas os numeradores: 3/4 + 1/4 = 4/4 = 1'
+        },
+        {
+          question: 'Qual número é primo?',
+          options: ['17', '15', '21', '9'],
+          correctAnswer: '17',
+          explanation: '17 é primo porque só é divisível por 1 e por ele mesmo. Os outros números têm outros divisores.'
+        },
+        {
+          question: 'Quanto é 25% de 200?',
+          options: ['50', '25', '75', '100'],
+          correctAnswer: '50',
+          explanation: '25% de 200 = 0,25 × 200 = 50'
+        },
+        {
+          question: 'Qual é a área de um quadrado com lado 5cm?',
+          options: ['25 cm²', '20 cm²', '10 cm²', '15 cm²'],
+          correctAnswer: '25 cm²',
+          explanation: 'Área do quadrado = lado × lado = 5 × 5 = 25 cm²'
+        },
+        {
+          question: 'Qual é o valor de x em: 2x + 6 = 10?',
+          options: ['2', '3', '4', '8'],
+          correctAnswer: '2',
+          explanation: '2x + 6 = 10 → 2x = 4 → x = 2'
+        }
+      ];
+    }
+    
+    if (subjectLower.includes('português') || subjectLower.includes('língua portuguesa')) {
+      return [
+        {
+          question: 'Qual é a classe gramatical da palavra "rapidamente"?',
+          options: ['Advérbio', 'Adjetivo', 'Substantivo', 'Verbo'],
+          correctAnswer: 'Advérbio',
+          explanation: 'Palavras terminadas em "-mente" que modificam verbos são advérbios de modo.'
+        },
+        {
+          question: 'Em "O menino correu para a escola", qual é o sujeito?',
+          options: ['O menino', 'correu', 'para a escola', 'escola'],
+          correctAnswer: 'O menino',
+          explanation: 'O sujeito é quem pratica a ação do verbo. Quem correu? O menino.'
+        },
+        {
+          question: 'Qual palavra está escrita corretamente?',
+          options: ['Exceção', 'Excessão', 'Exeção', 'Excesão'],
+          correctAnswer: 'Exceção',
+          explanation: 'Exceção se escreve com "ç" e apenas um "s".'
+        },
+        {
+          question: 'Qual é o plural de "cidadão"?',
+          options: ['Cidadãos', 'Cidadões', 'Cidadães', 'Cidadãoes'],
+          correctAnswer: 'Cidadãos',
+          explanation: 'Palavras terminadas em "-ão" podem fazer plural em "-ãos", "-ões" ou "-ães". Cidadão faz cidadãos.'
+        },
+        {
+          question: 'Qual frase está na voz passiva?',
+          options: ['O bolo foi feito pela mãe', 'A mãe fez o bolo', 'O bolo está pronto', 'A mãe cozinha bem'],
+          correctAnswer: 'O bolo foi feito pela mãe',
+          explanation: 'Na voz passiva, o sujeito recebe a ação. "O bolo foi feito" indica que o bolo recebeu a ação de ser feito.'
+        }
+      ];
+    }
+    
+    if (subjectLower.includes('história')) {
+      return [
+        {
+          question: 'Qual foi o primeiro presidente do Brasil?',
+          options: ['Marechal Deodoro da Fonseca', 'Getúlio Vargas', 'Dom Pedro II', 'Juscelino Kubitschek'],
+          correctAnswer: 'Marechal Deodoro da Fonseca',
+          explanation: 'Marechal Deodoro da Fonseca foi o primeiro presidente do Brasil, após a Proclamação da República em 1889.'
+        },
+        {
+          question: 'Em que ano o Brasil foi descoberto?',
+          options: ['1500', '1492', '1550', '1600'],
+          correctAnswer: '1500',
+          explanation: 'O Brasil foi descoberto em 22 de abril de 1500 por Pedro Álvares Cabral.'
+        },
+        {
+          question: 'Qual era o nome do país antes de se chamar Brasil?',
+          options: ['Terra de Santa Cruz', 'Nova Lusitânia', 'Terra Brasilis', 'Colônia Portuguesa'],
+          correctAnswer: 'Terra de Santa Cruz',
+          explanation: 'Inicialmente, o Brasil foi chamado de Terra de Santa Cruz pelos portugueses.'
+        },
+        {
+          question: 'Quem proclamou a Independência do Brasil?',
+          options: ['Dom Pedro I', 'Dom Pedro II', 'José Bonifácio', 'Tiradentes'],
+          correctAnswer: 'Dom Pedro I',
+          explanation: 'Dom Pedro I proclamou a Independência do Brasil em 7 de setembro de 1822.'
+        },
+        {
+          question: 'Qual período da história do Brasil durou de 1822 a 1889?',
+          options: ['Império', 'República', 'Colônia', 'Era Vargas'],
+          correctAnswer: 'Império',
+          explanation: 'O período do Império Brasileiro foi de 1822 (Independência) a 1889 (Proclamação da República).'
+        }
+      ];
+    }
+    
+    if (subjectLower.includes('ciências') || subjectLower.includes('biologia')) {
+      return [
+        {
+          question: 'Qual é a função principal dos pulmões?',
+          options: ['Realizar trocas gasosas', 'Bombear sangue', 'Digerir alimentos', 'Filtrar impurezas'],
+          correctAnswer: 'Realizar trocas gasosas',
+          explanation: 'Os pulmões são responsáveis pela troca de oxigênio e gás carbônico no processo de respiração.'
+        },
+        {
+          question: 'Qual planeta é conhecido como planeta vermelho?',
+          options: ['Marte', 'Júpiter', 'Vênus', 'Saturno'],
+          correctAnswer: 'Marte',
+          explanation: 'Marte é chamado de planeta vermelho devido à cor de sua superfície, rica em óxido de ferro.'
+        },
+        {
+          question: 'Qual é o maior órgão do corpo humano?',
+          options: ['Pele', 'Fígado', 'Coração', 'Cérebro'],
+          correctAnswer: 'Pele',
+          explanation: 'A pele é o maior órgão do corpo humano, cobrindo toda a superfície do corpo.'
+        },
+        {
+          question: 'O que as plantas precisam para fazer fotossíntese?',
+          options: ['Luz solar, água e CO2', 'Apenas água', 'Apenas luz', 'Oxigênio e água'],
+          correctAnswer: 'Luz solar, água e CO2',
+          explanation: 'A fotossíntese requer luz solar, água (H2O) e gás carbônico (CO2) para produzir glicose e oxigênio.'
+        },
+        {
+          question: 'Qual é a unidade básica da vida?',
+          options: ['Célula', 'Átomo', 'Molécula', 'Tecido'],
+          correctAnswer: 'Célula',
+          explanation: 'A célula é a unidade básica e fundamental de todos os seres vivos.'
+        }
+      ];
+    }
+    
+    if (subjectLower.includes('geografia')) {
+      return [
+        {
+          question: 'Qual é o maior país do mundo em extensão territorial?',
+          options: ['Rússia', 'Canadá', 'Estados Unidos', 'Brasil'],
+          correctAnswer: 'Rússia',
+          explanation: 'A Rússia é o maior país do mundo, com mais de 17 milhões de km².'
+        },
+        {
+          question: 'Qual é o rio mais longo do Brasil?',
+          options: ['Rio Amazonas', 'Rio São Francisco', 'Rio Paraná', 'Rio Tietê'],
+          correctAnswer: 'Rio Amazonas',
+          explanation: 'O Rio Amazonas é o maior rio do Brasil e um dos maiores do mundo.'
+        },
+        {
+          question: 'Quantos estados tem o Brasil?',
+          options: ['26 estados + DF', '25 estados + DF', '27 estados', '24 estados + DF'],
+          correctAnswer: '26 estados + DF',
+          explanation: 'O Brasil possui 26 estados e o Distrito Federal, totalizando 27 unidades federativas.'
+        },
+        {
+          question: 'Qual é a capital do Brasil?',
+          options: ['Brasília', 'Rio de Janeiro', 'São Paulo', 'Salvador'],
+          correctAnswer: 'Brasília',
+          explanation: 'Brasília é a capital do Brasil desde 1960, quando foi inaugurada por Juscelino Kubitschek.'
+        },
+        {
+          question: 'Qual é o maior bioma brasileiro?',
+          options: ['Amazônia', 'Cerrado', 'Mata Atlântica', 'Caatinga'],
+          correctAnswer: 'Amazônia',
+          explanation: 'A Amazônia é o maior bioma brasileiro, ocupando cerca de 49% do território nacional.'
+        }
+      ];
+    }
+    
+    // Fallback genérico para outras disciplinas - mas com questões REAIS sobre o tema
+    return [
+      {
+        question: `Sobre ${theme}: qual é a principal característica deste conteúdo em ${subject}?`,
+        options: [
+          'É um conceito fundamental para a disciplina',
+          'É um tópico opcional',
+          'Não é importante para o currículo',
+          'É abordado apenas em níveis avançados'
+        ],
+        correctAnswer: 'É um conceito fundamental para a disciplina',
+        explanation: `${theme} é um conteúdo importante em ${subject}, sendo parte fundamental do currículo escolar.`
+      },
+      {
+        question: `Como ${theme} pode ser aplicado na prática?`,
+        options: [
+          'Em situações cotidianas e profissionais',
+          'Apenas em provas escolares',
+          'Somente em laboratórios',
+          'Não tem aplicação prática'
+        ],
+        correctAnswer: 'Em situações cotidianas e profissionais',
+        explanation: `O conhecimento sobre ${theme} tem diversas aplicações práticas no dia a dia e no mercado de trabalho.`
+      },
+      {
+        question: `Qual habilidade é desenvolvida ao estudar ${theme}?`,
+        options: [
+          'Pensamento crítico e análise',
+          'Apenas memorização',
+          'Nenhuma habilidade específica',
+          'Apenas habilidades manuais'
+        ],
+        correctAnswer: 'Pensamento crítico e análise',
+        explanation: `Estudar ${theme} desenvolve o pensamento crítico e a capacidade de análise dos estudantes.`
+      },
+      {
+        question: `Por que ${theme} é importante para ${schoolYear}?`,
+        options: [
+          'Serve de base para conteúdos futuros',
+          'É apenas um conteúdo de revisão',
+          'Não tem importância para esta série',
+          'É opcional no currículo'
+        ],
+        correctAnswer: 'Serve de base para conteúdos futuros',
+        explanation: `${theme} é fundamental pois serve como base para o aprendizado de conteúdos mais avançados.`
+      },
+      {
+        question: `Qual é a melhor forma de estudar ${theme}?`,
+        options: [
+          'Praticando exercícios e revisando teoria',
+          'Apenas lendo o material',
+          'Decorando informações',
+          'Assistindo vídeos sem praticar'
+        ],
+        correctAnswer: 'Praticando exercícios e revisando teoria',
+        explanation: 'A melhor forma de aprender é combinando teoria com prática através de exercícios.'
+      }
+    ];
   }
 
   private buildPrompt(data: QuizInterativoData): string {
