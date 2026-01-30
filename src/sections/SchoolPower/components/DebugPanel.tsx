@@ -101,8 +101,19 @@ export default function DebugPanel() {
 
   // Monitorar chamadas da API Gemini
   const monitorGeminiApiCalls = () => {
-    const storedCalls = localStorage.getItem('gemini_api_calls');
-    const calls: GeminiApiCall[] = storedCalls ? JSON.parse(storedCalls) : [];
+    let calls: GeminiApiCall[] = [];
+    
+    try {
+      const storedCalls = localStorage.getItem('gemini_api_calls');
+      if (storedCalls) {
+        const parsed = JSON.parse(storedCalls);
+        // Garantir que sempre seja um array válido
+        calls = Array.isArray(parsed) ? parsed : [];
+      }
+    } catch (error) {
+      console.warn('Erro ao parsear gemini_api_calls:', error);
+      calls = [];
+    }
     
     // Manter apenas as últimas 20 chamadas
     const recentCalls = calls.slice(-20);
@@ -284,15 +295,15 @@ export default function DebugPanel() {
   }, []);
 
   // Verificar status das APIs
-  const checkAPIStatus = async () => {
-    const status = {
-      gemini: 'idle' as const,
-      supabase: 'idle' as const
+  const checkAPIStatus = async (): Promise<{ gemini: 'idle' | 'active' | 'error'; supabase: 'idle' | 'active' | 'error' }> => {
+    const status: { gemini: 'idle' | 'active' | 'error'; supabase: 'idle' | 'active' | 'error' } = {
+      gemini: 'idle',
+      supabase: 'idle'
     };
 
     try {
       // Verificar se a chave da API Gemini está disponível
-      const geminiKey = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
+      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
       if (geminiKey) {
         status.gemini = 'active';
       } else {

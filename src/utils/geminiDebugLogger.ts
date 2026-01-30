@@ -112,10 +112,13 @@ class GeminiDebugLogger {
     try {
       const savedLogs = localStorage.getItem('gemini_debug_logs');
       if (savedLogs) {
-        this.logs = JSON.parse(savedLogs);
+        const parsed = JSON.parse(savedLogs);
+        // Garantir que sempre seja um array válido
+        this.logs = Array.isArray(parsed) ? parsed : [];
       }
     } catch (error) {
       console.warn('Não foi possível restaurar logs do localStorage:', error);
+      this.logs = []; // Reset para array vazio em caso de erro
     }
   }
 

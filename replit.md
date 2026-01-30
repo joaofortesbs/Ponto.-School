@@ -99,7 +99,11 @@ The following components have protection rules to prevent accidental breakage:
   - Fixed Llama 4 Scout ID: `llama-4-scout-17b-16e-instruct` → `meta-llama/llama-4-scout-17b-16e-instruct`
   - Added `llama-3.3-70b-specdec` and `gemini-2.0-flash-lite`
   - Reduced model count from 10 (with invalid IDs) to 7 valid models
-- **System Status**: LLM Orchestrator v3.0 now functioning correctly with all 7 models
+- **Critical Fix - TypeError Crashes**: Fixed two runtime errors causing chat failures
+  - Fixed `TypeError: calls.slice is not a function` in DebugPanel.tsx - added safe array validation for localStorage data
+  - Fixed `TypeError: this.logs.push is not a function` in geminiDebugLogger.ts - added array validation when restoring logs
+  - Fixed type errors in checkAPIStatus function (DebugPanel.tsx)
+- **System Status**: LLM Orchestrator v3.0 and Agente Jota chat now functioning correctly
 
 ## Previous Changes (Jan 29, 2026)
 - **v2.1.2 Lista de Exercícios Blindagem**: Updated with comprehensive protection rules
