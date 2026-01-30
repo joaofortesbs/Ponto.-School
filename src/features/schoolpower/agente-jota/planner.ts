@@ -43,7 +43,14 @@ export async function createExecutionPlan(
   });
 
   if (!result.success || !result.data) {
-    console.error('❌ [Planner] Falha ao gerar plano');
+    console.error('❌ [Planner] Falha ao gerar plano:', {
+      success: result.success,
+      hasData: !!result.data,
+      modelUsed: result.modelUsed,
+      providerUsed: result.providerUsed,
+      attemptsMade: result.attemptsMade,
+      errors: result.errors,
+    });
     return createFallbackPlan(userPrompt);
   }
 

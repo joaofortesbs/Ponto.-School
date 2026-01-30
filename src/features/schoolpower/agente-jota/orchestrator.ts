@@ -121,7 +121,16 @@ export async function processUserPrompt(
       initialResponseData,
     };
   } catch (error) {
-    console.error('❌ [Orchestrator] Erro ao processar prompt:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : '';
+    
+    console.error('❌ [Orchestrator] Erro ao processar prompt:', {
+      error: errorMessage,
+      stack: errorStack,
+      userPrompt: userPrompt.substring(0, 100),
+      sessionId,
+      userId,
+    });
 
     return {
       plan: null,
