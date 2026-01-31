@@ -37,6 +37,10 @@ The platform features a modern design with glass-morphism effects, blur backgrou
       - `ActivityViewModal.tsx`: Uses `processQuizWithUnifiedPipeline` for robust multi-source loading with alias normalization.
       - `QuizInterativoGenerator.ts`: Real AI generator that produces structured quiz content.
       - `unified-quiz-pipeline.ts`: 6-layer processing with validation, normalization, and multi-source support.
+    - **Text-Version Activities Generation Pipeline (CRITICAL FIX - Jan 2026)**: The `generatePlanoAula` and `generateSequenciaDidatica` functions in `generateActivityContent.ts` now properly store content using `storeTextVersionContent()` and emit `text-version:generated` events to sync UI. This fix ensures auto-generated content (via `criar_atividade` capability) displays correctly in the Text Version Interface, matching the manual "Construir atividade" flow:
+      - Key pattern: After successful AI generation, call `storeTextVersionContent(activityId, activityType, generatedResult)` to save in `text_content_{type}_{id}` storage key
+      - Emit event: `window.dispatchEvent(new CustomEvent('text-version:generated', { detail: { activityId, activityType, success: true } }))`
+      - Return flags: Include `isTextVersion: true` in the return object for proper routing
     - **Study Groups**: Real-time chat and member management.
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.
