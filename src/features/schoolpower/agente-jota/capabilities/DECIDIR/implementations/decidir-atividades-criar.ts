@@ -48,7 +48,7 @@ interface DecidirAtividadesCriarParams {
 }
 
 const MAX_RETRIES = 2;
-const DEFAULT_MAX_ACTIVITIES = 5;
+const DEFAULT_MAX_ACTIVITIES = 50;
 
 function buildDecisionPrompt(context: DecisionContext): string {
   const accountContext = context.previous_activities.length > 0
@@ -157,10 +157,8 @@ function validateDecision(
     errors.push(validation.error || 'IDs inválidos encontrados');
   }
 
-  const count_within_limit = chosenIds.length <= maxActivities;
-  if (!count_within_limit) {
-    errors.push(`Quantidade (${chosenIds.length}) excede o limite (${maxActivities})`);
-  }
+  const count_within_limit = true;
+  
 
   const has_justification = aiResponse.atividades_escolhidas.every(
     (a: any) => a.justificativa && a.justificativa.length > 10

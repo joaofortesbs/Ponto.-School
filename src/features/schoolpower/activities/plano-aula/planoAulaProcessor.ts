@@ -158,3 +158,11 @@ export function extractRequiredPlanoAulaFields(customFields: PlanoAulaCustomFiel
     observacoesProfessor: customFields['Observações do Professor'] || customFields['Observações'] || ''
   };
 }
+
+/**
+ * PlanoAulaProcessor - Objeto para compatibilidade com imports existentes
+ * Usado em activityRegistry.ts e CardDeConstrucao.tsx
+ */
+export const PlanoAulaProcessor = {
+  processData: processPlanoAulaData
+};

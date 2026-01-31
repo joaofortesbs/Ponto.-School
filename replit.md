@@ -30,7 +30,14 @@ The platform features a modern design with glass-morphism effects, blur backgrou
     - **StorageSyncService v2.0**: A centralized service for managing activity storage, tracking origin and pipeline metadata, and emitting events for UI synchronization.
     - **StorageOrchestrator Enterprise System**: A 3-layer storage architecture utilizing IndexedDB, Zustand/Memory cache, and localStorage to prevent `QuotaExceededError`. It features automatic layer selection, garbage collection, emergency cleanup, and global guards.
     - **Activity Version System**: Dual-version system categorizing activities into Interactive and Text Version for various activity types, with robust AI response parsing and professional 6-section fallback content generation.
-    - **Component Protection Systems (Blindagem)**: Enterprise-grade isolation and protection for core components like "Lista de Exercícios", "Flash Cards", and "Quiz Interativo" with Bounded Context Architecture, protected files, contracts, sanitizers, dedicated storage namespaces, multi-layer pipelines, and rigorous validation.
+    - **Component Protection Systems (Blindagem)**: Enterprise-grade isolation and protection for core components with Bounded Context Architecture, protected files, contracts, sanitizers, dedicated storage namespaces, multi-layer pipelines, and rigorous validation.
+      - **Interactive Activities**: Lista de Exercícios (`sp_le_v2_`), Flash Cards (`sp_fc_v2_`), Quiz Interativo (`sp_qi_v1_`)
+      - **Text-Version Activities (NEW - Jan 2026)**: Plano de Aula (`sp_pa_v1_`, `text_content_plano-aula_`) and Sequência Didática (`sp_sd_v1_`, `text_content_sequencia-didatica_`) now have enterprise-grade protection with:
+        - Immutable contracts (readonly interfaces): `PlanoAulaInputContract`, `PlanoAulaOutputContract`, `SequenciaDidaticaInputContract`, `SequenciaDidaticaOutputContract`
+        - Sanitizers: `PlanoAulaSanitizer`, `SequenciaDidaticaSanitizer`
+        - Dedicated storage namespaces with legacy compatibility
+        - RULES.md documentation: `PLANO_AULA_RULES.md`, `SEQUENCIA_DIDATICA_RULES.md`
+        - Key files: `src/features/schoolpower/activities/plano-aula/contracts.ts`, `src/features/schoolpower/activities/sequencia-didatica/contracts.ts`
     - **Quiz Interativo Unified Pipeline v1.0**: 6-layer processing pipeline with multi-alias recognition (questions/questoes/perguntas/quiz.perguntas) ensuring AI-generated content is correctly loaded regardless of schema variations. Features detailed debug logging and normalization to standard 'questions' format across localStorage, Zustand store, and database sources.
     - **Quiz Interativo Generation Pipeline (CRITICAL FIX)**: The `generateQuizInterativo` function in `generateActivityContent.ts` now properly imports and uses `QuizInterativoGenerator` (same pattern as Flash Cards). Key files:
       - `generateActivityContent.ts` (lines 345-420): Uses dynamic import of `QuizInterativoGenerator`, prepares quiz data, calls `generator.generateQuizContent()`, with fallback content on error.
