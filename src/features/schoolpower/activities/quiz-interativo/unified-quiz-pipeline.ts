@@ -224,6 +224,9 @@ export class QuizDataLoader {
       `activity_${activityId}`
     ];
     
+    // Aliases que podem conter as questões (IA pode retornar em diferentes formatos)
+    const questionsAliases = ['questions', 'questoes', 'perguntas', 'quiz'];
+    
     for (const key of keys) {
       try {
         const stored = localStorage.getItem(key);
@@ -232,9 +235,51 @@ export class QuizDataLoader {
         const parsed = JSON.parse(stored);
         const data = parsed.data || parsed;
         
-        if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
+        console.log(`📦 [QuizDataLoader] Verificando ${key}:`, {
+          hasData: !!data,
+          dataKeys: data ? Object.keys(data) : [],
+          hasQuestions: !!data?.questions,
+          hasQuestoes: !!data?.questoes,
+          hasPerguntas: !!data?.perguntas
+        });
+        
+        // Buscar questões em qualquer alias reconhecido
+        let questionsArray: any[] | null = null;
+        let foundAlias = '';
+        
+        for (const alias of questionsAliases) {
+          const value = data?.[alias];
+          if (value && Array.isArray(value) && value.length > 0) {
+            questionsArray = value;
+            foundAlias = alias;
+            break;
+          }
+          // Também verificar nested (ex: data.quiz.perguntas)
+          if (alias === 'quiz' && value?.perguntas && Array.isArray(value.perguntas)) {
+            questionsArray = value.perguntas;
+            foundAlias = 'quiz.perguntas';
+            break;
+          }
+          if (alias === 'quiz' && value?.questions && Array.isArray(value.questions)) {
+            questionsArray = value.questions;
+            foundAlias = 'quiz.questions';
+            break;
+          }
+        }
+        
+        if (questionsArray && questionsArray.length > 0) {
+          console.log(`✅ [QuizDataLoader] Encontrado ${questionsArray.length} questões via '${foundAlias}' em ${key}`);
+          
+          // Normalizar para o formato padrão (sempre 'questions')
+          const normalizedData = {
+            ...data,
+            questions: questionsArray,
+            _originalAlias: foundAlias,
+            _loadedFrom: key
+          };
+          
           return {
-            data,
+            data: normalizedData,
             source: 'localStorage',
             confidence: parsed.isFallback ? 0.5 : 0.9
           };
@@ -244,29 +289,71 @@ export class QuizDataLoader {
       }
     }
     
+    console.warn(`⚠️ [QuizDataLoader] Nenhuma questão encontrada no localStorage para ${activityId}`);
     return { data: null, source: null, confidence: 0 };
   }
   
   private static tryZustandStore(activityId: string): QuizLoadResult {
+    const questionsAliases = ['questions', 'questoes', 'perguntas'];
+    
     try {
       const storeData = useChosenActivitiesStore.getState().getActivityById(activityId);
-      if (!storeData) return { data: null, source: null, confidence: 0 };
+      if (!storeData) {
+        console.log(`📦 [QuizDataLoader] Store: Nenhum dado encontrado para ${activityId}`);
+        return { data: null, source: null, confidence: 0 };
+      }
       
       const paths = [
-        storeData.dados_construidos?.generated_fields,
-        storeData.dados_construidos,
-        storeData.campos_preenchidos
+        { data: storeData.dados_construidos?.generated_fields, name: 'generated_fields' },
+        { data: storeData.dados_construidos, name: 'dados_construidos' },
+        { data: storeData.campos_preenchidos, name: 'campos_preenchidos' }
       ];
       
-      for (const path of paths) {
-        if (path?.questions && Array.isArray(path.questions) && path.questions.length > 0) {
+      for (const { data: path, name: pathName } of paths) {
+        if (!path) continue;
+        
+        // Verificar cada alias possível
+        for (const alias of questionsAliases) {
+          const value = path[alias];
+          if (value && Array.isArray(value) && value.length > 0) {
+            console.log(`✅ [QuizDataLoader] Store: Encontrado ${value.length} questões via '${alias}' em ${pathName}`);
+            
+            // Normalizar para 'questions'
+            const normalizedData = {
+              ...path,
+              questions: value,
+              _originalAlias: alias,
+              _loadedFrom: `store.${pathName}`
+            };
+            
+            return {
+              data: normalizedData,
+              source: 'store',
+              confidence: 0.8
+            };
+          }
+        }
+        
+        // Verificar quiz.perguntas ou quiz.questions aninhado
+        if (path.quiz?.perguntas && Array.isArray(path.quiz.perguntas) && path.quiz.perguntas.length > 0) {
+          console.log(`✅ [QuizDataLoader] Store: Encontrado ${path.quiz.perguntas.length} questões via 'quiz.perguntas' em ${pathName}`);
           return {
-            data: path,
+            data: { ...path, questions: path.quiz.perguntas, _originalAlias: 'quiz.perguntas' },
+            source: 'store',
+            confidence: 0.8
+          };
+        }
+        if (path.quiz?.questions && Array.isArray(path.quiz.questions) && path.quiz.questions.length > 0) {
+          console.log(`✅ [QuizDataLoader] Store: Encontrado ${path.quiz.questions.length} questões via 'quiz.questions' em ${pathName}`);
+          return {
+            data: { ...path, questions: path.quiz.questions, _originalAlias: 'quiz.questions' },
             source: 'store',
             confidence: 0.8
           };
         }
       }
+      
+      console.log(`⚠️ [QuizDataLoader] Store: Dados encontrados mas sem questões válidas para ${activityId}`);
     } catch (e) {
       console.warn('[QuizDataLoader] Erro ao ler Zustand store:', e);
     }
@@ -308,10 +395,36 @@ export function processQuizWithUnifiedPipeline(
   if (rawQuestions.length === 0 && originalData) {
     console.log('[UnifiedQuizPipeline] Usando originalData como fallback');
     const dbData = originalData.campos || originalData;
-    if (dbData?.questions && Array.isArray(dbData.questions)) {
-      rawQuestions = dbData.questions;
+    
+    // Reconhecer aliases também no banco de dados
+    const dbAliases = ['questions', 'questoes', 'perguntas'];
+    let foundQuestions: any[] | null = null;
+    let foundAlias = '';
+    
+    for (const alias of dbAliases) {
+      const value = dbData?.[alias];
+      if (value && Array.isArray(value) && value.length > 0) {
+        foundQuestions = value;
+        foundAlias = alias;
+        break;
+      }
+    }
+    
+    // Também verificar quiz.perguntas aninhado
+    if (!foundQuestions && dbData?.quiz?.perguntas && Array.isArray(dbData.quiz.perguntas)) {
+      foundQuestions = dbData.quiz.perguntas;
+      foundAlias = 'quiz.perguntas';
+    }
+    if (!foundQuestions && dbData?.quiz?.questions && Array.isArray(dbData.quiz.questions)) {
+      foundQuestions = dbData.quiz.questions;
+      foundAlias = 'quiz.questions';
+    }
+    
+    if (foundQuestions && foundQuestions.length > 0) {
+      console.log(`✅ [UnifiedQuizPipeline] Banco de dados: ${foundQuestions.length} questões via '${foundAlias}'`);
+      rawQuestions = foundQuestions;
       source = 'database';
-      title = dbData.title || originalData.titulo || title;
+      title = dbData.title || dbData.titulo || originalData.titulo || title;
       description = dbData.description || description;
     }
   }
