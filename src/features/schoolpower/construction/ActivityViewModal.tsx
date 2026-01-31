@@ -447,50 +447,42 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       // Determinar o tipo de atividade
       const activityType = activity.originalData?.type || activity.categoryId || activity.type || '';
       
-      // Carregar dados de Quiz Interativo
+      // Carregar dados de Quiz Interativo usando PIPELINE UNIFICADO v1.0
       if (activityType === 'quiz-interativo') {
-        let loadedContent = null;
+        console.log('🔄 [ActivityViewModal] Usando Unified Quiz Pipeline para:', activity.id);
         
-        // Primeiro, tentar localStorage
-        const quizSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`);
-        if (quizSavedContent) {
-          try {
-            const parsedContent = JSON.parse(quizSavedContent);
-            const data = parsedContent.data || parsedContent;
-            if (data?.questions?.length > 0) {
-              const validQuestions = data.questions.filter((q: any) =>
-                q && (q.question || q.text) && (q.options || q.type === 'verdadeiro-falso') && q.correctAnswer
-              );
-              if (validQuestions.length > 0) {
-                loadedContent = { ...data, questions: validQuestions };
-                console.log(`✅ Quiz: ${validQuestions.length} questões carregadas do localStorage`);
-              }
+        try {
+          const pipelineResult = processQuizWithUnifiedPipeline(activity.id, activity.originalData);
+          
+          if (pipelineResult.success && pipelineResult.questions.length > 0) {
+            const loadedContent = {
+              title: pipelineResult.title,
+              description: pipelineResult.description,
+              questions: pipelineResult.questions,
+              totalQuestions: pipelineResult.metadata.totalQuestions,
+              validQuestions: pipelineResult.metadata.validQuestions,
+              theme: pipelineResult.metadata.theme,
+              subject: pipelineResult.metadata.subject,
+              schoolYear: pipelineResult.metadata.schoolYear,
+              isFallback: pipelineResult.metadata.isFallback || false,
+              extractionMethod: pipelineResult.metadata.extractionMethod,
+              processingTimeMs: pipelineResult.metadata.processingTimeMs,
+              isGeneratedByAI: !pipelineResult.metadata.isFallback
+            };
+            
+            console.log(`✅ [ActivityViewModal] Quiz Pipeline: ${pipelineResult.questions.length} questões carregadas via ${pipelineResult.metadata.extractionMethod}`);
+            setQuizInterativoContent(loadedContent);
+          } else {
+            console.warn(`⚠️ [ActivityViewModal] Quiz Pipeline retornou 0 questões válidas`);
+            if (pipelineResult.errors?.length) {
+              console.warn(`⚠️ [ActivityViewModal] Erros:`, pipelineResult.errors);
             }
-          } catch (e) {
-            console.warn('⚠️ Erro ao parsear Quiz do localStorage:', e);
+            setQuizInterativoContent(null);
           }
+        } catch (pipelineError) {
+          console.error('❌ [ActivityViewModal] Erro no Quiz Pipeline:', pipelineError);
+          setQuizInterativoContent(null);
         }
-        
-        // Fallback: banco de dados
-        if (!loadedContent && activity.originalData) {
-          const dbData = activity.originalData.campos || activity.originalData;
-          if (dbData?.questions?.length > 0) {
-            const validQuestions = dbData.questions.filter((q: any) =>
-              q && (q.question || q.text) && (q.options || q.type === 'verdadeiro-falso') && q.correctAnswer
-            );
-            if (validQuestions.length > 0) {
-              loadedContent = {
-                ...dbData,
-                questions: validQuestions,
-                title: dbData.title || activity.originalData.titulo || 'Quiz Interativo',
-                description: dbData.description || 'Atividade criada na plataforma'
-              };
-              console.log(`✅ Quiz: ${validQuestions.length} questões carregadas do banco de dados`);
-            }
-          }
-        }
-        
-        setQuizInterativoContent(loadedContent);
       } else {
         setQuizInterativoContent(null);
       }

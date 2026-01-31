@@ -343,37 +343,80 @@ async function generateQuadroInterativo(formData: ActivityFormData) {
 }
 
 async function generateQuizInterativo(formData: ActivityFormData) {
-  const numberOfQuestions = parseInt(formData.numberOfQuestions) || 10;
-  
-  const content = {
-    title: formData.title,
-    description: formData.description,
-    subject: formData.subject,
-    theme: formData.theme,
-    schoolYear: formData.schoolYear,
-    difficultyLevel: formData.difficultyLevel,
-    questionModel: formData.questionModel,
-    format: formData.format || formData.questionModel,
-    timePerQuestion: parseInt(formData.timePerQuestion) || 60,
-    numberOfQuestions: numberOfQuestions,
-    questions: Array.from({ length: numberOfQuestions }, (_, i) => ({
-      id: i + 1,
-      question: `Questão ${i + 1}: ${formData.theme || formData.subject}`,
-      type: formData.questionModel || "multipla-escolha",
-      options: [
-        `A) Conceito de ${formData.theme || formData.subject}`,
-        "B) Aplicação prática",
-        "C) Teoria avançada",
-        "D) Exercícios práticos"
-      ],
-      correctAnswer: `A) Conceito de ${formData.theme || formData.subject}`,
-      explanation: `Explicação da questão ${i + 1}`
-    })),
-    generatedAt: new Date().toISOString(),
-    isGeneratedByAI: true
-  };
+  console.log('🎯 [generateQuizInterativo] Iniciando geração com IA real...');
 
-  return { success: true, data: content };
+  try {
+    const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
+    
+    if (!formData.theme || formData.theme.trim() === '') {
+      throw new Error('Tema é obrigatório para gerar quiz interativo');
+    }
+
+    const numberOfQuestions = parseInt(formData.numberOfQuestions?.toString() || '10');
+
+    const quizData = {
+      subject: formData.subject || 'Geral',
+      schoolYear: formData.schoolYear || 'Ensino Fundamental',
+      theme: formData.theme,
+      objectives: formData.objectives || `Testar conhecimentos sobre ${formData.theme}`,
+      difficultyLevel: formData.difficultyLevel || 'Médio',
+      format: formData.format || formData.questionModel || 'Múltipla Escolha',
+      numberOfQuestions: numberOfQuestions.toString(),
+      timePerQuestion: formData.timePerQuestion?.toString() || '60',
+      instructions: formData.instructions || 'Leia cada questão atentamente e selecione a resposta correta.',
+      evaluation: formData.evaluation || 'Pontuação baseada no número de acertos.'
+    };
+
+    console.log('🎯 [generateQuizInterativo] Dados preparados para API:', quizData);
+
+    const generator = new QuizInterativoGenerator();
+    const result = await generator.generateQuizContent(quizData);
+
+    console.log('✅ [generateQuizInterativo] Conteúdo gerado com sucesso pela IA:', {
+      title: result.title,
+      questionsCount: result.questions?.length || 0,
+      firstQuestion: result.questions?.[0]?.question?.substring(0, 80)
+    });
+
+    return { success: true, data: result };
+
+  } catch (error) {
+    console.error('❌ [generateQuizInterativo] Erro ao gerar com IA:', error);
+
+    const numberOfQuestions = parseInt(formData.numberOfQuestions?.toString() || '5');
+    
+    const fallbackContent = {
+      title: formData.title || `Quiz Interativo: ${formData.theme || 'Conteúdo'}`,
+      description: formData.description || `Quiz sobre ${formData.theme || 'diversos temas'}`,
+      subject: formData.subject,
+      theme: formData.theme,
+      schoolYear: formData.schoolYear,
+      difficultyLevel: formData.difficultyLevel,
+      questionModel: formData.questionModel,
+      format: formData.format || formData.questionModel,
+      timePerQuestion: parseInt(formData.timePerQuestion) || 60,
+      numberOfQuestions: numberOfQuestions,
+      questions: Array.from({ length: numberOfQuestions }, (_, i) => ({
+        id: i + 1,
+        question: `Questão ${i + 1} sobre ${formData.theme || 'o tema estudado'}`,
+        type: 'multipla-escolha' as const,
+        options: [
+          `A resposta correta para esta questão`,
+          `Uma alternativa plausível`,
+          `Outra alternativa possível`,
+          `Uma distração comum`
+        ],
+        correctAnswer: `A resposta correta para esta questão`,
+        explanation: `Esta é a explicação da questão ${i + 1}. Conteúdo gerado como fallback - a geração com IA falhou.`
+      })),
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false,
+      isFallback: true,
+      fallbackReason: error instanceof Error ? error.message : 'Erro desconhecido'
+    };
+
+    return { success: true, data: fallbackContent };
+  }
 }
 
 async function generateFlashCards(formData: ActivityFormData) {
