@@ -1016,12 +1016,12 @@ export class AutoBuildService {
         constructedActivities[activity.id] = {
           isBuilt: true,
           builtAt: new Date().toISOString(),
-          formData: { theme: activity.title },
+          formData: { theme: theme, subject: subject },
           generatedContent: fallbackResult,
           isFallback: true
         };
         localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-        console.log('✅ [QUIZ INTERATIVO FALLBACK] Salvo em constructedActivities global');
+        console.log(`✅ [QUIZ INTERATIVO FALLBACK] Salvo em constructedActivities global (tema: ${theme}, disciplina: ${subject})`);
 
         activity.isBuilt = true;
         activity.builtAt = new Date().toISOString();
