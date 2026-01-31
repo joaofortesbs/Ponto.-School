@@ -32,6 +32,11 @@ The platform features a modern design with glass-morphism effects, blur backgrou
     - **Activity Version System**: Dual-version system categorizing activities into Interactive and Text Version for various activity types, with robust AI response parsing and professional 6-section fallback content generation.
     - **Component Protection Systems (Blindagem)**: Enterprise-grade isolation and protection for core components like "Lista de Exercícios", "Flash Cards", and "Quiz Interativo" with Bounded Context Architecture, protected files, contracts, sanitizers, dedicated storage namespaces, multi-layer pipelines, and rigorous validation.
     - **Quiz Interativo Unified Pipeline v1.0**: 6-layer processing pipeline with multi-alias recognition (questions/questoes/perguntas/quiz.perguntas) ensuring AI-generated content is correctly loaded regardless of schema variations. Features detailed debug logging and normalization to standard 'questions' format across localStorage, Zustand store, and database sources.
+    - **Quiz Interativo Generation Pipeline (CRITICAL FIX)**: The `generateQuizInterativo` function in `generateActivityContent.ts` now properly imports and uses `QuizInterativoGenerator` (same pattern as Flash Cards). Key files:
+      - `generateActivityContent.ts` (lines 345-420): Uses dynamic import of `QuizInterativoGenerator`, prepares quiz data, calls `generator.generateQuizContent()`, with fallback content on error.
+      - `ActivityViewModal.tsx`: Uses `processQuizWithUnifiedPipeline` for robust multi-source loading with alias normalization.
+      - `QuizInterativoGenerator.ts`: Real AI generator that produces structured quiz content.
+      - `unified-quiz-pipeline.ts`: 6-layer processing with validation, normalization, and multi-source support.
     - **Study Groups**: Real-time chat and member management.
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.
