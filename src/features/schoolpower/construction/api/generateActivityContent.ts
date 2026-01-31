@@ -171,13 +171,14 @@ async function generatePlanoAula(formData: ActivityFormData) {
   console.log('📝 [generatePlanoAula] Iniciando geração com IA via TextVersionGenerator...');
   
   try {
-    const { generateTextVersionContent } = await import('@/features/schoolpower/activities/text-version/TextVersionGenerator');
+    const { generateTextVersionContent, storeTextVersionContent } = await import('@/features/schoolpower/activities/text-version/TextVersionGenerator');
     
     const extendedData = formData as ActivityFormData & Record<string, unknown>;
+    const activityId = (extendedData.id as string) || `plano-aula-${Date.now()}`;
     
     const textVersionInput = {
       activityType: 'plano-aula',
-      activityId: (extendedData.id as string) || `plano-aula-${Date.now()}`,
+      activityId: activityId,
       context: {
         tema: formData.theme || formData.tema || '',
         theme: formData.theme || formData.tema || '',
@@ -208,6 +209,19 @@ async function generatePlanoAula(formData: ActivityFormData) {
     });
     
     if (generatedResult.success) {
+      storeTextVersionContent(activityId, 'plano-aula', generatedResult);
+      console.log('💾 [generatePlanoAula] Conteúdo salvo via storeTextVersionContent para:', activityId);
+      
+      window.dispatchEvent(new CustomEvent('text-version:generated', {
+        detail: {
+          activityId: activityId,
+          activityType: 'plano-aula',
+          success: true,
+          sectionsCount: generatedResult.sections?.length || 0
+        }
+      }));
+      console.log('📡 [generatePlanoAula] Evento text-version:generated emitido');
+      
       const content = {
         title: formData.title || generatedResult.sections?.[0]?.title || 'Plano de Aula',
         description: formData.description,
@@ -230,10 +244,11 @@ async function generatePlanoAula(formData: ActivityFormData) {
         },
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: true,
-        isFallback: false
+        isFallback: false,
+        isTextVersion: true
       };
       
-      return { success: true, data: content };
+      return { success: true, data: content, isTextVersion: true };
     }
     
     throw new Error('TextVersionGenerator retornou success: false');
@@ -269,45 +284,113 @@ async function generatePlanoAula(formData: ActivityFormData) {
 }
 
 async function generateSequenciaDidatica(formData: ActivityFormData) {
-  const content = {
-    title: formData.title || formData.tituloTemaAssunto,
-    description: formData.description,
-    tituloTemaAssunto: formData.tituloTemaAssunto,
-    anoSerie: formData.anoSerie,
-    disciplina: formData.disciplina,
-    bnccCompetencias: formData.bnccCompetencias,
-    publicoAlvo: formData.publicoAlvo,
-    objetivosAprendizagem: formData.objetivosAprendizagem,
-    quantidadeAulas: parseInt(formData.quantidadeAulas) || 4,
-    quantidadeDiagnosticos: parseInt(formData.quantidadeDiagnosticos) || 1,
-    quantidadeAvaliacoes: parseInt(formData.quantidadeAvaliacoes) || 2,
-    cronograma: formData.cronograma,
-    aulas: Array.from({ length: parseInt(formData.quantidadeAulas) || 4 }, (_, i) => ({
-      numero: i + 1,
-      titulo: `Aula ${i + 1}: ${formData.tituloTemaAssunto}`,
-      objetivos: formData.objetivosAprendizagem,
-      conteudo: `Conteúdo da aula ${i + 1}`,
-      metodologia: "Metodologia ativa",
-      recursos: "Recursos pedagógicos",
-      avaliacao: "Avaliação formativa"
-    })),
-    diagnosticos: Array.from({ length: parseInt(formData.quantidadeDiagnosticos) || 1 }, (_, i) => ({
-      numero: i + 1,
-      titulo: `Diagnóstico ${i + 1}`,
-      objetivo: "Avaliar conhecimentos prévios",
-      instrumento: "Questionário diagnóstico"
-    })),
-    avaliacoes: Array.from({ length: parseInt(formData.quantidadeAvaliacoes) || 2 }, (_, i) => ({
-      numero: i + 1,
-      titulo: `Avaliação ${i + 1}`,
-      tipo: i === 0 ? "Formativa" : "Somativa",
-      criterios: "Critérios de avaliação"
-    })),
-    generatedAt: new Date().toISOString(),
-    isGeneratedByAI: true
-  };
+  console.log('📝 [generateSequenciaDidatica] Iniciando geração com IA via TextVersionGenerator...');
+  
+  try {
+    const { generateTextVersionContent, storeTextVersionContent } = await import('@/features/schoolpower/activities/text-version/TextVersionGenerator');
+    
+    const extendedData = formData as ActivityFormData & Record<string, unknown>;
+    const activityId = (extendedData.id as string) || `sequencia-didatica-${Date.now()}`;
+    
+    const textVersionInput = {
+      activityType: 'sequencia-didatica',
+      activityId: activityId,
+      context: {
+        tema: formData.tituloTemaAssunto || formData.theme || '',
+        theme: formData.tituloTemaAssunto || formData.theme || '',
+        disciplina: formData.disciplina || formData.subject || '',
+        subject: formData.disciplina || formData.subject || '',
+        serie: formData.anoSerie || formData.schoolYear || '',
+        schoolYear: formData.anoSerie || formData.schoolYear || '',
+        objetivos: formData.objetivosAprendizagem || formData.objectives || '',
+        objectives: formData.objetivosAprendizagem || formData.objectives || '',
+        numeroAulas: formData.quantidadeAulas || '4',
+        description: formData.description,
+        title: formData.title
+      },
+      conversationContext: (extendedData.conversationContext as string) || '',
+      userObjective: (extendedData.userObjective as string) || formData.objetivosAprendizagem || ''
+    };
+    
+    console.log('📝 [generateSequenciaDidatica] Dados preparados para TextVersionGenerator:', textVersionInput);
+    
+    const generatedResult = await generateTextVersionContent(textVersionInput);
+    
+    console.log('✅ [generateSequenciaDidatica] Conteúdo gerado pela IA:', {
+      success: generatedResult.success,
+      sectionsCount: generatedResult.sections?.length || 0,
+      textContentLength: generatedResult.textContent?.length || 0
+    });
+    
+    if (generatedResult.success) {
+      storeTextVersionContent(activityId, 'sequencia-didatica', generatedResult);
+      console.log('💾 [generateSequenciaDidatica] Conteúdo salvo via storeTextVersionContent para:', activityId);
+      
+      window.dispatchEvent(new CustomEvent('text-version:generated', {
+        detail: {
+          activityId: activityId,
+          activityType: 'sequencia-didatica',
+          success: true,
+          sectionsCount: generatedResult.sections?.length || 0
+        }
+      }));
+      console.log('📡 [generateSequenciaDidatica] Evento text-version:generated emitido');
+      
+      const content = {
+        title: formData.title || formData.tituloTemaAssunto,
+        description: formData.description,
+        tituloTemaAssunto: formData.tituloTemaAssunto,
+        anoSerie: formData.anoSerie,
+        disciplina: formData.disciplina,
+        bnccCompetencias: formData.bnccCompetencias,
+        publicoAlvo: formData.publicoAlvo,
+        objetivosAprendizagem: formData.objetivosAprendizagem,
+        quantidadeAulas: parseInt(formData.quantidadeAulas) || 4,
+        sections: generatedResult.sections,
+        textContent: generatedResult.textContent,
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true,
+        isFallback: false,
+        isTextVersion: true
+      };
 
-  return { success: true, data: content };
+      return { success: true, data: content, isTextVersion: true };
+    }
+    
+    throw new Error('TextVersionGenerator retornou success: false');
+    
+  } catch (error) {
+    console.error('❌ [generateSequenciaDidatica] Erro na geração com IA:', error);
+    
+    const fallbackContent = {
+      title: formData.title || formData.tituloTemaAssunto,
+      description: formData.description,
+      tituloTemaAssunto: formData.tituloTemaAssunto,
+      anoSerie: formData.anoSerie,
+      disciplina: formData.disciplina,
+      bnccCompetencias: formData.bnccCompetencias,
+      publicoAlvo: formData.publicoAlvo,
+      objetivosAprendizagem: formData.objetivosAprendizagem,
+      quantidadeAulas: parseInt(formData.quantidadeAulas) || 4,
+      quantidadeDiagnosticos: parseInt(formData.quantidadeDiagnosticos) || 1,
+      quantidadeAvaliacoes: parseInt(formData.quantidadeAvaliacoes) || 2,
+      cronograma: formData.cronograma,
+      aulas: Array.from({ length: parseInt(formData.quantidadeAulas) || 4 }, (_, i) => ({
+        numero: i + 1,
+        titulo: `Aula ${i + 1}: ${formData.tituloTemaAssunto}`,
+        objetivos: formData.objetivosAprendizagem,
+        conteudo: `Conteúdo da aula ${i + 1} (regenere para conteúdo personalizado)`,
+        metodologia: "Metodologia ativa",
+        recursos: "Recursos pedagógicos",
+        avaliacao: "Avaliação formativa"
+      })),
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false,
+      isFallback: true
+    };
+
+    return { success: true, data: fallbackContent };
+  }
 }
 
 async function generateQuadroInterativo(formData: ActivityFormData) {
