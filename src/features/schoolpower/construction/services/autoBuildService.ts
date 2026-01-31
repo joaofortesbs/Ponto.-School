@@ -13,6 +13,187 @@ import { useActivityDebugStore, logActivityDebug } from '../stores/activityDebug
 import { BuildQueueController, type QueueProgress } from '../queue/BuildQueueController';
 import { normalizeFieldKeys, getFieldByAnyName } from '../utils/activity-fields-sync';
 
+/**
+ * Extrai o tema real de um título/prompt do usuário
+ * Detecta padrões de prompt como "Crie um quiz sobre X" e extrai X
+ * @param title - O título ou prompt do usuário
+ * @param subject - A disciplina para inferência de tema padrão
+ * @returns O tema extraído ou um tema padrão apropriado
+ */
+function extractThemeFromTitle(title: string | undefined, subject: string = 'Geral'): string {
+  if (!title || title.length < 3) {
+    return getSubjectDefaultTheme(subject);
+  }
+  
+  const titleLower = title.toLowerCase().trim();
+  
+  // Lista de verbos/palavras que indicam prompt de usuário (não devem aparecer em temas)
+  const promptIndicators = [
+    'crie', 'criar', 'faça', 'fazer', 'gere', 'gerar', 'monte', 'montar',
+    'elabore', 'elaborar', 'prepare', 'preparar', 'desenvolva', 'desenvolver',
+    'construa', 'construir', 'preciso', 'quero', 'poderia', 'pode',
+    'por favor', 'você pode', 'me ajude', 'ajude-me'
+  ];
+  
+  // Detectar se é um prompt de usuário (vários padrões)
+  const isPrompt = 
+    // Começa com verbo de comando
+    promptIndicators.some(indicator => titleLower.startsWith(indicator)) ||
+    // Padrões como "Quiz de X", "Teste sobre Y", "Prova de Z"
+    /^(um|uma|o|a)?\s*(quiz|questionário|prova|teste|exercício|atividade|lista)/i.test(titleLower) ||
+    // Contém verbos imperativos em qualquer posição
+    promptIndicators.some(indicator => titleLower.includes(indicator)) ||
+    // Padrões com dois-pontos ou travessão que sugerem formatação de prompt
+    /^[^:–—-]{0,30}[:–—-]/i.test(title) ||
+    // Título muito longo (provavelmente é um prompt)
+    title.length > 80;
+  
+  // SEMPRE tentar extrair o tema real, independente de ser prompt ou não
+  // Isso garante que mesmo títulos normais passem pela limpeza
+  
+  // Padrões para extrair tema (ordem de prioridade)
+  const themeExtractionPatterns = [
+    // "sobre X" é o padrão mais específico e confiável
+    /(?:sobre|acerca de|a respeito de)\s+([^.,!?]+)/i,
+    // "tema: X" ou "tema - X"
+    /(?:tema|assunto|conteúdo)\s*[:–—\-]\s*([^.,!?]+)/i,
+    // "de <disciplina multi-word> sobre <tema>" - captura o tema após "sobre"
+    /de\s+(?:[\w\s]+?)\s+sobre\s+([^.,!?]+)/i,
+    // "Disciplina: tema" ou "Disciplina - tema" (captura após separador)
+    /^[\w\s]+[:–—\-]\s*([^.,!?]+)/i,
+    // "de X" quando X não é uma disciplina conhecida (última opção)
+    /(?:de|do|da)\s+(?!matemática|português|língua\s+portuguesa|história|geografia|ciências|biologia|física|química|inglês|espanhol|literatura|artes|educação\s+física|filosofia|sociologia)([^.,!?\-–—:]+)/i
+  ];
+  
+  for (const pattern of themeExtractionPatterns) {
+    const match = title.match(pattern);
+    if (match && match[1]) {
+      const extractedTheme = match[1].trim();
+      const cleanedTheme = sanitizeTheme(extractedTheme);
+      
+      if (isValidTheme(cleanedTheme)) {
+        console.log(`🎯 [extractThemeFromTitle] Tema extraído: "${cleanedTheme}" (original: "${title.substring(0, 50)}...")`);
+        return cleanedTheme.charAt(0).toUpperCase() + cleanedTheme.slice(1);
+      }
+    }
+  }
+  
+  // Se detectou como prompt mas não conseguiu extrair tema, usar tema padrão da disciplina
+  if (isPrompt) {
+    const defaultTheme = getSubjectDefaultTheme(subject);
+    console.log(`🎯 [extractThemeFromTitle] Prompt detectado, usando tema padrão: "${defaultTheme}"`);
+    return defaultTheme;
+  }
+  
+  // Não é um prompt e não extraiu tema - verificar se o título é seguro para usar
+  const sanitized = sanitizeTheme(title);
+  if (isValidTheme(sanitized) && sanitized.length <= 80) {
+    return sanitized.charAt(0).toUpperCase() + sanitized.slice(1);
+  }
+  
+  // Último fallback
+  return getSubjectDefaultTheme(subject);
+}
+
+/**
+ * Limpa texto de tema removendo partes indesejadas
+ */
+function sanitizeTheme(theme: string): string {
+  let cleaned = theme.trim();
+  
+  // Split em separadores comuns (–, -, :) e filtrar segmentos com ano/série
+  const separators = /\s*[–—\-:]\s*/;
+  const segments = cleaned.split(separators);
+  
+  if (segments.length > 1) {
+    // Filtrar segmentos que contêm ano/série/ensino
+    const gradePatterns = /\d+[ºª]?\s*(ano|série)|ensino\s*(fundamental|médio)|fundamental|médio/i;
+    const validSegments = segments.filter(seg => !gradePatterns.test(seg.trim()));
+    
+    // Se sobrou algo, usar o primeiro segmento válido (que geralmente é o tema)
+    if (validSegments.length > 0) {
+      // Preferir segmento que não seja apenas disciplina
+      const nonSubjectSegments = validSegments.filter(seg => {
+        const segLower = seg.toLowerCase().trim();
+        const disciplines = ['matemática', 'português', 'história', 'geografia', 'ciências', 
+                            'biologia', 'física', 'química', 'inglês', 'espanhol', 
+                            'literatura', 'artes', 'arte', 'educação física', 'filosofia', 'sociologia'];
+        return !disciplines.includes(segLower);
+      });
+      
+      cleaned = nonSubjectSegments.length > 0 ? nonSubjectSegments[0].trim() : validSegments[0].trim();
+    }
+  }
+  
+  return cleaned
+    // Remover preposições soltas no final
+    .replace(/\s+(para|do|da|de|no|na|em|ao|à|com)\s*$/i, '')
+    // Remover ano/série restante
+    .replace(/\s*\d+[ºª]?\s*(ano|série).*$/i, '')
+    .replace(/\s*(ensino\s+)?(fundamental|médio).*$/i, '')
+    // Remover pontuação extra
+    .replace(/[.,!?:;\-–—]+$/, '')
+    // Limpar espaços
+    .trim();
+}
+
+/**
+ * Verifica se um tema é válido (não é muito curto, muito longo, ou contém verbos imperativos)
+ */
+function isValidTheme(theme: string): boolean {
+  if (!theme || theme.length < 3 || theme.length > 100) {
+    return false;
+  }
+  
+  const themeLower = theme.toLowerCase();
+  
+  // Rejeitar se contém verbos imperativos
+  const forbiddenPatterns = [
+    /^(crie|criar|faça|fazer|gere|gerar|monte|montar)/i,
+    /^(elabore|elaborar|prepare|preparar|desenvolva|desenvolver)/i,
+    /^(preciso|quero|poderia|pode|me\s+ajude)/i
+  ];
+  
+  return !forbiddenPatterns.some(pattern => pattern.test(themeLower));
+}
+
+/**
+ * Retorna tema padrão baseado na disciplina
+ */
+function getSubjectDefaultTheme(subject: string): string {
+  const subjectThemes: Record<string, string> = {
+    'matemática': 'Conceitos Matemáticos',
+    'português': 'Língua Portuguesa',
+    'língua portuguesa': 'Interpretação de Textos',
+    'história': 'História Geral',
+    'geografia': 'Geografia do Brasil',
+    'ciências': 'Ciências Naturais',
+    'biologia': 'Biologia',
+    'física': 'Física',
+    'química': 'Química',
+    'inglês': 'Inglês',
+    'espanhol': 'Espanhol',
+    'literatura': 'Literatura Brasileira',
+    'artes': 'Expressão Artística',
+    'arte': 'Expressão Artística',
+    'educação física': 'Atividades Físicas',
+    'filosofia': 'Pensamento Filosófico',
+    'sociologia': 'Sociologia',
+    'geral': 'Conhecimentos Gerais'
+  };
+  
+  const subjectLower = (subject || 'geral').toLowerCase().trim();
+  
+  // Buscar correspondência exata ou parcial
+  for (const [key, value] of Object.entries(subjectThemes)) {
+    if (subjectLower === key || subjectLower.includes(key) || key.includes(subjectLower)) {
+      return value;
+    }
+  }
+  
+  return 'Conhecimentos Gerais';
+}
+
 export interface AutoBuildProgress {
   current: number;
   total: number;
@@ -674,8 +855,7 @@ export class AutoBuildService {
                      'Ensino Médio',
           theme: activity.customFields?.['Tema'] || 
                 activity.customFields?.['theme'] || 
-                activity.title || 
-                'Tema Geral',
+                extractThemeFromTitle(activity.title, activity.customFields?.['Disciplina'] || activity.customFields?.['subject'] || 'Geral'),
           objectives: activity.customFields?.['Objetivos'] || 
                      activity.customFields?.['objectives'] || 
                      activity.description ||
@@ -767,9 +947,9 @@ export class AutoBuildService {
         // Fallback contextualizado - usa banco de questões reais por disciplina
         console.log('🛡️ [QUIZ INTERATIVO] Ativando fallback contextualizado');
         
-        // Extrair tema e disciplina dos customFields ou title
-        const theme = activity.customFields?.['Tema'] || activity.customFields?.['theme'] || activity.title || 'Conhecimentos Gerais';
+        // Extrair tema e disciplina dos customFields ou title (usando extração inteligente)
         const subject = activity.customFields?.['Disciplina'] || activity.customFields?.['subject'] || 'Geral';
+        const theme = activity.customFields?.['Tema'] || activity.customFields?.['theme'] || extractThemeFromTitle(activity.title, subject);
         
         // Banco de questões contextualizadas por disciplina
         const questionBanks: Record<string, Array<{question: string; options: string[]; correctAnswer: string; explanation: string}>> = {

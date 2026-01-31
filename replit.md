@@ -95,6 +95,22 @@ The following components have protection rules to prevent accidental breakage:
 4. Document changes in the history section
 
 ## Recent Changes (Jan 31, 2026)
+- **Critical Fix - Theme Extraction System v2 (Root Cause Identified and Fixed)**:
+  - **Problem**: Quiz questions were showing user prompts (e.g., "Crie um quiz de matemática sobre frações") as question text
+  - **Root Cause Found**: In `autoBuildService.ts`, when `customFields` didn't have a theme, it fell back to `activity.title` directly, which contained the user's full prompt
+  - **Solution**: Created robust theme extraction system with 4 helper functions:
+    - `extractThemeFromTitle()` - Main function with multi-pattern detection and extraction
+    - `sanitizeTheme()` - Cleans extracted themes (removes years, punctuation)
+    - `isValidTheme()` - Validates themes (rejects if contains imperatives, too short/long)
+    - `getSubjectDefaultTheme()` - Returns subject-appropriate fallback themes
+  - **Handles**: Command verbs, "Quiz de X" patterns, colon/dash formats, multi-word subjects, long titles
+  - **Test Cases Supported**:
+    - "Crie um quiz de matemática sobre frações para o 6º ano" → "Frações"
+    - "Quiz de matemática sobre frações para o 6º ano" → "Frações"
+    - "Matemática: frações – 6º ano" → "Frações"
+    - "Frações" → "Frações" (valid short theme, used as-is)
+  - **Files Modified**: `src/features/schoolpower/construction/services/autoBuildService.ts`
+  - **Applied in**: Both quizData preparation and fallback section
 - **Critical Fix - Quiz Interativo Persistence Flow**: Fixed issue where quiz questions were not being saved to localStorage
   - Root cause: `syncSchemaToFormData` ignores `questions` field → `persistActivityToStorage` only saves mapped fields → questions lost
   - Solution: Added direct localStorage persistence in `gerar_conteudo_atividades.ts` handler for quiz-interativo
@@ -103,7 +119,9 @@ The following components have protection rules to prevent accidental breakage:
 - **Improved Fallback System in autoBuildService.ts**: Replaced generic fallback with contextualized question banks
   - Now uses real question banks per subject (Matemática, Português, default) instead of using `activity.title` as question content
   - Prevents issue where user prompts appeared as quiz questions
-- **Key Lesson Learned**: Interactive activities (quiz-interativo, lista-exercicios, flash-cards) require direct persistence of complex data structures (questions, cards, exercicios) that are not handled by the generic `persistActivityToStorage` function
+- **Key Lesson Learned**: 
+  - Interactive activities (quiz-interativo, lista-exercicios, flash-cards) require direct persistence of complex data structures (questions, cards, exercicios) that are not handled by the generic `persistActivityToStorage` function
+  - User-facing titles/prompts should NEVER be used directly as content themes - always extract or infer the actual topic
 
 ## Changes (Jan 30, 2026)
 - **Quiz Interativo Blindagem v1.0.0**: Enterprise-grade protection system for Quiz Interativo activity
