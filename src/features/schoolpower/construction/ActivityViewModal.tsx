@@ -22,6 +22,7 @@ import { isTextVersionActivity } from '../config/activityVersionConfig';
 import { retrieveTextVersionContent } from '../activities/text-version/TextVersionGenerator';
 import { useChosenActivitiesStore } from '../interface-chat-producao/stores/ChosenActivitiesStore';
 import { loadExerciseListData, processExerciseListWithUnifiedPipeline } from '../activities/lista-exercicios';
+import { processQuizWithUnifiedPipeline } from '../activities/quiz-interativo';
 
 // Helper function to get activity icon based on activity type
 const getActivityIcon = (activityId: string) => {
@@ -1151,95 +1152,38 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       return <TeseRedacaoPreview content={contentToLoad} isLoading={false} />;
     }
 
-    // 2. Quiz Interativo
+    // 2. Quiz Interativo - USANDO PIPELINE UNIFICADO v1.0.0
     if (activityType === 'quiz-interativo') {
-      const quizInterativoSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`);
-      console.log(`🔍 Quiz Interativo: Verificando conteúdo salvo para ${activity.id}. Existe?`, !!quizInterativoSavedContent);
-
-      if (quizInterativoSavedContent) {
-        try {
-          const parsedContent = JSON.parse(quizInterativoSavedContent);
-          
-          // VERIFICAÇÃO: Se localStorage tem apenas metadados leves, buscar da store
-          if (parsedContent.hasFullDataInStore === true) {
-            console.log('📦 Quiz Interativo: localStorage tem metadados leves, buscando da store Zustand...');
-            const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-            if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-              const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-              if (fullData.questions && Array.isArray(fullData.questions) && fullData.questions.length > 0) {
-                contentToLoad = fullData;
-                console.log(`✅ Quiz Interativo: ${fullData.questions.length} questões carregadas da store Zustand`);
-              }
-            }
-          } else {
-            contentToLoad = parsedContent.data || parsedContent;
-          }
-
-          // Validar estrutura das questões
-          if (contentToLoad && contentToLoad.questions && Array.isArray(contentToLoad.questions) && contentToLoad.questions.length > 0) {
-            const validQuestions = contentToLoad.questions.filter(q =>
-              q && (q.question || q.text) && (q.options || q.type === 'verdadeiro-falso') && q.correctAnswer
-            );
-
-            if (validQuestions.length > 0) {
-              contentToLoad.questions = validQuestions;
-              console.log(`✅ Quiz Interativo carregado com ${validQuestions.length} questões válidas para: ${activity.id}`);
-            } else {
-              console.warn('⚠️ Nenhuma questão válida encontrada no Quiz');
-              contentToLoad = null;
-            }
-          } else if (!contentToLoad?.questions) {
-            console.warn('⚠️ Estrutura de dados inválida para Quiz Interativo');
-            contentToLoad = null;
-          }
-        } catch (error) {
-          console.error('❌ Erro ao processar conteúdo do Quiz Interativo:', error);
-          contentToLoad = null;
-        }
-      }
+      console.log(`🔄 [UnifiedQuizPipeline] Processando quiz para ${activity.id}...`);
       
-      // FALLBACK 1: Buscar dados da store Zustand
-      if (!contentToLoad) {
-        console.log('📦 Quiz Interativo: Buscando dados da store Zustand como fallback...');
-        const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-        if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-          const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
-          if (fullData.questions && Array.isArray(fullData.questions) && fullData.questions.length > 0) {
-            const validQuestions = fullData.questions.filter(q =>
-              q && (q.question || q.text) && (q.options || q.type === 'verdadeiro-falso') && q.correctAnswer
-            );
-            if (validQuestions.length > 0) {
-              contentToLoad = { ...fullData, questions: validQuestions };
-              console.log(`✅ Quiz Interativo: ${validQuestions.length} questões carregadas da store Zustand (fallback)`);
-            }
-          }
-        }
-      }
+      const pipelineResult = processQuizWithUnifiedPipeline(activity.id, activity.originalData);
       
-      // FALLBACK 2: Se não encontrou na store, usar dados do banco (originalData)
-      if (!contentToLoad && activity.originalData) {
-        console.log('📊 Quiz Interativo: Usando dados do banco (originalData) como fallback');
-        const dbData = activity.originalData.campos || activity.originalData;
+      if (pipelineResult.success && pipelineResult.questions.length > 0) {
+        contentToLoad = {
+          title: pipelineResult.title,
+          description: pipelineResult.description,
+          questions: pipelineResult.questions,
+          totalQuestions: pipelineResult.metadata.validQuestions,
+          timePerQuestion: 60,
+          isGeneratedByAI: !pipelineResult.metadata.isFallback,
+          isFallback: pipelineResult.metadata.isFallback,
+          theme: pipelineResult.metadata.theme,
+          subject: pipelineResult.metadata.subject,
+          schoolYear: pipelineResult.metadata.schoolYear
+        };
         
-        if (dbData && dbData.questions && Array.isArray(dbData.questions) && dbData.questions.length > 0) {
-          const validQuestions = dbData.questions.filter(q =>
-            q && (q.question || q.text) && (q.options || q.type === 'verdadeiro-falso') && q.correctAnswer
-          );
-          
-          if (validQuestions.length > 0) {
-            contentToLoad = {
-              ...dbData,
-              questions: validQuestions,
-              title: dbData.title || activity.originalData.titulo || 'Quiz Interativo',
-              description: dbData.description || 'Atividade criada na plataforma'
-            };
-            console.log(`✅ Quiz Interativo: ${validQuestions.length} questões carregadas do banco de dados`);
-          }
+        console.log(`✅ [UnifiedQuizPipeline] Quiz carregado com sucesso:`, {
+          questions: pipelineResult.questions.length,
+          source: pipelineResult.metadata.extractionMethod,
+          processingTimeMs: pipelineResult.metadata.processingTimeMs
+        });
+        
+        if (pipelineResult.warnings?.length) {
+          console.warn(`⚠️ [UnifiedQuizPipeline] Avisos:`, pipelineResult.warnings);
         }
-      }
-      
-      if (!contentToLoad) {
-        console.log('ℹ️ Nenhum conteúdo específico encontrado para Quiz Interativo. Usando dados gerais.');
+      } else {
+        console.warn('⚠️ [UnifiedQuizPipeline] Nenhuma questão válida encontrada');
+        contentToLoad = null;
       }
     }
     // 3. Flash Cards
