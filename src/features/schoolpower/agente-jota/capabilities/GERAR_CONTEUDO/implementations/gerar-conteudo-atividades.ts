@@ -853,6 +853,55 @@ async function generateContentForActivity(
         }
       );
       
+      // ═══════════════════════════════════════════════════════════════════════
+      // 🔥 PERSISTÊNCIA DIRETA DO QUIZ NO LOCALSTORAGE
+      // O modal de visualização espera encontrar as questões em constructed_quiz-interativo_${id}
+      // Estrutura esperada: { success: true, data: { title, questions, totalQuestions, ... } }
+      // ═══════════════════════════════════════════════════════════════════════
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        try {
+          const quizStorageKey = `constructed_quiz-interativo_${activity.id}`;
+          const quizStorageData = {
+            success: true,
+            data: {
+              title: generatedContent.title || activity.titulo || 'Quiz Interativo',
+              description: generatedContent.description || `Quiz sobre ${inferredTheme}`,
+              questions: generatedContent.questions || [],
+              totalQuestions: generatedContent.totalQuestions || generatedContent.questions?.length || 0,
+              timePerQuestion: generatedContent.timePerQuestion || 60,
+              isGeneratedByAI: true,
+              isFallback: false,
+              generatedAt: new Date().toISOString(),
+              theme: inferredTheme,
+              subject: inferredSubject,
+              schoolYear: inferredSchoolYear
+            },
+            timestamp: new Date().toISOString()
+          };
+          
+          localStorage.setItem(quizStorageKey, JSON.stringify(quizStorageData));
+          console.log(`✅ [QUIZ-INTERATIVO] Persistido em ${quizStorageKey} com ${generatedContent.questions?.length || 0} questões`);
+          console.log(`📋 [QUIZ-INTERATIVO] Primeira questão:`, generatedContent.questions?.[0]?.question || 'N/A');
+          
+          // Também salvar em activity_{id} para compatibilidade com outros sistemas
+          localStorage.setItem(`activity_${activity.id}`, JSON.stringify(quizStorageData.data));
+          
+          // Atualizar constructedActivities global
+          const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+          constructedActivities[activity.id] = {
+            isBuilt: true,
+            builtAt: new Date().toISOString(),
+            formData: schemaFields,
+            generatedContent: quizStorageData.data
+          };
+          localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+          console.log(`✅ [QUIZ-INTERATIVO] Atualizado constructedActivities global`);
+          
+        } catch (storageError) {
+          console.error(`❌ [QUIZ-INTERATIVO] Erro ao salvar no localStorage:`, storageError);
+        }
+      }
+      
       const executionTime = Date.now() - activityStartTime;
       
       if (onProgress) {

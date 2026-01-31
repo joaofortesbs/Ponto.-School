@@ -764,20 +764,56 @@ export class AutoBuildService {
       } catch (error) {
         console.error('❌ [QUIZ INTERATIVO] Erro no sistema exclusivo:', error);
 
-        // Fallback manual em caso de erro total
-        console.log('🛡️ [QUIZ INTERATIVO] Ativando fallback manual');
-        const fallbackQuestions = Array.from({ length: 5 }, (_, i) => ({
+        // Fallback contextualizado - usa banco de questões reais por disciplina
+        console.log('🛡️ [QUIZ INTERATIVO] Ativando fallback contextualizado');
+        
+        // Extrair tema e disciplina dos customFields ou title
+        const theme = activity.customFields?.['Tema'] || activity.customFields?.['theme'] || activity.title || 'Conhecimentos Gerais';
+        const subject = activity.customFields?.['Disciplina'] || activity.customFields?.['subject'] || 'Geral';
+        
+        // Banco de questões contextualizadas por disciplina
+        const questionBanks: Record<string, Array<{question: string; options: string[]; correctAnswer: string; explanation: string}>> = {
+          'Matemática': [
+            { question: 'Qual é o resultado de 3/4 + 1/2?', options: ['5/4', '4/6', '3/6', '1/1'], correctAnswer: '5/4', explanation: 'Para somar frações, precisamos ter o mesmo denominador: 3/4 + 2/4 = 5/4' },
+            { question: 'Qual número é primo?', options: ['17', '15', '21', '9'], correctAnswer: '17', explanation: '17 é divisível apenas por 1 e por ele mesmo' },
+            { question: 'Quanto é 25% de 80?', options: ['20', '15', '25', '40'], correctAnswer: '20', explanation: '25% = 25/100 = 1/4, então 80 ÷ 4 = 20' },
+            { question: 'Qual é a área de um quadrado com lado 5cm?', options: ['25 cm²', '20 cm²', '10 cm²', '15 cm²'], correctAnswer: '25 cm²', explanation: 'Área do quadrado = lado × lado = 5 × 5 = 25 cm²' },
+            { question: 'Resolva: 2x + 6 = 10', options: ['x = 2', 'x = 4', 'x = 8', 'x = 3'], correctAnswer: 'x = 2', explanation: '2x = 10 - 6 = 4, então x = 4/2 = 2' }
+          ],
+          'Português': [
+            { question: 'Qual é a classe gramatical de "rapidamente"?', options: ['Advérbio', 'Adjetivo', 'Substantivo', 'Verbo'], correctAnswer: 'Advérbio', explanation: 'Palavras terminadas em -mente são advérbios de modo' },
+            { question: 'Na frase "O menino correu", qual é o sujeito?', options: ['O menino', 'correu', 'O', 'menino'], correctAnswer: 'O menino', explanation: 'O sujeito é quem pratica a ação do verbo' },
+            { question: 'Qual palavra está escrita corretamente?', options: ['Exceção', 'Excessão', 'Exceçao', 'Exseção'], correctAnswer: 'Exceção', explanation: 'Exceção é a grafia correta' },
+            { question: 'Qual é o plural de "cidadão"?', options: ['Cidadãos', 'Cidadões', 'Cidadães', 'Cidadãs'], correctAnswer: 'Cidadãos', explanation: 'O plural de cidadão é cidadãos' },
+            { question: 'Identifique a voz passiva:', options: ['O bolo foi comido', 'Eu comi o bolo', 'Comer bolo', 'Comendo bolo'], correctAnswer: 'O bolo foi comido', explanation: 'Na voz passiva, o sujeito sofre a ação' }
+          ],
+          'default': [
+            { question: 'Qual é a capital do Brasil?', options: ['Brasília', 'São Paulo', 'Rio de Janeiro', 'Salvador'], correctAnswer: 'Brasília', explanation: 'Brasília é a capital federal desde 1960' },
+            { question: 'Quantos planetas existem no Sistema Solar?', options: ['8', '9', '7', '10'], correctAnswer: '8', explanation: 'Os 8 planetas são: Mercúrio, Vênus, Terra, Marte, Júpiter, Saturno, Urano e Netuno' },
+            { question: 'Qual é o maior oceano do mundo?', options: ['Oceano Pacífico', 'Oceano Atlântico', 'Oceano Índico', 'Oceano Ártico'], correctAnswer: 'Oceano Pacífico', explanation: 'O Pacífico cobre cerca de 63 milhões de km²' },
+            { question: 'Em que ano o Brasil foi descoberto?', options: ['1500', '1492', '1534', '1822'], correctAnswer: '1500', explanation: 'Pedro Álvares Cabral chegou ao Brasil em 22 de abril de 1500' },
+            { question: 'Qual é o maior país do mundo em extensão territorial?', options: ['Rússia', 'Canadá', 'China', 'Brasil'], correctAnswer: 'Rússia', explanation: 'A Rússia tem mais de 17 milhões de km²' }
+          ]
+        };
+        
+        const subjectKey = Object.keys(questionBanks).find(k => 
+          subject.toLowerCase().includes(k.toLowerCase())
+        ) || 'default';
+        
+        const sourceQuestions = questionBanks[subjectKey] || questionBanks['default'];
+        
+        const fallbackQuestions = sourceQuestions.map((q, i) => ({
           id: i + 1,
-          question: `Questão ${i + 1} sobre ${activity.title}`,
+          question: q.question,
           type: 'multipla-escolha' as const,
-          options: ['Opção A', 'Opção B', 'Opção C', 'Opção D'],
-          correctAnswer: 'Opção A',
-          explanation: `Esta é a questão ${i + 1} do quiz sobre ${activity.title}`
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation
         }));
 
         const fallbackResult = {
-          title: activity.title || 'Quiz Interativo',
-          description: activity.description || `Quiz sobre ${activity.title}`,
+          title: `Quiz: ${theme}`,
+          description: `Quiz sobre ${theme} - ${subject}`,
           questions: fallbackQuestions,
           totalQuestions: fallbackQuestions.length,
           timePerQuestion: 60,

@@ -94,7 +94,18 @@ The following components have protection rules to prevent accidental breakage:
 3. Test according to the checklist
 4. Document changes in the history section
 
-## Recent Changes (Jan 30, 2026)
+## Recent Changes (Jan 31, 2026)
+- **Critical Fix - Quiz Interativo Persistence Flow**: Fixed issue where quiz questions were not being saved to localStorage
+  - Root cause: `syncSchemaToFormData` ignores `questions` field → `persistActivityToStorage` only saves mapped fields → questions lost
+  - Solution: Added direct localStorage persistence in `gerar_conteudo_atividades.ts` handler for quiz-interativo
+  - Storage structure: `constructed_quiz-interativo_${id}` with `{ success: true, data: { title, questions, totalQuestions, timePerQuestion, ... } }`
+  - Also updates `activity_${id}` and `constructedActivities` global for compatibility
+- **Improved Fallback System in autoBuildService.ts**: Replaced generic fallback with contextualized question banks
+  - Now uses real question banks per subject (Matemática, Português, default) instead of using `activity.title` as question content
+  - Prevents issue where user prompts appeared as quiz questions
+- **Key Lesson Learned**: Interactive activities (quiz-interativo, lista-exercicios, flash-cards) require direct persistence of complex data structures (questions, cards, exercicios) that are not handled by the generic `persistActivityToStorage` function
+
+## Changes (Jan 30, 2026)
 - **Quiz Interativo Blindagem v1.0.0**: Enterprise-grade protection system for Quiz Interativo activity
   - Created QUIZ_INTERATIVO_RULES.md with comprehensive modification rules
   - Implemented robust multi-path JSON parsing (bracket matching, validation, multiple extraction paths)
