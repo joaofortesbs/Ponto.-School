@@ -62,13 +62,15 @@ The platform features a modern design with glass-morphism effects, blur backgrou
       - **Avatar Loading Priority Chain**: tempAvatarPreview → userAvatarUrl (cache) → profile.imagem_avatar → profile.profile_image → Dicebear fallback
       - **Real-time Avatar Sync**: Listens to `userAvatarUpdated` event for cross-component synchronization
       - **User Profile Display**: Shows nome_completo (title) and nome_usuario (subtitle) from Neon database below banner with instant cache loading
-      - **Seu Uso Section (Feb 2026)**: Complete usage statistics interface with:
-        - UsageStats interface using `number | null` for proper empty state handling
-        - Four stat cards: tempo de uso, atividades criadas, sequência atual, school points
-        - New user detection based on actual data presence (activities > 0, streak > 0, or points > 0)
-        - Empty state card with encouragement message for new users
-        - Member info card with date and plan badge (conditionally rendered)
-        - No fake data - shows "--" when real data is null/undefined
+      - **Seu Uso Section v2.0 (Feb 2026)**: Ultra-modern usage statistics interface with award-winning design:
+        - **Status Header (Manus Style)**: Circular progress ring with glow effect showing daily Powers (current/max), level badge with title system (10 levels from "Iniciante" to "Transcendente"), and vibrant "Recarregar Powers" CTA button
+        - **Life Dashboard**: Animated count-up counters for Hours Recovered, Lessons Delivered, and Bureaucracy Eliminated with staggered delay animations
+        - **Weekly Trend Chart**: Bar chart visualization for 7-day Powers usage (shows empty state when no data)
+        - **Activity Log**: Transaction history with debit/credit icons, relative dates (Today/Yesterday), and color-coded amounts - loads from localStorage 'powerHistory'
+        - **Inspirational Footer**: Random motivational messages from curated list
+        - **Data Integrity**: All fields use `number | null` types with proper null guards - no fake/mocked data, shows "--" when unavailable
+        - **Micro-interactions**: useCountUp hook for smooth number animations, hover scale effects, glow shadows
+        - Key components: CircularProgress, LifeStatCard, ActivityItem, WeeklyChart
       - Logo integration with Ponto. School branding
       - Key files: `src/components/modal-geral/ModalGeral.tsx`, `SidebarModal.tsx`, `sections/PerfilSection.tsx`, `sections/ConfiguracoesSection.tsx`, `sections/SeuUsoSection.tsx`
       - Triggered from PerfilCabecalho dropdown menu
