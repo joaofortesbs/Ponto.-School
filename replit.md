@@ -54,6 +54,13 @@ The platform features a modern design with glass-morphism effects, blur backgrou
     - **School Points**: Persisted and synchronized point system.
     - **Calendário School**: Comprehensive calendar event management.
     - **Lesson Publishing System**: Manages lesson publication.
+    - **Modal Geral da Conta (Account Modal System - Feb 2026)**: Centralized user account management modal replacing the legacy `/profile` page. Features:
+      - Glassmorphism design with lateral navigation (SidebarModal)
+      - Three expandable sections: Perfil, Configurações, Seu Uso
+      - All sections currently display "Em Construção" placeholder for future development
+      - Logo integration with Ponto. School branding
+      - Key files: `src/components/modal-geral/ModalGeral.tsx`, `SidebarModal.tsx`, `sections/PerfilSection.tsx`, `sections/ConfiguracoesSection.tsx`, `sections/SeuUsoSection.tsx`
+      - Triggered from PerfilCabecalho dropdown menu
 
 ### System Design Choices
 The architecture emphasizes a modular component design based on shadcn/ui patterns. Data persistence uses Neon PostgreSQL for primary data, Supabase PostgreSQL for authentication, and Supabase Storage for file assets. Supabase Realtime supports live features. The system is designed for VM deployment to maintain backend state and real-time database connections, with dynamic section synchronization and isolated lesson creation sessions.
