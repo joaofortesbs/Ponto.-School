@@ -14,9 +14,7 @@ interface ModalGeralProps {
   initialSection?: ModalSection;
 }
 
-type AnimationState = 'closed' | 'opening' | 'open' | 'closing';
-
-const ANIMATION_DURATION = 200;
+const ANIMATION_DURATION = 150;
 
 export const ModalGeral: React.FC<ModalGeralProps> = ({
   isOpen,
@@ -24,7 +22,8 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
   initialSection = "perfil"
 }) => {
   const [activeSection, setActiveSection] = useState<ModalSection>(initialSection);
-  const [animationState, setAnimationState] = useState<AnimationState>('closed');
+  const [isVisible, setIsVisible] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isDark = true;
 
@@ -42,29 +41,37 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
   useEffect(() => {
     clearAnimationTimer();
 
-    if (isOpen && animationState === 'closed') {
-      setAnimationState('opening');
+    if (isOpen) {
+      setIsVisible(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setIsAnimating(true);
+        });
+      });
+    } else if (isVisible) {
+      setIsAnimating(false);
       animationTimerRef.current = setTimeout(() => {
-        setAnimationState('open');
-      }, ANIMATION_DURATION);
-    } else if (!isOpen && (animationState === 'open' || animationState === 'opening')) {
-      setAnimationState('closing');
-      animationTimerRef.current = setTimeout(() => {
-        setAnimationState('closed');
+        setIsVisible(false);
       }, ANIMATION_DURATION);
     }
 
     return clearAnimationTimer;
-  }, [isOpen, animationState, clearAnimationTimer]);
+  }, [isOpen, clearAnimationTimer]);
 
   const handleClose = useCallback(() => {
-    if (animationState === 'open' || animationState === 'opening') {
+    if (isAnimating) {
       onClose();
     }
-  }, [onClose, animationState]);
+  }, [onClose, isAnimating]);
 
   const handleOverlayClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  }, [handleClose]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
       handleClose();
     }
   }, [handleClose]);
@@ -82,7 +89,7 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
     }
   };
 
-  if (animationState === 'closed') {
+  if (!isVisible) {
     return null;
   }
 
@@ -90,44 +97,36 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
   const overlayConfig = MODAL_CONFIG.overlay;
   const closeButtonConfig = MODAL_CONFIG.closeButton;
 
-  const isVisible = animationState === 'opening' || animationState === 'open';
-  const isClosing = animationState === 'closing';
-
   return (
-    <DialogPrimitive.Root open={animationState !== 'closed'}>
+    <DialogPrimitive.Root open={isVisible}>
       <DialogPrimitive.Portal>
         <div
-          className={cn(
-            "fixed inset-0 z-50 transition-all",
-            isVisible && "animate-in fade-in-0",
-            isClosing && "animate-out fade-out-0"
-          )}
+          className="fixed inset-0 z-50"
           style={{
-            animationDuration: `${ANIMATION_DURATION}ms`,
-            animationFillMode: 'forwards',
-            backgroundColor: `rgba(0, 0, 0, ${overlayConfig.opacity})`,
-            backdropFilter: `blur(${overlayConfig.blur}px)`,
-            WebkitBackdropFilter: `blur(${overlayConfig.blur}px)`,
-            pointerEvents: isClosing ? 'none' : 'auto',
+            backgroundColor: `rgba(0, 0, 0, ${isAnimating ? overlayConfig.opacity : 0})`,
+            backdropFilter: isAnimating ? `blur(${overlayConfig.blur}px)` : 'blur(0px)',
+            WebkitBackdropFilter: isAnimating ? `blur(${overlayConfig.blur}px)` : 'blur(0px)',
+            transition: `all ${ANIMATION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+            pointerEvents: isAnimating ? 'auto' : 'none',
           }}
           onClick={handleOverlayClick}
+          onKeyDown={handleKeyDown}
           aria-hidden="true"
         />
         
         <DialogPrimitive.Content
-          className={cn(
-            "fixed left-[50%] top-[50%] z-50 grid w-full max-w-[900px] w-[95vw] h-[85vh] max-h-[700px] translate-x-[-50%] translate-y-[-50%] p-0 overflow-hidden gap-0",
-            isVisible && "animate-in fade-in-0 zoom-in-95 slide-in-from-left-1/2 slide-in-from-top-[48%]",
-            isClosing && "animate-out fade-out-0 zoom-out-95 slide-out-to-left-1/2 slide-out-to-top-[48%]"
-          )}
+          className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-[900px] w-[95vw] h-[85vh] max-h-[700px] p-0 overflow-hidden gap-0 outline-none"
           style={{
-            animationDuration: `${ANIMATION_DURATION}ms`,
-            animationFillMode: 'forwards',
+            transform: isAnimating 
+              ? 'translate(-50%, -50%) scale(1)' 
+              : 'translate(-50%, -48%) scale(0.96)',
+            opacity: isAnimating ? 1 : 0,
+            transition: `all ${ANIMATION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`,
             backgroundColor: colors.background,
             borderRadius: '24px',
             border: '1px solid #0c1334',
             boxShadow: '0 25px 80px -12px rgba(0, 0, 0, 0.6), 0 12px 40px -8px rgba(255, 107, 0, 0.15)',
-            pointerEvents: isClosing ? 'none' : 'auto',
+            pointerEvents: isAnimating ? 'auto' : 'none',
           }}
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
@@ -147,7 +146,6 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
             }}
             aria-label="Fechar modal"
             type="button"
-            disabled={isClosing}
           >
             <X className="w-5 h-5" />
           </button>
