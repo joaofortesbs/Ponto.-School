@@ -1,48 +1,40 @@
 import React, { useState, useEffect } from "react";
-import { 
-  BarChart3, 
-  Clock, 
-  BookOpen, 
-  Award, 
-  TrendingUp, 
-  Calendar,
-  Zap,
-  Target,
-  Sparkles,
-  ChevronRight
-} from "lucide-react";
 import { MODAL_CONFIG } from "../SidebarModal";
 import { profileService } from "@/services/profileService";
 
-interface UsageStats {
-  totalHoursUsed: number | null;
-  activitiesCreated: number | null;
-  lessonsCompleted: number | null;
-  currentStreak: number | null;
-  longestStreak: number | null;
-  memberSince: string | null;
-  planType: string | null;
-  schoolPoints: number | null;
+interface PowersData {
+  totalPowers: number;
+  usedPowers: number;
+  maxPowers: number;
+  dailyRenewable: number;
+  planType: string;
 }
 
 const SEU_USO_CONFIG = {
-  cards: {
-    borderRadius: 16,
-    padding: 20,
+  card: {
+    borderRadius: 20,
+    borderColor: '#FF6B00',
+    backgroundColor: '#1a1a2e',
   },
-  statCard: {
-    minHeight: 100,
+  progressCircle: {
+    size: 120,
+    strokeWidth: 8,
   },
 } as const;
 
 export const SeuUsoSection: React.FC = () => {
   const colors = MODAL_CONFIG.colors.dark;
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState<UsageStats | null>(null);
-  const [isNewUser, setIsNewUser] = useState(true);
+  const [powersData, setPowersData] = useState<PowersData>({
+    totalPowers: 100,
+    usedPowers: 100,
+    maxPowers: 300,
+    dailyRenewable: 0,
+    planType: 'Grátis',
+  });
 
   useEffect(() => {
-    const loadUsageStats = async () => {
+    const loadPowersData = async () => {
       setIsLoading(true);
       try {
         const profile = await profileService.getCurrentUserProfile();
@@ -50,294 +42,213 @@ export const SeuUsoSection: React.FC = () => {
         if (profile) {
           const profileData = profile as any;
           
-          let activityCount: number | null = null;
-          try {
-            const storedActivities = localStorage.getItem('chosenActivities');
-            if (storedActivities) {
-              const parsed = JSON.parse(storedActivities);
-              const count = parsed?.state?.activities?.length;
-              if (typeof count === 'number') {
-                activityCount = count;
-              }
-            }
-          } catch (e) {
-            console.error("Erro ao contar atividades:", e);
-          }
-
-          const memberDate = profile.created_at ? new Date(profile.created_at) : null;
-          const formattedDate = memberDate 
-            ? memberDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
-            : null;
-
-          const streakAtual = profileData.streak_atual || profileData.current_streak;
-          const maiorStreak = profileData.maior_streak || profileData.longest_streak;
-          const pontos = profileData.school_points || profileData.pontos_school;
-
-          const currentStats: UsageStats = {
-            totalHoursUsed: null,
-            activitiesCreated: activityCount,
-            lessonsCompleted: null,
-            currentStreak: typeof streakAtual === 'number' ? streakAtual : null,
-            longestStreak: typeof maiorStreak === 'number' ? maiorStreak : null,
-            memberSince: formattedDate,
-            planType: profile.plan_type || null,
-            schoolPoints: typeof pontos === 'number' ? pontos : null,
-          };
-
-          setStats(currentStats);
-          
-          const hasAnyData = 
-            (activityCount !== null && activityCount > 0) ||
-            (currentStats.currentStreak !== null && currentStats.currentStreak > 0) ||
-            (currentStats.schoolPoints !== null && currentStats.schoolPoints > 0);
-          
-          setIsNewUser(!hasAnyData);
-        } else {
-          setIsNewUser(true);
+          setPowersData({
+            totalPowers: profileData.powers_total || 100,
+            usedPowers: profileData.powers_used || 100,
+            maxPowers: profileData.powers_max || 300,
+            dailyRenewable: profileData.daily_renewable || 0,
+            planType: profile.plan_type === 'premium' ? 'Premium' : 'Grátis',
+          });
         }
       } catch (error) {
-        console.error("Erro ao carregar estatísticas de uso:", error);
-        setIsNewUser(true);
+        console.error("Erro ao carregar dados de Powers:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadUsageStats();
+    loadPowersData();
   }, []);
 
-  const StatCard: React.FC<{
-    icon: React.ReactNode;
-    label: string;
-    value: string | number | null;
-    subLabel?: string;
-    accentColor?: string;
-  }> = ({ icon, label, value, subLabel, accentColor = '#FF6B00' }) => {
-    const isEmpty = value === null || value === undefined;
-    return (
-    <div
-      className="flex flex-col justify-between transition-all duration-200 hover:scale-[1.02]"
-      style={{
-        backgroundColor: 'rgba(255, 255, 255, 0.03)',
-        borderRadius: `${SEU_USO_CONFIG.cards.borderRadius}px`,
-        padding: `${SEU_USO_CONFIG.cards.padding}px`,
-        minHeight: `${SEU_USO_CONFIG.statCard.minHeight}px`,
-        border: '1px solid rgba(255, 255, 255, 0.06)',
-      }}
-    >
-      <div className="flex items-center gap-3 mb-3">
-        <div 
-          className="w-10 h-10 rounded-xl flex items-center justify-center"
-          style={{
-            background: `linear-gradient(135deg, ${accentColor}20 0%, ${accentColor}10 100%)`,
-          }}
-        >
-          {icon}
-        </div>
-        <span className="text-sm font-medium" style={{ color: colors.textSecondary }}>
-          {label}
-        </span>
-      </div>
-      <div>
-        <span 
-          className="text-2xl font-bold"
-          style={{ color: isEmpty ? colors.textSecondary : colors.textPrimary }}
-        >
-          {isEmpty ? '--' : value}
-        </span>
-        {subLabel && !isEmpty && (
-          <span className="text-xs ml-2" style={{ color: colors.textSecondary }}>
-            {subLabel}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-  };
+  const ProgressCircle: React.FC<{
+    current: number;
+    max: number;
+    size?: number;
+    strokeWidth?: number;
+  }> = ({ current, max, size = 120, strokeWidth = 8 }) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const percentage = Math.min((current / max) * 100, 100);
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
-  const EmptyStateCard: React.FC<{
-    icon: React.ReactNode;
-    title: string;
-    description: string;
-    actionLabel?: string;
-    accentColor?: string;
-  }> = ({ icon, title, description, actionLabel, accentColor = '#FF6B00' }) => (
-    <div
-      className="flex flex-col items-center justify-center text-center p-6"
-      style={{
-        backgroundColor: `${accentColor}08`,
-        borderRadius: `${SEU_USO_CONFIG.cards.borderRadius}px`,
-        border: `1px dashed ${accentColor}30`,
-      }}
-    >
-      <div 
-        className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-        style={{
-          background: `linear-gradient(135deg, ${accentColor}15 0%, ${accentColor}08 100%)`,
-        }}
-      >
-        {icon}
-      </div>
-      <h4 className="text-base font-semibold mb-2" style={{ color: colors.textPrimary }}>
-        {title}
-      </h4>
-      <p className="text-sm mb-4 max-w-[280px]" style={{ color: colors.textSecondary }}>
-        {description}
-      </p>
-      {actionLabel && (
-        <button
-          className="flex items-center gap-1 text-sm font-medium transition-all duration-200 hover:gap-2"
-          style={{ color: accentColor }}
+    return (
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg
+          width={size}
+          height={size}
+          className="transform -rotate-90"
         >
-          {actionLabel}
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      )}
-    </div>
-  );
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="transparent"
+            stroke="rgba(255, 107, 0, 0.2)"
+            strokeWidth={strokeWidth}
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="transparent"
+            stroke="#FF6B00"
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="transition-all duration-500 ease-out"
+          />
+        </svg>
+        <div 
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <span 
+            className="text-lg font-semibold"
+            style={{ color: colors.textPrimary }}
+          >
+            {current}/{max}
+          </span>
+        </div>
+      </div>
+    );
+  };
 
   if (isLoading) {
     return (
-      <div className="h-full flex flex-col">
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-gray-700 rounded-xl animate-pulse" />
-            <div>
-              <div className="h-6 w-24 bg-gray-700 rounded animate-pulse mb-1" />
-              <div className="h-4 w-48 bg-gray-700 rounded animate-pulse" />
+      <div className="h-full flex flex-col p-2">
+        <div 
+          className="rounded-2xl p-6 animate-pulse"
+          style={{
+            backgroundColor: SEU_USO_CONFIG.card.backgroundColor,
+            border: `2px solid ${SEU_USO_CONFIG.card.borderColor}`,
+            borderRadius: `${SEU_USO_CONFIG.card.borderRadius}px`,
+          }}
+        >
+          <div className="flex justify-between items-center mb-4">
+            <div className="h-8 w-20 bg-gray-700 rounded" />
+            <div className="h-10 w-24 bg-gray-700 rounded-full" />
+          </div>
+          <div className="border-t border-dashed border-orange-500/50 my-4" />
+          <div className="flex items-center gap-8">
+            <div className="w-28 h-28 bg-gray-700 rounded-full" />
+            <div className="flex-1 space-y-4">
+              <div className="h-6 w-32 bg-gray-700 rounded" />
+              <div className="h-6 w-48 bg-gray-700 rounded" />
             </div>
           </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 bg-gray-700/30 rounded-2xl animate-pulse" />
-          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div 
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{
-              background: 'linear-gradient(135deg, #FF6B00 0%, #FF8C40 100%)',
-            }}
-          >
-            <BarChart3 className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold" style={{ color: colors.textPrimary }}>
-              Seu Uso
+    <div className="h-full flex flex-col p-2">
+      <div 
+        className="rounded-2xl overflow-hidden"
+        style={{
+          backgroundColor: SEU_USO_CONFIG.card.backgroundColor,
+          border: `2px solid ${SEU_USO_CONFIG.card.borderColor}`,
+          borderRadius: `${SEU_USO_CONFIG.card.borderRadius}px`,
+        }}
+      >
+        <div className="p-5 pb-4">
+          <div className="flex justify-between items-center">
+            <h2 
+              className="text-2xl font-bold"
+              style={{ color: colors.textPrimary }}
+            >
+              {powersData.planType}
             </h2>
-            <p className="text-sm" style={{ color: colors.textSecondary }}>
-              {isNewUser 
-                ? "Comece a usar a plataforma para ver suas estatísticas"
-                : "Acompanhe seu progresso na plataforma"
-              }
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {stats && (stats.memberSince || stats.planType) && (
-        <div 
-          className="flex items-center gap-3 mb-6 px-4 py-3 rounded-xl"
-          style={{
-            backgroundColor: 'rgba(255, 107, 0, 0.08)',
-            border: '1px solid rgba(255, 107, 0, 0.15)',
-          }}
-        >
-          {stats.memberSince && (
-            <>
-              <Calendar className="w-5 h-5 text-[#FF6B00]" />
-              <span className="text-sm" style={{ color: colors.textSecondary }}>
-                Membro desde <strong style={{ color: colors.textPrimary }}>{stats.memberSince}</strong>
-              </span>
-            </>
-          )}
-          <div className="flex-1" />
-          {stats.planType && (
-            <span 
-              className="px-3 py-1 rounded-full text-xs font-medium uppercase"
+            <button
+              disabled
+              className="px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 opacity-50 cursor-not-allowed"
               style={{
-                backgroundColor: stats.planType === 'premium' ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 107, 0, 0.15)',
-                color: stats.planType === 'premium' ? '#FFD700' : '#FF6B00',
+                backgroundColor: 'transparent',
+                border: `2px solid #FF6B00`,
+                color: '#FF6B00',
               }}
             >
-              {stats.planType}
-            </span>
-          )}
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <StatCard
-          icon={<Clock className="w-5 h-5 text-[#3B82F6]" />}
-          label="Tempo de uso"
-          value={stats?.totalHoursUsed}
-          subLabel="horas"
-          accentColor="#3B82F6"
-        />
-        <StatCard
-          icon={<BookOpen className="w-5 h-5 text-[#10B981]" />}
-          label="Atividades criadas"
-          value={stats?.activitiesCreated}
-          accentColor="#10B981"
-        />
-        <StatCard
-          icon={<Zap className="w-5 h-5 text-[#F59E0B]" />}
-          label="Sequência atual"
-          value={stats?.currentStreak}
-          subLabel="dias"
-          accentColor="#F59E0B"
-        />
-        <StatCard
-          icon={<Award className="w-5 h-5 text-[#8B5CF6]" />}
-          label="School Points"
-          value={stats?.schoolPoints}
-          subLabel="pts"
-          accentColor="#8B5CF6"
-        />
-      </div>
-
-      {isNewUser && (
-        <div className="flex-1">
-          <EmptyStateCard
-            icon={<Sparkles className="w-7 h-7 text-[#FF6B00]" />}
-            title="Comece sua jornada!"
-            description="Use o School Power para criar sua primeira atividade e começar a acompanhar seu progresso aqui."
-            actionLabel="Criar primeira atividade"
-            accentColor="#FF6B00"
-          />
-        </div>
-      )}
-
-      {!isNewUser && stats && (
-        <div 
-          className="mt-auto p-4 rounded-xl"
-          style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <TrendingUp className="w-5 h-5 text-[#10B981]" />
-            <div className="flex-1">
-              <p className="text-sm font-medium" style={{ color: colors.textPrimary }}>
-                Continue assim!
-              </p>
-              <p className="text-xs" style={{ color: colors.textSecondary }}>
-                Você está no caminho certo para alcançar seus objetivos.
-              </p>
-            </div>
-            <Target className="w-8 h-8 text-[#FF6B00]/30" />
+              Atualizar
+            </button>
           </div>
         </div>
-      )}
+
+        <div 
+          className="mx-5 mb-4"
+          style={{
+            borderTop: '2px dashed rgba(255, 107, 0, 0.4)',
+          }}
+        />
+
+        <div className="px-5 pb-6">
+          <div className="flex items-center gap-6">
+            <ProgressCircle 
+              current={powersData.usedPowers} 
+              max={powersData.maxPowers}
+              size={SEU_USO_CONFIG.progressCircle.size}
+              strokeWidth={SEU_USO_CONFIG.progressCircle.strokeWidth}
+            />
+
+            <div className="flex-1 space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 
+                    className="text-base font-semibold"
+                    style={{ color: colors.textPrimary }}
+                  >
+                    Powers
+                  </h3>
+                  <p 
+                    className="text-sm"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    Powers gratuitos
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span 
+                    className="text-2xl font-bold"
+                    style={{ color: colors.textPrimary }}
+                  >
+                    {powersData.totalPowers}
+                  </span>
+                  <p 
+                    className="text-sm"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    {powersData.totalPowers}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 
+                    className="text-base font-semibold"
+                    style={{ color: colors.textPrimary }}
+                  >
+                    Powers diários renováveis
+                  </h3>
+                  <p 
+                    className="text-sm"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    Atualize para 300 às 19:00 todos os dias
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span 
+                    className="text-2xl font-bold"
+                    style={{ color: colors.textPrimary }}
+                  >
+                    {powersData.dailyRenewable}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
