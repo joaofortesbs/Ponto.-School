@@ -10,17 +10,23 @@ interface PowersData {
 }
 
 interface CardDeUsoProps {
-  powersData: PowersData;
+  powersData?: PowersData;
   isLoading?: boolean;
 }
 
 const CARD_DE_USO_CONFIG = {
   borderRadius: 24,
-  borderColor: '#0c1334',
-  backgroundColor: '#0c1334',
+  borderColor: '#040b2a',
+  backgroundColor: '#040b2a',
   progressCircle: {
     size: 120,
     strokeWidth: 8,
+  },
+  defaults: {
+    usedPowers: 0,
+    maxPowers: 300,
+    dailyRenewable: 0,
+    planType: 'Grátis',
   },
 } as const;
 
@@ -33,7 +39,9 @@ const ProgressCircle: React.FC<{
   const colors = MODAL_CONFIG.colors.dark;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const percentage = Math.min((current / max) * 100, 100);
+  const safeMax = max || CARD_DE_USO_CONFIG.defaults.maxPowers;
+  const safeCurrent = current ?? CARD_DE_USO_CONFIG.defaults.usedPowers;
+  const percentage = safeMax > 0 ? Math.min((safeCurrent / safeMax) * 100, 100) : 0;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
@@ -69,7 +77,7 @@ const ProgressCircle: React.FC<{
           className="text-lg font-semibold"
           style={{ color: colors.textPrimary }}
         >
-          {current}/{max}
+          {safeCurrent}/{safeMax}
         </span>
       </div>
     </div>
@@ -105,6 +113,13 @@ const CardDeUsoSkeleton: React.FC = () => {
 export const CardDeUso: React.FC<CardDeUsoProps> = ({ powersData, isLoading = false }) => {
   const colors = MODAL_CONFIG.colors.dark;
 
+  const safeData = {
+    usedPowers: powersData?.usedPowers ?? CARD_DE_USO_CONFIG.defaults.usedPowers,
+    maxPowers: powersData?.maxPowers ?? CARD_DE_USO_CONFIG.defaults.maxPowers,
+    dailyRenewable: powersData?.dailyRenewable ?? CARD_DE_USO_CONFIG.defaults.dailyRenewable,
+    planType: powersData?.planType ?? CARD_DE_USO_CONFIG.defaults.planType,
+  };
+
   if (isLoading) {
     return <CardDeUsoSkeleton />;
   }
@@ -124,7 +139,7 @@ export const CardDeUso: React.FC<CardDeUsoProps> = ({ powersData, isLoading = fa
             className="text-2xl font-bold"
             style={{ color: colors.textPrimary }}
           >
-            {powersData.planType}
+            {safeData.planType}
           </h2>
           <button
             disabled
@@ -150,8 +165,8 @@ export const CardDeUso: React.FC<CardDeUsoProps> = ({ powersData, isLoading = fa
       <div className="px-5 pb-6">
         <div className="flex items-center gap-6">
           <ProgressCircle 
-            current={powersData.usedPowers} 
-            max={powersData.maxPowers}
+            current={safeData.usedPowers} 
+            max={safeData.maxPowers}
             size={CARD_DE_USO_CONFIG.progressCircle.size}
             strokeWidth={CARD_DE_USO_CONFIG.progressCircle.strokeWidth}
           />
@@ -177,7 +192,7 @@ export const CardDeUso: React.FC<CardDeUsoProps> = ({ powersData, isLoading = fa
                   className="text-base font-semibold"
                   style={{ color: colors.textPrimary }}
                 >
-                  {powersData.usedPowers}
+                  {safeData.usedPowers}
                 </span>
                 <p 
                   className="text-sm"
@@ -208,7 +223,7 @@ export const CardDeUso: React.FC<CardDeUsoProps> = ({ powersData, isLoading = fa
                   className="text-base font-semibold"
                   style={{ color: colors.textPrimary }}
                 >
-                  {powersData.dailyRenewable}
+                  {safeData.dailyRenewable}
                 </span>
               </div>
             </div>

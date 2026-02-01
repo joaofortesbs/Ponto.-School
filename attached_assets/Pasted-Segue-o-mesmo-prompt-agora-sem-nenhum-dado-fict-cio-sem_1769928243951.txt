@@ -1,0 +1,145 @@
+Segue o mesmo prompt, agora sem nenhum dado fictício (sem exemplos de datas, valores ou textos específicos de linhas):
+
+Quero que você implemente um componente de interface chamado “Extrato de Atividades” que replica o card de histórico de créditos do painel de uso do Manus (Manus Usage & Billing), tanto em layout quanto em vibe visual.
+​
+​
+
+Objetivo geral
+Crie um card em dark mode que mostra o histórico de movimentação de créditos, com três colunas (Detalhes, Data, Alteração de créditos) e paginação na parte de baixo. O foco é parecer uma tela de dashboard moderna, limpa, com bastante espaçamento e tipografia legível.
+​
+​
+
+Contexto visual
+Tema geral: dark, fundo em tom de cinza bem escuro.
+​
+
+Contraste alto entre texto e fundo, mas sem ficar “neon”.
+​
+
+Estilo lembra app de dashboard SaaS moderno, minimalista, com poucos elementos decorativos.
+​
+
+Borda e separadores bem sutis, usando leves variações de cinza.
+​
+
+Estrutura do card
+Container externo
+
+Ocupa a largura total disponível do painel principal (por exemplo, largura fluida com max-width opcional).
+​
+
+Fundo em cinza bem escuro, com cantos levemente arredondados e padding interno generoso.
+​
+
+Título do bloco na parte superior esquerda, em fonte média/negrito (algo como “Extrato de Atividades” ou “Uso do site e cobranças”).
+​
+
+Cabeçalho da tabela
+
+Uma linha de cabeçalho com três colunas:
+
+“Detalhes”
+
+“Data”
+
+“Alteração de créditos”
+
+Tipografia do cabeçalho em fonte pequena ou média, semibold, cor cinza-claro.
+​
+
+Distribuição:
+
+“Detalhes”: maior largura.
+
+“Data”: largura intermediária, alinhada à esquerda.
+
+“Alteração de créditos”: alinhada à direita.
+
+Linha de separação sutil abaixo do cabeçalho (borda inferior com baixa opacidade).
+​
+
+Linhas de itens (registros)
+Cada linha representa uma movimentação de créditos.
+
+Altura confortável (aprox. 44–56px de altura útil).
+​
+
+Fundo igual ao do card, mudando para um cinza um pouco mais claro no hover.
+
+Cursor pointer nas linhas que representam tarefas clicáveis.
+
+Conteúdo das colunas:
+
+Coluna Detalhes
+
+Exibe o nome da tarefa ou evento (string genérica), podendo ser longo.
+
+Estilo: texto claro (quase branco), peso normal ou semibold.
+
+Quando representar uma tarefa, o texto é clicável (link sutil, sem sublinhado; muda cor/opacidade no hover).
+
+Coluna Data
+
+Exibe uma string de data/hora em qualquer formato consistente definido por você (por exemplo, padrão ISO ou localizado).
+
+Texto em cinza-claro, um pouco menor que “Detalhes”.
+
+Coluna Alteração de créditos
+
+Mostra a variação de créditos (valor numérico com sinal), alinhado à direita.
+
+Valores negativos (consumo) estilizados com cor levemente avermelhada/alaranjada.
+
+Valores positivos (ganho) estilizados com cor levemente esverdeada.
+
+Mantém estilo minimalista, sem ícones exagerados.
+
+Corpo com vários registros
+
+Renderize múltiplas linhas de exemplo, mas deixe claro que os dados vêm de um array dinâmico, não codifique textos concretos.
+
+Garanta que títulos grandes fiquem elegantes (wrap ou truncar com reticências) sem quebrar o alinhamento das colunas.
+
+Paginação inferior
+
+Barra de paginação na parte de baixo do card:
+
+Controles para ir à página anterior e próxima.
+
+Indicação da página atual e das demais, em forma de números.
+
+A página atual tem destaque sutil (cor mais clara, bolha ou sublinhado discreto).
+​
+
+Estilo segue o dark mode e o minimalismo do restante do card, com espaçamento adequado entre os elementos.
+​
+
+Comportamentos esperados
+Hover em linha de tarefa: fundo levemente mais claro, indicando que é clicável.
+​
+
+Clique em tarefa: dispara uma ação de navegação (callback ou link) para detalhes dessa tarefa.
+
+Responsividade:
+
+Em telas menores, reduza a largura da coluna “Data” ou mova alguns dados para uma segunda linha dentro do mesmo item.
+
+Priorize a legibilidade de “Detalhes” e “Alteração de créditos”.
+
+Implementação técnica
+Use o stack que preferir (HTML/CSS, React, Vue, etc.), mas encapsule tudo em um componente independente, por exemplo ActivityStatementCard.
+
+A lista de registros deve vir de um array de objetos com estrutura genérica, por exemplo:
+
+title (string),
+
+date (string),
+
+creditChange (number ou string),
+
+isTask (boolean para definir se é clicável).
+
+O resultado final deve transmitir a sensação de um painel de histórico de uso de créditos de um app SaaS em dark mode, focado em clareza, hierarquia visual por colunas, boa legibilidade e interação suave.
+​
+​
+
