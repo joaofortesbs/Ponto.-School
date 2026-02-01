@@ -57,7 +57,11 @@ The platform features a modern design with glass-morphism effects, blur backgrou
     - **Modal Geral da Conta (Account Modal System - Feb 2026)**: Centralized user account management modal replacing the legacy `/profile` page. Features:
       - Glassmorphism design with lateral navigation (SidebarModal)
       - Three expandable sections: Perfil, Configurações, Seu Uso
-      - All sections currently display "Em Construção" placeholder for future development
+      - **Configurable Overlay System**: Uses `MODAL_CONFIG.overlay` for precise control over opacity (0.6) and blur (4px) effects
+      - **Close Button Positioning**: Configurable via `MODAL_CONFIG.closeButton` (top: 12px, right: 12px)
+      - **Avatar Loading Priority Chain**: tempAvatarPreview → userAvatarUrl (cache) → profile.imagem_avatar → profile.profile_image → Dicebear fallback
+      - **Real-time Avatar Sync**: Listens to `userAvatarUpdated` event for cross-component synchronization
+      - **User Profile Display**: Shows nome_completo (title) and nome_usuario (subtitle) from Neon database below banner
       - Logo integration with Ponto. School branding
       - Key files: `src/components/modal-geral/ModalGeral.tsx`, `SidebarModal.tsx`, `sections/PerfilSection.tsx`, `sections/ConfiguracoesSection.tsx`, `sections/SeuUsoSection.tsx`
       - Triggered from PerfilCabecalho dropdown menu
