@@ -305,74 +305,72 @@ export const SeuUsoSection: React.FC = () => {
       try {
         const profile = await profileService.getCurrentUserProfile();
         
-        if (profile) {
-          const profileData = profile as any;
-          
-          let activityCount: number | null = null;
-          try {
-            const storedActivities = localStorage.getItem('chosenActivities');
-            if (storedActivities) {
-              const parsed = JSON.parse(storedActivities);
-              const count = parsed?.state?.activities?.length;
-              if (typeof count === 'number') {
-                activityCount = count;
-              }
+        const profileData = profile as any || {};
+        
+        let activityCount: number | null = null;
+        try {
+          const storedActivities = localStorage.getItem('chosenActivities');
+          if (storedActivities) {
+            const parsed = JSON.parse(storedActivities);
+            const count = parsed?.state?.activities?.length;
+            if (typeof count === 'number') {
+              activityCount = count;
             }
-          } catch (e) {
-            console.error("Erro ao contar atividades:", e);
           }
-
-          const currentPowers = typeof profileData.credits === 'number' 
-            ? profileData.credits 
-            : (typeof profileData.powers === 'number' ? profileData.powers : null);
-          const dailyPowers = 300;
-          
-          const realActivities: ActivityEntry[] = [];
-          try {
-            const storedHistory = localStorage.getItem('powerHistory');
-            if (storedHistory) {
-              const history = JSON.parse(storedHistory);
-              if (Array.isArray(history)) {
-                history.slice(0, 10).forEach((item: any, index: number) => {
-                  if (item.description && typeof item.amount === 'number') {
-                    realActivities.push({
-                      id: item.id || String(index),
-                      description: item.description,
-                      date: new Date(item.date || Date.now()),
-                      amount: Math.abs(item.amount),
-                      type: item.amount >= 0 ? 'credit' : 'debit',
-                    });
-                  }
-                });
-              }
-            }
-          } catch (e) {
-            console.error("Erro ao carregar histórico de powers:", e);
-          }
-
-          const hasActivities = activityCount !== null && activityCount > 0;
-          const userLevel = hasActivities ? Math.min(10, Math.floor(activityCount / 5) + 1) : null;
-
-          const data: UsageData = {
-            powers: {
-              current: currentPowers,
-              daily: dailyPowers,
-              total: typeof profileData.total_powers === 'number' ? profileData.total_powers : null,
-            },
-            dashboard: {
-              hoursRecovered: hasActivities ? activityCount * 2.5 : null,
-              lessonsDelivered: activityCount,
-              bureaucracyEliminated: hasActivities ? Math.floor(activityCount * 1.5) : null,
-            },
-            activities: realActivities,
-            userLevel: userLevel,
-            levelTitle: userLevel ? getLevelTitle(userLevel) : 'Iniciante',
-            weeklyUsage: null,
-            hasRealData: hasActivities || currentPowers !== null || realActivities.length > 0,
-          };
-          
-          setUsageData(data);
+        } catch (e) {
+          console.error("Erro ao contar atividades:", e);
         }
+
+        const currentPowers = typeof profileData.credits === 'number' 
+          ? profileData.credits 
+          : (typeof profileData.powers === 'number' ? profileData.powers : null);
+        const dailyPowers = 300;
+        
+        const realActivities: ActivityEntry[] = [];
+        try {
+          const storedHistory = localStorage.getItem('powerHistory');
+          if (storedHistory) {
+            const history = JSON.parse(storedHistory);
+            if (Array.isArray(history)) {
+              history.slice(0, 10).forEach((item: any, index: number) => {
+                if (item.description && typeof item.amount === 'number') {
+                  realActivities.push({
+                    id: item.id || String(index),
+                    description: item.description,
+                    date: new Date(item.date || Date.now()),
+                    amount: Math.abs(item.amount),
+                    type: item.amount >= 0 ? 'credit' : 'debit',
+                  });
+                }
+              });
+            }
+          }
+        } catch (e) {
+          console.error("Erro ao carregar histórico de powers:", e);
+        }
+
+        const hasActivities = activityCount !== null && activityCount > 0;
+        const userLevel = hasActivities ? Math.min(10, Math.floor(activityCount / 5) + 1) : null;
+
+        const data: UsageData = {
+          powers: {
+            current: currentPowers,
+            daily: dailyPowers,
+            total: typeof profileData.total_powers === 'number' ? profileData.total_powers : null,
+          },
+          dashboard: {
+            hoursRecovered: hasActivities ? activityCount * 2.5 : null,
+            lessonsDelivered: activityCount,
+            bureaucracyEliminated: hasActivities ? Math.floor(activityCount * 1.5) : null,
+          },
+          activities: realActivities,
+          userLevel: userLevel,
+          levelTitle: userLevel ? getLevelTitle(userLevel) : 'Iniciante',
+          weeklyUsage: null,
+          hasRealData: hasActivities || currentPowers !== null || realActivities.length > 0,
+        };
+        
+        setUsageData(data);
       } catch (error) {
         console.error("Erro ao carregar dados de uso:", error);
       } finally {
