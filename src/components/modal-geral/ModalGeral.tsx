@@ -31,6 +31,10 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
     }
   };
 
+  const handleClose = () => {
+    onClose();
+  };
+
   const renderSection = () => {
     switch (activeSection) {
       case "perfil":
@@ -47,12 +51,14 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
   const colors = MODAL_CONFIG.colors.dark;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange} modal={true}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent 
-        className="max-w-[900px] w-[95vw] h-[85vh] max-h-[700px] p-0 overflow-hidden border-0 gap-0"
+        className="max-w-[900px] w-[95vw] h-[85vh] max-h-[700px] p-0 overflow-hidden gap-0"
+        hideCloseButton={true}
         style={{
           backgroundColor: colors.background,
           borderRadius: '24px',
+          border: '1px solid #0c1334',
           boxShadow: '0 25px 80px -12px rgba(0, 0, 0, 0.6), 0 12px 40px -8px rgba(255, 107, 0, 0.15)',
         }}
       >
@@ -61,10 +67,11 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
         </VisuallyHidden>
         
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute right-4 top-4 z-50 rounded-full p-2 transition-all duration-200 hover:bg-white/10"
           style={{ color: colors.textSecondary }}
           aria-label="Fechar modal"
+          type="button"
         >
           <X className="w-5 h-5" />
         </button>

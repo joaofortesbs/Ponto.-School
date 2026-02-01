@@ -11,9 +11,9 @@ export const MODAL_CONFIG = {
     dark: {
       background: '#000822',
       sidebarBackground: '#000822',
-      sectionActive: '#050d2a',
+      sectionActive: '#0c1334',
       sectionHover: 'rgba(255, 255, 255, 0.05)',
-      border: 'rgba(255, 255, 255, 0.08)',
+      border: '#0c1334',
       textPrimary: '#FFFFFF',
       textSecondary: 'rgba(255, 255, 255, 0.7)',
     },
