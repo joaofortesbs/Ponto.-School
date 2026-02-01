@@ -33,7 +33,38 @@ export const PerfilSection: React.FC = () => {
     const loadUserData = async () => {
       setIsLoading(true);
       try {
+        const cachedProfileStr = localStorage.getItem("userProfile");
+        if (cachedProfileStr) {
+          try {
+            const cachedProfile = JSON.parse(cachedProfileStr);
+            console.log("📋 [PerfilSection] Cache do perfil encontrado:", cachedProfile);
+            setUserProfile(cachedProfile);
+            
+            const tempPreview = localStorage.getItem("tempAvatarPreview");
+            const cachedAvatar = localStorage.getItem("userAvatarUrl");
+            
+            if (tempPreview) {
+              setProfileImage(tempPreview);
+            } else if (cachedAvatar) {
+              setProfileImage(cachedAvatar);
+            } else if (cachedProfile.imagem_avatar) {
+              setProfileImage(cachedProfile.imagem_avatar);
+            } else if (cachedProfile.profile_image) {
+              setProfileImage(cachedProfile.profile_image);
+            }
+            
+            const savedBanner = localStorage.getItem(`bannerImage_${cachedProfile.id}`);
+            if (savedBanner) {
+              setBannerImage(savedBanner);
+            }
+          } catch (e) {
+            console.error("Erro ao parsear cache do perfil:", e);
+          }
+        }
+
         const profile = await profileService.getCurrentUserProfile();
+        console.log("📋 [PerfilSection] Perfil carregado do serviço:", profile);
+        
         if (profile) {
           setUserProfile(profile);
           

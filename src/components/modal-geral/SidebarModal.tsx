@@ -12,8 +12,8 @@ export const MODAL_CONFIG = {
     blur: 4,
   },
   closeButton: {
-    top: 12,
-    right: 12,
+    top: 8,
+    right: 8,
   },
   colors: {
     dark: {
