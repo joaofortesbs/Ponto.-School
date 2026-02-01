@@ -114,6 +114,7 @@ const PerfilCabecalho: React.FC = () => {
   const isLightMode = !isDark;
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="flex items-center gap-1.5 px-1.5 py-1 rounded-full bg-white dark:bg-[#0A2540] border border-[#E0E1DD] dark:border-white/10 hover:border-[#FF6B00]/30 dark:hover:border-[#FF6B00]/30 transition-all duration-300 cursor-pointer group shadow-sm hover:shadow-md">
@@ -220,13 +221,14 @@ const PerfilCabecalho: React.FC = () => {
           </DropdownMenuItem>
         </div>
       </DropdownMenuContent>
-      
-      <ModalGeral 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
-        initialSection="perfil"
-      />
     </DropdownMenu>
+    
+    <ModalGeral 
+      isOpen={isModalOpen} 
+      onClose={() => setIsModalOpen(false)}
+      initialSection="perfil"
+    />
+    </>
   );
 };
 

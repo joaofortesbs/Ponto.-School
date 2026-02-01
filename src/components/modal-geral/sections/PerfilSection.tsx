@@ -1,54 +1,92 @@
-import React from "react";
-import { Construction, User } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { profileService } from "@/services/profileService";
+import { MODAL_CONFIG } from "../SidebarModal";
+
+export const PERFIL_CONFIG = {
+  banner: {
+    height: 160,
+    borderRadius: 16,
+    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f953c6 50%, #ff6b6b 75%, #ff8e53 100%)',
+  },
+  avatar: {
+    size: 100,
+    borderWidth: 4,
+    borderColor: '#000822',
+    offsetFromBanner: 50,
+  },
+} as const;
 
 export const PerfilSection: React.FC = () => {
-  const isDark = localStorage.getItem("darkMode") === "true";
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>("");
+  const colors = MODAL_CONFIG.colors.dark;
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const profile = await profileService.getCurrentUserProfile();
+        if (profile) {
+          setUserName(profile.username || profile.nome_usuario || "");
+          
+          const tempPreview = localStorage.getItem("tempAvatarPreview");
+          const cachedAvatar = localStorage.getItem("userAvatarUrl");
+          
+          if (tempPreview) {
+            setProfileImage(tempPreview);
+          } else if (cachedAvatar) {
+            setProfileImage(cachedAvatar);
+          } else if (profile.profile_image || profile.imagem_avatar) {
+            setProfileImage(profile.profile_image || profile.imagem_avatar);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados do perfil:", error);
+      }
+    };
+
+    loadUserData();
+  }, []);
+
+  const avatarSrc = profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName || "user"}`;
 
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div 
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{
-              background: 'linear-gradient(135deg, #FF6B00 0%, #FF8C40 100%)',
+      <div className="relative" style={{ marginBottom: `${PERFIL_CONFIG.avatar.offsetFromBanner + 20}px` }}>
+        <div
+          style={{
+            height: `${PERFIL_CONFIG.banner.height}px`,
+            borderRadius: `${PERFIL_CONFIG.banner.borderRadius}px`,
+            background: PERFIL_CONFIG.banner.gradient,
+          }}
+        />
+        
+        <div
+          className="absolute flex items-center justify-center overflow-hidden"
+          style={{
+            width: `${PERFIL_CONFIG.avatar.size}px`,
+            height: `${PERFIL_CONFIG.avatar.size}px`,
+            borderRadius: '50%',
+            border: `${PERFIL_CONFIG.avatar.borderWidth}px solid ${PERFIL_CONFIG.avatar.borderColor}`,
+            bottom: `-${PERFIL_CONFIG.avatar.offsetFromBanner}px`,
+            left: '24px',
+            backgroundColor: colors.background,
+          }}
+        >
+          <img
+            src={avatarSrc}
+            alt="Avatar do usuário"
+            className="w-full h-full object-cover rounded-full"
+            onError={(e) => {
+              const target = e.currentTarget;
+              target.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName || "user"}`;
             }}
-          >
-            <User className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Perfil
-            </h2>
-            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Gerencie suas informações pessoais
-            </p>
-          </div>
+          />
         </div>
       </div>
 
-      <div 
-        className="flex-1 flex flex-col items-center justify-center rounded-2xl p-8"
-        style={{
-          backgroundColor: isDark ? 'rgba(255, 107, 0, 0.05)' : 'rgba(255, 107, 0, 0.03)',
-          border: `1px dashed ${isDark ? 'rgba(255, 107, 0, 0.2)' : 'rgba(255, 107, 0, 0.15)'}`,
-        }}
-      >
-        <div 
-          className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255, 107, 0, 0.15) 0%, rgba(255, 140, 64, 0.1) 100%)',
-          }}
-        >
-          <Construction className="w-8 h-8 text-[#FF6B00]" />
-        </div>
-        
-        <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-          Em Construção
-        </h3>
-        
-        <p className={`text-sm text-center max-w-[300px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-          Esta seção está sendo desenvolvida. Em breve você poderá gerenciar suas informações de perfil por aqui.
+      <div className="flex-1 pt-4">
+        <p className="text-sm" style={{ color: colors.textSecondary }}>
+          Edição de perfil em desenvolvimento...
         </p>
       </div>
     </div>

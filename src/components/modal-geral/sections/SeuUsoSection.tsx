@@ -1,8 +1,9 @@
 import React from "react";
 import { Construction, BarChart3 } from "lucide-react";
+import { MODAL_CONFIG } from "../SidebarModal";
 
 export const SeuUsoSection: React.FC = () => {
-  const isDark = localStorage.getItem("darkMode") === "true";
+  const colors = MODAL_CONFIG.colors.dark;
 
   return (
     <div className="h-full flex flex-col">
@@ -17,10 +18,10 @@ export const SeuUsoSection: React.FC = () => {
             <BarChart3 className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className="text-xl font-bold" style={{ color: colors.textPrimary }}>
               Seu Uso
             </h2>
-            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            <p className="text-sm" style={{ color: colors.textSecondary }}>
               Acompanhe suas estatísticas e progresso
             </p>
           </div>
@@ -30,8 +31,8 @@ export const SeuUsoSection: React.FC = () => {
       <div 
         className="flex-1 flex flex-col items-center justify-center rounded-2xl p-8"
         style={{
-          backgroundColor: isDark ? 'rgba(255, 107, 0, 0.05)' : 'rgba(255, 107, 0, 0.03)',
-          border: `1px dashed ${isDark ? 'rgba(255, 107, 0, 0.2)' : 'rgba(255, 107, 0, 0.15)'}`,
+          backgroundColor: 'rgba(255, 107, 0, 0.05)',
+          border: '1px dashed rgba(255, 107, 0, 0.2)',
         }}
       >
         <div 
@@ -43,11 +44,11 @@ export const SeuUsoSection: React.FC = () => {
           <Construction className="w-8 h-8 text-[#FF6B00]" />
         </div>
         
-        <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+        <h3 className="text-lg font-semibold mb-2" style={{ color: colors.textPrimary }}>
           Em Construção
         </h3>
         
-        <p className={`text-sm text-center max-w-[300px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+        <p className="text-sm text-center max-w-[300px]" style={{ color: colors.textSecondary }}>
           Esta seção está sendo desenvolvida. Em breve você poderá visualizar estatísticas detalhadas do seu uso da plataforma.
         </p>
       </div>
