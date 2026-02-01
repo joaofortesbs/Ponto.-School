@@ -58,10 +58,17 @@ The platform features a modern design with glass-morphism effects, blur backgrou
       - Glassmorphism design with lateral navigation (SidebarModal)
       - Three expandable sections: Perfil, Configurações, Seu Uso
       - **Configurable Overlay System**: Uses `MODAL_CONFIG.overlay` for precise control over opacity (0.6) and blur (4px) effects
-      - **Close Button Positioning**: Configurable via `MODAL_CONFIG.closeButton` (top: 12px, right: 12px)
+      - **Close Button Positioning**: Configurable via `MODAL_CONFIG.closeButton` (top: 8px, right: 8px) for extreme corner placement
       - **Avatar Loading Priority Chain**: tempAvatarPreview → userAvatarUrl (cache) → profile.imagem_avatar → profile.profile_image → Dicebear fallback
       - **Real-time Avatar Sync**: Listens to `userAvatarUpdated` event for cross-component synchronization
-      - **User Profile Display**: Shows nome_completo (title) and nome_usuario (subtitle) from Neon database below banner
+      - **User Profile Display**: Shows nome_completo (title) and nome_usuario (subtitle) from Neon database below banner with instant cache loading
+      - **Seu Uso Section (Feb 2026)**: Complete usage statistics interface with:
+        - UsageStats interface using `number | null` for proper empty state handling
+        - Four stat cards: tempo de uso, atividades criadas, sequência atual, school points
+        - New user detection based on actual data presence (activities > 0, streak > 0, or points > 0)
+        - Empty state card with encouragement message for new users
+        - Member info card with date and plan badge (conditionally rendered)
+        - No fake data - shows "--" when real data is null/undefined
       - Logo integration with Ponto. School branding
       - Key files: `src/components/modal-geral/ModalGeral.tsx`, `SidebarModal.tsx`, `sections/PerfilSection.tsx`, `sections/ConfiguracoesSection.tsx`, `sections/SeuUsoSection.tsx`
       - Triggered from PerfilCabecalho dropdown menu
