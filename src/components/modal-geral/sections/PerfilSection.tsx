@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Pencil } from "lucide-react";
 import { profileService } from "@/services/profileService";
 import { MODAL_CONFIG } from "../SidebarModal";
+import { UserProfile } from "@/types/user-profile";
 
 export const PERFIL_CONFIG = {
   banner: {
@@ -15,12 +16,15 @@ export const PERFIL_CONFIG = {
     borderColor: '#000822',
     offsetFromBanner: 50,
   },
+  userInfo: {
+    marginTop: 16,
+  },
 } as const;
 
 export const PerfilSection: React.FC = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [bannerImage, setBannerImage] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string>("");
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const colors = MODAL_CONFIG.colors.dark;
@@ -31,9 +35,16 @@ export const PerfilSection: React.FC = () => {
       try {
         const profile = await profileService.getCurrentUserProfile();
         if (profile) {
-          setUserName(profile.username || profile.nome_usuario || "");
+          setUserProfile(profile);
           
-          if (profile.imagem_avatar) {
+          const tempPreview = localStorage.getItem("tempAvatarPreview");
+          const cachedAvatar = localStorage.getItem("userAvatarUrl");
+          
+          if (tempPreview) {
+            setProfileImage(tempPreview);
+          } else if (cachedAvatar) {
+            setProfileImage(cachedAvatar);
+          } else if (profile.imagem_avatar) {
             setProfileImage(profile.imagem_avatar);
             localStorage.setItem("userAvatarUrl", profile.imagem_avatar);
           } else if (profile.profile_image) {
@@ -54,6 +65,19 @@ export const PerfilSection: React.FC = () => {
     };
 
     loadUserData();
+
+    const handleAvatarUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail?.imageUrl) {
+        setProfileImage(customEvent.detail.imageUrl);
+      }
+    };
+
+    document.addEventListener("userAvatarUpdated", handleAvatarUpdate as EventListener);
+
+    return () => {
+      document.removeEventListener("userAvatarUpdated", handleAvatarUpdate as EventListener);
+    };
   }, []);
 
   const handleBannerEditClick = () => {
@@ -91,7 +115,17 @@ export const PerfilSection: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const avatarSrc = profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName || "user"}`;
+  const getDisplayName = (): string => {
+    if (!userProfile) return "";
+    return userProfile.nome_completo || userProfile.display_name || userProfile.username || "";
+  };
+
+  const getUsername = (): string => {
+    if (!userProfile) return "";
+    return userProfile.nome_usuario || userProfile.username || "";
+  };
+
+  const avatarSrc = profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${getUsername() || "user"}`;
 
   return (
     <div className="h-full flex flex-col">
@@ -147,14 +181,38 @@ export const PerfilSection: React.FC = () => {
               className="w-full h-full object-cover rounded-full"
               onError={(e) => {
                 const target = e.currentTarget;
-                target.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName || "user"}`;
+                target.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${getUsername() || "user"}`;
               }}
             />
           )}
         </div>
       </div>
 
-      <div className="flex-1 pt-4">
+      <div className="flex flex-col" style={{ marginTop: `${PERFIL_CONFIG.userInfo.marginTop}px`, marginLeft: '24px' }}>
+        {isLoading ? (
+          <>
+            <div className="h-7 w-48 bg-gray-700 animate-pulse rounded mb-2" />
+            <div className="h-5 w-32 bg-gray-700 animate-pulse rounded" />
+          </>
+        ) : (
+          <>
+            <h2 
+              className="text-xl font-bold"
+              style={{ color: colors.textPrimary }}
+            >
+              {getDisplayName() || "Usuário"}
+            </h2>
+            <p 
+              className="text-sm"
+              style={{ color: colors.textSecondary }}
+            >
+              {getUsername() || "@usuario"}
+            </p>
+          </>
+        )}
+      </div>
+
+      <div className="flex-1 pt-6 px-6">
         <p className="text-sm" style={{ color: colors.textSecondary }}>
           Edição de perfil em desenvolvimento...
         </p>

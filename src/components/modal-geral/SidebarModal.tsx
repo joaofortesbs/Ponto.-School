@@ -7,6 +7,14 @@ export const MODAL_CONFIG = {
     maxHeight: 60,
     padding: 24,
   },
+  overlay: {
+    opacity: 0.6,
+    blur: 4,
+  },
+  closeButton: {
+    top: 12,
+    right: 12,
+  },
   colors: {
     dark: {
       background: '#000822',
