@@ -11,18 +11,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User, HelpCircle, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/user-profile";
+import { ModalGeral } from "@/components/modal-geral";
 
 const PerfilCabecalho: React.FC = () => {
-  const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDark, setIsDark] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [stars, setSchoolPoints] = useState<number>(300);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -184,7 +184,7 @@ const PerfilCabecalho: React.FC = () => {
         <div className="py-3 px-2">
           <DropdownMenuItem 
             className={`mx-2 my-1.5 rounded-lg cursor-pointer transition-all duration-300 group relative overflow-hidden hover:bg-white/5 hover:text-[#FF6B00] focus:bg-white/5 focus:text-[#FF6B00] border border-transparent hover:border-[#FF6B00] ${isLightMode ? 'text-gray-700' : 'text-white'}`}
-            onClick={() => navigate('/profile')}
+            onClick={() => setIsModalOpen(true)}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF6B00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <User className={`mr-3.5 h-4 w-4 relative z-10 group-hover:text-[#FF6B00] transition-colors duration-300 ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`} />
@@ -220,6 +220,12 @@ const PerfilCabecalho: React.FC = () => {
           </DropdownMenuItem>
         </div>
       </DropdownMenuContent>
+      
+      <ModalGeral 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        initialSection="perfil"
+      />
     </DropdownMenu>
   );
 };

@@ -38,7 +38,6 @@ import Organizacao from "@/pages/organizacao";
 import Novidades from "@/pages/novidades";
 import Configuracoes from "@/pages/configuracoes";
 import PlanosEstudo from "@/pages/planos-estudo";
-import ProfilePage from "@/pages/profile";
 import SchoolPowerPageIndex from "./pages/school-power";
 import AlunoUnderConstruction from "@/pages/under-construction/AlunoUnderConstruction";
 import TrilhasSchoolProfessorInterface from '@/pages/trilhas-school/professores/interface';
@@ -384,17 +383,6 @@ function App() {
                     <Route path="planos-estudo" element={<PlanosEstudo />} />
                   </Route>
 
-                  {/* User Profile - Protegida */}
-                  <Route path="/profile" element={
-                    <ProtectedRoute>
-                      <ProfilePage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="profile" element={
-                    <ProtectedRoute>
-                      <ProfilePage />
-                    </ProtectedRoute>
-                  } />
 
                   {/* Agenda standalone - Protegida */}
                   <Route path="/agenda-preview" element={
