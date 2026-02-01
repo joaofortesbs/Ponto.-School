@@ -16,7 +16,7 @@ interface CardDeUsoProps {
 
 const CARD_DE_USO_CONFIG = {
   borderRadius: 24,
-  borderColor: '#040b2a',
+  borderColor: '#0c1a3a',
   backgroundColor: '#040b2a',
   progressCircle: {
     size: 120,
