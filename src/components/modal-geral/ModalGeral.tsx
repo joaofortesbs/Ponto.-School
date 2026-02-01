@@ -24,6 +24,7 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
   const [activeSection, setActiveSection] = useState<ModalSection>(initialSection);
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [sectionsInitialized, setSectionsInitialized] = useState(false);
   const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isDark = true;
 
@@ -43,6 +44,7 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
 
     if (isOpen) {
       setIsVisible(true);
+      setSectionsInitialized(true);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           setIsAnimating(true);
@@ -75,19 +77,6 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
       handleClose();
     }
   }, [handleClose]);
-
-  const renderSection = () => {
-    switch (activeSection) {
-      case "perfil":
-        return <PerfilSection />;
-      case "configuracoes":
-        return <ConfiguracoesSection />;
-      case "seu-uso":
-        return <SeuUsoSection />;
-      default:
-        return <PerfilSection />;
-    }
-  };
 
   if (!isVisible) {
     return null;
@@ -158,8 +147,37 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
             />
             
             <div className="flex-1 overflow-y-auto" style={{ backgroundColor: colors.background }}>
-              <div className="p-8">
-                {renderSection()}
+              <div className="p-8 h-full">
+                {sectionsInitialized && (
+                  <>
+                    <div 
+                      style={{ 
+                        display: activeSection === 'perfil' ? 'block' : 'none',
+                        height: '100%',
+                      }}
+                    >
+                      <PerfilSection />
+                    </div>
+                    
+                    <div 
+                      style={{ 
+                        display: activeSection === 'configuracoes' ? 'block' : 'none',
+                        height: '100%',
+                      }}
+                    >
+                      <ConfiguracoesSection />
+                    </div>
+                    
+                    <div 
+                      style={{ 
+                        display: activeSection === 'seu-uso' ? 'block' : 'none',
+                        height: '100%',
+                      }}
+                    >
+                      <SeuUsoSection />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
