@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogPortal } from "@/components/ui/dialog";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { X } from "lucide-react";
@@ -21,11 +20,23 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
   initialSection = "perfil"
 }) => {
   const [activeSection, setActiveSection] = useState<ModalSection>(initialSection);
+  const [shouldRender, setShouldRender] = useState(false);
   const isDark = true;
 
   useEffect(() => {
     setActiveSection(initialSection);
   }, [initialSection, isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+    } else {
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -54,33 +65,57 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
   const overlayConfig = MODAL_CONFIG.overlay;
   const closeButtonConfig = MODAL_CONFIG.closeButton;
 
+  if (!shouldRender) {
+    return null;
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogPortal>
+    <DialogPrimitive.Root open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogPrimitive.Portal forceMount>
         <DialogPrimitive.Overlay
           className={cn(
             "fixed inset-0 z-50",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-            "data-[state=closed]:pointer-events-none"
+            !isOpen && "pointer-events-none"
           )}
           style={{
             backgroundColor: `rgba(0, 0, 0, ${overlayConfig.opacity})`,
             backdropFilter: `blur(${overlayConfig.blur}px)`,
             WebkitBackdropFilter: `blur(${overlayConfig.blur}px)`,
+            pointerEvents: isOpen ? 'auto' : 'none',
           }}
         />
         <DialogPrimitive.Content
-          className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-[900px] w-[95vw] h-[85vh] max-h-[700px] translate-x-[-50%] translate-y-[-50%] p-0 overflow-hidden gap-0 duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] data-[state=closed]:pointer-events-none"
+          className={cn(
+            "fixed left-[50%] top-[50%] z-50 grid w-full max-w-[900px] w-[95vw] h-[85vh] max-h-[700px] translate-x-[-50%] translate-y-[-50%] p-0 overflow-hidden gap-0 duration-200",
+            "data-[state=open]:animate-in data-[state=closed]:animate-out",
+            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+            "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            "data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]",
+            "data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+            !isOpen && "pointer-events-none"
+          )}
           style={{
             backgroundColor: colors.background,
             borderRadius: '24px',
             border: '1px solid #0c1334',
             boxShadow: '0 25px 80px -12px rgba(0, 0, 0, 0.6), 0 12px 40px -8px rgba(255, 107, 0, 0.15)',
+            pointerEvents: isOpen ? 'auto' : 'none',
+          }}
+          onPointerDownOutside={(e) => {
+            if (!isOpen) {
+              e.preventDefault();
+            }
+          }}
+          onInteractOutside={(e) => {
+            if (!isOpen) {
+              e.preventDefault();
+            }
           }}
         >
           <VisuallyHidden>
-            <DialogTitle>Modal Geral da Conta</DialogTitle>
+            <DialogPrimitive.Title>Modal Geral da Conta</DialogPrimitive.Title>
           </VisuallyHidden>
           
           <button
@@ -111,8 +146,8 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
             </div>
           </div>
         </DialogPrimitive.Content>
-      </DialogPortal>
-    </Dialog>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 };
 
