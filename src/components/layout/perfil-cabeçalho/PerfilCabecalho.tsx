@@ -22,10 +22,11 @@ const PerfilCabecalho: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDark, setIsDark] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [powers, setPowers] = useState<number>(300);
+  const [powers, setPowers] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const updatePowersFromBalance = useCallback((balance: PowersBalance) => {
+    console.log('[PerfilCabecalho] 💰 Atualizando Powers:', balance.available);
     setPowers(balance.available);
   }, []);
 
@@ -43,11 +44,13 @@ const PerfilCabecalho: React.FC = () => {
 
     const initializePowers = async () => {
       try {
-        const balance = await powersService.initialize();
+        await powersService.initialize();
+        const balance = await powersService.forceRefreshFromDatabase();
         setPowers(balance.available);
-        console.log('[PerfilCabecalho] Powers carregados:', balance.available);
+        console.log('[PerfilCabecalho] 💰 Powers carregados do banco:', balance.available);
       } catch (error) {
-        console.error('[PerfilCabecalho] Erro ao carregar Powers:', error);
+        console.error('[PerfilCabecalho] ❌ Erro ao carregar Powers:', error);
+        setPowers(null);
       }
     };
 
@@ -168,7 +171,7 @@ const PerfilCabecalho: React.FC = () => {
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <span className="text-sm font-semibold text-[#FF6B00]">{powers}</span>
+            <span className="text-sm font-semibold text-[#FF6B00]">{powers !== null ? powers : '...'}</span>
             <ChevronDown className="h-4 w-4 text-[#64748B] dark:text-white/60 group-hover:text-[#FF6B00] dark:group-hover:text-[#FF6B00] transition-colors duration-300" />
           </div>
         </div>

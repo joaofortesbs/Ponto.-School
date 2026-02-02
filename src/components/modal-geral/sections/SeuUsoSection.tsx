@@ -107,28 +107,9 @@ export const SeuUsoSection: React.FC = () => {
         return;
       }
 
-      const cachedPowers = getCachedData<PowersData>(CACHE_KEYS.powersData);
-      const cachedRecords = getCachedData<ActivityRecord[]>(CACHE_KEYS.activityRecords);
-      const cacheIsValid = isCacheValid();
-
-      if (cachedPowers && cacheIsValid) {
-        setPowersData(cachedPowers);
-        setActivityRecords(cachedRecords || []);
-        setIsLoading(false);
-        hasLoadedRef.current = true;
-        console.log('[SeuUsoSection] Dados carregados do cache');
-        
-        await powersService.initialize();
-        return;
-      }
-
-      if (cachedPowers) {
-        setPowersData(cachedPowers);
-        setActivityRecords(cachedRecords || []);
-        setIsLoading(false);
-      }
-
       try {
+        console.log('[SeuUsoSection] 🔄 Carregando dados do banco de dados...');
+        
         const [profile, balance] = await Promise.all([
           profileService.getCurrentUserProfile(),
           powersService.initialize(),
@@ -136,11 +117,14 @@ export const SeuUsoSection: React.FC = () => {
         
         if (!isMountedRef.current) return;
 
+        await powersService.syncWithDatabase();
+        const updatedBalance = powersService.getBalance();
+
         const userPlanType = profile?.plan_type === 'premium' ? 'Premium' : 'Grátis';
         setPlanType(userPlanType);
 
-        const newPowersData = convertBalanceToPowersData(balance, userPlanType);
-        const newRecords = convertTransactionsToRecords(balance);
+        const newPowersData = convertBalanceToPowersData(updatedBalance, userPlanType);
+        const newRecords = convertTransactionsToRecords(updatedBalance);
 
         setPowersData(newPowersData);
         setActivityRecords(newRecords);
@@ -149,14 +133,14 @@ export const SeuUsoSection: React.FC = () => {
         setCachedData(CACHE_KEYS.activityRecords, newRecords);
         localStorage.setItem(CACHE_KEYS.lastFetch, Date.now().toString());
 
-        console.log('[SeuUsoSection] Dados carregados do powersService:', {
-          available: balance.available,
-          used: balance.used,
-          transactions: balance.transactions.length,
+        console.log('[SeuUsoSection] ✅ Dados carregados do banco:', {
+          available: updatedBalance.available,
+          used: updatedBalance.used,
+          transactions: updatedBalance.transactions.length,
         });
 
       } catch (error) {
-        console.error("[SeuUsoSection] Erro ao carregar dados de Powers:", error);
+        console.error("[SeuUsoSection] ❌ Erro ao carregar dados de Powers:", error);
       } finally {
         if (isMountedRef.current) {
           setIsLoading(false);

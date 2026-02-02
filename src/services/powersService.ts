@@ -132,19 +132,24 @@ class PowersService {
       const storedBalance = localStorage.getItem(STORAGE_KEYS.balance);
       
       if (storedBalance) {
-        this.balance = JSON.parse(storedBalance);
+        try {
+          this.balance = JSON.parse(storedBalance);
+        } catch {
+          this.balance = this.getDefaultBalance();
+        }
       }
 
       const powersFromDB = await this.fetchPowersFromDatabase();
       
       if (powersFromDB !== null) {
-        this.balance.available = Math.min(powersFromDB, POWERS_CONFIG.dailyFreeAllowance);
-        this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - this.balance.available);
+        this.balance.available = powersFromDB;
+        this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - powersFromDB);
         this.persistBalance();
-        console.log('[PowersService] Saldo carregado do banco de dados:', powersFromDB);
+        console.log('[PowersService] ✅ Saldo carregado do banco de dados:', powersFromDB, '| Usado:', this.balance.used);
       } else if (!storedBalance) {
         this.balance = this.getDefaultBalance();
         this.persistBalance();
+        console.log('[PowersService] ⚠️ Usando saldo padrão (banco não disponível)');
       }
 
       if (this.shouldRenewDaily()) {
@@ -152,11 +157,11 @@ class PowersService {
       }
 
       this.initialized = true;
-      console.log('[PowersService] Inicializado:', this.balance);
+      console.log('[PowersService] ✅ Inicializado - Disponível:', this.balance.available, '| Usado:', this.balance.used);
       
       return this.balance;
     } catch (error) {
-      console.error('[PowersService] Erro ao inicializar:', error);
+      console.error('[PowersService] ❌ Erro ao inicializar:', error);
       this.balance = this.getDefaultBalance();
       this.initialized = true;
       return this.balance;
@@ -513,14 +518,30 @@ class PowersService {
   }
 
   async syncWithDatabase(): Promise<void> {
+    console.log('[PowersService] 🔄 Iniciando sincronização com banco de dados...');
     const powersFromDB = await this.fetchPowersFromDatabase();
     if (powersFromDB !== null) {
-      this.balance.available = Math.min(powersFromDB, POWERS_CONFIG.dailyFreeAllowance);
-      this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - this.balance.available);
+      this.balance.available = powersFromDB;
+      this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - powersFromDB);
       this.persistBalance();
       this.emitUpdate();
-      console.log('[PowersService] Sincronizado com banco de dados:', powersFromDB);
+      console.log('[PowersService] ✅ Sincronizado - Disponível:', powersFromDB, '| Usado:', this.balance.used);
+    } else {
+      console.warn('[PowersService] ⚠️ Não foi possível sincronizar com banco de dados');
     }
+  }
+
+  async forceRefreshFromDatabase(): Promise<PowersBalance> {
+    console.log('[PowersService] 🔄 Forçando atualização do banco de dados...');
+    const powersFromDB = await this.fetchPowersFromDatabase();
+    if (powersFromDB !== null) {
+      this.balance.available = powersFromDB;
+      this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - powersFromDB);
+      this.persistBalance();
+      this.emitUpdate();
+      console.log('[PowersService] ✅ Atualizado do banco - Disponível:', powersFromDB, '| Usado:', this.balance.used);
+    }
+    return this.balance;
   }
 
   formatBalance(): string {

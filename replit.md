@@ -52,7 +52,7 @@ The platform features a modern design with glass-morphism effects, blur backgrou
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.
     - **School Points**: Persisted and synchronized point system.
-    - **Powers System v2.0 (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing, now with database sync:
+    - **Powers System v2.1 (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing, now with database sync:
       - **Daily Allowance**: 300 Powers renewed at 19:00 (America/Sao_Paulo timezone)
       - **Pricing Model**: Per-action charges (not per-base) to support scalable expansion
       - **Current Prices**: `criar_atividade` = 70 Powers/activity, all other capabilities = 0 (free)
@@ -63,10 +63,15 @@ The platform features a modern design with glass-morphism effects, blur backgrou
         - `PATCH /api/perfis/powers`: Update Powers with operations (deduct/add/reset)
       - **Event System**: Emits `powers:updated` AND `schoolPointsUpdated` events for reactive UI sync
       - **Persistence**: localStorage for immediate response + background sync to Neon DB
+      - **Critical Fixes (Feb 2026)**:
+        - Fixed hardcoded 300 value in PerfilCabecalho (now uses `null` while loading, then fetches from DB)
+        - Fixed `Math.min(powersFromDB, 300)` cap in PowersService that ignored real DB values
+        - Added `forceRefreshFromDatabase()` method for guaranteed DB sync
+        - SeuUsoSection now syncs with DB before displaying (removed stale cache logic)
       - **Integration Points**: 
         - `api/perfis.js`: Powers API endpoints
         - `criar-atividade.ts`: Charges after successful activity creation
-        - `PerfilCabecalho.tsx`: Header display with real-time Powers balance
+        - `PerfilCabecalho.tsx`: Header display with real-time Powers balance (forceRefreshFromDatabase on mount)
         - `SeuUsoSection.tsx`: Displays balance and transaction history (ExtratoAtividadesCard)
     - **Calendário School**: Comprehensive calendar event management.
     - **Lesson Publishing System**: Manages lesson publication.
