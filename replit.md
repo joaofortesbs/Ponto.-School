@@ -52,6 +52,16 @@ The platform features a modern design with glass-morphism effects, blur backgrou
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.
     - **School Points**: Persisted and synchronized point system.
+    - **Powers System (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing:
+      - **Daily Allowance**: 300 Powers renewed at 19:00 (America/Sao_Paulo timezone)
+      - **Pricing Model**: Per-action charges (not per-base) to support scalable expansion
+      - **Current Prices**: `criar_atividade` = 70 Powers/activity, all other capabilities = 0 (free)
+      - **Architecture**: Centralized config (`src/config/powers-pricing.ts`) + service (`src/services/powersService.ts`)
+      - **Event System**: Emits `powers:updated` events for reactive UI sync
+      - **Persistence**: localStorage with 5-min cache TTL
+      - **Integration Points**: 
+        - `criar-atividade.ts`: Charges after successful activity creation
+        - `SeuUsoSection.tsx`: Displays balance and transaction history (ExtratoAtividadesCard)
     - **Calendário School**: Comprehensive calendar event management.
     - **Lesson Publishing System**: Manages lesson publication.
     - **Modal Geral da Conta (Account Modal System - Feb 2026)**: Centralized user account management modal replacing the legacy `/profile` page. Features:
