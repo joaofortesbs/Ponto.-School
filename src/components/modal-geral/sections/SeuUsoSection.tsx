@@ -81,6 +81,12 @@ export const SeuUsoSection: React.FC = () => {
   const updateFromPowersService = useCallback((balance: PowersBalance) => {
     if (!isMountedRef.current) return;
     
+    console.log('[SeuUsoSection] 📡 Recebendo atualização do powersService:', {
+      available: balance.available,
+      used: balance.used,
+      transactions: balance.transactions.length,
+    });
+    
     const newPowersData = convertBalanceToPowersData(balance, planType);
     const newRecords = convertTransactionsToRecords(balance);
     
@@ -90,11 +96,7 @@ export const SeuUsoSection: React.FC = () => {
     setCachedData(CACHE_KEYS.powersData, newPowersData);
     setCachedData(CACHE_KEYS.activityRecords, newRecords);
     
-    console.log('[SeuUsoSection] Dados atualizados do powersService:', {
-      available: balance.available,
-      used: balance.used,
-      transactions: balance.transactions.length,
-    });
+    console.log('[SeuUsoSection] ✅ UI atualizada com novos dados de Powers');
   }, [planType]);
 
   useEffect(() => {

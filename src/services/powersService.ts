@@ -85,25 +85,41 @@ class PowersService {
   }
 
   private async getUserEmail(): Promise<string | null> {
-    if (this.userEmail) return this.userEmail;
+    if (this.userEmail) {
+      console.log('[PowersService] 📧 Email em cache de instância:', this.userEmail);
+      return this.userEmail;
+    }
 
     try {
       const { data: session } = await supabase.auth.getSession();
       if (session?.session?.user?.email) {
         this.userEmail = session.session.user.email;
         localStorage.setItem(STORAGE_KEYS.userEmail, this.userEmail);
+        console.log('[PowersService] 📧 Email obtido da sessão Supabase:', this.userEmail);
         return this.userEmail;
+      } else {
+        console.log('[PowersService] ⚠️ Sessão Supabase não contém email');
       }
     } catch (error) {
-      console.error('[PowersService] Erro ao obter email do usuário:', error);
+      console.error('[PowersService] ❌ Erro ao obter email do usuário:', error);
     }
 
     const cachedEmail = localStorage.getItem(STORAGE_KEYS.userEmail);
     if (cachedEmail) {
       this.userEmail = cachedEmail;
+      console.log('[PowersService] 📧 Email obtido do localStorage:', cachedEmail);
       return cachedEmail;
     }
 
+    const profileEmail = localStorage.getItem('userProfileEmail');
+    if (profileEmail) {
+      this.userEmail = profileEmail;
+      localStorage.setItem(STORAGE_KEYS.userEmail, profileEmail);
+      console.log('[PowersService] 📧 Email obtido do perfil em cache:', profileEmail);
+      return profileEmail;
+    }
+
+    console.warn('[PowersService] ⚠️ Email não encontrado em nenhuma fonte');
     return null;
   }
 
@@ -176,8 +192,10 @@ class PowersService {
   }
 
   private async deductPowersInDatabase(amount: number): Promise<boolean> {
+    console.log('[PowersService] 🔄 Iniciando sincronização de dedução:', amount, 'Powers');
+    
     if (this.syncInProgress) {
-      console.log('[PowersService] Sincronização já em progresso, aguardando...');
+      console.log('[PowersService] ⏳ Sincronização já em progresso, aguardando...');
       return false;
     }
 
@@ -186,9 +204,11 @@ class PowersService {
       const email = await this.getUserEmail();
       
       if (!email) {
-        console.log('[PowersService] Email não encontrado, salvando apenas localmente');
+        console.warn('[PowersService] ⚠️ Email não encontrado, salvando apenas localmente. Verifique se o usuário está autenticado.');
         return false;
       }
+
+      console.log('[PowersService] 📧 Email encontrado:', email, '- Enviando requisição ao banco...');
 
       const response = await fetch('/api/perfis/powers', {
         method: 'PATCH',
@@ -205,10 +225,10 @@ class PowersService {
       const result = await response.json();
 
       if (result.success) {
-        console.log('[PowersService] Powers deduzidos no banco:', amount, 'Novo saldo:', result.data?.powers_carteira);
+        console.log('[PowersService] ✅ Powers deduzidos no banco:', amount, 'Novo saldo:', result.data?.powers_carteira);
         return true;
       } else {
-        console.error('[PowersService] Erro ao deduzir no banco:', result.error);
+        console.error('[PowersService] ❌ Erro ao deduzir no banco:', result.error);
         return false;
       }
     } catch (error) {
@@ -446,6 +466,8 @@ class PowersService {
   }
 
   private emitUpdate(): void {
+    console.log('[PowersService] 📡 Emitindo eventos de atualização. Saldo:', this.balance.available);
+    
     const event = new CustomEvent(POWERS_EVENT, {
       detail: {
         balance: this.balance,
@@ -457,6 +479,16 @@ class PowersService {
     document.dispatchEvent(new CustomEvent('schoolPointsUpdated', {
       detail: { points: this.balance.available }
     }));
+    
+    window.dispatchEvent(new CustomEvent('powers:balance:changed', {
+      detail: { 
+        available: this.balance.available,
+        used: this.balance.used,
+        timestamp: new Date().toISOString(),
+      }
+    }));
+    
+    console.log('[PowersService] ✅ Eventos emitidos: powers:updated, schoolPointsUpdated, powers:balance:changed');
   }
 
   onUpdate(callback: (balance: PowersBalance) => void): () => void {

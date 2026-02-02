@@ -363,19 +363,27 @@ export async function criarAtividade(
       console.log(`   📋 Campos preenchidos: ${Object.keys(filledFields).length}`);
       console.log(`   💾 Chaves localStorage: ${buildResult.storageKeys.length}`);
 
-      const chargeResult = await powersService.chargeForCapability(
-        'criar_atividade',
-        1,
-        {
-          activityId: builtActivity.id,
-          activityTitle: activity.titulo,
-        }
-      );
+      console.log(`   💰 [CRIAR] Iniciando cobrança de Powers para atividade: ${activity.titulo}`);
+      
+      try {
+        const chargeResult = await powersService.chargeForCapability(
+          'criar_atividade',
+          1,
+          {
+            activityId: builtActivity.id,
+            activityTitle: activity.titulo,
+          }
+        );
 
-      if (chargeResult.success && chargeResult.charged > 0) {
-        console.log(`   💰 Powers cobrados: ${chargeResult.charged} | Saldo restante: ${chargeResult.remainingBalance}`);
-      } else if (!chargeResult.success) {
-        console.warn(`   ⚠️ Aviso: Não foi possível cobrar Powers - ${chargeResult.error}`);
+        if (chargeResult.success && chargeResult.charged > 0) {
+          console.log(`   💰 [CRIAR] Powers cobrados: ${chargeResult.charged} | Saldo restante: ${chargeResult.remainingBalance}`);
+        } else if (!chargeResult.success) {
+          console.warn(`   ⚠️ [CRIAR] Aviso: Não foi possível cobrar Powers - ${chargeResult.error}`);
+        } else {
+          console.log(`   💰 [CRIAR] Cobrança gratuita (0 Powers) - capability sem custo`);
+        }
+      } catch (chargeError) {
+        console.error(`   ❌ [CRIAR] Erro ao cobrar Powers:`, chargeError);
       }
 
     } catch (error) {

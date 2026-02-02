@@ -80,18 +80,32 @@ const PerfilCabecalho: React.FC = () => {
     const handlePointsUpdate = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail?.points !== undefined) {
+        console.log('[PerfilCabecalho] 📡 Evento schoolPointsUpdated recebido:', customEvent.detail.points);
         setPowers(customEvent.detail.points);
+      }
+    };
+
+    const handleBalanceChanged = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail?.available !== undefined) {
+        console.log('[PerfilCabecalho] 📡 Evento powers:balance:changed recebido:', customEvent.detail.available);
+        setPowers(customEvent.detail.available);
       }
     };
 
     document.addEventListener("userAvatarUpdated", handleAvatarUpdate as EventListener);
     document.addEventListener("schoolPointsUpdated", handlePointsUpdate as EventListener);
+    window.addEventListener("powers:balance:changed", handleBalanceChanged as EventListener);
 
-    const unsubscribe = powersService.onUpdate(updatePowersFromBalance);
+    const unsubscribe = powersService.onUpdate((balance) => {
+      console.log('[PerfilCabecalho] 📡 powersService.onUpdate recebido:', balance.available);
+      updatePowersFromBalance(balance);
+    });
 
     return () => {
       document.removeEventListener("userAvatarUpdated", handleAvatarUpdate as EventListener);
       document.removeEventListener("schoolPointsUpdated", handlePointsUpdate as EventListener);
+      window.removeEventListener("powers:balance:changed", handleBalanceChanged as EventListener);
       unsubscribe();
     };
   }, [updatePowersFromBalance]);
