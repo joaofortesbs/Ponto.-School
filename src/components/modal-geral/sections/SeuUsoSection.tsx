@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { profileService } from "@/services/profileService";
+import { powersService, PowersBalance } from "@/services/powersService";
 import { CardDeUso } from "../components/CardDeUso";
 import { ExtratoAtividadesCard, ActivityRecord } from "../components/ExtratoAtividadesCard";
 
@@ -50,12 +51,51 @@ const isCacheValid = (): boolean => {
   }
 };
 
+const convertBalanceToPowersData = (balance: PowersBalance, planType: string): PowersData => {
+  return {
+    totalPowers: balance.available,
+    usedPowers: balance.used,
+    maxPowers: balance.dailyLimit,
+    dailyRenewable: balance.dailyLimit - balance.used,
+    planType,
+  };
+};
+
+const convertTransactionsToRecords = (balance: PowersBalance): ActivityRecord[] => {
+  return balance.transactions.map(tx => ({
+    id: tx.id,
+    title: tx.description,
+    date: tx.timestamp,
+    creditChange: -tx.totalCost,
+  }));
+};
+
 export const SeuUsoSection: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [powersData, setPowersData] = useState<PowersData | undefined>(undefined);
   const [activityRecords, setActivityRecords] = useState<ActivityRecord[]>([]);
+  const [planType, setPlanType] = useState<string>('Grátis');
   const hasLoadedRef = useRef(false);
   const isMountedRef = useRef(true);
+
+  const updateFromPowersService = useCallback((balance: PowersBalance) => {
+    if (!isMountedRef.current) return;
+    
+    const newPowersData = convertBalanceToPowersData(balance, planType);
+    const newRecords = convertTransactionsToRecords(balance);
+    
+    setPowersData(newPowersData);
+    setActivityRecords(newRecords);
+    
+    setCachedData(CACHE_KEYS.powersData, newPowersData);
+    setCachedData(CACHE_KEYS.activityRecords, newRecords);
+    
+    console.log('[SeuUsoSection] Dados atualizados do powersService:', {
+      available: balance.available,
+      used: balance.used,
+      transactions: balance.transactions.length,
+    });
+  }, [planType]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -75,6 +115,8 @@ export const SeuUsoSection: React.FC = () => {
         setIsLoading(false);
         hasLoadedRef.current = true;
         console.log('[SeuUsoSection] Dados carregados do cache');
+        
+        await powersService.initialize();
         return;
       }
 
@@ -85,37 +127,34 @@ export const SeuUsoSection: React.FC = () => {
       }
 
       try {
-        const profile = await profileService.getCurrentUserProfile();
+        const [profile, balance] = await Promise.all([
+          profileService.getCurrentUserProfile(),
+          powersService.initialize(),
+        ]);
         
         if (!isMountedRef.current) return;
 
-        if (profile) {
-          const profileData = profile as any;
-          
-          const usedPowers = profileData.powers_used ?? 0;
-          const maxPowers = profileData.powers_max ?? 300;
-          
-          const newPowersData: PowersData = {
-            totalPowers: profileData.powers_total ?? 0,
-            usedPowers: usedPowers,
-            maxPowers: maxPowers,
-            dailyRenewable: profileData.daily_renewable ?? 0,
-            planType: profile.plan_type === 'premium' ? 'Premium' : 'Grátis',
-          };
+        const userPlanType = profile?.plan_type === 'premium' ? 'Premium' : 'Grátis';
+        setPlanType(userPlanType);
 
-          setPowersData(newPowersData);
-          setCachedData(CACHE_KEYS.powersData, newPowersData);
+        const newPowersData = convertBalanceToPowersData(balance, userPlanType);
+        const newRecords = convertTransactionsToRecords(balance);
 
-          if (profileData.activity_records && Array.isArray(profileData.activity_records)) {
-            setActivityRecords(profileData.activity_records);
-            setCachedData(CACHE_KEYS.activityRecords, profileData.activity_records);
-          }
+        setPowersData(newPowersData);
+        setActivityRecords(newRecords);
 
-          localStorage.setItem(CACHE_KEYS.lastFetch, Date.now().toString());
-          console.log('[SeuUsoSection] Dados atualizados do servidor e salvos no cache');
-        }
+        setCachedData(CACHE_KEYS.powersData, newPowersData);
+        setCachedData(CACHE_KEYS.activityRecords, newRecords);
+        localStorage.setItem(CACHE_KEYS.lastFetch, Date.now().toString());
+
+        console.log('[SeuUsoSection] Dados carregados do powersService:', {
+          available: balance.available,
+          used: balance.used,
+          transactions: balance.transactions.length,
+        });
+
       } catch (error) {
-        console.error("Erro ao carregar dados de Powers:", error);
+        console.error("[SeuUsoSection] Erro ao carregar dados de Powers:", error);
       } finally {
         if (isMountedRef.current) {
           setIsLoading(false);
@@ -126,10 +165,13 @@ export const SeuUsoSection: React.FC = () => {
 
     loadData();
 
+    const unsubscribe = powersService.onUpdate(updateFromPowersService);
+
     return () => {
       isMountedRef.current = false;
+      unsubscribe();
     };
-  }, []);
+  }, [updateFromPowersService]);
 
   const handleRecordClick = (record: ActivityRecord) => {
     console.log("Atividade clicada:", record);

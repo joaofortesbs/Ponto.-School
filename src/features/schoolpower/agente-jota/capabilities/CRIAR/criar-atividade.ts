@@ -28,6 +28,7 @@ import {
   waitForBuildResult,
   BuildActivityResult
 } from '../../../construction/events/constructionEventBus';
+import { powersService } from '@/services/powersService';
 
 interface CriarAtividadeParams {
   decision_result: DecisionResult;
@@ -361,6 +362,21 @@ export async function criarAtividade(
       console.log(`\n✅ [CRIAR] ATIVIDADE CONSTRUÍDA COM SUCESSO: ${activity.titulo}`);
       console.log(`   📋 Campos preenchidos: ${Object.keys(filledFields).length}`);
       console.log(`   💾 Chaves localStorage: ${buildResult.storageKeys.length}`);
+
+      const chargeResult = await powersService.chargeForCapability(
+        'criar_atividade',
+        1,
+        {
+          activityId: builtActivity.id,
+          activityTitle: activity.titulo,
+        }
+      );
+
+      if (chargeResult.success && chargeResult.charged > 0) {
+        console.log(`   💰 Powers cobrados: ${chargeResult.charged} | Saldo restante: ${chargeResult.remainingBalance}`);
+      } else if (!chargeResult.success) {
+        console.warn(`   ⚠️ Aviso: Não foi possível cobrar Powers - ${chargeResult.error}`);
+      }
 
     } catch (error) {
       console.error(`\n❌ [CRIAR] FALHA ao construir ${activity.titulo}:`, error);
