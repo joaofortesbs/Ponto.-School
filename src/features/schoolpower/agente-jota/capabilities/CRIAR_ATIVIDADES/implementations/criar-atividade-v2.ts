@@ -32,6 +32,7 @@ import {
   getStorageUsagePercent,
   initLocalStorageManager 
 } from '../../../../services/localStorage-manager';
+import { powersService } from '@/services/powersService';
 
 const CAPABILITY_ID = 'criar_atividade';
 const CONSTRUCTION_DELAY_MS = 300; // Delay menor pois agora há tempo real de API
@@ -570,6 +571,76 @@ Cada atividade terá sua própria chamada de API!
           }
         }
       }));
+      
+      // ═══════════════════════════════════════════════════════════════════════
+      // FASE 8: COBRANÇA DE POWERS (APÓS ATIVIDADE CONSTRUÍDA COM SUCESSO)
+      // ═══════════════════════════════════════════════════════════════════════
+      activityDebugStore.log(
+        activity.id, 'action', 'Powers',
+        `💰 Iniciando cobrança de Powers para atividade: ${activity.titulo}`,
+        { activity_id: activity.id, activity_type: activity.tipo }
+      );
+      
+      try {
+        const chargeResult = await powersService.chargeForCapability(
+          'criar_atividade',
+          1,
+          {
+            activityId: builtActivity.id,
+            activityTitle: activity.titulo,
+          }
+        );
+
+        if (chargeResult.success && chargeResult.charged > 0) {
+          console.error(`💰 [V2:CRIAR] Powers cobrados: ${chargeResult.charged} | Saldo restante: ${chargeResult.remainingBalance}`);
+          
+          activityDebugStore.log(
+            activity.id, 'success', 'Powers',
+            `💰 Powers cobrados com sucesso: -${chargeResult.charged} Powers | Saldo: ${chargeResult.remainingBalance}`,
+            { 
+              charged: chargeResult.charged, 
+              remaining: chargeResult.remainingBalance,
+              transaction_id: chargeResult.transactionId
+            }
+          );
+          
+          debug_log.push({
+            timestamp: new Date().toISOString(),
+            type: 'action',
+            narrative: `💰 Cobrança: -${chargeResult.charged} Powers por "${activity.titulo}" | Saldo: ${chargeResult.remainingBalance}`,
+            technical_data: {
+              activity_id: activity.id,
+              charged: chargeResult.charged,
+              remaining_balance: chargeResult.remainingBalance,
+              transaction_id: chargeResult.transactionId
+            }
+          });
+        } else if (!chargeResult.success) {
+          console.warn(`⚠️ [V2:CRIAR] Aviso: Não foi possível cobrar Powers - ${chargeResult.error}`);
+          
+          activityDebugStore.log(
+            activity.id, 'warning', 'Powers',
+            `⚠️ Não foi possível cobrar Powers: ${chargeResult.error}`,
+            { error: chargeResult.error }
+          );
+        } else {
+          console.log(`💰 [V2:CRIAR] Cobrança gratuita (0 Powers) - capability sem custo`);
+          
+          activityDebugStore.log(
+            activity.id, 'info', 'Powers',
+            `💰 Capability gratuita (0 Powers)`,
+            { charged: 0 }
+          );
+        }
+      } catch (chargeError: any) {
+        console.error(`❌ [V2:CRIAR] Erro ao cobrar Powers:`, chargeError);
+        
+        activityDebugStore.log(
+          activity.id, 'error', 'Powers',
+          `❌ Erro ao cobrar Powers: ${chargeError.message}`,
+          { error: chargeError.message, stack: chargeError.stack?.substring(0, 200) }
+        );
+      }
       
       // Pequeno delay entre atividades para visualização
       await new Promise(resolve => setTimeout(resolve, CONSTRUCTION_DELAY_MS));
