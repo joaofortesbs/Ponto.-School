@@ -70,7 +70,8 @@ The platform features a modern design with glass-morphism effects, blur backgrou
         - SeuUsoSection now syncs with DB before displaying (removed stale cache logic)
       - **Integration Points**: 
         - `api/perfis.js`: Powers API endpoints
-        - `criar-atividade.ts`: Charges after successful activity creation
+        - `criar-atividade-v2.ts`: **Active V2 implementation** - Charges 70 Powers per activity in FASE 8 after successful AI generation
+        - `criar-atividade.ts`: Legacy implementation (no longer used by executor)
         - `PerfilCabecalho.tsx`: Header display with real-time Powers balance (forceRefreshFromDatabase on mount)
         - `SeuUsoSection.tsx`: Displays balance and transaction history (ExtratoAtividadesCard)
     - **Calendário School**: Comprehensive calendar event management.
