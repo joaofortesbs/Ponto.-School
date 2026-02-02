@@ -1,19 +1,20 @@
 /**
- * POWERS SERVICE
+ * POWERS SERVICE v2.0
  * 
  * Serviço centralizado para gestão de Powers (moeda virtual da plataforma).
+ * INTEGRADO COM BANCO DE DADOS NEON
  * 
  * RESPONSABILIDADES:
  * - Gerenciar saldo de Powers do usuário
  * - Processar cobranças por capacidade executada
  * - Manter extrato de transações
  * - Verificar e renovar Powers diários
- * - Persistir dados no localStorage e sincronizar com backend
+ * - Persistir dados no localStorage E sincronizar com banco Neon
  * - Emitir eventos para sincronização da UI
  * 
  * ARQUITETURA:
  * - localStorage para cache local e persistência imediata
- * - API backend para sincronização (quando disponível)
+ * - API backend para sincronização com banco de dados Neon
  * - Sistema de eventos para atualização reativa da UI
  */
 
@@ -24,6 +25,7 @@ import {
   getCapabilityDisplayInfo,
   getCapabilityPrice 
 } from '@/config/powers-pricing';
+import { supabase } from '@/lib/supabase';
 
 export interface PowersTransaction {
   id: string;
@@ -57,6 +59,7 @@ const STORAGE_KEYS = {
   balance: 'powers_balance',
   transactions: 'powers_transactions',
   lastRenewal: 'powers_last_renewal',
+  userEmail: 'powers_user_email',
 } as const;
 
 const POWERS_EVENT = 'powers:updated';
@@ -64,6 +67,8 @@ const POWERS_EVENT = 'powers:updated';
 class PowersService {
   private balance: PowersBalance;
   private initialized: boolean = false;
+  private userEmail: string | null = null;
+  private syncInProgress: boolean = false;
 
   constructor() {
     this.balance = this.getDefaultBalance();
@@ -79,6 +84,29 @@ class PowersService {
     };
   }
 
+  private async getUserEmail(): Promise<string | null> {
+    if (this.userEmail) return this.userEmail;
+
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (session?.session?.user?.email) {
+        this.userEmail = session.session.user.email;
+        localStorage.setItem(STORAGE_KEYS.userEmail, this.userEmail);
+        return this.userEmail;
+      }
+    } catch (error) {
+      console.error('[PowersService] Erro ao obter email do usuário:', error);
+    }
+
+    const cachedEmail = localStorage.getItem(STORAGE_KEYS.userEmail);
+    if (cachedEmail) {
+      this.userEmail = cachedEmail;
+      return cachedEmail;
+    }
+
+    return null;
+  }
+
   async initialize(userId?: string): Promise<PowersBalance> {
     if (this.initialized) {
       return this.balance;
@@ -89,13 +117,22 @@ class PowersService {
       
       if (storedBalance) {
         this.balance = JSON.parse(storedBalance);
-        
-        if (this.shouldRenewDaily()) {
-          await this.renewDailyPowers();
-        }
-      } else {
+      }
+
+      const powersFromDB = await this.fetchPowersFromDatabase();
+      
+      if (powersFromDB !== null) {
+        this.balance.available = powersFromDB;
+        this.balance.used = POWERS_CONFIG.dailyFreeAllowance - powersFromDB;
+        this.persistBalance();
+        console.log('[PowersService] Saldo carregado do banco de dados:', powersFromDB);
+      } else if (!storedBalance) {
         this.balance = this.getDefaultBalance();
         this.persistBalance();
+      }
+
+      if (this.shouldRenewDaily()) {
+        await this.renewDailyPowers();
       }
 
       this.initialized = true;
@@ -107,6 +144,77 @@ class PowersService {
       this.balance = this.getDefaultBalance();
       this.initialized = true;
       return this.balance;
+    }
+  }
+
+  private async fetchPowersFromDatabase(): Promise<number | null> {
+    try {
+      const email = await this.getUserEmail();
+      if (!email) {
+        console.log('[PowersService] Email não encontrado, usando localStorage');
+        return null;
+      }
+
+      const response = await fetch(`/api/perfis/powers?email=${encodeURIComponent(email)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        return result.data.powers_carteira ?? POWERS_CONFIG.dailyFreeAllowance;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('[PowersService] Erro ao buscar powers do banco:', error);
+      return null;
+    }
+  }
+
+  private async updatePowersInDatabase(newBalance: number): Promise<boolean> {
+    if (this.syncInProgress) {
+      console.log('[PowersService] Sincronização já em progresso, aguardando...');
+      return false;
+    }
+
+    try {
+      this.syncInProgress = true;
+      const email = await this.getUserEmail();
+      
+      if (!email) {
+        console.log('[PowersService] Email não encontrado, salvando apenas localmente');
+        return false;
+      }
+
+      const response = await fetch('/api/perfis/powers', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          powers_carteira: newBalance,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('[PowersService] Powers atualizados no banco:', newBalance);
+        return true;
+      } else {
+        console.error('[PowersService] Erro ao atualizar no banco:', result.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('[PowersService] Erro ao sincronizar com banco:', error);
+      return false;
+    } finally {
+      this.syncInProgress = false;
     }
   }
 
@@ -141,6 +249,8 @@ class PowersService {
     this.balance.available = POWERS_CONFIG.dailyFreeAllowance;
     this.balance.used = 0;
     this.balance.lastRenewal = new Date().toISOString();
+    
+    await this.updatePowersInDatabase(this.balance.available);
     
     this.persistBalance();
     this.emitUpdate();
@@ -204,6 +314,11 @@ class PowersService {
     }
 
     this.persistBalance();
+    
+    this.updatePowersInDatabase(this.balance.available).catch(err => {
+      console.error('[PowersService] Erro ao sincronizar cobrança com banco:', err);
+    });
+
     this.emitUpdate();
 
     console.log(`[PowersService] Cobrado ${totalCost} Powers por ${capabilityId}. Saldo: ${this.balance.available}`);
@@ -302,6 +417,10 @@ class PowersService {
       },
     });
     window.dispatchEvent(event);
+    
+    document.dispatchEvent(new CustomEvent('schoolPointsUpdated', {
+      detail: { points: this.balance.available }
+    }));
   }
 
   onUpdate(callback: (balance: PowersBalance) => void): () => void {
@@ -319,9 +438,21 @@ class PowersService {
 
   async reset(): Promise<void> {
     this.balance = this.getDefaultBalance();
+    await this.updatePowersInDatabase(this.balance.available);
     this.persistBalance();
     this.emitUpdate();
     console.log('[PowersService] Saldo resetado');
+  }
+
+  async syncWithDatabase(): Promise<void> {
+    const powersFromDB = await this.fetchPowersFromDatabase();
+    if (powersFromDB !== null) {
+      this.balance.available = powersFromDB;
+      this.balance.used = POWERS_CONFIG.dailyFreeAllowance - powersFromDB;
+      this.persistBalance();
+      this.emitUpdate();
+      console.log('[PowersService] Sincronizado com banco de dados:', powersFromDB);
+    }
   }
 
   formatBalance(): string {

@@ -423,6 +423,142 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+// Atualizar Powers do usuário
+router.patch('/powers', async (req, res) => {
+  try {
+    const { email, powers_carteira, operation, amount } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Email é obrigatório' 
+      });
+    }
+
+    console.log('⚡ [POWERS] Atualizando powers para:', email);
+    console.log('⚡ [POWERS] Operação:', operation, 'Quantidade:', amount);
+
+    let query;
+    let params;
+
+    if (operation === 'deduct' && typeof amount === 'number') {
+      query = `
+        UPDATE usuarios 
+        SET powers_carteira = GREATEST(0, COALESCE(powers_carteira, 300) - $1), updated_at = NOW()
+        WHERE email = $2
+        RETURNING id, nome_completo, email, powers_carteira, updated_at
+      `;
+      params = [amount, email];
+    } else if (operation === 'add' && typeof amount === 'number') {
+      query = `
+        UPDATE usuarios 
+        SET powers_carteira = COALESCE(powers_carteira, 0) + $1, updated_at = NOW()
+        WHERE email = $2
+        RETURNING id, nome_completo, email, powers_carteira, updated_at
+      `;
+      params = [amount, email];
+    } else if (operation === 'reset') {
+      query = `
+        UPDATE usuarios 
+        SET powers_carteira = 300, updated_at = NOW()
+        WHERE email = $2
+        RETURNING id, nome_completo, email, powers_carteira, updated_at
+      `;
+      params = [300, email];
+    } else if (typeof powers_carteira === 'number') {
+      query = `
+        UPDATE usuarios 
+        SET powers_carteira = $1, updated_at = NOW()
+        WHERE email = $2
+        RETURNING id, nome_completo, email, powers_carteira, updated_at
+      `;
+      params = [powers_carteira, email];
+    } else {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Operação inválida ou powers_carteira não especificado' 
+      });
+    }
+
+    const result = await neonDB.executeQuery(query, params);
+
+    if (result.success && result.data.length > 0) {
+      console.log('✅ [POWERS] Powers atualizados:', result.data[0].powers_carteira);
+      res.json({ 
+        success: true, 
+        data: result.data[0] 
+      });
+    } else {
+      console.log('⚠️ [POWERS] Nenhum perfil encontrado para o email:', email);
+      res.status(404).json({ 
+        success: false, 
+        error: 'Perfil não encontrado' 
+      });
+    }
+  } catch (error) {
+    console.error('❌ [POWERS] Erro ao atualizar powers:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erro interno do servidor',
+      details: error.message 
+    });
+  }
+});
+
+// Obter Powers do usuário
+router.get('/powers', async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Email é obrigatório' 
+      });
+    }
+
+    console.log('⚡ [POWERS] Buscando powers para:', email);
+
+    const query = `
+      SELECT id, email, powers_carteira, stars_carteira
+      FROM usuarios 
+      WHERE email = $1
+    `;
+
+    const result = await neonDB.executeQuery(query, [email]);
+
+    if (result.success && result.data.length > 0) {
+      const userData = result.data[0];
+      const powers = userData.powers_carteira ?? 300;
+      
+      console.log('✅ [POWERS] Powers encontrados:', powers);
+      res.json({ 
+        success: true, 
+        data: {
+          powers_carteira: powers,
+          stars_carteira: userData.stars_carteira ?? 0
+        }
+      });
+    } else {
+      console.log('⚠️ [POWERS] Perfil não encontrado, retornando default');
+      res.json({ 
+        success: true, 
+        data: {
+          powers_carteira: 300,
+          stars_carteira: 0
+        }
+      });
+    }
+  } catch (error) {
+    console.error('❌ [POWERS] Erro ao buscar powers:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erro interno do servidor',
+      details: error.message 
+    });
+  }
+});
+
 // Verificar se email existe (para recuperação de senha)
 router.post('/check-email', async (req, res) => {
   try {

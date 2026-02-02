@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ChevronDown, Diamond } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -15,14 +15,19 @@ import { supabase } from "@/lib/supabase";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/user-profile";
 import { ModalGeral } from "@/components/modal-geral";
+import { powersService, PowersBalance } from "@/services/powersService";
 
 const PerfilCabecalho: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDark, setIsDark] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [stars, setSchoolPoints] = useState<number>(300);
+  const [powers, setPowers] = useState<number>(300);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const updatePowersFromBalance = useCallback((balance: PowersBalance) => {
+    setPowers(balance.available);
+  }, []);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -36,12 +41,22 @@ const PerfilCabecalho: React.FC = () => {
       }
     };
 
+    const initializePowers = async () => {
+      try {
+        const balance = await powersService.initialize();
+        setPowers(balance.available);
+        console.log('[PerfilCabecalho] Powers carregados:', balance.available);
+      } catch (error) {
+        console.error('[PerfilCabecalho] Erro ao carregar Powers:', error);
+      }
+    };
+
     fetchUserProfile();
+    initializePowers();
 
     const darkMode = localStorage.getItem("darkMode") === "true";
     setIsDark(darkMode);
 
-    // Carregar imagem de perfil do localStorage (sincronizado com sidebar)
     const loadProfileImage = () => {
       const tempPreview = localStorage.getItem("tempAvatarPreview");
       const cachedAvatar = localStorage.getItem("userAvatarUrl");
@@ -55,13 +70,6 @@ const PerfilCabecalho: React.FC = () => {
 
     loadProfileImage();
 
-    // Carregar Stars
-    const savedPoints = localStorage.getItem("stars");
-    if (savedPoints) {
-      setSchoolPoints(parseInt(savedPoints));
-    }
-
-    // Listener para atualização de avatar
     const handleAvatarUpdate = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail?.avatarUrl) {
@@ -69,23 +77,24 @@ const PerfilCabecalho: React.FC = () => {
       }
     };
 
-    // Listener para atualização de pontos
     const handlePointsUpdate = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail?.points !== undefined) {
-        setSchoolPoints(customEvent.detail.points);
-        localStorage.setItem("stars", customEvent.detail.points.toString());
+        setPowers(customEvent.detail.points);
       }
     };
 
     document.addEventListener("userAvatarUpdated", handleAvatarUpdate as EventListener);
     document.addEventListener("schoolPointsUpdated", handlePointsUpdate as EventListener);
 
+    const unsubscribe = powersService.onUpdate(updatePowersFromBalance);
+
     return () => {
       document.removeEventListener("userAvatarUpdated", handleAvatarUpdate as EventListener);
       document.removeEventListener("schoolPointsUpdated", handlePointsUpdate as EventListener);
+      unsubscribe();
     };
-  }, []);
+  }, [updatePowersFromBalance]);
 
   const handleLogout = async () => {
     try {
@@ -145,7 +154,7 @@ const PerfilCabecalho: React.FC = () => {
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <span className="text-sm font-semibold text-[#FF6B00]">{stars}</span>
+            <span className="text-sm font-semibold text-[#FF6B00]">{powers}</span>
             <ChevronDown className="h-4 w-4 text-[#64748B] dark:text-white/60 group-hover:text-[#FF6B00] dark:group-hover:text-[#FF6B00] transition-colors duration-300" />
           </div>
         </div>
