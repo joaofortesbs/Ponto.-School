@@ -1,8 +1,8 @@
 /**
- * POWERS SERVICE v2.0
+ * POWERS SERVICE v3.0 ENTERPRISE
  * 
  * Serviço centralizado para gestão de Powers (moeda virtual da plataforma).
- * INTEGRADO COM BANCO DE DADOS NEON
+ * INTEGRADO COM BANCO DE DADOS NEON - SINCRONIZAÇÃO BIDIRECIONAL ENTERPRISE-GRADE
  * 
  * RESPONSABILIDADES:
  * - Gerenciar saldo de Powers do usuário
@@ -11,11 +11,15 @@
  * - Verificar e renovar Powers diários
  * - Persistir dados no localStorage E sincronizar com banco Neon
  * - Emitir eventos para sincronização da UI
+ * - Sistema de retry com backoff exponencial
+ * - Fila de transações pendentes para recuperação de falhas
  * 
  * ARQUITETURA:
  * - localStorage para cache local e persistência imediata
  * - API backend para sincronização com banco de dados Neon
  * - Sistema de eventos para atualização reativa da UI
+ * - Retry mechanism com exponential backoff (máx 3 tentativas)
+ * - Pending transactions queue para durabilidade
  */
 
 import { 
@@ -37,6 +41,7 @@ export interface PowersTransaction {
   timestamp: string;
   activityId?: string;
   activityTitle?: string;
+  syncedToDb?: boolean;
 }
 
 export interface PowersBalance {
@@ -53,6 +58,14 @@ export interface ChargeResult {
   remainingBalance: number;
   transactionId: string;
   error?: string;
+  dbSynced?: boolean;
+}
+
+interface PendingSyncItem {
+  id: string;
+  amount: number;
+  timestamp: string;
+  retryCount: number;
 }
 
 const STORAGE_KEYS = {
@@ -60,18 +73,28 @@ const STORAGE_KEYS = {
   transactions: 'powers_transactions',
   lastRenewal: 'powers_last_renewal',
   userEmail: 'powers_user_email',
+  pendingSync: 'powers_pending_sync',
 } as const;
 
 const POWERS_EVENT = 'powers:updated';
+
+const SYNC_CONFIG = {
+  maxRetries: 3,
+  baseDelayMs: 500,
+  maxDelayMs: 5000,
+} as const;
 
 class PowersService {
   private balance: PowersBalance;
   private initialized: boolean = false;
   private userEmail: string | null = null;
-  private syncInProgress: boolean = false;
+  private pendingSync: PendingSyncItem[] = [];
+  private syncPollingInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.balance = this.getDefaultBalance();
+    this.loadPendingSync();
+    this.startSyncPolling();
   }
 
   private getDefaultBalance(): PowersBalance {
@@ -82,6 +105,140 @@ class PowersService {
       lastRenewal: new Date().toISOString(),
       transactions: [],
     };
+  }
+
+  private loadPendingSync(): void {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.pendingSync);
+      if (stored) {
+        this.pendingSync = JSON.parse(stored);
+        console.log('[PowersService] 📋 Carregadas', this.pendingSync.length, 'transações pendentes');
+      }
+    } catch (error) {
+      console.error('[PowersService] Erro ao carregar transações pendentes:', error);
+      this.pendingSync = [];
+    }
+  }
+
+  private savePendingSync(): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.pendingSync, JSON.stringify(this.pendingSync));
+    } catch (error) {
+      console.error('[PowersService] Erro ao salvar transações pendentes:', error);
+    }
+  }
+
+  private startSyncPolling(): void {
+    if (this.syncPollingInterval) {
+      clearInterval(this.syncPollingInterval);
+    }
+    this.syncPollingInterval = setInterval(() => {
+      this.processPendingSync();
+    }, 30000);
+    console.log('[PowersService] 🔄 Polling de sincronização iniciado (30s)');
+  }
+
+  private async processPendingSync(): Promise<void> {
+    console.log('[PowersService] 🔄 === POLLING BIDIRECTIONAL SYNC ===');
+    
+    if (this.pendingSync.length > 0) {
+      console.log('[PowersService] 🔄 Processando', this.pendingSync.length, 'transações pendentes...');
+      
+      const toProcess = [...this.pendingSync];
+      this.pendingSync = [];
+      this.savePendingSync();
+      
+      for (const item of toProcess) {
+        const success = await this.syncSingleDeduction(item.amount, item.retryCount);
+        if (!success && item.retryCount < SYNC_CONFIG.maxRetries) {
+          this.pendingSync.push({
+            ...item,
+            retryCount: item.retryCount + 1,
+          });
+          console.log('[PowersService] ⚠️ Transação falhou, será retentada. TX:', item.id, 'Retry:', item.retryCount + 1);
+        } else if (!success) {
+          console.log('[PowersService] ❌ Transação excedeu máximo de retries e será descartada. TX:', item.id);
+        }
+      }
+      
+      this.savePendingSync();
+    }
+    
+    console.log('[PowersService] 🔄 Iniciando sincronização DB → App (pull remoto)...');
+    const powersFromDB = await this.fetchPowersFromDatabase();
+    if (powersFromDB !== null) {
+      const localBalance = this.balance.available;
+      if (localBalance !== powersFromDB) {
+        console.log('[PowersService] 🔄 Sincronizando: Local =', localBalance, '| DB =', powersFromDB);
+        this.balance.available = powersFromDB;
+        this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - powersFromDB);
+        this.persistBalance();
+        this.emitUpdate();
+        console.log('[PowersService] ✅ Saldo sincronizado do banco de dados');
+      } else {
+        console.log('[PowersService] ✅ Saldo já está sincronizado com banco de dados');
+      }
+    } else {
+      console.log('[PowersService] ⚠️ Não foi possível buscar saldo do DB');
+    }
+    console.log('[PowersService] 🔄 === POLLING CONCLUÍDO ===');
+  }
+
+  private async syncSingleDeduction(amount: number, retryCount: number = 0): Promise<boolean> {
+    const delay = Math.min(
+      SYNC_CONFIG.baseDelayMs * Math.pow(2, retryCount),
+      SYNC_CONFIG.maxDelayMs
+    );
+    
+    if (retryCount > 0) {
+      console.log(`[PowersService] ⏳ Aguardando ${delay}ms antes de retry #${retryCount}...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    
+    try {
+      const email = await this.getUserEmail();
+      if (!email) {
+        console.warn('[PowersService] ⚠️ Email não encontrado para sincronização');
+        return false;
+      }
+
+      console.log(`[PowersService] 🔄 Enviando dedução de ${amount} Powers para o banco (retry: ${retryCount})...`);
+      console.log('[PowersService] 📧 Email:', email);
+      console.log('[PowersService] 📤 Payload:', JSON.stringify({ email, operation: 'deduct', amount }));
+
+      const response = await fetch('/api/perfis/powers', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          operation: 'deduct',
+          amount,
+        }),
+      });
+
+      console.log('[PowersService] 📥 Response status:', response.status);
+
+      if (!response.ok) {
+        console.error('[PowersService] ❌ Resposta HTTP não-ok:', response.status, response.statusText);
+        return false;
+      }
+
+      const result = await response.json();
+      console.log('[PowersService] 📥 Response body:', JSON.stringify(result));
+
+      if (result.success) {
+        console.log('[PowersService] ✅ SUCESSO! Powers deduzidos no banco. Novo saldo DB:', result.data?.powers_carteira);
+        return true;
+      } else {
+        console.error('[PowersService] ❌ Falha na API:', result.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('[PowersService] ❌ Erro de rede/fetch:', error);
+      return false;
+    }
   }
 
   private async getUserEmail(): Promise<string | null> {
@@ -196,52 +353,28 @@ class PowersService {
     }
   }
 
-  private async deductPowersInDatabase(amount: number): Promise<boolean> {
-    console.log('[PowersService] 🔄 Iniciando sincronização de dedução:', amount, 'Powers');
+  private async deductPowersInDatabase(amount: number, transactionId: string): Promise<boolean> {
+    console.log('[PowersService] 🔄 === INICIANDO SINCRONIZAÇÃO ENTERPRISE ===');
+    console.log('[PowersService] 🔄 Dedução:', amount, 'Powers | TX:', transactionId);
     
-    if (this.syncInProgress) {
-      console.log('[PowersService] ⏳ Sincronização já em progresso, aguardando...');
-      return false;
+    const success = await this.syncSingleDeduction(amount, 0);
+    
+    if (success) {
+      console.log('[PowersService] ✅ === SINCRONIZAÇÃO CONCLUÍDA COM SUCESSO ===');
+      return true;
     }
-
-    try {
-      this.syncInProgress = true;
-      const email = await this.getUserEmail();
-      
-      if (!email) {
-        console.warn('[PowersService] ⚠️ Email não encontrado, salvando apenas localmente. Verifique se o usuário está autenticado.');
-        return false;
-      }
-
-      console.log('[PowersService] 📧 Email encontrado:', email, '- Enviando requisição ao banco...');
-
-      const response = await fetch('/api/perfis/powers', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          operation: 'deduct',
-          amount,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        console.log('[PowersService] ✅ Powers deduzidos no banco:', amount, 'Novo saldo:', result.data?.powers_carteira);
-        return true;
-      } else {
-        console.error('[PowersService] ❌ Erro ao deduzir no banco:', result.error);
-        return false;
-      }
-    } catch (error) {
-      console.error('[PowersService] Erro ao sincronizar com banco:', error);
-      return false;
-    } finally {
-      this.syncInProgress = false;
-    }
+    
+    console.log('[PowersService] ⚠️ Sincronização inicial falhou. Adicionando à fila de pendentes...');
+    this.pendingSync.push({
+      id: transactionId,
+      amount,
+      timestamp: new Date().toISOString(),
+      retryCount: 1,
+    });
+    this.savePendingSync();
+    console.log('[PowersService] 📋 Transação adicionada à fila. Total pendente:', this.pendingSync.length);
+    
+    return false;
   }
 
   private async resetPowersInDatabase(): Promise<boolean> {
@@ -376,19 +509,32 @@ class PowersService {
 
     this.persistBalance();
     
-    this.deductPowersInDatabase(totalCost).catch(err => {
-      console.error('[PowersService] Erro ao sincronizar cobrança com banco:', err);
-    });
+    console.log('[PowersService] 💰 === COBRANÇA INICIADA ===');
+    console.log('[PowersService] 💰 Capacidade:', capabilityId);
+    console.log('[PowersService] 💰 Custo total:', totalCost, 'Powers');
+    console.log('[PowersService] 💰 Saldo após cobrança local:', this.balance.available);
+    console.log('[PowersService] 💰 TX ID:', transaction.id);
+    
+    const dbSynced = await this.deductPowersInDatabase(totalCost, transaction.id);
+    
+    if (dbSynced) {
+      transaction.syncedToDb = true;
+      this.persistBalance();
+      console.log('[PowersService] ✅ === COBRANÇA SINCRONIZADA COM BANCO ===');
+    } else {
+      console.log('[PowersService] ⚠️ Cobrança local OK, sincronização DB pendente');
+    }
 
     this.emitUpdate();
 
-    console.log(`[PowersService] Cobrado ${totalCost} Powers por ${capabilityId}. Saldo: ${this.balance.available}`);
+    console.log(`[PowersService] 💰 Cobrado ${totalCost} Powers por ${capabilityId}. Saldo: ${this.balance.available} | DB Synced: ${dbSynced}`);
 
     return {
       success: true,
       charged: totalCost,
       remainingBalance: this.balance.available,
       transactionId: transaction.id,
+      dbSynced,
     };
   }
 

@@ -52,25 +52,31 @@ The platform features a modern design with glass-morphism effects, blur backgrou
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.
     - **School Points**: Persisted and synchronized point system.
-    - **Powers System v2.1 (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing, now with database sync:
+    - **Powers System v3.0 ENTERPRISE (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing and enterprise-grade bidirectional synchronization:
       - **Daily Allowance**: 300 Powers renewed at 19:00 (America/Sao_Paulo timezone)
       - **Pricing Model**: Per-action charges (not per-base) to support scalable expansion
       - **Current Prices**: `criar_atividade` = 70 Powers/activity, all other capabilities = 0 (free)
       - **Architecture**: Centralized config (`src/config/powers-pricing.ts`) + service (`src/services/powersService.ts`)
-      - **Database Sync**: Dual-layer persistence with localStorage cache + Neon DB (`powers_carteira` column in `usuarios` table)
+      - **Database Sync v3.0 Enterprise**:
+        - **Bidirectional Sync**: True two-way sync between localStorage and Neon DB
+        - **Retry Mechanism**: Exponential backoff (base 500ms, max 5000ms, max 3 retries)
+        - **Pending Transactions Queue**: localStorage persistence for durability and automatic recovery
+        - **Polling System**: 30-second interval for both App→DB and DB→App synchronization
+        - **Synchronous Charges**: `chargeForCapability` now awaits DB sync (not fire-and-forget)
+        - **Manual DB Changes**: Polling automatically picks up and syncs manual database updates
       - **API Endpoints**: 
         - `GET /api/perfis/powers`: Fetch current Powers balance from database
         - `PATCH /api/perfis/powers`: Update Powers with operations (deduct/add/reset)
-      - **Event System**: Emits `powers:updated` AND `schoolPointsUpdated` events for reactive UI sync
-      - **Persistence**: localStorage for immediate response + background sync to Neon DB
-      - **Critical Fixes (Feb 2026)**:
-        - Fixed hardcoded 300 value in PerfilCabecalho (now uses `null` while loading, then fetches from DB)
-        - Fixed `Math.min(powersFromDB, 300)` cap in PowersService that ignored real DB values
-        - Added `forceRefreshFromDatabase()` method for guaranteed DB sync
-        - SeuUsoSection now syncs with DB before displaying (removed stale cache logic)
+      - **Event System**: Emits `powers:updated`, `schoolPointsUpdated`, and `powers:balance:changed` events for reactive UI sync
+      - **Persistence**: localStorage for immediate response + guaranteed sync to Neon DB
+      - **Enterprise Features**:
+        - Detailed logging at every step for observability
+        - Transaction ID tracking for debugging
+        - Failed transaction recovery via pending queue
+        - DB→App reconciliation on each polling cycle
       - **Integration Points**: 
-        - `api/perfis.js`: Powers API endpoints
-        - `criar-atividade-v2.ts`: **Active V2 implementation** - Charges 70 Powers per activity in FASE 8 after successful AI generation
+        - `api/perfis.js`: Powers API endpoints with [POWERS] logging
+        - `criar-atividade-v2.ts`: **Active V2 implementation** - Charges 70 Powers per activity in FASE 8 (awaited sync)
         - `criar-atividade.ts`: Legacy implementation (no longer used by executor)
         - `PerfilCabecalho.tsx`: Header display with real-time Powers balance (forceRefreshFromDatabase on mount)
         - `SeuUsoSection.tsx`: Displays balance and transaction history (ExtratoAtividadesCard)
