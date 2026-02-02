@@ -442,6 +442,12 @@ router.patch('/powers', async (req, res) => {
     let params;
 
     if (operation === 'deduct' && typeof amount === 'number') {
+      if (amount < 0 || amount > 1000) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Valor de dedução inválido' 
+        });
+      }
       query = `
         UPDATE usuarios 
         SET powers_carteira = GREATEST(0, COALESCE(powers_carteira, 300) - $1), updated_at = NOW()
@@ -450,9 +456,15 @@ router.patch('/powers', async (req, res) => {
       `;
       params = [amount, email];
     } else if (operation === 'add' && typeof amount === 'number') {
+      if (amount < 0 || amount > 300) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Valor de adição inválido' 
+        });
+      }
       query = `
         UPDATE usuarios 
-        SET powers_carteira = COALESCE(powers_carteira, 0) + $1, updated_at = NOW()
+        SET powers_carteira = LEAST(300, COALESCE(powers_carteira, 0) + $1), updated_at = NOW()
         WHERE email = $2
         RETURNING id, nome_completo, email, powers_carteira, updated_at
       `;
@@ -461,22 +473,14 @@ router.patch('/powers', async (req, res) => {
       query = `
         UPDATE usuarios 
         SET powers_carteira = 300, updated_at = NOW()
-        WHERE email = $2
+        WHERE email = $1
         RETURNING id, nome_completo, email, powers_carteira, updated_at
       `;
-      params = [300, email];
-    } else if (typeof powers_carteira === 'number') {
-      query = `
-        UPDATE usuarios 
-        SET powers_carteira = $1, updated_at = NOW()
-        WHERE email = $2
-        RETURNING id, nome_completo, email, powers_carteira, updated_at
-      `;
-      params = [powers_carteira, email];
+      params = [email];
     } else {
       return res.status(400).json({ 
         success: false, 
-        error: 'Operação inválida ou powers_carteira não especificado' 
+        error: 'Operação inválida. Use: deduct, add, ou reset' 
       });
     }
 

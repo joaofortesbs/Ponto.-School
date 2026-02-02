@@ -122,8 +122,8 @@ class PowersService {
       const powersFromDB = await this.fetchPowersFromDatabase();
       
       if (powersFromDB !== null) {
-        this.balance.available = powersFromDB;
-        this.balance.used = POWERS_CONFIG.dailyFreeAllowance - powersFromDB;
+        this.balance.available = Math.min(powersFromDB, POWERS_CONFIG.dailyFreeAllowance);
+        this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - this.balance.available);
         this.persistBalance();
         console.log('[PowersService] Saldo carregado do banco de dados:', powersFromDB);
       } else if (!storedBalance) {
@@ -175,7 +175,7 @@ class PowersService {
     }
   }
 
-  private async updatePowersInDatabase(newBalance: number): Promise<boolean> {
+  private async deductPowersInDatabase(amount: number): Promise<boolean> {
     if (this.syncInProgress) {
       console.log('[PowersService] Sincronização já em progresso, aguardando...');
       return false;
@@ -197,17 +197,18 @@ class PowersService {
         },
         body: JSON.stringify({
           email,
-          powers_carteira: newBalance,
+          operation: 'deduct',
+          amount,
         }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        console.log('[PowersService] Powers atualizados no banco:', newBalance);
+        console.log('[PowersService] Powers deduzidos no banco:', amount, 'Novo saldo:', result.data?.powers_carteira);
         return true;
       } else {
-        console.error('[PowersService] Erro ao atualizar no banco:', result.error);
+        console.error('[PowersService] Erro ao deduzir no banco:', result.error);
         return false;
       }
     } catch (error) {
@@ -215,6 +216,41 @@ class PowersService {
       return false;
     } finally {
       this.syncInProgress = false;
+    }
+  }
+
+  private async resetPowersInDatabase(): Promise<boolean> {
+    try {
+      const email = await this.getUserEmail();
+      
+      if (!email) {
+        console.log('[PowersService] Email não encontrado, salvando apenas localmente');
+        return false;
+      }
+
+      const response = await fetch('/api/perfis/powers', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          operation: 'reset',
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('[PowersService] Powers resetados no banco');
+        return true;
+      } else {
+        console.error('[PowersService] Erro ao resetar no banco:', result.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('[PowersService] Erro ao resetar no banco:', error);
+      return false;
     }
   }
 
@@ -250,7 +286,7 @@ class PowersService {
     this.balance.used = 0;
     this.balance.lastRenewal = new Date().toISOString();
     
-    await this.updatePowersInDatabase(this.balance.available);
+    await this.resetPowersInDatabase();
     
     this.persistBalance();
     this.emitUpdate();
@@ -315,7 +351,7 @@ class PowersService {
 
     this.persistBalance();
     
-    this.updatePowersInDatabase(this.balance.available).catch(err => {
+    this.deductPowersInDatabase(totalCost).catch(err => {
       console.error('[PowersService] Erro ao sincronizar cobrança com banco:', err);
     });
 
@@ -438,7 +474,7 @@ class PowersService {
 
   async reset(): Promise<void> {
     this.balance = this.getDefaultBalance();
-    await this.updatePowersInDatabase(this.balance.available);
+    await this.resetPowersInDatabase();
     this.persistBalance();
     this.emitUpdate();
     console.log('[PowersService] Saldo resetado');
@@ -447,8 +483,8 @@ class PowersService {
   async syncWithDatabase(): Promise<void> {
     const powersFromDB = await this.fetchPowersFromDatabase();
     if (powersFromDB !== null) {
-      this.balance.available = powersFromDB;
-      this.balance.used = POWERS_CONFIG.dailyFreeAllowance - powersFromDB;
+      this.balance.available = Math.min(powersFromDB, POWERS_CONFIG.dailyFreeAllowance);
+      this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - this.balance.available);
       this.persistBalance();
       this.emitUpdate();
       console.log('[PowersService] Sincronizado com banco de dados:', powersFromDB);
