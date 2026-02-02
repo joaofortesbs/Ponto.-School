@@ -52,15 +52,21 @@ The platform features a modern design with glass-morphism effects, blur backgrou
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.
     - **School Points**: Persisted and synchronized point system.
-    - **Powers System (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing:
+    - **Powers System v2.0 (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing, now with database sync:
       - **Daily Allowance**: 300 Powers renewed at 19:00 (America/Sao_Paulo timezone)
       - **Pricing Model**: Per-action charges (not per-base) to support scalable expansion
       - **Current Prices**: `criar_atividade` = 70 Powers/activity, all other capabilities = 0 (free)
       - **Architecture**: Centralized config (`src/config/powers-pricing.ts`) + service (`src/services/powersService.ts`)
-      - **Event System**: Emits `powers:updated` events for reactive UI sync
-      - **Persistence**: localStorage with 5-min cache TTL
+      - **Database Sync**: Dual-layer persistence with localStorage cache + Neon DB (`powers_carteira` column in `usuarios` table)
+      - **API Endpoints**: 
+        - `GET /api/perfis/powers`: Fetch current Powers balance from database
+        - `PATCH /api/perfis/powers`: Update Powers with operations (deduct/add/reset)
+      - **Event System**: Emits `powers:updated` AND `schoolPointsUpdated` events for reactive UI sync
+      - **Persistence**: localStorage for immediate response + background sync to Neon DB
       - **Integration Points**: 
+        - `api/perfis.js`: Powers API endpoints
         - `criar-atividade.ts`: Charges after successful activity creation
+        - `PerfilCabecalho.tsx`: Header display with real-time Powers balance
         - `SeuUsoSection.tsx`: Displays balance and transaction history (ExtratoAtividadesCard)
     - **Calendário School**: Comprehensive calendar event management.
     - **Lesson Publishing System**: Manages lesson publication.
