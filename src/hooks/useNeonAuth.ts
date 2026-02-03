@@ -221,6 +221,9 @@ export function useNeonAuth() {
       console.log("✅ Login automático realizado com sucesso:", loginData);
 
       const profile = loginData.profile;
+      
+      // Gerar token para registro
+      const token = btoa(`${profile.id}:${Date.now()}`);
 
       setAuthState({
         user: profile,
@@ -230,8 +233,16 @@ export function useNeonAuth() {
       });
 
       // Salvar dados no localStorage
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('user_id', profile.id);
       localStorage.setItem("neon_user", JSON.stringify(profile));
       localStorage.setItem("neon_authenticated", "true");
+      
+      // CRITICAL: Salvar email para o ProfileContext poder buscar o perfil
+      if (userData.email) {
+        localStorage.setItem("userEmail", userData.email);
+        localStorage.setItem("powers_user_email", userData.email);
+      }
       
       // CACHE INSTANTÂNEO: Salvar dados críticos para renderização rápida
       if (profile.tipo_conta) {
@@ -248,6 +259,15 @@ export function useNeonAuth() {
       if (profile.imagem_avatar) {
         localStorage.setItem("userAvatarUrl", profile.imagem_avatar);
       }
+
+      // CRITICAL: Disparar evento para o ProfileContext atualizar com o perfil + Powers
+      console.log('[useNeonAuth] 🎉 Dispatching neon-login-success after register with powers:', profile.powers_carteira);
+      document.dispatchEvent(new CustomEvent('neon-login-success', {
+        detail: { 
+          email: userData.email,
+          profile: profile
+        }
+      }));
 
       return { success: true, profile };
 
@@ -332,6 +352,12 @@ export function useNeonAuth() {
       localStorage.setItem("neon_user", JSON.stringify(user));
       localStorage.setItem("neon_authenticated", "true");
       
+      // CRITICAL: Salvar email para o ProfileContext poder buscar o perfil
+      if (email) {
+        localStorage.setItem("userEmail", email);
+        localStorage.setItem("powers_user_email", email);
+      }
+      
       // CACHE INSTANTÂNEO: Salvar tipo de conta imediatamente para renderização rápida
       if (user.tipo_conta) {
         localStorage.setItem("userAccountType", user.tipo_conta);
@@ -355,6 +381,15 @@ export function useNeonAuth() {
         isAuthenticated: true,
         error: null
       });
+
+      // CRITICAL: Disparar evento para o ProfileContext atualizar com o perfil + Powers
+      console.log('[useNeonAuth] 🎉 Dispatching neon-login-success with powers:', user.powers_carteira);
+      document.dispatchEvent(new CustomEvent('neon-login-success', {
+        detail: { 
+          email,
+          profile: user
+        }
+      }));
 
       return { success: true, user };
     } catch (error) {

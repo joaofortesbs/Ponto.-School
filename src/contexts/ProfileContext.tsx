@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types/user-profile';
 
-const CACHE_VERSION = 'v4.0';
+const CACHE_VERSION = 'v4.1';
 const CACHE_KEY = 'profile_context_v4';
 const CACHE_MAX_AGE = 5 * 60 * 1000;
 
@@ -91,17 +90,111 @@ function cleanupLegacyCache(): void {
   }
 }
 
+function getUserEmailFromLocalStorage(): string | null {
+  const email = localStorage.getItem('userEmail') 
+    || localStorage.getItem('powers_user_email')
+    || localStorage.getItem('supabase_user_email');
+  
+  if (email) {
+    console.log('[ProfileContext] Found email in localStorage:', email);
+    return email;
+  }
+
+  const neonUser = localStorage.getItem('neon_user');
+  if (neonUser) {
+    try {
+      const parsed = JSON.parse(neonUser);
+      if (parsed.email) {
+        console.log('[ProfileContext] Found email in neon_user:', parsed.email);
+        return parsed.email;
+      }
+    } catch (e) {
+      console.warn('[ProfileContext] Error parsing neon_user:', e);
+    }
+  }
+
+  return null;
+}
+
+function getUserIdFromLocalStorage(): string | null {
+  const userId = localStorage.getItem('user_id');
+  if (userId) {
+    console.log('[ProfileContext] Found user_id in localStorage:', userId);
+    return userId;
+  }
+  
+  const neonUser = localStorage.getItem('neon_user');
+  if (neonUser) {
+    try {
+      const parsed = JSON.parse(neonUser);
+      if (parsed.id) {
+        console.log('[ProfileContext] Found user_id in neon_user:', parsed.id);
+        return parsed.id;
+      }
+    } catch (e) {
+      console.warn('[ProfileContext] Error parsing neon_user:', e);
+    }
+  }
+  
+  return null;
+}
+
+function isUserAuthenticated(): boolean {
+  const authToken = localStorage.getItem('auth_token');
+  const neonAuthenticated = localStorage.getItem('neon_authenticated');
+  
+  return !!(authToken || neonAuthenticated === 'true');
+}
+
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [powers, setPowers] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const fetchProfileFromAPI = useCallback(async (email: string): Promise<UserProfile | null> => {
+  const fetchProfileByEmail = useCallback(async (email: string): Promise<UserProfile | null> => {
     try {
-      console.log('[ProfileContext] Fetching profile from API for:', email);
+      console.log('[ProfileContext] Fetching profile by EMAIL:', email);
       
       const response = await fetch(`/api/perfis?email=${encodeURIComponent(email)}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        console.error('[ProfileContext] API error:', response.status);
+        return null;
+      }
+
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        const profileData = result.data;
+        profileData.email = email;
+        
+        console.log('[ProfileContext] API returned profile with powers_carteira:', profileData.powers_carteira);
+        
+        setCache(profileData);
+        
+        localStorage.setItem('powers_user_email', email);
+        localStorage.setItem('userEmail', email);
+        
+        return profileData;
+      }
+      
+      console.warn('[ProfileContext] Profile not found by email');
+      return null;
+    } catch (error) {
+      console.error('[ProfileContext] Error fetching profile by email:', error);
+      return null;
+    }
+  }, []);
+
+  const fetchProfileById = useCallback(async (userId: string): Promise<UserProfile | null> => {
+    try {
+      console.log('[ProfileContext] Fetching profile by ID:', userId);
+      
+      const response = await fetch(`/api/perfis?id=${encodeURIComponent(userId)}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -118,28 +211,20 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         
         console.log('[ProfileContext] API returned profile with powers_carteira:', profileData.powers_carteira);
         
-        profileData.email = email;
+        if (profileData.email) {
+          localStorage.setItem('powers_user_email', profileData.email);
+          localStorage.setItem('userEmail', profileData.email);
+        }
         
         setCache(profileData);
-        
-        localStorage.setItem('powers_user_email', email);
-        localStorage.setItem('userEmail', email);
-        
-        document.dispatchEvent(new CustomEvent('profile-updated', {
-          detail: { profile: profileData }
-        }));
-        
-        document.dispatchEvent(new CustomEvent('user-email-available', {
-          detail: { email }
-        }));
         
         return profileData;
       }
       
-      console.warn('[ProfileContext] Profile not found in API');
+      console.warn('[ProfileContext] Profile not found by ID');
       return null;
     } catch (error) {
-      console.error('[ProfileContext] Error fetching profile:', error);
+      console.error('[ProfileContext] Error fetching profile by ID:', error);
       return null;
     }
   }, []);
@@ -149,10 +234,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
 
     try {
-      const { data: session } = await supabase.auth.getSession();
+      const authenticated = isUserAuthenticated();
+      console.log('[ProfileContext] User authenticated:', authenticated);
       
-      if (!session?.session?.user?.email) {
-        console.log('[ProfileContext] No authenticated user');
+      if (!authenticated) {
+        console.log('[ProfileContext] No auth token found - user not logged in');
         setIsAuthenticated(false);
         setProfile(null);
         setPowers(null);
@@ -161,31 +247,57 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       }
 
       setIsAuthenticated(true);
-      const email = session.session.user.email;
-      console.log('[ProfileContext] User authenticated:', email);
+
+      const email = getUserEmailFromLocalStorage();
+      const userId = getUserIdFromLocalStorage();
+
+      console.log('[ProfileContext] Auth sources - email:', email, ', userId:', userId);
 
       const cachedProfile = getValidCache();
-      if (cachedProfile && cachedProfile.email === email) {
-        console.log('[ProfileContext] Using valid cache with powers:', cachedProfile.powers_carteira);
-        setProfile(cachedProfile);
-        setPowers(cachedProfile.powers_carteira ?? null);
-        setIsLoading(false);
+      if (cachedProfile) {
+        const cacheMatchesUser = 
+          (email && cachedProfile.email === email) || 
+          (userId && cachedProfile.id === userId);
         
-        fetchProfileFromAPI(email).then(freshProfile => {
-          if (freshProfile) {
-            setProfile(freshProfile);
-            setPowers(freshProfile.powers_carteira ?? null);
+        if (cacheMatchesUser) {
+          console.log('[ProfileContext] Using valid cache with powers:', cachedProfile.powers_carteira);
+          setProfile(cachedProfile);
+          setPowers(cachedProfile.powers_carteira ?? null);
+          setIsLoading(false);
+          
+          if (email) {
+            fetchProfileByEmail(email).then(freshProfile => {
+              if (freshProfile) {
+                setProfile(freshProfile);
+                setPowers(freshProfile.powers_carteira ?? null);
+              }
+            });
+          } else if (userId) {
+            fetchProfileById(userId).then(freshProfile => {
+              if (freshProfile) {
+                setProfile(freshProfile);
+                setPowers(freshProfile.powers_carteira ?? null);
+              }
+            });
           }
-        });
-        return;
+          return;
+        }
       }
 
-      const freshProfile = await fetchProfileFromAPI(email);
+      let freshProfile: UserProfile | null = null;
+
+      if (email) {
+        freshProfile = await fetchProfileByEmail(email);
+      }
+      
+      if (!freshProfile && userId) {
+        freshProfile = await fetchProfileById(userId);
+      }
       
       if (freshProfile) {
         setProfile(freshProfile);
         setPowers(freshProfile.powers_carteira ?? null);
-        console.log('[ProfileContext] Profile loaded with powers:', freshProfile.powers_carteira);
+        console.log('[ProfileContext] ✅ Profile loaded with powers:', freshProfile.powers_carteira);
       } else {
         console.warn('[ProfileContext] Could not load profile');
         setProfile(null);
@@ -198,7 +310,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchProfileFromAPI]);
+  }, [fetchProfileByEmail, fetchProfileById]);
 
   const refreshProfile = useCallback(async () => {
     console.log('[ProfileContext] Manual refresh requested');
@@ -224,18 +336,38 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     cleanupLegacyCache();
     loadProfile();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[ProfileContext] Auth state changed:', event);
+    const handleLoginSuccess = (event: CustomEvent) => {
+      console.log('[ProfileContext] 🎉 Login success event received!');
+      const email = event.detail?.email;
+      const profile = event.detail?.profile;
       
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (profile && typeof profile.powers_carteira === 'number') {
+        console.log('[ProfileContext] Setting profile from login event with powers:', profile.powers_carteira);
+        setProfile(profile);
+        setPowers(profile.powers_carteira);
+        setIsAuthenticated(true);
+        setCache(profile);
+      } else if (email) {
+        console.log('[ProfileContext] Fetching profile after login for:', email);
+        fetchProfileByEmail(email).then(freshProfile => {
+          if (freshProfile) {
+            setProfile(freshProfile);
+            setPowers(freshProfile.powers_carteira ?? null);
+            setIsAuthenticated(true);
+          }
+        });
+      } else {
         loadProfile();
-      } else if (event === 'SIGNED_OUT') {
-        setProfile(null);
-        setPowers(null);
-        setIsAuthenticated(false);
-        localStorage.removeItem(CACHE_KEY);
       }
-    });
+    };
+
+    const handleLogout = () => {
+      console.log('[ProfileContext] Logout event received');
+      setProfile(null);
+      setPowers(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem(CACHE_KEY);
+    };
 
     const handlePowersCharged = (event: CustomEvent) => {
       if (typeof event.detail?.newBalance === 'number') {
@@ -256,15 +388,29 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'neon_authenticated' || event.key === 'auth_token') {
+        console.log('[ProfileContext] Storage auth change detected, reloading profile');
+        loadProfile();
+      }
+    };
+
+    document.addEventListener('neon-login-success', handleLoginSuccess as EventListener);
+    document.addEventListener('login-success', handleLoginSuccess as EventListener);
+    window.addEventListener('logout', handleLogout);
     document.addEventListener('powers:charged', handlePowersCharged as EventListener);
     document.addEventListener('profile-updated-external', handleExternalProfileUpdate as EventListener);
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
-      authListener?.subscription.unsubscribe();
+      document.removeEventListener('neon-login-success', handleLoginSuccess as EventListener);
+      document.removeEventListener('login-success', handleLoginSuccess as EventListener);
+      window.removeEventListener('logout', handleLogout);
       document.removeEventListener('powers:charged', handlePowersCharged as EventListener);
       document.removeEventListener('profile-updated-external', handleExternalProfileUpdate as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
     };
-  }, [loadProfile, updatePowers, profile?.email]);
+  }, [loadProfile, updatePowers, fetchProfileByEmail, profile?.email]);
 
   const value: ProfileContextType = {
     profile,
