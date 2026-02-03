@@ -49,13 +49,13 @@ The platform features a modern, glass-morphism inspired design with blur backgro
         - Aggressive retry system (2s, 5s delays) when DB is temporarily unavailable
         - `initialize()` and `forceRefreshFromDatabase()` never fallback to localStorage
         - PerfilCabecalho and SeuUsoSection only display values when `isBalanceReady()=true`
-      - **FAST-PATH Optimization v2.0 (Feb 2026)**: Powers now loaded instantly from profile API response.
+      - **FAST-PATH Optimization v2.1 (Feb 2026)**: Powers now loaded instantly from profile API response.
         - `findProfileByEmail()` includes `powers_carteira` in query result
         - `setBalanceFromProfile()` method sets Powers instantly without second API call
         - PerfilCabecalho uses FAST-PATH when `profile.powers_carteira` is available
         - Eliminates latency from separate `/api/perfis/powers` call
-        - **CRITICAL FIX**: Cache validation now checks for `powers_carteira` presence
-        - Cache without `powers_carteira` is automatically invalidated and re-fetched from Neon
+        - **CRITICAL FIX v2.1**: Fixed cache corruption bug where `useUserInfo.ts` was overwriting `userProfile` cache with partial data (without `powers_carteira`), causing FAST-PATH to fail. Now uses separate cache key `userProfile_schoolpower_cache`.
+        - Cache validation now checks for `powers_carteira` presence - cache without it is automatically invalidated and re-fetched from Neon
         - `refreshProfileInBackground()` now fetches from Neon (not Supabase) to ensure `powers_carteira` is included
       - **Race Condition Resolution**: Added `dbFetchCompleted` flag to track if the database fetch succeeded. If `initialize()` is called before email is available, it will re-fetch from DB on subsequent calls when email becomes available.
       - **Synchronization Flow**: (1) `PerfilCabecalho` loads profile with `powers_carteira`, (2) FAST-PATH: `setBalanceFromProfile()` sets Powers instantly, (3) UI shows value immediately. Fallback: calls `forceRefreshFromDatabase(email)`.

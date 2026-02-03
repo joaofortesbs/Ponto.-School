@@ -124,6 +124,10 @@ class ProfileService {
 
         if (result.success && result.data) {
           const neonProfile = result.data;
+          
+          // CRITICAL DEBUG: Verificar se powers_carteira veio do banco
+          console.log('💰 [PROFILE] powers_carteira do Neon:', neonProfile.powers_carteira);
+          console.log('💰 [PROFILE] Tipo do powers_carteira:', typeof neonProfile.powers_carteira);
 
           // Atualizar cache
           localStorage.setItem('userProfile', JSON.stringify(neonProfile));

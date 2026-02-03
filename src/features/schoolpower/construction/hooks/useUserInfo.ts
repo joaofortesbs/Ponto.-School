@@ -75,8 +75,10 @@ export const useUserInfo = (): UserInfo => {
           console.log('✅ [useUserInfo] Dados do usuário atualizados do Neon:', userInfoData);
           setUserInfo(userInfoData);
           
-          // Atualizar cache no localStorage
-          localStorage.setItem('userProfile', JSON.stringify({
+          // CRITICAL: NÃO sobrescrever userProfile - isso corrompe o cache do profileService
+          // O profileService mantém o perfil completo incluindo powers_carteira
+          // Se precisar salvar algo, usar uma chave separada
+          localStorage.setItem('userProfile_schoolpower_cache', JSON.stringify({
             full_name: userData.nome_completo,
             username: userData.nome_usuario,
             display_name: userData.nome_completo,
