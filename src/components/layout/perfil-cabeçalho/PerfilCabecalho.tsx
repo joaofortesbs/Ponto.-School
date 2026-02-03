@@ -46,17 +46,30 @@ const PerfilCabecalho: React.FC = () => {
           powersService.setUserEmail(profile.email);
           console.log('[PerfilCabecalho] 📧 Email passado para PowersService:', profile.email);
           
-          // 2. ENTERPRISE v2.0: Forçar refresh do banco - isso já faz initialize() internamente
-          // Não chamar clearLocalCache() em cada mount - preservar fallback para quando DB falhar
+          // 2. ENTERPRISE DB-ONLY v3.1: Forçar refresh do banco
           console.log('[PerfilCabecalho] 🔄 Chamando forceRefreshFromDatabase com email:', profile.email);
           const balance = await powersService.forceRefreshFromDatabase(profile.email);
-          setPowers(balance.available);
-          console.log('[PerfilCabecalho] 💰 Powers carregados do banco:', balance.available);
+          
+          // 3. DB-ONLY v3.1: Só mostrar valor se veio do banco
+          if (powersService.isBalanceReady()) {
+            setPowers(balance.available);
+            console.log('[PerfilCabecalho] 💰 Powers carregados do banco (confirmado):', balance.available);
+          } else {
+            // Banco não respondeu ainda - manter null para mostrar "..."
+            console.log('[PerfilCabecalho] ⏳ Aguardando resposta do banco...');
+            setPowers(null);
+          }
         } else {
           console.warn('[PerfilCabecalho] ⚠️ Perfil sem email - Powers podem não sincronizar corretamente');
           await powersService.initialize();
-          const balance = powersService.getBalance();
-          setPowers(balance.available);
+          
+          // DB-ONLY v3.1: Verificar se saldo é confiável
+          if (powersService.isBalanceReady()) {
+            const balance = powersService.getBalance();
+            setPowers(balance.available);
+          } else {
+            setPowers(null);
+          }
         }
         
         console.log('[PerfilCabecalho] ✅ === CARREGAMENTO CONCLUÍDO ===');
@@ -103,8 +116,9 @@ const PerfilCabecalho: React.FC = () => {
 
     const handleBalanceChanged = (event: Event) => {
       const customEvent = event as CustomEvent;
-      if (customEvent.detail?.available !== undefined) {
-        console.log('[PerfilCabecalho] 📡 Evento powers:balance:changed recebido:', customEvent.detail.available);
+      // DB-ONLY v3.1: Só atualizar se o saldo veio do banco
+      if (customEvent.detail?.available !== undefined && powersService.isBalanceReady()) {
+        console.log('[PerfilCabecalho] 📡 Evento powers:balance:changed recebido (DB confirmado):', customEvent.detail.available);
         setPowers(customEvent.detail.available);
       }
     };
@@ -114,8 +128,13 @@ const PerfilCabecalho: React.FC = () => {
     window.addEventListener("powers:balance:changed", handleBalanceChanged as EventListener);
 
     const unsubscribe = powersService.onUpdate((balance) => {
-      console.log('[PerfilCabecalho] 📡 powersService.onUpdate recebido:', balance.available);
-      updatePowersFromBalance(balance);
+      // DB-ONLY v3.1: Só atualizar se o saldo veio do banco
+      if (powersService.isBalanceReady()) {
+        console.log('[PerfilCabecalho] 📡 powersService.onUpdate recebido (DB confirmado):', balance.available);
+        updatePowersFromBalance(balance);
+      } else {
+        console.log('[PerfilCabecalho] ⏳ Ignorando update - aguardando DB');
+      }
     });
 
     return () => {

@@ -12,44 +12,7 @@ interface PowersData {
   planType: string;
 }
 
-const CACHE_KEYS = {
-  powersData: 'modalGeral_powersData',
-  activityRecords: 'modalGeral_activityRecords',
-  lastFetch: 'modalGeral_seuUso_lastFetch',
-} as const;
-
-const CACHE_DURATION = 5 * 60 * 1000;
-
-const getCachedData = <T,>(key: string): T | null => {
-  try {
-    const cached = localStorage.getItem(key);
-    if (cached) {
-      return JSON.parse(cached) as T;
-    }
-  } catch (error) {
-    console.warn(`[SeuUsoSection] Erro ao ler cache ${key}:`, error);
-  }
-  return null;
-};
-
-const setCachedData = <T,>(key: string, data: T): void => {
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch (error) {
-    console.warn(`[SeuUsoSection] Erro ao salvar cache ${key}:`, error);
-  }
-};
-
-const isCacheValid = (): boolean => {
-  try {
-    const lastFetch = localStorage.getItem(CACHE_KEYS.lastFetch);
-    if (!lastFetch) return false;
-    const lastFetchTime = parseInt(lastFetch, 10);
-    return Date.now() - lastFetchTime < CACHE_DURATION;
-  } catch {
-    return false;
-  }
-};
+// DB-ONLY v3.1: Cache removido - banco de dados é a única fonte de verdade
 
 const convertBalanceToPowersData = (balance: PowersBalance, planType: string): PowersData => {
   return {
@@ -81,7 +44,13 @@ export const SeuUsoSection: React.FC = () => {
   const updateFromPowersService = useCallback((balance: PowersBalance) => {
     if (!isMountedRef.current) return;
     
-    console.log('[SeuUsoSection] 📡 Recebendo atualização do powersService:', {
+    // DB-ONLY v3.1: Só atualizar se saldo veio do banco
+    if (!powersService.isBalanceReady()) {
+      console.log('[SeuUsoSection] ⏳ Ignorando update - aguardando DB');
+      return;
+    }
+    
+    console.log('[SeuUsoSection] 📡 Recebendo atualização do powersService (DB confirmado):', {
       available: balance.available,
       used: balance.used,
       transactions: balance.transactions.length,
@@ -93,10 +62,7 @@ export const SeuUsoSection: React.FC = () => {
     setPowersData(newPowersData);
     setActivityRecords(newRecords);
     
-    setCachedData(CACHE_KEYS.powersData, newPowersData);
-    setCachedData(CACHE_KEYS.activityRecords, newRecords);
-    
-    console.log('[SeuUsoSection] ✅ UI atualizada com novos dados de Powers');
+    console.log('[SeuUsoSection] ✅ UI atualizada com dados do banco');
   }, [planType]);
 
   useEffect(() => {
@@ -110,34 +76,41 @@ export const SeuUsoSection: React.FC = () => {
       try {
         console.log('[SeuUsoSection] 🔄 Carregando dados do banco de dados...');
         
-        const [profile, balance] = await Promise.all([
+        const [profile] = await Promise.all([
           profileService.getCurrentUserProfile(),
           powersService.initialize(),
         ]);
         
         if (!isMountedRef.current) return;
 
-        await powersService.syncWithDatabase();
+        // DB-ONLY v3.1: Forçar refresh do banco se temos email
+        if (profile?.email) {
+          await powersService.forceRefreshFromDatabase(profile.email);
+        } else {
+          await powersService.syncWithDatabase();
+        }
+        
         const updatedBalance = powersService.getBalance();
-
         const userPlanType = profile?.plan_type === 'premium' ? 'Premium' : 'Grátis';
         setPlanType(userPlanType);
 
-        const newPowersData = convertBalanceToPowersData(updatedBalance, userPlanType);
-        const newRecords = convertTransactionsToRecords(updatedBalance);
+        // DB-ONLY v3.1: Só mostrar dados se vieram do banco
+        if (powersService.isBalanceReady()) {
+          const newPowersData = convertBalanceToPowersData(updatedBalance, userPlanType);
+          const newRecords = convertTransactionsToRecords(updatedBalance);
 
-        setPowersData(newPowersData);
-        setActivityRecords(newRecords);
+          setPowersData(newPowersData);
+          setActivityRecords(newRecords);
 
-        setCachedData(CACHE_KEYS.powersData, newPowersData);
-        setCachedData(CACHE_KEYS.activityRecords, newRecords);
-        localStorage.setItem(CACHE_KEYS.lastFetch, Date.now().toString());
-
-        console.log('[SeuUsoSection] ✅ Dados carregados do banco:', {
-          available: updatedBalance.available,
-          used: updatedBalance.used,
-          transactions: updatedBalance.transactions.length,
-        });
+          console.log('[SeuUsoSection] ✅ Dados carregados do banco (confirmado):', {
+            available: updatedBalance.available,
+            used: updatedBalance.used,
+            transactions: updatedBalance.transactions.length,
+          });
+        } else {
+          console.log('[SeuUsoSection] ⏳ Aguardando resposta do banco...');
+          // Não setar powersData - deixar undefined para mostrar loading
+        }
 
       } catch (error) {
         console.error("[SeuUsoSection] ❌ Erro ao carregar dados de Powers:", error);

@@ -88,6 +88,7 @@ class PowersService {
   private balance: PowersBalance;
   private initialized: boolean = false;
   private dbFetchCompleted: boolean = false; // ENTERPRISE: Track se DB fetch foi bem-sucedido
+  private balanceReady: boolean = false; // ENTERPRISE DB-ONLY v3.1: TRUE apenas após sucesso do DB
   private userEmail: string | null = null;
   private pendingSync: PendingSyncItem[] = [];
   private syncPollingInterval: ReturnType<typeof setInterval> | null = null;
@@ -184,18 +185,19 @@ class PowersService {
       localStorage.setItem(STORAGE_KEYS.userEmail, email);
       console.log('[PowersService] 📧 Email definido manualmente:', email);
       
-      // ENTERPRISE: Reset dbFetchCompleted quando email muda para garantir re-fetch
-      if (emailChanged && !wasEmpty) {
+      // ENTERPRISE DB-ONLY v3.1: Reset flags quando email muda para garantir re-fetch
+      if (emailChanged || wasEmpty) {
         this.dbFetchCompleted = false;
-        console.log('[PowersService] 🔄 Email mudou - dbFetchCompleted resetado para forçar re-fetch');
+        this.balanceReady = false;
+        console.log('[PowersService] 🔄 Email configurado - flags resetados para forçar re-fetch');
       }
       
       // Se o polling ainda não foi iniciado E o serviço foi inicializado, iniciar agora
       if ((wasEmpty || emailChanged) && !this.syncPollingInterval && this.initialized) {
         console.log('[PowersService] 🚀 Iniciando polling após email ser configurado/alterado');
         this.startSyncPolling();
-        // Sincronização imediata quando email é configurado
-        this.forceRefreshFromDatabase();
+        // DB-ONLY v3.1: Passar email explicitamente
+        this.forceRefreshFromDatabase(email);
       }
     }
   }
@@ -443,6 +445,7 @@ class PowersService {
           this.persistBalance();
           this.emitUpdate();
           this.dbFetchCompleted = true;
+          this.balanceReady = true; // DB-ONLY v3.1: Saldo confiável
           console.log('[PowersService] ✅ DB fetch atrasado completado:', powersFromDB);
         }
       }
@@ -468,11 +471,13 @@ class PowersService {
         this.balance.transactions = this.balance.transactions || [];
         this.persistBalance();
         this.dbFetchCompleted = true;
+        this.balanceReady = true; // DB-ONLY v3.1: Saldo confiável
         console.log('[PowersService] ✅ SUCESSO DB-ONLY: Powers do banco:', powersFromDB);
       } else {
         // DB-ONLY v3.0: NUNCA usar localStorage como fallback
         // Usar default e agendar retry agressivo
         this.dbFetchCompleted = false;
+        this.balanceReady = false; // DB-ONLY v3.1: Saldo NÃO confiável
         console.warn('[PowersService] ⚠️ Banco não disponível - usando default temporário (DB-ONLY mode)');
         this.balance = this.getDefaultBalance();
         
@@ -484,6 +489,7 @@ class PowersService {
             this.balance.available = retryResult;
             this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - retryResult);
             this.dbFetchCompleted = true;
+            this.balanceReady = true; // DB-ONLY v3.1: Saldo confiável após retry
             this.persistBalance();
             this.emitUpdate();
             console.log('[PowersService] ✅ DB-ONLY Retry bem-sucedido:', retryResult);
@@ -767,15 +773,21 @@ class PowersService {
     return `${displayInfo.name} (${itemCount} ${displayInfo.itemLabel}s)`;
   }
 
+  /**
+   * ENTERPRISE DB-ONLY v3.1: Verifica se o saldo veio do banco de dados
+   * Use este método antes de exibir o saldo na UI
+   * @returns true se o saldo é confiável (veio do DB), false se ainda está carregando
+   */
+  isBalanceReady(): boolean {
+    return this.balanceReady;
+  }
+
   getBalance(): PowersBalance {
-    // ENTERPRISE DB-FIRST v2.0: Retorna estado determinístico
-    // Se inicializado OU dbFetchCompleted, retorna balance atual
-    // Caso contrário, retorna default (300 Powers - estado "carregando")
-    if (!this.initialized && !this.dbFetchCompleted) {
-      console.log('[PowersService] ⚠️ getBalance() chamado antes de init - retornando default (carregando)');
-      // Retornar default SEM modificar this.balance
-      // Isso evita que cache corrompido seja usado
-      return this.getDefaultBalance();
+    // ENTERPRISE DB-ONLY v3.1: Retorna saldo apenas se veio do banco
+    // Se balanceReady=false, ainda retornamos o balance atual (que pode ser default)
+    // mas a UI deve usar isBalanceReady() para decidir se mostra "..." ou o valor
+    if (!this.balanceReady) {
+      console.log('[PowersService] ⚠️ getBalance() chamado mas DB não sincronizado - saldo pode ser temporário');
     }
     return this.balance;
   }
@@ -929,6 +941,7 @@ class PowersService {
       this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - powersFromDB);
       this.balance.dailyLimit = POWERS_CONFIG.dailyFreeAllowance;
       this.dbFetchCompleted = true; // ENTERPRISE: Marcar que DB foi sincronizado com sucesso
+      this.balanceReady = true; // DB-ONLY v3.1: Saldo confiável
       this.initialized = true; // ENTERPRISE: Marcar como inicializado após DB fetch
       this.persistBalance();
       this.emitUpdate();
@@ -936,6 +949,7 @@ class PowersService {
     } else {
       // ENTERPRISE DB-ONLY v3.0: NUNCA usar localStorage como fallback
       // Se o banco falhar, usar default e agendar retry agressivo
+      this.balanceReady = false; // DB-ONLY v3.1: Saldo NÃO confiável
       console.warn('[PowersService] ⚠️ DB não disponível - usando default temporário (DB-ONLY mode)');
       this.balance = this.getDefaultBalance();
       this.initialized = true;
@@ -958,6 +972,7 @@ class PowersService {
             this.balance.available = retryResult;
             this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - retryResult);
             this.dbFetchCompleted = true;
+            this.balanceReady = true; // DB-ONLY v3.1: Saldo confiável após retry
             this.persistBalance();
             this.emitUpdate();
             console.log('[PowersService] ✅ DB-ONLY Retry bem-sucedido:', retryResult);

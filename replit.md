@@ -41,14 +41,16 @@ The platform features a modern, glass-morphism inspired design with blur backgro
     - **Powers System v5.0 ENTERPRISE DB-ONLY (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing and enterprise-grade synchronization with Neon DB. 
       - **Centralized Configuration**: All Powers values are configured in `src/config/powers-pricing.ts` (frontend) and `api/config/powers.js` (backend). To change initial Powers for new users, edit `initialPowersForNewUsers` in the config files.
       - **New User Provisioning**: New users automatically receive 300 Powers (configurable) upon account creation. The `powers_carteira` column in the `usuarios` table has a DEFAULT of 300.
-      - **DB-ONLY Strategy v3.0 (Feb 2026)**: Database is the SINGLE SOURCE OF TRUTH. localStorage is NEVER used as source of balance data.
+      - **DB-ONLY Strategy v3.1 (Feb 2026)**: Database is the SINGLE SOURCE OF TRUTH. localStorage is NEVER used as source of balance data.
         - Cache is automatically cleared in constructor and before each DB fetch
         - `persistBalance()` is blocked until DB sync is confirmed (`dbFetchCompleted=true`)
+        - `balanceReady` flag tracks if balance came from DB (UI shows "..." until true)
+        - `isBalanceReady()` method for UI components to check if balance is reliable
         - Aggressive retry system (2s, 5s delays) when DB is temporarily unavailable
         - `initialize()` and `forceRefreshFromDatabase()` never fallback to localStorage
-        - Default balance shown temporarily while DB retry is in progress
+        - PerfilCabecalho and SeuUsoSection only display values when `isBalanceReady()=true`
       - **Race Condition Resolution**: Added `dbFetchCompleted` flag to track if the database fetch succeeded. If `initialize()` is called before email is available, it will re-fetch from DB on subsequent calls when email becomes available.
-      - **Synchronization Flow**: (1) `PerfilCabecalho` loads profile with email, (2) calls `setUserEmail()`, (3) calls `forceRefreshFromDatabase(email)` - ensuring DB value is always used.
+      - **Synchronization Flow**: (1) `PerfilCabecalho` loads profile with email, (2) calls `setUserEmail()`, (3) calls `forceRefreshFromDatabase(email)`, (4) only shows value if `isBalanceReady()=true`.
       - **Features**: daily allowance, pending transactions queue, 30-second polling system for DB→App sync, synchronous charges for App→DB sync, event-based decoupling (no circular dependencies), lazy polling initialization, auto-initialization on email event, email override in forceRefreshFromDatabase(), automatic polling start on email override, multiple email propagation paths (localStorage cache, event listener, PerfilCabecalho direct call with email parameter), detailed logging for debug, retry on DB failure, and guard against duplicate listeners.
     - **Calendário School**: Comprehensive calendar event management.
     - **Lesson Publishing System**: Manages lesson publication.
