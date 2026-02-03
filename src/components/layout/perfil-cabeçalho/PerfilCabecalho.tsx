@@ -42,14 +42,12 @@ const PerfilCabecalho: React.FC = () => {
         
         // Se o perfil tem email, garantir que o PowersService tenha acesso ANTES de inicializar
         if (profile?.email) {
-          // 1. Definir email no PowersService
+          // 1. Definir email no PowersService PRIMEIRO
           powersService.setUserEmail(profile.email);
           console.log('[PerfilCabecalho] 📧 Email passado para PowersService:', profile.email);
           
-          // 2. Inicializar PowersService
-          await powersService.initialize();
-          
-          // 3. CRÍTICO: Forçar refresh do banco passando o email diretamente
+          // 2. ENTERPRISE v2.0: Forçar refresh do banco - isso já faz initialize() internamente
+          // Não chamar clearLocalCache() em cada mount - preservar fallback para quando DB falhar
           console.log('[PerfilCabecalho] 🔄 Chamando forceRefreshFromDatabase com email:', profile.email);
           const balance = await powersService.forceRefreshFromDatabase(profile.email);
           setPowers(balance.available);

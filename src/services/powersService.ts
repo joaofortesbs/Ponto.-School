@@ -747,15 +747,14 @@ class PowersService {
   }
 
   getBalance(): PowersBalance {
-    if (!this.initialized) {
-      const storedBalance = localStorage.getItem(STORAGE_KEYS.balance);
-      if (storedBalance) {
-        try {
-          this.balance = JSON.parse(storedBalance);
-        } catch {
-          this.balance = this.getDefaultBalance();
-        }
-      }
+    // ENTERPRISE DB-FIRST v2.0: Retorna estado determinístico
+    // Se inicializado OU dbFetchCompleted, retorna balance atual
+    // Caso contrário, retorna default (300 Powers - estado "carregando")
+    if (!this.initialized && !this.dbFetchCompleted) {
+      console.log('[PowersService] ⚠️ getBalance() chamado antes de init - retornando default (carregando)');
+      // Retornar default SEM modificar this.balance
+      // Isso evita que cache corrompido seja usado
+      return this.getDefaultBalance();
     }
     return this.balance;
   }
@@ -895,11 +894,60 @@ class PowersService {
       const previousBalance = this.balance.available;
       this.balance.available = powersFromDB;
       this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - powersFromDB);
+      this.balance.dailyLimit = POWERS_CONFIG.dailyFreeAllowance;
+      this.dbFetchCompleted = true; // ENTERPRISE: Marcar que DB foi sincronizado com sucesso
+      this.initialized = true; // ENTERPRISE: Marcar como inicializado após DB fetch
       this.persistBalance();
       this.emitUpdate();
       console.log('[PowersService] ✅ Atualizado do banco - Anterior:', previousBalance, '| Novo:', powersFromDB, '| Usado:', this.balance.used);
     } else {
-      console.warn('[PowersService] ⚠️ fetchPowersFromDatabase retornou null - usando cache local');
+      console.warn('[PowersService] ⚠️ fetchPowersFromDatabase retornou null - tentando fallback...');
+      // Fallback: usar cache local se existir
+      const storedBalance = localStorage.getItem(STORAGE_KEYS.balance);
+      if (storedBalance && !this.initialized) {
+        try {
+          const cached = JSON.parse(storedBalance);
+          this.balance = cached;
+          this.initialized = true;
+          console.log('[PowersService] 📦 Fallback: usando cache local:', cached.available);
+        } catch (e) {
+          console.error('[PowersService] ❌ Erro ao ler cache fallback:', e);
+          // DB falhou E cache inválido: usar default com retry programado
+          this.balance = this.getDefaultBalance();
+          this.initialized = true; // Marcar como inicializado para evitar loops
+          console.log('[PowersService] ⚠️ DB e cache falharam - usando default:', this.balance.available);
+        }
+      } else if (!this.initialized) {
+        // DB falhou E não há cache: usar default e agendar retry
+        this.balance = this.getDefaultBalance();
+        this.initialized = true;
+        console.log('[PowersService] ⚠️ DB falhou, sem cache - usando default:', this.balance.available);
+        
+        // Agendar retry em 5 segundos
+        setTimeout(async () => {
+          console.log('[PowersService] 🔄 Retry automático do DB fetch...');
+          const retryResult = await this.fetchPowersFromDatabase();
+          if (retryResult !== null) {
+            this.balance.available = retryResult;
+            this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - retryResult);
+            this.dbFetchCompleted = true;
+            this.persistBalance();
+            this.emitUpdate();
+            console.log('[PowersService] ✅ Retry bem-sucedido:', retryResult);
+          }
+        }, 5000);
+      }
+    }
+    
+    // ENTERPRISE: Verificar renovação diária (executar lógica de initialize)
+    if (this.shouldRenewDaily()) {
+      console.log('[PowersService] 🔄 Renovação diária necessária - executando...');
+      await this.renewDailyPowers();
+    }
+    
+    // Garantir que polling está ativo
+    if (!this.syncPollingInterval && this.userEmail) {
+      this.startSyncPolling();
     }
     
     console.log('[PowersService] 🔄 === FORCE REFRESH CONCLUÍDO ===');
@@ -909,6 +957,23 @@ class PowersService {
 
   formatBalance(): string {
     return `${this.balance.available}/${this.balance.dailyLimit}`;
+  }
+
+  /**
+   * ENTERPRISE: Limpar cache corrompido do localStorage
+   * Usado quando há discrepância entre banco e cache
+   */
+  clearLocalCache(): void {
+    console.log('[PowersService] 🧹 === LIMPANDO CACHE CORROMPIDO ===');
+    localStorage.removeItem(STORAGE_KEYS.balance);
+    localStorage.removeItem(STORAGE_KEYS.userEmail);
+    localStorage.removeItem(STORAGE_KEYS.lastReset);
+    localStorage.removeItem('modalGeral_powersData'); // Cache do SeuUsoSection
+    localStorage.removeItem('modalGeral_seuUso_lastFetch');
+    this.dbFetchCompleted = false;
+    this.initialized = false;
+    this.balance = this.getDefaultBalance();
+    console.log('[PowersService] ✅ Cache limpo - pronto para sincronizar com banco');
   }
 }
 
