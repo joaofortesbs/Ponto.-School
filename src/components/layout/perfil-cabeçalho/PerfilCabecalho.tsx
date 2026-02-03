@@ -40,30 +40,30 @@ const PerfilCabecalho: React.FC = () => {
         console.log('[PerfilCabecalho] 👤 Perfil carregado:', profile?.nome_completo || 'N/A');
         console.log('[PerfilCabecalho] 📧 Email do perfil:', profile?.email || 'NÃO ENCONTRADO');
         
-        // Se o perfil tem email, garantir que o PowersService tenha acesso ANTES de inicializar
-        if (profile?.email) {
-          // 1. Definir email no PowersService PRIMEIRO
+        // FAST-PATH: Se o perfil já tem powers_carteira, usar diretamente (evita segunda chamada)
+        if (profile?.email && typeof profile.powers_carteira === 'number') {
+          console.log('[PerfilCabecalho] ⚡ FAST-PATH: Powers já vieram do perfil:', profile.powers_carteira);
+          powersService.setBalanceFromProfile(profile.powers_carteira, profile.email);
+          setPowers(profile.powers_carteira);
+          console.log('[PerfilCabecalho] ⚡ Powers definidos instantaneamente!');
+        } else if (profile?.email) {
+          // Fallback: Perfil não veio com powers_carteira, buscar separadamente
+          console.log('[PerfilCabecalho] 🔄 Fallback: Buscando Powers separadamente...');
           powersService.setUserEmail(profile.email);
-          console.log('[PerfilCabecalho] 📧 Email passado para PowersService:', profile.email);
           
-          // 2. ENTERPRISE DB-ONLY v3.1: Forçar refresh do banco
-          console.log('[PerfilCabecalho] 🔄 Chamando forceRefreshFromDatabase com email:', profile.email);
           const balance = await powersService.forceRefreshFromDatabase(profile.email);
           
-          // 3. DB-ONLY v3.1: Só mostrar valor se veio do banco
           if (powersService.isBalanceReady()) {
             setPowers(balance.available);
-            console.log('[PerfilCabecalho] 💰 Powers carregados do banco (confirmado):', balance.available);
+            console.log('[PerfilCabecalho] 💰 Powers carregados do banco:', balance.available);
           } else {
-            // Banco não respondeu ainda - manter null para mostrar "..."
             console.log('[PerfilCabecalho] ⏳ Aguardando resposta do banco...');
             setPowers(null);
           }
         } else {
-          console.warn('[PerfilCabecalho] ⚠️ Perfil sem email - Powers podem não sincronizar corretamente');
+          console.warn('[PerfilCabecalho] ⚠️ Perfil sem email - Powers podem não sincronizar');
           await powersService.initialize();
           
-          // DB-ONLY v3.1: Verificar se saldo é confiável
           if (powersService.isBalanceReady()) {
             const balance = powersService.getBalance();
             setPowers(balance.available);

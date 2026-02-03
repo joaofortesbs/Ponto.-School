@@ -202,6 +202,46 @@ class PowersService {
     }
   }
 
+  /**
+   * FAST-PATH: Setar Powers diretamente do perfil (evita segunda chamada de API)
+   * Usado quando o perfil já contém powers_carteira
+   */
+  setBalanceFromProfile(powers: number, email?: string): void {
+    if (typeof powers !== 'number' || powers < 0) {
+      console.warn('[PowersService] ⚠️ Powers inválidos recebidos do perfil:', powers);
+      return;
+    }
+
+    console.log('[PowersService] ⚡ FAST-PATH: Setando Powers do perfil:', powers);
+    
+    // Setar email se fornecido
+    if (email && email.includes('@')) {
+      this.userEmail = email;
+      localStorage.setItem(STORAGE_KEYS.userEmail, email);
+    }
+    
+    // Atualizar saldo imediatamente
+    this.balance.available = powers;
+    this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - powers);
+    this.balance.dailyLimit = POWERS_CONFIG.dailyFreeAllowance;
+    
+    // Marcar como pronto - dados vieram do banco via perfil
+    this.dbFetchCompleted = true;
+    this.balanceReady = true;
+    this.initialized = true;
+    
+    // Persistir e emitir atualização
+    this.persistBalance();
+    this.emitUpdate();
+    
+    // Iniciar polling se não estiver rodando
+    if (!this.syncPollingInterval && this.userEmail) {
+      this.startSyncPolling();
+    }
+    
+    console.log('[PowersService] ⚡ FAST-PATH: Saldo pronto instantaneamente!');
+  }
+
   private getDefaultBalance(): PowersBalance {
     return {
       available: POWERS_CONFIG.dailyFreeAllowance,

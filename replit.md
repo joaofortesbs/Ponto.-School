@@ -49,8 +49,13 @@ The platform features a modern, glass-morphism inspired design with blur backgro
         - Aggressive retry system (2s, 5s delays) when DB is temporarily unavailable
         - `initialize()` and `forceRefreshFromDatabase()` never fallback to localStorage
         - PerfilCabecalho and SeuUsoSection only display values when `isBalanceReady()=true`
+      - **FAST-PATH Optimization (Feb 2026)**: Powers now loaded instantly from profile API response.
+        - `findProfileByEmail()` includes `powers_carteira` in query result
+        - `setBalanceFromProfile()` method sets Powers instantly without second API call
+        - PerfilCabecalho uses FAST-PATH when `profile.powers_carteira` is available
+        - Eliminates latency from separate `/api/perfis/powers` call
       - **Race Condition Resolution**: Added `dbFetchCompleted` flag to track if the database fetch succeeded. If `initialize()` is called before email is available, it will re-fetch from DB on subsequent calls when email becomes available.
-      - **Synchronization Flow**: (1) `PerfilCabecalho` loads profile with email, (2) calls `setUserEmail()`, (3) calls `forceRefreshFromDatabase(email)`, (4) only shows value if `isBalanceReady()=true`.
+      - **Synchronization Flow**: (1) `PerfilCabecalho` loads profile with `powers_carteira`, (2) FAST-PATH: `setBalanceFromProfile()` sets Powers instantly, (3) UI shows value immediately. Fallback: calls `forceRefreshFromDatabase(email)`.
       - **Features**: daily allowance, pending transactions queue, 30-second polling system for DB→App sync, synchronous charges for App→DB sync, event-based decoupling (no circular dependencies), lazy polling initialization, auto-initialization on email event, email override in forceRefreshFromDatabase(), automatic polling start on email override, multiple email propagation paths (localStorage cache, event listener, PerfilCabecalho direct call with email parameter), detailed logging for debug, retry on DB failure, and guard against duplicate listeners.
     - **Calendário School**: Comprehensive calendar event management.
     - **Lesson Publishing System**: Manages lesson publication.
