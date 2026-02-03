@@ -87,6 +87,7 @@ const SYNC_CONFIG = {
 class PowersService {
   private balance: PowersBalance;
   private initialized: boolean = false;
+  private dbFetchCompleted: boolean = false; // ENTERPRISE: Track se DB fetch foi bem-sucedido
   private userEmail: string | null = null;
   private pendingSync: PendingSyncItem[] = [];
   private syncPollingInterval: ReturnType<typeof setInterval> | null = null;
@@ -403,11 +404,26 @@ class PowersService {
   }
 
   async initialize(userId?: string): Promise<PowersBalance> {
+    // ENTERPRISE DB-FIRST v2.0: Resolver race condition identificada pelo architect
+    // Se já inicializado MAS o email chegou depois, precisamos re-buscar do banco
     if (this.initialized) {
+      // Se temos email E temos saldo diferente do que esperamos, fazer refresh silencioso
+      if (this.userEmail && !this.dbFetchCompleted) {
+        console.log('[PowersService] 🔄 Re-tentando DB fetch após email disponível...');
+        const powersFromDB = await this.fetchPowersFromDatabase();
+        if (powersFromDB !== null) {
+          this.balance.available = powersFromDB;
+          this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - powersFromDB);
+          this.persistBalance();
+          this.emitUpdate();
+          this.dbFetchCompleted = true;
+          console.log('[PowersService] ✅ DB fetch atrasado completado:', powersFromDB);
+        }
+      }
       return this.balance;
     }
 
-    console.log('[PowersService] 🚀 === INICIALIZANDO (DB-FIRST STRATEGY) ===');
+    console.log('[PowersService] 🚀 === INICIALIZANDO (DB-FIRST STRATEGY v2.0) ===');
 
     try {
       // ENTERPRISE DB-FIRST: Sempre buscar do banco primeiro
@@ -422,9 +438,12 @@ class PowersService {
         this.balance.lastRenewal = this.balance.lastRenewal || new Date().toISOString();
         this.balance.transactions = this.balance.transactions || [];
         this.persistBalance();
+        this.dbFetchCompleted = true;
         console.log('[PowersService] ✅ SUCESSO DB-FIRST: Powers do banco:', powersFromDB);
       } else {
         // FALLBACK: Banco não disponível - tentar localStorage como backup
+        // Marcar que DB fetch não foi completado para re-tentar quando email chegar
+        this.dbFetchCompleted = false;
         console.warn('[PowersService] ⚠️ Banco não disponível - tentando localStorage como fallback');
         const storedBalance = localStorage.getItem(STORAGE_KEYS.balance);
         
@@ -461,6 +480,7 @@ class PowersService {
       console.error('[PowersService] ❌ Erro ao inicializar:', error);
       this.balance = this.getDefaultBalance();
       this.initialized = true;
+      this.dbFetchCompleted = false;
       
       // Iniciar polling mesmo após erro se temos email
       if (!this.syncPollingInterval && this.userEmail) {
