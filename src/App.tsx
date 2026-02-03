@@ -19,6 +19,7 @@ import UsernameProvider from "./components/UsernameProvider";
 
 import WelcomeModal from "./components/auth/WelcomeModal";
 import { TypewriterLoader } from "./components/ui/typewriter-loader";
+import { ProfileProvider } from "@/contexts/ProfileContext";
 
 // Auth Pages - Direct imports for fast initial load
 import LoginPage from "@/pages/auth/login";
@@ -313,9 +314,10 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <UsernameProvider>
-        <StudyGoalProvider>
-          <ErrorBoundary>
+      <ProfileProvider>
+        <UsernameProvider>
+          <StudyGoalProvider>
+            <ErrorBoundary>
             <div className="min-h-screen bg-background font-body antialiased dark:bg-[#000822]">
               <Suspense fallback={
                 <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center">
@@ -417,9 +419,10 @@ function App() {
               }
             </div>
             <Toaster />
-          </ErrorBoundary>
-        </StudyGoalProvider>
-      </UsernameProvider>
+            </ErrorBoundary>
+          </StudyGoalProvider>
+        </UsernameProvider>
+      </ProfileProvider>
     </ThemeProvider>
   );
 }

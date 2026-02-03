@@ -38,29 +38,25 @@ The platform features a modern, glass-morphism inspired design with blur backgro
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.
     - **School Points**: Persisted and synchronized point system.
-    - **Powers System v5.0 ENTERPRISE DB-ONLY (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing and enterprise-grade synchronization with Neon DB. 
-      - **Centralized Configuration**: All Powers values are configured in `src/config/powers-pricing.ts` (frontend) and `api/config/powers.js` (backend). To change initial Powers for new users, edit `initialPowersForNewUsers` in the config files.
+    - **Powers System v4.0 UNIFIED CONTEXT (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing and enterprise-grade synchronization with Neon DB.
+      - **NEW: ProfileContext Architecture (v4.0)**: Centralized React Context that manages both profile and Powers in a single source of truth.
+        - `ProfileContext.tsx` located at `src/contexts/ProfileContext.tsx`
+        - Single API call to `/api/perfis` fetches profile WITH `powers_carteira` included
+        - `useProfile()` hook provides: `profile`, `powers`, `isLoading`, `isAuthenticated`, `refreshProfile()`, `updatePowers()`
+        - `usePowers()` hook for components that only need Powers data
+        - Automatic cache cleanup of legacy localStorage keys on mount
+        - Versioned cache system (v4.0) with 5-minute TTL and `powers_carteira` validation
+        - Stale-while-revalidate pattern: shows cache immediately, refreshes in background
+        - Event-driven updates via `powers:charged` and `profile-updated` events
+      - **Simplified PerfilCabecalho**: Now consumes ProfileContext directly instead of complex FAST-PATH/Fallback logic.
+        - Reduced from 300 lines to ~200 lines
+        - No direct profileService or powersService calls for display
+        - Powers display: `powers !== null ? powers : (isLoading ? '...' : '0')`
+      - **Centralized Configuration**: All Powers values are configured in `src/config/powers-pricing.ts` (frontend) and `api/config/powers.js` (backend).
       - **New User Provisioning**: New users automatically receive 300 Powers (configurable) upon account creation. The `powers_carteira` column in the `usuarios` table has a DEFAULT of 300.
-      - **DB-ONLY Strategy v3.2 (Feb 2026)**: Database is the SINGLE SOURCE OF TRUTH. localStorage is NEVER used as source of balance data.
-        - Cache is automatically cleared in constructor and before each DB fetch
-        - `persistBalance()` is blocked until DB sync is confirmed (`dbFetchCompleted=true`)
-        - `balanceReady` flag tracks if balance came from DB (UI shows "..." until true)
-        - `isBalanceReady()` method for UI components to check if balance is reliable
-        - Aggressive retry system (2s, 5s delays) when DB is temporarily unavailable
-        - `initialize()` and `forceRefreshFromDatabase()` never fallback to localStorage
-        - PerfilCabecalho and SeuUsoSection only display values when `isBalanceReady()=true`
-        - **CRITICAL FIX v3.3**: `chargeForCapability()` now FORCES database fetch BEFORE any charge if `balanceReady=false`. If the DB fetch fails or email is unavailable, the charge is **ABORTED** with an error message instead of proceeding with the default value. This guarantees that charges only occur when the DB balance is confirmed.
-      - **FAST-PATH Optimization v2.1 (Feb 2026)**: Powers now loaded instantly from profile API response.
-        - `findProfileByEmail()` includes `powers_carteira` in query result
-        - `setBalanceFromProfile()` method sets Powers instantly without second API call
-        - PerfilCabecalho uses FAST-PATH when `profile.powers_carteira` is available
-        - Eliminates latency from separate `/api/perfis/powers` call
-        - **CRITICAL FIX v2.1**: Fixed cache corruption bug where `useUserInfo.ts` was overwriting `userProfile` cache with partial data (without `powers_carteira`), causing FAST-PATH to fail. Now uses separate cache key `userProfile_schoolpower_cache`.
-        - Cache validation now checks for `powers_carteira` presence - cache without it is automatically invalidated and re-fetched from Neon
-        - `refreshProfileInBackground()` now fetches from Neon (not Supabase) to ensure `powers_carteira` is included
-      - **Race Condition Resolution**: Added `dbFetchCompleted` flag to track if the database fetch succeeded. If `initialize()` is called before email is available, it will re-fetch from DB on subsequent calls when email becomes available.
-      - **Synchronization Flow**: (1) `PerfilCabecalho` loads profile with `powers_carteira`, (2) FAST-PATH: `setBalanceFromProfile()` sets Powers instantly, (3) UI shows value immediately. Fallback: calls `forceRefreshFromDatabase(email)`.
-      - **Features**: daily allowance, pending transactions queue, 30-second polling system for DB→App sync, synchronous charges for App→DB sync, event-based decoupling (no circular dependencies), lazy polling initialization, auto-initialization on email event, email override in forceRefreshFromDatabase(), automatic polling start on email override, multiple email propagation paths (localStorage cache, event listener, PerfilCabecalho direct call with email parameter), detailed logging for debug, retry on DB failure, and guard against duplicate listeners.
+      - **DB as Single Source of Truth**: Database is authoritative. Cache is only for performance optimization, not source data.
+      - **PowersService Role**: Now focused on CHARGES only (deducting Powers), not display. Uses `powers:charged` event to notify ProfileContext of balance changes.
+      - **Legacy Cleanup**: Automatic cleanup of old cache keys: `userProfile`, `userProfileCacheTime`, `powers_balance`, `modalGeral_powersData`, `modalGeral_seuUso_lastFetch`.
     - **Calendário School**: Comprehensive calendar event management.
     - **Lesson Publishing System**: Manages lesson publication.
     - **Modal Geral da Conta (Account Modal System)**: Centralized user account management modal featuring glassmorphism design, lateral navigation, expandable sections (Perfil, Configurações, Seu Uso), configurable overlay and close button positioning, avatar loading priority chain, real-time avatar sync, and a complete usage statistics interface.
