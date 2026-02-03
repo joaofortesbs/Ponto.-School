@@ -80,9 +80,19 @@ class ProfileService {
           // Se o cache é válido e recente (menos de 5 minutos), usá-lo imediatamente
           const cacheTime = localStorage.getItem('userProfileCacheTime');
           if (cacheTime && (Date.now() - parseInt(cacheTime)) < 5 * 60 * 1000) {
-            // Atualizar em background e retornar cache imediatamente
-            this.refreshProfileInBackground();
-            return profile;
+            // CRITICAL FIX: Cache DEVE ter powers_carteira para FAST-PATH funcionar
+            // Se o cache não tem powers_carteira, está desatualizado e precisa ser invalidado
+            if (typeof profile.powers_carteira === 'number') {
+              console.log('✅ [PROFILE] Cache válido com powers_carteira:', profile.powers_carteira);
+              // Atualizar em background e retornar cache imediatamente
+              this.refreshProfileInBackground();
+              return profile;
+            } else {
+              console.log('⚠️ [PROFILE] Cache desatualizado (sem powers_carteira) - invalidando...');
+              localStorage.removeItem('userProfile');
+              localStorage.removeItem('userProfileCacheTime');
+              // NÃO retornar - continuar para buscar do banco
+            }
           }
         } catch (e) {
           console.error('Erro ao parsear perfil em cache:', e);
@@ -165,6 +175,7 @@ class ProfileService {
   }
 
   // Método para atualizar o perfil em background sem bloquear a UI
+  // CRITICAL FIX: Buscar do Neon (não do Supabase) para garantir powers_carteira
   private async refreshProfileInBackground() {
     requestAnimationFrame(async () => {
       try {
@@ -173,34 +184,38 @@ class ProfileService {
         if (!session?.session?.user) return;
         
         const userEmail = session.session.user.email;
+        if (!userEmail) return;
 
-        const { data, error } = await supabase
-          .from('perfis')
-          .select('*')
-          .eq('id', session.session.user.id)
-          .single();
+        // CRITICAL: Buscar do Neon para garantir powers_carteira
+        const response = await fetch(`/api/perfis?email=${encodeURIComponent(userEmail)}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
 
-        if (error) return;
+        const result = await response.json();
+        if (!result.success || !result.data) return;
 
-        if (data) {
-          localStorage.setItem('userProfile', JSON.stringify(data));
-          localStorage.setItem('userProfileCacheTime', Date.now().toString());
-          
-          // CRITICAL: Salvar email para PowersService
-          if (userEmail) {
-            localStorage.setItem('powers_user_email', userEmail);
-            localStorage.setItem('userEmail', userEmail);
-            // Emitir evento para notificar PowersService
-            document.dispatchEvent(new CustomEvent('user-email-available', {
-              detail: { email: userEmail }
-            }));
-          }
+        const neonProfile = result.data;
+        
+        // Atualizar cache com perfil do Neon (inclui powers_carteira)
+        localStorage.setItem('userProfile', JSON.stringify(neonProfile));
+        localStorage.setItem('userProfileCacheTime', Date.now().toString());
+        
+        // CRITICAL: Salvar email para PowersService
+        localStorage.setItem('powers_user_email', userEmail);
+        localStorage.setItem('userEmail', userEmail);
+        
+        // Emitir evento para notificar PowersService
+        document.dispatchEvent(new CustomEvent('user-email-available', {
+          detail: { email: userEmail }
+        }));
 
-          // Disparar evento para notificar componentes sobre a atualização
-          document.dispatchEvent(new CustomEvent('profile-updated', {
-            detail: { profile: data }
-          }));
-        }
+        // Disparar evento para notificar componentes sobre a atualização
+        document.dispatchEvent(new CustomEvent('profile-updated', {
+          detail: { profile: neonProfile }
+        }));
+        
+        console.log('🔄 [PROFILE] Background refresh concluído com powers_carteira:', neonProfile.powers_carteira);
       } catch (e) {
         // Silenciar erros em atualizações em background
       }
