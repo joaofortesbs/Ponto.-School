@@ -90,11 +90,87 @@ class PowersService {
   private userEmail: string | null = null;
   private pendingSync: PendingSyncItem[] = [];
   private syncPollingInterval: ReturnType<typeof setInterval> | null = null;
+  private eventListenerAttached: boolean = false;
 
   constructor() {
     this.balance = this.getDefaultBalance();
     this.loadPendingSync();
-    this.startSyncPolling();
+    this.preloadUserEmail();
+    // Escutar evento de email disponível (emitido pelo profileService)
+    this.listenForEmailEvent();
+    // NOTA: Polling NÃO inicia no construtor
+    // Polling só inicia após initialize() ser chamado E email estar disponível
+    // Isso garante ordem correta de inicialização
+  }
+  
+  private listenForEmailEvent(): void {
+    // Guard contra múltiplos listeners
+    if (this.eventListenerAttached) {
+      return;
+    }
+    this.eventListenerAttached = true;
+    
+    document.addEventListener('user-email-available', ((event: CustomEvent) => {
+      if (event.detail?.email) {
+        console.log('[PowersService] 📨 Recebido evento user-email-available:', event.detail.email);
+        this.setUserEmail(event.detail.email);
+        // Se ainda não inicializado, inicializar agora que temos email
+        if (!this.initialized) {
+          console.log('[PowersService] 🚀 Auto-inicializando após receber email via evento');
+          this.initialize().catch(err => {
+            console.error('[PowersService] ❌ Erro na auto-inicialização:', err);
+          });
+        }
+      }
+    }) as EventListener);
+  }
+  
+  private preloadUserEmail(): void {
+    try {
+      const sources = [
+        localStorage.getItem('powers_user_email'),
+        localStorage.getItem('userEmail'),
+        sessionStorage.getItem('userEmail'),
+      ];
+      
+      for (const email of sources) {
+        if (email && email.includes('@')) {
+          this.userEmail = email;
+          localStorage.setItem(STORAGE_KEYS.userEmail, email);
+          console.log('[PowersService] 📧 Email pré-carregado:', email);
+          return;
+        }
+      }
+      
+      const userProfileCache = localStorage.getItem('userProfile');
+      if (userProfileCache) {
+        const profile = JSON.parse(userProfileCache);
+        if (profile?.email) {
+          this.userEmail = profile.email;
+          localStorage.setItem(STORAGE_KEYS.userEmail, profile.email);
+          console.log('[PowersService] 📧 Email pré-carregado do cache userProfile:', profile.email);
+        }
+      }
+    } catch (error) {
+      console.warn('[PowersService] ⚠️ Não foi possível pré-carregar email:', error);
+    }
+  }
+  
+  setUserEmail(email: string): void {
+    if (email && email.includes('@')) {
+      const wasEmpty = !this.userEmail;
+      this.userEmail = email;
+      localStorage.setItem(STORAGE_KEYS.userEmail, email);
+      console.log('[PowersService] 📧 Email definido manualmente:', email);
+      
+      // Se o polling ainda não foi iniciado E o serviço foi inicializado, iniciar agora
+      if (wasEmpty && !this.syncPollingInterval && this.initialized) {
+        console.log('[PowersService] 🚀 Iniciando polling após email ser configurado');
+        this.startSyncPolling();
+        // Sincronização imediata quando email é configurado
+        this.forceRefreshFromDatabase();
+      }
+    }
   }
 
   private getDefaultBalance(): PowersBalance {
@@ -140,6 +216,12 @@ class PowersService {
 
   private async processPendingSync(): Promise<void> {
     console.log('[PowersService] 🔄 === POLLING BIDIRECTIONAL SYNC ===');
+    
+    // Verificar se temos email antes de processar
+    if (!this.userEmail) {
+      console.log('[PowersService] ⏳ Aguardando email do usuário...');
+      return;
+    }
     
     if (this.pendingSync.length > 0) {
       console.log('[PowersService] 🔄 Processando', this.pendingSync.length, 'transações pendentes...');
@@ -264,8 +346,31 @@ class PowersService {
     const cachedEmail = localStorage.getItem(STORAGE_KEYS.userEmail);
     if (cachedEmail) {
       this.userEmail = cachedEmail;
-      console.log('[PowersService] 📧 Email obtido do localStorage:', cachedEmail);
+      console.log('[PowersService] 📧 Email obtido do localStorage powers_user_email:', cachedEmail);
       return cachedEmail;
+    }
+
+    const userEmailKey = localStorage.getItem('userEmail');
+    if (userEmailKey) {
+      this.userEmail = userEmailKey;
+      localStorage.setItem(STORAGE_KEYS.userEmail, userEmailKey);
+      console.log('[PowersService] 📧 Email obtido do localStorage userEmail:', userEmailKey);
+      return userEmailKey;
+    }
+
+    try {
+      const userProfileCache = localStorage.getItem('userProfile');
+      if (userProfileCache) {
+        const profile = JSON.parse(userProfileCache);
+        if (profile?.email) {
+          this.userEmail = profile.email;
+          localStorage.setItem(STORAGE_KEYS.userEmail, profile.email);
+          console.log('[PowersService] 📧 Email obtido do cache userProfile:', profile.email);
+          return profile.email;
+        }
+      }
+    } catch (error) {
+      console.error('[PowersService] ⚠️ Erro ao parsear userProfile:', error);
     }
 
     const profileEmail = localStorage.getItem('userProfileEmail');
@@ -274,6 +379,14 @@ class PowersService {
       localStorage.setItem(STORAGE_KEYS.userEmail, profileEmail);
       console.log('[PowersService] 📧 Email obtido do perfil em cache:', profileEmail);
       return profileEmail;
+    }
+
+    const sessionEmail = sessionStorage.getItem('userEmail');
+    if (sessionEmail) {
+      this.userEmail = sessionEmail;
+      localStorage.setItem(STORAGE_KEYS.userEmail, sessionEmail);
+      console.log('[PowersService] 📧 Email obtido do sessionStorage:', sessionEmail);
+      return sessionEmail;
     }
 
     console.warn('[PowersService] ⚠️ Email não encontrado em nenhuma fonte');
@@ -316,11 +429,24 @@ class PowersService {
       this.initialized = true;
       console.log('[PowersService] ✅ Inicializado - Disponível:', this.balance.available, '| Usado:', this.balance.used);
       
+      // Iniciar polling se ainda não iniciou e temos email
+      if (!this.syncPollingInterval && this.userEmail) {
+        console.log('[PowersService] 🚀 Iniciando polling após initialize() com email:', this.userEmail);
+        this.startSyncPolling();
+      }
+      
       return this.balance;
     } catch (error) {
       console.error('[PowersService] ❌ Erro ao inicializar:', error);
       this.balance = this.getDefaultBalance();
       this.initialized = true;
+      
+      // Iniciar polling mesmo após erro se temos email
+      if (!this.syncPollingInterval && this.userEmail) {
+        console.log('[PowersService] 🚀 Iniciando polling após initialize() (com erro) com email:', this.userEmail);
+        this.startSyncPolling();
+      }
+      
       return this.balance;
     }
   }

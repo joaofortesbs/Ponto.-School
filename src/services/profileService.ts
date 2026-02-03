@@ -118,6 +118,17 @@ class ProfileService {
           // Atualizar cache
           localStorage.setItem('userProfile', JSON.stringify(neonProfile));
           localStorage.setItem('userProfileCacheTime', Date.now().toString());
+          
+          // CRITICAL: Salvar email em chave separada para o PowersService
+          if (userEmail) {
+            localStorage.setItem('powers_user_email', userEmail);
+            localStorage.setItem('userEmail', userEmail);
+            console.log('📧 [PROFILE] Email salvo no localStorage:', userEmail);
+            // Emitir evento para notificar outros serviços
+            document.dispatchEvent(new CustomEvent('user-email-available', {
+              detail: { email: userEmail }
+            }));
+          }
 
           // Disparar evento para notificar componentes sobre a atualização
           document.dispatchEvent(new CustomEvent('profile-updated', {
@@ -160,6 +171,8 @@ class ProfileService {
         const { data: session } = await supabase.auth.getSession();
 
         if (!session?.session?.user) return;
+        
+        const userEmail = session.session.user.email;
 
         const { data, error } = await supabase
           .from('perfis')
@@ -172,6 +185,16 @@ class ProfileService {
         if (data) {
           localStorage.setItem('userProfile', JSON.stringify(data));
           localStorage.setItem('userProfileCacheTime', Date.now().toString());
+          
+          // CRITICAL: Salvar email para PowersService
+          if (userEmail) {
+            localStorage.setItem('powers_user_email', userEmail);
+            localStorage.setItem('userEmail', userEmail);
+            // Emitir evento para notificar PowersService
+            document.dispatchEvent(new CustomEvent('user-email-available', {
+              detail: { email: userEmail }
+            }));
+          }
 
           // Disparar evento para notificar componentes sobre a atualização
           document.dispatchEvent(new CustomEvent('profile-updated', {

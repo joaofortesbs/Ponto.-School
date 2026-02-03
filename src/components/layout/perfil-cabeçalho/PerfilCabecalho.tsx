@@ -31,31 +31,32 @@ const PerfilCabecalho: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchUserProfileAndPowers = async () => {
       try {
+        // CRITICAL: Carregar perfil PRIMEIRO para que o email seja salvo
         const profile = await profileService.getCurrentUserProfile();
         setUserProfile(profile);
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const initializePowers = async () => {
-      try {
+        
+        // Se o perfil tem email, garantir que o PowersService tenha acesso
+        if (profile?.email) {
+          powersService.setUserEmail(profile.email);
+          console.log('[PerfilCabecalho] 📧 Email passado para PowersService:', profile.email);
+        }
+        
+        // Agora inicializar Powers com o email disponível
         await powersService.initialize();
         const balance = await powersService.forceRefreshFromDatabase();
         setPowers(balance.available);
         console.log('[PerfilCabecalho] 💰 Powers carregados do banco:', balance.available);
       } catch (error) {
-        console.error('[PerfilCabecalho] ❌ Erro ao carregar Powers:', error);
+        console.error('[PerfilCabecalho] ❌ Erro ao carregar perfil/Powers:', error);
         setPowers(null);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchUserProfile();
-    initializePowers();
+    fetchUserProfileAndPowers();
 
     const darkMode = localStorage.getItem("darkMode") === "true";
     setIsDark(darkMode);
