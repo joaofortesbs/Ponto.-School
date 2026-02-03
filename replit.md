@@ -41,7 +41,7 @@ The platform features a modern, glass-morphism inspired design with blur backgro
     - **Powers System v5.0 ENTERPRISE DB-ONLY (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing and enterprise-grade synchronization with Neon DB. 
       - **Centralized Configuration**: All Powers values are configured in `src/config/powers-pricing.ts` (frontend) and `api/config/powers.js` (backend). To change initial Powers for new users, edit `initialPowersForNewUsers` in the config files.
       - **New User Provisioning**: New users automatically receive 300 Powers (configurable) upon account creation. The `powers_carteira` column in the `usuarios` table has a DEFAULT of 300.
-      - **DB-ONLY Strategy v3.1 (Feb 2026)**: Database is the SINGLE SOURCE OF TRUTH. localStorage is NEVER used as source of balance data.
+      - **DB-ONLY Strategy v3.2 (Feb 2026)**: Database is the SINGLE SOURCE OF TRUTH. localStorage is NEVER used as source of balance data.
         - Cache is automatically cleared in constructor and before each DB fetch
         - `persistBalance()` is blocked until DB sync is confirmed (`dbFetchCompleted=true`)
         - `balanceReady` flag tracks if balance came from DB (UI shows "..." until true)
@@ -49,6 +49,7 @@ The platform features a modern, glass-morphism inspired design with blur backgro
         - Aggressive retry system (2s, 5s delays) when DB is temporarily unavailable
         - `initialize()` and `forceRefreshFromDatabase()` never fallback to localStorage
         - PerfilCabecalho and SeuUsoSection only display values when `isBalanceReady()=true`
+        - **CRITICAL FIX v3.3**: `chargeForCapability()` now FORCES database fetch BEFORE any charge if `balanceReady=false`. If the DB fetch fails or email is unavailable, the charge is **ABORTED** with an error message instead of proceeding with the default value. This guarantees that charges only occur when the DB balance is confirmed.
       - **FAST-PATH Optimization v2.1 (Feb 2026)**: Powers now loaded instantly from profile API response.
         - `findProfileByEmail()` includes `powers_carteira` in query result
         - `setBalanceFromProfile()` method sets Powers instantly without second API call

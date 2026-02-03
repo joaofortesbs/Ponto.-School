@@ -719,7 +719,57 @@ class PowersService {
       activityTitle?: string;
     }
   ): Promise<ChargeResult> {
-    await this.initialize();
+    console.log('[PowersService] 💰 === PRE-CHARGE: Verificando saldo do banco ===');
+    
+    // ENTERPRISE DB-ONLY v3.3: CRÍTICO - FORÇAR busca do banco ANTES de qualquer cobrança
+    // Se o saldo não veio do banco, precisamos buscar AGORA e ABORTAR se falhar
+    if (!this.balanceReady) {
+      console.log('[PowersService] ⚠️ Saldo não está pronto (balanceReady=false) - forçando fetch do banco...');
+      
+      // Tentar obter email de múltiplas fontes
+      const email = await this.getUserEmail();
+      
+      if (email) {
+        const powersFromDB = await this.fetchPowersFromDatabase();
+        if (powersFromDB !== null) {
+          this.balance.available = powersFromDB;
+          this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - powersFromDB);
+          this.dbFetchCompleted = true;
+          this.balanceReady = true;
+          this.initialized = true; // Marcar como inicializado após sucesso do DB
+          this.persistBalance();
+          console.log('[PowersService] ✅ Saldo atualizado do banco ANTES da cobrança:', powersFromDB);
+        } else {
+          // DB-ONLY v3.3: ABORTAR cobrança se não foi possível buscar do banco
+          console.error('[PowersService] ❌ CRÍTICO: DB fetch falhou - ABORTANDO cobrança para evitar usar valor default');
+          return {
+            success: false,
+            charged: 0,
+            remainingBalance: this.balance.available,
+            transactionId: '',
+            error: 'Não foi possível verificar seu saldo. Por favor, aguarde alguns segundos e tente novamente.',
+          };
+        }
+      } else {
+        // DB-ONLY v3.3: ABORTAR cobrança se email não disponível
+        console.error('[PowersService] ❌ CRÍTICO: Email não disponível - ABORTANDO cobrança');
+        return {
+          success: false,
+          charged: 0,
+          remainingBalance: this.balance.available,
+          transactionId: '',
+          error: 'Sua sessão não está pronta. Por favor, recarregue a página e tente novamente.',
+        };
+      }
+    } else {
+      console.log('[PowersService] ✅ Saldo já está sincronizado com banco:', this.balance.available);
+    }
+    
+    // ENTERPRISE DB-ONLY v3.3: Não chamar initialize() se já temos saldo do banco
+    // Isso evita sobrescrever o saldo recém-buscado com valor default
+    if (!this.initialized) {
+      await this.initialize();
+    }
 
     const costPerItem = getCapabilityPrice(capabilityId);
     const totalCost = calculateTotalCost(capabilityId, itemCount);
