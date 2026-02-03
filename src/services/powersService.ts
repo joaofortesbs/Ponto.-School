@@ -95,6 +95,9 @@ class PowersService {
 
   constructor() {
     this.balance = this.getDefaultBalance();
+    // ENTERPRISE DB-ONLY v3.0: Limpar cache de saldo corrompido na inicialização
+    // localStorage de saldo NUNCA deve ser a fonte de verdade
+    this.clearBalanceCache();
     this.loadPendingSync();
     this.preloadUserEmail();
     // Escutar evento de email disponível (emitido pelo profileService)
@@ -102,6 +105,21 @@ class PowersService {
     // NOTA: Polling NÃO inicia no construtor
     // Polling só inicia após initialize() ser chamado E email estar disponível
     // Isso garante ordem correta de inicialização
+  }
+  
+  /**
+   * ENTERPRISE DB-ONLY v3.0: Limpa APENAS cache de saldo
+   * Mantém email e transações pendentes intactos
+   */
+  private clearBalanceCache(): void {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.balance);
+      localStorage.removeItem('modalGeral_powersData');
+      localStorage.removeItem('modalGeral_seuUso_lastFetch');
+      console.log('[PowersService] 🧹 Cache de saldo limpo no construtor (DB-ONLY v3.0)');
+    } catch (e) {
+      console.warn('[PowersService] ⚠️ Não foi possível limpar cache:', e);
+    }
   }
   
   private listenForEmailEvent(): void {
@@ -412,10 +430,10 @@ class PowersService {
   }
 
   async initialize(userId?: string): Promise<PowersBalance> {
-    // ENTERPRISE DB-FIRST v2.0: Resolver race condition identificada pelo architect
+    // ENTERPRISE DB-ONLY v3.0: Resolver race condition e NUNCA usar localStorage
     // Se já inicializado MAS o email chegou depois, precisamos re-buscar do banco
     if (this.initialized) {
-      // Se temos email E temos saldo diferente do que esperamos, fazer refresh silencioso
+      // Se temos email E DB fetch não foi completado, fazer refresh silencioso
       if (this.userEmail && !this.dbFetchCompleted) {
         console.log('[PowersService] 🔄 Re-tentando DB fetch após email disponível...');
         const powersFromDB = await this.fetchPowersFromDatabase();
@@ -431,10 +449,13 @@ class PowersService {
       return this.balance;
     }
 
-    console.log('[PowersService] 🚀 === INICIALIZANDO (DB-FIRST STRATEGY v2.0) ===');
+    console.log('[PowersService] 🚀 === INICIALIZANDO (DB-ONLY v3.0) ===');
+    
+    // ENTERPRISE DB-ONLY v3.0: Limpar cache ANTES de inicializar
+    this.clearBalanceCache();
 
     try {
-      // ENTERPRISE DB-FIRST: Sempre buscar do banco primeiro
+      // ENTERPRISE DB-ONLY: Sempre buscar do banco primeiro
       // O banco de dados é a ÚNICA fonte de verdade
       const powersFromDB = await this.fetchPowersFromDatabase();
       
@@ -447,27 +468,27 @@ class PowersService {
         this.balance.transactions = this.balance.transactions || [];
         this.persistBalance();
         this.dbFetchCompleted = true;
-        console.log('[PowersService] ✅ SUCESSO DB-FIRST: Powers do banco:', powersFromDB);
+        console.log('[PowersService] ✅ SUCESSO DB-ONLY: Powers do banco:', powersFromDB);
       } else {
-        // FALLBACK: Banco não disponível - tentar localStorage como backup
-        // Marcar que DB fetch não foi completado para re-tentar quando email chegar
+        // DB-ONLY v3.0: NUNCA usar localStorage como fallback
+        // Usar default e agendar retry agressivo
         this.dbFetchCompleted = false;
-        console.warn('[PowersService] ⚠️ Banco não disponível - tentando localStorage como fallback');
-        const storedBalance = localStorage.getItem(STORAGE_KEYS.balance);
+        console.warn('[PowersService] ⚠️ Banco não disponível - usando default temporário (DB-ONLY mode)');
+        this.balance = this.getDefaultBalance();
         
-        if (storedBalance) {
-          try {
-            this.balance = JSON.parse(storedBalance);
-            console.log('[PowersService] 📦 Usando cache localStorage:', this.balance.available);
-          } catch {
-            this.balance = this.getDefaultBalance();
-            console.log('[PowersService] ⚠️ Erro ao parsear localStorage - usando default');
+        // Agendar retry em 2 segundos
+        setTimeout(async () => {
+          console.log('[PowersService] 🔄 DB-ONLY Retry automático...');
+          const retryResult = await this.fetchPowersFromDatabase();
+          if (retryResult !== null) {
+            this.balance.available = retryResult;
+            this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - retryResult);
+            this.dbFetchCompleted = true;
+            this.persistBalance();
+            this.emitUpdate();
+            console.log('[PowersService] ✅ DB-ONLY Retry bem-sucedido:', retryResult);
           }
-        } else {
-          this.balance = this.getDefaultBalance();
-          this.persistBalance();
-          console.log('[PowersService] ⚠️ Nenhum cache disponível - usando default:', this.balance.available);
-        }
+        }, 2000);
       }
 
       if (this.shouldRenewDaily()) {
@@ -475,7 +496,7 @@ class PowersService {
       }
 
       this.initialized = true;
-      console.log('[PowersService] ✅ Inicializado - Disponível:', this.balance.available, '| Usado:', this.balance.used);
+      console.log('[PowersService] ✅ Inicializado (DB-ONLY) - Disponível:', this.balance.available, '| Usado:', this.balance.used);
       
       // Iniciar polling se ainda não iniciou e temos email
       if (!this.syncPollingInterval && this.userEmail) {
@@ -869,10 +890,14 @@ class PowersService {
   }
 
   async forceRefreshFromDatabase(emailOverride?: string): Promise<PowersBalance> {
-    console.log('[PowersService] 🔄 === FORCE REFRESH FROM DATABASE ===');
+    console.log('[PowersService] 🔄 === FORCE REFRESH FROM DATABASE (DB-ONLY v3.0) ===');
     console.log('[PowersService] 🔄 Email override:', emailOverride || 'não fornecido');
     console.log('[PowersService] 🔄 Email em cache:', this.userEmail || 'não disponível');
     console.log('[PowersService] 🔄 Polling ativo:', !!this.syncPollingInterval);
+    
+    // ENTERPRISE DB-ONLY v3.0: Limpar cache de saldo ANTES de buscar do banco
+    // Isso garante que NUNCA usaremos dados corrompidos do localStorage
+    this.clearBalanceCache();
     
     // Se um email foi fornecido diretamente, usar ele
     if (emailOverride && emailOverride.includes('@')) {
@@ -901,31 +926,25 @@ class PowersService {
       this.emitUpdate();
       console.log('[PowersService] ✅ Atualizado do banco - Anterior:', previousBalance, '| Novo:', powersFromDB, '| Usado:', this.balance.used);
     } else {
-      console.warn('[PowersService] ⚠️ fetchPowersFromDatabase retornou null - tentando fallback...');
-      // Fallback: usar cache local se existir
-      const storedBalance = localStorage.getItem(STORAGE_KEYS.balance);
-      if (storedBalance && !this.initialized) {
-        try {
-          const cached = JSON.parse(storedBalance);
-          this.balance = cached;
-          this.initialized = true;
-          console.log('[PowersService] 📦 Fallback: usando cache local:', cached.available);
-        } catch (e) {
-          console.error('[PowersService] ❌ Erro ao ler cache fallback:', e);
-          // DB falhou E cache inválido: usar default com retry programado
-          this.balance = this.getDefaultBalance();
-          this.initialized = true; // Marcar como inicializado para evitar loops
-          console.log('[PowersService] ⚠️ DB e cache falharam - usando default:', this.balance.available);
-        }
-      } else if (!this.initialized) {
-        // DB falhou E não há cache: usar default e agendar retry
-        this.balance = this.getDefaultBalance();
-        this.initialized = true;
-        console.log('[PowersService] ⚠️ DB falhou, sem cache - usando default:', this.balance.available);
+      // ENTERPRISE DB-ONLY v3.0: NUNCA usar localStorage como fallback
+      // Se o banco falhar, usar default e agendar retry agressivo
+      console.warn('[PowersService] ⚠️ DB não disponível - usando default temporário (DB-ONLY mode)');
+      this.balance = this.getDefaultBalance();
+      this.initialized = true;
+      this.dbFetchCompleted = false; // Marcar que precisamos re-buscar
+      
+      // Agendar retry agressivo: 2s, depois 5s, depois polling normal
+      const retryDelays = [2000, 5000];
+      let retryIndex = 0;
+      
+      const scheduleRetry = () => {
+        if (retryIndex >= retryDelays.length) return;
         
-        // Agendar retry em 5 segundos
+        const delay = retryDelays[retryIndex];
+        retryIndex++;
+        
         setTimeout(async () => {
-          console.log('[PowersService] 🔄 Retry automático do DB fetch...');
+          console.log(`[PowersService] 🔄 DB-ONLY Retry #${retryIndex} (${delay}ms)...`);
           const retryResult = await this.fetchPowersFromDatabase();
           if (retryResult !== null) {
             this.balance.available = retryResult;
@@ -933,10 +952,14 @@ class PowersService {
             this.dbFetchCompleted = true;
             this.persistBalance();
             this.emitUpdate();
-            console.log('[PowersService] ✅ Retry bem-sucedido:', retryResult);
+            console.log('[PowersService] ✅ DB-ONLY Retry bem-sucedido:', retryResult);
+          } else {
+            scheduleRetry(); // Tentar novamente
           }
-        }, 5000);
-      }
+        }, delay);
+      };
+      
+      scheduleRetry();
     }
     
     // ENTERPRISE: Verificar renovação diária (executar lógica de initialize)
@@ -950,7 +973,8 @@ class PowersService {
       this.startSyncPolling();
     }
     
-    console.log('[PowersService] 🔄 === FORCE REFRESH CONCLUÍDO ===');
+    console.log('[PowersService] 🔄 === FORCE REFRESH CONCLUÍDO (DB-ONLY v3.0) ===');
+    console.log('[PowersService] 🔄 Saldo final:', this.balance.available);
     console.log('[PowersService] 🔄 Polling ativo após refresh:', !!this.syncPollingInterval);
     return this.balance;
   }
@@ -967,8 +991,8 @@ class PowersService {
     console.log('[PowersService] 🧹 === LIMPANDO CACHE CORROMPIDO ===');
     localStorage.removeItem(STORAGE_KEYS.balance);
     localStorage.removeItem(STORAGE_KEYS.userEmail);
-    localStorage.removeItem(STORAGE_KEYS.lastReset);
-    localStorage.removeItem('modalGeral_powersData'); // Cache do SeuUsoSection
+    localStorage.removeItem(STORAGE_KEYS.lastRenewal);
+    localStorage.removeItem('modalGeral_powersData');
     localStorage.removeItem('modalGeral_seuUso_lastFetch');
     this.dbFetchCompleted = false;
     this.initialized = false;
