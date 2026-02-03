@@ -160,13 +160,21 @@ class PowersService {
   setUserEmail(email: string): void {
     if (email && email.includes('@')) {
       const wasEmpty = !this.userEmail;
+      const emailChanged = this.userEmail !== email;
+      
       this.userEmail = email;
       localStorage.setItem(STORAGE_KEYS.userEmail, email);
       console.log('[PowersService] 📧 Email definido manualmente:', email);
       
+      // ENTERPRISE: Reset dbFetchCompleted quando email muda para garantir re-fetch
+      if (emailChanged && !wasEmpty) {
+        this.dbFetchCompleted = false;
+        console.log('[PowersService] 🔄 Email mudou - dbFetchCompleted resetado para forçar re-fetch');
+      }
+      
       // Se o polling ainda não foi iniciado E o serviço foi inicializado, iniciar agora
-      if (wasEmpty && !this.syncPollingInterval && this.initialized) {
-        console.log('[PowersService] 🚀 Iniciando polling após email ser configurado');
+      if ((wasEmpty || emailChanged) && !this.syncPollingInterval && this.initialized) {
+        console.log('[PowersService] 🚀 Iniciando polling após email ser configurado/alterado');
         this.startSyncPolling();
         // Sincronização imediata quando email é configurado
         this.forceRefreshFromDatabase();
