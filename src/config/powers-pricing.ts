@@ -38,14 +38,41 @@ export interface CapabilityPricing {
 }
 
 export interface PowersConfig {
+  /** Quantidade de Powers que novos usuários recebem ao criar conta */
+  initialPowersForNewUsers: number;
+  /** Quantidade diária gratuita de Powers */
   dailyFreeAllowance: number;
+  /** Hora de renovação diária (horário local) */
   renewalHour: number;
+  /** Timezone para renovação */
   renewalTimezone: string;
+  /** Máximo que pode acumular */
   maxAccumulation: number;
 }
 
+/**
+ * CONFIGURAÇÃO CENTRALIZADA DE POWERS
+ * 
+ * Para alterar a quantidade inicial de Powers para novos usuários:
+ * - Modifique o valor de `initialPowersForNewUsers` abaixo
+ * - O valor será automaticamente usado ao criar novos usuários no banco
+ * 
+ * IMPORTANTE: Este arquivo é a ÚNICA fonte de verdade para configuração de Powers
+ */
 export const POWERS_CONFIG: PowersConfig = {
+  // ====================================
+  // CONFIGURAÇÃO PRINCIPAL - ALTERE AQUI
+  // ====================================
+  
+  /** Powers iniciais para novos usuários (altere este valor conforme necessário) */
+  initialPowersForNewUsers: 300,
+  
+  /** Allowance diária de Powers gratuitos */
   dailyFreeAllowance: 300,
+  
+  // ====================================
+  // CONFIGURAÇÕES DE SISTEMA
+  // ====================================
   renewalHour: 19,
   renewalTimezone: 'America/Sao_Paulo',
   maxAccumulation: 300,

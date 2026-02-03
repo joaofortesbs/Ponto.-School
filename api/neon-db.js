@@ -1,4 +1,5 @@
 import { Client, Pool } from 'pg';
+import { getInitialPowersForNewUsers } from './config/powers.js';
 
 class NeonDBManager {
   constructor() {
@@ -152,6 +153,9 @@ class NeonDBManager {
 
   // Criar tabela de usuários
   async createPerfilsTable() {
+    // Obter valor inicial de Powers da configuração centralizada
+    const initialPowers = getInitialPowersForNewUsers();
+    
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS usuarios (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -164,6 +168,8 @@ class NeonDBManager {
         estado VARCHAR(100) NOT NULL,
         instituicao_ensino VARCHAR(255) NOT NULL,
         imagem_avatar TEXT,
+        powers_carteira INTEGER NOT NULL DEFAULT ${initialPowers},
+        stars_carteira INTEGER NOT NULL DEFAULT 0,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
@@ -355,13 +361,18 @@ class NeonDBManager {
       instituicao_ensino
     } = profileData;
 
+    // Usar configuração de Powers (importada no topo do arquivo)
+    const initialPowers = getInitialPowersForNewUsers();
+    
+    console.log(`[NEON-DB] Criando usuário com ${initialPowers} Powers iniciais`);
+
     const query = `
       INSERT INTO usuarios (
         nome_completo, nome_usuario, email, senha_hash,
-        tipo_conta, pais, estado, instituicao_ensino
+        tipo_conta, pais, estado, instituicao_ensino, powers_carteira
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING id, nome_completo, nome_usuario, email, tipo_conta, pais, estado, instituicao_ensino, created_at
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id, nome_completo, nome_usuario, email, tipo_conta, pais, estado, instituicao_ensino, powers_carteira, created_at
     `;
 
     const params = [
@@ -372,7 +383,8 @@ class NeonDBManager {
       tipo_conta,
       pais,
       estado,
-      instituicao_ensino
+      instituicao_ensino,
+      initialPowers
     ];
 
     return await this.executeQuery(query, params);

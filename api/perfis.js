@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import neonDB from './neon-db.js';
+import { POWERS_CONFIG, getInitialPowersForNewUsers, getDailyAllowance, getMaxAccumulation } from './config/powers.js';
 
 const router = express.Router();
 
@@ -448,15 +449,17 @@ router.patch('/powers', async (req, res) => {
           error: 'Valor de dedução inválido' 
         });
       }
+      const initialPowers = getInitialPowersForNewUsers();
       query = `
         UPDATE usuarios 
-        SET powers_carteira = GREATEST(0, COALESCE(powers_carteira, 300) - $1), updated_at = NOW()
+        SET powers_carteira = GREATEST(0, COALESCE(powers_carteira, ${initialPowers}) - $1), updated_at = NOW()
         WHERE email = $2
         RETURNING id, nome_completo, email, powers_carteira, updated_at
       `;
       params = [amount, email];
     } else if (operation === 'add' && typeof amount === 'number') {
-      if (amount < 0 || amount > 300) {
+      const maxPowers = getMaxAccumulation();
+      if (amount < 0 || amount > maxPowers) {
         return res.status(400).json({ 
           success: false, 
           error: 'Valor de adição inválido' 
@@ -464,15 +467,16 @@ router.patch('/powers', async (req, res) => {
       }
       query = `
         UPDATE usuarios 
-        SET powers_carteira = LEAST(300, COALESCE(powers_carteira, 0) + $1), updated_at = NOW()
+        SET powers_carteira = LEAST(${maxPowers}, COALESCE(powers_carteira, 0) + $1), updated_at = NOW()
         WHERE email = $2
         RETURNING id, nome_completo, email, powers_carteira, updated_at
       `;
       params = [amount, email];
     } else if (operation === 'reset') {
+      const dailyAllowance = getDailyAllowance();
       query = `
         UPDATE usuarios 
-        SET powers_carteira = 300, updated_at = NOW()
+        SET powers_carteira = ${dailyAllowance}, updated_at = NOW()
         WHERE email = $1
         RETURNING id, nome_completo, email, powers_carteira, updated_at
       `;
@@ -533,7 +537,8 @@ router.get('/powers', async (req, res) => {
 
     if (result.success && result.data.length > 0) {
       const userData = result.data[0];
-      const powers = userData.powers_carteira ?? 300;
+      const initialPowers = getInitialPowersForNewUsers();
+      const powers = userData.powers_carteira ?? initialPowers;
       
       console.log('✅ [POWERS] Powers encontrados:', powers);
       res.json({ 
@@ -544,11 +549,12 @@ router.get('/powers', async (req, res) => {
         }
       });
     } else {
-      console.log('⚠️ [POWERS] Perfil não encontrado, retornando default');
+      const defaultPowers = getInitialPowersForNewUsers();
+      console.log('⚠️ [POWERS] Perfil não encontrado, retornando default:', defaultPowers);
       res.json({ 
         success: true, 
         data: {
-          powers_carteira: 300,
+          powers_carteira: defaultPowers,
           stars_carteira: 0
         }
       });
