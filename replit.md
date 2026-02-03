@@ -15,7 +15,7 @@ The platform features a modern, glass-morphism inspired design with blur backgro
 - **Frontend**: React 18 with TypeScript, Vite, Tailwind CSS with shadcn/ui, and Zustand for state management.
 - **Backend**: Express.js for API endpoints.
 - **AI Integration**: A unified, resilient multi-model cascade system (LLM Orchestrator v3.0 Enterprise) with a 5-tier architecture across 7 models, including circuit breakers, rate limiters, retry mechanisms, input sanitization, smart routing, and an in-memory cache.
-- **Authentication & User Management**: Supabase handles authentication, user sessions, role-based access, and profiles.
+- **Authentication & User Management**: Hybrid system - Neon PostgreSQL handles user data and sessions via custom API (`/api/perfis/login`, `/api/perfis/register`), while Supabase is used for file storage. Auth state is stored in localStorage (`auth_token`, `neon_authenticated`, `userEmail`).
 - **Core Features**:
     - **School Power**: AI-powered lesson planning managed by a robust, observable, and self-correcting Multi-Agent Lesson Orchestrator (v4.0) through a 7-step workflow.
     - **Agente Jota Chat Interface**: A chat-based interface for School Power featuring an orchestrator, planner, executor, a 3-layer memory manager, a 4-layer Anti-Hallucination System, Rules Engine, Debug System, and Context-aware Content Generation.
@@ -38,16 +38,24 @@ The platform features a modern, glass-morphism inspired design with blur backgro
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.
     - **School Points**: Persisted and synchronized point system.
-    - **Powers System v4.0 UNIFIED CONTEXT (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing and enterprise-grade synchronization with Neon DB.
-      - **NEW: ProfileContext Architecture (v4.0)**: Centralized React Context that manages both profile and Powers in a single source of truth.
+    - **Powers System v4.1 UNIFIED CONTEXT (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing and enterprise-grade synchronization with Neon DB.
+      - **ProfileContext Architecture (v4.1)**: Centralized React Context that manages both profile and Powers in a single source of truth.
         - `ProfileContext.tsx` located at `src/contexts/ProfileContext.tsx`
-        - Single API call to `/api/perfis` fetches profile WITH `powers_carteira` included
+        - **CRITICAL FIX (Feb 2026)**: ProfileContext now uses localStorage for auth detection, NOT Supabase auth
+        - Auth detection via: `localStorage.getItem('auth_token')` or `neon_authenticated === 'true'`
+        - Email retrieval via: `getUserEmailFromLocalStorage()` with fallbacks (userEmail → powers_user_email → neon_user.email)
+        - User ID retrieval via: `getUserIdFromLocalStorage()` with fallbacks (user_id → neon_user.id)
+        - Single API call to `/api/perfis?email=...` fetches profile WITH `powers_carteira` included
         - `useProfile()` hook provides: `profile`, `powers`, `isLoading`, `isAuthenticated`, `refreshProfile()`, `updatePowers()`
         - `usePowers()` hook for components that only need Powers data
         - Automatic cache cleanup of legacy localStorage keys on mount
-        - Versioned cache system (v4.0) with 5-minute TTL and `powers_carteira` validation
+        - Versioned cache system (v4.1) with 5-minute TTL and `powers_carteira` validation
         - Stale-while-revalidate pattern: shows cache immediately, refreshes in background
-        - Event-driven updates via `powers:charged` and `profile-updated` events
+        - Event-driven updates via `neon-login-success`, `powers:charged`, and `profile-updated` events
+      - **useNeonAuth Event System**: Login and register functions dispatch `neon-login-success` event with email and profile for instant sync
+        - Both login() and register() save: userEmail, powers_user_email, auth_token, user_id, neon_authenticated
+        - Event `neon-login-success` dispatched with { email, profile } after successful auth
+        - ProfileContext listens to this event and immediately updates profile/powers state
       - **Simplified PerfilCabecalho**: Now consumes ProfileContext directly instead of complex FAST-PATH/Fallback logic.
         - Reduced from 300 lines to ~200 lines
         - No direct profileService or powersService calls for display
