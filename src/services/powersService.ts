@@ -407,28 +407,40 @@ class PowersService {
       return this.balance;
     }
 
-    try {
-      const storedBalance = localStorage.getItem(STORAGE_KEYS.balance);
-      
-      if (storedBalance) {
-        try {
-          this.balance = JSON.parse(storedBalance);
-        } catch {
-          this.balance = this.getDefaultBalance();
-        }
-      }
+    console.log('[PowersService] 🚀 === INICIALIZANDO (DB-FIRST STRATEGY) ===');
 
+    try {
+      // ENTERPRISE DB-FIRST: Sempre buscar do banco primeiro
+      // O banco de dados é a ÚNICA fonte de verdade
       const powersFromDB = await this.fetchPowersFromDatabase();
       
       if (powersFromDB !== null) {
+        // SUCESSO: Banco retornou dados - usar como fonte primária
         this.balance.available = powersFromDB;
         this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - powersFromDB);
+        this.balance.dailyLimit = POWERS_CONFIG.dailyFreeAllowance;
+        this.balance.lastRenewal = this.balance.lastRenewal || new Date().toISOString();
+        this.balance.transactions = this.balance.transactions || [];
         this.persistBalance();
-        console.log('[PowersService] ✅ Saldo carregado do banco de dados:', powersFromDB, '| Usado:', this.balance.used);
-      } else if (!storedBalance) {
-        this.balance = this.getDefaultBalance();
-        this.persistBalance();
-        console.log('[PowersService] ⚠️ Usando saldo padrão (banco não disponível)');
+        console.log('[PowersService] ✅ SUCESSO DB-FIRST: Powers do banco:', powersFromDB);
+      } else {
+        // FALLBACK: Banco não disponível - tentar localStorage como backup
+        console.warn('[PowersService] ⚠️ Banco não disponível - tentando localStorage como fallback');
+        const storedBalance = localStorage.getItem(STORAGE_KEYS.balance);
+        
+        if (storedBalance) {
+          try {
+            this.balance = JSON.parse(storedBalance);
+            console.log('[PowersService] 📦 Usando cache localStorage:', this.balance.available);
+          } catch {
+            this.balance = this.getDefaultBalance();
+            console.log('[PowersService] ⚠️ Erro ao parsear localStorage - usando default');
+          }
+        } else {
+          this.balance = this.getDefaultBalance();
+          this.persistBalance();
+          console.log('[PowersService] ⚠️ Nenhum cache disponível - usando default:', this.balance.available);
+        }
       }
 
       if (this.shouldRenewDaily()) {
