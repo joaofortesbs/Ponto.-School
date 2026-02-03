@@ -32,22 +32,36 @@ const PerfilCabecalho: React.FC = () => {
 
   useEffect(() => {
     const fetchUserProfileAndPowers = async () => {
+      console.log('[PerfilCabecalho] 🚀 === INICIANDO CARREGAMENTO ===');
       try {
         // CRITICAL: Carregar perfil PRIMEIRO para que o email seja salvo
         const profile = await profileService.getCurrentUserProfile();
         setUserProfile(profile);
+        console.log('[PerfilCabecalho] 👤 Perfil carregado:', profile?.nome_completo || 'N/A');
+        console.log('[PerfilCabecalho] 📧 Email do perfil:', profile?.email || 'NÃO ENCONTRADO');
         
-        // Se o perfil tem email, garantir que o PowersService tenha acesso
+        // Se o perfil tem email, garantir que o PowersService tenha acesso ANTES de inicializar
         if (profile?.email) {
+          // 1. Definir email no PowersService
           powersService.setUserEmail(profile.email);
           console.log('[PerfilCabecalho] 📧 Email passado para PowersService:', profile.email);
+          
+          // 2. Inicializar PowersService
+          await powersService.initialize();
+          
+          // 3. CRÍTICO: Forçar refresh do banco passando o email diretamente
+          console.log('[PerfilCabecalho] 🔄 Chamando forceRefreshFromDatabase com email:', profile.email);
+          const balance = await powersService.forceRefreshFromDatabase(profile.email);
+          setPowers(balance.available);
+          console.log('[PerfilCabecalho] 💰 Powers carregados do banco:', balance.available);
+        } else {
+          console.warn('[PerfilCabecalho] ⚠️ Perfil sem email - Powers podem não sincronizar corretamente');
+          await powersService.initialize();
+          const balance = powersService.getBalance();
+          setPowers(balance.available);
         }
         
-        // Agora inicializar Powers com o email disponível
-        await powersService.initialize();
-        const balance = await powersService.forceRefreshFromDatabase();
-        setPowers(balance.available);
-        console.log('[PerfilCabecalho] 💰 Powers carregados do banco:', balance.available);
+        console.log('[PerfilCabecalho] ✅ === CARREGAMENTO CONCLUÍDO ===');
       } catch (error) {
         console.error('[PerfilCabecalho] ❌ Erro ao carregar perfil/Powers:', error);
         setPowers(null);

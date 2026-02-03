@@ -208,10 +208,19 @@ class PowersService {
     if (this.syncPollingInterval) {
       clearInterval(this.syncPollingInterval);
     }
+    
+    // ENTERPRISE: Executar sincronização imediata ao iniciar polling
+    console.log('[PowersService] 🔄 Polling de sincronização iniciando...');
+    console.log('[PowersService] 🔄 Executando sincronização inicial imediata');
+    this.processPendingSync().catch(err => {
+      console.error('[PowersService] ❌ Erro na sincronização inicial:', err);
+    });
+    
+    // Depois configurar polling a cada 30 segundos
     this.syncPollingInterval = setInterval(() => {
       this.processPendingSync();
     }, 30000);
-    console.log('[PowersService] 🔄 Polling de sincronização iniciado (30s)');
+    console.log('[PowersService] ✅ Polling de sincronização iniciado (30s interval)');
   }
 
   private async processPendingSync(): Promise<void> {
@@ -452,29 +461,46 @@ class PowersService {
   }
 
   private async fetchPowersFromDatabase(): Promise<number | null> {
+    console.log('[PowersService] 🔍 === FETCH POWERS FROM DATABASE ===');
     try {
       const email = await this.getUserEmail();
+      console.log('[PowersService] 🔍 Email para busca:', email || 'NÃO ENCONTRADO');
+      
       if (!email) {
-        console.log('[PowersService] Email não encontrado, usando localStorage');
+        console.warn('[PowersService] ⚠️ Email não encontrado em nenhuma fonte - fallback para localStorage');
         return null;
       }
 
-      const response = await fetch(`/api/perfis/powers?email=${encodeURIComponent(email)}`, {
+      const url = `/api/perfis/powers?email=${encodeURIComponent(email)}`;
+      console.log('[PowersService] 🌐 Chamando API:', url);
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      const result = await response.json();
+      console.log('[PowersService] 📥 Response status:', response.status);
 
-      if (result.success && result.data) {
-        return result.data.powers_carteira ?? POWERS_CONFIG.dailyFreeAllowance;
+      if (!response.ok) {
+        console.error('[PowersService] ❌ HTTP Error:', response.status, response.statusText);
+        return null;
       }
 
+      const result = await response.json();
+      console.log('[PowersService] 📥 Response body:', JSON.stringify(result));
+
+      if (result.success && result.data) {
+        const powers = result.data.powers_carteira ?? POWERS_CONFIG.dailyFreeAllowance;
+        console.log('[PowersService] ✅ Powers do banco:', powers);
+        return powers;
+      }
+
+      console.warn('[PowersService] ⚠️ API retornou success=false ou data vazio');
       return null;
     } catch (error) {
-      console.error('[PowersService] Erro ao buscar powers do banco:', error);
+      console.error('[PowersService] ❌ Erro ao buscar powers do banco:', error);
       return null;
     }
   }
@@ -803,16 +829,41 @@ class PowersService {
     }
   }
 
-  async forceRefreshFromDatabase(): Promise<PowersBalance> {
-    console.log('[PowersService] 🔄 Forçando atualização do banco de dados...');
+  async forceRefreshFromDatabase(emailOverride?: string): Promise<PowersBalance> {
+    console.log('[PowersService] 🔄 === FORCE REFRESH FROM DATABASE ===');
+    console.log('[PowersService] 🔄 Email override:', emailOverride || 'não fornecido');
+    console.log('[PowersService] 🔄 Email em cache:', this.userEmail || 'não disponível');
+    console.log('[PowersService] 🔄 Polling ativo:', !!this.syncPollingInterval);
+    
+    // Se um email foi fornecido diretamente, usar ele
+    if (emailOverride && emailOverride.includes('@')) {
+      this.userEmail = emailOverride;
+      localStorage.setItem(STORAGE_KEYS.userEmail, emailOverride);
+      console.log('[PowersService] 📧 Email override aplicado:', emailOverride);
+      
+      // CRÍTICO: Iniciar polling se ainda não iniciou e agora temos email
+      if (!this.syncPollingInterval) {
+        console.log('[PowersService] 🚀 Iniciando polling após email override em forceRefresh');
+        this.startSyncPolling();
+      }
+    }
+    
     const powersFromDB = await this.fetchPowersFromDatabase();
+    console.log('[PowersService] 🔄 Powers retornados do DB:', powersFromDB);
+    
     if (powersFromDB !== null) {
+      const previousBalance = this.balance.available;
       this.balance.available = powersFromDB;
       this.balance.used = Math.max(0, POWERS_CONFIG.dailyFreeAllowance - powersFromDB);
       this.persistBalance();
       this.emitUpdate();
-      console.log('[PowersService] ✅ Atualizado do banco - Disponível:', powersFromDB, '| Usado:', this.balance.used);
+      console.log('[PowersService] ✅ Atualizado do banco - Anterior:', previousBalance, '| Novo:', powersFromDB, '| Usado:', this.balance.used);
+    } else {
+      console.warn('[PowersService] ⚠️ fetchPowersFromDatabase retornou null - usando cache local');
     }
+    
+    console.log('[PowersService] 🔄 === FORCE REFRESH CONCLUÍDO ===');
+    console.log('[PowersService] 🔄 Polling ativo após refresh:', !!this.syncPollingInterval);
     return this.balance;
   }
 
