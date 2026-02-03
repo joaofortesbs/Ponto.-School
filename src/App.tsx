@@ -53,8 +53,6 @@ const MentorIAPage = lazy(() => import("./pages/mentor-ia"));
 const QuizPage = lazy(() => import('@/pages/quiz'));
 const TrilhasSchoolAlunoInterface = lazy(() => import('@/pages/trilhas-school/alunos/interface'));
 
-// Lazy load floating chat to reduce initial bundle
-const FloatingChatSupport = lazy(() => import("@/components/chat/FloatingChatSupport"));
 
 // Public activity page (no authentication required)
 const AtividadeCompartilhadaPage = lazy(() => import('@/pages/atividade/[activityId]/[uniqueCode]'));
@@ -403,12 +401,6 @@ function App() {
                 </Routes>
               </Suspense>
 
-              {/* Floating Chat Support - Excluído explicitamente das rotas de auth e quiz */}
-              {!isAuthRoute && !isQuizRoute && location.pathname !== '/quiz' && (
-                <Suspense fallback={null}>
-                  <FloatingChatSupport />
-                </Suspense>
-              )}
 
               {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
               {!isAuthRoute &&
