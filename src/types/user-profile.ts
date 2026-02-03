@@ -25,6 +25,11 @@ export interface UserProfile {
   following_count?: number;
   classes_count?: number;
   achievements_count?: number;
+  powers_carteira?: number;
+  stars_carteira?: number;
+  nome_completo?: string;
+  nome_usuario?: string;
+  imagem_avatar?: string | null;
   achievements?: Array<{
     id: number;
     title: string;

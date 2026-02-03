@@ -33,7 +33,9 @@ router.get('/', async (req, res) => {
         id: profile.id,
         nome_completo: profile.nome_completo,
         nome_usuario: profile.nome_usuario,
-        imagem_avatar: profile.imagem_avatar
+        imagem_avatar: profile.imagem_avatar ? '[base64 data]' : null,
+        powers_carteira: profile.powers_carteira,
+        stars_carteira: profile.stars_carteira
       });
       
       res.json({ 

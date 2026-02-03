@@ -40,12 +40,18 @@ const PerfilCabecalho: React.FC = () => {
         console.log('[PerfilCabecalho] 👤 Perfil carregado:', profile?.nome_completo || 'N/A');
         console.log('[PerfilCabecalho] 📧 Email do perfil:', profile?.email || 'NÃO ENCONTRADO');
         
+        // CRITICAL DEBUG: Log de todos os campos do perfil recebido
+        console.log('[PerfilCabecalho] 📋 === PERFIL RECEBIDO (TODOS OS CAMPOS) ===');
+        console.log('[PerfilCabecalho] 📋 profile:', JSON.stringify(profile, null, 2));
+        console.log('[PerfilCabecalho] 📋 profile.powers_carteira:', profile?.powers_carteira);
+        console.log('[PerfilCabecalho] 📋 typeof powers_carteira:', typeof profile?.powers_carteira);
+        
         // FAST-PATH: Se o perfil já tem powers_carteira, usar diretamente (evita segunda chamada)
         if (profile?.email && typeof profile.powers_carteira === 'number') {
           console.log('[PerfilCabecalho] ⚡ FAST-PATH: Powers já vieram do perfil:', profile.powers_carteira);
           powersService.setBalanceFromProfile(profile.powers_carteira, profile.email);
           setPowers(profile.powers_carteira);
-          console.log('[PerfilCabecalho] ⚡ Powers definidos instantaneamente!');
+          console.log('[PerfilCabecalho] ⚡ Powers definidos instantaneamente:', profile.powers_carteira);
         } else if (profile?.email) {
           // Fallback: Perfil não veio com powers_carteira, buscar separadamente
           console.log('[PerfilCabecalho] 🔄 Fallback: Buscando Powers separadamente...');
