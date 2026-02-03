@@ -821,8 +821,16 @@ class PowersService {
   }
 
   private persistBalance(): void {
+    // DB-ONLY v3.0: Só persiste no localStorage se o saldo veio do banco
+    // Isso evita que valores default sejam salvos e depois lidos como se fossem reais
+    if (!this.dbFetchCompleted) {
+      console.log('[PowersService] ⏳ Persistência bloqueada - aguardando sincronização com banco');
+      return;
+    }
+    
     try {
       localStorage.setItem(STORAGE_KEYS.balance, JSON.stringify(this.balance));
+      console.log('[PowersService] 💾 Saldo persistido (DB confirmado):', this.balance.available);
     } catch (error) {
       console.error('[PowersService] Erro ao persistir saldo:', error);
     }

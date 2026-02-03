@@ -38,10 +38,15 @@ The platform features a modern, glass-morphism inspired design with blur backgro
     - **Digital Notebooks & Smart Worksheets**: AI-integrated content generation.
     - **Daily Login System**: Gamified streaks and rewards.
     - **School Points**: Persisted and synchronized point system.
-    - **Powers System v5.0 ENTERPRISE DB-FIRST (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing and enterprise-grade bidirectional synchronization between localStorage and Neon DB. 
+    - **Powers System v5.0 ENTERPRISE DB-ONLY (Feb 2026)**: Virtual currency for AI capabilities with per-action pricing and enterprise-grade synchronization with Neon DB. 
       - **Centralized Configuration**: All Powers values are configured in `src/config/powers-pricing.ts` (frontend) and `api/config/powers.js` (backend). To change initial Powers for new users, edit `initialPowersForNewUsers` in the config files.
       - **New User Provisioning**: New users automatically receive 300 Powers (configurable) upon account creation. The `powers_carteira` column in the `usuarios` table has a DEFAULT of 300.
-      - **DB-First Strategy v2.0**: Database is the SINGLE SOURCE OF TRUTH. On initialization, the system always attempts to fetch from the Neon database first, using localStorage only as a fallback when the database is unavailable.
+      - **DB-ONLY Strategy v3.0 (Feb 2026)**: Database is the SINGLE SOURCE OF TRUTH. localStorage is NEVER used as source of balance data.
+        - Cache is automatically cleared in constructor and before each DB fetch
+        - `persistBalance()` is blocked until DB sync is confirmed (`dbFetchCompleted=true`)
+        - Aggressive retry system (2s, 5s delays) when DB is temporarily unavailable
+        - `initialize()` and `forceRefreshFromDatabase()` never fallback to localStorage
+        - Default balance shown temporarily while DB retry is in progress
       - **Race Condition Resolution**: Added `dbFetchCompleted` flag to track if the database fetch succeeded. If `initialize()` is called before email is available, it will re-fetch from DB on subsequent calls when email becomes available.
       - **Synchronization Flow**: (1) `PerfilCabecalho` loads profile with email, (2) calls `setUserEmail()`, (3) calls `forceRefreshFromDatabase(email)` - ensuring DB value is always used.
       - **Features**: daily allowance, pending transactions queue, 30-second polling system for DB→App sync, synchronous charges for App→DB sync, event-based decoupling (no circular dependencies), lazy polling initialization, auto-initialization on email event, email override in forceRefreshFromDatabase(), automatic polling start on email override, multiple email propagation paths (localStorage cache, event listener, PerfilCabecalho direct call with email parameter), detailed logging for debug, retry on DB failure, and guard against duplicate listeners.
