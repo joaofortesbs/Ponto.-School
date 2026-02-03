@@ -6,6 +6,18 @@ Ponto. School is an AI-powered educational platform focused on personalized lear
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (Feb 2026)
+
+### Performance Optimization v1.0
+- **Removed FloatingChatSupport.tsx** (6,459 lines): Fixed "Failed to fetch dynamically imported module" error by completely removing the unused floating chat component
+- **Removed unused dependencies** (~60MB savings):
+  - `moment` (5.3MB) - not used, date-fns is preferred
+  - `three` (32MB) - not used in codebase
+  - `lovable-tagger` (17MB) - dev tool not needed
+  - `tempo-devtools` (5.3MB) - dev tool not needed
+- **Optimized vite.config.ts**: Removed lovable-tagger import, confirmed manual chunking and esnext target are configured
+- **Verified lucide-react imports**: Already using optimized named imports pattern
+
 ## System Architecture
 
 ### UI/UX Decisions
