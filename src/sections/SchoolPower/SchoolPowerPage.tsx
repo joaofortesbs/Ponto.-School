@@ -15,8 +15,13 @@ import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDe
 import { HistoricoAtividadesCriadas } from "../../features/schoolpower/construction/HistoricoAtividadesCriadas";
 import { ChatLayout } from "../../features/schoolpower/interface-chat-producao/ChatLayout";
 import { useIsMobile } from "../../hooks/useIsMobile";
-import DebugPanel from './components/DebugPanel';
-import GeminiApiMonitor from './components/GeminiApiMonitor';
+// PERFORMANCE: DebugPanel and GeminiApiMonitor only loaded in development mode
+const DebugPanel = import.meta.env.DEV 
+  ? React.lazy(() => import('./components/DebugPanel'))
+  : () => null;
+const GeminiApiMonitor = import.meta.env.DEV 
+  ? React.lazy(() => import('./components/GeminiApiMonitor'))
+  : () => null;
 import { 
   getPendingMessage, 
   clearPendingMessage, 
@@ -269,9 +274,12 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
         </motion.div>
       )}
 
-      <DebugPanel />
-
-      <GeminiApiMonitor />
+      {import.meta.env.DEV && (
+        <React.Suspense fallback={null}>
+          <DebugPanel />
+          <GeminiApiMonitor />
+        </React.Suspense>
+      )}
     </div>
   );
 }
