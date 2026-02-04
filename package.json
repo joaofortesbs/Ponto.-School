@@ -10,11 +10,11 @@
     "build-no-errors": "tsc ; vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview --host 0.0.0.0 --port 5000",
-    "setup-db": "node scripts/setup-supabase.js",
     "check-health": "node scripts/app-health-check.js",
     "start": "node scripts/start-production.js",
     "start:dev": "node scripts/start-app.js",
-    "types:supabase": "npx supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/supabase.ts"
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
