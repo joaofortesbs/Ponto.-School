@@ -8,15 +8,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (Feb 2026)
 
-### Performance Optimization v1.0
-- **Removed FloatingChatSupport.tsx** (6,459 lines): Fixed "Failed to fetch dynamically imported module" error by completely removing the unused floating chat component
-- **Removed unused dependencies** (~60MB savings):
-  - `moment` (5.3MB) - not used, date-fns is preferred
-  - `three` (32MB) - not used in codebase
-  - `lovable-tagger` (17MB) - dev tool not needed
-  - `tempo-devtools` (5.3MB) - dev tool not needed
-- **Optimized vite.config.ts**: Removed lovable-tagger import, confirmed manual chunking and esnext target are configured
-- **Verified lucide-react imports**: Already using optimized named imports pattern
+### Performance Optimization v1.1
+- **Lazy Loading in App.tsx**: Converted 12+ page imports to dynamic lazy loading (Dashboard, Agenda, Biblioteca, Carteira, MeusPontos, Epictus-IA, etc.)
+- **Dev-Only Components Optimization**: DebugPanel (695 lines) and GeminiApiMonitor now load only in development mode via React.lazy conditional
+- **Enhanced vite.config.ts**: Function-based manualChunks for better vendor splitting (react, ui, motion, icons, pdf, charts, dnd, particles, utils, forms, supabase)
+- **Removed FloatingChatSupport.tsx** (6,459 lines): Fixed "Failed to fetch dynamically imported module" error
+- **Removed unused dependencies** (~60MB savings): moment, three, lovable-tagger, tempo-devtools
+- **Tree-shaking**: Enabled for production builds
+
+### Performance Baseline (Pre-optimization)
+- Lighthouse Score: 29/100
+- FCP: 12.8s, LCP: 25.0s, TBT: 750ms
+- Unused JavaScript: 9.1MB
+- Total Payload: 27MB
 
 ## System Architecture
 
