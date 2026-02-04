@@ -52,10 +52,7 @@ export default defineConfig(({ command, mode }) => ({
       polyfill: false,
     },
     rollupOptions: {
-      treeshake: {
-        moduleSideEffects: 'no-external',
-        propertyReadSideEffects: false,
-      },
+      treeshake: true,
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules')) {

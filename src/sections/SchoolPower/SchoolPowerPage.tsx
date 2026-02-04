@@ -15,18 +15,19 @@ import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDe
 import { HistoricoAtividadesCriadas } from "../../features/schoolpower/construction/HistoricoAtividadesCriadas";
 import { ChatLayout } from "../../features/schoolpower/interface-chat-producao/ChatLayout";
 import { useIsMobile } from "../../hooks/useIsMobile";
-// PERFORMANCE: DebugPanel and GeminiApiMonitor only loaded in development mode
-const DebugPanel = import.meta.env.DEV 
-  ? React.lazy(() => import('./components/DebugPanel'))
-  : () => null;
-const GeminiApiMonitor = import.meta.env.DEV 
-  ? React.lazy(() => import('./components/GeminiApiMonitor'))
-  : () => null;
 import { 
   getPendingMessage, 
   clearPendingMessage, 
   clearRedirectToSchoolPower 
 } from "../../lib/message-sync";
+
+// PERFORMANCE: DebugPanel and GeminiApiMonitor only loaded in development mode
+const DebugPanel = import.meta.env.DEV 
+  ? React.lazy(() => import('./components/DebugPanel'))
+  : (() => null) as React.FC;
+const GeminiApiMonitor = import.meta.env.DEV 
+  ? React.lazy(() => import('./components/GeminiApiMonitor'))
+  : (() => null) as React.FC;
 
 interface SchoolPowerPageProps {
   isQuizMode?: boolean;
