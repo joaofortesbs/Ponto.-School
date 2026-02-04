@@ -8,6 +8,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (Feb 2026)
 
+### Critical Bug Fix: ProfileContext Infinite Loop (Feb 4, 2026)
+- **Root Cause**: useEffect in ProfileContext.tsx had `profile?.email` in dependencies, causing infinite re-renders when profile was updated
+- **Symptoms**: Dozens of GET /api/perfis requests per second, browser freezing, platform becoming unresponsive
+- **Solution**: Implemented useRef pattern to avoid stale closures while keeping empty dependency array
+  - Added refs: `profileRef`, `loadProfileRef`, `fetchProfileByEmailRef`, `updatePowersRef`
+  - Separate useEffects to keep refs updated when values change
+  - Main event listener effect runs once on mount using refs for current values
+- **Result**: Reduced from ~50+ API calls/second to 1-2 calls per page load
+
+### Environment Cleanup (Feb 4, 2026)
+- Removed unused Python 3.11 module (freed resources)
+- Cleaned up obsolete workflows from .replit (from 20+ to 3 essential workflows)
+
 ### Performance Optimization v1.1
 - **Lazy Loading in App.tsx**: Converted 12+ page imports to dynamic lazy loading (Dashboard, Agenda, Biblioteca, Carteira, MeusPontos, Epictus-IA, etc.)
 - **Dev-Only Components Optimization**: DebugPanel (695 lines) and GeminiApiMonitor now load only in development mode via React.lazy conditional

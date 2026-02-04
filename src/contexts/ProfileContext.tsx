@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { UserProfile } from '@/types/user-profile';
 
 const CACHE_VERSION = 'v4.1';
@@ -332,24 +332,42 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }));
   }, [profile]);
 
+  // Refs to avoid stale closures in event handlers
+  const profileRef = useRef(profile);
+  const loadProfileRef = useRef(loadProfile);
+  const fetchProfileByEmailRef = useRef(fetchProfileByEmail);
+  const updatePowersRef = useRef(updatePowers);
+
+  // Keep refs updated
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
+
+  useEffect(() => {
+    loadProfileRef.current = loadProfile;
+    fetchProfileByEmailRef.current = fetchProfileByEmail;
+    updatePowersRef.current = updatePowers;
+  }, [loadProfile, fetchProfileByEmail, updatePowers]);
+
+  // Main effect for event listeners - runs once on mount
   useEffect(() => {
     cleanupLegacyCache();
-    loadProfile();
+    loadProfileRef.current();
 
     const handleLoginSuccess = (event: CustomEvent) => {
       console.log('[ProfileContext] 🎉 Login success event received!');
       const email = event.detail?.email;
-      const profile = event.detail?.profile;
+      const eventProfile = event.detail?.profile;
       
-      if (profile && typeof profile.powers_carteira === 'number') {
-        console.log('[ProfileContext] Setting profile from login event with powers:', profile.powers_carteira);
-        setProfile(profile);
-        setPowers(profile.powers_carteira);
+      if (eventProfile && typeof eventProfile.powers_carteira === 'number') {
+        console.log('[ProfileContext] Setting profile from login event with powers:', eventProfile.powers_carteira);
+        setProfile(eventProfile);
+        setPowers(eventProfile.powers_carteira);
         setIsAuthenticated(true);
-        setCache(profile);
+        setCache(eventProfile);
       } else if (email) {
         console.log('[ProfileContext] Fetching profile after login for:', email);
-        fetchProfileByEmail(email).then(freshProfile => {
+        fetchProfileByEmailRef.current(email).then(freshProfile => {
           if (freshProfile) {
             setProfile(freshProfile);
             setPowers(freshProfile.powers_carteira ?? null);
@@ -357,7 +375,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           }
         });
       } else {
-        loadProfile();
+        loadProfileRef.current();
       }
     };
 
@@ -372,13 +390,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const handlePowersCharged = (event: CustomEvent) => {
       if (typeof event.detail?.newBalance === 'number') {
         console.log('[ProfileContext] Powers charged, new balance:', event.detail.newBalance);
-        updatePowers(event.detail.newBalance);
+        updatePowersRef.current(event.detail.newBalance);
       }
     };
 
     const handleExternalProfileUpdate = (event: CustomEvent) => {
       const updatedProfile = event.detail?.profile;
-      if (updatedProfile && profile?.email === updatedProfile.email) {
+      const currentProfile = profileRef.current;
+      if (updatedProfile && currentProfile?.email === updatedProfile.email) {
         console.log('[ProfileContext] External profile update received');
         setProfile(updatedProfile);
         if (typeof updatedProfile.powers_carteira === 'number') {
@@ -391,7 +410,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'neon_authenticated' || event.key === 'auth_token') {
         console.log('[ProfileContext] Storage auth change detected, reloading profile');
-        loadProfile();
+        loadProfileRef.current();
       }
     };
 
@@ -410,7 +429,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       document.removeEventListener('profile-updated-external', handleExternalProfileUpdate as EventListener);
       window.removeEventListener('storage', handleStorageChange);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const value: ProfileContextType = {
