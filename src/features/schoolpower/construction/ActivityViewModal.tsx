@@ -941,14 +941,52 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const isExerciseList = (activity.originalData?.type || activity.categoryId || activity.type) === 'lista-exercicios';
   const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
 
-  // Função para obter o título da atividade
+  const cleanActivityTitle = (title: string): string => {
+    const MAX_TITLE_LENGTH = 50;
+    if (!title || typeof title !== 'string') return '';
+    let cleaned = title
+      .replace(/^(preciso|quero|gostaria de|criar|fazer|desenvolver|crie|gere|monte|elabore|prepare)\s+/gi, '')
+      .replace(/^(algumas?|alguns?|as|os|a|o|um|uma|uns|umas)\s+/gi, '')
+      .replace(/^(atividades?|exercícios?|plano|planos|aulas?)\s+(de|sobre|para|com)\s+/gi, '')
+      .replace(/^próximas?\s+atividades?\s+(de|sobre|para)\s+/gi, '')
+      .replace(/^(sobre|para|com|de)\s+/gi, '')
+      .replace(/^(como|o que é|quais são|quando|onde)\s+/gi, '')
+      .trim();
+    
+    if (cleaned.length > MAX_TITLE_LENGTH) {
+      const sobreMatch = cleaned.match(/sobre\s+(.+?)(?:\s+(?:dentro|para|com|que|e)\s|$)/i);
+      if (sobreMatch && sobreMatch[1] && sobreMatch[1].length <= MAX_TITLE_LENGTH) {
+        cleaned = sobreMatch[1].trim();
+      } else {
+        const words = cleaned.split(/\s+/);
+        let result = '';
+        for (const word of words) {
+          if (result.length + word.length + 1 <= MAX_TITLE_LENGTH) {
+            result += (result ? ' ' : '') + word;
+          } else break;
+        }
+        cleaned = result || cleaned.substring(0, MAX_TITLE_LENGTH);
+      }
+    }
+    
+    cleaned = cleaned.replace(/\.\.\.$/, '').replace(/\.$/, '').trim();
+    if (!cleaned || cleaned.length < 3) return title;
+    
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  };
+
   const getActivityTitle = () => {
     if (activityType === 'plano-aula') {
-      const planoTitle = localStorage.getItem(`activity_${activity.id}`) ? JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.titulo || JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.title || activity.title || activity.personalizedTitle || 'Plano de Aula' : activity.title || activity.personalizedTitle || 'Plano de Aula';
-      const tema = localStorage.getItem(`activity_${activity.id}`) ? JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.tema || JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.['Tema ou Tópico Central'] || '' : '';
-      return tema ? `${planoTitle}: ${tema}` : planoTitle;
+      const storedData = localStorage.getItem(`activity_${activity.id}`) 
+        ? JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}') 
+        : {};
+      const planoTitle = storedData?.titulo || storedData?.title || activity.title || activity.personalizedTitle || 'Plano de Aula';
+      const tema = storedData?.tema || storedData?.['Tema ou Tópico Central'] || '';
+      const fullTitle = tema ? `${planoTitle}: ${tema}` : planoTitle;
+      return cleanActivityTitle(fullTitle);
     }
-    return activity.title || activity.personalizedTitle || 'Atividade';
+    const rawTitle = activity.title || activity.personalizedTitle || 'Atividade';
+    return cleanActivityTitle(rawTitle);
   };
 
   // Função para obter informações adicionais do Plano de Aula para o cabeçalho

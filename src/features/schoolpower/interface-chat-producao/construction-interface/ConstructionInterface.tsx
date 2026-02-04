@@ -290,11 +290,52 @@ function convertToConstructionActivity(activity: ActivityToBuild): ConstructionA
   const consolidatedFields = builtData._consolidated_fields || builtData.generated_fields || {};
   
   const getGeneratedTitle = (): string => {
-    if (consolidatedFields.theme) return consolidatedFields.theme;
-    if (consolidatedFields.temaRedacao) return consolidatedFields.temaRedacao;
-    if (consolidatedFields.tituloTemaAssunto) return consolidatedFields.tituloTemaAssunto;
-    if (consolidatedFields.centralTheme) return consolidatedFields.centralTheme;
-    if (consolidatedFields.title) return consolidatedFields.title;
+    const MAX_TITLE_LENGTH = 50;
+    
+    const cleanTitle = (title: string): string => {
+      if (!title || typeof title !== 'string') return '';
+      let cleaned = title
+        .replace(/^(preciso|quero|gostaria de|criar|fazer|desenvolver|crie|gere|monte|elabore|prepare)\s+/gi, '')
+        .replace(/^(algumas?|alguns?|as|os|a|o|um|uma|uns|umas)\s+/gi, '')
+        .replace(/^(atividades?|exercícios?|plano|planos|aulas?)\s+(de|sobre|para|com)\s+/gi, '')
+        .replace(/^próximas?\s+atividades?\s+(de|sobre|para)\s+/gi, '')
+        .replace(/^(sobre|para|com|de)\s+/gi, '')
+        .replace(/^(como|o que é|quais são|quando|onde)\s+/gi, '')
+        .trim();
+      
+      if (cleaned.length > MAX_TITLE_LENGTH) {
+        const sobreMatch = cleaned.match(/sobre\s+(.+?)(?:\s+(?:dentro|para|com|que|e)\s|$)/i);
+        if (sobreMatch && sobreMatch[1] && sobreMatch[1].length <= MAX_TITLE_LENGTH) {
+          cleaned = sobreMatch[1].trim();
+        } else {
+          const words = cleaned.split(/\s+/);
+          let result = '';
+          for (const word of words) {
+            if (result.length + word.length + 1 <= MAX_TITLE_LENGTH) {
+              result += (result ? ' ' : '') + word;
+            } else break;
+          }
+          cleaned = result || cleaned.substring(0, MAX_TITLE_LENGTH);
+        }
+      }
+      
+      cleaned = cleaned.replace(/\.\.\.$/, '').replace(/\.$/, '').trim();
+      if (!cleaned || cleaned.length < 3) return '';
+      
+      return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    };
+    
+    const rawTitle = consolidatedFields.theme || 
+                     consolidatedFields.temaRedacao || 
+                     consolidatedFields.tituloTemaAssunto || 
+                     consolidatedFields.centralTheme || 
+                     consolidatedFields.title;
+    
+    if (rawTitle) {
+      const cleanedTitle = cleanTitle(rawTitle);
+      if (cleanedTitle) return cleanedTitle;
+    }
+    
     return activity.name;
   };
   

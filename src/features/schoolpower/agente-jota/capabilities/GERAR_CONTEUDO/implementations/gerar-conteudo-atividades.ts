@@ -146,7 +146,6 @@ function inferSubjectFromObjective(objective: string): string {
 
 function generateThemeFromObjective(objective: string, subject: string): string {
   if (!objective || objective.length < 5) {
-    // Temas padrão por disciplina
     const defaultThemes: Record<string, string> = {
       'Matemática': 'Operações com Números Inteiros',
       'Língua Portuguesa': 'Interpretação de Textos',
@@ -155,22 +154,70 @@ function generateThemeFromObjective(objective: string, subject: string): string 
       'Geografia': 'Aspectos Físicos do Brasil',
       'Arte': 'Expressão Artística Contemporânea',
       'Educação Física': 'Jogos Cooperativos',
-      'Inglês': 'Basic Vocabulary and Expressions'
+      'Inglês': 'Basic Vocabulary and Expressions',
+      'Marketing': 'Estratégias de Marketing Digital',
+      'Tráfego Pago': 'Campanhas de Anúncios Online',
+      'Negócios': 'Gestão e Planejamento Empresarial'
     };
     return defaultThemes[subject] || 'Tema a ser definido';
   }
   
-  // Limpar e formatar o objetivo como tema
   let theme = objective
-    .replace(/^(preciso|quero|gostaria de|criar|fazer|desenvolver)\s+/gi, '')
-    .replace(/^(as|os|a|o|um|uma|uns|umas)\s+/gi, '')
+    .replace(/^(preciso|quero|gostaria de|criar|fazer|desenvolver|crie|gere|monte|elabore|prepare)\s+/gi, '')
+    .replace(/^(algumas?|alguns?|as|os|a|o|um|uma|uns|umas)\s+/gi, '')
+    .replace(/^(atividades?|exercícios?|plano|planos|aulas?)\s+(de|sobre|para|com)\s+/gi, '')
     .replace(/^próximas?\s+atividades?\s+(de|sobre|para)\s+/gi, '')
+    .replace(/^(sobre|para|com|de)\s+/gi, '')
+    .replace(/^(como|o que é|quais são|quando|onde)\s+/gi, '')
     .trim();
   
-  // Capitalizar primeira letra
+  const MAX_THEME_LENGTH = 50;
+  if (theme.length > MAX_THEME_LENGTH) {
+    const sobreMatch = theme.match(/sobre\s+(.+?)(?:\s+(?:dentro|para|com|que|e)\s|$)/i);
+    if (sobreMatch && sobreMatch[1]) {
+      theme = sobreMatch[1].trim();
+    } else {
+      const words = theme.split(/\s+/);
+      const keyWords: string[] = [];
+      let charCount = 0;
+      
+      for (const word of words) {
+        const skipWords = ['de', 'da', 'do', 'das', 'dos', 'em', 'na', 'no', 'nas', 'nos', 
+                          'para', 'por', 'com', 'sem', 'sob', 'sobre', 'entre', 'até',
+                          'que', 'como', 'quando', 'onde', 'quais', 'qual', 'dentro'];
+        if (skipWords.includes(word.toLowerCase()) && keyWords.length === 0) continue;
+        
+        if (charCount + word.length + 1 <= MAX_THEME_LENGTH) {
+          keyWords.push(word);
+          charCount += word.length + 1;
+        } else {
+          break;
+        }
+      }
+      
+      theme = keyWords.join(' ');
+    }
+  }
+  
+  theme = theme.replace(/\.\.\.$/, '').replace(/\.$/, '').trim();
+  
+  if (!theme || theme.length < 3) {
+    const defaultThemes: Record<string, string> = {
+      'Matemática': 'Conceitos Matemáticos',
+      'Língua Portuguesa': 'Produção Textual',
+      'Ciências': 'Fenômenos Naturais',
+      'História': 'Estudos Históricos',
+      'Geografia': 'Estudos Geográficos',
+      'Marketing': 'Estratégias de Marketing',
+      'Tráfego Pago': 'Campanhas de Anúncios',
+      'Negócios': 'Gestão Empresarial'
+    };
+    return defaultThemes[subject] || `Estudo de ${subject}`;
+  }
+  
   theme = theme.charAt(0).toUpperCase() + theme.slice(1);
   
-  return theme || objective;
+  return theme;
 }
 
 function generateDefaultObjectives(theme: string, subject: string): string {

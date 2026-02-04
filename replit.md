@@ -17,6 +17,23 @@ Preferred communication style: Simple, everyday language.
   - Main event listener effect runs once on mount using refs for current values
 - **Result**: Reduced from ~50+ API calls/second to 1-2 calls per page load
 
+### Activity Title Display Fix (Feb 4, 2026)
+- **Root Cause**: `generateThemeFromObjective()` function was using user's prompt as activity theme/title with minimal cleaning
+- **Symptoms**: Activity titles in Chat Jota showing full user prompts like "Criar algumas atividade sobre como escalar campanhas de tráfego pago..."
+- **Solution**: Enhanced title generation with intelligent extraction and truncation
+  - Improved `generateThemeFromObjective()` in `gerar-conteudo-atividades.ts`:
+    - Added more regex patterns to remove command words (crie, gere, monte, elabore, prepare, etc.)
+    - Extract key themes from "sobre X" patterns
+    - Limit titles to 50 characters maximum
+    - Added fallback themes for additional subjects (Marketing, Tráfego Pago, Negócios)
+  - Enhanced `getGeneratedTitle()` in `ConstructionInterface.tsx`:
+    - Added `cleanTitle()` helper with smart truncation and "sobre X" pattern extraction
+    - Preserves word boundaries when truncating to 50 characters
+  - Updated `getActivityTitle()` in `ActivityViewModal.tsx`:
+    - Added same `cleanActivityTitle()` function with identical logic for consistency
+    - Both modal and construction interface now use matching title cleaning (50 char limit)
+- **Result**: Activity titles now display clean, professional, max 50-character titles consistently across all views
+
 ### Environment Cleanup (Feb 4, 2026)
 - Removed unused Python 3.11 module (freed resources)
 - Cleaned up obsolete workflows from .replit (from 20+ to 3 essential workflows)
