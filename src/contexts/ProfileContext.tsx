@@ -410,7 +410,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       document.removeEventListener('profile-updated-external', handleExternalProfileUpdate as EventListener);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [loadProfile, updatePowers, fetchProfileByEmail, profile?.email]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const value: ProfileContextType = {
     profile,
