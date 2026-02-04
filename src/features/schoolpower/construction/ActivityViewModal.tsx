@@ -976,17 +976,94 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   };
 
   const getActivityTitle = () => {
+    const storedData = (() => {
+      try {
+        return JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
+      } catch { return {}; }
+    })();
+    
+    const customFields = activity.customFields || {};
+    const originalData = activity.originalData || {};
+    const consolidatedFields = originalData.built_data?._consolidated_fields || {};
+    const originalCampos = originalData.campos || {};
+    const mergedFields = { ...consolidatedFields, ...originalCampos };
+    
+    const extractThemeFromSources = (): string => {
+      const sources = [
+        storedData.theme,
+        storedData.tema,
+        storedData.temaRedacao,
+        storedData.tituloTemaAssunto,
+        storedData.centralTheme,
+        storedData['Tema ou Tópico Central'],
+        storedData['Tema da Redação'],
+        storedData.title,
+        storedData.titulo,
+        customFields.theme,
+        customFields.tema,
+        customFields.temaRedacao,
+        customFields.tituloTemaAssunto,
+        customFields.centralTheme,
+        customFields['Tema ou Tópico Central'],
+        customFields['Tema da Redação'],
+        mergedFields.theme,
+        mergedFields.tema,
+        mergedFields.temaRedacao,
+        mergedFields.tituloTemaAssunto,
+        mergedFields.centralTheme,
+        consolidatedFields.theme,
+        consolidatedFields.tema,
+        originalData.theme,
+        originalData.tema,
+        originalData.titulo_gerado
+      ];
+      
+      for (const source of sources) {
+        if (source && typeof source === 'string' && source.trim().length > 3) {
+          return source.trim();
+        }
+      }
+      return '';
+    };
+    
     if (activityType === 'plano-aula') {
-      const storedData = localStorage.getItem(`activity_${activity.id}`) 
-        ? JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}') 
-        : {};
-      const planoTitle = storedData?.titulo || storedData?.title || activity.title || activity.personalizedTitle || 'Plano de Aula';
-      const tema = storedData?.tema || storedData?.['Tema ou Tópico Central'] || '';
-      const fullTitle = tema ? `${planoTitle}: ${tema}` : planoTitle;
-      return cleanActivityTitle(fullTitle);
+      const baseTitle = storedData.titulo || storedData.title || 'Plano de Aula';
+      const tema = extractThemeFromSources();
+      if (tema) {
+        const fullTitle = `${baseTitle}: ${tema}`;
+        return cleanActivityTitle(fullTitle);
+      }
+      return cleanActivityTitle(baseTitle);
     }
-    const rawTitle = activity.title || activity.personalizedTitle || 'Atividade';
-    return cleanActivityTitle(rawTitle);
+    
+    const extractedTheme = extractThemeFromSources();
+    
+    if (extractedTheme) {
+      const cleanedTheme = cleanActivityTitle(extractedTheme);
+      if (cleanedTheme && cleanedTheme.length >= 3) {
+        return cleanedTheme;
+      }
+    }
+    
+    if (activity.title && activity.title !== activity.categoryName && activity.title !== activity.categoryId) {
+      const cleanedTitle = cleanActivityTitle(activity.title);
+      if (cleanedTitle && cleanedTitle.length >= 3) {
+        return cleanedTitle;
+      }
+    }
+    
+    const typeLabels: Record<string, string> = {
+      'lista-exercicios': 'Lista de Exercícios',
+      'plano-aula': 'Plano de Aula',
+      'sequencia-didatica': 'Sequência Didática',
+      'quiz-interativo': 'Quiz Interativo',
+      'flash-cards': 'Flash Cards',
+      'redacao': 'Redação',
+      'prova': 'Prova',
+      'aula': 'Aula'
+    };
+    
+    return typeLabels[activityType] || activity.categoryName || 'Atividade';
   };
 
   // Função para obter informações adicionais do Plano de Aula para o cabeçalho
