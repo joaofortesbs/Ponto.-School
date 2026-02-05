@@ -20,6 +20,8 @@ import {
   type InitialResponseResult,
   type FinalResponseResult,
 } from './context';
+import { criarArquivo } from './capabilities/CRIAR_ARQUIVO/implementations/criar-arquivo';
+import type { ArtifactData } from './capabilities/CRIAR_ARQUIVO/types';
 
 const memoryManagers: Map<string, MemoryManager> = new Map();
 const executors: Map<string, AgentExecutor> = new Map();
@@ -143,6 +145,7 @@ export interface ExecutePlanResult {
   relatorio: string;
   respostaFinal: string;
   finalResponseData?: FinalResponseResult;
+  artifactData?: ArtifactData;
 }
 
 export async function executeAgentPlan(
@@ -283,12 +286,25 @@ export async function executeAgentPlanWithDetails(
       metadata: { planId: plan.planId },
     });
 
+    let artifactData: ArtifactData | undefined;
+    try {
+      console.log('📄 [Orchestrator] Gerando artefato pós-execução...');
+      artifactData = await criarArquivo({
+        session_id: sessionId,
+        tipo: 'dossie',
+      });
+      console.log('✅ [Orchestrator] Artefato gerado:', artifactData.titulo);
+    } catch (artifactError) {
+      console.warn('⚠️ [Orchestrator] Falha ao gerar artefato (não-crítico):', artifactError);
+    }
+
     console.log('✅ [Orchestrator] Plano executado e resposta final gerada');
     
     return {
       relatorio,
       respostaFinal,
       finalResponseData,
+      artifactData,
     };
 
   } catch (error) {

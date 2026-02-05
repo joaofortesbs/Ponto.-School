@@ -13,7 +13,7 @@ import { ArrowLeft, Bot, User, Loader2, LogOut } from 'lucide-react';
 import { MessageStream } from './components/MessageStream';
 import { ContextModal } from './ContextModal';
 import { useChatState } from './state/chatState';
-import { processUserPrompt, executeAgentPlan } from '../agente-jota/orchestrator';
+import { processUserPrompt, executeAgentPlanWithDetails } from '../agente-jota/orchestrator';
 import { generateSessionId } from '../agente-jota/memory-manager';
 
 import type { 
@@ -25,7 +25,7 @@ import type {
 import { ChatInputJota } from './chat-input-jota';
 import { CardSuperiorSuasCriacoes } from './card-superior-suas-criacoes-input';
 import { ProgressBadge } from './components/ProgressBadge';
-import { useDossieStore, generateDossieContent, DossieViewModal } from './dossie-system';
+import { useDossieStore } from './dossie-system';
 
 const EXECUTION_LOCK_KEY = 'agente-jota-execution-lock';
 
@@ -79,6 +79,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     addPlanCard, 
     addDevModeCard,
     addDossieCard,
+    addArtifactCard,
     setExecuting,
     setLoading,
     clearMessages,
@@ -449,14 +450,14 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 ║════════════════════════════════════════════════════════════════════════║
       `);
       
-      const relatorio = await executeAgentPlan(
+      const result = await executeAgentPlanWithDetails(
         executionPlan,
         sessionId,
         handleProgress,
         conversationHistory
       );
       
-      console.error('✅ [ChatLayout] executeAgentPlan() retornou com sucesso');
+      console.error('✅ [ChatLayout] executeAgentPlanWithDetails() retornou com sucesso');
 
       setIsExecutingLocal(false);
       setExecuting(false);
@@ -471,33 +472,18 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         detail: { type: 'execution:completed' }
       }));
 
-      addTextMessage('assistant', relatorio);
+      addTextMessage('assistant', result.respostaFinal);
 
       addMemory({
         tipo: 'resultado',
         conteudo: 'Plano executado com sucesso',
-        resultado: relatorio,
+        resultado: result.respostaFinal,
       });
 
-      try {
-        console.log('📋 [ChatLayout] Gerando Dossiê da sessão...');
-        dossieStore.addEvent({ type: 'step_completed', data: { relatorio }, description: 'Execução concluída' });
-        dossieStore.setGenerating(true);
-        
-        const summary = dossieStore.getSessionSummary();
-        const dossieData = await generateDossieContent(summary);
-        
-        if (dossieData) {
-          dossieStore.setDossie(dossieData);
-          dossieStore.setGenerating(false);
-          addDossieCard(dossieData);
-          console.log('✅ [ChatLayout] Dossiê gerado com sucesso');
-        } else {
-          dossieStore.setGenerating(false);
-        }
-      } catch (dossieError) {
-        console.warn('⚠️ [ChatLayout] Falha ao gerar dossiê (não-crítico):', dossieError);
-        dossieStore.setGenerating(false);
+      if (result.artifactData) {
+        console.log('📄 [ChatLayout] Artefato recebido do Orchestrator, adicionando ao chat...');
+        addArtifactCard(result.artifactData);
+        console.log('✅ [ChatLayout] Artefato adicionado ao chat com sucesso');
       }
 
     } catch (error) {
@@ -580,7 +566,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         )}
       </AnimatePresence>
 
-      <DossieViewModal />
     </div>
   );
 }
