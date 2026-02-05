@@ -6,8 +6,6 @@ import { AssistantMessage } from './AssistantMessage';
 import { PlanActionCard } from './PlanActionCard';
 import { DeveloperModeCard } from './DeveloperModeCard';
 import { ActivityConstructionCard } from './ActivityConstructionCard';
-import { DossieCard } from '../dossie-system/DossieCard';
-import { ArtifactCard } from '../artifact-system/ArtifactCard';
 
 interface MessageStreamProps {
   onApplyPlan?: () => void;
@@ -80,13 +78,11 @@ export function MessageStream({ onApplyPlan }: MessageStreamProps) {
               />
             )}
 
-            {message.type === 'dossie_card' && (
-              <DossieCard dossieData={message.metadata?.cardData} />
-            )}
-
-            {message.type === 'artifact_card' && (
-              <ArtifactCard artifactData={message.metadata?.cardData} />
-            )}
+            {/* 
+              content_generation_card type DESATIVADO - geração de conteúdo agora 
+              aparece apenas como sub-card retangular dentro do tópico "Decidir quais 
+              atividades criar" via capability gerar_conteudo_atividades 
+            */}
           </motion.div>
         ))}
         

@@ -13,7 +13,7 @@ import { ArrowLeft, Bot, User, Loader2, LogOut } from 'lucide-react';
 import { MessageStream } from './components/MessageStream';
 import { ContextModal } from './ContextModal';
 import { useChatState } from './state/chatState';
-import { processUserPrompt, executeAgentPlanWithDetails } from '../agente-jota/orchestrator';
+import { processUserPrompt, executeAgentPlan } from '../agente-jota/orchestrator';
 import { generateSessionId } from '../agente-jota/memory-manager';
 
 import type { 
@@ -25,7 +25,6 @@ import type {
 import { ChatInputJota } from './chat-input-jota';
 import { CardSuperiorSuasCriacoes } from './card-superior-suas-criacoes-input';
 import { ProgressBadge } from './components/ProgressBadge';
-import { useDossieStore } from './dossie-system';
 
 const EXECUTION_LOCK_KEY = 'agente-jota-execution-lock';
 
@@ -78,8 +77,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     addTextMessage, 
     addPlanCard, 
     addDevModeCard,
-    addDossieCard,
-    addArtifactCard,
     setExecuting,
     setLoading,
     clearMessages,
@@ -95,14 +92,11 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     _hasHydrated
   } = useChatState();
 
-  const dossieStore = useDossieStore();
-
   const sessionId = storedSessionId || generateSessionId();
   
   useEffect(() => {
     if (!storedSessionId) {
       setStoredSessionId(sessionId);
-      dossieStore.initSession(sessionId);
       console.log('🆔 [ChatLayout] Nova sessão criada:', sessionId);
     } else {
       console.log('🔄 [ChatLayout] Sessão restaurada:', storedSessionId);
@@ -116,47 +110,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
-
-  useEffect(() => {
-    const handleActivityBuilt = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail) {
-        const id = detail.id || detail.activityId;
-        const titulo = detail.titulo || detail.title || detail.nome || '';
-        const tipo = detail.tipo || detail.type || '';
-        if (id && titulo) {
-          dossieStore.addActivity({
-            id,
-            titulo,
-            tipo,
-            tema: detail.tema,
-            materia: detail.materia,
-            status: 'criada',
-          });
-        }
-      }
-    };
-
-    const handleActivitySaved = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      const id = detail?.id || detail?.activityId;
-      if (id) {
-        dossieStore.updateActivityStatus(id, 'salva_bd');
-      }
-    };
-
-    window.addEventListener('construction:activity_built', handleActivityBuilt);
-    window.addEventListener('construction:activity_completed', handleActivityBuilt);
-    window.addEventListener('activityBuilt', handleActivityBuilt);
-    window.addEventListener('activity-auto-saved', handleActivitySaved);
-
-    return () => {
-      window.removeEventListener('construction:activity_built', handleActivityBuilt);
-      window.removeEventListener('construction:activity_completed', handleActivityBuilt);
-      window.removeEventListener('activityBuilt', handleActivityBuilt);
-      window.removeEventListener('activity-auto-saved', handleActivitySaved);
-    };
-  }, []);
 
   useEffect(() => {
     if (!_hasHydrated) {
@@ -212,7 +165,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     console.log('📨 [ChatLayout] Processando prompt do usuário:', userInput);
 
     addTextMessage('user', userInput);
-    dossieStore.addUserMessage(userInput);
     setIsLoading(true);
     setLoading(true);
 
@@ -226,15 +178,9 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
       setLoading(false);
       addTextMessage('assistant', aiMessage);
-      dossieStore.addAiResponse(aiMessage);
 
       if (plan) {
         setExecutionPlan(plan);
-        
-        dossieStore.setPlanInfo(
-          plan.objetivo,
-          plan.etapas.map((e: any) => e.titulo || e.descricao)
-        );
         
         addPlanCard({
           objetivo: plan.objetivo,
@@ -322,32 +268,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         reflectionLoading: update.reflectionLoading,
         hasReflection: !!update.reflection,
       }));
-
-      if (update.capabilityId && update.capabilityStatus === 'completed') {
-        dossieStore.addEvent({
-          type: 'capability_executed',
-          data: { capabilityId: update.capabilityId, result: update.capabilityResult },
-          description: update.descricao || update.capabilityId,
-        });
-
-        if (update.capabilityResult?.atividades) {
-          const atividades = update.capabilityResult.atividades;
-          if (Array.isArray(atividades)) {
-            atividades.forEach((a: any) => {
-              if (a.id && a.titulo && a.tipo) {
-                dossieStore.addActivity({
-                  id: a.id,
-                  titulo: a.titulo,
-                  tipo: a.tipo,
-                  tema: a.tema,
-                  materia: a.materia,
-                  status: a.status || 'criada',
-                });
-              }
-            });
-          }
-        }
-      }
 
       const stepIndex = update.etapaAtual !== undefined ? update.etapaAtual - 1 : 0;
 
@@ -450,18 +370,19 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 ║════════════════════════════════════════════════════════════════════════║
       `);
       
-      const result = await executeAgentPlanWithDetails(
+      const relatorio = await executeAgentPlan(
         executionPlan,
         sessionId,
         handleProgress,
         conversationHistory
       );
       
-      console.error('✅ [ChatLayout] executeAgentPlanWithDetails() retornou com sucesso');
+      console.error('✅ [ChatLayout] executeAgentPlan() retornou com sucesso');
 
       setIsExecutingLocal(false);
       setExecuting(false);
       setCurrentStep(null);
+      // CRÍTICO: Limpar executionPlan completamente para permitir novo plano
       setExecutionPlan(null);
       isExecutingPlanRef.current = false;
       releaseExecutionLock();
@@ -472,19 +393,13 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         detail: { type: 'execution:completed' }
       }));
 
-      addTextMessage('assistant', result.respostaFinal);
+      addTextMessage('assistant', relatorio);
 
       addMemory({
         tipo: 'resultado',
         conteudo: 'Plano executado com sucesso',
-        resultado: result.respostaFinal,
+        resultado: relatorio,
       });
-
-      if (result.artifactData) {
-        console.log('📄 [ChatLayout] Artefato recebido do Orchestrator, adicionando ao chat...');
-        addArtifactCard(result.artifactData);
-        console.log('✅ [ChatLayout] Artefato adicionado ao chat com sucesso');
-      }
 
     } catch (error) {
       console.error('❌ [ChatLayout] Erro na execução:', error);
@@ -565,7 +480,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
           />
         )}
       </AnimatePresence>
-
     </div>
   );
 }

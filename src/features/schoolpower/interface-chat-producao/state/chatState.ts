@@ -26,8 +26,6 @@ interface ChatState {
   addDevModeCard: (devModeData: DevModeCardData) => void;
   startExecution: () => boolean;
   addConstructionCard: (constructionData: any) => void;
-  addDossieCard: (dossieData: any) => void;
-  addArtifactCard: (artifactData: any) => void;
   updateCardData: (cardId: string, newData: Partial<DevModeCardData>) => void;
   updateCapabilityStatus: (cardId: string, etapaIndex: number, capabilityId: string, status: CapabilityState['status']) => void;
   updateEtapaStatus: (cardId: string, etapaIndex: number, status: 'pendente' | 'executando' | 'concluido') => void;
@@ -186,46 +184,6 @@ export const useChatState = create<ChatState>()(
 
     set((state) => ({
       messages: [...state.messages, constructionCard]
-    }));
-  },
-
-  addDossieCard: (dossieData) => {
-    const dossieCard: Message = {
-      id: generateId(),
-      type: 'dossie_card',
-      role: 'assistant',
-      content: '',
-      timestamp: Date.now(),
-      metadata: {
-        cardType: 'dossie',
-        cardData: dossieData,
-        isStatic: true,
-        shouldUpdate: false
-      }
-    };
-
-    set((state) => ({
-      messages: [...state.messages, dossieCard]
-    }));
-  },
-
-  addArtifactCard: (artifactData) => {
-    const artifactCard: Message = {
-      id: generateId(),
-      type: 'artifact_card',
-      role: 'assistant',
-      content: '',
-      timestamp: Date.now(),
-      metadata: {
-        cardType: 'artifact',
-        cardData: artifactData,
-        isStatic: true,
-        shouldUpdate: false
-      }
-    };
-
-    set((state) => ({
-      messages: [...state.messages, artifactCard]
     }));
   },
 
