@@ -5,6 +5,7 @@ export type MessageType =
   | 'dev_mode_card'
   | 'construction_card'
   | 'content_generation_card'
+  | 'dossie_card'
   | 'system';
 
 export interface Message {
@@ -14,7 +15,7 @@ export interface Message {
   content: string | any;
   timestamp: number;
   metadata?: {
-    cardType?: 'plan' | 'dev_mode' | 'construction' | 'content_generation';
+    cardType?: 'plan' | 'dev_mode' | 'construction' | 'content_generation' | 'dossie';
     cardData?: any;
     isStatic?: boolean;
     shouldUpdate?: boolean;
