@@ -989,7 +989,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     const mergedFields = { ...consolidatedFields, ...originalCampos };
     
     const extractThemeFromSources = (): string => {
+      const formData = storedData.formData || storedData.data?.formData || {};
+      
       const sources = [
+        formData.theme,
+        formData.tema,
+        formData.temaRedacao,
+        formData.tituloTemaAssunto,
+        formData.centralTheme,
         storedData.theme,
         storedData.tema,
         storedData.temaRedacao,
