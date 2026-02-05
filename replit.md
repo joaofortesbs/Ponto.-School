@@ -40,6 +40,7 @@ The platform features a modern, glass-morphism inspired design with blur backgro
     - **Calendário School**: Comprehensive calendar event management.
     - **Lesson Publishing System**: Manages lesson publication.
     - **Modal Geral da Conta (Account Modal System)**: Centralized user account management modal with glassmorphism design, lateral navigation, and usage statistics.
+    - **Activity Title Extraction System v2.0**: Robust title extraction in ActivityViewModal with normalized comparison, unified theme helper (`extractTheme`), and prioritized source resolution (customFields → consolidatedFields → originalData → localStorage). Handles plano-aula special formatting and filters generic labels via accent/hyphen-normalized comparison.
 
 ### System Design Choices
 The architecture emphasizes a modular component design based on shadcn/ui patterns. Data persistence uses Neon PostgreSQL for primary data, Supabase PostgreSQL for authentication, and Supabase Storage for file assets. Supabase Realtime supports live features. The system is designed for VM deployment to maintain backend state and real-time database connections, with dynamic section synchronization and isolated lesson creation sessions.
