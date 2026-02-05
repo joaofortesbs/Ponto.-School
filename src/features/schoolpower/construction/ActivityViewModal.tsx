@@ -976,88 +976,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   };
 
   const getActivityTitle = () => {
-    const storedData = (() => {
-      try {
-        return JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
-      } catch { return {}; }
-    })();
-    
     const customFields = activity.customFields || {};
     const originalData = activity.originalData || {};
     const consolidatedFields = originalData.built_data?._consolidated_fields || {};
     const originalCampos = originalData.campos || {};
-    const mergedFields = { ...consolidatedFields, ...originalCampos };
-    
-    const extractThemeFromSources = (): string => {
-      const formData = storedData.formData || storedData.data?.formData || {};
-      
-      const sources = [
-        formData.theme,
-        formData.tema,
-        formData.temaRedacao,
-        formData.tituloTemaAssunto,
-        formData.centralTheme,
-        storedData.theme,
-        storedData.tema,
-        storedData.temaRedacao,
-        storedData.tituloTemaAssunto,
-        storedData.centralTheme,
-        storedData['Tema ou Tópico Central'],
-        storedData['Tema da Redação'],
-        storedData.title,
-        storedData.titulo,
-        customFields.theme,
-        customFields.tema,
-        customFields.temaRedacao,
-        customFields.tituloTemaAssunto,
-        customFields.centralTheme,
-        customFields['Tema ou Tópico Central'],
-        customFields['Tema da Redação'],
-        mergedFields.theme,
-        mergedFields.tema,
-        mergedFields.temaRedacao,
-        mergedFields.tituloTemaAssunto,
-        mergedFields.centralTheme,
-        consolidatedFields.theme,
-        consolidatedFields.tema,
-        originalData.theme,
-        originalData.tema,
-        originalData.titulo_gerado
-      ];
-      
-      for (const source of sources) {
-        if (source && typeof source === 'string' && source.trim().length > 3) {
-          return source.trim();
-        }
-      }
-      return '';
-    };
-    
-    if (activityType === 'plano-aula') {
-      const baseTitle = storedData.titulo || storedData.title || 'Plano de Aula';
-      const tema = extractThemeFromSources();
-      if (tema) {
-        const fullTitle = `${baseTitle}: ${tema}`;
-        return cleanActivityTitle(fullTitle);
-      }
-      return cleanActivityTitle(baseTitle);
-    }
-    
-    const extractedTheme = extractThemeFromSources();
-    
-    if (extractedTheme) {
-      const cleanedTheme = cleanActivityTitle(extractedTheme);
-      if (cleanedTheme && cleanedTheme.length >= 3) {
-        return cleanedTheme;
-      }
-    }
-    
-    if (activity.title && activity.title !== activity.categoryName && activity.title !== activity.categoryId) {
-      const cleanedTitle = cleanActivityTitle(activity.title);
-      if (cleanedTitle && cleanedTitle.length >= 3) {
-        return cleanedTitle;
-      }
-    }
     
     const typeLabels: Record<string, string> = {
       'lista-exercicios': 'Lista de Exercícios',
@@ -1069,6 +991,115 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       'prova': 'Prova',
       'aula': 'Aula'
     };
+    
+    const normalizeForComparison = (str: string): string => {
+      if (!str) return '';
+      return str.trim().toLowerCase()
+        .replace(/[-_]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    };
+    
+    const genericLabels = new Set([
+      ...Object.values(typeLabels).map(normalizeForComparison),
+      ...Object.keys(typeLabels).map(normalizeForComparison),
+      'atividade'
+    ]);
+    
+    const isGenericLabel = (title: string): boolean => {
+      if (!title) return true;
+      const normalized = normalizeForComparison(title);
+      if (genericLabels.has(normalized)) return true;
+      if (normalized === normalizeForComparison(activityType)) return true;
+      if (normalized === normalizeForComparison(activity.categoryId || '')) return true;
+      if (normalized === normalizeForComparison(activity.categoryName || '')) return true;
+      return false;
+    };
+    
+    const storedData = (() => {
+      try {
+        return JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
+      } catch { return {}; }
+    })();
+    const formData = storedData.formData || storedData.data?.formData || {};
+    
+    const extractTheme = (): string => {
+      const themeKeys = ['theme', 'tema', 'temaRedacao', 'tituloTemaAssunto', 'centralTheme', 'Tema ou Tópico Central', 'Tema da Redação'];
+      
+      for (const key of themeKeys) {
+        if (customFields[key] && typeof customFields[key] === 'string' && customFields[key].trim().length > 3) {
+          return customFields[key].trim();
+        }
+      }
+      
+      for (const key of themeKeys) {
+        if (consolidatedFields[key] && typeof consolidatedFields[key] === 'string' && consolidatedFields[key].trim().length > 3) {
+          return consolidatedFields[key].trim();
+        }
+      }
+      
+      for (const key of themeKeys) {
+        if (originalCampos[key] && typeof originalCampos[key] === 'string' && originalCampos[key].trim().length > 3) {
+          return originalCampos[key].trim();
+        }
+      }
+      
+      for (const key of themeKeys) {
+        if (originalData[key] && typeof originalData[key] === 'string' && originalData[key].trim().length > 3) {
+          return originalData[key].trim();
+        }
+      }
+      
+      if (originalData.titulo_gerado && typeof originalData.titulo_gerado === 'string' && originalData.titulo_gerado.trim().length > 3) {
+        return originalData.titulo_gerado.trim();
+      }
+      
+      for (const key of themeKeys) {
+        if (formData[key] && typeof formData[key] === 'string' && formData[key].trim().length > 3) {
+          return formData[key].trim();
+        }
+      }
+      
+      for (const key of themeKeys) {
+        if (storedData[key] && typeof storedData[key] === 'string' && storedData[key].trim().length > 3) {
+          return storedData[key].trim();
+        }
+      }
+      
+      if (storedData.title && typeof storedData.title === 'string' && storedData.title.trim().length > 3) {
+        return storedData.title.trim();
+      }
+      if (storedData.titulo && typeof storedData.titulo === 'string' && storedData.titulo.trim().length > 3) {
+        return storedData.titulo.trim();
+      }
+      
+      return '';
+    };
+    
+    const theme = extractTheme();
+    
+    if (activityType === 'plano-aula') {
+      const baseTitle = storedData.titulo || storedData.title || customFields.titulo || 'Plano de Aula';
+      if (theme && !isGenericLabel(theme)) {
+        const fullTitle = `${baseTitle}: ${theme}`;
+        return cleanActivityTitle(fullTitle);
+      }
+      return cleanActivityTitle(baseTitle);
+    }
+    
+    if (activity.title && !isGenericLabel(activity.title)) {
+      const cleanedTitle = cleanActivityTitle(activity.title);
+      if (cleanedTitle && cleanedTitle.length >= 3 && !isGenericLabel(cleanedTitle)) {
+        return cleanedTitle;
+      }
+    }
+    
+    if (theme && !isGenericLabel(theme)) {
+      const cleanedTheme = cleanActivityTitle(theme);
+      if (cleanedTheme && cleanedTheme.length >= 3) {
+        return cleanedTheme;
+      }
+    }
     
     return typeLabels[activityType] || activity.categoryName || 'Atividade';
   };

@@ -326,6 +326,7 @@ function convertToConstructionActivity(activity: ActivityToBuild): ConstructionA
     };
     
     const rawTitle = consolidatedFields.theme || 
+                     consolidatedFields.tema ||
                      consolidatedFields.temaRedacao || 
                      consolidatedFields.tituloTemaAssunto || 
                      consolidatedFields.centralTheme || 
