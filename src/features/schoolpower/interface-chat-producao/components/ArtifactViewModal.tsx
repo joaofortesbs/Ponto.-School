@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Check, Download, MoreHorizontal, GripVertical } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { X, Copy, Check, Download, MoreHorizontal, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -103,22 +103,87 @@ function EditableContent({
   );
 }
 
+function BlockContextMenu({
+  onDuplicate,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+}: {
+  onDuplicate: () => void;
+  onDelete: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+      className="rounded-lg border py-1 min-w-[170px]"
+      style={{
+        background: '#0a1128',
+        borderColor: '#1a2444',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)',
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {[
+        { icon: <CopyPlus className="w-3.5 h-3.5" />, label: 'Duplicar', onClick: onDuplicate },
+        { icon: <ArrowUp className="w-3.5 h-3.5" />, label: 'Mover para cima', onClick: onMoveUp },
+        { icon: <ArrowDown className="w-3.5 h-3.5" />, label: 'Mover para baixo', onClick: onMoveDown },
+      ].map((item) => (
+        <button
+          key={item.label}
+          onClick={item.onClick}
+          className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-slate-300 hover:bg-white/5 transition-colors"
+          style={{ fontFamily: "'Inter', -apple-system, sans-serif" }}
+        >
+          {item.icon}
+          {item.label}
+        </button>
+      ))}
+      <div className="my-1 h-px mx-2" style={{ background: '#1a2444' }} />
+      <button
+        onClick={onDelete}
+        className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-red-400 hover:bg-red-500/10 transition-colors"
+        style={{ fontFamily: "'Inter', -apple-system, sans-serif" }}
+      >
+        <Trash2 className="w-3.5 h-3.5" />
+        Excluir
+      </button>
+    </motion.div>
+  );
+}
+
 function SortableBlock({
   block,
   index,
   accentColor,
+  isSelected,
   onBlockUpdate,
   onListItemUpdate,
   onTableCellUpdate,
+  onBlockSelect,
+  onDuplicate,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
 }: {
   block: EditorJSBlock;
   index: number;
   accentColor: string;
+  isSelected?: boolean;
   onBlockUpdate?: (blockId: string, newHtml: string) => void;
   onListItemUpdate?: (blockId: string, itemIndex: number, newHtml: string) => void;
   onTableCellUpdate?: (blockId: string, rowIndex: number, colIndex: number, newText: string) => void;
+  onBlockSelect?: (blockId: string) => void;
+  onDuplicate?: (blockId: string) => void;
+  onDelete?: (blockId: string) => void;
+  onMoveUp?: (blockId: string) => void;
+  onMoveDown?: (blockId: string) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const didDragRef = useRef(false);
 
   const {
     attributes,
@@ -128,6 +193,21 @@ function SortableBlock({
     transition,
     isDragging,
   } = useSortable({ id: block.id });
+
+  useEffect(() => {
+    if (isDragging) didDragRef.current = true;
+  }, [isDragging]);
+
+  const handleGripClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (!didDragRef.current) {
+        e.stopPropagation();
+        onBlockSelect?.(block.id);
+      }
+      didDragRef.current = false;
+    },
+    [block.id, onBlockSelect]
+  );
 
   const dndStyle: React.CSSProperties = {
     transform: DndCSS.Transform.toString(transform),
@@ -339,22 +419,43 @@ function SortableBlock({
   return (
     <div
       ref={setNodeRef}
-      style={dndStyle}
+      style={{
+        ...dndStyle,
+        background: isSelected ? 'rgba(56, 139, 253, 0.08)' : undefined,
+        borderRadius: isSelected ? '6px' : undefined,
+        padding: isSelected ? '2px 4px' : undefined,
+        margin: isSelected ? '-2px -4px' : undefined,
+      }}
       {...attributes}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => { if (!isSelected) setIsHovered(false); }}
       className="group relative"
     >
       <div
-        className="absolute -left-9 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded cursor-grab active:cursor-grabbing transition-opacity duration-150"
+        className="absolute -left-9 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded cursor-grab active:cursor-grabbing transition-all duration-150"
         style={{
-          opacity: isHovered ? 0.6 : 0,
-          color: '#64748b',
+          opacity: isHovered || isSelected ? 0.6 : 0,
+          color: isSelected ? accentColor : '#64748b',
         }}
+        onClick={handleGripClick}
         {...listeners}
       >
         <GripVertical className="w-4 h-4" />
       </div>
+
+      {isSelected && (
+        <div
+          className="absolute z-50"
+          style={{ left: '-36px', top: 'calc(50% + 16px)' }}
+        >
+          <BlockContextMenu
+            onDuplicate={() => onDuplicate?.(block.id)}
+            onDelete={() => onDelete?.(block.id)}
+            onMoveUp={() => onMoveUp?.(block.id)}
+            onMoveDown={() => onMoveDown?.(block.id)}
+          />
+        </div>
+      )}
 
       <motion.div
         custom={index}
@@ -382,7 +483,7 @@ function InlineTOC({
   if (items.length === 0) return null;
 
   return (
-    <div className="flex flex-col items-center gap-[6px] py-6">
+    <div className="flex flex-col items-end gap-[6px]">
       {items.map((item) => {
         const isActive = activeId === item.id;
         return (
@@ -404,12 +505,17 @@ function InlineTOC({
   );
 }
 
+const ANIMATION_DURATION = 150;
+
 export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewModalProps) {
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
   const [activeTOCId, setActiveTOCId] = useState('');
   const [blocks, setBlocks] = useState<EditorJSBlock[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const config = ARTIFACT_TYPE_CONFIGS[artifact.metadata.tipo];
 
   const editorData = useMemo(() => convertArtifactToEditorJS(artifact), [artifact]);
@@ -475,6 +581,52 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
     );
   }, []);
 
+  const handleBlockSelect = useCallback((blockId: string) => {
+    setSelectedBlockId((prev) => (prev === blockId ? null : blockId));
+  }, []);
+
+  const handleBlockDeselect = useCallback(() => {
+    setSelectedBlockId(null);
+  }, []);
+
+  const handleDuplicateBlock = useCallback((blockId: string) => {
+    setBlocks((prev) => {
+      const idx = prev.findIndex((b) => b.id === blockId);
+      if (idx === -1) return prev;
+      const original = prev[idx];
+      const duplicate: EditorJSBlock = {
+        ...original,
+        id: `${original.id}-copy-${Date.now()}`,
+        data: { ...original.data },
+      };
+      const next = [...prev];
+      next.splice(idx + 1, 0, duplicate);
+      return next;
+    });
+    setSelectedBlockId(null);
+  }, []);
+
+  const handleDeleteBlock = useCallback((blockId: string) => {
+    setBlocks((prev) => prev.filter((b) => b.id !== blockId));
+    setSelectedBlockId(null);
+  }, []);
+
+  const handleMoveBlockUp = useCallback((blockId: string) => {
+    setBlocks((prev) => {
+      const idx = prev.findIndex((b) => b.id === blockId);
+      if (idx <= 0) return prev;
+      return arrayMove(prev, idx, idx - 1);
+    });
+  }, []);
+
+  const handleMoveBlockDown = useCallback((blockId: string) => {
+    setBlocks((prev) => {
+      const idx = prev.findIndex((b) => b.id === blockId);
+      if (idx === -1 || idx >= prev.length - 1) return prev;
+      return arrayMove(prev, idx, idx + 1);
+    });
+  }, []);
+
   useEffect(() => {
     if (tocItems.length > 0 && !activeTOCId) {
       setActiveTOCId(tocItems[0].id);
@@ -505,29 +657,58 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
     return () => container.removeEventListener('scroll', handleScroll);
   }, [tocItems]);
 
+  const clearAnimationTimer = useCallback(() => {
+    if (animationTimerRef.current) {
+      clearTimeout(animationTimerRef.current);
+      animationTimerRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
+    clearAnimationTimer();
+
     if (isOpen) {
+      setIsVisible(true);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           setIsAnimating(true);
         });
       });
-      document.body.style.overflow = 'hidden';
-    } else {
+    } else if (isVisible) {
       setIsAnimating(false);
+      setSelectedBlockId(null);
+      animationTimerRef.current = setTimeout(() => {
+        setIsVisible(false);
+      }, ANIMATION_DURATION);
     }
 
+    return clearAnimationTimer;
+  }, [isOpen, clearAnimationTimer]);
+
+  useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isVisible]);
+
+  useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        if (selectedBlockId) {
+          setSelectedBlockId(null);
+        } else {
+          onClose();
+        }
+      }
     };
-    if (isOpen) {
+    if (isVisible) {
       document.addEventListener('keydown', handleEsc);
     }
-    return () => {
-      document.removeEventListener('keydown', handleEsc);
-      document.body.style.overflow = '';
-    };
-  }, [isOpen, onClose]);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [isVisible, onClose, selectedBlockId]);
 
   const handleCopyAll = useCallback(async () => {
     try {
@@ -562,37 +743,36 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
     });
   };
 
-  if (!isOpen) return null;
+  if (!isVisible) return null;
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[2000]">
+    <div className="fixed inset-0 z-[2000]">
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundColor: `rgba(0, 0, 0, ${isAnimating ? MODAL_COLORS.overlay.opacity : 0})`,
+          backdropFilter: isAnimating ? `blur(${MODAL_COLORS.overlay.blur}px)` : 'blur(0px)',
+          WebkitBackdropFilter: isAnimating ? `blur(${MODAL_COLORS.overlay.blur}px)` : 'blur(0px)',
+          transition: `all ${ANIMATION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+          pointerEvents: isAnimating ? 'auto' : 'none',
+        }}
+        onClick={onClose}
+      />
+
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div
-          className="absolute inset-0"
+          className="relative w-[96vw] max-w-[1000px] h-[92vh] max-h-[860px] rounded-2xl overflow-hidden flex flex-col pointer-events-auto"
           style={{
-            backgroundColor: `rgba(0, 0, 0, ${isAnimating ? MODAL_COLORS.overlay.opacity : 0})`,
-            backdropFilter: isAnimating ? `blur(${MODAL_COLORS.overlay.blur}px)` : 'blur(0px)',
-            WebkitBackdropFilter: isAnimating ? `blur(${MODAL_COLORS.overlay.blur}px)` : 'blur(0px)',
-            transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: isAnimating ? 'scale(1)' : 'scale(0.96)',
+            opacity: isAnimating ? 1 : 0,
+            transition: `all ${ANIMATION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+            background: MODAL_COLORS.background,
+            border: '1px solid #0c1334',
+            boxShadow: '0 25px 80px -12px rgba(0, 0, 0, 0.6), 0 12px 40px -8px rgba(255, 107, 0, 0.08)',
             pointerEvents: isAnimating ? 'auto' : 'none',
           }}
-          onClick={onClose}
-        />
-
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 16 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 16 }}
-            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-[96vw] max-w-[1000px] h-[92vh] max-h-[860px] rounded-2xl overflow-hidden flex flex-col pointer-events-auto"
-            style={{
-              background: MODAL_COLORS.background,
-              border: '1px solid #0c1334',
-              boxShadow: '0 25px 80px -12px rgba(0, 0, 0, 0.6), 0 12px 40px -8px rgba(255, 107, 0, 0.08)',
-            }}
-          >
+          onClick={(e) => e.stopPropagation()}
+        >
             <div
               className="flex items-center justify-between px-5 py-3.5 border-b"
               style={{
@@ -653,11 +833,12 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
               </div>
             </div>
 
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 overflow-hidden relative">
               <div
                 ref={scrollContainerRef}
                 className="flex-1 overflow-y-auto"
                 style={{ scrollBehavior: 'smooth' }}
+                onClick={handleBlockDeselect}
               >
                 <div className="max-w-[680px] mx-auto px-8 py-8 sm:px-12 sm:py-10 relative">
                   <motion.div
@@ -692,13 +873,6 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                     </div>
                   </motion.div>
 
-                  <InlineTOC
-                    items={tocItems}
-                    activeId={activeTOCId}
-                    onNavigate={handleNavigateToSection}
-                    accentColor={config.cor}
-                  />
-
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
@@ -714,9 +888,15 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                           block={block}
                           index={idx}
                           accentColor={config.cor}
+                          isSelected={selectedBlockId === block.id}
                           onBlockUpdate={handleBlockUpdate}
                           onListItemUpdate={handleListItemUpdate}
                           onTableCellUpdate={handleTableCellUpdate}
+                          onBlockSelect={handleBlockSelect}
+                          onDuplicate={handleDuplicateBlock}
+                          onDelete={handleDeleteBlock}
+                          onMoveUp={handleMoveBlockUp}
+                          onMoveDown={handleMoveBlockDown}
                         />
                       ))}
                     </SortableContext>
@@ -725,11 +905,21 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                   <div className="h-16" />
                 </div>
               </div>
+
+              {tocItems.length > 0 && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+                  <InlineTOC
+                    items={tocItems}
+                    activeId={activeTOCId}
+                    onNavigate={handleNavigateToSection}
+                    accentColor={config.cor}
+                  />
+                </div>
+              )}
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
-    </AnimatePresence>
   );
 }
 
