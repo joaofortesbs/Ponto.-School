@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { X, Copy, Check, Download, MoreHorizontal, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown } from 'lucide-react';
+import { X, Copy, Check, Download, MoreHorizontal, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown, Bold, Italic, Strikethrough, Code, Link2, Type } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -469,7 +469,7 @@ function SortableBlock({
   );
 }
 
-function InlineTOC({
+function BlockOutline({
   items,
   activeId,
   onNavigate,
@@ -483,25 +483,246 @@ function InlineTOC({
   if (items.length === 0) return null;
 
   return (
-    <div className="flex flex-col items-end gap-[6px]">
+    <nav className="flex flex-col gap-[5px] py-2" style={{ width: '140px' }}>
       {items.map((item) => {
         const isActive = activeId === item.id;
+        const isSubLevel = item.level > 1;
+        const truncatedText = item.text.length > 28 ? item.text.slice(0, 28) + '…' : item.text;
+
         return (
           <button
             key={item.id}
             onClick={() => onNavigate(item.id)}
-            className="transition-all duration-300 rounded-full hover:opacity-100"
+            className="group relative flex items-center gap-2 text-left transition-all duration-200 rounded-md"
             style={{
-              width: isActive ? '32px' : '20px',
-              height: '3px',
-              background: isActive ? accentColor : 'rgba(100, 116, 139, 0.4)',
-              opacity: isActive ? 1 : 0.7,
+              paddingLeft: isSubLevel ? '12px' : '0px',
+              paddingTop: '3px',
+              paddingBottom: '3px',
             }}
-            title={item.text}
-          />
+          >
+            <div
+              className="flex-shrink-0 rounded-full transition-all duration-300"
+              style={{
+                width: isActive ? '24px' : isSubLevel ? '14px' : '18px',
+                height: '2.5px',
+                background: isActive ? '#1D7AFC' : 'rgba(100, 116, 139, 0.35)',
+                boxShadow: isActive ? '0 0 8px rgba(29, 122, 252, 0.4)' : 'none',
+                animation: isActive ? 'outlinePulse 2s ease-in-out infinite' : 'none',
+              }}
+            />
+            <span
+              data-outline-active={isActive ? 'true' : 'false'}
+              className="text-[11px] leading-tight truncate transition-all duration-200"
+              style={{
+                ...FONT_STYLES.ui,
+                color: isActive ? '#93b4f5' : 'rgba(148, 163, 184, 0.5)',
+                fontWeight: isActive ? 500 : 400,
+                maxWidth: '100px',
+                opacity: isActive ? 1 : 0,
+              }}
+            >
+              {truncatedText}
+            </span>
+          </button>
         );
       })}
-    </div>
+      <style>{`
+        @keyframes outlinePulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
+        }
+        nav:hover span[data-outline-active="false"] {
+          opacity: 1 !important;
+          color: rgba(148, 163, 184, 0.55) !important;
+        }
+        nav:hover span[data-outline-active="true"] {
+          opacity: 1 !important;
+        }
+        nav:hover button:hover span[data-outline-active="false"] {
+          color: #93b4f5 !important;
+        }
+      `}</style>
+    </nav>
+  );
+}
+
+function FloatingToolbar({
+  containerRef,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const checkFormats = useCallback(() => {
+    const formats = new Set<string>();
+    if (document.queryCommandState('bold')) formats.add('bold');
+    if (document.queryCommandState('italic')) formats.add('italic');
+    if (document.queryCommandState('strikethrough')) formats.add('strikethrough');
+    setActiveFormats(formats);
+  }, []);
+
+  const handleSelectionChange = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(() => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed || !selection.rangeCount) {
+        setIsVisible(false);
+        setPosition(null);
+        return;
+      }
+
+      const container = containerRef.current;
+      if (!container) return;
+
+      const range = selection.getRangeAt(0);
+      const ancestor = range.commonAncestorContainer;
+      const ancestorEl = ancestor.nodeType === Node.TEXT_NODE ? ancestor.parentElement : ancestor as HTMLElement;
+      if (!ancestorEl || !container.contains(ancestorEl)) {
+        setIsVisible(false);
+        setPosition(null);
+        return;
+      }
+
+      const closest = ancestorEl.closest('[contenteditable="true"]');
+      if (!closest) {
+        setIsVisible(false);
+        setPosition(null);
+        return;
+      }
+
+      const selectedText = selection.toString().trim();
+      if (!selectedText) {
+        setIsVisible(false);
+        setPosition(null);
+        return;
+      }
+
+      const rect = range.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+
+      const toolbarWidth = 240;
+      let left = rect.left + rect.width / 2 - toolbarWidth / 2 - containerRect.left;
+      left = Math.max(8, Math.min(left, containerRect.width - toolbarWidth - 8));
+
+      setPosition({
+        top: rect.top - containerRect.top + container.scrollTop - 48,
+        left,
+      });
+      setIsVisible(true);
+      checkFormats();
+    }, 50);
+  }, [containerRef, checkFormats]);
+
+  useEffect(() => {
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [handleSelectionChange]);
+
+  const applyFormat = useCallback((command: string, value?: string) => {
+    document.execCommand(command, false, value);
+    checkFormats();
+
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed) {
+      handleSelectionChange();
+    }
+  }, [checkFormats, handleSelectionChange]);
+
+  const handleLinkInsert = useCallback(() => {
+    const url = prompt('URL do link:');
+    if (url) {
+      applyFormat('createLink', url);
+    }
+  }, [applyFormat]);
+
+  if (!isVisible || !position) return null;
+
+  const buttons = [
+    { icon: <Type className="w-3.5 h-3.5" />, command: 'removeFormat', label: 'Limpar', hasDropdown: true },
+    null,
+    { icon: <Bold className="w-3.5 h-3.5" />, command: 'bold', label: 'Negrito', active: activeFormats.has('bold') },
+    { icon: <Italic className="w-3.5 h-3.5" />, command: 'italic', label: 'Itálico', active: activeFormats.has('italic') },
+    { icon: <Strikethrough className="w-3.5 h-3.5" />, command: 'strikethrough', label: 'Tachado', active: activeFormats.has('strikethrough') },
+    { icon: <Code className="w-3.5 h-3.5" />, command: 'code', label: 'Código', isCode: true },
+    { icon: <Link2 className="w-3.5 h-3.5" />, command: 'link', label: 'Link', isLink: true },
+  ];
+
+  return (
+    <motion.div
+      ref={toolbarRef}
+      initial={{ opacity: 0, y: 4, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+      className="absolute z-[60] flex items-center rounded-lg border px-1 py-1 gap-0"
+      style={{
+        top: position.top,
+        left: position.left,
+        background: '#1a1a2e',
+        borderColor: '#2a2a4a',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)',
+      }}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.preventDefault()}
+    >
+      {buttons.map((btn, idx) => {
+        if (btn === null) {
+          return <div key={`sep-${idx}`} className="w-px h-5 mx-0.5" style={{ background: '#2a2a4a' }} />;
+        }
+
+        const handleClick = () => {
+          if (btn.isLink) {
+            handleLinkInsert();
+          } else if (btn.isCode) {
+            try {
+              const sel = window.getSelection();
+              if (sel && !sel.isCollapsed && sel.rangeCount > 0) {
+                const range = sel.getRangeAt(0);
+                const code = document.createElement('code');
+                code.style.cssText = 'background: rgba(135,131,120,0.15); padding: 2px 4px; border-radius: 3px; font-family: "SFMono-Regular", Menlo, monospace; font-size: 85%; color: #eb5757;';
+                const fragment = range.extractContents();
+                code.appendChild(fragment);
+                range.insertNode(code);
+                sel.removeAllRanges();
+              }
+            } catch { /* multi-node selection edge case */ }
+          } else {
+            applyFormat(btn.command);
+          }
+        };
+
+        return (
+          <button
+            key={btn.command}
+            onClick={handleClick}
+            className="flex items-center justify-center w-7 h-7 rounded-md transition-colors"
+            style={{
+              color: btn.active ? '#fff' : '#9ca3af',
+              background: btn.active ? 'rgba(255,255,255,0.1)' : 'transparent',
+            }}
+            title={btn.label}
+            onMouseOver={(e) => {
+              (e.currentTarget as HTMLElement).style.color = '#fff';
+              (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)';
+            }}
+            onMouseOut={(e) => {
+              (e.currentTarget as HTMLElement).style.color = btn.active ? '#fff' : '#9ca3af';
+              (e.currentTarget as HTMLElement).style.background = btn.active ? 'rgba(255,255,255,0.1)' : 'transparent';
+            }}
+          >
+            {btn.icon}
+            {btn.hasDropdown && <span className="text-[8px] ml-0.5 text-slate-500">▾</span>}
+          </button>
+        );
+      })}
+    </motion.div>
   );
 }
 
@@ -637,24 +858,77 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
     const container = scrollContainerRef.current;
     if (!container || tocItems.length === 0) return;
 
-    const handleScroll = () => {
-      const containerRect = container.getBoundingClientRect();
-      let currentActive = tocItems[0]?.id || '';
+    let rafId: number | null = null;
+    let lastUpdate = 0;
 
-      for (const item of tocItems) {
-        const el = container.querySelector(`[id="${CSS.escape(item.id)}"]`) as HTMLElement | null;
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= containerRect.top + 120) {
-            currentActive = item.id;
-          }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const now = performance.now();
+        if (now - lastUpdate < 16) {
+          if (rafId) cancelAnimationFrame(rafId);
+          rafId = requestAnimationFrame(() => processEntries(entries));
+          return;
+        }
+        processEntries(entries);
+      },
+      {
+        root: container,
+        rootMargin: '-10% 0px -70% 0px',
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      }
+    );
+
+    const visibleMap = new Map<string, number>();
+
+    function processEntries(entries: IntersectionObserverEntry[]) {
+      lastUpdate = performance.now();
+      for (const entry of entries) {
+        const id = entry.target.getAttribute('id');
+        if (!id) continue;
+        if (entry.isIntersecting) {
+          visibleMap.set(id, entry.intersectionRatio);
+        } else {
+          visibleMap.delete(id);
         }
       }
-      setActiveTOCId(currentActive);
-    };
 
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => container.removeEventListener('scroll', handleScroll);
+      let bestId = tocItems[0]?.id || '';
+      let bestRatio = -1;
+      for (const item of tocItems) {
+        const ratio = visibleMap.get(item.id);
+        if (ratio !== undefined && ratio > bestRatio) {
+          bestRatio = ratio;
+          bestId = item.id;
+        }
+      }
+
+      if (!visibleMap.size) {
+        const containerRect = container.getBoundingClientRect();
+        let fallbackId = tocItems[0]?.id || '';
+        for (const item of tocItems) {
+          const el = container.querySelector(`[id="${CSS.escape(item.id)}"]`) as HTMLElement | null;
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            if (rect.top <= containerRect.top + 120) {
+              fallbackId = item.id;
+            }
+          }
+        }
+        bestId = fallbackId;
+      }
+
+      setActiveTOCId(bestId);
+    }
+
+    for (const item of tocItems) {
+      const el = container.querySelector(`[id="${CSS.escape(item.id)}"]`);
+      if (el) observer.observe(el);
+    }
+
+    return () => {
+      observer.disconnect();
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, [tocItems]);
 
   const clearAnimationTimer = useCallback(() => {
@@ -836,10 +1110,12 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
             <div className="flex flex-1 overflow-hidden relative">
               <div
                 ref={scrollContainerRef}
-                className="flex-1 overflow-y-auto"
+                className="flex-1 overflow-y-auto relative"
                 style={{ scrollBehavior: 'smooth' }}
                 onClick={handleBlockDeselect}
               >
+                <FloatingToolbar containerRef={scrollContainerRef} />
+
                 <div className="max-w-[680px] mx-auto px-8 py-8 sm:px-12 sm:py-10 relative">
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
@@ -907,8 +1183,15 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
               </div>
 
               {tocItems.length > 0 && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
-                  <InlineTOC
+                <div
+                  className="absolute z-10 hidden lg:block"
+                  style={{
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                  }}
+                >
+                  <BlockOutline
                     items={tocItems}
                     activeId={activeTOCId}
                     onNavigate={handleNavigateToSection}
