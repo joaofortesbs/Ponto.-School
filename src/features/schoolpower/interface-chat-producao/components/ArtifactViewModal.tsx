@@ -30,8 +30,8 @@ function EditorBlock({ block, index, accentColor, onBlockUpdate }: { block: Edit
   const [editText, setEditText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleStartEdit = useCallback((text: string) => {
-    setEditText(text);
+  const handleStartEdit = useCallback((htmlText: string) => {
+    setEditText(htmlText);
     setIsEditing(true);
   }, []);
 
@@ -68,7 +68,7 @@ function EditorBlock({ block, index, accentColor, onBlockUpdate }: { block: Edit
           <h2
             className="text-[1.65rem] font-bold leading-tight tracking-tight cursor-text"
             style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#e2e8f0' }}
-            onClick={() => handleStartEdit(text.replace(/<[^>]*>/g, ''))}
+            onClick={() => handleStartEdit(text)}
           >
             {isEditing ? (
               <textarea
@@ -103,7 +103,7 @@ function EditorBlock({ block, index, accentColor, onBlockUpdate }: { block: Edit
           className="mt-8 mb-3"
         >
           <div
-            onClick={() => handleStartEdit(text.replace(/<[^>]*>/g, ''))}
+            onClick={() => handleStartEdit(text)}
             className="cursor-text text-[1.3rem] font-semibold leading-snug tracking-tight"
             style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#cbd5e1' }}
           >
@@ -134,7 +134,7 @@ function EditorBlock({ block, index, accentColor, onBlockUpdate }: { block: Edit
           className="mt-6 mb-2"
         >
           <div
-            onClick={() => handleStartEdit(text.replace(/<[^>]*>/g, ''))}
+            onClick={() => handleStartEdit(text)}
             className="cursor-text text-base font-semibold leading-snug"
             style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#94a3b8' }}
           >
@@ -167,7 +167,7 @@ function EditorBlock({ block, index, accentColor, onBlockUpdate }: { block: Edit
         className="mb-3"
       >
         <div
-          onClick={() => handleStartEdit(text.replace(/<[^>]*>/g, ''))}
+          onClick={() => handleStartEdit(text)}
           className="cursor-text text-[15px] leading-[1.8] text-slate-300"
           style={{ fontFamily: "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif" }}
         >
@@ -368,7 +368,7 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
       let currentActive = tocItems[0]?.id || '';
 
       for (const item of tocItems) {
-        const el = document.getElementById(item.id);
+        const el = container.querySelector(`[id="${CSS.escape(item.id)}"]`) as HTMLElement | null;
         if (el) {
           const rect = el.getBoundingClientRect();
           if (rect.top <= containerRect.top + 120) {
@@ -411,9 +411,10 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
   }, [artifact.secoes]);
 
   const handleNavigateToSection = useCallback((sectionId: string) => {
-    const el = document.getElementById(sectionId);
-    if (el && scrollContainerRef.current) {
-      const container = scrollContainerRef.current;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const el = container.querySelector(`[id="${CSS.escape(sectionId)}"]`) as HTMLElement | null;
+    if (el) {
       const elTop = el.offsetTop - container.offsetTop;
       container.scrollTo({ top: elTop - 20, behavior: 'smooth' });
     }

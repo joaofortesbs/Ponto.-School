@@ -45,11 +45,14 @@ function parseContentLine(line: string): EditorJSBlock | null {
   }
 
   if (trimmed.startsWith('> ') || trimmed.startsWith('⚠️') || trimmed.startsWith('💡') || trimmed.startsWith('📌')) {
+    const cleaned = trimmed
+      .replace(/^>\s*/, '')
+      .replace(/^[⚠️💡📌🔔✅❗📎🎯📝🚀⭐🔑📊]\s*/u, '');
     return {
       id: generateBlockId(),
       type: 'quote',
       data: {
-        text: trimmed.replace(/^>\s*/, ''),
+        text: formatInlineMarkdown(cleaned),
         caption: ''
       }
     };
@@ -151,12 +154,22 @@ export function convertArtifactToEditorJS(artifact: ArtifactData): EditorJSData 
         continue;
       }
 
+      const paragraphParts: string[] = [formatInlineMarkdown(trimmed)];
+      i++;
+      while (i < lines.length) {
+        const nextLine = lines[i].trim();
+        if (!nextLine) break;
+        if (nextLine.startsWith('- ') || nextLine.startsWith('• ') || nextLine.startsWith('* ')) break;
+        if (/^\d+[.)]\s/.test(nextLine)) break;
+        if (parseContentLine(nextLine)) break;
+        paragraphParts.push(formatInlineMarkdown(nextLine));
+        i++;
+      }
       blocks.push({
         id: generateBlockId(),
         type: 'paragraph',
-        data: { text: formatInlineMarkdown(trimmed) }
+        data: { text: paragraphParts.join(' ') }
       });
-      i++;
     }
 
     blocks.push({
@@ -186,11 +199,11 @@ export interface TOCItem {
 
 export function extractTOCFromBlocks(blocks: EditorJSBlock[]): TOCItem[] {
   return blocks
-    .filter(b => b.type === 'header' && (b.data.level === 1 || b.data.level === 2))
+    .filter(b => b.type === 'header' && (b.data.level === 1 || b.data.level === 2) && !!b.id)
     .map(b => ({
-      id: b.id || generateBlockId(),
+      id: b.id!,
       text: (b.data.text as string).replace(/<[^>]*>/g, ''),
       level: b.data.level as number,
-      sectionId: b.id || ''
+      sectionId: b.id!
     }));
 }
