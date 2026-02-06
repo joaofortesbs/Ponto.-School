@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { X, Copy, Check, Download, MoreHorizontal, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown, Bold, Italic, Strikethrough, Code, Link2, Type } from 'lucide-react';
+import { X, Copy, Check, Download, MoreHorizontal, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown, Bold, Italic, Strikethrough, Code, Link2, Type, ListOrdered, List as ListIcon, CheckSquare, ChevronUp } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -168,6 +168,7 @@ function SortableBlock({
   onDelete,
   onMoveUp,
   onMoveDown,
+  onTodoToggle,
 }: {
   block: EditorJSBlock;
   index: number;
@@ -181,6 +182,7 @@ function SortableBlock({
   onDelete?: (blockId: string) => void;
   onMoveUp?: (blockId: string) => void;
   onMoveDown?: (blockId: string) => void;
+  onTodoToggle?: (blockId: string) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const didDragRef = useRef(false);
@@ -383,6 +385,28 @@ function SortableBlock({
       );
     }
 
+    if (block.type === 'todo') {
+      const text = block.data.text as string;
+      const checked = block.data.checked as boolean;
+      return (
+        <div className="mb-3 flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={() => onTodoToggle?.(block.id)}
+            className="mt-1 w-4 h-4 rounded border-slate-600 accent-blue-500 flex-shrink-0"
+            style={{ cursor: 'pointer' }}
+          />
+          <EditableContent
+            html={text}
+            className={`text-[15px] leading-[1.8] ${checked ? 'line-through text-slate-500' : 'text-slate-300'}`}
+            style={FONT_STYLES.body}
+            onUpdate={handleTextUpdate}
+          />
+        </div>
+      );
+    }
+
     if (block.type === 'table') {
       const content = block.data.content as string[][];
       return (
@@ -419,6 +443,7 @@ function SortableBlock({
   return (
     <div
       ref={setNodeRef}
+      data-block-id={block.id}
       style={{
         ...dndStyle,
         background: isSelected ? 'rgba(56, 139, 253, 0.08)' : undefined,
@@ -473,7 +498,6 @@ function BlockOutline({
   items,
   activeId,
   onNavigate,
-  accentColor,
 }: {
   items: TOCItem[];
   activeId: string;
@@ -483,47 +507,25 @@ function BlockOutline({
   if (items.length === 0) return null;
 
   return (
-    <nav className="flex flex-col gap-[5px] py-2" style={{ width: '140px' }}>
+    <nav className="flex flex-col items-end gap-[6px] py-2">
       {items.map((item) => {
         const isActive = activeId === item.id;
         const isSubLevel = item.level > 1;
-        const truncatedText = item.text.length > 28 ? item.text.slice(0, 28) + '…' : item.text;
 
         return (
           <button
             key={item.id}
             onClick={() => onNavigate(item.id)}
-            className="group relative flex items-center gap-2 text-left transition-all duration-200 rounded-md"
+            className="block transition-all duration-300 rounded-full"
             style={{
-              paddingLeft: isSubLevel ? '12px' : '0px',
-              paddingTop: '3px',
-              paddingBottom: '3px',
+              width: isActive ? '22px' : isSubLevel ? '10px' : '16px',
+              height: '2px',
+              background: isActive ? '#1D7AFC' : 'rgba(100, 116, 139, 0.3)',
+              boxShadow: isActive ? '0 0 6px rgba(29, 122, 252, 0.5)' : 'none',
+              animation: isActive ? 'outlinePulse 2s ease-in-out infinite' : 'none',
             }}
-          >
-            <div
-              className="flex-shrink-0 rounded-full transition-all duration-300"
-              style={{
-                width: isActive ? '24px' : isSubLevel ? '14px' : '18px',
-                height: '2.5px',
-                background: isActive ? '#1D7AFC' : 'rgba(100, 116, 139, 0.35)',
-                boxShadow: isActive ? '0 0 8px rgba(29, 122, 252, 0.4)' : 'none',
-                animation: isActive ? 'outlinePulse 2s ease-in-out infinite' : 'none',
-              }}
-            />
-            <span
-              data-outline-active={isActive ? 'true' : 'false'}
-              className="text-[11px] leading-tight truncate transition-all duration-200"
-              style={{
-                ...FONT_STYLES.ui,
-                color: isActive ? '#93b4f5' : 'rgba(148, 163, 184, 0.5)',
-                fontWeight: isActive ? 500 : 400,
-                maxWidth: '100px',
-                opacity: isActive ? 1 : 0,
-              }}
-            >
-              {truncatedText}
-            </span>
-          </button>
+            title={item.text}
+          />
         );
       })}
       <style>{`
@@ -531,31 +533,135 @@ function BlockOutline({
           0%, 100% { opacity: 1; }
           50% { opacity: 0.6; }
         }
-        nav:hover span[data-outline-active="false"] {
-          opacity: 1 !important;
-          color: rgba(148, 163, 184, 0.55) !important;
-        }
-        nav:hover span[data-outline-active="true"] {
-          opacity: 1 !important;
-        }
-        nav:hover button:hover span[data-outline-active="false"] {
-          color: #93b4f5 !important;
-        }
       `}</style>
     </nav>
   );
 }
 
+interface TurnIntoOption {
+  type: string;
+  label: string;
+  icon: React.ReactNode;
+  data: Record<string, unknown>;
+}
+
+const TURN_INTO_OPTIONS: TurnIntoOption[] = [
+  { type: 'header', label: 'Heading 1', icon: <span className="text-[13px] font-bold" style={{ fontFamily: "'Inter', sans-serif" }}>H1</span>, data: { level: 1 } },
+  { type: 'header', label: 'Heading 2', icon: <span className="text-[13px] font-bold" style={{ fontFamily: "'Inter', sans-serif" }}>H2</span>, data: { level: 2 } },
+  { type: 'header', label: 'Heading 3', icon: <span className="text-[13px] font-bold" style={{ fontFamily: "'Inter', sans-serif" }}>H3</span>, data: { level: 3 } },
+  { type: 'header', label: 'Heading 4', icon: <span className="text-[12px] font-semibold" style={{ fontFamily: "'Inter', sans-serif" }}>H4</span>, data: { level: 4 } },
+  { type: 'header', label: 'Heading 5', icon: <span className="text-[12px] font-semibold" style={{ fontFamily: "'Inter', sans-serif" }}>H5</span>, data: { level: 5 } },
+  { type: 'header', label: 'Heading 6', icon: <span className="text-[11px] font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>H6</span>, data: { level: 6 } },
+  { type: 'paragraph', label: 'Text', icon: <Type className="w-4 h-4" />, data: {} },
+  { type: 'list', label: 'List', icon: <ListIcon className="w-4 h-4" />, data: { style: 'unordered' } },
+  { type: 'list', label: 'Ordered List', icon: <ListOrdered className="w-4 h-4" />, data: { style: 'ordered' } },
+  { type: 'todo', label: 'Todo', icon: <CheckSquare className="w-4 h-4" />, data: { checked: false } },
+];
+
+function TurnIntoMenu({
+  currentBlockType,
+  currentBlockLevel,
+  currentBlockStyle,
+  onSelect,
+  onClose,
+  focusedIndex,
+}: {
+  currentBlockType: string;
+  currentBlockLevel?: number;
+  currentBlockStyle?: string;
+  onSelect: (option: TurnIntoOption) => void;
+  onClose: () => void;
+  focusedIndex: number;
+}) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = menuRef.current?.children[focusedIndex] as HTMLElement | undefined;
+    if (el) el.scrollIntoView({ block: 'nearest' });
+  }, [focusedIndex]);
+
+  const isActive = (opt: TurnIntoOption) => {
+    if (opt.type === 'paragraph' && currentBlockType === 'paragraph') return true;
+    if (opt.type === 'header' && currentBlockType === 'header' && opt.data.level === currentBlockLevel) return true;
+    if (opt.type === 'list' && currentBlockType === 'list' && opt.data.style === currentBlockStyle) return true;
+    if (opt.type === 'todo' && currentBlockType === 'todo') return true;
+    return false;
+  };
+
+  return (
+    <motion.div
+      ref={menuRef}
+      initial={{ opacity: 0, y: -4, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+      className="absolute left-0 top-full mt-1 rounded-lg border py-1.5 z-[70] overflow-hidden"
+      style={{
+        background: '#141422',
+        borderColor: '#2a2a4a',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4)',
+        minWidth: '190px',
+        maxHeight: '320px',
+        overflowY: 'auto',
+      }}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.preventDefault()}
+    >
+      {TURN_INTO_OPTIONS.map((opt, idx) => {
+        const active = isActive(opt);
+        const focused = idx === focusedIndex;
+        return (
+          <button
+            key={`${opt.type}-${opt.label}`}
+            onClick={() => { onSelect(opt); onClose(); }}
+            className="w-full flex items-center gap-3 px-3 py-[7px] text-[13px] transition-colors"
+            style={{
+              fontFamily: "'Inter', -apple-system, sans-serif",
+              color: active ? '#4C9AFF' : focused ? '#e2e8f0' : '#c8cdd3',
+              background: focused ? 'rgba(255,255,255,0.06)' : 'transparent',
+            }}
+            onMouseOver={(e) => {
+              (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)';
+            }}
+            onMouseOut={(e) => {
+              (e.currentTarget as HTMLElement).style.background = 'transparent';
+            }}
+          >
+            <span className="flex items-center justify-center w-5 h-5 flex-shrink-0"
+              style={{ color: active ? '#4C9AFF' : '#8b919a' }}
+            >
+              {opt.icon}
+            </span>
+            <span className="flex-1 text-left">{opt.label}</span>
+            {active && <Check className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#4C9AFF' }} />}
+          </button>
+        );
+      })}
+    </motion.div>
+  );
+}
+
 function FloatingToolbar({
   containerRef,
+  blocks,
+  onBlockTransform,
 }: {
   containerRef: React.RefObject<HTMLDivElement | null>;
+  blocks: EditorJSBlock[];
+  onBlockTransform?: (blockId: string, newType: string, newData: Record<string, unknown>, preserveText: string) => void;
 }) {
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
+  const [showTurnInto, setShowTurnInto] = useState(false);
+  const [turnIntoFocusIdx, setTurnIntoFocusIdx] = useState(0);
+  const [currentBlockId, setCurrentBlockId] = useState<string | null>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const currentBlock = useMemo(() => {
+    if (!currentBlockId) return null;
+    return blocks.find(b => b.id === currentBlockId) || null;
+  }, [currentBlockId, blocks]);
 
   const checkFormats = useCallback(() => {
     const formats = new Set<string>();
@@ -563,6 +669,17 @@ function FloatingToolbar({
     if (document.queryCommandState('italic')) formats.add('italic');
     if (document.queryCommandState('strikethrough')) formats.add('strikethrough');
     setActiveFormats(formats);
+  }, []);
+
+  const findBlockIdFromSelection = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return null;
+    const range = selection.getRangeAt(0);
+    const node = range.commonAncestorContainer;
+    const el = node.nodeType === Node.TEXT_NODE ? node.parentElement : node as HTMLElement;
+    if (!el) return null;
+    const blockEl = el.closest('[data-block-id]');
+    return blockEl?.getAttribute('data-block-id') || null;
   }, []);
 
   const handleSelectionChange = useCallback(() => {
@@ -573,6 +690,7 @@ function FloatingToolbar({
       if (!selection || selection.isCollapsed || !selection.rangeCount) {
         setIsVisible(false);
         setPosition(null);
+        setShowTurnInto(false);
         return;
       }
 
@@ -585,6 +703,7 @@ function FloatingToolbar({
       if (!ancestorEl || !container.contains(ancestorEl)) {
         setIsVisible(false);
         setPosition(null);
+        setShowTurnInto(false);
         return;
       }
 
@@ -592,6 +711,7 @@ function FloatingToolbar({
       if (!closest) {
         setIsVisible(false);
         setPosition(null);
+        setShowTurnInto(false);
         return;
       }
 
@@ -599,13 +719,17 @@ function FloatingToolbar({
       if (!selectedText) {
         setIsVisible(false);
         setPosition(null);
+        setShowTurnInto(false);
         return;
       }
+
+      const blockId = findBlockIdFromSelection();
+      setCurrentBlockId(blockId);
 
       const rect = range.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
 
-      const toolbarWidth = 240;
+      const toolbarWidth = 260;
       let left = rect.left + rect.width / 2 - toolbarWidth / 2 - containerRect.left;
       left = Math.max(8, Math.min(left, containerRect.width - toolbarWidth - 8));
 
@@ -616,7 +740,7 @@ function FloatingToolbar({
       setIsVisible(true);
       checkFormats();
     }, 50);
-  }, [containerRef, checkFormats]);
+  }, [containerRef, checkFormats, findBlockIdFromSelection]);
 
   useEffect(() => {
     document.addEventListener('selectionchange', handleSelectionChange);
@@ -625,6 +749,34 @@ function FloatingToolbar({
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [handleSelectionChange]);
+
+  useEffect(() => {
+    if (!showTurnInto) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setTurnIntoFocusIdx(prev => Math.min(prev + 1, TURN_INTO_OPTIONS.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setTurnIntoFocusIdx(prev => Math.max(prev - 1, 0));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const opt = TURN_INTO_OPTIONS[turnIntoFocusIdx];
+        if (opt && currentBlockId && onBlockTransform) {
+          const block = blocks.find(b => b.id === currentBlockId);
+          const text = block ? extractBlockText(block) : '';
+          onBlockTransform(currentBlockId, opt.type, opt.data, text);
+        }
+        setShowTurnInto(false);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowTurnInto(false);
+      }
+    };
+    document.addEventListener('keydown', handleKey, true);
+    return () => document.removeEventListener('keydown', handleKey, true);
+  }, [showTurnInto, turnIntoFocusIdx, currentBlockId, blocks, onBlockTransform]);
 
   const applyFormat = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);
@@ -643,10 +795,18 @@ function FloatingToolbar({
     }
   }, [applyFormat]);
 
+  const handleTurnIntoSelect = useCallback((opt: TurnIntoOption) => {
+    if (!currentBlockId || !onBlockTransform) return;
+    const block = blocks.find(b => b.id === currentBlockId);
+    const text = block ? extractBlockText(block) : '';
+    onBlockTransform(currentBlockId, opt.type, opt.data, text);
+    setShowTurnInto(false);
+  }, [currentBlockId, blocks, onBlockTransform]);
+
   if (!isVisible || !position) return null;
 
   const buttons = [
-    { icon: <Type className="w-3.5 h-3.5" />, command: 'removeFormat', label: 'Limpar', hasDropdown: true },
+    { icon: <Type className="w-3.5 h-3.5" />, command: 'turnInto', label: 'Transformar', isTurnInto: true },
     null,
     { icon: <Bold className="w-3.5 h-3.5" />, command: 'bold', label: 'Negrito', active: activeFormats.has('bold') },
     { icon: <Italic className="w-3.5 h-3.5" />, command: 'italic', label: 'Itálico', active: activeFormats.has('italic') },
@@ -678,6 +838,11 @@ function FloatingToolbar({
         }
 
         const handleClick = () => {
+          if (btn.isTurnInto) {
+            setShowTurnInto(prev => !prev);
+            setTurnIntoFocusIdx(0);
+            return;
+          }
           if (btn.isLink) {
             handleLinkInsert();
           } else if (btn.isCode) {
@@ -692,38 +857,81 @@ function FloatingToolbar({
                 range.insertNode(code);
                 sel.removeAllRanges();
               }
-            } catch { /* multi-node selection edge case */ }
+            } catch { /* multi-node edge case */ }
           } else {
             applyFormat(btn.command);
           }
         };
 
         return (
-          <button
-            key={btn.command}
-            onClick={handleClick}
-            className="flex items-center justify-center w-7 h-7 rounded-md transition-colors"
-            style={{
-              color: btn.active ? '#fff' : '#9ca3af',
-              background: btn.active ? 'rgba(255,255,255,0.1)' : 'transparent',
-            }}
-            title={btn.label}
-            onMouseOver={(e) => {
-              (e.currentTarget as HTMLElement).style.color = '#fff';
-              (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)';
-            }}
-            onMouseOut={(e) => {
-              (e.currentTarget as HTMLElement).style.color = btn.active ? '#fff' : '#9ca3af';
-              (e.currentTarget as HTMLElement).style.background = btn.active ? 'rgba(255,255,255,0.1)' : 'transparent';
-            }}
-          >
-            {btn.icon}
-            {btn.hasDropdown && <span className="text-[8px] ml-0.5 text-slate-500">▾</span>}
-          </button>
+          <div key={btn.command} className="relative">
+            <button
+              onClick={handleClick}
+              className="flex items-center justify-center h-7 rounded-md transition-colors"
+              style={{
+                color: btn.active ? '#fff' : (btn.isTurnInto && showTurnInto) ? '#fff' : '#9ca3af',
+                background: btn.active ? 'rgba(255,255,255,0.1)' : (btn.isTurnInto && showTurnInto) ? 'rgba(255,255,255,0.1)' : 'transparent',
+                width: btn.isTurnInto ? '38px' : '28px',
+                gap: '1px',
+              }}
+              title={btn.label}
+              onMouseOver={(e) => {
+                (e.currentTarget as HTMLElement).style.color = '#fff';
+                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)';
+              }}
+              onMouseOut={(e) => {
+                const isActive = btn.active || (btn.isTurnInto && showTurnInto);
+                (e.currentTarget as HTMLElement).style.color = isActive ? '#fff' : '#9ca3af';
+                (e.currentTarget as HTMLElement).style.background = isActive ? 'rgba(255,255,255,0.1)' : 'transparent';
+              }}
+            >
+              {btn.icon}
+              {btn.isTurnInto && (
+                <ChevronUp
+                  className="w-3 h-3 transition-transform duration-150"
+                  style={{
+                    transform: showTurnInto ? 'rotate(0deg)' : 'rotate(180deg)',
+                    color: '#6b7280',
+                  }}
+                />
+              )}
+            </button>
+            {btn.isTurnInto && showTurnInto && currentBlock && (
+              <TurnIntoMenu
+                currentBlockType={currentBlock.type}
+                currentBlockLevel={
+                  currentBlock.type === 'header'
+                    ? (currentBlock.data.level as number)
+                    : undefined
+                }
+                currentBlockStyle={
+                  currentBlock.type === 'list'
+                    ? (currentBlock.data.style as string)
+                    : undefined
+                }
+                onSelect={handleTurnIntoSelect}
+                onClose={() => setShowTurnInto(false)}
+                focusedIndex={turnIntoFocusIdx}
+              />
+            )}
+          </div>
         );
       })}
     </motion.div>
   );
+}
+
+function extractBlockText(block: EditorJSBlock): string {
+  if (block.type === 'header' || block.type === 'paragraph' || block.type === 'quote') {
+    return ((block.data.text as string) || '').replace(/<[^>]*>/g, '');
+  }
+  if (block.type === 'list') {
+    return ((block.data.items as string[]) || []).map(i => i.replace(/<[^>]*>/g, '')).join('\n');
+  }
+  if (block.type === 'todo') {
+    return ((block.data.text as string) || '').replace(/<[^>]*>/g, '');
+  }
+  return '';
 }
 
 const ANIMATION_DURATION = 150;
@@ -846,6 +1054,41 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
       if (idx === -1 || idx >= prev.length - 1) return prev;
       return arrayMove(prev, idx, idx + 1);
     });
+  }, []);
+
+  const handleTodoToggle = useCallback((blockId: string) => {
+    setBlocks((prev) =>
+      prev.map((b) => {
+        if (b.id !== blockId || b.type !== 'todo') return b;
+        return { ...b, data: { ...b.data, checked: !(b.data.checked as boolean) } };
+      })
+    );
+  }, []);
+
+  const handleBlockTransform = useCallback((blockId: string, newType: string, newData: Record<string, unknown>, preserveText: string) => {
+    setBlocks((prev) =>
+      prev.map((b) => {
+        if (b.id !== blockId) return b;
+        const plainText = preserveText || ((b.data.text as string) || '').replace(/<[^>]*>/g, '');
+
+        if (newType === 'header') {
+          return { ...b, type: 'header', data: { text: plainText, level: newData.level } };
+        }
+        if (newType === 'paragraph') {
+          return { ...b, type: 'paragraph', data: { text: plainText } };
+        }
+        if (newType === 'list') {
+          const items = b.type === 'list'
+            ? (b.data.items as string[])
+            : [plainText];
+          return { ...b, type: 'list', data: { style: newData.style, items } };
+        }
+        if (newType === 'todo') {
+          return { ...b, type: 'todo', data: { text: plainText, checked: false } };
+        }
+        return b;
+      })
+    );
   }, []);
 
   useEffect(() => {
@@ -1002,8 +1245,11 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
     if (!container) return;
     const el = container.querySelector(`[id="${CSS.escape(sectionId)}"]`) as HTMLElement | null;
     if (el) {
-      const elTop = el.offsetTop - container.offsetTop;
-      container.scrollTo({ top: elTop - 20, behavior: 'smooth' });
+      const containerRect = container.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const targetTop = container.scrollTop + (elRect.top - containerRect.top) - 24;
+      container.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+      setActiveTOCId(sectionId);
     }
   }, []);
 
@@ -1114,7 +1360,11 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                 style={{ scrollBehavior: 'smooth' }}
                 onClick={handleBlockDeselect}
               >
-                <FloatingToolbar containerRef={scrollContainerRef} />
+                <FloatingToolbar
+                  containerRef={scrollContainerRef}
+                  blocks={blocks}
+                  onBlockTransform={handleBlockTransform}
+                />
 
                 <div className="max-w-[680px] mx-auto px-8 py-8 sm:px-12 sm:py-10 relative">
                   <motion.div
@@ -1173,6 +1423,7 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                           onDelete={handleDeleteBlock}
                           onMoveUp={handleMoveBlockUp}
                           onMoveDown={handleMoveBlockDown}
+                          onTodoToggle={handleTodoToggle}
                         />
                       ))}
                     </SortableContext>
@@ -1184,9 +1435,9 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
 
               {tocItems.length > 0 && (
                 <div
-                  className="absolute z-10 hidden lg:block"
+                  className="absolute z-10 hidden lg:flex items-center"
                   style={{
-                    right: '12px',
+                    right: '6px',
                     top: '50%',
                     transform: 'translateY(-50%)',
                   }}
