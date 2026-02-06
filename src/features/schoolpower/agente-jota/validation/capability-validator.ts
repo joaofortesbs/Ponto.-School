@@ -58,6 +58,15 @@ const CAPABILITY_ALIASES: Record<string, string> = {
   'salvar_banco': 'salvar_atividades_bd',
   'persistir_atividades': 'salvar_atividades_bd',
   'gravar_atividades': 'salvar_atividades_bd',
+  
+  'gerar_artefato': 'criar_arquivo',
+  'gerar_documento': 'criar_arquivo',
+  'criar_dossie': 'criar_arquivo',
+  'criar_resumo': 'criar_arquivo',
+  'gerar_relatorio': 'criar_arquivo',
+  'criar_roteiro': 'criar_arquivo',
+  'gerar_guia': 'criar_arquivo',
+  'criar_artefato': 'criar_arquivo',
 };
 
 export function getValidCapabilityNames(): string[] {
@@ -320,6 +329,7 @@ function getCanonicalCategory(capabilityName: string): string | null {
     'decidir_atividades_criar': 'ANALISAR',
     'gerar_conteudo_atividades': 'GERAR_CONTEUDO',
     'criar_atividade': 'CRIAR',
+    'criar_arquivo': 'CRIAR',
     'salvar_atividades_bd': 'SALVAR_BD',
     'planejar_plano_de_acao': 'PLANEJAR'
   };

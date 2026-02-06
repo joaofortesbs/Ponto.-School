@@ -20,7 +20,6 @@ import {
   type InitialResponseResult,
   type FinalResponseResult,
 } from './context';
-import { generateArtifact, shouldGenerateArtifact } from './capabilities/CRIAR_ARQUIVO';
 import type { ArtifactData } from './capabilities/CRIAR_ARQUIVO';
 
 const memoryManagers: Map<string, MemoryManager> = new Map();
@@ -218,20 +217,6 @@ export async function executeAgentPlan(
     });
 
     console.log('✅ [Orchestrator] Plano executado e resposta final gerada');
-    
-    let artifactData: ArtifactData | null = null;
-    try {
-      if (shouldGenerateArtifact(sessionId)) {
-        console.log('📄 [Orchestrator] Gerando artefato complementar...');
-        artifactData = await generateArtifact(sessionId);
-        if (artifactData) {
-          console.log(`✅ [Orchestrator] Artefato gerado: ${artifactData.metadata.titulo}`);
-          window.dispatchEvent(new CustomEvent('artifact:generated', { detail: artifactData }));
-        }
-      }
-    } catch (artifactError) {
-      console.warn('⚠️ [Orchestrator] Erro ao gerar artefato (não-fatal):', artifactError);
-    }
 
     return respostaFinal;
 
@@ -301,25 +286,12 @@ export async function executeAgentPlanWithDetails(
     });
 
     console.log('✅ [Orchestrator] Plano executado e resposta final gerada');
-    
-    let artifactData: ArtifactData | null = null;
-    try {
-      if (shouldGenerateArtifact(sessionId)) {
-        console.log('📄 [Orchestrator] Gerando artefato complementar...');
-        artifactData = await generateArtifact(sessionId);
-        if (artifactData) {
-          console.log(`✅ [Orchestrator] Artefato gerado: ${artifactData.metadata.titulo} (${artifactData.secoes.length} seções)`);
-        }
-      }
-    } catch (artifactError) {
-      console.warn('⚠️ [Orchestrator] Erro ao gerar artefato (não-fatal):', artifactError);
-    }
 
     return {
       relatorio,
       respostaFinal,
       finalResponseData,
-      artifactData,
+      artifactData: null,
     };
 
   } catch (error) {

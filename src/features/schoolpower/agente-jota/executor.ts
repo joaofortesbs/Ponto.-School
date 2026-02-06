@@ -23,6 +23,7 @@ import { decidirAtividadesCriarV2 } from './capabilities/DECIDIR/implementations
 import { pesquisarAtividadesDisponiveisV2 } from './capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis';
 import { criarAtividadeV2 } from './capabilities/CRIAR_ATIVIDADES/implementations/criar-atividade-v2';
 import { salvarAtividadesBdV2 } from './capabilities/SALVAR_BD/implementations/salvar-atividades-bd';
+import { criarArquivoV2 } from './capabilities/CRIAR_ARQUIVO/criar-arquivo-v2';
 import type { CapabilityInput, CapabilityOutput } from './capabilities/shared/types';
 import { 
   generateDevelopmentReflection,
@@ -341,7 +342,8 @@ export class AgentExecutor {
     'decidir_atividades_criar',
     'gerar_conteudo_atividades',
     'criar_atividade',
-    'salvar_atividades_bd'
+    'salvar_atividades_bd',
+    'criar_arquivo'
   ];
   
   // Flag para registrar o handler global apenas uma vez
@@ -479,6 +481,8 @@ export class AgentExecutor {
               v2Result = await criarAtividadeV2(capabilityInput);
             } else if (capName === 'salvar_atividades_bd') {
               v2Result = await salvarAtividadesBdV2(capabilityInput);
+            } else if (capName === 'criar_arquivo') {
+              v2Result = await criarArquivoV2(capabilityInput);
             }
             
             // Validar que temos um resultado
@@ -516,11 +520,9 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
                 { error: v2Result.error, v2_result: v2Result }
               );
               
-              // criar_atividade NÃO é crítica - manter cards visíveis com status de erro
               if (capName === 'criar_atividade') {
                 console.error(`⚠️ [Executor] criar_atividade failed but NOT throwing - cards will remain visible`);
                 
-                // Emitir evento para marcar atividades com erro mas mantê-las visíveis
                 this.emitProgress({
                   sessionId: this.sessionId,
                   type: 'construction:pipeline_error',
@@ -528,9 +530,10 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
                   keepCardsVisible: true
                 } as any);
                 
-                // NÃO lançar exceção - continuar fluxo normalmente
+              } else if (capName === 'criar_arquivo') {
+                console.error(`⚠️ [Executor] criar_arquivo failed but NOT throwing - artifact generation is non-critical`);
+                
               } else {
-                // Para outras capabilities críticas, lançar erro para interromper o fluxo
                 throw new Error(`Capability crítica "${capName}" falhou: ${errorMsg}`);
               }
             }

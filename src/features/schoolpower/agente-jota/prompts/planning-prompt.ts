@@ -20,7 +20,7 @@ FUNÇÕES DISPONÍVEIS (CAPABILITIES):
 {capabilities}
 
 ═══════════════════════════════════════════════════════════════════════════
-⚠️ ATENÇÃO CRÍTICA: USE APENAS ESTAS 6 CAPABILITIES (NOMES EXATOS) ⚠️
+⚠️ ATENÇÃO CRÍTICA: USE APENAS ESTAS 7 CAPABILITIES (NOMES EXATOS) ⚠️
 ═══════════════════════════════════════════════════════════════════════════
 
 1. "pesquisar_atividades_disponiveis" - Pesquisa atividades no catálogo
@@ -28,17 +28,18 @@ FUNÇÕES DISPONÍVEIS (CAPABILITIES):
 3. "decidir_atividades_criar" - Decide quais atividades criar
 4. "criar_atividade" - Cria as atividades selecionadas
 5. "salvar_atividades_bd" - Salva as atividades criadas no banco de dados
-6. "planejar_plano_de_acao" - Monta um plano estruturado
+6. "criar_arquivo" - Gera documento complementar (dossiê, resumo, roteiro, relatório ou guia)
+7. "planejar_plano_de_acao" - Monta um plano estruturado
 
 ❌ NÃO INVENTE NOMES como: pesquisar_tipos_atividades, criar_plano_aula, etc.
 ❌ NÃO MODIFIQUE os nomes acima de nenhuma forma!
-✅ COPIE exatamente um dos 6 nomes listados!
+✅ COPIE exatamente um dos 7 nomes listados!
 
 ═══════════════════════════════════════════════════════════════════════════
 
 INSTRUÇÕES:
-Crie um plano de ação SIMPLES com no máximo 4 etapas seguindo o pipeline:
-PESQUISAR → DECIDIR → CRIAR → SALVAR
+Crie um plano de ação SIMPLES com no máximo 5 etapas seguindo o pipeline:
+PESQUISAR → DECIDIR → CRIAR → SALVAR → CRIAR_ARQUIVO (documento complementar)
 
 RESPONDA APENAS COM UM JSON VÁLIDO no seguinte formato:
 {
@@ -122,15 +123,29 @@ EXEMPLO DE PLANO CORRETO PARA "Preciso criar atividades de matemática":
           "justificativa": "Persistir atividades criadas"
         }
       ]
+    },
+    {
+      "titulo": "Gerar documento complementar",
+      "descricao": "Vou criar um documento de apoio com tudo que foi feito",
+      "capabilities": [
+        {
+          "nome": "criar_arquivo",
+          "displayName": "Vou gerar um documento complementar para você",
+          "categoria": "CRIAR",
+          "parametros": {},
+          "justificativa": "Gerar artefato de apoio pedagógico"
+        }
+      ]
     }
   ]
 }
 
 IMPORTANTE: 
 - Retorne APENAS o JSON, sem explicações adicionais
-- Use APENAS os 6 nomes de capabilities listados acima
+- Use APENAS os 7 nomes de capabilities listados acima
 - NÃO invente novos nomes de capabilities!
-- SEMPRE inclua "salvar_atividades_bd" como ÚLTIMA capability após "criar_atividade"!
+- SEMPRE inclua "salvar_atividades_bd" após "criar_atividade"
+- SEMPRE inclua "criar_arquivo" como ÚLTIMA etapa do pipeline para gerar documento complementar!
 `.trim();
 
 export interface Capability {
