@@ -11,10 +11,12 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Bot, User, Loader2, LogOut } from 'lucide-react';
 import { MessageStream } from './components/MessageStream';
+import { ArtifactViewModal } from './components/ArtifactViewModal';
 import { ContextModal } from './ContextModal';
 import { useChatState } from './state/chatState';
 import { processUserPrompt, executeAgentPlan } from '../agente-jota/orchestrator';
 import { generateSessionId } from '../agente-jota/memory-manager';
+import type { ArtifactData } from '../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
 import type { 
   ExecutionPlan, 
@@ -68,6 +70,8 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   
   const [showContextModal, setShowContextModal] = useState(false);
   const [isCardExpanded, setIsCardExpanded] = useState(false);
+  const [selectedArtifact, setSelectedArtifact] = useState<ArtifactData | null>(null);
+  const [showArtifactModal, setShowArtifactModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isExecutingPlanRef = useRef(false);
   const hasProcessedInitialMessageRef = useRef(false);
@@ -77,6 +81,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     addTextMessage, 
     addPlanCard, 
     addDevModeCard,
+    addArtifactCard,
     setExecuting,
     setLoading,
     clearMessages,
@@ -110,6 +115,32 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  useEffect(() => {
+    const handleArtifactGenerated = (event: Event) => {
+      const artifactData = (event as CustomEvent).detail as ArtifactData;
+      if (artifactData) {
+        console.log('📄 [ChatLayout] Artefato recebido via evento:', artifactData.metadata.titulo);
+        addArtifactCard(artifactData);
+      }
+    };
+
+    window.addEventListener('artifact:generated', handleArtifactGenerated);
+    return () => {
+      window.removeEventListener('artifact:generated', handleArtifactGenerated);
+    };
+  }, [addArtifactCard]);
+
+  const handleOpenArtifact = useCallback((artifact: ArtifactData) => {
+    console.log('📄 [ChatLayout] Abrindo artefato:', artifact.metadata.titulo);
+    setSelectedArtifact(artifact);
+    setShowArtifactModal(true);
+  }, []);
+
+  const handleCloseArtifact = useCallback(() => {
+    setShowArtifactModal(false);
+    setTimeout(() => setSelectedArtifact(null), 300);
+  }, []);
 
   useEffect(() => {
     if (!_hasHydrated) {
@@ -443,7 +474,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
       <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-64 relative">
         <div className="max-w-[1200px] mx-auto w-full">
-          <MessageStream onApplyPlan={handleExecutePlan} />
+          <MessageStream onApplyPlan={handleExecutePlan} onOpenArtifact={handleOpenArtifact} />
         </div>
         <div ref={messagesEndRef} />
       </div>
@@ -480,6 +511,14 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
           />
         )}
       </AnimatePresence>
+
+      {selectedArtifact && (
+        <ArtifactViewModal
+          artifact={selectedArtifact}
+          isOpen={showArtifactModal}
+          onClose={handleCloseArtifact}
+        />
+      )}
     </div>
   );
 }

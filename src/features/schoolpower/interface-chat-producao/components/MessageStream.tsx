@@ -6,12 +6,15 @@ import { AssistantMessage } from './AssistantMessage';
 import { PlanActionCard } from './PlanActionCard';
 import { DeveloperModeCard } from './DeveloperModeCard';
 import { ActivityConstructionCard } from './ActivityConstructionCard';
+import { ArtifactCard } from './ArtifactCard';
+import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
 interface MessageStreamProps {
   onApplyPlan?: () => void;
+  onOpenArtifact?: (artifact: ArtifactData) => void;
 }
 
-export function MessageStream({ onApplyPlan }: MessageStreamProps) {
+export function MessageStream({ onApplyPlan, onOpenArtifact }: MessageStreamProps) {
   const messages = useChatState((state) => state.messages);
   const isLoading = useChatState((state) => state.isLoading);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -78,11 +81,12 @@ export function MessageStream({ onApplyPlan }: MessageStreamProps) {
               />
             )}
 
-            {/* 
-              content_generation_card type DESATIVADO - geração de conteúdo agora 
-              aparece apenas como sub-card retangular dentro do tópico "Decidir quais 
-              atividades criar" via capability gerar_conteudo_atividades 
-            */}
+            {message.type === 'artifact_card' && message.metadata?.cardData && (
+              <ArtifactCard
+                artifact={message.metadata.cardData}
+                onOpen={onOpenArtifact}
+              />
+            )}
           </motion.div>
         ))}
         
