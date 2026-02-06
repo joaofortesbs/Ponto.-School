@@ -1,8 +1,10 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Check, FileText, Clock, Hash, Tag, ChevronRight } from 'lucide-react';
-import type { ArtifactData, ArtifactSection } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
+import { X, Copy, Check, Download, MoreHorizontal } from 'lucide-react';
+import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 import { ARTIFACT_TYPE_CONFIGS } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
+import { convertArtifactToEditorJS, extractTOCFromBlocks } from './artifact-editorjs-converter';
+import type { EditorJSBlock, TOCItem } from './artifact-editorjs-converter';
 
 interface ArtifactViewModalProps {
   artifact: ArtifactData;
@@ -10,11 +12,376 @@ interface ArtifactViewModalProps {
   onClose: () => void;
 }
 
+const blockAnimVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: 0.06 * i,
+      duration: 0.35,
+      ease: [0.25, 0.46, 0.45, 0.94],
+    },
+  }),
+};
+
+function EditorBlock({ block, index, accentColor, onBlockUpdate }: { block: EditorJSBlock; index: number; accentColor: string; onBlockUpdate?: (blockId: string, newText: string) => void }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleStartEdit = useCallback((text: string) => {
+    setEditText(text);
+    setIsEditing(true);
+  }, []);
+
+  const handleFinishEdit = useCallback(() => {
+    setIsEditing(false);
+    if (block.id && onBlockUpdate && editText.trim()) {
+      onBlockUpdate(block.id, editText);
+    }
+  }, [block.id, onBlockUpdate, editText]);
+
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [isEditing]);
+
+  if (block.type === 'header') {
+    const level = block.data.level as number;
+    const text = block.data.text as string;
+    const isSectionHeader = block.id?.startsWith('section-');
+
+    if (level === 1 || (level === 2 && isSectionHeader)) {
+      return (
+        <motion.div
+          custom={index}
+          variants={blockAnimVariants}
+          initial="hidden"
+          animate="visible"
+          id={block.id}
+          className="mt-10 mb-4 first:mt-0"
+        >
+          <h2
+            className="text-[1.65rem] font-bold leading-tight tracking-tight cursor-text"
+            style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#e2e8f0' }}
+            onClick={() => handleStartEdit(text.replace(/<[^>]*>/g, ''))}
+          >
+            {isEditing ? (
+              <textarea
+                ref={textareaRef}
+                value={editText}
+                onChange={(e) => {
+                  setEditText(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = e.target.scrollHeight + 'px';
+                }}
+                onBlur={handleFinishEdit}
+                className="w-full bg-transparent border-none outline-none resize-none text-[1.65rem] font-bold leading-tight tracking-tight"
+                style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#e2e8f0' }}
+              />
+            ) : (
+              <span dangerouslySetInnerHTML={{ __html: text }} />
+            )}
+          </h2>
+          <div className="mt-2 h-[1px]" style={{ background: `linear-gradient(to right, ${accentColor}40, transparent)` }} />
+        </motion.div>
+      );
+    }
+
+    if (level === 2) {
+      return (
+        <motion.div
+          custom={index}
+          variants={blockAnimVariants}
+          initial="hidden"
+          animate="visible"
+          id={block.id}
+          className="mt-8 mb-3"
+        >
+          <div
+            onClick={() => handleStartEdit(text.replace(/<[^>]*>/g, ''))}
+            className="cursor-text text-[1.3rem] font-semibold leading-snug tracking-tight"
+            style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#cbd5e1' }}
+          >
+            {isEditing ? (
+              <textarea
+                ref={textareaRef}
+                value={editText}
+                onChange={(e) => { setEditText(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
+                onBlur={handleFinishEdit}
+                className="w-full bg-transparent border-none outline-none resize-none text-[1.3rem] font-semibold leading-snug tracking-tight"
+                style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#cbd5e1' }}
+              />
+            ) : (
+              <span dangerouslySetInnerHTML={{ __html: text }} />
+            )}
+          </div>
+        </motion.div>
+      );
+    }
+
+    if (level === 3) {
+      return (
+        <motion.div
+          custom={index}
+          variants={blockAnimVariants}
+          initial="hidden"
+          animate="visible"
+          className="mt-6 mb-2"
+        >
+          <div
+            onClick={() => handleStartEdit(text.replace(/<[^>]*>/g, ''))}
+            className="cursor-text text-base font-semibold leading-snug"
+            style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#94a3b8' }}
+          >
+            {isEditing ? (
+              <textarea
+                ref={textareaRef}
+                value={editText}
+                onChange={(e) => { setEditText(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
+                onBlur={handleFinishEdit}
+                className="w-full bg-transparent border-none outline-none resize-none text-base font-semibold leading-snug"
+                style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#94a3b8' }}
+              />
+            ) : (
+              <span dangerouslySetInnerHTML={{ __html: text }} />
+            )}
+          </div>
+        </motion.div>
+      );
+    }
+  }
+
+  if (block.type === 'paragraph') {
+    const text = block.data.text as string;
+    return (
+      <motion.div
+        custom={index}
+        variants={blockAnimVariants}
+        initial="hidden"
+        animate="visible"
+        className="mb-3"
+      >
+        <div
+          onClick={() => handleStartEdit(text.replace(/<[^>]*>/g, ''))}
+          className="cursor-text text-[15px] leading-[1.8] text-slate-300"
+          style={{ fontFamily: "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif" }}
+        >
+          {isEditing ? (
+            <textarea
+              ref={textareaRef}
+              value={editText}
+              onChange={(e) => { setEditText(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
+              onBlur={handleFinishEdit}
+              className="w-full bg-transparent border-none outline-none resize-none text-[15px] leading-[1.8] text-slate-300"
+              style={{ fontFamily: "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif" }}
+            />
+          ) : (
+            <span dangerouslySetInnerHTML={{ __html: text }} />
+          )}
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (block.type === 'list') {
+    const items = block.data.items as string[];
+    const isOrdered = block.data.style === 'ordered';
+
+    return (
+      <motion.div
+        custom={index}
+        variants={blockAnimVariants}
+        initial="hidden"
+        animate="visible"
+        className="mb-4 pl-1"
+      >
+        {isOrdered ? (
+          <ol className="space-y-1.5">
+            {items.map((item, idx) => (
+              <li key={idx} className="flex items-start gap-3 text-[15px] leading-[1.7] text-slate-300" style={{ fontFamily: "'Georgia', 'Palatino Linotype', serif" }}>
+                <span className="font-semibold text-sm mt-0.5 min-w-[20px] text-right" style={{ fontFamily: "'Inter', sans-serif", color: accentColor }}>
+                  {idx + 1}.
+                </span>
+                <span dangerouslySetInnerHTML={{ __html: item }} />
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <ul className="space-y-1.5">
+            {items.map((item, idx) => (
+              <li key={idx} className="flex items-start gap-3 text-[15px] leading-[1.7] text-slate-300" style={{ fontFamily: "'Georgia', 'Palatino Linotype', serif" }}>
+                <span className="mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: accentColor }} />
+                <span dangerouslySetInnerHTML={{ __html: item }} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </motion.div>
+    );
+  }
+
+  if (block.type === 'quote') {
+    const text = block.data.text as string;
+    return (
+      <motion.div
+        custom={index}
+        variants={blockAnimVariants}
+        initial="hidden"
+        animate="visible"
+        className="mb-4 rounded-lg px-5 py-4"
+        style={{
+          borderLeft: `3px solid ${accentColor}`,
+          background: `${accentColor}08`,
+        }}
+      >
+        <p className="text-[14px] leading-[1.7] text-slate-300 italic" style={{ fontFamily: "'Georgia', 'Palatino Linotype', serif" }}>
+          {text}
+        </p>
+      </motion.div>
+    );
+  }
+
+  if (block.type === 'delimiter') {
+    return (
+      <motion.div
+        custom={index}
+        variants={blockAnimVariants}
+        initial="hidden"
+        animate="visible"
+        className="my-8 flex items-center justify-center gap-2"
+      >
+        <span className="w-1 h-1 rounded-full bg-slate-600" />
+        <span className="w-1 h-1 rounded-full bg-slate-600" />
+        <span className="w-1 h-1 rounded-full bg-slate-600" />
+      </motion.div>
+    );
+  }
+
+  if (block.type === 'table') {
+    const content = block.data.content as string[][];
+    return (
+      <motion.div
+        custom={index}
+        variants={blockAnimVariants}
+        initial="hidden"
+        animate="visible"
+        className="mb-4 overflow-x-auto rounded-lg border border-slate-700/50"
+      >
+        <table className="w-full text-sm text-slate-300" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <tbody>
+            {content.map((row, rIdx) => (
+              <tr key={rIdx} className={rIdx === 0 ? 'bg-slate-800/60' : 'bg-slate-800/20'}>
+                {row.map((cell, cIdx) => (
+                  <td key={cIdx} className={`px-4 py-2.5 border-b border-slate-700/30 ${rIdx === 0 ? 'font-semibold text-slate-200' : ''}`}>
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </motion.div>
+    );
+  }
+
+  return null;
+}
+
+function RightTOC({ items, activeId, onNavigate, accentColor }: {
+  items: TOCItem[];
+  activeId: string;
+  onNavigate: (id: string) => void;
+  accentColor: string;
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <div className="w-[180px] flex-shrink-0 py-6 pr-4 pl-2 overflow-y-auto hidden lg:block">
+      <div className="sticky top-6">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-3" style={{ fontFamily: "'Inter', sans-serif" }}>
+          Sumário
+        </p>
+        <nav className="space-y-0.5">
+          {items.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.id)}
+              className={`block w-full text-left py-1.5 transition-all duration-200 text-[11px] leading-tight truncate ${
+                activeId === item.id
+                  ? 'font-medium'
+                  : 'text-slate-500 hover:text-slate-300'
+              }`}
+              style={{
+                paddingLeft: item.level === 2 && !item.sectionId.startsWith('section-') ? '12px' : '0px',
+                color: activeId === item.id ? accentColor : undefined,
+                borderLeft: activeId === item.id ? `2px solid ${accentColor}` : '2px solid transparent',
+                fontFamily: "'Inter', sans-serif",
+              }}
+            >
+              {item.text}
+            </button>
+          ))}
+        </nav>
+      </div>
+    </div>
+  );
+}
+
 export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewModalProps) {
-  const [activeSection, setActiveSection] = useState(0);
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
+  const [activeTOCId, setActiveTOCId] = useState('');
+  const [blocks, setBlocks] = useState<EditorJSBlock[]>([]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const config = ARTIFACT_TYPE_CONFIGS[artifact.metadata.tipo];
-  const stats = artifact.metadata.estatisticas;
+
+  const editorData = useMemo(() => convertArtifactToEditorJS(artifact), [artifact]);
+
+  useEffect(() => {
+    setBlocks(editorData.blocks);
+  }, [editorData]);
+
+  const tocItems = useMemo(() => extractTOCFromBlocks(blocks), [blocks]);
+
+  const handleBlockUpdate = useCallback((blockId: string, newText: string) => {
+    setBlocks(prev => prev.map(b =>
+      b.id === blockId ? { ...b, data: { ...b.data, text: newText } } : b
+    ));
+  }, []);
+
+  useEffect(() => {
+    if (tocItems.length > 0 && !activeTOCId) {
+      setActiveTOCId(tocItems[0].id);
+    }
+  }, [tocItems, activeTOCId]);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || tocItems.length === 0) return;
+
+    const handleScroll = () => {
+      const containerRect = container.getBoundingClientRect();
+      let currentActive = tocItems[0]?.id || '';
+
+      for (const item of tocItems) {
+        const el = document.getElementById(item.id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= containerRect.top + 120) {
+            currentActive = item.id;
+          }
+        }
+      }
+      setActiveTOCId(currentActive);
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [tocItems]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -30,16 +397,6 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
     };
   }, [isOpen, onClose]);
 
-  const handleCopySection = useCallback(async (section: ArtifactSection) => {
-    try {
-      await navigator.clipboard.writeText(section.conteudo);
-      setCopiedSection(section.id);
-      setTimeout(() => setCopiedSection(null), 2000);
-    } catch {
-      console.warn('Falha ao copiar para clipboard');
-    }
-  }, []);
-
   const handleCopyAll = useCallback(async () => {
     try {
       const fullText = artifact.secoes
@@ -53,6 +410,15 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
     }
   }, [artifact.secoes]);
 
+  const handleNavigateToSection = useCallback((sectionId: string) => {
+    const el = document.getElementById(sectionId);
+    if (el && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const elTop = el.offsetTop - container.offsetTop;
+      container.scrollTo({ top: elTop - 20, behavior: 'smooth' });
+    }
+  }, []);
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -62,13 +428,6 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
       minute: '2-digit',
     });
   };
-
-  const formatTime = (ms: number) => {
-    if (ms < 1000) return `${ms}ms`;
-    return `${(ms / 1000).toFixed(1)}s`;
-  };
-
-  const currentSection = artifact.secoes[activeSection];
 
   if (!isOpen) return null;
 
@@ -82,246 +441,137 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
         className="fixed inset-0 z-[2000] flex items-center justify-center"
         onClick={onClose}
       >
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          initial={{ opacity: 0, scale: 0.96, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          exit={{ opacity: 0, scale: 0.96, y: 16 }}
           transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-[95vw] max-w-[1100px] h-[90vh] max-h-[800px] rounded-2xl overflow-hidden flex flex-col"
+          className="relative w-[96vw] max-w-[1000px] h-[92vh] max-h-[860px] rounded-2xl overflow-hidden flex flex-col"
           style={{
-            background: 'rgba(15, 23, 42, 0.95)',
-            backdropFilter: 'blur(30px)',
-            WebkitBackdropFilter: 'blur(30px)',
-            border: `1px solid ${config.cor}30`,
-            boxShadow: `0 25px 60px rgba(0,0,0,0.5), 0 0 40px ${config.cor}10`,
+            background: '#0f1419',
+            border: '1px solid rgba(56, 68, 90, 0.4)',
+            boxShadow: '0 25px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03)',
           }}
         >
-          <div 
-            className="flex items-center justify-between px-6 py-4 border-b"
-            style={{ borderColor: `${config.cor}20` }}
-          >
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-700/40">
             <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-                style={{ background: `${config.cor}20`, border: `1px solid ${config.cor}30` }}
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-base"
+                style={{ background: `${config.cor}15` }}
               >
                 {config.icone}
               </div>
               <div>
-                <h2 className="text-base font-bold text-slate-100">
+                <h2 className="text-sm font-semibold text-slate-200" style={{ fontFamily: "'Inter', sans-serif" }}>
                   {config.nome}
                 </h2>
-                {artifact.metadata.subtitulo && (
-                  <p className="text-xs text-slate-400 mt-0.5 max-w-[400px] truncate">
-                    {artifact.metadata.subtitulo}
-                  </p>
-                )}
+                <p className="text-[11px] text-slate-500 mt-0.5" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  {artifact.metadata.subtitulo
+                    ? artifact.metadata.subtitulo
+                    : `Última modificação: ${formatDate(artifact.metadata.geradoEm)}`
+                  }
+                </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={handleCopyAll}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:bg-slate-700/50"
-                style={{ color: config.cor }}
+                className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/40 transition-colors"
+                title="Copiar tudo"
               >
-                {copiedSection === 'all' ? (
-                  <>
-                    <Check className="w-3.5 h-3.5" />
-                    Copiado!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    Copiar tudo
-                  </>
-                )}
+                {copiedSection === 'all' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
               </button>
               <button
-                onClick={onClose}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-colors"
+                className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/40 transition-colors"
+                title="Download"
               >
-                <X className="w-5 h-5" />
+                <Download className="w-4 h-4" />
+              </button>
+              <button
+                className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/40 transition-colors"
+                title="Mais opções"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+              <div className="w-px h-5 bg-slate-700/50 mx-1" />
+              <button
+                onClick={onClose}
+                className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/40 transition-colors"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
 
           <div className="flex flex-1 overflow-hidden">
-            <div className="w-[220px] flex-shrink-0 border-r border-slate-700/50 overflow-y-auto py-3 px-2">
-              {artifact.secoes.map((section, idx) => (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveSection(idx)}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl mb-1 transition-all duration-200 group flex items-center gap-2 ${
-                    activeSection === idx
-                      ? 'text-white'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                  }`}
-                  style={activeSection === idx ? {
-                    background: `${config.cor}15`,
-                    border: `1px solid ${config.cor}25`,
-                  } : { border: '1px solid transparent' }}
+            <div
+              ref={scrollContainerRef}
+              className="flex-1 overflow-y-auto"
+              style={{
+                scrollBehavior: 'smooth',
+              }}
+            >
+              <div className="max-w-[680px] mx-auto px-8 py-8 sm:px-12 sm:py-10">
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  className="mb-8"
                 >
-                  <span 
-                    className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                    style={activeSection === idx 
-                      ? { background: `${config.cor}30`, color: config.cor }
-                      : { background: 'rgba(100,116,139,0.2)', color: 'rgb(148,163,184)' }
-                    }
+                  <h1
+                    className="text-[2rem] font-bold leading-tight tracking-tight text-white mb-2"
+                    style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif" }}
                   >
-                    {idx + 1}
-                  </span>
-                  <span className="text-xs font-medium truncate">
-                    {section.titulo}
-                  </span>
-                  {activeSection === idx && (
-                    <ChevronRight 
-                      className="w-3 h-3 ml-auto flex-shrink-0" 
-                      style={{ color: config.cor }}
-                    />
-                  )}
-                </button>
-              ))}
-
-              <div className="mt-4 pt-3 mx-2 border-t border-slate-700/50 space-y-2">
-                <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                  <Hash className="w-3 h-3" />
-                  <span>{artifact.secoes.length} seções</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                  <FileText className="w-3 h-3" />
-                  <span>{stats?.palavras || '—'} palavras</span>
-                </div>
-                {stats?.tempoGeracao && stats.tempoGeracao > 0 && (
-                  <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                    <Clock className="w-3 h-3" />
-                    <span>{formatTime(stats.tempoGeracao)}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                  <Tag className="w-3 h-3" />
-                  <span>{formatDate(artifact.metadata.geradoEm)}</span>
-                </div>
-              </div>
-
-              {artifact.metadata.tags.length > 0 && (
-                <div className="mt-3 px-2 flex flex-wrap gap-1">
-                  {artifact.metadata.tags.map((tag) => (
-                    <span 
-                      key={tag}
-                      className="text-[9px] px-1.5 py-0.5 rounded-md bg-slate-800/80 text-slate-400"
+                    {artifact.metadata.titulo || config.nome}
+                  </h1>
+                  {artifact.metadata.subtitulo && (
+                    <p
+                      className="text-base text-slate-400 leading-relaxed"
+                      style={{ fontFamily: "'Georgia', serif" }}
                     >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
+                      {artifact.metadata.subtitulo}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-4 mt-4 text-[11px] text-slate-500" style={{ fontFamily: "'Inter', sans-serif" }}>
+                    <span>{artifact.secoes.length} seções</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-600" />
+                    <span>{artifact.metadata.estatisticas?.palavras || '—'} palavras</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-600" />
+                    <span>{formatDate(artifact.metadata.geradoEm)}</span>
+                  </div>
+                  <div className="mt-5 h-[1px] bg-slate-700/50" />
+                </motion.div>
+
+                {blocks.map((block, idx) => (
+                  <EditorBlock
+                    key={block.id || idx}
+                    block={block}
+                    index={idx}
+                    accentColor={config.cor}
+                    onBlockUpdate={handleBlockUpdate}
+                  />
+                ))}
+
+                <div className="h-16" />
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
-              <AnimatePresence mode="wait">
-                {currentSection && (
-                  <motion.div
-                    key={currentSection.id}
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="p-6"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 
-                        className="text-lg font-bold"
-                        style={{ color: config.cor }}
-                      >
-                        {currentSection.titulo}
-                      </h3>
-                      <button
-                        onClick={() => handleCopySection(currentSection)}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-all"
-                      >
-                        {copiedSection === currentSection.id ? (
-                          <>
-                            <Check className="w-3 h-3 text-green-400" />
-                            <span className="text-green-400">Copiado!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3 h-3" />
-                            <span>Copiar seção</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-                    <div className="prose prose-invert prose-sm max-w-none">
-                      {currentSection.conteudo.split('\n').map((paragraph, pIdx) => {
-                        const trimmed = paragraph.trim();
-                        if (!trimmed) return <div key={pIdx} className="h-3" />;
-                        
-                        if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
-                          return (
-                            <div key={pIdx} className="flex items-start gap-2 py-0.5 text-slate-300 text-sm leading-relaxed">
-                              <span style={{ color: config.cor }} className="mt-1.5 text-xs">●</span>
-                              <span>{trimmed.replace(/^[-•]\s*/, '')}</span>
-                            </div>
-                          );
-                        }
-                        
-                        if (/^\d+[.)]\s/.test(trimmed)) {
-                          const numMatch = trimmed.match(/^(\d+)[.)]\s*(.*)/);
-                          return (
-                            <div key={pIdx} className="flex items-start gap-2 py-0.5 text-slate-300 text-sm leading-relaxed">
-                              <span 
-                                className="font-bold text-xs mt-0.5 min-w-[16px]"
-                                style={{ color: config.cor }}
-                              >
-                                {numMatch?.[1]}.
-                              </span>
-                              <span>{numMatch?.[2] || trimmed}</span>
-                            </div>
-                          );
-                        }
-                        
-                        if (trimmed.startsWith('### ')) {
-                          return (
-                            <h4 key={pIdx} className="text-sm font-bold text-slate-200 mt-4 mb-2">
-                              {trimmed.replace('### ', '')}
-                            </h4>
-                          );
-                        }
-                        
-                        if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
-                          return (
-                            <p key={pIdx} className="text-sm font-semibold text-slate-200 mt-3 mb-1">
-                              {trimmed.replace(/\*\*/g, '')}
-                            </p>
-                          );
-                        }
-                        
-                        return (
-                          <p key={pIdx} className="text-sm text-slate-300 leading-relaxed mb-2">
-                            {trimmed}
-                          </p>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <RightTOC
+              items={tocItems}
+              activeId={activeTOCId}
+              onNavigate={handleNavigateToSection}
+              accentColor={config.cor}
+            />
           </div>
 
-          <div 
-            className="px-6 py-3 border-t flex items-center justify-between text-[10px] text-slate-500"
-            style={{ borderColor: `${config.cor}15` }}
-          >
+          <div className="px-5 py-2.5 border-t border-slate-700/30 flex items-center justify-between text-[10px] text-slate-500" style={{ fontFamily: "'Inter', sans-serif" }}>
             <div className="flex items-center gap-1">
               <span>Gerado por</span>
-              <span className="font-bold text-slate-400">Agente Jota</span>
+              <span className="font-semibold text-slate-400">Agente Jota</span>
               <span>•</span>
               <span>Ponto School</span>
             </div>
