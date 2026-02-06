@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { X, Copy, Check, Download, MoreHorizontal, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown, Bold, Italic, Strikethrough, Code, Link2, Type, ListOrdered, List as ListIcon, CheckSquare, ChevronUp } from 'lucide-react';
+import { X, Copy, Check, Download, MoreHorizontal, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown, Bold, Italic, Strikethrough, Code, Link2, Type, ListOrdered, List as ListIcon, CheckSquare, ChevronUp, Quote, ListChecks } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -169,6 +169,8 @@ function SortableBlock({
   onMoveUp,
   onMoveDown,
   onTodoToggle,
+  onChecklistItemToggle,
+  onChecklistItemUpdate,
 }: {
   block: EditorJSBlock;
   index: number;
@@ -183,6 +185,8 @@ function SortableBlock({
   onMoveUp?: (blockId: string) => void;
   onMoveDown?: (blockId: string) => void;
   onTodoToggle?: (blockId: string) => void;
+  onChecklistItemToggle?: (blockId: string, itemIndex: number) => void;
+  onChecklistItemUpdate?: (blockId: string, itemIndex: number, newHtml: string) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const didDragRef = useRef(false);
@@ -294,6 +298,45 @@ function SortableBlock({
           </div>
         );
       }
+
+      if (level === 4) {
+        return (
+          <div id={block.id} className="mt-5 mb-2">
+            <EditableContent
+              html={text}
+              className="text-[15px] font-semibold leading-snug"
+              style={{ ...FONT_STYLES.heading, color: '#8b95a5' }}
+              onUpdate={handleTextUpdate}
+            />
+          </div>
+        );
+      }
+
+      if (level === 5) {
+        return (
+          <div id={block.id} className="mt-4 mb-1.5">
+            <EditableContent
+              html={text}
+              className="text-[14px] font-medium leading-snug"
+              style={{ ...FONT_STYLES.heading, color: '#7d8899' }}
+              onUpdate={handleTextUpdate}
+            />
+          </div>
+        );
+      }
+
+      if (level === 6) {
+        return (
+          <div id={block.id} className="mt-4 mb-1">
+            <EditableContent
+              html={text}
+              className="text-[13px] font-medium leading-snug uppercase tracking-wide"
+              style={{ ...FONT_STYLES.heading, color: '#6b7685' }}
+              onUpdate={handleTextUpdate}
+            />
+          </div>
+        );
+      }
     }
 
     if (block.type === 'paragraph') {
@@ -359,15 +402,15 @@ function SortableBlock({
       const text = block.data.text as string;
       return (
         <div
-          className="mb-4 rounded-lg px-5 py-4"
+          className="mb-4 py-3 pl-5 pr-4"
           style={{
-            borderLeft: `3px solid ${accentColor}`,
-            background: `${accentColor}08`,
+            borderLeft: `3px solid ${accentColor}60`,
+            borderRadius: '2px',
           }}
         >
           <EditableContent
             html={text}
-            className="text-[14px] leading-[1.7] text-slate-300 italic"
+            className="text-[15px] leading-[1.8] text-slate-300/90"
             style={FONT_STYLES.body}
             onUpdate={handleTextUpdate}
           />
@@ -403,6 +446,43 @@ function SortableBlock({
             style={FONT_STYLES.body}
             onUpdate={handleTextUpdate}
           />
+        </div>
+      );
+    }
+
+    if (block.type === 'checklist') {
+      const items = (block.data.items as { text: string; checked: boolean }[]) || [];
+      return (
+        <div className="mb-4 space-y-1">
+          {items.map((item, idx) => (
+            <div key={idx} className="flex items-start gap-3 py-0.5">
+              <input
+                type="checkbox"
+                checked={item.checked}
+                onChange={() => onChecklistItemToggle?.(block.id, idx)}
+                className="mt-1 w-4 h-4 rounded border-slate-600 flex-shrink-0"
+                style={{
+                  cursor: 'pointer',
+                  accentColor: accentColor,
+                }}
+              />
+              <span
+                contentEditable
+                suppressContentEditableWarning
+                className={`outline-none flex-1 text-[15px] leading-[1.8] ${item.checked ? 'line-through opacity-40' : 'text-slate-300'}`}
+                style={{
+                  ...FONT_STYLES.body,
+                  cursor: 'text',
+                  minHeight: '1em',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  textDecorationColor: item.checked ? 'rgba(148, 163, 184, 0.5)' : undefined,
+                }}
+                onInput={(e) => onChecklistItemUpdate?.(block.id, idx, (e.target as HTMLSpanElement).innerHTML)}
+                dangerouslySetInnerHTML={{ __html: item.text }}
+              />
+            </div>
+          ))}
         </div>
       );
     }
@@ -504,37 +584,122 @@ function BlockOutline({
   onNavigate: (id: string) => void;
   accentColor: string;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = useCallback(() => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    hoverTimeoutRef.current = setTimeout(() => setIsHovered(false), 200);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    };
+  }, []);
+
   if (items.length === 0) return null;
 
   return (
-    <nav className="flex flex-col items-end gap-[6px] py-2">
-      {items.map((item) => {
-        const isActive = activeId === item.id;
-        const isSubLevel = item.level > 1;
+    <div
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {isHovered && (
+        <motion.div
+          initial={{ opacity: 0, x: 8, scale: 0.96 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
+          className="absolute z-20 rounded-xl border py-3 px-3"
+          style={{
+            right: 'calc(100% + 10px)',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'rgba(20, 22, 40, 0.92)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3)',
+            width: '220px',
+            maxHeight: '380px',
+            overflowY: 'auto',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <nav className="flex flex-col gap-0.5">
+            {items.map((item) => {
+              const isActive = activeId === item.id;
+              const truncatedText = item.text.length > 22
+                ? item.text.substring(0, 22) + '...'
+                : item.text;
 
-        return (
-          <button
-            key={item.id}
-            onClick={() => onNavigate(item.id)}
-            className="block transition-all duration-300 rounded-full"
-            style={{
-              width: isActive ? '22px' : isSubLevel ? '10px' : '16px',
-              height: '2px',
-              background: isActive ? '#1D7AFC' : 'rgba(100, 116, 139, 0.3)',
-              boxShadow: isActive ? '0 0 6px rgba(29, 122, 252, 0.5)' : 'none',
-              animation: isActive ? 'outlinePulse 2s ease-in-out infinite' : 'none',
-            }}
-            title={item.text}
-          />
-        );
-      })}
-      <style>{`
-        @keyframes outlinePulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
-        }
-      `}</style>
-    </nav>
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onNavigate(item.id)}
+                  className="w-full text-left rounded-md px-2 py-1.5 transition-colors duration-150"
+                  style={{
+                    paddingLeft: item.level > 1 ? '20px' : '8px',
+                    color: isActive ? '#4C9AFF' : '#9ca3af',
+                    background: isActive ? 'rgba(29, 122, 252, 0.08)' : 'transparent',
+                    fontSize: item.level === 1 ? '13px' : '12px',
+                    fontWeight: item.level === 1 ? 600 : 400,
+                    fontFamily: "'Inter', -apple-system, sans-serif",
+                    lineHeight: '1.4',
+                  }}
+                  onMouseOver={(e) => {
+                    if (!isActive) {
+                      (e.currentTarget as HTMLElement).style.background = 'rgba(255, 255, 255, 0.04)';
+                      (e.currentTarget as HTMLElement).style.color = '#e2e8f0';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = isActive ? 'rgba(29, 122, 252, 0.08)' : 'transparent';
+                    (e.currentTarget as HTMLElement).style.color = isActive ? '#4C9AFF' : '#9ca3af';
+                  }}
+                >
+                  {truncatedText}
+                </button>
+              );
+            })}
+          </nav>
+        </motion.div>
+      )}
+
+      <nav className="flex flex-col items-end gap-[6px] py-2">
+        {items.map((item) => {
+          const isActive = activeId === item.id;
+          const isSubLevel = item.level > 1;
+
+          return (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.id)}
+              className="block transition-all duration-300 rounded-full"
+              style={{
+                width: isActive ? '22px' : isSubLevel ? '10px' : '16px',
+                height: '2px',
+                background: isActive ? '#1D7AFC' : 'rgba(100, 116, 139, 0.3)',
+                boxShadow: isActive ? '0 0 6px rgba(29, 122, 252, 0.5)' : 'none',
+                animation: isActive ? 'outlinePulse 2s ease-in-out infinite' : 'none',
+              }}
+              title={item.text}
+            />
+          );
+        })}
+        <style>{`
+          @keyframes outlinePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+          }
+        `}</style>
+      </nav>
+    </div>
   );
 }
 
@@ -556,6 +721,8 @@ const TURN_INTO_OPTIONS: TurnIntoOption[] = [
   { type: 'list', label: 'List', icon: <ListIcon className="w-4 h-4" />, data: { style: 'unordered' } },
   { type: 'list', label: 'Ordered List', icon: <ListOrdered className="w-4 h-4" />, data: { style: 'ordered' } },
   { type: 'todo', label: 'Todo', icon: <CheckSquare className="w-4 h-4" />, data: { checked: false } },
+  { type: 'checklist', label: 'Checklist', icon: <ListChecks className="w-4 h-4" />, data: {} },
+  { type: 'quote', label: 'Citação', icon: <Quote className="w-4 h-4" />, data: {} },
 ];
 
 function TurnIntoMenu({
@@ -585,6 +752,8 @@ function TurnIntoMenu({
     if (opt.type === 'header' && currentBlockType === 'header' && opt.data.level === currentBlockLevel) return true;
     if (opt.type === 'list' && currentBlockType === 'list' && opt.data.style === currentBlockStyle) return true;
     if (opt.type === 'todo' && currentBlockType === 'todo') return true;
+    if (opt.type === 'checklist' && currentBlockType === 'checklist') return true;
+    if (opt.type === 'quote' && currentBlockType === 'quote') return true;
     return false;
   };
 
@@ -931,6 +1100,11 @@ function extractBlockText(block: EditorJSBlock): string {
   if (block.type === 'todo') {
     return ((block.data.text as string) || '').replace(/<[^>]*>/g, '');
   }
+  if (block.type === 'checklist') {
+    return ((block.data.items as { text: string; checked: boolean }[]) || [])
+      .map(i => i.text.replace(/<[^>]*>/g, ''))
+      .join('\n');
+  }
   return '';
 }
 
@@ -1065,6 +1239,28 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
     );
   }, []);
 
+  const handleChecklistItemToggle = useCallback((blockId: string, itemIndex: number) => {
+    setBlocks((prev) =>
+      prev.map((b) => {
+        if (b.id !== blockId || b.type !== 'checklist') return b;
+        const items = [...(b.data.items as { text: string; checked: boolean }[])];
+        items[itemIndex] = { ...items[itemIndex], checked: !items[itemIndex].checked };
+        return { ...b, data: { ...b.data, items } };
+      })
+    );
+  }, []);
+
+  const handleChecklistItemUpdate = useCallback((blockId: string, itemIndex: number, newHtml: string) => {
+    setBlocks((prev) =>
+      prev.map((b) => {
+        if (b.id !== blockId || b.type !== 'checklist') return b;
+        const items = [...(b.data.items as { text: string; checked: boolean }[])];
+        items[itemIndex] = { ...items[itemIndex], text: newHtml };
+        return { ...b, data: { ...b.data, items } };
+      })
+    );
+  }, []);
+
   const handleBlockTransform = useCallback((blockId: string, newType: string, newData: Record<string, unknown>, preserveText: string) => {
     setBlocks((prev) =>
       prev.map((b) => {
@@ -1085,6 +1281,16 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
         }
         if (newType === 'todo') {
           return { ...b, type: 'todo', data: { text: plainText, checked: false } };
+        }
+        if (newType === 'checklist') {
+          const lines = plainText.split('\n').filter(l => l.trim());
+          const items = lines.length > 0
+            ? lines.map(l => ({ text: l, checked: false }))
+            : [{ text: plainText || '', checked: false }];
+          return { ...b, type: 'checklist', data: { items } };
+        }
+        if (newType === 'quote') {
+          return { ...b, type: 'quote', data: { text: plainText, caption: '' } };
         }
         return b;
       })
@@ -1424,6 +1630,8 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                           onMoveUp={handleMoveBlockUp}
                           onMoveDown={handleMoveBlockDown}
                           onTodoToggle={handleTodoToggle}
+                          onChecklistItemToggle={handleChecklistItemToggle}
+                          onChecklistItemUpdate={handleChecklistItemUpdate}
                         />
                       ))}
                     </SortableContext>
