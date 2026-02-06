@@ -1,0 +1,46 @@
+O sistema de blocos do Notion é implementado com uma arquitetura de editor de texto rico baseado em blocos, usando React para a UI e um motor como ProseMirror (ou similar headless como Tiptap) para gerenciar a estrutura hierárquica e edições. Cada página é um árvore de blocos (block tree), onde blocos são nós independentes com propriedades como tipo (text, heading, image), conteúdo e filhos aninhados, persistidos via API com IDs únicos para sincronização em tempo real.
+​
+
+Estrutura de Dados
+Use um schema de documento como no ProseMirror: defina nodes como block (container) e paragraph (leaf), com atributos { id: string, type: string, content: any, children: array }. Renderize como lista vertical de componentes React: cada <BlockNode key={id} data={block} />, com estado global (Context ou Zustand) para reordenação via mutations no array de filhos.
+
+Renderização e Hover
+Em cada BlockNode, adicione uma margem esquerda condicional: use onMouseEnter para mostrar overlay absoluto com position: absolute; left: -36px; opacity: 1; transition: opacity 0.2s, contendo ⋮⋮ (div com cursor: grab) e + (botão). Para o +, abra um Portal com menu de opções via ReactDOM.createPortal.
+​
+
+Drag-and-Drop Maleável
+Integre HTML5 Drag API ou biblioteca como @dnd-kit/core (recomendado para nested drag). No componente pai (PageEditor):
+​
+
+useDroppable no container com sensores para detectar posições.
+
+Em ⋮⋮, useDraggable({ id: block.id }) com preview fantasma.
+
+Durante drag, renderize linha guia azul (<div class="drop-indicator" style={{ position: 'absolute', height: 2px, background: blue }} />) baseada em over.id e offset Y do mouse.
+​
+Exemplo básico em React + dnd-kit:
+
+jsx
+import { DndContext, useDraggable, useDroppable } from '@dnd-kit/core';
+
+function Block({ block }) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: block.id });
+  const style = { transform: CSS.Transform.toString(transform) };
+  return (
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="block">
+      {/* margem esquerda com ⋮⋮ visível no hover */}
+      <div className="content">{block.content}</div>
+    </div>
+  );
+}
+Eventos e Estado
+onDragEnd: Calcule índice novo via active.id e over.data.current.index, use moveItemInArray ou immer para imutabilidade, atualize árvore e salve via API.
+​
+
+Para nested: suporte dataTransfer com JSON.stringify({type: 'block', id}) e drop zones em filhos.
+​
+
+Otimizações: Virtualização com react-window para listas longas; debounce em mutations para perf.
+​
+
+Essa stack permite blocos infinitamente aninhados e maleáveis, como no Notion; teste com Tiptap para extensões prontas de slash commands (/).

@@ -1,7 +1,7 @@
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
 export interface EditorJSBlock {
-  id?: string;
+  id: string;
   type: string;
   data: Record<string, unknown>;
 }

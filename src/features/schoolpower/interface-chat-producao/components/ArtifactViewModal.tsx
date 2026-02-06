@@ -1,6 +1,23 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Check, Download, MoreHorizontal } from 'lucide-react';
+import { X, Copy, Check, Download, MoreHorizontal, GripVertical } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS as DndCSS } from '@dnd-kit/utilities';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 import { ARTIFACT_TYPE_CONFIGS } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 import { convertArtifactToEditorJS, extractTOCFromBlocks } from './artifact-editorjs-converter';
@@ -11,6 +28,12 @@ interface ArtifactViewModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const MODAL_COLORS = {
+  background: '#000822',
+  header: '#040b2a',
+  overlay: { opacity: 0.6, blur: 4 },
+};
 
 const blockAnimVariants = {
   hidden: { opacity: 0, y: 12 },
@@ -25,274 +48,332 @@ const blockAnimVariants = {
   }),
 };
 
-function EditorBlock({ block, index, accentColor, onBlockUpdate }: { block: EditorJSBlock; index: number; accentColor: string; onBlockUpdate?: (blockId: string, newText: string) => void }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editText, setEditText] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+const FONT_STYLES = {
+  heading: { fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" },
+  body: { fontFamily: "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif" },
+  ui: { fontFamily: "'Inter', -apple-system, sans-serif" },
+} as const;
 
-  const handleStartEdit = useCallback((htmlText: string) => {
-    setEditText(htmlText);
-    setIsEditing(true);
-  }, []);
-
-  const handleFinishEdit = useCallback(() => {
-    setIsEditing(false);
-    if (block.id && onBlockUpdate && editText.trim()) {
-      onBlockUpdate(block.id, editText);
-    }
-  }, [block.id, onBlockUpdate, editText]);
+function EditableContent({
+  html,
+  className,
+  style,
+  onUpdate,
+}: {
+  html: string;
+  className?: string;
+  style?: React.CSSProperties;
+  onUpdate?: (newHtml: string) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const lastHtmlRef = useRef(html);
 
   useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.focus();
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    if (ref.current && html !== lastHtmlRef.current) {
+      ref.current.innerHTML = html;
+      lastHtmlRef.current = html;
     }
-  }, [isEditing]);
+  }, [html]);
 
-  if (block.type === 'header') {
-    const level = block.data.level as number;
-    const text = block.data.text as string;
-    const isSectionHeader = block.id?.startsWith('section-');
-
-    if (level === 1 || (level === 2 && isSectionHeader)) {
-      return (
-        <motion.div
-          custom={index}
-          variants={blockAnimVariants}
-          initial="hidden"
-          animate="visible"
-          id={block.id}
-          className="mt-10 mb-4 first:mt-0"
-        >
-          <h2
-            className="text-[1.65rem] font-bold leading-tight tracking-tight cursor-text"
-            style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#e2e8f0' }}
-            onClick={() => handleStartEdit(text)}
-          >
-            {isEditing ? (
-              <textarea
-                ref={textareaRef}
-                value={editText}
-                onChange={(e) => {
-                  setEditText(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = e.target.scrollHeight + 'px';
-                }}
-                onBlur={handleFinishEdit}
-                className="w-full bg-transparent border-none outline-none resize-none text-[1.65rem] font-bold leading-tight tracking-tight"
-                style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#e2e8f0' }}
-              />
-            ) : (
-              <span dangerouslySetInnerHTML={{ __html: text }} />
-            )}
-          </h2>
-          <div className="mt-2 h-[1px]" style={{ background: `linear-gradient(to right, ${accentColor}40, transparent)` }} />
-        </motion.div>
-      );
+  const handleInput = useCallback(() => {
+    if (ref.current && onUpdate) {
+      const newHtml = ref.current.innerHTML;
+      lastHtmlRef.current = newHtml;
+      onUpdate(newHtml);
     }
+  }, [onUpdate]);
 
-    if (level === 2) {
-      return (
-        <motion.div
-          custom={index}
-          variants={blockAnimVariants}
-          initial="hidden"
-          animate="visible"
-          id={block.id}
-          className="mt-8 mb-3"
-        >
-          <div
-            onClick={() => handleStartEdit(text)}
-            className="cursor-text text-[1.3rem] font-semibold leading-snug tracking-tight"
-            style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#cbd5e1' }}
-          >
-            {isEditing ? (
-              <textarea
-                ref={textareaRef}
-                value={editText}
-                onChange={(e) => { setEditText(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
-                onBlur={handleFinishEdit}
-                className="w-full bg-transparent border-none outline-none resize-none text-[1.3rem] font-semibold leading-snug tracking-tight"
-                style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#cbd5e1' }}
-              />
-            ) : (
-              <span dangerouslySetInnerHTML={{ __html: text }} />
-            )}
-          </div>
-        </motion.div>
-      );
-    }
-
-    if (level === 3) {
-      return (
-        <motion.div
-          custom={index}
-          variants={blockAnimVariants}
-          initial="hidden"
-          animate="visible"
-          className="mt-6 mb-2"
-        >
-          <div
-            onClick={() => handleStartEdit(text)}
-            className="cursor-text text-base font-semibold leading-snug"
-            style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#94a3b8' }}
-          >
-            {isEditing ? (
-              <textarea
-                ref={textareaRef}
-                value={editText}
-                onChange={(e) => { setEditText(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
-                onBlur={handleFinishEdit}
-                className="w-full bg-transparent border-none outline-none resize-none text-base font-semibold leading-snug"
-                style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif", color: '#94a3b8' }}
-              />
-            ) : (
-              <span dangerouslySetInnerHTML={{ __html: text }} />
-            )}
-          </div>
-        </motion.div>
-      );
-    }
-  }
-
-  if (block.type === 'paragraph') {
-    const text = block.data.text as string;
-    return (
-      <motion.div
-        custom={index}
-        variants={blockAnimVariants}
-        initial="hidden"
-        animate="visible"
-        className="mb-3"
-      >
-        <div
-          onClick={() => handleStartEdit(text)}
-          className="cursor-text text-[15px] leading-[1.8] text-slate-300"
-          style={{ fontFamily: "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif" }}
-        >
-          {isEditing ? (
-            <textarea
-              ref={textareaRef}
-              value={editText}
-              onChange={(e) => { setEditText(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
-              onBlur={handleFinishEdit}
-              className="w-full bg-transparent border-none outline-none resize-none text-[15px] leading-[1.8] text-slate-300"
-              style={{ fontFamily: "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif" }}
-            />
-          ) : (
-            <span dangerouslySetInnerHTML={{ __html: text }} />
-          )}
-        </div>
-      </motion.div>
-    );
-  }
-
-  if (block.type === 'list') {
-    const items = block.data.items as string[];
-    const isOrdered = block.data.style === 'ordered';
-
-    return (
-      <motion.div
-        custom={index}
-        variants={blockAnimVariants}
-        initial="hidden"
-        animate="visible"
-        className="mb-4 pl-1"
-      >
-        {isOrdered ? (
-          <ol className="space-y-1.5">
-            {items.map((item, idx) => (
-              <li key={idx} className="flex items-start gap-3 text-[15px] leading-[1.7] text-slate-300" style={{ fontFamily: "'Georgia', 'Palatino Linotype', serif" }}>
-                <span className="font-semibold text-sm mt-0.5 min-w-[20px] text-right" style={{ fontFamily: "'Inter', sans-serif", color: accentColor }}>
-                  {idx + 1}.
-                </span>
-                <span dangerouslySetInnerHTML={{ __html: item }} />
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <ul className="space-y-1.5">
-            {items.map((item, idx) => (
-              <li key={idx} className="flex items-start gap-3 text-[15px] leading-[1.7] text-slate-300" style={{ fontFamily: "'Georgia', 'Palatino Linotype', serif" }}>
-                <span className="mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: accentColor }} />
-                <span dangerouslySetInnerHTML={{ __html: item }} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </motion.div>
-    );
-  }
-
-  if (block.type === 'quote') {
-    const text = block.data.text as string;
-    return (
-      <motion.div
-        custom={index}
-        variants={blockAnimVariants}
-        initial="hidden"
-        animate="visible"
-        className="mb-4 rounded-lg px-5 py-4"
-        style={{
-          borderLeft: `3px solid ${accentColor}`,
-          background: `${accentColor}08`,
-        }}
-      >
-        <p className="text-[14px] leading-[1.7] text-slate-300 italic" style={{ fontFamily: "'Georgia', 'Palatino Linotype', serif" }}>
-          {text}
-        </p>
-      </motion.div>
-    );
-  }
-
-  if (block.type === 'delimiter') {
-    return (
-      <motion.div
-        custom={index}
-        variants={blockAnimVariants}
-        initial="hidden"
-        animate="visible"
-        className="my-8 flex items-center justify-center gap-2"
-      >
-        <span className="w-1 h-1 rounded-full bg-slate-600" />
-        <span className="w-1 h-1 rounded-full bg-slate-600" />
-        <span className="w-1 h-1 rounded-full bg-slate-600" />
-      </motion.div>
-    );
-  }
-
-  if (block.type === 'table') {
-    const content = block.data.content as string[][];
-    return (
-      <motion.div
-        custom={index}
-        variants={blockAnimVariants}
-        initial="hidden"
-        animate="visible"
-        className="mb-4 overflow-x-auto rounded-lg border border-slate-700/50"
-      >
-        <table className="w-full text-sm text-slate-300" style={{ fontFamily: "'Inter', sans-serif" }}>
-          <tbody>
-            {content.map((row, rIdx) => (
-              <tr key={rIdx} className={rIdx === 0 ? 'bg-slate-800/60' : 'bg-slate-800/20'}>
-                {row.map((cell, cIdx) => (
-                  <td key={cIdx} className={`px-4 py-2.5 border-b border-slate-700/30 ${rIdx === 0 ? 'font-semibold text-slate-200' : ''}`}>
-                    {cell}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </motion.div>
-    );
-  }
-
-  return null;
+  return (
+    <div
+      ref={ref}
+      contentEditable
+      suppressContentEditableWarning
+      className={className}
+      style={{
+        ...style,
+        outline: 'none',
+        cursor: 'text',
+        minHeight: '1em',
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+      }}
+      onInput={handleInput}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
 }
 
-function RightTOC({ items, activeId, onNavigate, accentColor }: {
+function SortableBlock({
+  block,
+  index,
+  accentColor,
+  onBlockUpdate,
+  onListItemUpdate,
+  onTableCellUpdate,
+}: {
+  block: EditorJSBlock;
+  index: number;
+  accentColor: string;
+  onBlockUpdate?: (blockId: string, newHtml: string) => void;
+  onListItemUpdate?: (blockId: string, itemIndex: number, newHtml: string) => void;
+  onTableCellUpdate?: (blockId: string, rowIndex: number, colIndex: number, newText: string) => void;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: block.id });
+
+  const dndStyle: React.CSSProperties = {
+    transform: DndCSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative' as const,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  const handleTextUpdate = useCallback(
+    (newHtml: string) => {
+      if (onBlockUpdate) {
+        onBlockUpdate(block.id, newHtml);
+      }
+    },
+    [onBlockUpdate, block.id]
+  );
+
+  const handleListItemInput = useCallback(
+    (idx: number, e: React.FormEvent<HTMLSpanElement>) => {
+      if (onListItemUpdate) {
+        onListItemUpdate(block.id, idx, (e.target as HTMLSpanElement).innerHTML);
+      }
+    },
+    [onListItemUpdate, block.id]
+  );
+
+  const handleTableCellInput = useCallback(
+    (rIdx: number, cIdx: number, e: React.FormEvent<HTMLTableCellElement>) => {
+      if (onTableCellUpdate) {
+        onTableCellUpdate(block.id, rIdx, cIdx, (e.target as HTMLTableCellElement).textContent || '');
+      }
+    },
+    [onTableCellUpdate, block.id]
+  );
+
+  const renderContent = () => {
+    if (block.type === 'header') {
+      const level = block.data.level as number;
+      const text = block.data.text as string;
+      const isSectionHeader = block.id.startsWith('section-');
+
+      if (level === 1 || (level === 2 && isSectionHeader)) {
+        return (
+          <div id={block.id} className="mt-10 mb-4 first:mt-0">
+            <EditableContent
+              html={text}
+              className="text-[1.65rem] font-bold leading-tight tracking-tight"
+              style={{ ...FONT_STYLES.heading, color: '#e2e8f0' }}
+              onUpdate={handleTextUpdate}
+            />
+            <div
+              className="mt-2 h-[1px]"
+              style={{ background: `linear-gradient(to right, ${accentColor}40, transparent)` }}
+            />
+          </div>
+        );
+      }
+
+      if (level === 2) {
+        return (
+          <div id={block.id} className="mt-8 mb-3">
+            <EditableContent
+              html={text}
+              className="text-[1.3rem] font-semibold leading-snug tracking-tight"
+              style={{ ...FONT_STYLES.heading, color: '#cbd5e1' }}
+              onUpdate={handleTextUpdate}
+            />
+          </div>
+        );
+      }
+
+      if (level === 3) {
+        return (
+          <div className="mt-6 mb-2">
+            <EditableContent
+              html={text}
+              className="text-base font-semibold leading-snug"
+              style={{ ...FONT_STYLES.heading, color: '#94a3b8' }}
+              onUpdate={handleTextUpdate}
+            />
+          </div>
+        );
+      }
+    }
+
+    if (block.type === 'paragraph') {
+      const text = block.data.text as string;
+      return (
+        <div className="mb-3">
+          <EditableContent
+            html={text}
+            className="text-[15px] leading-[1.8] text-slate-300"
+            style={FONT_STYLES.body}
+            onUpdate={handleTextUpdate}
+          />
+        </div>
+      );
+    }
+
+    if (block.type === 'list') {
+      const items = block.data.items as string[];
+      const isOrdered = block.data.style === 'ordered';
+
+      const renderItem = (item: string, idx: number) => (
+        <li
+          key={idx}
+          className="flex items-start gap-3 text-[15px] leading-[1.7] text-slate-300"
+          style={FONT_STYLES.body}
+        >
+          {isOrdered ? (
+            <span
+              className="font-semibold text-sm mt-0.5 min-w-[20px] text-right flex-shrink-0"
+              style={{ ...FONT_STYLES.ui, color: accentColor }}
+            >
+              {idx + 1}.
+            </span>
+          ) : (
+            <span
+              className="mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0"
+              style={{ background: accentColor }}
+            />
+          )}
+          <span
+            contentEditable
+            suppressContentEditableWarning
+            className="outline-none flex-1"
+            style={{ cursor: 'text', minHeight: '1em', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+            onInput={(e) => handleListItemInput(idx, e)}
+            dangerouslySetInnerHTML={{ __html: item }}
+          />
+        </li>
+      );
+
+      return (
+        <div className="mb-4 pl-1">
+          {isOrdered ? (
+            <ol className="space-y-1.5">{items.map(renderItem)}</ol>
+          ) : (
+            <ul className="space-y-1.5">{items.map(renderItem)}</ul>
+          )}
+        </div>
+      );
+    }
+
+    if (block.type === 'quote') {
+      const text = block.data.text as string;
+      return (
+        <div
+          className="mb-4 rounded-lg px-5 py-4"
+          style={{
+            borderLeft: `3px solid ${accentColor}`,
+            background: `${accentColor}08`,
+          }}
+        >
+          <EditableContent
+            html={text}
+            className="text-[14px] leading-[1.7] text-slate-300 italic"
+            style={FONT_STYLES.body}
+            onUpdate={handleTextUpdate}
+          />
+        </div>
+      );
+    }
+
+    if (block.type === 'delimiter') {
+      return (
+        <div className="my-8 flex items-center justify-center gap-2">
+          <span className="w-1 h-1 rounded-full bg-slate-600" />
+          <span className="w-1 h-1 rounded-full bg-slate-600" />
+          <span className="w-1 h-1 rounded-full bg-slate-600" />
+        </div>
+      );
+    }
+
+    if (block.type === 'table') {
+      const content = block.data.content as string[][];
+      return (
+        <div className="mb-4 overflow-x-auto rounded-lg border border-slate-700/50">
+          <table className="w-full text-sm text-slate-300" style={FONT_STYLES.ui}>
+            <tbody>
+              {content.map((row, rIdx) => (
+                <tr key={rIdx} className={rIdx === 0 ? 'bg-slate-800/60' : 'bg-slate-800/20'}>
+                  {row.map((cell, cIdx) => (
+                    <td
+                      key={cIdx}
+                      contentEditable
+                      suppressContentEditableWarning
+                      className={`px-4 py-2.5 border-b border-slate-700/30 outline-none ${
+                        rIdx === 0 ? 'font-semibold text-slate-200' : ''
+                      }`}
+                      style={{ cursor: 'text' }}
+                      onInput={(e) => handleTableCellInput(rIdx, cIdx, e)}
+                    >
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={dndStyle}
+      {...attributes}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="group relative"
+    >
+      <div
+        className="absolute -left-9 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded cursor-grab active:cursor-grabbing transition-opacity duration-150"
+        style={{
+          opacity: isHovered ? 0.6 : 0,
+          color: '#64748b',
+        }}
+        {...listeners}
+      >
+        <GripVertical className="w-4 h-4" />
+      </div>
+
+      <motion.div
+        custom={index}
+        variants={blockAnimVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {renderContent()}
+      </motion.div>
+    </div>
+  );
+}
+
+function InlineTOC({
+  items,
+  activeId,
+  onNavigate,
+  accentColor,
+}: {
   items: TOCItem[];
   activeId: string;
   onNavigate: (id: string) => void;
@@ -301,33 +382,24 @@ function RightTOC({ items, activeId, onNavigate, accentColor }: {
   if (items.length === 0) return null;
 
   return (
-    <div className="w-[180px] flex-shrink-0 py-6 pr-4 pl-2 overflow-y-auto hidden lg:block">
-      <div className="sticky top-6">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-3" style={{ fontFamily: "'Inter', sans-serif" }}>
-          Sumário
-        </p>
-        <nav className="space-y-0.5">
-          {items.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => onNavigate(item.id)}
-              className={`block w-full text-left py-1.5 transition-all duration-200 text-[11px] leading-tight truncate ${
-                activeId === item.id
-                  ? 'font-medium'
-                  : 'text-slate-500 hover:text-slate-300'
-              }`}
-              style={{
-                paddingLeft: item.level === 2 && !item.sectionId.startsWith('section-') ? '12px' : '0px',
-                color: activeId === item.id ? accentColor : undefined,
-                borderLeft: activeId === item.id ? `2px solid ${accentColor}` : '2px solid transparent',
-                fontFamily: "'Inter', sans-serif",
-              }}
-            >
-              {item.text}
-            </button>
-          ))}
-        </nav>
-      </div>
+    <div className="flex flex-col items-center gap-[6px] py-6">
+      {items.map((item) => {
+        const isActive = activeId === item.id;
+        return (
+          <button
+            key={item.id}
+            onClick={() => onNavigate(item.id)}
+            className="transition-all duration-300 rounded-full hover:opacity-100"
+            style={{
+              width: isActive ? '32px' : '20px',
+              height: '3px',
+              background: isActive ? accentColor : 'rgba(100, 116, 139, 0.4)',
+              opacity: isActive ? 1 : 0.7,
+            }}
+            title={item.text}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -336,6 +408,7 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
   const [activeTOCId, setActiveTOCId] = useState('');
   const [blocks, setBlocks] = useState<EditorJSBlock[]>([]);
+  const [isAnimating, setIsAnimating] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const config = ARTIFACT_TYPE_CONFIGS[artifact.metadata.tipo];
 
@@ -347,10 +420,59 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
 
   const tocItems = useMemo(() => extractTOCFromBlocks(blocks), [blocks]);
 
-  const handleBlockUpdate = useCallback((blockId: string, newText: string) => {
-    setBlocks(prev => prev.map(b =>
-      b.id === blockId ? { ...b, data: { ...b.data, text: newText } } : b
-    ));
+  const blockIds = useMemo(
+    () => blocks.map((b) => b.id),
+    [blocks]
+  );
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      setBlocks((prev) => {
+        const oldIndex = prev.findIndex((b) => b.id === active.id);
+        const newIndex = prev.findIndex((b) => b.id === over.id);
+        if (oldIndex === -1 || newIndex === -1) return prev;
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+    },
+    []
+  );
+
+  const handleBlockUpdate = useCallback((blockId: string, newHtml: string) => {
+    setBlocks((prev) =>
+      prev.map((b) => (b.id === blockId ? { ...b, data: { ...b.data, text: newHtml } } : b))
+    );
+  }, []);
+
+  const handleListItemUpdate = useCallback((blockId: string, itemIndex: number, newHtml: string) => {
+    setBlocks((prev) =>
+      prev.map((b) => {
+        if (b.id !== blockId || b.type !== 'list') return b;
+        const items = [...(b.data.items as string[])];
+        items[itemIndex] = newHtml;
+        return { ...b, data: { ...b.data, items } };
+      })
+    );
+  }, []);
+
+  const handleTableCellUpdate = useCallback((blockId: string, rowIndex: number, colIndex: number, newText: string) => {
+    setBlocks((prev) =>
+      prev.map((b) => {
+        if (b.id !== blockId || b.type !== 'table') return b;
+        const content = (b.data.content as string[][]).map((row) => [...row]);
+        if (content[rowIndex]) {
+          content[rowIndex][colIndex] = newText;
+        }
+        return { ...b, data: { ...b.data, content } };
+      })
+    );
   }, []);
 
   useEffect(() => {
@@ -384,12 +506,22 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
   }, [tocItems]);
 
   useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setIsAnimating(true);
+        });
+      });
+      document.body.style.overflow = 'hidden';
+    } else {
+      setIsAnimating(false);
+    }
+
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     if (isOpen) {
       document.addEventListener('keydown', handleEsc);
-      document.body.style.overflow = 'hidden';
     }
     return () => {
       document.removeEventListener('keydown', handleEsc);
@@ -400,7 +532,7 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
   const handleCopyAll = useCallback(async () => {
     try {
       const fullText = artifact.secoes
-        .map(s => `## ${s.titulo}\n\n${s.conteudo}`)
+        .map((s) => `## ${s.titulo}\n\n${s.conteudo}`)
         .join('\n\n---\n\n');
       await navigator.clipboard.writeText(fullText);
       setCopiedSection('all');
@@ -434,154 +566,169 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-[2000] flex items-center justify-center"
-        onClick={onClose}
-      >
-        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: 16 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 16 }}
-          transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-          onClick={(e) => e.stopPropagation()}
-          className="relative w-[96vw] max-w-[1000px] h-[92vh] max-h-[860px] rounded-2xl overflow-hidden flex flex-col"
+      <div className="fixed inset-0 z-[2000]">
+        <div
+          className="absolute inset-0"
           style={{
-            background: '#0f1419',
-            border: '1px solid rgba(56, 68, 90, 0.4)',
-            boxShadow: '0 25px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03)',
+            backgroundColor: `rgba(0, 0, 0, ${isAnimating ? MODAL_COLORS.overlay.opacity : 0})`,
+            backdropFilter: isAnimating ? `blur(${MODAL_COLORS.overlay.blur}px)` : 'blur(0px)',
+            WebkitBackdropFilter: isAnimating ? `blur(${MODAL_COLORS.overlay.blur}px)` : 'blur(0px)',
+            transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+            pointerEvents: isAnimating ? 'auto' : 'none',
           }}
-        >
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-700/40">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center text-base"
-                style={{ background: `${config.cor}15` }}
-              >
-                {config.icone}
-              </div>
-              <div>
-                <h2 className="text-sm font-semibold text-slate-200" style={{ fontFamily: "'Inter', sans-serif" }}>
-                  {config.nome}
-                </h2>
-                <p className="text-[11px] text-slate-500 mt-0.5" style={{ fontFamily: "'Inter', sans-serif" }}>
-                  {artifact.metadata.subtitulo
-                    ? artifact.metadata.subtitulo
-                    : `Última modificação: ${formatDate(artifact.metadata.geradoEm)}`
-                  }
-                </p>
-              </div>
-            </div>
+          onClick={onClose}
+        />
 
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={handleCopyAll}
-                className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/40 transition-colors"
-                title="Copiar tudo"
-              >
-                {copiedSection === 'all' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-              </button>
-              <button
-                className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/40 transition-colors"
-                title="Download"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-              <button
-                className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/40 transition-colors"
-                title="Mais opções"
-              >
-                <MoreHorizontal className="w-4 h-4" />
-              </button>
-              <div className="w-px h-5 bg-slate-700/50 mx-1" />
-              <button
-                onClick={onClose}
-                className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/40 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex flex-1 overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 16 }}
+            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-[96vw] max-w-[1000px] h-[92vh] max-h-[860px] rounded-2xl overflow-hidden flex flex-col pointer-events-auto"
+            style={{
+              background: MODAL_COLORS.background,
+              border: '1px solid #0c1334',
+              boxShadow: '0 25px 80px -12px rgba(0, 0, 0, 0.6), 0 12px 40px -8px rgba(255, 107, 0, 0.08)',
+            }}
+          >
             <div
-              ref={scrollContainerRef}
-              className="flex-1 overflow-y-auto"
+              className="flex items-center justify-between px-5 py-3.5 border-b"
               style={{
-                scrollBehavior: 'smooth',
+                background: MODAL_COLORS.header,
+                borderColor: '#0c1334',
               }}
             >
-              <div className="max-w-[680px] mx-auto px-8 py-8 sm:px-12 sm:py-10">
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.1 }}
-                  className="mb-8"
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-9 h-9 rounded-lg flex items-center justify-center text-base"
+                  style={{ background: `${config.cor}15` }}
                 >
-                  <h1
-                    className="text-[2rem] font-bold leading-tight tracking-tight text-white mb-2"
-                    style={{ fontFamily: "'Inter', 'SF Pro Display', sans-serif" }}
-                  >
-                    {artifact.metadata.titulo || config.nome}
-                  </h1>
-                  {artifact.metadata.subtitulo && (
-                    <p
-                      className="text-base text-slate-400 leading-relaxed"
-                      style={{ fontFamily: "'Georgia', serif" }}
-                    >
-                      {artifact.metadata.subtitulo}
-                    </p>
+                  {config.icone}
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-slate-200" style={FONT_STYLES.ui}>
+                    {config.nome}
+                  </h2>
+                  <p className="text-[11px] text-slate-500 mt-0.5" style={FONT_STYLES.ui}>
+                    {artifact.metadata.subtitulo
+                      ? artifact.metadata.subtitulo
+                      : `Última modificação: ${formatDate(artifact.metadata.geradoEm)}`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handleCopyAll}
+                  className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
+                  title="Copiar tudo"
+                >
+                  {copiedSection === 'all' ? (
+                    <Check className="w-4 h-4 text-green-400" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
                   )}
-                  <div className="flex items-center gap-4 mt-4 text-[11px] text-slate-500" style={{ fontFamily: "'Inter', sans-serif" }}>
-                    <span>{artifact.secoes.length} seções</span>
-                    <span className="w-1 h-1 rounded-full bg-slate-600" />
-                    <span>{artifact.metadata.estatisticas?.palavras || '—'} palavras</span>
-                    <span className="w-1 h-1 rounded-full bg-slate-600" />
-                    <span>{formatDate(artifact.metadata.geradoEm)}</span>
-                  </div>
-                  <div className="mt-5 h-[1px] bg-slate-700/50" />
-                </motion.div>
-
-                {blocks.map((block, idx) => (
-                  <EditorBlock
-                    key={block.id || idx}
-                    block={block}
-                    index={idx}
-                    accentColor={config.cor}
-                    onBlockUpdate={handleBlockUpdate}
-                  />
-                ))}
-
-                <div className="h-16" />
+                </button>
+                <button
+                  className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
+                  title="Download"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+                <button
+                  className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
+                  title="Mais opções"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
+                <div className="w-px h-5 mx-1" style={{ background: '#0c1334' }} />
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
 
-            <RightTOC
-              items={tocItems}
-              activeId={activeTOCId}
-              onNavigate={handleNavigateToSection}
-              accentColor={config.cor}
-            />
-          </div>
+            <div className="flex flex-1 overflow-hidden">
+              <div
+                ref={scrollContainerRef}
+                className="flex-1 overflow-y-auto"
+                style={{ scrollBehavior: 'smooth' }}
+              >
+                <div className="max-w-[680px] mx-auto px-8 py-8 sm:px-12 sm:py-10 relative">
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                    className="mb-8"
+                  >
+                    <h1
+                      className="text-[2rem] font-bold leading-tight tracking-tight text-white mb-2"
+                      style={FONT_STYLES.heading}
+                    >
+                      {artifact.metadata.titulo || config.nome}
+                    </h1>
+                    {artifact.metadata.subtitulo && (
+                      <p
+                        className="text-base text-slate-400 leading-relaxed"
+                        style={FONT_STYLES.body}
+                      >
+                        {artifact.metadata.subtitulo}
+                      </p>
+                    )}
+                    <div
+                      className="flex items-center gap-4 mt-4 text-[11px] text-slate-500"
+                      style={FONT_STYLES.ui}
+                    >
+                      <span>{artifact.secoes.length} seções</span>
+                      <span className="w-1 h-1 rounded-full bg-slate-600" />
+                      <span>{artifact.metadata.estatisticas?.palavras || '—'} palavras</span>
+                      <span className="w-1 h-1 rounded-full bg-slate-600" />
+                      <span>{formatDate(artifact.metadata.geradoEm)}</span>
+                    </div>
+                  </motion.div>
 
-          <div className="px-5 py-2.5 border-t border-slate-700/30 flex items-center justify-between text-[10px] text-slate-500" style={{ fontFamily: "'Inter', sans-serif" }}>
-            <div className="flex items-center gap-1">
-              <span>Gerado por</span>
-              <span className="font-semibold text-slate-400">Agente Jota</span>
-              <span>•</span>
-              <span>Ponto School</span>
+                  <InlineTOC
+                    items={tocItems}
+                    activeId={activeTOCId}
+                    onNavigate={handleNavigateToSection}
+                    accentColor={config.cor}
+                  />
+
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={blockIds}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {blocks.map((block, idx) => (
+                        <SortableBlock
+                          key={block.id}
+                          block={block}
+                          index={idx}
+                          accentColor={config.cor}
+                          onBlockUpdate={handleBlockUpdate}
+                          onListItemUpdate={handleListItemUpdate}
+                          onTableCellUpdate={handleTableCellUpdate}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+
+                  <div className="h-16" />
+                </div>
+              </div>
             </div>
-            <div>
-              v{artifact.metadata.versao} • {artifact.id}
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
+          </motion.div>
+        </div>
+      </div>
     </AnimatePresence>
   );
 }
