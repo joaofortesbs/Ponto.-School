@@ -1,0 +1,45 @@
+1. O Motor de Edição: Integração com Editor.js
+Diferente de um textarea comum, o uso da biblioteca Editor.js é obrigatório para permitir uma estrutura baseada em blocos (Block-styled editor).
+Lógica de Blocos: Cada parágrafo, título, imagem ou tabela é um bloco independente. Isso permite que a IA "injete" novos blocos em posições específicas do Dossiê durante a conversa.
+Plugins Essenciais:
+Header: Suporte para H1, H2, H3 (Hierarquia visual clara).
+Table: Para cronogramas de aula e roadmaps minuto a minuto.
+List: Para ganchos de atenção e materiais necessários.
+Warning/Quote: Para destacar dicas pedagógicas críticas ou "Pílulas de Orgulho".
+Marker: Para destacar termos técnicos que o professor deve enfatizar.
+2. Interface e Navegação (Estilo Notion + Manus)
+Sidebar de Navegação (Table of Contents): No lado direito do modal, deve haver uma lista de "âncoras" (traços/links) que mapeiam os cabeçalhos do documento. Ao clicar, o scroll é suave até o bloco correspondente.
+Tipografia Dinâmica: Implementar um sistema de design que suporte fontes serifadas para o corpo do texto (melhor leitura) e sans-serif para títulos e elementos de interface, garantindo o visual "Premium" da Manus.
+Modo de Edição "Live": O usuário pode clicar em qualquer bloco e editar o texto instantaneamente. O estado do Editor.js deve ser salvo automaticamente no banco de dados da sessão.
+3. Elementos Específicos do Dossiê Pedagógico
+Para superar o Notion, o modal deve conter blocos customizados (Custom Tools do Editor.js):
+Bloco de Atividade Interativa: Um bloco que renderiza um preview da atividade P.S criada, com um botão de "Abrir em Nova Aba".
+Bloco de Script de Aula: Um componente visual que separa o "O que o professor diz" do "O que o professor faz".
+Bloco de Reputação: Um campo de texto pré-formatado para WhatsApp com um botão de "One-click Copy".
+🛠️ Especificação para o Programador (Implementação)
+JavaScript
+// Exemplo de configuração do Editor.js para o Dossiê P.S
+const editor = new EditorJS({
+  holder: 'ponto-canvas-editor',
+  tools: {
+    header: Header,
+    list: List,
+    table: {
+      class: Table,
+      inlineToolbar: true,
+      config: { rows: 2, cols: 3 },
+    },
+    reputationCard: {
+      class: CustomReputationTool, // Bloco customizado para Pílulas de Orgulho
+    },
+    activityPreview: {
+      class: CustomActivityTool, // Bloco customizado para Atividades P.S
+    }
+  },
+  data: aiGeneratedJsonData, // O JSON estruturado enviado pelo Agente Jota
+  onReady: () => {
+    new TableOfContents({ editor }); // Inicializa a régua de navegação à direita
+  }
+});
+🌟 O "Momento Wow" Visual
+Quando o Jota termina a execução, o modal não "abre" simplesmente. Ele deve ter uma animação de construção: os blocos aparecem sequencialmente (fade-in + slide-up), dando a sensação de que o documento está sendo "impresso" pela inteligência da IA em tempo real.
