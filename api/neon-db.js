@@ -3,10 +3,6 @@ import { getInitialPowersForNewUsers } from './config/powers.js';
 
 class NeonDBManager {
   constructor() {
-    // URL POOLED - PRIORIDADE TOTAL AO AMBIENTE
-    const FALLBACK_POOLED_URL = 'postgresql://neondb_owner:npg_1Pbxc0ZjoGpS@ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require';
-    
-    // Lista de variáveis de ambiente que podem conter a URL do banco
     const dbEnvVars = [
       'DATABASE_URL',
       'DEPLOYMENT_DB_URL',
@@ -17,10 +13,9 @@ class NeonDBManager {
     let connectionString = null;
     let selectedSecret = null;
 
-    // Tentar encontrar a melhor URL nas variáveis de ambiente
     for (const envVar of dbEnvVars) {
       const url = process.env[envVar];
-      if (url && url.length > 10) { // Validar se não é uma string vazia ou placeholder
+      if (url && url.length > 10) {
         connectionString = url;
         selectedSecret = envVar;
         console.log(`🎯 [NeonDB] Encontrada variável válida: ${envVar}`);
@@ -28,10 +23,8 @@ class NeonDBManager {
       }
     }
 
-    // Se não encontrou em nenhuma env var, usa o fallback hardcoded
     if (!connectionString) {
-      connectionString = FALLBACK_POOLED_URL;
-      selectedSecret = 'FALLBACK_HARDCODED';
+      throw new Error('DATABASE_URL não configurada. Configure a variável de ambiente DATABASE_URL.');
     }
 
     const isProduction = process.env.NODE_ENV === 'production' || 
@@ -43,12 +36,11 @@ class NeonDBManager {
     console.log(`   - Secret Selecionado: ${selectedSecret}`);
     console.log('🔗 [NeonDB] ==========================================');
     
-    // Configuração do Pool
+    const needsSsl = connectionString.includes('neon.tech') || connectionString.includes('supabase');
+    
     this.connectionConfig = {
       connectionString: connectionString,
-      ssl: {
-        rejectUnauthorized: false
-      },
+      ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}),
       max: 10,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
