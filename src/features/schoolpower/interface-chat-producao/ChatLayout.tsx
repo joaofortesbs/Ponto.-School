@@ -155,52 +155,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     };
   }, []);
 
-  useEffect(() => {
-    const handleContentSync = (event: Event) => {
-      const detail = (event as CustomEvent).detail;
-      if (!detail?.activities) return;
-      
-      console.log(`🔄 [ChatLayout] Sync de conteúdo recebido para ${detail.activities.length} atividades`);
-      
-      const store = useChosenActivitiesStore.getState();
-      for (const actInfo of detail.activities) {
-        const storeActivity = store.getActivityById(actInfo.id);
-        if (!storeActivity) continue;
-        
-        const generatedFields = storeActivity.dados_construidos?.generated_fields || {};
-        const camposPreenchidos = storeActivity.campos_preenchidos || {};
-        const consolidated = { ...camposPreenchidos, ...generatedFields };
-        
-        if (Object.keys(consolidated).length === 0) continue;
-        
-        const constructedKey = `constructed_${actInfo.tipo}_${actInfo.id}`;
-        try {
-          const existing = localStorage.getItem(constructedKey);
-          const parsed = existing ? JSON.parse(existing) : null;
-          
-          if (parsed?.hasFullDataInStore === true || !parsed || Object.keys(parsed).length <= 5) {
-            const fullData = {
-              ...consolidated,
-              success: true,
-              activityId: actInfo.id,
-              activityType: actInfo.tipo,
-              titulo: actInfo.titulo,
-              syncedAt: new Date().toISOString(),
-            };
-            localStorage.setItem(constructedKey, JSON.stringify(fullData));
-            console.log(`✅ [ChatLayout] Sync: dados completos persistidos em ${constructedKey} (${Object.keys(consolidated).length} campos)`);
-          }
-        } catch (e) {
-          console.warn(`⚠️ [ChatLayout] Erro no sync para ${actInfo.id}:`, e);
-        }
-      }
-    };
-
-    window.addEventListener('activity-content-sync', handleContentSync);
-    return () => {
-      window.removeEventListener('activity-content-sync', handleContentSync);
-    };
-  }, []);
 
   const handleOpenArtifact = useCallback((artifact: ArtifactData) => {
     console.log('📄 [ChatLayout] Abrindo artefato:', artifact.metadata.titulo);
@@ -228,6 +182,64 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     console.log(`📋 [ChatLayout] ContentRegistry resultado: found=${contentResult.found}, source=${contentResult.source}, fields=${Object.keys(contentResult.customFields).length}`);
 
     const messageContentSnapshot = activity._contentSnapshot || {};
+    const mergedContent = { ...messageContentSnapshot, ...contentResult.customFields };
+    const mergedContentKeys = Object.keys(mergedContent).filter(k => 
+      mergedContent[k] !== undefined && mergedContent[k] !== null && mergedContent[k] !== ''
+    );
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // LAYER 3: CONTENT BRIDGE — Escrever conteúdo no localStorage ANTES de abrir o modal
+    // Garante que ActivityViewModal encontre dados nas chaves que ele lê independentemente
+    // ═══════════════════════════════════════════════════════════════════════
+    if (mergedContentKeys.length > 2 && activityTipo) {
+      try {
+        const constructedKey = `constructed_${activityTipo}_${activityId}`;
+        const existingRaw = localStorage.getItem(constructedKey);
+        let existingHasRealContent = false;
+        
+        if (existingRaw) {
+          try {
+            const existingParsed = JSON.parse(existingRaw);
+            const existingData = existingParsed?.data || existingParsed;
+            const contentKeys = ['questoes', 'questions', 'cards', 'etapas', 'sections'];
+            existingHasRealContent = contentKeys.some(k => {
+              const val = existingData?.[k];
+              return Array.isArray(val) && val.length > 0;
+            });
+          } catch {}
+        }
+        
+        if (!existingHasRealContent) {
+          const bridgeData = {
+            success: true,
+            data: mergedContent,
+            bridgedAt: new Date().toISOString(),
+            source: 'chat-card-bridge'
+          };
+          localStorage.setItem(constructedKey, JSON.stringify(bridgeData));
+          console.log(`🔗 [LAYER3-BRIDGE] Conteúdo escrito em ${constructedKey}: ${mergedContentKeys.length} campos`);
+        } else {
+          console.log(`🔗 [LAYER3-BRIDGE] ${constructedKey} já tem conteúdo real — não sobrescrever`);
+        }
+
+        const activityKey = `activity_${activityId}`;
+        const existingActivityRaw = localStorage.getItem(activityKey);
+        let existingActivityHasContent = false;
+        if (existingActivityRaw) {
+          try {
+            const ep = JSON.parse(existingActivityRaw);
+            const contentKeys = ['questoes', 'questions', 'cards', 'etapas', 'sections'];
+            existingActivityHasContent = contentKeys.some(k => Array.isArray(ep?.[k]) && ep[k].length > 0);
+          } catch {}
+        }
+        if (!existingActivityHasContent) {
+          localStorage.setItem(activityKey, JSON.stringify(mergedContent));
+          console.log(`🔗 [LAYER3-BRIDGE] Conteúdo escrito em ${activityKey}: ${mergedContentKeys.length} campos`);
+        }
+      } catch (e) {
+        console.warn('⚠️ [LAYER3-BRIDGE] Erro ao escrever bridge:', e);
+      }
+    }
 
     const constructionActivity: ConstructionActivity = {
       id: activityId,
@@ -240,10 +252,10 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       difficulty: contentResult.originalData?.nivel_dificuldade || 'medio',
       estimatedTime: '15 min',
       type: activityTipo,
-      customFields: { ...messageContentSnapshot, ...contentResult.customFields },
+      customFields: mergedContent,
       originalData: {
         type: activityTipo,
-        campos: { ...messageContentSnapshot, ...contentResult.customFields },
+        campos: mergedContent,
         ...contentResult.originalData,
       },
       isBuilt: true,
@@ -251,7 +263,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       progress: 100,
     };
 
-    console.log('📋 [ChatLayout] ConstructionActivity montada:', constructionActivity.title, 'type:', constructionActivity.type);
+    console.log('📋 [ChatLayout] ConstructionActivity montada:', constructionActivity.title, 'type:', constructionActivity.type, 'customFields:', mergedContentKeys.length);
     setSelectedViewActivity(constructionActivity);
     setShowActivityViewModal(true);
   }, []);

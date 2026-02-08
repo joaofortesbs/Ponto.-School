@@ -46,6 +46,85 @@ const sessionTimestamps: Map<string, number> = new Map();
 const SESSION_CLEANUP_INTERVAL = 15 * 60 * 1000;
 const SESSION_MAX_AGE = 4 * 60 * 60 * 1000;
 
+// ═══════════════════════════════════════════════════════════════════════
+// LAYER 5: backupActivityContentToLocalStorage
+// Garante que o conteúdo gerado seja persistido no localStorage
+// ANTES que o ChosenActivitiesStore seja limpo
+// ═══════════════════════════════════════════════════════════════════════
+async function backupActivityContentToLocalStorage(collectedItems: { activities: any[]; artifacts: any[] }): Promise<void> {
+  if (collectedItems.activities.length === 0) return;
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+
+  try {
+    const { useChosenActivitiesStore } = await import('../interface-chat-producao/stores/ChosenActivitiesStore');
+    const store = useChosenActivitiesStore.getState();
+    const contentKeys = ['questoes', 'questions', 'cards', 'etapas', 'sections'];
+
+    for (const act of collectedItems.activities) {
+      const constructedKey = `constructed_${act.tipo}_${act.id}`;
+      const activityKey = `activity_${act.id}`;
+
+      let existingHasRealContent = false;
+      try {
+        const existingRaw = localStorage.getItem(constructedKey);
+        if (existingRaw) {
+          const ep = JSON.parse(existingRaw);
+          const ed = ep?.data || ep;
+          existingHasRealContent = contentKeys.some(k => Array.isArray(ed?.[k]) && ed[k].length > 0);
+        }
+      } catch {}
+
+      if (existingHasRealContent) {
+        console.log(`✅ [LAYER5] ${constructedKey}: já tem conteúdo real`);
+        continue;
+      }
+
+      let backupContent: Record<string, any> | null = null;
+      let backupSource = '';
+
+      const storeActivity = store.getActivityById(act.id);
+      if (storeActivity) {
+        const genFields = storeActivity.dados_construidos?.generated_fields || {};
+        const campos = storeActivity.campos_preenchidos || {};
+        const builtData = storeActivity.dados_construidos || {};
+        const fullContent = { ...campos, ...builtData, ...genFields };
+        const fullKeys = Object.keys(fullContent).filter(k => fullContent[k] !== undefined && fullContent[k] !== null);
+        if (fullKeys.length > 2) {
+          backupContent = fullContent;
+          backupSource = 'store';
+        }
+      }
+
+      if (!backupContent && act._contentSnapshot && Object.keys(act._contentSnapshot).length > 2) {
+        backupContent = act._contentSnapshot;
+        backupSource = 'snapshot';
+      }
+
+      if (backupContent) {
+        try {
+          const backupData = {
+            success: true,
+            data: backupContent,
+            backedUpAt: new Date().toISOString(),
+            source: `layer5-${backupSource}`
+          };
+          localStorage.setItem(constructedKey, JSON.stringify(backupData));
+          localStorage.setItem(activityKey, JSON.stringify(backupContent));
+          console.log(`🛡️ [LAYER5] ${act.tipo}_${act.id}: ${Object.keys(backupContent).length} campos backupeados (${backupSource})`);
+        } catch (e) {
+          console.warn(`⚠️ [LAYER5] Erro ao salvar backup para ${act.id}:`, e);
+        }
+      } else {
+        console.warn(`⚠️ [LAYER5] ${act.tipo}_${act.id}: nenhum conteúdo encontrado para backup`);
+      }
+    }
+
+    console.log(`🔄 [LAYER5] Verificação concluída para ${collectedItems.activities.length} atividades`);
+  } catch (e) {
+    console.warn('⚠️ [LAYER5] Erro geral no backup:', e);
+  }
+}
+
 function cleanupExpiredSessions(): void {
   const now = Date.now();
   for (const [sessionId, timestamp] of sessionTimestamps.entries()) {
@@ -317,26 +396,8 @@ export async function executeAgentPlan(
 
     const collectedItems = executor.getCollectedItems();
 
-    if (collectedItems.activities.length > 0) {
-      try {
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('activity-content-sync', {
-            detail: {
-              activities: collectedItems.activities.map(a => ({
-                id: a.id,
-                tipo: a.tipo,
-                titulo: a.titulo,
-                hasSnapshot: !!a._contentSnapshot,
-              })),
-              timestamp: Date.now(),
-            }
-          }));
-          console.log(`🔄 [Orchestrator] Evento activity-content-sync emitido para ${collectedItems.activities.length} atividades`);
-        }
-      } catch (e) {
-        console.warn('⚠️ [Orchestrator] Erro ao emitir evento de sync:', e);
-      }
-    }
+    // LAYER 5: POST-EXECUTION CONTENT VERIFICATION (processUserPrompt path)
+    await backupActivityContentToLocalStorage(collectedItems);
 
     console.log('🏁 [Orchestrator] Execução completa, gerando resposta final...');
     
@@ -413,26 +474,8 @@ export async function executeAgentPlanWithDetails(
 
     const collectedItems = executor.getCollectedItems();
 
-    if (collectedItems.activities.length > 0) {
-      try {
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('activity-content-sync', {
-            detail: {
-              activities: collectedItems.activities.map(a => ({
-                id: a.id,
-                tipo: a.tipo,
-                titulo: a.titulo,
-                hasSnapshot: !!a._contentSnapshot,
-              })),
-              timestamp: Date.now(),
-            }
-          }));
-          console.log(`🔄 [Orchestrator] Evento activity-content-sync emitido para ${collectedItems.activities.length} atividades`);
-        }
-      } catch (e) {
-        console.warn('⚠️ [Orchestrator] Erro ao emitir evento de sync:', e);
-      }
-    }
+    // LAYER 5: POST-EXECUTION CONTENT VERIFICATION (executeFollowUp path)
+    await backupActivityContentToLocalStorage(collectedItems);
 
     console.log('🏁 [Orchestrator] Execução completa, gerando resposta final...');
     

@@ -751,6 +751,42 @@ async function generateContentForActivity(
         }
       );
       
+      // ═══════════════════════════════════════════════════════════════════════
+      // PERSISTÊNCIA DIRETA NO LOCALSTORAGE (LAYER 1)
+      // O modal de visualização espera encontrar os exercícios em constructed_lista-exercicios_${id}
+      // ═══════════════════════════════════════════════════════════════════════
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        try {
+          const listaStorageKey = `constructed_lista-exercicios_${activity.id}`;
+          const listaStorageData = {
+            success: true,
+            data: {
+              title: generatedContent.titulo || activity.titulo || 'Lista de Exercícios',
+              titulo: generatedContent.titulo || activity.titulo || 'Lista de Exercícios',
+              questoes: generatedContent.questoes || [],
+              numberOfQuestions: generatedContent.questoes?.length || 0,
+              theme: inferredTheme,
+              subject: inferredSubject,
+              schoolYear: inferredSchoolYear,
+              difficultyLevel: inferredDifficultyLevel,
+              questionModel: inferredQuestionModel,
+              objectives: inferredObjectives,
+              isGeneratedByAI: true,
+              generatedAt: new Date().toISOString()
+            },
+            timestamp: new Date().toISOString()
+          };
+          
+          localStorage.setItem(listaStorageKey, JSON.stringify(listaStorageData));
+          console.log(`✅ [LISTA-EXERCICIOS] Persistido em ${listaStorageKey} com ${generatedContent.questoes?.length || 0} questões`);
+          
+          localStorage.setItem(`activity_${activity.id}`, JSON.stringify(listaStorageData.data));
+          console.log(`✅ [LISTA-EXERCICIOS] Também persistido em activity_${activity.id}`);
+        } catch (storageError) {
+          console.error(`❌ [LISTA-EXERCICIOS] Erro ao salvar no localStorage:`, storageError);
+        }
+      }
+
       const executionTime = Date.now() - activityStartTime;
       
       if (onProgress) {
@@ -1088,6 +1124,39 @@ async function generateContentForActivity(
         }
       );
       
+      // ═══════════════════════════════════════════════════════════════════════
+      // PERSISTÊNCIA DIRETA NO LOCALSTORAGE (LAYER 1)
+      // O modal de visualização espera encontrar os cards em constructed_flash-cards_${id}
+      // ═══════════════════════════════════════════════════════════════════════
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        try {
+          const flashStorageKey = `constructed_flash-cards_${activity.id}`;
+          const flashStorageData = {
+            success: true,
+            data: {
+              title: generatedContent.title || activity.titulo || 'Flash Cards',
+              cards: generatedContent.cards || [],
+              totalCards: generatedContent.totalCards || generatedContent.cards?.length || 0,
+              description: generatedContent.description || `Flash Cards sobre ${inferredTheme}`,
+              theme: inferredTheme,
+              subject: inferredSubject,
+              schoolYear: inferredSchoolYear,
+              isGeneratedByAI: true,
+              generatedAt: new Date().toISOString()
+            },
+            timestamp: new Date().toISOString()
+          };
+          
+          localStorage.setItem(flashStorageKey, JSON.stringify(flashStorageData));
+          console.log(`✅ [FLASH-CARDS] Persistido em ${flashStorageKey} com ${generatedContent.cards?.length || 0} cards`);
+          
+          localStorage.setItem(`activity_${activity.id}`, JSON.stringify(flashStorageData.data));
+          console.log(`✅ [FLASH-CARDS] Também persistido em activity_${activity.id}`);
+        } catch (storageError) {
+          console.error(`❌ [FLASH-CARDS] Erro ao salvar no localStorage:`, storageError);
+        }
+      }
+
       const executionTime = Date.now() - activityStartTime;
       
       if (onProgress) {

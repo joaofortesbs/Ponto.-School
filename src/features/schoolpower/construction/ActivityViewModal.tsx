@@ -413,6 +413,62 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     return null;
   };
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // LAYER 4: DATA INJECTION — Injetar dados do activity prop no localStorage
+  // Quando o modal abre via chat card, os dados vêm no customFields/originalData.campos
+  // Precisamos garantir que localStorage tem esses dados ANTES do useEffect de carregamento
+  // ═══════════════════════════════════════════════════════════════════════
+  React.useEffect(() => {
+    if (!isOpen || !activity?.id) return;
+    
+    const activityType = activity.originalData?.type || activity.categoryId || activity.type || '';
+    const propsData = activity.originalData?.campos || activity.customFields || {};
+    const propsKeys = Object.keys(propsData).filter(k => 
+      propsData[k] !== undefined && propsData[k] !== null && propsData[k] !== ''
+    );
+    
+    if (propsKeys.length <= 2 || !activityType) return;
+    
+    const contentIndicators = ['questoes', 'questions', 'cards', 'etapas', 'sections'];
+    const hasRealContentInProps = contentIndicators.some(k => 
+      Array.isArray(propsData[k]) && propsData[k].length > 0
+    );
+    
+    if (!hasRealContentInProps && propsKeys.length < 5) return;
+    
+    const constructedKey = `constructed_${activityType}_${activity.id}`;
+    const activityKey = `activity_${activity.id}`;
+    
+    try {
+      const existingRaw = localStorage.getItem(constructedKey);
+      let existingHasRealContent = false;
+      
+      if (existingRaw) {
+        try {
+          const ep = JSON.parse(existingRaw);
+          const ed = ep?.data || ep;
+          existingHasRealContent = contentIndicators.some(k => 
+            Array.isArray(ed?.[k]) && ed[k].length > 0
+          );
+        } catch {}
+      }
+      
+      if (!existingHasRealContent) {
+        const injectionData = {
+          success: true,
+          data: propsData,
+          injectedAt: new Date().toISOString(),
+          source: 'layer4-modal-injection'
+        };
+        localStorage.setItem(constructedKey, JSON.stringify(injectionData));
+        localStorage.setItem(activityKey, JSON.stringify(propsData));
+        console.log(`💉 [LAYER4-INJECTION] Dados injetados para ${activityType}_${activity.id}: ${propsKeys.length} campos (hasContent: ${hasRealContentInProps})`);
+      }
+    } catch (e) {
+      console.warn('⚠️ [LAYER4-INJECTION] Erro:', e);
+    }
+  }, [isOpen, activity?.id]);
+
   // Resetar estado do sidebar quando o modal abre - com dependência estável
   React.useEffect(() => {
     if (isOpen && activity) {

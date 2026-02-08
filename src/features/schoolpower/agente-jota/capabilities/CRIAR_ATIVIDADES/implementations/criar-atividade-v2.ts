@@ -456,8 +456,8 @@ Cada atividade terá sua própria chamada de API!
         const existingMeaningfulKeys = existingInnerData ? Object.keys(existingInnerData).filter((k: string) => !metaKeys.includes(k)).length : 0;
 
         if (existingConstructed && existingMeaningfulKeys > 3) {
-          console.log(`💾 [criar-atividade-v2] ${activity.tipo}: constructed_* já possui dados completos (${existingMeaningfulKeys} campos úteis) — fazendo merge preservando conteúdo existente`);
-          const mergedData = { ...existingInnerData, ...dataToStore };
+          console.log(`💾 [criar-atividade-v2] ${activity.tipo}: constructed_* já possui dados completos (${existingMeaningfulKeys} campos úteis) — PRESERVANDO conteúdo existente, adicionando apenas metadados novos`);
+          const mergedData = { ...dataToStore, ...existingInnerData };
           const saved = safeSetJSON(primaryKey, { success: true, data: mergedData, generatedAt: new Date().toISOString() });
           if (saved) storageKeys.push(primaryKey);
           localStorageSuccess = saved;
