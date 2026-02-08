@@ -1,0 +1,27 @@
+Agora mesmo depois da conclusão do carregamento, os dados/conteúdos das respectivas atividades ainda não são passados corretamente (Como eu te representei dentro da imagem que eu te enviei)!
+
+E em alguns casos quando o usuário clica dentro de alguma atividade de dentro do respectivo card de ATIVIDADES CRIADAS, na respectiva atividade de Quiz interativo, aparece uma mensagem de erro de "Rendered fewer hooks than expected. This may be caused by an accidental early return statement."!
+
+-> Quais que são todas as possibilidades de erros que podem acontecer?
+-> Porque esses erros acontecem?
+-> Algumas empresas ou pessoas já passaram por esse problema? Se sim, como elas resolveram?
+-> Porque depois de todas as alterações que a gente fez, os erros ainda não foram corrigidos?
+-> Porque esses erros ainda estão acontecendo?
+-> Porque as minhas ultimas alterações ainda não foram completamente efetivas?
+-> Quais são todos os fluxs e etapas de dentro do funil que eu preciso analisar?
+-> Como funciona toda a arquitetura de arquivos e sistemas e toda a engenharia de dados atuais, e quais são as brechas/furos de dentro do fluxo/funil que podem ocasionar nesse erro?
+-> Existe algum sistema conhecido que já faz algo que eu quero fazer agora muito bem? Como eu posso me inspirar?
+
+Os conteúdos ainda não estão sendo passados/sicronizados corretamente, pelo que parece está acontecendo um carregamento infinito! E na verdade deveria ser uma sicronização instantanea!
+
+Analisando toda essa estrutura, como podemos fazer que os conteúdos de dentro do modal de Visualizar atividades de dentro da respectiva atividade X que foi criada dentro do card de Interface de Criação, se comunica e seja diretamente sicronizada com o card de ATIVIDADES CRIADAS (InlineActivitiesCard), agora dentro do modal de Visualizar atividades de dentro desse respetivo card, que aparece quando o usuário clica dentro de alguma das respectivas atividades de dentro do card (InlineActivitiesCard)? Já exisite um sistema parecido com isso atualmente dentro do código? Como podemos fazer a sicronização de dados? (Json)? Como os dados são salvos de maneira individual e compartilhada?
+
+E de acordo com todas as suas alteações anteriores, o que você pode aprender e sugar de alterações ineficazes que você fez que ainda não foram completamente efetiva? Talvez estamos focando em algo muito pequeno, e o problema talvez não esteja consentrado, mas sim espalhado entre alguns componentes/sistemas/funcionalidades/desing sytem/UI e ux/back-end e front-end. Seja super criativo nas suas soluções!
+
+Faça uma investigação super profunda e uma pesquisa extremamente densa em cada detalhe de dentro de toda a arquitetura e de dentro de cada linha de código! Ative o arquiteto de maneira intelignete para analisar uma área, marcar como vista e passar para a próxima etapa de dentro do plano de investigação para chegar em uma conclusão precisa!
+
+Reflita antes de cada alteração, e faça um mapeamento completo para identificar a melhor forma, de maneira segura, robusta, alinhada, profissional, avançada e sofisticada! Não cometa erros ou bugs dentro do código, e não deixe o código ser corrompido! Garanta também que todo o sistema não tenha brechas para erros ou bugs!
+Revise todas as suas modificações depois de cada finalização, não deixe brechas pra erros, não prejudique o funcionamento geral, refine as alterações, e garanta que nenhum sistema considerável foi influenciado ou modificado negativamente! Teste tudo que você fez para garantir o funcionamento perfeito!
+No final de tudo, me explique todas as alterações que você fez, como elas foram feitas, e principalmente porque você decidiu fazer essas alterações!
+No final de tudo, liste todos os seus aprendizados com base em todas as alterações que você fez, para que você possa ir se aprimorando conforme as próximas alterações, e melhorando a sua janela de contexto, para que esses erros em hipotese alguma acontecem novamente dentro da plataforma!
+No final, me sugira as próximas alterações dentro da própria plataforma que a gente precisa fazer, ou que seria muito bom, para deixar a plataforma ainda mais completa, sem nenhum erro ou perigo!
