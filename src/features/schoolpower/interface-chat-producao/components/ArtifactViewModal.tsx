@@ -636,14 +636,15 @@ function BlockOutline({
     >
       {isHovered && (
         <motion.div
-          initial={{ opacity: 0, y: 8, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
           className="absolute z-20 rounded-xl border py-3 px-3"
           style={{
-            bottom: 'calc(100% + 10px)',
             right: '0',
-            background: 'rgba(20, 22, 40, 0.92)',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'rgba(20, 22, 40, 0.95)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
             borderColor: 'rgba(255, 255, 255, 0.08)',
