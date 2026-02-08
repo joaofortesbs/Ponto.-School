@@ -722,7 +722,7 @@ function BlockOutline({
         </motion.div>
       )}
 
-      <nav className="flex flex-col items-end gap-[6px] py-2">
+      <nav className="flex flex-col items-end gap-[6px] py-2" style={{ marginTop: '-60px' }}>
         {items.map((item) => {
           const isActive = activeId === item.id;
           const isSubLevel = item.level > 1;
