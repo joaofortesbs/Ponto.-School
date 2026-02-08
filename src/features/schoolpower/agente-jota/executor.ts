@@ -250,7 +250,7 @@ export class AgentExecutor {
           console.warn('⚠️ [Executor] Erro ao gerar narrativa (não crítico):', narrativeError);
         }
 
-        // Check if replanning is needed (skip for last step)
+        // Check if replanning is needed (skip for last step) - only emit narrative, do NOT modify plan
         if (nextEtapa && plan.etapas.indexOf(etapa) < plan.etapas.length - 1) {
           try {
             const replanResult = await this.checkReplanning(
@@ -260,40 +260,15 @@ export class AgentExecutor {
               plan.etapas.filter(e => e.ordem > etapa.ordem)
             );
             
-            if (replanResult && replanResult.needs_replan && replanResult.updated_remaining_steps?.length > 0) {
-              console.log(`🔄 [Executor] Replanning ativado: ${replanResult.reason}`);
-              
-              const currentIndex = plan.etapas.indexOf(etapa);
-              const completedSteps = plan.etapas.slice(0, currentIndex + 1);
-              
-              const newSteps: ExecutionStep[] = replanResult.updated_remaining_steps.map((step: any, idx: number) => ({
-                ordem: completedSteps.length + idx + 1,
-                titulo: step.titulo,
-                descricao: step.descricao || step.titulo,
-                funcao: step.capabilities?.[0]?.nome || '',
-                parametros: step.capabilities?.[0]?.parametros || {},
-                status: 'pendente' as const,
-                capabilities: (step.capabilities || []).map((cap: any, capIdx: number) => ({
-                  id: `replan-cap-${Date.now()}-${capIdx}`,
-                  nome: cap.nome,
-                  displayName: cap.displayName || cap.nome,
-                  categoria: cap.categoria || 'CRIAR',
-                  parametros: cap.parametros || {},
-                  status: 'pending' as const,
-                  ordem: capIdx + 1,
-                })),
-              }));
-              
-              plan.etapas = [...completedSteps, ...newSteps];
+            if (replanResult && replanResult.needs_replan && replanResult.reason) {
+              console.log(`🔄 [Executor] Replanning sugerido (somente narrativa): ${replanResult.reason}`);
               
               this.emitProgress({
                 sessionId: this.sessionId,
                 status: 'replan',
+                etapaAtual: etapa.ordem,
                 descricao: replanResult.reason,
-                updatedSteps: newSteps,
               } as any);
-              
-              console.log(`✅ [Executor] Plano atualizado: ${plan.etapas.length} etapas (${completedSteps.length} concluídas + ${newSteps.length} novas)`);
             }
           } catch (replanError) {
             console.warn('⚠️ [Executor] Erro ao verificar replanning (não crítico):', replanError);

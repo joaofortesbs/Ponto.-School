@@ -489,16 +489,12 @@ const CapabilityCard: React.FC<{
 
 const NarrativeText: React.FC<{ text: string }> = ({ text }) => (
   <motion.div
-    initial={{ opacity: 0, y: 10 }}
+    initial={{ opacity: 0, y: 8 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5, ease: 'easeOut' }}
-    className="px-4 py-3 rounded-xl"
-    style={{
-      background: 'rgba(255, 255, 255, 0.03)',
-      border: '1px solid rgba(255, 255, 255, 0.06)',
-    }}
+    className="px-2 py-1"
   >
-    <p className="text-sm text-gray-300 leading-relaxed italic">
+    <p className="text-sm text-gray-400 leading-relaxed italic">
       {text}
     </p>
   </motion.div>
@@ -506,17 +502,14 @@ const NarrativeText: React.FC<{ text: string }> = ({ text }) => (
 
 const ReplanNotice: React.FC<{ reason: string }> = ({ reason }) => (
   <motion.div
-    initial={{ opacity: 0, scale: 0.95, y: 10 }}
-    animate={{ opacity: 1, scale: 1, y: 0 }}
+    initial={{ opacity: 0, y: 8 }}
+    animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.4, ease: 'easeOut' }}
-    className="px-4 py-2.5 rounded-xl flex items-center gap-2"
-    style={{
-      background: 'rgba(139, 92, 246, 0.08)',
-      border: '1px solid rgba(139, 92, 246, 0.2)',
-    }}
+    className="px-2 py-1"
   >
-    <span className="text-violet-400 text-xs font-medium whitespace-nowrap">Plano ajustado</span>
-    <span className="text-xs text-violet-300/70">{reason}</span>
+    <p className="text-sm text-gray-400 leading-relaxed italic">
+      {reason}
+    </p>
   </motion.div>
 );
 
@@ -589,32 +582,29 @@ export function ProgressiveExecutionCard({
 
   return (
     <div className="w-full space-y-4">
-      <AnimatePresence mode="sync">
-        {objectives.map((objective, idx) => (
-          <React.Fragment key={`objective-group-${idx}`}>
-            <ObjectiveCard
-              key={`objective-${idx}`}
-              objective={objective}
-              index={idx}
-              isVisible={visibleObjectives.has(idx)}
-              reflection={reflections?.get(idx)}
-              isLoadingReflection={loadingReflections?.has(idx)}
-              activitiesToBuild={activitiesToBuild}
-              completedActivities={completedActivities}
-              onBuildActivities={onBuildActivities}
-              isBuildingActivities={isBuildingActivities}
-            />
-            
-            {narratives.has(idx) && objective.status === 'completed' && (
-              <NarrativeText key={`narrative-${idx}`} text={narratives.get(idx)!} />
-            )}
-            
-            {replanNotices.has(idx) && (
-              <ReplanNotice key={`replan-${idx}`} reason={replanNotices.get(idx)!} />
-            )}
-          </React.Fragment>
-        ))}
-      </AnimatePresence>
+      {objectives.map((objective, idx) => (
+        <React.Fragment key={`objective-group-${idx}`}>
+          <ObjectiveCard
+            objective={objective}
+            index={idx}
+            isVisible={visibleObjectives.has(idx)}
+            reflection={reflections?.get(idx)}
+            isLoadingReflection={loadingReflections?.has(idx)}
+            activitiesToBuild={activitiesToBuild}
+            completedActivities={completedActivities}
+            onBuildActivities={onBuildActivities}
+            isBuildingActivities={isBuildingActivities}
+          />
+          
+          {narratives.has(idx) && objective.status === 'completed' && (
+            <NarrativeText key={`narrative-${idx}`} text={narratives.get(idx)!} />
+          )}
+          
+          {replanNotices.has(idx) && (
+            <ReplanNotice key={`replan-${idx}`} reason={replanNotices.get(idx)!} />
+          )}
+        </React.Fragment>
+      ))}
     </div>
   );
 }

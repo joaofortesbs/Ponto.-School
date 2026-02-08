@@ -343,6 +343,20 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         capabilityStatus: update.capabilityStatus,
       }));
 
+      const rawType = (update as any).type;
+      if (!update.status && rawType) {
+        console.log(`🔀 [ChatLayout] Pass-through event: ${rawType}`);
+        const normalizedDetail: any = { ...update, type: rawType };
+        if (normalizedDetail.capabilityId && !normalizedDetail.capability_id) {
+          normalizedDetail.capability_id = normalizedDetail.capabilityId;
+        }
+        if (normalizedDetail.activityId && !normalizedDetail.activity_id) {
+          normalizedDetail.activity_id = normalizedDetail.activityId;
+        }
+        window.dispatchEvent(new CustomEvent('agente-jota-progress', { detail: normalizedDetail }));
+        return;
+      }
+
       const stepIndex = update.etapaAtual !== undefined ? update.etapaAtual - 1 : 0;
 
       let eventType: string = update.status;
@@ -369,16 +383,18 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
       console.log(`🎯 [ChatLayout] Emitindo evento: ${eventType} | stepIndex: ${stepIndex} | capabilityId: ${update.capabilityId}`);
 
+      const capabilityName = (update as any).capabilityName;
+      
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: {
           type: eventType,
           stepIndex: stepIndex,
           stepTitle: update.descricao,
           capability_id: update.capabilityId,
-          capability_name: update.descricao,
+          capability_name: capabilityName || update.descricao,
+          displayName: capabilityName ? update.descricao : undefined,
           mensagem: update.resultado ? `Concluído: ${update.descricao}` : undefined,
           narrativeText: eventType === 'execution:narrative' ? update.descricao : undefined,
-          updatedSteps: (update as any).updatedSteps,
           replanReason: eventType === 'execution:replan' ? update.descricao : undefined,
         }
       }));

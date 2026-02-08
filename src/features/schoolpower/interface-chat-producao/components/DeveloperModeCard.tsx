@@ -31,10 +31,15 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
   const hasRestoredReflectionsRef = useRef(false);
   
   const activitiesToBuildRef = useRef<ActivityToBuild[]>([]);
+  const dataRef = useRef<DevModeCardData>(data);
 
   useEffect(() => {
     activitiesToBuildRef.current = activitiesToBuild;
   }, [activitiesToBuild]);
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   useEffect(() => {
     if (reflectionsHydrated && !hasRestoredReflectionsRef.current) {
@@ -106,6 +111,19 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
 
       if (update.type === 'capability:iniciou') {
         console.log(`▶️ [DeveloperModeCard] Iniciando capability: ${update.capability_id} na etapa ${update.stepIndex}`);
+        const currentData = dataRef.current;
+        const etapas = currentData?.etapas || [];
+        const targetEtapa = etapas[update.stepIndex];
+        const capExists = targetEtapa?.capabilities?.some((c: any) => c.id === update.capability_id);
+        if (!capExists && targetEtapa) {
+          const novaCapability: CapabilityState = {
+            id: update.capability_id || `cap-auto-${Date.now()}`,
+            nome: update.capability_name || 'capability',
+            displayName: update.displayName || update.capability_name || update.stepTitle,
+            status: 'pendente'
+          };
+          addCapabilityToEtapa(cardId, update.stepIndex, novaCapability);
+        }
         updateCapabilityStatus(cardId, update.stepIndex, update.capability_id, 'executando');
       }
 
@@ -161,28 +179,6 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
           saveReflectionFromEvent(cardId, update.stepIndex, reflectionData);
           console.log(`💾 [DeveloperModeCard] Reflexão persistida para card ${cardId}, etapa ${update.stepIndex}`);
         }
-      }
-
-      if (update.type === 'execution:replan' && update.updatedSteps) {
-        console.log(`🔄 [DeveloperModeCard] Replanning recebido: ${update.replanReason}`);
-        const completedIndex = update.stepIndex ?? 0;
-        
-        const newEtapas = update.updatedSteps.map((step: any, idx: number) => ({
-          ordem: completedIndex + 1 + idx,
-          titulo: step.titulo,
-          descricao: step.descricao || step.titulo,
-          status: 'pendente',
-          capabilities: (step.capabilities || []).map((cap: any, capIdx: number) => ({
-            id: cap.id || `replan-cap-${Date.now()}-${idx}-${capIdx}`,
-            nome: cap.nome || cap.funcao,
-            displayName: cap.displayName || cap.nome,
-            status: 'pendente',
-          })),
-        }));
-        
-        const currentEtapas = data?.etapas || [];
-        const completedEtapas = currentEtapas.slice(0, completedIndex + 1);
-        updateCardData(cardId, { etapas: [...completedEtapas, ...newEtapas] });
       }
 
       if (update.type === 'execution:completed') {
