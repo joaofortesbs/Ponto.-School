@@ -444,27 +444,24 @@ Cada atividade terá sua própria chamada de API!
         // Evitar duplicação que causa QuotaExceededError
         const primaryKey = `constructed_${activity.tipo}_${activity.id}`;
         
-        // Para atividades pesadas, armazenar apenas metadados no localStorage
-        // Os dados completos ficam na store Zustand
-        const isHeavyActivity = ['lista-exercicios', 'quiz-interativo', 'flash-cards', 'plano-aula', 'sequencia-didatica'].includes(activity.tipo);
-        
-        if (isHeavyActivity) {
-          // Armazenar apenas referência e metadados leves
-          const lightData = {
-            success: true,
-            activityId: activity.id,
-            activityType: activity.tipo,
-            titulo: activity.titulo,
-            generatedAt: new Date().toISOString(),
-            fieldsCount: Object.keys(contentData).filter(k => !k.startsWith('_')).length,
-            hasFullDataInStore: true
-          };
-          const saved = safeSetJSON(primaryKey, lightData);
+        const existingConstructed = (() => {
+          try {
+            const raw = localStorage.getItem(primaryKey);
+            return raw ? JSON.parse(raw) : null;
+          } catch { return null; }
+        })();
+
+        const existingInnerData = existingConstructed?.data || existingConstructed;
+        const metaKeys = ['success', 'hasFullDataInStore', 'activityId', 'activityType', 'generatedAt', 'apiCallDuration', 'persistedAt', 'syncedAt', 'fieldsCount', 'titulo'];
+        const existingMeaningfulKeys = existingInnerData ? Object.keys(existingInnerData).filter((k: string) => !metaKeys.includes(k)).length : 0;
+
+        if (existingConstructed && existingMeaningfulKeys > 3) {
+          console.log(`💾 [criar-atividade-v2] ${activity.tipo}: constructed_* já possui dados completos (${existingMeaningfulKeys} campos úteis) — fazendo merge preservando conteúdo existente`);
+          const mergedData = { ...existingInnerData, ...dataToStore };
+          const saved = safeSetJSON(primaryKey, { success: true, data: mergedData, generatedAt: new Date().toISOString() });
           if (saved) storageKeys.push(primaryKey);
           localStorageSuccess = saved;
-          console.log(`💾 [criar-atividade-v2] Atividade pesada ${activity.tipo}: salvando metadados leves`);
         } else {
-          // Para atividades leves, salvar dados completos
           const saved = safeSetJSON(primaryKey, { success: true, data: dataToStore });
           if (saved) storageKeys.push(primaryKey);
           localStorageSuccess = saved;
@@ -478,7 +475,7 @@ Cada atividade terá sua própria chamada de API!
           activityDebugStore.log(
             activity.id, 'success', 'LocalStorage',
             `Dados persistidos com sucesso (${storageKeys.length} chave${storageKeys.length > 1 ? 's' : ''})`,
-            { storage_keys: storageKeys, is_heavy: isHeavyActivity }
+            { storage_keys: storageKeys }
           );
         } else {
           activityDebugStore.log(

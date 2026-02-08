@@ -317,6 +317,27 @@ export async function executeAgentPlan(
 
     const collectedItems = executor.getCollectedItems();
 
+    if (collectedItems.activities.length > 0) {
+      try {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('activity-content-sync', {
+            detail: {
+              activities: collectedItems.activities.map(a => ({
+                id: a.id,
+                tipo: a.tipo,
+                titulo: a.titulo,
+                hasSnapshot: !!a._contentSnapshot,
+              })),
+              timestamp: Date.now(),
+            }
+          }));
+          console.log(`🔄 [Orchestrator] Evento activity-content-sync emitido para ${collectedItems.activities.length} atividades`);
+        }
+      } catch (e) {
+        console.warn('⚠️ [Orchestrator] Erro ao emitir evento de sync:', e);
+      }
+    }
+
     console.log('🏁 [Orchestrator] Execução completa, gerando resposta final...');
     
     let respostaFinal = relatorio;
@@ -391,6 +412,27 @@ export async function executeAgentPlanWithDetails(
     const relatorio = await executor.executePlan(plan);
 
     const collectedItems = executor.getCollectedItems();
+
+    if (collectedItems.activities.length > 0) {
+      try {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('activity-content-sync', {
+            detail: {
+              activities: collectedItems.activities.map(a => ({
+                id: a.id,
+                tipo: a.tipo,
+                titulo: a.titulo,
+                hasSnapshot: !!a._contentSnapshot,
+              })),
+              timestamp: Date.now(),
+            }
+          }));
+          console.log(`🔄 [Orchestrator] Evento activity-content-sync emitido para ${collectedItems.activities.length} atividades`);
+        }
+      } catch (e) {
+        console.warn('⚠️ [Orchestrator] Erro ao emitir evento de sync:', e);
+      }
+    }
 
     console.log('🏁 [Orchestrator] Execução completa, gerando resposta final...');
     

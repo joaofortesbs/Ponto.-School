@@ -67,6 +67,7 @@ export interface ActivitySummaryUI {
   titulo: string;
   tipo: string;
   db_id?: number;
+  _contentSnapshot?: Record<string, any>;
 }
 
 export interface StructuredResponseData {

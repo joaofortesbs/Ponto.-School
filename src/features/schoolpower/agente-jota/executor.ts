@@ -48,6 +48,7 @@ export interface ActivitySummary {
   titulo: string;
   tipo: string;
   db_id?: number;
+  _contentSnapshot?: Record<string, any>;
 }
 
 export type ProgressCallback = (update: ProgressUpdate) => void;
@@ -140,11 +141,55 @@ export class AgentExecutor {
 
       for (const act of builtActivities) {
         const actId = act.id || act.original_id || act.activity_id || `act-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+        const actTipo = act.tipo || act.activity_type || act.type || 'atividade';
+        
+        let contentSnapshot: Record<string, any> | undefined;
+        const metaKeysToSkip = ['success', 'activityId', 'activityType', 'generatedAt', 'apiCallDuration', 'persistedAt', 'syncedAt', 'hasFullDataInStore', 'fieldsCount'];
+        try {
+          const constructedKey = `constructed_${actTipo}_${actId}`;
+          const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(constructedKey) : null;
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            const innerData = parsed?.data || parsed;
+            if (innerData) {
+              const snapshotKeys = Object.keys(innerData).filter(k => !metaKeysToSkip.includes(k));
+              if (snapshotKeys.length > 2) {
+                contentSnapshot = {};
+                for (const k of snapshotKeys) {
+                  contentSnapshot[k] = innerData[k];
+                }
+                console.error(`📸 [getCollectedItems] Snapshot localStorage para ${actId}: ${snapshotKeys.length} campos`);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn(`⚠️ [getCollectedItems] Erro snapshot localStorage para ${actId}:`, e);
+        }
+        
+        if (!contentSnapshot || Object.keys(contentSnapshot).length <= 2) {
+          try {
+            const storeActivity = useChosenActivitiesStore.getState().getActivityById(actId);
+            if (storeActivity) {
+              const genFields = storeActivity.dados_construidos?.generated_fields || {};
+              const campos = storeActivity.campos_preenchidos || {};
+              const consolidated = { ...campos, ...genFields };
+              const storeKeys = Object.keys(consolidated);
+              if (storeKeys.length > 0) {
+                contentSnapshot = { ...contentSnapshot, ...consolidated };
+                console.error(`📸 [getCollectedItems] Snapshot store para ${actId}: ${storeKeys.length} campos`);
+              }
+            }
+          } catch (e) {
+            console.warn(`⚠️ [getCollectedItems] Erro snapshot store para ${actId}:`, e);
+          }
+        }
+        
         activities.push({
           id: actId,
           titulo: act.titulo || act.name || act.title || 'Atividade',
-          tipo: act.tipo || act.activity_type || act.type || 'atividade',
+          tipo: actTipo,
           db_id: act.db_id || savedMap.get(actId),
+          _contentSnapshot: contentSnapshot,
         });
       }
 

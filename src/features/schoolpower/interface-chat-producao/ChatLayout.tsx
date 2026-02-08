@@ -21,6 +21,7 @@ import { generateSessionId } from '../agente-jota/memory-manager';
 import type { ArtifactData } from '../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 import { parseStructuredResponse } from './utils/structured-response-parser';
 import { useChosenActivitiesStore } from './stores/ChosenActivitiesStore';
+import { getActivityContent } from '../services/activity-content-registry';
 import type { ConstructionActivity } from '../construction/types';
 
 import type { 
@@ -154,6 +155,53 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     };
   }, []);
 
+  useEffect(() => {
+    const handleContentSync = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (!detail?.activities) return;
+      
+      console.log(`🔄 [ChatLayout] Sync de conteúdo recebido para ${detail.activities.length} atividades`);
+      
+      const store = useChosenActivitiesStore.getState();
+      for (const actInfo of detail.activities) {
+        const storeActivity = store.getActivityById(actInfo.id);
+        if (!storeActivity) continue;
+        
+        const generatedFields = storeActivity.dados_construidos?.generated_fields || {};
+        const camposPreenchidos = storeActivity.campos_preenchidos || {};
+        const consolidated = { ...camposPreenchidos, ...generatedFields };
+        
+        if (Object.keys(consolidated).length === 0) continue;
+        
+        const constructedKey = `constructed_${actInfo.tipo}_${actInfo.id}`;
+        try {
+          const existing = localStorage.getItem(constructedKey);
+          const parsed = existing ? JSON.parse(existing) : null;
+          
+          if (parsed?.hasFullDataInStore === true || !parsed || Object.keys(parsed).length <= 5) {
+            const fullData = {
+              ...consolidated,
+              success: true,
+              activityId: actInfo.id,
+              activityType: actInfo.tipo,
+              titulo: actInfo.titulo,
+              syncedAt: new Date().toISOString(),
+            };
+            localStorage.setItem(constructedKey, JSON.stringify(fullData));
+            console.log(`✅ [ChatLayout] Sync: dados completos persistidos em ${constructedKey} (${Object.keys(consolidated).length} campos)`);
+          }
+        } catch (e) {
+          console.warn(`⚠️ [ChatLayout] Erro no sync para ${actInfo.id}:`, e);
+        }
+      }
+    };
+
+    window.addEventListener('activity-content-sync', handleContentSync);
+    return () => {
+      window.removeEventListener('activity-content-sync', handleContentSync);
+    };
+  }, []);
+
   const handleOpenArtifact = useCallback((artifact: ArtifactData) => {
     console.log('📄 [ChatLayout] Abrindo artefato:', artifact.metadata.titulo);
     setSelectedArtifact(artifact);
@@ -173,39 +221,30 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   const handleOpenActivity = useCallback((activity: any) => {
     console.log('📋 [ChatLayout] Abrindo atividade:', activity.titulo, 'tipo:', activity.tipo, 'id:', activity.id, 'db_id:', activity.db_id);
     
-    const storeActivity = useChosenActivitiesStore.getState().getActivityById(activity.id);
-    console.log('📋 [ChatLayout] Dados da store:', storeActivity ? 'encontrado' : 'não encontrado');
+    const activityId = activity.id || activity.db_id || `fallback-${Date.now()}`;
+    const activityTipo = activity.tipo || '';
     
-    const generatedFields = storeActivity?.dados_construidos?.generated_fields || storeActivity?.campos_preenchidos || {};
-    const storedData = (() => {
-      try {
-        const raw = localStorage.getItem(`activity_${activity.id}`);
-        return raw ? JSON.parse(raw) : {};
-      } catch { return {}; }
-    })();
-    const storedFields = (() => {
-      try {
-        const raw = localStorage.getItem(`activity_${activity.id}_fields`);
-        return raw ? JSON.parse(raw) : {};
-      } catch { return {}; }
-    })();
+    const contentResult = getActivityContent(activityId, activityTipo, activity.titulo);
+    console.log(`📋 [ChatLayout] ContentRegistry resultado: found=${contentResult.found}, source=${contentResult.source}, fields=${Object.keys(contentResult.customFields).length}`);
+
+    const messageContentSnapshot = activity._contentSnapshot || {};
 
     const constructionActivity: ConstructionActivity = {
-      id: activity.id,
-      title: activity.titulo || storedData.title || 'Atividade',
-      description: storedData.description || storeActivity?.justificativa || '',
-      categoryId: activity.tipo || storedData.type || '',
-      categoryName: activity.tipo?.replace(/[-_]/g, ' ') || '',
+      id: activityId,
+      title: contentResult.titulo || activity.titulo || 'Atividade',
+      description: contentResult.originalData?.description || contentResult.originalData?.descricao || '',
+      categoryId: activityTipo,
+      categoryName: activityTipo?.replace(/[-_]/g, ' ') || '',
       icon: '📋',
-      tags: storeActivity?.tags || [],
-      difficulty: storeActivity?.nivel_dificuldade || 'medio',
+      tags: contentResult.originalData?.tags || [],
+      difficulty: contentResult.originalData?.nivel_dificuldade || 'medio',
       estimatedTime: '15 min',
-      type: activity.tipo || storedData.type || '',
-      customFields: { ...generatedFields, ...storedFields, ...storedData },
+      type: activityTipo,
+      customFields: { ...messageContentSnapshot, ...contentResult.customFields },
       originalData: {
-        type: activity.tipo,
-        campos: { ...generatedFields, ...storedFields },
-        ...storedData,
+        type: activityTipo,
+        campos: { ...messageContentSnapshot, ...contentResult.customFields },
+        ...contentResult.originalData,
       },
       isBuilt: true,
       status: 'completed',
