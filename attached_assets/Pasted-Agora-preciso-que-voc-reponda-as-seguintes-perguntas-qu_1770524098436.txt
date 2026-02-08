@@ -1,0 +1,11 @@
+Agora preciso que você reponda as seguintes perguntas que eu tenho:
+
+Atualmente quantas chamadas de IA existem dentro do chat Jota?
+Atualmente as capacidades já são pré-programadas dentro do plano de ação antes mesmo do card de desenvolvimento aparecer né? E se a gente fazer uma configuração modificando o sistema atual para que não tenha capacidades pre-definidas dentro do card de Desenvovlimento, pois quando o card de Desenvolvimento for "ativado", vai ter uma mente orquestradora superior inteligente, com uma chamada dedicada com o objetivo de escolher as capacidades que ela memo vai chamar, e o processo que ela vai fazer é que depois que ela chamar uma capacidade disponivel atualmente, ela vai continuar falando, e dizendo o que aconteceu, o que ela percebeu, e o que ela vai fazer agora, então imagina que dentro do card de Desenvolvimento vai ter a IA falando o que ela vai fazer, após disso vai surgir as capacidades que ela mesmo escolheu, depois das capacidades serem executadas ela vai voltar a falar em texto abaixo do card retangular da respectiva capacidade, entendeu tudo?
+As minhas dores atuais são:
+
+Eu queria que não existisse um caminho pre-definido de capacidades para a IA fazer, porque sempre vai existir novas capacidades, e a IA precisa ser inteligente para escolher e seguir caminhos, e não ficar engessada e limitada sabe?
+
+Atualmente quando o usuário pergunta alguma coisa mesmo que não esteja relacionada com atividades que precisam ser criadas, a IA sugere logo de cara um plano de ação que inclui a criação de atividades ou algo relacionado diretamente com elas, como se o plano de ação fosse fixo e ainda não maleavel! Por exemplo: Atualmente temos a capacidade de criar_arquivo, que deveria poder ser usada para criar qualquer tipo de texto mais longo e ser entregue para o usuário, porém ainda não da pro usuário mandar um imput de por exemplo "Crie um arquivo dizendo sobre celulas procariontes e eucaritontes!" e a IA/Jota criar diretamente esse arquivo, podendo criar um plano de ação maleavel e direto de maneira especifica sabe?
+
+Analise como as grandes empresas de IA Agente generation funcionam, como por exemplo: Manus IA, Replit Agent, Kimi Agent... E entenda perfeitamente como funciona esse sisema de decisão, porque você precisa focar exclusivamente nisso!
