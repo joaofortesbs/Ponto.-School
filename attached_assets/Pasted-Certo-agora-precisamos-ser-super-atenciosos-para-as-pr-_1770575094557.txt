@@ -1,0 +1,35 @@
+Certo, agora precisamos ser super atenciosos para as prócimas aletarções! Eu pecerbi que dentro do benchmarking atoms.dev o chat conversativo deles funciona da seguinte maneria:
+
+-> O usuário envia uma mensagem incial de imput.
+-> A IA decide o caminho que ela quer seguir, se ela vai para o desenvolvimento ou conversa.
+-> Se a IA decidiu ir para o Desenvolvimento, todo o processo de desenvolvimento, execução, criação, pensamento, vai acontecer dentro da interface do chat de Desenvolvimento, e só depois que todo esse processo acabar, vai aparecer a resposta final estruturada! Mas no processo de desenvolvimento, ele acontece de maneira visivel inciialmente e depois é minimizadado!
+
+O que eu quero é que o Jota funcione da seguinte maneira:
+
+-> Quando o usuário mandar uma mensagem incial de imput para o Jota, essa mensagem vai ser analisada inicialmente e o Jota pode escolher o caminho, se ele vai conversar com o usuário primeiro, pedindo mais informações ou perguntando alguma coisa! Ou o Jota pode começar o desenvolvimento já inicialmente! O desenvolvimento para a agente consciste simplesmente no card de Desenvovimento já exisitente!
+
+-> Depois de todo o processo de Desenvolvimento for concluido, ai sim o Jota vai apresentar e falar tudo que ele fez de meneira estruturada, e com um poder de mostragem avançado!
+
+O objetivo aqui é organizar em partes tudo que é "construido" e depois "mostrado"! Reflita e analise o seguinte exemplo:
+
+Imagine que o usuário mande uma mensagem incial dentro do chat de "Preciso criar todas as atividades da minha semana"
+
+A IA/Jota vai partir direto para o desenvolvimento (Obviamente ela já vai desenvolver o plano de ação completo), e dentro do desenvolvimento ela vai passar por todas as capacidades, que pode incluisive incluir a criação além das atividades, mas também de arquivos como "Aplicação prática dentro da sala de aula" e "Mensagem para os pais dos alunos" e "Relatório de atividades criadas para coordenadores"! Certo, imagine que essas foram as criações dentro do card de Desenvolvimento! Agora dentro da resposta final da IA, ela vai falar algo como:
+
+Gerei todas as X atividades para a sua semana de aula completa com o objetivo X, sendo personalizadas para a sua turma X, com especial a pesquisa X que eu fiz em conjunto!
+
+[Card mostrando todas as atividades criadas para o usuário visualizar]
+
+Eu tamvém criei um arquivo para te orientar na hora da aplicação de cada uma dessas atividades para a sua turma X, também detalhei como você pode transformar essas atividades em aulas completas.
+
+[Card de aquivo "Aplicação prática dentro da sala de aula" para o usuário clicar e visualizar]
+
+Eu também criei um arquivo completo com 3 váriações de mensagens que você pode mandar para os seus alunos e motivarem eles a fazerem as respectivas atividades criadas.
+
+[Card de arquivo "Mensagem para os pais dos alunos" para o usuário clicar e visualizar]
+
+Eu também criei um arquivo bem estruturado e profissional com uma explicação prática e sofisticada para você enviar para os seus coordenadores justificando a criação das atividades.
+
+[Card de arquivo "Relatório de atividades criadas para coordenadores" para o usuário clicar e visualizar]
+
+O que você achou de tudo? Se você quiser posso criar mais X coisas para te ajudar!
