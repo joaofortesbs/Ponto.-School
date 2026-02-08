@@ -67,6 +67,14 @@ export async function createExecutionPlan(
     
     const validatedPlan = validation.correctedPlan;
     
+    const allCapabilityNames = validatedPlan.etapas.flatMap(
+      (etapa: ParsedEtapa) => (etapa.capabilities || []).map((cap: ParsedCapability) => {
+        const v = validateCapabilityName(cap.nome);
+        return v.normalizedName || cap.nome;
+      })
+    );
+    const planAlreadyHasSalvarBd = allCapabilityNames.includes('salvar_atividades_bd');
+
     const plan: ExecutionPlan = {
       planId: `plan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       objetivo: validatedPlan.objetivo,
@@ -94,16 +102,14 @@ export async function createExecutionPlan(
           return isValid;
         });
 
-        // VALIDAÇÃO DE SEGURANÇA: Se criar_atividade está presente sem salvar_atividades_bd na mesma etapa,
-        // garantir que salvar_atividades_bd exista em ALGUMA etapa posterior (o planner já deve incluir)
         const hasCriarAtividade = validatedCapabilities.some(
           cap => cap.nome === 'criar_atividade'
         );
-        const hasSalvarBd = validatedCapabilities.some(
+        const hasSalvarBdInEtapa = validatedCapabilities.some(
           cap => cap.nome === 'salvar_atividades_bd'
         );
         
-        if (hasCriarAtividade && !hasSalvarBd) {
+        if (hasCriarAtividade && !hasSalvarBdInEtapa && !planAlreadyHasSalvarBd) {
           const timestamp = Date.now();
           console.log('🔧 [Planner] Segurança: Adicionando salvar_atividades_bd após criar_atividade');
           validatedCapabilities.push({

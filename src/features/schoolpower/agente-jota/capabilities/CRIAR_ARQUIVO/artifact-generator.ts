@@ -8,6 +8,52 @@ function generateArtifactId(): string {
   return `artifact-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
 }
 
+function normalizeArtifactType(rawType: string): ArtifactType {
+  const lower = rawType.toLowerCase().trim();
+  
+  const mappings: Record<string, ArtifactType> = {
+    'dossie_pedagogico': 'dossie_pedagogico',
+    'dossiê pedagógico': 'dossie_pedagogico',
+    'dossie': 'dossie_pedagogico',
+    'resumo_executivo': 'resumo_executivo',
+    'resumo executivo': 'resumo_executivo',
+    'resumo': 'resumo_executivo',
+    'roteiro_aula': 'roteiro_aula',
+    'roteiro de aula': 'roteiro_aula',
+    'plano de aula': 'roteiro_aula',
+    'roteiro': 'roteiro_aula',
+    'relatorio_progresso': 'relatorio_progresso',
+    'relatório de progresso': 'relatorio_progresso',
+    'relatório': 'relatorio_progresso',
+    'relatorio': 'relatorio_progresso',
+    'guia_aplicacao': 'guia_aplicacao',
+    'guia de aplicação': 'guia_aplicacao',
+    'guia de aplicacao': 'guia_aplicacao',
+    'guia': 'guia_aplicacao',
+  };
+
+  if (mappings[lower]) return mappings[lower];
+
+  for (const [key, value] of Object.entries(mappings)) {
+    if (lower.includes(key)) return value;
+  }
+
+  if (lower.includes('explicação') || lower.includes('explicar') || lower.includes('explicativo')) {
+    return 'dossie_pedagogico';
+  }
+  if (lower.includes('plano') || lower.includes('sequência') || lower.includes('sequencia')) {
+    return 'roteiro_aula';
+  }
+  if (lower.includes('progresso') || lower.includes('avaliação') || lower.includes('análise')) {
+    return 'relatorio_progresso';
+  }
+  if (lower.includes('como usar') || lower.includes('aplicar') || lower.includes('manual')) {
+    return 'guia_aplicacao';
+  }
+
+  return 'dossie_pedagogico';
+}
+
 function detectBestArtifactType(contexto: string): ArtifactType {
   const lower = contexto.toLowerCase();
   
@@ -83,7 +129,7 @@ function generatePreview(sections: ArtifactSection[]): string {
 
 export async function generateArtifact(
   sessionId: string,
-  tipoForce?: ArtifactType
+  tipoForce?: string
 ): Promise<ArtifactData | null> {
   const startTime = Date.now();
   
@@ -100,10 +146,15 @@ export async function generateArtifact(
   const rawContext = contextManager.gerarContextoParaChamada('final');
   const sanitizedContext = sanitizeContextForPrompt(rawContext);
   
-  const tipo = tipoForce || detectBestArtifactType(sanitizedContext);
-  const config = ARTIFACT_TYPE_CONFIGS[tipo];
+  const tipoNormalized = tipoForce ? normalizeArtifactType(tipoForce) : detectBestArtifactType(sanitizedContext);
+  const config = ARTIFACT_TYPE_CONFIGS[tipoNormalized];
   
-  console.log(`📄 [ArtifactGenerator] Tipo detectado: ${tipo} (${config.nome})`);
+  if (!config) {
+    console.error(`❌ [ArtifactGenerator] Config não encontrado para tipo: ${tipoNormalized} (original: ${tipoForce})`);
+    return null;
+  }
+  
+  console.log(`📄 [ArtifactGenerator] Tipo detectado: ${tipoNormalized} (${config.nome})${tipoForce ? ` [original: ${tipoForce}]` : ''}`);
   
   const prompt = config.promptTemplate.replace('{contexto}', sanitizedContext);
   
@@ -114,7 +165,7 @@ export async function generateArtifact(
     
     if (!result.success || !result.data) {
       console.error(`❌ [ArtifactGenerator] Falha na geração LLM`);
-      return generateFallbackArtifact(sessionId, tipo, config, sanitizedContext);
+      return generateFallbackArtifact(sessionId, tipoNormalized, config, sanitizedContext);
     }
     
     const rawText = result.data.trim();
@@ -125,7 +176,7 @@ export async function generateArtifact(
     const artifact: ArtifactData = {
       id: generateArtifactId(),
       metadata: {
-        tipo,
+        tipo: tipoNormalized,
         titulo: config.nome,
         subtitulo: contexto.objetivoGeral || contexto.inputOriginal.texto.substring(0, 80),
         geradoEm: Date.now(),
@@ -147,7 +198,7 @@ export async function generateArtifact(
     return artifact;
   } catch (error) {
     console.error(`❌ [ArtifactGenerator] Erro na geração:`, error);
-    return generateFallbackArtifact(sessionId, tipo, config, sanitizedContext);
+    return generateFallbackArtifact(sessionId, tipoNormalized, config, sanitizedContext);
   }
 }
 

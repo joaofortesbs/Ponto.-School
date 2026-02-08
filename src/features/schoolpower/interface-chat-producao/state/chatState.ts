@@ -135,20 +135,12 @@ export const useChatState = create<ChatState>()(
       // REMOVIDO: Bloqueios que impediam múltiplos cards de desenvolvimento na mesma conversa
       // Agora permitimos criar novos DevModeCards - cada um representa uma nova execução
       
-      const textMessage: Message = {
-        id: generateId(),
-        type: 'assistant',
-        role: 'assistant',
-        content: 'Vou executar o seu plano de ação agora',
-        timestamp: Date.now()
-      };
-
       const devCard: Message = {
         id: generateId(),
         type: 'dev_mode_card',
         role: 'assistant',
         content: '',
-        timestamp: Date.now() + 1,
+        timestamp: Date.now(),
         metadata: {
           cardType: 'dev_mode',
           cardData: devModeData,
@@ -161,7 +153,7 @@ export const useChatState = create<ChatState>()(
 
       return {
         ...state,
-        messages: [...state.messages, textMessage, devCard],
+        messages: [...state.messages, devCard],
         activeDevModeCardId: devCard.id,
         isExecuting: true
       };

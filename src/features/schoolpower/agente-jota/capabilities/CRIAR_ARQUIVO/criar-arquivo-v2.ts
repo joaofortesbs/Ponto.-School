@@ -1,13 +1,13 @@
 import type { CapabilityInput, CapabilityOutput, DebugEntry } from '../shared/types';
 import { generateArtifact, shouldGenerateArtifact } from './artifact-generator';
-import type { ArtifactData, ArtifactType } from './types';
+import type { ArtifactData } from './types';
 
 export async function criarArquivoV2(input: CapabilityInput): Promise<CapabilityOutput> {
   const startTime = Date.now();
   const debugLog: DebugEntry[] = [];
 
   const sessionId = input.context.session_id || input.context.sessionId || input.execution_id;
-  const tipoForce = input.context.tipo_artefato as ArtifactType | undefined;
+  const tipoForce = input.context.tipo_artefato as string | undefined;
 
   debugLog.push({
     timestamp: new Date().toISOString(),
