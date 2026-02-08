@@ -62,43 +62,8 @@ class ContentSyncServiceImpl {
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
 
     try {
-      const constructedKey = `constructed_${tipo}_${activityId}`;
-      const existingRaw = localStorage.getItem(constructedKey);
-
-      if (existingRaw) {
-        try {
-          const existingParsed = JSON.parse(existingRaw);
-          const existingData = existingParsed?.data || existingParsed;
-          const existingHasReal = CONTENT_INDICATORS.some(k => {
-            const val = existingData?.[k];
-            return Array.isArray(val) && val.length > 0;
-          });
-          if (existingHasReal) {
-            return;
-          }
-        } catch {}
-      }
-
-      if (tipo === 'quiz-interativo') {
-        const wrapper = { success: true, data, timestamp: new Date().toISOString() };
-        localStorage.setItem(constructedKey, JSON.stringify(wrapper));
-      } else if (tipo === 'lista-exercicios') {
-        try {
-          import('../activities/lista-exercicios/contracts').then(({ saveExerciseListData }) => {
-            saveExerciseListData(activityId, data);
-          }).catch(() => {
-            localStorage.setItem(constructedKey, JSON.stringify(data));
-          });
-          return;
-        } catch {
-          localStorage.setItem(constructedKey, JSON.stringify(data));
-        }
-      } else {
-        localStorage.setItem(constructedKey, JSON.stringify(data));
-      }
-
-      localStorage.setItem(`activity_${activityId}`, JSON.stringify(data));
-      console.log(`💾 [ContentSync→LS] Auto-persistido em ${constructedKey}`);
+      const { writeActivityContent } = require('./activity-storage-contract');
+      writeActivityContent(activityId, tipo, data);
     } catch (e) {
       console.warn('⚠️ [ContentSync→LS] Erro ao persistir:', e);
     }

@@ -758,7 +758,6 @@ async function generateContentForActivity(
       // ═══════════════════════════════════════════════════════════════════════
       if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
         try {
-          const { saveExerciseListData } = await import('../../../../activities/lista-exercicios/contracts');
           const listaFlatData = {
             title: generatedContent.titulo || activity.titulo || 'Lista de Exercícios',
             titulo: generatedContent.titulo || activity.titulo || 'Lista de Exercícios',
@@ -776,11 +775,9 @@ async function generateContentForActivity(
             generatedAt: new Date().toISOString()
           };
           
-          const saved = saveExerciseListData(activity.id, listaFlatData);
-          console.log(`✅ [LISTA-EXERCICIOS] Persistido via saveExerciseListData: ${saved}, ${generatedContent.questoes?.length || 0} questões`);
-          
-          localStorage.setItem(`activity_${activity.id}`, JSON.stringify(listaFlatData));
-          console.log(`✅ [LISTA-EXERCICIOS] Também persistido em activity_${activity.id}`);
+          const { writeActivityContent } = await import('../../../../services/activity-storage-contract');
+          writeActivityContent(activity.id, 'lista-exercicios', listaFlatData, true);
+          console.log(`✅ [LISTA-EXERCICIOS] Persistido via StorageContract: ${generatedContent.questoes?.length || 0} questões`);
 
           try {
             const { ContentSyncService } = await import('../../../../services/content-sync-service');
@@ -947,43 +944,36 @@ async function generateContentForActivity(
       // ═══════════════════════════════════════════════════════════════════════
       if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
         try {
-          const quizStorageKey = `constructed_quiz-interativo_${activity.id}`;
-          const quizStorageData = {
-            success: true,
-            data: {
-              title: generatedContent.title || activity.titulo || 'Quiz Interativo',
-              description: generatedContent.description || `Quiz sobre ${inferredTheme}`,
-              questions: generatedContent.questions || [],
-              totalQuestions: generatedContent.totalQuestions || generatedContent.questions?.length || 0,
-              timePerQuestion: generatedContent.timePerQuestion || 60,
-              isGeneratedByAI: true,
-              isFallback: false,
-              generatedAt: new Date().toISOString(),
-              theme: inferredTheme,
-              subject: inferredSubject,
-              schoolYear: inferredSchoolYear
-            },
-            timestamp: new Date().toISOString()
+          const quizFlatData = {
+            title: generatedContent.title || activity.titulo || 'Quiz Interativo',
+            description: generatedContent.description || `Quiz sobre ${inferredTheme}`,
+            questions: generatedContent.questions || [],
+            totalQuestions: generatedContent.totalQuestions || generatedContent.questions?.length || 0,
+            timePerQuestion: generatedContent.timePerQuestion || 60,
+            isGeneratedByAI: true,
+            isFallback: false,
+            generatedAt: new Date().toISOString(),
+            theme: inferredTheme,
+            subject: inferredSubject,
+            schoolYear: inferredSchoolYear
           };
           
-          localStorage.setItem(quizStorageKey, JSON.stringify(quizStorageData));
-          console.log(`✅ [QUIZ-INTERATIVO] Persistido em ${quizStorageKey} com ${generatedContent.questions?.length || 0} questões`);
+          const { writeActivityContent } = await import('../../../../services/activity-storage-contract');
+          writeActivityContent(activity.id, 'quiz-interativo', quizFlatData, true);
+          console.log(`✅ [QUIZ-INTERATIVO] Persistido via StorageContract com ${generatedContent.questions?.length || 0} questões`);
           console.log(`📋 [QUIZ-INTERATIVO] Primeira questão:`, generatedContent.questions?.[0]?.question || 'N/A');
-          
-          localStorage.setItem(`activity_${activity.id}`, JSON.stringify(quizStorageData.data));
 
           try {
             const { ContentSyncService } = await import('../../../../services/content-sync-service');
-            ContentSyncService.setContent(activity.id, 'quiz-interativo', quizStorageData.data);
+            ContentSyncService.setContent(activity.id, 'quiz-interativo', quizFlatData);
           } catch {}
           
-          // Atualizar constructedActivities global
           const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
           constructedActivities[activity.id] = {
             isBuilt: true,
             builtAt: new Date().toISOString(),
             formData: schemaFields,
-            generatedContent: quizStorageData.data
+            generatedContent: quizFlatData
           };
           localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
           console.log(`✅ [QUIZ-INTERATIVO] Atualizado constructedActivities global`);
@@ -1139,7 +1129,6 @@ async function generateContentForActivity(
       // ═══════════════════════════════════════════════════════════════════════
       if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
         try {
-          const flashStorageKey = `constructed_flash-cards_${activity.id}`;
           const flashFlatData = {
             title: generatedContent.title || activity.titulo || 'Flash Cards',
             cards: generatedContent.cards || [],
@@ -1152,11 +1141,9 @@ async function generateContentForActivity(
             generatedAt: new Date().toISOString()
           };
           
-          localStorage.setItem(flashStorageKey, JSON.stringify(flashFlatData));
-          console.log(`✅ [FLASH-CARDS] Persistido FLAT em ${flashStorageKey} com ${generatedContent.cards?.length || 0} cards`);
-          
-          localStorage.setItem(`activity_${activity.id}`, JSON.stringify(flashFlatData));
-          console.log(`✅ [FLASH-CARDS] Também persistido em activity_${activity.id}`);
+          const { writeActivityContent } = await import('../../../../services/activity-storage-contract');
+          writeActivityContent(activity.id, 'flash-cards', flashFlatData, true);
+          console.log(`✅ [FLASH-CARDS] Persistido via StorageContract com ${generatedContent.cards?.length || 0} cards`);
 
           try {
             const { ContentSyncService } = await import('../../../../services/content-sync-service');

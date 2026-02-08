@@ -22,8 +22,8 @@ import type { ArtifactData } from '../agente-jota/capabilities/CRIAR_ARQUIVO/typ
 import { parseStructuredResponse } from './utils/structured-response-parser';
 import { useChosenActivitiesStore } from './stores/ChosenActivitiesStore';
 import { getActivityContent } from '../services/activity-content-registry';
-import { saveExerciseListData } from '../activities/lista-exercicios';
 import { ContentSyncService } from '../services/content-sync-service';
+import { writeActivityContent, readActivityContent, hasRealContent } from '../services/activity-storage-contract';
 import type { ConstructionActivity } from '../construction/types';
 
 import type { 
@@ -187,10 +187,14 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     const contentResult = getActivityContent(activityId, activityTipo, activity.titulo);
     console.log(`📋 [ChatLayout] ContentRegistry: found=${contentResult.found}, source=${contentResult.source}, fields=${Object.keys(contentResult.customFields).length}`);
 
+    const storedContent = activityTipo ? readActivityContent(activityId, activityTipo) : null;
+    console.log(`📦 [ChatLayout] StorageContract: found=${!!storedContent}, hasReal=${storedContent ? hasRealContent(storedContent) : false}`);
+
     const messageContentSnapshot = activity._contentSnapshot || {};
     const mergedContent = { 
       ...messageContentSnapshot, 
       ...contentResult.customFields,
+      ...(storedContent || {}),
       ...(syncHasReal && syncContent ? syncContent : {}),
     };
     const mergedContentKeys = Object.keys(mergedContent).filter(k => 
@@ -199,45 +203,8 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
     if (mergedContentKeys.length > 2 && activityTipo) {
       try {
-        const constructedKey = `constructed_${activityTipo}_${activityId}`;
-        const existingRaw = localStorage.getItem(constructedKey);
-        let existingHasRealContent = false;
-        
-        if (existingRaw) {
-          try {
-            const existingParsed = JSON.parse(existingRaw);
-            const existingData = existingParsed?.data || existingParsed;
-            const contentKeys = ['questoes', 'questions', 'cards', 'etapas', 'sections'];
-            existingHasRealContent = contentKeys.some(k => {
-              const val = existingData?.[k];
-              return Array.isArray(val) && val.length > 0;
-            });
-          } catch {}
-        }
-        
-        if (!existingHasRealContent) {
-          if (activityTipo === 'lista-exercicios') {
-            try {
-              saveExerciseListData(activityId, mergedContent);
-              console.log(`🔗 [LAYER3-BRIDGE] lista-exercicios bridge via saveExerciseListData: ${mergedContent.questoes?.length || 0} questões`);
-            } catch {
-              localStorage.setItem(constructedKey, JSON.stringify(mergedContent));
-            }
-          } else if (activityTipo === 'quiz-interativo') {
-            const quizWrapper = {
-              success: true,
-              data: mergedContent,
-              timestamp: new Date().toISOString()
-            };
-            localStorage.setItem(constructedKey, JSON.stringify(quizWrapper));
-            console.log(`🔗 [LAYER3-BRIDGE] quiz-interativo bridge com wrapper: ${mergedContent.questions?.length || 0} questões`);
-          } else {
-            localStorage.setItem(constructedKey, JSON.stringify(mergedContent));
-            console.log(`🔗 [LAYER3-BRIDGE] ${activityTipo} escrito em ${constructedKey}: ${mergedContentKeys.length} campos`);
-          }
-
-          localStorage.setItem(`activity_${activityId}`, JSON.stringify(mergedContent));
-        }
+        writeActivityContent(activityId, activityTipo, mergedContent);
+        console.log(`🔗 [LAYER3-BRIDGE] ${activityTipo} via StorageContract: ${mergedContentKeys.length} campos`);
       } catch (e) {
         console.warn('⚠️ [LAYER3-BRIDGE] Erro:', e);
       }

@@ -21,9 +21,10 @@ import { TextVersionModal } from '../components/Modal-Versao-Texto';
 import { isTextVersionActivity } from '../config/activityVersionConfig';
 import { retrieveTextVersionContent } from '../activities/text-version/TextVersionGenerator';
 import { useChosenActivitiesStore } from '../interface-chat-producao/stores/ChosenActivitiesStore';
-import { loadExerciseListData, saveExerciseListData, processExerciseListWithUnifiedPipeline } from '../activities/lista-exercicios';
+import { loadExerciseListData, processExerciseListWithUnifiedPipeline } from '../activities/lista-exercicios';
 import { processQuizWithUnifiedPipeline } from '../activities/quiz-interativo';
 import { ContentSyncService } from '../services/content-sync-service';
+import { writeActivityContent, readActivityContent } from '../services/activity-storage-contract';
 
 // Helper function to get activity icon based on activity type
 const getActivityIcon = (activityId: string) => {
@@ -415,41 +416,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     
     if (!hasRealContentInProps && propsKeys.length < 5) return;
     
-    const constructedKey = `constructed_${activityType}_${activity.id}`;
-    const activityKey = `activity_${activity.id}`;
-    
     try {
-      const existingRaw = localStorage.getItem(constructedKey);
-      let existingHasRealContent = false;
-      
-      if (existingRaw) {
-        try {
-          const ep = JSON.parse(existingRaw);
-          const ed = ep?.data || ep;
-          existingHasRealContent = contentIndicators.some(k => 
-            Array.isArray(ed?.[k]) && ed[k].length > 0
-          );
-        } catch {}
-      }
-      
-      if (!existingHasRealContent) {
-        if (activityType === 'lista-exercicios') {
-          try {
-            saveExerciseListData(activity.id, propsData);
-            console.log(`💉 [LAYER4-INJECTION] lista-exercicios via saveExerciseListData: ${propsData.questoes?.length || 0} questões`);
-          } catch {
-            localStorage.setItem(constructedKey, JSON.stringify(propsData));
-          }
-        } else if (activityType === 'quiz-interativo') {
-          const quizWrapper = { success: true, data: propsData, timestamp: new Date().toISOString() };
-          localStorage.setItem(constructedKey, JSON.stringify(quizWrapper));
-          console.log(`💉 [LAYER4-INJECTION] quiz-interativo com wrapper: ${propsData.questions?.length || 0} questões`);
-        } else {
-          localStorage.setItem(constructedKey, JSON.stringify(propsData));
-          console.log(`💉 [LAYER4-INJECTION] ${activityType} dados FLAT injetados: ${propsKeys.length} campos`);
-        }
-        localStorage.setItem(activityKey, JSON.stringify(propsData));
-      }
+      writeActivityContent(activity.id, activityType, propsData);
+      console.log(`💉 [LAYER4-INJECTION] ${activityType} via StorageContract: ${propsKeys.length} campos`);
     } catch (e) {
       console.warn('⚠️ [LAYER4-INJECTION] Erro:', e);
     }
@@ -536,32 +505,12 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         if (activityType === 'flash-cards') {
           let loadedContent = null;
           
-          const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
-          if (flashCardsSavedContent) {
-            try {
-              const parsedContent = JSON.parse(flashCardsSavedContent);
-              if (parsedContent.hasFullDataInStore === true) {
-                const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-                if (storeData) {
-                  const fullData = storeData.dados_construidos?.generated_fields || storeData.dados_construidos || storeData.campos_preenchidos || {};
-                  if (fullData.cards && Array.isArray(fullData.cards) && fullData.cards.length > 0) {
-                    const validCards = fullData.cards.filter((card: any) => card && typeof card === 'object' && card.front && card.back);
-                    if (validCards.length > 0) {
-                      loadedContent = { ...fullData, cards: validCards };
-                    }
-                  }
-                }
-              } else {
-                const data = parsedContent.data || parsedContent;
-                if (data?.cards?.length > 0) {
-                  const validCards = data.cards.filter((card: any) => card && typeof card === 'object' && card.front && card.back);
-                  if (validCards.length > 0) {
-                    loadedContent = { ...data, cards: validCards };
-                  }
-                }
-              }
-            } catch (e) {
-              console.warn('⚠️ Erro ao parsear Flash Cards do localStorage:', e);
+          const storedData = readActivityContent(activity.id, 'flash-cards');
+          if (storedData?.cards?.length > 0) {
+            const validCards = storedData.cards.filter((card: any) => card && typeof card === 'object' && card.front && card.back);
+            if (validCards.length > 0) {
+              loadedContent = { ...storedData, cards: validCards };
+              console.log(`✅ [FALLBACK] Flash Cards via StorageContract: ${validCards.length} cards`);
             }
           }
           
