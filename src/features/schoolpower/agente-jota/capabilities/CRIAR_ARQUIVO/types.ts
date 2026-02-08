@@ -3,7 +3,10 @@ export type ArtifactType =
   | 'resumo_executivo'  
   | 'roteiro_aula'
   | 'relatorio_progresso'
-  | 'guia_aplicacao';
+  | 'guia_aplicacao'
+  | 'mensagem_pais'
+  | 'mensagem_alunos'
+  | 'relatorio_coordenacao';
 
 export interface ArtifactSection {
   id: string;
@@ -217,5 +220,113 @@ REGRAS:
 - Linguagem acessível para qualquer professor
 - Inclua exemplos concretos quando possível
 - NÃO retorne JSON`
+  },
+  mensagem_pais: {
+    tipo: 'mensagem_pais',
+    nome: 'Mensagens para Pais',
+    descricao: 'Variações de mensagens motivacionais para enviar aos pais dos alunos sobre as atividades',
+    icone: '💬',
+    cor: '#06B6D4',
+    secoesEsperadas: ['Contexto', 'Mensagem Formal', 'Mensagem Amigável', 'Mensagem Objetiva'],
+    promptTemplate: `Gere MENSAGENS PARA OS PAIS dos alunos sobre as atividades criadas pelo professor.
+
+CONTEXTO DA SESSÃO:
+{contexto}
+
+ESTRUTURE COM AS SEGUINTES SEÇÕES (use exatamente estes títulos como headers ## ):
+
+## Contexto
+Breve explicação do que o professor criou e o objetivo pedagógico por trás das atividades — esta seção é para o professor entender o contexto, NÃO faz parte das mensagens.
+
+## Mensagem Formal
+Uma mensagem profissional e respeitosa para enviar via comunicado oficial da escola ou grupo de pais. Tom institucional, mencionando o objetivo pedagógico e como os pais podem apoiar em casa. Inclua cumprimento, corpo e despedida.
+
+## Mensagem Amigável
+Uma mensagem calorosa e acessível para enviar via WhatsApp ou rede social da turma. Tom próximo e motivador, explicando de forma simples o que os alunos vão fazer e por que é importante. Use linguagem do dia a dia.
+
+## Mensagem Objetiva
+Uma mensagem curta e direta (máximo 4 linhas) para situações onde o professor precisa ser breve. Apenas o essencial: o que foi criado, quando será aplicado, e o que os pais podem fazer para ajudar.
+
+REGRAS:
+- Cada mensagem deve ser COMPLETA e pronta para copiar e colar
+- Use o nome das atividades criadas na sessão
+- Mencione a série/turma quando disponível no contexto
+- Tom sempre positivo e motivador
+- Evite jargão pedagógico nas mensagens para pais
+- NÃO retorne JSON, apenas texto com headers markdown ##`
+  },
+  mensagem_alunos: {
+    tipo: 'mensagem_alunos',
+    nome: 'Mensagens para Alunos',
+    descricao: 'Mensagens motivacionais para engajar os alunos nas atividades criadas',
+    icone: '🎓',
+    cor: '#F97316',
+    secoesEsperadas: ['Contexto para o Professor', 'Mensagem de Apresentação', 'Mensagem de Motivação', 'Desafio Divertido'],
+    promptTemplate: `Gere MENSAGENS MOTIVACIONAIS PARA OS ALUNOS sobre as atividades que o professor criou.
+
+CONTEXTO DA SESSÃO:
+{contexto}
+
+ESTRUTURE COM AS SEGUINTES SEÇÕES (use exatamente estes títulos como headers ## ):
+
+## Contexto para o Professor
+Breve explicação de como e quando usar cada mensagem — esta seção é orientação para o professor, NÃO para os alunos.
+
+## Mensagem de Apresentação
+Uma mensagem empolgante para apresentar as atividades aos alunos. Deve despertar curiosidade e vontade de participar. Use linguagem jovem e acessível adequada à faixa etária da turma. Pode incluir perguntas provocativas sobre o tema.
+
+## Mensagem de Motivação
+Uma mensagem para enviar DURANTE a realização das atividades, incentivando os alunos a continuarem e dando dicas. Tom de torcida, reconhecimento do esforço, e reforço positivo. Curta e impactante.
+
+## Desafio Divertido
+Uma mensagem que transforma parte da atividade em um desafio ou competição saudável entre os alunos. Ex: "Quem conseguir completar primeiro ganha...", "O grupo que acertar mais questões...". Deve ser divertido e inclusivo.
+
+REGRAS:
+- Adeque a linguagem à série/faixa etária da turma (quando disponível no contexto)
+- Seja criativo e use referências do universo dos alunos
+- Cada mensagem deve ser pronta para o professor copiar e usar
+- Tom sempre positivo, nunca punitivo ou ameaçador
+- Mencione as atividades criadas pelo nome
+- NÃO retorne JSON, apenas texto com headers markdown ##`
+  },
+  relatorio_coordenacao: {
+    tipo: 'relatorio_coordenacao',
+    nome: 'Relatório para Coordenação',
+    descricao: 'Documento formal e profissional para apresentar aos coordenadores pedagógicos',
+    icone: '📑',
+    cor: '#7C3AED',
+    secoesEsperadas: ['Apresentação', 'Justificativa Pedagógica', 'Detalhamento das Atividades', 'Alinhamento Curricular', 'Cronograma de Aplicação', 'Resultados Esperados'],
+    promptTemplate: `Gere um RELATÓRIO PARA COORDENAÇÃO PEDAGÓGICA — um documento formal e profissional que o professor pode apresentar aos seus coordenadores para justificar e documentar as atividades criadas.
+
+CONTEXTO DA SESSÃO:
+{contexto}
+
+ESTRUTURE COM AS SEGUINTES SEÇÕES (use exatamente estes títulos como headers ## ):
+
+## Apresentação
+Identificação do professor, turma, disciplina e período. Resumo objetivo do que foi planejado e criado.
+
+## Justificativa Pedagógica
+Fundamentação teórica e pedagógica para a criação das atividades. Por que estas atividades são relevantes para o desenvolvimento dos alunos? Quais competências e habilidades estão sendo trabalhadas? Cite metodologias aplicadas (gamificação, aprendizagem ativa, etc.) quando relevante.
+
+## Detalhamento das Atividades
+Descrição profissional de cada atividade criada, incluindo: tipo, objetivo específico, conteúdo abordado, nível de dificuldade e tempo estimado de aplicação. Apresente em formato organizado.
+
+## Alinhamento Curricular
+Como as atividades se conectam com o currículo da escola, as diretrizes da BNCC e os objetivos do bimestre/trimestre. Mencione habilidades específicas quando possível.
+
+## Cronograma de Aplicação
+Sugestão de quando e como aplicar cada atividade ao longo da semana ou período letivo. Inclua sequência lógica e interdependências.
+
+## Resultados Esperados
+Quais resultados de aprendizagem são esperados com a aplicação das atividades. Como o professor pretende avaliar o impacto. Indicadores de sucesso mensuráveis.
+
+REGRAS:
+- Tom FORMAL e profissional — este documento será lido por coordenadores
+- Use linguagem técnica pedagógica adequada (diferente das mensagens para pais)
+- Seja específico com dados: nomes de atividades, quantidades, tipos
+- Demonstre intencionalidade pedagógica em cada escolha
+- O documento deve transmitir competência e planejamento
+- NÃO retorne JSON, apenas texto com headers markdown ##`
   }
 };

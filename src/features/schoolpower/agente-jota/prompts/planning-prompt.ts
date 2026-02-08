@@ -55,7 +55,7 @@ REGRAS DE DECISÃO:
 1. Se o professor quer CRIAR ATIVIDADES (exercícios, quiz, prova, lista, etc):
    → Use o pipeline COMPLETO: pesquisar_atividades_disponiveis → decidir_atividades_criar → gerar_conteudo_atividades → criar_atividade → salvar_atividades_bd
    → IMPORTANTE: Se incluir criar_atividade, SEMPRE inclua salvar_atividades_bd logo depois
-   → Opcionalmente adicione criar_arquivo no final para documento complementar
+   → NÃO adicione criar_arquivo ao criar atividades — o sistema Ponto. Flow gera automaticamente documentos complementares (guia de aplicação, mensagens para pais, relatório para coordenação) após a criação das atividades
 
 2. 🔴 REGRA OBRIGATÓRIA — SEQUÊNCIA gerar_conteudo_atividades → criar_atividade:
    Se o plano incluir "gerar_conteudo_atividades", é OBRIGATÓRIO incluir "criar_atividade" LOGO DEPOIS!

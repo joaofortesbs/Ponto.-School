@@ -25,6 +25,7 @@ import {
   type FinalResponseResult,
 } from './context';
 import type { ArtifactData } from './capabilities/CRIAR_ARQUIVO';
+import { determineFlowArtifacts, executeFlowPackage } from './ponto-flow/flow-orchestrator';
 import {
   createSession,
   addConversationTurn,
@@ -394,6 +395,47 @@ export async function executeAgentPlan(
 
     // LAYER 5: POST-EXECUTION CONTENT VERIFICATION (processUserPrompt path)
     await backupActivityContentToLocalStorage(collectedItems);
+
+    // LAYER 6: PONTO FLOW — Generate complementary artifacts package
+    if (collectedItems.activities.length > 0) {
+      console.log(`\n🌊 [Orchestrator] Ponto Flow: ${collectedItems.activities.length} atividades detectadas, gerando pacote complementar...`);
+      
+      try {
+        const flowPlan = determineFlowArtifacts(
+          collectedItems.activities.length,
+          plan.objetivo,
+        );
+
+        if (flowPlan.length > 0) {
+          console.log(`🌊 [Orchestrator] Ponto Flow: ${flowPlan.length} artefatos planejados: ${flowPlan.map(a => a.tipo).join(', ')}`);
+
+          onProgress?.({
+            type: 'flow_start',
+            message: `Preparando pacote completo com ${flowPlan.length} documentos complementares...`,
+          } as any);
+
+          const flowResult = await executeFlowPackage(sessionId, flowPlan, (update) => {
+            onProgress?.({
+              type: 'flow_artifact',
+              message: `${update.status === 'gerando' ? 'Gerando' : update.status === 'concluido' ? 'Pronto' : 'Erro'}: ${update.artifact} (${update.index + 1}/${update.total})`,
+            } as any);
+          });
+
+          for (const artifact of flowResult.artifacts) {
+            collectedItems.artifacts.push(artifact);
+          }
+
+          console.log(`🌊 [Orchestrator] Ponto Flow concluído: ${flowResult.totalGenerated} gerados, ${flowResult.totalFailed} falhas, ${flowResult.generationTimeMs}ms`);
+
+          addLedgerFact(sessionId, {
+            fact: `Ponto Flow gerou ${flowResult.totalGenerated} documentos complementares: ${flowResult.artifacts.map(a => a.metadata.titulo).join(', ')}`,
+            category: 'context',
+          });
+        }
+      } catch (flowError) {
+        console.warn('⚠️ [Orchestrator] Ponto Flow falhou (não-crítico, continuando):', flowError);
+      }
+    }
 
     console.log('🏁 [Orchestrator] Execução completa, gerando resposta final...');
     

@@ -30,6 +30,22 @@ function normalizeArtifactType(rawType: string): ArtifactType {
     'guia de aplicação': 'guia_aplicacao',
     'guia de aplicacao': 'guia_aplicacao',
     'guia': 'guia_aplicacao',
+    'mensagem_pais': 'mensagem_pais',
+    'mensagem para pais': 'mensagem_pais',
+    'mensagens para pais': 'mensagem_pais',
+    'mensagem pais': 'mensagem_pais',
+    'comunicado pais': 'mensagem_pais',
+    'mensagem_alunos': 'mensagem_alunos',
+    'mensagem para alunos': 'mensagem_alunos',
+    'mensagens para alunos': 'mensagem_alunos',
+    'mensagem alunos': 'mensagem_alunos',
+    'motivação alunos': 'mensagem_alunos',
+    'relatorio_coordenacao': 'relatorio_coordenacao',
+    'relatório para coordenação': 'relatorio_coordenacao',
+    'relatório coordenação': 'relatorio_coordenacao',
+    'relatorio coordenacao': 'relatorio_coordenacao',
+    'relatório para coordenadores': 'relatorio_coordenacao',
+    'relatorio coordenadores': 'relatorio_coordenacao',
   };
 
   if (mappings[lower]) return mappings[lower];
@@ -49,6 +65,15 @@ function normalizeArtifactType(rawType: string): ArtifactType {
   }
   if (lower.includes('como usar') || lower.includes('aplicar') || lower.includes('manual')) {
     return 'guia_aplicacao';
+  }
+  if (lower.includes('pais') || lower.includes('responsáveis') || lower.includes('responsaveis') || lower.includes('família') || lower.includes('comunicado')) {
+    return 'mensagem_pais';
+  }
+  if (lower.includes('alunos') || lower.includes('estudantes') || lower.includes('motivação') || lower.includes('motivar')) {
+    return 'mensagem_alunos';
+  }
+  if (lower.includes('coordena') || lower.includes('diretor') || lower.includes('gestão') || lower.includes('gestao') || lower.includes('institucional')) {
+    return 'relatorio_coordenacao';
   }
 
   return 'dossie_pedagogico';
