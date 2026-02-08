@@ -23,6 +23,7 @@ import { retrieveTextVersionContent } from '../activities/text-version/TextVersi
 import { useChosenActivitiesStore } from '../interface-chat-producao/stores/ChosenActivitiesStore';
 import { loadExerciseListData, saveExerciseListData, processExerciseListWithUnifiedPipeline } from '../activities/lista-exercicios';
 import { processQuizWithUnifiedPipeline } from '../activities/quiz-interativo';
+import { ContentSyncService } from '../services/content-sync-service';
 
 // Helper function to get activity icon based on activity type
 const getActivityIcon = (activityId: string) => {
@@ -74,100 +75,77 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   // Ref para rastrear o último timestamp de atualização e evitar re-renders infinitos
   const lastUpdateRef = useRef<string | null>(null);
 
-  // Listener para sincronização instantânea via eventos customizados
   useEffect(() => {
     if (!activity?.id || !isOpen) return;
+    const activityType = activity.type || activity.categoryId || '';
 
     const handleDataSync = (event: CustomEvent) => {
-      const { activityId, data, timestamp } = event.detail;
-      
+      const { activityId, data } = event.detail;
       if (activityId === activity.id) {
-        console.log('⚡ [INSTANT-SYNC] Dados recebidos do modal de edição:', data);
-        
-        // Atualizar estados instantaneamente
         const contentToUse = data.generatedContent || data;
-        
         if (contentToUse) {
           setGeneratedContent(contentToUse);
-          
-          // Atualizar conteúdos específicos
-          if (activity.type === 'quiz-interativo' || activity.id === 'quiz-interativo') {
-            setQuizInterativoContent(contentToUse);
-          }
-          
-          // CORREÇÃO: Flash Cards - aceitar cards diretamente do evento
-          if (activity.type === 'flash-cards' || activity.id === 'flash-cards') {
-            const flashContent = contentToUse.cards 
-              ? contentToUse 
-              : data.cards 
-                ? { ...data, cards: data.cards } 
-                : contentToUse;
-            
-            if (flashContent?.cards?.length > 0) {
-              console.log(`🃏 [INSTANT-SYNC] Flash Cards: ${flashContent.cards.length} cards recebidos`);
-            }
-            setFlashCardsContent(flashContent);
+          if (activityType === 'quiz-interativo') setQuizInterativoContent(contentToUse);
+          if (activityType === 'flash-cards') {
+            const fc = contentToUse.cards ? contentToUse : data.cards ? { ...data, cards: data.cards } : contentToUse;
+            setFlashCardsContent(fc);
           }
         }
-        
         setIsContentLoaded(true);
-        
-        console.log('✅ [INSTANT-SYNC] Modal de visualização atualizado instantaneamente!');
+        console.log('⚡ [INSTANT-SYNC] Modal atualizado via evento customizado');
       }
     };
 
-    // Adicionar listener para eventos de sincronização
+    const applyContentData = (data: Record<string, any>) => {
+      const contentToUse = data.generatedContent || data;
+      setGeneratedContent(contentToUse);
+
+      if (activityType === 'quiz-interativo' && contentToUse.questions?.length > 0) {
+        setQuizInterativoContent(contentToUse);
+        console.log(`⚡ [CONTENT-SYNC] Quiz: ${contentToUse.questions.length} questões sincronizadas`);
+      }
+      if (activityType === 'flash-cards') {
+        const fc = contentToUse.cards ? contentToUse : data.cards ? { ...data, cards: data.cards } : null;
+        if (fc?.cards?.length > 0) {
+          setFlashCardsContent(fc);
+          console.log(`⚡ [CONTENT-SYNC] Flash Cards: ${fc.cards.length} cards sincronizados`);
+        }
+      }
+      if (activityType === 'lista-exercicios' && contentToUse.questoes?.length > 0) {
+        console.log(`⚡ [CONTENT-SYNC] Lista: ${contentToUse.questoes.length} questões sincronizadas`);
+      }
+      setIsContentLoaded(true);
+    };
+
+    const unsubscribe = ContentSyncService.subscribe((syncId, syncTipo, syncData) => {
+      if (syncId === activity.id) {
+        console.log(`📡 [CONTENT-SYNC] Dados recebidos em tempo real para ${syncId} (${syncTipo})`);
+        applyContentData(syncData);
+      }
+    });
+
+    const handleContentSyncEvent = (event: CustomEvent) => {
+      const { activityId, data } = event.detail || {};
+      if (activityId === activity.id && data) {
+        applyContentData(data);
+      }
+    };
+
+    const existingContent = ContentSyncService.getContent(activity.id, activityType);
+    if (existingContent && ContentSyncService.hasRealContent(activity.id, activityType)) {
+      console.log(`📡 [CONTENT-SYNC] Conteúdo já disponível no ContentSync para ${activity.id}`);
+      applyContentData(existingContent);
+    }
+
     window.addEventListener('activity-data-sync', handleDataSync as EventListener);
+    window.addEventListener('content-sync-update', handleContentSyncEvent as EventListener);
 
     return () => {
+      unsubscribe();
       window.removeEventListener('activity-data-sync', handleDataSync as EventListener);
+      window.removeEventListener('content-sync-update', handleContentSyncEvent as EventListener);
     };
   }, [activity?.id, activity?.type, isOpen]);
-
-  // Auto-reload ao detectar mudanças no localStorage (fallback)
-  useEffect(() => {
-    if (!activity?.id || !isOpen) return;
-    const activityType = activity.type || (typeof activity.id === 'string' ? activity.id.split('-')[0] : '');
-
-    const checkForUpdates = setInterval(() => {
-      const latestData = localStorage.getItem(`activity_${activity.id}`);
-      if (latestData) {
-        try {
-          const parsed = JSON.parse(latestData);
-          const currentUpdate = parsed.lastUpdate || JSON.stringify(parsed).slice(0, 100);
-          
-          // Só atualizar se o valor realmente mudou (evita loops infinitos)
-          if (currentUpdate && currentUpdate !== lastUpdateRef.current) {
-            console.log('🔄 [AUTO-RELOAD] Detectada atualização, recarregando dados...');
-            lastUpdateRef.current = currentUpdate;
-            
-            const contentToUse = parsed.generatedContent || parsed;
-            setGeneratedContent(contentToUse);
-            
-            // CORREÇÃO: Normalizar dados de Flash Cards no auto-reload
-            if (activityType === 'flash-cards') {
-              const flashContent = contentToUse.cards 
-                ? contentToUse 
-                : parsed.cards 
-                  ? { ...parsed, cards: parsed.cards }
-                  : contentToUse;
-              
-              if (flashContent?.cards?.length > 0) {
-                console.log(`🃏 [AUTO-RELOAD] Flash Cards: ${flashContent.cards.length} cards atualizados`);
-                setFlashCardsContent(flashContent);
-              }
-            }
-            
-            setIsContentLoaded(true);
-          }
-        } catch (e) {
-          console.warn('⚠️ Erro ao verificar atualizações:', e);
-        }
-      }
-    }, 1000); // Verificar a cada 1 segundo para evitar sobrecarga
-
-    return () => clearInterval(checkForUpdates);
-  }, [activity?.id, isOpen]);
 
   // NOTA: A lógica de carregamento de Quiz e Flash Cards foi consolidada no useEffect principal
   // que executa quando o modal abre (ver "Resetar estado do sidebar quando o modal abre")

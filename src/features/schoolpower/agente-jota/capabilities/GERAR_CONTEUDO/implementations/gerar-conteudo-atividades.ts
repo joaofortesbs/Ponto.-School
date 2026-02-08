@@ -781,6 +781,11 @@ async function generateContentForActivity(
           
           localStorage.setItem(`activity_${activity.id}`, JSON.stringify(listaFlatData));
           console.log(`✅ [LISTA-EXERCICIOS] Também persistido em activity_${activity.id}`);
+
+          try {
+            const { ContentSyncService } = await import('../../../../services/content-sync-service');
+            ContentSyncService.setContent(activity.id, 'lista-exercicios', listaFlatData);
+          } catch {}
         } catch (storageError) {
           console.error(`❌ [LISTA-EXERCICIOS] Erro ao salvar no localStorage:`, storageError);
         }
@@ -965,8 +970,12 @@ async function generateContentForActivity(
           console.log(`✅ [QUIZ-INTERATIVO] Persistido em ${quizStorageKey} com ${generatedContent.questions?.length || 0} questões`);
           console.log(`📋 [QUIZ-INTERATIVO] Primeira questão:`, generatedContent.questions?.[0]?.question || 'N/A');
           
-          // Também salvar em activity_{id} para compatibilidade com outros sistemas
           localStorage.setItem(`activity_${activity.id}`, JSON.stringify(quizStorageData.data));
+
+          try {
+            const { ContentSyncService } = await import('../../../../services/content-sync-service');
+            ContentSyncService.setContent(activity.id, 'quiz-interativo', quizStorageData.data);
+          } catch {}
           
           // Atualizar constructedActivities global
           const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
@@ -1148,6 +1157,11 @@ async function generateContentForActivity(
           
           localStorage.setItem(`activity_${activity.id}`, JSON.stringify(flashFlatData));
           console.log(`✅ [FLASH-CARDS] Também persistido em activity_${activity.id}`);
+
+          try {
+            const { ContentSyncService } = await import('../../../../services/content-sync-service');
+            ContentSyncService.setContent(activity.id, 'flash-cards', flashFlatData);
+          } catch {}
         } catch (storageError) {
           console.error(`❌ [FLASH-CARDS] Erro ao salvar no localStorage:`, storageError);
         }

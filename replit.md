@@ -39,6 +39,7 @@ The platform features a modern, glass-morphism inspired design with blur backgro
     - **Activity Creation Pipeline (V2)**: Persists generated activity fields and emits UI update events.
     - **Field Synchronization System**: Provides bidirectional mapping between AI-generated and form field names.
     - **Auto-Build System with ModalBridge**: Event-driven architecture for progressive visual construction of activities within the `EditActivityModal`.
+    - **ContentSyncService (Live Sync)**: In-memory event-driven singleton that stores AI-generated content by activity ID. Writers (gerar-conteudo, orchestrator backup) push content; readers (ChatLayout handleOpenActivity, ActivityViewModal) subscribe for instant live updates. Eliminates stale content when opening activities from structured response cards. Located at `src/features/schoolpower/services/content-sync-service.ts`.
     - **StorageSyncService v2.0**: Centralized service for activity storage, metadata tracking, and UI synchronization events.
     - **StorageOrchestrator Enterprise System**: 3-layer storage architecture (IndexedDB, Zustand/Memory, localStorage) with automatic layer selection, garbage collection, and emergency cleanup.
     - **Activity Version System**: Dual-version system for Interactive and Text Version activities, with AI response parsing and professional fallback content.

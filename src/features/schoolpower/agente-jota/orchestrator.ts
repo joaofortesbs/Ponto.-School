@@ -129,6 +129,26 @@ async function backupActivityContentToLocalStorage(collectedItems: { activities:
       }
     }
 
+    try {
+      const { ContentSyncService } = await import('../services/content-sync-service');
+      for (const act of collectedItems.activities) {
+        const constructedKey = `constructed_${act.tipo}_${act.id}`;
+        const raw = localStorage.getItem(constructedKey);
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            const data = parsed?.data || parsed;
+            const contentIndicators = ['questoes', 'questions', 'cards', 'etapas', 'sections'];
+            const hasArrays = contentIndicators.some(k => Array.isArray(data?.[k]) && data[k].length > 0);
+            if (hasArrays) {
+              ContentSyncService.setContent(act.id, act.tipo, data);
+              console.log(`📡 [LAYER5] ContentSync atualizado para ${act.tipo}_${act.id}`);
+            }
+          } catch {}
+        }
+      }
+    } catch {}
+
     console.log(`🔄 [LAYER5] Verificação concluída para ${collectedItems.activities.length} atividades`);
   } catch (e) {
     console.warn('⚠️ [LAYER5] Erro geral no backup:', e);

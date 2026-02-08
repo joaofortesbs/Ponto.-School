@@ -23,6 +23,7 @@ import { parseStructuredResponse } from './utils/structured-response-parser';
 import { useChosenActivitiesStore } from './stores/ChosenActivitiesStore';
 import { getActivityContent } from '../services/activity-content-registry';
 import { saveExerciseListData } from '../activities/lista-exercicios';
+import { ContentSyncService } from '../services/content-sync-service';
 import type { ConstructionActivity } from '../construction/types';
 
 import type { 
@@ -179,19 +180,23 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     const activityId = activity.id || activity.db_id || `fallback-${Date.now()}`;
     const activityTipo = activity.tipo || '';
     
+    const syncContent = ContentSyncService.getContent(activityId, activityTipo);
+    const syncHasReal = ContentSyncService.hasRealContent(activityId, activityTipo);
+    console.log(`📡 [ChatLayout] ContentSync: found=${!!syncContent}, hasReal=${syncHasReal}, fields=${syncContent ? Object.keys(syncContent).length : 0}`);
+
     const contentResult = getActivityContent(activityId, activityTipo, activity.titulo);
-    console.log(`📋 [ChatLayout] ContentRegistry resultado: found=${contentResult.found}, source=${contentResult.source}, fields=${Object.keys(contentResult.customFields).length}`);
+    console.log(`📋 [ChatLayout] ContentRegistry: found=${contentResult.found}, source=${contentResult.source}, fields=${Object.keys(contentResult.customFields).length}`);
 
     const messageContentSnapshot = activity._contentSnapshot || {};
-    const mergedContent = { ...messageContentSnapshot, ...contentResult.customFields };
+    const mergedContent = { 
+      ...messageContentSnapshot, 
+      ...contentResult.customFields,
+      ...(syncHasReal && syncContent ? syncContent : {}),
+    };
     const mergedContentKeys = Object.keys(mergedContent).filter(k => 
       mergedContent[k] !== undefined && mergedContent[k] !== null && mergedContent[k] !== ''
     );
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // LAYER 3: CONTENT BRIDGE — Escrever conteúdo no localStorage ANTES de abrir o modal
-    // Garante que ActivityViewModal encontre dados nas chaves que ele lê independentemente
-    // ═══════════════════════════════════════════════════════════════════════
     if (mergedContentKeys.length > 2 && activityTipo) {
       try {
         const constructedKey = `constructed_${activityTipo}_${activityId}`;
@@ -214,34 +219,19 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
           if (activityTipo === 'lista-exercicios') {
             try {
               saveExerciseListData(activityId, mergedContent);
-              console.log(`🔗 [LAYER3-BRIDGE] lista-exercicios bridge via saveExerciseListData: ${mergedContent.questoes?.length || 0} questões`);
+              console.log(`🔗 [LAYER3-BRIDGE] lista-exercicios bridge: ${mergedContent.questoes?.length || 0} questões`);
             } catch {
               localStorage.setItem(constructedKey, JSON.stringify(mergedContent));
             }
           } else {
             localStorage.setItem(constructedKey, JSON.stringify(mergedContent));
-            console.log(`🔗 [LAYER3-BRIDGE] Conteúdo FLAT escrito em ${constructedKey}: ${mergedContentKeys.length} campos`);
+            console.log(`🔗 [LAYER3-BRIDGE] ${activityTipo} escrito em ${constructedKey}: ${mergedContentKeys.length} campos`);
           }
-        } else {
-          console.log(`🔗 [LAYER3-BRIDGE] ${constructedKey} já tem conteúdo real — não sobrescrever`);
-        }
 
-        const activityKey = `activity_${activityId}`;
-        const existingActivityRaw = localStorage.getItem(activityKey);
-        let existingActivityHasContent = false;
-        if (existingActivityRaw) {
-          try {
-            const ep = JSON.parse(existingActivityRaw);
-            const contentKeys = ['questoes', 'questions', 'cards', 'etapas', 'sections'];
-            existingActivityHasContent = contentKeys.some(k => Array.isArray(ep?.[k]) && ep[k].length > 0);
-          } catch {}
-        }
-        if (!existingActivityHasContent) {
-          localStorage.setItem(activityKey, JSON.stringify(mergedContent));
-          console.log(`🔗 [LAYER3-BRIDGE] Conteúdo escrito em ${activityKey}: ${mergedContentKeys.length} campos`);
+          localStorage.setItem(`activity_${activityId}`, JSON.stringify(mergedContent));
         }
       } catch (e) {
-        console.warn('⚠️ [LAYER3-BRIDGE] Erro ao escrever bridge:', e);
+        console.warn('⚠️ [LAYER3-BRIDGE] Erro:', e);
       }
     }
 
