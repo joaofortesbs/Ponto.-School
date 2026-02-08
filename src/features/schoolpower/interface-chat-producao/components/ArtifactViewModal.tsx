@@ -668,8 +668,7 @@ function BlockOutline({
           transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
           className="absolute z-20 rounded-xl border py-3 px-3"
           style={{
-            right: '100%',
-            marginRight: '8px',
+            right: '0',
             top: '50%',
             transform: 'translateY(-50%)',
             background: 'rgba(20, 22, 40, 0.95)',
@@ -723,7 +722,7 @@ function BlockOutline({
         </motion.div>
       )}
 
-      <nav className="flex flex-col items-end gap-[6px] py-2" style={{ marginTop: '-20px' }}>
+      <nav className="flex flex-col items-end gap-[6px] py-2">
         {items.map((item) => {
           const isActive = activeId === item.id;
           const isSubLevel = item.level > 1;
@@ -1706,7 +1705,7 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                   className="absolute z-10 hidden lg:flex items-center"
                   style={{
                     right: '6px',
-                    top: '45%',
+                    top: '50%',
                     transform: 'translateY(-50%)',
                   }}
                 >
