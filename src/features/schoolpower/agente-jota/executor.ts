@@ -271,6 +271,68 @@ export class AgentExecutor {
         });
 
         // ═══════════════════════════════════════════════════════════════
+        // HARD ENFORCEMENT: gerar_conteudo_atividades MUST be followed by criar_atividade
+        // Se esta etapa executou gerar_conteudo e não há criar_atividade nas próximas etapas,
+        // injeta dinamicamente criar_atividade + salvar_atividades_bd no plano
+        // ═══════════════════════════════════════════════════════════════
+        const etapaCapNames = (etapa.capabilities || []).map(c => c.nome);
+        const justRanGerarConteudo = etapaCapNames.includes('gerar_conteudo_atividades');
+        
+        if (justRanGerarConteudo) {
+          const remainingEtapas = plan.etapas.filter(e => e.ordem > etapa.ordem);
+          const remainingCapNames = remainingEtapas.flatMap(e => (e.capabilities || []).map(c => c.nome));
+          const hasCriarAtividadeAhead = remainingCapNames.includes('criar_atividade');
+          
+          if (!hasCriarAtividadeAhead) {
+            console.log('🔴 [Executor] HARD ENFORCEMENT: gerar_conteudo_atividades executado sem criar_atividade nas próximas etapas — injetando!');
+            const ts = Date.now();
+            const hasSalvarAhead = remainingCapNames.includes('salvar_atividades_bd');
+            
+            const injectedCaps: CapabilityCall[] = [
+              {
+                id: `cap-injected-criar-${ts}`,
+                nome: 'criar_atividade',
+                displayName: 'Vou construir as atividades com o conteúdo gerado',
+                categoria: 'CRIAR' as CapabilityCall['categoria'],
+                parametros: {},
+                status: 'pending' as const,
+                ordem: 1,
+              },
+            ];
+            if (!hasSalvarAhead) {
+              injectedCaps.push({
+                id: `cap-injected-salvar-${ts}`,
+                nome: 'salvar_atividades_bd',
+                displayName: 'Vou salvar suas atividades no banco de dados',
+                categoria: 'SALVAR_BD' as CapabilityCall['categoria'],
+                parametros: {},
+                status: 'pending' as const,
+                ordem: 2,
+              });
+            }
+            
+            const injectedEtapa: ExecutionStep = {
+              ordem: etapa.ordem + 1,
+              titulo: 'Construir e salvar suas atividades',
+              descricao: 'Vou montar as atividades com o conteúdo gerado e salvar no banco de dados',
+              funcao: 'criar_atividade',
+              parametros: {},
+              status: 'pendente' as const,
+              capabilities: injectedCaps,
+            };
+            
+            const insertIndex = plan.etapas.indexOf(etapa) + 1;
+            plan.etapas.splice(insertIndex, 0, injectedEtapa);
+            
+            for (let i = insertIndex; i < plan.etapas.length; i++) {
+              plan.etapas[i].ordem = i + 1;
+            }
+            
+            console.log(`✅ [Executor] Etapa injetada na posição ${insertIndex + 1} do plano. Total etapas agora: ${plan.etapas.length}`);
+          }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
         // MENTE MAIOR: Chamada UNIFICADA de narrativa + replanning
         // Substitui as 2 chamadas separadas (generateNarrativeForStep + checkReplanning)
         // por uma única chamada ReAct que gera ambos simultaneamente

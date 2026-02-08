@@ -46,23 +46,26 @@ Sua tarefa é RACIOCINAR sobre o pedido do professor e decidir AUTONOMAMENTE:
 NÃO siga um pipeline fixo! Analise o que o professor REALMENTE precisa:
 
 REGRAS DE DECISÃO:
-1. Se o professor quer CRIAR ATIVIDADES na plataforma:
-   → Use o pipeline: pesquisar_atividades_disponiveis → decidir_atividades_criar → gerar_conteudo_atividades → criar_atividade → salvar_atividades_bd
+
+🔴🔴🔴 REGRA MAIS IMPORTANTE — COMO IDENTIFICAR SE É ATIVIDADE OU ARQUIVO:
+- Se o professor menciona "exercício", "exercícios", "lista de exercícios", "quiz", "prova", "atividade", "atividades", "flash card", "cruzadinha", "caça-palavra", "jogo educativo" → É CRIAÇÃO DE ATIVIDADE! Use o pipeline completo (regra 1)!
+- Se o professor menciona "roteiro", "documento", "dossiê", "relatório", "resumo", "apostila", "plano de aula", "explicação" → É ARQUIVO! Use criar_arquivo (regra 3)!
+- ⚠️ NUNCA use "criar_arquivo" sozinho quando o professor quer exercícios/atividades/quiz! criar_arquivo gera DOCUMENTOS de texto, NÃO cria atividades na plataforma!
+
+1. Se o professor quer CRIAR ATIVIDADES (exercícios, quiz, prova, lista, etc):
+   → Use o pipeline COMPLETO: pesquisar_atividades_disponiveis → decidir_atividades_criar → gerar_conteudo_atividades → criar_atividade → salvar_atividades_bd
    → IMPORTANTE: Se incluir criar_atividade, SEMPRE inclua salvar_atividades_bd logo depois
    → Opcionalmente adicione criar_arquivo no final para documento complementar
 
-2. 🔴 REGRA OBRIGATÓRIA — SEQUÊNCIA GERAR CONTEÚDO → CRIAR ATIVIDADE:
+2. 🔴 REGRA OBRIGATÓRIA — SEQUÊNCIA gerar_conteudo_atividades → criar_atividade:
    Se o plano incluir "gerar_conteudo_atividades", é OBRIGATÓRIO incluir "criar_atividade" LOGO DEPOIS!
    → "gerar_conteudo_atividades" gera o conteúdo pedagógico
    → "criar_atividade" constrói a atividade com esse conteúdo
    → Sem "criar_atividade" depois, o conteúdo gerado é PERDIDO e o professor não recebe nada!
    → NUNCA use "gerar_conteudo_atividades" sozinho sem "criar_atividade" na sequência!
 
-3. 🔴 REGRA — ARQUIVO OU TEXTO LONGO:
-   Se o professor pedir um ARQUIVO, DOCUMENTO, TEXTO LONGO, EXPLICAÇÃO DETALHADA, RESUMO, ROTEIRO, PLANO DE AULA ou qualquer conteúdo escrito:
-   → Use "criar_arquivo" — ele gera qualquer tipo de documento/texto
-   → Palavras-chave: "roteiro", "arquivo", "documento", "dossiê", "relatório", "resumo executivo", "apostila", "texto", "explicação", "plano de aula"
-   → Se já houver criação de atividades, adicione "criar_arquivo" como ÚLTIMA etapa adicional
+3. Se o professor pedir um DOCUMENTO escrito (roteiro, dossiê, relatório, apostila, plano de aula):
+   → Use "criar_arquivo" — ele gera documentos/textos
    → NÃO precisa pesquisar, decidir ou criar atividades para textos/documentos!
 
 4. Se o professor quer PESQUISAR o que já tem ou o que está disponível:
@@ -214,7 +217,9 @@ IMPORTANTE:
 - Retorne APENAS o JSON, sem explicações adicionais
 - Use APENAS os nomes de capabilities listados acima
 - NÃO invente novos nomes!
+- Se incluir "gerar_conteudo_atividades", OBRIGATÓRIO incluir "criar_atividade" logo depois!
 - Se incluir "criar_atividade", SEMPRE inclua "salvar_atividades_bd" na mesma etapa ou logo depois
+- NUNCA use "criar_arquivo" sozinho para pedidos de exercícios/atividades/quiz — use o pipeline completo!
 - Escolha o MENOR número de capabilities necessárias — não adicione capabilities desnecessárias!
 `.trim();
 

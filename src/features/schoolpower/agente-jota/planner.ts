@@ -140,6 +140,15 @@ export async function createExecutionPlan(
 
     const allCapNames = plan.etapas.flatMap(e => e.capabilities?.map(c => c.nome) || []);
 
+    const isActivityRequest = detectIntentForFallback(userPrompt) === 'criar_atividades';
+    const planOnlyHasCriarArquivo = allCapNames.length > 0 && 
+      allCapNames.every(name => name === 'criar_arquivo');
+    
+    if (isActivityRequest && planOnlyHasCriarArquivo) {
+      console.log('🔴 [Planner] Pós-validação CRÍTICA: Professor pediu ATIVIDADE mas AI usou apenas criar_arquivo — substituindo por pipeline de atividades!');
+      return createFallbackPlan(userPrompt);
+    }
+
     const hasGerarConteudo = allCapNames.includes('gerar_conteudo_atividades');
     const hasCriarAtividadeGlobal = allCapNames.includes('criar_atividade');
     if (hasGerarConteudo && !hasCriarAtividadeGlobal) {
@@ -293,16 +302,18 @@ function parseAIPlanResponse(responseText: string): ParsedPlan {
  * Caso contrário, usa apenas criar_arquivo.
  */
 function detectIntentForFallback(userPrompt: string): 'criar_atividades' | 'texto_livre' {
-  const promptLower = userPrompt.toLowerCase();
+  const normalized = userPrompt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   
   const activityKeywords = [
-    'atividade', 'atividades', 'exercício', 'exercícios', 'quiz', 'prova',
-    'avaliação', 'avaliacao', 'criar atividade', 'crie atividade', 'monte atividade',
-    'flash card', 'flashcard', 'caça-palavra', 'caca-palavra', 'cruzadinha',
-    'jogo educativo', 'game educativo', 'dinâmica', 'interativ'
+    'atividade', 'atividades', 'exercicio', 'exercicios', 'quiz', 'prova',
+    'avaliacao', 'criar atividade', 'crie atividade', 'monte atividade',
+    'crie uma lista', 'lista de exercicio', 'lista de atividade',
+    'flash card', 'flashcard', 'caca-palavra', 'cruzadinha',
+    'jogo educativo', 'game educativo', 'dinamica', 'interativ',
+    'crie um quiz', 'crie uma prova', 'crie exercicio',
   ];
   
-  const isActivityRequest = activityKeywords.some(kw => promptLower.includes(kw));
+  const isActivityRequest = activityKeywords.some(kw => normalized.includes(kw));
   
   return isActivityRequest ? 'criar_atividades' : 'texto_livre';
 }
