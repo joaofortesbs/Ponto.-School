@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { X, Copy, Check, Download, MoreHorizontal, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown, Bold, Italic, Strikethrough, Code, Link2, Type, ListOrdered, List as ListIcon, ChevronUp, Quote, ListChecks, Maximize2, Minimize2 } from 'lucide-react';
+import { X, Copy, Check, Download, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown, Bold, Italic, Strikethrough, Code, Link2, Type, ListOrdered, List as ListIcon, ChevronUp, Quote, ListChecks, Maximize2, Minimize2, Printer } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -1503,6 +1503,116 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
     }
   }, [artifact.secoes]);
 
+  const handlePrint = useCallback(() => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const title = editableTitle || artifact.metadata.titulo || 'Documento';
+    const cleanTitle = title.replace(/<[^>]*>/g, '');
+
+    let contentHtml = '';
+    for (const block of blocks) {
+      switch (block.type) {
+        case 'header': {
+          const level = (block.data as any).level || 2;
+          const text = (block.data as any).text || '';
+          contentHtml += `<h${level}>${text}</h${level}>`;
+          break;
+        }
+        case 'paragraph':
+          contentHtml += `<p>${(block.data as any).text || ''}</p>`;
+          break;
+        case 'list': {
+          const items = (block.data as any).items || [];
+          const listStyle = (block.data as any).style === 'ordered' ? 'ol' : 'ul';
+          contentHtml += `<${listStyle}>${items.map((i: string) => `<li>${i}</li>`).join('')}</${listStyle}>`;
+          break;
+        }
+        case 'checklist': {
+          const checkItems = (block.data as any).items || [];
+          contentHtml += '<ul style="list-style:none;padding-left:0;">';
+          for (const ci of checkItems) {
+            const checked = ci.checked ? '☑' : '☐';
+            contentHtml += `<li>${checked} ${ci.text}</li>`;
+          }
+          contentHtml += '</ul>';
+          break;
+        }
+        case 'quote':
+          contentHtml += `<blockquote style="border-left:3px solid #666;padding-left:12px;margin:12px 0;color:#555;font-style:italic;">${(block.data as any).text || ''}</blockquote>`;
+          break;
+        case 'delimiter':
+          contentHtml += '<hr style="margin:24px 0;border:none;border-top:1px solid #ddd;"/>';
+          break;
+        case 'table': {
+          const rows = (block.data as any).content || [];
+          if (rows.length > 0) {
+            contentHtml += '<table style="width:100%;border-collapse:collapse;margin:16px 0;">';
+            rows.forEach((row: string[], ri: number) => {
+              const tag = ri === 0 && (block.data as any).withHeadings ? 'th' : 'td';
+              contentHtml += '<tr>';
+              row.forEach((cell: string) => {
+                contentHtml += `<${tag} style="border:1px solid #ddd;padding:8px;text-align:left;">${cell}</${tag}>`;
+              });
+              contentHtml += '</tr>';
+            });
+            contentHtml += '</table>';
+          }
+          break;
+        }
+        default:
+          if ((block.data as any).text) {
+            contentHtml += `<p>${(block.data as any).text}</p>`;
+          }
+      }
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${cleanTitle}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Georgia&display=swap');
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: 'Georgia', 'Palatino Linotype', serif;
+            color: #1a1a1a;
+            line-height: 1.7;
+            padding: 48px;
+            max-width: 780px;
+            margin: 0 auto;
+          }
+          h1 { font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 700; margin-bottom: 8px; color: #111; }
+          h2 { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 600; margin: 28px 0 12px; color: #222; }
+          h3 { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600; margin: 24px 0 10px; color: #333; }
+          h4, h5, h6 { font-family: 'Inter', sans-serif; margin: 20px 0 8px; color: #444; }
+          p { margin: 10px 0; font-size: 15px; }
+          ul, ol { margin: 10px 0; padding-left: 28px; }
+          li { margin: 4px 0; font-size: 15px; }
+          .subtitle { font-size: 16px; color: #666; margin-bottom: 32px; font-family: 'Georgia', serif; }
+          .header-line { width: 60px; height: 3px; background: #e67e22; margin: 16px 0 32px; border-radius: 2px; }
+          @media print {
+            body { padding: 24px; }
+            @page { margin: 2cm; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>${cleanTitle}</h1>
+        ${editableSubtitle ? `<p class="subtitle">${editableSubtitle.replace(/<[^>]*>/g, '')}</p>` : ''}
+        <div class="header-line"></div>
+        ${contentHtml}
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+    }, 300);
+  }, [blocks, editableTitle, editableSubtitle, artifact.metadata.titulo]);
+
   const handleNavigateToSection = useCallback((sectionId: string) => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -1602,10 +1712,11 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                   <Download className="w-4 h-4" />
                 </button>
                 <button
+                  onClick={handlePrint}
                   className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
-                  title="Mais opções"
+                  title="Imprimir"
                 >
-                  <MoreHorizontal className="w-4 h-4" />
+                  <Printer className="w-4 h-4" />
                 </button>
                 <div className="w-px h-5 mx-1" style={{ background: '#0c1334' }} />
                 <button
