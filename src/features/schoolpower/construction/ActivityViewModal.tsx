@@ -17,7 +17,7 @@ import TeseRedacaoPreview from '@/features/schoolpower/activities/tese-redacao/T
 import { UniversalActivityHeader } from './components/UniversalActivityHeader';
 import { useUserInfo } from './hooks/useUserInfo';
 import { downloadActivity, isDownloadSupported, getDownloadFormatLabel } from '../Sistema-baixar-atividades';
-import { ContentExtractModal } from '../components/ContentExtractModal';
+import { TextVersionModal } from '../components/Modal-Versao-Texto';
 import { isTextVersionActivity } from '../config/activityVersionConfig';
 import { retrieveTextVersionContent } from '../activities/text-version/TextVersionGenerator';
 import { useChosenActivitiesStore } from '../interface-chat-producao/stores/ChosenActivitiesStore';
@@ -2007,12 +2007,11 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     <>
       {!isContentExtractOpen && createPortal(modalContent, document.body)}
       
-      {/* Modal de Extrato de Conteúdo para atividades versão texto */}
-      <ContentExtractModal
+      {/* Modal de Versão em Texto para atividades versão texto */}
+      <TextVersionModal
         isOpen={isContentExtractOpen}
         onClose={() => {
           setIsContentExtractOpen(false);
-          // Fechar também o ActivityViewModal ao fechar o ContentExtractModal
           onClose();
         }}
         activityType={activityType}
