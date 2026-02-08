@@ -1,0 +1,102 @@
+O “up‑down” é um marcador único posicionado por cima da coluna de traços, alinhado via cálculo de índice da seção ativa e altura fixa de cada traço. Ele não é um traço separado por seção; é um thumb que se move verticalmente em cima da “trilha” de traços.
+
+Como o alinhamento é calculado
+Cada traço é renderizado com a mesma altura (tickHeight) e espaçamento (gap), por exemplo 12px de altura + 8px de gap.
+
+O sistema sabe qual seção está ativa (activeIndex) e calcula o deslocamento vertical do marcador:
+
+o
+f
+f
+s
+e
+t
+Y
+=
+a
+c
+t
+i
+v
+e
+I
+n
+d
+e
+x
+×
+(
+t
+i
+c
+k
+H
+e
+i
+g
+h
+t
++
+g
+a
+p
+)
+offsetY=activeIndex×(tickHeight+gap)
+O marcador é um único elemento, algo como:
+
+xml
+<div class="ticks-container">
+  <div class="ticks-track">
+    <!-- traços cinza -->
+    <div class="tick"></div>
+    <div class="tick"></div>
+    ...
+  </div>
+
+  <!-- marcador branco/azul -->
+  <div class="tick-thumb"></div>
+</div>
+No CSS, ele fica absolutamente alinhado à trilha:
+
+css
+.ticks-container {
+  position: absolute; /* preso à lateral do modal */
+  right: 24px;
+  top: 25%;           /* ajusta a “coluna” na altura da tela */
+  height: auto;
+}
+
+.ticks-track {
+  position: relative;
+}
+
+.tick {
+  width: 18px;
+  height: 4px;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  background: #3a3a3a;
+}
+
+.tick-thumb {
+  position: absolute;
+  left: 0;
+  width: 22px;
+  height: 4px;
+  border-radius: 999px;
+  background: #f5f5f5;
+  transition: transform 0.16s ease-out;
+}
+Movimento do up‑down
+Sempre que activeSectionId muda, o código recalcula o offsetY e aplica em um transform:
+
+ts
+const offsetY = activeIndex * (tickHeight + gap);
+tickThumbEl.style.transform = `translateY(${offsetY}px)`;
+Como o transform é animado via transition, o marcador desliza suavemente para o traço correspondente, parecendo que “sobe e desce” exatamente alinhado sobre eles.
+​
+
+Sincronização com a interface
+A coluna inteira (ticks-container) é ancorada ao editor (por exemplo, ao lado direito do modal, com top definido em função da altura do modal), garantindo que os traços e o marcador fiquem sempre na mesma posição relativa, mesmo em fullscreen.
+
+Em telas menores ou quando o modal muda de tamanho, o layout recalcula o top e, se necessário, o número de traços/spacing, mas o princípio permanece: índice da seção → deslocamento fixo → marcador perfeitamente alinhado.

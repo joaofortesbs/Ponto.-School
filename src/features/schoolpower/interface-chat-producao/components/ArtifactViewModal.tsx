@@ -663,14 +663,14 @@ function BlockOutline({
     >
       {isHovered && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, x: 6, scale: 0.96 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
           transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-          className="fixed z-[10000] rounded-xl border py-3 px-3"
+          className="absolute z-20 rounded-xl border py-3 px-3"
           style={{
-            left: '50%',
+            right: '0',
             top: '50%',
-            transform: 'translate(-50%, -50%)',
+            transform: 'translateY(-50%)',
             background: 'rgba(20, 22, 40, 0.95)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
@@ -681,8 +681,6 @@ function BlockOutline({
             overflowY: 'auto',
           }}
           onClick={(e) => e.stopPropagation()}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
         >
           <nav className="flex flex-col gap-0.5">
             {items.map((item) => {

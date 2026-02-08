@@ -1,0 +1,35 @@
+Esses traços laterais da Manus IA são um mini‑mapa de seções (outline vertical) acoplado ao editor, renderizado como uma lista de anchors alinhada à lateral do modal, sincronizada com o scroll e com a posição atual do texto. Cada traço representa uma seção/bloco relevante do documento, e o “up‑down” é uma animação de foco quando você navega ou rola a página, deslocando o marcador ativo para o traço correspondente.
+
+Estrutura de dados
+O editor mantém uma lista de seções: sections = [{id, startOffset, endOffset, title}], derivada dos headings ou blocos lógicos do texto (ex.: H1–H6, separadores, capítulos).
+​
+
+Essa lista alimenta o componente lateral: para cada seção, um traço (<div class="section-tick" data-id="...">). O traço ativo recebe classe especial (.section-tick--active).
+
+Sincronização com scroll (marcador que sobe/desce)
+Um IntersectionObserver ou listener de scroll observa os elementos de seção no editor; quando um entra mais no viewport, o sistema marca essa seção como ativa (activeSectionId).
+
+O marcador visual (traço mais claro) muda de posição alterando a classe do traço correspondente; a transição é feita com CSS (transition: transform 160ms ease-out, opacity 160ms), gerando o efeito “up‑down” suave enquanto você rola ou clica.
+​
+​
+
+Navegação por clique
+Ao clicar em um traço, o sistema localiza o bloco/heading da seção (document.getElementById(section.id)) e executa scrollIntoView({behavior: 'smooth', block: 'center'}), sincronizando o texto com o marcador.
+​
+
+Ao mesmo tempo, o activeSectionId é atualizado para essa seção, o que dispara a animação de foco no traço e, opcionalmente, um leve highlight na seção de texto (background sutil).
+​
+
+Componente lateral (implementação típica)
+Posicionamento: position: absolute ou fixed à direita do modal; altura proporcional ao documento (por exemplo, 8–10 traços visíveis que representam as principais seções).
+​
+
+Responsividade: em telas menores, esse mini‑mapa pode esconder ou virar um botão; em fullscreen, permanece alinhado à borda do editor para manter a sensação de “document viewer” profissional.
+​
+
+Integração com o editor
+Esse sistema não mexe no modelo de texto em si; ele apenas observa a estrutura do documento (headings/blocos) e reflete isso em um componente visual independente.
+​
+
+A cada mudança estrutural (criar/excluir heading, dividir seção), o editor recalcula sections e re-renderiza os traços, mantendo o mini‑mapa sempre coerente com o conteúdo real.
+​
