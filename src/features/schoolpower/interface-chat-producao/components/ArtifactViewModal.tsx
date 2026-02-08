@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { X, Copy, Check, Download, MoreHorizontal, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown, Bold, Italic, Strikethrough, Code, Link2, Type, ListOrdered, List as ListIcon, ChevronUp, Quote, ListChecks } from 'lucide-react';
 import {
@@ -1467,7 +1468,7 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
 
   if (!isVisible) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0" style={{ zIndex: OVERLAY_CONFIG.zIndex }}>
       <div
         className="absolute inset-0"
@@ -1657,7 +1658,8 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
             </div>
           </div>
         </div>
-      </div>
+      </div>,
+    document.body
   );
 }
 
