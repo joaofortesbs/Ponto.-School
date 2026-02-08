@@ -11,7 +11,7 @@
  *          goal recitation, e memória de sessão completa.
  */
 
-export { ContextAssembler, contextAssembler, type CallType, type SessionContext } from './context-assembler';
+export { ContextAssembler, contextAssembler, type CallType, type SessionContext, type LedgerFact } from './context-assembler';
 export { ConversationCompactor, type ConversationTurn } from './conversation-compactor';
 export { GoalReciter } from './goal-reciter';
 export { 
@@ -22,7 +22,9 @@ export {
   setPlan, 
   addStepResult, 
   registerActivity, 
-  clearSession 
+  addLedgerFact,
+  clearSession,
+  warmupSession,
 } from './session-store';
 
 export { 
@@ -30,3 +32,20 @@ export {
   type MenteMaiorInput, 
   type MenteMaiorOutput 
 } from './mente-maior';
+
+export {
+  buildUnifiedContext,
+  buildContextForFollowUp,
+  buildContextForPlanner,
+  buildContextForCapability,
+  getContextStats,
+  type GatewayOptions,
+} from './context-gateway';
+
+export {
+  classifyIntent,
+  shouldCreatePlan,
+  shouldRespondDirectly,
+  type IntentType,
+  type ClassifiedIntent,
+} from './intent-classifier';

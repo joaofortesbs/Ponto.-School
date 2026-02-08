@@ -22,6 +22,14 @@ export type CallType =
   | 'final_response'
   | 'follow_up';
 
+export interface LedgerFact {
+  id: string;
+  fact: string;
+  category: 'activity_created' | 'decision' | 'content_generated' | 'preference' | 'discovery' | 'error' | 'context';
+  timestamp: number;
+  metadata?: Record<string, any>;
+}
+
 export interface SessionContext {
   sessionId: string;
   userId: string;
@@ -61,16 +69,17 @@ export interface SessionContext {
     summary: string;
     timestamp: number;
   }>;
+  interactionLedger: LedgerFact[];
 }
 
 const MAX_CONTEXT_CHARS: Record<CallType, number> = {
-  planner: 6000,
-  initial_response: 2000,
-  interpretation: 1500,
-  mente_maior: 8000,
-  capability: 4000,
-  final_response: 6000,
-  follow_up: 5000,
+  planner: 12000,
+  initial_response: 4000,
+  interpretation: 3000,
+  mente_maior: 16000,
+  capability: 6000,
+  final_response: 12000,
+  follow_up: 10000,
 };
 
 export class ContextAssembler {

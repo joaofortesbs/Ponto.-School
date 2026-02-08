@@ -138,6 +138,7 @@ export class AgentExecutor {
       stepResults: [],
       activitiesCreated: [],
       previousInteractions: [],
+      interactionLedger: [],
     };
   }
 

@@ -6,11 +6,12 @@
  * 2. Chamada 2: Card de Desenvolvimento (MenteMaior unificada) 
  * 3. Chamada 3: Resposta Final (FinalResponseService)
  * 
- * INTEGRAÇÃO COM CONTEXT ENGINE:
+ * CONTEXT ENGINE v2.0 (fonte ÚNICA de verdade):
  * - SessionStore mantém toda a memória da sessão
- * - ConversationCompactor compacta histórico inteligentemente
+ * - ContextGateway garante contexto alinhado em TODAS as chamadas
+ * - InteractionLedger registra fatos permanentes (nunca truncados)
  * - GoalReciter garante que o objetivo original nunca se perde
- * - ContextAssembler monta contexto otimizado por tipo de chamada
+ * - MemoryManager mantido como bridge read-only para backward compat
  */
 
 import { createExecutionPlan, generatePlanMessage } from './planner';
@@ -18,7 +19,6 @@ import { AgentExecutor } from './executor';
 import { MemoryManager, createMemoryManager } from './memory-manager';
 import type { ExecutionPlan, WorkingMemoryItem, ProgressUpdate } from '../interface-chat-producao/types';
 import { 
-  getContextManager,
   generateInitialResponse,
   generateFinalResponse,
   type InitialResponseResult,
@@ -29,15 +29,22 @@ import {
   createSession,
   addConversationTurn,
   setPlan,
+  addLedgerFact,
+  getSession,
   clearSession as clearContextEngineSession,
+  buildContextForFollowUp,
+  buildContextForPlanner,
+  classifyIntent,
+  shouldCreatePlan,
+  shouldRespondDirectly,
   type ConversationTurn,
 } from './context-engine';
 
 const memoryManagers: Map<string, MemoryManager> = new Map();
 const executors: Map<string, AgentExecutor> = new Map();
 const sessionTimestamps: Map<string, number> = new Map();
-const SESSION_CLEANUP_INTERVAL = 10 * 60 * 1000;
-const SESSION_MAX_AGE = 60 * 60 * 1000;
+const SESSION_CLEANUP_INTERVAL = 15 * 60 * 1000;
+const SESSION_MAX_AGE = 4 * 60 * 60 * 1000;
 
 function cleanupExpiredSessions(): void {
   const now = Date.now();
@@ -84,28 +91,43 @@ export async function processUserPrompt(
   console.log('📌 [Orchestrator] Session:', sessionId, 'User:', userId);
 
   const memory = getOrCreateMemoryManager(sessionId, userId);
-  const contextManager = getContextManager(sessionId);
+  sessionTimestamps.set(sessionId, Date.now());
 
-  // CRÍTICO: Usar prepararParaNovoPlano para permitir múltiplas interações
-  contextManager.prepararParaNovoPlano(userPrompt);
-
-  // CONTEXT ENGINE: Criar/atualizar sessão no SessionStore unificado
   const session = createSession(sessionId, userId, userPrompt);
   
-  // Registrar mensagem do usuário no histórico da conversa
   addConversationTurn(sessionId, {
     role: 'user',
     content: userPrompt,
     timestamp: Date.now(),
   });
 
-  await memory.addToShortTermMemory({
-    type: 'interaction',
-    content: userPrompt,
-    metadata: { role: 'user' },
+  const intent = classifyIntent(userPrompt);
+  console.log(`🧠 [Orchestrator] Intent: ${intent.type} (${(intent.confidence * 100).toFixed(0)}%) — ${intent.reasoning}`);
+
+  addLedgerFact(sessionId, {
+    fact: `Professor pediu: "${userPrompt.substring(0, 150)}" [intent: ${intent.type}]`,
+    category: 'context',
   });
 
-  const contextForPlanner = memory.formatContextForPrompt();
+  if (shouldRespondDirectly(intent)) {
+    console.log('💬 [Orchestrator] Modo conversacional — respondendo sem criar plano');
+    
+    const directResponse = await handleDirectResponse(userPrompt, sessionId, userId);
+    
+    addConversationTurn(sessionId, {
+      role: 'assistant',
+      content: directResponse,
+      timestamp: Date.now(),
+      metadata: { type: 'follow_up' },
+    });
+
+    return {
+      plan: null,
+      initialMessage: directResponse,
+    };
+  }
+
+  const contextForPlanner = buildContextForPlanner(sessionId, userPrompt);
 
   try {
     const plan = await createExecutionPlan(userPrompt, {
@@ -115,9 +137,7 @@ export async function processUserPrompt(
     });
 
     await memory.savePlan(plan);
-    contextManager.definirPlano(plan.planId, plan.objetivo, plan.etapas.length);
 
-    // CONTEXT ENGINE: Registrar plano no SessionStore
     setPlan(sessionId, {
       planId: plan.planId,
       objetivo: plan.objetivo,
@@ -132,6 +152,11 @@ export async function processUserPrompt(
       })),
     });
 
+    addLedgerFact(sessionId, {
+      fact: `Plano criado: "${plan.objetivo}" com ${plan.etapas.length} etapas (${plan.planId})`,
+      category: 'decision',
+    });
+
     let initialMessage = generatePlanMessage(plan);
     let initialResponseData: InitialResponseResult | undefined;
 
@@ -143,18 +168,11 @@ export async function processUserPrompt(
       console.warn('⚠️ [Orchestrator] Erro ao gerar resposta inicial, usando fallback:', initialError);
     }
 
-    // CONTEXT ENGINE: Registrar resposta inicial no histórico
     addConversationTurn(sessionId, {
       role: 'assistant',
       content: initialMessage,
       timestamp: Date.now(),
       metadata: { type: 'initial_response', planId: plan.planId },
-    });
-
-    await memory.addToShortTermMemory({
-      type: 'interaction',
-      content: initialMessage,
-      metadata: { role: 'assistant', planId: plan.planId },
     });
 
     console.log('✅ [Orchestrator] Plano criado e resposta inicial gerada:', plan.planId);
@@ -176,11 +194,50 @@ export async function processUserPrompt(
       userId,
     });
 
+    addLedgerFact(sessionId, {
+      fact: `Erro ao processar pedido: ${errorMessage.substring(0, 200)}`,
+      category: 'error',
+    });
+
     return {
       plan: null,
       initialMessage: 'Desculpe, não consegui processar sua solicitação no momento. Por favor, tente novamente ou reformule seu pedido.',
     };
   }
+}
+
+async function handleDirectResponse(
+  message: string,
+  sessionId: string,
+  userId: string
+): Promise<string> {
+  const unifiedContext = buildContextForFollowUp(sessionId, message, userId);
+
+  const { executeWithCascadeFallback } = await import('../services/controle-APIs-gerais-school-power');
+
+  const prompt = `
+${unifiedContext}
+
+═══════════════════════════════════════════════════════════════
+MENSAGEM ATUAL DO PROFESSOR:
+"${message}"
+═══════════════════════════════════════════════════════════════
+
+O professor está conversando, não pedindo para criar algo específico.
+Responda de forma natural, amigável e conversacional.
+Lembre-se de TUDO que já foi feito e discutido na sessão.
+Se o professor está agradecendo, reconheça e pergunte se precisa de mais algo.
+Se está fazendo uma pergunta, responda com base no contexto.
+Se quiser criar algo, indique que pode fazer um plano.
+  `.trim();
+
+  const result = await executeWithCascadeFallback(prompt);
+
+  if (result.success && result.data) {
+    return result.data;
+  }
+
+  return 'Entendi! Estou aqui para ajudar. O que precisa?';
 }
 
 export interface ExecutePlanResult {
@@ -218,7 +275,6 @@ export async function executeAgentPlan(
 
   const executor = getOrCreateExecutor(sessionId, memory);
 
-  // CRÍTICO: Resetar executor para nova execução
   executor.resetForNewExecution();
   console.error('✅ [Orchestrator] Executor resetado para nova execução');
 
@@ -242,13 +298,6 @@ export async function executeAgentPlan(
       const finalResponseData = await generateFinalResponse(sessionId);
       respostaFinal = finalResponseData.resposta;
       
-      await memory.addToShortTermMemory({
-        type: 'interaction',
-        content: finalResponseData.resposta,
-        metadata: { role: 'assistant', type: 'final_response' },
-      });
-      
-      // CONTEXT ENGINE: Registrar resposta final no histórico unificado
       addConversationTurn(sessionId, {
         role: 'assistant',
         content: finalResponseData.resposta,
@@ -261,10 +310,9 @@ export async function executeAgentPlan(
       console.warn('⚠️ [Orchestrator] Erro ao gerar resposta final, usando relatório:', finalError);
     }
 
-    await memory.addToShortTermMemory({
-      type: 'result',
-      content: `Plano ${plan.planId} executado com sucesso`,
-      metadata: { planId: plan.planId },
+    addLedgerFact(sessionId, {
+      fact: `Plano "${plan.objetivo}" executado com sucesso (${plan.etapas.length} etapas)`,
+      category: 'context',
     });
 
     console.log('✅ [Orchestrator] Plano executado e resposta final gerada');
@@ -274,9 +322,9 @@ export async function executeAgentPlan(
   } catch (error) {
     console.error('❌ [Orchestrator] Erro na execução:', error);
 
-    await memory.saveToWorkingMemory({
-      tipo: 'erro',
-      conteudo: `Erro na execução do plano: ${error instanceof Error ? error.message : String(error)}`,
+    addLedgerFact(sessionId, {
+      fact: `Erro na execução do plano: ${error instanceof Error ? error.message : String(error)}`,
+      category: 'error',
     });
 
     throw error;
@@ -298,7 +346,6 @@ export async function executeAgentPlanWithDetails(
 
   const executor = getOrCreateExecutor(sessionId, memory);
 
-  // CRÍTICO: Resetar executor para nova execução
   executor.resetForNewExecution();
 
   if (onProgress) {
@@ -320,14 +367,7 @@ export async function executeAgentPlanWithDetails(
     try {
       finalResponseData = await generateFinalResponse(sessionId);
       respostaFinal = finalResponseData.resposta;
-      
-      await memory.addToShortTermMemory({
-        type: 'interaction',
-        content: finalResponseData.resposta,
-        metadata: { role: 'assistant', type: 'final_response' },
-      });
 
-      // CONTEXT ENGINE: Registrar resposta final no histórico unificado
       addConversationTurn(sessionId, {
         role: 'assistant',
         content: finalResponseData.resposta,
@@ -338,10 +378,9 @@ export async function executeAgentPlanWithDetails(
       console.warn('⚠️ [Orchestrator] Erro ao gerar resposta final, usando relatório:', finalError);
     }
 
-    await memory.addToShortTermMemory({
-      type: 'result',
-      content: `Plano ${plan.planId} executado com sucesso`,
-      metadata: { planId: plan.planId },
+    addLedgerFact(sessionId, {
+      fact: `Plano "${plan.objetivo}" executado com sucesso`,
+      category: 'context',
     });
 
     console.log('✅ [Orchestrator] Plano executado e resposta final gerada');
@@ -363,6 +402,15 @@ export async function getSessionContext(sessionId: string): Promise<{
   workingMemory: WorkingMemoryItem[];
   hasActivePlan: boolean;
 }> {
+  const session = getSession(sessionId);
+  
+  if (session) {
+    return {
+      workingMemory: [],
+      hasActivePlan: !!session.currentPlan && session.currentPlan.etapasCompletas < session.currentPlan.totalEtapas,
+    };
+  }
+
   const memory = memoryManagers.get(sessionId);
   if (!memory) {
     return {
@@ -392,8 +440,8 @@ export async function clearSession(sessionId: string): Promise<void> {
   }
 
   executors.delete(sessionId);
+  sessionTimestamps.delete(sessionId);
 
-  // CONTEXT ENGINE: Limpar sessão do SessionStore unificado
   clearContextEngineSession(sessionId);
 }
 
@@ -404,36 +452,52 @@ export async function sendFollowUpMessage(
 ): Promise<string> {
   console.log('💬 [Orchestrator] Mensagem de follow-up:', message);
 
-  const memory = getOrCreateMemoryManager(sessionId, userId);
-  const context = memory.formatContextForPrompt();
+  sessionTimestamps.set(sessionId, Date.now());
+
+  const session = getSession(sessionId);
+  if (!session) {
+    createSession(sessionId, userId, message);
+  }
+
+  addConversationTurn(sessionId, {
+    role: 'user',
+    content: message,
+    timestamp: Date.now(),
+    metadata: { type: 'follow_up' },
+  });
+
+  addLedgerFact(sessionId, {
+    fact: `Follow-up do professor: "${message.substring(0, 120)}"`,
+    category: 'context',
+  });
+
+  const unifiedContext = buildContextForFollowUp(sessionId, message, userId);
 
   const { executeWithCascadeFallback } = await import('../services/controle-APIs-gerais-school-power');
 
   const prompt = `
-Você é o assistente School Power. O professor enviou uma mensagem de acompanhamento:
+${unifiedContext}
 
-MENSAGEM: "${message}"
+═══════════════════════════════════════════════════════════════
+MENSAGEM ATUAL DO PROFESSOR:
+"${message}"
+═══════════════════════════════════════════════════════════════
 
-CONTEXTO ATUAL:
-${context}
-
-Responda de forma útil e amigável, considerando o contexto da conversa.
-Se for uma nova solicitação, indique que você pode criar um novo plano de ação.
+Responda de forma útil e amigável, considerando TODO o contexto da conversa acima.
+Lembre-se de tudo que já foi feito, criado e discutido.
+Se for uma nova solicitação que requer criação de atividades ou conteúdo, 
+indique que você pode criar um novo plano de ação.
+Se for uma conversa casual, pergunta ou agradecimento, responda naturalmente.
   `.trim();
 
   const result = await executeWithCascadeFallback(prompt);
 
   if (result.success && result.data) {
-    await memory.addToShortTermMemory({
-      type: 'interaction',
-      content: message,
-      metadata: { role: 'user' },
-    });
-
-    await memory.addToShortTermMemory({
-      type: 'interaction',
+    addConversationTurn(sessionId, {
+      role: 'assistant',
       content: result.data,
-      metadata: { role: 'assistant' },
+      timestamp: Date.now(),
+      metadata: { type: 'follow_up' },
     });
 
     return result.data;
