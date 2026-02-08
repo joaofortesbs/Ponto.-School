@@ -1705,7 +1705,7 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                   className="absolute z-10 hidden lg:flex items-center"
                   style={{
                     right: '6px',
-                    top: '50%',
+                    top: '45%',
                     transform: 'translateY(-50%)',
                   }}
                 >
