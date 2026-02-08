@@ -18,7 +18,14 @@ The platform features a modern, glass-morphism inspired design with blur backgro
 - **Authentication & User Management**: Hybrid system using Neon PostgreSQL for user data and sessions, and Supabase for file storage. Auth state managed via localStorage.
 - **Core Features**:
     - **School Power**: AI-powered lesson planning managed by a robust, observable, and self-correcting Multi-Agent Lesson Orchestrator (v4.0) through a 7-step workflow, accessible via the Agente Jota Chat Interface. This interface includes an orchestrator, planner, executor, 3-layer memory manager, 4-layer Anti-Hallucination System, Rules Engine, Debug System, and Context-aware Content Generation, supporting multi-turn conversations.
-    - **3-Call Context Architecture**: Unified context management with specialized AI calls for initial, development card reflection, and final responses.
+    - **3-Call Context Architecture (v1.0 Legacy)**: Unified context management with specialized AI calls for initial, development card reflection, and final responses.
+    - **Advanced Hybrid Agent System (v2.0)**: Next-generation agentic architecture located at `src/features/schoolpower/agente-jota/v2/` with 5 pillars:
+      - **AgentLoop (ReAct Loop)**: Flexible Pensar→Agir→Observar loop replacing rigid pipeline. Max 10 iterations with stuck detection, timeout guardrails, and parallel action support.
+      - **Context Engine**: KV-cache optimized context management with stable prompt prefixes, deterministic serialization, append-only context, and recoverable compression (inspired by Manus AI).
+      - **Parallel Executor**: Fan-out/fan-in execution of independent capabilities using Promise.allSettled with dependency graph resolution.
+      - **Persistent Memory**: PostgreSQL-backed memory (tables: `agent_memory`, `agent_sessions`) replacing localStorage. Cross-session preferences, auto-learning from interactions. API at `/api/agent-memory`.
+      - **Verifier Agent**: Quality verification before delivery with pedagogical coherence checks, completeness validation, and auto-correction retry (inspired by Replit Agent 3).
+      - **Orchestrator v2.0**: Unified comprehension (3 calls → 1), ReAct execution loop, verification, and final response. Reduces AI calls from 8-12 to 3-5 per flow.
     - **API-First Architecture (V2)**: Uses standardized contracts and a central `CapabilityExecutor` for managing key capabilities.
     - **Database Persistence Pipeline**: Persists created activities to the Neon database through a 4-phase architecture (COLLECT, VALIDATE, PERSIST, VERIFY).
     - **Content Generation Pipeline (V2)**: Generates AI content for selected activities.
