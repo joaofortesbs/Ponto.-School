@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { X, Copy, Check, Download, MoreHorizontal, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown, Bold, Italic, Strikethrough, Code, Link2, Type, ListOrdered, List as ListIcon, ChevronUp, Quote, ListChecks } from 'lucide-react';
+import { X, Copy, Check, Download, MoreHorizontal, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown, Bold, Italic, Strikethrough, Code, Link2, Type, ListOrdered, List as ListIcon, ChevronUp, Quote, ListChecks, Maximize2, Minimize2 } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -70,28 +70,54 @@ function EditableContent({
   placeholder?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const lastHtmlRef = useRef(html);
+  const isFocusedRef = useRef(false);
+  const lastExternalHtmlRef = useRef(html);
+  const [showPlaceholder, setShowPlaceholder] = useState(
+    !html || html.replace(/<[^>]*>/g, '').trim() === ''
+  );
 
   useEffect(() => {
-    if (ref.current && html !== lastHtmlRef.current) {
+    if (ref.current && html !== lastExternalHtmlRef.current && !isFocusedRef.current) {
       ref.current.innerHTML = html;
-      lastHtmlRef.current = html;
+      lastExternalHtmlRef.current = html;
+      const isEmpty = !html || html.replace(/<[^>]*>/g, '').trim() === '';
+      setShowPlaceholder(isEmpty);
     }
   }, [html]);
 
+  useEffect(() => {
+    if (ref.current && !ref.current.innerHTML) {
+      ref.current.innerHTML = html;
+    }
+  }, []);
+
   const handleInput = useCallback(() => {
-    if (ref.current && onUpdate) {
+    if (ref.current) {
       const newHtml = ref.current.innerHTML;
-      lastHtmlRef.current = newHtml;
-      onUpdate(newHtml);
+      const isEmpty = !newHtml || newHtml.replace(/<[^>]*>/g, '').trim() === '';
+      setShowPlaceholder(isEmpty);
+      if (onUpdate) {
+        onUpdate(newHtml);
+      }
     }
   }, [onUpdate]);
 
-  const isEmpty = !html || html.replace(/<[^>]*>/g, '').trim() === '';
+  const handleFocus = useCallback(() => {
+    isFocusedRef.current = true;
+  }, []);
+
+  const handleBlur = useCallback(() => {
+    isFocusedRef.current = false;
+    if (ref.current && onUpdate) {
+      const currentHtml = ref.current.innerHTML;
+      lastExternalHtmlRef.current = currentHtml;
+      onUpdate(currentHtml);
+    }
+  }, [onUpdate]);
 
   return (
     <div style={{ position: 'relative' }}>
-      {isEmpty && placeholder && (
+      {showPlaceholder && placeholder && (
         <div
           className={className}
           style={{
@@ -121,7 +147,8 @@ function EditableContent({
           wordBreak: 'break-word',
         }}
         onInput={handleInput}
-        dangerouslySetInnerHTML={{ __html: html }}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
       />
     </div>
   );
@@ -639,11 +666,11 @@ function BlockOutline({
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-          className="absolute z-20 rounded-xl border py-3 px-3"
+          className="fixed z-[10000] rounded-xl border py-3 px-3"
           style={{
-            right: '0',
+            left: '50%',
             top: '50%',
-            transform: 'translateY(-50%)',
+            transform: 'translate(-50%, -50%)',
             background: 'rgba(20, 22, 40, 0.95)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
@@ -654,6 +681,8 @@ function BlockOutline({
             overflowY: 'auto',
           }}
           onClick={(e) => e.stopPropagation()}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
           <nav className="flex flex-col gap-0.5">
             {items.map((item) => {
@@ -1141,6 +1170,7 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [editableTitle, setEditableTitle] = useState('');
   const [editableSubtitle, setEditableSubtitle] = useState('');
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const config = ARTIFACT_TYPE_CONFIGS[artifact.metadata.tipo];
@@ -1441,20 +1471,26 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
   }, [isVisible]);
 
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (selectedBlockId) {
           setSelectedBlockId(null);
+        } else if (isFullscreen) {
+          setIsFullscreen(false);
         } else {
           onClose();
         }
       }
+      if (e.key === 'F' && e.ctrlKey && e.shiftKey) {
+        e.preventDefault();
+        setIsFullscreen(f => !f);
+      }
     };
     if (isVisible) {
-      document.addEventListener('keydown', handleEsc);
+      document.addEventListener('keydown', handleKeyDown);
     }
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [isVisible, onClose, selectedBlockId]);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isVisible, onClose, selectedBlockId, isFullscreen]);
 
   const handleCopyAll = useCallback(async () => {
     try {
@@ -1510,14 +1546,15 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
 
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div
-          className="relative w-[96vw] max-w-[1000px] h-[92vh] max-h-[860px] rounded-2xl overflow-hidden flex flex-col pointer-events-auto"
+          className={`relative overflow-hidden flex flex-col pointer-events-auto ${isFullscreen ? 'w-screen h-screen' : 'w-[96vw] max-w-[1000px] h-[92vh] max-h-[860px]'}`}
           style={{
             transform: isAnimating ? 'scale(1)' : 'scale(0.96)',
             opacity: isAnimating ? 1 : 0,
-            transition: `all ${ANIMATION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+            transition: `all 180ms cubic-bezier(0.4, 0, 0.2, 1)`,
             background: MODAL_COLORS.background,
-            border: '1px solid #0c1334',
-            boxShadow: '0 25px 80px -12px rgba(0, 0, 0, 0.6), 0 12px 40px -8px rgba(255, 107, 0, 0.08)',
+            border: isFullscreen ? 'none' : '1px solid #0c1334',
+            borderRadius: isFullscreen ? '0' : '16px',
+            boxShadow: isFullscreen ? 'none' : '0 25px 80px -12px rgba(0, 0, 0, 0.6), 0 12px 40px -8px rgba(255, 107, 0, 0.08)',
             pointerEvents: isAnimating ? 'auto' : 'none',
           }}
           onClick={(e) => e.stopPropagation()}
@@ -1573,6 +1610,17 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                   <MoreHorizontal className="w-4 h-4" />
                 </button>
                 <div className="w-px h-5 mx-1" style={{ background: '#0c1334' }} />
+                <button
+                  onClick={() => setIsFullscreen(f => !f)}
+                  className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
+                  title={isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
+                >
+                  {isFullscreen ? (
+                    <Minimize2 className="w-4 h-4" />
+                  ) : (
+                    <Maximize2 className="w-4 h-4" />
+                  )}
+                </button>
                 <button
                   onClick={onClose}
                   className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"

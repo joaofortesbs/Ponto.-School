@@ -1,0 +1,85 @@
+sse sistema é um toggle de modo “fullscreen” do modal, controlado por estado e animado via CSS/JS, que transforma o container do modal em um overlay ocupando 100% da viewport com transição suave.
+
+Lógica de estado (profissional)
+Tenha um único componente DocumentModal com prop/estado isFullscreen.
+
+O botão do cabeçalho (ícone de expandir/retrair) só faz setIsFullscreen(prev => !prev).
+
+O mesmo componente renderiza em modo normal ou fullscreen apenas trocando classes CSS (sem recriar o conteúdo, para não perder seleção/scroll).
+
+Exemplo (React):
+
+tsx
+function DocumentModal() {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  return (
+    <div
+      className={clsx(
+        "modal-base",
+        isFullscreen ? "modal-fullscreen" : "modal-centered"
+      )}
+    >
+      <header className="modal-header">
+        {/* ...título etc... */}
+        <button onClick={() => setIsFullscreen(f => !f)}>
+          {isFullscreen ? "⤢" : "⤢"}
+        </button>
+      </header>
+
+      <div className="modal-body">
+        {/* seu editor / conteúdo */}
+      </div>
+    </div>
+  );
+}
+Camada visual e animação
+Profissionalmente, a sensação de “expansão” vem de:
+
+Overlay fixo: o backdrop cobre a tela inteira (position: fixed; inset: 0;) sempre; o que muda é o tamanho/posição do card.
+
+Transições GPU-friendly: animar só transform e opacity, e no máximo max-width/height, nunca top/left puros para evitar lag.
+
+Timing: transition: transform 180ms ease-out, max-width 180ms ease-out, max-height 180ms ease-out, border-radius 180ms;.
+
+CSS ilustrativo:
+
+css
+.modal-base {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  background: #111;
+  color: #f8f8f8;
+  box-shadow: 0 18px 45px rgba(0,0,0,0.45);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition:
+    transform 0.18s ease-out,
+    max-width 0.18s ease-out,
+    max-height 0.18s ease-out,
+    border-radius 0.18s ease-out;
+}
+
+.modal-centered {
+  max-width: 960px;
+  max-height: 90vh;
+  border-radius: 18px;
+  transform: scale(0.98);
+}
+
+.modal-fullscreen {
+  max-width: 100vw;
+  max-height: 100vh;
+  border-radius: 0;
+  transform: scale(1);
+}
+Detalhes de UX importantes
+Preservar contexto: nunca desmontar o editor ao trocar o modo; apenas mudar classes no mesmo nó para o usuário manter cursor, seleção e scroll.
+
+Scroll independente: modal-body com overflow: auto em ambos os modos; no fullscreen, ele ocupa todo o espaço remanescente (flex: 1).
+
+Atalhos de teclado: ESC fecha, Ctrl+Shift+F (ou similar) toggla fullscreen; isso passa a sensação de app desktop.
+
+Responsividade: em telas pequenas, fullscreen é o padrão; o botão pode só “esconder” sidebars da plataforma enquanto o modal fica 100%.

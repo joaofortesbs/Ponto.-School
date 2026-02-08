@@ -1,0 +1,71 @@
+sse comportamento quase sempre vem de um contentEditable controlado pelo React (ou similar) que re-renderiza o nó inteiro a cada digitação, fazendo o browser perder a posição do cursor e resetar para o início.
+
+Por que o cursor volta para o início
+Você provavelmente está fazendo algo como: <div contentEditable onInput={e => setTexto(e.target.innerText)}>{texto}</div>.
+
+Quando setTexto roda, o componente re-renderiza, substitui o conteúdo do div pelo valor de texto e o navegador reposiciona o caret no começo do nó.
+
+Formas diretas de corrigir
+Você tem basicamente três caminhos:
+
+Não controlar o contentEditable caractere a caractere
+
+Deixe o DOM ser a fonte de verdade enquanto o usuário digita.
+
+Só sincronize para o estado ao blur (ou com debounce mais longo).
+
+Ex.: salvar em onBlur em vez de onInput / onKeyUp.
+
+Salvar e restaurar a posição do caret (mais próximo do que editores tipo Notion fazem)
+
+Antes de atualizar o estado, capture a posição atual do cursor usando window.getSelection() e Range.
+
+Após o re-render, recoloque o cursor no mesmo ponto usando a mesma API.
+
+Esqueleto em React:
+
+jsx
+function Editable() {
+  const ref = useRef(null);
+  const [value, setValue] = useState("");
+  const selectionRef = useRef(null);
+
+  const saveSelection = () => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    selectionRef.current = sel.getRangeAt(0);
+  };
+
+  const restoreSelection = () => {
+    const range = selectionRef.current;
+    if (!range) return;
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  };
+
+  const onInput = e => {
+    saveSelection();
+    setValue(e.currentTarget.innerText);
+  };
+
+  useEffect(() => {
+    restoreSelection();
+  }, [value]);
+
+  return (
+    <div
+      ref={ref}
+      contentEditable
+      onInput={onInput}
+      suppressContentEditableWarning
+    >
+      {value}
+    </div>
+  );
+}
+Esse padrão resolve o “jump to start” na maioria dos casos.
+
+Usar uma lib de editor pronta
+
+Tiptap, Slate, Lexical etc. já tratam caret, seleção e atualizações de state pra você.
