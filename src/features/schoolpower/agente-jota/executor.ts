@@ -168,6 +168,19 @@ export class AgentExecutor {
         
         if (!contentSnapshot || Object.keys(contentSnapshot).length <= 2) {
           try {
+            const syncModule = require('../services/content-sync-service');
+            const syncData = syncModule.ContentSyncService.getContent(actId, actTipo);
+            if (syncData && Object.keys(syncData).length > 2) {
+              contentSnapshot = { ...(contentSnapshot || {}), ...syncData };
+              console.error(`📸 [getCollectedItems] Snapshot ContentSync para ${actId}: ${Object.keys(syncData).length} campos`);
+            }
+          } catch (e) {
+            console.warn(`⚠️ [getCollectedItems] Erro snapshot ContentSync para ${actId}:`, e);
+          }
+        }
+
+        if (!contentSnapshot || Object.keys(contentSnapshot).length <= 2) {
+          try {
             const storeActivity = useChosenActivitiesStore.getState().getActivityById(actId);
             if (storeActivity) {
               const genFields = storeActivity.dados_construidos?.generated_fields || {};

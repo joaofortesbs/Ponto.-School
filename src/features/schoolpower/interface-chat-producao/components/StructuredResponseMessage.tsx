@@ -5,6 +5,8 @@ import { ArtifactCard } from './ArtifactCard';
 import { BookOpen, CheckCircle2, FileText, ChevronRight, Loader2 } from 'lucide-react';
 import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
+import { ContentSyncService } from '../../services/content-sync-service';
+import { readActivityContent, hasRealContent } from '../../services/activity-storage-contract';
 
 interface StructuredResponseMessageProps {
   blocks: StructuredResponseBlock[];
@@ -14,27 +16,29 @@ interface StructuredResponseMessageProps {
 
 const HEAVY_TYPES = ['quiz-interativo', 'flash-cards', 'lista-exercicios'];
 
+function checkContentExists(activityId: string, tipo: string): boolean {
+  if (ContentSyncService.hasRealContent(activityId, tipo)) return true;
+  const stored = readActivityContent(activityId, tipo);
+  if (hasRealContent(stored)) return true;
+  return false;
+}
+
 function InlineActivitiesCard({ activities, onOpenActivity }: { 
   activities: ActivitySummaryUI[]; 
   onOpenActivity?: (activity: ActivitySummaryUI) => void;
 }) {
-  const [contentReady, setContentReady] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
+  const [contentReady, setContentReady] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const act of activities) {
       const isHeavy = HEAVY_TYPES.includes(act.tipo?.toLowerCase() || '');
       if (!isHeavy) {
         initial[act.id] = true;
       } else {
-        const snap = act._contentSnapshot || {};
-        const indicators = ['questoes', 'questions', 'cards', 'etapas', 'sections'];
-        const hasArrays = indicators.some(k => Array.isArray(snap[k]) && snap[k].length > 0);
-        initial[act.id] = hasArrays;
+        initial[act.id] = checkContentExists(act.id, act.tipo?.toLowerCase() || '');
       }
     }
-    setContentReady(initial);
-  }, [activities]);
+    return initial;
+  });
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -44,8 +48,37 @@ function InlineActivitiesCard({ activities, onOpenActivity }: {
     };
 
     window.addEventListener('content-sync-update', handler);
-    return () => window.removeEventListener('content-sync-update', handler);
-  }, []);
+
+    const safetyTimer = setTimeout(() => {
+      setContentReady(prev => {
+        const updated = { ...prev };
+        let changed = false;
+        for (const act of activities) {
+          if (updated[act.id] === false) {
+            const tipo = act.tipo?.toLowerCase() || '';
+            if (checkContentExists(act.id, tipo)) {
+              updated[act.id] = true;
+              changed = true;
+            }
+          }
+        }
+        if (!changed) {
+          for (const key of Object.keys(updated)) {
+            if (updated[key] === false) {
+              updated[key] = true;
+              changed = true;
+            }
+          }
+        }
+        return changed ? updated : prev;
+      });
+    }, 3000);
+
+    return () => {
+      window.removeEventListener('content-sync-update', handler);
+      clearTimeout(safetyTimer);
+    };
+  }, [activities]);
 
   const getActivityIcon = (tipo: string) => {
     const t = tipo?.toLowerCase() || '';
