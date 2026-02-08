@@ -668,9 +668,9 @@ function BlockOutline({
           transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
           className="absolute z-20 rounded-xl border py-3 px-3"
           style={{
-            right: '0',
+            left: '50%',
             top: '50%',
-            transform: 'translateY(-50%)',
+            transform: 'translate(-50%, -50%)',
             background: 'rgba(20, 22, 40, 0.95)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
@@ -722,7 +722,7 @@ function BlockOutline({
         </motion.div>
       )}
 
-      <nav className="flex flex-col items-end gap-[6px] py-2" style={{ marginTop: '-60px' }}>
+      <nav className="flex flex-col items-end gap-[6px] py-2" style={{ marginTop: '-20px' }}>
         {items.map((item) => {
           const isActive = activeId === item.id;
           const isSubLevel = item.level > 1;
