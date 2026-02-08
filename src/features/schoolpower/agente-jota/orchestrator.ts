@@ -3,10 +3,14 @@
  * 
  * Coordena todo o fluxo do agente com arquitetura de 3 chamadas:
  * 1. Chamada 1: Resposta Inicial (InitialResponseService)
- * 2. Chamada 2: Card de Desenvolvimento (DevelopmentCardService) 
+ * 2. Chamada 2: Card de Desenvolvimento (MenteMaior unificada) 
  * 3. Chamada 3: Resposta Final (FinalResponseService)
  * 
- * O ContextManager mantém a visão unificada de toda a conversa.
+ * INTEGRAÇÃO COM CONTEXT ENGINE:
+ * - SessionStore mantém toda a memória da sessão
+ * - ConversationCompactor compacta histórico inteligentemente
+ * - GoalReciter garante que o objetivo original nunca se perde
+ * - ContextAssembler monta contexto otimizado por tipo de chamada
  */
 
 import { createExecutionPlan, generatePlanMessage } from './planner';
@@ -21,6 +25,13 @@ import {
   type FinalResponseResult,
 } from './context';
 import type { ArtifactData } from './capabilities/CRIAR_ARQUIVO';
+import {
+  createSession,
+  addConversationTurn,
+  setPlan,
+  clearSession as clearContextEngineSession,
+  type ConversationTurn,
+} from './context-engine';
 
 const memoryManagers: Map<string, MemoryManager> = new Map();
 const executors: Map<string, AgentExecutor> = new Map();
@@ -76,8 +87,17 @@ export async function processUserPrompt(
   const contextManager = getContextManager(sessionId);
 
   // CRÍTICO: Usar prepararParaNovoPlano para permitir múltiplas interações
-  // Isso preserva o histórico da conversa mas reseta o estado de execução
   contextManager.prepararParaNovoPlano(userPrompt);
+
+  // CONTEXT ENGINE: Criar/atualizar sessão no SessionStore unificado
+  const session = createSession(sessionId, userId, userPrompt);
+  
+  // Registrar mensagem do usuário no histórico da conversa
+  addConversationTurn(sessionId, {
+    role: 'user',
+    content: userPrompt,
+    timestamp: Date.now(),
+  });
 
   await memory.addToShortTermMemory({
     type: 'interaction',
@@ -97,6 +117,21 @@ export async function processUserPrompt(
     await memory.savePlan(plan);
     contextManager.definirPlano(plan.planId, plan.objetivo, plan.etapas.length);
 
+    // CONTEXT ENGINE: Registrar plano no SessionStore
+    setPlan(sessionId, {
+      planId: plan.planId,
+      objetivo: plan.objetivo,
+      totalEtapas: plan.etapas.length,
+      etapasCompletas: 0,
+      etapas: plan.etapas.map(e => ({
+        ordem: e.ordem,
+        titulo: e.titulo || e.descricao,
+        descricao: e.descricao,
+        status: 'pendente' as const,
+        capabilities: e.capabilities?.map(c => c.nome) || [e.funcao],
+      })),
+    });
+
     let initialMessage = generatePlanMessage(plan);
     let initialResponseData: InitialResponseResult | undefined;
 
@@ -107,6 +142,14 @@ export async function processUserPrompt(
     } catch (initialError) {
       console.warn('⚠️ [Orchestrator] Erro ao gerar resposta inicial, usando fallback:', initialError);
     }
+
+    // CONTEXT ENGINE: Registrar resposta inicial no histórico
+    addConversationTurn(sessionId, {
+      role: 'assistant',
+      content: initialMessage,
+      timestamp: Date.now(),
+      metadata: { type: 'initial_response', planId: plan.planId },
+    });
 
     await memory.addToShortTermMemory({
       type: 'interaction',
@@ -205,6 +248,14 @@ export async function executeAgentPlan(
         metadata: { role: 'assistant', type: 'final_response' },
       });
       
+      // CONTEXT ENGINE: Registrar resposta final no histórico unificado
+      addConversationTurn(sessionId, {
+        role: 'assistant',
+        content: finalResponseData.resposta,
+        timestamp: Date.now(),
+        metadata: { type: 'final_response', planId: plan.planId },
+      });
+      
       console.log('📊 [Orchestrator] Resumo:', finalResponseData.resumo);
     } catch (finalError) {
       console.warn('⚠️ [Orchestrator] Erro ao gerar resposta final, usando relatório:', finalError);
@@ -275,6 +326,14 @@ export async function executeAgentPlanWithDetails(
         content: finalResponseData.resposta,
         metadata: { role: 'assistant', type: 'final_response' },
       });
+
+      // CONTEXT ENGINE: Registrar resposta final no histórico unificado
+      addConversationTurn(sessionId, {
+        role: 'assistant',
+        content: finalResponseData.resposta,
+        timestamp: Date.now(),
+        metadata: { type: 'final_response', planId: plan.planId },
+      });
     } catch (finalError) {
       console.warn('⚠️ [Orchestrator] Erro ao gerar resposta final, usando relatório:', finalError);
     }
@@ -333,6 +392,9 @@ export async function clearSession(sessionId: string): Promise<void> {
   }
 
   executors.delete(sessionId);
+
+  // CONTEXT ENGINE: Limpar sessão do SessionStore unificado
+  clearContextEngineSession(sessionId);
 }
 
 export async function sendFollowUpMessage(
