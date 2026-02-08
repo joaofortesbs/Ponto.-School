@@ -139,6 +139,49 @@ export async function createExecutionPlan(
     };
 
     const allCapNames = plan.etapas.flatMap(e => e.capabilities?.map(c => c.nome) || []);
+
+    const hasGerarConteudo = allCapNames.includes('gerar_conteudo_atividades');
+    const hasCriarAtividadeGlobal = allCapNames.includes('criar_atividade');
+    if (hasGerarConteudo && !hasCriarAtividadeGlobal) {
+      console.log('🔧 [Planner] Pós-validação: gerar_conteudo_atividades sem criar_atividade — injetando criar_atividade + salvar_atividades_bd');
+      const timestamp = Date.now();
+      const hasSalvar = allCapNames.includes('salvar_atividades_bd');
+      
+      const criarCaps: CapabilityCall[] = [
+        {
+          id: `cap-${plan.etapas.length}-0-${timestamp}`,
+          nome: 'criar_atividade',
+          displayName: 'Vou construir as atividades com o conteúdo gerado',
+          categoria: 'CRIAR' as CapabilityCall['categoria'],
+          parametros: {},
+          status: 'pending' as const,
+          ordem: 1,
+        },
+      ];
+      if (!hasSalvar) {
+        criarCaps.push({
+          id: `cap-${plan.etapas.length}-1-${timestamp}`,
+          nome: 'salvar_atividades_bd',
+          displayName: 'Vou salvar suas atividades no banco de dados',
+          categoria: 'SALVAR_BD' as CapabilityCall['categoria'],
+          parametros: {},
+          status: 'pending' as const,
+          ordem: 2,
+        });
+      }
+      
+      plan.etapas.push({
+        ordem: plan.etapas.length + 1,
+        titulo: 'Construir e salvar suas atividades',
+        descricao: 'Vou montar as atividades com o conteúdo gerado e salvar no banco de dados',
+        funcao: 'criar_atividade',
+        parametros: {},
+        justificativa: 'gerar_conteudo_atividades precisa de criar_atividade para completar o fluxo',
+        status: 'pendente' as const,
+        capabilities: criarCaps,
+      });
+    }
+
     const hasCriarArquivo = allCapNames.includes('criar_arquivo');
 
     if (!hasCriarArquivo && detectsFileRequest(userPrompt)) {
@@ -182,6 +225,7 @@ const FILE_REQUEST_STRONG_KEYWORDS = [
   'relatório', 'relatorio', 'resumo executivo',
   'apostila', 'formato de arquivo', 'em formato de',
   'gere um documento', 'gere um texto',
+  'plano de aula', 'explicação detalhada',
 ];
 
 const FILE_REQUEST_CONTEXTUAL_PATTERNS = [

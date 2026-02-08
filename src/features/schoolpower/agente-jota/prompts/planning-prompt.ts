@@ -51,24 +51,25 @@ REGRAS DE DECISÃO:
    → IMPORTANTE: Se incluir criar_atividade, SEMPRE inclua salvar_atividades_bd logo depois
    → Opcionalmente adicione criar_arquivo no final para documento complementar
 
-2. Se o professor quer uma EXPLICAÇÃO, TEXTO, RESUMO ou conteúdo escrito:
-   → Use APENAS "criar_arquivo" — ele gera qualquer tipo de documento/texto
-   → NÃO precisa pesquisar, decidir ou criar atividades!
+2. 🔴 REGRA OBRIGATÓRIA — SEQUÊNCIA GERAR CONTEÚDO → CRIAR ATIVIDADE:
+   Se o plano incluir "gerar_conteudo_atividades", é OBRIGATÓRIO incluir "criar_atividade" LOGO DEPOIS!
+   → "gerar_conteudo_atividades" gera o conteúdo pedagógico
+   → "criar_atividade" constrói a atividade com esse conteúdo
+   → Sem "criar_atividade" depois, o conteúdo gerado é PERDIDO e o professor não recebe nada!
+   → NUNCA use "gerar_conteudo_atividades" sozinho sem "criar_atividade" na sequência!
 
-3. Se o professor quer PESQUISAR o que já tem ou o que está disponível:
+3. 🔴 REGRA — ARQUIVO OU TEXTO LONGO:
+   Se o professor pedir um ARQUIVO, DOCUMENTO, TEXTO LONGO, EXPLICAÇÃO DETALHADA, RESUMO, ROTEIRO, PLANO DE AULA ou qualquer conteúdo escrito:
+   → Use "criar_arquivo" — ele gera qualquer tipo de documento/texto
+   → Palavras-chave: "roteiro", "arquivo", "documento", "dossiê", "relatório", "resumo executivo", "apostila", "texto", "explicação", "plano de aula"
+   → Se já houver criação de atividades, adicione "criar_arquivo" como ÚLTIMA etapa adicional
+   → NÃO precisa pesquisar, decidir ou criar atividades para textos/documentos!
+
+4. Se o professor quer PESQUISAR o que já tem ou o que está disponível:
    → Use "pesquisar_atividades_disponiveis" e/ou "pesquisar_atividades_conta"
    → NÃO precisa criar nada!
 
-4. Se o professor quer um PLANO DE AULA ou planejamento:
-   → Use "criar_arquivo" para gerar o documento do plano
-
 5. Para pedidos AMBÍGUOS, tente interpretar a intenção real e escolha o caminho mais simples.
-
-6. 🔴 REGRA — DETECÇÃO DE ARQUIVO/DOCUMENTO:
-   Se o professor pedir EXPLICITAMENTE um documento usando palavras como "roteiro", "arquivo", "documento", "dossiê", "relatório", "resumo executivo", "apostila"
-   → Inclua "criar_arquivo" no plano
-   → Se já houver criação de atividades, adicione "criar_arquivo" como ÚLTIMA etapa adicional
-   ⚠️ NÃO force "criar_arquivo" para palavras genéricas como "material", "apresentação", "guia" — só inclua se o contexto deixar claro que o professor quer um DOCUMENTO para download/impressão
 
 FORMATO DE ETAPAS - ETAPAS AMPLAS E DESCRITIVAS:
 
