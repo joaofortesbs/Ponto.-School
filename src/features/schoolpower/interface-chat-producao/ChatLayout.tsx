@@ -14,7 +14,7 @@ import { MessageStream } from './components/MessageStream';
 import { ArtifactViewModal } from './components/ArtifactViewModal';
 import { ContextModal } from './ContextModal';
 import { useChatState } from './state/chatState';
-import { processUserPrompt, executeAgentPlan } from '../agente-jota/v2/orchestrator-switch';
+import { processUserPrompt, executeAgentPlan } from '../agente-jota/orchestrator';
 import { generateSessionId } from '../agente-jota/memory-manager';
 import type { ArtifactData } from '../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
