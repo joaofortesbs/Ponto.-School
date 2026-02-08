@@ -106,10 +106,17 @@ export class AgentExecutor {
   }
 
   /**
-   * Constrói uma sessão mínima quando o SessionStore não tem dados
-   * Isso garante que a MenteMaior funcione mesmo sem o orchestrator ter criado a sessão
+   * FALLBACK: Constrói uma sessão mínima quando o SessionStore não tem dados.
+   * Em condições normais, o orchestrator sempre cria a sessão via createSession()
+   * ANTES da execução — este método só é ativado em edge cases.
+   * 
+   * BRIDGE NOTE: Durante a migração do MemoryManager legado para o ContextEngine,
+   * ambos os sistemas coexistem. O SessionStore é o novo source-of-truth mas
+   * o MemoryManager ainda é mantido para backward compatibility até remoção completa.
    */
   private buildMinimalSession(plan: ExecutionPlan): SessionContext {
+    console.warn('⚠️ [Executor] buildMinimalSession ativado — SessionStore vazio para sessão', this.sessionId);
+    console.warn('⚠️ [Executor] Isso indica que o orchestrator não criou a sessão antes da execução');
     return {
       sessionId: this.sessionId,
       userId: '',
