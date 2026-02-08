@@ -3,11 +3,10 @@ const STORAGE_KEY = 'agente-jota-v2-enabled';
 export function isV2Enabled(): boolean {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'true') return true;
     if (stored === 'false') return false;
-    return false;
+    return true;
   } catch {
-    return false;
+    return true;
   }
 }
 

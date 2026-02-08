@@ -26,7 +26,7 @@ The platform features a modern, glass-morphism inspired design with blur backgro
       - **Persistent Memory**: PostgreSQL-backed memory (tables: `agent_memory`, `agent_sessions`) replacing localStorage. Cross-session preferences, auto-learning from interactions. API at `/api/agent-memory`.
       - **Verifier Agent**: Quality verification before delivery with pedagogical coherence checks, completeness validation, and auto-correction retry (inspired by Replit Agent 3).
       - **Orchestrator v2.0**: Unified comprehension (3 calls → 1), ReAct execution loop, verification, and final response. Reduces AI calls from 8-12 to 3-5 per flow.
-      - **Feature Flag System**: Toggle v1/v2 via `localStorage` key `agente-jota-v2-enabled`. Console API: `window.__jotaV2.enable()`, `window.__jotaV2.disable()`, `window.__jotaV2.toggle()`.
+      - **Feature Flag System**: V2 is the DEFAULT (enabled). Toggle via `localStorage` key `agente-jota-v2-enabled`. Console API: `window.__jotaV2.enable()`, `window.__jotaV2.disable()`, `window.__jotaV2.toggle()`. To revert to v1: `window.__jotaV2.disable()`.
       - **Adapter/Bridge Layer**: Type-compatible adapter (`v2/adapter.ts`) translating v2 responses to v1 interfaces (ProcessPromptResult, ExecutePlanResult, ProgressUpdate events). Ensures zero regression on v1.
       - **Orchestrator Switch**: Unified entry point (`v2/orchestrator-switch.ts`) imported by ChatLayout.tsx. Routes to v1 or v2 orchestrator based on feature flag state.
     - **API-First Architecture (V2)**: Uses standardized contracts and a central `CapabilityExecutor` for managing key capabilities.
