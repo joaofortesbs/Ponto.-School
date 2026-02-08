@@ -61,11 +61,13 @@ function EditableContent({
   className,
   style,
   onUpdate,
+  placeholder,
 }: {
   html: string;
   className?: string;
   style?: React.CSSProperties;
   onUpdate?: (newHtml: string) => void;
+  placeholder?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const lastHtmlRef = useRef(html);
@@ -85,23 +87,43 @@ function EditableContent({
     }
   }, [onUpdate]);
 
+  const isEmpty = !html || html.replace(/<[^>]*>/g, '').trim() === '';
+
   return (
-    <div
-      ref={ref}
-      contentEditable
-      suppressContentEditableWarning
-      className={className}
-      style={{
-        ...style,
-        outline: 'none',
-        cursor: 'text',
-        minHeight: '1em',
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word',
-      }}
-      onInput={handleInput}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <div style={{ position: 'relative' }}>
+      {isEmpty && placeholder && (
+        <div
+          className={className}
+          style={{
+            ...style,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            pointerEvents: 'none',
+            opacity: 0.35,
+          }}
+        >
+          {placeholder}
+        </div>
+      )}
+      <div
+        ref={ref}
+        contentEditable
+        suppressContentEditableWarning
+        className={className}
+        style={{
+          ...style,
+          outline: 'none',
+          cursor: 'text',
+          minHeight: '1em',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+        }}
+        onInput={handleInput}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </div>
   );
 }
 
@@ -1117,6 +1139,8 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
   const [isAnimating, setIsAnimating] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [editableTitle, setEditableTitle] = useState('');
+  const [editableSubtitle, setEditableSubtitle] = useState('');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const config = ARTIFACT_TYPE_CONFIGS[artifact.metadata.tipo];
@@ -1125,7 +1149,9 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
 
   useEffect(() => {
     setBlocks(editorData.blocks);
-  }, [editorData]);
+    setEditableTitle(artifact.metadata.titulo || config.nome || '');
+    setEditableSubtitle(artifact.metadata.subtitulo || '');
+  }, [editorData, artifact.metadata.titulo, artifact.metadata.subtitulo, config.nome]);
 
   const tocItems = useMemo(() => extractTOCFromBlocks(blocks), [blocks]);
 
@@ -1576,30 +1602,20 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                     transition={{ duration: 0.4, delay: 0.1 }}
                     className="mb-8"
                   >
-                    <h1
+                    <EditableContent
+                      html={editableTitle}
                       className="text-[2rem] font-bold leading-tight tracking-tight text-white mb-2"
                       style={FONT_STYLES.heading}
-                    >
-                      {artifact.metadata.titulo || config.nome}
-                    </h1>
-                    {artifact.metadata.subtitulo && (
-                      <p
-                        className="text-base text-slate-400 leading-relaxed"
-                        style={FONT_STYLES.body}
-                      >
-                        {artifact.metadata.subtitulo}
-                      </p>
-                    )}
-                    <div
-                      className="flex items-center gap-4 mt-4 text-[11px] text-slate-500"
-                      style={FONT_STYLES.ui}
-                    >
-                      <span>{artifact.secoes.length} seções</span>
-                      <span className="w-1 h-1 rounded-full bg-slate-600" />
-                      <span>{artifact.metadata.estatisticas?.palavras || '—'} palavras</span>
-                      <span className="w-1 h-1 rounded-full bg-slate-600" />
-                      <span>{formatDate(artifact.metadata.geradoEm)}</span>
-                    </div>
+                      onUpdate={setEditableTitle}
+                      placeholder="Adicione um título..."
+                    />
+                    <EditableContent
+                      html={editableSubtitle}
+                      className="text-base leading-relaxed text-slate-400"
+                      style={FONT_STYLES.body}
+                      onUpdate={setEditableSubtitle}
+                      placeholder="Adicione um subtítulo..."
+                    />
                   </motion.div>
 
                   <DndContext
