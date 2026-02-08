@@ -668,9 +668,10 @@ function BlockOutline({
           transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
           className="absolute z-20 rounded-xl border py-3 px-3"
           style={{
-            left: '50%',
+            right: '100%',
+            marginRight: '8px',
             top: '50%',
-            transform: 'translate(-50%, -50%)',
+            transform: 'translateY(-50%)',
             background: 'rgba(20, 22, 40, 0.95)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
