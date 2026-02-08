@@ -117,28 +117,54 @@ export class AgentExecutor {
     const activities: ActivitySummary[] = [];
     const artifacts: ArtifactData[] = [];
 
+    console.error(`
+═══════════════════════════════════════════════════════════════════════
+🔍 [Executor] getCollectedItems() — Coletando itens criados
+   Map keys: ${Array.from(this.capabilityResultsMap.keys()).join(', ') || 'NENHUMA'}
+   Map size: ${this.capabilityResultsMap.size}
+═══════════════════════════════════════════════════════════════════════`);
+
     const criarAtividadeResult = this.capabilityResultsMap.get('criar_atividade');
-    if (criarAtividadeResult?.success && criarAtividadeResult?.data?.atividades_criadas) {
-      for (const act of criarAtividadeResult.data.atividades_criadas) {
+    if (criarAtividadeResult?.success) {
+      const builtActivities = criarAtividadeResult.data?.activities_built || criarAtividadeResult.data?.atividades_criadas || [];
+      
+      const salvarResult = this.capabilityResultsMap.get('salvar_atividades_bd');
+      const savedMap = new Map<string, number>();
+      if (salvarResult?.success && salvarResult?.data?.saved_activities) {
+        for (const saved of salvarResult.data.saved_activities) {
+          if (saved.original_id && saved.db_id) {
+            savedMap.set(saved.original_id, saved.db_id);
+          }
+        }
+      }
+
+      for (const act of builtActivities) {
+        const actId = act.id || act.original_id || act.activity_id || `act-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
         activities.push({
-          id: act.id || `act-${Date.now()}`,
-          titulo: act.titulo || 'Atividade',
-          tipo: act.tipo || 'atividade',
-          db_id: act.db_id,
+          id: actId,
+          titulo: act.titulo || act.name || act.title || 'Atividade',
+          tipo: act.tipo || act.activity_type || act.type || 'atividade',
+          db_id: act.db_id || savedMap.get(actId),
         });
       }
-    }
 
-    const criarArquivoResult = this.capabilityResultsMap.get('criar_arquivo');
-    if (criarArquivoResult?.success && criarArquivoResult?.data?.artifact) {
-      artifacts.push(criarArquivoResult.data.artifact);
+      console.error(`✅ [getCollectedItems] Atividades coletadas: ${activities.length}`);
+      activities.forEach((a, i) => console.error(`   ${i + 1}. ${a.titulo} (${a.tipo}) db_id=${a.db_id || 'N/A'}`));
+    } else {
+      console.error(`⚠️ [getCollectedItems] criar_atividade não encontrado ou falhou`);
+      if (criarAtividadeResult) {
+        console.error(`   success=${criarAtividadeResult.success}, data keys: ${criarAtividadeResult.data ? Object.keys(criarAtividadeResult.data).join(', ') : 'N/A'}`);
+      }
     }
 
     for (const [key, value] of this.capabilityResultsMap.entries()) {
-      if (key.startsWith('criar_arquivo') && key !== 'criar_arquivo' && value?.success && value?.data?.artifact) {
+      if (key.startsWith('criar_arquivo') && value?.success && value?.data?.artifact) {
         artifacts.push(value.data.artifact);
+        console.error(`✅ [getCollectedItems] Artifact coletado de '${key}': ${value.data.artifact?.metadata?.titulo || 'sem título'}`);
       }
     }
+
+    console.error(`📊 [getCollectedItems] TOTAL: ${activities.length} atividades, ${artifacts.length} artifacts`);
 
     return { activities, artifacts };
   }

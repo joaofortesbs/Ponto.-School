@@ -160,6 +160,15 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     setTimeout(() => setSelectedArtifact(null), 300);
   }, []);
 
+  const handleOpenActivity = useCallback((activity: any) => {
+    console.log('📋 [ChatLayout] Abrindo atividade:', activity.titulo, 'db_id:', activity.db_id);
+    if (activity.db_id) {
+      window.dispatchEvent(new CustomEvent('open-activity-modal', {
+        detail: { activityId: activity.db_id, activityTitle: activity.titulo }
+      }));
+    }
+  }, []);
+
   useEffect(() => {
     if (!_hasHydrated) {
       console.log('⏳ [ChatLayout] Aguardando hidratação do sessionStorage...');
@@ -467,23 +476,46 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         detail: { type: 'execution:completed' }
       }));
 
+      const collectedActivities = result.collectedItems?.activities || [];
+      const collectedArtifacts = result.collectedItems?.artifacts || [];
+      
+      console.error(`
+╔════════════════════════════════════════════════════════════════════════╗
+║ 📊 [ChatLayout] STRUCTURED RESPONSE — DADOS COLETADOS
+║════════════════════════════════════════════════════════════════════════║
+║ Atividades coletadas: ${collectedActivities.length}
+║ Artifacts coletados: ${collectedArtifacts.length}
+║ Pending artifacts: ${pendingArtifactsRef.current.length}
+║ Resposta length: ${result.resposta?.length || 0}
+║ Tem marcadores [[: ${result.resposta?.includes('[[') || false}
+╚════════════════════════════════════════════════════════════════════════╝`);
+
+      if (collectedActivities.length > 0) {
+        collectedActivities.forEach((a: any, i: number) => {
+          console.error(`   Atividade ${i + 1}: "${a.titulo}" (${a.tipo}) id=${a.id}`);
+        });
+      }
+
       const allArtifacts = [
-        ...(result.collectedItems?.artifacts || []),
+        ...collectedArtifacts,
         ...pendingArtifactsRef.current,
       ];
       pendingArtifactsRef.current = [];
 
       const seenArtifactIds = new Set<string>();
       const uniqueArtifacts = allArtifacts.filter(a => {
+        if (!a?.id) return true;
         if (seenArtifactIds.has(a.id)) return false;
         seenArtifactIds.add(a.id);
         return true;
       });
 
       const blocks = parseStructuredResponse(result.resposta, {
-        activities: result.collectedItems?.activities || [],
+        activities: collectedActivities,
         artifacts: uniqueArtifacts,
       });
+
+      console.error(`📦 [ChatLayout] Parsed blocks: ${blocks.length} — types: ${blocks.map(b => b.type).join(', ')}`);
 
       addStructuredResponse({ blocks, rawText: result.resposta });
 
@@ -536,7 +568,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
       <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-64 relative">
         <div className="max-w-[1200px] mx-auto w-full">
-          <MessageStream onApplyPlan={handleExecutePlan} onOpenArtifact={handleOpenArtifact} />
+          <MessageStream onApplyPlan={handleExecutePlan} onOpenArtifact={handleOpenArtifact} onOpenActivity={handleOpenActivity} />
         </div>
         <div ref={messagesEndRef} />
       </div>

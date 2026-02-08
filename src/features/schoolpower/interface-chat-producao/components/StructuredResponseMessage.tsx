@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { JotaAvatarChat } from './JotaAvatarChat';
 import { ArtifactCard } from './ArtifactCard';
-import { BookOpen, CheckCircle2 } from 'lucide-react';
+import { BookOpen, CheckCircle2, FileText, ChevronRight } from 'lucide-react';
 import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
@@ -24,6 +24,8 @@ function InlineActivitiesCard({ activities, onOpenActivity }: {
     if (t.includes('cruzada')) return '✏️';
     if (t.includes('complete') || t.includes('lacuna')) return '📝';
     if (t.includes('associa')) return '🔗';
+    if (t.includes('texto') || t.includes('text')) return '📄';
+    if (t.includes('lista') || t.includes('exerc')) return '📋';
     return '📋';
   };
 
@@ -34,8 +36,9 @@ function InlineActivitiesCard({ activities, onOpenActivity }: {
       transition={{ duration: 0.3 }}
       className="my-3 rounded-xl overflow-hidden"
       style={{
-        background: 'rgba(30, 41, 59, 0.5)',
+        background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%)',
         border: '1px solid rgba(148, 163, 184, 0.15)',
+        backdropFilter: 'blur(8px)',
       }}
     >
       <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
@@ -49,7 +52,7 @@ function InlineActivitiesCard({ activities, onOpenActivity }: {
           <button
             key={activity.id || idx}
             onClick={() => onOpenActivity?.(activity)}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors duration-150 group"
+            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-all duration-200 group cursor-pointer"
           >
             <span className="text-lg flex-shrink-0">{getActivityIcon(activity.tipo)}</span>
             <div className="flex-1 min-w-0">
@@ -58,10 +61,50 @@ function InlineActivitiesCard({ activities, onOpenActivity }: {
               </p>
               <p className="text-xs text-slate-500 capitalize">{activity.tipo?.replace(/_/g, ' ')}</p>
             </div>
-            <CheckCircle2 className="w-4 h-4 text-green-500/70 flex-shrink-0" />
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-green-500/70" />
+              <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" />
+            </div>
           </button>
         ))}
       </div>
+    </motion.div>
+  );
+}
+
+function InlineArtifactCard({ artifact, onOpen }: { artifact: ArtifactData; onOpen?: (artifact: ArtifactData) => void }) {
+  const titulo = artifact.metadata?.titulo || 'Documento';
+  const secoesCount = artifact.secoes?.length || 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="my-3"
+    >
+      <button
+        onClick={() => onOpen?.(artifact)}
+        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 hover:bg-white/5 group cursor-pointer"
+        style={{
+          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%)',
+          border: '1px solid rgba(148, 163, 184, 0.12)',
+          backdropFilter: 'blur(8px)',
+        }}
+      >
+        <div className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(99, 102, 241, 0.15)' }}>
+          <FileText className="w-4.5 h-4.5 text-indigo-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-slate-200 truncate group-hover:text-white transition-colors">
+            {titulo}
+          </p>
+          <p className="text-xs text-slate-500">
+            {secoesCount} {secoesCount === 1 ? 'seção' : 'seções'}
+          </p>
+        </div>
+        <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors flex-shrink-0" />
+      </button>
     </motion.div>
   );
 }
@@ -90,7 +133,7 @@ export function StructuredResponseMessage({ blocks, onOpenArtifact, onOpenActivi
                     key={`text-${idx}`}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: idx * 0.1, duration: 0.3 }}
+                    transition={{ delay: idx * 0.08, duration: 0.3 }}
                     className="text-white/90 text-sm leading-relaxed whitespace-pre-wrap mb-2"
                   >
                     {block.content}
@@ -98,13 +141,13 @@ export function StructuredResponseMessage({ blocks, onOpenArtifact, onOpenActivi
                 );
               }
               
-              if (block.type === 'activities_card' && block.activities) {
+              if (block.type === 'activities_card' && block.activities && block.activities.length > 0) {
                 return (
                   <motion.div
                     key={`activities-${idx}`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1, duration: 0.4 }}
+                    transition={{ delay: idx * 0.08, duration: 0.4 }}
                   >
                     <InlineActivitiesCard 
                       activities={block.activities} 
@@ -120,9 +163,9 @@ export function StructuredResponseMessage({ blocks, onOpenArtifact, onOpenActivi
                     key={`artifact-${idx}`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1, duration: 0.4 }}
+                    transition={{ delay: idx * 0.08, duration: 0.4 }}
                   >
-                    <ArtifactCard
+                    <InlineArtifactCard
                       artifact={block.artifact}
                       onOpen={onOpenArtifact}
                     />

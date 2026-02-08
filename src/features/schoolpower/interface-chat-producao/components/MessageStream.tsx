@@ -9,13 +9,15 @@ import { ActivityConstructionCard } from './ActivityConstructionCard';
 import { ArtifactCard } from './ArtifactCard';
 import { StructuredResponseMessage } from './StructuredResponseMessage';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
+import type { ActivitySummaryUI } from '../types/message-types';
 
 interface MessageStreamProps {
   onApplyPlan?: () => void;
   onOpenArtifact?: (artifact: ArtifactData) => void;
+  onOpenActivity?: (activity: ActivitySummaryUI) => void;
 }
 
-export function MessageStream({ onApplyPlan, onOpenArtifact }: MessageStreamProps) {
+export function MessageStream({ onApplyPlan, onOpenArtifact, onOpenActivity }: MessageStreamProps) {
   const messages = useChatState((state) => state.messages);
   const isLoading = useChatState((state) => state.isLoading);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -93,6 +95,7 @@ export function MessageStream({ onApplyPlan, onOpenArtifact }: MessageStreamProp
               <StructuredResponseMessage
                 blocks={message.metadata.cardData.blocks || []}
                 onOpenArtifact={onOpenArtifact}
+                onOpenActivity={onOpenActivity}
               />
             )}
           </motion.div>
