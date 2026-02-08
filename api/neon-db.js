@@ -24,7 +24,7 @@ class NeonDBManager {
     }
 
     if (!connectionString) {
-      throw new Error('DATABASE_URL não configurada. Configure a variável de ambiente DATABASE_URL.');
+      throw new Error('❌ [NeonDB] Nenhuma variável de ambiente de banco de dados encontrada. Configure DATABASE_URL.');
     }
 
     const isProduction = process.env.NODE_ENV === 'production' || 
@@ -36,11 +36,12 @@ class NeonDBManager {
     console.log(`   - Secret Selecionado: ${selectedSecret}`);
     console.log('🔗 [NeonDB] ==========================================');
     
-    const needsSsl = connectionString.includes('neon.tech') || connectionString.includes('supabase');
-    
+    // Configuração do Pool
     this.connectionConfig = {
       connectionString: connectionString,
-      ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}),
+      ssl: {
+        rejectUnauthorized: false
+      },
       max: 10,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,

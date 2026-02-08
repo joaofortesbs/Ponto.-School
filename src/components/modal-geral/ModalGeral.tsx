@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { SidebarModal, MODAL_CONFIG } from "./SidebarModal";
 import { PerfilSection, ConfiguracoesSection, SeuUsoSection } from "./sections";
 import { cn } from "@/lib/utils";
+import { OVERLAY_CONFIG } from "@/config/overlay";
 
 export type ModalSection = "perfil" | "configuracoes" | "seu-uso";
 
@@ -90,12 +91,13 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
     <DialogPrimitive.Root open={isVisible}>
       <DialogPrimitive.Portal>
         <div
-          className="fixed inset-0 z-50"
+          className="fixed inset-0"
           style={{
+            zIndex: OVERLAY_CONFIG.zIndex,
             backgroundColor: `rgba(0, 0, 0, ${isAnimating ? overlayConfig.opacity : 0})`,
             backdropFilter: isAnimating ? `blur(${overlayConfig.blur}px)` : 'blur(0px)',
             WebkitBackdropFilter: isAnimating ? `blur(${overlayConfig.blur}px)` : 'blur(0px)',
-            transition: `all ${ANIMATION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+            transition: `all ${OVERLAY_CONFIG.transition.duration}ms ${OVERLAY_CONFIG.transition.easing}`,
             pointerEvents: isAnimating ? 'auto' : 'none',
           }}
           onClick={handleOverlayClick}
@@ -104,13 +106,14 @@ export const ModalGeral: React.FC<ModalGeralProps> = ({
         />
         
         <DialogPrimitive.Content
-          className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-[900px] w-[95vw] h-[85vh] max-h-[700px] p-0 overflow-hidden gap-0 outline-none"
+          className="fixed left-[50%] top-[50%] grid w-full max-w-[900px] w-[95vw] h-[85vh] max-h-[700px] p-0 overflow-hidden gap-0 outline-none"
           style={{
+            zIndex: OVERLAY_CONFIG.zIndex + 1,
             transform: isAnimating 
               ? 'translate(-50%, -50%) scale(1)' 
               : 'translate(-50%, -48%) scale(0.96)',
             opacity: isAnimating ? 1 : 0,
-            transition: `all ${ANIMATION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+            transition: `all ${OVERLAY_CONFIG.transition.duration}ms ${OVERLAY_CONFIG.transition.easing}`,
             backgroundColor: colors.background,
             borderRadius: '24px',
             border: '1px solid #0c1334',

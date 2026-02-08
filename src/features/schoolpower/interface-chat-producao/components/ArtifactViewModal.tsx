@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { X, Copy, Check, Download, MoreHorizontal, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown, Bold, Italic, Strikethrough, Code, Link2, Type, ListOrdered, List as ListIcon, CheckSquare, ChevronUp, Quote, ListChecks } from 'lucide-react';
+import { X, Copy, Check, Download, MoreHorizontal, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown, Bold, Italic, Strikethrough, Code, Link2, Type, ListOrdered, List as ListIcon, ChevronUp, Quote, ListChecks } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -19,6 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
+import { OVERLAY_CONFIG } from '@/config/overlay';
 import { ARTIFACT_TYPE_CONFIGS } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 import { convertArtifactToEditorJS, extractTOCFromBlocks } from './artifact-editorjs-converter';
 import type { EditorJSBlock, TOCItem } from './artifact-editorjs-converter';
@@ -32,7 +33,7 @@ interface ArtifactViewModalProps {
 const MODAL_COLORS = {
   background: '#000822',
   header: '#040b2a',
-  overlay: { opacity: 0.6, blur: 4 },
+  overlay: { opacity: OVERLAY_CONFIG.opacity, blur: OVERLAY_CONFIG.blur },
 };
 
 const blockAnimVariants = {
@@ -720,7 +721,6 @@ const TURN_INTO_OPTIONS: TurnIntoOption[] = [
   { type: 'paragraph', label: 'Text', icon: <Type className="w-4 h-4" />, data: {} },
   { type: 'list', label: 'List', icon: <ListIcon className="w-4 h-4" />, data: { style: 'unordered' } },
   { type: 'list', label: 'Ordered List', icon: <ListOrdered className="w-4 h-4" />, data: { style: 'ordered' } },
-  { type: 'todo', label: 'Todo', icon: <CheckSquare className="w-4 h-4" />, data: { checked: false } },
   { type: 'checklist', label: 'Checklist', icon: <ListChecks className="w-4 h-4" />, data: {} },
   { type: 'quote', label: 'Citação', icon: <Quote className="w-4 h-4" />, data: {} },
 ];
@@ -751,7 +751,6 @@ function TurnIntoMenu({
     if (opt.type === 'paragraph' && currentBlockType === 'paragraph') return true;
     if (opt.type === 'header' && currentBlockType === 'header' && opt.data.level === currentBlockLevel) return true;
     if (opt.type === 'list' && currentBlockType === 'list' && opt.data.style === currentBlockStyle) return true;
-    if (opt.type === 'todo' && currentBlockType === 'todo') return true;
     if (opt.type === 'checklist' && currentBlockType === 'checklist') return true;
     if (opt.type === 'quote' && currentBlockType === 'quote') return true;
     return false;
@@ -1279,9 +1278,6 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
             : [plainText];
           return { ...b, type: 'list', data: { style: newData.style, items } };
         }
-        if (newType === 'todo') {
-          return { ...b, type: 'todo', data: { text: plainText, checked: false } };
-        }
         if (newType === 'checklist') {
           const lines = plainText.split('\n').filter(l => l.trim());
           const items = lines.length > 0
@@ -1472,14 +1468,14 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-[2000]">
+    <div className="fixed inset-0" style={{ zIndex: OVERLAY_CONFIG.zIndex }}>
       <div
         className="absolute inset-0"
         style={{
           backgroundColor: `rgba(0, 0, 0, ${isAnimating ? MODAL_COLORS.overlay.opacity : 0})`,
           backdropFilter: isAnimating ? `blur(${MODAL_COLORS.overlay.blur}px)` : 'blur(0px)',
           WebkitBackdropFilter: isAnimating ? `blur(${MODAL_COLORS.overlay.blur}px)` : 'blur(0px)',
-          transition: `all ${ANIMATION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+          transition: `all ${OVERLAY_CONFIG.transition.duration}ms ${OVERLAY_CONFIG.transition.easing}`,
           pointerEvents: isAnimating ? 'auto' : 'none',
         }}
         onClick={onClose}

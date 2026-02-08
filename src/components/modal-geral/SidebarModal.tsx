@@ -1,6 +1,7 @@
 import React from "react";
 import { User, Settings, BarChart3 } from "lucide-react";
 import { ModalSection } from "./ModalGeral";
+import { OVERLAY_CONFIG } from "@/config/overlay";
 
 export const MODAL_CONFIG = {
   logo: {
@@ -8,8 +9,8 @@ export const MODAL_CONFIG = {
     padding: 24,
   },
   overlay: {
-    opacity: 0.6,
-    blur: 4,
+    opacity: OVERLAY_CONFIG.opacity,
+    blur: OVERLAY_CONFIG.blur,
   },
   closeButton: {
     top: 8,
