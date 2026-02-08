@@ -102,15 +102,25 @@ async function backupActivityContentToLocalStorage(collectedItems: { activities:
 
       if (backupContent) {
         try {
-          const backupData = {
-            success: true,
-            data: backupContent,
-            backedUpAt: new Date().toISOString(),
-            source: `layer5-${backupSource}`
-          };
-          localStorage.setItem(constructedKey, JSON.stringify(backupData));
-          localStorage.setItem(activityKey, JSON.stringify(backupContent));
-          console.log(`🛡️ [LAYER5] ${act.tipo}_${act.id}: ${Object.keys(backupContent).length} campos backupeados (${backupSource})`);
+          if (act.tipo === 'lista-exercicios') {
+            const { saveExerciseListData } = await import('../activities/lista-exercicios/contracts');
+            saveExerciseListData(act.id, backupContent);
+            localStorage.setItem(activityKey, JSON.stringify(backupContent));
+            console.log(`🛡️ [LAYER5] lista-exercicios_${act.id}: ${backupContent.questoes?.length || 0} questões backupeadas via saveExerciseListData (${backupSource})`);
+          } else if (act.tipo === 'flash-cards') {
+            localStorage.setItem(constructedKey, JSON.stringify(backupContent));
+            localStorage.setItem(activityKey, JSON.stringify(backupContent));
+            console.log(`🛡️ [LAYER5] flash-cards_${act.id}: ${backupContent.cards?.length || 0} cards backupeados FLAT (${backupSource})`);
+          } else if (act.tipo === 'quiz-interativo') {
+            const quizWrapper = { success: true, data: backupContent, source: `layer5-${backupSource}` };
+            localStorage.setItem(constructedKey, JSON.stringify(quizWrapper));
+            localStorage.setItem(activityKey, JSON.stringify(backupContent));
+            console.log(`🛡️ [LAYER5] quiz-interativo_${act.id}: ${backupContent.questions?.length || 0} questões backupeadas com wrapper (${backupSource})`);
+          } else {
+            localStorage.setItem(constructedKey, JSON.stringify(backupContent));
+            localStorage.setItem(activityKey, JSON.stringify(backupContent));
+            console.log(`🛡️ [LAYER5] ${act.tipo}_${act.id}: ${Object.keys(backupContent).length} campos backupeados (${backupSource})`);
+          }
         } catch (e) {
           console.warn(`⚠️ [LAYER5] Erro ao salvar backup para ${act.id}:`, e);
         }

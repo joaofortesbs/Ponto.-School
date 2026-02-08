@@ -466,7 +466,12 @@ export function loadExerciseListData(activityId: string): ProcessedExerciseListD
       return null;
     }
     
-    const parsed = JSON.parse(rawData);
+    let parsed = JSON.parse(rawData);
+    
+    if (parsed.data && typeof parsed.data === 'object' && !parsed.questoes) {
+      console.log(`🔄 [ExerciseListStorage] Detectado formato wrapper {success, data}, extraindo .data`);
+      parsed = parsed.data;
+    }
     
     console.log(`📂 [ExerciseListStorage] Dados carregados de ${source}:`, {
       activityId,
@@ -475,7 +480,6 @@ export function loadExerciseListData(activityId: string): ProcessedExerciseListD
       processedByPipeline: parsed._processedByPipeline
     });
     
-    // Se veio do legacy e não foi processado, migrar para novo namespace
     if (source === 'legacy' && !parsed._processedByPipeline) {
       console.log(`🔄 [ExerciseListStorage] Migrando dados legacy para novo namespace`);
       saveExerciseListData(activityId, parsed);

@@ -21,7 +21,7 @@ import { TextVersionModal } from '../components/Modal-Versao-Texto';
 import { isTextVersionActivity } from '../config/activityVersionConfig';
 import { retrieveTextVersionContent } from '../activities/text-version/TextVersionGenerator';
 import { useChosenActivitiesStore } from '../interface-chat-producao/stores/ChosenActivitiesStore';
-import { loadExerciseListData, processExerciseListWithUnifiedPipeline } from '../activities/lista-exercicios';
+import { loadExerciseListData, saveExerciseListData, processExerciseListWithUnifiedPipeline } from '../activities/lista-exercicios';
 import { processQuizWithUnifiedPipeline } from '../activities/quiz-interativo';
 
 // Helper function to get activity icon based on activity type
@@ -454,15 +454,18 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       }
       
       if (!existingHasRealContent) {
-        const injectionData = {
-          success: true,
-          data: propsData,
-          injectedAt: new Date().toISOString(),
-          source: 'layer4-modal-injection'
-        };
-        localStorage.setItem(constructedKey, JSON.stringify(injectionData));
+        if (activityType === 'lista-exercicios') {
+          try {
+            saveExerciseListData(activity.id, propsData);
+            console.log(`💉 [LAYER4-INJECTION] lista-exercicios via saveExerciseListData: ${propsData.questoes?.length || 0} questões`);
+          } catch {
+            localStorage.setItem(constructedKey, JSON.stringify(propsData));
+          }
+        } else {
+          localStorage.setItem(constructedKey, JSON.stringify(propsData));
+          console.log(`💉 [LAYER4-INJECTION] ${activityType} dados FLAT injetados: ${propsKeys.length} campos`);
+        }
         localStorage.setItem(activityKey, JSON.stringify(propsData));
-        console.log(`💉 [LAYER4-INJECTION] Dados injetados para ${activityType}_${activity.id}: ${propsKeys.length} campos (hasContent: ${hasRealContentInProps})`);
       }
     } catch (e) {
       console.warn('⚠️ [LAYER4-INJECTION] Erro:', e);

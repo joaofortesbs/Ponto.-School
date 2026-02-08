@@ -22,6 +22,7 @@ import type { ArtifactData } from '../agente-jota/capabilities/CRIAR_ARQUIVO/typ
 import { parseStructuredResponse } from './utils/structured-response-parser';
 import { useChosenActivitiesStore } from './stores/ChosenActivitiesStore';
 import { getActivityContent } from '../services/activity-content-registry';
+import { saveExerciseListData } from '../activities/lista-exercicios';
 import type { ConstructionActivity } from '../construction/types';
 
 import type { 
@@ -210,14 +211,17 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         }
         
         if (!existingHasRealContent) {
-          const bridgeData = {
-            success: true,
-            data: mergedContent,
-            bridgedAt: new Date().toISOString(),
-            source: 'chat-card-bridge'
-          };
-          localStorage.setItem(constructedKey, JSON.stringify(bridgeData));
-          console.log(`🔗 [LAYER3-BRIDGE] Conteúdo escrito em ${constructedKey}: ${mergedContentKeys.length} campos`);
+          if (activityTipo === 'lista-exercicios') {
+            try {
+              saveExerciseListData(activityId, mergedContent);
+              console.log(`🔗 [LAYER3-BRIDGE] lista-exercicios bridge via saveExerciseListData: ${mergedContent.questoes?.length || 0} questões`);
+            } catch {
+              localStorage.setItem(constructedKey, JSON.stringify(mergedContent));
+            }
+          } else {
+            localStorage.setItem(constructedKey, JSON.stringify(mergedContent));
+            console.log(`🔗 [LAYER3-BRIDGE] Conteúdo FLAT escrito em ${constructedKey}: ${mergedContentKeys.length} campos`);
+          }
         } else {
           console.log(`🔗 [LAYER3-BRIDGE] ${constructedKey} já tem conteúdo real — não sobrescrever`);
         }
