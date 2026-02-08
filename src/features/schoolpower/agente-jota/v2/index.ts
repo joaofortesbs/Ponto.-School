@@ -26,3 +26,21 @@ export {
   clearSessionV2,
 } from './orchestrator-v2';
 export type { ProcessPromptResultV2, ExecutePlanResultV2 } from './orchestrator-v2';
+
+export { isV2Enabled, enableV2, disableV2, toggleV2 } from './feature-flag';
+
+export {
+  processUserPromptAdapted,
+  executeAgentPlanAdapted,
+  getSessionContextAdapted,
+  clearSessionAdapted,
+  sendFollowUpMessageAdapted,
+} from './adapter';
+
+export {
+  processUserPrompt,
+  executeAgentPlan,
+  getSessionContext,
+  clearSession,
+  sendFollowUpMessage,
+} from './orchestrator-switch';

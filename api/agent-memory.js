@@ -63,6 +63,11 @@ async function authMiddleware(req, res, next) {
     return res.status(401).json({ error: 'Authentication required. Send x-auth-token header.' });
   }
 
+  if (!authToken || authToken.length < 10) {
+    console.warn('⚠️ [AgentMemory] Suspicious short auth token rejected');
+    return res.status(403).json({ error: 'Invalid authentication token.' });
+  }
+
   try {
     const result = await neonDB.query(
       'SELECT id FROM usuarios WHERE id = $1 LIMIT 1',
@@ -75,6 +80,18 @@ async function authMiddleware(req, res, next) {
     }
 
     req.authUserId = result.rows[0].id.toString();
+
+    const bodyUserId = req.body?.user_id;
+    const queryUserId = req.query?.user_id;
+    if (bodyUserId && bodyUserId !== req.authUserId) {
+      console.warn('⚠️ [AgentMemory] User ID mismatch: token=' + req.authUserId.substring(0, 8) + '... body=' + bodyUserId.substring(0, 8) + '...');
+      return res.status(403).json({ error: 'User ID does not match authenticated user.' });
+    }
+    if (queryUserId && queryUserId !== req.authUserId) {
+      console.warn('⚠️ [AgentMemory] User ID mismatch in query params');
+      return res.status(403).json({ error: 'User ID does not match authenticated user.' });
+    }
+
     next();
   } catch (error) {
     console.error('❌ [AgentMemory] Auth validation error:', error.message);
