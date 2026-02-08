@@ -1242,44 +1242,84 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       return <TeseRedacaoPreview content={contentToLoad} isLoading={false} />;
     }
 
-    // 2. Quiz Interativo - USANDO PIPELINE UNIFICADO v1.0.0
     if (activityType === 'quiz-interativo') {
-      console.log(`🔄 [UnifiedQuizPipeline] Processando quiz para ${activity.id}...`);
+      console.log(`🔄 [QuizSync] Processando quiz para ${activity.id}...`);
       
-      const pipelineResult = processQuizWithUnifiedPipeline(activity.id, activity.originalData);
+      const inMemoryQuestions = quizInterativoContent?.questions || generatedContent?.questions;
+      const customFieldsQuestions = activity.customFields?.questions;
       
-      if (pipelineResult.success && pipelineResult.questions.length > 0) {
+      if (inMemoryQuestions && Array.isArray(inMemoryQuestions) && inMemoryQuestions.length > 0) {
+        const src = quizInterativoContent || generatedContent || {};
         contentToLoad = {
-          title: pipelineResult.title,
-          description: pipelineResult.description,
-          questions: pipelineResult.questions,
-          totalQuestions: pipelineResult.metadata.validQuestions,
-          timePerQuestion: 60,
-          isGeneratedByAI: !pipelineResult.metadata.isFallback,
-          isFallback: pipelineResult.metadata.isFallback,
-          theme: pipelineResult.metadata.theme,
-          subject: pipelineResult.metadata.subject,
-          schoolYear: pipelineResult.metadata.schoolYear
+          title: src.title || activity.title || 'Quiz Interativo',
+          description: src.description || '',
+          questions: inMemoryQuestions,
+          totalQuestions: inMemoryQuestions.length,
+          timePerQuestion: src.timePerQuestion || 60,
+          isGeneratedByAI: true,
+          isFallback: false,
+          theme: src.theme,
+          subject: src.subject,
+          schoolYear: src.schoolYear
         };
-        
-        console.log(`✅ [UnifiedQuizPipeline] Quiz carregado com sucesso:`, {
-          questions: pipelineResult.questions.length,
-          source: pipelineResult.metadata.extractionMethod,
-          processingTimeMs: pipelineResult.metadata.processingTimeMs
-        });
-        
-        if (pipelineResult.warnings?.length) {
-          console.warn(`⚠️ [UnifiedQuizPipeline] Avisos:`, pipelineResult.warnings);
-        }
+        console.log(`✅ [QuizSync] Quiz carregado via ContentSync/state: ${inMemoryQuestions.length} questões`);
       } else {
-        console.warn('⚠️ [UnifiedQuizPipeline] Nenhuma questão válida encontrada');
-        contentToLoad = null;
+        const pipelineResult = processQuizWithUnifiedPipeline(activity.id, activity.originalData);
+        
+        if (pipelineResult.success && pipelineResult.questions.length > 0) {
+          contentToLoad = {
+            title: pipelineResult.title,
+            description: pipelineResult.description,
+            questions: pipelineResult.questions,
+            totalQuestions: pipelineResult.metadata.validQuestions,
+            timePerQuestion: 60,
+            isGeneratedByAI: !pipelineResult.metadata.isFallback,
+            isFallback: pipelineResult.metadata.isFallback,
+            theme: pipelineResult.metadata.theme,
+            subject: pipelineResult.metadata.subject,
+            schoolYear: pipelineResult.metadata.schoolYear
+          };
+          console.log(`✅ [QuizSync] Quiz carregado via pipeline: ${pipelineResult.questions.length} questões`);
+        } else if (customFieldsQuestions && Array.isArray(customFieldsQuestions) && customFieldsQuestions.length > 0) {
+          contentToLoad = {
+            title: activity.customFields?.title || activity.title || 'Quiz Interativo',
+            description: activity.customFields?.description || '',
+            questions: customFieldsQuestions,
+            totalQuestions: customFieldsQuestions.length,
+            timePerQuestion: activity.customFields?.timePerQuestion || 60,
+            isGeneratedByAI: true,
+            isFallback: false,
+            theme: activity.customFields?.theme,
+            subject: activity.customFields?.subject,
+            schoolYear: activity.customFields?.schoolYear
+          };
+          console.log(`✅ [QuizSync] Quiz carregado via customFields: ${customFieldsQuestions.length} questões`);
+        } else {
+          console.warn('⚠️ [QuizSync] Nenhuma questão válida encontrada em nenhuma fonte');
+          contentToLoad = null;
+        }
       }
     }
-    // 3. Flash Cards
     else if (activityType === 'flash-cards') {
+      console.log(`🃏 [FlashSync] Processando flash-cards para ${activity.id}`);
+      
+      const inMemoryCards = flashCardsContent?.cards || generatedContent?.cards;
+      const customFieldsCards = activity.customFields?.cards;
+      
+      if (inMemoryCards && Array.isArray(inMemoryCards) && inMemoryCards.length > 0) {
+        const validCards = inMemoryCards.filter((card: any) => card && typeof card === 'object' && card.front && card.back);
+        if (validCards.length > 0) {
+          contentToLoad = {
+            ...(flashCardsContent || generatedContent || {}),
+            cards: validCards,
+            title: flashCardsContent?.title || generatedContent?.title || activity.title || 'Flash Cards',
+          };
+          console.log(`✅ [FlashSync] ${validCards.length} cards carregados via ContentSync/state`);
+        }
+      }
+      
+      if (!contentToLoad) {
       const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
-      console.log(`🃏 Flash Cards: Verificando conteúdo salvo para ${activity.id}. Existe?`, !!flashCardsSavedContent);
 
       if (flashCardsSavedContent) {
         try {
@@ -1382,9 +1422,21 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         }
       }
       
-      if (!contentToLoad) {
-        console.log('ℹ️ Nenhum conteúdo específico encontrado para Flash Cards. Usando dados gerais.');
+      if (!contentToLoad && customFieldsCards && Array.isArray(customFieldsCards) && customFieldsCards.length > 0) {
+        const validCards = customFieldsCards.filter((card: any) => card && typeof card === 'object' && card.front && card.back);
+        if (validCards.length > 0) {
+          contentToLoad = {
+            cards: validCards,
+            title: activity.customFields?.title || activity.title || 'Flash Cards',
+          };
+          console.log(`✅ [FlashSync] ${validCards.length} cards carregados via customFields`);
+        }
       }
+      
+      if (!contentToLoad) {
+        console.log('ℹ️ Nenhum conteúdo específico encontrado para Flash Cards.');
+      }
+      } // end if (!contentToLoad) — localStorage/store/DB fallback chain
     }
     // 4. Plano de Aula (com fallback para store e originalData)
     else if (activityType === 'plano-aula') {
@@ -1497,65 +1549,76 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
     // 5. Lista de Exercícios (BLINDAGEM V2.0 - usando funções centralizadas)
     else if (activityType === 'lista-exercicios') {
-      console.log('📝 [ActivityViewModal] Carregando Lista de Exercícios via storage centralizado...');
+      console.log('📝 [ListaSync] Carregando Lista de Exercícios para', activity.id);
       
-      // PASSO 1: Usar função centralizada para carregar dados
-      const storedData = loadExerciseListData(activity.id);
+      const inMemoryQuestoes = generatedContent?.questoes;
+      const customFieldsQuestoes = activity.customFields?.questoes;
       
-      if (storedData && storedData.questoes && storedData.questoes.length > 0) {
-        // Dados já processados pela pipeline - usar diretamente
-        previewData.questoes = storedData.questoes;
-        previewData.titulo = storedData.titulo || previewData.title;
-        previewData.disciplina = storedData.disciplina;
-        previewData.tema = storedData.tema;
-        previewData.isGeneratedByAI = storedData.isGeneratedByAI;
-        previewData._processedByPipeline = storedData._processedByPipeline;
-        console.log(`✅ Lista de Exercícios: ${storedData.questoes.length} questões carregadas via storage centralizado`);
+      if (inMemoryQuestoes && Array.isArray(inMemoryQuestoes) && inMemoryQuestoes.length > 0) {
+        previewData.questoes = inMemoryQuestoes;
+        previewData.titulo = generatedContent?.titulo || previewData.title;
+        previewData.disciplina = generatedContent?.disciplina;
+        previewData.tema = generatedContent?.tema;
+        previewData.isGeneratedByAI = true;
+        console.log(`✅ [ListaSync] ${inMemoryQuestoes.length} questões carregadas via ContentSync/state`);
       } else {
-        // FALLBACK PARA STORE: Se storage centralizado não tem dados
-        console.log('📦 Lista de Exercícios: Storage centralizado sem dados, tentando store Zustand...');
+        const storedData = loadExerciseListData(activity.id);
         
-        const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-        if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
-          const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
+        if (storedData && storedData.questoes && storedData.questoes.length > 0) {
+          previewData.questoes = storedData.questoes;
+          previewData.titulo = storedData.titulo || previewData.title;
+          previewData.disciplina = storedData.disciplina;
+          previewData.tema = storedData.tema;
+          previewData.isGeneratedByAI = storedData.isGeneratedByAI;
+          previewData._processedByPipeline = storedData._processedByPipeline;
+          console.log(`✅ [ListaSync] ${storedData.questoes.length} questões carregadas via storage centralizado`);
+        } else if (customFieldsQuestoes && Array.isArray(customFieldsQuestoes) && customFieldsQuestoes.length > 0) {
+          previewData.questoes = customFieldsQuestoes;
+          previewData.titulo = activity.customFields?.titulo || previewData.title;
+          previewData.disciplina = activity.customFields?.disciplina;
+          previewData.tema = activity.customFields?.tema;
+          previewData.isGeneratedByAI = true;
+          console.log(`✅ [ListaSync] ${customFieldsQuestoes.length} questões carregadas via customFields`);
+        } else {
+          console.log('📦 [ListaSync] Storage vazio, tentando store Zustand...');
           
-          // Processar pela pipeline unificada antes de usar
-          if (fullData.questoes && Array.isArray(fullData.questoes) && fullData.questoes.length > 0) {
-            console.log('🔄 Lista de Exercícios: Processando dados da store pela pipeline unificada...');
-            const processedResult = processExerciseListWithUnifiedPipeline(fullData, {
-              id: activity.id,
-              tema: fullData.tema || previewData.theme,
-              disciplina: fullData.disciplina || previewData.subject,
-              titulo: fullData.titulo || previewData.title
-            });
+          const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
+          if (storeData?.campos_preenchidos || storeData?.dados_construidos?.generated_fields) {
+            const fullData = storeData.dados_construidos?.generated_fields || storeData.campos_preenchidos || {};
             
-            if (processedResult.success && processedResult.questoes.length > 0) {
-              previewData.questoes = processedResult.questoes as any;
-              console.log(`✅ Lista de Exercícios: ${processedResult.questoes.length} questões processadas pela pipeline`);
-            }
-          }
-        }
-        
-        // FALLBACK 3: Se ainda não tem questões, usar dados do banco (originalData)
-        if (!previewData.questoes || previewData.questoes.length === 0) {
-          if (activity.originalData) {
-            console.log('📊 Lista de Exercícios: Usando dados do banco (originalData) como fallback');
-            const dbData = activity.originalData.campos || activity.originalData;
-            
-            if (dbData && dbData.questoes && Array.isArray(dbData.questoes) && dbData.questoes.length > 0) {
-              // Processar pela pipeline unificada
-              const processedResult = processExerciseListWithUnifiedPipeline(dbData, {
+            if (fullData.questoes && Array.isArray(fullData.questoes) && fullData.questoes.length > 0) {
+              const processedResult = processExerciseListWithUnifiedPipeline(fullData, {
                 id: activity.id,
-                tema: dbData.tema || previewData.theme,
-                disciplina: dbData.disciplina || previewData.subject,
-                titulo: dbData.titulo || previewData.title
+                tema: fullData.tema || previewData.theme,
+                disciplina: fullData.disciplina || previewData.subject,
+                titulo: fullData.titulo || previewData.title
               });
               
               if (processedResult.success && processedResult.questoes.length > 0) {
                 previewData.questoes = processedResult.questoes as any;
-                previewData.title = dbData.title || activity.originalData.titulo || previewData.title;
-                previewData.description = dbData.description || previewData.description;
-                console.log(`✅ Lista de Exercícios: ${processedResult.questoes.length} questões do banco processadas pela pipeline`);
+                console.log(`✅ [ListaSync] ${processedResult.questoes.length} questões processadas via Zustand`);
+              }
+            }
+          }
+          
+          if (!previewData.questoes || previewData.questoes.length === 0) {
+            if (activity.originalData) {
+              const dbData = activity.originalData.campos || activity.originalData;
+              
+              if (dbData && dbData.questoes && Array.isArray(dbData.questoes) && dbData.questoes.length > 0) {
+                const processedResult = processExerciseListWithUnifiedPipeline(dbData, {
+                  id: activity.id,
+                  tema: dbData.tema || previewData.theme,
+                  disciplina: dbData.disciplina || previewData.subject,
+                  titulo: dbData.titulo || previewData.title
+                });
+                
+                if (processedResult.success && processedResult.questoes.length > 0) {
+                  previewData.questoes = processedResult.questoes as any;
+                  previewData.title = dbData.title || activity.originalData.titulo || previewData.title;
+                  previewData.description = dbData.description || previewData.description;
+                  console.log(`✅ [ListaSync] ${processedResult.questoes.length} questões do banco processadas`);
+                }
               }
             }
           }

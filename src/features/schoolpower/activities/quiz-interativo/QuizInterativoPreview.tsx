@@ -97,14 +97,42 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     }
   }, [timeLeft, isQuizStarted, isQuizCompleted, showResult]);
 
-  // Reset timer when question changes
+  const finalContent = React.useMemo(() => {
+    if (!content) {
+      return null;
+    }
+
+    let extractedData = content;
+
+    if (content.data && typeof content.data === 'object') {
+      extractedData = content.data;
+    }
+
+    if (content.customFields && typeof content.customFields === 'object') {
+      extractedData = { ...extractedData, ...content.customFields };
+    }
+
+    const processedContent = {
+      ...extractedData,
+      questions: extractedData.questions || content.questions || [],
+      totalQuestions: (extractedData.questions || content.questions || []).length || extractedData.totalQuestions || content.totalQuestions || 0,
+      timePerQuestion: extractedData.timePerQuestion || content.timePerQuestion || 60,
+      title: extractedData.title || content.title || 'Quiz Interativo',
+      description: extractedData.description || content.description || 'Teste seus conhecimentos!',
+      isGeneratedByAI: extractedData.isGeneratedByAI || content.isGeneratedByAI || false,
+      isFallback: extractedData.isFallback || content.isFallback || false
+    };
+
+    return processedContent;
+  }, [content]);
+
   useEffect(() => {
-    if (content && isQuizStarted) {
-      const timePerQ = content.timePerQuestion && !isNaN(Number(content.timePerQuestion)) ? 
-        Number(content.timePerQuestion) : 60;
+    if (finalContent && isQuizStarted) {
+      const timePerQ = finalContent.timePerQuestion && !isNaN(Number(finalContent.timePerQuestion)) ? 
+        Number(finalContent.timePerQuestion) : 60;
       setTimeLeft(timePerQ);
     }
-  }, [currentQuestionIndex, content]);
+  }, [currentQuestionIndex, finalContent]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -198,7 +226,6 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     return ((currentQuestionIndex + 1) / finalContent.questions.length) * 100;
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <Card className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-900 border-2 border-orange-200 dark:border-orange-800 shadow-xl rounded-3xl">
@@ -215,43 +242,6 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
-  // CORREÇÃO CRÍTICA: Preparar dados de forma consistente
-  const finalContent = React.useMemo(() => {
-    if (!content) {
-      return null;
-    }
-
-    // Extrair dados de diferentes estruturas possíveis (modal de edição vs modal de visualização)
-    let extractedData = content;
-
-    // Se os dados vêm do modal de visualização
-    if (content.data && typeof content.data === 'object') {
-      extractedData = content.data;
-    }
-
-    // Se há customFields, pode conter dados do quiz
-    if (content.customFields && typeof content.customFields === 'object') {
-      extractedData = { ...extractedData, ...content.customFields };
-    }
-
-    // Processar dados de forma consistente
-    const processedContent = {
-      ...extractedData,
-      questions: extractedData.questions || content.questions || [],
-      totalQuestions: (extractedData.questions || content.questions || []).length || extractedData.totalQuestions || content.totalQuestions || 0,
-      timePerQuestion: extractedData.timePerQuestion || content.timePerQuestion || 60,
-      title: extractedData.title || content.title || 'Quiz Interativo',
-      description: extractedData.description || content.description || 'Teste seus conhecimentos!',
-      isGeneratedByAI: extractedData.isGeneratedByAI || content.isGeneratedByAI || false,
-      isFallback: extractedData.isFallback || content.isFallback || false
-    };
-
-    console.log('🎯 QuizInterativoPreview - Conteúdo processado:', processedContent);
-    console.log('🎯 QuizInterativoPreview - Dados originais:', content);
-    return processedContent;
-  }, [content]);
-
-  // Early return para evitar problemas de hooks
   if (!finalContent) {
     return (
       <Card className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-900 border-2 border-orange-200 dark:border-orange-800 shadow-xl rounded-3xl">
