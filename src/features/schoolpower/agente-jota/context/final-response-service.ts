@@ -42,13 +42,24 @@ REGRAS:
 - Mencione elementos ESPECÍFICOS do que foi criado
 - Conecte com o pedido ORIGINAL do usuário
 - NÃO repita as reflexões anteriores verbatim
-- Sintetize os resultados de forma nova
+- Sintetize os resultados de forma nova e ORIGINAL
 
 REGRAS CRÍTICAS DE FORMATO:
 - NUNCA retorne JSON, arrays ou objetos técnicos
 - NUNCA retorne dados como [{"id":"...", "title":"..."}]
 - SEMPRE responda em texto narrativo natural com os marcadores intercalados
 - Se você recebeu dados técnicos no contexto, SINTETIZE-OS em linguagem natural
+
+REGRAS ANTI-DUPLICAÇÃO:
+- Use o marcador [[ATIVIDADES]] NO MÁXIMO UMA VEZ em toda a resposta
+- NUNCA repita o card de atividades — se já usou [[ATIVIDADES]], não use de novo
+- NUNCA liste as atividades manualmente se já usou [[ATIVIDADES]] — o card já mostra tudo
+
+REGRAS DE RESPOSTA ORIGINAL:
+- NUNCA use frases genéricas como "Processo concluído com sucesso"
+- Cada resposta deve ser ÚNICA e ESPECÍFICA ao tema pedido pelo professor
+- Mencione DADOS CONCRETOS: nome das atividades, tema, série, tipo de conteúdo
+- Evite respostas padronizadas — escreva como se fosse a primeira vez
 
 EXEMPLO DE FORMATO COM MARCADORES:
 "Pronto! Criei 3 atividades de matemática personalizadas para o 7º ano, todas alinhadas com a BNCC e prontas para uso!

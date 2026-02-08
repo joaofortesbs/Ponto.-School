@@ -191,9 +191,40 @@ export async function createExecutionPlan(
       });
     }
 
+    const isFileRequest = detectsFileRequest(userPrompt);
     const hasCriarArquivo = allCapNames.includes('criar_arquivo');
 
-    if (!hasCriarArquivo && detectsFileRequest(userPrompt)) {
+    if (isFileRequest && !isActivityRequest && hasGerarConteudo && !hasCriarArquivo) {
+      console.log('🔴 [Planner] Pós-validação CRÍTICA: Professor pediu ARQUIVO mas AI usou gerar_conteudo_atividades — substituindo por criar_arquivo!');
+      plan.etapas = plan.etapas.filter(e => {
+        const capNames = e.capabilities?.map(c => c.nome) || [];
+        return !capNames.includes('gerar_conteudo_atividades') && 
+               !capNames.includes('criar_atividade') && 
+               !capNames.includes('salvar_atividades_bd');
+      });
+      const timestamp = Date.now();
+      plan.etapas.push({
+        ordem: plan.etapas.length + 1,
+        titulo: 'Preparar seu documento',
+        descricao: 'Vou gerar o documento solicitado com todo o conteúdo organizado',
+        funcao: 'criar_arquivo',
+        parametros: {},
+        justificativa: 'Professor pediu arquivo/documento — usar criar_arquivo obrigatoriamente',
+        status: 'pendente' as const,
+        capabilities: [{
+          id: `cap-fix-0-${timestamp}`,
+          nome: 'criar_arquivo',
+          displayName: 'Vou criar o documento solicitado',
+          categoria: 'CRIAR' as CapabilityCall['categoria'],
+          parametros: {},
+          status: 'pending' as const,
+          ordem: 1,
+        }],
+      });
+    }
+
+    const updatedCapNames = plan.etapas.flatMap(e => e.capabilities?.map(c => c.nome) || []);
+    if (!updatedCapNames.includes('criar_arquivo') && isFileRequest) {
       console.log('🔧 [Planner] Pós-validação: Professor pediu arquivo/documento — injetando criar_arquivo');
       const timestamp = Date.now();
       plan.etapas.push({

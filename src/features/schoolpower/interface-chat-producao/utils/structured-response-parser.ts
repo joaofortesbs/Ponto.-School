@@ -6,6 +6,16 @@ export interface CollectedItems {
   artifacts: ArtifactData[];
 }
 
+function sanitizeResponseText(text: string): string {
+  let cleaned = text;
+  cleaned = cleaned.replace(/```json[\s\S]*?```/g, '');
+  cleaned = cleaned.replace(/\[?\{[\s\S]*?"id"\s*:\s*"[\s\S]*?\}\]?/g, '');
+  cleaned = cleaned.replace(/^\s*[\[\{][\s\S]*?[\]\}]\s*$/gm, '');
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+  cleaned = cleaned.trim();
+  return cleaned || text;
+}
+
 export function parseStructuredResponse(
   text: string,
   items: CollectedItems
@@ -23,18 +33,20 @@ export function parseStructuredResponse(
     return fallbackBlocks;
   }
 
+  const sanitizedText = sanitizeResponseText(text);
   const blocks: StructuredResponseBlock[] = [];
   const markerRegex = /\[\[(ATIVIDADES|ARQUIVO:([^\]]+))\]\]/g;
   let hasMarkers = false;
   let lastIndex = 0;
   let match;
+  let activitiesCardAdded = false;
   const usedArtifactIds = new Set<string>();
 
-  while ((match = markerRegex.exec(text)) !== null) {
+  while ((match = markerRegex.exec(sanitizedText)) !== null) {
     hasMarkers = true;
 
     if (match.index > lastIndex) {
-      const textBefore = text.substring(lastIndex, match.index).trim();
+      const textBefore = sanitizedText.substring(lastIndex, match.index).trim();
       if (textBefore) {
         blocks.push({ type: 'text', content: textBefore });
       }
@@ -43,11 +55,12 @@ export function parseStructuredResponse(
     const fullMarker = match[1];
 
     if (fullMarker === 'ATIVIDADES') {
-      if (items.activities.length > 0) {
+      if (items.activities.length > 0 && !activitiesCardAdded) {
         blocks.push({
           type: 'activities_card',
           activities: items.activities,
         });
+        activitiesCardAdded = true;
       }
     } else if (fullMarker.startsWith('ARQUIVO:')) {
       const titulo = match[2]?.trim();
@@ -73,19 +86,18 @@ export function parseStructuredResponse(
     lastIndex = match.index + match[0].length;
   }
 
-  if (hasMarkers && lastIndex < text.length) {
-    const remaining = text.substring(lastIndex).trim();
+  if (hasMarkers && lastIndex < sanitizedText.length) {
+    const remaining = sanitizedText.substring(lastIndex).trim();
     if (remaining) {
       blocks.push({ type: 'text', content: remaining });
     }
   }
 
   if (!hasMarkers) {
-    blocks.push({ type: 'text', content: text });
+    blocks.push({ type: 'text', content: sanitizedText });
   }
 
-  const hasActivitiesCard = blocks.some(b => b.type === 'activities_card');
-  if (!hasActivitiesCard && items.activities.length > 0) {
+  if (!activitiesCardAdded && items.activities.length > 0) {
     blocks.push({ type: 'activities_card', activities: items.activities });
   }
 

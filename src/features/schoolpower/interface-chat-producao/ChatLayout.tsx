@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Bot, User, Loader2, LogOut } from 'lucide-react';
 import { MessageStream } from './components/MessageStream';
 import { ArtifactViewModal } from './components/ArtifactViewModal';
+import { ActivityViewModal } from '../construction/ActivityViewModal';
 import { ContextModal } from './ContextModal';
 import { useChatState } from './state/chatState';
 import { processUserPrompt, executeAgentPlan } from '../agente-jota/orchestrator';
@@ -19,6 +20,8 @@ import type { ExecuteAgentPlanResult } from '../agente-jota/orchestrator';
 import { generateSessionId } from '../agente-jota/memory-manager';
 import type { ArtifactData } from '../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 import { parseStructuredResponse } from './utils/structured-response-parser';
+import { useChosenActivitiesStore } from './stores/ChosenActivitiesStore';
+import type { ConstructionActivity } from '../construction/types';
 
 import type { 
   ExecutionPlan, 
@@ -74,6 +77,8 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   const [isCardExpanded, setIsCardExpanded] = useState(false);
   const [selectedArtifact, setSelectedArtifact] = useState<ArtifactData | null>(null);
   const [showArtifactModal, setShowArtifactModal] = useState(false);
+  const [selectedViewActivity, setSelectedViewActivity] = useState<ConstructionActivity | null>(null);
+  const [showActivityViewModal, setShowActivityViewModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isExecutingPlanRef = useRef(false);
   const hasProcessedInitialMessageRef = useRef(false);
@@ -160,13 +165,56 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     setTimeout(() => setSelectedArtifact(null), 300);
   }, []);
 
+  const handleCloseActivityView = useCallback(() => {
+    setShowActivityViewModal(false);
+    setTimeout(() => setSelectedViewActivity(null), 300);
+  }, []);
+
   const handleOpenActivity = useCallback((activity: any) => {
-    console.log('📋 [ChatLayout] Abrindo atividade:', activity.titulo, 'db_id:', activity.db_id);
-    if (activity.db_id) {
-      window.dispatchEvent(new CustomEvent('open-activity-modal', {
-        detail: { activityId: activity.db_id, activityTitle: activity.titulo }
-      }));
-    }
+    console.log('📋 [ChatLayout] Abrindo atividade:', activity.titulo, 'tipo:', activity.tipo, 'id:', activity.id, 'db_id:', activity.db_id);
+    
+    const storeActivity = useChosenActivitiesStore.getState().getActivityById(activity.id);
+    console.log('📋 [ChatLayout] Dados da store:', storeActivity ? 'encontrado' : 'não encontrado');
+    
+    const generatedFields = storeActivity?.dados_construidos?.generated_fields || storeActivity?.campos_preenchidos || {};
+    const storedData = (() => {
+      try {
+        const raw = localStorage.getItem(`activity_${activity.id}`);
+        return raw ? JSON.parse(raw) : {};
+      } catch { return {}; }
+    })();
+    const storedFields = (() => {
+      try {
+        const raw = localStorage.getItem(`activity_${activity.id}_fields`);
+        return raw ? JSON.parse(raw) : {};
+      } catch { return {}; }
+    })();
+
+    const constructionActivity: ConstructionActivity = {
+      id: activity.id,
+      title: activity.titulo || storedData.title || 'Atividade',
+      description: storedData.description || storeActivity?.justificativa || '',
+      categoryId: activity.tipo || storedData.type || '',
+      categoryName: activity.tipo?.replace(/[-_]/g, ' ') || '',
+      icon: '📋',
+      tags: storeActivity?.tags || [],
+      difficulty: storeActivity?.nivel_dificuldade || 'medio',
+      estimatedTime: '15 min',
+      type: activity.tipo || storedData.type || '',
+      customFields: { ...generatedFields, ...storedFields, ...storedData },
+      originalData: {
+        type: activity.tipo,
+        campos: { ...generatedFields, ...storedFields },
+        ...storedData,
+      },
+      isBuilt: true,
+      status: 'completed',
+      progress: 100,
+    };
+
+    console.log('📋 [ChatLayout] ConstructionActivity montada:', constructionActivity.title, 'type:', constructionActivity.type);
+    setSelectedViewActivity(constructionActivity);
+    setShowActivityViewModal(true);
   }, []);
 
   useEffect(() => {
@@ -611,6 +659,14 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
           artifact={selectedArtifact}
           isOpen={showArtifactModal}
           onClose={handleCloseArtifact}
+        />
+      )}
+
+      {selectedViewActivity && (
+        <ActivityViewModal
+          activity={selectedViewActivity}
+          isOpen={showActivityViewModal}
+          onClose={handleCloseActivityView}
         />
       )}
     </div>
