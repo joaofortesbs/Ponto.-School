@@ -15,8 +15,10 @@ import { ArtifactViewModal } from './components/ArtifactViewModal';
 import { ContextModal } from './ContextModal';
 import { useChatState } from './state/chatState';
 import { processUserPrompt, executeAgentPlan } from '../agente-jota/orchestrator';
+import type { ExecuteAgentPlanResult } from '../agente-jota/orchestrator';
 import { generateSessionId } from '../agente-jota/memory-manager';
 import type { ArtifactData } from '../agente-jota/capabilities/CRIAR_ARQUIVO/types';
+import { parseStructuredResponse } from './utils/structured-response-parser';
 
 import type { 
   ExecutionPlan, 
@@ -84,6 +86,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     addPlanCard, 
     addDevModeCard,
     addArtifactCard,
+    addStructuredResponse,
     setExecuting,
     setLoading,
     clearMessages,
@@ -442,7 +445,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 ║════════════════════════════════════════════════════════════════════════║
       `);
       
-      const relatorio = await executeAgentPlan(
+      const result = await executeAgentPlan(
         planToExecute,
         sessionId,
         handleProgress,
@@ -464,20 +467,30 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
         detail: { type: 'execution:completed' }
       }));
 
-      addTextMessage('assistant', relatorio);
+      const allArtifacts = [
+        ...(result.collectedItems?.artifacts || []),
+        ...pendingArtifactsRef.current,
+      ];
+      pendingArtifactsRef.current = [];
 
-      if (pendingArtifactsRef.current.length > 0) {
-        for (const artifactData of pendingArtifactsRef.current) {
-          console.log('📄 [ChatLayout] Adicionando artefato após resposta final:', artifactData.metadata.titulo);
-          addArtifactCard(artifactData);
-        }
-        pendingArtifactsRef.current = [];
-      }
+      const seenArtifactIds = new Set<string>();
+      const uniqueArtifacts = allArtifacts.filter(a => {
+        if (seenArtifactIds.has(a.id)) return false;
+        seenArtifactIds.add(a.id);
+        return true;
+      });
+
+      const blocks = parseStructuredResponse(result.resposta, {
+        activities: result.collectedItems?.activities || [],
+        artifacts: uniqueArtifacts,
+      });
+
+      addStructuredResponse({ blocks, rawText: result.resposta });
 
       addMemory({
         tipo: 'resultado',
         conteudo: 'Plano executado com sucesso',
-        resultado: relatorio,
+        resultado: result.resposta,
       });
 
     } catch (error) {

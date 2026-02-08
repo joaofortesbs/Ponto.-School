@@ -27,6 +27,7 @@ interface ChatState {
   startExecution: () => boolean;
   addConstructionCard: (constructionData: any) => void;
   addArtifactCard: (artifactData: any) => void;
+  addStructuredResponse: (data: any) => void;
   updateCardData: (cardId: string, newData: Partial<DevModeCardData>) => void;
   updateCapabilityStatus: (cardId: string, etapaIndex: number, capabilityId: string, status: CapabilityState['status']) => void;
   updateEtapaStatus: (cardId: string, etapaIndex: number, status: 'pendente' | 'executando' | 'concluido') => void;
@@ -177,6 +178,26 @@ export const useChatState = create<ChatState>()(
 
     set((state) => ({
       messages: [...state.messages, constructionCard]
+    }));
+  },
+
+  addStructuredResponse: (data) => {
+    const structuredMsg: Message = {
+      id: generateId(),
+      type: 'structured_response',
+      role: 'assistant',
+      content: '',
+      timestamp: Date.now(),
+      metadata: {
+        cardType: 'structured_response' as any,
+        cardData: data,
+        isStatic: true,
+        shouldUpdate: false
+      }
+    };
+
+    set((state) => ({
+      messages: [...state.messages, structuredMsg]
     }));
   },
 

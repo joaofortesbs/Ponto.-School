@@ -21,15 +21,23 @@ Você é o Jota, assistente de IA do Ponto School.
 CONTEXTO COMPLETO:
 {full_context}
 
+ITENS CRIADOS NESTA SESSÃO:
+{created_items}
+
 SUA TAREFA:
-Gere uma RESPOSTA FINAL que:
+Gere uma RESPOSTA FINAL ESTRUTURADA que:
 1. Resume o que foi FEITO em resposta ao pedido original
 2. Menciona DADOS ESPECÍFICOS (números, tipos, nomes)
-3. Destaca as ATIVIDADES/CONTEÚDOS criados
+3. Usa MARCADORES ESPECIAIS para mostrar os itens criados de forma interativa
 4. Oferece próximos passos ou dicas úteis
 
+MARCADORES DISPONÍVEIS (use-os no meio do texto):
+- [[ATIVIDADES]] — Mostra um card interativo com todas as atividades criadas
+- [[ARQUIVO:titulo do arquivo]] — Mostra um card interativo de um arquivo/documento específico
+
 REGRAS:
-- Seja conciso mas completo (3-5 frases)
+- Escreva texto narrativo natural intercalado com os marcadores
+- Coloque cada marcador em uma LINHA SEPARADA entre os parágrafos de texto
 - Use tom de celebração/conclusão
 - Mencione elementos ESPECÍFICOS do que foi criado
 - Conecte com o pedido ORIGINAL do usuário
@@ -39,20 +47,21 @@ REGRAS:
 REGRAS CRÍTICAS DE FORMATO:
 - NUNCA retorne JSON, arrays ou objetos técnicos
 - NUNCA retorne dados como [{"id":"...", "title":"..."}]
-- SEMPRE responda em texto narrativo natural
+- SEMPRE responda em texto narrativo natural com os marcadores intercalados
 - Se você recebeu dados técnicos no contexto, SINTETIZE-OS em linguagem natural
 
-FORMATO SUGERIDO:
-"[Frase de conclusão com dados específicos]. [O que foi criado]. [Destaque ou dica útil]. [Próximo passo opcional]."
+EXEMPLO DE FORMATO COM MARCADORES:
+"Pronto! Criei 3 atividades de matemática personalizadas para o 7º ano, todas alinhadas com a BNCC e prontas para uso!
 
-EXEMPLOS:
-- Pedido: "Crie 3 atividades de matemática para 7º ano"
-  Resposta Final: "Pronto! Criei 3 atividades de matemática personalizadas para o 7º ano: um Quiz de Equações com 12 questões, Flash Cards de Frações com 20 cards e um Caça-palavras de Geometria. Todas estão alinhadas com a BNCC e prontas para uso. Você pode editá-las ou aplicar diretamente com sua turma!"
+[[ATIVIDADES]]
 
-- Pedido: "Faça uma avaliação diagnóstica de português"
-  Resposta Final: "Sua avaliação diagnóstica de português está pronta! Incluí questões de leitura, interpretação e gramática, organizadas por nível de dificuldade. Isso vai te ajudar a mapear o conhecimento da turma e identificar pontos de atenção para suas próximas aulas."
+Também preparei um roteiro detalhado para te ajudar na aplicação dessas atividades em sala de aula.
 
-RETORNE APENAS A RESPOSTA FINAL, sem formatação extra.
+[[ARQUIVO:Roteiro de Aula]]
+
+Você pode editar qualquer atividade ou acessar o roteiro a qualquer momento. Precisa de mais alguma coisa?"
+
+RETORNE APENAS A RESPOSTA FINAL COM OS MARCADORES, sem formatação extra.
 `.trim();
 
 export interface FinalResponseResult {
@@ -65,12 +74,17 @@ export interface FinalResponseResult {
     atividadesCriadas: string[];
     principaisResultados: string[];
   };
+  collectedItems?: {
+    activities: Array<{ id: string; titulo: string; tipo: string; db_id?: number }>;
+    artifacts: any[];
+  };
   sucesso: boolean;
   erro?: string;
 }
 
 export async function generateFinalResponse(
-  sessionId: string
+  sessionId: string,
+  collectedItems?: { activities: Array<{ id: string; titulo: string; tipo: string; db_id?: number }>; artifacts: any[] }
 ): Promise<FinalResponseResult> {
   console.log(`🏁 [FinalResponse] Gerando resposta final para sessão: ${sessionId}`);
 
@@ -98,7 +112,29 @@ export async function generateFinalResponse(
 
   const rawContext = contextManager.gerarContextoParaChamada('final');
   const fullContext = sanitizeContextForPrompt(rawContext);
-  const prompt = FINAL_RESPONSE_PROMPT.replace('{full_context}', fullContext);
+
+  let createdItemsStr = '';
+  if (collectedItems) {
+    if (collectedItems.activities.length > 0) {
+      createdItemsStr += `ATIVIDADES CRIADAS (${collectedItems.activities.length}):\n`;
+      collectedItems.activities.forEach(a => {
+        createdItemsStr += `- ${a.titulo} (tipo: ${a.tipo})\n`;
+      });
+    }
+    if (collectedItems.artifacts.length > 0) {
+      createdItemsStr += `ARQUIVOS/DOCUMENTOS CRIADOS (${collectedItems.artifacts.length}):\n`;
+      collectedItems.artifacts.forEach(a => {
+        createdItemsStr += `- ${a.metadata?.titulo || 'Documento'} (tipo: ${a.metadata?.tipo || 'documento'})\n`;
+      });
+    }
+  }
+  if (!createdItemsStr) {
+    createdItemsStr = 'Nenhum item específico foi criado nesta sessão.';
+  }
+
+  const prompt = FINAL_RESPONSE_PROMPT
+    .replace('{full_context}', fullContext)
+    .replace('{created_items}', createdItemsStr);
 
   try {
     const result = await executeWithCascadeFallback(prompt, {
@@ -136,6 +172,7 @@ export async function generateFinalResponse(
           ...contexto.resumoProgressivo.principaisDecisoes,
         ],
       },
+      collectedItems,
       sucesso: true,
     };
   } catch (error) {
@@ -198,7 +235,9 @@ ATIVIDADES CRIADAS: ${atividadesCriadas.join(', ') || 'Nenhuma'}
 TOTAL DE ATIVIDADES: ${atividadesCriadas.length}
 `.trim();
 
-  const prompt = FINAL_RESPONSE_PROMPT.replace('{full_context}', contextoSimplificado);
+  const prompt = FINAL_RESPONSE_PROMPT
+    .replace('{full_context}', contextoSimplificado)
+    .replace('{created_items}', `ATIVIDADES CRIADAS: ${atividadesCriadas.join(', ') || 'Nenhuma'}`);
 
   const result = await executeWithCascadeFallback(prompt, {
     onProgress: (status) => console.log(`📝 [FinalResponse] ${status}`),

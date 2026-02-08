@@ -263,12 +263,20 @@ export interface ExecutePlanResult {
   artifactData?: ArtifactData | null;
 }
 
+export interface ExecuteAgentPlanResult {
+  resposta: string;
+  collectedItems: {
+    activities: Array<{ id: string; titulo: string; tipo: string; db_id?: number }>;
+    artifacts: any[];
+  };
+}
+
 export async function executeAgentPlan(
   plan: ExecutionPlan,
   sessionId: string,
   onProgress?: (update: ProgressUpdate) => void,
   conversationHistory?: string
-): Promise<string> {
+): Promise<ExecuteAgentPlanResult> {
   console.log('▶️ [Orchestrator] Iniciando execução do plano:', plan.planId);
   console.error(`
 ╔════════════════════════════════════════════════════════════════════════╗
@@ -307,11 +315,13 @@ export async function executeAgentPlan(
   try {
     const relatorio = await executor.executePlan(plan);
 
+    const collectedItems = executor.getCollectedItems();
+
     console.log('🏁 [Orchestrator] Execução completa, gerando resposta final...');
     
     let respostaFinal = relatorio;
     try {
-      const finalResponseData = await generateFinalResponse(sessionId);
+      const finalResponseData = await generateFinalResponse(sessionId, collectedItems);
       respostaFinal = finalResponseData.resposta;
       
       addConversationTurn(sessionId, {
@@ -335,7 +345,10 @@ export async function executeAgentPlan(
 
     console.log('✅ [Orchestrator] Plano executado e resposta final gerada');
 
-    return respostaFinal;
+    return {
+      resposta: respostaFinal,
+      collectedItems,
+    };
 
   } catch (error) {
     console.error('❌ [Orchestrator] Erro na execução:', error);
@@ -377,13 +390,15 @@ export async function executeAgentPlanWithDetails(
   try {
     const relatorio = await executor.executePlan(plan);
 
+    const collectedItems = executor.getCollectedItems();
+
     console.log('🏁 [Orchestrator] Execução completa, gerando resposta final...');
     
     let respostaFinal = relatorio;
     let finalResponseData: FinalResponseResult | undefined;
     
     try {
-      finalResponseData = await generateFinalResponse(sessionId);
+      finalResponseData = await generateFinalResponse(sessionId, collectedItems);
       respostaFinal = finalResponseData.resposta;
 
       addConversationTurn(sessionId, {

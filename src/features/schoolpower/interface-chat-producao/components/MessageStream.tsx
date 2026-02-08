@@ -7,6 +7,7 @@ import { PlanActionCard } from './PlanActionCard';
 import { DeveloperModeCard } from './DeveloperModeCard';
 import { ActivityConstructionCard } from './ActivityConstructionCard';
 import { ArtifactCard } from './ArtifactCard';
+import { StructuredResponseMessage } from './StructuredResponseMessage';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
 interface MessageStreamProps {
@@ -85,6 +86,13 @@ export function MessageStream({ onApplyPlan, onOpenArtifact }: MessageStreamProp
               <ArtifactCard
                 artifact={message.metadata.cardData}
                 onOpen={onOpenArtifact}
+              />
+            )}
+
+            {message.type === 'structured_response' && message.metadata?.cardData && (
+              <StructuredResponseMessage
+                blocks={message.metadata.cardData.blocks || []}
+                onOpenArtifact={onOpenArtifact}
               />
             )}
           </motion.div>

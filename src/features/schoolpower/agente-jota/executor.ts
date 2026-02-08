@@ -25,6 +25,7 @@ import { pesquisarAtividadesDisponiveisV2 } from './capabilities/PESQUISAR/imple
 import { criarAtividadeV2 } from './capabilities/CRIAR_ATIVIDADES/implementations/criar-atividade-v2';
 import { salvarAtividadesBdV2 } from './capabilities/SALVAR_BD/implementations/salvar-atividades-bd';
 import { criarArquivoV2 } from './capabilities/CRIAR_ARQUIVO/criar-arquivo-v2';
+import type { ArtifactData } from './capabilities/CRIAR_ARQUIVO/types';
 import type { CapabilityInput, CapabilityOutput } from './capabilities/shared/types';
 import { 
   convertCapabilityInsightToResultado,
@@ -41,6 +42,13 @@ import {
   addStepResult, 
   type SessionContext 
 } from './context-engine';
+
+export interface ActivitySummary {
+  id: string;
+  titulo: string;
+  tipo: string;
+  db_id?: number;
+}
 
 export type ProgressCallback = (update: ProgressUpdate) => void;
 
@@ -103,6 +111,36 @@ export class AgentExecutor {
     this.conversationContext = '';
     this.onProgress = null;
     console.log('✅ [Executor] Estado limpo para nova execução');
+  }
+
+  getCollectedItems(): { activities: ActivitySummary[]; artifacts: ArtifactData[] } {
+    const activities: ActivitySummary[] = [];
+    const artifacts: ArtifactData[] = [];
+
+    const criarAtividadeResult = this.capabilityResultsMap.get('criar_atividade');
+    if (criarAtividadeResult?.success && criarAtividadeResult?.data?.atividades_criadas) {
+      for (const act of criarAtividadeResult.data.atividades_criadas) {
+        activities.push({
+          id: act.id || `act-${Date.now()}`,
+          titulo: act.titulo || 'Atividade',
+          tipo: act.tipo || 'atividade',
+          db_id: act.db_id,
+        });
+      }
+    }
+
+    const criarArquivoResult = this.capabilityResultsMap.get('criar_arquivo');
+    if (criarArquivoResult?.success && criarArquivoResult?.data?.artifact) {
+      artifacts.push(criarArquivoResult.data.artifact);
+    }
+
+    for (const [key, value] of this.capabilityResultsMap.entries()) {
+      if (key.startsWith('criar_arquivo') && key !== 'criar_arquivo' && value?.success && value?.data?.artifact) {
+        artifacts.push(value.data.artifact);
+      }
+    }
+
+    return { activities, artifacts };
   }
 
   /**

@@ -6,6 +6,7 @@ export type MessageType =
   | 'construction_card'
   | 'content_generation_card'
   | 'artifact_card'
+  | 'structured_response'
   | 'system';
 
 export interface Message {
@@ -15,7 +16,7 @@ export interface Message {
   content: string | any;
   timestamp: number;
   metadata?: {
-    cardType?: 'plan' | 'dev_mode' | 'construction' | 'content_generation' | 'artifact';
+    cardType?: 'plan' | 'dev_mode' | 'construction' | 'content_generation' | 'artifact' | 'structured_response';
     cardData?: any;
     isStatic?: boolean;
     shouldUpdate?: boolean;
@@ -52,4 +53,23 @@ export interface PlanCardData {
     titulo: string;
     descricao: string;
   }>;
+}
+
+export interface StructuredResponseBlock {
+  type: 'text' | 'activities_card' | 'artifact_card';
+  content?: string;
+  activities?: ActivitySummaryUI[];
+  artifact?: any;
+}
+
+export interface ActivitySummaryUI {
+  id: string;
+  titulo: string;
+  tipo: string;
+  db_id?: number;
+}
+
+export interface StructuredResponseData {
+  blocks: StructuredResponseBlock[];
+  rawText: string;
 }

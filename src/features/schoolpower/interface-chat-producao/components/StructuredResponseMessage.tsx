@@ -1,0 +1,142 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { JotaAvatarChat } from './JotaAvatarChat';
+import { ArtifactCard } from './ArtifactCard';
+import { BookOpen, CheckCircle2 } from 'lucide-react';
+import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
+import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
+
+interface StructuredResponseMessageProps {
+  blocks: StructuredResponseBlock[];
+  onOpenArtifact?: (artifact: ArtifactData) => void;
+  onOpenActivity?: (activity: ActivitySummaryUI) => void;
+}
+
+function InlineActivitiesCard({ activities, onOpenActivity }: { 
+  activities: ActivitySummaryUI[]; 
+  onOpenActivity?: (activity: ActivitySummaryUI) => void;
+}) {
+  const getActivityIcon = (tipo: string) => {
+    const t = tipo?.toLowerCase() || '';
+    if (t.includes('quiz')) return '🧠';
+    if (t.includes('flash') || t.includes('card')) return '🃏';
+    if (t.includes('caça') || t.includes('caca')) return '🔍';
+    if (t.includes('cruzada')) return '✏️';
+    if (t.includes('complete') || t.includes('lacuna')) return '📝';
+    if (t.includes('associa')) return '🔗';
+    return '📋';
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="my-3 rounded-xl overflow-hidden"
+      style={{
+        background: 'rgba(30, 41, 59, 0.5)',
+        border: '1px solid rgba(148, 163, 184, 0.15)',
+      }}
+    >
+      <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
+        <BookOpen className="w-4 h-4 text-orange-400" />
+        <span className="text-xs font-semibold text-white/80 uppercase tracking-wider">
+          {activities.length} Atividade{activities.length !== 1 ? 's' : ''} Criada{activities.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+      <div className="divide-y divide-white/5">
+        {activities.map((activity, idx) => (
+          <button
+            key={activity.id || idx}
+            onClick={() => onOpenActivity?.(activity)}
+            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors duration-150 group"
+          >
+            <span className="text-lg flex-shrink-0">{getActivityIcon(activity.tipo)}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-slate-200 truncate group-hover:text-white transition-colors">
+                {activity.titulo}
+              </p>
+              <p className="text-xs text-slate-500 capitalize">{activity.tipo?.replace(/_/g, ' ')}</p>
+            </div>
+            <CheckCircle2 className="w-4 h-4 text-green-500/70 flex-shrink-0" />
+          </button>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+export function StructuredResponseMessage({ blocks, onOpenArtifact, onOpenActivity }: StructuredResponseMessageProps) {
+  return (
+    <motion.div 
+      className="flex justify-start"
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="flex gap-3 max-w-[85%]">
+        <div className="flex flex-col items-center flex-shrink-0">
+          <JotaAvatarChat size="md" showAnimation={true} />
+        </div>
+        
+        <div className="flex flex-col min-h-[48px] py-1 flex-1">
+          <span className="text-white font-bold text-[15px] leading-tight mb-1">Jota</span>
+          
+          <div className="mt-auto">
+            {blocks.map((block, idx) => {
+              if (block.type === 'text' && block.content) {
+                return (
+                  <motion.p
+                    key={`text-${idx}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: idx * 0.1, duration: 0.3 }}
+                    className="text-white/90 text-sm leading-relaxed whitespace-pre-wrap mb-2"
+                  >
+                    {block.content}
+                  </motion.p>
+                );
+              }
+              
+              if (block.type === 'activities_card' && block.activities) {
+                return (
+                  <motion.div
+                    key={`activities-${idx}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1, duration: 0.4 }}
+                  >
+                    <InlineActivitiesCard 
+                      activities={block.activities} 
+                      onOpenActivity={onOpenActivity}
+                    />
+                  </motion.div>
+                );
+              }
+              
+              if (block.type === 'artifact_card' && block.artifact) {
+                return (
+                  <motion.div
+                    key={`artifact-${idx}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1, duration: 0.4 }}
+                  >
+                    <ArtifactCard
+                      artifact={block.artifact}
+                      onOpen={onOpenArtifact}
+                    />
+                  </motion.div>
+                );
+              }
+              
+              return null;
+            })}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+export default StructuredResponseMessage;
