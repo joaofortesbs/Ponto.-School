@@ -116,12 +116,14 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  const pendingArtifactsRef = useRef<ArtifactData[]>([]);
+
   useEffect(() => {
     const handleArtifactGenerated = (event: Event) => {
       const artifactData = (event as CustomEvent).detail as ArtifactData;
       if (artifactData) {
-        console.log('📄 [ChatLayout] Artefato recebido via evento:', artifactData.metadata.titulo);
-        addArtifactCard(artifactData);
+        console.log('📄 [ChatLayout] Artefato recebido via evento (enfileirado):', artifactData.metadata.titulo);
+        pendingArtifactsRef.current.push(artifactData);
       }
     };
 
@@ -129,7 +131,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     return () => {
       window.removeEventListener('artifact:generated', handleArtifactGenerated);
     };
-  }, [addArtifactCard]);
+  }, []);
 
   const handleOpenArtifact = useCallback((artifact: ArtifactData) => {
     console.log('📄 [ChatLayout] Abrindo artefato:', artifact.metadata.titulo);
@@ -426,6 +428,14 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
       addTextMessage('assistant', relatorio);
 
+      if (pendingArtifactsRef.current.length > 0) {
+        for (const artifactData of pendingArtifactsRef.current) {
+          console.log('📄 [ChatLayout] Adicionando artefato após resposta final:', artifactData.metadata.titulo);
+          addArtifactCard(artifactData);
+        }
+        pendingArtifactsRef.current = [];
+      }
+
       addMemory({
         tipo: 'resultado',
         conteudo: 'Plano executado com sucesso',
@@ -439,6 +449,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       setExecutionPlan(prev => prev ? { ...prev, status: 'erro' } : null);
       isExecutingPlanRef.current = false;
       releaseExecutionLock();
+      pendingArtifactsRef.current = [];
 
       addTextMessage('assistant', 'Ocorreu um erro durante a execução. Por favor, tente novamente.');
     }
