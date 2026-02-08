@@ -1,8 +1,10 @@
 /**
- * PLANNER - Criador de Planos de Ação
+ * PLANNER - Mente Orquestradora do Agente Jota
  * 
  * Recebe o prompt do usuário e gera um plano estruturado
- * com etapas e capabilities para execução inteligente
+ * com capabilities escolhidas AUTONOMAMENTE pela IA.
+ * 
+ * NÃO existe pipeline fixo — a IA decide o melhor caminho.
  */
 
 import { executeWithCascadeFallback } from '../services/controle-APIs-gerais-school-power';
@@ -21,12 +23,11 @@ export async function createExecutionPlan(
   userPrompt: string,
   context: PlannerContext
 ): Promise<ExecutionPlan> {
-  console.log('📋 [Planner] Criando plano de execução para:', userPrompt);
+  console.log('📋 [Planner] Mente Orquestradora analisando:', userPrompt);
 
   const capabilities = getAllCapabilities();
   const capabilitiesText = formatCapabilitiesForPrompt(capabilities);
   
-  // Adicionar whitelist de capabilities para prevenir alucinação
   const whitelist = getCapabilityWhitelist();
 
   const planningPrompt = PLANNING_PROMPT
@@ -34,7 +35,7 @@ export async function createExecutionPlan(
     .replace('{context}', context.workingMemory || 'Sem contexto anterior')
     .replace('{capabilities}', capabilitiesText + '\n\n' + whitelist.prompt);
 
-  console.log('🤖 [Planner] Enviando para IA...');
+  console.log('🧠 [Planner] Mente Orquestradora decidindo capabilities...');
 
   const result = await executeWithCascadeFallback(planningPrompt, {
     onProgress: (status) => {
@@ -57,13 +58,11 @@ export async function createExecutionPlan(
   try {
     const parsed = parseAIPlanResponse(result.data);
     
-    // VALIDAÇÃO ANTI-ALUCINAÇÃO: Verificar e corrigir nomes de capabilities
     console.log('🔍 [Planner] Validando capabilities do plano...');
     const validation = validatePlanCapabilities(parsed);
     
     if (!validation.valid) {
       console.warn('⚠️ [Planner] Capabilities inválidas detectadas:', validation.errors);
-      // Usar plano corrigido automaticamente
     }
     
     const validatedPlan = validation.correctedPlan;
@@ -72,7 +71,6 @@ export async function createExecutionPlan(
       planId: `plan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       objetivo: validatedPlan.objetivo,
       etapas: validatedPlan.etapas.map((etapa: ParsedEtapa, idx: number) => {
-        // Validar e normalizar cada capability
         const validatedCapabilities = (etapa.capabilities || []).map((cap: ParsedCapability, capIdx: number) => {
           const capValidation = validateCapabilityName(cap.nome);
           const finalName = capValidation.normalizedName || cap.nome;
@@ -91,29 +89,29 @@ export async function createExecutionPlan(
             ordem: capIdx + 1,
           };
         }).filter((cap: CapabilityCall) => {
-          // Remover capabilities que não existem após validação
           const isValid = validateCapabilityName(cap.nome).valid || 
                          validateCapabilityName(cap.nome).normalizedName;
           return isValid;
         });
-        
-        // INJEÇÃO OBRIGATÓRIA: Adicionar gerar_conteudo_atividades após decidir_atividades_criar
-        const hasDecidirAtividades = validatedCapabilities.some(
-          cap => cap.nome === 'decidir_atividades_criar'
+
+        // VALIDAÇÃO DE SEGURANÇA: Se criar_atividade está presente sem salvar_atividades_bd na mesma etapa,
+        // garantir que salvar_atividades_bd exista em ALGUMA etapa posterior (o planner já deve incluir)
+        const hasCriarAtividade = validatedCapabilities.some(
+          cap => cap.nome === 'criar_atividade'
         );
-        const hasGerarConteudo = validatedCapabilities.some(
-          cap => cap.nome === 'gerar_conteudo_atividades'
+        const hasSalvarBd = validatedCapabilities.some(
+          cap => cap.nome === 'salvar_atividades_bd'
         );
         
-        if (hasDecidirAtividades && !hasGerarConteudo) {
+        if (hasCriarAtividade && !hasSalvarBd) {
           const timestamp = Date.now();
-          console.log('🔧 [Planner] Injetando capability gerar_conteudo_atividades na etapa de decisão');
+          console.log('🔧 [Planner] Segurança: Adicionando salvar_atividades_bd após criar_atividade');
           validatedCapabilities.push({
             id: `cap-${idx}-${validatedCapabilities.length}-${timestamp}`,
-            nome: 'gerar_conteudo_atividades',
-            displayName: 'Gerando conteúdo para as atividades',
-            categoria: 'GERAR_CONTEUDO' as CapabilityCall['categoria'],
-            parametros: { contexto: userPrompt },
+            nome: 'salvar_atividades_bd',
+            displayName: 'Vou salvar suas atividades no banco de dados',
+            categoria: 'SALVAR_BD' as CapabilityCall['categoria'],
+            parametros: {},
             status: 'pending' as const,
             ordem: validatedCapabilities.length + 1,
           });
@@ -130,11 +128,16 @@ export async function createExecutionPlan(
           capabilities: validatedCapabilities,
         };
       }),
-      status: 'aguardando_aprovacao',
+      status: 'em_execucao',
       createdAt: Date.now(),
     };
 
-    console.log('✅ [Planner] Plano criado e validado com capabilities:', plan);
+    console.log('✅ [Planner] Plano criado pela Mente Orquestradora:', {
+      planId: plan.planId,
+      objetivo: plan.objetivo,
+      totalEtapas: plan.etapas.length,
+      capabilities: plan.etapas.flatMap(e => e.capabilities?.map(c => c.nome) || []),
+    });
     return plan;
   } catch (error) {
     console.error('❌ [Planner] Erro ao parsear resposta:', error);
@@ -182,13 +185,62 @@ function parseAIPlanResponse(responseText: string): ParsedPlan {
   return parsed;
 }
 
+/**
+ * Analisa o pedido do usuário para determinar o tipo de fallback.
+ * Se parece ser sobre criação de atividades, usa pipeline completo.
+ * Caso contrário, usa apenas criar_arquivo.
+ */
+function detectIntentForFallback(userPrompt: string): 'criar_atividades' | 'texto_livre' {
+  const promptLower = userPrompt.toLowerCase();
+  
+  const activityKeywords = [
+    'atividade', 'atividades', 'exercício', 'exercícios', 'quiz', 'prova',
+    'avaliação', 'avaliacao', 'criar atividade', 'crie atividade', 'monte atividade',
+    'flash card', 'flashcard', 'caça-palavra', 'caca-palavra', 'cruzadinha',
+    'jogo educativo', 'game educativo', 'dinâmica', 'interativ'
+  ];
+  
+  const isActivityRequest = activityKeywords.some(kw => promptLower.includes(kw));
+  
+  return isActivityRequest ? 'criar_atividades' : 'texto_livre';
+}
+
 function createFallbackPlan(userPrompt: string): ExecutionPlan {
-  console.log('🔄 [Planner] Usando plano fallback inteligente com capabilities válidas');
-
+  const intent = detectIntentForFallback(userPrompt);
   const timestamp = Date.now();
+  
+  console.log(`🔄 [Planner] Fallback inteligente - Intenção detectada: ${intent}`);
 
-  // PIPELINE OBRIGATÓRIO: BUSCAR → DECIDIR → CRIAR
-  // Usando APENAS capabilities válidas do registro
+  if (intent === 'texto_livre') {
+    return {
+      planId: `plan-fallback-${timestamp}`,
+      objetivo: `Criar conteúdo personalizado conforme solicitado`,
+      etapas: [
+        {
+          ordem: 1,
+          titulo: 'Criar conteúdo para você',
+          descricao: 'Vou elaborar o conteúdo solicitado',
+          funcao: 'criar_arquivo',
+          parametros: { contexto: userPrompt },
+          status: 'pendente',
+          capabilities: [
+            {
+              id: `cap-0-0-${timestamp}`,
+              nome: 'criar_arquivo',
+              displayName: 'Vou criar o conteúdo que você precisa',
+              categoria: 'CRIAR',
+              parametros: { contexto: userPrompt },
+              status: 'pending',
+              ordem: 1,
+            },
+          ],
+        },
+      ],
+      status: 'em_execucao',
+      createdAt: timestamp,
+    };
+  }
+
   const etapas: ExecutionStep[] = [
     {
       ordem: 1,
@@ -220,7 +272,7 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
     },
     {
       ordem: 2,
-      titulo: 'Decidir quais atividades criar',
+      titulo: 'Decidir e gerar conteúdo',
       descricao: 'Vou escolher as melhores atividades e gerar conteúdo pedagógico',
       funcao: 'decidir_atividades_criar',
       parametros: { contexto: userPrompt },
@@ -248,8 +300,8 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
     },
     {
       ordem: 3,
-      titulo: 'Criar as atividades personalizadas',
-      descricao: 'Vou criar as atividades sob medida para você',
+      titulo: 'Criar e salvar as atividades',
+      descricao: 'Vou criar e salvar as atividades sob medida para você',
       funcao: 'criar_atividade',
       parametros: { contexto: userPrompt },
       status: 'pendente',
@@ -263,24 +315,14 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
           status: 'pending',
           ordem: 1,
         },
-      ],
-    },
-    {
-      ordem: 4,
-      titulo: 'Salvar no banco de dados',
-      descricao: 'Vou salvar permanentemente as atividades criadas',
-      funcao: 'salvar_atividades_bd',
-      parametros: {},
-      status: 'pendente',
-      capabilities: [
         {
-          id: `cap-3-0-${timestamp}`,
+          id: `cap-2-1-${timestamp}`,
           nome: 'salvar_atividades_bd',
           displayName: 'Vou salvar suas atividades no banco de dados',
           categoria: 'SALVAR_BD',
           parametros: {},
           status: 'pending',
-          ordem: 1,
+          ordem: 2,
         },
       ],
     },
@@ -290,15 +332,22 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
     planId: `plan-fallback-${timestamp}`,
     objetivo: `Criar material educacional personalizado para você`,
     etapas,
-    status: 'aguardando_aprovacao',
+    status: 'em_execucao',
     createdAt: timestamp,
   };
 }
 
 export function generatePlanMessage(plan: ExecutionPlan): string {
-  return `Ótimo! Entendi o que você precisa. Montei um plano de ação com ${plan.etapas.length} etapas para: ${plan.objetivo}
+  const capabilityNames = plan.etapas.flatMap(e => e.capabilities?.map(c => c.nome) || []);
+  const isSimplePlan = capabilityNames.length <= 2;
+  
+  if (isSimplePlan) {
+    return `Entendi o que você precisa! Vou trabalhar nisso agora: ${plan.objetivo}`;
+  }
+  
+  return `Ótimo! Entendi o que você precisa. Montei um plano com ${plan.etapas.length} etapas para: ${plan.objetivo}
 
-Dá uma olhada no plano e, se estiver tudo certo, é só clicar em "Executar Plano"!`;
+Já estou começando a trabalhar!`;
 }
 
 export default {

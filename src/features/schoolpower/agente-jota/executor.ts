@@ -13,7 +13,7 @@ import { executeWithCascadeFallback } from '../services/controle-APIs-gerais-sch
 import { findCapability, executeCapability } from './capabilities';
 import { MemoryManager } from './memory-manager';
 import { EXECUTION_PROMPT } from './prompts/execution-prompt';
-import { reflectionService, type CapabilityInsight, type NarrativeReflection } from './reflection-service';
+import { reflectionService, type CapabilityInsight } from './reflection-service';
 import type { ExecutionPlan, ExecutionStep, CapabilityCall, ProgressUpdate } from '../interface-chat-producao/types';
 import { createDebugEntry } from '../interface-chat-producao/debug-system/DebugStore';
 import { useDebugStore } from '../interface-chat-producao/debug-system/DebugStore';
@@ -26,7 +26,6 @@ import { salvarAtividadesBdV2 } from './capabilities/SALVAR_BD/implementations/s
 import { criarArquivoV2 } from './capabilities/CRIAR_ARQUIVO/criar-arquivo-v2';
 import type { CapabilityInput, CapabilityOutput } from './capabilities/shared/types';
 import { 
-  generateDevelopmentReflection,
   convertCapabilityInsightToResultado,
   registerActivityCreated,
   type ResultadoCapability,
@@ -40,11 +39,6 @@ export interface CapabilityProgressUpdate extends ProgressUpdate {
   capabilityStatus?: 'pending' | 'executing' | 'completed' | 'failed';
   capabilityResult?: any;
   capabilityDuration?: number;
-}
-
-export interface ReflectionProgressUpdate extends ProgressUpdate {
-  reflection?: NarrativeReflection;
-  reflectionLoading?: boolean;
 }
 
 export class AgentExecutor {
@@ -228,49 +222,6 @@ export class AgentExecutor {
           resultado: this.formatResultSummary(combinedResult),
         });
 
-        this.emitProgress({
-          sessionId: this.sessionId,
-          status: 'executando',
-          etapaAtual: etapa.ordem,
-          descricao: 'Gerando reflexão...',
-          reflectionLoading: true,
-        } as ReflectionProgressUpdate);
-
-        try {
-          const devCardResult = await generateDevelopmentReflection(
-            this.sessionId,
-            etapa.ordem,
-            etapa.titulo || etapa.descricao,
-            this.currentEtapaCapabilities
-          );
-          
-          const reflection: NarrativeReflection = {
-            id: `reflection-${etapa.ordem}-${Date.now()}`,
-            objectiveIndex: etapa.ordem - 1,
-            objectiveTitle: etapa.titulo || etapa.descricao,
-            narrative: devCardResult.reflexao,
-            tone: 'celebratory',
-            highlights: [],
-            timestamp: Date.now(),
-          };
-          
-          this.emitProgress({
-            sessionId: this.sessionId,
-            status: 'executando',
-            etapaAtual: etapa.ordem,
-            descricao: 'Reflexão gerada',
-            reflection,
-            reflectionLoading: false,
-          } as ReflectionProgressUpdate);
-          
-          console.log('💡 [Executor] Reflexão gerada (Chamada 2 - DevelopmentCard):', devCardResult.reflexao.substring(0, 100) + '...');
-          
-          this.currentEtapaCapabilities = [];
-        } catch (reflectionError) {
-          console.warn('⚠️ [Executor] Erro ao gerar reflexão:', reflectionError);
-          this.currentEtapaCapabilities = [];
-        }
-
         await this.delay(300);
 
       } catch (error) {
@@ -334,17 +285,14 @@ export class AgentExecutor {
   // Mapa para armazenar resultados de capabilities entre etapas
   private capabilityResultsMap: Map<string, any> = new Map();
 
-  // Capabilities que usam API-First V2 pattern
-  // Todas as capabilities V2 do pipeline completo:
-  // pesquisar → decidir → gerar → criar → salvar
-  private static readonly V2_CAPABILITIES = [
-    'pesquisar_atividades_disponiveis',
-    'decidir_atividades_criar',
-    'gerar_conteudo_atividades',
-    'criar_atividade',
-    'salvar_atividades_bd',
-    'criar_arquivo'
-  ];
+  private static readonly V2_REGISTRY: Map<string, (input: CapabilityInput) => Promise<CapabilityOutput>> = new Map([
+    ['pesquisar_atividades_disponiveis', pesquisarAtividadesDisponiveisV2],
+    ['decidir_atividades_criar', decidirAtividadesCriarV2],
+    ['gerar_conteudo_atividades', gerarConteudoAtividadesV2],
+    ['criar_atividade', criarAtividadeV2],
+    ['salvar_atividades_bd', salvarAtividadesBdV2],
+    ['criar_arquivo', criarArquivoV2],
+  ]);
   
   // Flag para registrar o handler global apenas uma vez
   private static globalHandlerRegistered: boolean = false;
@@ -424,7 +372,7 @@ export class AgentExecutor {
           // ═══════════════════════════════════════════════════════════════════════
           // VERSÃO V2: Usar API-First pattern para capabilities críticas
           // ═══════════════════════════════════════════════════════════════════════
-          if (AgentExecutor.V2_CAPABILITIES.includes(capName)) {
+          if (AgentExecutor.V2_REGISTRY.has(capName)) {
             console.error(`
 ═══════════════════════════════════════════════════════════════════════
 🚀 [Executor] USING V2 API-FIRST for ${capName}
@@ -471,18 +419,9 @@ export class AgentExecutor {
             // Executar a capability V2 correspondente
             let v2Result: CapabilityOutput | null = null;
             
-            if (capName === 'pesquisar_atividades_disponiveis') {
-              v2Result = await pesquisarAtividadesDisponiveisV2(capabilityInput);
-            } else if (capName === 'decidir_atividades_criar') {
-              v2Result = await decidirAtividadesCriarV2(capabilityInput);
-            } else if (capName === 'gerar_conteudo_atividades') {
-              v2Result = await gerarConteudoAtividadesV2(capabilityInput);
-            } else if (capName === 'criar_atividade') {
-              v2Result = await criarAtividadeV2(capabilityInput);
-            } else if (capName === 'salvar_atividades_bd') {
-              v2Result = await salvarAtividadesBdV2(capabilityInput);
-            } else if (capName === 'criar_arquivo') {
-              v2Result = await criarArquivoV2(capabilityInput);
+            const v2Handler = AgentExecutor.V2_REGISTRY.get(capName);
+            if (v2Handler) {
+              v2Result = await v2Handler(capabilityInput);
             }
             
             // Validar que temos um resultado
@@ -792,7 +731,7 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
         
         // Para capabilities V2 críticas (exceto criar_atividade), propagar o erro para interromper todo o fluxo
         // criar_atividade NÃO é crítica - os cards de construção devem permanecer visíveis mesmo após falha
-        if (AgentExecutor.V2_CAPABILITIES.includes(capName) && capName !== 'criar_atividade') {
+        if (AgentExecutor.V2_REGISTRY.has(capName) && capName !== 'criar_atividade') {
           console.error(`🛑 [Executor] CRITICAL V2 capability "${capName}" failed - halting pipeline execution`);
           throw error; // Re-lançar para interromper executeCapabilitiesForEtapa
         }

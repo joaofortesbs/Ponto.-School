@@ -21,7 +21,7 @@ SUA TAREFA:
 Gere uma RESPOSTA INICIAL acolhedora e informativa que:
 1. Demonstre que você ENTENDEU o pedido específico do usuário
 2. Explique BREVEMENTE o que você vai fazer para atender
-3. Defina EXPECTATIVAS claras sobre o que será criado
+3. Defina EXPECTATIVAS claras sobre o que será entregue
 
 REGRAS:
 - Seja direto e objetivo (2-4 frases)
@@ -31,15 +31,23 @@ REGRAS:
 - NÃO liste etapas técnicas
 - NÃO mencione "plano de ação" ou termos técnicos
 
-EXEMPLOS DE RESPOSTAS BOAS:
+EXEMPLOS DE RESPOSTAS PARA DIFERENTES TIPOS DE PEDIDO:
+
+Criação de atividades:
 - Pedido: "Crie 3 atividades de matemática para 7º ano"
   Resposta: "Perfeito! Vou criar 3 atividades de matemática focadas no 7º ano. Vou analisar as melhores opções de formato para engajar seus alunos e personalizar o conteúdo para a faixa etária."
 
-- Pedido: "Preciso de um quiz sobre fotossíntese"
-  Resposta: "Entendi! Vou montar um quiz completo sobre fotossíntese. Vou criar questões variadas que testem o conhecimento dos alunos de forma dinâmica e educativa."
+Explicação/Texto:
+- Pedido: "Me explique o que é metodologia ativa"
+  Resposta: "Claro! Vou preparar uma explicação completa sobre metodologia ativa, com conceitos, exemplos práticos e dicas de como aplicar em sala de aula."
 
-- Pedido: "Faça uma avaliação diagnóstica de português"
-  Resposta: "Combinado! Vou preparar uma avaliação diagnóstica de português personalizada. Isso vai ajudar você a identificar o nível atual da turma e planejar as próximas aulas."
+Pesquisa:
+- Pedido: "Quais atividades eu já criei?"
+  Resposta: "Vou consultar suas atividades anteriores agora mesmo! Em instantes você terá uma lista completa do que já foi criado."
+
+Plano de aula:
+- Pedido: "Monte um plano de aula sobre clima"
+  Resposta: "Ótimo! Vou elaborar um plano de aula completo sobre clima, com objetivos, metodologia e atividades sugeridas para você aplicar com a turma."
 
 RETORNE APENAS A RESPOSTA, sem formatação extra ou explicações.
 `.trim();
@@ -52,7 +60,7 @@ PEDIDO: "{user_input}"
 Retorne um JSON com:
 {
   "interpretacao": "resumo do que o usuário quer em uma frase",
-  "intencao": "CRIAR_ATIVIDADE | CRIAR_AVALIACAO | PESQUISAR | PLANEJAR | OUTRO",
+  "intencao": "CRIAR_ATIVIDADE | CRIAR_AVALIACAO | EXPLICAR_CONCEITO | CRIAR_TEXTO | CRIAR_PLANO_AULA | PESQUISAR | PLANEJAR | OUTRO",
   "entidades": {
     "quantidade": número ou null,
     "disciplina": string ou null,
@@ -62,6 +70,16 @@ Retorne um JSON com:
     "outros": {}
   }
 }
+
+GUIA DE INTENÇÕES:
+- CRIAR_ATIVIDADE: quando o professor quer criar atividades, exercícios, quiz, jogos educativos na plataforma
+- CRIAR_AVALIACAO: quando quer uma avaliação diagnóstica ou prova
+- EXPLICAR_CONCEITO: quando quer uma explicação sobre um tema pedagógico ou educacional
+- CRIAR_TEXTO: quando quer um texto, resumo, roteiro, dossiê ou documento escrito
+- CRIAR_PLANO_AULA: quando quer um plano de aula ou sequência didática
+- PESQUISAR: quando quer saber o que tem disponível ou o que já criou
+- PLANEJAR: quando quer ajuda para planejar algo mais amplo
+- OUTRO: quando não se encaixa em nenhuma das categorias acima
 
 Retorne APENAS o JSON, sem explicações.
 `.trim();
@@ -99,7 +117,7 @@ export async function generateInitialResponse(
 
     let resposta = 'Entendi seu pedido! Vou começar a trabalhar nisso agora.';
     let interpretacao = userInput;
-    let intencao = 'CRIAR_ATIVIDADE';
+    let intencao = 'OUTRO';
     let entidades: Record<string, any> = {};
 
     if (responseResult.success && responseResult.data) {
@@ -126,7 +144,7 @@ export async function generateInitialResponse(
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
           interpretacao = parsed.interpretacao || userInput;
-          intencao = parsed.intencao || 'CRIAR_ATIVIDADE';
+          intencao = parsed.intencao || 'OUTRO';
           entidades = parsed.entidades || {};
         }
       } catch (parseError) {
@@ -155,7 +173,7 @@ export async function generateInitialResponse(
     return {
       resposta: fallbackResponse,
       interpretacao: userInput,
-      intencao: 'CRIAR_ATIVIDADE',
+      intencao: 'OUTRO',
       entidades: {},
       sucesso: false,
       erro: error instanceof Error ? error.message : 'Erro desconhecido',

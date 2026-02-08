@@ -75,6 +75,8 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isExecutingPlanRef = useRef(false);
   const hasProcessedInitialMessageRef = useRef(false);
+  const isMountedRef = useRef(true);
+  const autoExecTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { 
     messages,
@@ -107,6 +109,17 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       console.log('🔄 [ChatLayout] Sessão restaurada:', storedSessionId);
     }
   }, [storedSessionId, sessionId, setStoredSessionId]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (autoExecTimerRef.current) {
+        clearTimeout(autoExecTimerRef.current);
+        autoExecTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -215,19 +228,23 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       if (plan) {
         setExecutionPlan(plan);
         
-        addPlanCard({
-          objetivo: plan.objetivo,
-          etapas: plan.etapas.map((e, idx) => ({
-            ordem: idx,
-            titulo: e.titulo || e.descricao,
-            descricao: e.descricao
-          }))
-        });
-
         addMemory({
           tipo: 'objetivo',
           conteudo: plan.objetivo,
         });
+
+        console.log('🧠 [ChatLayout] Mente Orquestradora: Iniciando execução automática do plano');
+        setIsLoading(false);
+        
+        autoExecTimerRef.current = setTimeout(() => {
+          autoExecTimerRef.current = null;
+          if (!isMountedRef.current) {
+            console.warn('⚠️ [ChatLayout] Componente desmontado — execução automática cancelada');
+            return;
+          }
+          handleExecutePlanAuto(plan);
+        }, 100);
+        return;
       }
       
       setIsLoading(false);
@@ -237,6 +254,31 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       addTextMessage('assistant', 'Desculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.');
       setIsLoading(false);
     }
+  };
+
+  /**
+   * Execução automática do plano — chamada pela Mente Orquestradora
+   * Recebe o plano diretamente para não depender do state assíncrono
+   */
+  const handleExecutePlanAuto = async (plan: ExecutionPlan) => {
+    if (!plan) return;
+
+    if (!acquireExecutionLock(sessionId)) {
+      console.warn('⚠️ [ChatLayout] Execução automática bloqueada pelo sessionStorage!');
+      setExecutionPlan(null);
+      return;
+    }
+
+    const canStart = startExecution();
+    if (!canStart) {
+      console.warn('⚠️ [ChatLayout] Execução automática bloqueada pelo Zustand!');
+      releaseExecutionLock();
+      setExecutionPlan(null);
+      return;
+    }
+
+    console.log('🧠 [ChatLayout] Mente Orquestradora: Execução automática iniciada');
+    await executeAgentPlanInternal(plan);
   };
 
   const handleExecutePlan = async () => {
@@ -254,24 +296,27 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       return;
     }
 
-    console.log('▶️ [ChatLayout] Iniciando execução do plano (aprovado)');
+    console.log('▶️ [ChatLayout] Iniciando execução do plano (manual)');
+    await executeAgentPlanInternal(executionPlan);
+  };
 
+  const executeAgentPlanInternal = async (planToExecute: ExecutionPlan) => {
     isExecutingPlanRef.current = true;
 
     setIsExecutingLocal(true);
     setExecuting(true);
     
     const updatedPlan = {
-      ...executionPlan,
+      ...planToExecute,
       status: 'em_execucao' as const
     };
     setExecutionPlan(updatedPlan);
 
     addDevModeCard({
-      plano: executionPlan,
+      plano: planToExecute,
       status: 'executando',
       etapaAtual: 0,
-      etapas: executionPlan.etapas.map((e, idx) => ({
+      etapas: planToExecute.etapas.map((e, idx) => ({
         ordem: idx,
         titulo: e.titulo || e.descricao,
         descricao: e.descricao,
@@ -290,42 +335,15 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       capabilityStatus?: string;
       capabilityResult?: any;
       capabilityDuration?: number;
-      reflectionLoading?: boolean;
-      reflection?: any;
     }) => {
       console.log('📊 [ChatLayout] Progresso:', JSON.stringify({
         status: update.status,
         etapaAtual: update.etapaAtual,
         capabilityId: update.capabilityId,
         capabilityStatus: update.capabilityStatus,
-        reflectionLoading: update.reflectionLoading,
-        hasReflection: !!update.reflection,
       }));
 
       const stepIndex = update.etapaAtual !== undefined ? update.etapaAtual - 1 : 0;
-
-      if (update.reflectionLoading === true) {
-        console.log(`💭 [ChatLayout] Emitindo evento: reflection:loading | stepIndex: ${stepIndex}`);
-        window.dispatchEvent(new CustomEvent('agente-jota-progress', {
-          detail: {
-            type: 'reflection:loading',
-            stepIndex: stepIndex,
-          }
-        }));
-        return;
-      }
-
-      if (update.reflection) {
-        console.log(`💡 [ChatLayout] Emitindo evento: reflection:ready | stepIndex: ${stepIndex}`);
-        window.dispatchEvent(new CustomEvent('agente-jota-progress', {
-          detail: {
-            type: 'reflection:ready',
-            stepIndex: stepIndex,
-            reflection: update.reflection,
-          }
-        }));
-        return;
-      }
 
       let eventType: string = update.status;
       
@@ -385,7 +403,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     };
 
     try {
-      // Formatar histórico da conversa para passar ao executor
       const conversationHistory = messages
         .filter(m => m.type === 'user' || m.type === 'assistant')
         .map(m => `${m.role === 'user' ? 'Usuário' : 'Assistente'}: ${m.content}`)
@@ -393,18 +410,17 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       
       console.error(`
 ╔════════════════════════════════════════════════════════════════════════╗
-║ 🚀 CHAT LAYOUT - handleExecutePlan() CALLING executeAgentPlan
+║ 🧠 MENTE ORQUESTRADORA - executeAgentPlanInternal()
 ║════════════════════════════════════════════════════════════════════════║
 ║ sessionId: ${sessionId}
-║ executionPlan.planId: ${executionPlan.planId}
-║ executionPlan.etapas: ${executionPlan.etapas.length}
-║ conversationHistory length: ${conversationHistory.length}
-║ handleProgress callback: ${typeof handleProgress === 'function' ? 'YES' : 'NO'}
+║ planId: ${planToExecute.planId}
+║ etapas: ${planToExecute.etapas.length}
+║ capabilities: ${planToExecute.etapas.flatMap(e => e.capabilities?.map(c => c.nome) || []).join(', ')}
 ║════════════════════════════════════════════════════════════════════════║
       `);
       
       const relatorio = await executeAgentPlan(
-        executionPlan,
+        planToExecute,
         sessionId,
         handleProgress,
         conversationHistory
@@ -415,7 +431,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       setIsExecutingLocal(false);
       setExecuting(false);
       setCurrentStep(null);
-      // CRÍTICO: Limpar executionPlan completamente para permitir novo plano
       setExecutionPlan(null);
       isExecutingPlanRef.current = false;
       releaseExecutionLock();
