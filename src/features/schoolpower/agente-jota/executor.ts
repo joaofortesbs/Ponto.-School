@@ -13,6 +13,9 @@ import { executeWithCascadeFallback } from '../services/controle-APIs-gerais-sch
 import { findCapability, executeCapability } from './capabilities';
 import { MemoryManager } from './memory-manager';
 import { EXECUTION_PROMPT } from './prompts/execution-prompt';
+import { buildNarrativePrompt } from './prompts/narrative-prompt';
+import { buildReplanningPrompt } from './prompts/replanning-prompt';
+import { SYSTEM_PROMPT_SHORT } from './prompts/system-prompt';
 import { reflectionService, type CapabilityInsight } from './reflection-service';
 import type { ExecutionPlan, ExecutionStep, CapabilityCall, ProgressUpdate } from '../interface-chat-producao/types';
 import { createDebugEntry } from '../interface-chat-producao/debug-system/DebugStore';
@@ -221,6 +224,81 @@ export class AgentExecutor {
           etapaAtual: etapa.ordem,
           resultado: this.formatResultSummary(combinedResult),
         });
+
+        // Generate narrative text between steps
+        const nextEtapa = plan.etapas.find(e => e.ordem === etapa.ordem + 1);
+        try {
+          const narrativeText = await this.generateNarrativeForStep(
+            etapa,
+            combinedResult,
+            nextEtapa || null,
+            plan.objetivo,
+            etapa.ordem,
+            plan.etapas.length
+          );
+          
+          if (narrativeText) {
+            this.emitProgress({
+              sessionId: this.sessionId,
+              status: 'narrative',
+              etapaAtual: etapa.ordem,
+              descricao: narrativeText,
+            } as any);
+            console.log(`💬 [Executor] Narrativa gerada para etapa ${etapa.ordem}: ${narrativeText.substring(0, 80)}...`);
+          }
+        } catch (narrativeError) {
+          console.warn('⚠️ [Executor] Erro ao gerar narrativa (não crítico):', narrativeError);
+        }
+
+        // Check if replanning is needed (skip for last step)
+        if (nextEtapa && plan.etapas.indexOf(etapa) < plan.etapas.length - 1) {
+          try {
+            const replanResult = await this.checkReplanning(
+              plan,
+              etapa,
+              combinedResult,
+              plan.etapas.filter(e => e.ordem > etapa.ordem)
+            );
+            
+            if (replanResult && replanResult.needs_replan && replanResult.updated_remaining_steps?.length > 0) {
+              console.log(`🔄 [Executor] Replanning ativado: ${replanResult.reason}`);
+              
+              const currentIndex = plan.etapas.indexOf(etapa);
+              const completedSteps = plan.etapas.slice(0, currentIndex + 1);
+              
+              const newSteps: ExecutionStep[] = replanResult.updated_remaining_steps.map((step: any, idx: number) => ({
+                ordem: completedSteps.length + idx + 1,
+                titulo: step.titulo,
+                descricao: step.descricao || step.titulo,
+                funcao: step.capabilities?.[0]?.nome || '',
+                parametros: step.capabilities?.[0]?.parametros || {},
+                status: 'pendente' as const,
+                capabilities: (step.capabilities || []).map((cap: any, capIdx: number) => ({
+                  id: `replan-cap-${Date.now()}-${capIdx}`,
+                  nome: cap.nome,
+                  displayName: cap.displayName || cap.nome,
+                  categoria: cap.categoria || 'CRIAR',
+                  parametros: cap.parametros || {},
+                  status: 'pending' as const,
+                  ordem: capIdx + 1,
+                })),
+              }));
+              
+              plan.etapas = [...completedSteps, ...newSteps];
+              
+              this.emitProgress({
+                sessionId: this.sessionId,
+                status: 'replan',
+                descricao: replanResult.reason,
+                updatedSteps: newSteps,
+              } as any);
+              
+              console.log(`✅ [Executor] Plano atualizado: ${plan.etapas.length} etapas (${completedSteps.length} concluídas + ${newSteps.length} novas)`);
+            }
+          } catch (replanError) {
+            console.warn('⚠️ [Executor] Erro ao verificar replanning (não crítico):', replanError);
+          }
+        }
 
         await this.delay(300);
 
@@ -1082,6 +1160,95 @@ Seja específico e forneça dados que ajudem o professor.
       conteudo: `Etapa "${etapa.descricao}" processada`,
       funcao: etapa.funcao,
     };
+  }
+
+  /**
+   * Generates a short narrative text after a step completes
+   */
+  private async generateNarrativeForStep(
+    etapa: ExecutionStep,
+    resultado: any,
+    nextEtapa: ExecutionStep | null,
+    planObjective: string,
+    currentStep: number,
+    totalSteps: number
+  ): Promise<string | null> {
+    const resultSummary = this.formatResultSummary(resultado);
+    
+    const nextStepInfo = nextEtapa
+      ? `Próxima etapa: "${nextEtapa.titulo || nextEtapa.descricao}" - ${nextEtapa.capabilities?.map(c => c.displayName || c.nome).join(', ') || nextEtapa.funcao}`
+      : 'Esta é a última etapa do plano.';
+
+    const prompt = `${SYSTEM_PROMPT_SHORT}\n\n${buildNarrativePrompt({
+      stepTitle: etapa.titulo || etapa.descricao,
+      stepDescription: etapa.descricao,
+      stepResult: resultSummary.substring(0, 500),
+      nextStepInfo,
+      planObjective,
+      currentStep,
+      totalSteps,
+    })}`;
+
+    const result = await executeWithCascadeFallback(prompt, {
+      onProgress: () => {},
+    });
+
+    if (result.success && result.data) {
+      const text = result.data.trim().replace(/^["']|["']$/g, '');
+      return text.length > 0 ? text : null;
+    }
+    return null;
+  }
+
+  /**
+   * Checks if the plan needs to be modified after a step completes
+   */
+  private async checkReplanning(
+    plan: ExecutionPlan,
+    completedEtapa: ExecutionStep,
+    resultado: any,
+    remainingEtapas: ExecutionStep[]
+  ): Promise<{ needs_replan: boolean; reason: string; updated_remaining_steps?: any[] } | null> {
+    if (remainingEtapas.length === 0) return null;
+
+    const completedStepsText = plan.etapas
+      .filter(e => e.status === 'concluida')
+      .map(e => `- ${e.titulo || e.descricao}: Concluída`)
+      .join('\n') || 'Nenhuma etapa concluída anteriormente';
+
+    const remainingStepsText = remainingEtapas
+      .map(e => `- ${e.titulo || e.descricao}: ${e.capabilities?.map(c => c.nome).join(', ') || e.funcao}`)
+      .join('\n');
+
+    const capabilitiesText = Array.from(AgentExecutor.V2_REGISTRY.keys()).join(', ');
+    
+    const resultSummary = this.formatResultSummary(resultado);
+
+    const prompt = buildReplanningPrompt({
+      planObjective: plan.objetivo,
+      totalSteps: plan.etapas.length,
+      completedSteps: completedStepsText,
+      currentStepTitle: completedEtapa.titulo || completedEtapa.descricao,
+      currentStepResult: resultSummary.substring(0, 500),
+      remainingSteps: remainingStepsText,
+      availableCapabilities: capabilitiesText,
+    });
+
+    const result = await executeWithCascadeFallback(prompt, {
+      onProgress: () => {},
+    });
+
+    if (result.success && result.data) {
+      try {
+        const cleaned = result.data.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const parsed = JSON.parse(cleaned);
+        return parsed;
+      } catch (parseError) {
+        console.warn('⚠️ [Executor] Falha ao parsear resposta de replanning:', parseError);
+        return null;
+      }
+    }
+    return null;
   }
 
   /**

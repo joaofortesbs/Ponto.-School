@@ -163,6 +163,28 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
         }
       }
 
+      if (update.type === 'execution:replan' && update.updatedSteps) {
+        console.log(`🔄 [DeveloperModeCard] Replanning recebido: ${update.replanReason}`);
+        const completedIndex = update.stepIndex ?? 0;
+        
+        const newEtapas = update.updatedSteps.map((step: any, idx: number) => ({
+          ordem: completedIndex + 1 + idx,
+          titulo: step.titulo,
+          descricao: step.descricao || step.titulo,
+          status: 'pendente',
+          capabilities: (step.capabilities || []).map((cap: any, capIdx: number) => ({
+            id: cap.id || `replan-cap-${Date.now()}-${idx}-${capIdx}`,
+            nome: cap.nome || cap.funcao,
+            displayName: cap.displayName || cap.nome,
+            status: 'pendente',
+          })),
+        }));
+        
+        const currentEtapas = data?.etapas || [];
+        const completedEtapas = currentEtapas.slice(0, completedIndex + 1);
+        updateCardData(cardId, { etapas: [...completedEtapas, ...newEtapas] });
+      }
+
       if (update.type === 'execution:completed') {
         console.log(`🎉 [DeveloperModeCard] Execução completa!`);
         updateCardData(cardId, { status: 'concluido' });

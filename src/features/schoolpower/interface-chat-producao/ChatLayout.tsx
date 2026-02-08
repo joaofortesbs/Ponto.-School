@@ -349,6 +349,10 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       
       if (update.status === 'etapa_concluida') {
         eventType = 'execution:step:completed';
+      } else if (update.status === 'narrative' as any) {
+        eventType = 'execution:narrative';
+      } else if (update.status === 'replan' as any) {
+        eventType = 'execution:replan';
       } else if (update.status === 'executando') {
         if (update.capabilityId && update.capabilityStatus === 'executing') {
           eventType = 'capability:iniciou';
@@ -372,7 +376,10 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
           stepTitle: update.descricao,
           capability_id: update.capabilityId,
           capability_name: update.descricao,
-          mensagem: update.resultado ? `Concluído: ${update.descricao}` : undefined
+          mensagem: update.resultado ? `Concluído: ${update.descricao}` : undefined,
+          narrativeText: eventType === 'execution:narrative' ? update.descricao : undefined,
+          updatedSteps: (update as any).updatedSteps,
+          replanReason: eventType === 'execution:replan' ? update.descricao : undefined,
         }
       }));
 

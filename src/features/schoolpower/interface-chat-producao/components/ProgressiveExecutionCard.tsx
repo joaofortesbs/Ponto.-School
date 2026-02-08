@@ -487,6 +487,39 @@ const CapabilityCard: React.FC<{
   );
 };
 
+const NarrativeText: React.FC<{ text: string }> = ({ text }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5, ease: 'easeOut' }}
+    className="px-4 py-3 rounded-xl"
+    style={{
+      background: 'rgba(255, 255, 255, 0.03)',
+      border: '1px solid rgba(255, 255, 255, 0.06)',
+    }}
+  >
+    <p className="text-sm text-gray-300 leading-relaxed italic">
+      {text}
+    </p>
+  </motion.div>
+);
+
+const ReplanNotice: React.FC<{ reason: string }> = ({ reason }) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+    animate={{ opacity: 1, scale: 1, y: 0 }}
+    transition={{ duration: 0.4, ease: 'easeOut' }}
+    className="px-4 py-2.5 rounded-xl flex items-center gap-2"
+    style={{
+      background: 'rgba(139, 92, 246, 0.08)',
+      border: '1px solid rgba(139, 92, 246, 0.2)',
+    }}
+  >
+    <span className="text-violet-400 text-xs font-medium whitespace-nowrap">Plano ajustado</span>
+    <span className="text-xs text-violet-300/70">{reason}</span>
+  </motion.div>
+);
+
 export function ProgressiveExecutionCard({
   objectives,
   reflections,
@@ -500,6 +533,8 @@ export function ProgressiveExecutionCard({
 }: ProgressiveExecutionCardProps) {
   const [visibleObjectives, setVisibleObjectives] = useState<Set<number>>(new Set([0]));
   const [prevObjectives, setPrevObjectives] = useState<ObjectiveItem[]>(objectives);
+  const [narratives, setNarratives] = useState<Map<number, string>>(new Map());
+  const [replanNotices, setReplanNotices] = useState<Map<number, string>>(new Map());
 
   useEffect(() => {
     objectives.forEach((obj, idx) => {
@@ -527,17 +562,28 @@ export function ProgressiveExecutionCard({
   }, [objectives, onObjectiveComplete, onAllComplete, prevObjectives]);
 
   useEffect(() => {
-    const handleStepStarted = (event: CustomEvent) => {
+    const handleProgressEvent = (event: CustomEvent) => {
       const update = event.detail;
+      
       if (update.type === 'execution:step:started') {
         const stepIndex = update.stepIndex ?? 0;
         setVisibleObjectives(prev => new Set([...prev, stepIndex]));
       }
+      
+      if (update.type === 'execution:narrative' && update.narrativeText) {
+        const stepIndex = update.stepIndex ?? 0;
+        setNarratives(prev => new Map(prev).set(stepIndex, update.narrativeText));
+      }
+      
+      if (update.type === 'execution:replan' && update.replanReason) {
+        const stepIndex = update.stepIndex ?? 0;
+        setReplanNotices(prev => new Map(prev).set(stepIndex, update.replanReason));
+      }
     };
 
-    window.addEventListener('agente-jota-progress', handleStepStarted as EventListener);
+    window.addEventListener('agente-jota-progress', handleProgressEvent as EventListener);
     return () => {
-      window.removeEventListener('agente-jota-progress', handleStepStarted as EventListener);
+      window.removeEventListener('agente-jota-progress', handleProgressEvent as EventListener);
     };
   }, []);
 
@@ -545,18 +591,28 @@ export function ProgressiveExecutionCard({
     <div className="w-full space-y-4">
       <AnimatePresence mode="sync">
         {objectives.map((objective, idx) => (
-          <ObjectiveCard
-            key={`objective-${idx}`}
-            objective={objective}
-            index={idx}
-            isVisible={visibleObjectives.has(idx)}
-            reflection={reflections?.get(idx)}
-            isLoadingReflection={loadingReflections?.has(idx)}
-            activitiesToBuild={activitiesToBuild}
-            completedActivities={completedActivities}
-            onBuildActivities={onBuildActivities}
-            isBuildingActivities={isBuildingActivities}
-          />
+          <React.Fragment key={`objective-group-${idx}`}>
+            <ObjectiveCard
+              key={`objective-${idx}`}
+              objective={objective}
+              index={idx}
+              isVisible={visibleObjectives.has(idx)}
+              reflection={reflections?.get(idx)}
+              isLoadingReflection={loadingReflections?.has(idx)}
+              activitiesToBuild={activitiesToBuild}
+              completedActivities={completedActivities}
+              onBuildActivities={onBuildActivities}
+              isBuildingActivities={isBuildingActivities}
+            />
+            
+            {narratives.has(idx) && objective.status === 'completed' && (
+              <NarrativeText key={`narrative-${idx}`} text={narratives.get(idx)!} />
+            )}
+            
+            {replanNotices.has(idx) && (
+              <ReplanNotice key={`replan-${idx}`} reason={replanNotices.get(idx)!} />
+            )}
+          </React.Fragment>
         ))}
       </AnimatePresence>
     </div>

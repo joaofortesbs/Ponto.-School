@@ -64,13 +64,21 @@ REGRAS DE DECISÃO:
 
 5. Para pedidos AMBÍGUOS, tente interpretar a intenção real e escolha o caminho mais simples.
 
+FORMATO DE ETAPAS - ETAPAS AMPLAS E DESCRITIVAS:
+
+Cada etapa deve ser AMPLA e focada no VALOR para o professor, não na capability técnica.
+- O TÍTULO deve descrever o BENEFÍCIO ou RESULTADO para o professor (ex: "Encontrar as melhores opções para sua turma")
+- A DESCRIÇÃO deve ser uma frase natural explicando o que acontecerá (ex: "Vou analisar o catálogo e suas atividades anteriores para recomendar as opções ideais")
+- Agrupe capabilities relacionadas na MESMA etapa (pesquisar + pesquisar, decidir + gerar, criar + salvar)
+- Prefira 2-4 etapas amplas em vez de muitas etapas pequenas
+
 RESPONDA APENAS COM UM JSON VÁLIDO:
 {
   "objetivo": "Resumo claro do que será entregue ao professor",
   "etapas": [
     {
-      "titulo": "Título orientado a valor para o professor",
-      "descricao": "Descrição simples do que será feito",
+      "titulo": "Título orientado a valor (o que o professor ganha)",
+      "descricao": "Frase natural explicando o que será feito nesta etapa",
       "capabilities": [
         {
           "nome": "NOME_EXATO_DA_LISTA",
@@ -93,19 +101,19 @@ EXEMPLO 1 - "Crie atividades de matemática para 7º ano" (CRIAÇÃO DE ATIVIDAD
   "objetivo": "Criar atividades de matemática personalizadas para o 7º ano",
   "etapas": [
     {
-      "titulo": "Pesquisar as melhores opções para você",
-      "descricao": "Vou analisar o catálogo e suas atividades anteriores",
+      "titulo": "Encontrar as melhores opções para sua turma",
+      "descricao": "Vou analisar nosso catálogo e verificar suas atividades anteriores para recomendar as opções ideais de matemática para o 7º ano",
       "capabilities": [
         {
           "nome": "pesquisar_atividades_disponiveis",
-          "displayName": "Vou pesquisar quais atividades eu posso criar",
+          "displayName": "Pesquisando opções no catálogo",
           "categoria": "PESQUISAR",
           "parametros": {},
           "justificativa": "Consultar catálogo de atividades"
         },
         {
           "nome": "pesquisar_atividades_conta",
-          "displayName": "Vou buscar suas atividades anteriores",
+          "displayName": "Verificando suas atividades anteriores",
           "categoria": "PESQUISAR",
           "parametros": {},
           "justificativa": "Evitar duplicações"
@@ -113,19 +121,19 @@ EXEMPLO 1 - "Crie atividades de matemática para 7º ano" (CRIAÇÃO DE ATIVIDAD
       ]
     },
     {
-      "titulo": "Decidir e gerar conteúdo",
-      "descricao": "Vou escolher as melhores atividades e gerar o conteúdo",
+      "titulo": "Selecionar e preparar o conteúdo pedagógico",
+      "descricao": "Com base na pesquisa, vou escolher as atividades mais relevantes e preparar todo o conteúdo pedagógico alinhado à sua turma",
       "capabilities": [
         {
           "nome": "decidir_atividades_criar",
-          "displayName": "Vou decidir quais atividades criar",
+          "displayName": "Selecionando as melhores atividades",
           "categoria": "DECIDIR",
           "parametros": {},
           "justificativa": "Selecionar atividades ideais"
         },
         {
           "nome": "gerar_conteudo_atividades",
-          "displayName": "Vou gerar o conteúdo pedagógico",
+          "displayName": "Gerando conteúdo pedagógico",
           "categoria": "GERAR_CONTEUDO",
           "parametros": {},
           "justificativa": "Criar conteúdo para as atividades"
@@ -133,19 +141,19 @@ EXEMPLO 1 - "Crie atividades de matemática para 7º ano" (CRIAÇÃO DE ATIVIDAD
       ]
     },
     {
-      "titulo": "Criar e salvar as atividades",
-      "descricao": "Vou construir e salvar suas atividades",
+      "titulo": "Construir e salvar suas atividades prontas",
+      "descricao": "Vou montar cada atividade com todos os campos preenchidos e salvar no seu banco de dados para uso imediato",
       "capabilities": [
         {
           "nome": "criar_atividade",
-          "displayName": "Vou criar as atividades selecionadas",
+          "displayName": "Montando as atividades",
           "categoria": "CRIAR",
           "parametros": {},
           "justificativa": "Construir atividades"
         },
         {
           "nome": "salvar_atividades_bd",
-          "displayName": "Vou salvar no banco de dados",
+          "displayName": "Salvando no banco de dados",
           "categoria": "SALVAR_BD",
           "parametros": {},
           "justificativa": "Persistir atividades"
@@ -157,15 +165,15 @@ EXEMPLO 1 - "Crie atividades de matemática para 7º ano" (CRIAÇÃO DE ATIVIDAD
 
 EXEMPLO 2 - "Explique o que é metodologia ativa" (TEXTO/EXPLICAÇÃO):
 {
-  "objetivo": "Criar um documento explicativo sobre metodologia ativa",
+  "objetivo": "Criar um documento explicativo completo sobre metodologia ativa",
   "etapas": [
     {
-      "titulo": "Criar documento explicativo",
-      "descricao": "Vou elaborar uma explicação completa sobre metodologia ativa",
+      "titulo": "Elaborar explicação completa sobre metodologia ativa",
+      "descricao": "Vou criar um documento claro e didático explicando os conceitos, benefícios e formas de aplicar metodologias ativas em sala de aula",
       "capabilities": [
         {
           "nome": "criar_arquivo",
-          "displayName": "Vou criar um documento explicativo para você",
+          "displayName": "Elaborando documento explicativo",
           "categoria": "CRIAR",
           "parametros": {"tipo": "explicacao", "tema": "metodologia ativa"},
           "justificativa": "Gerar documento com a explicação solicitada"
@@ -177,15 +185,15 @@ EXEMPLO 2 - "Explique o que é metodologia ativa" (TEXTO/EXPLICAÇÃO):
 
 EXEMPLO 3 - "Quais atividades eu já criei?" (PESQUISA):
 {
-  "objetivo": "Listar as atividades já criadas pelo professor",
+  "objetivo": "Listar e organizar as atividades que você já criou",
   "etapas": [
     {
-      "titulo": "Buscar suas atividades",
-      "descricao": "Vou consultar o banco de dados para listar suas atividades",
+      "titulo": "Consultar seu histórico de atividades",
+      "descricao": "Vou buscar todas as atividades que você já criou na plataforma e apresentar de forma organizada",
       "capabilities": [
         {
           "nome": "pesquisar_atividades_conta",
-          "displayName": "Vou buscar todas as suas atividades",
+          "displayName": "Consultando suas atividades",
           "categoria": "PESQUISAR",
           "parametros": {},
           "justificativa": "Listar atividades do professor"
