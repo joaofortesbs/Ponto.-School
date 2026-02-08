@@ -629,19 +629,31 @@ function BlockOutline({
   items,
   activeId,
   onNavigate,
+  modalContainerRef,
 }: {
   items: TOCItem[];
   activeId: string;
   onNavigate: (id: string) => void;
   accentColor: string;
+  modalContainerRef?: React.RefObject<HTMLDivElement>;
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const [popupPosition, setPopupPosition] = useState<{ right: number } | null>(null);
+  const ticksRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleMouseEnter = useCallback(() => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    if (modalContainerRef?.current && ticksRef.current) {
+      const containerRect = modalContainerRef.current.getBoundingClientRect();
+      const ticksRect = ticksRef.current.getBoundingClientRect();
+      const containerCenter = containerRect.left + containerRect.width / 2;
+      const popupHalfWidth = 110;
+      const rightOffset = ticksRect.right - containerCenter + popupHalfWidth;
+      setPopupPosition({ right: rightOffset });
+    }
     setIsHovered(true);
-  }, []);
+  }, [modalContainerRef]);
 
   const handleMouseLeave = useCallback(() => {
     hoverTimeoutRef.current = setTimeout(() => setIsHovered(false), 200);
@@ -657,18 +669,19 @@ function BlockOutline({
 
   return (
     <div
+      ref={ticksRef}
       className="relative"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       {isHovered && (
         <motion.div
-          initial={{ opacity: 0, x: 6, scale: 0.96 }}
-          animate={{ opacity: 1, x: 0, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
           className="absolute z-20 rounded-xl border py-3 px-3"
           style={{
-            right: '0',
+            right: popupPosition ? `${popupPosition.right}px` : '0',
             top: '50%',
             transform: 'translateY(-50%)',
             background: 'rgba(20, 22, 40, 0.95)',
@@ -1170,6 +1183,7 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
   const [editableSubtitle, setEditableSubtitle] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const modalContentRef = useRef<HTMLDivElement>(null);
   const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const config = ARTIFACT_TYPE_CONFIGS[artifact.metadata.tipo];
 
@@ -1628,7 +1642,7 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
               </div>
             </div>
 
-            <div className="flex flex-1 overflow-hidden relative">
+            <div ref={modalContentRef} className="flex flex-1 overflow-hidden relative">
               <div
                 ref={scrollContainerRef}
                 className="flex-1 overflow-y-auto relative"
@@ -1714,6 +1728,7 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                     activeId={activeTOCId}
                     onNavigate={handleNavigateToSection}
                     accentColor={config.cor}
+                    modalContainerRef={modalContentRef}
                   />
                 </div>
               )}
