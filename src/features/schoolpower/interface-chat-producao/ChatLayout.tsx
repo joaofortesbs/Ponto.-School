@@ -219,10 +219,18 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
           if (activityTipo === 'lista-exercicios') {
             try {
               saveExerciseListData(activityId, mergedContent);
-              console.log(`🔗 [LAYER3-BRIDGE] lista-exercicios bridge: ${mergedContent.questoes?.length || 0} questões`);
+              console.log(`🔗 [LAYER3-BRIDGE] lista-exercicios bridge via saveExerciseListData: ${mergedContent.questoes?.length || 0} questões`);
             } catch {
               localStorage.setItem(constructedKey, JSON.stringify(mergedContent));
             }
+          } else if (activityTipo === 'quiz-interativo') {
+            const quizWrapper = {
+              success: true,
+              data: mergedContent,
+              timestamp: new Date().toISOString()
+            };
+            localStorage.setItem(constructedKey, JSON.stringify(quizWrapper));
+            console.log(`🔗 [LAYER3-BRIDGE] quiz-interativo bridge com wrapper: ${mergedContent.questions?.length || 0} questões`);
           } else {
             localStorage.setItem(constructedKey, JSON.stringify(mergedContent));
             console.log(`🔗 [LAYER3-BRIDGE] ${activityTipo} escrito em ${constructedKey}: ${mergedContentKeys.length} campos`);

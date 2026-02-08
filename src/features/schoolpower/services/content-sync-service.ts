@@ -1,5 +1,7 @@
 type ContentListener = (activityId: string, tipo: string, data: Record<string, any>) => void;
 
+const CONTENT_INDICATORS = ['questoes', 'questions', 'cards', 'etapas', 'sections', 'perguntas'];
+
 class ContentSyncServiceImpl {
   private contentMap = new Map<string, Record<string, any>>();
   private listeners = new Set<ContentListener>();
@@ -15,10 +17,9 @@ class ContentSyncServiceImpl {
     const key = this.makeKey(activityId, tipo);
     const existing = this.contentMap.get(key);
 
-    const contentIndicators = ['questoes', 'questions', 'cards', 'etapas', 'sections', 'perguntas'];
-    const newHasArrays = contentIndicators.some(k => Array.isArray(data[k]) && data[k].length > 0);
+    const newHasArrays = CONTENT_INDICATORS.some(k => Array.isArray(data[k]) && data[k].length > 0);
     const existingHasArrays = existing
-      ? contentIndicators.some(k => Array.isArray(existing[k]) && existing[k].length > 0)
+      ? CONTENT_INDICATORS.some(k => Array.isArray(existing[k]) && existing[k].length > 0)
       : false;
 
     if (existingHasArrays && !newHasArrays) {
@@ -38,6 +39,10 @@ class ContentSyncServiceImpl {
 
     console.log(`📡 [ContentSync] Conteúdo armazenado: ${key} (${Object.keys(data).length} campos)`);
 
+    if (newHasArrays) {
+      this.persistToLocalStorage(activityId, tipo, data);
+    }
+
     for (const listener of this.listeners) {
       try {
         listener(activityId, tipo, data);
@@ -51,6 +56,52 @@ class ContentSyncServiceImpl {
         detail: { activityId, tipo, data, timestamp: Date.now() }
       }));
     } catch {}
+  }
+
+  private persistToLocalStorage(activityId: string, tipo: string, data: Record<string, any>): void {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+
+    try {
+      const constructedKey = `constructed_${tipo}_${activityId}`;
+      const existingRaw = localStorage.getItem(constructedKey);
+
+      if (existingRaw) {
+        try {
+          const existingParsed = JSON.parse(existingRaw);
+          const existingData = existingParsed?.data || existingParsed;
+          const existingHasReal = CONTENT_INDICATORS.some(k => {
+            const val = existingData?.[k];
+            return Array.isArray(val) && val.length > 0;
+          });
+          if (existingHasReal) {
+            return;
+          }
+        } catch {}
+      }
+
+      if (tipo === 'quiz-interativo') {
+        const wrapper = { success: true, data, timestamp: new Date().toISOString() };
+        localStorage.setItem(constructedKey, JSON.stringify(wrapper));
+      } else if (tipo === 'lista-exercicios') {
+        try {
+          import('../activities/lista-exercicios/contracts').then(({ saveExerciseListData }) => {
+            saveExerciseListData(activityId, data);
+          }).catch(() => {
+            localStorage.setItem(constructedKey, JSON.stringify(data));
+          });
+          return;
+        } catch {
+          localStorage.setItem(constructedKey, JSON.stringify(data));
+        }
+      } else {
+        localStorage.setItem(constructedKey, JSON.stringify(data));
+      }
+
+      localStorage.setItem(`activity_${activityId}`, JSON.stringify(data));
+      console.log(`💾 [ContentSync→LS] Auto-persistido em ${constructedKey}`);
+    } catch (e) {
+      console.warn('⚠️ [ContentSync→LS] Erro ao persistir:', e);
+    }
   }
 
   getContent(activityId: string, tipo?: string): Record<string, any> | null {
@@ -80,8 +131,7 @@ class ContentSyncServiceImpl {
   hasRealContent(activityId: string, tipo?: string): boolean {
     const data = this.getContent(activityId, tipo);
     if (!data) return false;
-    const contentIndicators = ['questoes', 'questions', 'cards', 'etapas', 'sections', 'perguntas'];
-    return contentIndicators.some(k => Array.isArray(data[k]) && data[k].length > 0);
+    return CONTENT_INDICATORS.some(k => Array.isArray(data[k]) && data[k].length > 0);
   }
 
   subscribe(listener: ContentListener): () => void {

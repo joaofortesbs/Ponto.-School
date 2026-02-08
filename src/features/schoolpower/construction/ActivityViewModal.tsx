@@ -68,11 +68,11 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [flashCardsContent, setFlashCardsContent] = useState<any>(null);
   const [generatedContent, setGeneratedContent] = useState<any>(null);
   const [isContentLoaded, setIsContentLoaded] = useState<boolean>(false);
+  const [isAwaitingContent, setIsAwaitingContent] = useState<boolean>(false);
   const [stars, setStars] = useState<number>(100);
   const [isContentExtractOpen, setIsContentExtractOpen] = useState<boolean>(false);
   const [textVersionContent, setTextVersionContent] = useState<string>('');
   
-  // Ref para rastrear o último timestamp de atualização e evitar re-renders infinitos
   const lastUpdateRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -115,6 +115,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log(`⚡ [CONTENT-SYNC] Lista: ${contentToUse.questoes.length} questões sincronizadas`);
       }
       setIsContentLoaded(true);
+      setIsAwaitingContent(false);
     };
 
     const unsubscribe = ContentSyncService.subscribe((syncId, syncTipo, syncData) => {
@@ -439,6 +440,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           } catch {
             localStorage.setItem(constructedKey, JSON.stringify(propsData));
           }
+        } else if (activityType === 'quiz-interativo') {
+          const quizWrapper = { success: true, data: propsData, timestamp: new Date().toISOString() };
+          localStorage.setItem(constructedKey, JSON.stringify(quizWrapper));
+          console.log(`💉 [LAYER4-INJECTION] quiz-interativo com wrapper: ${propsData.questions?.length || 0} questões`);
         } else {
           localStorage.setItem(constructedKey, JSON.stringify(propsData));
           console.log(`💉 [LAYER4-INJECTION] ${activityType} dados FLAT injetados: ${propsKeys.length} campos`);
@@ -457,193 +462,147 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
       setIsInQuestionView(false);
-      
-      // Limpar a ref de atualização para evitar conflitos com dados antigos
       lastUpdateRef.current = null;
 
       console.log('🔍 ActivityViewModal: Carregando dados para atividade:', activity);
 
-      // Carregar Stars do localStorage ou banco
-      const loadStars = async () => {
-        // Primeiro, tentar do localStorage
-        const stKey = `activity_${activity.id}_stars`;
-        const localSTs = localStorage.getItem(stKey);
-
-        if (localSTs) {
-          const points = parseInt(localSTs);
-          console.log(`💰 Stars carregados do localStorage: ${points} STs`);
-          setStars(points);
-        } else {
-          console.log('💰 Usando valor padrão: 100 STs');
-          setStars(100);
-        }
-      };
-
-      loadStars();
+      const stKey = `activity_${activity.id}_stars`;
+      const localSTs = localStorage.getItem(stKey);
+      setStars(localSTs ? parseInt(localSTs) : 100);
       
-      // Determinar o tipo de atividade
       const activityType = activity.originalData?.type || activity.categoryId || activity.type || '';
-      
-      // Carregar dados de Quiz Interativo usando PIPELINE UNIFICADO v1.0
-      if (activityType === 'quiz-interativo') {
-        console.log('🔄 [ActivityViewModal] Usando Unified Quiz Pipeline para:', activity.id);
-        
-        try {
-          const pipelineResult = processQuizWithUnifiedPipeline(activity.id, activity.originalData);
-          
-          if (pipelineResult.success && pipelineResult.questions.length > 0) {
-            const loadedContent = {
-              title: pipelineResult.title,
-              description: pipelineResult.description,
-              questions: pipelineResult.questions,
-              totalQuestions: pipelineResult.metadata.totalQuestions,
-              validQuestions: pipelineResult.metadata.validQuestions,
-              theme: pipelineResult.metadata.theme,
-              subject: pipelineResult.metadata.subject,
-              schoolYear: pipelineResult.metadata.schoolYear,
-              isFallback: pipelineResult.metadata.isFallback || false,
-              extractionMethod: pipelineResult.metadata.extractionMethod,
-              processingTimeMs: pipelineResult.metadata.processingTimeMs,
-              isGeneratedByAI: !pipelineResult.metadata.isFallback
-            };
-            
-            console.log(`✅ [ActivityViewModal] Quiz Pipeline: ${pipelineResult.questions.length} questões carregadas via ${pipelineResult.metadata.extractionMethod}`);
-            setQuizInterativoContent(loadedContent);
-          } else {
-            console.warn(`⚠️ [ActivityViewModal] Quiz Pipeline retornou 0 questões válidas`);
-            if (pipelineResult.errors?.length) {
-              console.warn(`⚠️ [ActivityViewModal] Erros:`, pipelineResult.errors);
-            }
-            setQuizInterativoContent(null);
-          }
-        } catch (pipelineError) {
-          console.error('❌ [ActivityViewModal] Erro no Quiz Pipeline:', pipelineError);
+
+      const syncContent = ContentSyncService.getContent(activity.id, activityType);
+      const syncHasReal = ContentSyncService.hasRealContent(activity.id, activityType);
+
+      if (syncHasReal && syncContent) {
+        console.log(`🏆 [PRIORITY] ContentSyncService tem dados reais para ${activity.id} — usando como fonte primária`);
+        setGeneratedContent(syncContent);
+        setIsContentLoaded(true);
+
+        if (activityType === 'quiz-interativo' && syncContent.questions?.length > 0) {
+          setQuizInterativoContent(syncContent);
+          console.log(`🏆 [PRIORITY] Quiz: ${syncContent.questions.length} questões do ContentSync`);
+        } else if (activityType !== 'quiz-interativo') {
           setQuizInterativoContent(null);
         }
+
+        if (activityType === 'flash-cards' && syncContent.cards?.length > 0) {
+          setFlashCardsContent(syncContent);
+          console.log(`🏆 [PRIORITY] Flash Cards: ${syncContent.cards.length} cards do ContentSync`);
+        } else if (activityType !== 'flash-cards') {
+          setFlashCardsContent(null);
+        }
       } else {
-        setQuizInterativoContent(null);
-      }
-      
-      // Carregar dados de Flash Cards
-      if (activityType === 'flash-cards') {
-        let loadedContent = null;
-        
-        // Primeiro, tentar localStorage
-        const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
-        if (flashCardsSavedContent) {
+        console.log(`📦 [FALLBACK] ContentSync sem dados reais — carregando de localStorage/pipeline/banco`);
+
+        const heavyTypes = ['quiz-interativo', 'flash-cards', 'lista-exercicios'];
+        if (heavyTypes.includes(activityType)) {
+          setIsAwaitingContent(true);
+        }
+
+        if (activityType === 'quiz-interativo') {
           try {
-            const parsedContent = JSON.parse(flashCardsSavedContent);
-            
-            // CORREÇÃO: Verificar se localStorage tem apenas metadados leves
-            if (parsedContent.hasFullDataInStore === true) {
-              console.log('📦 [INIT] Flash Cards: localStorage tem metadados leves, buscando da store Zustand...');
-              const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
-              
-              if (storeData) {
-                // CORREÇÃO: Buscar em MÚLTIPLOS caminhos possíveis na store
-                const fullData = 
-                  storeData.dados_construidos?.generated_fields || 
-                  storeData.dados_construidos || 
-                  storeData.campos_preenchidos || 
-                  {};
-                
-                if (fullData.cards && Array.isArray(fullData.cards) && fullData.cards.length > 0) {
-                  const validCards = fullData.cards.filter((card: any) =>
-                    card && typeof card === 'object' && card.front && card.back
-                  );
+            const pipelineResult = processQuizWithUnifiedPipeline(activity.id, activity.originalData);
+            if (pipelineResult.success && pipelineResult.questions.length > 0) {
+              const loadedContent = {
+                title: pipelineResult.title,
+                description: pipelineResult.description,
+                questions: pipelineResult.questions,
+                totalQuestions: pipelineResult.metadata.totalQuestions,
+                validQuestions: pipelineResult.metadata.validQuestions,
+                theme: pipelineResult.metadata.theme,
+                subject: pipelineResult.metadata.subject,
+                schoolYear: pipelineResult.metadata.schoolYear,
+                isFallback: pipelineResult.metadata.isFallback || false,
+                extractionMethod: pipelineResult.metadata.extractionMethod,
+                processingTimeMs: pipelineResult.metadata.processingTimeMs,
+                isGeneratedByAI: !pipelineResult.metadata.isFallback
+              };
+              console.log(`✅ [FALLBACK] Quiz Pipeline: ${pipelineResult.questions.length} questões via ${pipelineResult.metadata.extractionMethod}`);
+              setQuizInterativoContent(loadedContent);
+              setIsAwaitingContent(false);
+            } else {
+              setQuizInterativoContent(null);
+            }
+          } catch (pipelineError) {
+            console.error('❌ [FALLBACK] Erro no Quiz Pipeline:', pipelineError);
+            setQuizInterativoContent(null);
+          }
+        } else {
+          setQuizInterativoContent(null);
+        }
+        
+        if (activityType === 'flash-cards') {
+          let loadedContent = null;
+          
+          const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
+          if (flashCardsSavedContent) {
+            try {
+              const parsedContent = JSON.parse(flashCardsSavedContent);
+              if (parsedContent.hasFullDataInStore === true) {
+                const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
+                if (storeData) {
+                  const fullData = storeData.dados_construidos?.generated_fields || storeData.dados_construidos || storeData.campos_preenchidos || {};
+                  if (fullData.cards && Array.isArray(fullData.cards) && fullData.cards.length > 0) {
+                    const validCards = fullData.cards.filter((card: any) => card && typeof card === 'object' && card.front && card.back);
+                    if (validCards.length > 0) {
+                      loadedContent = { ...fullData, cards: validCards };
+                    }
+                  }
+                }
+              } else {
+                const data = parsedContent.data || parsedContent;
+                if (data?.cards?.length > 0) {
+                  const validCards = data.cards.filter((card: any) => card && typeof card === 'object' && card.front && card.back);
                   if (validCards.length > 0) {
-                    loadedContent = { ...fullData, cards: validCards };
-                    console.log(`✅ Flash Cards: ${validCards.length} cards carregados da store Zustand`);
+                    loadedContent = { ...data, cards: validCards };
                   }
                 }
               }
-            } else {
-              // Dados completos no localStorage
-              const data = parsedContent.data || parsedContent;
-              if (data?.cards?.length > 0) {
-                const validCards = data.cards.filter((card: any) =>
-                  card && typeof card === 'object' && card.front && card.back
-                );
-                if (validCards.length > 0) {
-                  loadedContent = { ...data, cards: validCards };
-                  console.log(`✅ Flash Cards: ${validCards.length} cards carregados do localStorage`);
-                }
-              }
+            } catch (e) {
+              console.warn('⚠️ Erro ao parsear Flash Cards do localStorage:', e);
             }
-          } catch (e) {
-            console.warn('⚠️ Erro ao parsear Flash Cards do localStorage:', e);
           }
-        }
-        
-        // Fallback 1: store Zustand (se localStorage não tinha dados)
-        if (!loadedContent) {
-          console.log('📦 [INIT] Flash Cards: Buscando da store Zustand como fallback...');
-          const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
           
-          if (storeData) {
-            // CORREÇÃO: Buscar em MÚLTIPLOS caminhos possíveis na store
-            const fullData = 
-              storeData.dados_construidos?.generated_fields || 
-              storeData.dados_construidos || 
-              storeData.campos_preenchidos || 
-              {};
-            
-            console.log('📦 [INIT] Flash Cards: Dados encontrados na store:', {
-              hasGeneratedFields: !!storeData.dados_construidos?.generated_fields,
-              hasDadosConstruidos: !!storeData.dados_construidos,
-              hasCamposPreenchidos: !!storeData.campos_preenchidos
-            });
-            
-            if (fullData.cards && Array.isArray(fullData.cards) && fullData.cards.length > 0) {
-              const validCards = fullData.cards.filter((card: any) =>
-                card && typeof card === 'object' && card.front && card.back
-              );
-              if (validCards.length > 0) {
-                loadedContent = { ...fullData, cards: validCards };
-                console.log(`✅ Flash Cards: ${validCards.length} cards carregados da store Zustand (fallback)`);
+          if (!loadedContent) {
+            const storeData = useChosenActivitiesStore.getState().getActivityById(activity.id);
+            if (storeData) {
+              const fullData = storeData.dados_construidos?.generated_fields || storeData.dados_construidos || storeData.campos_preenchidos || {};
+              if (fullData.cards && Array.isArray(fullData.cards) && fullData.cards.length > 0) {
+                const validCards = fullData.cards.filter((card: any) => card && typeof card === 'object' && card.front && card.back);
+                if (validCards.length > 0) loadedContent = { ...fullData, cards: validCards };
               }
             }
           }
-        }
-        
-        // Fallback 2: banco de dados
-        if (!loadedContent && activity.originalData) {
-          const dbData = activity.originalData.campos || activity.originalData;
-          if (dbData?.cards?.length > 0) {
-            const validCards = dbData.cards.filter((card: any) =>
-              card && typeof card === 'object' && card.front && card.back
-            );
-            if (validCards.length > 0) {
-              loadedContent = {
-                ...dbData,
-                cards: validCards,
-                title: dbData.title || activity.originalData.titulo || 'Flash Cards',
-                description: dbData.description || 'Atividade criada na plataforma'
-              };
-              console.log(`✅ Flash Cards: ${validCards.length} cards carregados do banco de dados`);
+          
+          if (!loadedContent && activity.originalData) {
+            const dbData = activity.originalData.campos || activity.originalData;
+            if (dbData?.cards?.length > 0) {
+              const validCards = dbData.cards.filter((card: any) => card && typeof card === 'object' && card.front && card.back);
+              if (validCards.length > 0) {
+                loadedContent = { ...dbData, cards: validCards, title: dbData.title || activity.originalData.titulo || 'Flash Cards', description: dbData.description || 'Atividade criada na plataforma' };
+              }
             }
           }
+          
+          setFlashCardsContent(loadedContent);
+          if (loadedContent) setIsAwaitingContent(false);
+        } else {
+          setFlashCardsContent(null);
         }
-        
-        setFlashCardsContent(loadedContent);
-      } else {
-        setFlashCardsContent(null);
       }
 
-      // Se for plano-aula, tentar carregar dados específicos
       if (activityType === 'plano-aula') {
         const planoData = loadPlanoAulaData(activity.id);
-        if (planoData) {
-          console.log('📚 Dados do plano-aula carregados com sucesso:', planoData);
-        }
+        if (planoData) console.log('📚 Dados do plano-aula carregados com sucesso');
       }
 
-      // Verificar se é uma atividade do histórico e garantir que os dados estejam sincronizados
       if (activity.isBuilt && activity.originalData) {
-        console.log('📋 Carregando dados de atividade do histórico:', activity.originalData);
+        console.log('📋 Carregando dados de atividade do histórico');
       }
     }
-  }, [isOpen, activity?.id]); // Usar apenas activity.id para evitar loops - type e originalData são acessados via activity
+  }, [isOpen, activity?.id]);
 
   if (!isOpen || !activity) return null;
 
@@ -1904,7 +1863,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         return (
           <QuizInterativoPreview
             content={previewData}
-            isLoading={false}
+            isLoading={isAwaitingContent && !previewData?.questions?.length}
           />
         );
 
@@ -1913,7 +1872,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         return (
           <FlashCardsPreview
             content={previewData}
-            isLoading={false}
+            isLoading={isAwaitingContent && !previewData?.cards?.length}
           />
         );
 
