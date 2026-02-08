@@ -64,6 +64,12 @@ REGRAS DE DECISÃO:
 
 5. Para pedidos AMBÍGUOS, tente interpretar a intenção real e escolha o caminho mais simples.
 
+6. 🔴 REGRA — DETECÇÃO DE ARQUIVO/DOCUMENTO:
+   Se o professor pedir EXPLICITAMENTE um documento usando palavras como "roteiro", "arquivo", "documento", "dossiê", "relatório", "resumo executivo", "apostila"
+   → Inclua "criar_arquivo" no plano
+   → Se já houver criação de atividades, adicione "criar_arquivo" como ÚLTIMA etapa adicional
+   ⚠️ NÃO force "criar_arquivo" para palavras genéricas como "material", "apresentação", "guia" — só inclua se o contexto deixar claro que o professor quer um DOCUMENTO para download/impressão
+
 FORMATO DE ETAPAS - ETAPAS AMPLAS E DESCRITIVAS:
 
 Cada etapa deve ser AMPLA e focada no VALOR para o professor, não na capability técnica.

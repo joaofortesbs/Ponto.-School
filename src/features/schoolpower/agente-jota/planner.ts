@@ -138,6 +138,32 @@ export async function createExecutionPlan(
       createdAt: Date.now(),
     };
 
+    const allCapNames = plan.etapas.flatMap(e => e.capabilities?.map(c => c.nome) || []);
+    const hasCriarArquivo = allCapNames.includes('criar_arquivo');
+
+    if (!hasCriarArquivo && detectsFileRequest(userPrompt)) {
+      console.log('🔧 [Planner] Pós-validação: Professor pediu arquivo/documento — injetando criar_arquivo');
+      const timestamp = Date.now();
+      plan.etapas.push({
+        ordem: plan.etapas.length + 1,
+        titulo: 'Preparar seu documento',
+        descricao: 'Vou gerar o documento solicitado com todo o conteúdo organizado e pronto para uso',
+        funcao: 'criar_arquivo',
+        parametros: {},
+        justificativa: 'Professor pediu explicitamente um arquivo/documento',
+        status: 'pendente' as const,
+        capabilities: [{
+          id: `cap-${plan.etapas.length}-0-${timestamp}`,
+          nome: 'criar_arquivo',
+          displayName: 'Vou criar o documento solicitado',
+          categoria: 'CRIAR' as CapabilityCall['categoria'],
+          parametros: {},
+          status: 'pending' as const,
+          ordem: 1,
+        }],
+      });
+    }
+
     console.log('✅ [Planner] Plano criado pela Mente Orquestradora:', {
       planId: plan.planId,
       objetivo: plan.objetivo,
@@ -149,6 +175,32 @@ export async function createExecutionPlan(
     console.error('❌ [Planner] Erro ao parsear resposta:', error);
     return createFallbackPlan(userPrompt);
   }
+}
+
+const FILE_REQUEST_STRONG_KEYWORDS = [
+  'roteiro', 'arquivo', 'documento', 'dossiê', 'dossie',
+  'relatório', 'relatorio', 'resumo executivo',
+  'apostila', 'formato de arquivo', 'em formato de',
+  'gere um documento', 'gere um texto',
+];
+
+const FILE_REQUEST_CONTEXTUAL_PATTERNS = [
+  /(?:me\s+)?entregu(?:e|ar)\s+(?:um|o|em)\s+\w+/i,
+  /(?:me\s+)?envi(?:e|ar)\s+(?:um|o|em)\s+\w+/i,
+  /(?:em\s+)?formato\s+de\s+(?:arquivo|documento|texto|pdf)/i,
+  /(?:crie|faça|monte|prepare)\s+(?:um|o)\s+(?:roteiro|guia|documento|relatório|texto)/i,
+];
+
+function detectsFileRequest(userPrompt: string): boolean {
+  const normalized = userPrompt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  const hasStrongKeyword = FILE_REQUEST_STRONG_KEYWORDS.some(keyword => {
+    const normalizedKeyword = keyword.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return normalized.includes(normalizedKeyword);
+  });
+  if (hasStrongKeyword) return true;
+
+  return FILE_REQUEST_CONTEXTUAL_PATTERNS.some(pattern => pattern.test(userPrompt));
 }
 
 interface ParsedCapability {

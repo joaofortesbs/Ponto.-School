@@ -287,11 +287,11 @@ export class AgentExecutor {
               index: etapa.ordem,
               title: etapa.titulo || etapa.descricao,
               description: etapa.descricao,
-              capabilityResults: this.currentEtapaCapabilities.map(c => ({
+              capabilityResults: this.currentEtapaCapabilities.map((c, capIdx) => ({
                 name: c.capabilityName,
                 displayName: c.displayName,
                 success: c.sucesso,
-                summary: this.formatResultSummary(combinedResult).substring(0, 300),
+                summary: this.formatResultSummary(etapaResultados[capIdx] ?? c.dados ?? c).substring(0, 300),
                 discoveries: c.descobertas,
                 decisions: c.decisoes,
                 metrics: c.metricas,

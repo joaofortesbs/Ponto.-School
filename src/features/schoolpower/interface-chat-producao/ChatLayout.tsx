@@ -458,7 +458,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       isExecutingPlanRef.current = false;
       releaseExecutionLock();
       
-      console.log('🔄 [ChatLayout] Execução finalizada - estado limpo para permitir nova interação');
+      console.log('🔄 [ChatLayout] Execução finalizada — próximos prompts passam por IntentClassifier no orchestrator');
 
       window.dispatchEvent(new CustomEvent('agente-jota-progress', {
         detail: { type: 'execution:completed' }

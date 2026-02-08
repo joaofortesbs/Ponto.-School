@@ -93,24 +93,27 @@ export async function processUserPrompt(
   const memory = getOrCreateMemoryManager(sessionId, userId);
   sessionTimestamps.set(sessionId, Date.now());
 
-  const session = createSession(sessionId, userId, userPrompt);
-  
-  addConversationTurn(sessionId, {
-    role: 'user',
-    content: userPrompt,
-    timestamp: Date.now(),
-  });
-
   const intent = classifyIntent(userPrompt);
   console.log(`🧠 [Orchestrator] Intent: ${intent.type} (${(intent.confidence * 100).toFixed(0)}%) — ${intent.reasoning}`);
 
-  addLedgerFact(sessionId, {
-    fact: `Professor pediu: "${userPrompt.substring(0, 150)}" [intent: ${intent.type}]`,
-    category: 'context',
-  });
-
   if (shouldRespondDirectly(intent)) {
     console.log('💬 [Orchestrator] Modo conversacional — respondendo sem criar plano');
+
+    const existingSession = getSession(sessionId);
+    if (!existingSession) {
+      createSession(sessionId, userId, userPrompt);
+    }
+
+    addConversationTurn(sessionId, {
+      role: 'user',
+      content: userPrompt,
+      timestamp: Date.now(),
+    });
+
+    addLedgerFact(sessionId, {
+      fact: `Professor perguntou: "${userPrompt.substring(0, 150)}" [intent: ${intent.type}]`,
+      category: 'context',
+    });
     
     const directResponse = await handleDirectResponse(userPrompt, sessionId, userId);
     
@@ -126,6 +129,19 @@ export async function processUserPrompt(
       initialMessage: directResponse,
     };
   }
+
+  const session = createSession(sessionId, userId, userPrompt);
+  
+  addConversationTurn(sessionId, {
+    role: 'user',
+    content: userPrompt,
+    timestamp: Date.now(),
+  });
+
+  addLedgerFact(sessionId, {
+    fact: `Professor pediu: "${userPrompt.substring(0, 150)}" [intent: ${intent.type}]`,
+    category: 'context',
+  });
 
   const contextForPlanner = buildContextForPlanner(sessionId, userPrompt);
 
@@ -315,6 +331,8 @@ export async function executeAgentPlan(
       category: 'context',
     });
 
+    extractAndRegisterTopicFacts(sessionId, plan);
+
     console.log('✅ [Orchestrator] Plano executado e resposta final gerada');
 
     return respostaFinal;
@@ -443,6 +461,77 @@ export async function clearSession(sessionId: string): Promise<void> {
   sessionTimestamps.delete(sessionId);
 
   clearContextEngineSession(sessionId);
+}
+
+function extractAndRegisterTopicFacts(sessionId: string, plan: ExecutionPlan): void {
+  try {
+    const session = getSession(sessionId);
+    if (!session) return;
+
+    const originalGoal = session.originalGoal || '';
+    const objetivo = plan.objetivo || '';
+    const fullText = `${originalGoal} ${objetivo}`.toLowerCase();
+
+    const facts: string[] = [];
+
+    const seriePatterns = [
+      /(\d+)[ºªo°]\s*(?:ano|série)/i,
+      /(?:ano|série)\s*(\d+)/i,
+      /ensino\s+(fundamental|médio|medio)/i,
+    ];
+    for (const pattern of seriePatterns) {
+      const match = fullText.match(pattern);
+      if (match) {
+        facts.push(`Série/ano mencionado: ${match[0].trim()}`);
+        break;
+      }
+    }
+
+    const turmaMatch = fullText.match(/turma\s+([a-zA-Z0-9]+)/i);
+    if (turmaMatch) {
+      facts.push(`Turma: ${turmaMatch[0].trim()}`);
+    }
+
+    const topicIndicators = [
+      /(?:sobre|de|para)\s+(.{3,60})(?:\.|,|!|\?|$)/i,
+      /(?:tema|assunto|conteúdo|conteudo|matéria|materia)[:\s]+(.{3,60})(?:\.|,|!|\?|$)/i,
+    ];
+    for (const pattern of topicIndicators) {
+      const match = originalGoal.match(pattern);
+      if (match && match[1]) {
+        const topic = match[1].trim()
+          .replace(/\s*(e me entregue|e prepare|e faça|e faca|e crie|e monte).*$/i, '')
+          .trim();
+        if (topic.length > 3 && topic.length < 80) {
+          facts.push(`Tópico/tema trabalhado: ${topic}`);
+          break;
+        }
+      }
+    }
+
+    const activityTypes: string[] = [];
+    const session_ = getSession(sessionId);
+    if (session_?.stepResults) {
+      for (const step of session_.stepResults) {
+        if (step.stepTitle) {
+          activityTypes.push(step.stepTitle);
+        }
+      }
+    }
+    if (activityTypes.length > 0) {
+      facts.push(`Atividades criadas: ${activityTypes.join(', ')}`);
+    }
+
+    if (facts.length > 0) {
+      addLedgerFact(sessionId, {
+        fact: `[CONTEXTO DO QUE FOI FEITO] ${facts.join(' | ')}`,
+        category: 'discovery',
+      });
+      console.log(`📌 [Orchestrator] Fatos de tópico registrados no ledger: ${facts.join(' | ')}`);
+    }
+  } catch (error) {
+    console.warn('⚠️ [Orchestrator] Erro ao extrair fatos de tópico (não crítico):', error);
+  }
 }
 
 export async function sendFollowUpMessage(

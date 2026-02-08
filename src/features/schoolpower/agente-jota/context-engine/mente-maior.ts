@@ -171,13 +171,24 @@ export async function executeMenteMaior(input: MenteMaiorInput): Promise<MenteMa
     ? `CAPABILITIES DISPONÍVEIS (para replan):\n${input.availableCapabilities.join(', ')}`
     : '';
 
+  const recentNarratives = (input.session.stepResults || [])
+    .filter(sr => sr.narrativeGenerated)
+    .slice(-3);
+  const previousNarrativesSection = recentNarratives.length > 0
+    ? `\n⚠️ NARRATIVAS JÁ GERADAS (NÃO REPITA):\n${
+        recentNarratives
+          .map(sr => `- Etapa ${sr.stepIndex}: "${sr.narrativeGenerated!.substring(0, 150)}"`)
+          .join('\n')
+      }\nGere uma narrativa DIFERENTE e ESPECÍFICA para esta etapa.\n`
+    : '';
+
   const prompt = MENTE_MAIOR_PROMPT
     .replace('{context}', context)
     .replace('{step_index}', String(input.completedStep.index))
     .replace('{step_title}', input.completedStep.title)
     .replace('{step_description}', input.completedStep.description)
     .replace('{capabilities_summary}', capabilitiesSummary)
-    .replace('{results_summary}', resultsSummary)
+    .replace('{results_summary}', resultsSummary + previousNarrativesSection)
     .replace('{next_step_section}', nextStepSection)
     .replace('{capabilities_list}', capabilitiesList);
 
