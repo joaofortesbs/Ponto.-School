@@ -108,6 +108,113 @@ router.get('/user/:userId', async (req, res) => {
   }
 });
 
+router.get('/by-original-id/:originalId', async (req, res) => {
+  const client = getDbClient();
+  
+  try {
+    const { originalId } = req.params;
+    const { userId } = req.query;
+    
+    await client.connect();
+    console.log('🔍 Buscando atividade por original_id:', originalId);
+    
+    let query = `
+      SELECT * FROM atividades 
+      WHERE id_json->'metadata'->>'original_id' = $1
+    `;
+    const params = [originalId];
+    
+    if (userId) {
+      query += ` AND id_user = $2`;
+      params.push(userId);
+    }
+    
+    query += ` ORDER BY updated_at DESC LIMIT 1;`;
+    
+    const result = await client.query(query, params);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Atividade não encontrada pelo original_id'
+      });
+    }
+    
+    const atividade = {
+      ...result.rows[0],
+      id_json: typeof result.rows[0].id_json === 'string' 
+        ? JSON.parse(result.rows[0].id_json) 
+        : result.rows[0].id_json
+    };
+    
+    console.log('✅ Atividade encontrada por original_id:', atividade.id);
+    
+    res.json({
+      success: true,
+      data: atividade
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro ao buscar por original_id:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  } finally {
+    await client.end();
+  }
+});
+
+router.get('/by-type-user/:userId/:tipo', async (req, res) => {
+  const client = getDbClient();
+  
+  try {
+    const { userId, tipo } = req.params;
+    
+    await client.connect();
+    console.log('🔍 Buscando atividade mais recente por tipo:', tipo, 'user:', userId);
+    
+    const query = `
+      SELECT * FROM atividades 
+      WHERE id_user = $1 AND tipo = $2
+      ORDER BY updated_at DESC 
+      LIMIT 1;
+    `;
+    
+    const result = await client.query(query, [userId, tipo]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Nenhuma atividade encontrada para este tipo'
+      });
+    }
+    
+    const atividade = {
+      ...result.rows[0],
+      id_json: typeof result.rows[0].id_json === 'string' 
+        ? JSON.parse(result.rows[0].id_json) 
+        : result.rows[0].id_json
+    };
+    
+    console.log('✅ Atividade encontrada por tipo:', atividade.id);
+    
+    res.json({
+      success: true,
+      data: atividade
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro ao buscar por tipo:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  } finally {
+    await client.end();
+  }
+});
+
 // Buscar atividade específica
 router.get('/:id', async (req, res) => {
   const client = getDbClient();

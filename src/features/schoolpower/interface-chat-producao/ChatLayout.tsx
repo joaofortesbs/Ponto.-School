@@ -174,7 +174,7 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     setTimeout(() => setSelectedViewActivity(null), 300);
   }, []);
 
-  const handleOpenActivity = useCallback((activity: any) => {
+  const handleOpenActivity = useCallback(async (activity: any) => {
     console.log('📋 [ChatLayout] Abrindo atividade:', activity.titulo, 'tipo:', activity.tipo, 'id:', activity.id, 'db_id:', activity.db_id);
     
     const activityId = activity.id || activity.db_id || `fallback-${Date.now()}`;
@@ -191,15 +191,65 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     console.log(`📦 [ChatLayout] StorageContract: found=${!!storedContent}, hasReal=${storedContent ? hasRealContent(storedContent) : false}`);
 
     const messageContentSnapshot = activity._contentSnapshot || {};
-    const mergedContent = { 
+    let mergedContent: Record<string, any> = { 
       ...messageContentSnapshot, 
       ...contentResult.customFields,
       ...(storedContent || {}),
       ...(syncHasReal && syncContent ? syncContent : {}),
     };
-    const mergedContentKeys = Object.keys(mergedContent).filter(k => 
+    let mergedContentKeys = Object.keys(mergedContent).filter(k => 
       mergedContent[k] !== undefined && mergedContent[k] !== null && mergedContent[k] !== ''
     );
+
+    if (!hasRealContent(mergedContent) && activityTipo) {
+      console.log(`🔄 [ChatLayout] Fontes locais vazias para ${activityId} — buscando do banco de dados...`);
+      try {
+        let dbContent: Record<string, any> | null = null;
+
+        const byOriginalRes = await fetch(`/api/atividades-neon/by-original-id/${encodeURIComponent(activityId)}`);
+        if (byOriginalRes.ok) {
+          const byOriginalData = await byOriginalRes.json();
+          if (byOriginalData.success && byOriginalData.data?.id_json?.campos) {
+            dbContent = byOriginalData.data.id_json.campos;
+            console.log(`✅ [ChatLayout] DB fetch por original_id: ${Object.keys(dbContent!).length} campos`);
+          }
+        }
+
+        if (!dbContent || !hasRealContent(dbContent)) {
+          const userId = localStorage.getItem('user_id');
+          if (userId) {
+            const byTypeRes = await fetch(`/api/atividades-neon/by-type-user/${encodeURIComponent(userId)}/${encodeURIComponent(activityTipo)}`);
+            if (byTypeRes.ok) {
+              const byTypeData = await byTypeRes.json();
+              if (byTypeData.success && byTypeData.data?.id_json?.campos) {
+                dbContent = byTypeData.data.id_json.campos;
+                console.log(`✅ [ChatLayout] DB fetch por tipo+user: ${Object.keys(dbContent!).length} campos`);
+              }
+            }
+          }
+        }
+
+        if (dbContent && hasRealContent(dbContent)) {
+          mergedContent = { ...mergedContent, ...dbContent };
+          mergedContentKeys = Object.keys(mergedContent).filter(k => 
+            mergedContent[k] !== undefined && mergedContent[k] !== null && mergedContent[k] !== ''
+          );
+          console.log(`✅ [ChatLayout] Conteúdo DB integrado: ${mergedContentKeys.length} campos totais`);
+
+          try {
+            writeActivityContent(activityId, activityTipo, mergedContent, true);
+            ContentSyncService.setContent(activityId, activityTipo, mergedContent);
+            console.log(`💾 [ChatLayout] Conteúdo DB persistido no cache local`);
+          } catch (cacheErr) {
+            console.warn(`⚠️ [ChatLayout] Erro ao cachear conteúdo DB:`, cacheErr);
+          }
+        } else {
+          console.warn(`⚠️ [ChatLayout] Banco de dados também não retornou conteúdo real para ${activityId}`);
+        }
+      } catch (fetchError) {
+        console.error(`❌ [ChatLayout] Erro ao buscar do banco:`, fetchError);
+      }
+    }
 
     if (mergedContentKeys.length > 2 && activityTipo) {
       try {

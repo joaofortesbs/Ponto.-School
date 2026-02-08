@@ -24,7 +24,7 @@ import { useChosenActivitiesStore } from '../interface-chat-producao/stores/Chos
 import { loadExerciseListData, processExerciseListWithUnifiedPipeline } from '../activities/lista-exercicios';
 import { processQuizWithUnifiedPipeline } from '../activities/quiz-interativo';
 import { ContentSyncService } from '../services/content-sync-service';
-import { writeActivityContent, readActivityContent } from '../services/activity-storage-contract';
+import { writeActivityContent, readActivityContent, hasRealContent } from '../services/activity-storage-contract';
 
 // Helper function to get activity icon based on activity type
 const getActivityIcon = (activityId: string) => {
@@ -463,7 +463,32 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           setFlashCardsContent(null);
         }
       } else {
-        console.log(`📦 [FALLBACK] ContentSync sem dados reais — carregando de localStorage/pipeline/banco`);
+        console.log(`📦 [FALLBACK] ContentSync sem dados reais — tentando customFields/originalData/localStorage`);
+
+        const cfData = activity.customFields || {};
+        const odCampos = activity.originalData?.campos || {};
+        const combinedLocal = { ...odCampos, ...cfData };
+        const combinedHasReal = hasRealContent(combinedLocal);
+
+        if (combinedHasReal) {
+          console.log(`✅ [FALLBACK] Dados reais encontrados em customFields/originalData: ${Object.keys(combinedLocal).length} campos`);
+          setGeneratedContent(combinedLocal);
+          setIsContentLoaded(true);
+
+          if (activityType === 'quiz-interativo' && combinedLocal.questions?.length > 0) {
+            setQuizInterativoContent(combinedLocal);
+            console.log(`✅ [FALLBACK] Quiz via customFields: ${combinedLocal.questions.length} questões`);
+          } else if (activityType !== 'quiz-interativo') {
+            setQuizInterativoContent(null);
+          }
+
+          if (activityType === 'flash-cards' && combinedLocal.cards?.length > 0) {
+            setFlashCardsContent(combinedLocal);
+            console.log(`✅ [FALLBACK] Flash Cards via customFields: ${combinedLocal.cards.length} cards`);
+          } else if (activityType !== 'flash-cards') {
+            setFlashCardsContent(null);
+          }
+        } else {
 
         const heavyTypes = ['quiz-interativo', 'flash-cards', 'lista-exercicios'];
         if (heavyTypes.includes(activityType)) {
@@ -541,6 +566,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           setFlashCardsContent(null);
         }
       }
+
+      } // end else (no combinedHasReal)
 
       if (activityType === 'plano-aula') {
         const planoData = loadPlanoAulaData(activity.id);
