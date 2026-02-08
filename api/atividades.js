@@ -120,7 +120,7 @@ router.get('/by-original-id/:originalId', async (req, res) => {
     
     let query = `
       SELECT * FROM atividades 
-      WHERE id_json->'metadata'->>'original_id' = $1
+      WHERE id_json::jsonb->'metadata'->>'original_id' = $1
     `;
     const params = [originalId];
     

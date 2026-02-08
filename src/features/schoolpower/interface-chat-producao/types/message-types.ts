@@ -66,6 +66,7 @@ export interface ActivitySummaryUI {
   id: string;
   titulo: string;
   tipo: string;
+  descricao?: string;
   db_id?: number;
   _contentSnapshot?: Record<string, any>;
 }

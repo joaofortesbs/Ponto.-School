@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { JotaAvatarChat } from './JotaAvatarChat';
 import { ArtifactCard } from './ArtifactCard';
-import { BookOpen, CheckCircle2, FileText, ChevronRight, Loader2 } from 'lucide-react';
+import { FileText, ChevronRight, Brain, Layers, Search, PenLine, TextCursorInput, Link2, ClipboardList, Sparkles } from 'lucide-react';
 import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
-import { ContentSyncService } from '../../services/content-sync-service';
-import { readActivityContent, hasRealContent } from '../../services/activity-storage-contract';
 
 interface StructuredResponseMessageProps {
   blocks: StructuredResponseBlock[];
@@ -14,84 +12,37 @@ interface StructuredResponseMessageProps {
   onOpenActivity?: (activity: ActivitySummaryUI) => void;
 }
 
-const HEAVY_TYPES = ['quiz-interativo', 'flash-cards', 'lista-exercicios'];
+function getActivityLucideIcon(tipo: string) {
+  const t = tipo?.toLowerCase() || '';
+  if (t.includes('quiz')) return Brain;
+  if (t.includes('flash') || t.includes('card')) return Layers;
+  if (t.includes('caça') || t.includes('caca')) return Search;
+  if (t.includes('cruzada')) return PenLine;
+  if (t.includes('complete') || t.includes('lacuna')) return TextCursorInput;
+  if (t.includes('associa')) return Link2;
+  if (t.includes('texto') || t.includes('text')) return FileText;
+  if (t.includes('lista') || t.includes('exerc')) return ClipboardList;
+  return ClipboardList;
+}
 
-function checkContentExists(activityId: string, tipo: string): boolean {
-  if (ContentSyncService.hasRealContent(activityId, tipo)) return true;
-  const stored = readActivityContent(activityId, tipo);
-  if (hasRealContent(stored)) return true;
-  return false;
+function getActivityTypeLabel(tipo: string): string {
+  const t = tipo?.toLowerCase() || '';
+  if (t.includes('quiz')) return 'Quiz Interativo';
+  if (t.includes('flash') || t.includes('card')) return 'Flash Cards';
+  if (t.includes('caça') || t.includes('caca')) return 'Caça-palavras';
+  if (t.includes('cruzada')) return 'Palavras Cruzadas';
+  if (t.includes('complete') || t.includes('lacuna')) return 'Complete as Lacunas';
+  if (t.includes('associa')) return 'Associação';
+  if (t.includes('texto') || t.includes('text')) return 'Versão Texto';
+  if (t.includes('lista') || t.includes('exerc')) return 'Lista de Exercícios';
+  return tipo?.replace(/[-_]/g, ' ') || 'Atividade';
 }
 
 function InlineActivitiesCard({ activities, onOpenActivity }: { 
   activities: ActivitySummaryUI[]; 
   onOpenActivity?: (activity: ActivitySummaryUI) => void;
 }) {
-  const [contentReady, setContentReady] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    for (const act of activities) {
-      const isHeavy = HEAVY_TYPES.includes(act.tipo?.toLowerCase() || '');
-      if (!isHeavy) {
-        initial[act.id] = true;
-      } else {
-        initial[act.id] = checkContentExists(act.id, act.tipo?.toLowerCase() || '');
-      }
-    }
-    return initial;
-  });
-
-  useEffect(() => {
-    const handler = (event: Event) => {
-      const detail = (event as CustomEvent).detail;
-      if (!detail?.activityId) return;
-      setContentReady(prev => ({ ...prev, [detail.activityId]: true }));
-    };
-
-    window.addEventListener('content-sync-update', handler);
-
-    const safetyTimer = setTimeout(() => {
-      setContentReady(prev => {
-        const updated = { ...prev };
-        let changed = false;
-        for (const act of activities) {
-          if (updated[act.id] === false) {
-            const tipo = act.tipo?.toLowerCase() || '';
-            if (checkContentExists(act.id, tipo)) {
-              updated[act.id] = true;
-              changed = true;
-            }
-          }
-        }
-        if (!changed) {
-          for (const key of Object.keys(updated)) {
-            if (updated[key] === false) {
-              updated[key] = true;
-              changed = true;
-            }
-          }
-        }
-        return changed ? updated : prev;
-      });
-    }, 3000);
-
-    return () => {
-      window.removeEventListener('content-sync-update', handler);
-      clearTimeout(safetyTimer);
-    };
-  }, [activities]);
-
-  const getActivityIcon = (tipo: string) => {
-    const t = tipo?.toLowerCase() || '';
-    if (t.includes('quiz')) return '🧠';
-    if (t.includes('flash') || t.includes('card')) return '🃏';
-    if (t.includes('caça') || t.includes('caca')) return '🔍';
-    if (t.includes('cruzada')) return '✏️';
-    if (t.includes('complete') || t.includes('lacuna')) return '📝';
-    if (t.includes('associa')) return '🔗';
-    if (t.includes('texto') || t.includes('text')) return '📄';
-    if (t.includes('lista') || t.includes('exerc')) return '📋';
-    return '📋';
-  };
+  const showHeader = activities.length >= 2;
 
   return (
     <motion.div
@@ -100,43 +51,45 @@ function InlineActivitiesCard({ activities, onOpenActivity }: {
       transition={{ duration: 0.3 }}
       className="my-3 rounded-xl overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%)',
-        border: '1px solid rgba(148, 163, 184, 0.15)',
-        backdropFilter: 'blur(8px)',
+        background: '#040b2a',
+        border: '1px solid rgba(99, 102, 241, 0.15)',
+        maxWidth: '340px',
       }}
     >
-      <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
-        <BookOpen className="w-4 h-4 text-orange-400" />
-        <span className="text-xs font-semibold text-white/80 uppercase tracking-wider">
-          {activities.length} Atividade{activities.length !== 1 ? 's' : ''} Criada{activities.length !== 1 ? 's' : ''}
-        </span>
-      </div>
-      <div className="divide-y divide-white/5">
+      {showHeader && (
+        <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(99, 102, 241, 0.1)' }}>
+          <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+          <span className="text-xs font-semibold text-white/70 tracking-wide">
+            Suas {activities.length} atividades:
+          </span>
+        </div>
+      )}
+      <div className={showHeader ? 'divide-y divide-white/5' : ''}>
         {activities.map((activity, idx) => {
-          const isReady = contentReady[activity.id] !== false;
-          const isHeavy = HEAVY_TYPES.includes(activity.tipo?.toLowerCase() || '');
+          const IconComponent = getActivityLucideIcon(activity.tipo);
+          const subtitle = activity.descricao || getActivityTypeLabel(activity.tipo);
 
           return (
             <button
               key={activity.id || idx}
               onClick={() => onOpenActivity?.(activity)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-all duration-200 group cursor-pointer"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.04] transition-all duration-200 group cursor-pointer"
             >
-              <span className="text-lg flex-shrink-0">{getActivityIcon(activity.tipo)}</span>
+              <div
+                className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: 'rgba(99, 102, 241, 0.12)' }}
+              >
+                <IconComponent className="w-4 h-4 text-indigo-400" />
+              </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-200 truncate group-hover:text-white transition-colors">
+                <p className="text-sm font-medium text-slate-200 truncate group-hover:text-white transition-colors leading-tight">
                   {activity.titulo}
                 </p>
-                <p className="text-xs text-slate-500 capitalize">{activity.tipo?.replace(/_/g, ' ')}</p>
+                <p className="text-xs text-slate-500 truncate mt-0.5 leading-tight">
+                  {subtitle}
+                </p>
               </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                {isHeavy && !isReady ? (
-                  <Loader2 className="w-4 h-4 text-orange-400/70 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4 text-green-500/70" />
-                )}
-                <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" />
-              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors flex-shrink-0" />
             </button>
           );
         })}

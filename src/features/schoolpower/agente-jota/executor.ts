@@ -47,6 +47,7 @@ export interface ActivitySummary {
   id: string;
   titulo: string;
   tipo: string;
+  descricao?: string;
   db_id?: number;
   _contentSnapshot?: Record<string, any>;
 }
@@ -197,10 +198,15 @@ export class AgentExecutor {
           }
         }
         
+        const actDescricao = act.descricao || act.description || act.objetivo || 
+          contentSnapshot?.descricao || contentSnapshot?.description || 
+          contentSnapshot?.objetivo || contentSnapshot?.tema || '';
+
         activities.push({
           id: actId,
           titulo: act.titulo || act.name || act.title || 'Atividade',
           tipo: actTipo,
+          descricao: actDescricao,
           db_id: act.db_id || savedMap.get(actId),
           _contentSnapshot: contentSnapshot,
         });
