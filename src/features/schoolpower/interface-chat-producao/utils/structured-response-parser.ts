@@ -10,7 +10,7 @@ function sanitizeResponseText(text: string): string {
   let cleaned = text;
   cleaned = cleaned.replace(/```json[\s\S]*?```/g, '');
   cleaned = cleaned.replace(/\[?\{[\s\S]*?"id"\s*:\s*"[\s\S]*?\}\]?/g, '');
-  cleaned = cleaned.replace(/^\s*[\[\{][\s\S]*?[\]\}]\s*$/gm, '');
+  cleaned = cleaned.replace(/^\s*[\[\{](?!\[)[\s\S]*?[\]\}]\s*$/gm, '');
   cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
   cleaned = cleaned.trim();
   return cleaned || text;
@@ -65,12 +65,18 @@ export function parseStructuredResponse(
     } else if (fullMarker.startsWith('ARQUIVO:')) {
       const titulo = match[2]?.trim();
       if (titulo && items.artifacts.length > 0) {
+        const normalizeStr = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/gi, '').trim();
+        const searchNorm = normalizeStr(titulo);
+        const searchWords = searchNorm.split(/\s+/).filter(w => w.length > 2);
+
         const artifact = items.artifacts.find(a => {
           if (usedArtifactIds.has(a.id)) return false;
-          const artTitle = (a.metadata?.titulo || '').toLowerCase();
-          const searchTitle = titulo.toLowerCase();
-          return artTitle.includes(searchTitle) || searchTitle.includes(artTitle) ||
-            artTitle.replace(/[^a-záàâãéèêíïóôõöúç\s]/gi, '').includes(searchTitle.replace(/[^a-záàâãéèêíïóôõöúç\s]/gi, ''));
+          const artTitle = a.metadata?.titulo || '';
+          const artNorm = normalizeStr(artTitle);
+          if (artNorm === searchNorm) return true;
+          if (artNorm.includes(searchNorm) || searchNorm.includes(artNorm)) return true;
+          const matchingWords = searchWords.filter(w => artNorm.includes(w));
+          return matchingWords.length >= Math.max(1, searchWords.length * 0.5);
         });
 
         if (artifact) {

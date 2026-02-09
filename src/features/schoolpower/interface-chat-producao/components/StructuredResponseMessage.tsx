@@ -1,11 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { JotaAvatarChat } from './JotaAvatarChat';
-import { ArtifactCard } from './ArtifactCard';
-import { FileText, ChevronRight, Brain, Layers, Search, PenLine, TextCursorInput, Link2, ClipboardList, Sparkles, MessageCircle, GraduationCap, ClipboardCheck, BookOpen } from 'lucide-react';
+import { FileText, ChevronRight, Brain, Layers, Search, PenLine, TextCursorInput, Link2, ClipboardList, Sparkles } from 'lucide-react';
 import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
-import { ARTIFACT_TYPE_CONFIGS } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
 interface StructuredResponseMessageProps {
   blocks: StructuredResponseBlock[];
@@ -99,24 +97,9 @@ function InlineActivitiesCard({ activities, onOpenActivity }: {
   );
 }
 
-function getArtifactLucideIcon(tipo: string) {
-  const t = tipo?.toLowerCase() || '';
-  if (t.includes('guia') || t.includes('aplicacao')) return BookOpen;
-  if (t.includes('mensagem_pais') || t.includes('pais')) return MessageCircle;
-  if (t.includes('mensagem_alunos') || t.includes('alunos')) return GraduationCap;
-  if (t.includes('relatorio') || t.includes('coordenacao')) return ClipboardCheck;
-  if (t.includes('dossie')) return ClipboardList;
-  if (t.includes('roteiro')) return PenLine;
-  if (t.includes('resumo')) return Layers;
-  return FileText;
-}
-
 function InlineArtifactCard({ artifact, onOpen }: { artifact: ArtifactData; onOpen?: (artifact: ArtifactData) => void }) {
   const titulo = artifact.metadata?.titulo || 'Documento';
   const secoesCount = artifact.secoes?.length || 0;
-  const config = ARTIFACT_TYPE_CONFIGS[artifact.metadata?.tipo];
-  const accentColor = config?.cor || '#6366f1';
-  const IconComponent = getArtifactLucideIcon(artifact.metadata?.tipo || '');
 
   return (
     <motion.div
@@ -126,7 +109,7 @@ function InlineArtifactCard({ artifact, onOpen }: { artifact: ArtifactData; onOp
       className="my-3 rounded-xl overflow-hidden"
       style={{
         background: '#040b2a',
-        border: `1px solid ${accentColor}22`,
+        border: '1px solid rgba(99, 102, 241, 0.15)',
         maxWidth: '340px',
       }}
     >
@@ -136,9 +119,9 @@ function InlineArtifactCard({ artifact, onOpen }: { artifact: ArtifactData; onOp
       >
         <div
           className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ background: `${accentColor}1A` }}
+          style={{ background: 'rgba(99, 102, 241, 0.12)' }}
         >
-          <IconComponent className="w-4 h-4" style={{ color: accentColor }} />
+          <FileText className="w-4 h-4 text-indigo-400" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-slate-200 truncate group-hover:text-white transition-colors leading-tight">
