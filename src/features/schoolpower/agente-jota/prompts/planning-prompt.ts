@@ -49,8 +49,9 @@ REGRAS DE DECISÃO:
 
 🔴🔴🔴 REGRA MAIS IMPORTANTE — COMO IDENTIFICAR SE É ATIVIDADE OU ARQUIVO:
 - Se o professor menciona "exercício", "exercícios", "lista de exercícios", "quiz", "prova", "atividade", "atividades", "flash card", "cruzadinha", "caça-palavra", "jogo educativo" → É CRIAÇÃO DE ATIVIDADE! Use o pipeline completo (regra 1)!
-- Se o professor menciona "roteiro", "documento", "dossiê", "relatório", "resumo", "apostila", "plano de aula" → É ARQUIVO com tipo específico! Use criar_arquivo (regra 3)!
-- Se o professor pede algo TEXTUAL LONGO: explicação, texto sobre X, redação, artigo, guia sobre um assunto, análise de tema, comparação, resumo de conteúdo → É DOCUMENTO LIVRE! Use criar_arquivo com tipo "documento_livre" (regra 3b)!
+- Se o professor menciona "roteiro", "dossiê", "plano de aula", "resumo executivo" → É ARQUIVO com tipo específico! Use criar_arquivo com tipo correspondente (regra 3)!
+- Se o professor pede "arquivo", "documento", "texto", "explicação", "crie um arquivo sobre X", "texto sobre Y", "artigo", "redação", "análise de tema", "conteúdo sobre", "me explique", "escreva sobre" → É DOCUMENTO LIVRE! Use criar_arquivo com tipo_artefato "documento_livre" (regra 3b)!
+- 🔴 "Crie um arquivo sobre [TEMA]" = SEMPRE documento_livre com parametros {"tipo_artefato": "documento_livre", "solicitacao": "pedido original"}
 - ⚠️ NUNCA use "criar_arquivo" sozinho quando o professor quer exercícios/atividades/quiz! criar_arquivo gera DOCUMENTOS de texto, NÃO cria atividades na plataforma!
 
 1. Se o professor quer CRIAR ATIVIDADES (exercícios, quiz, prova, lista, etc):
@@ -67,12 +68,17 @@ REGRAS DE DECISÃO:
 
 3. Se o professor pedir um DOCUMENTO escrito ESPECÍFICO (roteiro, dossiê, relatório, apostila, plano de aula):
    → Use "criar_arquivo" com o tipo correspondente nos parâmetros
+   → 🔴 OBRIGATÓRIO: Sempre inclua "tipo_artefato" E "solicitacao" nos parametros da capability criar_arquivo!
+   → Exemplo parametros: {"tipo_artefato": "roteiro_aula", "solicitacao": "roteiro de aula sobre frações para 5º ano"}
    → NÃO precisa pesquisar, decidir ou criar atividades para textos/documentos!
 
-3b. 🆕 Se o professor pedir um TEXTO LONGO, EXPLICAÇÃO, ou CONTEÚDO CUSTOMIZADO (explicação sobre X, texto sobre Y, análise de Z, comparação, artigo):
-   → Use "criar_arquivo" com tipo "documento_livre" — a IA vai criar a estrutura ideal automaticamente
+3b. 🆕 Se o professor pedir um ARQUIVO, TEXTO, EXPLICAÇÃO, CONTEÚDO sobre um TEMA, ou qualquer pedido que resulte em documento textual:
+   → Use "criar_arquivo" com tipo_artefato "documento_livre" nos parâmetros
+   → 🔴 OBRIGATÓRIO: parametros DEVEM conter {"tipo_artefato": "documento_livre", "solicitacao": "pedido original do professor"}
    → O documento livre permite que a IA decida título e seções, criando um documento sob medida
-   → REGRA: Sempre que o pedido resultar em texto com mais de 3 parágrafos, PREFIRA usar criar_arquivo com documento_livre em vez de responder no chat!
+   → REGRA: Sempre que o pedido resultar em texto com mais de 3 parágrafos, PREFIRA usar criar_arquivo com documento_livre!
+   → EXEMPLOS que devem usar documento_livre: "crie um arquivo sobre X", "texto sobre Y", "explicação de Z", "me explique W", "artigo sobre..."
+   → ⚠️ NUNCA deixe tipo_artefato vazio ou omitido! Se não sabe qual tipo usar, use "documento_livre"!
 
 4. Se o professor quer PESQUISAR o que já tem ou o que está disponível:
    → Use "pesquisar_atividades_disponiveis" e/ou "pesquisar_atividades_conta"
@@ -191,8 +197,28 @@ EXEMPLO 2 - "Explique o que é metodologia ativa" (TEXTO/EXPLICAÇÃO → DOCUME
           "nome": "criar_arquivo",
           "displayName": "Elaborando documento explicativo",
           "categoria": "CRIAR",
-          "parametros": {"tipo": "documento_livre", "solicitacao": "Explique o que é metodologia ativa, seus benefícios e como aplicar em sala de aula"},
+          "parametros": {"tipo_artefato": "documento_livre", "solicitacao": "Explique o que é metodologia ativa, seus benefícios e como aplicar em sala de aula"},
           "justificativa": "Gerar documento livre com estrutura customizada pela IA"
+        }
+      ]
+    }
+  ]
+}
+
+EXEMPLO 2b - "Crie um arquivo sobre células procariontes e me mande" (ARQUIVO/DOCUMENTO SOBRE TEMA):
+{
+  "objetivo": "Criar um documento completo sobre células procariontes",
+  "etapas": [
+    {
+      "titulo": "Criar documento sobre células procariontes",
+      "descricao": "Vou elaborar um documento completo e detalhado sobre células procariontes, com todas as informações organizadas para uso em aula",
+      "capabilities": [
+        {
+          "nome": "criar_arquivo",
+          "displayName": "Vou criar o conteúdo que você precisa",
+          "categoria": "CRIAR",
+          "parametros": {"tipo_artefato": "documento_livre", "solicitacao": "Crie um arquivo sobre o tema de células procariontes"},
+          "justificativa": "Professor pediu arquivo sobre tema específico — usar documento_livre para estrutura customizada"
         }
       ]
     }
@@ -227,6 +253,7 @@ IMPORTANTE:
 - Se incluir "criar_atividade", SEMPRE inclua "salvar_atividades_bd" na mesma etapa ou logo depois
 - NUNCA use "criar_arquivo" sozinho para pedidos de exercícios/atividades/quiz — use o pipeline completo!
 - Escolha o MENOR número de capabilities necessárias — não adicione capabilities desnecessárias!
+- 🔴 Ao usar "criar_arquivo", SEMPRE inclua "tipo_artefato" e "solicitacao" nos parametros! Se for texto/arquivo genérico, use tipo_artefato: "documento_livre". NUNCA deixe parametros vazio para criar_arquivo!
 `.trim();
 
 export interface Capability {

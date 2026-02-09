@@ -85,7 +85,32 @@ function normalizeArtifactType(rawType: string): ArtifactType {
   return 'documento_livre';
 }
 
-function detectBestArtifactType(contexto: string): ArtifactType {
+function detectBestArtifactType(contexto: string, solicitacao?: string): ArtifactType {
+  const solLower = (solicitacao || '').toLowerCase();
+  
+  if (solLower) {
+    const specificTypePatterns: Array<{ pattern: RegExp; type: ArtifactType }> = [
+      { pattern: /\b(?:plano de aula|roteiro de aula|sequência didática|sequencia didática)\b/, type: 'roteiro_aula' },
+      { pattern: /\b(?:dossiê|dossie|dossiê pedagógico)\b/, type: 'dossie_pedagogico' },
+      { pattern: /\b(?:relatório|relatorio)\s+(?:de\s+)?(?:progresso|avaliação|diagnóstic)/, type: 'relatorio_progresso' },
+      { pattern: /\b(?:guia de aplicação|guia de aplicacao|como usar|manual)\b/, type: 'guia_aplicacao' },
+      { pattern: /\b(?:resumo executivo)\b/, type: 'resumo_executivo' },
+      { pattern: /\b(?:mensagem|comunicado|carta)\s+(?:para\s+)?(?:os\s+)?pais\b/, type: 'mensagem_pais' },
+      { pattern: /\b(?:mensagem|motivação|carta)\s+(?:para\s+)?(?:os\s+)?alunos\b/, type: 'mensagem_alunos' },
+      { pattern: /\b(?:relatório|relatorio)\s+(?:para\s+)?(?:a\s+)?coordena/, type: 'relatorio_coordenacao' },
+    ];
+    
+    for (const { pattern, type } of specificTypePatterns) {
+      if (pattern.test(solLower)) {
+        console.log(`📄 [detectBestArtifactType] Tipo específico detectado na solicitação: ${type}`);
+        return type;
+      }
+    }
+    
+    console.log(`📄 [detectBestArtifactType] Nenhum tipo específico na solicitação — usando documento_livre`);
+    return 'documento_livre';
+  }
+  
   const lower = contexto.toLowerCase();
   
   if (lower.includes('plano de aula') || lower.includes('plano-aula') || lower.includes('sequencia didática') || lower.includes('sequência didática')) {
@@ -98,11 +123,6 @@ function detectBestArtifactType(contexto: string): ArtifactType {
   
   if (lower.includes('como usar') || lower.includes('aplicar') || lower.includes('guia')) {
     return 'guia_aplicacao';
-  }
-  
-  const atividadeCount = (lower.match(/atividade/g) || []).length;
-  if (atividadeCount >= 3) {
-    return 'dossie_pedagogico';
   }
   
   return 'documento_livre';
@@ -192,7 +212,7 @@ export async function generateArtifact(
   const rawContext = contextManager.gerarContextoParaChamada('final');
   const sanitizedContext = sanitizeContextForPrompt(rawContext);
   
-  const tipoNormalized = tipoForce ? normalizeArtifactType(tipoForce) : detectBestArtifactType(sanitizedContext);
+  const tipoNormalized = tipoForce ? normalizeArtifactType(tipoForce) : detectBestArtifactType(sanitizedContext, solicitacao);
   const config = ARTIFACT_TYPE_CONFIGS[tipoNormalized];
   
   if (!config) {

@@ -68,6 +68,7 @@ export class AgentExecutor {
   private onProgress: ProgressCallback | null = null;
   private conversationContext: string = '';
   private currentEtapaCapabilities: ResultadoCapability[] = [];
+  private currentPlanObjective: string = '';
 
   constructor(sessionId: string, memory: MemoryManager) {
     this.sessionId = sessionId;
@@ -111,6 +112,7 @@ export class AgentExecutor {
     this.capabilityResultsMap.clear();
     this.currentEtapaCapabilities = [];
     this.conversationContext = '';
+    this.currentPlanObjective = '';
     this.onProgress = null;
     console.log('✅ [Executor] Estado limpo para nova execução');
   }
@@ -319,7 +321,8 @@ export class AgentExecutor {
 ║════════════════════════════════════════════════════════════════════════║
     `);
 
-    // Limpar mapa de resultados de execuções anteriores
+    this.currentPlanObjective = plan.objetivo || '';
+    
     this.capabilityResultsMap.clear();
     console.log('🧹 [Executor] Mapa de resultados limpo para nova execução');
 
@@ -713,18 +716,18 @@ export class AgentExecutor {
             // Obter user_id do localStorage (onde o sistema de autenticação salva)
             const authenticatedUserId = this.getAuthenticatedUserId();
             
-            // Construir CapabilityInput com previous_results e contexto da conversa
+            const userPromptFromPlan = this.currentPlanObjective || '';
+            
             const capabilityInput: CapabilityInput = {
               capability_id: capName,
               execution_id: `exec_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
               context: {
                 ...capability.parametros,
-                // Passar user_id autenticado para todas as capabilities V2
                 user_id: authenticatedUserId,
                 professor_id: authenticatedUserId,
-                // Usar contexto da conversa passado pelo orchestrator, ou fallback para parâmetros
                 conversation_context: this.conversationContext || capability.parametros?.conversation_context || capability.parametros?.contexto || '',
-                user_objective: capability.parametros?.user_objective || capability.parametros?.contexto || '',
+                user_objective: capability.parametros?.user_objective || capability.parametros?.contexto || userPromptFromPlan || '',
+                user_prompt: capability.parametros?.solicitacao || capability.parametros?.contexto || userPromptFromPlan || '',
                 session_id: this.sessionId
               },
               previous_results: this.capabilityResultsMap

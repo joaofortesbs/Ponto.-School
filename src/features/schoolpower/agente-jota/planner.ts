@@ -208,15 +208,15 @@ export async function createExecutionPlan(
         titulo: 'Preparar seu documento',
         descricao: 'Vou gerar o documento solicitado com todo o conteúdo organizado',
         funcao: 'criar_arquivo',
-        parametros: {},
-        justificativa: 'Professor pediu arquivo/documento — usar criar_arquivo obrigatoriamente',
+        parametros: { tipo_artefato: 'documento_livre', solicitacao: userPrompt },
+        justificativa: 'Professor pediu arquivo/documento — usar criar_arquivo com documento_livre',
         status: 'pendente' as const,
         capabilities: [{
           id: `cap-fix-0-${timestamp}`,
           nome: 'criar_arquivo',
           displayName: 'Vou criar o documento solicitado',
           categoria: 'CRIAR' as CapabilityCall['categoria'],
-          parametros: {},
+          parametros: { tipo_artefato: 'documento_livre', solicitacao: userPrompt },
           status: 'pending' as const,
           ordem: 1,
         }],
@@ -225,14 +225,14 @@ export async function createExecutionPlan(
 
     const updatedCapNames = plan.etapas.flatMap(e => e.capabilities?.map(c => c.nome) || []);
     if (!updatedCapNames.includes('criar_arquivo') && isFileRequest) {
-      console.log('🔧 [Planner] Pós-validação: Professor pediu arquivo/documento — injetando criar_arquivo');
+      console.log('🔧 [Planner] Pós-validação: Professor pediu arquivo/documento — injetando criar_arquivo com documento_livre');
       const timestamp = Date.now();
       plan.etapas.push({
         ordem: plan.etapas.length + 1,
         titulo: 'Preparar seu documento',
         descricao: 'Vou gerar o documento solicitado com todo o conteúdo organizado e pronto para uso',
         funcao: 'criar_arquivo',
-        parametros: {},
+        parametros: { tipo_artefato: 'documento_livre', solicitacao: userPrompt },
         justificativa: 'Professor pediu explicitamente um arquivo/documento',
         status: 'pendente' as const,
         capabilities: [{
@@ -240,7 +240,7 @@ export async function createExecutionPlan(
           nome: 'criar_arquivo',
           displayName: 'Vou criar o documento solicitado',
           categoria: 'CRIAR' as CapabilityCall['categoria'],
-          parametros: {},
+          parametros: { tipo_artefato: 'documento_livre', solicitacao: userPrompt },
           status: 'pending' as const,
           ordem: 1,
         }],
@@ -365,7 +365,7 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
           titulo: 'Criar conteúdo para você',
           descricao: 'Vou elaborar o conteúdo solicitado',
           funcao: 'criar_arquivo',
-          parametros: { contexto: userPrompt },
+          parametros: { tipo_artefato: 'documento_livre', solicitacao: userPrompt, contexto: userPrompt },
           status: 'pendente',
           capabilities: [
             {
@@ -373,7 +373,7 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
               nome: 'criar_arquivo',
               displayName: 'Vou criar o conteúdo que você precisa',
               categoria: 'CRIAR',
-              parametros: { contexto: userPrompt },
+              parametros: { tipo_artefato: 'documento_livre', solicitacao: userPrompt, contexto: userPrompt },
               status: 'pending',
               ordem: 1,
             },
