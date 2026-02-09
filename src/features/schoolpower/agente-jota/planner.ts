@@ -12,14 +12,11 @@ import { PLANNING_PROMPT, formatCapabilitiesForPrompt } from './prompts/planning
 import { getAllCapabilities } from './capabilities';
 import { validatePlanCapabilities, getCapabilityWhitelist, validateCapabilityName } from './validation/capability-validator';
 import type { ExecutionPlan, ExecutionStep, CapabilityCall } from '../interface-chat-producao/types';
-import { analyzeDeepIntent, formatDeepIntentForPlanner, type DeepIntentResult } from './context-engine/deep-intent-analyzer';
-import { selectGoldExamples, formatExamplesForPrompt } from './prompts/gold-standard-library';
 
 export interface PlannerContext {
   workingMemory: string;
   userId: string;
   sessionId: string;
-  deepIntent?: DeepIntentResult;
 }
 
 export async function createExecutionPlan(
@@ -28,33 +25,14 @@ export async function createExecutionPlan(
 ): Promise<ExecutionPlan> {
   console.log('📋 [Planner] Mente Orquestradora analisando:', userPrompt);
 
-  const deepIntent = context.deepIntent || analyzeDeepIntent(userPrompt);
-  console.log(`🔬 [Planner] Deep Intent: modo=${deepIntent.modo}, tipo=${deepIntent.tipo_entrega}, complexidade=${deepIntent.complexidade}, confiança=${deepIntent.confidence}`);
-
   const capabilities = getAllCapabilities();
   const capabilitiesText = formatCapabilitiesForPrompt(capabilities);
   
   const whitelist = getCapabilityWhitelist();
 
-  const deepIntentText = deepIntent.modo !== 'CONVERSACIONAL'
-    ? formatDeepIntentForPlanner(deepIntent)
-    : '';
-
-  const goldExamples = selectGoldExamples(
-    deepIntent.entities.componente,
-    deepIntent.entities.serie,
-    deepIntent.tipo_entrega === 'atividade_textual' ? 'prova' : 
-    deepIntent.tipo_entrega === 'atividade_interativa' ? 'atividade' : null,
-    deepIntent.entities.temas,
-    2
-  );
-  const goldExamplesText = formatExamplesForPrompt(goldExamples);
-
   const planningPrompt = PLANNING_PROMPT
     .replace('{user_prompt}', userPrompt)
-    .replace('{deep_intent_analysis}', deepIntentText)
     .replace('{context}', context.workingMemory || 'Sem contexto anterior')
-    .replace('{gold_standard_examples}', goldExamplesText)
     .replace('{capabilities}', capabilitiesText + '\n\n' + whitelist.prompt);
 
   console.log('🧠 [Planner] Mente Orquestradora decidindo capabilities...');
