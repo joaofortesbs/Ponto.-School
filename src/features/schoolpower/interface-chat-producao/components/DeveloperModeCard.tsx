@@ -14,7 +14,7 @@ interface DeveloperModeCardProps {
 }
 
 export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperModeCardProps) {
-  const { updateCardData, updateCapabilityStatus, updateEtapaStatus, addCapabilityToEtapa } = useChatState();
+  const { updateCardData, updateCapabilityStatus, updateEtapaStatus, addCapabilityToEtapa, addEtapaToCard } = useChatState();
   const [reflections, setReflections] = useState<Map<number, ObjectiveReflection>>(new Map());
   const [loadingReflections, setLoadingReflections] = useState<Set<number>>(new Set());
   const [activitiesToBuild, setActivitiesToBuild] = useState<ActivityToBuild[]>([]);
@@ -254,6 +254,53 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
           ? update.activities 
           : activitiesToBuildRef.current;
         setCompletedActivities(activitiesForGeneration);
+      }
+
+      if (update.type === 'flow:etapa_added') {
+        console.log(`🌊 [DeveloperModeCard] Ponto Flow: Nova etapa adicionada`);
+        addEtapaToCard(cardId, {
+          titulo: update.flowTitle || 'Preparando pacote completo',
+          descricao: update.flowDescription || 'Gerando documentos complementares',
+          status: 'executando',
+          capabilities: (update.flowCapabilities || []).map((cap: any) => ({
+            id: cap.id,
+            nome: cap.nome,
+            displayName: cap.displayName,
+            status: 'pendente' as const,
+          })),
+        });
+      }
+
+      if (update.type === 'flow:capability_started') {
+        const etapas = dataRef.current?.etapas || [];
+        const flowEtapaIndex = etapas.length - 1;
+        if (flowEtapaIndex >= 0) {
+          updateCapabilityStatus(cardId, flowEtapaIndex, update.capability_id, 'executando');
+        }
+      }
+
+      if (update.type === 'flow:capability_completed') {
+        const etapas = dataRef.current?.etapas || [];
+        const flowEtapaIndex = etapas.length - 1;
+        if (flowEtapaIndex >= 0) {
+          updateCapabilityStatus(cardId, flowEtapaIndex, update.capability_id, 'concluido');
+        }
+      }
+
+      if (update.type === 'flow:capability_error') {
+        const etapas = dataRef.current?.etapas || [];
+        const flowEtapaIndex = etapas.length - 1;
+        if (flowEtapaIndex >= 0) {
+          updateCapabilityStatus(cardId, flowEtapaIndex, update.capability_id, 'erro');
+        }
+      }
+
+      if (update.type === 'flow:completed') {
+        const etapas = dataRef.current?.etapas || [];
+        const flowEtapaIndex = etapas.length - 1;
+        if (flowEtapaIndex >= 0) {
+          updateEtapaStatus(cardId, flowEtapaIndex, 'concluido');
+        }
       }
 
       // Handler para erro no pipeline - MANTER cards visíveis com status de erro

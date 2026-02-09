@@ -32,6 +32,7 @@ interface ChatState {
   updateCapabilityStatus: (cardId: string, etapaIndex: number, capabilityId: string, status: CapabilityState['status']) => void;
   updateEtapaStatus: (cardId: string, etapaIndex: number, status: 'pendente' | 'executando' | 'concluido') => void;
   addCapabilityToEtapa: (cardId: string, etapaIndex: number, capability: CapabilityState) => void;
+  addEtapaToCard: (cardId: string, etapa: { titulo: string; descricao: string; status: 'pendente' | 'executando' | 'concluido'; capabilities: CapabilityState[] }) => void;
   setExecuting: (isExecuting: boolean) => void;
   setLoading: (isLoading: boolean) => void;
   clearMessages: () => void;
@@ -357,6 +358,36 @@ export const useChatState = create<ChatState>()(
             cardData: {
               ...cardData,
               etapas: updatedEtapas
+            }
+          }
+        };
+      })
+    }));
+  },
+
+  addEtapaToCard: (cardId, etapa) => {
+    set((state) => ({
+      messages: state.messages.map((msg) => {
+        if (msg.id !== cardId) return msg;
+
+        const cardData = msg.metadata?.cardData as DevModeCardData;
+        if (!cardData?.etapas) return msg;
+
+        const newEtapa = {
+          ordem: cardData.etapas.length,
+          titulo: etapa.titulo,
+          descricao: etapa.descricao,
+          status: etapa.status,
+          capabilities: etapa.capabilities,
+        };
+
+        return {
+          ...msg,
+          metadata: {
+            ...msg.metadata,
+            cardData: {
+              ...cardData,
+              etapas: [...cardData.etapas, newEtapa]
             }
           }
         };

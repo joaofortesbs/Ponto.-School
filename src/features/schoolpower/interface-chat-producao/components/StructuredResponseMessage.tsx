@@ -2,9 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { JotaAvatarChat } from './JotaAvatarChat';
 import { ArtifactCard } from './ArtifactCard';
-import { FileText, ChevronRight, Brain, Layers, Search, PenLine, TextCursorInput, Link2, ClipboardList, Sparkles } from 'lucide-react';
+import { FileText, ChevronRight, Brain, Layers, Search, PenLine, TextCursorInput, Link2, ClipboardList, Sparkles, MessageCircle, GraduationCap, ClipboardCheck, BookOpen } from 'lucide-react';
 import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
+import { ARTIFACT_TYPE_CONFIGS } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
 interface StructuredResponseMessageProps {
   blocks: StructuredResponseBlock[];
@@ -98,38 +99,56 @@ function InlineActivitiesCard({ activities, onOpenActivity }: {
   );
 }
 
+function getArtifactLucideIcon(tipo: string) {
+  const t = tipo?.toLowerCase() || '';
+  if (t.includes('guia') || t.includes('aplicacao')) return BookOpen;
+  if (t.includes('mensagem_pais') || t.includes('pais')) return MessageCircle;
+  if (t.includes('mensagem_alunos') || t.includes('alunos')) return GraduationCap;
+  if (t.includes('relatorio') || t.includes('coordenacao')) return ClipboardCheck;
+  if (t.includes('dossie')) return ClipboardList;
+  if (t.includes('roteiro')) return PenLine;
+  if (t.includes('resumo')) return Layers;
+  return FileText;
+}
+
 function InlineArtifactCard({ artifact, onOpen }: { artifact: ArtifactData; onOpen?: (artifact: ArtifactData) => void }) {
   const titulo = artifact.metadata?.titulo || 'Documento';
   const secoesCount = artifact.secoes?.length || 0;
+  const config = ARTIFACT_TYPE_CONFIGS[artifact.metadata?.tipo];
+  const accentColor = config?.cor || '#6366f1';
+  const IconComponent = getArtifactLucideIcon(artifact.metadata?.tipo || '');
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="my-3"
+      className="my-3 rounded-xl overflow-hidden"
+      style={{
+        background: '#040b2a',
+        border: `1px solid ${accentColor}22`,
+        maxWidth: '340px',
+      }}
     >
       <button
         onClick={() => onOpen?.(artifact)}
-        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 hover:bg-white/5 group cursor-pointer"
-        style={{
-          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%)',
-          border: '1px solid rgba(148, 163, 184, 0.12)',
-          backdropFilter: 'blur(8px)',
-        }}
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.04] transition-all duration-200 group cursor-pointer"
       >
-        <div className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(99, 102, 241, 0.15)' }}>
-          <FileText className="w-4.5 h-4.5 text-indigo-400" />
+        <div
+          className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
+          style={{ background: `${accentColor}1A` }}
+        >
+          <IconComponent className="w-4 h-4" style={{ color: accentColor }} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-slate-200 truncate group-hover:text-white transition-colors">
+          <p className="text-sm font-medium text-slate-200 truncate group-hover:text-white transition-colors leading-tight">
             {titulo}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 truncate mt-0.5 leading-tight">
             {secoesCount} {secoesCount === 1 ? 'seção' : 'seções'}
           </p>
         </div>
-        <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors flex-shrink-0" />
+        <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors flex-shrink-0" />
       </button>
     </motion.div>
   );

@@ -12,6 +12,7 @@ import {
   Zap,
   CheckCircle,
   Database,
+  FileText,
   type LucideIcon
 } from 'lucide-react';
 
@@ -76,6 +77,11 @@ const capabilityIconMap: Record<string, CapabilityIconConfig> = {
     icon: Database,
     color: 'text-green-400',
     bgColor: 'bg-green-500/20',
+  },
+  criar_arquivo: {
+    icon: FileText,
+    color: 'text-violet-400',
+    bgColor: 'bg-violet-500/20',
   },
 };
 

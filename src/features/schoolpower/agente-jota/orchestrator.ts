@@ -410,20 +410,43 @@ export async function executeAgentPlan(
           console.log(`🌊 [Orchestrator] Ponto Flow: ${flowPlan.length} artefatos planejados: ${flowPlan.map(a => a.tipo).join(', ')}`);
 
           onProgress?.({
-            type: 'flow_start',
-            message: `Preparando pacote completo com ${flowPlan.length} documentos complementares...`,
+            type: 'flow:etapa_added',
+            flowTitle: 'Preparando pacote completo',
+            flowDescription: `Gerando ${flowPlan.length} documentos complementares`,
+            flowCapabilities: flowPlan.map((a, i) => ({
+              id: `flow-${a.tipo}-${i}`,
+              nome: `criar_arquivo_${a.tipo}`,
+              displayName: a.titulo,
+            })),
           } as any);
 
           const flowResult = await executeFlowPackage(sessionId, flowPlan, (update) => {
-            onProgress?.({
-              type: 'flow_artifact',
-              message: `${update.status === 'gerando' ? 'Gerando' : update.status === 'concluido' ? 'Pronto' : 'Erro'}: ${update.artifact} (${update.index + 1}/${update.total})`,
-            } as any);
+            const capId = `flow-${flowPlan[update.index]?.tipo}-${update.index}`;
+            if (update.status === 'gerando') {
+              onProgress?.({
+                type: 'flow:capability_started',
+                capability_id: capId,
+              } as any);
+            } else if (update.status === 'concluido') {
+              onProgress?.({
+                type: 'flow:capability_completed',
+                capability_id: capId,
+              } as any);
+            } else if (update.status === 'erro') {
+              onProgress?.({
+                type: 'flow:capability_error',
+                capability_id: capId,
+              } as any);
+            }
           });
 
           for (const artifact of flowResult.artifacts) {
             collectedItems.artifacts.push(artifact);
           }
+
+          onProgress?.({
+            type: 'flow:completed',
+          } as any);
 
           console.log(`🌊 [Orchestrator] Ponto Flow concluído: ${flowResult.totalGenerated} gerados, ${flowResult.totalFailed} falhas, ${flowResult.generationTimeMs}ms`);
 
@@ -514,6 +537,43 @@ export async function executeAgentPlanWithDetails(
 
     // LAYER 5: POST-EXECUTION CONTENT VERIFICATION (executeFollowUp path)
     await backupActivityContentToLocalStorage(collectedItems);
+
+    // LAYER 6: PONTO FLOW (executeFollowUp path)
+    if (collectedItems.activities.length > 0) {
+      try {
+        const flowPlan = determineFlowArtifacts(collectedItems.activities.length, plan.objetivo);
+        if (flowPlan.length > 0) {
+          onProgress?.({
+            type: 'flow:etapa_added',
+            flowTitle: 'Preparando pacote completo',
+            flowDescription: `Gerando ${flowPlan.length} documentos complementares`,
+            flowCapabilities: flowPlan.map((a, i) => ({
+              id: `flow-${a.tipo}-${i}`,
+              nome: `criar_arquivo_${a.tipo}`,
+              displayName: a.titulo,
+            })),
+          } as any);
+
+          const flowResult = await executeFlowPackage(sessionId, flowPlan, (update) => {
+            const capId = `flow-${flowPlan[update.index]?.tipo}-${update.index}`;
+            if (update.status === 'gerando') {
+              onProgress?.({ type: 'flow:capability_started', capability_id: capId } as any);
+            } else if (update.status === 'concluido') {
+              onProgress?.({ type: 'flow:capability_completed', capability_id: capId } as any);
+            } else if (update.status === 'erro') {
+              onProgress?.({ type: 'flow:capability_error', capability_id: capId } as any);
+            }
+          });
+
+          for (const artifact of flowResult.artifacts) {
+            collectedItems.artifacts.push(artifact);
+          }
+          onProgress?.({ type: 'flow:completed' } as any);
+        }
+      } catch (flowError) {
+        console.warn('⚠️ [Orchestrator] Ponto Flow falhou (não-crítico):', flowError);
+      }
+    }
 
     console.log('🏁 [Orchestrator] Execução completa, gerando resposta final...');
     
