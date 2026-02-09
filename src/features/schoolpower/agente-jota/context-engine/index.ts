@@ -49,3 +49,11 @@ export {
   type IntentType,
   type ClassifiedIntent,
 } from './intent-classifier';
+
+export {
+  analyzeDeepIntent,
+  formatDeepIntentForPlanner,
+  type DeepIntentResult,
+  type DeepIntentEntities,
+  type CronogramaInfo,
+} from './deep-intent-analyzer';

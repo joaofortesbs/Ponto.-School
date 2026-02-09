@@ -38,7 +38,9 @@ import {
   classifyIntent,
   shouldCreatePlan,
   shouldRespondDirectly,
+  analyzeDeepIntent,
   type ConversationTurn,
+  type DeepIntentResult,
 } from './context-engine';
 
 const memoryManagers: Map<string, MemoryManager> = new Map();
@@ -172,7 +174,10 @@ export async function processUserPrompt(
   const intent = classifyIntent(userPrompt);
   console.log(`🧠 [Orchestrator] Intent: ${intent.type} (${(intent.confidence * 100).toFixed(0)}%) — ${intent.reasoning}`);
 
-  if (shouldRespondDirectly(intent)) {
+  const deepIntent = analyzeDeepIntent(userPrompt);
+  console.log(`🔬 [Orchestrator] DeepIntent: modo=${deepIntent.modo}, tipo=${deepIntent.tipo_entrega}, complexidade=${deepIntent.complexidade}, temas=[${deepIntent.entities.temas.join(',')}]`);
+
+  if (shouldRespondDirectly(intent) && deepIntent.modo === 'CONVERSACIONAL') {
     console.log('💬 [Orchestrator] Modo conversacional — respondendo sem criar plano');
 
     const existingSession = getSession(sessionId);
@@ -214,8 +219,16 @@ export async function processUserPrompt(
     timestamp: Date.now(),
   });
 
+  const deepIntentSummary = [
+    deepIntent.entities.componente && `componente: ${deepIntent.entities.componente}`,
+    deepIntent.entities.serie && `série: ${deepIntent.entities.serie}`,
+    deepIntent.entities.temas.length > 0 && `temas: ${deepIntent.entities.temas.join(', ')}`,
+    deepIntent.entities.cronograma && `cronograma: ${deepIntent.entities.cronograma.tipo}`,
+    deepIntent.entities.quantidade_atividades && `quantidade: ${deepIntent.entities.quantidade_atividades}`,
+  ].filter(Boolean).join(' | ');
+
   addLedgerFact(sessionId, {
-    fact: `Professor pediu: "${userPrompt.substring(0, 150)}" [intent: ${intent.type}]`,
+    fact: `Professor pediu: "${userPrompt.substring(0, 150)}" [intent: ${intent.type}, modo: ${deepIntent.modo}, tipo: ${deepIntent.tipo_entrega}${deepIntentSummary ? ` — ${deepIntentSummary}` : ''}]`,
     category: 'context',
   });
 
@@ -226,6 +239,7 @@ export async function processUserPrompt(
       workingMemory: contextForPlanner,
       userId,
       sessionId,
+      deepIntent,
     });
 
     await memory.savePlan(plan);

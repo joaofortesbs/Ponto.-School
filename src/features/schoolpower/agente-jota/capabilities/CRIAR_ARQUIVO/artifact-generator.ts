@@ -5,6 +5,8 @@ import type { ArtifactData, ArtifactSection, ArtifactType, ArtifactTypeConfig } 
 import { ARTIFACT_TYPE_CONFIGS } from './types';
 import { routeActivityRequest, isTextActivity, getPromptForRoute } from './text-activities';
 import type { TextActivityRouterResult } from './text-activities';
+import { analyzeDeepIntent } from '../../context-engine/deep-intent-analyzer';
+import { selectGoldExamples, formatExamplesForPrompt } from '../../prompts/gold-standard-library';
 
 function generateArtifactId(): string {
   return `artifact-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
@@ -247,20 +249,38 @@ export async function generateArtifact(
   
   let prompt: string;
   
+  let goldExamplesSection = '';
+  try {
+    const deepIntent = analyzeDeepIntent(userRequest);
+    const goldExamples = selectGoldExamples(
+      deepIntent.entities.componente,
+      deepIntent.entities.serie,
+      tipoNormalized === 'atividade_textual' ? 'prova' : null,
+      deepIntent.entities.temas,
+      2
+    );
+    if (goldExamples.length > 0) {
+      goldExamplesSection = '\n\n' + formatExamplesForPrompt(goldExamples) + '\n\n';
+      console.log(`📄 [ArtifactGenerator] ${goldExamples.length} exemplos Gold Standard injetados (${goldExamples.map(e => e.id).join(', ')})`);
+    }
+  } catch (e) {
+    console.warn('⚠️ [ArtifactGenerator] Erro ao selecionar Gold Standard examples (não-crítico):', e);
+  }
+
   if (useTextActivityPrompt && routerResult) {
     const textPrompt = getPromptForRoute(routerResult, userRequest, sanitizedContext);
     if (textPrompt) {
-      prompt = textPrompt;
+      prompt = textPrompt + goldExamplesSection;
       console.log(`📄 [ArtifactGenerator] Usando prompt especializado do template: ${routerResult.templateId}`);
     } else {
       prompt = config.promptTemplate
         .replace('{contexto}', sanitizedContext)
-        .replace('{solicitacao}', userRequest);
+        .replace('{solicitacao}', userRequest) + goldExamplesSection;
     }
   } else {
     prompt = config.promptTemplate
       .replace('{contexto}', sanitizedContext)
-      .replace('{solicitacao}', userRequest);
+      .replace('{solicitacao}', userRequest) + goldExamplesSection;
   }
   
   try {
