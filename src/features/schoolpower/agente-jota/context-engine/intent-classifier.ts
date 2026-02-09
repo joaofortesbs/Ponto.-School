@@ -52,6 +52,18 @@ const EXECUTE_PATTERNS = [
   /\brelat[oó]rio\b/i,
 ];
 
+const SCHOOL_CONTEXT_EXECUTE_PATTERNS = [
+  /(?:preciso|quero|vou|tenho que)\s+(?:falar|trabalhar|ensinar|abordar)\s+(?:sobre|com)/i,
+  /(?:meus?\s+)?alunos?\b/i,
+  /\d+[ºªo]?\s*(?:ano|serie|classe)\b/i,
+  /(?:turma|classe)\s+\w/i,
+  /(?:ensino\s+)?(?:fundamental|medio)\b/i,
+  /(?:segunda|terca|quarta|quinta|sexta)[\s-]+(?:a|ate)\s+(?:sexta|segunda)/i,
+  /(?:semana|mes|bimestre|trimestre)\s+(?:de|sobre|com|toda)/i,
+  /\d+\s*(?:aula|aulas)\b/i,
+  /(?:aula\s+de\s+)?amanh[ãa]\b/i,
+];
+
 const CHAT_PATTERNS = [
   /^obrigad/i,
   /^valeu/i,
@@ -142,6 +154,19 @@ export function classifyIntent(message: string): ClassifiedIntent {
     if (pattern.test(trimmed)) scores.execute += 2;
   }
 
+  let schoolContextHits = 0;
+  for (const pattern of SCHOOL_CONTEXT_EXECUTE_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      schoolContextHits++;
+      scores.execute += 3;
+    }
+  }
+
+  if (schoolContextHits >= 2) {
+    scores.execute += 5;
+    scores.chat = Math.max(0, scores.chat - 4);
+  }
+
   for (const pattern of CHAT_PATTERNS) {
     if (pattern.test(trimmed)) scores.chat += 2;
   }
@@ -162,7 +187,7 @@ export function classifyIntent(message: string): ClassifiedIntent {
     scores.execute += 1;
   }
 
-  if (trimmed.endsWith('?') && scores.execute < 4) {
+  if (trimmed.endsWith('?') && scores.execute < 4 && schoolContextHits === 0) {
     scores.chat += 2;
     scores.query += 1;
   }

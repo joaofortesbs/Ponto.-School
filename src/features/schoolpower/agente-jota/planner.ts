@@ -58,6 +58,13 @@ export async function createExecutionPlan(
   try {
     const parsed = parseAIPlanResponse(result.data);
     
+    if (parsed.intencao_desconstruida) {
+      console.log('🎯 [Planner] Intenção Desconstruída:', JSON.stringify(parsed.intencao_desconstruida, null, 2));
+      console.log(`🎯 [Planner] MODO: ${parsed.intencao_desconstruida.modo} | QUEM: ${parsed.intencao_desconstruida.quem} | TEMAS: ${parsed.intencao_desconstruida.temas?.join(', ') || 'nenhum'}`);
+    } else {
+      console.warn('⚠️ [Planner] Resposta da IA não incluiu intencao_desconstruida — usando fallback de detecção');
+    }
+    
     console.log('🔍 [Planner] Validando capabilities do plano...');
     const validation = validatePlanCapabilities(parsed);
     
@@ -304,7 +311,17 @@ interface ParsedEtapa {
   capabilities?: ParsedCapability[];
 }
 
+interface IntencaoDesconstruida {
+  quem: string;
+  o_que: string;
+  temas: string[];
+  quando: string;
+  quanto: string;
+  modo: 'EXECUTIVO' | 'INFORMATIVO';
+}
+
 interface ParsedPlan {
+  intencao_desconstruida?: IntencaoDesconstruida;
   objetivo: string;
   etapas: ParsedEtapa[];
 }
@@ -377,6 +394,23 @@ function detectIntentForFallback(userPrompt: string): 'criar_atividades' | 'ativ
   
   const isGeneralActivityRequest = generalActivityKeywords.some(kw => normalized.includes(kw));
   if (isGeneralActivityRequest) return 'criar_atividades';
+  
+  const schoolContextPatterns = [
+    /(?:preciso|quero|vou|tenho que)\s+(?:falar|trabalhar|ensinar|abordar)\s+(?:sobre|com|o tema)\s+.+(?:aluno|turma|ano|serie|classe)/i,
+    /(?:aluno|turma|ano|serie|classe).+(?:preciso|quero|vou|tenho que)\s+(?:falar|trabalhar|ensinar|abordar)/i,
+    /(?:me\s+)?ajud(?:a|e)\s+(?:com\s+)?(?:a\s+)?(?:aula|semana|planejamento)/i,
+    /(?:aula|aulas)\s+(?:de|sobre)\s+.+(?:para|no|na|do|da)\s+(?:\d|ensino)/i,
+    /(?:para|no|na|do|da)\s+(?:\d+[ºªo]?\s*(?:ano|serie|classe)).+(?:sobre|de)\s+/i,
+    /(?:sobre|de)\s+.+(?:para|no|na|do|da)\s+(?:\d+[ºªo]?\s*(?:ano|serie|classe))/i,
+    /(?:segunda|terca|quarta|quinta|sexta|semana).+(?:aula|atividade|tema)/i,
+    /(?:\d+)\s*(?:aula|aulas)\s+(?:sobre|de|na|no)/i,
+  ];
+  
+  const hasSchoolContext = schoolContextPatterns.some(pattern => pattern.test(normalized));
+  if (hasSchoolContext) {
+    console.log('🎯 [Planner-Fallback] Detectado contexto escolar com temas — interpretando como criação de atividades (anti-literalismo)');
+    return 'criar_atividades';
+  }
   
   return 'texto_livre';
 }
