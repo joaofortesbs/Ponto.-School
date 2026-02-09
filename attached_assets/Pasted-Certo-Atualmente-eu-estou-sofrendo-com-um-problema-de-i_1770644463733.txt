@@ -1,0 +1,13 @@
+Certo. Atualmente eu estou sofrendo com um problema de inteligencia da IA Jota, que é o chat Agent que gera todos os conteúdos para os professores! O principal problema é as instruções para a IA ficar esperta e ágil para os casos de uso do dia a dia dos professores! A IA precisa entender que o objetivo dela é entender os objetivos do professor (Usuário) e gerar um conteúdo para ele, para ajudar e auxiliar no dia a dia escolar! A IA precisa conseguir prever o que o professor precisa, sem mesmo ele pedir, para que a nossa entrega seja surreal!
+
+Um exemplo dos erros que estão acontecendo atualmente é que a IA ainda é muito literal em alguns casos, como por exemplo:
+
+-> Se o usuário manda no chat: "Preciso criar todas as atividades para a minha semana de aula, de segunda a sexta! Preciso falar sobre os tópicos: -> Funções quadraticas -> Funções do primeiro e segundo grau Eu tenho 5 aulas na turma do segunda ano A!"
+
+-> O Jota/IA ainda não consegue entender que o professor precisa criar atividades sobre os temas que ele pediu, para a turma que ele pediu! Ela ainda entende que o professor quer atividades de "como aprender a criar atividades" entende?
+
+Eu quero saber como eu posso deixar a IA mais inteligente? Como se ela fosse treinada com diversos dados de casos de uso de professores, treinada com a rotina real de cada um deles! Treinada com diversas atividades que já foram feitas por eles, para que as atividades sejam super criativas entende?
+
+Precisamos entender como as grandes empresas de IA treinam seus modelos com informações, e precisamos entender como são as instruções que grandes empresas de agentes como a Manus IA 1.6 Max, Genspark Agent IA, Kimi Agent, Kimi Agent Swarm, Blackbox, DeepAgent IA, Replit Agente V3, ChatGPT Agent, Perplexity Agent Pro, e assim por diante! 
+
+Precisamos entender também como os nossos concorrentes da Ponto. School conseguem criar conteúdos tão bons, divertidos, criativos, e que realmente engajam e funcionam? Precisamos entender perfeitamente aonde está o segredo dessas grandes empresas para se auto-nutrirem? Porque a gente também precisa que a IA fique melhor a cada uso do chat, ainda mais inteligente e preparada!
