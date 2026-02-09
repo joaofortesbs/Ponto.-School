@@ -7,7 +7,8 @@ export type ArtifactType =
   | 'mensagem_pais'
   | 'mensagem_alunos'
   | 'relatorio_coordenacao'
-  | 'documento_livre';
+  | 'documento_livre'
+  | 'atividade_textual';
 
 export interface ArtifactSection {
   id: string;
@@ -368,5 +369,14 @@ REGRAS TÉCNICAS:
 - NÃO retorne JSON, apenas texto com headers markdown
 - NÃO inclua metadados, tags ou informações técnicas
 - O texto deve ser pronto para uso imediato pelo professor`
+  },
+  atividade_textual: {
+    tipo: 'atividade_textual',
+    nome: 'Atividade em Texto',
+    descricao: 'Atividade pedagógica gerada em formato textual a partir de template especializado',
+    icone: '📝',
+    cor: '#8B5CF6',
+    secoesEsperadas: [],
+    promptTemplate: `{dynamic_prompt}`
   }
 };

@@ -332,21 +332,53 @@ function parseAIPlanResponse(responseText: string): ParsedPlan {
  * Se parece ser sobre criação de atividades, usa pipeline completo.
  * Caso contrário, usa apenas criar_arquivo.
  */
-function detectIntentForFallback(userPrompt: string): 'criar_atividades' | 'texto_livre' {
+function detectIntentForFallback(userPrompt: string): 'criar_atividades' | 'atividade_textual' | 'texto_livre' {
   const normalized = userPrompt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   
-  const activityKeywords = [
-    'atividade', 'atividades', 'exercicio', 'exercicios', 'quiz', 'prova',
-    'avaliacao', 'criar atividade', 'crie atividade', 'monte atividade',
-    'crie uma lista', 'lista de exercicio', 'lista de atividade',
-    'flash card', 'flashcard', 'caca-palavra', 'cruzadinha',
-    'jogo educativo', 'game educativo', 'dinamica', 'interativ',
-    'crie um quiz', 'crie uma prova', 'crie exercicio',
+  const interactiveKeywords = [
+    'quiz', 'flash card', 'flashcard', 'lista de exercicio',
+    'lista de atividade', 'crie um quiz', 'exercicio interativo',
   ];
   
-  const isActivityRequest = activityKeywords.some(kw => normalized.includes(kw));
+  const isInteractiveRequest = interactiveKeywords.some(kw => normalized.includes(kw));
+  if (isInteractiveRequest) return 'criar_atividades';
   
-  return isActivityRequest ? 'criar_atividades' : 'texto_livre';
+  const textActivityKeywords = [
+    'prova', 'simulado', 'avaliacao', 'caca-palavra', 'caca palavras',
+    'cruzadinha', 'palavras cruzadas', 'bingo', 'rubrica',
+    'mapa mental', 'mapa conceitual', 'infografico',
+    'apostila', 'guia de estudo', 'gabarito',
+    'redacao', 'interpretacao de texto', 'resenha',
+    'plano de unidade', 'planejamento anual', 'pbl', 'roteiro de projeto',
+    'newsletter', 'boletim comentado', 'relatorio individual',
+    'material adaptado', 'choice board', 'plano individualizado',
+    'exit ticket', 'icebreaker', 'acolhimento', 'estudo de caso',
+    'debate estruturado', 'vocabulario', 'glossario',
+    'verdadeiro ou falso', 'v ou f', 'preencher lacunas',
+    'exercicio de associacao', 'exercicio de ordenacao',
+    'questoes dissertativas', 'teste cloze',
+    'show do milhao', 'jogo de perguntas', 'gincana',
+    'convite', 'comunicado', 'cronograma de estudos',
+    'organizador grafico', 'quadro comparativo',
+    'diario reflexivo', 'prompt de escrita',
+    'crie uma prova', 'faca uma prova', 'monte uma prova',
+    'crie um simulado', 'faca um simulado',
+    'multipla escolha', 'crie exercicio',
+  ];
+  
+  const isTextActivityRequest = textActivityKeywords.some(kw => normalized.includes(kw));
+  if (isTextActivityRequest) return 'atividade_textual';
+
+  const generalActivityKeywords = [
+    'atividade', 'atividades', 'exercicio', 'exercicios',
+    'criar atividade', 'crie atividade', 'monte atividade',
+    'jogo educativo', 'game educativo', 'dinamica', 'interativ',
+  ];
+  
+  const isGeneralActivityRequest = generalActivityKeywords.some(kw => normalized.includes(kw));
+  if (isGeneralActivityRequest) return 'criar_atividades';
+  
+  return 'texto_livre';
 }
 
 function createFallbackPlan(userPrompt: string): ExecutionPlan {
@@ -374,6 +406,36 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
               displayName: 'Vou criar o conteúdo que você precisa',
               categoria: 'CRIAR',
               parametros: { tipo_artefato: 'documento_livre', solicitacao: userPrompt, contexto: userPrompt },
+              status: 'pending',
+              ordem: 1,
+            },
+          ],
+        },
+      ],
+      status: 'em_execucao',
+      createdAt: timestamp,
+    };
+  }
+
+  if (intent === 'atividade_textual') {
+    return {
+      planId: `plan-fallback-${timestamp}`,
+      objetivo: `Criar atividade pedagógica personalizada`,
+      etapas: [
+        {
+          ordem: 1,
+          titulo: 'Criar atividade pedagógica',
+          descricao: 'Vou elaborar a atividade usando um template especializado',
+          funcao: 'criar_arquivo',
+          parametros: { tipo_artefato: 'atividade_textual', solicitacao: userPrompt, contexto: userPrompt },
+          status: 'pendente',
+          capabilities: [
+            {
+              id: `cap-0-0-${timestamp}`,
+              nome: 'criar_arquivo',
+              displayName: 'Vou criar a atividade que você precisa',
+              categoria: 'CRIAR',
+              parametros: { tipo_artefato: 'atividade_textual', solicitacao: userPrompt, contexto: userPrompt },
               status: 'pending',
               ordem: 1,
             },

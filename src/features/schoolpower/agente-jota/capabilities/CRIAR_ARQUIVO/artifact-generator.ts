@@ -3,6 +3,8 @@ import { getContextManager } from '../../context/context-manager';
 import { sanitizeContextForPrompt } from '../../context/output-sanitizer';
 import type { ArtifactData, ArtifactSection, ArtifactType, ArtifactTypeConfig } from './types';
 import { ARTIFACT_TYPE_CONFIGS } from './types';
+import { routeActivityRequest, isTextActivity, getPromptForRoute } from './text-activities';
+import type { TextActivityRouterResult } from './text-activities';
 
 function generateArtifactId(): string {
   return `artifact-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
@@ -52,6 +54,8 @@ function normalizeArtifactType(rawType: string): ArtifactType {
     'texto livre': 'documento_livre',
     'texto': 'documento_livre',
     'livre': 'documento_livre',
+    'atividade_textual': 'atividade_textual',
+    'atividade textual': 'atividade_textual',
   };
 
   if (mappings[lower]) return mappings[lower];
@@ -132,7 +136,7 @@ function parseMarkdownSections(rawText: string, config: ArtifactTypeConfig): Art
   const sections: ArtifactSection[] = [];
   
   let textToParse = rawText;
-  if (config.tipo === 'documento_livre') {
+  if (config.tipo === 'documento_livre' || config.tipo === 'atividade_textual') {
     textToParse = rawText.replace(/^#\s+.+$/m, '').trim();
   }
   
@@ -212,7 +216,26 @@ export async function generateArtifact(
   const rawContext = contextManager.gerarContextoParaChamada('final');
   const sanitizedContext = sanitizeContextForPrompt(rawContext);
   
-  const tipoNormalized = tipoForce ? normalizeArtifactType(tipoForce) : detectBestArtifactType(sanitizedContext, solicitacao);
+  const userRequest = solicitacao || contexto.inputOriginal?.texto || '';
+
+  let routerResult: TextActivityRouterResult | null = null;
+  let useTextActivityPrompt = false;
+
+  if (tipoForce === 'atividade_textual' || (!tipoForce && userRequest)) {
+    try {
+      routerResult = await routeActivityRequest(userRequest, sanitizedContext);
+      if (isTextActivity(routerResult)) {
+        useTextActivityPrompt = true;
+        console.log(`📄 [ArtifactGenerator] 🎯 Roteamento: atividade textual detectada → ${routerResult.templateId} (origem: ${routerResult.origem})`);
+      }
+    } catch (error) {
+      console.warn(`⚠️ [ArtifactGenerator] Erro no text-activity-router, usando fluxo padrão:`, error);
+    }
+  }
+
+  const tipoNormalized = useTextActivityPrompt 
+    ? 'atividade_textual' as ArtifactType
+    : (tipoForce ? normalizeArtifactType(tipoForce) : detectBestArtifactType(sanitizedContext, solicitacao));
   const config = ARTIFACT_TYPE_CONFIGS[tipoNormalized];
   
   if (!config) {
@@ -220,12 +243,25 @@ export async function generateArtifact(
     return null;
   }
   
-  console.log(`📄 [ArtifactGenerator] Tipo detectado: ${tipoNormalized} (${config.nome})${tipoForce ? ` [original: ${tipoForce}]` : ''}`);
+  console.log(`📄 [ArtifactGenerator] Tipo detectado: ${tipoNormalized} (${config.nome})${tipoForce ? ` [original: ${tipoForce}]` : ''}${useTextActivityPrompt ? ` [template: ${routerResult?.templateId}]` : ''}`);
   
-  const userRequest = solicitacao || contexto.inputOriginal?.texto || '';
-  const prompt = config.promptTemplate
-    .replace('{contexto}', sanitizedContext)
-    .replace('{solicitacao}', userRequest);
+  let prompt: string;
+  
+  if (useTextActivityPrompt && routerResult) {
+    const textPrompt = getPromptForRoute(routerResult, userRequest, sanitizedContext);
+    if (textPrompt) {
+      prompt = textPrompt;
+      console.log(`📄 [ArtifactGenerator] Usando prompt especializado do template: ${routerResult.templateId}`);
+    } else {
+      prompt = config.promptTemplate
+        .replace('{contexto}', sanitizedContext)
+        .replace('{solicitacao}', userRequest);
+    }
+  } else {
+    prompt = config.promptTemplate
+      .replace('{contexto}', sanitizedContext)
+      .replace('{solicitacao}', userRequest);
+  }
   
   try {
     const result = await executeWithCascadeFallback(prompt, {
@@ -243,10 +279,12 @@ export async function generateArtifact(
     const tempoGeracao = Date.now() - startTime;
     
     let titulo = config.nome;
-    if (tipoNormalized === 'documento_livre') {
+    if (tipoNormalized === 'documento_livre' || tipoNormalized === 'atividade_textual') {
       const aiTitle = extractTitleFromMarkdown(rawText);
       if (aiTitle) {
         titulo = aiTitle;
+      } else if (useTextActivityPrompt && routerResult?.template) {
+        titulo = routerResult.template.nome;
       } else if (userRequest.length > 0) {
         titulo = userRequest.length > 60 ? userRequest.substring(0, 57) + '...' : userRequest;
       }
