@@ -29,7 +29,10 @@ Gere uma RESPOSTA FINAL no estilo "entrega de pacote completo" — como um assis
 
 MARCADORES DISPONÍVEIS (use-os no meio do texto):
 - [[ATIVIDADES]] — Mostra um card interativo com todas as atividades criadas
-- [[ARQUIVO:titulo exato do arquivo]] — Mostra um card interativo de um arquivo/documento específico
+- [[ARQUIVO:titulo exato do arquivo]] — Mostra um card interativo de um arquivo/documento específico (use o título EXATO listado em ITENS CRIADOS)
+
+REGRA IMPORTANTE SOBRE DOCUMENTOS LIVRES:
+Quando um documento do tipo "Documento" ou "documento_livre" foi criado, use o título EXATO que aparece na lista de ITENS CRIADOS para o marcador [[ARQUIVO:titulo]]. Documentos livres têm títulos customizados definidos pela IA, então copie o título exatamente como está listado.
 
 ESTRUTURA NARRATIVA OBRIGATÓRIA (siga esta sequência quando houver atividades + documentos):
 
@@ -83,6 +86,13 @@ EXEMPLO SIMPLES (quando há apenas atividades, sem documentos):
 [[ATIVIDADES]]
 
 Você pode editar qualquer atividade ou me pedir ajuda para criar mais. O que acha?"
+
+EXEMPLO DOCUMENTO LIVRE (quando só há documento, sem atividades):
+"Pronto! Preparei um documento completo sobre o tema que você pediu, com toda a fundamentação e organização que você precisa.
+
+[[ARQUIVO:Metodologias Ativas na Educação Básica]]
+
+Se quiser que eu aprofunde algum ponto ou crie atividades baseadas neste conteúdo, é só pedir!"
 
 RETORNE APENAS A RESPOSTA FINAL COM OS MARCADORES, sem formatação extra.
 `.trim();

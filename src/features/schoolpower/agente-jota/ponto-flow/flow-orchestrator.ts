@@ -1,6 +1,13 @@
 import type { ArtifactType, ArtifactData } from '../capabilities/CRIAR_ARQUIVO/types';
 import { generateArtifact } from '../capabilities/CRIAR_ARQUIVO/artifact-generator';
 
+export interface FlowDocumentoLivrePlan {
+  titulo: string;
+  solicitacao: string;
+  prioridade: 'obrigatorio' | 'recomendado' | 'opcional';
+  razao: string;
+}
+
 export interface FlowPackage {
   artifacts: ArtifactData[];
   flowType: FlowType;

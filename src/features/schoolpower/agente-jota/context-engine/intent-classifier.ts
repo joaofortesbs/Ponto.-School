@@ -41,6 +41,15 @@ const EXECUTE_PATTERNS = [
   /\bsequên?cia\s+did[áa]tica/i,
   /\bproduz/i,
   /\bdesenvolver?\b/i,
+  /\bescreva?\b/i,
+  /\bredig[ae]/i,
+  /\bdocumento\b/i,
+  /\btexto\s+sobre\b/i,
+  /\bexplica[çc][ãa]o\s+(completa|detalhada|sobre)\b/i,
+  /\bartigo\b/i,
+  /\bapostila\b/i,
+  /\bdossi[êe]\b/i,
+  /\brelat[oó]rio\b/i,
 ];
 
 const CHAT_PATTERNS = [

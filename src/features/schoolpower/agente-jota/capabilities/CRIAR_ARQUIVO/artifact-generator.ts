@@ -46,6 +46,12 @@ function normalizeArtifactType(rawType: string): ArtifactType {
     'relatorio coordenacao': 'relatorio_coordenacao',
     'relatório para coordenadores': 'relatorio_coordenacao',
     'relatorio coordenadores': 'relatorio_coordenacao',
+    'documento_livre': 'documento_livre',
+    'documento livre': 'documento_livre',
+    'documento': 'documento_livre',
+    'texto livre': 'documento_livre',
+    'texto': 'documento_livre',
+    'livre': 'documento_livre',
   };
 
   if (mappings[lower]) return mappings[lower];
@@ -55,7 +61,7 @@ function normalizeArtifactType(rawType: string): ArtifactType {
   }
 
   if (lower.includes('explicação') || lower.includes('explicar') || lower.includes('explicativo')) {
-    return 'dossie_pedagogico';
+    return 'documento_livre';
   }
   if (lower.includes('plano') || lower.includes('sequência') || lower.includes('sequencia')) {
     return 'roteiro_aula';
@@ -76,7 +82,7 @@ function normalizeArtifactType(rawType: string): ArtifactType {
     return 'relatorio_coordenacao';
   }
 
-  return 'dossie_pedagogico';
+  return 'documento_livre';
 }
 
 function detectBestArtifactType(contexto: string): ArtifactType {
@@ -99,16 +105,22 @@ function detectBestArtifactType(contexto: string): ArtifactType {
     return 'dossie_pedagogico';
   }
   
-  return 'resumo_executivo';
+  return 'documento_livre';
 }
 
 function parseMarkdownSections(rawText: string, config: ArtifactTypeConfig): ArtifactSection[] {
   const sections: ArtifactSection[] = [];
+  
+  let textToParse = rawText;
+  if (config.tipo === 'documento_livre') {
+    textToParse = rawText.replace(/^#\s+.+$/m, '').trim();
+  }
+  
   const headerRegex = /^##\s+(.+)$/gm;
   const matches: { titulo: string; startIndex: number }[] = [];
   
   let match;
-  while ((match = headerRegex.exec(rawText)) !== null) {
+  while ((match = headerRegex.exec(textToParse)) !== null) {
     matches.push({
       titulo: match[1].trim(),
       startIndex: match.index + match[0].length,
@@ -119,7 +131,7 @@ function parseMarkdownSections(rawText: string, config: ArtifactTypeConfig): Art
     sections.push({
       id: `section-0`,
       titulo: config.secoesEsperadas[0] || 'Conteúdo',
-      conteudo: rawText.trim(),
+      conteudo: textToParse.trim(),
       ordem: 0,
     });
     return sections;
@@ -127,8 +139,8 @@ function parseMarkdownSections(rawText: string, config: ArtifactTypeConfig): Art
   
   for (let i = 0; i < matches.length; i++) {
     const start = matches[i].startIndex;
-    const end = i + 1 < matches.length ? rawText.lastIndexOf('##', matches[i + 1].startIndex) : rawText.length;
-    const conteudo = rawText.substring(start, end).trim();
+    const end = i + 1 < matches.length ? textToParse.lastIndexOf('##', matches[i + 1].startIndex) : textToParse.length;
+    const conteudo = textToParse.substring(start, end).trim();
     
     sections.push({
       id: `section-${i}`,
@@ -152,9 +164,18 @@ function generatePreview(sections: ArtifactSection[]): string {
   return (sentences.slice(0, 2).join('. ') + '.').substring(0, 200);
 }
 
+function extractTitleFromMarkdown(rawText: string): string | null {
+  const h1Match = rawText.match(/^#\s+(.+)$/m);
+  if (h1Match) return h1Match[1].trim();
+  const h2Match = rawText.match(/^##\s+(.+)$/m);
+  if (h2Match) return h2Match[1].trim();
+  return null;
+}
+
 export async function generateArtifact(
   sessionId: string,
-  tipoForce?: string
+  tipoForce?: string,
+  solicitacao?: string
 ): Promise<ArtifactData | null> {
   const startTime = Date.now();
   
@@ -181,7 +202,10 @@ export async function generateArtifact(
   
   console.log(`📄 [ArtifactGenerator] Tipo detectado: ${tipoNormalized} (${config.nome})${tipoForce ? ` [original: ${tipoForce}]` : ''}`);
   
-  const prompt = config.promptTemplate.replace('{contexto}', sanitizedContext);
+  const userRequest = solicitacao || contexto.inputOriginal?.texto || '';
+  const prompt = config.promptTemplate
+    .replace('{contexto}', sanitizedContext)
+    .replace('{solicitacao}', userRequest);
   
   try {
     const result = await executeWithCascadeFallback(prompt, {
@@ -198,11 +222,21 @@ export async function generateArtifact(
     const totalWords = countWords(rawText);
     const tempoGeracao = Date.now() - startTime;
     
+    let titulo = config.nome;
+    if (tipoNormalized === 'documento_livre') {
+      const aiTitle = extractTitleFromMarkdown(rawText);
+      if (aiTitle) {
+        titulo = aiTitle;
+      } else if (userRequest.length > 0) {
+        titulo = userRequest.length > 60 ? userRequest.substring(0, 57) + '...' : userRequest;
+      }
+    }
+    
     const artifact: ArtifactData = {
       id: generateArtifactId(),
       metadata: {
         tipo: tipoNormalized,
-        titulo: config.nome,
+        titulo,
         subtitulo: contexto.objetivoGeral || contexto.inputOriginal.texto.substring(0, 80),
         geradoEm: Date.now(),
         sessaoId: sessionId,
@@ -284,7 +318,6 @@ export function shouldGenerateArtifact(sessionId: string): boolean {
   const contexto = contextManager.obterContexto();
   
   if (!contexto) return false;
-  if (contexto.resumoProgressivo.etapasCompletas === 0) return false;
   
   return true;
 }

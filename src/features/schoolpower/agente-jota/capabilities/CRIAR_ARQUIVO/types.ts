@@ -6,7 +6,8 @@ export type ArtifactType =
   | 'guia_aplicacao'
   | 'mensagem_pais'
   | 'mensagem_alunos'
-  | 'relatorio_coordenacao';
+  | 'relatorio_coordenacao'
+  | 'documento_livre';
 
 export interface ArtifactSection {
   id: string;
@@ -328,5 +329,44 @@ REGRAS:
 - Demonstre intencionalidade pedagógica em cada escolha
 - O documento deve transmitir competência e planejamento
 - NÃO retorne JSON, apenas texto com headers markdown ##`
+  },
+  documento_livre: {
+    tipo: 'documento_livre',
+    nome: 'Documento',
+    descricao: 'Documento livre com estrutura customizada definida pela IA',
+    icone: '📄',
+    cor: '#6366f1',
+    secoesEsperadas: [],
+    promptTemplate: `Você é o Jota, assistente pedagógico do Ponto School. O professor precisa de um DOCUMENTO/TEXTO estruturado.
+
+SOLICITAÇÃO DO PROFESSOR:
+{solicitacao}
+
+CONTEXTO DA SESSÃO (se disponível):
+{contexto}
+
+SUA TAREFA:
+Crie um documento completo, bem estruturado e profissional que atenda EXATAMENTE ao que o professor pediu.
+
+REGRAS DE ESTRUTURA:
+- Você tem LIBERDADE TOTAL para definir o título, subtítulo e as seções do documento
+- Crie quantas seções forem necessárias para cobrir o assunto adequadamente
+- Use headers markdown ## para cada seção (o sistema parseia automaticamente)
+- Comece com um título principal usando # (apenas um)
+- Cada seção deve ter conteúdo substancial (2-5 parágrafos)
+- Organize as seções numa ordem lógica e fluida
+
+REGRAS DE CONTEÚDO:
+- Escreva em português brasileiro fluente e profissional
+- Adapte o tom ao contexto (formal para coordenadores, acessível para professores, lúdico para alunos)
+- Seja detalhado e completo — o professor vai usar este documento como está
+- Inclua exemplos práticos quando relevante
+- Use listas, tópicos e formatação markdown para facilitar a leitura
+- O documento deve ser AUTOCONTIDO — qualquer pessoa que ler deve entender tudo sem contexto adicional
+
+REGRAS TÉCNICAS:
+- NÃO retorne JSON, apenas texto com headers markdown
+- NÃO inclua metadados, tags ou informações técnicas
+- O texto deve ser pronto para uso imediato pelo professor`
   }
 };

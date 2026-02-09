@@ -7,7 +7,8 @@ export async function criarArquivoV2(input: CapabilityInput): Promise<Capability
   const debugLog: DebugEntry[] = [];
 
   const sessionId = input.context.session_id || input.context.sessionId || input.execution_id;
-  const tipoForce = input.context.tipo_artefato as string | undefined;
+  const tipoForce = (input.context.tipo_artefato || input.context.tipo) as string | undefined;
+  const solicitacao = (input.context.solicitacao || input.context.tema || input.context.user_prompt || input.context.user_objective) as string | undefined;
 
   debugLog.push({
     timestamp: new Date().toISOString(),
@@ -49,7 +50,7 @@ export async function criarArquivoV2(input: CapabilityInput): Promise<Capability
   });
 
   try {
-    const artifact: ArtifactData | null = await generateArtifact(sessionId, tipoForce);
+    const artifact: ArtifactData | null = await generateArtifact(sessionId, tipoForce, solicitacao);
 
     if (!artifact) {
       debugLog.push({

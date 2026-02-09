@@ -26,8 +26,8 @@ The platform features a modern, glass-morphism inspired design with blur backgro
     - **ContentSyncService (Live Sync)**: In-memory event-driven singleton for real-time synchronization of AI-generated content.
     - **ActivityStorageContract**: Centralized module for managing all `localStorage` persistence of activity content.
     - **Activity Content Sync (DB Fallback)**: Prioritizes local sources for activity content, falling back to the database when necessary.
-    - **Agentic Artifacts System (CRIAR_ARQUIVO) v3.0**: Generates 8 types of pedagogical artifacts via LLM.
-    - **Ponto. Flow**: Automatic Package Delivery System (Layer 6 in orchestrator) that generates complementary documents based on activity count and user context. Includes an `ArtifactViewModal` for displaying artifacts with advanced UI features.
+    - **Agentic Artifacts System (CRIAR_ARQUIVO) v4.0**: Generates 9 types of pedagogical artifacts via LLM, including `documento_livre` — a free-form document type where the AI autonomously decides title, structure, and sections based on the user's request. No predefined section templates; the AI designs the document structure from scratch. Triggered by text/explanation/document requests. Uses `{solicitacao}` placeholder in prompt template. Parser strips `# Title` line, extracts it as artifact title, and parses remaining `## Section` headers.
+    - **Ponto. Flow**: Automatic Package Delivery System (Layer 6 in orchestrator) that generates complementary documents based on activity count and user context. Includes an `ArtifactViewModal` for displaying artifacts with advanced UI features. Supports documento_livre for standalone document generation without prior activities.
     - **Text Version Modal (`Modal-Versao-Texto`)**: Replaces old content modals, leveraging the `ArtifactViewModal` interface for text-version activities.
     - **Centralized Overlay Config**: Shared configuration for all modal backdrops.
     - **Study Groups**: Real-time chat and member management.
