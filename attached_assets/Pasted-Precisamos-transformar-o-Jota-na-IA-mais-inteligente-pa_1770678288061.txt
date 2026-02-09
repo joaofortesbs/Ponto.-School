@@ -1,0 +1,58 @@
+Precisamos transformar o Jota na IA mais inteligente para a Educação e com ICP de professores, como se fosse um orquestrador de intenções usando ferramentas de dentro da base, que se auto nutre e de auto-inteligente continua!
+Certo. Atualmente eu estou sofrendo com um problema de inteligencia da IA Jota, que é o chat Agent que gera todos os conteúdos para os professores! O principal problema é as instruções para a IA ficar esperta e ágil para os casos de uso do dia a dia dos professores! A IA precisa entender que o objetivo dela é entender os objetivos do professor (Usuário) e gerar um conteúdo para ele, para ajudar e auxiliar no dia a dia escolar! A IA precisa conseguir prever o que o professor precisa, sem mesmo ele pedir, para que a nossa entrega seja surreal!
+Um exemplo dos erros que estão acontecendo atualmente é que a IA ainda é muito literal em alguns casos, como por exemplo:
+-> Se o usuário manda no chat: "Preciso criar todas as atividades para a minha semana de aula, de segunda a sexta! Preciso falar sobre os tópicos: -> Funções quadraticas -> Funções do primeiro e segundo grau Eu tenho 5 aulas na turma do segunda ano A!"
+-> O Jota/IA ainda não consegue entender que o professor precisa criar atividades sobre os temas que ele pediu, para a turma que ele pediu! Ela ainda entende que o professor quer atividades de "como aprender a criar atividades" entende?
+Eu quero saber como eu posso deixar a IA mais inteligente? Como se ela fosse treinada com diversos dados de casos de uso de professores, treinada com a rotina real de cada um deles! Treinada com diversas atividades que já foram feitas por eles, para que as atividades sejam super criativas entende?
+Precisamos entender como as grandes empresas de IA treinam seus modelos com informações, e precisamos entender como são as instruções que grandes empresas de agentes como a Manus IA 1.6 Max, Genspark Agent IA, Kimi Agent, Kimi Agent Swarm, Blackbox, DeepAgent IA, Replit Agente V3, ChatGPT Agent, Perplexity Agent Pro, e assim por diante!
+Precisamos entender também como os nossos concorrentes da Ponto. School conseguem criar conteúdos tão bons, divertidos, criativos, e que realmente engajam e funcionam? Precisamos entender perfeitamente aonde está o segredo dessas grandes empresas para se auto-nutrirem? Porque a gente também precisa que a IA fique melhor a cada uso do chat, ainda mais inteligente e preparada!
+* Concorrentes:
+    * Teachy - teachy.com.br
+    * Risely - https://risely.ai/
+    * Youlearn - https://www.youlearn.ai/
+    * Straia - https://www.straia.io/
+    * Alice - https://www.alice.tech/
+    * Eduaide - https://www.eduaide.ai/
+    * Ensinei - https://ensinei.com.br/
+    * Magic School - app.magicschool.ai
+    * Kira - https://www.kira-learning.com/
+    * Brisk Teaching - https://www.briskteaching.com/pt-br
+    * Edcafe AI - https://www.edcafe.ai/
+    * Monsha - https://monsha.ai/
+    * Brisk Teachig - app.briskteaching.com
+    * To - Teach - https://to-teach.ai/
+    * Eduaide - https://www.eduaide.ai/
+    * TPT - https://www.teacherspayteachers.com/
+    * Kajabi - https://kajabi.com/
+    * Teachable - https://www.teachable.com/
+  🧠 1. O Segredo das Gigantes: O "System 2 Thinking"
+Empresas como a Manus e a Kimi usam uma técnica chamada "Inference-Time Compute" (similar ao modelo o1 da OpenAI). Elas não respondem de imediato. Elas passam por um processo de:
+Desconstrução da Intenção: "O que o professor realmente quer?" (Ex: Ele não quer aprender a criar, ele quer as atividades prontas para 5 aulas).
+Mapeamento de Entidades: Identificar Turma (2º Ano A), Temas (Funções) e Cronograma (Segunda a Sexta).
+Simulação de Persona: "Se eu fosse um professor exausto no domingo à noite, o que me faria chorar de alegria agora?"
+🛠️ 2. Como "Treinar" o Jota sem gastar milhões em GPUs
+Você não precisa treinar um modelo do zero. Você precisa de uma Camada de Orquestração de Conhecimento (RAG + Few-Shot).
+A. Biblioteca de "Gold Standard" (Ouro Pedagógico)
+O segredo dos seus concorrentes é que eles têm uma base de dados de atividades reais que funcionam.
+A Solução: Crie uma pasta no seu sistema com 50 exemplos de "Atividades Perfeitas" (Quizzes criativos, Planos de Aula engajadores).
+A Implementação: Antes do Jota responder, o sistema faz uma busca rápida nessa biblioteca e diz à IA: "Aqui estão 3 exemplos de como atividades criativas sobre este tema devem ser estruturadas. Siga este padrão de criatividade."
+B. Instrução de "Iniciativa Autônoma" (O Fim do Literalismo)
+O erro do Jota hoje é a falta de um "Filtro de Intenção". Você deve atualizar o System Prompt dele com uma regra de ferro:
+"Se o professor mencionar um cronograma (ex: 'minha semana') e temas, sua resposta padrão NUNCA deve ser explicativa. Sua resposta deve ser EXECUTIVA. Você deve assumir o papel de Assistente de Operações e começar a gerar os materiais imediatamente."
+🚀 3. A Nova Arquitetura do Jota (O "Cérebro S-Tier")
+Para o Jota ficar mais inteligente a cada uso, precisamos implementar o Loop de Feedback Pedagógico:
+Memória de Estilo (Vibe Sync): O Jota deve salvar em um banco de dados (vetorial) as alterações que o professor faz. Se o professor sempre pede para "deixar mais engraçado", o Jota aprende que para aquele professor, o padrão é o humor.
+Agente Crítico (O Revisor): Antes de mostrar a resposta ao usuário, um segundo agente (invisível) lê o que o Jota escreveu e pergunta: "Isso é criativo o suficiente? Isso resolve a dor do tempo do professor? Se não, refaça."
+⚔️ 4. O Plano de Ação para o Lançamento
+Para resolver o erro do "literalismo" hoje mesmo, vamos implementar o "Protocolo de Intenção Executiva":
+Problema Atual
+Nova Lógica do Jota
+Literalismo: "Vou te ensinar a criar..."
+Execução: "Entendido. Vou gerar agora as 5 aulas da sua semana sobre Funções para o 2º Ano A."
+Falta de Criatividade: Atividades genéricas.
+Nutrição: O Jota acessa a "Biblioteca de Ouro" e usa ganchos do mundo real (ex: Funções aplicadas ao lucro de uma loja de games).
+Passividade: Espera o professor pedir cada detalhe.
+Proatividade: "Já criei as atividades e, como sei que você tem 5 aulas, já organizei o cronograma de segunda a sexta."
+O Conselho do Mentor:
+As grandes IAs não são inteligentes porque "sabem tudo", mas porque sabem o que o usuário espera. O segredo da Teachy é que eles limitaram o escopo para serem bons em uma coisa. O seu segredo será ser o Agente que entende o contexto humano.
+Você quer que eu escreva agora o novo "System Prompt de Raciocínio" para o Jota, focado em eliminar esse literalismo e aumentar a criatividade? Isso vai mudar o comportamento dele instantaneamente.
