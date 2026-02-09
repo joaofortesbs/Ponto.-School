@@ -396,7 +396,7 @@ function detectIntentForFallback(userPrompt: string): 'criar_atividades' | 'ativ
   if (isGeneralActivityRequest) return 'criar_atividades';
   
   const schoolContextPatterns = [
-    /(?:preciso|quero|vou|tenho que)\s+(?:falar|trabalhar|ensinar|abordar)\s+(?:sobre|com|o tema)\s+.+(?:aluno|turma|ano|serie|classe)/i,
+    /(?:preciso|quero|vou|tenho que)\s+(?:falar|trabalhar|ensinar|abordar)\s+.+(?:aluno|turma|ano|serie|classe)/i,
     /(?:aluno|turma|ano|serie|classe).+(?:preciso|quero|vou|tenho que)\s+(?:falar|trabalhar|ensinar|abordar)/i,
     /(?:me\s+)?ajud(?:a|e)\s+(?:com\s+)?(?:a\s+)?(?:aula|semana|planejamento)/i,
     /(?:aula|aulas)\s+(?:de|sobre)\s+.+(?:para|no|na|do|da)\s+(?:\d|ensino)/i,
@@ -404,6 +404,8 @@ function detectIntentForFallback(userPrompt: string): 'criar_atividades' | 'ativ
     /(?:sobre|de)\s+.+(?:para|no|na|do|da)\s+(?:\d+[ºªo]?\s*(?:ano|serie|classe))/i,
     /(?:segunda|terca|quarta|quinta|sexta|semana).+(?:aula|atividade|tema)/i,
     /(?:\d+)\s*(?:aula|aulas)\s+(?:sobre|de|na|no)/i,
+    /(?:trabalhar|ensinar|abordar|falar)\s+.+(?:com\s+(?:meus?\s+)?alunos|(?:na|com)\s+(?:minha\s+)?turma)/i,
+    /(?:meus?\s+)?alunos?\s+(?:do|da|de)\s+\d+/i,
   ];
   
   const hasSchoolContext = schoolContextPatterns.some(pattern => pattern.test(normalized));

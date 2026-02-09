@@ -7,6 +7,7 @@ Ponto. School is an AI-powered educational platform designed to provide personal
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+- **2026-02-09**: Anti-Literalism Architecture v2.0 — Major rewrite of Planning Prompt with 4-phase architecture: (1) Intent Deconstruction (QUEM/O_QUE/TEMAS/QUANDO/QUANTO/MODO), (2) Persona Simulation, (3) Anti-Literalism Iron Rule with few-shot examples, (4) Batch Creation support. Updated System Prompt with Executive Intent Protocol. Enhanced Intent Classifier with school-context patterns. Updated planner fallback with school-context regex detection. All changes ensure Jota creates materials instead of explaining how to create them.
 - **2026-02-09**: Migrated project to standard Replit environment. Database schema synced with Neon PostgreSQL. Both frontend (Vite on port 5000) and backend (Express on port 3001) workflows running successfully. Supabase migration still pending for auth, storage, and edge functions.
 
 ## System Architecture
