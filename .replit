@@ -5,8 +5,8 @@ run = "npm run dev"
 channel = "stable-25_05"
 
 [deployment]
-run = ["node", "./dist/index.cjs"]
-deploymentTarget = "autoscale"
+run = ["npm", "run", "start"]
+deploymentTarget = "vm"
 build = ["npm", "run", "build"]
 
 [[ports]]
