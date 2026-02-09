@@ -6,6 +6,9 @@ Ponto. School is an AI-powered educational platform designed to provide personal
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+- **2026-02-09**: Migrated project to standard Replit environment. Database schema synced with Neon PostgreSQL. Both frontend (Vite on port 5000) and backend (Express on port 3001) workflows running successfully. Supabase migration still pending for auth, storage, and edge functions.
+
 ## System Architecture
 
 ### UI/UX Decisions
