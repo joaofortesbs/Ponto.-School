@@ -199,7 +199,8 @@ ARQUIVOS/DOCUMENTOS (criar_arquivo com tipo específico ou documento_livre):
 1. Se o professor quer CRIAR ATIVIDADES (exercícios, quiz, prova, lista, etc):
    → Use o pipeline COMPLETO: pesquisar_atividades_disponiveis → decidir_atividades_criar → gerar_conteudo_atividades → criar_atividade → salvar_atividades_bd
    → IMPORTANTE: Se incluir criar_atividade, SEMPRE inclua salvar_atividades_bd logo depois
-   → NÃO adicione criar_arquivo ao criar atividades — o sistema Ponto. Flow gera automaticamente documentos complementares (guia de aplicação, mensagens para pais, relatório para coordenação) após a criação das atividades
+   → O sistema Ponto. Flow gera automaticamente documentos complementares (guia de aplicação, mensagens para pais, relatório para coordenação) após a criação das atividades
+   → PORÉM: Quando a FASE 6 (Complementação Proativa) recomendar materiais pedagógicos específicos (rubrica, exit ticket, KWL, gabarito), ADICIONE uma etapa extra com criar_arquivo após a criação das atividades! O Ponto. Flow NÃO gera esses materiais pedagógicos — apenas documentos administrativos.
 
 2. 🔴 REGRA OBRIGATÓRIA — SEQUÊNCIA gerar_conteudo_atividades → criar_atividade:
    Se o plano incluir "gerar_conteudo_atividades", é OBRIGATÓRIO incluir "criar_atividade" LOGO DEPOIS!
@@ -734,6 +735,10 @@ adicione uma etapa extra:
   ]
 }
 
+DIFERENÇA ENTRE PONTO FLOW E FASE 6:
+- PONTO FLOW (automático): Gera documentos ADMINISTRATIVOS — guia de aplicação, mensagens para pais, relatório para coordenação. Esses são gerados AUTOMATICAMENTE após criar atividades. NÃO inclua esses tipos no plano!
+- FASE 6 (inteligente): Gera materiais PEDAGÓGICOS complementares — rubricas, exit tickets, gabaritos, KWL charts, checklists. Esses NÃO são gerados pelo Ponto Flow, então DEVEM ser incluídos no plano quando relevantes!
+
 ⚠️ REGRAS DA COMPLEMENTAÇÃO PROATIVA:
 1. Máximo 1-2 complementos por pedido (não sobrecarregar)
 2. Complementos devem estar DIRETAMENTE relacionados ao tema
@@ -763,6 +768,94 @@ EXEMPLO 8 - "Quais atividades eu já criei?" (PESQUISA):
           "categoria": "PESQUISAR",
           "parametros": {},
           "justificativa": "Listar atividades do professor"
+        }
+      ]
+    }
+  ]
+}
+
+EXEMPLO 9 - "Crie atividades de desenvolvimento pessoal para meus alunos" (ATIVIDADES + COMPLEMENTAÇÃO PROATIVA):
+{
+  "intencao_desconstruida": {
+    "quem": "turma não especificada",
+    "o_que": "atividades prontas sobre desenvolvimento pessoal + materiais complementares",
+    "temas": ["desenvolvimento pessoal", "competências socioemocionais"],
+    "quando": "imediato",
+    "quanto": "atividades interativas + complementos pedagógicos",
+    "modo": "EXECUTIVO"
+  },
+  "objetivo": "Criar atividades engajadoras de desenvolvimento pessoal com materiais complementares de avaliação",
+  "etapas": [
+    {
+      "titulo": "Pesquisar as melhores opções para você",
+      "descricao": "Vou pesquisar atividades variadas de desenvolvimento pessoal e socioemocional no catálogo",
+      "capabilities": [
+        {
+          "nome": "pesquisar_atividades_disponiveis",
+          "displayName": "Vou pesquisar quais atividades eu posso criar",
+          "categoria": "PESQUISAR",
+          "parametros": {},
+          "justificativa": "Encontrar atividades sobre desenvolvimento pessoal"
+        },
+        {
+          "nome": "pesquisar_atividades_conta",
+          "displayName": "Vou buscar suas atividades anteriores",
+          "categoria": "PESQUISAR",
+          "parametros": {},
+          "justificativa": "Evitar duplicações"
+        }
+      ]
+    },
+    {
+      "titulo": "Decidir e gerar conteúdo",
+      "descricao": "Vou decidir estrategicamente quais atividades criar e gerar conteúdo pedagógico personalizado",
+      "capabilities": [
+        {
+          "nome": "decidir_atividades_criar",
+          "displayName": "Vou decidir estrategicamente quais atividades criar",
+          "categoria": "DECIDIR",
+          "parametros": {},
+          "justificativa": "Selecionar atividades com variedade"
+        },
+        {
+          "nome": "gerar_conteudo_atividades",
+          "displayName": "Gerando conteúdo para as atividades",
+          "categoria": "GERAR_CONTEUDO",
+          "parametros": {},
+          "justificativa": "Criar conteúdo pedagógico"
+        }
+      ]
+    },
+    {
+      "titulo": "Criar e salvar as atividades",
+      "descricao": "Vou construir e salvar cada atividade pronta para uso",
+      "capabilities": [
+        {
+          "nome": "criar_atividade",
+          "displayName": "Vou criar atividades engajantes",
+          "categoria": "CRIAR",
+          "parametros": {},
+          "justificativa": "Construir atividades completas"
+        },
+        {
+          "nome": "salvar_atividades_bd",
+          "displayName": "Vou salvar suas atividades no banco de dados",
+          "categoria": "SALVAR_BD",
+          "parametros": {},
+          "justificativa": "Persistir atividades"
+        }
+      ]
+    },
+    {
+      "titulo": "Materiais complementares de avaliação",
+      "descricao": "Vou criar uma rubrica de avaliação socioemocional para acompanhar o progresso dos alunos nas atividades",
+      "capabilities": [
+        {
+          "nome": "criar_arquivo",
+          "displayName": "Criando rubrica de avaliação socioemocional",
+          "categoria": "CRIAR",
+          "parametros": {"tipo_artefato": "atividade_textual", "solicitacao": "Crie uma rubrica de avaliação socioemocional para atividades de desenvolvimento pessoal, com critérios: autoconhecimento, empatia, tomada de decisão, gestão emocional. Tabela com 4 níveis: Iniciante, Em Desenvolvimento, Proficiente, Avançado"},
+          "justificativa": "Complemento proativo FASE 6 — rubrica para avaliar competências socioemocionais desenvolvidas nas atividades"
         }
       ]
     }

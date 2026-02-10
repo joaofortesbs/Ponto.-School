@@ -18,6 +18,28 @@ function normalizeText(text: string): string {
     .trim();
 }
 
+const SYNONYM_EXPANSIONS: Record<string, string[]> = {
+  'avaliacao': ['prova', 'simulado', 'teste', 'exame'],
+  'jogo': ['bingo', 'caca-palavras', 'caca palavras', 'show do milhao', 'palavras cruzadas', 'gincana'],
+  'organizador': ['mapa mental', 'mapa conceitual', 'kwl', 'quadro comparativo', 'organizador grafico', 'venn', 'espinha de peixe'],
+  'resumo': ['fichamento'],
+  'reflexao': ['diario reflexivo', 'diario de reflexao'],
+};
+
+function expandWithSynonyms(normalizedText: string): string {
+  let expanded = normalizedText;
+  for (const [trigger, synonyms] of Object.entries(SYNONYM_EXPANSIONS)) {
+    if (normalizedText.includes(trigger)) {
+      for (const synonym of synonyms) {
+        if (!expanded.includes(synonym)) {
+          expanded += ' ' + synonym;
+        }
+      }
+    }
+  }
+  return expanded;
+}
+
 function isRequestingActivityCreation(text: string): boolean {
   const lower = normalizeText(text);
   const creationPatterns = [
@@ -51,20 +73,35 @@ export function detectActivityType(userPrompt: string): DetectionResult {
     }
   }
 
-  const textTemplates = TextActivityRegistry.searchByText(userPrompt);
+  const expandedText = expandWithSynonyms(lower);
+
+  const textTemplates = TextActivityRegistry.searchByText(expandedText);
   if (textTemplates.length > 0) {
     const best = textTemplates[0];
-    const confianca = textTemplates.length === 1 ? 'alta' : 'media';
+
+    let confianca: 'alta' | 'media' | 'baixa' = textTemplates.length === 1 ? 'alta' : 'media';
+
+    const bestKeywords = best.keywords || [];
+    let matchCount = 0;
+    for (const kw of bestKeywords) {
+      if (expandedText.includes(normalizeText(kw))) {
+        matchCount++;
+      }
+    }
+    if (matchCount >= 2) {
+      confianca = 'alta';
+    }
+
     return {
       tipo: 'template_textual',
       template: best,
       interativaId: null,
       confianca,
-      motivo: `Template textual encontrado: ${best.nome} (id: ${best.id})`,
+      motivo: `Template textual encontrado: ${best.nome} (id: ${best.id}, keywords matched: ${matchCount})`,
     };
   }
 
-  const evolvedMatch = TextActivityRegistry.getEvolvedByKeyword(userPrompt);
+  const evolvedMatch = TextActivityRegistry.getEvolvedByKeyword(expandedText);
   if (evolvedMatch) {
     return {
       tipo: 'template_textual',
@@ -95,5 +132,6 @@ export function detectActivityType(userPrompt: string): DetectionResult {
 }
 
 export function getActivitySuggestions(userPrompt: string, limit = 5): TextActivityTemplate[] {
-  return TextActivityRegistry.searchByText(userPrompt).slice(0, limit);
+  const normalizedPrompt = expandWithSynonyms(normalizeText(userPrompt));
+  return TextActivityRegistry.searchByText(normalizedPrompt).slice(0, limit);
 }

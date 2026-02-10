@@ -44,38 +44,66 @@ export function determineFlowArtifacts(
   const mentionsPais = lower.includes('pais') || lower.includes('responsáveis') || lower.includes('família');
   const mentionsAlunos = lower.includes('alunos') || lower.includes('estudantes') || lower.includes('turma');
   const mentionsCoordenacao = lower.includes('coordena') || lower.includes('diretor') || lower.includes('gestão');
+  const mentionsAvaliacao = /avalia[çc][aã]o|avaliar|avalia[çc]/.test(lower);
+  const mentionsProjeto = /projeto|pbl|maker|steam/.test(lower);
+  const mentionsInclusao = /inclus[aã]o|inclusiv|adaptad|diferencia|pei|iep/.test(lower);
 
   plan.push({
     tipo: 'guia_aplicacao',
     titulo: 'Guia de Aplicação em Sala de Aula',
     prioridade: 'obrigatorio',
-    razao: 'Orienta o professor na aplicação prática das atividades criadas',
+    razao: 'Documento essencial que orienta o professor passo a passo na aplicação prática das atividades criadas em sala de aula',
   });
 
-  if (isMultipleActivities || isWeekPlan || mentionsPais) {
+  const needsMensagemPais = isMultipleActivities || isWeekPlan || mentionsPais || mentionsInclusao;
+  if (needsMensagemPais) {
+    let razaoPais = 'Comunica aos pais sobre as atividades e como apoiar em casa';
+    if (mentionsInclusao) {
+      razaoPais = 'Pais precisam ser informados sobre estratégias de diferenciação e inclusão aplicadas às atividades dos seus filhos';
+    } else if (isWeekPlan) {
+      razaoPais = 'Planejamento semanal requer comunicação com os pais sobre a sequência de atividades e como apoiar o aprendizado em casa';
+    } else if (mentionsPais) {
+      razaoPais = 'Professor mencionou pais/responsáveis — comunicação direta solicitada';
+    }
     plan.push({
       tipo: 'mensagem_pais',
       titulo: 'Mensagens para os Pais dos Alunos',
-      prioridade: isWeekPlan ? 'obrigatorio' : 'recomendado',
-      razao: 'Comunica aos pais sobre as atividades e como apoiar em casa',
+      prioridade: (isWeekPlan || mentionsInclusao) ? 'obrigatorio' : 'recomendado',
+      razao: razaoPais,
     });
   }
 
-  if (isMultipleActivities || isWeekPlan || mentionsCoordenacao) {
+  const needsRelatorioCoordenacao = isMultipleActivities || isWeekPlan || mentionsCoordenacao || mentionsProjeto;
+  if (needsRelatorioCoordenacao) {
+    let razaoCoordenacao = 'Documento formal justificando as atividades para a gestão escolar';
+    if (mentionsProjeto) {
+      razaoCoordenacao = 'Projetos (PBL/STEAM/Maker) exigem justificativa pedagógica formal para a coordenação aprovar e acompanhar';
+    } else if (isWeekPlan) {
+      razaoCoordenacao = 'Planejamento semanal completo requer documentação formal para alinhamento com a coordenação pedagógica';
+    } else if (mentionsCoordenacao) {
+      razaoCoordenacao = 'Professor mencionou coordenação/gestão — relatório formal solicitado';
+    }
     plan.push({
       tipo: 'relatorio_coordenacao',
       titulo: 'Relatório para Coordenação Pedagógica',
-      prioridade: isWeekPlan ? 'obrigatorio' : 'recomendado',
-      razao: 'Documento formal justificando as atividades para a gestão escolar',
+      prioridade: (isWeekPlan || mentionsProjeto) ? 'obrigatorio' : 'recomendado',
+      razao: razaoCoordenacao,
     });
   }
 
-  if ((isMultipleActivities && mentionsAlunos) || isWeekPlan) {
+  const needsMensagemAlunos = (isMultipleActivities && mentionsAlunos) || isWeekPlan || mentionsAvaliacao;
+  if (needsMensagemAlunos) {
+    let razaoAlunos = 'Engaja e motiva os alunos a participarem das atividades';
+    if (mentionsAvaliacao) {
+      razaoAlunos = 'Atividades avaliativas se beneficiam de mensagens motivacionais que reduzem ansiedade e engajam os alunos';
+    } else if (isWeekPlan) {
+      razaoAlunos = 'Semana completa de atividades requer mensagens de motivação para manter o engajamento dos alunos ao longo dos dias';
+    }
     plan.push({
       tipo: 'mensagem_alunos',
       titulo: 'Mensagens Motivacionais para os Alunos',
-      prioridade: 'opcional',
-      razao: 'Engaja e motiva os alunos a participarem das atividades',
+      prioridade: mentionsAvaliacao ? 'recomendado' : 'opcional',
+      razao: razaoAlunos,
     });
   }
 

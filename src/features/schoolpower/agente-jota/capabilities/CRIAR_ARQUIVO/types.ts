@@ -85,7 +85,14 @@ REGRAS:
 - Seja específico com dados da sessão (nomes de atividades, tipos, quantidades)
 - Cada seção deve ter 2-4 parágrafos substanciais
 - Use linguagem acessível para professores
-- NÃO retorne JSON, apenas texto com headers markdown ##`
+- NÃO retorne JSON, apenas texto com headers markdown ##
+- Use tabela para mapeamento BNCC (Habilidade | Descrição | Atividade)
+- Use FORMATAÇÃO RICA para tornar o documento visualmente profissional:
+  • Tabelas markdown para comparações, cronogramas, métricas e dados estruturados
+  • Checklists (- [ ] item) para listas de tarefas e materiais
+  • Callout boxes (> 💡 dica, > ⚠️ atenção, > 📌 importante) para destaques
+  • **Negrito** para termos-chave, *itálico* para ênfase
+  • --- para separadores visuais entre seções grandes`
   },
   resumo_executivo: {
     tipo: 'resumo_executivo',
@@ -118,7 +125,13 @@ REGRAS:
 - Use dados concretos da sessão
 - Máximo 2 parágrafos por seção
 - Linguagem profissional mas acessível
-- NÃO retorne JSON`
+- NÃO retorne JSON
+- Use FORMATAÇÃO RICA para tornar o documento visualmente profissional:
+  • Tabelas markdown para comparações, cronogramas, métricas e dados estruturados
+  • Checklists (- [ ] item) para listas de tarefas e materiais
+  • Callout boxes (> 💡 dica, > ⚠️ atenção, > 📌 importante) para destaques
+  • **Negrito** para termos-chave, *itálico* para ênfase
+  • --- para separadores visuais entre seções grandes`
   },
   roteiro_aula: {
     tipo: 'roteiro_aula',
@@ -154,7 +167,15 @@ REGRAS:
 - Inclua tempos estimados
 - Dê dicas de adaptação para diferentes contextos
 - Mencione as atividades criadas pelo nome
-- NÃO retorne JSON`
+- NÃO retorne JSON
+- Use tabela para distribuição de tempo (Momento | Duração | Atividade | Recursos)
+- Use checklist para materiais necessários
+- Use FORMATAÇÃO RICA para tornar o documento visualmente profissional:
+  • Tabelas markdown para comparações, cronogramas, métricas e dados estruturados
+  • Checklists (- [ ] item) para listas de tarefas e materiais
+  • Callout boxes (> 💡 dica, > ⚠️ atenção, > 📌 importante) para destaques
+  • **Negrito** para termos-chave, *itálico* para ênfase
+  • --- para separadores visuais entre seções grandes`
   },
   relatorio_progresso: {
     tipo: 'relatorio_progresso',
@@ -186,7 +207,13 @@ REGRAS:
 - Documente todo o processo de forma clara
 - Use dados específicos (números, nomes, tipos)
 - Mantenha tom profissional e objetivo
-- NÃO retorne JSON`
+- NÃO retorne JSON
+- Use FORMATAÇÃO RICA para tornar o documento visualmente profissional:
+  • Tabelas markdown para comparações, cronogramas, métricas e dados estruturados
+  • Checklists (- [ ] item) para listas de tarefas e materiais
+  • Callout boxes (> 💡 dica, > ⚠️ atenção, > 📌 importante) para destaques
+  • **Negrito** para termos-chave, *itálico* para ênfase
+  • --- para separadores visuais entre seções grandes`
   },
   guia_aplicacao: {
     tipo: 'guia_aplicacao',
@@ -221,7 +248,15 @@ REGRAS:
 - Foco em praticidade
 - Linguagem acessível para qualquer professor
 - Inclua exemplos concretos quando possível
-- NÃO retorne JSON`
+- NÃO retorne JSON
+- Use tabela para sequência de aplicação
+- Use callout > 💡 para dicas práticas
+- Use FORMATAÇÃO RICA para tornar o documento visualmente profissional:
+  • Tabelas markdown para comparações, cronogramas, métricas e dados estruturados
+  • Checklists (- [ ] item) para listas de tarefas e materiais
+  • Callout boxes (> 💡 dica, > ⚠️ atenção, > 📌 importante) para destaques
+  • **Negrito** para termos-chave, *itálico* para ênfase
+  • --- para separadores visuais entre seções grandes`
   },
   mensagem_pais: {
     tipo: 'mensagem_pais',
@@ -255,7 +290,14 @@ REGRAS:
 - Mencione a série/turma quando disponível no contexto
 - Tom sempre positivo e motivador
 - Evite jargão pedagógico nas mensagens para pais
-- NÃO retorne JSON, apenas texto com headers markdown ##`
+- NÃO retorne JSON, apenas texto com headers markdown ##
+- Use > 💡 para dicas de como apoiar em casa
+- Use FORMATAÇÃO RICA para tornar o documento visualmente profissional:
+  • Tabelas markdown para comparações, cronogramas, métricas e dados estruturados
+  • Checklists (- [ ] item) para listas de tarefas e materiais
+  • Callout boxes (> 💡 dica, > ⚠️ atenção, > 📌 importante) para destaques
+  • **Negrito** para termos-chave, *itálico* para ênfase
+  • --- para separadores visuais entre seções grandes`
   },
   mensagem_alunos: {
     tipo: 'mensagem_alunos',
@@ -289,7 +331,14 @@ REGRAS:
 - Cada mensagem deve ser pronta para o professor copiar e usar
 - Tom sempre positivo, nunca punitivo ou ameaçador
 - Mencione as atividades criadas pelo nome
-- NÃO retorne JSON, apenas texto com headers markdown ##`
+- NÃO retorne JSON, apenas texto com headers markdown ##
+- Use > ✅ para pontos de motivação
+- Use FORMATAÇÃO RICA para tornar o documento visualmente profissional:
+  • Tabelas markdown para comparações, cronogramas, métricas e dados estruturados
+  • Checklists (- [ ] item) para listas de tarefas e materiais
+  • Callout boxes (> 💡 dica, > ⚠️ atenção, > 📌 importante) para destaques
+  • **Negrito** para termos-chave, *itálico* para ênfase
+  • --- para separadores visuais entre seções grandes`
   },
   relatorio_coordenacao: {
     tipo: 'relatorio_coordenacao',
@@ -329,7 +378,15 @@ REGRAS:
 - Seja específico com dados: nomes de atividades, quantidades, tipos
 - Demonstre intencionalidade pedagógica em cada escolha
 - O documento deve transmitir competência e planejamento
-- NÃO retorne JSON, apenas texto com headers markdown ##`
+- NÃO retorne JSON, apenas texto com headers markdown ##
+- Use tabela para detalhamento das atividades
+- Use tabela para cronograma de aplicação
+- Use FORMATAÇÃO RICA para tornar o documento visualmente profissional:
+  • Tabelas markdown para comparações, cronogramas, métricas e dados estruturados
+  • Checklists (- [ ] item) para listas de tarefas e materiais
+  • Callout boxes (> 💡 dica, > ⚠️ atenção, > 📌 importante) para destaques
+  • **Negrito** para termos-chave, *itálico* para ênfase
+  • --- para separadores visuais entre seções grandes`
   },
   documento_livre: {
     tipo: 'documento_livre',
@@ -368,7 +425,14 @@ REGRAS DE CONTEÚDO:
 REGRAS TÉCNICAS:
 - NÃO retorne JSON, apenas texto com headers markdown
 - NÃO inclua metadados, tags ou informações técnicas
-- O texto deve ser pronto para uso imediato pelo professor`
+- O texto deve ser pronto para uso imediato pelo professor
+- Escolha ATIVAMENTE entre tabelas, checklists e callouts conforme o tema
+- Use FORMATAÇÃO RICA para tornar o documento visualmente profissional:
+  • Tabelas markdown para comparações, cronogramas, métricas e dados estruturados
+  • Checklists (- [ ] item) para listas de tarefas e materiais
+  • Callout boxes (> 💡 dica, > ⚠️ atenção, > 📌 importante) para destaques
+  • **Negrito** para termos-chave, *itálico* para ênfase
+  • --- para separadores visuais entre seções grandes`
   },
   atividade_textual: {
     tipo: 'atividade_textual',
