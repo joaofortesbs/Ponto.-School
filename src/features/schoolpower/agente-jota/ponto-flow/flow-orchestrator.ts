@@ -39,23 +39,28 @@ export function determineFlowArtifacts(
   const lower = userPrompt.toLowerCase();
   const plan: FlowArtifactPlan[] = [];
 
+  if (activityCount === 0) return plan;
+
   const isWeekPlan = lower.includes('semana') || lower.includes('semanal') || lower.includes('semanas');
+  const isSubstantialBatch = activityCount >= 3;
   const isMultipleActivities = activityCount >= 2;
   const mentionsPais = lower.includes('pais') || lower.includes('responsáveis') || lower.includes('família');
-  const mentionsAlunos = lower.includes('alunos') || lower.includes('estudantes') || lower.includes('turma');
+  const mentionsAlunos = lower.includes('alunos') || lower.includes('estudantes');
   const mentionsCoordenacao = lower.includes('coordena') || lower.includes('diretor') || lower.includes('gestão');
-  const mentionsAvaliacao = /avalia[çc][aã]o|avaliar|avalia[çc]/.test(lower);
-  const mentionsProjeto = /projeto|pbl|maker|steam/.test(lower);
-  const mentionsInclusao = /inclus[aã]o|inclusiv|adaptad|diferencia|pei|iep/.test(lower);
+  const mentionsAvaliacao = /avalia[çc][aã]o\b|prova\s+(bimestral|mensal|final)/.test(lower);
+  const mentionsProjeto = /\bprojeto\b|pbl|maker|steam/.test(lower);
+  const mentionsInclusao = /inclus[aã]o|inclusiv|adaptad|diferencia[çc]|pei\b|iep\b/.test(lower);
 
-  plan.push({
-    tipo: 'guia_aplicacao',
-    titulo: 'Guia de Aplicação em Sala de Aula',
-    prioridade: 'obrigatorio',
-    razao: 'Documento essencial que orienta o professor passo a passo na aplicação prática das atividades criadas em sala de aula',
-  });
+  if (activityCount >= 1) {
+    plan.push({
+      tipo: 'guia_aplicacao',
+      titulo: 'Guia de Aplicação em Sala de Aula',
+      prioridade: isMultipleActivities ? 'obrigatorio' : 'recomendado',
+      razao: 'Documento essencial que orienta o professor passo a passo na aplicação prática das atividades criadas em sala de aula',
+    });
+  }
 
-  const needsMensagemPais = isMultipleActivities || isWeekPlan || mentionsPais || mentionsInclusao;
+  const needsMensagemPais = isWeekPlan || mentionsPais || mentionsInclusao;
   if (needsMensagemPais) {
     let razaoPais = 'Comunica aos pais sobre as atividades e como apoiar em casa';
     if (mentionsInclusao) {
@@ -73,7 +78,7 @@ export function determineFlowArtifacts(
     });
   }
 
-  const needsRelatorioCoordenacao = isMultipleActivities || isWeekPlan || mentionsCoordenacao || mentionsProjeto;
+  const needsRelatorioCoordenacao = isWeekPlan || mentionsCoordenacao || mentionsProjeto || (isSubstantialBatch && mentionsAvaliacao);
   if (needsRelatorioCoordenacao) {
     let razaoCoordenacao = 'Documento formal justificando as atividades para a gestão escolar';
     if (mentionsProjeto) {
@@ -91,18 +96,16 @@ export function determineFlowArtifacts(
     });
   }
 
-  const needsMensagemAlunos = (isMultipleActivities && mentionsAlunos) || isWeekPlan || mentionsAvaliacao;
+  const needsMensagemAlunos = (isSubstantialBatch && mentionsAlunos) || (isWeekPlan && mentionsAlunos);
   if (needsMensagemAlunos) {
     let razaoAlunos = 'Engaja e motiva os alunos a participarem das atividades';
-    if (mentionsAvaliacao) {
-      razaoAlunos = 'Atividades avaliativas se beneficiam de mensagens motivacionais que reduzem ansiedade e engajam os alunos';
-    } else if (isWeekPlan) {
+    if (isWeekPlan) {
       razaoAlunos = 'Semana completa de atividades requer mensagens de motivação para manter o engajamento dos alunos ao longo dos dias';
     }
     plan.push({
       tipo: 'mensagem_alunos',
       titulo: 'Mensagens Motivacionais para os Alunos',
-      prioridade: mentionsAvaliacao ? 'recomendado' : 'opcional',
+      prioridade: 'opcional',
       razao: razaoAlunos,
     });
   }

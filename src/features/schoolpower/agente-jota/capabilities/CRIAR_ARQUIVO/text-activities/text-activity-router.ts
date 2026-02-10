@@ -81,6 +81,23 @@ export function isTextActivity(routerResult: TextActivityRouterResult): boolean 
   return routerResult.origem === 'template_textual' || routerResult.origem === 'auto_gerada';
 }
 
+const RICH_FORMATTING_INSTRUCTIONS = `
+
+FORMATAÇÃO RICA OBRIGATÓRIA:
+Use os seguintes recursos de formatação para criar materiais profissionais e visualmente atraentes:
+- **Tabelas markdown** para comparações, rubricas, cronogramas, gabaritos (use | coluna1 | coluna2 |)
+- **Listas de tarefas** com checkboxes (- [ ] item) para checklists e planejamentos
+- **Callouts/Alertas** para destaques importantes (💡 Dica:, ⚠️ Atenção:, 📌 Importante:)
+- **Negrito** para conceitos-chave e termos importantes
+- *Itálico* para exemplos e citações
+- **Headers hierárquicos** (##, ###, ####) para organizar seções
+- **Listas numeradas** para passos sequenciais e questões
+- **Listas com marcadores** para itens não sequenciais
+- **Separadores** (---) entre seções principais
+- ~~Tachado~~ quando mostrar erros comuns a evitar
+NÃO retorne JSON — retorne texto formatado em markdown rico e profissional.
+`;
+
 export function getPromptForRoute(
   routerResult: TextActivityRouterResult,
   solicitacao: string,
@@ -93,6 +110,8 @@ export function getPromptForRoute(
 
   prompt = prompt.replace(/\{solicitacao\}/g, solicitacao);
   prompt = prompt.replace(/\{contexto\}/g, contexto || 'Nenhum contexto adicional disponível.');
+
+  prompt += RICH_FORMATTING_INSTRUCTIONS;
 
   return prompt;
 }

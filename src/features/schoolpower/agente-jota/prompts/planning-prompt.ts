@@ -862,6 +862,12 @@ EXEMPLO 9 - "Crie atividades de desenvolvimento pessoal para meus alunos" (ATIVI
   ]
 }
 
+🔍 CHECKLIST OBRIGATÓRIO ANTES DE FINALIZAR O PLANO:
+□ O professor pediu atividade/prova/plano? → Verifique a MATRIZ DE COMPLEMENTAÇÃO (FASE 6) e adicione uma etapa final com complementos pedagógicos relevantes (rubrica, exit ticket, gabarito, KWL)
+□ Os complementos usam criar_arquivo com tipo_artefato "atividade_textual"?
+□ Complementos NÃO duplicam o que o Ponto Flow já gera (guia, mensagens pais, relatório coordenação)?
+□ Máximo 1-2 complementos por pedido?
+
 IMPORTANTE:
 - Retorne APENAS o JSON, sem explicações adicionais
 - SEMPRE inclua o campo "intencao_desconstruida" — é obrigatório!
@@ -873,6 +879,7 @@ IMPORTANTE:
 - Escolha o MENOR número de capabilities necessárias — não adicione capabilities desnecessárias!
 - 🔴 Ao usar "criar_arquivo", SEMPRE inclua "tipo_artefato" e "solicitacao" nos parametros! Se for texto/arquivo genérico, use tipo_artefato: "documento_livre". NUNCA deixe parametros vazio para criar_arquivo!
 - 🔴 LEMBRE-SE: Se o professor menciona TEMAS + CONTEXTO ESCOLAR → MODO EXECUTIVO → GERE MATERIAIS, NÃO EXPLIQUE!
+- 🟢 FASE 6: Quando o plano inclui criação de atividades/provas/planos → SEMPRE adicione uma etapa final de complementação proativa com rubrica, gabarito ou exit ticket via criar_arquivo!
 `.trim();
 
 export interface Capability {

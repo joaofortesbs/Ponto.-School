@@ -267,6 +267,22 @@ export async function decidirAtividadesCriar(
   const startTime = Date.now();
   const maxActivities = params.constraints?.max_activities || DEFAULT_MAX_ACTIVITIES;
 
+  const WORD_TO_NUMBER: Record<string, number> = {
+    'uma': 1, 'um': 1, 'dois': 2, 'duas': 2, 'três': 3, 'tres': 3,
+    'quatro': 4, 'cinco': 5, 'seis': 6, 'sete': 7, 'oito': 8, 'nove': 9, 'dez': 10
+  };
+  const objective = params.user_objective || '';
+  const numericMatch = objective.match(/(\d+)\s*(atividade|exerc|quest|prova|material|lista|quiz|flash|jogo|rubrica|plano)/i);
+  const wordMatch = objective.match(/\b(uma?|dois|duas|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez)\s+(atividade|exerc|quest|prova|material|lista|quiz|flash|jogo|rubrica|plano)/i);
+  const requestedQuantity = numericMatch
+    ? parseInt(numericMatch[1])
+    : wordMatch
+      ? (WORD_TO_NUMBER[wordMatch[1].toLowerCase()] || null)
+      : null;
+  if (requestedQuantity) {
+    console.log(`🔢 [Capability:DECIDIR] Quantidade explícita detectada: ${requestedQuantity}`);
+  }
+
   // VALIDAR ENTRADAS
   const availableActivities = params.available_activities?.activities || [];
   const accountActivities = params.account_activities?.activities || [];
@@ -369,10 +385,15 @@ Por favor, corrija o erro e responda novamente com IDs VÁLIDOS do catálogo.
       );
 
       if (validation.errors.length === 0) {
-        const chosenActivities = enrichChosenActivities(
+        let chosenActivities = enrichChosenActivities(
           parsedResponse.atividades_escolhidas,
           availableActivities
         );
+
+        if (requestedQuantity && chosenActivities.length > requestedQuantity) {
+          console.log(`✂️ [Capability:DECIDIR] Trimming: AI retornou ${chosenActivities.length}, professor pediu ${requestedQuantity}`);
+          chosenActivities = chosenActivities.slice(0, requestedQuantity);
+        }
 
         console.log(`✅ [Capability:DECIDIR] Decisão aprovada: ${chosenActivities.length} atividades`);
         console.log(`   📋 Atividades escolhidas: ${chosenActivities.map(a => a.id).join(', ')}`);
@@ -410,9 +431,10 @@ Por favor, corrija o erro e responda novamente com IDs VÁLIDOS do catálogo.
 
   console.error('❌ [Capability:DECIDIR] Todas as tentativas falharam, usando fallback');
 
+  const fallbackCount = requestedQuantity || Math.min(3, maxActivities);
   const standardFallback = params.available_activities.activities
     .filter(a => (a as any).pipeline === 'standard' || !(a as any).pipeline)
-    .slice(0, Math.min(3, maxActivities));
+    .slice(0, fallbackCount);
   const fallbackActivities = standardFallback.map((a, idx) => ({
       id: a.id,
       titulo: a.titulo,
