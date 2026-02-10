@@ -35,7 +35,8 @@ export const INTERACTIVE_ACTIVITIES: readonly string[] = [
 export const TEXT_VERSION_ACTIVITIES: readonly string[] = [
   'plano-aula',
   'sequencia-didatica',
-  'tese-redacao'
+  'tese-redacao',
+  'atividade-textual'
 ] as const;
 
 /**

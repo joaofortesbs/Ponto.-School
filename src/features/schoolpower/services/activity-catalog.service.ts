@@ -121,7 +121,9 @@ class ActivityCatalogService {
         enabled: true,
         campos_obrigatorios: a.campos_obrigatorios || [],
         campos_opcionais: a.campos_opcionais || [],
-        schema_campos: a.schema_campos || {}
+        schema_campos: a.schema_campos || {},
+        pipeline: a.pipeline || 'standard',
+        text_activity_template_id: a.text_activity_template_id || undefined
       }));
 
     // Extrair tipos e categorias únicos

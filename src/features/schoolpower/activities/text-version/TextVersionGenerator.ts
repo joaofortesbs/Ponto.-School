@@ -14,6 +14,7 @@
 import { executeWithCascadeFallback } from '../../services/controle-APIs-gerais-school-power';
 import { isTextVersionActivity, getActivityInfo } from '../../config/activityVersionConfig';
 import { safeSetJSON, cleanupPlanoAulaData } from '../../services/localStorage-manager';
+import { TextActivityRegistry } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/text-activities/text-activity-registry';
 
 export interface TextVersionInput {
   activityType: string;
@@ -259,7 +260,58 @@ Responda APENAS com um JSON no seguinte formato:
   ],
   "textContent": "Versão completa em texto corrido formatado..."
 }
-`
+`,
+
+  'atividade-textual': (input) => {
+    const tema = input.context.tema || input.context.theme || input.userObjective || 'Não especificado';
+    const disciplina = input.context.disciplina || input.context.subject || 'Não especificada';
+    const serie = input.context.serie || input.context.schoolYear || 'Não especificado';
+    const objetivos = input.context.objetivos || input.context.objectives || '';
+    const titulo = input.context.titulo || input.context.title || '';
+    const templateId = input.context.text_activity_template_id || '';
+
+    const template = templateId ? TextActivityRegistry.getByType(templateId) : null;
+    const templatePrompt = template?.promptTemplate || '';
+    const templateSections = template?.secoesEsperadas || [];
+    const templateName = template?.nome || titulo || 'Atividade Pedagógica';
+
+    return `Você é um professor especialista e pedagogo experiente. Sua tarefa é criar uma atividade pedagógica completa, detalhada e profissional.
+
+TIPO DE ATIVIDADE: ${templateName}
+${templatePrompt ? `\nINSTRUÇÕES ESPECÍFICAS DO TEMPLATE:\n${templatePrompt}\n` : ''}
+INFORMAÇÕES:
+- Tema: ${tema}
+- Disciplina: ${disciplina}
+- Série/Ano: ${serie}
+${objetivos ? `- Objetivos: ${objetivos}` : ''}
+
+${input.conversationContext ? `CONTEXTO DA CONVERSA:\n${input.conversationContext}` : ''}
+${input.userObjective ? `OBJETIVO DO USUÁRIO:\n${input.userObjective}` : ''}
+
+REGRAS OBRIGATÓRIAS:
+1. Crie conteúdo COMPLETO e PRONTO PARA USO - não apenas estrutura
+2. Inclua questões, textos, instruções detalhadas quando aplicável
+3. Use formatação rica: tabelas markdown, listas, cabeçalhos, destaques
+4. Adapte a linguagem para ${serie}
+5. Inclua gabarito/respostas esperadas quando aplicável
+
+**FORMATO DE RESPOSTA (OBRIGATÓRIO):**
+Responda APENAS com um JSON no seguinte formato:
+
+{
+  "titulo": "${templateName}: ${tema}",
+  "sections": [
+${templateSections.length > 0 
+  ? templateSections.map((s, i) => `    {"title": "${s}", "content": "Conteúdo completo e detalhado...", "icon": "file"}`).join(',\n')
+  : `    {"title": "📋 Orientações ao Professor", "content": "Instruções detalhadas...", "icon": "file"},
+    {"title": "📝 Atividade", "content": "Conteúdo completo da atividade...", "icon": "edit"},
+    {"title": "✅ Gabarito / Respostas Esperadas", "content": "Respostas e critérios...", "icon": "check"}`
+}
+  ],
+  "textContent": "Versão completa em texto corrido formatado com toda a atividade..."
+}
+`;
+  }
 };
 
 // ============================================================================

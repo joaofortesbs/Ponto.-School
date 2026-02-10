@@ -61,17 +61,30 @@ ${context.previous_activities.map(a => `- ${a.titulo} (${a.tipo})`).join('\n')}
 PROFESSOR NOVO: Nenhuma atividade anterior encontrada.
 `;
 
-  const catalogSummary = context.available_activities.slice(0, 15).map((a, idx) => `
-${idx + 1}. **${a.titulo}** (ID: ${a.id})
-   - Tipo: ${a.tipo} | Categoria: ${a.categoria}
-   - Descrição: ${a.descricao?.substring(0, 100)}...
-   - Campos: ${a.campos_obrigatorios.slice(0, 5).join(', ')}${a.campos_obrigatorios.length > 5 ? '...' : ''}
-`).join('');
+  const standardActivities = context.available_activities.filter(a => (a as any).pipeline === 'standard' || !(a as any).pipeline);
+  const textualActivities = context.available_activities.filter(a => (a as any).pipeline === 'criar_arquivo_textual');
+
+  const groupedTextual = textualActivities.reduce((acc, a) => {
+    const cat = a.categoria;
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(a);
+    return acc;
+  }, {} as Record<string, typeof textualActivities>);
+
+  const standardSummary = standardActivities.map(a => `- ${a.titulo} (ID: ${a.id}) — ${a.descricao?.substring(0, 80)}`).join('\n');
+
+  const textualSummary = Object.entries(groupedTextual).map(([cat, items]) => {
+    const itemList = items.map(a => `  - ${a.titulo} (ID: ${a.id})`).join('\n');
+    return `📁 ${cat.toUpperCase()}:\n${itemList}`;
+  }).join('\n\n');
+
+  const quantidadeExplicitaMatch = context.user_objective.match(/(\d+)\s*(atividade|exerc|quest|prova|material)/i);
+  const quantidadeSolicitada = quantidadeExplicitaMatch ? parseInt(quantidadeExplicitaMatch[1]) : null;
 
   return `
 # TAREFA: Decidir quais atividades criar
 
-Você é um especialista pedagógico escolhendo atividades para um professor.
+Você é um especialista pedagógico. Analise o pedido do professor e escolha as atividades MAIS ADEQUADAS do catálogo.
 
 ## OBJETIVO DO USUÁRIO
 ${context.user_objective}
@@ -84,52 +97,62 @@ ${context.user_objective}
 
 ${accountContext}
 
-## ATIVIDADES DISPONÍVEIS NO CATÁLOGO (FONTE DE VERDADE)
-Total disponível: ${context.available_activities.length}
+## 🔢 REGRA DE QUANTIDADE (OBRIGATÓRIA)
+${quantidadeSolicitada
+  ? `O professor pediu EXATAMENTE ${quantidadeSolicitada} atividade(s). Você DEVE escolher exatamente ${quantidadeSolicitada}. NÃO escolha mais nem menos.`
+  : `O professor NÃO especificou quantidade. Analise o pedido:
+  - Se pediu UMA coisa específica (ex: "uma prova", "um bingo") → escolha 1 atividade
+  - Se pediu algo genérico (ex: "atividades sobre X") → escolha 2-3 atividades variadas
+  - Se pediu pacote/vários (ex: "materiais completos") → escolha 3-5 atividades variadas`}
+
+## CATÁLOGO COMPLETO — ATIVIDADES DISPONÍVEIS
+
+### 🟢 ATIVIDADES INTERATIVAS (pipeline padrão — quiz, flash cards, lista)
+${standardSummary}
+
+### 🔵 ATIVIDADES TEXTUAIS (pipeline criar_arquivo — provas, jogos, rubricas, etc.)
+${textualSummary}
 
 IDs VÁLIDOS: ${context.available_activities.map(a => a.id).join(', ')}
 
-${catalogSummary}
-
-## CONSTRAINTS
-- Máximo de atividades: ${context.constraints.max_activities}
-- Tipos preferidos: ${context.constraints.preferred_types?.join(', ') || 'Nenhum'}
-- Evitar tipos: ${context.constraints.avoid_types?.join(', ') || 'Nenhum'}
-
 ## INSTRUÇÕES DE DECISÃO
 
-1. Analise o objetivo do usuário e o contexto
-2. Escolha até ${context.constraints.max_activities} atividades do CATÁLOGO DISPONÍVEL
-3. Priorize:
-   - Relevância para disciplina e nível
-   - Progressão pedagógica (básico → avançado)
-   - VARIEDADE MÁXIMA: NUNCA escolha 2+ atividades do mesmo tipo! Combine quiz + flash card + lista, nunca quiz + quiz + quiz
-   - Atividades que o professor ainda não criou
-   - Se possível, inclua pelo menos 1 tipo avaliativo (quiz/lista) e 1 tipo lúdico (flash card)
+1. LEIA o pedido do professor com atenção
+2. RESPEITE a quantidade solicitada (regra acima)
+3. ESCOLHA a atividade que MELHOR corresponde ao pedido:
+   - Professor pediu "prova" → use prova-personalizada, NÃO lista-exercicios
+   - Professor pediu "bingo" → use bingo-educativo, NÃO quiz-interativo
+   - Professor pediu "rubrica" → use rubrica-avaliacao
+   - Professor pediu "caça-palavras" → use caca-palavras
+   - Professor pediu "plano de aula" → use plano-aula
+4. VARIEDADE: quando criar múltiplas, use categorias DIFERENTES
+5. PRIORIZE atividades textuais especializadas sobre atividades genéricas (lista/quiz/flash)
 
-🎯 PRINCÍPIO DE VARIEDADE: Um bom mix inclui tipos DIFERENTES para manter o engajamento dos alunos.
-   Exemplo BOM: quiz + flash cards + lista (3 tipos diferentes)
-   Exemplo RUIM: quiz + quiz + quiz (mesmo tipo repetido)
+🎯 PRINCÍPIO: O catálogo textual tem 61 templates especializados. USE-OS! Não force tudo em lista/quiz/flash cards.
 
-## ⚠️ REGRA ABSOLUTA - ANTI-ALUCINAÇÃO
+Exemplos de decisão CORRETA:
+- "Crie uma prova de frações" → prova-personalizada (1 atividade)
+- "Crie um bingo sobre sistema solar" → bingo-educativo (1 atividade)
+- "3 atividades sobre crônicas" → interpretacao-texto + prompt-escrita + quiz-interativo (3 atividades variadas)
+- "Atividade sobre biomas, tenho alunos com necessidades especiais" → atividade-diferenciada-inclusao (1 atividade)
 
+## ⚠️ REGRA ANTI-ALUCINAÇÃO
 - Use APENAS IDs da lista de IDs válidos acima
-- NUNCA invente IDs ou atividades que não existem
-- Se escolher um ID inválido, o sistema REJEITARÁ sua resposta
+- NUNCA invente IDs
 
 ## FORMATO DE RESPOSTA (JSON VÁLIDO)
 
 {
   "atividades_escolhidas": [
     {
-      "id": "plano-aula-001",
-      "titulo": "Título exato do catálogo",
-      "justificativa": "Por que esta atividade é ideal para o objetivo",
+      "id": "prova-personalizada",
+      "titulo": "Prova Personalizada",
+      "justificativa": "Professor pediu prova — template especializado para provas",
       "ordem_sugerida": 1
     }
   ],
-  "estrategia_pedagogica": "Explicação da progressão pedagógica escolhida",
-  "total_escolhidas": 2
+  "estrategia_pedagogica": "Explicação da escolha",
+  "total_escolhidas": 1
 }
 
 Retorne APENAS o JSON, sem texto adicional.
@@ -222,7 +245,9 @@ function enrichChosenActivities(
       justificativa: choice.justificativa || 'Atividade selecionada estrategicamente',
       ordem_sugerida: choice.ordem_sugerida || (index + 1),
       status_construcao: 'aguardando' as const,
-      progresso: 0
+      progresso: 0,
+      pipeline: catalogActivity.pipeline || 'standard',
+      text_activity_template_id: catalogActivity.text_activity_template_id
     };
   }).filter(Boolean) as ChosenActivity[];
 }
@@ -385,9 +410,10 @@ Por favor, corrija o erro e responda novamente com IDs VÁLIDOS do catálogo.
 
   console.error('❌ [Capability:DECIDIR] Todas as tentativas falharam, usando fallback');
 
-  const fallbackActivities = params.available_activities.activities
-    .slice(0, Math.min(3, maxActivities))
-    .map((a, idx) => ({
+  const standardFallback = params.available_activities.activities
+    .filter(a => (a as any).pipeline === 'standard' || !(a as any).pipeline)
+    .slice(0, Math.min(3, maxActivities));
+  const fallbackActivities = standardFallback.map((a, idx) => ({
       id: a.id,
       titulo: a.titulo,
       tipo: a.tipo,
@@ -402,7 +428,9 @@ Por favor, corrija o erro e responda novamente com IDs VÁLIDOS do catálogo.
       justificativa: 'Seleção automática (fallback)',
       ordem_sugerida: idx + 1,
       status_construcao: 'aguardando' as const,
-      progresso: 0
+      progresso: 0,
+      pipeline: (a.pipeline || 'standard') as 'standard' | 'criar_arquivo_textual',
+      text_activity_template_id: a.text_activity_template_id
     }));
 
   return {

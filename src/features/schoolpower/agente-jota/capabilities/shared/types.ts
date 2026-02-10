@@ -173,6 +173,8 @@ export interface ActivityFromCatalog {
   campos_obrigatorios: string[];
   campos_opcionais?: string[];
   schema_campos: Record<string, FieldSchema>;
+  pipeline?: 'standard' | 'criar_arquivo_textual';
+  text_activity_template_id?: string;
 }
 
 export interface FieldSchema {
@@ -257,6 +259,8 @@ export interface ChosenActivity {
   ordem_sugerida: number;
   status_construcao: 'aguardando' | 'construindo' | 'concluida' | 'erro';
   progresso: number;
+  pipeline?: 'standard' | 'criar_arquivo_textual';
+  text_activity_template_id?: string;
 }
 
 export interface DecisionValidation {

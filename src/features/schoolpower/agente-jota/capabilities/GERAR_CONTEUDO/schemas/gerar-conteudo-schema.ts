@@ -525,6 +525,55 @@ export const ACTIVITY_FIELDS_MAPPING: Record<string, ActivityFieldsMapping> = {
         description: 'Como avaliar o mapa'
       }
     ]
+  },
+
+  'atividade-textual': {
+    type: 'atividade-textual',
+    displayName: 'Atividade Textual',
+    requiredFields: [
+      {
+        name: 'theme',
+        label: 'Tema',
+        type: 'text' as const,
+        description: 'Tema ou assunto da atividade',
+        placeholder: 'Ex: Frações, Revolução Francesa, Sistema Solar'
+      },
+      {
+        name: 'subject',
+        label: 'Disciplina',
+        type: 'text' as const,
+        description: 'Disciplina ou área de conhecimento',
+        placeholder: 'Ex: Matemática, História, Ciências'
+      },
+      {
+        name: 'schoolYear',
+        label: 'Ano/Série',
+        type: 'text' as const,
+        description: 'Ano ou série escolar',
+        placeholder: 'Ex: 5º ano, 8º ano, 2º ano EM'
+      }
+    ],
+    optionalFields: [
+      {
+        name: 'objectives',
+        label: 'Objetivos',
+        type: 'textarea' as const,
+        description: 'Objetivos de aprendizagem'
+      },
+      {
+        name: 'context',
+        label: 'Contexto',
+        type: 'textarea' as const,
+        description: 'Contexto adicional ou instruções'
+      },
+      {
+        name: 'difficultyLevel',
+        label: 'Nível de Dificuldade',
+        type: 'select' as const,
+        description: 'Nível de dificuldade',
+        options: ['Fácil', 'Intermediário', 'Avançado']
+      }
+    ]
   }
 };
 

@@ -1285,6 +1285,8 @@ async function generateContentForActivity(
           metodologia: inferredDifficultyLevel,
           duracao: inferredTimeLimit,
           description: activity.campos_preenchidos?.description || activity.campos_preenchidos?.descricao,
+          titulo: activity.titulo,
+          text_activity_template_id: (activity as any).text_activity_template_id || activity.campos_preenchidos?.text_activity_template_id || '',
           ...activity.campos_preenchidos
         },
         conversationContext,
