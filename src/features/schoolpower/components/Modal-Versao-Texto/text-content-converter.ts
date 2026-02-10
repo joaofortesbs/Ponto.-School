@@ -1,90 +1,90 @@
 import type { EditorJSBlock, EditorJSData } from '../../interface-chat-producao/components/artifact-editorjs-converter';
+import { formatInlineMarkdown } from '../../interface-chat-producao/components/artifact-editorjs-converter';
 
 function generateBlockId(): string {
   return 'tv-' + Math.random().toString(36).substring(2, 12);
 }
 
-function formatInlineMarkdown(text: string): string {
-  let formatted = text;
-  formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
-  formatted = formatted.replace(/\*(.+?)\*/g, '<i>$1</i>');
-  formatted = formatted.replace(/`(.+?)`/g, '<mark class="cdx-marker">$1</mark>');
-  return formatted;
+const CALLOUT_EMOJI_MAP: Record<string, { type: string; icon: string }> = {
+  '💡': { type: 'tip', icon: '💡' },
+  '⚠️': { type: 'warning', icon: '⚠️' },
+  '📌': { type: 'important', icon: '📌' },
+  '❗': { type: 'danger', icon: '❗' },
+  '✅': { type: 'success', icon: '✅' },
+  '🔔': { type: 'info', icon: '🔔' },
+  '📎': { type: 'info', icon: '📎' },
+  '🎯': { type: 'important', icon: '🎯' },
+  '📝': { type: 'tip', icon: '📝' },
+  '🚀': { type: 'success', icon: '🚀' },
+  '⭐': { type: 'important', icon: '⭐' },
+  '🔑': { type: 'important', icon: '🔑' },
+  '📊': { type: 'info', icon: '📊' },
+  '⚡': { type: 'warning', icon: '⚡' },
+  '🧠': { type: 'tip', icon: '🧠' },
+  '📚': { type: 'info', icon: '📚' },
+};
+
+const CALLOUT_EMOJI_PATTERN = new RegExp(
+  `^(${Object.keys(CALLOUT_EMOJI_MAP).map(e => e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*`
+);
+
+function isTableSeparatorRow(line: string): boolean {
+  return /^\|[\s:]*-{2,}[\s:]*(\|[\s:]*-{2,}[\s:]*)+\|?\s*$/.test(line.trim());
+}
+
+function isTableRow(line: string): boolean {
+  const trimmed = line.trim();
+  return trimmed.startsWith('|') && trimmed.includes('|', 1);
+}
+
+function parseTableRow(line: string): string[] {
+  const trimmed = line.trim();
+  const withoutOuter = trimmed.startsWith('|') ? trimmed.slice(1) : trimmed;
+  const cleaned = withoutOuter.endsWith('|') ? withoutOuter.slice(0, -1) : withoutOuter;
+  return cleaned.split('|').map(cell => cell.trim());
+}
+
+function isChecklistItem(line: string): boolean {
+  return /^[-*]\s*\[([ xX])\]\s/.test(line.trim());
+}
+
+function isCodeFenceStart(line: string): boolean {
+  return /^```/.test(line.trim());
+}
+
+function isHorizontalRule(line: string): boolean {
+  return /^(-{3,}|\*{3,}|_{3,})$/.test(line.trim());
 }
 
 function parseContentLine(line: string): EditorJSBlock | null {
   const trimmed = line.trim();
   if (!trimmed) return null;
 
-  const headerMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
-  if (headerMatch) {
-    const level = Math.min(headerMatch[1].length, 6);
-    return {
-      id: generateBlockId(),
-      type: 'header',
-      data: { text: formatInlineMarkdown(headerMatch[2]), level }
-    };
+  if (trimmed.startsWith('###### ')) {
+    return { id: generateBlockId(), type: 'header', data: { text: formatInlineMarkdown(trimmed.slice(7)), level: 6 } };
+  }
+  if (trimmed.startsWith('##### ')) {
+    return { id: generateBlockId(), type: 'header', data: { text: formatInlineMarkdown(trimmed.slice(6)), level: 5 } };
+  }
+  if (trimmed.startsWith('#### ')) {
+    return { id: generateBlockId(), type: 'header', data: { text: formatInlineMarkdown(trimmed.slice(5)), level: 4 } };
+  }
+  if (trimmed.startsWith('### ')) {
+    return { id: generateBlockId(), type: 'header', data: { text: formatInlineMarkdown(trimmed.slice(4)), level: 3 } };
+  }
+  if (trimmed.startsWith('## ')) {
+    return { id: generateBlockId(), type: 'header', data: { text: formatInlineMarkdown(trimmed.slice(3)), level: 2 } };
+  }
+  if (trimmed.startsWith('# ')) {
+    return { id: generateBlockId(), type: 'header', data: { text: formatInlineMarkdown(trimmed.slice(2)), level: 1 } };
   }
 
-  if (trimmed.startsWith('> ') || trimmed.startsWith('⚠️') || trimmed.startsWith('💡') || trimmed.startsWith('📌')) {
-    const cleaned = trimmed
-      .replace(/^>\s*/, '')
-      .replace(/^[⚠️💡📌🔔✅❗📎🎯📝🚀⭐🔑📊]\s*/u, '');
-    return {
-      id: generateBlockId(),
-      type: 'quote',
-      data: { text: formatInlineMarkdown(cleaned), caption: '' }
-    };
-  }
-
-  if (trimmed === '---' || trimmed === '***' || trimmed === '___') {
-    return {
-      id: generateBlockId(),
-      type: 'delimiter',
-      data: {}
-    };
-  }
-
-  if (trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length > 4) {
-    const text = trimmed.replace(/^\*\*/, '').replace(/\*\*$/, '');
-    return {
-      id: generateBlockId(),
-      type: 'header',
-      data: { text, level: 3 }
-    };
+  if (trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length > 4 && !trimmed.slice(2, -2).includes('**')) {
+    const text = trimmed.slice(2, -2);
+    return { id: generateBlockId(), type: 'header', data: { text, level: 3 } };
   }
 
   return null;
-}
-
-function parseListItems(lines: string[], startIdx: number, isOrdered: boolean): { block: EditorJSBlock; endIdx: number } {
-  const items: string[] = [];
-  let idx = startIdx;
-
-  while (idx < lines.length) {
-    const trimmed = lines[idx].trim();
-    if (isOrdered && /^\d+[.)]\s/.test(trimmed)) {
-      items.push(formatInlineMarkdown(trimmed.replace(/^\d+[.)]\s*/, '')));
-      idx++;
-    } else if (!isOrdered && (trimmed.startsWith('- ') || trimmed.startsWith('• ') || trimmed.startsWith('* '))) {
-      items.push(formatInlineMarkdown(trimmed.replace(/^[-•*]\s*/, '')));
-      idx++;
-    } else {
-      break;
-    }
-  }
-
-  return {
-    block: {
-      id: generateBlockId(),
-      type: 'list',
-      data: {
-        style: isOrdered ? 'ordered' : 'unordered',
-        items
-      }
-    },
-    endIdx: idx
-  };
 }
 
 export function convertTextContentToBlocks(textContent: string): EditorJSData {
@@ -101,17 +101,110 @@ export function convertTextContentToBlocks(textContent: string): EditorJSData {
       continue;
     }
 
+    if (isCodeFenceStart(trimmed)) {
+      const langMatch = trimmed.match(/^```(\w*)/);
+      const language = langMatch ? langMatch[1] || 'text' : 'text';
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length) {
+        if (lines[i].trim() === '```') { i++; break; }
+        codeLines.push(lines[i]);
+        i++;
+      }
+      blocks.push({
+        id: generateBlockId(),
+        type: 'code',
+        data: { code: codeLines.join('\n'), language }
+      });
+      continue;
+    }
+
+    if (isTableRow(trimmed)) {
+      const rows: string[][] = [];
+      let hasHeader = false;
+      while (i < lines.length) {
+        const tl = lines[i].trim();
+        if (!tl) { if (rows.length > 0) break; i++; continue; }
+        if (isTableSeparatorRow(tl)) { hasHeader = rows.length > 0; i++; continue; }
+        if (isTableRow(tl)) { rows.push(parseTableRow(tl).map(c => formatInlineMarkdown(c))); i++; }
+        else break;
+      }
+      if (rows.length >= 2) {
+        blocks.push({ id: generateBlockId(), type: 'table', data: { content: rows, withHeadings: hasHeader } });
+      }
+      continue;
+    }
+
+    if (isChecklistItem(trimmed)) {
+      const items: { text: string; checked: boolean }[] = [];
+      while (i < lines.length) {
+        const match = lines[i].trim().match(/^[-*]\s*\[([ xX])\]\s*(.*)/);
+        if (match) { items.push({ text: formatInlineMarkdown(match[2]), checked: match[1].toLowerCase() === 'x' }); i++; }
+        else break;
+      }
+      blocks.push({ id: generateBlockId(), type: 'checklist', data: { items } });
+      continue;
+    }
+
+    if (isHorizontalRule(trimmed)) {
+      blocks.push({ id: generateBlockId(), type: 'delimiter', data: {} });
+      i++;
+      continue;
+    }
+
+    if (trimmed.startsWith('> ')) {
+      const contentAfterArrow = trimmed.replace(/^>\s*/, '');
+      const calloutInfo = CALLOUT_EMOJI_PATTERN.test(contentAfterArrow) ? (() => {
+        const match = contentAfterArrow.match(CALLOUT_EMOJI_PATTERN);
+        return match ? CALLOUT_EMOJI_MAP[match[1]] : null;
+      })() : null;
+
+      const contentParts: string[] = [];
+      const firstContent = contentAfterArrow.replace(CALLOUT_EMOJI_PATTERN, '');
+      contentParts.push(formatInlineMarkdown(firstContent));
+      i++;
+      while (i < lines.length && lines[i].trim().startsWith('> ')) {
+        contentParts.push(formatInlineMarkdown(lines[i].trim().replace(/^>\s*/, '')));
+        i++;
+      }
+
+      if (calloutInfo) {
+        blocks.push({ id: generateBlockId(), type: 'callout', data: { text: contentParts.join('<br>'), type: calloutInfo.type, icon: calloutInfo.icon } });
+      } else {
+        blocks.push({ id: generateBlockId(), type: 'quote', data: { text: contentParts.join('<br>'), caption: '' } });
+      }
+      continue;
+    }
+
+    if (CALLOUT_EMOJI_PATTERN.test(trimmed)) {
+      const match = trimmed.match(CALLOUT_EMOJI_PATTERN);
+      const info = match ? CALLOUT_EMOJI_MAP[match[1]] : { type: 'info', icon: '💡' };
+      blocks.push({ id: generateBlockId(), type: 'callout', data: { text: formatInlineMarkdown(trimmed.replace(CALLOUT_EMOJI_PATTERN, '')), type: info?.type || 'info', icon: info?.icon || '💡' } });
+      i++;
+      continue;
+    }
+
     if (trimmed.startsWith('- ') || trimmed.startsWith('• ') || trimmed.startsWith('* ')) {
-      const { block, endIdx } = parseListItems(lines, i, false);
-      blocks.push(block);
-      i = endIdx;
+      const items: string[] = [];
+      while (i < lines.length) {
+        const t = lines[i].trim();
+        if ((t.startsWith('- ') || t.startsWith('• ') || t.startsWith('* ')) && !isChecklistItem(t)) {
+          items.push(formatInlineMarkdown(t.replace(/^[-•*]\s*/, '')));
+          i++;
+        } else break;
+      }
+      blocks.push({ id: generateBlockId(), type: 'list', data: { style: 'unordered', items } });
       continue;
     }
 
     if (/^\d+[.)]\s/.test(trimmed)) {
-      const { block, endIdx } = parseListItems(lines, i, true);
-      blocks.push(block);
-      i = endIdx;
+      const items: string[] = [];
+      while (i < lines.length) {
+        const t = lines[i].trim();
+        if (/^\d+[.)]\s/.test(t)) { items.push(formatInlineMarkdown(t.replace(/^\d+[.)]\s*/, ''))); i++; }
+        else break;
+      }
+      blocks.push({ id: generateBlockId(), type: 'list', data: { style: 'ordered', items } });
       continue;
     }
 
@@ -129,6 +222,12 @@ export function convertTextContentToBlocks(textContent: string): EditorJSData {
       if (!nextLine) break;
       if (nextLine.startsWith('- ') || nextLine.startsWith('• ') || nextLine.startsWith('* ')) break;
       if (/^\d+[.)]\s/.test(nextLine)) break;
+      if (isTableRow(nextLine)) break;
+      if (isCodeFenceStart(nextLine)) break;
+      if (isHorizontalRule(nextLine)) break;
+      if (isChecklistItem(nextLine)) break;
+      if (nextLine.startsWith('#')) break;
+      if (nextLine.startsWith('> ')) break;
       if (parseContentLine(nextLine)) break;
       paragraphParts.push(formatInlineMarkdown(nextLine));
       i++;

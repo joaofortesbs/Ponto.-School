@@ -540,30 +540,121 @@ function SortableBlock({
 
     if (block.type === 'table') {
       const content = block.data.content as string[][];
+      const withHeadings = block.data.withHeadings as boolean;
       return (
-        <div className="mb-4 overflow-x-auto rounded-lg border border-slate-700/50">
+        <div className="mb-5 overflow-x-auto rounded-xl border border-slate-600/40" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.25)' }}>
           <table className="w-full text-sm text-slate-300" style={FONT_STYLES.ui}>
-            <tbody>
-              {content.map((row, rIdx) => (
-                <tr key={rIdx} className={rIdx === 0 ? 'bg-slate-800/60' : 'bg-slate-800/20'}>
-                  {row.map((cell, cIdx) => (
-                    <td
+            {withHeadings && content.length > 0 && (
+              <thead>
+                <tr style={{ background: `linear-gradient(135deg, ${accentColor}18, ${accentColor}08)` }}>
+                  {content[0].map((cell, cIdx) => (
+                    <th
                       key={cIdx}
                       contentEditable
                       suppressContentEditableWarning
-                      className={`px-4 py-2.5 border-b border-slate-700/30 outline-none ${
-                        rIdx === 0 ? 'font-semibold text-slate-200' : ''
-                      }`}
-                      style={{ cursor: 'text' }}
-                      onInput={(e) => handleTableCellInput(rIdx, cIdx, e)}
-                    >
-                      {cell}
-                    </td>
+                      className="px-4 py-3 text-left font-semibold text-slate-100 border-b-2 outline-none"
+                      style={{ borderBottomColor: `${accentColor}40`, cursor: 'text', fontSize: '13px', letterSpacing: '0.02em' }}
+                      onInput={(e) => handleTableCellInput(0, cIdx, e)}
+                      dangerouslySetInnerHTML={{ __html: cell }}
+                    />
                   ))}
                 </tr>
-              ))}
+              </thead>
+            )}
+            <tbody>
+              {content.slice(withHeadings ? 1 : 0).map((row, rIdx) => {
+                const actualRowIdx = withHeadings ? rIdx + 1 : rIdx;
+                return (
+                  <tr
+                    key={actualRowIdx}
+                    className="transition-colors hover:bg-white/[0.03]"
+                    style={{ background: rIdx % 2 === 1 ? 'rgba(148, 163, 184, 0.03)' : 'transparent' }}
+                  >
+                    {row.map((cell, cIdx) => (
+                      <td
+                        key={cIdx}
+                        contentEditable
+                        suppressContentEditableWarning
+                        className="px-4 py-2.5 border-b border-slate-700/20 outline-none text-slate-300"
+                        style={{ cursor: 'text', fontSize: '13.5px' }}
+                        onInput={(e) => handleTableCellInput(actualRowIdx, cIdx, e)}
+                        dangerouslySetInnerHTML={{ __html: cell }}
+                      />
+                    ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+        </div>
+      );
+    }
+
+    if (block.type === 'code') {
+      const code = block.data.code as string;
+      const language = (block.data.language as string) || 'text';
+      const [copied, setCopied] = useState(false);
+      const handleCopy = () => {
+        navigator.clipboard.writeText(code);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      };
+      return (
+        <div className="mb-5 rounded-xl overflow-hidden border border-slate-600/30" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.3)' }}>
+          <div className="flex items-center justify-between px-4 py-2" style={{ background: '#0d1117', borderBottom: '1px solid rgba(99, 110, 123, 0.25)' }}>
+            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: accentColor, fontFamily: "'Inter', monospace" }}>
+              {language}
+            </span>
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-all hover:bg-white/10"
+              style={{ color: copied ? '#22c55e' : '#8b949e', fontFamily: "'Inter', sans-serif" }}
+            >
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? 'Copiado' : 'Copiar'}
+            </button>
+          </div>
+          <pre className="p-4 overflow-x-auto" style={{ background: '#0d1117', margin: 0 }}>
+            <code
+              className="text-[13px] leading-relaxed"
+              style={{ fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace", color: '#c9d1d9', tabSize: 2 }}
+            >
+              {code}
+            </code>
+          </pre>
+        </div>
+      );
+    }
+
+    if (block.type === 'callout') {
+      const text = block.data.text as string;
+      const calloutType = (block.data.type as string) || 'info';
+      const icon = (block.data.icon as string) || '💡';
+      const calloutStyles: Record<string, { bg: string; border: string; textColor: string }> = {
+        tip: { bg: 'rgba(34, 197, 94, 0.06)', border: '#22c55e', textColor: '#86efac' },
+        warning: { bg: 'rgba(234, 179, 8, 0.06)', border: '#eab308', textColor: '#fde68a' },
+        important: { bg: 'rgba(59, 130, 246, 0.06)', border: '#3b82f6', textColor: '#93c5fd' },
+        danger: { bg: 'rgba(239, 68, 68, 0.06)', border: '#ef4444', textColor: '#fca5a5' },
+        success: { bg: 'rgba(34, 197, 94, 0.06)', border: '#22c55e', textColor: '#86efac' },
+        info: { bg: 'rgba(99, 102, 241, 0.06)', border: '#6366f1', textColor: '#a5b4fc' },
+      };
+      const style = calloutStyles[calloutType] || calloutStyles.info;
+      return (
+        <div
+          className="mb-4 rounded-xl py-3.5 pl-4 pr-5 flex items-start gap-3"
+          style={{
+            background: style.bg,
+            borderLeft: `3px solid ${style.border}`,
+            boxShadow: `inset 0 0 20px ${style.border}08`,
+          }}
+        >
+          <span className="text-lg flex-shrink-0 mt-0.5">{icon}</span>
+          <EditableContent
+            html={text}
+            className="text-[14.5px] leading-[1.75] flex-1"
+            style={{ ...FONT_STYLES.body, color: style.textColor }}
+            onUpdate={handleTextUpdate}
+          />
         </div>
       );
     }
