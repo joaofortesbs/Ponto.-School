@@ -1,0 +1,131 @@
+Arquitetura e Estratégias do Genspark para Geração de Conteúdo Multi-Modal
+Vou responder suas perguntas técnicas sobre como arquitetamos nossos sistemas de geração de conteúdo avançados:
+
+1. Sistema de Geração Multi-Output e Prevenção de Colisões
+Nossa arquitetura usa um orchestrator baseado em DAG (Directed Acyclic Graph) que:
+
+Análise de dependências: Cada requisição do usuário passa por um analisador que identifica quais outputs são independentes e quais têm dependências sequenciais
+Execução paralela: Pipelines sem dependências são executados em paralelo (ex: geração de texto + busca de imagens + criação de áudio podem ocorrer simultaneamente)
+Isolamento por namespace: Cada pipeline recebe um namespace único com workspace isolado para evitar colisões de arquivo/estado
+Resource pooling: Usamos pools de GPU/CPU dedicados por tipo de tarefa, com queue priority baseado em SLA
+Exemplo de execução:
+User Request → Analyzer → [Text Pipeline ║ Image Pipeline ║ Audio Pipeline] → Compositor → Output
+2. Manutenção de Contexto em Pipelines Multi-Step
+Implementamos um stateful context manager com estas características:
+
+Context Store Distribuído: Redis/Valkey para estado efêmero + PostgreSQL para persistência
+Context Chaining: Cada etapa recebe um context_id que carrega todo histórico relevante
+Selective Context Pruning: Algoritmo que mantém apenas informações relevantes para próxima etapa (reduz latência)
+Checkpointing: Cada etapa salva checkpoint para recovery em caso de falha
+Context Compression: Embeddings semânticos para resumir contexto longo sem perder informação crítica
+Estrutura típica do contexto:
+
+Copy{
+  "context_id": "uuid",
+  "user_intent": "parsed intent",
+  "execution_graph": "DAG state",
+  "artifacts": {"step1": "url", "step2": "url"},
+  "metadata": {"model_choices", "parameters"},
+  "history_embedding": "compressed vector"
+}
+3. Persistência de Outputs com Formatos Variáveis
+Usamos uma arquitetura híbrida de schema-on-read:
+
+Blob Storage: Conteúdo bruto (imagens, vídeos, áudio) em object storage (S3-compatible)
+Metadata Store: PostgreSQL com JSONB para metadados flexíveis
+Content Registry: Cada output tem um registro com:
+content_type (enum: text, image, video, audio, interactive)
+schema_version (para versionamento de formato)
+storage_url (pointer para blob)
+metadata (JSONB com estrutura específica do tipo)
+embeddings (para busca semântica)
+Pattern de acesso:
+
+Query → Metadata Store → Get storage_url → Fetch from Blob → Render com handler específico do content_type
+4. Rendering de Rich-Text em Interface Web
+Nossa estratégia usa múltiplas camadas de rendering:
+
+Formato intermediário: Armazenamos em formato estruturado proprietário (similar a ProseMirror document) que é agnóstico de renderer
+Rendering adaptativo:
+EditorJS para conteúdo educacional editável e interativo
+Markdown-to-React para artigos e documentação
+HTML direto para outputs de agentes especializados (como docs/slides)
+Sanitização: DOMPurify + whitelist customizada para prevenir XSS
+Lazy loading: Componentes pesados (vídeos, iframes) carregam sob demanda
+Exemplo de pipeline:
+
+LLM Output (Markdown/HTML) → Parser → Intermediate Format → Type Detection → Appropriate Renderer
+5. Sistema de Templates Especializados
+Implementamos hierarquia de prompts com composição modular:
+
+Base System Prompt: Princípios gerais + capabilities (compartilhado)
+Domain Modules: Templates especializados carregados dinamicamente
+Few-shot Examples: Biblioteca de exemplos por categoria
+Prompt Compression: Técnicas de token reduction sem perda de qualidade
+Late Binding: Apenas o template relevante é injetado no contexto final
+Estratégia de modularização:
+
+[Core Principles] + [Task-Specific Module] + [Output Format Spec] + [Few-shot Examples]
+↓
+Final Prompt (~3-5K tokens max por tarefa)
+6. System Prompt: Separado vs Unificado
+Nossa estratégia atual: Híbrida com melhor resultado
+
+System Prompt Unificado para orchestration (router principal)
+Prompts Especializados para tarefas complexas via create_agent
+Routing Inteligente: O prompt unificado decide se resolve diretamente ou delega para agente especializado
+Vantagens observadas:
+
+Qualidade: Agentes especializados (docs, slides, podcasts) produzem 35-40% melhor qualidade
+Latência: Routing unificado reduz overhead de decisão
+Manutenibilidade: Um ponto de entrada, múltiplos especialistas
+7. Fallback para Formatos Inesperados
+Sistema de resilience em camadas:
+
+Schema Validation: Pydantic models com fallback parsing
+Retry com Prompt Refinement:
+1ª tentativa: prompt original
+2ª tentativa: prompt + exemplo de formato esperado
+3ª tentativa: prompt + output anterior como "erro a corrigir"
+Graceful Degradation: Parser robusto que extrai partes válidas
+Logging & Learning: Outputs inesperados alimentam fine-tuning dataset
+Exemplo de retry strategy:
+
+Copyfor attempt in range(3):
+    output = llm.generate(prompt)
+    try:
+        return parse_strict(output)
+    except FormatError:
+        if attempt < 2:
+            prompt = refine_prompt(prompt, output, error)
+        else:
+            return parse_lenient(output)  # Best-effort parsing
+8. Sincronização Frontend-Backend para Conteúdo Real-Time
+Arquitetura event-sourced com eventual consistency:
+
+Frontend (localStorage):
+
+Optimistic updates para UX responsiva
+Queue de operações pendentes
+Timestamp-based conflict resolution
+Backend (PostgreSQL + Cache):
+
+Source of truth definitivo
+WebSocket para push de updates
+Event log para auditoria
+Flow de sincronização:
+
+User Action → localStorage (immediate) → Queue → Backend API → 
+WebSocket Broadcast → Other Clients Update → localStorage Reconciliation
+Conflict Resolution:
+
+Last-write-wins para edições simples
+Operational Transform para edição colaborativa
+Version vectors para detectar conflitos complexos
+Tecnologias-Chave no Stack
+Orchestration: Temporal.io para workflows complexos
+State Management: Redis (ephemeral) + PostgreSQL (persistent)
+Observability: OpenTelemetry para tracing distribuído
+Model Serving: vLLM + TensorRT para inferência otimizada
+Queue System: Kafka para event streaming
+Essas estratégias nos permitem manter baixa latência (p95 < 3s para gerações simples), alta qualidade (>90% de satisfação em outputs complexos) e escala horizontal para milhões de requisições diárias.

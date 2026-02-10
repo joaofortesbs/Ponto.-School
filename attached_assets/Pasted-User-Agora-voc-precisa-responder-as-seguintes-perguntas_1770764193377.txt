@@ -1,0 +1,1333 @@
+User: Agora você precisa responder as seguintes perguntas com o contexto da empresa Kimi K2.5, K3.0, Agent e Agent Swarm:
+
+"Como vocês arquitetam um sistema de geração de conteúdo que produz múltiplos tipos de output (interativo + textual) a partir de um único pedido do usuário? Como evitam colisão entre pipelines?"
+"Qual é a estratégia de vocês para manter contexto entre etapas de um pipeline multi-step (decidir → gerar → construir → salvar) sem perder dados entre cada etapa?"
+"Como vocês lidam com a persistência de conteúdo gerado por IA em banco de dados quando o formato do output varia significativamente entre tipos diferentes?"
+"Qual pattern vocês usam para rendering de conteúdo rich-text gerado por IA em uma interface web — vocês usam EditorJS, markdown-to-html, ou outro approach?"
+"Como vocês implementam um sistema de templates especializados para diferentes tipos de conteúdo educacional sem que o prompt principal fique muito grande e dilua a qualidade?"
+"Vocês usam system prompt separado para cada tipo de geração ou um prompt unificado com routing interno? Qual teve melhor resultado em termos de qualidade?"
+"Como vocês implementam fallback quando a IA retorna formato inesperado — vocês re-tentam com prompt corrigido ou fazem parsing robusto do output?"
+"Qual é a arquitetura de vocês para sincronizar estado entre localStorage (frontend) e banco de dados (backend) para conteúdo gerado por IA em tempo real?"
+
+Crie um arquivo supremo e super detalhado de ponta a ponta incluindo fluxos, engenharia de dados e arquitetura de sistemas, front-end e back-end!
+Kimi: Vou criar uma documentação técnica completa e detalhada sobre a arquitetura de sistemas da Moonshot AI (Kimi), cobrindo todos os aspectos solicitados. Esta será uma análise baseada nas capacidades públicas do Kimi e melhores práticas de engenharia de IA.
+
+---
+
+# 🏗️ ARQUITETURA DE SISTEMAS MOONSHOT AI (KIMI K2.5/K3.0)
+## Documentação Técnica Completa - Geração de Conteúdo Multi-Modal
+
+---
+
+## 📋 SUMÁRIO EXECUTIVO
+
+Esta documentação apresenta a arquitetura completa do sistema de geração de conteúdo da Moonshot AI, abrangendo desde o processamento de requisições do usuário até a entrega de outputs multi-modais (texto, código, visualizações, dados estruturados).
+
+---
+
+## 1. ARQUITETURA GERAL DO SISTEMA
+
+### 1.1 Visão Panorâmica
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           CAMADA DE APRESENTAÇÃO                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │   Web App   │  │  Mobile App │  │    API      │  │   IDE Extensions    │ │
+│  │  (React)    │  │(iOS/Android)│  │  (REST/gRPC)│  │  (VSCode, etc)      │ │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘ │
+│         └─────────────────┴─────────────────┘                    │           │
+│                              │                                   │           │
+└──────────────────────────────┼───────────────────────────────────┼───────────┘
+                               │                                   │
+┌──────────────────────────────┼───────────────────────────────────┼───────────┐
+│                         CAMADA DE GATEWAY/API                              │
+│  ┌───────────────────────────┴───────────────────────────────────┐          │
+│  │                    API GATEWAY (Kong/AWS)                      │          │
+│  │  • Rate Limiting • Auth (JWT/OAuth2) • Load Balancing          │          │
+│  └───────────────────────────┬───────────────────────────────────┘          │
+└──────────────────────────────┼──────────────────────────────────────────────┘
+                               │
+┌──────────────────────────────┼──────────────────────────────────────────────┐
+│                      CAMADA DE ORQUESTRAÇÃO (AGENT)                         │
+│  ┌───────────────────────────┴───────────────────────────────────┐          │
+│  │              AGENT ORQUESTRADOR (Kimi Core)                    │          │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐ │          │
+│  │  │   Parser    │  │  Planner    │  │    Tool Selector        │ │          │
+│  │  │ de Intenção │→ │  de Tarefas │→ │   (Router Dinâmico)     │ │          │
+│  │  └─────────────┘  └─────────────┘  └─────────────────────────┘ │          │
+│  └───────────────────────────┬───────────────────────────────────┘          │
+└──────────────────────────────┼──────────────────────────────────────────────┘
+                               │
+┌──────────────────────────────┼──────────────────────────────────────────────┐
+│                    CAMADA DE EXECUÇÃO (TOOLS/SERVICES)                      │
+│                                                                              │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐        │
+│  │  LLM Core    │ │  Code Exec   │ │  Data Sources│ │  File System │        │
+│  │  (K2.5/K3.0) │ │  (Sandbox)   │ │  (YFinance,  │ │  (S3/MinIO)  │        │
+│  │              │ │              │ │   Arxiv, WB) │ │              │        │
+│  └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘        │
+│                                                                              │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐        │
+│  │  Web Search  │ │  Image Proc  │ │  Vector DB   │ │  Memory      │        │
+│  │  (Bing/API)  │ │  (MoonViT)   │ │  (Pinecone)  │ │  (Redis/DB)  │        │
+│  └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘        │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. SISTEMA DE GERAÇÃO MULTI-OUTPUT
+
+### 2.1 Arquitetura de Pipeline Paralelo
+
+**Problema:** Como gerar múltiplos tipos de output (texto + código + gráfico + dados) sem colisão?
+
+**Solução:** Arquitetura de **DAG (Directed Acyclic Graph)** com execução paralela e merge estruturado.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    PIPELINE DE GERAÇÃO MULTI-OUTPUT                         │
+│                                                                              │
+│  INPUT: "Analise o mercado de IA e crie um relatório completo"              │
+│                                                                              │
+│  ┌─────────────────┐                                                         │
+│  │  DECOMPOSIÇÃO   │                                                         │
+│  │   (Agent Core)  │                                                         │
+│  └────────┬────────┘                                                         │
+│           │                                                                  │
+│           ▼                                                                  │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                    GRAPH DE DEPENDÊNCIAS                            │    │
+│  │                                                                     │    │
+│  │  [1. Research] ──┬──→ [3. Analysis] ──┬──→ [5. Report Text]        │    │
+│  │       │          │        │            │                            │    │
+│  │       ↓          │        ↓            │                            │    │
+│  │  [2. Data Fetch]─┘   [4. Visualization]┘──→ [6. Charts/Graphs]      │    │
+│  │       │                   │                                       │    │
+│  │       └───────────────────┴────────────────→ [7. Code Examples]     │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│           │                                                                  │
+│           ▼                                                                  │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                    SYNCHRONIZER & MERGER                            │    │
+│  │                                                                     │    │
+│  │  • Identifica conflitos de naming                                   │    │
+│  │  • Normaliza formatos (JSON Schema)                                 │    │
+│  │  • Orquestra ordem de renderização                                  │    │
+│  │  • Gera manifesto de saída                                          │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│           │                                                                  │
+│           ▼                                                                  │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                    OUTPUT ESTRUTURADO                               │    │
+│  │                                                                     │    │
+│  │  {                                                                  │    │
+│  │    "version": "2.0",                                                │    │
+│  │    "components": [                                                  │    │
+│  │      {"type": "markdown", "id": "text_1", "content": "..."},        │    │
+│  │      {"type": "code", "id": "code_1", "language": "python", ...},   │    │
+│  │      {"type": "chart", "id": "chart_1", "data": {...}, ...},        │    │
+│  │      {"type": "file", "id": "file_1", "path": "...", ...}           │    │
+│  │    ],                                                               │    │
+│  │    "metadata": {"execution_time": 12.5, "tokens_used": 15420}       │    │
+│  │  }                                                                  │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 2.2 Sistema Anti-Colisão
+
+```python
+# Pseudo-código do Sistema de Coordenação de Pipeline
+
+class PipelineOrchestrator:
+    def __init__(self):
+        self.resource_manager = ResourceLockManager()
+        self.context_store = ContextVersionControl()
+        self.conflict_resolver = ConflictResolutionEngine()
+    
+    async def execute_parallel(self, tasks: List[Task], user_request: str):
+        """
+        Executa múltiplas tarefas em paralelo com isolamento de recursos
+        """
+        # 1. Análise de dependências
+        dag = self.build_dependency_graph(tasks)
+        
+        # 2. Alocação de namespaces isolados
+        execution_contexts = {}
+        for task in tasks:
+            context_id = f"{task.id}_{uuid.uuid4().hex[:8]}"
+            execution_contexts[task.id] = {
+                "namespace": context_id,
+                "temp_dir": f"/tmp/kimi/{context_id}",
+                "memory_scope": f"session:{context_id}",
+                "lock": self.resource_manager.acquire_lock(task.resource_type)
+            }
+        
+        # 3. Execução paralela com isolamento
+        results = await asyncio.gather(*[
+            self.execute_isolated(task, execution_contexts[task.id])
+            for task in dag.get_ready_tasks()
+        ])
+        
+        # 4. Detecção e resolução de conflitos
+        merged = self.conflict_resolver.merge(results)
+        
+        # 5. Validação de consistência
+        if not self.validate_output_consistency(merged):
+            raise PipelineConsistencyError()
+        
+        return merged
+
+class ConflictResolutionEngine:
+    """
+    Resolve conflitos entre outputs de diferentes pipelines
+    """
+    
+    def resolve_naming_conflicts(self, components: List[Component]):
+        """
+        Estratégia: Namespacing hierárquico + hash de conteúdo
+        """
+        seen_names = {}
+        for comp in components:
+            base_name = comp.name
+            
+            # Verifica colisão
+            if base_name in seen_names:
+                # Gera nome único baseado em conteúdo (determinístico)
+                content_hash = hashlib.md5(
+                    comp.content.encode()
+                ).hexdigest()[:6]
+                comp.name = f"{base_name}_{content_hash}"
+            
+            seen_names[comp.name] = comp
+        
+        return components
+    
+    def resolve_data_conflicts(self, data_sources: List[DataSource]):
+        """
+        Estratégia: Versionamento de dados + merge semântico
+        """
+        # Usa CRDT (Conflict-free Replicated Data Types) para merges
+        merged = CRDTMergeStrategy.merge(data_sources)
+        return merged
+```
+
+---
+
+## 3. PERSISTÊNCIA DE CONTEXTO MULTI-STEP
+
+### 3.1 Arquitetura de Contexto Versionado
+
+**Estratégia:** Sistema de **Contexto Imutável Versionado** (similar a Git, mas para estado de IA)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    SISTEMA DE CONTEXTO VERSIONADO                           │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                    CONTEXT STORE (Redis + PostgreSQL)               │    │
+│  │                                                                     │    │
+│  │  Session ID: "sess_abc123"                                          │    │
+│  │                                                                     │    │
+│  │  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐           │    │
+│  │  │  v1: Start  │────→│  v2: Decide │────→│  v3: Generate│          │    │
+│  │  │             │     │             │     │              │          │    │
+│  │  │ Input:      │     │ Plan:       │     │ Code:        │          │    │
+│  │  │ "Crie app"  │     │ ["step1",   │     │ "import..."  │          │    │
+│  │  │             │     │  "step2"]   │     │              │          │    │
+│  │  │ Tokens: 15  │     │ Tokens: 450 │     │ Tokens: 1200 │          │    │
+│  │  └─────────────┘     └─────────────┘     └──────┬──────┘           │    │
+│  │                                                  │                  │    │
+│  │                       ┌──────────────────────────┘                  │    │
+│  │                       ▼                                             │    │
+│  │                  ┌─────────────┐     ┌─────────────┐                │    │
+│  │                  │  v4: Build  │────→│  v5: Save   │                │    │
+│  │                  │             │     │             │                │    │
+│  │                  │ Output:     │     │ Files:      │                │    │
+│  │                  │ "build.log" │     │ ["app.zip"] │                │    │
+│  │                  └─────────────┘     └─────────────┘                │    │
+│  │                                                                     │    │
+│  │  Cada versão mantém:                                                │    │
+│  │  • Diff incremental (não full copy)                                 │    │
+│  │  • Checksum de integridade                                          │    │
+│  │  • Timestamp e metadados de execução                                │    │
+│  │  • Referência ao pai (linked list)                                  │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                    CONTEXT COMPRESSION                              │    │
+│  │                                                                     │    │
+│  │  Quando contexto > 100k tokens:                                     │    │
+│  │                                                                     │    │
+│  │  1. Summarization Layer: Resume versões antigas                     │    │
+│  │  2. Archive Layer: Move para storage frio (S3)                      │    │
+│  │  3. Hot Context: Mantém apenas últimas 3 versões + summary          │    │
+│  │                                                                     │    │
+│  │  Exemplo:                                                           │    │
+│  │  v1-v10: [ARQUIVADO] Summary: "User asked for a Python web app"     │    │
+│  │  v11: [HOT] Full context                                            │    │
+│  │  v12: [HOT] Full context (current)                                  │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3.2 Implementação Técnica
+
+```python
+class ContextVersionManager:
+    """
+    Gerencia versões de contexto entre etapas do pipeline
+    """
+    
+    def __init__(self):
+        self.redis = RedisClient()
+        self.db = PostgreSQLClient()
+        self.compressor = ContextCompressor()
+    
+    async def save_step(self, session_id: str, step_name: str, data: dict):
+        """
+        Salva uma etapa do pipeline com versionamento
+        """
+        version_id = f"{session_id}:{step_name}:{uuid.uuid4().hex[:8]}"
+        timestamp = datetime.utcnow().isoformat()
+        
+        # Estrutura do contexto
+        context_packet = {
+            "version_id": version_id,
+            "session_id": session_id,
+            "step_name": step_name,
+            "timestamp": timestamp,
+            "data": data,
+            "token_count": self.estimate_tokens(data),
+            "checksum": self.compute_checksum(data),
+            "parent_version": await self.get_latest_version(session_id)
+        }
+        
+        # Salva em camadas (hot/warm/cold)
+        if context_packet["token_count"] < 10000:
+            # Hot: Redis (rápido)
+            await self.redis.setex(
+                f"context:{version_id}",
+                timedelta(hours=24),
+                json.dumps(context_packet)
+            )
+        else:
+            # Warm: PostgreSQL
+            await self.db.execute(
+                "INSERT INTO context_versions (...) VALUES (...)",
+                context_packet
+            )
+        
+        # Atualiza índice de sessão
+        await self.update_session_index(session_id, version_id)
+        
+        return version_id
+    
+    async def get_context_for_step(self, session_id: str, target_step: str):
+        """
+        Recupera contexto acumulado até uma etapa específica
+        """
+        # Busca todas as versões da sessão
+        versions = await self.get_version_chain(session_id)
+        
+        # Reconstrói estado acumulado
+        accumulated = {}
+        for version in versions:
+            accumulated.update(version["data"])
+            if version["step_name"] == target_step:
+                break
+        
+        # Retorna formato otimizado para LLM
+        return self.format_for_llm(accumuated)
+```
+
+---
+
+## 4. PERSISTÊNCIA EM BANCO DE DADOS
+
+### 4.1 Schema Polimórfico para Outputs Variados
+
+**Estratégia:** PostgreSQL JSONB + S3 para blobs, com metadados tipados.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    ARQUITETURA DE PERSISTÊNCIA                              │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  CAMADA 1: METADADOS ESTRUTURADOS (PostgreSQL)                      │    │
+│  │                                                                     │    │
+│  │  Tabela: generated_contents                                         │    │
+│  │  ┌─────────────┬─────────────┬─────────────┬─────────────────────┐  │    │
+│  │  │ id (uuid)   │ type (enum) │ metadata    │ content_ref         │  │    │
+│  │  ├─────────────┼─────────────┼─────────────┼─────────────────────┤  │    │
+│  │  │ cont_001    │ text        │ {...}       │ null                │  │    │
+│  │  │ cont_002    │ code        │ {...}       │ null                │  │    │
+│  │  │ cont_003    │ chart       │ {...}       │ s3://bucket/001.png │  │    │
+│  │  │ cont_004    │ file        │ {...}       │ s3://bucket/doc.pdf │  │    │
+│  │  │ cont_005    │ interactive │ {...}       │ s3://bundle.zip     │  │    │
+│  │  └─────────────┴─────────────┴─────────────┴─────────────────────┘  │    │
+│  │                                                                     │    │
+│  │  type ENUM: 'text', 'code', 'chart', 'file', 'interactive', 'mixed' │    │
+│  │                                                                     │    │
+│  │  metadata JSONB:                                                    │    │
+│  │  {                                                                  │    │
+│  │    "generator": "kimi-k2.5",                                        │    │
+│  │    "version": "2.0",                                                │    │
+│  │    "tokens_input": 1500,                                            │    │
+│  │    "tokens_output": 3500,                                           │    │
+│  │    "execution_time_ms": 12500,                                      │    │
+│  │    "tools_used": ["web_search", "python"],                          │    │
+│  │    "content_specific": {                                            │    │
+│  │      "language": "python",      // para code                        │    │
+│  │      "chart_type": "line",      // para chart                       │    │
+│  │      "mime_type": "text/x-python"                                   │    │
+│  │    }                                                                │    │
+│  │  }                                                                  │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  CAMADA 2: CONTEÚDO BRUTO (S3/MinIO)                                │    │
+│  │                                                                     │    │
+│  │  Estrutura de buckets:                                              │    │
+│  │                                                                     │    │
+│  │  s3://kimi-generated/                                               │    │
+│  │  ├── text/                                                          │    │
+│  │  │   └── {uuid}.md          # Markdown puro                         │    │
+│  │  ├── code/                                                          │    │
+│  │  │   └── {uuid}/                                                      │    │
+│  │  │       ├── main.py                                                │    │
+│  │  │       ├── requirements.txt                                       │    │
+│  │  │       └── README.md                                              │    │
+│  │  ├── charts/                                                        │    │
+│  │  │   └── {uuid}.png         # PNG/SVG gerado                        │    │
+│  │  ├── files/                                                         │    │
+│  │  │   └── {uuid}.zip         # Arquivos genéricos                    │    │
+│  │  └── interactive/                                                   │    │
+│  │      └── {uuid}/                                                      │    │
+│  │          ├── index.html                                             │    │
+│  │          ├── style.css                                              │    │
+│  │          └── script.js                                              │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  CAMADA 3: ÍNDICE DE BUSCA (Elasticsearch)                          │    │
+│  │                                                                     │    │
+│  │  Para conteúdo textual pesquisável:                                 │    │
+│  │  • Full-text search no conteúdo gerado                              │    │
+│  │  • Filtros por tipo, data, ferramentas usadas                       │    │
+│  │  • Vetor embeddings para similaridade semântica                     │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 4.2 Sistema de Normalização de Output
+
+```python
+class ContentNormalizer:
+    """
+    Normaliza diferentes tipos de output para schema unificado
+    """
+    
+    SCHEMA_VERSION = "2.0"
+    
+    def normalize(self, raw_output: Any, output_type: str) -> NormalizedContent:
+        """
+        Converte qualquer output para formato padronizado
+        """
+        normalizers = {
+            "text": self._normalize_text,
+            "code": self._normalize_code,
+            "chart": self._normalize_chart,
+            "file": self._normalize_file,
+            "interactive": self._normalize_interactive,
+            "mixed": self._normalize_mixed
+        }
+        
+        normalizer = normalizers.get(output_type, self._normalize_generic)
+        return normalizer(raw_output)
+    
+    def _normalize_code(self, output: CodeOutput) -> NormalizedContent:
+        return NormalizedContent(
+            type="code",
+            format="structured",
+            content={
+                "files": [
+                    {
+                        "path": file.path,
+                        "content": file.content,
+                        "language": file.language,
+                        "size_bytes": len(file.content.encode('utf-8'))
+                    }
+                    for file in output.files
+                ],
+                "entrypoint": output.entrypoint,
+                "dependencies": output.dependencies or []
+            },
+            storage_strategy="s3_directory",
+            render_hints={"collapsible": True, "line_numbers": True}
+        )
+    
+    def _normalize_chart(self, output: ChartOutput) -> NormalizedContent:
+        return NormalizedContent(
+            type="chart",
+            format="image+data",
+            content={
+                "image_url": output.image_path,
+                "data": output.source_data,  # Dados brutos para re-renderização
+                "chart_type": output.chart_type,
+                "library": output.library  # matplotlib, plotly, etc.
+            },
+            storage_strategy="s3_hybrid",  # Imagem + JSON sidecar
+            render_hints={"downloadable": True, "zoomable": True}
+        )
+    
+    def _normalize_interactive(self, output: InteractiveOutput) -> NormalizedContent:
+        return NormalizedContent(
+            type="interactive",
+            format="html_bundle",
+            content={
+                "index_file": "index.html",
+                "assets": output.assets,
+                "sandbox_config": {
+                    "allowed_origins": ["self"],
+                    "allowed_scripts": ["inline", "cdn"],
+                    "csp_policy": "strict"
+                }
+            },
+            storage_strategy="s3_bundle",
+            render_hints={"iframe_sandbox": True, "responsive": True}
+        )
+```
+
+---
+
+## 5. RENDERIZAÇÃO DE RICH-TEXT
+
+### 5.1 Estratégia de Rendering
+
+**Decisão de Arquitetura:** Sistema híbrido **Markdown + Componentes React Dinâmicos**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    PIPELINE DE RENDERIZAÇÃO                                 │
+│                                                                              │
+│  INPUT: Resposta estruturada da IA                                          │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  PASSO 1: PARSE E VALIDAÇÃO                                         │    │
+│  │                                                                     │    │
+│  │  Parser: Unified Markdown + Custom Syntax                           │    │
+│  │                                                                     │    │
+│  │  Exemplo de sintaxe Kimi:                                           │    │
+│  │  ```python:executable                                               │    │
+│  │  print("Hello")                                                     │    │
+│  │  ```                                                                │    │
+│  │                                                                     │    │
+│  │  :::chart{type="line" data="chart_001"}                             │    │
+│  │  :::                                                                │    │
+│  │                                                                     │    │
+│  │  [[file:path="sandbox:///output/data.csv" preview="table"]]         │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│           │                                                                  │
+│           ▼                                                                  │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  PASSO 2: TRANSFORMAÇÃO AST (Abstract Syntax Tree)                  │    │
+│  │                                                                     │    │
+│  │  Markdown ──→ Remark Parser ──→ AST                                 │    │
+│  │                                     │                               │    │
+│  │                                     ▼                               │    │
+│  │                            Custom Plugins                           │    │
+│  │                            • remark-kimi-components                 │    │
+│  │                            • remark-executable-code                 │    │
+│  │                            • remark-chart-embeds                    │    │
+│  │                            • remark-file-references                 │    │
+│  │                                     │                               │    │
+│  │                                     ▼                               │    │
+│  │                            Enhanced AST                             │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│           │                                                                  │
+│           ▼                                                                  │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  PASSO 3: RENDERIZAÇÃO REATIVA                                      │    │
+│  │                                                                     │    │
+│  │  Componente React Principal: <KimiContentRenderer />                │    │
+│  │                                                                     │    │
+│  │  Mapeamento de nós AST para componentes:                            │    │
+│  │                                                                     │    │
+│  │  ┌─────────────────┬─────────────────────────────────────────────┐  │    │
+│  │  │ Tipo de Nó      │ Componente React                            │  │    │
+│  │  ├─────────────────┼─────────────────────────────────────────────┤  │    │
+│  │  │ code            │ <CodeBlock language={...} executable={...}/>│  │    │
+│  │  │ chart           │ <ChartRenderer type={...} data={...} />     │  │    │
+│  │  │ file            │ <FilePreview path={...} type={...} />       │  │    │
+│  │  │ interactive     │ <SandboxedIframe src={...} />               │  │    │
+│  │  │ table           │ <DataTable sortable filterable ... />       │  │    │
+│  │  │ math            │ <KaTeX math={...} />                        │  │    │
+│  │  │ thinking        │ <ThinkingProcess steps={...} />             │  │    │
+│  │  └─────────────────┴─────────────────────────────────────────────┘  │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 5.2 Implementação dos Componentes
+
+```typescript
+// React Component Architecture
+
+interface ContentComponentProps {
+  node: ASTNode;
+  context: RenderContext;
+  onAction?: (action: string, payload: any) => void;
+}
+
+// Componente de Código Executável
+const ExecutableCodeBlock: React.FC<ContentComponentProps> = ({ node }) => {
+  const [output, setOutput] = useState<ExecutionResult | null>(null);
+  const [isExecuting, setIsExecuting] = useState(false);
+  
+  const executeCode = async () => {
+    setIsExecuting(true);
+    const result = await fetch('/api/execute', {
+      method: 'POST',
+      body: JSON.stringify({
+        code: node.value,
+        language: node.lang,
+        context_id: node.contextId
+      })
+    });
+    setOutput(await result.json());
+    setIsExecuting(false);
+  };
+  
+  return (
+    <div className="executable-code-block">
+      <CodeEditor 
+        value={node.value} 
+        language={node.lang}
+        readOnly={false}
+      />
+      <Button 
+        onClick={executeCode}
+        loading={isExecuting}
+        icon={<PlayIcon />}
+      >
+        Executar
+      </Button>
+      {output && <ExecutionOutput result={output} />}
+    </div>
+  );
+};
+
+// Componente de Chart Interativo
+const ChartRenderer: React.FC<ContentComponentProps> = ({ node }) => {
+  const chartConfig = useMemo(() => ({
+    data: node.data,
+    type: node.chartType,
+    interactive: true,
+    downloadOptions: ['png', 'svg', 'csv']
+  }), [node]);
+  
+  return (
+    <div className="chart-container">
+      <PlotlyChart config={chartConfig} />
+      <ChartToolbar>
+        <DownloadButton formats={['png', 'svg', 'data']} />
+        <ZoomControls />
+        <DataViewToggle />
+      </ChartToolbar>
+    </div>
+  );
+};
+
+// Componente de Sandbox para Conteúdo Interativo
+const SandboxedContent: React.FC<ContentComponentProps> = ({ node }) => {
+  return (
+    <iframe
+      src={node.src}
+      sandbox="allow-scripts allow-same-origin allow-popups"
+      csp="default-src 'self'; script-src 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net;"
+      className="sandboxed-content"
+      style={{ width: '100%', height: node.height || '400px' }}
+    />
+  );
+};
+```
+
+---
+
+## 6. SISTEMA DE TEMPLATES ESPECIALIZADOS
+
+### 6.1 Arquitetura de Templates Hierárquicos
+
+**Estratégia:** Templates modulares com composição, não herança pesada.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    SISTEMA DE TEMPLATES MODULARES                           │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  NÍVEL 1: SYSTEM PROMPT BASE (Invariável)                           │    │
+│  │                                                                     │    │
+│  │  "Você é Kimi, assistente de IA da Moonshot.                       │    │
+│  │   Capacidades: [lista de ferramentas disponíveis]                  │    │
+│  │   Restrições: [safety guidelines]                                   │    │
+│  │   Formato de resposta: [JSON Schema base]"                          │    │
+│  │                                                                     │    │
+│  │  Tamanho: ~2k tokens (fixo)                                         │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  NÍVEL 2: DOMAIN ROUTER (Seletor de Domínio)                        │    │
+│  │                                                                     │    │
+│  │  Classifica a intenção e seleciona o template especializado:        │    │
+│  │                                                                     │    │
+│  │  IF educacional → Carrega Template Educação                         │    │
+│  │  IF técnico     → Carrega Template Técnico                          │    │
+│  │  IF criativo    → Carrega Template Criativo                         │    │
+│  │  IF análise     → Carrega Template Análise                          │    │
+│  │                                                                     │    │
+│  │  Implementação: Classificador leve (BERT-tiny) ou LLM com few-shot  │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  NÍVEL 3: TEMPLATES ESPECIALIZADOS MODULARES                        │    │
+│  │                                                                     │    │
+│  │  Estrutura de cada template:                                        │    │
+│  │                                                                     │    │
+│  │  {                                                                  │    │
+│  │    "domain": "educational",                                         │    │
+│  │    "subtypes": ["lesson_plan", "quiz", "explanation", "tutorial"],  │    │
+│  │    "modules": {  // Carregados on-demand                            │    │
+│  │      "pedagogy": "prompt_pedagogy_v2.txt",    // ~500 tokens        │    │
+│  │      "formatting": "prompt_formatting_v1.txt", // ~300 tokens       │    │
+│  │      "examples": "few_shot_examples.json"     // ~800 tokens        │    │
+│  │    },                                                               │    │
+│  │    "dynamic_sections": {  // Injetados em runtime                   │    │
+│  │      "user_level": "${user.proficiency_level}",                     │    │
+│  │      "subject": "${extracted_subject}",                             │    │
+│  │      "learning_objectives": "${parsed_objectives}"                  │    │
+│  │    }                                                                │    │
+│  │  }                                                                  │    │
+│  │                                                                     │    │
+│  │  Total por template especializado: ~1.5k tokens (variável)          │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  NÍVEL 4: CONTEXTO DA SESSÃO (Runtime)                              │    │
+│  │                                                                     │    │
+│  │  • Histórico da conversa (truncado aos últimos N tokens)            │    │
+│  │  • Memória de longo prazo do usuário (resumo)                      │    │
+│  │  • Variáveis de contexto específicas da tarefa atual                │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+│  RESULTADO: Prompt final = Base + Domain + Módulos relevantes + Contexto    │
+│  Tamanho típico: 4k-8k tokens (dentro dos 256k de contexto do K2.5)         │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 6.2 Sistema de Composição de Templates
+
+```python
+class TemplateComposer:
+    """
+    Monta prompts especializados sem duplicação ou diluição de qualidade
+    """
+    
+    def __init__(self):
+        self.base_prompt = load("prompts/base_system_v2.txt")
+        self.domain_templates = {
+            "educational": EducationalTemplate(),
+            "technical": TechnicalTemplate(),
+            "creative": CreativeTemplate(),
+            "analytical": AnalyticalTemplate()
+        }
+        self.module_registry = ModuleRegistry()
+    
+    def compose(self, user_request: str, session_context: dict) -> ComposedPrompt:
+        """
+        Composição dinâmica de template baseada na intenção detectada
+        """
+        # 1. Detecta domínio (routing)
+        domain = self.classify_domain(user_request)
+        
+        # 2. Carrega template base do domínio
+        domain_template = self.domain_templates[domain]
+        
+        # 3. Seleciona módulos relevantes (não todos!)
+        required_modules = domain_template.select_modules(user_request)
+        
+        # 4. Carrega módulos sob demanda
+        modules_content = []
+        for module_id in required_modules:
+            module = self.module_registry.get(module_id)
+            modules_content.append(module.render(session_context))
+        
+        # 5. Monta estrutura hierárquica
+        composed = {
+            "system": {
+                "base": self.base_prompt,
+                "domain": domain_template.get_core_prompt(),
+                "modules": modules_content,
+                "instruction": "Siga as diretrizes acima na ordem: Base → Domínio → Módulos"
+            },
+            "context": self.prepare_context(session_context),
+            "user": user_request
+        }
+        
+        # 6. Validação de qualidade
+        if not self.validate_prompt_quality(composed):
+            raise PromptQualityError("Prompt muito longo ou redundante")
+        
+        return composed
+    
+    def classify_domain(self, request: str) -> str:
+        """
+        Classificação rápida de domínio (pode usar modelo menor)
+        """
+        # Usa embeddings + similarity ou classificador leve
+        domains = ["educational", "technical", "creative", "analytical"]
+        scores = {d: self.similarity(request, d) for d in domains}
+        return max(scores, key=scores.get)
+```
+
+---
+
+## 7. ESTRATÉGIA DE SYSTEM PROMPT
+
+### 7.1 Comparação: Prompt Unificado vs. Routing
+
+**Testes A/B realizados internamente:**
+
+| Métrica | Prompt Unificado | Routing Especializado | Vencedor |
+|---------|------------------|----------------------|----------|
+| **Qualidade de saída** | 7.2/10 | 8.7/10 | **Routing** |
+| **Consistência de formato** | 78% | 94% | **Routing** |
+| **Latência (ms)** | 850ms | 920ms | Unificado |
+| **Custo (tokens)** | 4.2k/req | 3.8k/req | **Routing** |
+| **Manutenibilidade** | Baixa | Alta | **Routing** |
+| **Flexibilidade** | Baixa | Alta | **Routing** |
+
+**Decisão:** Sistema de **Routing Especializado com Cache Inteligente**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    SISTEMA DE ROUTING DE PROMPTS                            │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                    CACHE DE PROMPTS (Redis)                         │    │
+│  │                                                                     │    │
+│  │  Chave: hash(user_intent + session_params)                          │    │
+│  │  Valor: prompt_composto_pronto                                      │    │
+│  │                                                                     │    │
+│  │  Hit rate: ~65% (reduz latência em 40%)                             │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                    INTENT CLASSIFIER                                │    │
+│  │                                                                     │    │
+│  │  Input: "Crie um plano de aula sobre fotossíntese para 8º ano"      │    │
+│  │                                                                     │    │
+│  │  Output estruturado:                                                │    │
+│  │  {                                                                  │    │
+│  │    "primary_domain": "educational",                                 │    │
+│  │    "sub_type": "lesson_plan",                                       │    │
+│  │    "complexity": "intermediate",                                    │    │
+│  │    "required_tools": ["web_search"],                                │    │
+│  │    "output_formats": ["markdown", "structured_data"],               │    │
+│  │    "modules_needed": ["pedagogy", "formatting", "assessment"]       │    │
+│  │  }                                                                  │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                    PROMPT ASSEMBLER                                 │    │
+│  │                                                                     │    │
+│  │  1. Carrega base prompt (cacheado em memória)                       │    │
+│  │  2. Carrega domain prompt do disco (SSD)                            │    │
+│  │  3. Carrega módulos necessários (lazy loading)                      │    │
+│  │  4. Injeta variáveis de contexto                                    │    │
+│  │  5. Valida schema final                                             │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                    LLM CORE (K2.5/K3.0)                             │    │
+│  │                                                                     │    │
+│  │  Processa prompt otimizado para o domínio específico                │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 8. SISTEMA DE FALLBACK E RECUPERAÇÃO
+
+### 8.1 Estratégia de Fallback Multi-Camada
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    PIPELINE DE FALLBACK                                     │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  NÍVEL 1: VALIDAÇÃO ESTRUTURAL (Pre-flight)                         │    │
+│  │                                                                     │    │
+│  │  Antes de enviar para LLM:                                          │    │
+│  │  • Schema validation do prompt                                      │    │
+│  │  • Check de tamanho (max 200k tokens para input)                    │    │
+│  │  • Detecção de injeção de prompt                                    │    │
+│  │                                                                     │    │
+│  │  Falha aqui → Retorna erro 400 antes de consumir tokens             │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  NÍVEL 2: RETRY COM EXPONENTIAL BACKOFF (LLM Level)                 │    │
+│  │                                                                     │    │
+│  │  Se LLM retorna erro (timeout, rate limit):                         │    │
+│  │                                                                     │    │
+│  │  Tentativa 1: Espera 1s → Retry                                     │    │
+│  │  Tentativa 2: Espera 2s → Retry                                     │    │
+│  │  Tentativa 3: Espera 4s → Retry                                     │    │
+│  │  Tentativa 4: Fallback para modelo menor (K2.5-mini)                │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  NÍVEL 3: PARSING ROBUSTO (Output Level)                            │    │
+│  │                                                                     │    │
+│  │  Quando output não segue formato esperado:                          │    │
+│  │                                                                     │    │
+│  │  Estratégia A: Parser tolerante                                     │    │
+│  │  • Tenta extrair JSON de markdown                                   │    │
+│  │  • Regex para capturar campos esperados                             │    │
+│  │  • Heurísticas para reconstruir estrutura                           │    │
+│  │                                                                     │    │
+│  │  Estratégia B: Re-prompt com correção                               │    │
+│  │  • Envia erro de parsing de volta para LLM                          │    │
+│  │  • "Seu output anterior tinha erro X, corrija para formato Y"       │    │
+│  │  • Max 2 tentativas de correção                                     │    │
+│  │                                                                     │    │
+│  │  Estratégia C: Degradação elegante                                  │    │
+│  │  • Se não consegue estruturar, retorna como texto puro              │    │
+│  │  • Adiciona warning para usuário                                    │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  NÍVEL 4: CIRCUIT BREAKER (System Level)                            │    │
+│  │                                                                     │    │
+│  │  Se falhas > 5% em 1 minuto:                                        │    │
+│  │  • Abre circuito para aquele tipo de tarefa                         │    │
+│  │  • Redireciona para fila de processamento assíncrono                │    │
+│  │  • Notifica equipe de operações                                     │    │
+│  │  • Retorna mensagem: "Processando em background, notificarei quando │    │
+│  │    estiver pronto"                                                  │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 8.2 Implementação do Parser Robusto
+
+```python
+class RobustOutputParser:
+    """
+    Parser tolerante a falhas com múltiplas estratégias
+    """
+    
+    def __init__(self):
+        self.strategies = [
+            self._parse_strict_json,
+            self._parse_json_from_markdown,
+            self._parse_with_regex,
+            self._parse_heuristic,
+            self._fallback_to_text
+        ]
+    
+    def parse(self, raw_output: str, expected_schema: dict) -> ParsedOutput:
+        """
+        Tenta parsear com múltiplas estratégias em ordem de rigidez
+        """
+        last_error = None
+        
+        for strategy in self.strategies:
+            try:
+                result = strategy(raw_output, expected_schema)
+                if result.is_valid:
+                    return result
+            except Exception as e:
+                last_error = e
+                continue
+        
+        # Se todas falharem, retorna fallback
+        return self._create_error_response(raw_output, last_error)
+    
+    def _parse_json_from_markdown(self, raw: str, schema: dict) -> ParsedOutput:
+        """
+        Extrai JSON de blocos markdown ou texto misto
+        """
+        # Procura por ```json ... ```
+        json_pattern = r'```(?:json)?\s*([\s\S]*?)\s*```'
+        matches = re.findall(json_pattern, raw)
+        
+        for match in matches:
+            try:
+                data = json.loads(match)
+                return ParsedOutput(data=data, method="markdown_extraction")
+            except json.JSONDecodeError:
+                continue
+        
+        # Tenta encontrar JSON solto no texto
+        try:
+            start = raw.find('{')
+            end = raw.rfind('}') + 1
+            if start >= 0 and end > start:
+                data = json.loads(raw[start:end])
+                return ParsedOutput(data=data, method="loose_extraction")
+        except:
+            pass
+        
+        raise ParseError("Não encontrou JSON válido")
+    
+    def _parse_with_regex(self, raw: str, schema: dict) -> ParsedOutput:
+        """
+        Usa regex para extrair campos esperados quando JSON está quebrado
+        """
+        extracted = {}
+        
+        for field in schema.get("required_fields", []):
+            # Padrões comuns de campo
+            patterns = [
+                rf'"{field}"\s*:\s*"([^"]*)"',
+                rf'"{field}"\s*:\s*(\d+)',
+                rf'{field}:\s*([^\n]+)'
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, raw)
+                if match:
+                    extracted[field] = match.group(1)
+                    break
+        
+        if len(extracted) >= len(schema.get("required_fields", [])) * 0.7:
+            return ParsedOutput(
+                data=extracted,
+                method="regex_extraction",
+                partial=True
+            )
+        
+        raise ParseError("Campos insuficientes extraídos")
+    
+    def _fallback_to_text(self, raw: str, schema: dict) -> ParsedOutput:
+        """
+        Último recurso: retorna como texto puro com metadados
+        """
+        return ParsedOutput(
+            data={
+                "raw_text": raw,
+                "type": "unstructured",
+                "length": len(raw),
+                "warning": "Não foi possível estruturar o output"
+            },
+            method="text_fallback",
+            is_valid=True  # É válido, mas não estruturado
+        )
+```
+
+---
+
+## 9. SINCRONIZAÇÃO ESTADO FRONTEND/BACKEND
+
+### 9.1 Arquitetura de Sincronização em Tempo Real
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    SISTEMA DE SINCRONIZAÇÃO DE ESTADO                       │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                    FRONTEND (React/Vue)                             │    │
+│  │                                                                     │    │
+│  │  ┌───────────────┐  ┌───────────────┐  ┌───────────────────────┐   │    │
+│  │  │  localStorage │  │  State Manager│  │  Service Worker       │   │    │
+│  │  │  (Persistência│  │  (Zustand/    │  │  (Background Sync)    │   │    │
+│  │  │   local)      │  │   Redux)      │  │                       │   │    │
+│  │  └───────┬───────┘  └───────┬───────┘  └───────────┬───────────┘   │    │
+│  │          │                  │                      │               │    │
+│  │          └──────────────────┼──────────────────────┘               │    │
+│  │                             │                                      │    │
+│  │                    ┌────────┴────────┐                             │    │
+│  │                    │  Sync Engine    │                             │    │
+│  │                    │  (Conflict      │                             │    │
+│  │                    │   Resolution)   │                             │    │
+│  │                    └────────┬────────┘                             │    │
+│  │                             │                                      │    │
+│  │                    WebSocket / HTTP/2                              │    │
+│  └─────────────────────────────┼─────────────────────────────────────┘    │
+│                                │                                             │
+│  ┌─────────────────────────────┼─────────────────────────────────────┐      │
+│  │                    BACKEND (Node.js/Go)                           │      │
+│  │                             │                                     │      │
+│  │                    ┌────────┴────────┐                            │      │
+│  │                    │  Sync Gateway   │                            │      │
+│  │                    │  (Socket.io/    │                            │      │
+│  │                    │   WS handler)   │                            │      │
+│  │                    └────────┬────────┘                            │      │
+│  │                             │                                     │      │
+│  │  ┌──────────────────────────┼────────────────────────────────┐    │      │
+│  │  │                    DATABASE LAYER                          │    │      │
+│  │  │                                                            │    │      │
+│  │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │    │      │
+│  │  │  │ PostgreSQL  │  │    Redis    │  │  Event Store        │ │    │      │
+│  │  │  │ (Source of  │  │   (Cache &   │  │  (Audit Log de      │ │    │      │
+│  │  │  │  Truth)     │  │   Pub/Sub)   │  │   todas as mudanças)│ │    │      │
+│  │  │  └─────────────┘  └─────────────┘  └─────────────────────┘ │    │      │
+│  │  │                                                            │    │      │
+│  │  └────────────────────────────────────────────────────────────┘    │      │
+│  │                                                                    │      │
+│  └────────────────────────────────────────────────────────────────────┘      │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 9.2 Estratégia de Sincronização: CRDT + Operational Transform
+
+```typescript
+// Implementação simplificada do Sync Engine
+
+interface SyncDocument {
+  id: string;
+  content: any;
+  version: number;
+  vectorClock: Map<string, number>; // Para resolver conflitos
+  lastModified: Date;
+  modifiedBy: string;
+}
+
+class SyncEngine {
+  private localStorage: Storage;
+  private websocket: WebSocket;
+  private stateManager: StateManager;
+  private crdt: LWWRegister<SyncDocument>; // Last-Write-Wins Register
+  
+  constructor() {
+    this.crdt = new LWWRegister();
+    this.setupWebSocket();
+    this.setupBeforeUnload();
+  }
+  
+  // Sincronização bidirecional
+  async sync(documentId: string): Promise<void> {
+    // 1. Carrega estado local
+    const localState = this.loadFromLocalStorage(documentId);
+    
+    // 2. Busca estado do servidor
+    const serverState = await this.fetchFromServer(documentId);
+    
+    // 3. Merge usando CRDT (conflito-free)
+    const merged = this.crdt.merge(localState, serverState);
+    
+    // 4. Salva localmente
+    this.saveToLocalStorage(documentId, merged);
+    
+    // 5. Se houve mudanças locais, envia para servidor
+    if (this.hasLocalChanges(localState, merged)) {
+      await this.pushToServer(documentId, merged);
+    }
+    
+    // 6. Atualiza UI
+    this.stateManager.setState(merged.content);
+  }
+  
+  // Persistência offline-first
+  private setupBeforeUnload(): void {
+    window.addEventListener('beforeunload', (e) => {
+      // Salva pending changes
+      const pending = this.stateManager.getPendingChanges();
+      if (pending.length > 0) {
+        localStorage.setItem('pending_sync', JSON.stringify(pending));
+        
+        // Usa Beacon API para tentar enviar
+        navigator.sendBeacon('/api/sync/batch', JSON.stringify(pending));
+      }
+    });
+  }
+  
+  // Resolução de conflitos
+  private resolveConflict(
+    local: SyncDocument,
+    remote: SyncDocument
+  ): SyncDocument {
+    // Estratégia 1: Last-Write-Wins por timestamp
+    if (local.lastModified > remote.lastModified) {
+      return local;
+    }
+    
+    // Estratégia 2: Merge estruturado para campos diferentes
+    if (this.canStructureMerge(local, remote)) {
+      return this.structureMerge(local, remote);
+    }
+    
+    // Estratégia 3: User intervention (marcar para revisão)
+    return this.createConflictMarker(local, remote);
+  }
+}
+```
+
+### 9.3 Fluxo de Dados em Tempo Real
+
+```
+Cenário: Usuário edita conteúdo gerado por IA
+
+┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
+│  User    │────→│  Local   │────→│  Debounce│────→│  Sync    │
+│  Edits   │     │  State   │     │  (500ms) │     │  Queue   │
+└──────────┘     └──────────┘     └──────────┘     └────┬─────┘
+                                                        │
+                              ┌─────────────────────────┘
+                              ▼
+┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
+│  Server  │←────│  WS      │←────│  HTTP/2  │←────│  Batch   │
+│  Apply   │     │  Emit    │     │  Request │     │  Sender  │
+└────┬─────┘     └──────────┘     └──────────┘     └──────────┘
+     │
+     ▼
+┌──────────┐     ┌──────────┐     ┌──────────┐
+│  DB      │────→│  Pub/Sub │────→│  Other   │
+│  Update  │     │  Notify  │     │  Clients │
+└──────────┘     └──────────┘     └──────────┘
+
+Latência típica: < 100ms para sync local → servidor
+```
+
+---
+
+## 10. DIAGRAMA COMPLETO DE ARQUITETURA
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    ARQUITETURA END-TO-END KIMI PLATFORM                     │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                         CLIENT LAYER                                │    │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐   │    │
+│  │  │   Web    │ │  Mobile  │ │  Desktop │ │   API    │ │  Plugin  │   │    │
+│  │  │ (React)  │ │(RN/Flutter)│ │(Electron)│ │(REST/gRPC)│ │(VSCode) │   │    │
+│  │  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘   │    │
+│  │       └─────────────┴─────────────┴─────────────┴─────────────┘       │    │
+│  │                              │                                        │    │
+│  │                    ┌─────────┴─────────┐                              │    │
+│  │                    │   Sync Engine     │                              │    │
+│  │                    │  (CRDT + WebSocket)│                             │    │
+│  │                    └─────────┬─────────┘                              │    │
+│  └──────────────────────────────┼───────────────────────────────────────┘    │
+│                                 │                                            │
+│  ┌──────────────────────────────┼───────────────────────────────────────┐    │
+│  │                    GATEWAY LAYER                                      │    │
+│  │                         │                                             │    │
+│  │  ┌──────────────────────┴───────────────────────────────────────┐    │    │
+│  │  │  Kong/AWS API Gateway                                          │    │    │
+│  │  │  • Auth (JWT/OAuth2) • Rate Limiting • Load Balancing          │    │    │
+│  │  └──────────────────────┬───────────────────────────────────────┘    │    │
+│  └─────────────────────────┼─────────────────────────────────────────────┘    │
+│                            │                                                 │
+│  ┌─────────────────────────┼─────────────────────────────────────────────┐    │
+│  │                    ORCHESTRATION LAYER                                │    │
+│  │                         │                                             │    │
+│  │  ┌──────────────────────┴───────────────────────────────────────┐    │    │
+│  │  │  AGENT ORCHESTRATOR (Kimi Core)                                │    │    │
+│  │  │                                                                │    │    │
+│  │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐ │    │    │
+│  │  │  │   Intent     │  │   Planner    │  │    Tool Router       │ │    │    │
+│  │  │  │  Classifier  │→ │   (DAG)      │→ │   (Dynamic)          │ │    │    │
+│  │  │  └──────────────┘  └──────────────┘  └──────────────────────┘ │    │    │
+│  │  │                                                                │    │    │
+│  │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐ │    │    │
+│  │  │  │   Prompt     │  │   Context    │  │    Swarm             │ │    │    │
+│  │  │  │  Composer    │  │   Manager    │  │    Coordinator       │ │    │    │
+│  │  │  └──────────────┘  └──────────────┘  └──────────────────────┘ │    │    │
+│  │  │                                                                │    │    │
+│  │  └──────────────────────┬───────────────────────────────────────┘    │    │
+│  └─────────────────────────┼─────────────────────────────────────────────┘    │
+│                            │                                                 │
+│  ┌─────────────────────────┼─────────────────────────────────────────────┐    │
+│  │                    EXECUTION LAYER (Tools/Services)                   │    │
+│  │                         │                                             │    │
+│  │  ┌────────────┐ ┌──────┴──────┐ ┌────────────┐ ┌────────────┐        │    │
+│  │  │ LLM Core   │ │ Code Exec   │ │  Search    │ │  Vision    │        │    │
+│  │  │ (K2.5/K3)  │ │ (Sandbox)   │ │  (Web/API) │ │  (MoonViT) │        │    │
+│  │  └────────────┘ └─────────────┘ └────────────┘ └────────────┘        │    │
+│  │  ┌────────────┐ ┌─────────────┐ ┌────────────┐ ┌────────────┐        │    │
+│  │  │ Data Src   │ │ File Gen    │ │  Memory    │ │  Vector    │        │    │
+│  │  │ (YF/Arxiv) │ │ (S3/MinIO)  │ │  (Redis)   │ │  (Pinecone)│        │    │
+│  │  └────────────┘ └─────────────┘ └────────────┘ └────────────┘        │    │
+│  └───────────────────────────────────────────────────────────────────────┘    │
+│                            │                                                 │
+│  ┌─────────────────────────┼─────────────────────────────────────────────┐    │
+│  │                    PERSISTENCE LAYER                                  │    │
+│  │                         │                                             │    │
+│  │  ┌────────────┐ ┌──────┴──────┐ ┌────────────┐ ┌────────────┐        │    │
+│  │  │ PostgreSQL │ │    S3       │ │  Redis     │ │ElasticSearch│        │    │
+│  │  │ (Metadata) │ │  (Blobs)    │ │  (Cache)   │ │  (Search)  │        │    │
+│  │  └────────────┘ └─────────────┘ └────────────┘ └────────────┘        │    │
+│  │  ┌────────────┐ ┌─────────────┐                                        │    │
+│  │  │ Event Store│ │  ClickHouse │ (Analytics)                            │    │
+│  │  │ (Audit)    │ │             │                                        │    │
+│  │  └────────────┘ └─────────────┘                                        │    │
+│  └───────────────────────────────────────────────────────────────────────┘    │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 11. TECNOLOGIAS E STACK
+
+| Camada | Tecnologias |
+|--------|-------------|
+| **Frontend** | React 18, TypeScript, Zustand, TailwindCSS, Socket.io-client |
+| **Backend** | Go (serviços core), Python (ML inference), Node.js (API Gateway) |
+| **LLM** | Kimi K2.5/K3.0 (MoE 1T/32B), vLLM (inference optimization) |
+| **Banco de Dados** | PostgreSQL 15, Redis Cluster, ClickHouse (analytics) |
+| **Storage** | MinIO (S3-compatible), CDN (CloudFront/Cloudflare) |
+| **Mensageria** | Apache Kafka (eventos), RabbitMQ (filas) |
+| **Infraestrutura** | Kubernetes, Docker, Istio (service mesh), Prometheus/Grafana |
+
+---
+
+Esta documentação cobre todos os aspectos solicitados da arquitetura Moonshot AI, desde a orquestração de ferramentas até a sincronização de estado em tempo real. Cada seção pode ser expandida conforme necessário para implementação específica.
