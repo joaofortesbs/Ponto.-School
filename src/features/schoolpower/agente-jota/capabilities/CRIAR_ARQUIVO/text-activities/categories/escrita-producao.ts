@@ -256,6 +256,144 @@ REGRAS:
 - Análise de aspectos linguísticos e discursivos
 - NÃO retorne JSON`
   },
+  {
+    id: 'texto_mentor',
+    nome: 'Texto Mentor (Mentor Text)',
+    descricao: 'Atividade baseada em texto modelo para ensinar técnicas de escrita',
+    categoria: 'escrita_producao',
+    icone: '📜',
+    cor: '#881337',
+    keywords: ['texto mentor', 'mentor text', 'texto modelo', 'modelo de texto', 'técnica de escrita', 'craft lesson', 'mini lesson de escrita'],
+    secoesEsperadas: ['Texto Mentor Selecionado', 'Análise do Texto', 'Técnica em Foco', 'Atividade de Prática', 'Produção do Aluno'],
+    exemploUso: 'Crie uma atividade com texto mentor para ensinar uso de metáforas',
+    promptTemplate: `Você é o Jota, assistente pedagógico do Ponto School. Crie uma atividade de TEXTO MENTOR (MENTOR TEXT) para ensinar técnicas de escrita.
+
+SOLICITAÇÃO DO PROFESSOR:
+{solicitacao}
+
+CONTEXTO DA SESSÃO (se disponível):
+{contexto}
+
+ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
+
+# Texto Mentor — {tema}
+
+## Texto Mentor Selecionado
+Apresente um texto modelo (200-400 palavras) que demonstre de forma exemplar a técnica de escrita em foco. O texto deve ser envolvente, adequado à faixa etária e rico na técnica que será ensinada. Indique o autor (real ou criado para fins pedagógicos) e o gênero textual.
+
+## Análise do Texto
+Crie 5-8 perguntas guiadas para análise do texto mentor:
+- O que o autor fez neste trecho? (identificação da técnica)
+- Por que isso é eficaz? (efeito no leitor)
+- Que palavras/estruturas o autor escolheu? (análise linguística)
+- Como isso contribui para o texto como um todo? (função no texto)
+- Destaque trechos específicos do texto e explique a técnica usada em cada um.
+
+## Técnica em Foco
+Explicação didática e detalhada da técnica de escrita:
+- O que é a técnica (definição clara)
+- Por que escritores a utilizam (propósito)
+- Como identificá-la em textos (características)
+- Exemplos variados de uso (3-4 exemplos curtos)
+- Erros comuns ao tentar usar a técnica
+
+## Atividade de Prática
+Crie 3-4 exercícios progressivos para o aluno praticar a técnica:
+- Exercício de identificação (encontrar a técnica em outros trechos)
+- Exercício de transformação (reescrever frases aplicando a técnica)
+- Exercício de criação guiada (escrever um parágrafo usando a técnica com apoio)
+
+## Produção do Aluno
+Proposta de produção textual onde o aluno deve aplicar a técnica aprendida:
+- Tema e gênero definidos
+- Extensão esperada
+- Critérios específicos relacionados à técnica em foco
+- Checklist para o aluno revisar seu próprio texto
+
+REGRAS:
+- Texto mentor de qualidade literária
+- Progressão clara: observar → analisar → praticar → produzir
+- Linguagem adequada ao nível escolar
+- NÃO retorne JSON`
+  },
+  {
+    id: 'roteiro_apresentacao',
+    nome: 'Roteiro de Apresentação Oral',
+    descricao: 'Guia estruturado para o aluno preparar e realizar apresentações orais',
+    categoria: 'escrita_producao',
+    icone: '🎤',
+    cor: '#4C0519',
+    keywords: ['apresentação oral', 'apresentação', 'apresentacao', 'seminário', 'seminario', 'roteiro de apresentação', 'oratória', 'oral presentation'],
+    secoesEsperadas: ['Tema da Apresentação', 'Estrutura do Roteiro', 'Modelo de Roteiro', 'Dicas de Oratória', 'Rubrica de Avaliação'],
+    exemploUso: 'Crie um roteiro de apresentação oral sobre biomas brasileiros',
+    promptTemplate: `Você é o Jota, assistente pedagógico do Ponto School. Crie um ROTEIRO DE APRESENTAÇÃO ORAL completo e estruturado.
+
+SOLICITAÇÃO DO PROFESSOR:
+{solicitacao}
+
+CONTEXTO DA SESSÃO (se disponível):
+{contexto}
+
+ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
+
+# Roteiro de Apresentação Oral — {tema}
+
+## Tema da Apresentação
+Apresente o tema, objetivos da apresentação, público-alvo e tempo estimado. Inclua os pontos essenciais que devem ser abordados.
+
+## Estrutura do Roteiro
+Modelo de estrutura em branco para o aluno preencher:
+
+### 1. Abertura (Gancho Inicial)
+- Espaço para o aluno criar uma pergunta provocativa, dado surpreendente ou história breve para capturar a atenção.
+
+### 2. Introdução
+- Apresentação do tema e do que será abordado
+- Roteiro do que o público pode esperar
+
+### 3. Desenvolvimento (Pontos Principais)
+- Ponto 1: _____ (com transição para o próximo)
+- Ponto 2: _____ (com transição para o próximo)
+- Ponto 3: _____ (com transição para a conclusão)
+- Espaço para exemplos, dados e evidências em cada ponto
+
+### 4. Conclusão
+- Resumo dos pontos principais
+- Mensagem final impactante
+- Agradecimento
+
+### 5. Perguntas e Respostas
+- Dicas para conduzir o momento de perguntas
+
+## Modelo de Roteiro
+Um exemplo completo de roteiro preenchido sobre o tema solicitado, servindo como referência para o aluno. Inclua falas sugeridas, transições entre tópicos e marcações de tempo.
+
+## Dicas de Oratória
+Orientações práticas para uma boa apresentação:
+- 👁️ Contato visual: como olhar para o público
+- 🗣️ Voz: volume, ritmo, entonação e pausas estratégicas
+- 🤸 Linguagem corporal: postura, gestos e movimentação
+- 📊 Uso de recursos visuais: slides, cartazes, objetos
+- 😰 Como lidar com o nervosismo: técnicas de respiração e preparação
+- ⏱️ Gestão do tempo: como ensaiar e controlar a duração
+
+## Rubrica de Avaliação
+Tabela com critérios de avaliação da apresentação oral:
+- Conteúdo e domínio do tema
+- Organização e estrutura
+- Oratória e comunicação verbal
+- Linguagem corporal e postura
+- Uso de recursos visuais
+- Gestão do tempo
+- Interação com o público
+Para cada critério: 4 níveis (Insuficiente / Regular / Bom / Excelente) com descrições.
+
+REGRAS:
+- Roteiro prático e pronto para usar
+- Linguagem encorajadora e acessível
+- Dicas concretas e aplicáveis
+- NÃO retorne JSON`
+  },
 ];
 
 export const ESCRITA_PRODUCAO_CATEGORY: TextActivityCategory = {

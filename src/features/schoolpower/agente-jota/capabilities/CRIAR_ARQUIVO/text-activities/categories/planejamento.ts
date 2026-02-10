@@ -230,6 +230,217 @@ REGRAS:
 - Inclua pausas e lazer
 - NÃO retorne JSON`
   },
+  {
+    id: 'revisao_espiral',
+    nome: 'Revisão Espiral (Spiral Review)',
+    descricao: 'Atividade de revisão que retoma conteúdos anteriores de forma progressiva e cumulativa',
+    categoria: 'planejamento',
+    icone: '🌀',
+    cor: '#BAE6FD',
+    keywords: ['revisão espiral', 'revisao espiral', 'spiral review', 'revisão cumulativa', 'retomada de conteúdo', 'revisão progressiva', 'do now', 'bell ringer'],
+    secoesEsperadas: ['Sobre a Revisão Espiral', 'Plano Semanal de Revisão', 'Atividades Diárias', 'Acompanhamento de Domínio', 'Banco de Questões'],
+    exemploUso: 'Crie uma revisão espiral de matemática para o 7º ano (4 semanas)',
+    promptTemplate: `Você é o Jota, assistente pedagógico do Ponto School. Crie um PLANO DE REVISÃO ESPIRAL (Spiral Review) completo.
+
+SOLICITAÇÃO DO PROFESSOR:
+{solicitacao}
+
+CONTEXTO DA SESSÃO (se disponível):
+{contexto}
+
+ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
+
+# Revisão Espiral — {tema/disciplina}
+
+## Sobre a Revisão Espiral
+Explique a metodologia de revisão espiral: como funciona, por que é eficaz (retenção de longo prazo, prática espaçada), e como implementar na rotina da sala de aula. Inclua referências pedagógicas sobre a técnica.
+
+## Plano Semanal de Revisão
+Organize um plano semanal (4 semanas) que retome conteúdos anteriores de forma progressiva enquanto introduz novos tópicos:
+- Semana 1: Tópicos revisados + novo conteúdo
+- Semana 2: Retomada da semana 1 + novo conteúdo
+- Semana 3: Retomada das semanas 1-2 + novo conteúdo
+- Semana 4: Revisão cumulativa de todas as semanas
+Mostre claramente como os tópicos se acumulam.
+
+## Atividades Diárias
+Crie atividades de aquecimento "Do Now" (5-10 minutos) para cada dia:
+- Formato: 3-5 questões rápidas misturando tópicos antigos e atuais
+- Nível progressivo de dificuldade
+- Inclua questões de múltipla escolha, resposta curta e resolução rápida
+- As atividades devem funcionar como "bell ringers" no início da aula
+
+## Acompanhamento de Domínio
+Crie uma tabela/quadro de acompanhamento para o professor monitorar o domínio dos alunos:
+- Lista de tópicos/habilidades por aluno
+- Indicadores: Dominado ✅ / Em progresso 🔄 / Precisa reforço ❌
+- Espaço para anotações do professor
+- Sugestões de intervenção para alunos com dificuldade
+
+## Banco de Questões
+Crie um banco de questões organizado por:
+- Tópico/conteúdo
+- Nível de dificuldade (Básico / Intermediário / Avançado)
+- Mínimo de 5 questões por tópico
+- Gabarito com resoluções comentadas
+
+REGRAS:
+- Progressão lógica e cumulativa
+- Questões variadas e contextualizadas
+- Alinhado à BNCC quando aplicável
+- NÃO retorne JSON`
+  },
+  {
+    id: 'atividade_steam',
+    nome: 'Atividade STEAM/STEM',
+    descricao: 'Atividade interdisciplinar integrando Ciências, Tecnologia, Engenharia, Artes e Matemática',
+    categoria: 'planejamento',
+    icone: '🔬',
+    cor: '#0C4A6E',
+    keywords: ['steam', 'stem', 'atividade steam', 'atividade stem', 'interdisciplinar', 'maker', 'mão na massa', 'hands on', 'projeto maker'],
+    secoesEsperadas: ['Desafio STEAM', 'Conexões Curriculares', 'Materiais e Recursos', 'Roteiro da Atividade', 'Avaliação e Reflexão'],
+    exemploUso: 'Crie uma atividade STEAM sobre construção de pontes para o 6º ano',
+    promptTemplate: `Você é o Jota, assistente pedagógico do Ponto School. Crie uma ATIVIDADE STEAM/STEM completa e interdisciplinar.
+
+SOLICITAÇÃO DO PROFESSOR:
+{solicitacao}
+
+CONTEXTO DA SESSÃO (se disponível):
+{contexto}
+
+ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
+
+# Atividade STEAM — {tema}
+
+## Desafio STEAM
+Apresente um desafio ou problema envolvente e real para os alunos resolverem. O desafio deve:
+- Ser contextualizado na realidade dos alunos
+- Ter múltiplas soluções possíveis
+- Exigir integração de diferentes áreas do conhecimento
+- Motivar a investigação e a criatividade
+
+## Conexões Curriculares
+Explicite as conexões com cada área STEAM:
+- **Ciências (S):** Conceitos científicos envolvidos, habilidades BNCC
+- **Tecnologia (T):** Ferramentas tecnológicas utilizadas, competências digitais
+- **Engenharia (E):** Processo de design e construção, resolução de problemas
+- **Artes (A):** Elementos estéticos, criatividade, expressão visual
+- **Matemática (M):** Conceitos matemáticos aplicados, medições, cálculos
+
+## Materiais e Recursos
+Lista completa de materiais necessários:
+- Priorize materiais acessíveis e de baixo custo
+- Inclua alternativas para materiais menos disponíveis
+- Indique recursos digitais gratuitos quando aplicável
+- Liste materiais de segurança necessários
+
+## Roteiro da Atividade
+Guia passo a passo seguindo o processo de design de engenharia:
+1. **Investigar:** Pesquisa e compreensão do problema (tempo estimado)
+2. **Imaginar:** Brainstorming de soluções em grupo (tempo estimado)
+3. **Planejar:** Desenho e planejamento da solução (tempo estimado)
+4. **Criar:** Construção do protótipo/produto (tempo estimado)
+5. **Testar:** Teste e avaliação da solução (tempo estimado)
+6. **Melhorar:** Iteração e aprimoramento (tempo estimado)
+7. **Compartilhar:** Apresentação para a turma (tempo estimado)
+
+## Avaliação e Reflexão
+- Rubrica de avaliação com critérios claros para cada área STEAM
+- Perguntas de reflexão para os alunos (individual e em grupo)
+- Auto-avaliação do processo de trabalho em equipe
+- Registro fotográfico/portfólio sugerido
+
+REGRAS:
+- Atividade mão na massa (hands-on)
+- Materiais acessíveis e de baixo custo
+- Protagonismo do aluno
+- Trabalho colaborativo
+- NÃO retorne JSON`
+  },
+  {
+    id: 'roteiro_laboratorio',
+    nome: 'Roteiro de Laboratório / Experimento',
+    descricao: 'Roteiro científico completo para aula prática ou experimento de laboratório',
+    categoria: 'planejamento',
+    icone: '🧪',
+    cor: '#075985',
+    keywords: ['laboratório', 'laboratorio', 'experimento', 'aula prática', 'aula pratica', 'lab', 'roteiro de laboratório', 'prática de laboratório', 'experiência científica'],
+    secoesEsperadas: ['Objetivo do Experimento', 'Fundamentação Teórica', 'Materiais e Segurança', 'Procedimento Passo a Passo', 'Registro de Observações', 'Análise e Conclusão'],
+    exemploUso: 'Crie um roteiro de laboratório sobre reações químicas para o 9º ano',
+    promptTemplate: `Você é o Jota, assistente pedagógico do Ponto School. Crie um ROTEIRO DE LABORATÓRIO / EXPERIMENTO completo.
+
+SOLICITAÇÃO DO PROFESSOR:
+{solicitacao}
+
+CONTEXTO DA SESSÃO (se disponível):
+{contexto}
+
+ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
+
+# Roteiro de Laboratório — {experimento}
+
+## Objetivo do Experimento
+- Objetivo geral do experimento
+- Objetivos específicos de aprendizagem
+- Hipótese a ser testada (quando aplicável)
+- Pergunta investigativa que guia o experimento
+
+## Fundamentação Teórica
+Breve base teórica que o aluno precisa conhecer antes do experimento:
+- Conceitos-chave envolvidos
+- Princípios científicos aplicados
+- Conexão com o conteúdo estudado em sala
+- Referências à BNCC
+
+## Materiais e Segurança
+**Materiais necessários:**
+- Lista completa com quantidades por grupo
+- Alternativas para materiais menos acessíveis
+
+**⚠️ Normas de Segurança (EPI):**
+- Equipamentos de proteção individual necessários (luvas, óculos, jaleco)
+- Precauções específicas do experimento
+- Procedimentos de emergência
+- Descarte correto de resíduos
+
+## Procedimento Passo a Passo
+Instruções detalhadas e numeradas:
+1. Preparação do ambiente e materiais
+2. Cada etapa com descrição clara e objetiva
+3. Inclua dicas visuais: "Observe que..." / "Você deverá notar..."
+4. Indique pontos de atenção: "⚠️ Cuidado ao..."
+5. Tempos de espera quando necessários
+6. Descrição do que deve acontecer em cada etapa
+
+*Inclua descrições de ilustrações/diagramas sugeridos para acompanhar cada etapa.*
+
+## Registro de Observações
+Modelo de tabela/ficha para os alunos registrarem:
+- Tabela de dados com colunas apropriadas ao experimento
+- Espaço para desenhos de observação
+- Campos para registrar: o que observou, medições, cores, temperaturas, etc.
+- Espaço para anotações livres
+
+## Análise e Conclusão
+Perguntas orientadoras para análise dos resultados:
+- O que os dados indicam?
+- A hipótese foi confirmada ou refutada? Por quê?
+- Quais fatores podem ter influenciado os resultados?
+- Como este experimento se conecta com o cotidiano?
+- Sugestões de experimentos complementares
+
+**📝 Notas do Professor (não compartilhar com alunos):**
+- Resultados esperados do experimento
+- Erros comuns e como preveni-los
+- Variações possíveis do experimento
+- Pontos de discussão para aprofundamento
+
+REGRAS:
+- Linguagem clara e acessível ao nível dos alunos
+- Segurança em primeiro lugar
+- Método científico como base
+- NÃO retorne JSON`
+  },
 ];
 
 export const PLANEJAMENTO_CATEGORY: TextActivityCategory = {

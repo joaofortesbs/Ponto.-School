@@ -103,8 +103,13 @@ ${catalogSummary}
 3. Priorize:
    - Relevância para disciplina e nível
    - Progressão pedagógica (básico → avançado)
-   - Diversidade de tipos (não repetir mesmo tipo)
+   - VARIEDADE MÁXIMA: NUNCA escolha 2+ atividades do mesmo tipo! Combine quiz + flash card + lista, nunca quiz + quiz + quiz
    - Atividades que o professor ainda não criou
+   - Se possível, inclua pelo menos 1 tipo avaliativo (quiz/lista) e 1 tipo lúdico (flash card)
+
+🎯 PRINCÍPIO DE VARIEDADE: Um bom mix inclui tipos DIFERENTES para manter o engajamento dos alunos.
+   Exemplo BOM: quiz + flash cards + lista (3 tipos diferentes)
+   Exemplo RUIM: quiz + quiz + quiz (mesmo tipo repetido)
 
 ## ⚠️ REGRA ABSOLUTA - ANTI-ALUCINAÇÃO
 

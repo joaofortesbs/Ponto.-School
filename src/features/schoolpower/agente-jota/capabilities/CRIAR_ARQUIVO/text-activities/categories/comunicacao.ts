@@ -172,6 +172,78 @@ REGRAS:
 - Informações completas e precisas
 - NÃO retorne JSON`
   },
+  {
+    id: 'comentarios_boletim',
+    nome: 'Comentários para Boletim Escolar',
+    descricao: 'Banco de frases e comentários prontos para preencher boletins e relatórios de alunos',
+    categoria: 'comunicacao',
+    icone: '💬',
+    cor: '#FDBA74',
+    keywords: ['comentários de boletim', 'frases para boletim', 'parecer', 'comentários para relatório', 'frases prontas', 'report card comments', 'parecer descritivo pronto'],
+    secoesEsperadas: ['Desempenho Acadêmico', 'Comportamento e Participação', 'Habilidades Socioemocionais', 'Áreas de Melhoria', 'Comentários Personalizáveis'],
+    exemploUso: 'Crie comentários prontos para boletins do 3º ano do fundamental',
+    promptTemplate: `Você é o Jota, assistente pedagógico do Ponto School. Crie um BANCO DE COMENTÁRIOS PARA BOLETIM ESCOLAR completo.
+
+SOLICITAÇÃO DO PROFESSOR:
+{solicitacao}
+
+CONTEXTO DA SESSÃO (se disponível):
+{contexto}
+
+ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
+
+# Comentários para Boletim Escolar — {ano/série}
+
+## Desempenho Acadêmico
+Crie 20+ frases organizadas por área do conhecimento (Linguagens, Matemática, Ciências, etc.), com variantes para diferentes níveis de desempenho:
+
+**Aluno com ótimo desempenho:**
+- Frases que reconhecem e valorizam o esforço e os resultados
+
+**Aluno com desempenho satisfatório:**
+- Frases que destacam o progresso e incentivam a continuidade
+
+**Aluno que precisa de apoio:**
+- Frases construtivas que apontam caminhos de melhoria sem negatividade
+
+## Comportamento e Participação
+Crie 15+ frases sobre:
+- Participação em aula e atividades
+- Colaboração com colegas
+- Respeito às regras e combinados
+- Organização e pontualidade
+- Iniciativa e proatividade
+Inclua variantes para diferentes perfis de comportamento.
+
+## Habilidades Socioemocionais
+Crie 10+ frases sobre:
+- Autogestão e autonomia
+- Empatia e cooperação
+- Resolução de conflitos
+- Resiliência e persistência
+- Criatividade e pensamento crítico
+
+## Áreas de Melhoria
+Frases construtivas para apontar aspectos a desenvolver:
+- Sempre com tom positivo e propositivo
+- Nunca use linguagem negativa ou punitiva
+- Inclua sugestões práticas de como melhorar
+- Foque no potencial do aluno
+
+## Comentários Personalizáveis
+Modelos de frases com espaços em branco para o professor personalizar:
+- "[Nome do aluno] demonstrou grande progresso em ______"
+- "Recomendamos que [Nome do aluno] dedique mais atenção a ______"
+- "Um destaque positivo de [Nome do aluno] neste período foi ______"
+- Inclua 10+ modelos variados para diferentes situações
+
+REGRAS:
+- Tom profissional, caloroso e construtivo em todas as frases
+- Nunca usar linguagem negativa, punitiva ou desmotivadora
+- Frases prontas para copiar e colar no boletim
+- Linguagem adequada para comunicação com famílias
+- NÃO retorne JSON`
+  },
 ];
 
 export const COMUNICACAO_CATEGORY: TextActivityCategory = {

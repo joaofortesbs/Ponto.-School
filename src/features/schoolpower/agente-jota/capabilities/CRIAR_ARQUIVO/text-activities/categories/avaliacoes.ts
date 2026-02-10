@@ -362,6 +362,121 @@ REGRAS:
 - Lacunas em posições que testem compreensão real
 - NÃO retorne JSON`
   },
+  {
+    id: 'avaliacao_diagnostica',
+    nome: 'Avaliação Diagnóstica',
+    descricao: 'Avaliação diagnóstica para mapear conhecimentos prévios e lacunas da turma',
+    categoria: 'avaliacoes',
+    icone: '🔍',
+    cor: '#9A3412',
+    keywords: ['avaliação diagnóstica', 'avaliacao diagnostica', 'diagnóstica', 'diagnostica', 'sondagem', 'mapear conhecimentos', 'conhecimentos prévios', 'avaliação inicial'],
+    secoesEsperadas: ['Objetivo da Diagnóstica', 'Questões por Nível', 'Planilha de Tabulação', 'Análise e Próximos Passos'],
+    exemploUso: 'Crie uma avaliação diagnóstica de matemática para o 6º ano',
+    promptTemplate: `Você é o Jota, assistente pedagógico do Ponto School. Crie uma AVALIAÇÃO DIAGNÓSTICA completa para mapear conhecimentos prévios e lacunas dos alunos.
+
+SOLICITAÇÃO DO PROFESSOR:
+{solicitacao}
+
+CONTEXTO DA SESSÃO (se disponível):
+{contexto}
+
+ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
+
+# Avaliação Diagnóstica — {tema}
+
+## Objetivo da Diagnóstica
+Explique o objetivo da avaliação diagnóstica: mapear o que os alunos já sabem, identificar lacunas de aprendizagem e orientar o planejamento pedagógico. Inclua as habilidades e competências que serão avaliadas.
+
+## Questões por Nível
+Organize as questões em 3 níveis de complexidade:
+
+### Nível Básico (Conhecimentos Fundamentais)
+Crie 4-5 questões que avaliam os pré-requisitos essenciais. Questões diretas e objetivas.
+
+### Nível Intermediário (Aplicação)
+Crie 4-5 questões que exigem aplicação dos conceitos em situações simples.
+
+### Nível Avançado (Análise e Síntese)
+Crie 3-4 questões que demandam raciocínio mais elaborado, resolução de problemas e conexões entre conceitos.
+
+## Planilha de Tabulação
+Crie um modelo de planilha/tabela para o professor registrar os resultados:
+- Linhas: nomes dos alunos (deixe em branco para preencher)
+- Colunas: cada habilidade/competência avaliada
+- Legenda: ✅ Domina | ⚠️ Parcial | ❌ Não domina
+- Espaço para observações por aluno
+
+## Análise e Próximos Passos
+Orientações para o professor interpretar os resultados:
+- Como identificar padrões da turma
+- Sugestão de agrupamentos por nível
+- Recomendações de intervenção para cada nível identificado
+- Cronograma sugerido de revisão dos conteúdos com lacunas
+
+REGRAS:
+- Questões claras e adequadas ao nível escolar
+- Progressão coerente entre os três níveis
+- Planilha prática e pronta para usar
+- NÃO retorne JSON`
+  },
+  {
+    id: 'autoavaliacao_aluno',
+    nome: 'Autoavaliação do Aluno',
+    descricao: 'Formulário de autoavaliação para o aluno refletir sobre seu próprio aprendizado',
+    categoria: 'avaliacoes',
+    icone: '🪞',
+    cor: '#7C2D12',
+    keywords: ['autoavaliação', 'autoavaliacao', 'auto avaliação', 'auto-avaliação', 'self assessment', 'reflexão do aluno', 'autoavaliação do aluno'],
+    secoesEsperadas: ['Sobre a Autoavaliação', 'Formulário de Autoavaliação', 'Escala de Percepção', 'Metas Pessoais', 'Guia do Professor'],
+    exemploUso: 'Crie uma autoavaliação para alunos do 8º ano sobre o bimestre',
+    promptTemplate: `Você é o Jota, assistente pedagógico do Ponto School. Crie um formulário de AUTOAVALIAÇÃO DO ALUNO completo e reflexivo.
+
+SOLICITAÇÃO DO PROFESSOR:
+{solicitacao}
+
+CONTEXTO DA SESSÃO (se disponível):
+{contexto}
+
+ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
+
+# Autoavaliação do Aluno — {tema}
+
+## Sobre a Autoavaliação
+Explique ao aluno o que é autoavaliação, por que é importante refletir sobre o próprio aprendizado e como preencher o formulário com sinceridade. Use linguagem acolhedora e adequada à faixa etária.
+
+## Formulário de Autoavaliação
+Crie um formulário estruturado com escala Likert para diferentes competências:
+- 8-12 afirmações sobre conhecimentos, habilidades e atitudes
+- Escala de 1 a 5 (Discordo totalmente → Concordo totalmente)
+- Agrupe por categorias: Conhecimento do Conteúdo, Participação, Organização, Trabalho em Equipe, etc.
+- Espaço para justificativa em cada categoria
+
+## Escala de Percepção
+Para alunos mais novos: use escala visual com emojis (😟 😐 🙂 😊 🤩) para cada item.
+Para alunos mais velhos: use escala descritiva (Preciso melhorar muito → Estou excelente).
+Inclua perguntas abertas como: "O que aprendi de mais importante?", "O que foi mais difícil?", "Como posso melhorar?"
+
+## Metas Pessoais
+Seção para o aluno definir:
+- 2-3 metas de aprendizagem para o próximo período
+- Ações concretas para alcançar cada meta
+- Prazos realistas
+- Como vai saber que alcançou a meta
+
+## Guia do Professor
+Orientações para o professor sobre:
+- Como apresentar a autoavaliação aos alunos
+- Como criar um ambiente seguro para respostas sinceras
+- Como usar os resultados para feedback individual
+- Como acompanhar o progresso das metas dos alunos
+- Sugestões de conversa individual baseada nas respostas
+
+REGRAS:
+- Linguagem acessível e encorajadora
+- Formulário pronto para imprimir e usar
+- Tom que estimule reflexão genuína, não respostas "certas"
+- NÃO retorne JSON`
+  },
 ];
 
 export const AVALIACOES_CATEGORY: TextActivityCategory = {

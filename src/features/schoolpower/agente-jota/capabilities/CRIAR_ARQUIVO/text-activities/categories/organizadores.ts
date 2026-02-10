@@ -354,6 +354,69 @@ REGRAS:
 - Informações precisas em cada célula
 - NÃO retorne JSON`
   },
+  {
+    id: 'painel_ancora',
+    nome: 'Painel de Âncora (Anchor Chart)',
+    descricao: 'Cartaz de referência visual com conceitos-chave, regras ou processos para fixar na sala',
+    categoria: 'organizadores',
+    icone: '📌',
+    cor: '#134E4A',
+    keywords: ['painel de âncora', 'anchor chart', 'cartaz', 'cartaz de referência', 'poster educativo', 'cartaz de sala', 'mural pedagógico'],
+    secoesEsperadas: ['Conceito Central', 'Layout do Painel', 'Conteúdo do Painel', 'Versão para Aluno Criar', 'Dicas de Uso'],
+    exemploUso: 'Crie um painel de âncora sobre os sinais de pontuação',
+    promptTemplate: `Você é o Jota, assistente pedagógico do Ponto School. Crie um PAINEL DE ÂNCORA (ANCHOR CHART) completo e visualmente descritivo.
+
+SOLICITAÇÃO DO PROFESSOR:
+{solicitacao}
+
+CONTEXTO DA SESSÃO (se disponível):
+{contexto}
+
+ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
+
+# 📌 Painel de Âncora — {tema}
+
+## Conceito Central
+Apresente o conceito-chave, regra ou processo que será o foco do painel. Inclua uma definição clara e objetiva em linguagem acessível aos alunos.
+
+## Layout do Painel
+Descreva o layout visual do painel usando arte textual (caixas, setas, divisões):
+- Título destacado no topo
+- Organização visual sugerida (colunas, seções, fluxo)
+- Use ┌──────┐ │ │ └──────┘ para representar caixas
+- Use → ← ↓ ↑ para fluxos e conexões
+- Sugira cores para cada seção (ex: título em azul, exemplos em verde)
+- Dimensão sugerida do cartaz (ex: cartolina A3, papel kraft)
+
+## Conteúdo do Painel
+Detalhe todo o conteúdo que deve aparecer no painel:
+- Título principal chamativo
+- Regras, passos ou conceitos-chave (em formato de bullets ou numeração)
+- Exemplos visuais e práticos
+- Ícones e emojis sugeridos para cada seção
+- Frases curtas e memoráveis
+- Dicas ou "lembre-se" em destaque
+
+## Versão para Aluno Criar
+Crie uma versão em branco/esqueleto do painel para que os alunos possam criar seu próprio anchor chart:
+- Estrutura com espaços para preencher
+- Perguntas-guia para orientar o preenchimento
+- Sugestão de materiais (canetinhas, post-its, recortes)
+
+## Dicas de Uso
+Orientações para o professor:
+- Onde fixar o painel na sala (local visível e acessível)
+- Como construir o painel COM os alunos (co-criação)
+- Quando e como referenciar o painel durante as aulas
+- Como atualizar ou expandir o painel ao longo do período
+- Sugestão de atividade de revisão usando o painel
+
+REGRAS:
+- Conteúdo visualmente organizado e fácil de ler à distância
+- Linguagem direta, frases curtas e memoráveis
+- Pronto para ser reproduzido em cartaz físico
+- NÃO retorne JSON`
+  },
 ];
 
 export const ORGANIZADORES_CATEGORY: TextActivityCategory = {
