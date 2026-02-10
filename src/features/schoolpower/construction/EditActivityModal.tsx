@@ -43,7 +43,7 @@ import {
   saveExerciseListData,
   type UnifiedExerciseListResponse 
 } from '@/features/schoolpower/activities/lista-exercicios';
-import { generateTextVersionContent, storeTextVersionContent, TextVersionInput } from '@/features/schoolpower/activities/text-version/TextVersionGenerator';
+import { generateTextVersionContent, storeTextVersionContent, retrieveTextVersionContent, TextVersionInput } from '@/features/schoolpower/activities/text-version/TextVersionGenerator';
 import { isTextVersionActivity } from '@/features/schoolpower/config/activityVersionConfig';
 import { storageSet, storageSetJSON, safeSetJSON, isHeavyActivityType } from '@/features/schoolpower/services/StorageOrchestrator';
 
@@ -419,6 +419,7 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
   const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
   const [flashCardsContent, setFlashCardsContent] = useState<any>(null); // New state for Flash Cards content
   const [teseRedacaoContent, setTeseRedacaoContent] = useState<any>(null); // New state for Tese de Redação content
+  const [textualContent, setTextualContent] = useState<string>('');
   const [isContentLoaded, setIsContentLoaded] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
@@ -510,6 +511,25 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
   const [isInQuestionView, setIsInQuestionView] = useState(false);
 
   // REMOVIDO: useEffect duplicado - a lógica de carregamento agora está centralizada no hook useActivityAutoLoad
+
+  useEffect(() => {
+    if (!activity || !isOpen) return;
+    const activityType = activity.type || activity.categoryId || activity.id || '';
+    if (activityType === 'atividade-textual' || (isTextVersionActivity(activityType) && activityType !== 'plano-aula' && activityType !== 'sequencia-didatica' && activityType !== 'tese-redacao')) {
+      const content =
+        activity.customFields?.textContent ||
+        activity.originalData?.textContent ||
+        '';
+      if (content) {
+        setTextualContent(content);
+      } else {
+        const retrieved = retrieveTextVersionContent(activity.id, activityType);
+        if (retrieved?.textContent) {
+          setTextualContent(retrieved.textContent);
+        }
+      }
+    }
+  }, [activity, isOpen]);
 
   // useEffect para escutar eventos de dados salvos (Tese da Redação)
   useEffect(() => {
@@ -1386,6 +1406,9 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
             'Nível de Dificuldade': formData.nivelDificuldade,
             'Competências ENEM': formData.competenciasENEM,
             'Contexto Adicional': formData.contextoAdicional
+          }),
+          ...((activity.id === 'atividade-textual' || isTextVersionActivity(activity.type || activity.id || '')) && {
+            textContent: textualContent
           })
         },
         lastModified: new Date().toISOString()
@@ -2542,6 +2565,13 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
         console.log('💾 Tese de Redação processada e salva:', teseRedacaoData);
       }
 
+      if (activityType === 'atividade-textual' || isTextVersionActivity(activityType)) {
+        const textData = result?.textContent || result?.data?.textContent || (typeof result === 'string' ? result : '');
+        if (textData) {
+          setTextualContent(textData);
+        }
+      }
+
       // Trigger específico para Lista de Exercícios - BLINDAGEM V2.0
       if (activityType === 'lista-exercicios') {
         console.log('📚 ====== PROCESSAMENTO LISTA DE EXERCÍCIOS (BLINDAGEM V2.0) ======');
@@ -3025,8 +3055,30 @@ const EditActivityModal = forwardRef<EditActivityModalHandle, EditActivityModalP
                         return (
                           <>
                             {/* Campos Genéricos */}
-                            {(activityType !== 'sequencia-didatica' && activityType !== 'plano-aula' && activityType !== 'quadro-interativo' && activityType !== 'quiz-interativo' && activityType !== 'mapa-mental' && activityType !== 'flash-cards' && activityType !== 'tese-redacao') && (
+                            {(activityType !== 'sequencia-didatica' && activityType !== 'plano-aula' && activityType !== 'quadro-interativo' && activityType !== 'quiz-interativo' && activityType !== 'mapa-mental' && activityType !== 'flash-cards' && activityType !== 'tese-redacao' && activityType !== 'atividade-textual' && !isTextVersionActivity(activityType)) && (
                               <DefaultEditActivity formData={formData} onFieldChange={handleInputChange} />
+                            )}
+
+                            {/* Conteúdo Rico para Atividade Textual */}
+                            {(activityType === 'atividade-textual' || (isTextVersionActivity(activityType) && activityType !== 'plano-aula' && activityType !== 'sequencia-didatica' && activityType !== 'tese-redacao')) && (
+                              <div className="space-y-3">
+                                <Label className="text-sm font-semibold flex items-center gap-2">
+                                  <FileText className="h-4 w-4 text-[#FF6B00]" />
+                                  Conteúdo da Atividade
+                                </Label>
+                                <Textarea
+                                  value={textualContent}
+                                  onChange={(e) => setTextualContent(e.target.value)}
+                                  placeholder="O conteúdo da atividade aparecerá aqui após a geração..."
+                                  className="min-h-[350px] text-sm leading-relaxed font-mono whitespace-pre-wrap bg-[#000822] text-gray-100 border-gray-700 rounded-xl p-4 focus:border-[#FF6B00] focus:ring-[#FF6B00]/20 resize-y"
+                                  style={{ whiteSpace: 'pre-wrap' }}
+                                />
+                                {!textualContent && (
+                                  <p className="text-xs text-gray-500 italic">
+                                    Clique em "Construir Atividade" para gerar o conteúdo textual.
+                                  </p>
+                                )}
+                              </div>
                             )}
 
                             {/* Campos Específicos Sequência Didática */}

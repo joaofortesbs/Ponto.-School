@@ -54,8 +54,6 @@ function normalizeArtifactType(rawType: string): ArtifactType {
     'texto livre': 'documento_livre',
     'texto': 'documento_livre',
     'livre': 'documento_livre',
-    'atividade_textual': 'atividade_textual',
-    'atividade textual': 'atividade_textual',
   };
 
   if (mappings[lower]) return mappings[lower];

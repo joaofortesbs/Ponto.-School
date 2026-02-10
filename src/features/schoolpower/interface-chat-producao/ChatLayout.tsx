@@ -25,6 +25,8 @@ import { getActivityContent } from '../services/activity-content-registry';
 import { ContentSyncService } from '../services/content-sync-service';
 import { writeActivityContent, readActivityContent, hasRealContent } from '../services/activity-storage-contract';
 import type { ConstructionActivity } from '../construction/types';
+import { isTextVersionActivity } from '../config/activityVersionConfig';
+import { retrieveTextVersionContent } from '../activities/text-version/TextVersionGenerator';
 
 import type { 
   ExecutionPlan, 
@@ -283,6 +285,73 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     };
 
     console.log('📋 [ChatLayout] ConstructionActivity montada:', constructionActivity.title, 'type:', constructionActivity.type, 'customFields:', mergedContentKeys.length);
+
+    if (activityTipo === 'atividade-textual' || isTextVersionActivity(activityTipo)) {
+      console.log('📄 [ChatLayout] Atividade textual detectada, redirecionando para ArtifactViewModal');
+      
+      const textData = retrieveTextVersionContent(activityId, activityTipo);
+      const textContent = textData?.textContent || mergedContent?.textContent || '';
+      const sections = textData?.sections || mergedContent?.sections || [];
+      
+      const artifactSections = Array.isArray(sections) ? sections.map((sec: any, idx: number) => ({
+        id: sec.id || `section-${idx}`,
+        titulo: sec.titulo || sec.title || `Seção ${idx + 1}`,
+        conteudo: sec.conteudo || sec.content || '',
+        icone: sec.icone || sec.icon || '',
+        ordem: sec.ordem ?? idx,
+      })) : [];
+      
+      if (artifactSections.length === 0 && textContent) {
+        const markdownSections = textContent.split(/^##\s+/m).filter(Boolean);
+        markdownSections.forEach((block: string, idx: number) => {
+          const lines = block.split('\n');
+          const title = lines[0]?.trim() || `Seção ${idx + 1}`;
+          const content = lines.slice(1).join('\n').trim();
+          artifactSections.push({
+            id: `section-${idx}`,
+            titulo: title,
+            conteudo: content,
+            icone: '',
+            ordem: idx,
+          });
+        });
+      }
+      
+      if (artifactSections.length === 0) {
+        artifactSections.push({
+          id: 'section-0',
+          titulo: constructionActivity.title || 'Conteúdo',
+          conteudo: textContent || 'Conteúdo não disponível. Tente gerar novamente.',
+          icone: '',
+          ordem: 0,
+        });
+      }
+      
+      const artifact: ArtifactData = {
+        id: activityId,
+        metadata: {
+          tipo: 'atividade_textual',
+          titulo: constructionActivity.title || 'Atividade em Texto',
+          subtitulo: constructionActivity.description || '',
+          geradoEm: Date.now(),
+          sessaoId: activityId,
+          versao: '2.0',
+          tags: constructionActivity.tags || [],
+          estatisticas: {
+            palavras: textContent.split(/\s+/).length,
+            secoes: artifactSections.length,
+            tempoGeracao: 0,
+          },
+        },
+        secoes: artifactSections,
+        resumoPreview: textContent.substring(0, 200) + '...',
+      };
+      
+      setSelectedArtifact(artifact);
+      setShowArtifactModal(true);
+      return;
+    }
+
     setSelectedViewActivity(constructionActivity);
     setShowActivityViewModal(true);
   }, []);

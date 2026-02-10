@@ -1392,6 +1392,21 @@ async function generateContentForActivity(
             // Campos opcionais (exatamente como no schema)
             contextoAdicional: inferredContext || `O tema "${inferredTheme}" é relevante no contexto atual da sociedade brasileira e exige reflexão crítica sobre aspectos sociais, econômicos e culturais.`,
           };
+        } else if (activity.tipo === 'atividade-textual') {
+          activityTypeFields = {
+            theme: inferredTheme,
+            subject: inferredSubject,
+            schoolYear: inferredSchoolYear,
+            objectives: inferredObjectives,
+            materials: inferredMaterials || '',
+            context: inferredContext || '',
+            competencies: inferredCompetencies || '',
+            difficultyLevel: inferredDifficultyLevel || 'Médio',
+            textContent: textVersionResult.textContent || '',
+            sections: textVersionResult.sections || [],
+            templateId: activity.campos_preenchidos?.text_activity_template_id || '',
+            templateName: activity.campos_preenchidos?.text_activity_template_name || '',
+          };
         }
         
         // Separação clara: campos do schema vs metadados de texto

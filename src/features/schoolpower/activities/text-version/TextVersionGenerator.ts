@@ -968,10 +968,29 @@ export async function generateTextVersionContent(
       return generateFallbackContent(input);
     }
 
-    const parsed = parseAIResponse(response.data, input.activityType);
+    let parsed = parseAIResponse(response.data, input.activityType);
     
-    if (!parsed) {
-      console.warn('⚠️ [TextVersionGenerator] Não foi possível parsear resposta, usando fallback');
+    if (!parsed || !parsed.textContent || parsed.textContent.length < 50 || parsed.sections.length === 0) {
+      console.warn('⚠️ [TextVersionGenerator] Resposta insuficiente, tentando retry com formato reforçado...');
+      
+      const retryPrompt = `${fullPrompt}\n\n---\nIMPORTANTE: Sua resposta DEVE conter:\n1. Pelo menos 3 seções com headers ## (ex: ## Título da Seção)\n2. Conteúdo substancial em cada seção (mínimo 100 palavras por seção)\n3. Formatação markdown rica (tabelas, listas, negrito)\n4. NÃO retorne JSON - apenas texto markdown formatado.\n\nResposta anterior foi insuficiente. Por favor, gere conteúdo completo e detalhado.`;
+      
+      try {
+        const retryResponse = await executeWithCascadeFallback(retryPrompt, { bypassCache: true });
+        if (retryResponse.success && retryResponse.data) {
+          const retryParsed = parseAIResponse(retryResponse.data, input.activityType);
+          if (retryParsed && retryParsed.textContent && retryParsed.textContent.length >= 50) {
+            console.log('✅ [TextVersionGenerator] Retry bem-sucedido!');
+            parsed = retryParsed;
+          }
+        }
+      } catch (retryErr) {
+        console.warn('⚠️ [TextVersionGenerator] Retry falhou:', retryErr);
+      }
+    }
+    
+    if (!parsed || !parsed.textContent || parsed.textContent.length < 20) {
+      console.warn('⚠️ [TextVersionGenerator] Parsing falhou após retry, usando fallback');
       return generateFallbackContent(input);
     }
 

@@ -717,7 +717,8 @@ function validateActivities(
 
     if (!activity.campos_preenchidos || typeof activity.campos_preenchidos !== 'object') {
       errors.push('Campos preenchidos ausentes ou inválidos');
-    } else if (Object.keys(activity.campos_preenchidos).length === 0) {
+    } else if (Object.keys(activity.campos_preenchidos).length === 0 && 
+               activity.tipo !== 'atividade-textual') {
       errors.push('Atividade sem campos preenchidos');
     }
 
@@ -737,6 +738,9 @@ async function saveActivityToDatabase(
   userId: string
 ): Promise<ResultadoSalvamento> {
   try {
+    const isTextualActivity = activity.tipo === 'atividade-textual' || 
+      (activity.campos_preenchidos?.textContent && activity.campos_preenchidos?.sections);
+
     const payload = {
       id: activity.id,
       id_user: userId,
@@ -744,7 +748,18 @@ async function saveActivityToDatabase(
       id_json: {
         titulo: activity.titulo,
         campos: activity.campos_preenchidos,
-        metadata: activity.metadata
+        metadata: activity.metadata,
+        ...(isTextualActivity ? {
+          content_type: 'atividade-textual',
+          text_payload: {
+            textContent: activity.campos_preenchidos?.textContent || '',
+            sections: activity.campos_preenchidos?.sections || [],
+            versionType: 'text',
+            templateId: activity.campos_preenchidos?.templateId || '',
+            templateName: activity.campos_preenchidos?.templateName || '',
+          },
+          schema_version: '2.0'
+        } : {})
       },
       stars: 100
     };

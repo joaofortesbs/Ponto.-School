@@ -2,17 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
 import { EditActivityModal } from './EditActivityModal';
-import { ActivityViewModal } from './ActivityViewModal'; // Importar o novo modal
-import { HistoricoAtividadesCriadas } from './HistoricoAtividadesCriadas'; // Importar o novo componente
+import { ActivityViewModal } from './ActivityViewModal';
+import { HistoricoAtividadesCriadas } from './HistoricoAtividadesCriadas';
 import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
-import { useAutoSync } from './hooks/useAutoSync'; // Novo hook
+import { useAutoSync } from './hooks/useAutoSync';
 import { ConstructionActivity } from './types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Zap, Loader2, CheckCircle, AlertCircle, Building2, History, ArrowLeft, Save } from 'lucide-react';
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
 import { storageSet, safeSetJSON } from '@/features/schoolpower/services/StorageOrchestrator';
+import { ArtifactViewModal } from '@/features/schoolpower/interface-chat-producao/components/ArtifactViewModal';
+import type { ArtifactData } from '@/features/schoolpower/agente-jota/capabilities/CRIAR_ARQUIVO/types';
+import { isTextVersionActivity } from '@/features/schoolpower/config/activityVersionConfig';
+import { retrieveTextVersionContent } from '@/features/schoolpower/activities/text-version/TextVersionGenerator';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
@@ -42,11 +46,12 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     setActivities(hookActivities);
   }, [hookActivities]);
 
-  // Novos estados para o modal de visualização
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewActivity, setViewActivity] = useState<ConstructionActivity | null>(null);
 
-  // Estado para controlar a visualização do histórico
+  const [isArtifactModalOpen, setIsArtifactModalOpen] = useState(false);
+  const [artifactData, setArtifactData] = useState<ArtifactData | null>(null);
+
   const [showHistorico, setShowHistorico] = useState(false);
   
   // Estado para controlar salvamento
@@ -127,17 +132,86 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   const handleView = (activity: ConstructionActivity) => {
     console.log('👁️ Abrindo modal de visualização para atividade:', activity.title);
-    console.log('👁️ Dados completos da atividade:', activity);
-    console.log('👁️ Dados originais:', activity.originalData);
-    console.log('👁️ Campos customizados:', activity.customFields);
+    const activityType = activity.originalData?.tipo || activity.categoryId || activity.type || '';
+    
+    if (activityType === 'atividade-textual' || isTextVersionActivity(activityType)) {
+      console.log('📄 [ConstructionGrid] Atividade textual detectada, redirecionando para ArtifactViewModal');
+      
+      const textData = retrieveTextVersionContent(activity.id, activityType);
+      const textContent = textData?.textContent || activity.customFields?.textContent || activity.originalData?.textContent || '';
+      const sections = textData?.sections || activity.customFields?.sections || activity.originalData?.sections || [];
+      
+      const artifactSections = Array.isArray(sections) ? sections.map((sec: any, idx: number) => ({
+        id: sec.id || `section-${idx}`,
+        titulo: sec.titulo || sec.title || `Seção ${idx + 1}`,
+        conteudo: sec.conteudo || sec.content || '',
+        icone: sec.icone || sec.icon || '',
+        ordem: sec.ordem ?? idx,
+      })) : [];
+      
+      if (artifactSections.length === 0 && textContent) {
+        const markdownSections = textContent.split(/^##\s+/m).filter(Boolean);
+        markdownSections.forEach((block: string, idx: number) => {
+          const lines = block.split('\n');
+          const title = lines[0]?.trim() || `Seção ${idx + 1}`;
+          const content = lines.slice(1).join('\n').trim();
+          artifactSections.push({
+            id: `section-${idx}`,
+            titulo: title,
+            conteudo: content,
+            icone: '',
+            ordem: idx,
+          });
+        });
+      }
+      
+      if (artifactSections.length === 0) {
+        artifactSections.push({
+          id: 'section-0',
+          titulo: activity.title || 'Conteúdo',
+          conteudo: textContent || 'Conteúdo não disponível. Tente gerar novamente.',
+          icone: '',
+          ordem: 0,
+        });
+      }
+      
+      const artifact: ArtifactData = {
+        id: activity.id,
+        metadata: {
+          tipo: 'atividade_textual',
+          titulo: activity.title || 'Atividade em Texto',
+          subtitulo: activity.description || '',
+          geradoEm: Date.now(),
+          sessaoId: activity.id,
+          versao: '2.0',
+          tags: activity.tags || [],
+          estatisticas: {
+            palavras: textContent.split(/\s+/).length,
+            secoes: artifactSections.length,
+            tempoGeracao: 0,
+          },
+        },
+        secoes: artifactSections,
+        resumoPreview: textContent.substring(0, 200) + '...',
+      };
+      
+      setArtifactData(artifact);
+      setIsArtifactModalOpen(true);
+      return;
+    }
+    
     setViewActivity(activity);
     setIsViewModalOpen(true);
   };
 
   const closeViewModal = () => {
-    console.log('👁️ Fechando modal de visualização');
     setIsViewModalOpen(false);
     setViewActivity(null);
+  };
+
+  const closeArtifactModal = () => {
+    setIsArtifactModalOpen(false);
+    setArtifactData(null);
   };
 
   const handleShowHistorico = () => {
@@ -690,12 +764,21 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         onSave={handleSaveActivity}
       />
 
-      {/* Modal de Visualização */}
+      {/* Modal de Visualização - Atividades Interativas */}
       <ActivityViewModal
         isOpen={isViewModalOpen}
         activity={viewActivity}
         onClose={closeViewModal}
       />
+
+      {/* Modal de Artefato - Atividades Textuais */}
+      {artifactData && (
+        <ArtifactViewModal
+          artifact={artifactData}
+          isOpen={isArtifactModalOpen}
+          onClose={closeArtifactModal}
+        />
+      )}
 
       {/* Modal de Progresso da Construção Automática */}
       {showProgressModal && buildProgress && (
