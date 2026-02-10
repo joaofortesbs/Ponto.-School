@@ -1,5 +1,6 @@
 import { geminiLogger } from '@/utils/geminiDebugLogger';
 import { generateContent } from '@/services/llm-orchestrator';
+import { getQualityPromptForQuiz, type QualityContext } from '@/features/schoolpower/agente-jota/prompts/quality-prompt-templates';
 
 export interface QuizInterativoData {
   subject: string;
@@ -731,49 +732,65 @@ export class QuizInterativoGenerator {
   }
 
   private buildPrompt(data: QuizInterativoData): string {
+    const qualityCtx: QualityContext = {
+      tema: data.theme,
+      disciplina: data.subject,
+      anoSerie: data.schoolYear,
+      objetivo: `Quiz sobre ${data.theme}`
+    };
+    const qualityDirectives = getQualityPromptForQuiz(qualityCtx);
+
     return `
-Você é um gerador de quizzes educativos especializados. Crie um quiz sobre "${data.theme}" para ${data.schoolYear} na disciplina ${data.subject}.
+Você é um gerador de quizzes educativos de ALTA QUALIDADE PEDAGÓGICA. Crie um quiz sobre "${data.theme}" para ${data.schoolYear} na disciplina ${data.subject}.
 
 ESPECIFICAÇÕES OBRIGATÓRIAS:
 - Número de questões: ${data.numberOfQuestions}
-- Nível de dificuldade: ${data.difficultyLevel}  
+- Nível de dificuldade geral: ${data.difficultyLevel}  
 - Formato: ${data.format}
 - Tema específico: ${data.theme}
 - Disciplina: ${data.subject}
 - Público-alvo: ${data.schoolYear}
 
-REGRAS CRÍTICAS:
+${qualityDirectives}
+
+REGRAS CRÍTICAS DE FORMATO:
 1. Retorne APENAS JSON válido, sem markdown, sem texto extra
 2. Use EXATAMENTE o formato especificado abaixo
 3. Questões adequadas ao nível "${data.schoolYear}"
-4. Todas as alternativas devem ser plausíveis
+4. Todas as alternativas devem ser plausíveis (distratores pedagógicos)
 5. resposta_correta = índice numérico (0, 1, 2, 3)
+6. OBRIGATÓRIO: Cada questão deve ter campos "dificuldade", "nivel_bloom" e "feedback" detalhado
 
-FORMATO OBRIGATÓRIO (COPIE EXATAMENTE):
+FORMATO OBRIGATÓRIO:
 {
   "quiz": {
     "titulo": "Quiz: ${data.theme} - ${data.subject}",
     "descricao": "Avalie seus conhecimentos sobre ${data.theme}",
+    "instrucoes_professor": "Orientações detalhadas para aplicação do quiz em sala",
     "perguntas": [
       {
         "id": 1,
-        "texto": "Pergunta sobre ${data.theme}?",
-        "alternativas": ["Primeira opção correta sobre o tema", "Segunda opção plausível mas incorreta", "Terceira opção relacionada ao conteúdo", "Quarta opção do exercício"],
+        "texto": "Pergunta contextualizada sobre ${data.theme}",
+        "alternativas": ["Alternativa correta com explicação", "Distrator baseado em erro conceitual comum 1", "Distrator baseado em erro conceitual comum 2", "Distrator baseado em erro conceitual comum 3"],
         "resposta_correta": 0,
-        "feedback": "Explicação educativa"
+        "dificuldade": "facil|medio|dificil",
+        "nivel_bloom": "Lembrar|Compreender|Aplicar|Analisar|Avaliar|Criar",
+        "habilidade_bncc": "Código BNCC",
+        "feedback": "Explicação detalhada: por que a correta está certa E por que cada distrator está errado. Dica de estudo."
       }
     ]
   }
 }
 
-VALIDAÇÕES:
+VALIDAÇÕES FINAIS:
 - Sempre 4 alternativas por questão
 - resposta_correta = número (0, 1, 2 ou 3)
 - Linguagem adequada para ${data.schoolYear}
 - Conteúdo focado em: ${data.theme}
-- Nível de dificuldade: ${data.difficultyLevel}
+- PROGRESSÃO: Primeiras questões fáceis, depois médias, depois difíceis
+- FEEDBACK: Cada questão deve ter feedback educativo detalhado
 
-Gere ${data.numberOfQuestions} questões seguindo essas especificações.
+Gere ${data.numberOfQuestions} questões seguindo essas especificações com qualidade pedagógica excepcional.
 `;
   }
 }

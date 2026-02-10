@@ -1,5 +1,6 @@
 
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
+import { getQualityPromptForLessonPlan, type QualityContext } from '@/features/schoolpower/agente-jota/prompts/quality-prompt-templates';
 
 export interface PlanoAulaData {
   // Dados de entrada do formulário
@@ -82,12 +83,21 @@ export class PlanoAulaBuilder {
    */
   static generatePrompt(data: PlanoAulaData): string {
     const promptData = JSON.stringify(data, null, 2);
+    const qualityCtx: QualityContext = {
+      tema: data.tema || '',
+      disciplina: data.disciplina || '',
+      anoSerie: data.serie || '7º Ano',
+      objetivo: data.objetivoGeral || `Plano de aula sobre ${data.tema}`
+    };
+    const qualityDirectives = getQualityPromptForLessonPlan(qualityCtx);
     
     return `Você é um planejador pedagógico especialista da School Power. Com base nos seguintes dados do professor, construa um plano de aula completo dividido em: Visão Geral, Objetivos, Metodologia, Desenvolvimento e Atividades.
 
 ${promptData}
 
 O plano de aula deve ser aplicável, dinâmico, moderno e atender à BNCC. Use linguagem clara e gere sugestões inteligentes em cada seção.
+
+${qualityDirectives}
 
 IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato exato:
 

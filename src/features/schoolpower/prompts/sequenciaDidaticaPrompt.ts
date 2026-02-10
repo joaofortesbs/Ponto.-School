@@ -1,3 +1,4 @@
+import { getQualityPromptForSequenciaDidatica, type QualityContext } from '@/features/schoolpower/agente-jota/prompts/quality-prompt-templates';
 
 export interface SequenciaDidaticaPromptData {
   tituloTemaAssunto: string;
@@ -13,6 +14,14 @@ export interface SequenciaDidaticaPromptData {
 }
 
 export function buildSequenciaDidaticaPrompt(data: SequenciaDidaticaPromptData): string {
+  const qualityCtx: QualityContext = {
+    tema: data.tituloTemaAssunto,
+    disciplina: data.disciplina,
+    anoSerie: data.anoSerie,
+    objetivo: data.objetivosAprendizagem
+  };
+  const qualityDirectives = getQualityPromptForSequenciaDidatica(qualityCtx);
+
   return `# Gerador de Sequência Didática - Especialista em Educação
 
 Você é um especialista em educação e design instrucional. Crie uma sequência didática completa e detalhada baseada nos dados fornecidos.
@@ -28,6 +37,8 @@ Você é um especialista em educação e design instrucional. Crie uma sequênci
 - **Quantidade de Diagnósticos**: ${data.quantidadeDiagnosticos}
 - **Quantidade de Avaliações**: ${data.quantidadeAvaliacoes}
 - **Cronograma**: ${data.cronograma || 'A definir'}
+
+${qualityDirectives}
 
 ## INSTRUÇÕES ESPECÍFICAS:
 

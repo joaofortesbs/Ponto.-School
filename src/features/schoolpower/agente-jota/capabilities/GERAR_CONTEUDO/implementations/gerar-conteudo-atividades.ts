@@ -20,6 +20,7 @@ import {
   type ActivityFieldsMapping,
   type FieldDefinition 
 } from '../schemas/gerar-conteudo-schema';
+import { getQualityEnhancementForType, getBatchProgressionPrompt, type QualityContext } from '../../../prompts/quality-prompt-templates';
 import { 
   syncSchemaToFormData, 
   validateSyncedFields,
@@ -407,8 +408,19 @@ function buildContentGenerationPrompt(
   activity: ChosenActivity,
   fieldsMapping: ActivityFieldsMapping,
   conversationContext: string,
-  userObjective: string
+  userObjective: string,
+  batchIndex?: number,
+  batchTotal?: number
 ): string {
+  const qualityCtx: QualityContext = {
+    tema: activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || activity.titulo || '',
+    disciplina: activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina || activity.materia || 'Não especificada',
+    anoSerie: activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.anoSerie || '7º Ano',
+    objetivo: userObjective,
+    solicitacaoOriginal: userObjective
+  };
+  const qualityDirectives = getQualityEnhancementForType(activity.tipo, qualityCtx);
+
   const fieldsDescription = fieldsMapping.requiredFields.map((field, idx) => `
 ${idx + 1}. "${field.name}" (${field.label}) [OBRIGATÓRIO]
    - Descrição: ${field.description}
@@ -519,6 +531,11 @@ Se o objetivo do usuário for vago ou curto (ex: "matemática aplicada", "criar 
 4. **OBJETIVOS**: Liste múltiplos objetivos de aprendizagem mensuráveis
 5. **MATERIAIS**: Liste recursos concretos que serão utilizados
 
+## DIRETRIZES DE QUALIDADE PEDAGÓGICA (ESPECÍFICAS PARA ${fieldsMapping.displayName.toUpperCase()})
+${qualityDirectives}
+
+${(batchIndex !== undefined && batchTotal !== undefined && batchTotal > 1) ? getBatchProgressionPrompt(batchIndex, batchTotal, []) : ''}
+
 ## FORMATO DE RESPOSTA - JSON COMPLETO
 
 ⚠️ ATENÇÃO MÁXIMA: Você DEVE preencher ABSOLUTAMENTE TODOS os campos listados abaixo.
@@ -601,7 +618,9 @@ async function generateContentForActivity(
   userObjective: string,
   onProgress?: (update: ProgressUpdate) => void,
   capabilityId?: string,
-  capabilityName?: string
+  capabilityName?: string,
+  batchIndex?: number,
+  batchTotal?: number
 ): Promise<GeneratedFieldsResult> {
   const correlationId = generateCorrelationId();
   const activityStartTime = Date.now();
@@ -1471,7 +1490,9 @@ async function generateContentForActivity(
     activity,
     fieldsMapping,
     conversationContext,
-    userObjective
+    userObjective,
+    batchIndex,
+    batchTotal
   );
 
   let lastError: string = '';
@@ -1895,7 +1916,9 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
       params.user_objective,
       params.on_progress,
       CAPABILITY_ID,
-      CAPABILITY_NAME
+      CAPABILITY_NAME,
+      i,
+      totalActivities
     );
 
     // A função generateContentForActivity já registra debug entries detalhadas

@@ -1,5 +1,6 @@
 
 import { geminiClient } from '@/utils/api/geminiClient';
+import { getQualityPromptForFlashCards, type QualityContext } from '@/features/schoolpower/agente-jota/prompts/quality-prompt-templates';
 
 export interface FlashCard {
   id: number;
@@ -93,8 +94,16 @@ export class FlashCardsGenerator {
   }
 
   private buildFlashCardsPrompt(data: FlashCardsData, numberOfCards: number): string {
+    const qualityCtx: QualityContext = {
+      tema: data.theme,
+      disciplina: data.subject || 'Geral',
+      anoSerie: data.schoolYear || 'Ensino Médio',
+      objetivo: `Flash Cards sobre ${data.theme}`
+    };
+    const qualityDirectives = getQualityPromptForFlashCards(qualityCtx);
+
     return `
-Você é um especialista em educação. Gere exatamente ${numberOfCards} flash cards educativos sobre o tema: "${data.theme}"
+Você é um especialista em educação e técnicas de memorização ativa. Gere exatamente ${numberOfCards} flash cards educativos de ALTA QUALIDADE sobre o tema: "${data.theme}"
 
 CONTEXTO EDUCACIONAL:
 - Disciplina: ${data.subject || 'Geral'}
@@ -103,31 +112,34 @@ CONTEXTO EDUCACIONAL:
 - Contexto de Uso: ${data.context || 'Estudos e revisão'}
 - Nível de Dificuldade: ${data.difficultyLevel || 'Médio'}
 
+${qualityDirectives}
+
 DIRETRIZES PARA CRIAÇÃO:
 1. Crie exatamente ${numberOfCards} flash cards únicos e distintos
 2. Para cada card:
-   - FRENTE: Uma pergunta clara, conceito-chave, termo ou definição incompleta
-   - VERSO: Resposta completa, explicação detalhada ou definição precisa
+   - FRENTE: Uma pergunta clara e direta, conceito-chave ou situação-problema
+   - VERSO: Resposta completa com explicação detalhada, exemplo prático e dica mnemônica quando aplicável
 3. Varie os tipos de conteúdo:
-   - Definições conceituais
-   - Exemplos práticos
-   - Aplicações reais
-   - Fórmulas (se aplicável)
-   - Comparações e contrastes
+   - Definições conceituais com exemplos
+   - Aplicações práticas do cotidiano
+   - Comparações e contrastes entre conceitos
+   - Fórmulas com explicação do significado (se aplicável)
+   - Conexões interdisciplinares
 4. Mantenha linguagem adequada para ${data.schoolYear || 'estudantes do ensino médio'}
 5. Foque especificamente nos tópicos listados: ${data.topicos}
 6. Garanta progressão lógica de dificuldade
-7. Inclua exemplos concretos quando possível
+7. Cada card deve ter campo "difficulty" indicando "Fácil", "Médio" ou "Difícil"
 
 FORMATO DE RESPOSTA OBRIGATÓRIO (JSON válido):
 {
   "title": "Flash Cards: ${data.theme}",
   "description": "Flash cards educativos sobre ${data.theme} para ${data.schoolYear || 'ensino médio'}",
+  "instrucoes_uso": "Orientações de como usar estes flash cards para máximo aproveitamento (técnica de revisão espaçada, dicas de estudo).",
   "cards": [
     {
       "id": 1,
       "front": "Pergunta ou conceito específico aqui",
-      "back": "Resposta completa e educativa aqui",
+      "back": "Resposta completa: [definição]. Exemplo: [exemplo prático]. Dica: [mnemônico ou associação].",
       "category": "${data.subject || 'Geral'}",
       "difficulty": "Fácil|Médio|Difícil"
     }
@@ -140,6 +152,7 @@ IMPORTANTE:
 - Garanta que todos os ${numberOfCards} cards sejam únicos e educativos
 - Use aspas duplas para strings JSON
 - Evite caracteres especiais que quebrem o JSON
+- PROGRESSÃO: Primeiros cards mais simples, últimos mais complexos
     `.trim();
   }
 
