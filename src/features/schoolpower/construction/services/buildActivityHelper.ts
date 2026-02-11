@@ -5,6 +5,7 @@ import {
   processExerciseListWithUnifiedPipeline, 
   saveExerciseListData 
 } from '../../activities/lista-exercicios';
+import { isTextVersionActivity as isTextVersionActivityConfig } from '../../config/activityVersionConfig';
 
 /**
  * Helper function to build an activity from form data
@@ -44,10 +45,7 @@ export async function buildActivityFromFormData(
 
     console.log('✅ [buildActivityHelper] Atividade construída com sucesso:', result);
 
-    // TEXT VERSION ACTIVITIES: plano-aula, sequencia-didatica, tese-redacao
-    // Para atividades de versão texto, NÃO armazenar dados duplicados
-    // O conteúdo é armazenado apenas na chave text_content_ pelo TextVersionGenerator
-    const isTextVersionActivity = ['plano-aula', 'sequencia-didatica', 'tese-redacao'].includes(activityType);
+    const isTextVersionActivity = isTextVersionActivityConfig(activityType);
     
     if (!isTextVersionActivity) {
       // CORREÇÃO: Extrair dados corretos do resultado (pode vir como { success, data } ou direto)

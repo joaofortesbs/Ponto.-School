@@ -37,6 +37,10 @@ import { createBuildController } from '../../construction/controllers/BuildContr
 import { onBuildProgress, BuildProgressUpdate } from '../../construction/events/constructionEventBus';
 import { ModalBridge } from '../../construction/bridge/ModalBridge';
 import { useActivityDebugStore } from '../../construction/stores/activityDebugStore';
+import { ArtifactViewModal } from '../components/ArtifactViewModal';
+import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
+import { isTextVersionActivity } from '../../config/activityVersionConfig';
+import { retrieveTextVersionContent } from '../../activities/text-version/TextVersionGenerator';
 
 export type ActivityBuildStatus = 'waiting' | 'building' | 'completed' | 'error';
 
@@ -426,6 +430,8 @@ export function ConstructionInterface({
   const [selectedActivity, setSelectedActivity] = useState<ConstructionActivity | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewActivity, setViewActivity] = useState<ConstructionActivity | null>(null);
+  const [isArtifactModalOpen, setIsArtifactModalOpen] = useState(false);
+  const [artifactData, setArtifactData] = useState<ArtifactData | null>(null);
   const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
   const [debugActivityId, setDebugActivityId] = useState<string | null>(null);
   const [debugActivityName, setDebugActivityName] = useState<string>('');
@@ -525,7 +531,99 @@ export function ConstructionInterface({
   }, []);
 
   const handleViewClick = useCallback((activity: ActivityToBuild) => {
-    console.log('👁️ [ConstructionInterface] Abrindo modal de VISUALIZAÇÃO para atividade:', activity.name);
+    console.log('👁️ [ConstructionInterface] Abrindo modal de VISUALIZAÇÃO para atividade:', activity.name, 'tipo:', activity.type, 'activity_id:', activity.activity_id);
+    
+    const activityType = activity.type || activity.built_data?.activityType || '';
+    const activityId = activity.activity_id || activity.id || '';
+    
+    const isTextByConfig = isTextVersionActivity(activityType) || isTextVersionActivity(activityId);
+    const isTextByType = activityType === 'atividade-textual';
+    const isTextByBuiltData = activity.built_data?.activityType === 'atividade-textual' ||
+      activity.built_data?.versionType === 'text' ||
+      activity.built_data?.isTextVersion === true ||
+      activity.built_data?.pipeline === 'criar_arquivo_textual';
+    
+    if (isTextByConfig || isTextByType || isTextByBuiltData) {
+      console.log('📄 [ConstructionInterface] Atividade TEXTUAL detectada, abrindo ArtifactViewModal', { activityType, activityId, isTextByConfig, isTextByType, isTextByBuiltData });
+      
+      const builtData = activity.built_data || {};
+      const consolidatedFields = builtData._consolidated_fields || builtData.generated_fields || {};
+      
+      const textData = retrieveTextVersionContent(activityId, activityType) || 
+                        retrieveTextVersionContent(activityId, 'atividade-textual') ||
+                        retrieveTextVersionContent(activity.id, activityType);
+      
+      const textContent = textData?.textContent || 
+                          consolidatedFields?.textContent || 
+                          builtData?.textContent || 
+                          '';
+      const sections = textData?.sections || 
+                       consolidatedFields?.sections || 
+                       builtData?.sections || 
+                       [];
+      
+      const artifactSections = Array.isArray(sections) ? sections.map((sec: any, idx: number) => ({
+        id: sec.id || `section-${idx}`,
+        titulo: sec.titulo || sec.title || `Seção ${idx + 1}`,
+        conteudo: sec.conteudo || sec.content || '',
+        icone: sec.icone || sec.icon || '',
+        ordem: sec.ordem ?? idx,
+      })) : [];
+      
+      if (artifactSections.length === 0 && textContent) {
+        const markdownSections = textContent.split(/^##\s+/m).filter(Boolean);
+        markdownSections.forEach((block: string, idx: number) => {
+          const lines = block.split('\n');
+          const title = lines[0]?.trim() || `Seção ${idx + 1}`;
+          const content = lines.slice(1).join('\n').trim();
+          artifactSections.push({
+            id: `section-${idx}`,
+            titulo: title,
+            conteudo: content,
+            icone: '',
+            ordem: idx,
+          });
+        });
+      }
+      
+      if (artifactSections.length === 0) {
+        artifactSections.push({
+          id: 'section-0',
+          titulo: activity.name || 'Conteúdo',
+          conteudo: textContent || JSON.stringify(consolidatedFields, null, 2) || 'Conteúdo não disponível.',
+          icone: '',
+          ordem: 0,
+        });
+      }
+      
+      const constructionActivity = convertToConstructionActivity(activity);
+      
+      const artifact: ArtifactData = {
+        id: activityId,
+        metadata: {
+          tipo: 'atividade_textual',
+          titulo: constructionActivity.title || activity.name || 'Atividade em Texto',
+          subtitulo: constructionActivity.description || '',
+          geradoEm: Date.now(),
+          sessaoId: activityId,
+          versao: '2.0',
+          tags: [],
+          estatisticas: {
+            palavras: textContent ? textContent.split(/\s+/).length : 0,
+            secoes: artifactSections.length,
+            tempoGeracao: 0,
+          },
+        },
+        secoes: artifactSections,
+        resumoPreview: textContent ? textContent.substring(0, 200) + '...' : '',
+      };
+      
+      setArtifactData(artifact);
+      setIsArtifactModalOpen(true);
+      return;
+    }
+    
+    console.log('🎮 [ConstructionInterface] Atividade INTERATIVA, abrindo ActivityViewModal');
     const constructionActivity = convertToConstructionActivity(activity);
     setViewActivity(constructionActivity);
     setIsViewModalOpen(true);
@@ -724,6 +822,18 @@ export function ConstructionInterface({
           setViewActivity(null);
         }}
       />
+
+      {artifactData && (
+        <ArtifactViewModal
+          artifact={artifactData}
+          isOpen={isArtifactModalOpen}
+          onClose={() => {
+            console.log('📄 [ConstructionInterface] Fechando modal de artefato');
+            setIsArtifactModalOpen(false);
+            setArtifactData(null);
+          }}
+        />
+      )}
 
       <ActivityDebugModal
         isOpen={isDebugModalOpen}

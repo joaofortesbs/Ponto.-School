@@ -6,6 +6,9 @@ Ponto. School is an AI-powered educational platform designed to provide personal
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+- **2026-02-11**: Text Activity Routing COMPLETE FIX — Root cause: Previous fixes were applied to `ConstructionGrid.tsx` but the actual UI in chat is `ConstructionInterface.tsx` (a different component) which had NO text detection. Also `buildActivityHelper.ts` had hardcoded 3-type check. Fix: (1) ConstructionInterface.tsx now has full ArtifactViewModal routing for text activities. (2) buildActivityHelper.ts uses expanded isTextVersionActivity config. (3) Executor multi-key localStorage fallback for text_content. (4) ChatLayout 3-tier content retrieval fallback. CRITICAL LEARNING: Always match screenshots to actual component names before fixing.
+
 ## System Architecture
 
 ### UI/UX Decisions

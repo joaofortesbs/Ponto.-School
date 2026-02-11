@@ -202,20 +202,40 @@ export class AgentExecutor {
         
         if (!contentSnapshot?.textContent) {
           try {
-            const textContentKey = `text_content_${actTipo}_${actId}`;
-            const textRaw = typeof localStorage !== 'undefined' ? localStorage.getItem(textContentKey) : null;
-            if (textRaw) {
-              const textParsed = JSON.parse(textRaw);
-              if (textParsed?.textContent) {
-                contentSnapshot = {
-                  ...(contentSnapshot || {}),
-                  textContent: textParsed.textContent,
-                  sections: textParsed.sections || [],
-                  versionType: 'text',
-                  isTextVersion: true,
-                };
-                console.error(`📸 [getCollectedItems] TextVersion content para ${actId}: textContent=${textParsed.textContent.length} chars, sections=${textParsed.sections?.length || 0}`);
+            const keysToTry = [
+              `text_content_${actTipo}_${actId}`,
+              `text_content_atividade-textual_${actId}`,
+            ];
+            let textParsed: any = null;
+            for (const key of keysToTry) {
+              const textRaw = typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
+              if (textRaw) {
+                textParsed = JSON.parse(textRaw);
+                if (textParsed?.textContent) {
+                  console.error(`📸 [getCollectedItems] TextVersion found via key: ${key}`);
+                  break;
+                }
+                textParsed = null;
               }
+            }
+            if (!textParsed && typeof localStorage !== 'undefined') {
+              const allKeys = Object.keys(localStorage);
+              const matchingKey = allKeys.find(k => k.startsWith('text_content_') && k.includes(actId));
+              if (matchingKey) {
+                const raw = localStorage.getItem(matchingKey);
+                if (raw) textParsed = JSON.parse(raw);
+                console.error(`📸 [getCollectedItems] TextVersion found via scan: ${matchingKey}`);
+              }
+            }
+            if (textParsed?.textContent) {
+              contentSnapshot = {
+                ...(contentSnapshot || {}),
+                textContent: textParsed.textContent,
+                sections: textParsed.sections || [],
+                versionType: 'text',
+                isTextVersion: true,
+              };
+              console.error(`📸 [getCollectedItems] TextVersion content para ${actId}: textContent=${textParsed.textContent.length} chars, sections=${textParsed.sections?.length || 0}`);
             }
           } catch (e) {
             console.warn(`⚠️ [getCollectedItems] Erro text_content lookup para ${actId}:`, e);

@@ -296,9 +296,25 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     if (activityTipo === 'atividade-textual' || isTextByConfig || isTextBySignal) {
       console.log('📄 [ChatLayout] Atividade textual detectada, redirecionando para ArtifactViewModal', { activityTipo, isTextByConfig, isTextBySignal });
       
-      const textData = retrieveTextVersionContent(activityId, activityTipo);
-      const textContent = textData?.textContent || mergedContent?.textContent || '';
-      const sections = textData?.sections || mergedContent?.sections || [];
+      let textData = retrieveTextVersionContent(activityId, activityTipo);
+      if (!textData?.textContent && activityTipo !== 'atividade-textual') {
+        textData = retrieveTextVersionContent(activityId, 'atividade-textual');
+      }
+      if (!textData?.textContent) {
+        try {
+          const allKeys = Object.keys(localStorage);
+          const matchingKey = allKeys.find(k => k.startsWith('text_content_') && k.includes(activityId));
+          if (matchingKey) {
+            const raw = localStorage.getItem(matchingKey);
+            if (raw) textData = JSON.parse(raw);
+            console.log(`📄 [ChatLayout] TextContent via busca direta: ${matchingKey}`);
+          }
+        } catch (e) {
+          console.warn('⚠️ [ChatLayout] Erro busca direta text_content:', e);
+        }
+      }
+      const textContent = textData?.textContent || mergedContent?.textContent || messageContentSnapshot?.textContent || '';
+      const sections = textData?.sections || mergedContent?.sections || messageContentSnapshot?.sections || [];
       
       const artifactSections = Array.isArray(sections) ? sections.map((sec: any, idx: number) => ({
         id: sec.id || `section-${idx}`,
