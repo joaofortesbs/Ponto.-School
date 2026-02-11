@@ -549,15 +549,32 @@ export function ConstructionInterface({
       const builtData = activity.built_data || {};
       const consolidatedFields = builtData._consolidated_fields || builtData.generated_fields || {};
       
-      let textData: any = retrieveTextVersionContent(activityId, activityType) || 
+      const originId = activity.built_data?.origin_activity_id || 
+                        activity.built_data?.catalogId ||
+                        activity.id || '';
+      const builtIdMatch = activityId.match(/^built-(.+)-\d+$/);
+      const catalogIdFromBuilt = builtIdMatch ? builtIdMatch[1] : '';
+      const bestOriginalId = originId || catalogIdFromBuilt || activityId;
+      
+      let textData: any = retrieveTextVersionContent(bestOriginalId, activityType) ||
+                        retrieveTextVersionContent(bestOriginalId, 'atividade-textual') ||
+                        retrieveTextVersionContent(activityId, activityType) || 
                         retrieveTextVersionContent(activityId, 'atividade-textual') ||
                         retrieveTextVersionContent(activity.id, activityType);
       
       if (!textData?.textContent && typeof localStorage !== 'undefined') {
         const allKeys = Object.keys(localStorage);
-        const matchingKey = allKeys.find(k => 
-          k.startsWith('text_content_') && (k.includes(activityId) || k.includes(activityType))
-        );
+        
+        const candidateIds = [originId, catalogIdFromBuilt, activityId].filter(Boolean);
+        
+        let matchingKey: string | undefined;
+        for (const cid of candidateIds) {
+          matchingKey = allKeys.find(k => 
+            k.startsWith('text_content_') && k.endsWith(`_${cid}`)
+          );
+          if (matchingKey) break;
+        }
+        
         if (matchingKey) {
           try {
             const raw = localStorage.getItem(matchingKey);
@@ -565,9 +582,13 @@ export function ConstructionInterface({
           } catch (e) { }
         }
         if (!textData?.textContent) {
-          const constructedKey = allKeys.find(k => 
-            k.startsWith('constructed_') && (k.includes(activityId) || k.includes(activityType))
-          );
+          let constructedKey: string | undefined;
+          for (const cid of candidateIds) {
+            constructedKey = allKeys.find(k => 
+              k.startsWith('constructed_') && k.endsWith(`_${cid}`)
+            );
+            if (constructedKey) break;
+          }
           if (constructedKey) {
             try {
               const raw = localStorage.getItem(constructedKey);

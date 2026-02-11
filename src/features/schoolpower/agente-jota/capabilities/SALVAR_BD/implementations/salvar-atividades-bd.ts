@@ -517,26 +517,29 @@ async function collectActivitiesFromAllSources(
       const newId = ensureValidActivityId(undefined);
       const newFields = built.campos_preenchidos || built.fields || {};
       
-      if (activitiesByType.has(tipo)) {
-        const existing = activitiesByType.get(tipo)!;
+      const builtOriginalId = built.id || built.original_id || '';
+      const builtCompositeKey = builtOriginalId ? `${tipo}::${builtOriginalId}` : tipo;
+      
+      if (activitiesByType.has(builtCompositeKey)) {
+        const existing = activitiesByType.get(builtCompositeKey)!;
         const mergedFields = mergeActivityFields(existing.campos_preenchidos, newFields);
         existing.campos_preenchidos = mergedFields;
-        console.error(`🔄 [COLETA] MERGE previous_results -> ${tipo}: ${Object.keys(mergedFields).length} campos totais`);
+        console.error(`🔄 [COLETA] MERGE previous_results -> ${builtCompositeKey}: ${Object.keys(mergedFields).length} campos totais`);
       } else {
         const activity: AtividadeParaSalvar = {
           id: newId,
           tipo: tipo,
-          titulo: built.titulo || built.name || `Atividade ${tipo}`,
+          titulo: built.titulo || built.name || `Atividade ${builtOriginalId || tipo}`,
           campos_preenchidos: newFields,
           metadata: {
             criado_em: new Date().toISOString(),
             pipeline_version: 'v2',
             model_used: built.model_used,
-            original_id: built.id || built.original_id
+            original_id: builtOriginalId || undefined
           }
         };
-        activitiesByType.set(tipo, activity);
-        console.error(`✅ [COLETA] previous_results: ${tipo} -> ID ${newId} (campos: ${Object.keys(newFields).length})`);
+        activitiesByType.set(builtCompositeKey, activity);
+        console.error(`✅ [COLETA] previous_results: ${builtCompositeKey} -> ID ${newId} (campos: ${Object.keys(newFields).length})`);
       }
     }
     console.error(`📦 [COLETA] ${builtActivities.length} atividades de previous_results.criar_atividade`);
@@ -556,26 +559,29 @@ async function collectActivitiesFromAllSources(
     
     if (Object.keys(consolidatedFields).length === 0) continue;
     
-    if (activitiesByType.has(tipo)) {
-      const existing = activitiesByType.get(tipo)!;
+    const storeOriginalId = activity.id || activity.activity_id || '';
+    const storeCompositeKey = storeOriginalId ? `${tipo}::${storeOriginalId}` : tipo;
+    
+    if (activitiesByType.has(storeCompositeKey)) {
+      const existing = activitiesByType.get(storeCompositeKey)!;
       const mergedFields = mergeActivityFields(existing.campos_preenchidos, consolidatedFields);
       existing.campos_preenchidos = mergedFields;
-      console.error(`🔄 [COLETA] MERGE Store -> ${tipo}: ${Object.keys(mergedFields).length} campos totais`);
+      console.error(`🔄 [COLETA] MERGE Store -> ${storeCompositeKey}: ${Object.keys(mergedFields).length} campos totais`);
     } else {
       const newId = ensureValidActivityId(undefined);
       
-      activitiesByType.set(tipo, {
+      activitiesByType.set(storeCompositeKey, {
         id: newId,
         tipo: tipo,
-        titulo: consolidatedFields.titulo || consolidatedFields.name || `Atividade ${tipo}`,
+        titulo: consolidatedFields.titulo || consolidatedFields.name || `Atividade ${storeOriginalId || tipo}`,
         campos_preenchidos: consolidatedFields,
         metadata: {
           criado_em: new Date().toISOString(),
           pipeline_version: 'v2',
-          original_id: activity.id
+          original_id: storeOriginalId || activity.id
         }
       });
-      console.error(`✅ [COLETA] Store: ${tipo} -> ID ${newId}`);
+      console.error(`✅ [COLETA] Store: ${storeCompositeKey} -> ID ${newId}`);
     }
   }
   console.error(`📦 [COLETA] ${storeActivities.length} atividades do ChosenActivitiesStore`);
@@ -619,21 +625,26 @@ async function collectActivitiesFromAllSources(
               const textType = extractTypeFromKey(key);
               if (textType && textType !== 'unknown') {
                 const normalizedTextType = normalizeActivityType(textType);
-                if (activitiesByType.has(normalizedTextType)) {
-                  const existing = activitiesByType.get(normalizedTextType)!;
+                const withoutPrefix = key.replace(/^text_content_/, '');
+                const lastUnderscore = withoutPrefix.lastIndexOf('_');
+                const originalActivityId = lastUnderscore > 0 ? withoutPrefix.substring(lastUnderscore + 1) : '';
+                const uniqueKey = originalActivityId ? `${normalizedTextType}::${originalActivityId}` : normalizedTextType;
+                
+                if (activitiesByType.has(uniqueKey)) {
+                  const existing = activitiesByType.get(uniqueKey)!;
                   if (!existing.campos_preenchidos.textContent) {
                     existing.campos_preenchidos.textContent = textData.textContent || '';
                   }
                   if (!existing.campos_preenchidos.sections || existing.campos_preenchidos.sections.length === 0) {
                     existing.campos_preenchidos.sections = textData.sections || [];
                   }
-                  console.error(`🔄 [COLETA] MERGE text_content -> ${normalizedTextType}: textContent ${(textData.textContent || '').length} chars`);
+                  console.error(`🔄 [COLETA] MERGE text_content -> ${uniqueKey}: textContent ${(textData.textContent || '').length} chars`);
                 } else {
                   const newId = ensureValidActivityId(undefined);
-                  activitiesByType.set(normalizedTextType, {
+                  activitiesByType.set(uniqueKey, {
                     id: newId,
                     tipo: normalizedTextType,
-                    titulo: textData.titulo || textData.title || `Atividade ${normalizedTextType}`,
+                    titulo: textData.titulo || textData.title || `Atividade ${originalActivityId || normalizedTextType}`,
                     campos_preenchidos: {
                       textContent: textData.textContent || '',
                       sections: textData.sections || [],
@@ -643,10 +654,11 @@ async function collectActivitiesFromAllSources(
                     metadata: {
                       criado_em: textData.savedAt || new Date().toISOString(),
                       pipeline_version: 'v2',
+                      original_id: originalActivityId || undefined,
                       storage_key: key
                     }
                   });
-                  console.error(`✅ [COLETA] text_content_*: ${normalizedTextType} -> ID ${newId} (key: ${key})`);
+                  console.error(`✅ [COLETA] text_content_*: ${uniqueKey} -> ID ${newId} (key: ${key})`);
                 }
               }
             }
@@ -676,27 +688,34 @@ async function collectActivitiesFromAllSources(
         
         if (Object.keys(fields).length === 0) continue;
         
-        if (activitiesByType.has(tipo)) {
-          const existing = activitiesByType.get(tipo)!;
+        const constructedOriginalId = activityData.id || activityData.activity_id || activityData.original_id || '';
+        const withoutKeyPrefix = key.replace(/^(constructed_|activity_|generated_content_)/, '');
+        const lastKeyUnderscore = withoutKeyPrefix.lastIndexOf('_');
+        const keyOriginalId = lastKeyUnderscore > 0 ? withoutKeyPrefix.substring(lastKeyUnderscore + 1) : '';
+        const resolvedOriginalId = constructedOriginalId || keyOriginalId || '';
+        const compositeKey = resolvedOriginalId ? `${tipo}::${resolvedOriginalId}` : tipo;
+        
+        if (activitiesByType.has(compositeKey)) {
+          const existing = activitiesByType.get(compositeKey)!;
           const mergedFields = mergeActivityFields(existing.campos_preenchidos, fields);
           existing.campos_preenchidos = mergedFields;
-          console.error(`🔄 [COLETA] MERGE localStorage -> ${tipo}: ${Object.keys(mergedFields).length} campos totais (key: ${key})`);
+          console.error(`🔄 [COLETA] MERGE localStorage -> ${compositeKey}: ${Object.keys(mergedFields).length} campos totais (key: ${key})`);
         } else {
           const newId = ensureValidActivityId(undefined);
           
-          activitiesByType.set(tipo, {
+          activitiesByType.set(compositeKey, {
             id: newId,
             tipo: tipo,
-            titulo: fields.titulo || activityData.titulo || activityData.name || `Atividade ${tipo}`,
+            titulo: fields.titulo || activityData.titulo || activityData.name || `Atividade ${resolvedOriginalId || tipo}`,
             campos_preenchidos: fields,
             metadata: {
               criado_em: activityData.criadoEm || new Date().toISOString(),
               pipeline_version: 'v2',
-              original_id: activityData.id || activityData.activity_id,
+              original_id: resolvedOriginalId || undefined,
               storage_key: key
             }
           });
-          console.error(`✅ [COLETA] localStorage: ${tipo} -> ID ${newId} (key: ${key})`);
+          console.error(`✅ [COLETA] localStorage: ${compositeKey} -> ID ${newId} (key: ${key})`);
         }
       }
     }
@@ -716,18 +735,23 @@ async function collectActivitiesFromAllSources(
         if (!textType || textType === 'unknown') continue;
         const normalizedTextType = normalizeActivityType(textType);
         
-        if (activitiesByType.has(normalizedTextType)) {
-          const existing = activitiesByType.get(normalizedTextType)!;
+        const withoutPrefixFinal = key.replace(/^text_content_/, '');
+        const lastUnderscoreFinal = withoutPrefixFinal.lastIndexOf('_');
+        const finalOriginalId = lastUnderscoreFinal > 0 ? withoutPrefixFinal.substring(lastUnderscoreFinal + 1) : '';
+        const finalCompositeKey = finalOriginalId ? `${normalizedTextType}::${finalOriginalId}` : normalizedTextType;
+        
+        if (activitiesByType.has(finalCompositeKey)) {
+          const existing = activitiesByType.get(finalCompositeKey)!;
           const isTextActivity = isTextVersionActivity(normalizedTextType) || 
                                 normalizedTextType === 'atividade-textual';
           if (isTextActivity) {
             if (!existing.campos_preenchidos.textContent && textData.textContent) {
               existing.campos_preenchidos.textContent = textData.textContent;
-              console.error(`📄 [COLETA] Final merge textContent -> ${normalizedTextType}: ${textData.textContent.length} chars`);
+              console.error(`📄 [COLETA] Final merge textContent -> ${finalCompositeKey}: ${textData.textContent.length} chars`);
             }
             if ((!existing.campos_preenchidos.sections || existing.campos_preenchidos.sections.length === 0) && textData.sections?.length > 0) {
               existing.campos_preenchidos.sections = textData.sections;
-              console.error(`📄 [COLETA] Final merge sections -> ${normalizedTextType}: ${textData.sections.length} seções`);
+              console.error(`📄 [COLETA] Final merge sections -> ${finalCompositeKey}: ${textData.sections.length} seções`);
             }
           }
         }
@@ -849,12 +873,11 @@ async function saveActivityToDatabase(
       if (!activity.campos_preenchidos) activity.campos_preenchidos = {};
       if (typeof localStorage !== 'undefined') {
         const allKeys = Object.keys(localStorage);
-        const textKey = allKeys.find(k => 
-          k.startsWith('text_content_') && (
-            k.includes(activity.tipo) ||
-            k.includes(activity.metadata?.original_id || '') ||
-            k.includes(activity.id)
-          )
+        const origId = activity.metadata?.original_id || (activity.metadata as any)?.origin_activity_id || '';
+        const textKey = (origId ? allKeys.find(k => 
+          k.startsWith('text_content_') && k.endsWith(`_${origId}`)
+        ) : null) || allKeys.find(k => 
+          k.startsWith('text_content_') && k.endsWith(`_${activity.id}`)
         );
         if (textKey) {
           try {

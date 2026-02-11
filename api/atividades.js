@@ -131,7 +131,26 @@ router.get('/by-original-id/:originalId', async (req, res) => {
     
     query += ` ORDER BY updated_at DESC LIMIT 1;`;
     
-    const result = await client.query(query, params);
+    let result = await client.query(query, params);
+    
+    if (result.rows.length === 0) {
+      const builtIdMatch = originalId.match(/^built-(.+)-\d+$/);
+      if (builtIdMatch) {
+        const catalogId = builtIdMatch[1];
+        console.log('🔄 Tentando buscar pelo catalogId extraído:', catalogId);
+        let fallbackQuery = `
+          SELECT * FROM atividades 
+          WHERE id_json::jsonb->'metadata'->>'original_id' = $1
+        `;
+        const fallbackParams = [catalogId];
+        if (userId) {
+          fallbackQuery += ` AND id_user = $2`;
+          fallbackParams.push(userId);
+        }
+        fallbackQuery += ` ORDER BY updated_at DESC LIMIT 1;`;
+        result = await client.query(fallbackQuery, fallbackParams);
+      }
+    }
     
     if (result.rows.length === 0) {
       return res.status(404).json({

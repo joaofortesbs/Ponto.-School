@@ -151,8 +151,11 @@ export async function buildActivityFromFormData(
       
       let actualData = result?.data || result;
       
-      const textContentKey = Object.keys(localStorage).find(k => 
-        k.startsWith('text_content_') && (k.includes(activityId) || k.includes(activityType))
+      const allLsKeys = Object.keys(localStorage);
+      const textContentKey = allLsKeys.find(k => 
+        k.startsWith('text_content_') && k.endsWith(`_${activityId}`)
+      ) || allLsKeys.find(k =>
+        k === `text_content_${activityType}_${activityId}`
       );
       let textContent = '';
       let textSections: any[] = [];

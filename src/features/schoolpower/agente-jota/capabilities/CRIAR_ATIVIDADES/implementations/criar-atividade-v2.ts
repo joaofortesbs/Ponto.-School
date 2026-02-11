@@ -564,7 +564,10 @@ Cada atividade terá sua própria chamada de API!
             titulo: activity.titulo,
             fields: contentData,
             fields_completed: fieldsCount,
-            build_time_ms: totalBuildTime
+            build_time_ms: totalBuildTime,
+            origin_activity_id: activity.id,
+            activityType: activity.tipo,
+            text_activity_template_id: (activity as any).text_activity_template_id || ''
           }
         }
       }));

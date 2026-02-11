@@ -7,6 +7,12 @@ Ponto. School is an AI-powered educational platform designed to provide personal
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+- **2026-02-11**: Text Activity Cross-Contamination & Persistence COMPLETE FIX — Multiple root causes fixed:
+  1. **SALVAR_BD Collection Deduplication**: `activitiesByType` Map was keyed by `tipo` alone, causing ALL text activities with `tipo: "atividade-textual"` to merge into ONE entry. Fixed by using composite keys `${tipo}::${originalId}` across all 4 collection sources (previous_results, ChosenActivitiesStore, constructed_* keys, text_content_* keys).
+  2. **ConstructionInterface Retrieval**: Added original catalog ID extraction from built IDs (regex `/^built-(.+)-\d+$/`) and prioritized `retrieveTextVersionContent` calls with the correct original ID first.
+  3. **Event Data Enrichment**: Added `origin_activity_id`, `activityType`, `text_activity_template_id` to `construction:activity_completed` events.
+  4. **Backend API Fallback**: Enhanced `by-original-id` endpoint to extract catalog ID from built-format IDs (`built-prova-personalizada-{timestamp}` → `prova-personalizada`) when exact match fails.
+  CRITICAL LEARNING: The `activitiesByType` Map keyed by `tipo` was the PRIMARY root cause of text activity loss — 7+ text activities collapsed into 1. Composite keys are REQUIRED for same-tipo activities.
 - **2026-02-11**: Text Activity Routing COMPLETE FIX — Root cause: Previous fixes were applied to `ConstructionGrid.tsx` but the actual UI in chat is `ConstructionInterface.tsx` (a different component) which had NO text detection. Also `buildActivityHelper.ts` had hardcoded 3-type check. Fix: (1) ConstructionInterface.tsx now has full ArtifactViewModal routing for text activities. (2) buildActivityHelper.ts uses expanded isTextVersionActivity config. (3) Executor multi-key localStorage fallback for text_content. (4) ChatLayout 3-tier content retrieval fallback. CRITICAL LEARNING: Always match screenshots to actual component names before fixing.
 
 ## System Architecture
