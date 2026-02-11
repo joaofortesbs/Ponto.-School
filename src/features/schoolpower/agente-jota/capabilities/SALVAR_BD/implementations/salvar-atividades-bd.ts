@@ -490,6 +490,12 @@ duration: ${duration}ms
   }
 }
 
+function extractCatalogIdFromBuiltId(id: string): string {
+  if (!id) return '';
+  const match = id.match(/^built-(.+)-\d+$/);
+  return match ? match[1] : id;
+}
+
 async function collectActivitiesFromAllSources(
   input: CapabilityInput
 ): Promise<{ activities: AtividadeParaSalvar[]; storageKeys: StorageKeys }> {
@@ -517,8 +523,9 @@ async function collectActivitiesFromAllSources(
       const newId = ensureValidActivityId(undefined);
       const newFields = built.campos_preenchidos || built.fields || {};
       
-      const builtOriginalId = built.id || built.original_id || '';
-      const builtCompositeKey = builtOriginalId ? `${tipo}::${builtOriginalId}` : tipo;
+      const rawBuiltId = built.id || built.original_id || '';
+      const catalogId = extractCatalogIdFromBuiltId(rawBuiltId);
+      const builtCompositeKey = catalogId ? `${tipo}::${catalogId}` : tipo;
       
       if (activitiesByType.has(builtCompositeKey)) {
         const existing = activitiesByType.get(builtCompositeKey)!;
@@ -529,13 +536,13 @@ async function collectActivitiesFromAllSources(
         const activity: AtividadeParaSalvar = {
           id: newId,
           tipo: tipo,
-          titulo: built.titulo || built.name || `Atividade ${builtOriginalId || tipo}`,
+          titulo: built.titulo || built.name || `Atividade ${catalogId || tipo}`,
           campos_preenchidos: newFields,
           metadata: {
             criado_em: new Date().toISOString(),
             pipeline_version: 'v2',
             model_used: built.model_used,
-            original_id: builtOriginalId || undefined
+            original_id: catalogId || undefined
           }
         };
         activitiesByType.set(builtCompositeKey, activity);
@@ -559,8 +566,9 @@ async function collectActivitiesFromAllSources(
     
     if (Object.keys(consolidatedFields).length === 0) continue;
     
-    const storeOriginalId = activity.id || activity.activity_id || '';
-    const storeCompositeKey = storeOriginalId ? `${tipo}::${storeOriginalId}` : tipo;
+    const rawStoreId = activity.id || activity.activity_id || '';
+    const storeCatalogId = extractCatalogIdFromBuiltId(rawStoreId);
+    const storeCompositeKey = storeCatalogId ? `${tipo}::${storeCatalogId}` : tipo;
     
     if (activitiesByType.has(storeCompositeKey)) {
       const existing = activitiesByType.get(storeCompositeKey)!;
@@ -573,12 +581,12 @@ async function collectActivitiesFromAllSources(
       activitiesByType.set(storeCompositeKey, {
         id: newId,
         tipo: tipo,
-        titulo: consolidatedFields.titulo || consolidatedFields.name || `Atividade ${storeOriginalId || tipo}`,
+        titulo: consolidatedFields.titulo || consolidatedFields.name || `Atividade ${storeCatalogId || tipo}`,
         campos_preenchidos: consolidatedFields,
         metadata: {
           criado_em: new Date().toISOString(),
           pipeline_version: 'v2',
-          original_id: storeOriginalId || activity.id
+          original_id: storeCatalogId || extractCatalogIdFromBuiltId(activity.id)
         }
       });
       console.error(`✅ [COLETA] Store: ${storeCompositeKey} -> ID ${newId}`);
