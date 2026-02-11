@@ -147,7 +147,51 @@ export async function buildActivityFromFormData(
       safeSetJSON('constructedActivities', constructedActivities);
       console.log('💾 [buildActivityHelper] Atividade adicionada a constructedActivities');
     } else {
-      console.log('📝 [buildActivityHelper] Atividade de versão texto - armazenamento mínimo apenas');
+      console.log('📝 [buildActivityHelper] Atividade de versão texto - salvando dados essenciais');
+      
+      let actualData = result?.data || result;
+      
+      const textContentKey = Object.keys(localStorage).find(k => 
+        k.startsWith('text_content_') && (k.includes(activityId) || k.includes(activityType))
+      );
+      let textContent = '';
+      let textSections: any[] = [];
+      if (textContentKey) {
+        try {
+          const textRaw = localStorage.getItem(textContentKey);
+          if (textRaw) {
+            const textData = JSON.parse(textRaw);
+            textContent = textData.textContent || '';
+            textSections = textData.sections || [];
+          }
+        } catch (e) { }
+      }
+      
+      const textActivityData = {
+        ...actualData,
+        activityType: activityType,
+        activityId: activityId,
+        isTextVersion: true,
+        versionType: 'text',
+        textContent: textContent || actualData?.textContent || '',
+        sections: textSections.length > 0 ? textSections : (actualData?.sections || []),
+        generatedAt: new Date().toISOString(),
+      };
+      
+      const storageKey = `constructed_${activityType}_${activityId}`;
+      const saved = safeSetJSON(storageKey, { success: true, data: textActivityData });
+      if (saved) {
+        console.log(`💾 [buildActivityHelper] Texto salvo em: ${storageKey}`);
+      }
+      
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      constructedActivities[activityId] = {
+        generatedContent: textActivityData,
+        timestamp: new Date().toISOString(),
+        activityType: activityType,
+        isTextVersion: true
+      };
+      safeSetJSON('constructedActivities', constructedActivities);
     }
 
     // 4. Special handling for quadro-interativo

@@ -610,11 +610,57 @@ async function collectActivitiesFromAllSources(
         } catch (e) { }
       }
 
+      if (key.startsWith('text_content_') && !activityData) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const textData = JSON.parse(raw);
+            if (textData?.textContent || textData?.sections) {
+              const textType = extractTypeFromKey(key);
+              if (textType && textType !== 'unknown') {
+                const normalizedTextType = normalizeActivityType(textType);
+                if (activitiesByType.has(normalizedTextType)) {
+                  const existing = activitiesByType.get(normalizedTextType)!;
+                  if (!existing.campos_preenchidos.textContent) {
+                    existing.campos_preenchidos.textContent = textData.textContent || '';
+                  }
+                  if (!existing.campos_preenchidos.sections || existing.campos_preenchidos.sections.length === 0) {
+                    existing.campos_preenchidos.sections = textData.sections || [];
+                  }
+                  console.error(`🔄 [COLETA] MERGE text_content -> ${normalizedTextType}: textContent ${(textData.textContent || '').length} chars`);
+                } else {
+                  const newId = ensureValidActivityId(undefined);
+                  activitiesByType.set(normalizedTextType, {
+                    id: newId,
+                    tipo: normalizedTextType,
+                    titulo: textData.titulo || textData.title || `Atividade ${normalizedTextType}`,
+                    campos_preenchidos: {
+                      textContent: textData.textContent || '',
+                      sections: textData.sections || [],
+                      templateId: textData.templateId || '',
+                      templateName: textData.templateName || '',
+                    },
+                    metadata: {
+                      criado_em: textData.savedAt || new Date().toISOString(),
+                      pipeline_version: 'v2',
+                      storage_key: key
+                    }
+                  });
+                  console.error(`✅ [COLETA] text_content_*: ${normalizedTextType} -> ID ${newId} (key: ${key})`);
+                }
+              }
+            }
+          }
+        } catch (e) { }
+      }
+
       if (activityData && keyType) {
         storageKeys[keyType].push(key);
         
         const tipo = normalizeActivityType(
           activityData.tipo || activityData.type || activityData.activity_type || 
+          activityData.data?.type || activityData.data?.activityType ||
+          activityData.data?.activity_type ||
           extractTypeFromKey(key) || 'unknown'
         );
         
@@ -622,8 +668,10 @@ async function collectActivitiesFromAllSources(
         
         const fields = activityData.campos_preenchidos || 
                       activityData.formData || 
+                      activityData.data?.formData ||
                       activityData.fields || 
                       activityData.generated_fields ||
+                      activityData.data?.generated_fields ||
                       {};
         
         if (Object.keys(fields).length === 0) continue;
@@ -654,6 +702,39 @@ async function collectActivitiesFromAllSources(
     }
   }
 
+  if (typeof localStorage !== 'undefined') {
+    const allKeysForTextScan = Object.keys(localStorage);
+    for (const key of allKeysForTextScan) {
+      if (!key.startsWith('text_content_')) continue;
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        const textData = JSON.parse(raw);
+        if (!textData?.textContent && !textData?.sections) continue;
+        
+        const textType = extractTypeFromKey(key);
+        if (!textType || textType === 'unknown') continue;
+        const normalizedTextType = normalizeActivityType(textType);
+        
+        if (activitiesByType.has(normalizedTextType)) {
+          const existing = activitiesByType.get(normalizedTextType)!;
+          const isTextActivity = isTextVersionActivity(normalizedTextType) || 
+                                normalizedTextType === 'atividade-textual';
+          if (isTextActivity) {
+            if (!existing.campos_preenchidos.textContent && textData.textContent) {
+              existing.campos_preenchidos.textContent = textData.textContent;
+              console.error(`📄 [COLETA] Final merge textContent -> ${normalizedTextType}: ${textData.textContent.length} chars`);
+            }
+            if ((!existing.campos_preenchidos.sections || existing.campos_preenchidos.sections.length === 0) && textData.sections?.length > 0) {
+              existing.campos_preenchidos.sections = textData.sections;
+              console.error(`📄 [COLETA] Final merge sections -> ${normalizedTextType}: ${textData.sections.length} seções`);
+            }
+          }
+        }
+      } catch (e) { }
+    }
+  }
+
   const activities = Array.from(activitiesByType.values());
   
   console.error(`
@@ -668,18 +749,35 @@ Tipos coletados: ${Array.from(activitiesByType.keys()).join(', ')}
 }
 
 function extractTypeFromKey(key: string): string | null {
-  const patterns = [
-    /^constructed_(.+?)(?:_|$)/,
-    /^activity_(.+?)(?:_fields)?$/,
-    /^atividade_compartilhada_(.+?)$/
-  ];
-  
-  for (const pattern of patterns) {
-    const match = key.match(pattern);
-    if (match && match[1]) {
-      return match[1].replace(/_/g, '-');
+  if (key.startsWith('constructed_')) {
+    const withoutPrefix = key.substring('constructed_'.length);
+    const lastUnderscoreIdx = withoutPrefix.lastIndexOf('_');
+    if (lastUnderscoreIdx > 0) {
+      const possibleType = withoutPrefix.substring(0, lastUnderscoreIdx);
+      return possibleType.replace(/_/g, '-');
     }
+    return withoutPrefix.replace(/_/g, '-');
   }
+  
+  if (key.startsWith('activity_')) {
+    const withoutPrefix = key.substring('activity_'.length);
+    return withoutPrefix.replace(/_fields$/, '').replace(/_/g, '-');
+  }
+  
+  if (key.startsWith('atividade_compartilhada_')) {
+    const withoutPrefix = key.substring('atividade_compartilhada_'.length);
+    return withoutPrefix.replace(/_/g, '-');
+  }
+  
+  if (key.startsWith('text_content_')) {
+    const withoutPrefix = key.substring('text_content_'.length);
+    const lastUnderscoreIdx = withoutPrefix.lastIndexOf('_');
+    if (lastUnderscoreIdx > 0) {
+      return withoutPrefix.substring(0, lastUnderscoreIdx).replace(/_/g, '-');
+    }
+    return withoutPrefix.replace(/_/g, '-');
+  }
+  
   return null;
 }
 
@@ -744,6 +842,41 @@ async function saveActivityToDatabase(
       isTextVersionActivity(activity.tipo) ||
       (activity.campos_preenchidos?.textContent && activity.campos_preenchidos?.sections);
 
+    let textContent = activity.campos_preenchidos?.textContent || '';
+    let textSections = activity.campos_preenchidos?.sections || [];
+
+    if (isTextualActivity && (!textContent || textSections.length === 0)) {
+      if (!activity.campos_preenchidos) activity.campos_preenchidos = {};
+      if (typeof localStorage !== 'undefined') {
+        const allKeys = Object.keys(localStorage);
+        const textKey = allKeys.find(k => 
+          k.startsWith('text_content_') && (
+            k.includes(activity.tipo) ||
+            k.includes(activity.metadata?.original_id || '') ||
+            k.includes(activity.id)
+          )
+        );
+        if (textKey) {
+          try {
+            const raw = localStorage.getItem(textKey);
+            if (raw) {
+              const textData = JSON.parse(raw);
+              if (!textContent && textData.textContent) {
+                textContent = textData.textContent;
+                activity.campos_preenchidos.textContent = textContent;
+                console.error(`📄 [SAVE] Recovered textContent from ${textKey}: ${textContent.length} chars`);
+              }
+              if (textSections.length === 0 && textData.sections?.length > 0) {
+                textSections = textData.sections;
+                activity.campos_preenchidos.sections = textSections;
+                console.error(`📄 [SAVE] Recovered sections from ${textKey}: ${textSections.length} seções`);
+              }
+            }
+          } catch (e) { }
+        }
+      }
+    }
+
     const payload = {
       id: activity.id,
       id_user: userId,
@@ -755,8 +888,8 @@ async function saveActivityToDatabase(
         ...(isTextualActivity ? {
           content_type: 'atividade-textual',
           text_payload: {
-            textContent: activity.campos_preenchidos?.textContent || '',
-            sections: activity.campos_preenchidos?.sections || [],
+            textContent: textContent,
+            sections: textSections,
             versionType: 'text',
             templateId: activity.campos_preenchidos?.templateId || '',
             templateName: activity.campos_preenchidos?.templateName || '',

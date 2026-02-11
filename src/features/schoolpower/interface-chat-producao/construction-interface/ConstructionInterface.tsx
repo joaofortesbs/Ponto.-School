@@ -549,9 +549,39 @@ export function ConstructionInterface({
       const builtData = activity.built_data || {};
       const consolidatedFields = builtData._consolidated_fields || builtData.generated_fields || {};
       
-      const textData = retrieveTextVersionContent(activityId, activityType) || 
+      let textData: any = retrieveTextVersionContent(activityId, activityType) || 
                         retrieveTextVersionContent(activityId, 'atividade-textual') ||
                         retrieveTextVersionContent(activity.id, activityType);
+      
+      if (!textData?.textContent && typeof localStorage !== 'undefined') {
+        const allKeys = Object.keys(localStorage);
+        const matchingKey = allKeys.find(k => 
+          k.startsWith('text_content_') && (k.includes(activityId) || k.includes(activityType))
+        );
+        if (matchingKey) {
+          try {
+            const raw = localStorage.getItem(matchingKey);
+            if (raw) textData = JSON.parse(raw);
+          } catch (e) { }
+        }
+        if (!textData?.textContent) {
+          const constructedKey = allKeys.find(k => 
+            k.startsWith('constructed_') && (k.includes(activityId) || k.includes(activityType))
+          );
+          if (constructedKey) {
+            try {
+              const raw = localStorage.getItem(constructedKey);
+              if (raw) {
+                const parsed = JSON.parse(raw);
+                const inner = parsed?.data || parsed;
+                if (inner?.textContent) {
+                  textData = { textContent: inner.textContent, sections: inner.sections || [] };
+                }
+              }
+            } catch (e) { }
+          }
+        }
+      }
       
       const textContent = textData?.textContent || 
                           consolidatedFields?.textContent || 
