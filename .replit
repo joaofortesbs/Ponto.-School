@@ -49,13 +49,13 @@ waitForPort = 5000
 name = "Backend"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node api/server.js"
 waitForPort = 3001
-
-[workflows.workflow.metadata]
-outputType = "console"
 
 [auth]
 pageEnabled = false
