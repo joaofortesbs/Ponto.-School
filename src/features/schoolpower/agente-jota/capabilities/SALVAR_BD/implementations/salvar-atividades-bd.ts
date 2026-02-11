@@ -34,6 +34,7 @@ import type {
 } from '../../shared/types';
 import { createDataConfirmation, createDataCheck } from '../../shared/types';
 import { useChosenActivitiesStore } from '../../../../interface-chat-producao/stores/ChosenActivitiesStore';
+import { isTextVersionActivity } from '../../../../config/activityVersionConfig';
 import { useActivityDebugStore } from '../../../../construction/stores/activityDebugStore';
 import type { 
   AtividadeParaSalvar, 
@@ -718,7 +719,8 @@ function validateActivities(
     if (!activity.campos_preenchidos || typeof activity.campos_preenchidos !== 'object') {
       errors.push('Campos preenchidos ausentes ou inválidos');
     } else if (Object.keys(activity.campos_preenchidos).length === 0 && 
-               activity.tipo !== 'atividade-textual') {
+               activity.tipo !== 'atividade-textual' &&
+               !isTextVersionActivity(activity.tipo)) {
       errors.push('Atividade sem campos preenchidos');
     }
 
@@ -739,6 +741,7 @@ async function saveActivityToDatabase(
 ): Promise<ResultadoSalvamento> {
   try {
     const isTextualActivity = activity.tipo === 'atividade-textual' || 
+      isTextVersionActivity(activity.tipo) ||
       (activity.campos_preenchidos?.textContent && activity.campos_preenchidos?.sections);
 
     const payload = {

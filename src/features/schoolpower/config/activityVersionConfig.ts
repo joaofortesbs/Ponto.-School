@@ -6,7 +6,13 @@
  * 2. Atividades Versão Texto: Geram conteúdo em formato texto enquanto a versão interativa está em desenvolvimento
  * 
  * IMPORTANTE: Uma atividade só pode pertencer a UMA categoria. Não pode ter os dois modos.
+ * 
+ * A lista de atividades texto é carregada automaticamente do schoolPowerActivities.json
+ * (pipeline === 'criar_arquivo_textual'), garantindo sincronização automática quando
+ * novos templates são adicionados ao catálogo.
  */
+
+import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 
 export type ActivityVersionType = 'interactive' | 'text';
 
@@ -29,15 +35,25 @@ export const INTERACTIVE_ACTIVITIES: readonly string[] = [
 ] as const;
 
 /**
- * Atividades com versão em TEXTO
- * Estas atividades geram conteúdo em formato texto enquanto a versão interativa está em desenvolvimento
+ * Atividades com versão em TEXTO — carregadas automaticamente do catálogo JSON.
+ * Inclui TODAS as atividades com pipeline 'criar_arquivo_textual' + tipos base.
  */
+const TEXT_PIPELINE_IDS: string[] = (schoolPowerActivitiesData as any[])
+  .filter((a: any) => a.pipeline === 'criar_arquivo_textual')
+  .map((a: any) => a.id);
+
 export const TEXT_VERSION_ACTIVITIES: readonly string[] = [
-  'plano-aula',
-  'sequencia-didatica',
-  'tese-redacao',
-  'atividade-textual'
+  ...new Set([
+    'plano-aula',
+    'sequencia-didatica',
+    'tese-redacao',
+    'atividade-textual',
+    ...TEXT_PIPELINE_IDS,
+  ])
 ] as const;
+
+const TEXT_VERSION_SET = new Set<string>(TEXT_VERSION_ACTIVITIES);
+const INTERACTIVE_SET = new Set<string>(INTERACTIVE_ACTIVITIES);
 
 /**
  * Verifica se uma atividade é do tipo INTERATIVO
@@ -45,16 +61,17 @@ export const TEXT_VERSION_ACTIVITIES: readonly string[] = [
  * @returns true se a atividade possui versão interativa
  */
 export function isInteractiveActivity(activityType: string): boolean {
-  return INTERACTIVE_ACTIVITIES.includes(activityType as any);
+  return INTERACTIVE_SET.has(activityType);
 }
 
 /**
  * Verifica se uma atividade é do tipo VERSÃO TEXTO
+ * Inclui TODAS as 61+ atividades do pipeline texto + tipos base.
  * @param activityType - Tipo/ID da atividade
  * @returns true se a atividade usa versão em texto
  */
 export function isTextVersionActivity(activityType: string): boolean {
-  return TEXT_VERSION_ACTIVITIES.includes(activityType as any);
+  return TEXT_VERSION_SET.has(activityType);
 }
 
 /**
@@ -131,11 +148,11 @@ export function getActivityInfo(activityType: string): ActivityVersionInfo | und
  * @returns Array com IDs das atividades
  */
 export function getActivitiesByVersionType(versionType: ActivityVersionType): string[] {
-  return Object.entries(ACTIVITY_VERSION_CATALOG)
-    .filter(([_, info]) => info.versionType === versionType)
-    .map(([id]) => id);
+  if (versionType === 'text') return [...TEXT_VERSION_ACTIVITIES];
+  if (versionType === 'interactive') return [...INTERACTIVE_ACTIVITIES];
+  return [];
 }
 
 console.log('📋 [ActivityVersionConfig] Sistema de versões de atividades carregado');
 console.log('   ✅ Atividades interativas:', INTERACTIVE_ACTIVITIES.join(', '));
-console.log('   📝 Atividades em texto:', TEXT_VERSION_ACTIVITIES.join(', '));
+console.log(`   📝 Atividades em texto: ${TEXT_VERSION_ACTIVITIES.length} tipos registrados`);

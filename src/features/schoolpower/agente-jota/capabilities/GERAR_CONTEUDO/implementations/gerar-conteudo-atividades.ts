@@ -1392,7 +1392,7 @@ async function generateContentForActivity(
             // Campos opcionais (exatamente como no schema)
             contextoAdicional: inferredContext || `O tema "${inferredTheme}" é relevante no contexto atual da sociedade brasileira e exige reflexão crítica sobre aspectos sociais, econômicos e culturais.`,
           };
-        } else if (activity.tipo === 'atividade-textual') {
+        } else if (activity.tipo === 'atividade-textual' || isTextVersionActivity(activity.tipo)) {
           activityTypeFields = {
             theme: inferredTheme,
             subject: inferredSubject,

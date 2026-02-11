@@ -286,8 +286,15 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
     console.log('📋 [ChatLayout] ConstructionActivity montada:', constructionActivity.title, 'type:', constructionActivity.type, 'customFields:', mergedContentKeys.length);
 
-    if (activityTipo === 'atividade-textual' || isTextVersionActivity(activityTipo)) {
-      console.log('📄 [ChatLayout] Atividade textual detectada, redirecionando para ArtifactViewModal');
+    const isTextByConfig = isTextVersionActivity(activityTipo);
+    const isTextBySignal = mergedContent?.versionType === 'text' ||
+      mergedContent?.isTextVersion === true ||
+      activity?.versionType === 'text' ||
+      activity?.isTextVersion === true ||
+      activity?.pipeline === 'criar_arquivo_textual';
+    
+    if (activityTipo === 'atividade-textual' || isTextByConfig || isTextBySignal) {
+      console.log('📄 [ChatLayout] Atividade textual detectada, redirecionando para ArtifactViewModal', { activityTipo, isTextByConfig, isTextBySignal });
       
       const textData = retrieveTextVersionContent(activityId, activityTipo);
       const textContent = textData?.textContent || mergedContent?.textContent || '';

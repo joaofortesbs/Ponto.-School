@@ -200,6 +200,28 @@ export class AgentExecutor {
           }
         }
         
+        if (!contentSnapshot?.textContent) {
+          try {
+            const textContentKey = `text_content_${actTipo}_${actId}`;
+            const textRaw = typeof localStorage !== 'undefined' ? localStorage.getItem(textContentKey) : null;
+            if (textRaw) {
+              const textParsed = JSON.parse(textRaw);
+              if (textParsed?.textContent) {
+                contentSnapshot = {
+                  ...(contentSnapshot || {}),
+                  textContent: textParsed.textContent,
+                  sections: textParsed.sections || [],
+                  versionType: 'text',
+                  isTextVersion: true,
+                };
+                console.error(`📸 [getCollectedItems] TextVersion content para ${actId}: textContent=${textParsed.textContent.length} chars, sections=${textParsed.sections?.length || 0}`);
+              }
+            }
+          } catch (e) {
+            console.warn(`⚠️ [getCollectedItems] Erro text_content lookup para ${actId}:`, e);
+          }
+        }
+
         const actDescricao = act.descricao || act.description || act.objetivo || 
           contentSnapshot?.descricao || contentSnapshot?.description || 
           contentSnapshot?.objetivo || contentSnapshot?.tema || '';

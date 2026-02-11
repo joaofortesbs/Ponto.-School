@@ -134,8 +134,15 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     console.log('👁️ Abrindo modal de visualização para atividade:', activity.title);
     const activityType = activity.originalData?.tipo || activity.categoryId || activity.type || '';
     
-    if (activityType === 'atividade-textual' || isTextVersionActivity(activityType)) {
-      console.log('📄 [ConstructionGrid] Atividade textual detectada, redirecionando para ArtifactViewModal');
+    const isTextByConfig = isTextVersionActivity(activityType);
+    const isTextBySignal = activity.customFields?.versionType === 'text' ||
+      activity.customFields?.isTextVersion === true ||
+      activity.originalData?.versionType === 'text' ||
+      activity.originalData?.isTextVersion === true ||
+      activity.originalData?.pipeline === 'criar_arquivo_textual';
+    
+    if (activityType === 'atividade-textual' || isTextByConfig || isTextBySignal) {
+      console.log('📄 [ConstructionGrid] Atividade textual detectada, redirecionando para ArtifactViewModal', { activityType, isTextByConfig, isTextBySignal });
       
       const textData = retrieveTextVersionContent(activity.id, activityType);
       const textContent = textData?.textContent || activity.customFields?.textContent || activity.originalData?.textContent || '';
