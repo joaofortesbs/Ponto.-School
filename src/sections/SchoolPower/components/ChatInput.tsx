@@ -4,7 +4,7 @@ import { motion, useMotionValue, useTransform, useAnimationFrame, useMotionTempl
 import { TextShimmerWave } from '@/components/ui/text-shimmer-wave';
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { TemplateRenderer } from "./preset-blocks/SlotChipEditor";
-import { compilePrompt, updateSlotValue, hasUnfilledSlots } from "./preset-blocks/promptNodes";
+import { compilePrompt, updateSlotValue } from "./preset-blocks/promptNodes";
 import type { PromptNode } from "./preset-blocks/promptNodes";
 
 interface UploadedFile {
@@ -108,16 +108,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
     setIsTyping(e.target.value.length > 0);
   };
 
-  const templateHasUnfilled = isTemplateMode && templateNodes ? hasUnfilledSlots(templateNodes) : false;
-
   const handleSend = () => {
     let finalMessage = "";
 
     if (isTemplateMode && templateNodes) {
-      if (templateHasUnfilled) {
-        console.warn("⚠️ Slots não preenchidos, clique nos campos em laranja para preencher");
-        return;
-      }
       finalMessage = compilePrompt(templateNodes);
     } else {
       finalMessage = message.trim();
@@ -1473,9 +1467,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
               <button
                 onClick={handleSend}
                 className="action-button"
-                disabled={isTemplateMode ? templateHasUnfilled : !message.trim()}
+                disabled={isTemplateMode ? false : !message.trim()}
                 style={{
-                  opacity: isTemplateMode ? (templateHasUnfilled ? 0.5 : 1) : (message.trim() ? 1 : 0.5),
+                  opacity: isTemplateMode ? 1 : (message.trim() ? 1 : 0.5),
                   flexShrink: 0,
                   marginLeft: 'auto'
                 }}

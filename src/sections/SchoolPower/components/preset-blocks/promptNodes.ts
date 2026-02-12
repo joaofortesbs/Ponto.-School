@@ -53,7 +53,7 @@ export function compilePrompt(nodes: PromptNode[]): string {
   return nodes
     .map((n) => {
       if (n.type === 'text') return n.value;
-      return n.value || `[${n.placeholder}]`;
+      return n.value.trim() || n.placeholder;
     })
     .join('');
 }

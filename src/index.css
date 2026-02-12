@@ -12,6 +12,25 @@
 @import "./styles/chat-responsive.css";
 @import "./features/schoolpower/construction/styles/universalActivityHeader.css";
 
+/* Inline editable chip styles */
+.inline-chip-editable:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(249, 115, 22, 0.5);
+  font-style: italic;
+  font-weight: 400;
+  pointer-events: none;
+}
+
+.inline-chip-editable:focus {
+  background: rgba(249, 115, 22, 0.15) !important;
+  border-color: rgba(249, 115, 22, 0.6) !important;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+}
+
+.inline-chip-editable::selection {
+  background: rgba(249, 115, 22, 0.3);
+}
+
 /* Utilitário para limitar linhas de texto */
 .line-clamp-3 {
   display: -webkit-box;

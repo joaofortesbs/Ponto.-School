@@ -9,9 +9,9 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 - **2026-02-12**: Preset Blocks Grid + Interactive Slot Chips:
   1. **PresetBlocksGrid**: 2-column responsive grid (596px width matching ChatInput) with GRID_CONFIG for precise sizing. Positioned inside 900x617 container via PRESET_GRID_POSITION config.
-  2. **Interactive Slot System**: `promptNodes.ts` (PromptNode types, parsePromptToNodes parser, compilePrompt compiler), `SlotChipEditor.tsx` (clickable orange pill chips with popover editing). `[Placeholder]` patterns become interactive chips.
-  3. **ChatInput Template Mode**: Switches between textarea (normal) and TemplateRenderer (when preset with slots active). Send blocked until all slots filled via `hasUnfilledSlots` validation.
-  4. **Flow**: Click preset block → parsePromptToNodes → ChatInput template mode → click chips to fill → compilePrompt → clean text to AI.
+  2. **Interactive Slot System**: `promptNodes.ts` (PromptNode types, parsePromptToNodes parser, compilePrompt compiler), `SlotChipEditor.tsx` (inline contentEditable chips — no modals/popovers). `[Placeholder]` patterns become inline-editable chips.
+  3. **ChatInput Template Mode**: Switches between textarea (normal) and TemplateRenderer (when preset with slots active). Send always enabled — user can send with unfilled slots (placeholder text used as fallback).
+  4. **Flow**: Click preset block → parsePromptToNodes → ChatInput template mode → click chips to type inline → compilePrompt → text to AI (unfilled slots use placeholder name).
   Files: `preset-blocks/PresetBlocksGrid.tsx`, `preset-blocks/promptNodes.ts`, `preset-blocks/SlotChipEditor.tsx`, `SchoolPowerPage.tsx`, `ChatInput.tsx`.
 - **2026-02-12**: Rich Text Formatting Tools — Unified formatting across text activities and Jota chat:
   1. **RichTextMessage Component**: New read-only renderer that converts markdown to EditorJS blocks (tables, callouts, checklists, code blocks, quotes, headers, lists, delimiters). Uses smart heuristic: strong indicators (headers, tables, callouts) trigger rich rendering immediately; soft indicators (bold, lists) require 2+ matches.

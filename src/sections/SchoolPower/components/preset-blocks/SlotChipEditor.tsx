@@ -1,6 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useRef, useEffect, useCallback } from "react";
 import type { PromptNode } from "./promptNodes";
 
 interface SlotChipProps {
@@ -9,154 +8,136 @@ interface SlotChipProps {
 }
 
 const SlotChip: React.FC<SlotChipProps> = ({ node, onUpdate }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(node.value);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const chipRef = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
-
-  useEffect(() => {
-    setEditValue(node.value);
-  }, [node.value]);
-
-  const handleConfirm = () => {
-    onUpdate(node.id, editValue.trim());
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      e.stopPropagation();
-      handleConfirm();
-    }
-    if (e.key === 'Escape') {
-      setEditValue(node.value);
-      setIsEditing(false);
-    }
-  };
+  const spanRef = useRef<HTMLSpanElement>(null);
+  const lastSyncedValue = useRef(node.value);
 
   const isFilled = node.value.trim().length > 0;
 
-  return (
-    <>
-      <span
-        ref={chipRef}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setIsEditing(true);
-        }}
-        className="inline-flex items-center cursor-pointer select-none transition-all duration-200"
-        style={{
-          background: isFilled
-            ? "rgba(249, 115, 22, 0.2)"
-            : "rgba(249, 115, 22, 0.08)",
-          border: isFilled
-            ? "1px solid rgba(249, 115, 22, 0.5)"
-            : "1px dashed rgba(249, 115, 22, 0.35)",
-          borderRadius: "8px",
-          padding: "2px 10px",
-          margin: "0 2px",
-          fontSize: "14px",
-          lineHeight: "22px",
-          color: isFilled ? "#fb923c" : "rgba(249, 115, 22, 0.65)",
-          fontWeight: isFilled ? 500 : 400,
-          fontStyle: isFilled ? "normal" : "italic",
-          verticalAlign: "baseline",
-          whiteSpace: "nowrap",
-          maxWidth: "200px",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
-        {isFilled ? node.value : node.placeholder}
-      </span>
+  useEffect(() => {
+    if (spanRef.current && node.value !== lastSyncedValue.current) {
+      const sel = window.getSelection();
+      const hadFocus = spanRef.current === document.activeElement;
+      let savedOffset = 0;
 
-      <AnimatePresence>
-        {isEditing && (
-          <>
-            <div
-              className="fixed inset-0 z-[99998]"
-              onClick={() => {
-                handleConfirm();
-              }}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 4, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 4, scale: 0.96 }}
-              transition={{ duration: 0.15 }}
-              className="fixed z-[99999]"
-              style={{
-                top: chipRef.current
-                  ? chipRef.current.getBoundingClientRect().bottom + 6
-                  : 0,
-                left: chipRef.current
-                  ? Math.min(
-                      chipRef.current.getBoundingClientRect().left,
-                      window.innerWidth - 260
-                    )
-                  : 0,
-              }}
-            >
-              <div
-                className="flex items-center gap-2"
-                style={{
-                  background: "linear-gradient(145deg, #1a1a2e, #16213e)",
-                  border: "1px solid rgba(249, 115, 22, 0.3)",
-                  borderRadius: "12px",
-                  padding: "8px 12px",
-                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(249, 115, 22, 0.1)",
-                  minWidth: "220px",
-                }}
-              >
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={node.placeholder}
-                  className="flex-1 bg-transparent border-none outline-none text-white/90 text-sm placeholder:text-white/30"
-                  style={{
-                    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-                    caretColor: "#f97316",
-                  }}
-                />
-                <button
-                  onClick={handleConfirm}
-                  className="flex-shrink-0 flex items-center justify-center rounded-lg transition-all duration-200 hover:scale-105"
-                  style={{
-                    background: "linear-gradient(145deg, #f97316, #ea580c)",
-                    width: "28px",
-                    height: "28px",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </button>
-              </div>
-              <div
-                className="text-xs mt-1.5 px-1"
-                style={{ color: "rgba(255,255,255,0.35)" }}
-              >
-                Enter para confirmar · Esc para cancelar
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </>
+      if (hadFocus && sel && sel.rangeCount > 0) {
+        savedOffset = sel.getRangeAt(0).startOffset;
+      }
+
+      spanRef.current.textContent = node.value || '';
+      lastSyncedValue.current = node.value;
+
+      if (hadFocus && sel) {
+        requestAnimationFrame(() => {
+          if (!spanRef.current || !spanRef.current.firstChild) return;
+          const range = document.createRange();
+          const maxOff = Math.min(savedOffset, spanRef.current.firstChild.textContent?.length || 0);
+          range.setStart(spanRef.current.firstChild, maxOff);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        });
+      }
+    }
+  }, [node.value]);
+
+  const handleInput = useCallback(() => {
+    if (!spanRef.current) return;
+    const text = spanRef.current.textContent || '';
+    lastSyncedValue.current = text;
+    onUpdate(node.id, text);
+  }, [node.id, onUpdate]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      const el = spanRef.current;
+      if (!el) return;
+      const allChips = el.closest('.template-renderer-container')?.querySelectorAll('[contenteditable="true"]');
+      if (allChips) {
+        const arr = Array.from(allChips);
+        const idx = arr.indexOf(el);
+        if (idx >= 0 && idx < arr.length - 1) {
+          (arr[idx + 1] as HTMLElement).focus();
+          return;
+        }
+      }
+      el.blur();
+    }
+  }, []);
+
+  const handleFocus = useCallback(() => {
+    if (!spanRef.current) return;
+    if (!isFilled) {
+      spanRef.current.textContent = '';
+    }
+    const sel = window.getSelection();
+    if (sel && spanRef.current.childNodes.length > 0) {
+      const range = document.createRange();
+      range.selectNodeContents(spanRef.current);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }, [isFilled]);
+
+  const handleBlur = useCallback(() => {
+    if (!spanRef.current) return;
+    const text = (spanRef.current.textContent || '').trim();
+    lastSyncedValue.current = text;
+    onUpdate(node.id, text);
+    if (!text) {
+      spanRef.current.textContent = '';
+    }
+  }, [node.id, onUpdate]);
+
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+  }, []);
+
+  return (
+    <span
+      ref={spanRef}
+      contentEditable
+      suppressContentEditableWarning
+      onInput={handleInput}
+      onKeyDown={handleKeyDown}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onPaste={handlePaste}
+      data-placeholder={node.placeholder}
+      data-slot-id={node.id}
+      className="inline-chip-editable"
+      style={{
+        display: 'inline',
+        background: isFilled
+          ? "rgba(249, 115, 22, 0.2)"
+          : "rgba(249, 115, 22, 0.08)",
+        border: isFilled
+          ? "1px solid rgba(249, 115, 22, 0.5)"
+          : "1px dashed rgba(249, 115, 22, 0.35)",
+        borderRadius: "8px",
+        padding: "2px 10px",
+        margin: "0 2px",
+        fontSize: "inherit",
+        lineHeight: "inherit",
+        color: isFilled ? "#fb923c" : "rgba(249, 115, 22, 0.65)",
+        fontWeight: isFilled ? 500 : 400,
+        fontStyle: isFilled ? "normal" : "italic",
+        verticalAlign: "baseline",
+        outline: "none",
+        caretColor: "#f97316",
+        cursor: "text",
+        minWidth: "40px",
+        wordBreak: "break-word",
+        whiteSpace: "pre-wrap",
+        transition: "background 0.15s, border-color 0.15s, color 0.15s",
+      }}
+    >
+      {isFilled ? node.value : ''}
+    </span>
   );
 };
 
@@ -168,11 +149,11 @@ interface TemplateRendererProps {
 export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onUpdateSlot }) => {
   return (
     <div
-      className="w-full"
+      className="w-full template-renderer-container"
       style={{
         color: "#e0e0e0",
         fontSize: "16px",
-        lineHeight: "24px",
+        lineHeight: "26px",
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
         minHeight: "20px",
         maxHeight: "200px",

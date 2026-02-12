@@ -1,0 +1,60 @@
+Você está atuando como um desenvolvedor front‑end sênior, com experiência em React, TypeScript e construção de editores de texto ricos (contenteditable, Slate, ProseMirror ou equivalentes). Seu objetivo é revisar criticamente a forma como estou implementando a área de mensagem com “fichas clicáveis” (chips/slots) e corrigir os problemas de interação descritos abaixo, projetando uma solução robusta em termos de UX e arquitetura de código.
+
+Contexto geral (não reimplemente do zero sem necessidade):
+Existe uma caixa de enviar mensagens que exibe um texto‑template com blocos de pré‑definição (fichas clicáveis). Esses blocos representam campos como tipo de atividade, nível escolar, vibe, etc. O usuário deve conseguir interagir com essas fichas como parte natural do texto, sem modais externos, e o sistema posteriormente compila tudo em um prompt de texto plano para a IA.
+
+Agora você precisa corrigir e melhorar os seguintes pontos, levando em conta boas práticas de componentes controlados e edição inline:
+
+Editabilidade direta dentro das fichas
+
+Hoje, quando o usuário clica em um bloco de pré‑definição, ele fica “travado” e não é possível editar o texto dentro dele, como se fosse um elemento totalmente estático.
+
+Quero que você reprojete a interação para que, ao clicar em qualquer ficha, o usuário possa editar diretamente o texto daquela ficha dentro da própria área de mensagem, como se fosse um token de texto enriquecido.
+
+Preserve a ideia de que o bloco tem identidade própria (slot), mas não o trate como algo “blindado”; o foco de texto precisa entrar no conteúdo da ficha, permitindo digitação, seleção, copiar, colar e backspace normalmente.
+
+Remoção de modais/cards auxiliares ao clicar
+
+No comportamento atual, ao clicar em uma ficha, é aberto um modal/card separado para o usuário digitar o valor do campo. Esse fluxo é incorreto para este caso.
+
+Reestruture a lógica para que nenhuma janela adicional seja aberta ao clicar nas fichas. Toda a edição deve ocorrer inline, no mesmo plano da mensagem, aproveitando recursos como contenteditable ou mecanismos similares do editor que você escolher.
+
+Considere questões como gerenciamento de foco, teclas de navegação (setas, tab, enter) e consistência visual, para que a edição inline seja fluida e previsível.
+
+Manipulação livre das fichas dentro da caixa de mensagem
+
+O usuário precisa conseguir copiar, recortar, colar e apagar fichas inteiras diretamente na caixa de mensagem, como se fossem “tokens” avançados de texto.
+
+Ajuste a modelagem de estado e os manipuladores de eventos para que operações de teclado ou mouse que envolvam uma ficha sejam interpretadas corretamente (ex.: backspace antes de uma ficha remove o token, seleção com arraste inclui a ficha, etc.).
+
+Garanta que isso não quebre o mapeamento interno entre essas fichas e os slots semânticos usados depois na compilação do prompt.
+
+Dimensionamento flexível das fichas conforme o conteúdo
+
+Atualmente, o texto interno das fichas parece estar limitado ou cortado, e o tamanho do card não acompanha o comprimento do texto.
+
+Reprojetar o estilo e a estrutura das fichas para que o componente seja intrinsecamente flexível, aumentando ou reduzindo sua largura/altura em função do texto, com quebras de linha apropriadas quando necessário.
+
+Evite soluções rígidas de largura fixa; use layout e estilo (CSS/Tailwind/etc.) que preservem legibilidade e responsividade, mesmo para textos longos ou curtos.
+
+Requisitos técnicos e critérios de qualidade:
+
+Use uma arquitetura baseada em estado estruturado (por exemplo, uma lista de nós representando texto e slots), mas pense sobre como adaptar essa ideia ao código existente, em vez de apenas criar tudo do zero. Otimize para integrabilidade.
+
+Tenha atenção à sincronização entre a representação visual (DOM/contenteditable/editor) e o modelo de dados interno. Evite descompasso entre o que o usuário vê e o que é enviado ao backend.
+
+Lide corretamente com casos limite: usuário apagando apenas parte do texto de uma ficha, selecionando múltiplas fichas e texto ao mesmo tempo, colando texto dentro de uma ficha que já possui valor, etc.
+
+Priorize um código limpo e extensível: nomes claros, separação de responsabilidades (componente de input, camada de modelo de nós, helpers de transformação), e nada de acoplamento desnecessário com soluções temporárias.
+
+Após implementar as correções, explique de forma concisa:
+
+como a nova interação funciona do ponto de vista do usuário;
+
+como você está representando internamente as fichas e o texto;
+
+como a solução lida com edição inline, dimensionamento dinâmico e operações de copiar/apagar;
+
+e quais são os trade‑offs técnicos da abordagem escolhida.
+
+Não apenas aplique mudanças locais; faça uma análise crítica das causas dos problemas atuais e proponha ajustes na arquitetura da entrada de mensagem quando necessário, mantendo foco no objetivo principal: fichas totalmente editáveis inline, sem modais, com comportamento fluido e natural dentro da caixa de enviar mensagens.
