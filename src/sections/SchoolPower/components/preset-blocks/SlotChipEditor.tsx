@@ -27,7 +27,7 @@ const CHIP_STYLES_EMPTY = {
   fontStyle: 'italic',
 } as const;
 
-const CHIP_BASE_STYLES = 'display:inline-block;border-radius:8px;padding:2px 10px;margin:0 2px;vertical-align:baseline;outline:none;caret-color:#f97316;cursor:text;min-width:40px;word-break:break-word;white-space:pre-wrap;-webkit-user-modify:read-write-plaintext-only';
+const CHIP_BASE_STYLES = 'display:inline-block;border-radius:6px;padding:0px 8px;margin:0 2px;vertical-align:baseline;outline:none;caret-color:#f97316;cursor:text;min-width:30px;word-break:break-word;white-space:pre-wrap;-webkit-user-modify:read-write-plaintext-only';
 
 function applyChipVisualState(chip: HTMLSpanElement, filled: boolean) {
   const styles = filled ? CHIP_STYLES_FILLED : CHIP_STYLES_EMPTY;
