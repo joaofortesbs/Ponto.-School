@@ -22,18 +22,18 @@ const PRESET_BLOCKS: PresetBlock[] = [
   {
     id: "transforme-arquivos",
     title: "Transforme arquivos em atividades",
-    description: "Envie todas as suas atividades e arquivos antigos e engessados e transforme eles em atividades interativas já prontas para os seus alunos!",
+    description: "Envie todas as suas atividades e arquivos antigos e transforme eles em atividades interativas já prontas para os seus alunos!",
     prompt: "Analise os arquivos anexados e extraia a essência pedagógica deles. Quero que você transforme esse conteúdo em [Tipo de atividade] para alunos de [Nível Escolar]. Adicione um toque de [Vibe] e gere o Roadmap de Aplicação para eu usar amanhã.",
     iconType: "transform-files",
   },
 ];
 
 const GRID_CONFIG = {
-  maxWidth: 600,
+  maxWidth: 700,
   gap: 12,
   cardBorderRadius: 16,
   cardPaddingX: 16,
-  cardPaddingY: 14,
+  cardPaddingY: 20,
   iconSize: 44,
   iconBoxSize: 34,
   iconInnerSize: 18,
