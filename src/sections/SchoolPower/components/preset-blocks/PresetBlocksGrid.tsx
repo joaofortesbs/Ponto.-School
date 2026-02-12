@@ -33,7 +33,7 @@ const GRID_CONFIG = {
   gap: 12,
   cardBorderRadius: 16,
   cardPaddingX: 16,
-  cardPaddingY: 20,
+  cardPaddingY: 16,
   iconSize: 44,
   iconBoxSize: 34,
   iconInnerSize: 18,
