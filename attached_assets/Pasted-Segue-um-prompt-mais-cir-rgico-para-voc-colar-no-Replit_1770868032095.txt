@@ -1,0 +1,81 @@
+Segue um prompt mais “cirúrgico” para você colar no Replit Agent e obrigar ele a identificar e corrigir o problema do cursor e da edição dentro da caixa de mensagem.
+
+Quero que você atue como um desenvolvedor front‑end sênior, especialista em React, TypeScript e componentes contenteditable.
+Você vai analisar o meu componente de entrada de mensagem (a caixa onde o usuário escreve o prompt com fichas clicáveis) e corrigir dois problemas centrais de edição de texto:
+
+Problema 1 – Cursor sempre voltando para o início
+Sintoma atual:
+Quando o usuário clica dentro de uma ficha e começa a digitar, a barra de texto (caret) volta involuntariamente para o começo da frase a cada tecla pressionada. Isso quebra completamente a experiência de escrita.
+
+O que você precisa fazer:
+
+Descobrir em que ponto do código o componente está sendo re-renderizado de forma destrutiva a cada keypress, causando perda da posição do cursor (típico problema de contenteditable controlado).
+
+Projetar uma solução robusta para preservar a seleção/caret, usando a Selection API (window.getSelection(), Range) ou outra técnica apropriada.
+
+Ajustar o componente para que, durante a digitação normal:
+
+o caret permaneça exatamente onde o usuário está digitando, dentro ou fora das fichas;
+
+não haja “pulos” para o início da linha ou para outros pontos inesperados;
+
+a árvore de nós (texto + fichas) não seja recriada inutilmente a cada tecla (evite recriar DOM inteiro).
+
+Você deve pensar na solução, não apenas ligar um snippet pronto. Explique no final qual abordagem escolheu para controlar ou semi‑controlar o contenteditable e como garante estabilidade do cursor.
+
+Problema 2 – Texto fora das fichas não é editável
+Sintoma atual:
+O restante do texto da caixa de enviar mensagens (trechos que não são fichas) ainda não pode ser editado normalmente. O usuário só consegue mexer dentro da ficha, e mesmo assim com o problema do cursor descrito acima.
+
+O que você precisa fazer:
+
+Investigar como o componente está modelando o conteúdo:
+
+como o texto “normal” está sendo renderizado;
+
+como as fichas clicáveis estão sendo criadas;
+
+se existe algum uso incorreto de contentEditable={false} em elementos‑pai, ou alguma estrutura DOM que torne trechos estáticos.
+
+Reformular a estrutura para que:
+
+o container geral seja editável (contenteditable="true" ou o equivalente do editor que você estiver usando);
+
+os trechos de texto “comuns” sejam nós editáveis livres;
+
+as fichas sejam nós especiais (chips) integrados na mesma linha, mas que não bloqueiem a edição do texto ao redor.
+
+Garantir que o usuário possa:
+
+digitar antes e depois de uma ficha;
+
+selecionar texto + fichas;
+
+apagar uma ficha com backspace ou delete;
+
+copiar e colar trechos que incluam fichas e texto comum, sem corromper o modelo interno.
+
+Requisitos de qualidade e arquitetura
+Ao corrigir esses problemas:
+
+Preserve ou refine a ideia de um modelo de nós estruturado (texto e fichas), mantendo a capacidade de compilar tudo em um prompt de texto plano depois.
+
+Evite soluções que apenas “mascarem” o bug; o componente deve ficar estável mesmo sob digitação rápida, seleções grandes, e colagem de textos maiores.
+
+Garanta que o estilo das fichas seja flexível, ajustando largura/altura ao tamanho do conteúdo, sem cortar o texto interno.
+
+Não simplifique removendo a interação avançada; mantenha a experiência mais próxima possível de sistemas como Manus AI, onde o usuário sente que está editando um texto contínuo com blocos especiais integrados na frase.
+
+No final, me entregue:
+
+O código atualizado do componente principal de input, com as correções aplicadas.
+
+Uma explicação técnica concisa de:
+
+por que o cursor estava pulando e o que você fez para manter a seleção estável;
+
+por que o texto fora das fichas não era editável e como isso foi resolvido;
+
+como o novo fluxo lida com digitação, seleção, copiar/colar e exclusão de fichas.
+
+Priorize uma solução bem projetada, com bom equilíbrio entre controle de estado em React e comportamento nativo do contenteditable, em vez de remendos pontuais.
