@@ -29,7 +29,7 @@ const PRESET_BLOCKS: PresetBlock[] = [
 ];
 
 const GRID_CONFIG = {
-  maxWidth: 720,
+  maxWidth: 600,
   gap: 12,
   cardBorderRadius: 16,
   cardPaddingX: 16,
