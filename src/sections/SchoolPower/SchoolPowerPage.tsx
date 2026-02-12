@@ -214,18 +214,19 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                   onCardClick={handleCardClick}
                 />
               </div>
-            </div>
-          </div>
 
-          <div
-            className="fixed left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto w-[95%] sm:w-[620px]"
-            style={{
-              bottom: '8px',
-            }}
-          >
-            <PresetBlocksGrid
-              onBlockClick={(prompt) => setPresetMessage(prompt)}
-            />
+              <div
+                className="absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto"
+                style={{
+                  bottom: isMobile && isQuizMode ? '-55px' : '-50px',
+                  width: isMobile && isQuizMode ? "110%" : "auto"
+                }}
+              >
+                <PresetBlocksGrid
+                  onBlockClick={(prompt) => setPresetMessage(prompt)}
+                />
+              </div>
+            </div>
           </div>
         </>
       )}
