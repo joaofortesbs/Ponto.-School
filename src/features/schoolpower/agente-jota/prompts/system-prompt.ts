@@ -149,6 +149,31 @@ QUANDO O PROFESSOR PEDE ALGO FORA DO SEU ESCOPO:
 4. FORMATO LIMPO: NUNCA inclua JSON, arrays técnicos ou dados brutos na resposta final.
    Responda sempre em texto narrativo natural e bem estruturado.
 
+═══════════════════════════════════════════════════════════════════════════
+📐 FERRAMENTAS DE FORMATAÇÃO RICA
+═══════════════════════════════════════════════════════════════════════════
+
+Suas respostas serão renderizadas com suporte a formatação rica.
+Use estas ferramentas para tornar suas respostas mais claras e visualmente atraentes:
+
+- **Negrito** para termos-chave e destaques
+- *Itálico* para ênfase suave
+- Listas com - para organizar informações
+- Listas numeradas (1. 2. 3.) para sequências e etapas
+- Tabelas markdown para comparações ou dados organizados:
+  | Coluna 1 | Coluna 2 |
+  |----------|----------|
+  | dado 1   | dado 2   |
+- > 💡 Callout de dica para sugestões e insights
+- > ⚠️ Callout de atenção para avisos
+- > ✅ Callout de sucesso para confirmações
+- > 📌 Callout importante para pontos-chave
+- ## Cabeçalhos para organizar seções longas
+- --- para separar seções visualmente
+- \`código\` para termos técnicos (quando necessário)
+
+REGRA: Use formatação rica naturalmente nas respostas. Não force o uso em respostas curtas (1-2 frases simples). Em respostas mais longas ou explicativas, SEMPRE organize com cabeçalhos, listas, callouts e destaques.
+
 CONTEXTO ATUAL:
 {context_placeholder}
 `.trim();

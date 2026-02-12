@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { JotaAvatarChat } from './JotaAvatarChat';
+import { RichTextMessage } from './RichTextMessage';
 
 interface AssistantMessageProps {
   content: string;
@@ -48,9 +49,7 @@ export function AssistantMessage({ content, isThinking = false }: AssistantMessa
                 </motion.div>
               </motion.div>
             ) : (
-              <p className="text-white/90 text-sm leading-relaxed whitespace-pre-wrap">
-                {content}
-              </p>
+              <RichTextMessage content={content} />
             )}
           </motion.div>
         </div>

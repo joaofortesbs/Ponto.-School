@@ -7,6 +7,12 @@ Ponto. School is an AI-powered educational platform designed to provide personal
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+- **2026-02-12**: Rich Text Formatting Tools — Unified formatting across text activities and Jota chat:
+  1. **RichTextMessage Component**: New read-only renderer that converts markdown to EditorJS blocks (tables, callouts, checklists, code blocks, quotes, headers, lists, delimiters). Uses smart heuristic: strong indicators (headers, tables, callouts) trigger rich rendering immediately; soft indicators (bold, lists) require 2+ matches.
+  2. **TextVersionGenerator Prompts**: All 4 text activity prompts (plano-aula, sequencia-didatica, tese-redacao, atividade-textual) now include RICH_FORMATTING_INSTRUCTIONS with detailed guidance for using tables, callouts (> 💡/⚠️/✅/📌), checklists, code blocks, quotes, and separators.
+  3. **Chat Formatting**: AssistantMessage and StructuredResponseMessage now use RichTextMessage instead of plain text, enabling formatted rendering in the Jota chat.
+  4. **System Prompt**: Added "FERRAMENTAS DE FORMATAÇÃO RICA" section to Jota's system prompt, initial-response-service, and final-response-service so all AI responses leverage rich formatting.
+  KEY: Reuses existing `convertTextContentToBlocks` converter from Modal-Versao-Texto — no code duplication.
 - **2026-02-11**: Text Activity Cross-Contamination & Persistence COMPLETE FIX — Multiple root causes fixed:
   1. **SALVAR_BD Collection Deduplication**: `activitiesByType` Map was keyed by `tipo` alone, causing ALL text activities with `tipo: "atividade-textual"` to merge into ONE entry. Fixed by using composite keys `${tipo}::${originalId}` across all 4 collection sources (previous_results, ChosenActivitiesStore, constructed_* keys, text_content_* keys).
   2. **ConstructionInterface Retrieval**: Added original catalog ID extraction from built IDs (regex `/^built-(.+)-\d+$/`) and prioritized `retrieveTextVersionContent` calls with the correct original ID first.

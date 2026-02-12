@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { JotaAvatarChat } from './JotaAvatarChat';
+import { RichTextMessage } from './RichTextMessage';
 import { FileText, ChevronRight, Brain, Layers, Search, PenLine, TextCursorInput, Link2, ClipboardList, Sparkles } from 'lucide-react';
 import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
@@ -157,15 +158,15 @@ export function StructuredResponseMessage({ blocks, onOpenArtifact, onOpenActivi
             {blocks.map((block, idx) => {
               if (block.type === 'text' && block.content) {
                 return (
-                  <motion.p
+                  <motion.div
                     key={`text-${idx}`}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: idx * 0.08, duration: 0.3 }}
-                    className="text-white/90 text-sm leading-relaxed whitespace-pre-wrap mb-2"
+                    className="mb-2"
                   >
-                    {block.content}
-                  </motion.p>
+                    <RichTextMessage content={block.content} />
+                  </motion.div>
                 );
               }
               

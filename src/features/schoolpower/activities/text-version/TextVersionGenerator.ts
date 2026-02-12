@@ -50,6 +50,52 @@ export interface TextSection {
   icon?: string;
 }
 
+const RICH_FORMATTING_INSTRUCTIONS = `
+FERRAMENTAS DE FORMATAÇÃO RICA (USE TODAS quando apropriado):
+
+1. **TABELAS MARKDOWN** — Use para comparações, cronogramas, rubrica de avaliação, dados organizados:
+   | Coluna 1 | Coluna 2 | Coluna 3 |
+   |----------|----------|----------|
+   | dado 1   | dado 2   | dado 3   |
+
+2. **CALLOUTS/DESTAQUES** — Use para dicas, avisos, pontos importantes:
+   > 💡 Dica importante para o professor ou aluno
+   > ⚠️ Atenção: ponto que merece cuidado
+   > ✅ Ponto positivo ou conclusão
+   > 📌 Informação importante para fixar
+   > 🎯 Objetivo ou meta a ser atingida
+   > 📝 Nota ou observação relevante
+
+3. **CHECKLISTS** — Use para listas de verificação, etapas a cumprir, materiais:
+   - [ ] Item pendente
+   - [x] Item já concluído
+
+4. **LISTAS** — Use listas ordenadas e não-ordenadas:
+   - Item com marcador
+   1. Item numerado
+
+5. **BLOCOS DE CITAÇÃO** — Use para citações, referências, falas:
+   > "Citação relevante ou referência bibliográfica"
+
+6. **SEPARADORES** — Use para dividir seções visualmente:
+   ---
+
+7. **FORMATAÇÃO INLINE** — Use dentro do texto:
+   **negrito** para termos-chave
+   *itálico* para ênfase
+   ~~tachado~~ para correções
+   \`código\` para termos técnicos
+   ==destaque== para marcar informações essenciais
+
+8. **CABEÇALHOS HIERÁRQUICOS** — Use para organizar o documento:
+   # Título principal
+   ## Seção
+   ### Subseção
+   #### Tópico
+
+REGRA: Combine MÚLTIPLAS ferramentas em cada seção para criar conteúdo visualmente rico e estruturado. Não use apenas parágrafos simples.
+`;
+
 const PROMPTS_BY_ACTIVITY_TYPE: Record<string, (input: TextVersionInput) => string> = {
   'plano-aula': (input) => {
     const tema = input.context.tema || input.context.theme || input.userObjective || 'Não especificado';
@@ -97,12 +143,18 @@ REGRAS OBRIGATÓRIAS:
 - Escreva TUDO em português brasileiro formal e profissional
 - Seja EXTREMAMENTE detalhado - cada seção deve ter múltiplos parágrafos
 - Inclua EXEMPLOS CONCRETOS e práticos relacionados ao tema "${tema}"
-- Use formatação clara com marcadores (•, -, ▪) e numeração
 - Distribua o tempo de forma realista entre os momentos da aula
 - Inclua perguntas motivadoras e analogias que o professor pode usar
 - Alinhe com a BNCC quando aplicável
 - O conteúdo deve ser COMPLETO para o professor usar diretamente em sala
 - NÃO use abreviações ou resumos - escreva o conteúdo COMPLETO
+
+${RICH_FORMATTING_INSTRUCTIONS}
+EXEMPLOS DE USO NO PLANO DE AULA:
+- Use TABELAS para cronograma da aula, rubrica de avaliação, distribuição de tempo
+- Use CALLOUTS (> 💡) para dicas ao professor, (> ⚠️) para pontos de atenção
+- Use CHECKLISTS para materiais necessários e preparação prévia
+- Use **negrito** para termos-chave e conceitos importantes
 
 FORMATO DE RESPOSTA (TEXTO PURO):
 Escreva o plano de aula COMPLETO em formato de texto, seguindo esta estrutura:
@@ -171,6 +223,13 @@ Crie uma sequência didática completa com as seguintes informações:
 ${input.conversationContext ? `**Contexto da conversa:**\n${input.conversationContext}` : ''}
 ${input.userObjective ? `**Objetivo do usuário:**\n${input.userObjective}` : ''}
 
+${RICH_FORMATTING_INSTRUCTIONS}
+EXEMPLOS DE USO NA SEQUÊNCIA DIDÁTICA:
+- Use TABELAS para cronograma das aulas, competências por aula, distribuição de conteúdo
+- Use CALLOUTS (> 💡) para sugestões pedagógicas, (> 📌) para pontos-chave
+- Use CHECKLISTS para objetivos de cada aula e materiais necessários
+- Use SEPARADORES (---) entre as aulas
+
 **FORMATO DE RESPOSTA (OBRIGATÓRIO):**
 Responda APENAS com um JSON no seguinte formato:
 
@@ -225,6 +284,13 @@ Crie um apoio para tese de redação com as seguintes informações:
 
 ${input.conversationContext ? `**Contexto da conversa:**\n${input.conversationContext}` : ''}
 ${input.userObjective ? `**Objetivo do usuário:**\n${input.userObjective}` : ''}
+
+${RICH_FORMATTING_INSTRUCTIONS}
+EXEMPLOS DE USO NA TESE DE REDAÇÃO:
+- Use TABELAS para comparar argumentos a favor/contra, repertórios socioculturais
+- Use CALLOUTS (> 💡) para dicas de escrita, (> 📌) para palavras-conectivo úteis
+- Use **negrito** para termos-chave e conceitos centrais da argumentação
+- Use CITAÇÕES (>) para referências bibliográficas e repertório sociocultural
 
 **FORMATO DE RESPOSTA (OBRIGATÓRIO):**
 Responda APENAS com um JSON no seguinte formato:
@@ -291,9 +357,16 @@ ${input.userObjective ? `OBJETIVO DO USUÁRIO:\n${input.userObjective}` : ''}
 REGRAS OBRIGATÓRIAS:
 1. Crie conteúdo COMPLETO e PRONTO PARA USO - não apenas estrutura
 2. Inclua questões, textos, instruções detalhadas quando aplicável
-3. Use formatação rica: tabelas markdown, listas, cabeçalhos, destaques
-4. Adapte a linguagem para ${serie}
-5. Inclua gabarito/respostas esperadas quando aplicável
+3. Adapte a linguagem para ${serie}
+4. Inclua gabarito/respostas esperadas quando aplicável
+
+${RICH_FORMATTING_INSTRUCTIONS}
+EXEMPLOS DE USO NA ATIVIDADE:
+- Use TABELAS para quadros comparativos, rubricas, exercícios de associação
+- Use CALLOUTS (> 💡) para dicas aos alunos, (> ⚠️) para atenção, (> 📌) para regras
+- Use CHECKLISTS para critérios de avaliação e etapas da atividade
+- Use **negrito** para enunciados e conceitos-chave
+- Use SEPARADORES (---) entre questões ou seções da atividade
 
 **FORMATO DE RESPOSTA (OBRIGATÓRIO):**
 Responda APENAS com um JSON no seguinte formato:
