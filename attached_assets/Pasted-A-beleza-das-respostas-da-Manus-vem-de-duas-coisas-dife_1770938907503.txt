@@ -1,0 +1,104 @@
+A beleza das respostas da Manus vem de duas coisas diferentes: 1) tipografia/HTML/CSS bem pensados no front, 2) respostas em Markdown muito bem controladas pelo prompt system e pós‑processamento.
+
+1. Tipografia e UI do chat
+No front, não é “mágica de IA”, é design:
+
+Fontes: usam uma combinação de fontes modernas (ex.: DM Sans, Libre Baskerville ou similares) com hierarquia clara: uma para títulos, outra para corpo e dados.
+​
+
+Hierarquia visual: tamanhos diferentes para heading, subtítulo e parágrafo, line-height generoso, espaços verticais consistentes entre blocos.
+
+Cores e peso: texto principal em cinza bem escuro, títulos um pouco mais pesados, negritos só para dar contraste (não tudo gritando).
+​
+
+Layout: largura máxima de coluna (ex.: 640–720px) para não virar “linha infinita”, margens laterais, e blocos de código/caixas de destaque com fundo levemente diferente.
+
+Para você replicar no seu chat:
+
+Escolha 2 fontes (Google Fonts): uma de display para headings, outra sans para corpo.
+
+Defina tokens: --font-size-body, --font-size-h1, --font-size-h2, --line-height, --space-block, e aplique via classes .message-body, .message-title, .message-section.
+
+Limite a largura do conteúdo da resposta (max-width) e use padding generoso.
+
+2. Como a resposta vem “bonita” da IA
+A IA em si devolve texto em Markdown, que o front converte para HTML com um renderer (Marked, Remark, unified, etc.).
+
+O fluxo típico é:
+
+Prompt pede explicitamente: “Responda usando Markdown estruturado, com títulos (##), listas, negrito apenas para termos importantes, sem HTML cru”.
+
+O modelo gera algo como:
+## Visão Geral
+Texto…
+### Passos
+1. ...
+
+Seu front pega esse Markdown, passa por um parser e aplica estilos com CSS às tags <h2>, <p>, <ul>, <strong>, etc.
+
+Para o seu chat:
+
+Sempre trate a saída da IA como Markdown.
+
+Use uma lib de Markdown → HTML e um tema de estilos (tipo “prose” do Tailwind ou algo próprio) para padronizar títulos, listas, blocos de código, tabelas.
+
+3. Estrutura do prompt system para respostas finais
+Um system prompt “à la Manus” costuma ter blocos bem separados.
+
+Adaptando para o seu caso de chat, algo assim:
+
+Role / Persona
+
+“Você é um assistente especialista em [X], direto e organizado.”
+
+Política de raciocínio
+
+“Siga sempre o ciclo: 1) Entenda o pedido, 2) Estruture a resposta em seções, 3) Se necessário, pense internamente antes de responder, 4) Só então produza a resposta final.”
+​
+
+Contrato de saída (formato visual)
+
+Algo bem explícito, por exemplo:
+
+Use títulos Markdown: ## para seções principais, no máximo 4 seções.
+
+Use listas numeradas para passos, listas com - para pontos soltos.
+
+Use negrito apenas para uma ou duas palavras-chave por parágrafo.
+
+Não use HTML, não use emojis (a menos que pedido).
+
+Evite blocos de texto maiores que 4–5 linhas por parágrafo.
+
+Guardrails de estilo
+
+“Seja conciso, mas completo.”
+
+“Explique em linguagem simples, sem jargão desnecessário.”
+
+“Não duplique informação em seções diferentes.”
+
+Exemplos de boa resposta
+
+O que trava o estilo é mostrar 1–2 exemplos no system prompt:
+
+Um exemplo de pergunta e uma resposta com exatamente a estrutura que você quer (títulos, listas, tom, tamanho de parágrafo).
+
+4. Implementando passo a passo no seu chat
+Para você desenvolver isso no School Power / chat com IA:
+
+Backend / prompt
+
+Crie um system prompt fixo com: persona + regras de formato + exemplo de saída.
+
+Deixe o user prompt limpo, só com o pedido do usuário.
+
+Se usar ferramentas/agents, tenha um “prompt de resposta final” separado, só focado em transformar o raciocínio/resultado em texto bonito.
+
+Frontend
+
+Receba o final_answer sempre em Markdown.
+
+Parseie com uma lib de Markdown, aplique um tema de tipografia.
+
+Tenha classes específicas para blocos do agente (ex.: .ai-message) com max-width, fontes, espaçamento e cores bem definidas.
