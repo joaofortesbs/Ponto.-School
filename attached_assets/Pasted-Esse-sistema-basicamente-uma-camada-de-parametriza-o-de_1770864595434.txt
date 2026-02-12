@@ -1,0 +1,123 @@
+Esse sistema é basicamente uma camada de parametrização de prompt em cima de um textarea comum, combinando UI rica com um motor que converte tudo em um único prompt de texto “limpo” antes de mandar para o modelo.
+
+Visão geral da arquitetura
+Na UI você tem um “prompt template” com placeholders (blocos clicáveis) definidos em um esquema declarativo, por exemplo JSON ou YAML, descrevendo: id do slot, label, tipo (texto curto, longo, número, opção, etc.), valor padrão e regras de validação.
+
+No front-end, esses placeholders são renderizados dentro da caixa de mensagem como spans ou chips interativos (por exemplo, <span data-slot="project_objectives">[Objetivos do projeto]</span>), que o usuário pode clicar para editar.
+
+No back-end existe um “prompt compiler”: ele pega o template com marcadores ({{project_objectives}}, {{budget_estimation}} etc.), injeta os valores preenchidos pelo usuário, aplica normalização e envia um único string final para o modelo de IA.
+​
+
+Modelo de dados do template
+Você pode pensar em cada prompt predefinido como:
+
+json
+{
+  "id": "pitch_deck_proposta",
+  "system_instructions": "Você é um consultor sênior de negócios...",
+  "template": "Crie um pitch deck para uma nova proposta de projeto. A apresentação deve delinear os objetivos: {{project_objectives}}, escopo: {{project_scope}}, cronograma: {{project_timeline}} e orçamento estimado: {{budget_estimation}}.",
+  "slots": [
+    { "name": "project_objectives", "label": "Objetivos do projeto", "type": "long_text", "required": true },
+    { "name": "project_scope", "label": "Escopo do projeto", "type": "long_text", "required": true },
+    { "name": "project_timeline", "label": "Cronograma", "type": "short_text", "required": false },
+    { "name": "budget_estimation", "label": "Orçamento estimado", "type": "short_text", "required": false }
+  ]
+}
+template é a “frase mestre” com marcadores formais ({{slot}}) que nunca aparecem para o usuário.
+​
+
+slots descrevem como cada marcador vira um bloco clicável na UI, com label humanizado e, se quiser, placeholder de explicação.
+​
+
+Renderização da caixa de mensagem
+Na hora de mostrar “O que você está construindo?” com os blocos:
+
+O front-end pega o template e transforma em um modelo intermediário: sequência de tokens Texto e Slot.
+
+Renderiza os Texto como spans normais e os Slot como elementos editáveis:
+
+Pode usar contenteditable num span, ou abrir um popover/form ao clicar.
+
+Visualmente, você estiliza como pill/chip, com label e talvez um ícone de lápis.
+
+O campo “texto bruto” que o usuário vê é só uma projeção; internamente você sempre mantém um estado estruturado:
+
+ts
+{
+  templateId: "pitch_deck_proposta",
+  slotValues: {
+    project_objectives: "Apresentar um novo produto para escolas...",
+    project_scope: "Pesquisa de mercado, protótipo, testes com 10 escolas...",
+    project_timeline: "3 meses",
+    budget_estimation: "R$ 150.000"
+  },
+  freeText: "" // se você permitir texto livre fora dos slots
+}
+Esse estado evita que os marcadores “sujos” apareçam no texto final que vai para a IA.
+​
+
+Compilação para o prompt final
+Quando o usuário clica em “Enviar”:
+
+Validação: o front-end roda validações de cada slot (obrigatório, tamanho mínimo, regex etc.) e bloqueia envio se estiver faltando algo crítico.
+​
+
+Serialização: o back-end recebe templateId, slotValues e freeText.
+
+Prompt compiler:
+
+Carrega o template oficial do servidor.
+
+Substitui cada {{slot}} pelo valor normalizado (trim, remover quebras extras, sanitizar).
+
+Se existir freeText, decide onde anexar (por exemplo, no fim: “Instruções adicionais do usuário: ...”).
+​
+
+Resultado (exemplo):
+
+“Crie um pitch deck para uma nova proposta de projeto. A apresentação deve delinear os objetivos: Apresentar um novo produto para escolas..., escopo: Pesquisa de mercado, protótipo, testes com 10 escolas..., cronograma: 3 meses e orçamento estimado: R$ 150.000.”
+​
+
+Esse é o único texto que o modelo vê; os blocos clicáveis não “vazam” para o prompt.
+
+Como não atrapalhar a IA
+Alguns detalhes importantes para manter o entendimento limpo:
+
+Nunca mande labels de UI como “[Clique aqui para editar]” dentro do texto final; use só o conteúdo do usuário + a estrutura do template.
+​
+
+Padronize o estilo do template (frases claras, estrutura sempre igual), para o modelo aprender o padrão de saída que você quer.
+​
+
+Use instruções de sistema/perfil separadas do prompt do usuário (por exemplo, system_instructions em um campo separado da API).
+
+Se quiser enriquecer o prompt, você pode ter um passo adicional de “prompt expansion” no servidor, em que outro modelo reescreve o prompt com mais detalhes a partir dos slots, mas ainda assim trabalhando em cima do texto já compilado.
+​
+
+Implementação avançada (features de nível pro)
+Se você quiser programar “no talo”, dá para adicionar:
+
+Tipos de slot:
+
+enum com dropdown, date com datepicker, file para anexar documentos que um agente depois processa, persona para escolher o tom de voz.
+
+Versões de template:
+
+Guardar version e permitir A/B testing de templates para medir qual gera melhor resultado (tempo de conclusão de tarefa, satisfação do usuário etc.).
+​
+
+Autosave e histórico:
+
+Todo preenchimento de slots gera um snapshot do estado, integrando com o histórico de tarefas, como o Manus faz quando cria um item para cada nova tarefa.
+​
+
+Agents/tooling:
+
+Cada template pode ter uma “pipeline” de ferramentas associadas (ex: “Criar site” dispara builder de website, “Criar slides” chama gerador de apresentações).
+
+Prompt augmentation adaptativa:
+
+Você pode ter um passo que observa os slots e injeta dicas no próprio template (“Se o orçamento for alto, enfatize ROI”) antes de compilar, usando padrões de “prompt augmentation” de UX.
+​
+
+Em resumo: você modela o prompt como um formulário estruturado (slots) com uma view de texto rica (chips clicáveis) e um compilador de templates no servidor que transforma tudo em um único prompt limpo e extremamente controlado para a IA, mantendo a experiência guiada para o usuário sem poluir a entrada do modelo.
