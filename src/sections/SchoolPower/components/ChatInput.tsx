@@ -79,10 +79,11 @@ interface ChatInputProps {
   onSend?: (message: string, files?: UploadedFile[]) => void;
   externalSelectedCard?: string | null;
   onCardClick?: (cardName: string) => void;
+  externalMessage?: string | null;
+  onExternalMessageConsumed?: () => void;
 }
 
-// Componente AIMessageBox
-const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, externalSelectedCard = null, onCardClick }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, externalSelectedCard = null, onCardClick, externalMessage = null, onExternalMessageConsumed }) => {
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -259,6 +260,17 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
       handleCardClick(externalSelectedCard);
     }
   }, [externalSelectedCard]);
+
+  React.useEffect(() => {
+    if (externalMessage) {
+      setMessage(externalMessage);
+      setIsTyping(true);
+      onExternalMessageConsumed?.();
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 100);
+    }
+  }, [externalMessage]);
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">

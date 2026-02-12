@@ -10,6 +10,7 @@ import {
   ParticlesBackground,
 } from "./components";
 import { QuickAccessCards } from "./components/4-cards-pré-prompts";
+import { PresetBlocksGrid } from "./components/preset-blocks";
 import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerFlow";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 import { HistoricoAtividadesCriadas } from "../../features/schoolpower/construction/HistoricoAtividadesCriadas";
@@ -37,6 +38,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const [isDarkTheme] = useState(true);
   const [showHistorico, setShowHistorico] = useState(false);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [presetMessage, setPresetMessage] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const pendingMessageProcessed = useRef(false);
 
@@ -195,6 +197,8 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                   onSend={handleSendMessage}
                   externalSelectedCard={selectedCard}
                   onCardClick={handleCardClick}
+                  externalMessage={presetMessage}
+                  onExternalMessageConsumed={() => setPresetMessage(null)}
                 />
               </div>
 
@@ -211,6 +215,17 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 />
               </div>
             </div>
+          </div>
+
+          <div
+            className="fixed left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto w-[95%] sm:w-[620px]"
+            style={{
+              bottom: '8px',
+            }}
+          >
+            <PresetBlocksGrid
+              onBlockClick={(prompt) => setPresetMessage(prompt)}
+            />
           </div>
         </>
       )}
