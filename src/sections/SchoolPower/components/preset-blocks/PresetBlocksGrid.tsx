@@ -131,7 +131,7 @@ export const PresetBlocksGrid: React.FC<PresetBlocksGridProps> = ({ onBlockClick
                   <ArrowRight className="w-3.5 h-3.5 text-orange-400/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0 -translate-x-1 group-hover:translate-x-0" 
                     style={{ transition: "all 0.2s ease" }} />
                 </div>
-                <p className="text-xs text-white/50 leading-relaxed line-clamp-2">
+                <p className="text-xs text-white/50 leading-relaxed line-clamp-3">
                   {block.description}
                 </p>
               </div>
