@@ -296,14 +296,20 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
     if (activityTipo === 'atividade-textual' || isTextByConfig || isTextBySignal) {
       console.log('📄 [ChatLayout] Atividade textual detectada, redirecionando para ArtifactViewModal', { activityTipo, isTextByConfig, isTextBySignal });
       
-      let textData = retrieveTextVersionContent(activityId, activityTipo);
+      const builtIdMatchCL = activityId.match(/^built-(.+)-\d+$/);
+      const catalogIdCL = builtIdMatchCL ? builtIdMatchCL[1] : activityId;
+      
+      let textData = retrieveTextVersionContent(catalogIdCL, activityTipo) ||
+                     retrieveTextVersionContent(activityId, activityTipo);
       if (!textData?.textContent && activityTipo !== 'atividade-textual') {
-        textData = retrieveTextVersionContent(activityId, 'atividade-textual');
+        textData = retrieveTextVersionContent(catalogIdCL, 'atividade-textual') ||
+                  retrieveTextVersionContent(activityId, 'atividade-textual');
       }
       if (!textData?.textContent) {
         try {
           const allKeys = Object.keys(localStorage);
-          const matchingKey = allKeys.find(k => k.startsWith('text_content_') && k.includes(activityId));
+          const matchingKey = allKeys.find(k => k.startsWith('text_content_') && k.includes(catalogIdCL)) ||
+                             allKeys.find(k => k.startsWith('text_content_') && k.includes(activityId));
           if (matchingKey) {
             const raw = localStorage.getItem(matchingKey);
             if (raw) textData = JSON.parse(raw);

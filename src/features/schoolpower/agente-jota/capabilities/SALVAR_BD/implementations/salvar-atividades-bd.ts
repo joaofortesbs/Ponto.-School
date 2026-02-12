@@ -59,6 +59,18 @@ function generateActivityId(): string {
   return result;
 }
 
+function extractCatalogId(builtId: string): string {
+  if (!builtId || typeof builtId !== 'string') return builtId || '';
+  const builtMatch = builtId.match(/^built-(.+)-\d{10,}$/);
+  if (builtMatch) {
+    return builtMatch[1];
+  }
+  if (builtId.startsWith('built-')) {
+    return builtId.replace(/^built-/, '').replace(/-\d+$/, '');
+  }
+  return builtId;
+}
+
 function isValidActivityId(id: string): boolean {
   if (!id || typeof id !== 'string') return false;
   if (id === 'fields' || id === 'unknown') return false;
@@ -518,7 +530,12 @@ async function collectActivitiesFromAllSources(
       const newFields = built.campos_preenchidos || built.fields || {};
       
       const builtOriginalId = built.id || built.original_id || '';
-      const builtCompositeKey = builtOriginalId ? `${tipo}::${builtOriginalId}` : tipo;
+      const catalogId = extractCatalogId(builtOriginalId);
+      const builtCompositeKey = catalogId ? `${tipo}::${catalogId}` : tipo;
+      
+      if (builtOriginalId !== catalogId) {
+        console.error(`🔑 [COLETA] ID transformado: "${builtOriginalId}" → "${catalogId}" (compositeKey: ${builtCompositeKey})`);
+      }
       
       if (activitiesByType.has(builtCompositeKey)) {
         const existing = activitiesByType.get(builtCompositeKey)!;
@@ -535,7 +552,7 @@ async function collectActivitiesFromAllSources(
             criado_em: new Date().toISOString(),
             pipeline_version: 'v2',
             model_used: built.model_used,
-            original_id: builtOriginalId || undefined
+            original_id: catalogId || undefined
           }
         };
         activitiesByType.set(builtCompositeKey, activity);
@@ -559,7 +576,8 @@ async function collectActivitiesFromAllSources(
     
     if (Object.keys(consolidatedFields).length === 0) continue;
     
-    const storeOriginalId = activity.id || activity.activity_id || '';
+    const storeOriginalIdRaw = activity.id || activity.activity_id || '';
+    const storeOriginalId = extractCatalogId(storeOriginalIdRaw);
     const storeCompositeKey = storeOriginalId ? `${tipo}::${storeOriginalId}` : tipo;
     
     if (activitiesByType.has(storeCompositeKey)) {
@@ -688,11 +706,12 @@ async function collectActivitiesFromAllSources(
         
         if (Object.keys(fields).length === 0) continue;
         
-        const constructedOriginalId = activityData.id || activityData.activity_id || activityData.original_id || '';
+        const constructedOriginalIdRaw = activityData.id || activityData.activity_id || activityData.original_id || '';
         const withoutKeyPrefix = key.replace(/^(constructed_|activity_|generated_content_)/, '');
         const lastKeyUnderscore = withoutKeyPrefix.lastIndexOf('_');
         const keyOriginalId = lastKeyUnderscore > 0 ? withoutKeyPrefix.substring(lastKeyUnderscore + 1) : '';
-        const resolvedOriginalId = constructedOriginalId || keyOriginalId || '';
+        const resolvedOriginalIdRaw = constructedOriginalIdRaw || keyOriginalId || '';
+        const resolvedOriginalId = extractCatalogId(resolvedOriginalIdRaw);
         const compositeKey = resolvedOriginalId ? `${tipo}::${resolvedOriginalId}` : tipo;
         
         if (activitiesByType.has(compositeKey)) {
@@ -873,12 +892,15 @@ async function saveActivityToDatabase(
       if (!activity.campos_preenchidos) activity.campos_preenchidos = {};
       if (typeof localStorage !== 'undefined') {
         const allKeys = Object.keys(localStorage);
-        const origId = activity.metadata?.original_id || (activity.metadata as any)?.origin_activity_id || '';
+        const origIdRaw = activity.metadata?.original_id || (activity.metadata as any)?.origin_activity_id || '';
+        const origId = extractCatalogId(origIdRaw);
         const textKey = (origId ? allKeys.find(k => 
           k.startsWith('text_content_') && k.endsWith(`_${origId}`)
         ) : null) || allKeys.find(k => 
           k.startsWith('text_content_') && k.endsWith(`_${activity.id}`)
-        );
+        ) || (origId ? allKeys.find(k =>
+          k.startsWith('text_content_') && k.includes(`_${origId}`)
+        ) : null);
         if (textKey) {
           try {
             const raw = localStorage.getItem(textKey);
@@ -900,6 +922,8 @@ async function saveActivityToDatabase(
       }
     }
 
+    const catalogOrigId = extractCatalogId(activity.metadata?.original_id || '');
+    
     const payload = {
       id: activity.id,
       id_user: userId,
@@ -907,7 +931,11 @@ async function saveActivityToDatabase(
       id_json: {
         titulo: activity.titulo,
         campos: activity.campos_preenchidos,
-        metadata: activity.metadata,
+        metadata: {
+          ...activity.metadata,
+          original_id: catalogOrigId || activity.metadata?.original_id,
+          catalog_activity_type: catalogOrigId || undefined,
+        },
         ...(isTextualActivity ? {
           content_type: 'atividade-textual',
           text_payload: {
@@ -923,10 +951,17 @@ async function saveActivityToDatabase(
       stars: 100
     };
 
+    const textPayloadSize = (payload.id_json as any)?.text_payload?.textContent?.length || 0;
+    const camposTextSize = activity.campos_preenchidos?.textContent?.length || 0;
     console.error(`📤 [API] Enviando para /api/atividades-neon:`, {
       id: payload.id,
       tipo: payload.tipo,
-      campos_count: Object.keys(activity.campos_preenchidos).length
+      campos_count: Object.keys(activity.campos_preenchidos).length,
+      isTextual: isTextualActivity,
+      textPayloadChars: textPayloadSize,
+      camposTextContentChars: camposTextSize,
+      originalId: catalogOrigId || 'N/A',
+      sectionsCount: textSections.length
     });
 
     const controller = new AbortController();
