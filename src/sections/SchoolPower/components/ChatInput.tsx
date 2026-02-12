@@ -1440,27 +1440,27 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
                 </button>
               </div>
 
-              <div className="flex-1">
-                {isTemplateMode && templateNodes ? (
+              <div className="flex-1" style={{ position: 'relative' }}>
+                <div style={{ display: isTemplateMode && templateNodes ? 'block' : 'none' }}>
                   <TemplateRenderer
-                    nodes={templateNodes}
+                    nodes={templateNodes || []}
                     onNodesChange={(updated) => {
                       onTemplateNodesChange?.(updated);
                     }}
                   />
-                ) : (
-                  <textarea
-                    ref={textareaRef}
-                    value={message}
-                    onChange={handleInputChange}
-                    onKeyPress={handleKeyPress}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
-                    placeholder="Digite o que você quer criar..."
-                    className="textarea-custom"
-                    rows={1}
-                  />
-                )}
+                </div>
+                <textarea
+                  ref={textareaRef}
+                  value={message}
+                  onChange={handleInputChange}
+                  onKeyPress={handleKeyPress}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  placeholder="Digite o que você quer criar..."
+                  className="textarea-custom"
+                  rows={1}
+                  style={{ display: isTemplateMode && templateNodes ? 'none' : 'block' }}
+                />
               </div>
 
               <button
