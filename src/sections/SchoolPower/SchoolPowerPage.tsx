@@ -33,10 +33,10 @@ const GeminiApiMonitor = import.meta.env.DEV
 
 const PRESET_GRID_POSITION = {
   desktop: {
-    bottomOffset: -105,
+    bottomOffset: -145,
   },
   mobile: {
-    bottomOffset: -110,
+    bottomOffset: -150,
   },
 } as const;
 
@@ -232,7 +232,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 className="absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto"
                 style={{
                   bottom: `${isMobile && isQuizMode ? PRESET_GRID_POSITION.mobile.bottomOffset : PRESET_GRID_POSITION.desktop.bottomOffset}px`,
-                  width: isMobile && isQuizMode ? "110%" : "700px"
+                  width: isMobile && isQuizMode ? "110%" : "737px"
                 }}
               >
                 <PresetBlocksGrid
