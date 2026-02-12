@@ -113,27 +113,19 @@ interface TemplateRendererProps {
 }
 
 export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNodesChange }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<HTMLDivElement | null>(null);
   const lastExternalSlotIds = useRef<string>('');
   const mountedNodesRef = useRef<PromptNode[]>(nodes);
-  const hasMounted = useRef(false);
+  const onNodesChangeRef = useRef(onNodesChange);
+  onNodesChangeRef.current = onNodesChange;
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const currentSlotIds = getSlotIds(nodes);
-
-    if (hasMounted.current && currentSlotIds === lastExternalSlotIds.current) {
-      mountedNodesRef.current = nodes;
-      return;
-    }
-
-    containerRef.current.innerHTML = nodesToHtml(nodes);
-    mountedNodesRef.current = nodes;
-    lastExternalSlotIds.current = currentSlotIds;
-    hasMounted.current = true;
-    bindChipClicks(containerRef.current);
-  }, [nodes]);
+  const syncDomToModel = useCallback(() => {
+    if (!editorRef.current) return;
+    const parsed = htmlToNodes(editorRef.current, mountedNodesRef.current);
+    mountedNodesRef.current = parsed;
+    onNodesChangeRef.current(parsed);
+  }, []);
 
   const bindChipClicks = useCallback((container: HTMLElement) => {
     const chips = container.querySelectorAll<HTMLSpanElement>('.inline-chip-editable');
@@ -142,7 +134,6 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
         e.stopPropagation();
         chip.setAttribute('contenteditable', 'true');
         chip.focus();
-
         const sel = window.getSelection();
         if (sel) {
           const range = document.createRange();
@@ -156,20 +147,13 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
       chip.onblur = () => {
         const text = (chip.textContent || '').trim();
         chip.setAttribute('contenteditable', 'false');
-
         const filled = text.length > 0;
         chip.style.background = filled ? 'rgba(249,115,22,0.2)' : 'rgba(249,115,22,0.08)';
-        chip.style.border = filled
-          ? '1px solid rgba(249,115,22,0.5)'
-          : '1px dashed rgba(249,115,22,0.35)';
+        chip.style.border = filled ? '1px solid rgba(249,115,22,0.5)' : '1px dashed rgba(249,115,22,0.35)';
         chip.style.color = filled ? '#fb923c' : 'rgba(249,115,22,0.65)';
         chip.style.fontWeight = filled ? '500' : '400';
         chip.style.fontStyle = filled ? 'normal' : 'italic';
-
-        if (!filled) {
-          chip.textContent = '';
-        }
-
+        if (!filled) chip.textContent = '';
         syncDomToModel();
       };
 
@@ -177,7 +161,6 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
         if (e.key === 'Enter') {
           e.preventDefault();
           e.stopPropagation();
-
           const allChips = container.querySelectorAll<HTMLSpanElement>('.inline-chip-editable');
           const arr = Array.from(allChips);
           const idx = arr.indexOf(chip);
@@ -204,13 +187,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
       chip.oninput = () => {
         const filled = (chip.textContent || '').trim().length > 0;
         chip.style.background = filled ? 'rgba(249,115,22,0.2)' : 'rgba(249,115,22,0.08)';
-        chip.style.border = filled
-          ? '1px solid rgba(249,115,22,0.5)'
-          : '1px dashed rgba(249,115,22,0.35)';
+        chip.style.border = filled ? '1px solid rgba(249,115,22,0.5)' : '1px dashed rgba(249,115,22,0.35)';
         chip.style.color = filled ? '#fb923c' : 'rgba(249,115,22,0.65)';
         chip.style.fontWeight = filled ? '500' : '400';
         chip.style.fontStyle = filled ? 'normal' : 'italic';
-
         syncDomToModel();
       };
 
@@ -220,60 +200,81 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
         document.execCommand('insertText', false, text);
       };
     });
-  }, []);
-
-  const syncDomToModel = useCallback(() => {
-    if (!containerRef.current) return;
-    const parsed = htmlToNodes(containerRef.current, mountedNodesRef.current);
-    mountedNodesRef.current = parsed;
-    onNodesChange(parsed);
-  }, [onNodesChange]);
-
-  const handleContainerInput = useCallback(() => {
-    syncDomToModel();
   }, [syncDomToModel]);
 
-  const handleContainerPaste = useCallback((e: React.ClipboardEvent) => {
-    const activeEl = document.activeElement;
-    if (activeEl && activeEl.classList.contains('inline-chip-editable')) {
-      return;
-    }
-    e.preventDefault();
-    const text = e.clipboardData.getData('text/plain');
-    document.execCommand('insertText', false, text);
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    const editor = document.createElement('div');
+    editor.contentEditable = 'true';
+    editor.className = 'w-full template-renderer-container';
+    Object.assign(editor.style, {
+      color: '#e0e0e0',
+      fontSize: '16px',
+      lineHeight: '26px',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      minHeight: '20px',
+      maxHeight: '200px',
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      wordBreak: 'break-word',
+      scrollbarWidth: 'none',
+      outline: 'none',
+      caretColor: '#e0e0e0',
+      whiteSpace: 'pre-wrap',
+    });
+
+    editor.innerHTML = nodesToHtml(nodes);
+    mountedNodesRef.current = nodes;
+    lastExternalSlotIds.current = getSlotIds(nodes);
+
+    editor.addEventListener('input', () => syncDomToModel());
+    editor.addEventListener('paste', (e) => {
+      const activeEl = document.activeElement;
+      if (activeEl && activeEl.classList.contains('inline-chip-editable')) return;
+      e.preventDefault();
+      const text = (e as ClipboardEvent).clipboardData?.getData('text/plain') || '';
+      document.execCommand('insertText', false, text);
+    });
+    editor.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+      }
+    });
+
+    wrapper.appendChild(editor);
+    editorRef.current = editor;
+    bindChipClicks(editor);
+
+    return () => {
+      if (wrapper.contains(editor)) {
+        wrapper.removeChild(editor);
+      }
+      editorRef.current = null;
+    };
   }, []);
 
-  const handleContainerKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
+  useEffect(() => {
+    if (!editorRef.current) return;
+
+    const currentSlotIds = getSlotIds(nodes);
+    if (currentSlotIds === lastExternalSlotIds.current) {
+      mountedNodesRef.current = nodes;
+      return;
     }
-  }, []);
+
+    editorRef.current.innerHTML = nodesToHtml(nodes);
+    mountedNodesRef.current = nodes;
+    lastExternalSlotIds.current = currentSlotIds;
+    bindChipClicks(editorRef.current);
+  }, [nodes, bindChipClicks]);
 
   return (
     <div
-      ref={containerRef}
-      contentEditable
-      suppressContentEditableWarning
-      onInput={handleContainerInput}
-      onPaste={handleContainerPaste}
-      onKeyDown={handleContainerKeyDown}
-      className="w-full template-renderer-container"
-      style={{
-        color: "#e0e0e0",
-        fontSize: "16px",
-        lineHeight: "26px",
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-        minHeight: "20px",
-        maxHeight: "200px",
-        overflowY: "auto",
-        overflowX: "hidden",
-        wordBreak: "break-word",
-        scrollbarWidth: "none",
-        msOverflowStyle: "none",
-        outline: "none",
-        caretColor: "#e0e0e0",
-        whiteSpace: "pre-wrap",
-      }}
+      ref={wrapperRef}
+      className="w-full"
+      style={{ minHeight: '20px' }}
     />
   );
 };
