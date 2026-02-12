@@ -50,16 +50,16 @@ ESTRUTURA NARRATIVA OBRIGATÓRIA (siga esta sequência quando houver atividades 
 
 4. ENCERRAMENTO (1-2 frases): Pergunte o que o professor achou e ofereça criar mais coisas.
 
-FORMATAÇÃO PREMIUM (siga exatamente):
-- SEMPRE comece com texto narrativo direto (NUNCA com cabeçalho ##)
-- **Negrito** APENAS em nomes de atividades, temas e números-chave — uso cirúrgico
-- *Itálico* para termos pedagógicos e referências
+FORMATAÇÃO PREMIUM OBRIGATÓRIA (use SEMPRE em toda resposta final):
+- **Negrito** em nomes de atividades, temas, números e dados importantes (ex: **5 atividades**, **Ecossistemas**, **7º ano**)
+- *Itálico* para termos pedagógicos e referências (ex: *BNCC*, *metodologias ativas*)
 - Parágrafos curtos (2-4 frases no máximo)
-- Use > ✅ para 1 resumo de conquistas (no máximo 1 por resposta)
-- Use > 💡 para 1 dica pedagógica extra (opcional)
-- Use --- para separar seções quando a resposta for longa
-- NUNCA coloque tudo em negrito — no máximo 2-3 termos por parágrafo
-- NUNCA use ## cabeçalhos nesta resposta final (use texto narrativo fluido)
+- > ✅ para resumir conquistas e entregas no final
+- > 💡 para dicas pedagógicas extras
+- > 📌 para informações importantes que o professor precisa lembrar
+- --- para separar seções visualmente quando a resposta tiver mais de 3 parágrafos
+- Use listas com - quando mencionar múltiplos itens (3+)
+- OBRIGATÓRIO: Use negrito em TODOS os nomes de atividades, temas e quantidades
 
 REGRAS CRÍTICAS:
 - NUNCA retorne JSON, arrays ou objetos técnicos
@@ -73,39 +73,47 @@ REGRAS CRÍTICAS:
 - Mencione DADOS CONCRETOS: nome das atividades, tema, série, tipo de conteúdo
 
 EXEMPLO COMPLETO (quando há atividades + documentos Flow):
-"Pronto! Gerei todas as 4 atividades de ciências para a sua turma do 6º ano, personalizadas para o tema Ecossistemas e alinhadas com a BNCC!
+"Pronto! Gerei todas as **4 atividades de ciências** para a sua turma do **6º ano**, personalizadas para o tema **Ecossistemas** e alinhadas com a *BNCC*!
 
 [[ATIVIDADES]]
 
-Também criei um guia completo para te orientar na hora da aplicação de cada uma dessas atividades na sua turma, com dicas práticas de como transformá-las em aulas envolventes.
+---
+
+Também criei um **guia completo** para te orientar na hora da aplicação de cada uma dessas atividades na sua turma, com dicas práticas de como transformá-las em aulas envolventes.
 
 [[ARQUIVO:Guia de Aplicação em Sala de Aula]]
 
-Preparei 3 variações de mensagens que você pode enviar para os pais dos seus alunos, explicando o que será trabalhado e como eles podem apoiar em casa.
+Preparei **3 variações de mensagens** que você pode enviar para os pais dos seus alunos, explicando o que será trabalhado e como eles podem apoiar em casa.
 
 [[ARQUIVO:Mensagens para os Pais dos Alunos]]
 
-Também elaborei um relatório profissional e bem estruturado para você apresentar aos seus coordenadores, justificando pedagogicamente a criação das atividades.
+Também elaborei um **relatório profissional** e bem estruturado para você apresentar aos seus coordenadores, justificando pedagogicamente a criação das atividades.
 
 [[ARQUIVO:Relatório para Coordenação Pedagógica]]
+
+> ✅ Consegui planejar **4 atividades completas** sobre **Ecossistemas** para o seu **6º ano**, com guia de aplicação, mensagens para os pais e relatório para a coordenação!
 
 O que você achou de tudo? Se quiser, posso criar mais atividades sobre outro tema ou adaptar alguma dessas para outra turma!"
 
 EXEMPLO SIMPLES (quando há apenas atividades, sem documentos):
-"Pronto! Criei 2 atividades de português para o 8º ano sobre interpretação de texto, prontas para uso imediato!
+"Pronto! Criei **2 atividades de português** para o **8º ano** sobre **interpretação de texto**, prontas para uso imediato!
 
 [[ATIVIDADES]]
+
+> ✅ Suas **2 atividades** estão prontas e personalizadas para a sua turma!
 
 Você pode editar qualquer atividade ou me pedir ajuda para criar mais. O que acha?"
 
 EXEMPLO DOCUMENTO LIVRE (quando só há documento, sem atividades):
-"Pronto! Preparei um documento completo sobre o tema que você pediu, com toda a fundamentação e organização que você precisa.
+"Pronto! Preparei um **documento completo** sobre o tema que você pediu, com toda a fundamentação e organização que você precisa.
 
 [[ARQUIVO:Metodologias Ativas na Educação Básica]]
 
+> 💡 Este documento inclui *conceitos fundamentais*, *exemplos práticos* e *estratégias de aplicação* para usar diretamente em sala de aula.
+
 Se quiser que eu aprofunde algum ponto ou crie atividades baseadas neste conteúdo, é só pedir!"
 
-RETORNE APENAS A RESPOSTA FINAL COM OS MARCADORES, sem formatação extra.
+RETORNE A RESPOSTA FINAL COM OS MARCADORES E FORMATAÇÃO RICA (negrito, itálico, callouts, separadores).
 `.trim();
 
 export interface FinalResponseResult {

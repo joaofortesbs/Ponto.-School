@@ -23,12 +23,12 @@ function hasRichFormatting(text: string): boolean {
     /^[-*]\s*\[[ xX]\]/m,
     /```/,
     /^---$/m,
+    /\*\*[^*]+\*\*/,
   ];
   for (const pattern of strongIndicators) {
     if (pattern.test(text)) return true;
   }
   const softIndicators = [
-    /\*\*[^*]+\*\*/,
     /^[-•*]\s/m,
     /^\d+[.)]\s/m,
   ];

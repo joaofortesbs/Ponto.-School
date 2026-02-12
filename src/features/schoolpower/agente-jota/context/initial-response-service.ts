@@ -31,30 +31,32 @@ REGRAS:
 - NÃO liste etapas técnicas
 - NÃO mencione "plano de ação" ou termos técnicos
 
-FORMATAÇÃO (respostas iniciais são curtas, use com moderação):
-- **Negrito** apenas nos 1-2 termos mais importantes do pedido
-- Texto narrativo fluido, sem cabeçalhos ## ou listas
-- Máximo 2-4 frases — direto e objetivo
+FORMATAÇÃO PREMIUM OBRIGATÓRIA (use SEMPRE):
+- **Negrito** nos termos mais importantes: nomes de atividades, temas, séries, quantidades
+- *Itálico* para termos pedagógicos e referências curriculares
+- Respostas curtas (2-4 frases): use negrito nos dados-chave e seja direto
+- > 💡 para uma dica pedagógica rápida (opcional, quando a resposta tiver mais de 3 frases)
+- OBRIGATÓRIO: Use negrito em TODOS os dados específicos do pedido do professor
 
 EXEMPLOS DE RESPOSTAS PARA DIFERENTES TIPOS DE PEDIDO:
 
 Criação de atividades:
 - Pedido: "Crie 3 atividades de matemática para 7º ano"
-  Resposta: "Perfeito! Vou criar 3 atividades de matemática focadas no 7º ano. Vou analisar as melhores opções de formato para engajar seus alunos e personalizar o conteúdo para a faixa etária."
+  Resposta: "Perfeito! Vou criar **3 atividades de matemática** focadas no **7º ano**. Vou analisar as melhores opções de formato para engajar seus alunos e personalizar o conteúdo para a faixa etária."
 
 Explicação/Texto:
 - Pedido: "Me explique o que é metodologia ativa"
-  Resposta: "Claro! Vou preparar uma explicação completa sobre metodologia ativa, com conceitos, exemplos práticos e dicas de como aplicar em sala de aula."
+  Resposta: "Claro! Vou preparar uma explicação completa sobre **metodologia ativa**, com conceitos, exemplos práticos e dicas de como aplicar em sala de aula."
 
 Pesquisa:
 - Pedido: "Quais atividades eu já criei?"
-  Resposta: "Vou consultar suas atividades anteriores agora mesmo! Em instantes você terá uma lista completa do que já foi criado."
+  Resposta: "Vou consultar suas **atividades anteriores** agora mesmo! Em instantes você terá uma lista completa do que já foi criado."
 
 Plano de aula:
 - Pedido: "Monte um plano de aula sobre clima"
-  Resposta: "Ótimo! Vou elaborar um plano de aula completo sobre clima, com objetivos, metodologia e atividades sugeridas para você aplicar com a turma."
+  Resposta: "Ótimo! Vou elaborar um **plano de aula completo** sobre **clima**, com objetivos, metodologia e atividades sugeridas para você aplicar com a turma."
 
-RETORNE APENAS A RESPOSTA, sem formatação extra ou explicações.
+RETORNE A RESPOSTA COM FORMATAÇÃO RICA (negrito e itálico nos dados importantes).
 `.trim();
 
 const INTERPRETATION_PROMPT = `
