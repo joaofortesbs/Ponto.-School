@@ -1,0 +1,80 @@
+Quero que você atue como um especialista em React + TypeScript + contenteditable, com experiência em construção de editores ricos e manipulação precisa de cursor e seleção. Você já montou para mim um componente de entrada de mensagem com fichas clicáveis (cards/slots) dentro de um campo editável, mas ainda existem problemas de interação finos que precisam ser corrigidos.
+
+Sintomas atuais
+Quando o usuário começa a escrever dentro de uma ficha editável, ele não consegue editar de forma natural o texto que já digitou lá dentro. É difícil colocar o cursor em um ponto específico no meio do texto, selecionar apenas uma parte da frase, apagar caracteres internos, etc.
+
+Ao clicar em uma ficha, o cursor | aparece primeiro antes do card e só depois vai para dentro da ficha, com um pequeno atraso visual. Isso dá sensação de lag e falta de precisão.
+
+Quero um comportamento sofisticado e robusto, sem flicker, sem pulos de cursor e sem limitações na edição, mesmo em digitação rápida, seleção com mouse, seleção com teclado e operações de copiar/colar.
+
+O que você precisa fazer
+Analisar a estrutura DOM e a configuração de contenteditable
+
+Revise a forma como cada ficha é renderizada: elementos usados (span, div etc.), atributos contentEditable, data-*, classes, e se existe aninhamento desnecessário que impacta o caret.
+
+Verifique se não há pais ou wrappers com contentEditable={false} atrapalhando a seleção interna do texto da ficha, ou spans não editáveis envolvendo o texto real.
+
+Corrigir o posicionamento e a entrada do cursor na ficha
+
+Ao clicar na ficha, o cursor deve ser posicionado diretamente dentro do texto dessa ficha, no ponto correspondente ao clique (ou, no mínimo, no fim do texto da ficha), sem aparecer antes do card e sem delay.
+
+Revise a lógica que salva e restaura a seleção/caret: se você estiver primeiro posicionando o cursor em um nó externo e depois movendo para dentro da ficha, isso causa exatamente o efeito de aparecer “antes do card”. Ajuste para que o Range final já aponte para o nó de texto interno da ficha.
+
+Permitir edição granular e natural dentro da ficha
+
+O usuário deve conseguir:
+
+clicar em qualquer ponto do texto da ficha e digitar ali;
+
+selecionar parte do texto da ficha com mouse ou Shift+Seta;
+
+apagar apenas um trecho da ficha sem destruir todo o card;
+
+copiar/colar texto dentro da ficha sem quebrar sua estrutura.
+
+Adapte o modelo de estado e os handlers de eventos para que a ficha seja tratada como um “token” lógico, mas internamente tenha um nó de texto comum sobre o qual o navegador controla a seleção. Não recrie o elemento da ficha a cada keypress (para não perder a seleção).
+
+Revisar a estratégia de controle do contenteditable
+
+Se o componente estiver totalmente controlado, evite re-renderizações destrutivas a cada digitação que recriem os nós DOM, pois isso faz o cursor pular e prejudica a edição interna.
+
+Considere uma abordagem mais estável:
+
+manter uma estrutura de nós (texto + ficha) estável,
+
+atualizar apenas o valor do texto da ficha correspondente,
+
+e usar a Selection API apenas quando realmente necessário para preservar o caret.
+
+Robustez e critérios de aceitação
+
+A solução só será considerada correta se:
+
+Clicar em qualquer parte visível da ficha coloca o cursor exatamente ali, sem piscar antes fora do card.
+
+O texto dentro da ficha se comporta como texto normal: fácil de selecionar, editar, copiar e colar em qualquer posição.
+
+Clicar fora das fichas permite editar normalmente o texto “solto” da mensagem.
+
+O comportamento permanece estável em: digitação rápida, seleção de grandes trechos incluindo fichas, e colagem de conteúdo que misture texto e fichas.
+
+Entregáveis
+Ao finalizar, me entregue:
+
+O código atualizado do componente de input (ou dos trechos relevantes) mostrando como você:
+
+renderiza as fichas e o texto dentro do contenteditable;
+
+configura contentEditable/contenteditable;
+
+posiciona e mantém o cursor dentro das fichas.
+
+Uma explicação técnica objetiva sobre:
+
+qual era a causa do cursor aparecer antes da ficha e por que havia dificuldade em editar o texto interno;
+
+qual estratégia você adotou para corrigir isso (DOM, seleção, controle/semi‑controle do editor);
+
+como essa solução torna o sistema mais robusto e resistente a bugs típicos de contenteditable em React.
+
+Não faça apenas um ajuste superficial: quero uma solução de nível de produto, comparável à experiência fluida de edição inline de ferramentas como Manus AI.

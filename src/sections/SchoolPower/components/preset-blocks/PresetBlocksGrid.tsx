@@ -16,20 +16,20 @@ const PRESET_BLOCKS: PresetBlock[] = [
     id: "salve-semana",
     title: "Salve minha semana de aulas",
     description: "Crie todas as suas aulas da semana com todas as atividades prontas e de maneira automatizada! E já envie elas para os seus alunos agora mesmo!",
-    prompt: "Jota, assuma o controle da minha semana letiva. Preciso que você planeje aulas para a turma [Nome da Turma] sobre os temas [Tópicos da Semana]. Considere que tenho [Quantidade] aulas disponíveis. Use uma abordagem focada em [Estilo: Engajamento/Revisão/Conteúdo Denso]. Ao finalizar, organize tudo no meu calendário e prepare o Dossiê Ponto. Flow completo.",
+    prompt: "Jota, assuma o controle da minha semana letiva. Preciso que você planeje aulas para a turma [Nome da Turma] sobre os temas [Tópicos da Semana]. Considere que tenho [Quantidade] aulas disponíveis. Use uma abordagem focada em [Seu estilo]. Ao finalizar, organize tudo no meu calendário e prepare o Dossiê Ponto. Flow completo.",
     iconType: "save-week",
   },
   {
     id: "transforme-arquivos",
     title: "Transforme arquivos em atividades",
     description: "Envie todas as suas atividades e arquivos antigos e engessados e transforme eles em atividades interativas já prontas para os seus alunos!",
-    prompt: "Analise os arquivos anexados e extraia a essência pedagógica deles. Quero que você transforme esse conteúdo em [Tipo de Atividade: Quiz/Flashcards/Desafio] para alunos de [Nível Escolar]. Adicione um toque de [Vibe: Humor/Curiosidade/Competição] e gere o Roadmap de Aplicação para eu usar amanhã.",
+    prompt: "Analise os arquivos anexados e extraia a essência pedagógica deles. Quero que você transforme esse conteúdo em [Tipo de atividade] para alunos de [Nível Escolar]. Adicione um toque de [Vibe: Humor/Curiosidade/Competição] e gere o Roadmap de Aplicação para eu usar amanhã.",
     iconType: "transform-files",
   },
 ];
 
 const GRID_CONFIG = {
-  maxWidth: 596,
+  maxWidth: 720,
   gap: 12,
   cardBorderRadius: 16,
   cardPaddingX: 16,

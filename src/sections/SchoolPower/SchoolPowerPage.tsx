@@ -33,10 +33,10 @@ const GeminiApiMonitor = import.meta.env.DEV
 
 const PRESET_GRID_POSITION = {
   desktop: {
-    bottomOffset: -65,
+    bottomOffset: -105,
   },
   mobile: {
-    bottomOffset: -70,
+    bottomOffset: -110,
   },
 } as const;
 

@@ -11,6 +11,33 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#39;');
 }
 
+const CHIP_STYLES_FILLED = {
+  background: 'rgba(249,115,22,0.2)',
+  border: '1px solid rgba(249,115,22,0.5)',
+  color: '#fb923c',
+  fontWeight: '500',
+  fontStyle: 'normal',
+} as const;
+
+const CHIP_STYLES_EMPTY = {
+  background: 'rgba(249,115,22,0.08)',
+  border: '1px dashed rgba(249,115,22,0.35)',
+  color: 'rgba(249,115,22,0.65)',
+  fontWeight: '400',
+  fontStyle: 'italic',
+} as const;
+
+const CHIP_BASE_STYLES = 'display:inline-block;border-radius:8px;padding:2px 10px;margin:0 2px;vertical-align:baseline;outline:none;caret-color:#f97316;cursor:text;min-width:40px;word-break:break-word;white-space:pre-wrap;-webkit-user-modify:read-write-plaintext-only';
+
+function applyChipVisualState(chip: HTMLSpanElement, filled: boolean) {
+  const styles = filled ? CHIP_STYLES_FILLED : CHIP_STYLES_EMPTY;
+  chip.style.background = styles.background;
+  chip.style.border = styles.border;
+  chip.style.color = styles.color;
+  chip.style.fontWeight = styles.fontWeight;
+  chip.style.fontStyle = styles.fontStyle;
+}
+
 function nodesToHtml(nodes: PromptNode[]): string {
   return nodes.map((node) => {
     if (node.type === 'text') {
@@ -18,7 +45,8 @@ function nodesToHtml(nodes: PromptNode[]): string {
     }
     const filled = node.value.trim().length > 0;
     const displayText = filled ? escapeHtml(node.value) : '';
-    return `<span class="inline-chip-editable" data-slot-id="${escapeHtml(node.id)}" data-slot-name="${escapeHtml(node.name)}" data-placeholder="${escapeHtml(node.placeholder)}" contenteditable="false" style="display:inline-block;background:${filled ? 'rgba(249,115,22,0.2)' : 'rgba(249,115,22,0.08)'};border:1px ${filled ? 'solid rgba(249,115,22,0.5)' : 'dashed rgba(249,115,22,0.35)'};border-radius:8px;padding:2px 10px;margin:0 2px;color:${filled ? '#fb923c' : 'rgba(249,115,22,0.65)'};font-weight:${filled ? '500' : '400'};font-style:${filled ? 'normal' : 'italic'};vertical-align:baseline;outline:none;caret-color:#f97316;cursor:text;min-width:40px;word-break:break-word;white-space:pre-wrap">${displayText}</span>`;
+    const s = filled ? CHIP_STYLES_FILLED : CHIP_STYLES_EMPTY;
+    return `<span class="inline-chip-editable" data-slot-id="${escapeHtml(node.id)}" data-slot-name="${escapeHtml(node.name)}" data-placeholder="${escapeHtml(node.placeholder)}" contenteditable="true" style="${CHIP_BASE_STYLES};background:${s.background};border:${s.border};color:${s.color};font-weight:${s.fontWeight};font-style:${s.fontStyle}">${displayText}</span>`;
   }).join('');
 }
 
@@ -107,6 +135,36 @@ function htmlToNodes(container: HTMLElement, originalNodes: PromptNode[]): Promp
   return result;
 }
 
+function placeCaretAtClickPoint(chip: HTMLSpanElement, clientX: number, clientY: number) {
+  const sel = window.getSelection();
+  if (!sel) return;
+
+  if ((document as any).caretRangeFromPoint) {
+    const range = (document as any).caretRangeFromPoint(clientX, clientY) as Range | null;
+    if (range && chip.contains(range.startContainer)) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+      return;
+    }
+  } else if ((document as any).caretPositionFromPoint) {
+    const pos = (document as any).caretPositionFromPoint(clientX, clientY);
+    if (pos && chip.contains(pos.offsetNode)) {
+      const range = document.createRange();
+      range.setStart(pos.offsetNode, pos.offset);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      return;
+    }
+  }
+
+  const range = document.createRange();
+  range.selectNodeContents(chip);
+  range.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
 interface TemplateRendererProps {
   nodes: PromptNode[];
   onNodesChange: (nodes: PromptNode[]) => void;
@@ -127,37 +185,33 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
     onNodesChangeRef.current(parsed);
   }, []);
 
-  const bindChipClicks = useCallback((container: HTMLElement) => {
+  const bindChipEvents = useCallback((container: HTMLElement) => {
     const chips = container.querySelectorAll<HTMLSpanElement>('.inline-chip-editable');
     chips.forEach((chip) => {
-      chip.onclick = (e) => {
-        e.stopPropagation();
-        chip.setAttribute('contenteditable', 'true');
-        chip.focus();
-        const sel = window.getSelection();
-        if (sel) {
-          const range = document.createRange();
-          range.selectNodeContents(chip);
-          range.collapse(false);
-          sel.removeAllRanges();
-          sel.addRange(range);
-        }
-      };
 
-      chip.onblur = () => {
+      chip.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+
+        requestAnimationFrame(() => {
+          chip.focus();
+          placeCaretAtClickPoint(chip, e.clientX, e.clientY);
+        });
+      });
+
+      chip.addEventListener('focus', () => {
+        const filled = (chip.textContent || '').trim().length > 0;
+        applyChipVisualState(chip, filled || true);
+      });
+
+      chip.addEventListener('blur', () => {
         const text = (chip.textContent || '').trim();
-        chip.setAttribute('contenteditable', 'false');
         const filled = text.length > 0;
-        chip.style.background = filled ? 'rgba(249,115,22,0.2)' : 'rgba(249,115,22,0.08)';
-        chip.style.border = filled ? '1px solid rgba(249,115,22,0.5)' : '1px dashed rgba(249,115,22,0.35)';
-        chip.style.color = filled ? '#fb923c' : 'rgba(249,115,22,0.65)';
-        chip.style.fontWeight = filled ? '500' : '400';
-        chip.style.fontStyle = filled ? 'normal' : 'italic';
+        applyChipVisualState(chip, filled);
         if (!filled) chip.textContent = '';
         syncDomToModel();
-      };
+      });
 
-      chip.onkeydown = (e) => {
+      chip.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
           e.stopPropagation();
@@ -165,7 +219,15 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
           const arr = Array.from(allChips);
           const idx = arr.indexOf(chip);
           if (idx >= 0 && idx < arr.length - 1) {
-            arr[idx + 1].click();
+            arr[idx + 1].focus();
+            const sel = window.getSelection();
+            if (sel) {
+              const range = document.createRange();
+              range.selectNodeContents(arr[idx + 1]);
+              range.collapse(false);
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
           } else {
             chip.blur();
           }
@@ -177,28 +239,32 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
           const idx = arr.indexOf(chip);
           const nextIdx = e.shiftKey ? idx - 1 : idx + 1;
           if (nextIdx >= 0 && nextIdx < arr.length) {
-            arr[nextIdx].click();
+            arr[nextIdx].focus();
+            const sel = window.getSelection();
+            if (sel) {
+              const range = document.createRange();
+              range.selectNodeContents(arr[nextIdx]);
+              range.collapse(false);
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
           } else {
             chip.blur();
           }
         }
-      };
+      });
 
-      chip.oninput = () => {
+      chip.addEventListener('input', () => {
         const filled = (chip.textContent || '').trim().length > 0;
-        chip.style.background = filled ? 'rgba(249,115,22,0.2)' : 'rgba(249,115,22,0.08)';
-        chip.style.border = filled ? '1px solid rgba(249,115,22,0.5)' : '1px dashed rgba(249,115,22,0.35)';
-        chip.style.color = filled ? '#fb923c' : 'rgba(249,115,22,0.65)';
-        chip.style.fontWeight = filled ? '500' : '400';
-        chip.style.fontStyle = filled ? 'normal' : 'italic';
+        applyChipVisualState(chip, filled);
         syncDomToModel();
-      };
+      });
 
-      chip.onpaste = (e) => {
+      chip.addEventListener('paste', (e) => {
         e.preventDefault();
-        const text = e.clipboardData?.getData('text/plain') || '';
+        const text = (e as ClipboardEvent).clipboardData?.getData('text/plain') || '';
         document.execCommand('insertText', false, text);
-      };
+      });
     });
   }, [syncDomToModel]);
 
@@ -245,7 +311,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
 
     wrapper.appendChild(editor);
     editorRef.current = editor;
-    bindChipClicks(editor);
+    bindChipEvents(editor);
 
     return () => {
       if (wrapper.contains(editor)) {
@@ -267,8 +333,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
     editorRef.current.innerHTML = nodesToHtml(nodes);
     mountedNodesRef.current = nodes;
     lastExternalSlotIds.current = currentSlotIds;
-    bindChipClicks(editorRef.current);
-  }, [nodes, bindChipClicks]);
+    bindChipEvents(editorRef.current);
+  }, [nodes, bindChipEvents]);
 
   return (
     <div
