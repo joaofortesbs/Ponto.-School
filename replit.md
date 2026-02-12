@@ -7,6 +7,11 @@ Ponto. School is an AI-powered educational platform designed to provide personal
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+- **2026-02-12**: Premium Typography & Design Overhaul (Manus AI-level quality):
+  1. **RichTextMessage.tsx Complete Redesign**: Unified Inter font stack across ALL block types (eliminated Georgia serif mixing). Body text 14.5px/1.75 line-height, headers H1:20px/700, H2:17px/700, H3:15px/600 with negative letter-spacing. Max-width 680px constraint for readability. All renderers use inline styles for precise control. CSS-in-JS `<style>` tag handles inline elements (strong, em, code, a). Generous vertical spacing: 14px for special blocks, 6px for paragraphs. Subtle gradient delimiter, polished tables with alternating rows, callouts with 3px left accent border.
+  2. **AssistantMessage.tsx + StructuredResponseMessage.tsx**: "Jota" label unified to Inter 14px/700 with -0.01em tracking. Consistent design system across all message types.
+  3. **Prompt System Upgrade**: System prompt "FERRAMENTAS DE FORMATAÇÃO RICA" replaced with "FORMATAÇÃO PREMIUM" enforcing: paragraph length limits (2-4 sentences max), heading hierarchy (## and ### only), surgical bold usage (max 30% of text), response-length-adaptive formatting (short=plain, medium=bold+list, long=headings+callouts). Initial-response simplified to 2-4 sentences with minimal formatting. Final-response enforces narrative flow without headers, max 1 callout per response.
+  KEY DESIGN TOKENS: Font: Inter/-apple-system/BlinkMacSystemFont. Body: 14.5px/400/1.75/#fff82%. H1: 20px/700/1.35/#fff95%. Code: JetBrains Mono 13px. Max-width: 680px.
 - **2026-02-12**: Preset Blocks Grid + Interactive Slot Chips:
   1. **PresetBlocksGrid**: 2-column responsive grid (596px width matching ChatInput) with GRID_CONFIG for precise sizing. Positioned inside 900x617 container via PRESET_GRID_POSITION config.
   2. **Interactive Slot System**: `promptNodes.ts` (PromptNode types, parsePromptToNodes parser, compilePrompt compiler), `SlotChipEditor.tsx` (inline contentEditable chips — no modals/popovers). `[Placeholder]` patterns become inline-editable chips.

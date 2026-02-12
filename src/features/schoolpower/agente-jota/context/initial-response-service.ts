@@ -31,11 +31,10 @@ REGRAS:
 - NÃO liste etapas técnicas
 - NÃO mencione "plano de ação" ou termos técnicos
 
-FORMATAÇÃO RICA (use quando a resposta for mais elaborada):
-- Use **negrito** para destacar pontos importantes
-- Use listas com - para organizar informações
-- Use > 💡 para dicas ou destaques
-- Use --- para separar seções quando necessário
+FORMATAÇÃO (respostas iniciais são curtas, use com moderação):
+- **Negrito** apenas nos 1-2 termos mais importantes do pedido
+- Texto narrativo fluido, sem cabeçalhos ## ou listas
+- Máximo 2-4 frases — direto e objetivo
 
 EXEMPLOS DE RESPOSTAS PARA DIFERENTES TIPOS DE PEDIDO:
 

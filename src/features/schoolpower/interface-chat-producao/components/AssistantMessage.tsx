@@ -22,7 +22,18 @@ export function AssistantMessage({ content, isThinking = false }: AssistantMessa
         </div>
         
         <div className="flex flex-col min-h-[48px] py-1">
-          <span className="text-white font-bold text-[15px] leading-tight mb-1">Jota</span>
+          <span
+            className="leading-tight mb-2"
+            style={{
+              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+              fontSize: '14px',
+              fontWeight: '700',
+              color: 'rgba(255, 255, 255, 0.95)',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Jota
+          </span>
           
           <motion.div 
             className="mt-auto"
@@ -36,7 +47,16 @@ export function AssistantMessage({ content, isThinking = false }: AssistantMessa
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                <span className="text-white/70 text-sm italic">Pensando...</span>
+                <span
+                  style={{
+                    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+                    fontSize: '14px',
+                    fontStyle: 'italic',
+                    color: 'rgba(255, 255, 255, 0.55)',
+                  }}
+                >
+                  Pensando...
+                </span>
                 <motion.div 
                   className="flex gap-1"
                   initial={{ opacity: 0.5 }}

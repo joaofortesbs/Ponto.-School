@@ -152,7 +152,18 @@ export function StructuredResponseMessage({ blocks, onOpenArtifact, onOpenActivi
         </div>
         
         <div className="flex flex-col min-h-[48px] py-1 flex-1">
-          <span className="text-white font-bold text-[15px] leading-tight mb-1">Jota</span>
+          <span
+            className="leading-tight mb-2"
+            style={{
+              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+              fontSize: '14px',
+              fontWeight: '700',
+              color: 'rgba(255, 255, 255, 0.95)',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Jota
+          </span>
           
           <div className="mt-auto">
             {blocks.map((block, idx) => {

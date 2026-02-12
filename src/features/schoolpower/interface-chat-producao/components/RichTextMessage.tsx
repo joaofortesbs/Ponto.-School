@@ -3,13 +3,15 @@ import { convertTextContentToBlocks } from '../../components/Modal-Versao-Texto/
 import { formatInlineMarkdown } from './artifact-editorjs-converter';
 import type { EditorJSBlock } from './artifact-editorjs-converter';
 
-const CALLOUT_STYLES: Record<string, { bg: string; border: string; iconBg: string }> = {
-  tip: { bg: 'rgba(34, 197, 94, 0.06)', border: 'rgba(34, 197, 94, 0.2)', iconBg: 'rgba(34, 197, 94, 0.15)' },
-  warning: { bg: 'rgba(234, 179, 8, 0.06)', border: 'rgba(234, 179, 8, 0.2)', iconBg: 'rgba(234, 179, 8, 0.15)' },
-  important: { bg: 'rgba(99, 102, 241, 0.06)', border: 'rgba(99, 102, 241, 0.2)', iconBg: 'rgba(99, 102, 241, 0.15)' },
-  danger: { bg: 'rgba(239, 68, 68, 0.06)', border: 'rgba(239, 68, 68, 0.2)', iconBg: 'rgba(239, 68, 68, 0.15)' },
-  success: { bg: 'rgba(34, 197, 94, 0.06)', border: 'rgba(34, 197, 94, 0.2)', iconBg: 'rgba(34, 197, 94, 0.15)' },
-  info: { bg: 'rgba(59, 130, 246, 0.06)', border: 'rgba(59, 130, 246, 0.2)', iconBg: 'rgba(59, 130, 246, 0.15)' },
+const FONT_STACK = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+
+const CALLOUT_STYLES: Record<string, { bg: string; border: string; accent: string; iconBg: string }> = {
+  tip: { bg: 'rgba(34, 197, 94, 0.05)', border: 'rgba(34, 197, 94, 0.15)', accent: 'rgba(34, 197, 94, 0.4)', iconBg: 'rgba(34, 197, 94, 0.1)' },
+  warning: { bg: 'rgba(234, 179, 8, 0.05)', border: 'rgba(234, 179, 8, 0.15)', accent: 'rgba(234, 179, 8, 0.4)', iconBg: 'rgba(234, 179, 8, 0.1)' },
+  important: { bg: 'rgba(99, 102, 241, 0.05)', border: 'rgba(99, 102, 241, 0.15)', accent: 'rgba(99, 102, 241, 0.4)', iconBg: 'rgba(99, 102, 241, 0.1)' },
+  danger: { bg: 'rgba(239, 68, 68, 0.05)', border: 'rgba(239, 68, 68, 0.15)', accent: 'rgba(239, 68, 68, 0.4)', iconBg: 'rgba(239, 68, 68, 0.1)' },
+  success: { bg: 'rgba(34, 197, 94, 0.05)', border: 'rgba(34, 197, 94, 0.15)', accent: 'rgba(34, 197, 94, 0.4)', iconBg: 'rgba(34, 197, 94, 0.1)' },
+  info: { bg: 'rgba(59, 130, 246, 0.05)', border: 'rgba(59, 130, 246, 0.15)', accent: 'rgba(59, 130, 246, 0.4)', iconBg: 'rgba(59, 130, 246, 0.1)' },
 };
 
 function hasRichFormatting(text: string): boolean {
@@ -43,18 +45,27 @@ function RenderBlock({ block }: { block: EditorJSBlock }) {
     case 'header': {
       const level = (block.data.level as number) || 2;
       const text = block.data.text as string;
-      const sizeMap: Record<number, string> = {
-        1: 'text-[17px] font-bold',
-        2: 'text-[15px] font-bold',
-        3: 'text-[14px] font-semibold',
-        4: 'text-[13px] font-semibold',
-        5: 'text-[13px] font-medium',
-        6: 'text-[12px] font-medium',
+      const styles: Record<number, { size: string; weight: string; tracking: string; mt: string }> = {
+        1: { size: '20px', weight: '700', tracking: '-0.02em', mt: '28px' },
+        2: { size: '17px', weight: '700', tracking: '-0.01em', mt: '24px' },
+        3: { size: '15px', weight: '600', tracking: '0', mt: '20px' },
+        4: { size: '14px', weight: '600', tracking: '0', mt: '16px' },
+        5: { size: '13px', weight: '600', tracking: '0.01em', mt: '14px' },
+        6: { size: '12px', weight: '600', tracking: '0.02em', mt: '12px' },
       };
+      const s = styles[level] || styles[3];
       return (
         <div
-          className={`${sizeMap[level] || sizeMap[3]} text-white/95 mt-3 mb-1`}
-          style={{ fontFamily: "'Inter', sans-serif" }}
+          style={{
+            fontFamily: FONT_STACK,
+            fontSize: s.size,
+            fontWeight: s.weight,
+            letterSpacing: s.tracking,
+            lineHeight: '1.35',
+            color: 'rgba(255, 255, 255, 0.95)',
+            marginTop: s.mt,
+            marginBottom: '8px',
+          }}
           dangerouslySetInnerHTML={{ __html: text }}
         />
       );
@@ -65,8 +76,16 @@ function RenderBlock({ block }: { block: EditorJSBlock }) {
       if (!text?.trim()) return null;
       return (
         <p
-          className="text-white/85 text-[13px] leading-[1.7] my-1"
-          style={{ fontFamily: "'Georgia', serif" }}
+          style={{
+            fontFamily: FONT_STACK,
+            fontSize: '14.5px',
+            fontWeight: '400',
+            lineHeight: '1.75',
+            color: 'rgba(255, 255, 255, 0.82)',
+            marginTop: '6px',
+            marginBottom: '6px',
+            letterSpacing: '0.01em',
+          }}
           dangerouslySetInnerHTML={{ __html: text }}
         />
       );
@@ -77,12 +96,26 @@ function RenderBlock({ block }: { block: EditorJSBlock }) {
       const isOrdered = block.data.style === 'ordered';
       const Tag = isOrdered ? 'ol' : 'ul';
       return (
-        <Tag className={`my-1.5 pl-4 space-y-0.5 ${isOrdered ? 'list-decimal' : 'list-disc'}`}>
+        <Tag
+          style={{
+            marginTop: '10px',
+            marginBottom: '10px',
+            paddingLeft: '20px',
+            listStyleType: isOrdered ? 'decimal' : 'disc',
+          }}
+        >
           {items.map((item, idx) => (
             <li
               key={idx}
-              className="text-white/85 text-[13px] leading-[1.6]"
-              style={{ fontFamily: "'Georgia', serif" }}
+              style={{
+                fontFamily: FONT_STACK,
+                fontSize: '14.5px',
+                fontWeight: '400',
+                lineHeight: '1.7',
+                color: 'rgba(255, 255, 255, 0.82)',
+                marginBottom: '4px',
+                paddingLeft: '4px',
+              }}
               dangerouslySetInnerHTML={{ __html: item }}
             />
           ))}
@@ -93,20 +126,33 @@ function RenderBlock({ block }: { block: EditorJSBlock }) {
     case 'checklist': {
       const items = block.data.items as { text: string; checked: boolean }[];
       return (
-        <div className="my-1.5 space-y-1">
+        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           {items.map((item, idx) => (
-            <div key={idx} className="flex items-start gap-2">
+            <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '6px' }}>
               <div
-                className={`w-4 h-4 rounded border mt-0.5 flex items-center justify-center flex-shrink-0 ${
-                  item.checked
-                    ? 'bg-green-500/20 border-green-500/40'
-                    : 'border-white/20 bg-white/5'
-                }`}
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '4px',
+                  border: item.checked ? '1.5px solid rgba(34, 197, 94, 0.5)' : '1.5px solid rgba(255, 255, 255, 0.2)',
+                  background: item.checked ? 'rgba(34, 197, 94, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  marginTop: '2px',
+                }}
               >
-                {item.checked && <span className="text-green-400 text-[10px]">✓</span>}
+                {item.checked && <span style={{ color: '#4ade80', fontSize: '11px', fontWeight: '700' }}>✓</span>}
               </div>
               <span
-                className={`text-[13px] leading-[1.6] ${item.checked ? 'text-white/50 line-through' : 'text-white/85'}`}
+                style={{
+                  fontFamily: FONT_STACK,
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                  color: item.checked ? 'rgba(255, 255, 255, 0.45)' : 'rgba(255, 255, 255, 0.82)',
+                  textDecoration: item.checked ? 'line-through' : 'none',
+                }}
                 dangerouslySetInnerHTML={{ __html: item.text }}
               />
             </div>
@@ -120,16 +166,33 @@ function RenderBlock({ block }: { block: EditorJSBlock }) {
       const withHeadings = block.data.withHeadings as boolean;
       if (!rows?.length) return null;
       return (
-        <div className="my-2 overflow-x-auto rounded-lg border border-white/10">
-          <table className="w-full text-[12px]">
+        <div
+          style={{
+            marginTop: '14px',
+            marginBottom: '14px',
+            overflowX: 'auto',
+            borderRadius: '10px',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'rgba(255, 255, 255, 0.02)',
+          }}
+        >
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13.5px' }}>
             {withHeadings && rows.length > 0 && (
               <thead>
-                <tr className="bg-white/5">
+                <tr style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
                   {rows[0].map((cell, ci) => (
                     <th
                       key={ci}
-                      className="px-3 py-1.5 text-left text-white/90 font-semibold border-b border-white/10"
-                      style={{ fontFamily: "'Inter', sans-serif" }}
+                      style={{
+                        fontFamily: FONT_STACK,
+                        padding: '10px 14px',
+                        textAlign: 'left',
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontWeight: '600',
+                        fontSize: '13px',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                        letterSpacing: '0.01em',
+                      }}
                       dangerouslySetInnerHTML={{ __html: cell }}
                     />
                   ))}
@@ -138,12 +201,18 @@ function RenderBlock({ block }: { block: EditorJSBlock }) {
             )}
             <tbody>
               {rows.slice(withHeadings ? 1 : 0).map((row, ri) => (
-                <tr key={ri} className={ri % 2 === 0 ? 'bg-white/[0.02]' : ''}>
+                <tr key={ri} style={{ background: ri % 2 === 1 ? 'rgba(255, 255, 255, 0.015)' : 'transparent' }}>
                   {row.map((cell, ci) => (
                     <td
                       key={ci}
-                      className="px-3 py-1.5 text-white/80 border-b border-white/5"
-                      style={{ fontFamily: "'Georgia', serif" }}
+                      style={{
+                        fontFamily: FONT_STACK,
+                        padding: '9px 14px',
+                        color: 'rgba(255, 255, 255, 0.75)',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+                        fontSize: '13.5px',
+                        lineHeight: '1.5',
+                      }}
                       dangerouslySetInnerHTML={{ __html: cell }}
                     />
                   ))}
@@ -158,10 +227,26 @@ function RenderBlock({ block }: { block: EditorJSBlock }) {
     case 'quote': {
       const text = block.data.text as string;
       return (
-        <blockquote className="my-2 pl-3 border-l-2 border-indigo-400/40">
+        <blockquote
+          style={{
+            marginTop: '14px',
+            marginBottom: '14px',
+            paddingLeft: '16px',
+            borderLeft: '3px solid rgba(99, 102, 241, 0.4)',
+            background: 'rgba(99, 102, 241, 0.03)',
+            borderRadius: '0 8px 8px 0',
+            padding: '10px 16px',
+          }}
+        >
           <p
-            className="text-white/75 text-[13px] italic leading-[1.6]"
-            style={{ fontFamily: "'Georgia', serif" }}
+            style={{
+              fontFamily: FONT_STACK,
+              fontSize: '14px',
+              fontStyle: 'italic',
+              lineHeight: '1.7',
+              color: 'rgba(255, 255, 255, 0.72)',
+              margin: 0,
+            }}
             dangerouslySetInnerHTML={{ __html: text }}
           />
         </blockquote>
@@ -175,16 +260,44 @@ function RenderBlock({ block }: { block: EditorJSBlock }) {
       const style = CALLOUT_STYLES[calloutType] || CALLOUT_STYLES.info;
       return (
         <div
-          className="my-2 rounded-lg px-3 py-2 flex items-start gap-2"
-          style={{ background: style.bg, border: `1px solid ${style.border}` }}
+          style={{
+            marginTop: '14px',
+            marginBottom: '14px',
+            borderRadius: '10px',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px',
+            background: style.bg,
+            border: `1px solid ${style.border}`,
+            borderLeft: `3px solid ${style.accent}`,
+          }}
         >
           {icon && (
-            <span className="text-sm flex-shrink-0 mt-0.5 w-5 h-5 flex items-center justify-center rounded" style={{ background: style.iconBg }}>
+            <span
+              style={{
+                fontSize: '15px',
+                flexShrink: 0,
+                marginTop: '1px',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '6px',
+                background: style.iconBg,
+              }}
+            >
               {icon}
             </span>
           )}
           <span
-            className="text-white/85 text-[13px] leading-[1.6]"
+            style={{
+              fontFamily: FONT_STACK,
+              fontSize: '14px',
+              lineHeight: '1.65',
+              color: 'rgba(255, 255, 255, 0.85)',
+            }}
             dangerouslySetInnerHTML={{ __html: text }}
           />
         </div>
@@ -194,14 +307,39 @@ function RenderBlock({ block }: { block: EditorJSBlock }) {
     case 'code': {
       const code = block.data.code as string;
       return (
-        <pre className="my-2 rounded-lg bg-[#0a0a1a] border border-white/10 p-3 overflow-x-auto">
-          <code className="text-[12px] text-green-300/90 font-mono whitespace-pre-wrap">{code}</code>
+        <pre
+          style={{
+            marginTop: '14px',
+            marginBottom: '14px',
+            borderRadius: '10px',
+            background: 'rgba(0, 0, 10, 0.6)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            padding: '14px 16px',
+            overflowX: 'auto',
+          }}
+        >
+          <code
+            style={{
+              fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', Menlo, monospace",
+              fontSize: '13px',
+              lineHeight: '1.6',
+              color: 'rgba(74, 222, 128, 0.9)',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+            }}
+          >
+            {code}
+          </code>
         </pre>
       );
     }
 
     case 'delimiter':
-      return <hr className="my-3 border-white/10" />;
+      return (
+        <div style={{ marginTop: '20px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ flex: 1, height: '1px', background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent)' }} />
+        </div>
+      );
 
     default:
       return null;
@@ -222,14 +360,66 @@ export function RichTextMessage({ content }: RichTextMessageProps) {
 
   if (!isRich) {
     return (
-      <p className="text-white/90 text-sm leading-relaxed whitespace-pre-wrap">
+      <p
+        style={{
+          fontFamily: FONT_STACK,
+          fontSize: '14.5px',
+          fontWeight: '400',
+          lineHeight: '1.75',
+          color: 'rgba(255, 255, 255, 0.85)',
+          whiteSpace: 'pre-wrap',
+          letterSpacing: '0.01em',
+          margin: 0,
+        }}
+      >
         {content}
       </p>
     );
   }
 
   return (
-    <div className="rich-text-chat-message">
+    <div
+      className="rich-text-chat-message"
+      style={{
+        maxWidth: '680px',
+        fontFamily: FONT_STACK,
+      }}
+    >
+      <style>{`
+        .rich-text-chat-message strong,
+        .rich-text-chat-message b {
+          color: rgba(255, 255, 255, 0.95);
+          font-weight: 600;
+        }
+        .rich-text-chat-message em,
+        .rich-text-chat-message i {
+          color: rgba(255, 255, 255, 0.78);
+          font-style: italic;
+        }
+        .rich-text-chat-message code:not(pre code) {
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 4px;
+          padding: 1px 5px;
+          font-size: 13px;
+          font-family: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+          color: rgba(251, 146, 60, 0.9);
+        }
+        .rich-text-chat-message a {
+          color: rgba(99, 102, 241, 0.9);
+          text-decoration: underline;
+          text-decoration-color: rgba(99, 102, 241, 0.3);
+          text-underline-offset: 2px;
+        }
+        .rich-text-chat-message a:hover {
+          color: rgba(129, 140, 248, 1);
+          text-decoration-color: rgba(99, 102, 241, 0.6);
+        }
+        .rich-text-chat-message > div:first-child,
+        .rich-text-chat-message > p:first-child {
+          margin-top: 0 !important;
+        }
+      `}</style>
       {blocks.map((block) => (
         <RenderBlock key={block.id} block={block} />
       ))}
