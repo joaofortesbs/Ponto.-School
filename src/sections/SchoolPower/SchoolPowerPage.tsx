@@ -232,7 +232,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 className="absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto"
                 style={{
                   bottom: `${isMobile && isQuizMode ? PRESET_GRID_POSITION.mobile.bottomOffset : PRESET_GRID_POSITION.desktop.bottomOffset}px`,
-                  width: isMobile && isQuizMode ? "110%" : "auto"
+                  width: isMobile && isQuizMode ? "110%" : "600px"
                 }}
               >
                 <PresetBlocksGrid
