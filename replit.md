@@ -7,12 +7,12 @@ Ponto. School is an AI-powered educational platform designed to provide personal
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
-- **2026-02-12**: Preset Blocks Grid — Pre-defined prompt blocks below QuickAccessCards:
-  1. **PresetBlocksGrid Component**: 2-column responsive grid with glass-morphism styled rectangular blocks. Each block has stacked/overlapping Lucide icons, title, description, and a preset prompt.
-  2. **Two Blocks**: "Salve minha semana de aulas" (weekly lesson automation) and "Transforme arquivos em atividades" (file-to-activity conversion), each with parameterized prompts.
-  3. **ChatInput Integration**: New `externalMessage` prop enables external text injection. Clicking a preset block fills the chat input with the prompt for user editing before sending.
-  4. **Responsive**: Single column on mobile, 2-column grid on desktop. Fixed positioning at viewport bottom.
-  Files: `src/sections/SchoolPower/components/preset-blocks/PresetBlocksGrid.tsx`, `SchoolPowerPage.tsx`, `ChatInput.tsx`.
+- **2026-02-12**: Preset Blocks Grid + Interactive Slot Chips:
+  1. **PresetBlocksGrid**: 2-column responsive grid (596px width matching ChatInput) with GRID_CONFIG for precise sizing. Positioned inside 900x617 container via PRESET_GRID_POSITION config.
+  2. **Interactive Slot System**: `promptNodes.ts` (PromptNode types, parsePromptToNodes parser, compilePrompt compiler), `SlotChipEditor.tsx` (clickable orange pill chips with popover editing). `[Placeholder]` patterns become interactive chips.
+  3. **ChatInput Template Mode**: Switches between textarea (normal) and TemplateRenderer (when preset with slots active). Send blocked until all slots filled via `hasUnfilledSlots` validation.
+  4. **Flow**: Click preset block → parsePromptToNodes → ChatInput template mode → click chips to fill → compilePrompt → clean text to AI.
+  Files: `preset-blocks/PresetBlocksGrid.tsx`, `preset-blocks/promptNodes.ts`, `preset-blocks/SlotChipEditor.tsx`, `SchoolPowerPage.tsx`, `ChatInput.tsx`.
 - **2026-02-12**: Rich Text Formatting Tools — Unified formatting across text activities and Jota chat:
   1. **RichTextMessage Component**: New read-only renderer that converts markdown to EditorJS blocks (tables, callouts, checklists, code blocks, quotes, headers, lists, delimiters). Uses smart heuristic: strong indicators (headers, tables, callouts) trigger rich rendering immediately; soft indicators (bold, lists) require 2+ matches.
   2. **TextVersionGenerator Prompts**: All 4 text activity prompts (plano-aula, sequencia-didatica, tese-redacao, atividade-textual) now include RICH_FORMATTING_INSTRUCTIONS with detailed guidance for using tables, callouts (> 💡/⚠️/✅/📌), checklists, code blocks, quotes, and separators.

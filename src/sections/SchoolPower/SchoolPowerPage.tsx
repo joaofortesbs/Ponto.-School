@@ -10,7 +10,8 @@ import {
   ParticlesBackground,
 } from "./components";
 import { QuickAccessCards } from "./components/4-cards-pré-prompts";
-import { PresetBlocksGrid } from "./components/preset-blocks";
+import { PresetBlocksGrid, parsePromptToNodes } from "./components/preset-blocks";
+import type { PromptNode } from "./components/preset-blocks";
 import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerFlow";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 import { HistoricoAtividadesCriadas } from "../../features/schoolpower/construction/HistoricoAtividadesCriadas";
@@ -30,6 +31,15 @@ const GeminiApiMonitor = import.meta.env.DEV
   ? React.lazy(() => import('./components/GeminiApiMonitor'))
   : (() => null) as React.FC;
 
+const PRESET_GRID_POSITION = {
+  desktop: {
+    bottomOffset: -65,
+  },
+  mobile: {
+    bottomOffset: -70,
+  },
+} as const;
+
 interface SchoolPowerPageProps {
   isQuizMode?: boolean;
 }
@@ -39,6 +49,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const [showHistorico, setShowHistorico] = useState(false);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [presetMessage, setPresetMessage] = useState<string | null>(null);
+  const [templateNodes, setTemplateNodes] = useState<PromptNode[] | null>(null);
   const isMobile = useIsMobile();
   const pendingMessageProcessed = useRef(false);
 
@@ -199,6 +210,8 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                   onCardClick={handleCardClick}
                   externalMessage={presetMessage}
                   onExternalMessageConsumed={() => setPresetMessage(null)}
+                  templateNodes={templateNodes}
+                  onTemplateNodesChange={setTemplateNodes}
                 />
               </div>
 
@@ -218,12 +231,22 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
               <div
                 className="absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto"
                 style={{
-                  bottom: isMobile && isQuizMode ? '-55px' : '-50px',
+                  bottom: `${isMobile && isQuizMode ? PRESET_GRID_POSITION.mobile.bottomOffset : PRESET_GRID_POSITION.desktop.bottomOffset}px`,
                   width: isMobile && isQuizMode ? "110%" : "auto"
                 }}
               >
                 <PresetBlocksGrid
-                  onBlockClick={(prompt) => setPresetMessage(prompt)}
+                  onBlockClick={(prompt) => {
+                    const nodes = parsePromptToNodes(prompt);
+                    const hasSlots = nodes.some(n => n.type === 'slot');
+                    if (hasSlots) {
+                      setTemplateNodes(nodes);
+                      setPresetMessage(null);
+                    } else {
+                      setPresetMessage(prompt);
+                      setTemplateNodes(null);
+                    }
+                  }}
                 />
               </div>
             </div>

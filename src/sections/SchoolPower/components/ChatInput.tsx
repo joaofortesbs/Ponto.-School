@@ -3,6 +3,9 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, useMotionValue, useTransform, useAnimationFrame, useMotionTemplate } from "framer-motion";
 import { TextShimmerWave } from '@/components/ui/text-shimmer-wave';
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { TemplateRenderer } from "./preset-blocks/SlotChipEditor";
+import { compilePrompt, updateSlotValue, hasUnfilledSlots } from "./preset-blocks/promptNodes";
+import type { PromptNode } from "./preset-blocks/promptNodes";
 
 interface UploadedFile {
   id: string;
@@ -81,11 +84,14 @@ interface ChatInputProps {
   onCardClick?: (cardName: string) => void;
   externalMessage?: string | null;
   onExternalMessageConsumed?: () => void;
+  templateNodes?: PromptNode[] | null;
+  onTemplateNodesChange?: (nodes: PromptNode[] | null) => void;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, externalSelectedCard = null, onCardClick, externalMessage = null, onExternalMessageConsumed }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, externalSelectedCard = null, onCardClick, externalMessage = null, onExternalMessageConsumed, templateNodes = null, onTemplateNodesChange }) => {
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const isTemplateMode = templateNodes !== null && templateNodes.length > 0;
   const [isFocused, setIsFocused] = useState(false);
   const [selectedMode, setSelectedMode] = useState("Agente IA");
   const [showModeDropdown, setShowModeDropdown] = useState(false);
@@ -102,23 +108,34 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
     setIsTyping(e.target.value.length > 0);
   };
 
-  const handleSend = () => {
-    const trimmedMessage = message.trim();
+  const templateHasUnfilled = isTemplateMode && templateNodes ? hasUnfilledSlots(templateNodes) : false;
 
-    if (trimmedMessage || uploadedFiles.length > 0) {
-      console.log("📤 Enviando mensagem:", trimmedMessage);
+  const handleSend = () => {
+    let finalMessage = "";
+
+    if (isTemplateMode && templateNodes) {
+      if (templateHasUnfilled) {
+        console.warn("⚠️ Slots não preenchidos, clique nos campos em laranja para preencher");
+        return;
+      }
+      finalMessage = compilePrompt(templateNodes);
+    } else {
+      finalMessage = message.trim();
+    }
+
+    if (finalMessage || uploadedFiles.length > 0) {
+      console.log("📤 Enviando mensagem:", finalMessage);
       console.log("📎 Arquivos anexados:", uploadedFiles.length);
 
-      // Chama a função onSend se fornecida, passando mensagem e arquivos
       if (onSend) {
-        onSend(trimmedMessage, uploadedFiles);
+        onSend(finalMessage, uploadedFiles);
       }
 
-      // Limpa o campo e arquivos após o envio
       setMessage("");
       setUploadedFiles([]);
       setSelectedCard(null);
       setIsTyping(false);
+      onTemplateNodesChange?.(null);
 
       console.log("✅ Mensagem enviada e campos limpos");
     } else {
@@ -344,6 +361,27 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
         .message-container.expanding {
           height: auto;
           max-height: 400px;
+        }
+
+        .message-container.template-active {
+          height: auto;
+          min-height: 68px;
+          max-height: 300px;
+          border-radius: 24px;
+        }
+
+        .message-container.template-active .message-container-inner {
+          border-radius: 22px;
+        }
+
+        .message-container.template-active .inner-container {
+          border-radius: 20px;
+          padding: 12px 12px 12px 16px;
+          align-items: flex-start;
+        }
+
+        .message-container.template-active .moving-border-container {
+          border-radius: 24px;
         }
 
         @media (max-width: 768px) {
@@ -1304,7 +1342,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
         {/* Container invisível unificado - sem espaços */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0', padding: '0', margin: '0' }}>
           <div
-            className={`message-container ${isTyping || isFocused ? "typing" : ""} ${uploadedFiles.length > 0 ? "has-files" : ""} ${textareaRef.current?.classList.contains('expanding') ? 'expanding' : ''} ${isMobile && isQuizMode ? 'mobile-quiz' : ''}`}
+            className={`message-container ${isTyping || isFocused || isTemplateMode ? "typing" : ""} ${uploadedFiles.length > 0 ? "has-files" : ""} ${isTemplateMode ? "expanding template-active" : ""} ${textareaRef.current?.classList.contains('expanding') ? 'expanding' : ''} ${isMobile && isQuizMode ? 'mobile-quiz' : ''}`}
           >
           <div className="moving-border-container">
             <MovingBorder duration={3000} rx="20px" ry="20px">
@@ -1409,25 +1447,35 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend, exter
               </div>
 
               <div className="flex-1">
-                <textarea
-                  ref={textareaRef}
-                  value={message}
-                  onChange={handleInputChange}
-                  onKeyPress={handleKeyPress}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  placeholder="Digite o que você quer criar..."
-                  className="textarea-custom"
-                  rows={1}
-                />
+                {isTemplateMode && templateNodes ? (
+                  <TemplateRenderer
+                    nodes={templateNodes}
+                    onUpdateSlot={(slotId, value) => {
+                      const updated = updateSlotValue(templateNodes, slotId, value);
+                      onTemplateNodesChange?.(updated);
+                    }}
+                  />
+                ) : (
+                  <textarea
+                    ref={textareaRef}
+                    value={message}
+                    onChange={handleInputChange}
+                    onKeyPress={handleKeyPress}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    placeholder="Digite o que você quer criar..."
+                    className="textarea-custom"
+                    rows={1}
+                  />
+                )}
               </div>
 
               <button
                 onClick={handleSend}
                 className="action-button"
-                disabled={!message.trim()}
+                disabled={isTemplateMode ? templateHasUnfilled : !message.trim()}
                 style={{
-                  opacity: message.trim() ? 1 : 0.5,
+                  opacity: isTemplateMode ? (templateHasUnfilled ? 0.5 : 1) : (message.trim() ? 1 : 0.5),
                   flexShrink: 0,
                   marginLeft: 'auto'
                 }}

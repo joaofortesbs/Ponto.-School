@@ -1,0 +1,93 @@
+uero que você atue como um desenvolvedor front‑end sênior especializado em React e interfaces de chat com IA. Você vai analisar e corrigir a forma como estou implementando a área de envio de mensagens do meu app.
+
+Hoje, a caixa de mensagem é apenas um <textarea> simples. Porém, eu preciso replicar o comportamento de sistemas como Manus AI, onde o texto do prompt contém slots interativos no meio da frase, por exemplo:
+
+[Tipo de Atividade: Quiz/Flashcards/Desafio]
+
+[Nível Escolar]
+
+[Vibe: Humor/Curiosidade/Competição]
+
+[Nome da Turma], [Quantidade], [Estilo: Engajamento/Revisão/Conteúdo Denso], etc.
+
+Esses pedaços entre colchetes devem aparecer para o usuário como “chips” ou blocos clicáveis dentro da própria frase, e não apenas como texto plano. Quando o usuário clicar em um desses blocos, ele deve conseguir preencher/editar o valor correspondente. Na hora de enviar a mensagem, o sistema deve:
+
+Manter um modelo de estado estruturado, por exemplo uma lista de nós:
+
+nós de texto normal;
+
+nós de slot, com propriedades como id, name, value, placeholder.
+
+Compilar esse estado em um único string de prompt limpo, sem rótulos de UI como “clique aqui” ou instruções internas, apenas o texto final com os valores preenchidos.
+
+Garantir que o modelo de IA só receba o texto compilado, e não a estrutura de UI.
+
+Quero que você faça o seguinte:
+
+Substitua o <textarea> atual por um componente adequado que permita texto + chips inline. Você pode usar:
+
+um <div contenteditable="true"> controlado em React, com spans contentEditable={false} para os slots; ou
+
+um editor rico minimalista (por exemplo, TipTap/Slate/ProseMirror) se achar mais robusto.
+
+Implemente uma estrutura de estado em React parecida com:
+
+ts
+type Node =
+  | { type: 'text'; id: string; value: string }
+  | { type: 'slot'; id: string; name: string; value: string; placeholder: string }
+Implemente a renderização desses nós dentro do componente de input. Para cada nó:
+
+text: renderize como <span>{value}</span>;
+
+slot: renderize como <span className="slot-chip" data-slot={name} contentEditable={false} onClick={...}>...</span>, mostrando value ou o placeholder, com estilo de “pill”.
+
+Crie handlers para:
+
+clicar em um slot abrir um pequeno input ou popover para editar value;
+
+atualizar corretamente o estado quando o usuário digita texto antes/depois dos slots, sem quebrar a estrutura;
+
+impedir que o usuário edite diretamente o conteúdo interno do slot (apenas via click/edição controlada).
+
+Implemente uma função em TypeScript/JavaScript que, dado o array de nós, retorne o prompt final:
+
+ts
+function compilePrompt(nodes: Node[]): string {
+  return nodes.map(n => n.type === 'text' ? n.value : (n.value || n.placeholder)).join('');
+}
+Integre o botão de “Enviar” da minha interface com essa função compilePrompt, de forma que:
+
+o front‑end envie para o backend apenas o string do prompt compilado;
+
+opcionalmente envie também um objeto { templateId, slotValues } caso eu queira registrar os campos no banco.
+
+Analise o código que eu já tenho neste projeto (componentes de chat, caixa de input, handlers de envio, etc.), identifique exatamente por que ele ainda não está criando os blocos clicáveis no meio do texto, e então:
+
+refatore o componente para usar o modelo de nós descrito;
+
+remover qualquer dependência rígida de <textarea> que impeça a renderização de elementos inline personalizados;
+
+garantir que o estilo visual fique consistente com o resto da UI (classes CSS/Tailwind que você julgar adequadas).
+
+Restrições e preferências:
+
+Stack: use React com TypeScript, componentes funcionais e hooks.
+
+Código deve ser limpo, tipado, com nomes claros de funções/variáveis.
+
+Separe em pelo menos três arquivos: MessageInput.tsx (componente principal), promptNodes.ts (tipos + helpers como compilePrompt) e um arquivo de estilos ou classes utilitárias.
+
+Comente o código apenas onde necessário para explicar decisões não triviais; não polua com comentários óbvios.
+
+Por fim, depois de escrever o código, explique em texto (no próprio chat do Agent) como a arquitetura funciona:
+
+como os nós são mantidos em estado;
+
+como o usuário interage com os slots;
+
+como o prompt final é gerado e enviado para a IA;
+
+e como eu posso adicionar novos slots/templates no futuro.
+
+Use linguagem direta, passo a passo, como se estivesse entregando esse componente para outro dev integrar no meu app.
