@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useLayoutEffect, useCallback, Component, type ErrorInfo, type ReactNode } from "react";
 import type { PromptNode } from "./promptNodes";
 
 function escapeHtml(str: string): string {
@@ -165,13 +165,52 @@ function placeCaretAtClickPoint(chip: HTMLSpanElement, clientX: number, clientY:
   sel.addRange(range);
 }
 
+function safeDomCleanup(container: HTMLElement) {
+  try {
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+  } catch {
+    try {
+      container.textContent = '';
+    } catch {
+      // silently ignore
+    }
+  }
+}
+
+class TemplateErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode; fallback?: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): { hasError: boolean } {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    if (error.message?.includes('removeChild') || error.message?.includes('not a child')) {
+      console.warn('[TemplateRenderer] Caught DOM reconciliation error, recovering...');
+      this.setState({ hasError: false });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || null;
+    }
+    return this.props.children;
+  }
+}
+
 interface TemplateRendererProps {
   nodes: PromptNode[];
   onNodesChange: (nodes: PromptNode[]) => void;
 }
 
-export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNodesChange }) => {
-  const wrapperRef = useRef<HTMLDivElement>(null);
+const TemplateRendererInner: React.FC<TemplateRendererProps> = ({ nodes, onNodesChange }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement | null>(null);
   const lastExternalSlotIds = useRef<string>('');
   const mountedNodesRef = useRef<PromptNode[]>(nodes);
@@ -180,9 +219,13 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
 
   const syncDomToModel = useCallback(() => {
     if (!editorRef.current) return;
-    const parsed = htmlToNodes(editorRef.current, mountedNodesRef.current);
-    mountedNodesRef.current = parsed;
-    onNodesChangeRef.current(parsed);
+    try {
+      const parsed = htmlToNodes(editorRef.current, mountedNodesRef.current);
+      mountedNodesRef.current = parsed;
+      onNodesChangeRef.current(parsed);
+    } catch {
+      // ignore sync errors
+    }
   }, []);
 
   const bindChipEvents = useCallback((container: HTMLElement) => {
@@ -268,9 +311,17 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
     });
   }, [syncDomToModel]);
 
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
+  const refCallback = useCallback((node: HTMLDivElement | null) => {
+    containerRef.current = node;
+  }, []);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (editorRef.current && container.contains(editorRef.current)) {
+      return;
+    }
 
     const editor = document.createElement('div');
     editor.contentEditable = 'true';
@@ -309,19 +360,17 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
       }
     });
 
-    wrapper.appendChild(editor);
+    container.appendChild(editor);
     editorRef.current = editor;
     bindChipEvents(editor);
 
     return () => {
-      if (wrapper.contains(editor)) {
-        wrapper.removeChild(editor);
-      }
+      safeDomCleanup(container);
       editorRef.current = null;
     };
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!editorRef.current) return;
 
     const currentSlotIds = getSlotIds(nodes);
@@ -330,7 +379,12 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
       return;
     }
 
-    editorRef.current.innerHTML = nodesToHtml(nodes);
+    try {
+      editorRef.current.innerHTML = nodesToHtml(nodes);
+    } catch {
+      safeDomCleanup(editorRef.current);
+      editorRef.current.innerHTML = nodesToHtml(nodes);
+    }
     mountedNodesRef.current = nodes;
     lastExternalSlotIds.current = currentSlotIds;
     bindChipEvents(editorRef.current);
@@ -338,10 +392,19 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({ nodes, onNod
 
   return (
     <div
-      ref={wrapperRef}
+      ref={refCallback}
       className="w-full"
       style={{ minHeight: '20px' }}
+      suppressContentEditableWarning
     />
+  );
+};
+
+export const TemplateRenderer: React.FC<TemplateRendererProps> = (props) => {
+  return (
+    <TemplateErrorBoundary>
+      <TemplateRendererInner {...props} />
+    </TemplateErrorBoundary>
   );
 };
 
