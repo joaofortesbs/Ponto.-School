@@ -128,17 +128,18 @@ function groupBlocksIntoPhases(blocks: StructuredResponseBlock[]): {
 
   if (phases.length > 0) {
     const lastPhase = phases[phases.length - 1];
-    const trailingTextBlocks: StructuredResponseBlock[] = [];
-    while (lastPhase.children.length > 0) {
-      const lastChild = lastPhase.children[lastPhase.children.length - 1];
-      if (lastChild.type === 'text') {
-        trailingTextBlocks.unshift(lastChild);
-        lastPhase.children.pop();
-      } else {
+    let lastCardIndex = -1;
+    for (let i = lastPhase.children.length - 1; i >= 0; i--) {
+      const child = lastPhase.children[i];
+      if (child.type === 'artifact_card' || child.type === 'activities_card' || child.type === 'single_activity_card') {
+        lastCardIndex = i;
         break;
       }
     }
-    postPhaseBlocks.push(...trailingTextBlocks);
+    if (lastCardIndex >= 0 && lastCardIndex < lastPhase.children.length - 1) {
+      const extracted = lastPhase.children.splice(lastCardIndex + 1);
+      postPhaseBlocks.push(...extracted);
+    }
   }
 
   return { prePhaseBlocks, phases, postPhaseBlocks };

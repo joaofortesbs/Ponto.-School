@@ -14,6 +14,8 @@ Preferred communication style: Simple, everyday language.
   4. **Phase Children Alignment**: paddingLeft: 4px aligns phase content (text + cards) with the phase icon, NOT indented to the right under the title text. LEARNING: pl-11 (44px) was wrong — matched icon+gap offset instead of icon position.
   5. **Mobile Optimization**: Touch targets min-height 48px, WebkitTapHighlightColor transparent, responsive padding.
   6. **Parser**: 4 marker types: ATIVIDADES, ATIVIDADE:, ARQUIVO:, FASE:. `mergeConsecutiveActivityCards()` groups consecutive single_activity_cards.
+  7. **Post-Phase Content Extraction**: `groupBlocksIntoPhases()` finds the LAST card (artifact_card/activities_card/single_activity_card) in the last phase and `splice()`s all subsequent blocks into postPhaseBlocks. This ensures closing text/callouts render independently OUTSIDE the accordion. LEARNING: Previous approach (extracting only trailing `text` type) failed when non-text blocks existed between cards and closing text.
+  8. **Closing Structure**: Removed `> ✅` callout entirely (redundant — professor already saw items being created). Replaced with ENCERRAMENTO ESTRATÉGICO: 3-5 sentence paragraph with Jota's opinion + next step suggestions + engaging question. Max 2 callouts (💡 + 📌), never ✅.
   KEY PATTERN: "Progressive Disclosure" — teachers see phase overview first, open phases on demand. Reduces vertical scroll by ~60%.
   KEY LEARNING: Prompt instructions must be 100% internally consistent — a single contradictory line (e.g., "máximo 1 frase" vs "2-4 frases") causes the AI to revert to the shorter/easier behavior. Always grep for ALL occurrences of changed rules.
 - **2026-02-12**: Premium Typography & Design Overhaul (Manus AI-level quality):
