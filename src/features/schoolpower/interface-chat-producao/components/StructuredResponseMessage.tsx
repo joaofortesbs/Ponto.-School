@@ -259,7 +259,7 @@ function CollapsiblePhaseSection({
             transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
             style={{ overflow: 'hidden' }}
           >
-            <div className="pl-11 pb-2">
+            <div className="pb-2" style={{ paddingLeft: '4px' }}>
               {phase.children.map((block, idx) => (
                 <BlockRenderer
                   key={`phase-child-${idx}`}
