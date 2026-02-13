@@ -35,12 +35,30 @@ export function parseStructuredResponse(
 
   const sanitizedText = sanitizeResponseText(text);
   const blocks: StructuredResponseBlock[] = [];
-  const markerRegex = /\[\[(ATIVIDADES|ARQUIVO:([^\]]+))\]\]/g;
+  const markerRegex = /\[\[(ATIVIDADES|ATIVIDADE:([^\]]+)|ARQUIVO:([^\]]+))\]\]/g;
   let hasMarkers = false;
   let lastIndex = 0;
   let match;
   let activitiesCardAdded = false;
   const usedArtifactIds = new Set<string>();
+  const usedActivityIds = new Set<string>();
+
+  const normalizeStr = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/gi, '').trim();
+
+  function findActivityByTitle(titulo: string): import('../types/message-types').ActivitySummaryUI | undefined {
+    const searchNorm = normalizeStr(titulo);
+    const searchWords = searchNorm.split(/\s+/).filter(w => w.length > 2);
+
+    return items.activities.find(a => {
+      if (usedActivityIds.has(a.id)) return false;
+      const actTitle = a.titulo || '';
+      const actNorm = normalizeStr(actTitle);
+      if (actNorm === searchNorm) return true;
+      if (actNorm.includes(searchNorm) || searchNorm.includes(actNorm)) return true;
+      const matchingWords = searchWords.filter(w => actNorm.includes(w));
+      return matchingWords.length >= Math.max(1, searchWords.length * 0.5);
+    });
+  }
 
   while ((match = markerRegex.exec(sanitizedText)) !== null) {
     hasMarkers = true;
@@ -56,16 +74,31 @@ export function parseStructuredResponse(
 
     if (fullMarker === 'ATIVIDADES') {
       if (items.activities.length > 0 && !activitiesCardAdded) {
-        blocks.push({
-          type: 'activities_card',
-          activities: items.activities,
-        });
+        const remainingActivities = items.activities.filter(a => !usedActivityIds.has(a.id));
+        if (remainingActivities.length > 0) {
+          blocks.push({
+            type: 'activities_card',
+            activities: remainingActivities,
+          });
+          remainingActivities.forEach(a => usedActivityIds.add(a.id));
+        }
         activitiesCardAdded = true;
       }
-    } else if (fullMarker.startsWith('ARQUIVO:')) {
+    } else if (fullMarker.startsWith('ATIVIDADE:')) {
       const titulo = match[2]?.trim();
+      if (titulo && items.activities.length > 0) {
+        const activity = findActivityByTitle(titulo);
+        if (activity) {
+          usedActivityIds.add(activity.id);
+          blocks.push({
+            type: 'single_activity_card',
+            activity: activity,
+          });
+        }
+      }
+    } else if (fullMarker.startsWith('ARQUIVO:')) {
+      const titulo = match[3]?.trim();
       if (titulo && items.artifacts.length > 0) {
-        const normalizeStr = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/gi, '').trim();
         const searchNorm = normalizeStr(titulo);
         const searchWords = searchNorm.split(/\s+/).filter(w => w.length > 2);
 
@@ -104,7 +137,10 @@ export function parseStructuredResponse(
   }
 
   if (!activitiesCardAdded && items.activities.length > 0) {
-    blocks.push({ type: 'activities_card', activities: items.activities });
+    const remainingActivities = items.activities.filter(a => !usedActivityIds.has(a.id));
+    if (remainingActivities.length > 0) {
+      blocks.push({ type: 'activities_card', activities: remainingActivities });
+    }
   }
 
   for (const artifact of items.artifacts) {

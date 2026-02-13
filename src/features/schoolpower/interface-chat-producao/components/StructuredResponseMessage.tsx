@@ -98,6 +98,49 @@ function InlineActivitiesCard({ activities, onOpenActivity }: {
   );
 }
 
+function InlineSingleActivityCard({ activity, onOpenActivity }: {
+  activity: ActivitySummaryUI;
+  onOpenActivity?: (activity: ActivitySummaryUI) => void;
+}) {
+  const IconComponent = getActivityLucideIcon(activity.tipo);
+  const subtitle = activity.descricao || getActivityTypeLabel(activity.tipo);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="my-3 rounded-xl overflow-hidden"
+      style={{
+        background: '#040b2a',
+        border: '1px solid rgba(99, 102, 241, 0.15)',
+        maxWidth: '340px',
+      }}
+    >
+      <button
+        onClick={() => onOpenActivity?.(activity)}
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.04] transition-all duration-200 group cursor-pointer"
+      >
+        <div
+          className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
+          style={{ background: 'rgba(99, 102, 241, 0.12)' }}
+        >
+          <IconComponent className="w-4 h-4 text-indigo-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-slate-200 truncate group-hover:text-white transition-colors leading-tight">
+            {activity.titulo}
+          </p>
+          <p className="text-xs text-slate-500 truncate mt-0.5 leading-tight">
+            {subtitle}
+          </p>
+        </div>
+        <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors flex-shrink-0" />
+      </button>
+    </motion.div>
+  );
+}
+
 function InlineArtifactCard({ artifact, onOpen }: { artifact: ArtifactData; onOpen?: (artifact: ArtifactData) => void }) {
   const titulo = artifact.metadata?.titulo || 'Documento';
   const secoesCount = artifact.secoes?.length || 0;
@@ -191,6 +234,22 @@ export function StructuredResponseMessage({ blocks, onOpenArtifact, onOpenActivi
                   >
                     <InlineActivitiesCard 
                       activities={block.activities} 
+                      onOpenActivity={onOpenActivity}
+                    />
+                  </motion.div>
+                );
+              }
+              
+              if (block.type === 'single_activity_card' && block.activity) {
+                return (
+                  <motion.div
+                    key={`single-activity-${idx}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.08, duration: 0.4 }}
+                  >
+                    <InlineSingleActivityCard
+                      activity={block.activity}
                       onOpenActivity={onOpenActivity}
                     />
                   </motion.div>
