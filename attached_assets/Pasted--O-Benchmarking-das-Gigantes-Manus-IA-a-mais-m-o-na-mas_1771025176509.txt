@@ -1,0 +1,29 @@
+🧠 O Benchmarking das Gigantes:
+Manus IA: É a mais "mão na massa". Ela diz: "Entendido. Vou fazer X, Y e Z agora. Acompanhe o progresso abaixo." (Foco em Ação).
+Claude Artifacts: É sutil. Ela responde brevemente e já renderiza o objeto ao lado. (Foco em Resultado).
+Perplexity: Ela resume o que entendeu e lista as fontes. (Foco em Confiança).
+🚀 A Fórmula Ponto. School: "O Protocolo de Intenção"
+Para o nosso ICP (professor exausto), a primeira mensagem deve servir para baixar a ansiedade. Ele precisa saber que o Jota entendeu o pedido e já está trabalhando.
+A estrutura ideal deve ter 3 pilares:
+Validação: Confirmar o tema e a turma (mostra que a IA não é genérica).
+Mapa de Execução: Dizer exatamente o que vai entregar (gera antecipação).
+Início Imediato: Não pedir permissão, apenas começar.
+📝 Exemplo Real de Resposta Inicial (O que o Jota deve dizer):
+Input do Usuário: "Jota, salve minha semana de Funções do 2º Grau para o 1º C."
+Resposta Inicial do Jota (Em milissegundos):
+"Entendido, Professor! Vou assumir o controle e estruturar sua semana de Funções do 2º Grau para a Turma 1º C.
+Meu plano de ação agora:
+Organizar um roteiro pedagógico de 5 dias alinhado à BNCC.
+Gerar atividades de engajamento e listas de exercícios.
+Preparar seu Dossiê de fechamento com rubricas de avaliação.
+Já estou renderizando sua trilha abaixo... 🚀"
+⚠️ O Erro que você NÃO pode cometer:
+Não faça perguntas na primeira mensagem.
+O professor quer que você resolva o problema, não que dê mais trabalho para ele. Se a IA precisar de algo (ex: "Qual o nível de dificuldade?"), ela deve assumir um padrão (default) e dizer: "Assumi um nível intermediário, mas você pode ajustar no final."
+💡 Minha Sugestão de "Mestre":
+Implemente o "Status de Pensamento" (como o ChatGPT faz agora). Enquanto o Jota "pensa", mostre frases rápidas na tela:
+Analizando competências da BNCC...
+Buscando tendências para engajamento...
+Estruturando Dossiê Ponto. Flow...
+Isso cria a percepção de que há um trabalho intelectual imenso acontecendo por trás, aumentando o valor percebido da ferramenta.
+O que você acha dessa abordagem "Direta e Executiva"? 
