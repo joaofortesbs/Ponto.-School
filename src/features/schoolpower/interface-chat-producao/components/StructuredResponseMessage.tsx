@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { JotaAvatarChat } from './JotaAvatarChat';
 import { RichTextMessage } from './RichTextMessage';
 import { FileText, ChevronRight, Brain, Layers, Search, PenLine, TextCursorInput, Link2, ClipboardList, Sparkles, BookOpen, Target, CheckCircle2, FolderOpen } from 'lucide-react';
-import type { StructuredResponseBlock, ActivitySummaryUI, DossieSummary } from '../types/message-types';
+import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
 interface StructuredResponseMessageProps {
@@ -60,88 +60,6 @@ function getPhaseColor(emoji: string): string {
     case '📦': return '#6366f1';
     default: return '#6366f1';
   }
-}
-
-function DossieSummaryCard({ summary }: { summary: DossieSummary }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="my-4 rounded-2xl overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.06) 50%, rgba(59, 130, 246, 0.04) 100%)',
-        border: '1px solid rgba(99, 102, 241, 0.18)',
-        maxWidth: '460px',
-      }}
-    >
-      <div className="px-5 pt-4 pb-3">
-        <div className="flex items-center gap-2.5 mb-1">
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(99, 102, 241, 0.15)' }}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          </div>
-          <p
-            className="font-semibold text-white/90 leading-tight"
-            style={{
-              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-              fontSize: '14.5px',
-              letterSpacing: '-0.01em',
-            }}
-          >
-            {summary.titulo}
-          </p>
-        </div>
-      </div>
-
-      <div className="px-5 pb-3">
-        <div className="flex gap-4">
-          <div className="flex items-center gap-1.5">
-            <ClipboardList className="w-3 h-3 text-indigo-400/70" />
-            <span className="text-xs text-slate-400">
-              {summary.totalAtividades} {summary.totalAtividades === 1 ? 'atividade' : 'atividades'}
-            </span>
-          </div>
-          {summary.totalDocumentos > 0 && (
-            <div className="flex items-center gap-1.5">
-              <FileText className="w-3 h-3 text-indigo-400/70" />
-              <span className="text-xs text-slate-400">
-                {summary.totalDocumentos} {summary.totalDocumentos === 1 ? 'documento' : 'documentos'}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {summary.fases.length > 0 && (
-        <div className="px-5 pb-4 flex flex-wrap gap-2">
-          {summary.fases.map((fase, i) => {
-            const color = getPhaseColor(fase.emoji);
-            return (
-              <div
-                key={i}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-                style={{
-                  background: `${color}12`,
-                  border: `1px solid ${color}25`,
-                }}
-              >
-                <span className="text-xs">{fase.emoji}</span>
-                <span
-                  className="text-xs font-medium"
-                  style={{ color: `${color}cc` }}
-                >
-                  {fase.nome}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </motion.div>
-  );
 }
 
 function PhaseSeparator({ title, emoji, description }: { title: string; emoji: string; description?: string }) {
@@ -376,19 +294,6 @@ export function StructuredResponseMessage({ blocks, onOpenArtifact, onOpenActivi
           
           <div className="mt-auto">
             {blocks.map((block, idx) => {
-              if (block.type === 'dossie_summary' && block.dossieSummary) {
-                return (
-                  <motion.div
-                    key={`dossie-${idx}`}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.08, duration: 0.4 }}
-                  >
-                    <DossieSummaryCard summary={block.dossieSummary} />
-                  </motion.div>
-                );
-              }
-
               if (block.type === 'phase_separator' && block.phaseTitle) {
                 return (
                   <motion.div

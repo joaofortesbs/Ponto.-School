@@ -55,15 +55,8 @@ export interface PlanCardData {
   }>;
 }
 
-export interface DossieSummary {
-  titulo: string;
-  totalAtividades: number;
-  totalDocumentos: number;
-  fases: { emoji: string; nome: string; count: number }[];
-}
-
 export interface StructuredResponseBlock {
-  type: 'text' | 'activities_card' | 'artifact_card' | 'single_activity_card' | 'phase_separator' | 'dossie_summary';
+  type: 'text' | 'activities_card' | 'artifact_card' | 'single_activity_card' | 'phase_separator';
   content?: string;
   activities?: ActivitySummaryUI[];
   activity?: ActivitySummaryUI;
@@ -71,7 +64,6 @@ export interface StructuredResponseBlock {
   phaseTitle?: string;
   phaseEmoji?: string;
   phaseDescription?: string;
-  dossieSummary?: DossieSummary;
 }
 
 export interface ActivitySummaryUI {

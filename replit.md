@@ -7,13 +7,12 @@ Ponto. School is an AI-powered educational platform designed to provide personal
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
-- **2026-02-13**: Dossiê Pedagógico System — Organized Response Architecture:
-  1. **Phase Separators (`[[FASE:titulo|descrição]]`)**: New marker type that creates elegant visual section headers to group activities by pedagogical purpose (Engajamento, Conteúdo, Prática, Avaliação, Complementos). Each phase has auto-detected emoji and color coding.
-  2. **Dossiê Summary Card (`[[DOSSIE:titulo]]`)**: Compact overview card at the top of responses showing mission title, activity count, document count, and phase breakdown pills. Gives the teacher instant context before scrolling.
-  3. **Parser Enhancements**: `structured-response-parser.ts` now handles 5 marker types: ATIVIDADES, ATIVIDADE:, ARQUIVO:, FASE:, DOSSIE:. Phase detection uses PHASE_CONFIG lookup table for emoji/color mapping.
-  4. **UI Components**: `DossieSummaryCard` (gradient background, sparkle icon, count badges, phase pills) and `PhaseSeparator` (icon + title + description + gradient line) in StructuredResponseMessage.tsx.
-  5. **Prompt Architecture**: Final response prompt now instructs AI to organize 3+ activities into pedagogical phases (Engajamento → Conteúdo → Prática → Avaliação → Complementos) with dossiê summary at top. Transforms "list of items" into "teaching roadmap".
-  KEY INSIGHT: The problem was "Paralysis of the List" — teachers received 7+ activities but didn't know where to start. Solution: organize by pedagogical purpose, not generation order.
+- **2026-02-13**: Phase-Grouped Activity Cards — Compact Response Architecture:
+  1. **Phase Separators (`[[FASE:titulo|descrição]]`)**: Visual section headers grouping activities by pedagogical purpose (Engajamento, Conteúdo, Prática, Avaliação, Complementos). Auto-detected emoji and color coding via PHASE_CONFIG.
+  2. **Activity Grouping Per Phase**: AI writes ONE combined sentence describing ALL activities in a phase, then lists markers consecutively. Parser's `mergeConsecutiveActivityCards()` post-processor automatically groups 2+ consecutive `single_activity_card` blocks into a single `activities_card` block ("Suas X atividades" card).
+  3. **Parser**: `structured-response-parser.ts` handles 4 marker types: ATIVIDADES, ATIVIDADE:, ARQUIVO:, FASE:. DossieSummaryCard and [[DOSSIE:]] marker removed entirely.
+  4. **Prompt Architecture**: Final response prompt enforces: one combined sentence per phase → grouped activity markers. Explicit CORRETO/ERRADO examples prevent the AI from writing individual descriptions per activity.
+  KEY INSIGHT: "Paralysis of the List" solved by organizing by pedagogical purpose. Compact grouped cards reduce visual noise.
 - **2026-02-12**: Premium Typography & Design Overhaul (Manus AI-level quality):
   1. **RichTextMessage.tsx Complete Redesign**: Unified Inter font stack across ALL block types (eliminated Georgia serif mixing). Body text 14.5px/1.75 line-height, headers H1:20px/700, H2:17px/700, H3:15px/600 with negative letter-spacing. Max-width 680px constraint for readability. All renderers use inline styles for precise control. CSS-in-JS `<style>` tag handles inline elements (strong, em, code, a). Generous vertical spacing: 14px for special blocks, 6px for paragraphs. Subtle gradient delimiter, polished tables with alternating rows, callouts with 3px left accent border.
   2. **AssistantMessage.tsx + StructuredResponseMessage.tsx**: "Jota" label unified to Inter 14px/700 with -0.01em tracking. Consistent design system across all message types.

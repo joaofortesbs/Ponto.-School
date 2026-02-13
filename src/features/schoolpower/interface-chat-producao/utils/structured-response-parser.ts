@@ -1,4 +1,4 @@
-import type { StructuredResponseBlock, ActivitySummaryUI, DossieSummary } from '../types/message-types';
+import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
 export interface CollectedItems {
@@ -49,6 +49,33 @@ function detectPhaseEmoji(title: string): string {
   return '📋';
 }
 
+function mergeConsecutiveActivityCards(blocks: StructuredResponseBlock[]): StructuredResponseBlock[] {
+  const merged: StructuredResponseBlock[] = [];
+
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i];
+
+    if (block.type === 'single_activity_card' && block.activity) {
+      const group: ActivitySummaryUI[] = [block.activity];
+
+      while (i + 1 < blocks.length && blocks[i + 1].type === 'single_activity_card' && blocks[i + 1].activity) {
+        i++;
+        group.push(blocks[i].activity!);
+      }
+
+      if (group.length >= 2) {
+        merged.push({ type: 'activities_card', activities: group });
+      } else {
+        merged.push(block);
+      }
+    } else {
+      merged.push(block);
+    }
+  }
+
+  return merged;
+}
+
 export function parseStructuredResponse(
   text: string,
   items: CollectedItems
@@ -68,7 +95,7 @@ export function parseStructuredResponse(
 
   const sanitizedText = sanitizeResponseText(text);
   const blocks: StructuredResponseBlock[] = [];
-  const markerRegex = /\[\[(ATIVIDADES|ATIVIDADE:([^\]]+)|ARQUIVO:([^\]]+)|FASE:([^\]]+)|DOSSIE:([^\]]+))\]\]/g;
+  const markerRegex = /\[\[(ATIVIDADES|ATIVIDADE:([^\]]+)|ARQUIVO:([^\]]+)|FASE:([^\]]+))\]\]/g;
   let hasMarkers = false;
   let lastIndex = 0;
   let match;
@@ -166,30 +193,6 @@ export function parseStructuredResponse(
         phaseEmoji,
         phaseDescription,
       });
-    } else if (fullMarker.startsWith('DOSSIE:')) {
-      const dossieTitle = match[5]?.trim() || '';
-      const totalAtividades = items.activities.length;
-      const totalDocumentos = items.artifacts.length;
-
-      const fases: DossieSummary['fases'] = [];
-      const tempText = sanitizedText.substring(match.index);
-      const faseMatches = tempText.matchAll(/\[\[FASE:([^\]]+)\]\]/g);
-      for (const fm of faseMatches) {
-        const parts = (fm[1] || '').split('|').map(s => s.trim());
-        const nome = parts[0] || '';
-        const emoji = detectPhaseEmoji(nome);
-        fases.push({ emoji, nome, count: 0 });
-      }
-
-      blocks.push({
-        type: 'dossie_summary',
-        dossieSummary: {
-          titulo: dossieTitle,
-          totalAtividades,
-          totalDocumentos,
-          fases,
-        },
-      });
     }
 
     lastIndex = match.index + match[0].length;
@@ -219,5 +222,5 @@ export function parseStructuredResponse(
     }
   }
 
-  return blocks;
+  return mergeConsecutiveActivityCards(blocks);
 }
