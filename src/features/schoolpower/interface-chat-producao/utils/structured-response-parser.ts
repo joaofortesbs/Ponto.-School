@@ -1,4 +1,4 @@
-import type { StructuredResponseBlock, ActivitySummaryUI, PredictiveSuggestion } from '../types/message-types';
+import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
 export interface CollectedItems {
@@ -95,14 +95,13 @@ export function parseStructuredResponse(
 
   const sanitizedText = sanitizeResponseText(text);
   const blocks: StructuredResponseBlock[] = [];
-  const markerRegex = /\[\[(ATIVIDADES|ATIVIDADE:([^\]]+)|ARQUIVO:([^\]]+)|FASE:([^\]]+)|SUGESTAO:([^\]]+))\]\]/g;
+  const markerRegex = /\[\[(ATIVIDADES|ATIVIDADE:([^\]]+)|ARQUIVO:([^\]]+)|FASE:([^\]]+))\]\]/g;
   let hasMarkers = false;
   let lastIndex = 0;
   let match;
   let activitiesCardAdded = false;
   const usedArtifactIds = new Set<string>();
   const usedActivityIds = new Set<string>();
-  const collectedSuggestions: PredictiveSuggestion[] = [];
 
   const normalizeStr = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/gi, '').trim();
 
@@ -194,16 +193,6 @@ export function parseStructuredResponse(
         phaseEmoji,
         phaseDescription,
       });
-    } else if (fullMarker.startsWith('SUGESTAO:')) {
-      const sugestaoContent = match[5]?.trim() || '';
-      const parts = sugestaoContent.split('|').map(s => s.trim());
-      if (parts.length >= 2) {
-        collectedSuggestions.push({
-          emoji: parts[0] || '💡',
-          title: parts[1] || '',
-          description: parts[2] || '',
-        });
-      }
     }
 
     lastIndex = match.index + match[0].length;
@@ -233,14 +222,5 @@ export function parseStructuredResponse(
     }
   }
 
-  const mergedBlocks = mergeConsecutiveActivityCards(blocks);
-
-  if (collectedSuggestions.length > 0) {
-    mergedBlocks.push({
-      type: 'predictive_suggestions',
-      suggestions: collectedSuggestions,
-    });
-  }
-
-  return mergedBlocks;
+  return mergeConsecutiveActivityCards(blocks);
 }

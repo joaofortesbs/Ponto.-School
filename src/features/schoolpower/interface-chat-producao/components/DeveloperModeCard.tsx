@@ -429,7 +429,6 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
     <motion.div
       layout={isStatic}
       className="w-full max-w-2xl my-2"
-      style={{ marginLeft: '52px' }}
     >
       <div className="rounded-2xl overflow-hidden shadow-xl backdrop-blur-sm p-5" style={{ backgroundColor: '#040b2a', borderWidth: '1px', borderStyle: 'solid', borderColor: '#1e2440' }}>
         <ProgressiveExecutionCard

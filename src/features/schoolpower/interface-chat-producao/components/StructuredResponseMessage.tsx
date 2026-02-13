@@ -1,10 +1,9 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { JotaAvatarChat } from './JotaAvatarChat';
 import { RichTextMessage } from './RichTextMessage';
-import { PredictiveSuggestionsCard } from './PredictiveSuggestionsCard';
 import { FileText, ChevronRight, ChevronDown, Brain, Layers, Search, PenLine, TextCursorInput, Link2, ClipboardList, Sparkles, BookOpen, Target, CheckCircle2, FolderOpen } from 'lucide-react';
-import type { StructuredResponseBlock, ActivitySummaryUI, PredictiveSuggestion } from '../types/message-types';
+import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
 interface StructuredResponseMessageProps {
@@ -97,15 +96,14 @@ function groupBlocksIntoPhases(blocks: StructuredResponseBlock[]): {
   phases: PhaseSection[];
   postPhaseBlocks: StructuredResponseBlock[];
 } {
-  const filteredBlocks = blocks.filter(b => b.type !== 'predictive_suggestions');
   const prePhaseBlocks: StructuredResponseBlock[] = [];
   const phases: PhaseSection[] = [];
   const postPhaseBlocks: StructuredResponseBlock[] = [];
   let currentPhase: PhaseSection | null = null;
   let foundFirstPhase = false;
 
-  for (let i = 0; i < filteredBlocks.length; i++) {
-    const block = filteredBlocks[i];
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i];
     if (block.type === 'phase_separator' && block.phaseTitle) {
       foundFirstPhase = true;
       if (currentPhase) {
@@ -420,10 +418,6 @@ function BlockRenderer({ block, idx, onOpenArtifact, onOpenActivity }: {
   onOpenArtifact?: (artifact: ArtifactData) => void;
   onOpenActivity?: (activity: ActivitySummaryUI) => void;
 }) {
-  if (block.type === 'predictive_suggestions' && block.suggestions) {
-    return null;
-  }
-
   if (block.type === 'text' && block.content) {
     return (
       <div className="mb-2">
@@ -466,12 +460,6 @@ export function StructuredResponseMessage({ blocks, onOpenArtifact, onOpenActivi
   const { prePhaseBlocks, phases, postPhaseBlocks } = useMemo(() => groupBlocksIntoPhases(blocks), [blocks]);
   const hasPhases = phases.length > 0;
 
-  const suggestions = useMemo(() => {
-    return blocks
-      .filter(b => b.type === 'predictive_suggestions' && b.suggestions)
-      .flatMap(b => b.suggestions || []);
-  }, [blocks]);
-
   const [openPhases, setOpenPhases] = useState<Set<number>>(() => {
     return new Set(hasPhases ? [0] : []);
   });
@@ -487,13 +475,6 @@ export function StructuredResponseMessage({ blocks, onOpenArtifact, onOpenActivi
       return next;
     });
   };
-
-  const handleSuggestionClick = useCallback((suggestion: PredictiveSuggestion) => {
-    const message = `${suggestion.title}: ${suggestion.description}`;
-    window.dispatchEvent(new CustomEvent('jota-suggestion-click', {
-      detail: { message, suggestion }
-    }));
-  }, []);
 
   return (
     <motion.div 
@@ -571,7 +552,7 @@ export function StructuredResponseMessage({ blocks, onOpenArtifact, onOpenActivi
                 ))}
               </>
             ) : (
-              blocks.filter(b => b.type !== 'predictive_suggestions').map((block, idx) => (
+              blocks.map((block, idx) => (
                 <motion.div
                   key={`flat-${idx}`}
                   initial={{ opacity: 0 }}
@@ -587,13 +568,6 @@ export function StructuredResponseMessage({ blocks, onOpenArtifact, onOpenActivi
                   />
                 </motion.div>
               ))
-            )}
-
-            {suggestions.length > 0 && (
-              <PredictiveSuggestionsCard
-                suggestions={suggestions}
-                onSuggestionClick={handleSuggestionClick}
-              />
             )}
           </div>
         </div>

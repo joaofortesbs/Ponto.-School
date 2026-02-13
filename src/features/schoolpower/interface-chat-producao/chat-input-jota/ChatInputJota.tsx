@@ -110,19 +110,6 @@ export function ChatInputJota({
   };
 
   useEffect(() => {
-    const handleSuggestionClick = (event: CustomEvent) => {
-      const { message: suggestionMessage } = event.detail;
-      if (suggestionMessage && !isLoading && !isDisabled) {
-        onSend(suggestionMessage);
-      }
-    };
-    window.addEventListener('jota-suggestion-click', handleSuggestionClick as EventListener);
-    return () => {
-      window.removeEventListener('jota-suggestion-click', handleSuggestionClick as EventListener);
-    };
-  }, [onSend, isLoading, isDisabled]);
-
-  useEffect(() => {
     if (textareaRef.current) {
       const textarea = textareaRef.current;
       const lineHeight = 20;

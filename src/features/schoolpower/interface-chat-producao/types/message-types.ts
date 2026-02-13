@@ -55,14 +55,8 @@ export interface PlanCardData {
   }>;
 }
 
-export interface PredictiveSuggestion {
-  emoji: string;
-  title: string;
-  description: string;
-}
-
 export interface StructuredResponseBlock {
-  type: 'text' | 'activities_card' | 'artifact_card' | 'single_activity_card' | 'phase_separator' | 'predictive_suggestions';
+  type: 'text' | 'activities_card' | 'artifact_card' | 'single_activity_card' | 'phase_separator';
   content?: string;
   activities?: ActivitySummaryUI[];
   activity?: ActivitySummaryUI;
@@ -70,7 +64,6 @@ export interface StructuredResponseBlock {
   phaseTitle?: string;
   phaseEmoji?: string;
   phaseDescription?: string;
-  suggestions?: PredictiveSuggestion[];
 }
 
 export interface ActivitySummaryUI {
