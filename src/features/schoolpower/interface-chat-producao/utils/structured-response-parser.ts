@@ -1,4 +1,4 @@
-import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
+import type { StructuredResponseBlock, ActivitySummaryUI, DossieSummary } from '../types/message-types';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
 export interface CollectedItems {
@@ -14,6 +14,39 @@ function sanitizeResponseText(text: string): string {
   cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
   cleaned = cleaned.trim();
   return cleaned || text;
+}
+
+const PHASE_CONFIG: Record<string, { emoji: string; color: string }> = {
+  'engajamento': { emoji: '🎯', color: '#f59e0b' },
+  'aquecimento': { emoji: '🎯', color: '#f59e0b' },
+  'introducao': { emoji: '🎯', color: '#f59e0b' },
+  'introdução': { emoji: '🎯', color: '#f59e0b' },
+  'diagnostico': { emoji: '🎯', color: '#f59e0b' },
+  'conteudo': { emoji: '🧠', color: '#8b5cf6' },
+  'conteúdo': { emoji: '🧠', color: '#8b5cf6' },
+  'ensino': { emoji: '🧠', color: '#8b5cf6' },
+  'desenvolvimento': { emoji: '🧠', color: '#8b5cf6' },
+  'pratica': { emoji: '📝', color: '#3b82f6' },
+  'prática': { emoji: '📝', color: '#3b82f6' },
+  'fixacao': { emoji: '📝', color: '#3b82f6' },
+  'fixação': { emoji: '📝', color: '#3b82f6' },
+  'exercicios': { emoji: '📝', color: '#3b82f6' },
+  'avaliacao': { emoji: '✅', color: '#10b981' },
+  'avaliação': { emoji: '✅', color: '#10b981' },
+  'fechamento': { emoji: '✅', color: '#10b981' },
+  'encerramento': { emoji: '✅', color: '#10b981' },
+  'complementos': { emoji: '📂', color: '#6366f1' },
+  'documentos': { emoji: '📂', color: '#6366f1' },
+  'materiais': { emoji: '📦', color: '#6366f1' },
+};
+
+function detectPhaseEmoji(title: string): string {
+  const lower = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  for (const [key, config] of Object.entries(PHASE_CONFIG)) {
+    const keyNorm = key.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (lower.includes(keyNorm)) return config.emoji;
+  }
+  return '📋';
 }
 
 export function parseStructuredResponse(
@@ -35,7 +68,7 @@ export function parseStructuredResponse(
 
   const sanitizedText = sanitizeResponseText(text);
   const blocks: StructuredResponseBlock[] = [];
-  const markerRegex = /\[\[(ATIVIDADES|ATIVIDADE:([^\]]+)|ARQUIVO:([^\]]+))\]\]/g;
+  const markerRegex = /\[\[(ATIVIDADES|ATIVIDADE:([^\]]+)|ARQUIVO:([^\]]+)|FASE:([^\]]+)|DOSSIE:([^\]]+))\]\]/g;
   let hasMarkers = false;
   let lastIndex = 0;
   let match;
@@ -45,7 +78,7 @@ export function parseStructuredResponse(
 
   const normalizeStr = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/gi, '').trim();
 
-  function findActivityByTitle(titulo: string): import('../types/message-types').ActivitySummaryUI | undefined {
+  function findActivityByTitle(titulo: string): ActivitySummaryUI | undefined {
     const searchNorm = normalizeStr(titulo);
     const searchWords = searchNorm.split(/\s+/).filter(w => w.length > 2);
 
@@ -120,6 +153,43 @@ export function parseStructuredResponse(
           });
         }
       }
+    } else if (fullMarker.startsWith('FASE:')) {
+      const faseContent = match[4]?.trim() || '';
+      const parts = faseContent.split('|').map(s => s.trim());
+      const phaseTitle = parts[0] || 'Fase';
+      const phaseDescription = parts[1] || '';
+      const phaseEmoji = detectPhaseEmoji(phaseTitle);
+
+      blocks.push({
+        type: 'phase_separator',
+        phaseTitle,
+        phaseEmoji,
+        phaseDescription,
+      });
+    } else if (fullMarker.startsWith('DOSSIE:')) {
+      const dossieTitle = match[5]?.trim() || '';
+      const totalAtividades = items.activities.length;
+      const totalDocumentos = items.artifacts.length;
+
+      const fases: DossieSummary['fases'] = [];
+      const tempText = sanitizedText.substring(match.index);
+      const faseMatches = tempText.matchAll(/\[\[FASE:([^\]]+)\]\]/g);
+      for (const fm of faseMatches) {
+        const parts = (fm[1] || '').split('|').map(s => s.trim());
+        const nome = parts[0] || '';
+        const emoji = detectPhaseEmoji(nome);
+        fases.push({ emoji, nome, count: 0 });
+      }
+
+      blocks.push({
+        type: 'dossie_summary',
+        dossieSummary: {
+          titulo: dossieTitle,
+          totalAtividades,
+          totalDocumentos,
+          fases,
+        },
+      });
     }
 
     lastIndex = match.index + match[0].length;

@@ -2,8 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { JotaAvatarChat } from './JotaAvatarChat';
 import { RichTextMessage } from './RichTextMessage';
-import { FileText, ChevronRight, Brain, Layers, Search, PenLine, TextCursorInput, Link2, ClipboardList, Sparkles } from 'lucide-react';
-import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
+import { FileText, ChevronRight, Brain, Layers, Search, PenLine, TextCursorInput, Link2, ClipboardList, Sparkles, BookOpen, Target, CheckCircle2, FolderOpen } from 'lucide-react';
+import type { StructuredResponseBlock, ActivitySummaryUI, DossieSummary } from '../types/message-types';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 
 interface StructuredResponseMessageProps {
@@ -36,6 +36,172 @@ function getActivityTypeLabel(tipo: string): string {
   if (t.includes('texto') || t.includes('text')) return 'Versão Texto';
   if (t.includes('lista') || t.includes('exerc')) return 'Lista de Exercícios';
   return tipo?.replace(/[-_]/g, ' ') || 'Atividade';
+}
+
+function getPhaseIcon(emoji: string) {
+  switch (emoji) {
+    case '🎯': return Target;
+    case '🧠': return Brain;
+    case '📝': return BookOpen;
+    case '✅': return CheckCircle2;
+    case '📂': return FolderOpen;
+    case '📦': return FolderOpen;
+    default: return BookOpen;
+  }
+}
+
+function getPhaseColor(emoji: string): string {
+  switch (emoji) {
+    case '🎯': return '#f59e0b';
+    case '🧠': return '#8b5cf6';
+    case '📝': return '#3b82f6';
+    case '✅': return '#10b981';
+    case '📂': return '#6366f1';
+    case '📦': return '#6366f1';
+    default: return '#6366f1';
+  }
+}
+
+function DossieSummaryCard({ summary }: { summary: DossieSummary }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="my-4 rounded-2xl overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.06) 50%, rgba(59, 130, 246, 0.04) 100%)',
+        border: '1px solid rgba(99, 102, 241, 0.18)',
+        maxWidth: '460px',
+      }}
+    >
+      <div className="px-5 pt-4 pb-3">
+        <div className="flex items-center gap-2.5 mb-1">
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(99, 102, 241, 0.15)' }}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+          </div>
+          <p
+            className="font-semibold text-white/90 leading-tight"
+            style={{
+              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+              fontSize: '14.5px',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            {summary.titulo}
+          </p>
+        </div>
+      </div>
+
+      <div className="px-5 pb-3">
+        <div className="flex gap-4">
+          <div className="flex items-center gap-1.5">
+            <ClipboardList className="w-3 h-3 text-indigo-400/70" />
+            <span className="text-xs text-slate-400">
+              {summary.totalAtividades} {summary.totalAtividades === 1 ? 'atividade' : 'atividades'}
+            </span>
+          </div>
+          {summary.totalDocumentos > 0 && (
+            <div className="flex items-center gap-1.5">
+              <FileText className="w-3 h-3 text-indigo-400/70" />
+              <span className="text-xs text-slate-400">
+                {summary.totalDocumentos} {summary.totalDocumentos === 1 ? 'documento' : 'documentos'}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {summary.fases.length > 0 && (
+        <div className="px-5 pb-4 flex flex-wrap gap-2">
+          {summary.fases.map((fase, i) => {
+            const color = getPhaseColor(fase.emoji);
+            return (
+              <div
+                key={i}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                style={{
+                  background: `${color}12`,
+                  border: `1px solid ${color}25`,
+                }}
+              >
+                <span className="text-xs">{fase.emoji}</span>
+                <span
+                  className="text-xs font-medium"
+                  style={{ color: `${color}cc` }}
+                >
+                  {fase.nome}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function PhaseSeparator({ title, emoji, description }: { title: string; emoji: string; description?: string }) {
+  const color = getPhaseColor(emoji);
+  const IconComponent = getPhaseIcon(emoji);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+      className="mt-5 mb-3"
+      style={{ maxWidth: '460px' }}
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{
+            background: `${color}15`,
+            border: `1px solid ${color}30`,
+          }}
+        >
+          <IconComponent className="w-4 h-4" style={{ color }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p
+            className="font-semibold leading-tight"
+            style={{
+              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+              fontSize: '13.5px',
+              color: `${color}dd`,
+              letterSpacing: '-0.005em',
+            }}
+          >
+            {title}
+          </p>
+          {description && (
+            <p
+              className="mt-0.5 leading-snug"
+              style={{
+                fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+                fontSize: '12px',
+                color: 'rgba(255, 255, 255, 0.45)',
+              }}
+            >
+              {description}
+            </p>
+          )}
+        </div>
+        <div
+          className="flex-1 h-px"
+          style={{
+            background: `linear-gradient(to right, ${color}25, transparent)`,
+            minWidth: '40px',
+            maxWidth: '100px',
+          }}
+        />
+      </div>
+    </motion.div>
+  );
 }
 
 function InlineActivitiesCard({ activities, onOpenActivity }: { 
@@ -210,6 +376,36 @@ export function StructuredResponseMessage({ blocks, onOpenArtifact, onOpenActivi
           
           <div className="mt-auto">
             {blocks.map((block, idx) => {
+              if (block.type === 'dossie_summary' && block.dossieSummary) {
+                return (
+                  <motion.div
+                    key={`dossie-${idx}`}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.08, duration: 0.4 }}
+                  >
+                    <DossieSummaryCard summary={block.dossieSummary} />
+                  </motion.div>
+                );
+              }
+
+              if (block.type === 'phase_separator' && block.phaseTitle) {
+                return (
+                  <motion.div
+                    key={`phase-${idx}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: idx * 0.08, duration: 0.3 }}
+                  >
+                    <PhaseSeparator
+                      title={block.phaseTitle}
+                      emoji={block.phaseEmoji || '📋'}
+                      description={block.phaseDescription}
+                    />
+                  </motion.div>
+                );
+              }
+
               if (block.type === 'text' && block.content) {
                 return (
                   <motion.div

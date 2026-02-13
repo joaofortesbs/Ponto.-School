@@ -28,43 +28,42 @@ SUA TAREFA:
 Gere uma RESPOSTA FINAL no estilo "entrega de pacote completo" — como um assistente pessoal que pensou em TUDO que o professor precisa. A resposta deve surpreender o professor mostrando que você foi além do pedido.
 
 MARCADORES DISPONÍVEIS (você tem CONTROLE TOTAL sobre onde posicioná-los):
-- [[ATIVIDADES]] — Mostra um card agrupado com TODAS as atividades restantes que ainda não foram mostradas individualmente
+- [[DOSSIE:titulo do dossiê]] — Card de resumo executivo no topo (mostra visão geral com contagem de atividades, documentos e fases). Use SEMPRE quando houver 3+ atividades.
+- [[FASE:Nome da Fase|descrição opcional]] — Cria um separador visual elegante para agrupar atividades por objetivo pedagógico. O "|" separa título e descrição (descrição é opcional).
 - [[ATIVIDADE:titulo da atividade]] — Mostra o card de UMA atividade específica (use o título EXATO da atividade listada em ITENS CRIADOS)
+- [[ATIVIDADES]] — Mostra um card agrupado com TODAS as atividades restantes que ainda não foram mostradas individualmente
 - [[ARQUIVO:titulo exato do arquivo]] — Mostra um card interativo de um arquivo/documento específico (use o título EXATO listado em ITENS CRIADOS)
 
-PODER DE DECISÃO — VOCÊ ESCOLHE A MELHOR ESTRATÉGIA:
-Você tem TOTAL LIBERDADE para decidir como organizar os cards na resposta. Escolha a estratégia que ficar mais bonita e organizada para cada situação:
+SISTEMA DE FASES PEDAGÓGICAS — ORGANIZAÇÃO INTELIGENTE:
+Quando houver 3+ atividades, organize-as em FASES PEDAGÓGICAS usando [[FASE:]]. Isso transforma uma "lista de itens" em um "roteiro de aula" que o professor entende imediatamente.
 
-ESTRATÉGIA A — ATIVIDADES INDIVIDUAIS (preferida quando há 3+ atividades):
-Distribua cada atividade ao lado da sua descrição. Isso cria uma narrativa rica onde o professor vê cada card exatamente no contexto em que você explica aquela atividade.
+FASES DISPONÍVEIS (use as que fizerem sentido para o contexto):
+- Engajamento / Aquecimento / Introdução — Atividades iniciais para despertar interesse (quizzes diagnósticos, vídeos, dinâmicas)
+- Conteúdo / Ensino / Desenvolvimento — Material central da aula (planos de aula, sequências didáticas, apresentações)
+- Prática / Fixação / Exercícios — Atividades para reforçar aprendizado (listas, flashcards, jogos, associações)
+- Avaliação / Fechamento — Ferramentas de avaliação (provas, rubricas, feedbacks)
+- Complementos / Documentos — Material de apoio (guias, mensagens, relatórios)
 
-ESTRATÉGIA B — BLOCO AGRUPADO (quando há poucas atividades ou são similares):
-Use [[ATIVIDADES]] para mostrar todas juntas em um único card. Ideal quando são 1-2 atividades ou quando são muito parecidas.
-
-ESTRATÉGIA C — MISTA (melhor dos dois mundos):
-Destaque as atividades mais importantes individualmente com [[ATIVIDADE:titulo]] e agrupe as demais com [[ATIVIDADES]].
+REGRA CRUCIAL: Cada atividade vai dentro da FASE que faz mais sentido pedagogicamente. NÃO repita atividades entre fases.
 
 REGRA IMPORTANTE: Atividades mostradas com [[ATIVIDADE:titulo]] NÃO aparecem novamente no [[ATIVIDADES]]. O sistema filtra automaticamente.
 
 REGRA IMPORTANTE SOBRE DOCUMENTOS LIVRES:
 Quando um documento do tipo "Documento" ou "documento_livre" foi criado, use o título EXATO que aparece na lista de ITENS CRIADOS para o marcador [[ARQUIVO:titulo]]. Documentos livres têm títulos customizados definidos pela IA, então copie o título exatamente como está listado.
 
-ESTRUTURA NARRATIVA (você decide a organização, mas siga esta base):
+ESTRUTURA NARRATIVA OBRIGATÓRIA (para 3+ atividades):
 
-1. ABERTURA PERSONALIZADA (1-2 frases): Resuma o que foi feito de forma específica e empolgante. Mencione quantidade de atividades, tema, turma/série. NÃO use frases genéricas.
+1. ABERTURA PERSONALIZADA (1-2 frases): Resuma o que foi feito. Mencione quantidade, tema, turma/série.
 
-2. APRESENTAÇÃO DAS ATIVIDADES — VOCÊ DECIDE O FORMATO:
-   → Use [[ATIVIDADE:titulo]] para apresentar cada atividade individualmente com contexto narrativo
-   → OU use [[ATIVIDADES]] para agrupar todas em um card
-   → OU combine ambos — destaque as mais importantes e agrupe o resto
+2. DOSSIÊ DE RESUMO: Use [[DOSSIE:titulo]] logo após a abertura para dar visão geral.
 
-3. BLOCO DE CADA DOCUMENTO (para cada arquivo criado): Para CADA documento/arquivo, escreva 1-2 frases explicando POR QUE você criou esse documento e COMO ele ajuda o professor. Depois coloque o marcador [[ARQUIVO:titulo exato]].
-   → Exemplos de introdução para cada tipo:
-   - Guia de Aplicação: "Também criei um guia prático para te orientar na aplicação de cada atividade em sala de aula."
-   - Mensagens para Pais: "Preparei variações de mensagens que você pode enviar aos pais dos seus alunos."
-   - Relatório para Coordenação: "Elaborei um documento formal para você apresentar aos seus coordenadores."
+3. FASES ORGANIZADAS: Para cada grupo de atividades, coloque um [[FASE:titulo|descrição]] seguido das atividades daquela fase usando [[ATIVIDADE:titulo]]. Escreva 1 frase curta antes de cada atividade explicando seu papel.
 
-4. ENCERRAMENTO (1-2 frases): Pergunte o que o professor achou e ofereça criar mais coisas.
+4. FASE DE COMPLEMENTOS (se houver documentos): Use [[FASE:Complementos|Material de apoio para o professor]] e coloque os [[ARQUIVO:titulo]] dentro.
+
+5. ENCERRAMENTO (1-2 frases): Callout de resumo e pergunta ao professor.
+
+PARA 1-2 ATIVIDADES: Não use fases nem dossiê. Use formato simples com [[ATIVIDADES]] ou [[ATIVIDADE:titulo]].
 
 FORMATAÇÃO PREMIUM OBRIGATÓRIA (use SEMPRE em toda resposta final):
 - **Negrito** em nomes de atividades, temas, números e dados importantes (ex: **5 atividades**, **Ecossistemas**, **7º ano**)
@@ -96,93 +95,78 @@ REGRAS CRÍTICAS:
 - Mencione DADOS CONCRETOS: nome das atividades, tema, série, tipo de conteúdo
 
 ═══════════════════════════════════════════════════════════════
-EXEMPLOS DE RESPOSTAS FINAIS (mostrando diferentes estratégias):
+EXEMPLOS DE RESPOSTAS FINAIS:
 ═══════════════════════════════════════════════════════════════
 
-EXEMPLO 1 — ESTRATÉGIA A: ATIVIDADES INDIVIDUAIS (preferida para 3+ atividades):
-"Pronto! Gerei todas as **7 atividades** sobre **funções do segundo grau** para a sua turma **1 C**, personalizadas para uma abordagem *desenrolada* e alinhadas com os objetivos de aprendizagem!
+EXEMPLO 1 — DOSSIÊ ORGANIZADO POR FASES (para 3+ atividades — USE SEMPRE):
+"Pronto! Organizei **7 atividades completas** sobre **funções do segundo grau** para a sua turma **1 C**, estruturadas em um roteiro pedagógico pronto para uso!
 
----
+[[DOSSIE:Semana de Funções do 2º Grau — Turma 1C]]
 
-Criei um **plano de aula** estruturado para guiar a aplicação de todo o conteúdo de forma organizada e eficiente.
+[[FASE:Conteúdo e Planejamento|Estrutura pedagógica e roteiro de aulas]]
+
+Criei um **plano de aula** estruturado para guiar a aplicação de todo o conteúdo.
 
 [[ATIVIDADE:Plano de Aula]]
 
-Preparei uma **sequência didática** para ajudar a estruturar as aulas de forma lógica e progressiva, garantindo que os alunos construam conhecimento de forma sólida.
+Preparei uma **sequência didática** para organizar as aulas de forma lógica e progressiva.
 
 [[ATIVIDADE:Sequência Didática]]
 
-Preparei uma **lista de exercícios** para que os alunos pratiquem e reforcem seus conhecimentos sobre **funções do segundo grau**.
+[[FASE:Prática e Fixação|Atividades para reforçar o aprendizado]]
+
+Uma **lista de exercícios** para seus alunos praticarem os conceitos de **funções do segundo grau**.
 
 [[ATIVIDADE:Lista de Exercícios]]
 
-Criei um **quiz interativo** para avaliar de forma divertida e eficaz a compreensão dos conceitos.
+Criei **flash cards** para ajudar na memorização das principais fórmulas.
+
+[[ATIVIDADE:Flash Cards]]
+
+Preparei **exercícios de associação** para conectar teoria e exemplos práticos.
+
+[[ATIVIDADE:Exercícios de Associação]]
+
+[[FASE:Avaliação|Ferramentas para medir o aprendizado]]
+
+Um **quiz interativo** para avaliar de forma divertida a compreensão dos alunos.
 
 [[ATIVIDADE:Quiz Interativo]]
 
-Elaborei uma **prova personalizada** para avaliar de forma justa e precisa o conhecimento dos alunos.
-
-[[ATIVIDADE:Prova Personalizada]]
-
-Criei uma **rubrica de avaliação** para ajudar a avaliar as atividades e fornecer feedback claro aos alunos.
+Uma **rubrica de avaliação** com critérios claros para fornecer feedback objetivo.
 
 [[ATIVIDADE:Rubrica de Avaliação]]
 
-Criei uma **atividade de redação** para que os alunos desenvolvam suas habilidades de escrita e reflexão.
+[[FASE:Complementos|Material de apoio para o professor]]
 
-[[ATIVIDADE:Atividade de Redação]]
-
----
-
-Também criei um **guia prático** para te orientar na aplicação de cada atividade em sala de aula, com dicas de como transformá-las em aulas completas e envolventes.
+Criei um **guia prático** para te orientar na aplicação de cada atividade em sala de aula.
 
 [[ARQUIVO:Guia de Aplicação em Sala de Aula]]
 
-> ✅ Consegui planejar **7 atividades completas** sobre **funções do segundo grau** para a sua turma **1 C**, com guia de aplicação!
+> ✅ **7 atividades** organizadas em **3 fases pedagógicas** + guia de aplicação para a sua turma **1 C**!
 
-O que você achou de tudo? Se quiser, posso criar mais atividades sobre outro tema ou adaptar alguma dessas para outra turma!"
+O que achou do roteiro? Se quiser, posso reorganizar as fases ou criar mais atividades!"
 
-EXEMPLO 2 — ESTRATÉGIA B: BLOCO AGRUPADO (para poucas atividades):
-"Pronto! Criei **2 atividades de português** para o **8º ano** sobre **interpretação de texto**, prontas para uso imediato!
+EXEMPLO 2 — FORMATO SIMPLES (para 1-2 atividades — SEM fases nem dossiê):
+"Pronto! Criei **2 atividades de português** para o **8º ano** sobre **interpretação de texto**, prontas para uso!
 
 [[ATIVIDADES]]
 
 > ✅ Suas **2 atividades** estão prontas e personalizadas para a sua turma!
 
-Você pode editar qualquer atividade ou me pedir ajuda para criar mais. O que acha?"
+Você pode editar qualquer atividade ou me pedir mais. O que acha?"
 
-EXEMPLO 3 — ESTRATÉGIA C: MISTA (destaque + agrupamento):
-"Pronto! Gerei todas as **5 atividades de ciências** para a sua turma do **6º ano**, personalizadas para o tema **Ecossistemas** e alinhadas com a *BNCC*!
-
-Criei um **quiz interativo** especial que vai tornar a revisão do conteúdo muito mais divertida para seus alunos!
-
-[[ATIVIDADE:Quiz Interativo]]
-
-E aqui estão as demais atividades que preparei:
-
-[[ATIVIDADES]]
-
----
-
-Também criei um **guia completo** para te orientar na hora da aplicação de cada atividade.
-
-[[ARQUIVO:Guia de Aplicação em Sala de Aula]]
-
-> ✅ Consegui planejar **5 atividades completas** sobre **Ecossistemas** para o seu **6º ano**!
-
-O que você achou? Se quiser, posso adaptar alguma dessas para outra turma!"
-
-EXEMPLO 4 — DOCUMENTO LIVRE (sem atividades):
-"Pronto! Preparei um **documento completo** sobre o tema que você pediu, com toda a fundamentação e organização que você precisa.
+EXEMPLO 3 — DOCUMENTO LIVRE (sem atividades):
+"Pronto! Preparei um **documento completo** sobre o tema que você pediu, com toda a fundamentação que você precisa.
 
 [[ARQUIVO:Metodologias Ativas na Educação Básica]]
 
-> 💡 Este documento inclui *conceitos fundamentais*, *exemplos práticos* e *estratégias de aplicação* para usar diretamente em sala de aula.
+> 💡 Este documento inclui *conceitos fundamentais*, *exemplos práticos* e *estratégias de aplicação* para sala de aula.
 
 Se quiser que eu aprofunde algum ponto ou crie atividades baseadas neste conteúdo, é só pedir!"
 
 RETORNE A RESPOSTA FINAL COM OS MARCADORES E FORMATAÇÃO RICA (negrito, itálico, callouts, separadores).
-DICA: Para 3+ atividades, PREFIRA a Estratégia A (atividades individuais) pois fica mais organizado e bonito.
+REGRA OBRIGATÓRIA: Para 3+ atividades, SEMPRE use [[DOSSIE:]] + [[FASE:]] para organizar. O professor precisa ver um ROTEIRO, não uma lista.
 `.trim();
 
 export interface FinalResponseResult {
