@@ -60,6 +60,12 @@ FORMATAÇÃO PREMIUM OBRIGATÓRIA (use SEMPRE em toda resposta final):
 - --- para separar seções visualmente quando a resposta tiver mais de 3 parágrafos
 - Use listas com - quando mencionar múltiplos itens (3+)
 - OBRIGATÓRIO: Use negrito em TODOS os nomes de atividades, temas e quantidades
+- OBRIGATÓRIO: Callouts (> 💡, > ✅, > 📌) SEMPRE em linhas separadas, NUNCA inline no meio de um parágrafo
+
+REGRA CRÍTICA DE CALLOUTS:
+- ERRADO: "...atividades na sua turma. > ✅ Consegui planejar..."  (callout inline)
+- CORRETO: "...atividades na sua turma.\n\n> ✅ Consegui planejar..." (callout em linha separada)
+- Todo callout (> emoji texto) DEVE estar em sua própria linha, com uma linha em branco ANTES dele
 
 REGRAS CRÍTICAS:
 - NUNCA retorne JSON, arrays ou objetos técnicos

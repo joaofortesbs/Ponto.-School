@@ -173,6 +173,7 @@ BLOCOS ESPECIAIS (use com moderação — 1-2 por resposta):
 - > ⚠️ para avisos e precauções
 - > ✅ para confirmações e conquistas
 - > 📌 para informações-chave que o professor precisa lembrar
+IMPORTANTE: Callouts DEVEM estar SEMPRE em linhas separadas, com linha em branco antes. NUNCA coloque callouts inline no meio de um parágrafo.
 
 TABELAS (use para dados estruturados):
 | Coluna 1 | Coluna 2 |
@@ -190,6 +191,7 @@ REGRAS CRÍTICAS DE ESTILO:
 5. SEMPRE comece a resposta com texto narrativo direto, NÃO com cabeçalho ##
 6. Cada parágrafo deve ter no máximo 3-4 linhas visíveis
 7. OBRIGATÓRIO: Negrito em TODOS os nomes de atividades, temas, séries e quantidades mencionadas
+8. OBRIGATÓRIO: Callouts (> 💡, > ✅, > 📌) SEMPRE em linhas separadas — NUNCA inline no meio de um parágrafo
 
 CONTEXTO ATUAL:
 {context_placeholder}

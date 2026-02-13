@@ -32,31 +32,46 @@ REGRAS:
 - NÃO mencione "plano de ação" ou termos técnicos
 
 FORMATAÇÃO PREMIUM OBRIGATÓRIA (use SEMPRE):
-- **Negrito** nos termos mais importantes: nomes de atividades, temas, séries, quantidades
-- *Itálico* para termos pedagógicos e referências curriculares
-- Respostas curtas (2-4 frases): use negrito nos dados-chave e seja direto
-- > 💡 para uma dica pedagógica rápida (opcional, quando a resposta tiver mais de 3 frases)
+- **Negrito** em nomes de atividades, temas, séries, quantidades e dados importantes (ex: **5 atividades**, **Ecossistemas**, **7º ano**)
+- *Itálico* para termos pedagógicos e referências curriculares (ex: *BNCC*, *metodologias ativas*)
+- Parágrafos curtos (2-4 frases no máximo)
+- > 💡 para dicas pedagógicas extras (OBRIGATÓRIO colocar em LINHA SEPARADA com linha em branco antes)
+- > ✅ para confirmar o que será feito
+- > 📌 para informações importantes
+- --- para separar seções quando a resposta tiver mais de 3 frases
 - OBRIGATÓRIO: Use negrito em TODOS os dados específicos do pedido do professor
+- OBRIGATÓRIO: Callouts (> 💡, > ✅, > 📌) SEMPRE em linhas separadas, NUNCA inline no meio de um parágrafo
+
+REGRA CRÍTICA DE CALLOUTS:
+- ERRADO: "...personalizar o material. > 💡 Uma dica pedagógica..."  (callout inline no meio do texto)
+- CORRETO: "...personalizar o material.\n\n> 💡 Uma dica pedagógica..." (callout em linha separada após linha em branco)
+- Todo callout (> emoji texto) DEVE estar em sua própria linha, com uma linha em branco ANTES dele
 
 EXEMPLOS DE RESPOSTAS PARA DIFERENTES TIPOS DE PEDIDO:
 
 Criação de atividades:
 - Pedido: "Crie 3 atividades de matemática para 7º ano"
-  Resposta: "Perfeito! Vou criar **3 atividades de matemática** focadas no **7º ano**. Vou analisar as melhores opções de formato para engajar seus alunos e personalizar o conteúdo para a faixa etária."
+  Resposta: "Perfeito! Vou criar **3 atividades de matemática** focadas no **7º ano**. Vou analisar as melhores opções de formato para engajar seus alunos e personalizar o conteúdo para a *faixa etária*.
+
+> 💡 Atividades interativas como *quiz* e *jogos educativos* costumam ter maior engajamento no **7º ano**!"
 
 Explicação/Texto:
 - Pedido: "Me explique o que é metodologia ativa"
-  Resposta: "Claro! Vou preparar uma explicação completa sobre **metodologia ativa**, com conceitos, exemplos práticos e dicas de como aplicar em sala de aula."
+  Resposta: "Claro! Vou preparar uma explicação completa sobre **metodologia ativa**, com conceitos, exemplos práticos e dicas de como aplicar em sala de aula.
+
+> 💡 *Metodologias ativas* colocam o aluno como protagonista do aprendizado — vou incluir exemplos práticos para sua realidade!"
 
 Pesquisa:
 - Pedido: "Quais atividades eu já criei?"
   Resposta: "Vou consultar suas **atividades anteriores** agora mesmo! Em instantes você terá uma lista completa do que já foi criado."
 
 Plano de aula:
-- Pedido: "Monte um plano de aula sobre clima"
-  Resposta: "Ótimo! Vou elaborar um **plano de aula completo** sobre **clima**, com objetivos, metodologia e atividades sugeridas para você aplicar com a turma."
+- Pedido: "Monte um plano de aula sobre clima para o 5º ano"
+  Resposta: "Ótimo! Vou elaborar um **plano de aula completo** sobre **clima** para o **5º ano**, com objetivos alinhados à *BNCC*, metodologia e atividades sugeridas para aplicar com a turma.
 
-RETORNE A RESPOSTA COM FORMATAÇÃO RICA (negrito e itálico nos dados importantes).
+> 💡 Vou incluir atividades práticas sobre **clima** que tornam o aprendizado mais significativo para os alunos!"
+
+RETORNE A RESPOSTA COM FORMATAÇÃO RICA (negrito, itálico, callouts em linhas separadas).
 `.trim();
 
 const INTERPRETATION_PROMPT = `
@@ -133,7 +148,7 @@ export async function generateInitialResponse(
       // SANITIZAÇÃO CRÍTICA: Garantir que JSON bruto nunca chegue à UI
       if (containsRawJson(rawResponse)) {
         console.warn('⚠️ [InitialResponse] Resposta da IA contém JSON bruto! Sanitizando...');
-        const sanitized = sanitizeAiOutput(rawResponse, { capabilityName: 'resposta_inicial' });
+        const sanitized = sanitizeAiOutput(rawResponse, { capabilityName: 'resposta_inicial', expectedType: 'narrative' });
         resposta = sanitized.sanitized;
         console.log(`✅ [InitialResponse] Resposta sanitizada: "${resposta.substring(0, 100)}..."`);
       } else {
@@ -201,7 +216,7 @@ export async function getInitialResponseOnly(userInput: string): Promise<string>
     // SANITIZAÇÃO CRÍTICA: Garantir que JSON bruto nunca chegue à UI
     if (containsRawJson(rawResponse)) {
       console.warn('⚠️ [InitialResponseOnly] Resposta contém JSON bruto! Sanitizando...');
-      const sanitized = sanitizeAiOutput(rawResponse, { capabilityName: 'resposta_inicial' });
+      const sanitized = sanitizeAiOutput(rawResponse, { capabilityName: 'resposta_inicial', expectedType: 'narrative' });
       return sanitized.sanitized;
     }
     

@@ -87,9 +87,16 @@ function parseContentLine(line: string): EditorJSBlock | null {
   return null;
 }
 
+function preprocessCallouts(text: string): string {
+  const calloutEmojis = Object.keys(CALLOUT_EMOJI_MAP).map(e => e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  const inlineCalloutPattern = new RegExp(`([.!?;:)"'])\\s*>\\s*(${calloutEmojis})\\s`, 'g');
+  return text.replace(inlineCalloutPattern, '$1\n\n> $2 ');
+}
+
 export function convertTextContentToBlocks(textContent: string): EditorJSData {
   const blocks: EditorJSBlock[] = [];
-  const lines = textContent.split('\n');
+  const preprocessed = preprocessCallouts(textContent);
+  const lines = preprocessed.split('\n');
   let i = 0;
 
   while (i < lines.length) {
