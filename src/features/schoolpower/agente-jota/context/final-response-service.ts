@@ -121,39 +121,48 @@ EXEMPLOS DE RESPOSTAS FINAIS:
 ═══════════════════════════════════════════════════════════════
 
 EXEMPLO 1 — FASES COM ATIVIDADES AGRUPADAS (para 3+ atividades — USE SEMPRE):
-"Pronto! Organizei **7 atividades completas** sobre **funções do segundo grau** para a sua turma **1 C**, estruturadas em um roteiro pedagógico pronto para uso!
+"Pronto! Organizei **7 atividades completas** sobre **funções do segundo grau** para a sua turma **1 C**, em um roteiro pedagógico pronto para uso!
 
-[[FASE:Conteúdo e Planejamento|Estrutura pedagógica e roteiro de aulas]]
+[[FASE:Engajamento / Aquecimento|Atividades iniciais para despertar interesse]]
 
-Criei um **Plano de Aula** estruturado para guiar a aplicação de todo o conteúdo e uma **Sequência Didática** para organizar as aulas de forma lógica e progressiva.
+Comece por aqui — atividades curtas que ativam o conhecimento prévio antes de aprofundar.
 
 [[ATIVIDADE:Plano de Aula]]
 [[ATIVIDADE:Sequência Didática]]
 
 [[FASE:Prática e Fixação|Atividades para reforçar o aprendizado]]
 
-Preparei uma **Lista de Exercícios** para praticar os conceitos, **Flash Cards** para memorização das fórmulas e **Exercícios de Associação** para conectar teoria e exemplos práticos.
+Ideais para a **segunda aula** — alterne entre exercícios individuais e em dupla para manter o ritmo.
 
 [[ATIVIDADE:Lista de Exercícios]]
 [[ATIVIDADE:Flash Cards]]
 [[ATIVIDADE:Exercícios de Associação]]
 
-[[FASE:Avaliação|Ferramentas para medir o aprendizado]]
+[[FASE:Avaliação / Fechamento|Ferramentas para medir o aprendizado]]
 
-Criei um **Quiz Interativo** para avaliar de forma divertida a compreensão dos alunos e uma **Rubrica de Avaliação** com critérios claros para feedback objetivo.
+Use o quiz como avaliação formativa e a rubrica para feedback individualizado.
 
 [[ATIVIDADE:Quiz Interativo]]
 [[ATIVIDADE:Rubrica de Avaliação]]
 
 [[FASE:Complementos|Material de apoio para o professor]]
 
-Preparei um **Guia de Aplicação em Sala de Aula** para te orientar na aplicação de cada atividade.
-
 [[ARQUIVO:Guia de Aplicação em Sala de Aula]]
 
-> ✅ **7 atividades** organizadas em **3 fases pedagógicas** + guia de aplicação para a sua turma **1 C**!
+> ✅ **7 atividades** organizadas em **4 fases pedagógicas** para a turma **1 C** — abra cada fase para explorar!
 
-O que achou do roteiro? Se quiser, posso reorganizar as fases ou criar mais atividades!"
+O que achou? Se quiser, posso reorganizar ou criar mais atividades!"
+
+REGRA ANTI-REDUNDÂNCIA — O texto entre a fase e os marcadores NÃO deve repetir o que o card já mostra.
+ERRADO: "Criei um **Plano de Aula** estruturado para guiar a aplicação de todo o conteúdo e uma **Sequência Didática** para organizar as aulas." (REDUNDANTE — o card já diz o nome!)
+CORRETO: "Comece por aqui — atividades curtas que ativam o conhecimento prévio antes de aprofundar." (INSIGHT ESTRATÉGICO — dica de como/quando usar)
+
+O texto entre fase e marcadores deve ser:
+- Uma DICA PEDAGÓGICA de como aplicar (ex: "Alterne entre individual e em dupla")
+- Uma RECOMENDAÇÃO de sequência (ex: "Comece pela segunda aula")
+- Uma OBSERVAÇÃO contextual (ex: "Ideal para turmas com dificuldade em álgebra")
+- OU simplesmente OMITIDO se não há insight relevante (liste os marcadores direto)
+NUNCA repita o nome/tipo das atividades no texto — o card já mostra isso visualmente.
 
 EXEMPLO 2 — FORMATO SIMPLES (para 1-2 atividades — SEM fases):
 "Pronto! Criei **2 atividades de português** para o **8º ano** sobre **interpretação de texto**, prontas para uso!
@@ -174,7 +183,8 @@ EXEMPLO 3 — DOCUMENTO LIVRE (sem atividades):
 Se quiser que eu aprofunde algum ponto ou crie atividades baseadas neste conteúdo, é só pedir!"
 
 RETORNE A RESPOSTA FINAL COM OS MARCADORES E FORMATAÇÃO RICA (negrito, itálico, callouts, separadores).
-REGRA OBRIGATÓRIA: Para 3+ atividades, SEMPRE use [[FASE:]] para organizar. O professor precisa ver um ROTEIRO, não uma lista. Dentro de cada fase, escreva UMA frase unificada e liste os marcadores [[ATIVIDADE:]] todos juntos em sequência.
+REGRA OBRIGATÓRIA: Para 3+ atividades, SEMPRE use [[FASE:]] para organizar. O professor precisa ver um ROTEIRO, não uma lista.
+REGRA ANTI-REDUNDÂNCIA: O texto entre fase e marcadores deve ser um INSIGHT ESTRATÉGICO (dica pedagógica, recomendação de sequência, observação contextual) — NUNCA repita os nomes das atividades que já aparecem nos cards. Máximo 1 frase curta por fase, ou omita o texto se não há insight relevante.
 `.trim();
 
 export interface FinalResponseResult {

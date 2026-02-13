@@ -7,12 +7,13 @@ Ponto. School is an AI-powered educational platform designed to provide personal
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
-- **2026-02-13**: Phase-Grouped Activity Cards — Compact Response Architecture:
-  1. **Phase Separators (`[[FASE:titulo|descrição]]`)**: Visual section headers grouping activities by pedagogical purpose (Engajamento, Conteúdo, Prática, Avaliação, Complementos). Auto-detected emoji and color coding via PHASE_CONFIG.
-  2. **Activity Grouping Per Phase**: AI writes ONE combined sentence describing ALL activities in a phase, then lists markers consecutively. Parser's `mergeConsecutiveActivityCards()` post-processor automatically groups 2+ consecutive `single_activity_card` blocks into a single `activities_card` block ("Suas X atividades" card).
-  3. **Parser**: `structured-response-parser.ts` handles 4 marker types: ATIVIDADES, ATIVIDADE:, ARQUIVO:, FASE:. DossieSummaryCard and [[DOSSIE:]] marker removed entirely.
-  4. **Prompt Architecture**: Final response prompt enforces: one combined sentence per phase → grouped activity markers. Explicit CORRETO/ERRADO examples prevent the AI from writing individual descriptions per activity.
-  KEY INSIGHT: "Paralysis of the List" solved by organizing by pedagogical purpose. Compact grouped cards reduce visual noise.
+- **2026-02-13**: Collapsible Phase Accordion + Anti-Redundancy System:
+  1. **Collapsible Phases (Accordion)**: `CollapsiblePhaseSection` component in StructuredResponseMessage.tsx. Phase 1 defaults open, rest collapsed. Smooth AnimatePresence expand/collapse. Chevron rotation indicator. `groupBlocksIntoPhases()` groups blocks into prePhase/phases/postPhase. Trailing text blocks (callouts) extracted from last phase to remain always-visible.
+  2. **Item Count Badge**: When phase is collapsed, shows compact pill badge (e.g., "2 atividades + 1 documento") next to title. Uses phase color coding.
+  3. **Anti-Redundancy Prompt**: REGRA ANTI-REDUNDÂNCIA in final-response-service.ts. AI must NOT repeat activity names the card already shows. Text between phase and markers must be: pedagogical tips, sequence recommendations, contextual observations, or omitted entirely. ERRADO/CORRETO examples enforce this.
+  4. **Mobile Optimization**: Touch targets min-height 48px, WebkitTapHighlightColor transparent, responsive padding.
+  5. **Parser**: 4 marker types: ATIVIDADES, ATIVIDADE:, ARQUIVO:, FASE:. `mergeConsecutiveActivityCards()` groups consecutive single_activity_cards.
+  KEY PATTERN: "Progressive Disclosure" — teachers see phase overview first, open phases on demand. Reduces vertical scroll by ~60%.
 - **2026-02-12**: Premium Typography & Design Overhaul (Manus AI-level quality):
   1. **RichTextMessage.tsx Complete Redesign**: Unified Inter font stack across ALL block types (eliminated Georgia serif mixing). Body text 14.5px/1.75 line-height, headers H1:20px/700, H2:17px/700, H3:15px/600 with negative letter-spacing. Max-width 680px constraint for readability. All renderers use inline styles for precise control. CSS-in-JS `<style>` tag handles inline elements (strong, em, code, a). Generous vertical spacing: 14px for special blocks, 6px for paragraphs. Subtle gradient delimiter, polished tables with alternating rows, callouts with 3px left accent border.
   2. **AssistantMessage.tsx + StructuredResponseMessage.tsx**: "Jota" label unified to Inter 14px/700 with -0.01em tracking. Consistent design system across all message types.
