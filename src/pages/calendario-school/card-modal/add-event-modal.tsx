@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tag, Hourglass, Pencil, Sparkles, BookOpen, GripHorizontal, X, Camera, Check, Star, Plus } from 'lucide-react';
+import { Tag, Hourglass, Pencil, Sparkles, BookOpen, GripHorizontal, X, Camera, Check, Star, Plus, Clock, RefreshCw, ChevronDown, ArrowRight } from 'lucide-react';
 
 interface Event {
   id: string;
@@ -9,16 +9,20 @@ interface Event {
   icon: string;
   selectedLabels: string[];
   labelColors: { [key: string]: string };
+  startTime: string | null;
+  endTime: string | null;
+  isAllDay: boolean;
+  repeat: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 }
 
 interface AddEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDay: number | null;
-  onAddEvent: (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }) => void;
+  onAddEvent: (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string) => void;
   isEditing?: boolean;
   editingEvent?: Event | null;
-  onUpdateEvent?: (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }) => void;
+  onUpdateEvent?: (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string) => void;
   onDeleteEvent?: (eventId: string) => void;
 }
 
@@ -28,13 +32,11 @@ interface Label {
   color: string;
 }
 
-// Constantes milimétricas do modal
-const MODAL_WIDTH = 360; // px
-const MODAL_BORDER_RADIUS = 16; // px
-const MODAL_PADDING = 16; // px
-const MODAL_HEADER_HEIGHT = 48; // px
+const MODAL_WIDTH = 360;
+const MODAL_BORDER_RADIUS = 16;
+const MODAL_PADDING = 16;
+const MODAL_HEADER_HEIGHT = 48;
 
-// Ícones disponíveis para seleção
 const AVAILABLE_ICONS = [
   { id: 'pencil', icon: Pencil, label: 'Lápis' },
   { id: 'camera', icon: Camera, label: 'Câmera' },
@@ -42,10 +44,38 @@ const AVAILABLE_ICONS = [
   { id: 'star', icon: Star, label: 'Estrela' },
 ];
 
-// Cores disponíveis para etiquetas
 const LABEL_COLORS = [
   '#FF6B00', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#EF4444', '#06B6D4'
 ];
+
+const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
+  const h = Math.floor(i / 2).toString().padStart(2, '0');
+  const m = i % 2 === 0 ? '00' : '30';
+  return `${h}:${m}`;
+});
+
+const REPEAT_OPTIONS = [
+  { value: 'none', label: 'Não repete' },
+  { value: 'daily', label: 'Diariamente' },
+  { value: 'weekly', label: 'Semanalmente' },
+  { value: 'monthly', label: 'Mensalmente' },
+  { value: 'yearly', label: 'Anualmente' },
+];
+
+const WEEKDAYS_SHORT = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+const calculateDuration = (start: string, end: string): string => {
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  let diffMin = (eh * 60 + em) - (sh * 60 + sm);
+  if (diffMin <= 0) return '';
+  const hours = Math.floor(diffMin / 60);
+  const mins = diffMin % 60;
+  if (hours === 0) return `${mins}min`;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h${mins}min`;
+};
 
 const AddEventModal: React.FC<AddEventModalProps> = ({
   isOpen,
@@ -65,12 +95,10 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   
-  // Estados para seletor de ícone
   const [selectedIcon, setSelectedIcon] = useState('pencil');
   const [isIconDropdownOpen, setIsIconDropdownOpen] = useState(false);
   const iconDropdownRef = useRef<HTMLDivElement>(null);
   
-  // Estados para etiquetas
   const [isLabelDropdownOpen, setIsLabelDropdownOpen] = useState(false);
   const [labels, setLabels] = useState<Label[]>([]);
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
@@ -79,33 +107,46 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   const [newLabelColor, setNewLabelColor] = useState(LABEL_COLORS[0]);
   const labelDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Reset/pré-preenchimento quando modal abre
+  const [startTime, setStartTime] = useState<string>('09:00');
+  const [endTime, setEndTime] = useState<string>('10:00');
+  const [isAllDay, setIsAllDay] = useState(true);
+  const [repeat, setRepeat] = useState<string>('none');
+  const [isRepeatDropdownOpen, setIsRepeatDropdownOpen] = useState(false);
+  const repeatDropdownRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (isOpen) {
       if (isEditing && editingEvent) {
         setTitle(editingEvent.title);
         setSelectedIcon(editingEvent.icon);
         setSelectedLabels(editingEvent.selectedLabels);
+        setIsAllDay(editingEvent.isAllDay);
+        setStartTime(editingEvent.startTime || '09:00');
+        setEndTime(editingEvent.endTime || '10:00');
+        setRepeat(editingEvent.repeat || 'none');
       } else {
         setTitle('');
         setSelectedIcon('pencil');
         setSelectedLabels([]);
+        setIsAllDay(true);
+        setStartTime('09:00');
+        setEndTime('10:00');
+        setRepeat('none');
       }
       setIsIconDropdownOpen(false);
       setIsLabelDropdownOpen(false);
       setIsCreatingLabel(false);
+      setIsRepeatDropdownOpen(false);
       setPosition({ x: 150, y: 80 });
     }
   }, [isOpen, isEditing, editingEvent]);
 
-  // Obter referência do container pai
   useEffect(() => {
     if (isOpen && modalRef.current) {
       containerRef.current = modalRef.current.closest('.calendar-container') as HTMLDivElement;
     }
   }, [isOpen]);
 
-  // Fechar dropdowns ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (iconDropdownRef.current && !iconDropdownRef.current.contains(event.target as Node)) {
@@ -115,13 +156,15 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         setIsLabelDropdownOpen(false);
         setIsCreatingLabel(false);
       }
+      if (repeatDropdownRef.current && !repeatDropdownRef.current.contains(event.target as Node)) {
+        setIsRepeatDropdownOpen(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Melhor sistema de arraste - segue o cursor exatamente
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -177,10 +220,13 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         labelData[label.id] = { name: label.name, color: label.color };
       });
       
+      const finalStartTime = isAllDay ? null : startTime;
+      const finalEndTime = isAllDay ? null : endTime;
+
       if (isEditing && onUpdateEvent) {
-        onUpdateEvent(title, selectedIcon, selectedLabels, labelData);
+        onUpdateEvent(title, selectedIcon, selectedLabels, labelData, finalStartTime, finalEndTime, isAllDay, repeat);
       } else {
-        onAddEvent(title, selectedDay, selectedIcon, selectedLabels, labelData);
+        onAddEvent(title, selectedDay, selectedIcon, selectedLabels, labelData, finalStartTime, finalEndTime, isAllDay, repeat);
       }
       onClose();
     }
@@ -215,7 +261,18 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
     );
   };
 
+  const getDateDisplay = () => {
+    if (!selectedDay) return '';
+    const date = new Date();
+    date.setDate(selectedDay);
+    const dow = WEEKDAYS_SHORT[date.getDay()];
+    const month = MONTHS_SHORT[date.getMonth()];
+    return `${dow}, ${selectedDay} de ${month}`;
+  };
+
   const SelectedIconComponent = AVAILABLE_ICONS.find(i => i.id === selectedIcon)?.icon || Pencil;
+  const repeatLabel = REPEAT_OPTIONS.find(r => r.value === repeat)?.label || 'Não repete';
+  const duration = calculateDuration(startTime, endTime);
 
   if (!isOpen) return null;
 
@@ -239,7 +296,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       }}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      {/* Header arrastável */}
       <div
         onMouseDown={handleMouseDown}
         className="flex items-center justify-between px-4 border-b border-[#FF6B00]/20"
@@ -257,9 +313,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           </span>
         </div>
         
-        {/* Ícones do header: Etiquetas, X */}
         <div className="flex items-center gap-2">
-          {/* Botão de Etiquetas */}
           <div ref={labelDropdownRef} className="relative">
             <motion.button
               whileHover={{ scale: 1.1 }}
@@ -275,7 +329,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
               <Tag className="w-4 h-4" />
             </motion.button>
             
-            {/* Dropdown de Etiquetas */}
             <AnimatePresence>
               {isLabelDropdownOpen && (
                 <motion.div
@@ -386,11 +439,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         </div>
       </div>
 
-      {/* Conteúdo do modal */}
       <div style={{ padding: `${MODAL_PADDING}px` }}>
-        {/* Campo de título com seletor de ícone */}
         <div className="flex gap-2">
-          {/* Seletor de ícone */}
           <div ref={iconDropdownRef} className="relative">
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -405,7 +455,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
               <SelectedIconComponent className="w-5 h-5 text-[#FF6B00]" />
             </motion.button>
             
-            {/* Dropdown de ícones */}
             <AnimatePresence>
               {isIconDropdownOpen && (
                 <motion.div
@@ -447,7 +496,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
             </AnimatePresence>
           </div>
           
-          {/* Campo de título */}
           <input
             type="text"
             value={title}
@@ -462,7 +510,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           />
         </div>
 
-        {/* Etiquetas selecionadas */}
         {selectedLabels.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
             {selectedLabels.map((labelId) => {
@@ -481,7 +528,112 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           </div>
         )}
 
-        {/* Cards de ação: Atividades e Aulas */}
+        <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(255, 107, 0, 0.1)' }}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <Clock className="text-white/40 w-5 h-5" />
+              <span className="text-white/80 text-sm">{getDateDisplay()}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-white/60 text-xs">Dia todo</span>
+              <button
+                onClick={() => setIsAllDay(!isAllDay)}
+                className="relative w-9 h-5 rounded-full transition-colors"
+                style={{ background: isAllDay ? '#FF6B00' : 'rgba(255, 255, 255, 0.2)' }}
+              >
+                <motion.div
+                  className="absolute top-0.5 w-4 h-4 bg-white rounded-full"
+                  animate={{ left: isAllDay ? '18px' : '2px' }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                />
+              </button>
+            </div>
+          </div>
+
+          {!isAllDay && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex items-center gap-2 mb-2"
+            >
+              <select
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="bg-transparent text-white text-sm font-semibold outline-none appearance-none cursor-pointer px-2 py-1 rounded-lg"
+                style={{ border: '1px solid rgba(255, 107, 0, 0.2)' }}
+              >
+                {TIME_OPTIONS.map((t) => (
+                  <option key={t} value={t} style={{ background: '#0a1434' }}>{t}</option>
+                ))}
+              </select>
+              <ArrowRight className="text-white/40 w-4 h-4 flex-shrink-0" />
+              <select
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="bg-transparent text-white text-sm font-semibold outline-none appearance-none cursor-pointer px-2 py-1 rounded-lg"
+                style={{ border: '1px solid rgba(255, 107, 0, 0.2)' }}
+              >
+                {TIME_OPTIONS.map((t) => (
+                  <option key={t} value={t} style={{ background: '#0a1434' }}>{t}</option>
+                ))}
+              </select>
+              {duration && (
+                <span className="text-white/40 text-xs ml-auto">{duration}</span>
+              )}
+            </motion.div>
+          )}
+        </div>
+
+        <div className="mt-3 pt-3 flex items-center gap-3" style={{ borderTop: '1px solid rgba(255, 107, 0, 0.1)' }}>
+          <RefreshCw className="text-white/40 w-5 h-5" />
+          <div ref={repeatDropdownRef} className="relative flex-1">
+            <button
+              onClick={() => setIsRepeatDropdownOpen(!isRepeatDropdownOpen)}
+              className="flex items-center gap-2 bg-transparent text-white text-sm font-semibold outline-none cursor-pointer px-2 py-1 rounded-lg w-full"
+              style={{ border: '1px solid rgba(255, 107, 0, 0.2)' }}
+            >
+              <span className="flex-1 text-left">{repeatLabel}</span>
+              <ChevronDown className={`w-4 h-4 text-white/40 transition-transform ${isRepeatDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <AnimatePresence>
+              {isRepeatDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  className="absolute top-full left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-lg"
+                  style={{
+                    background: '#0a1434',
+                    border: '1px solid rgba(255, 107, 0, 0.3)',
+                    zIndex: 9999
+                  }}
+                >
+                  <div className="p-1">
+                    {REPEAT_OPTIONS.map((opt) => (
+                      <motion.button
+                        key={opt.value}
+                        whileHover={{ x: 4 }}
+                        onClick={() => {
+                          setRepeat(opt.value);
+                          setIsRepeatDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                          repeat === opt.value
+                            ? 'text-[#FF6B00] bg-[#FF6B00]/10 font-semibold'
+                            : 'text-white/70 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {opt.label}
+                      </motion.button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
         <div className="flex gap-3 mt-4">
           <motion.button
             whileHover={{ scale: 1.02, y: -2 }}
@@ -510,7 +662,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           </motion.button>
         </div>
 
-        {/* Botão Adicionar/Atualizar + Deletar */}
         <div className="flex gap-2 justify-end mt-4">
           {isEditing && (
             <motion.button

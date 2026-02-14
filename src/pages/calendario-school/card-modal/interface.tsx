@@ -17,6 +17,10 @@ interface Event {
   icon: string;
   selectedLabels: string[];
   labelColors: { [key: string]: string };
+  startTime: string | null;
+  endTime: string | null;
+  isAllDay: boolean;
+  repeat: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 }
 
 interface DayData {
@@ -309,7 +313,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     setIsAddEventModalOpen(true);
   };
 
-  const handleAddEvent = (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }) => {
+  const handleAddEvent = (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string) => {
     const labelColors: { [key: string]: string } = {};
     selectedLabels.forEach(labelId => {
       if (labelData[labelId]) {
@@ -323,10 +327,13 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
       day,
       icon: selectedIcon,
       selectedLabels,
-      labelColors
+      labelColors,
+      startTime: isAllDay ? null : startTime,
+      endTime: isAllDay ? null : endTime,
+      isAllDay,
+      repeat: repeat as Event['repeat']
     };
     setEvents([...events, newEvent]);
-    console.log('📅 Novo evento adicionado:', { title, day, month: MONTHS[currentMonth], year: currentYear, icon: selectedIcon, labels: selectedLabels });
   };
 
   const handleEditEvent = (eventId: string) => {
@@ -337,7 +344,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     }
   };
 
-  const handleUpdateEvent = (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }) => {
+  const handleUpdateEvent = (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string) => {
     if (!editingEvent) return;
 
     const labelColors: { [key: string]: string } = {};
@@ -352,13 +359,16 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
       title,
       icon: selectedIcon,
       selectedLabels,
-      labelColors
+      labelColors,
+      startTime: isAllDay ? null : startTime,
+      endTime: isAllDay ? null : endTime,
+      isAllDay,
+      repeat: repeat as Event['repeat']
     };
 
     setEvents(events.map(e => e.id === editingEvent.id ? updatedEvent : e));
     setIsEditEventModalOpen(false);
     setEditingEvent(null);
-    console.log('📝 Evento atualizado:', { title, icon: selectedIcon, labels: selectedLabels });
   };
 
   const handleDeleteEvent = (eventId: string) => {
@@ -577,6 +587,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                               <IconComp className="w-4 h-4 text-[#FF6B00]" />
                             </div>
                             <span className="text-white text-sm font-medium flex-1 truncate">{event.title}</span>
+                            <span className="text-white/40 text-xs ml-auto">{event.isAllDay ? 'Dia todo' : `${event.startTime} - ${event.endTime}`}</span>
                             <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: labelColor }} />
                           </motion.div>
                         );
@@ -593,6 +604,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                           className="flex items-stretch relative cursor-pointer hover:bg-white/[0.02] transition-colors"
                           style={{ height: '48px', borderBottom: '1px solid rgba(255, 107, 0, 0.1)' }}
                           onClick={() => { setModalSelectedDay(focusDay); setIsAddEventModalOpen(true); }}
+                          onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                          onDrop={(e) => { e.preventDefault(); if (draggedEvent) { setEvents(events.map(ev => ev.id === draggedEvent.id ? { ...ev, day: focusDay, startTime: `${hour.toString().padStart(2, '0')}:00`, endTime: `${(hour + 1).toString().padStart(2, '0')}:00`, isAllDay: false } : ev)); setDraggedEvent(null); } }}
                         >
                           <div className="w-16 flex-shrink-0 flex items-center justify-end pr-3">
                             <span className="text-xs text-white/40">{hour.toString().padStart(2, '0')}:00</span>
@@ -671,6 +684,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                                   setModalSelectedDay(d.getDate());
                                   setIsAddEventModalOpen(true);
                                 }}
+                                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                onDrop={(e) => { e.preventDefault(); if (draggedEvent) { setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1)); setEvents(events.map(ev => ev.id === draggedEvent.id ? { ...ev, day: d.getDate(), startTime: `${hour.toString().padStart(2, '0')}:00`, endTime: `${(hour + 1).toString().padStart(2, '0')}:00`, isAllDay: false } : ev)); setDraggedEvent(null); } }}
                               >
                                 {isCurrentHourLine && (
                                   <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-[#FF6B00] z-10" />
@@ -680,12 +695,14 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                                   return (
                                     <div
                                       key={event.id}
+                                      draggable
+                                      onDragStart={(e) => { e.stopPropagation(); handleEventDragStart(e as any, event); }}
                                       onClick={(e) => { e.stopPropagation(); handleEditEvent(event.id); }}
-                                      className="absolute left-0.5 right-0.5 top-0.5 h-5 text-[10px] font-medium text-white truncate px-1 rounded flex items-center gap-1 cursor-pointer hover:opacity-80"
+                                      className="absolute left-0.5 right-0.5 top-0.5 h-5 text-[10px] font-medium text-white truncate px-1 rounded flex items-center gap-1 cursor-grab active:cursor-grabbing hover:opacity-80"
                                       style={{ background: 'rgba(255, 107, 0, 0.25)', zIndex: 5 }}
                                     >
                                       <IconComp className="w-2.5 h-2.5 flex-shrink-0" />
-                                      <span className="truncate">{event.title}</span>
+                                      <span className="truncate">{event.isAllDay ? event.title : `${event.startTime} ${event.title}`}</span>
                                     </div>
                                   );
                                 })}
@@ -765,18 +782,9 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                       transition: 'all 0.2s ease'
                     }}
                   >
-                    {!dayData.isCurrentMonth ? (
-                      <motion.div
-                        className="flex flex-col items-center justify-center h-full gap-2"
-                      >
-                        <div className="w-12 h-12 rounded-full border-2 border-dashed border-[#FF6B00]/30 flex items-center justify-center hover:border-[#FF6B00]/50 transition-colors">
-                          <Plus className="w-6 h-6 text-[#FF6B00]/40 hover:text-[#FF6B00]/60" />
-                        </div>
-                        <p className="text-white/30 text-sm">Criar Aula</p>
-                      </motion.div>
-                    ) : (
+                    {dayData.isCurrentMonth && (
                       <AnimatePresence>
-                        {isHovered && dayData.isCurrentMonth && (
+                        {isHovered && (
                           <motion.div
                             initial={{ opacity: 0, scale: 0.5 }}
                             animate={{ opacity: 1, scale: 1 }}
