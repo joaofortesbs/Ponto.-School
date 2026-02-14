@@ -29,6 +29,7 @@ The platform features a modern, glass-morphism inspired design with blur backgro
     - **Ponto. Flow**: Automatic Package Delivery System (Layer 6 in orchestrator) that generates ADMINISTRATIVE complementary documents based on activity count and contextual keyword detection. Includes an `ArtifactViewModal` for displaying artifacts.
     - **Text Version Modal (`Modal-Versao-Texto`)**: Replaces old content modals, leveraging the `ArtifactViewModal` interface for text-version activities.
     - **Powers System v4.1 UNIFIED CONTEXT**: Virtual currency for AI capabilities with per-action pricing and synchronization with Neon DB.
+    - **Calendário School Multi-View System**: Portal-rendered calendar panel with 4 view modes (Day/Week/Month/Year). Uses Strategy Pattern — shared event data with view-specific projection functions. View-aware navigation (±day/±week/±month/±year) and dynamic title formatting. Header bounds detection via `data-header-flutuante` attribute + ResizeObserver for pixel-perfect alignment. Auto-closes on route navigation via useLocation.
 
 ### System Design Choices
 The architecture features a modular component design based on shadcn/ui patterns. Data persistence uses Neon PostgreSQL for primary data, Supabase PostgreSQL for authentication, and Supabase Storage for file assets. Supabase Realtime supports live features. The system is designed for VM deployment to maintain backend state and real-time database connections, with dynamic section synchronization and isolated lesson creation sessions.
