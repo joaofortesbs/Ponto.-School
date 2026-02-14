@@ -70,6 +70,7 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import CalendarioSchoolPanel from "@/pages/calendario-school/card-modal/interface";
 
 // Configuração milimétrica do cabeçalho flutuante - matching PromotionalBanner
 const HEADER_HEIGHT = 64; // Altura aumentada para 64px (8px a mais para melhor proporção)
@@ -119,6 +120,7 @@ export default function CabecalhoFlutuante() {
     useState(false);
   const [isDark, setIsDark] = useState(false);
   const [theme, setTheme] = useState("light");
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -897,6 +899,24 @@ export default function CabecalhoFlutuante() {
         </div>
 
         <div className="flex items-center gap-4">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative hover:bg-gray-100 dark:hover:bg-gray-800"
+                  onClick={() => setIsCalendarOpen(true)}
+                >
+                  <Calendar className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Calendário</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
           <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -1050,6 +1070,11 @@ export default function CabecalhoFlutuante() {
 
           <PerfilCabecalho />
         </div>
+
+        <CalendarioSchoolPanel
+          isOpen={isCalendarOpen}
+          onClose={() => setIsCalendarOpen(false)}
+        />
       </header>
   );
 }
