@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, ChevronLeft, ChevronRight, X, Clock, Settings, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star, Share2, Download, Plug, FileText, Zap, BookOpen, Users, Presentation, Search, Filter, GraduationCap, Brain, Target, Shield } from 'lucide-react';
 import CalendarViewSelector from './calendar-view-selector';
@@ -90,6 +91,33 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   onClose
 }) => {
   const today = new Date();
+  const [sidebarWidth, setSidebarWidth] = useState(72);
+
+  const detectSidebarWidth = useCallback(() => {
+    const sidebarEl = document.querySelector('[class*="fixed top-0 left-0"][class*="flex-col"]');
+    if (sidebarEl) {
+      const rect = sidebarEl.getBoundingClientRect();
+      if (rect.width > 0) {
+        setSidebarWidth(rect.width);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      detectSidebarWidth();
+      const observer = new MutationObserver(detectSidebarWidth);
+      const sidebar = document.querySelector('[class*="fixed top-0 left-0"][class*="flex-col"]');
+      if (sidebar) {
+        observer.observe(sidebar, { attributes: true, attributeFilter: ['style', 'class'] });
+      }
+      window.addEventListener('resize', detectSidebarWidth);
+      return () => {
+        observer.disconnect();
+        window.removeEventListener('resize', detectSidebarWidth);
+      };
+    }
+  }, [isOpen, detectSidebarWidth]);
   const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState<number | null>(today.getDate());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'year'>('month');
@@ -301,28 +329,48 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     console.log('➡️ Evento movido para dia:', newDay);
   };
 
-  return (
+  const calendarContent = (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          exit={{ y: '100%' }}
-          transition={{ 
-            type: 'spring',
-            damping: 30,
-            stiffness: 300,
-            mass: 0.8
-          }}
-          className="absolute inset-0 z-40 flex flex-col calendar-container"
-          style={{ 
-            background: '#030C2A',
-            borderRadius: `${CALENDAR_BORDER_RADIUS}px`,
-            border: '1px solid rgba(255, 107, 0, 0.2)',
-            margin: `0 ${CALENDAR_PADDING_HORIZONTAL}px`,
-            maxWidth: `calc(100% - ${CALENDAR_PADDING_HORIZONTAL * 2}px)`
-          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[9998]"
+          style={{ pointerEvents: 'auto' }}
         >
+          <div 
+            className="absolute inset-0"
+            style={{ 
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              background: 'rgba(0, 0, 0, 0.4)'
+            }}
+            onClick={onClose}
+          />
+
+          <motion.div
+            initial={{ y: '100%', opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
+            transition={{ 
+              type: 'spring',
+              damping: 30,
+              stiffness: 300,
+              mass: 0.8
+            }}
+            className="fixed z-[9999] flex flex-col calendar-container"
+            style={{ 
+              background: '#030C2A',
+              borderRadius: `${CALENDAR_BORDER_RADIUS}px`,
+              border: '1px solid rgba(255, 107, 0, 0.2)',
+              top: '96px',
+              left: `${sidebarWidth + 16}px`,
+              right: '24px',
+              bottom: '16px',
+            }}
+          >
           <div className="flex items-center justify-between border-b border-[#FF6B00]/20 flex-shrink-0 relative z-50" style={{ padding: `${CALENDAR_HEADER_PADDING}px ${CALENDAR_PADDING_HORIZONTAL}px`, background: '#0a1434', borderRadius: `${CALENDAR_HEADER_BORDER_RADIUS}px ${CALENDAR_HEADER_BORDER_RADIUS}px 0 0` }}>
             <div className="flex items-center gap-3">
               <div 
@@ -748,6 +796,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
               )}
             </AnimatePresence>
           </div>
+          </motion.div>
         </motion.div>
       )}
 
@@ -971,6 +1020,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
       </AnimatePresence>
     </AnimatePresence>
   );
+
+  return ReactDOM.createPortal(calendarContent, document.body);
 };
 
 export default CalendarioSchoolPanel;

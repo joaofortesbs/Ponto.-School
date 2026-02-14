@@ -75,7 +75,7 @@ export default function Sidebar({
       {/* Sidebar Container - Container vertical que envolve todo o menu */}
       <div
         className={cn(
-          "fixed top-0 left-0 z-30 h-full flex flex-col transition-all duration-300 ease-in-out md:relative",
+          "fixed top-0 left-0 z-[10000] h-full flex flex-col transition-all duration-300 ease-in-out md:relative",
           isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           className,
         )}

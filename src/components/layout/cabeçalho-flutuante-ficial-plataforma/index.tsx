@@ -743,8 +743,9 @@ export default function CabecalhoFlutuante() {
   const isLightMode = theme === 'light' || (!isDark && theme !== 'dark');
 
   return (
+    <>
     <header
-      className="w-full bg-white dark:bg-[#030C2A] border border-gray-200 dark:border-white/10 flex items-center justify-between shadow-lg backdrop-blur-sm"
+      className="w-full bg-white dark:bg-[#030C2A] border border-gray-200 dark:border-white/10 flex items-center justify-between shadow-lg backdrop-blur-sm relative z-[10000]"
       style={{
         height: `${HEADER_HEIGHT}px`,
         borderRadius: `${HEADER_BORDER_RADIUS}px`,
@@ -1070,11 +1071,12 @@ export default function CabecalhoFlutuante() {
 
           <PerfilCabecalho />
         </div>
-
-        <CalendarioSchoolPanel
-          isOpen={isCalendarOpen}
-          onClose={() => setIsCalendarOpen(false)}
-        />
       </header>
+
+      <CalendarioSchoolPanel
+        isOpen={isCalendarOpen}
+        onClose={() => setIsCalendarOpen(false)}
+      />
+    </>
   );
 }
