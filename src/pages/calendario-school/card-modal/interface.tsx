@@ -91,33 +91,37 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   onClose
 }) => {
   const today = new Date();
-  const [sidebarWidth, setSidebarWidth] = useState(72);
+  const [headerBounds, setHeaderBounds] = useState({ left: 88, right: 24, top: 96 });
 
-  const detectSidebarWidth = useCallback(() => {
-    const sidebarEl = document.querySelector('[class*="fixed top-0 left-0"][class*="flex-col"]');
-    if (sidebarEl) {
-      const rect = sidebarEl.getBoundingClientRect();
+  const detectHeaderBounds = useCallback(() => {
+    const headerEl = document.querySelector('[data-header-flutuante="true"]');
+    if (headerEl) {
+      const rect = headerEl.getBoundingClientRect();
       if (rect.width > 0) {
-        setSidebarWidth(rect.width);
+        setHeaderBounds({
+          left: rect.left,
+          right: window.innerWidth - rect.right,
+          top: rect.bottom + 8
+        });
       }
     }
   }, []);
 
   useEffect(() => {
     if (isOpen) {
-      detectSidebarWidth();
-      const observer = new MutationObserver(detectSidebarWidth);
-      const sidebar = document.querySelector('[class*="fixed top-0 left-0"][class*="flex-col"]');
-      if (sidebar) {
-        observer.observe(sidebar, { attributes: true, attributeFilter: ['style', 'class'] });
+      detectHeaderBounds();
+      const resizeObserver = new ResizeObserver(detectHeaderBounds);
+      const headerEl = document.querySelector('[data-header-flutuante="true"]');
+      if (headerEl) {
+        resizeObserver.observe(headerEl);
       }
-      window.addEventListener('resize', detectSidebarWidth);
+      window.addEventListener('resize', detectHeaderBounds);
       return () => {
-        observer.disconnect();
-        window.removeEventListener('resize', detectSidebarWidth);
+        resizeObserver.disconnect();
+        window.removeEventListener('resize', detectHeaderBounds);
       };
     }
-  }, [isOpen, detectSidebarWidth]);
+  }, [isOpen, detectHeaderBounds]);
   const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState<number | null>(today.getDate());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'year'>('month');
@@ -345,7 +349,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
             style={{ 
               backdropFilter: 'blur(8px)',
               WebkitBackdropFilter: 'blur(8px)',
-              background: 'rgba(0, 0, 0, 0.4)'
+              background: 'transparent'
             }}
             onClick={onClose}
           />
@@ -365,9 +369,9 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
               background: '#030C2A',
               borderRadius: `${CALENDAR_BORDER_RADIUS}px`,
               border: '1px solid rgba(255, 107, 0, 0.2)',
-              top: '96px',
-              left: `${sidebarWidth + 16}px`,
-              right: '24px',
+              top: `${headerBounds.top}px`,
+              left: `${headerBounds.left}px`,
+              right: `${headerBounds.right}px`,
               bottom: '16px',
             }}
           >

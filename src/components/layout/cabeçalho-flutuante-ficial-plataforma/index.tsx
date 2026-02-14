@@ -46,7 +46,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/user-profile";
 import PerfilCabecalho from "@/components/layout/perfil-cabeçalho/PerfilCabecalho";
@@ -126,6 +126,13 @@ export default function CabecalhoFlutuante() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const suggestionsDropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (isCalendarOpen) {
+      setIsCalendarOpen(false);
+    }
+  }, [location.pathname]);
 
   const searchSuggestions = [
     "Como usar a IA da plataforma?",
@@ -745,6 +752,7 @@ export default function CabecalhoFlutuante() {
   return (
     <>
     <header
+      data-header-flutuante="true"
       className="w-full bg-white dark:bg-[#030C2A] border border-gray-200 dark:border-white/10 flex items-center justify-between shadow-lg backdrop-blur-sm relative z-[10000]"
       style={{
         height: `${HEADER_HEIGHT}px`,
