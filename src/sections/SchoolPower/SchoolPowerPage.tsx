@@ -6,7 +6,6 @@ import {
   JotaAvatar,
   ChatInput,
   Particles3D,
-  SideMenu,
   ParticlesBackground,
 } from "./components";
 import { QuickAccessCards } from "./components/4-cards-pré-prompts";
@@ -160,12 +159,6 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
 
       {componentsVisible && (
         <>
-          {!(isMobile && isQuizMode) && (
-            <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-              <SideMenu onHistoricoClick={handleOpenHistorico} />
-            </div>
-          )}
-
           <div className={`absolute ${isMobile && isQuizMode ? 'top-[42%]' : 'top-[48%]'} left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none`}>
             <div
               className="relative"
