@@ -1,9 +1,8 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, ChevronLeft, ChevronRight, X, Clock, Settings, Users2, ChevronDown, Plus, Sparkles, Pencil, Camera, Check, Star, Share2, Download, Plug, FileText, Zap, BookOpen, Users, Presentation, Search, Filter, GraduationCap, Brain, Target, Shield } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, X, Settings, Users2, ChevronDown, Plus, Pencil, Camera, Check, Star, Share2, Download, Plug, FileText, Zap, BookOpen, Users, Presentation, Search, Filter, GraduationCap, Brain, Target, Shield } from 'lucide-react';
 import CalendarViewSelector from './calendar-view-selector';
-import ClassSelector from './class-selector';
 import AddEventModal from './add-event-modal';
 
 interface CalendarioSchoolPanelProps {
@@ -101,7 +100,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
         setHeaderBounds({
           left: rect.left,
           right: window.innerWidth - rect.right,
-          top: rect.bottom + 8
+          top: rect.bottom + 16
         });
       }
     }
@@ -133,8 +132,6 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
   const [viewAllEventsDay, setViewAllEventsDay] = useState<number | null>(null);
-  const [userClasses, setUserClasses] = useState<string[]>([]);
-  const [selectedClass, setSelectedClass] = useState('Todas');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPlanningModalOpen, setIsPlanningModalOpen] = useState(false);
   const [selectedPlanningCategory, setSelectedPlanningCategory] = useState<string | null>(null);
@@ -441,45 +438,6 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                   )}
                 </AnimatePresence>
               </div>
-              
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setIsMenuOpen(false)}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
-              >
-                <Clock className="w-5 h-5" />
-              </motion.button>
-              
-              <ClassSelector
-                selectedClass={selectedClass}
-                onClassChange={setSelectedClass}
-                classes={userClasses}
-                onAddClass={() => {
-                  setIsMenuOpen(false);
-                  const newClass = prompt('Nome da turma:');
-                  if (newClass && newClass.trim()) {
-                    setUserClasses([...userClasses, newClass.trim()]);
-                  }
-                }}
-              />
-              
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  handlePlanClick();
-                }}
-                className="flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-semibold transition-all"
-                style={{
-                  background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)',
-                  boxShadow: '0 4px 15px rgba(255, 107, 0, 0.3)'
-                }}
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Planejar</span>
-              </motion.button>
               
               <motion.button
                 whileHover={{ scale: 1.1, rotate: 90 }}
