@@ -196,14 +196,77 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     return days;
   }, [currentMonth, currentYear, today, events]);
 
-  const goToPreviousMonth = () => {
-    setCurrentDate(new Date(currentYear, currentMonth - 1, 1));
-    setSelectedDay(null);
+  const getWeekRange = (date: Date) => {
+    const d = date.getDay();
+    const start = new Date(date);
+    start.setDate(date.getDate() - d);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    return { start, end };
   };
 
-  const goToNextMonth = () => {
-    setCurrentDate(new Date(currentYear, currentMonth + 1, 1));
-    setSelectedDay(null);
+  const getFocusedDate = () => {
+    const d = selectedDay || today.getDate();
+    return new Date(currentYear, currentMonth, d);
+  };
+
+  const goToPrevious = () => {
+    if (viewMode === 'day') {
+      const focused = getFocusedDate();
+      focused.setDate(focused.getDate() - 1);
+      setCurrentDate(new Date(focused.getFullYear(), focused.getMonth(), 1));
+      setSelectedDay(focused.getDate());
+    } else if (viewMode === 'week') {
+      const focused = getFocusedDate();
+      focused.setDate(focused.getDate() - 7);
+      setCurrentDate(new Date(focused.getFullYear(), focused.getMonth(), 1));
+      setSelectedDay(focused.getDate());
+    } else if (viewMode === 'month') {
+      setCurrentDate(new Date(currentYear, currentMonth - 1, 1));
+      setSelectedDay(null);
+    } else if (viewMode === 'year') {
+      setCurrentDate(new Date(currentYear - 1, currentMonth, 1));
+      setSelectedDay(null);
+    }
+  };
+
+  const goToNext = () => {
+    if (viewMode === 'day') {
+      const focused = getFocusedDate();
+      focused.setDate(focused.getDate() + 1);
+      setCurrentDate(new Date(focused.getFullYear(), focused.getMonth(), 1));
+      setSelectedDay(focused.getDate());
+    } else if (viewMode === 'week') {
+      const focused = getFocusedDate();
+      focused.setDate(focused.getDate() + 7);
+      setCurrentDate(new Date(focused.getFullYear(), focused.getMonth(), 1));
+      setSelectedDay(focused.getDate());
+    } else if (viewMode === 'month') {
+      setCurrentDate(new Date(currentYear, currentMonth + 1, 1));
+      setSelectedDay(null);
+    } else if (viewMode === 'year') {
+      setCurrentDate(new Date(currentYear + 1, currentMonth, 1));
+      setSelectedDay(null);
+    }
+  };
+
+  const MONTHS_SHORT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+  const getViewTitle = () => {
+    if (viewMode === 'day') {
+      const d = selectedDay || today.getDate();
+      return `${d} de ${MONTHS[currentMonth]} ${currentYear}`;
+    } else if (viewMode === 'week') {
+      const focused = getFocusedDate();
+      const { start, end } = getWeekRange(focused);
+      if (start.getMonth() === end.getMonth()) {
+        return `${start.getDate()} - ${end.getDate()} ${MONTHS_SHORT[start.getMonth()]} ${start.getFullYear()}`;
+      }
+      return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} - ${end.getDate()} ${MONTHS_SHORT[end.getMonth()]} ${end.getFullYear()}`;
+    } else if (viewMode === 'year') {
+      return `${currentYear}`;
+    }
+    return `${MONTHS[currentMonth]} ${currentYear}`;
   };
 
   const handleDayClick = (dayData: DayData) => {
@@ -451,33 +514,203 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
           </div>
           
           <div className="flex-1 overflow-auto relative" style={{ padding: `${CALENDAR_PADDING_VERTICAL_TOP}px ${CALENDAR_PADDING_HORIZONTAL}px` }}>
-            {/* Navegação do Mês */}
             <div className="flex items-center justify-between mb-4">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={goToPreviousMonth}
+                onClick={goToPrevious}
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
               >
                 <ChevronLeft className="w-5 h-5" />
               </motion.button>
               
               <h3 className="text-white font-bold text-lg">
-                {MONTHS[currentMonth]} {currentYear}
+                {getViewTitle()}
               </h3>
               
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={goToNextMonth}
+                onClick={goToNext}
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
               >
                 <ChevronRight className="w-5 h-5" />
               </motion.button>
             </div>
 
-            {/* Grid de Dias da Semana */}
-            <div className="grid grid-cols-7 gap-3 mb-4">
+            {viewMode === 'day' && (() => {
+              const focusDay = selectedDay || today.getDate();
+              const focusDate = new Date(currentYear, currentMonth, focusDay);
+              const currentHour = today.getHours();
+              const dayEvents = events.filter(e => e.day === focusDay && currentMonth === currentDate.getMonth());
+              const dayOfWeek = WEEKDAYS[focusDate.getDay()];
+
+              return (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+                  <div className="flex items-center gap-3 mb-4 pb-3" style={{ borderBottom: '1px solid rgba(255, 107, 0, 0.1)' }}>
+                    <div className="w-14 h-14 rounded-2xl flex flex-col items-center justify-center" style={{ background: 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)' }}>
+                      <span className="text-white text-lg font-bold leading-none">{focusDay}</span>
+                      <span className="text-white/80 text-[10px] font-medium uppercase">{dayOfWeek}</span>
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm">{MONTHS[currentMonth]} {currentYear}</p>
+                      <p className="text-white/40 text-xs">{dayEvents.length} compromisso(s)</p>
+                    </div>
+                  </div>
+
+                  {dayEvents.length > 0 && (
+                    <div className="mb-4 flex flex-col gap-2">
+                      {dayEvents.map((event) => {
+                        const IconComp = getIconComponent(event.icon);
+                        const labelColor = event.selectedLabels.length > 0 && event.labelColors[event.selectedLabels[0]] ? event.labelColors[event.selectedLabels[0]] : '#999999';
+                        return (
+                          <motion.div
+                            key={event.id}
+                            whileHover={{ x: 4 }}
+                            onClick={() => handleEditEvent(event.id)}
+                            draggable
+                            onDragStart={(e) => handleEventDragStart(e, event)}
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all"
+                            style={{ background: 'rgba(255, 107, 0, 0.1)', border: '1px solid rgba(255, 107, 0, 0.2)' }}
+                          >
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255, 107, 0, 0.2)' }}>
+                              <IconComp className="w-4 h-4 text-[#FF6B00]" />
+                            </div>
+                            <span className="text-white text-sm font-medium flex-1 truncate">{event.title}</span>
+                            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: labelColor }} />
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="flex flex-col">
+                    {Array.from({ length: 24 }, (_, hour) => {
+                      const isCurrentHour = hour === currentHour && focusDay === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
+                      return (
+                        <div
+                          key={hour}
+                          className="flex items-stretch relative cursor-pointer hover:bg-white/[0.02] transition-colors"
+                          style={{ height: '48px', borderBottom: '1px solid rgba(255, 107, 0, 0.1)' }}
+                          onClick={() => { setModalSelectedDay(focusDay); setIsAddEventModalOpen(true); }}
+                        >
+                          <div className="w-16 flex-shrink-0 flex items-center justify-end pr-3">
+                            <span className="text-xs text-white/40">{hour.toString().padStart(2, '0')}:00</span>
+                          </div>
+                          <div className="flex-1 relative" style={{ borderLeft: '1px solid rgba(255, 107, 0, 0.1)' }}>
+                            {isCurrentHour && (
+                              <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-[#FF6B00] z-10">
+                                <div className="absolute -left-1 -top-1 w-2.5 h-2.5 rounded-full bg-[#FF6B00]" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              );
+            })()}
+
+            {viewMode === 'week' && (() => {
+              const focused = getFocusedDate();
+              const { start } = getWeekRange(focused);
+              const currentHour = today.getHours();
+              const weekDays = Array.from({ length: 7 }, (_, i) => {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                return d;
+              });
+
+              return (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+                  <div className="grid gap-0" style={{ gridTemplateColumns: '64px repeat(7, 1fr)' }}>
+                    <div className="h-12" />
+                    {weekDays.map((d, i) => {
+                      const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+                      return (
+                        <div
+                          key={i}
+                          className="h-12 flex flex-col items-center justify-center"
+                          style={{
+                            borderBottom: '1px solid rgba(255, 107, 0, 0.15)',
+                            background: isToday ? 'rgba(255, 107, 0, 0.08)' : 'transparent'
+                          }}
+                        >
+                          <span className="text-[#FF6B00]/70 text-xs font-semibold uppercase">{WEEKDAYS[i]}</span>
+                          <span className={`text-sm font-bold ${isToday ? 'text-[#FF6B00]' : 'text-white/80'}`}>{d.getDate()}</span>
+                        </div>
+                      );
+                    })}
+
+                    {Array.from({ length: 18 }, (_, hourIdx) => {
+                      const hour = hourIdx + 6;
+                      return (
+                        <React.Fragment key={hour}>
+                          <div className="flex items-center justify-end pr-3" style={{ height: '48px', borderBottom: '1px solid rgba(255, 107, 0, 0.05)' }}>
+                            <span className="text-xs text-white/40">{hour.toString().padStart(2, '0')}:00</span>
+                          </div>
+                          {weekDays.map((d, dayIdx) => {
+                            const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+                            const isCurrentHourLine = isToday && hour === currentHour;
+                            const dayEvts = d.getMonth() === currentMonth ? events.filter(e => e.day === d.getDate()) : [];
+
+                            return (
+                              <div
+                                key={dayIdx}
+                                className="relative cursor-pointer hover:bg-white/[0.02] transition-colors"
+                                style={{
+                                  height: '48px',
+                                  borderBottom: '1px solid rgba(255, 107, 0, 0.05)',
+                                  borderLeft: '1px solid rgba(255, 107, 0, 0.05)',
+                                  background: isToday ? 'rgba(255, 107, 0, 0.04)' : 'transparent'
+                                }}
+                                onClick={() => {
+                                  setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1));
+                                  setSelectedDay(d.getDate());
+                                  setModalSelectedDay(d.getDate());
+                                  setIsAddEventModalOpen(true);
+                                }}
+                              >
+                                {isCurrentHourLine && (
+                                  <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-[#FF6B00] z-10" />
+                                )}
+                                {hour === 6 && dayEvts.slice(0, 2).map((event) => {
+                                  const IconComp = getIconComponent(event.icon);
+                                  return (
+                                    <div
+                                      key={event.id}
+                                      onClick={(e) => { e.stopPropagation(); handleEditEvent(event.id); }}
+                                      className="absolute left-0.5 right-0.5 top-0.5 h-5 text-[10px] font-medium text-white truncate px-1 rounded flex items-center gap-1 cursor-pointer hover:opacity-80"
+                                      style={{ background: 'rgba(255, 107, 0, 0.25)', zIndex: 5 }}
+                                    >
+                                      <IconComp className="w-2.5 h-2.5 flex-shrink-0" />
+                                      <span className="truncate">{event.title}</span>
+                                    </div>
+                                  );
+                                })}
+                                {hour === 6 && dayEvts.length > 2 && (
+                                  <div
+                                    className="absolute left-0.5 right-0.5 top-6 h-4 text-[9px] font-semibold text-[#FF6B00] flex items-center justify-center rounded"
+                                    style={{ background: 'rgba(255, 107, 0, 0.1)', zIndex: 5 }}
+                                  >
+                                    +{dayEvts.length - 2}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              );
+            })()}
+
+            {viewMode === 'month' && (
+              <>
+                <div className="grid grid-cols-7 gap-3 mb-4">
                   {WEEKDAYS.map((day) => (
                     <div 
                       key={day} 
@@ -532,7 +765,6 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                       transition: 'all 0.2s ease'
                     }}
                   >
-                    {/* Ícone de Adicionar - Mostrar sempre quando não há dias do mês*/}
                     {!dayData.isCurrentMonth ? (
                       <motion.div
                         className="flex flex-col items-center justify-center h-full gap-2"
@@ -583,7 +815,6 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                       {dayData.day}
                     </span>
                     
-                    {/* Eventos do dia */}
                     {dayData.hasActivities && dayData.isCurrentMonth && (
                       <div className="flex-1 w-full px-1 mt-1 flex flex-col gap-1 overflow-hidden">
                         {events.filter(e => e.day === dayData.day).slice(0, 2).map((event) => {
@@ -640,6 +871,64 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                 );
               })}
                 </div>
+              </>
+            )}
+
+            {viewMode === 'year' && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                {Array.from({ length: 12 }, (_, monthIdx) => {
+                  const isCurrentMonthCell = monthIdx === today.getMonth() && currentYear === today.getFullYear();
+                  const firstDay = new Date(currentYear, monthIdx, 1).getDay();
+                  const totalDays = new Date(currentYear, monthIdx + 1, 0).getDate();
+                  const miniDays = Array.from({ length: firstDay }, () => null).concat(Array.from({ length: totalDays }, (_, d) => d + 1));
+
+                  return (
+                    <motion.div
+                      key={monthIdx}
+                      whileHover={{ scale: 1.03, y: -2 }}
+                      onClick={() => {
+                        setCurrentDate(new Date(currentYear, monthIdx, 1));
+                        setSelectedDay(null);
+                        setViewMode('month');
+                      }}
+                      className="p-3 rounded-xl cursor-pointer transition-all"
+                      style={{
+                        background: 'rgba(26, 43, 60, 0.5)',
+                        border: isCurrentMonthCell ? '2px solid rgba(255, 107, 0, 0.5)' : '1px solid rgba(255, 107, 0, 0.15)',
+                        boxShadow: isCurrentMonthCell ? '0 0 12px rgba(255, 107, 0, 0.15)' : 'none'
+                      }}
+                    >
+                      <p className={`text-xs font-semibold mb-2 ${isCurrentMonthCell ? 'text-[#FF6B00]' : 'text-white/80'}`}>
+                        {MONTHS[monthIdx]}
+                      </p>
+                      <div className="grid grid-cols-7 gap-px">
+                        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((wd, i) => (
+                          <div key={i} className="text-[8px] text-[#FF6B00]/50 text-center font-medium">{wd}</div>
+                        ))}
+                        {miniDays.map((day, i) => {
+                          if (day === null) return <div key={`empty-${i}`} className="h-3.5" />;
+                          const isTodayCell = day === today.getDate() && monthIdx === today.getMonth() && currentYear === today.getFullYear();
+                          const hasEvents = events.some(e => e.day === day && monthIdx === currentMonth);
+                          return (
+                            <div key={i} className="h-3.5 flex flex-col items-center justify-center relative">
+                              <span
+                                className={`text-[10px] leading-none ${isTodayCell ? 'text-[#FF6B00] font-bold' : 'text-white/60'}`}
+                                style={isTodayCell ? { background: 'rgba(255, 107, 0, 0.2)', borderRadius: '50%', width: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' } : {}}
+                              >
+                                {day}
+                              </span>
+                              {hasEvents && (
+                                <div className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-[#FF6B00]" />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            )}
 
             {/* Modal de adicionar evento */}
             <AnimatePresence>
