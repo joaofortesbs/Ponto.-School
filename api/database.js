@@ -1,6 +1,4 @@
-import neonDBModule from './neon-db.js';
-
-const { neonDB } = neonDBModule;
+import neonDB from './neon-db.js';
 
 // Função para inicializar o banco de dados
 export const initializeDatabase = async () => {

@@ -36,12 +36,11 @@ class NeonDBManager {
     console.log(`   - Secret Selecionado: ${selectedSecret}`);
     console.log('🔗 [NeonDB] ==========================================');
     
-    // Configuração do Pool
+    const needsSsl = connectionString.includes('neon.tech') || connectionString.includes('supabase');
+    
     this.connectionConfig = {
       connectionString: connectionString,
-      ssl: {
-        rejectUnauthorized: false
-      },
+      ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}),
       max: 10,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
