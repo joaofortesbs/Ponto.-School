@@ -8,10 +8,15 @@ channel = "stable-25_05"
 run = ["bash", "-c", "node api/server.js"]
 deploymentTarget = "vm"
 build = ["npm", "run", "build"]
+publicDir = "dist/public"
 
 [[ports]]
 localPort = 3001
 externalPort = 3001
+
+[[ports]]
+localPort = 5000
+externalPort = 80
 
 [workflows]
 runButton = "Project"
