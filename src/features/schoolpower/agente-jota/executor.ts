@@ -1605,6 +1605,24 @@ Seja específico e forneça dados que ajudem o professor.
       }
     }
 
+    if (capName === 'criar_compromisso_calendario') {
+      const authenticatedUserId = this.getAuthenticatedUserId();
+      if (authenticatedUserId && !enrichedParams.professor_id) {
+        enrichedParams.professor_id = authenticatedUserId;
+        console.log(`🔗 [Executor] Injetando professor_id em criar_compromisso_calendario: ${authenticatedUserId}`);
+      }
+
+      const criarResult = this.capabilityResultsMap.get('criar_atividade');
+      if (criarResult?.success && criarResult?.data?.activities && !enrichedParams.linked_activity_ids) {
+        enrichedParams.linked_activity_ids = criarResult.data.activities.map((a: any) => ({
+          id: a.id || a.db_id,
+          tipo: a.tipo || a.type,
+          titulo: a.titulo || a.title,
+        })).filter((a: any) => a.id);
+        console.log(`🔗 [Executor] Injetando ${enrichedParams.linked_activity_ids.length} atividades vinculadas ao compromisso`);
+      }
+    }
+
     return enrichedParams;
   }
 

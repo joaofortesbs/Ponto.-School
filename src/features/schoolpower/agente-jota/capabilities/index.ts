@@ -12,6 +12,7 @@ import { GERAR_CONTEUDO_CAPABILITIES } from './GERAR_CONTEUDO/registry';
 import { CRIAR_ATIVIDADES_CAPABILITIES } from './CRIAR_ATIVIDADES/registry';
 import { CRIAR_ARQUIVO_CAPABILITIES } from './CRIAR_ARQUIVO/registry';
 import { SALVAR_BD_CAPABILITIES } from './SALVAR_BD/registry';
+import { criarCompromissoCalendario } from './CRIAR/criar-compromisso-calendario';
 
 import type { Capability } from '../prompts/planning-prompt';
 
@@ -42,12 +43,36 @@ export interface CapabilityConfig {
   cacheTTL?: number;
 }
 
+const CALENDARIO_CAPABILITIES: Record<string, CapabilityConfig> = {
+  criar_compromisso_calendario: {
+    name: 'criar_compromisso_calendario',
+    funcao: 'criar_compromisso_calendario',
+    displayName: 'Criar Compromisso no Calendário',
+    categoria: 'CRIAR',
+    description: 'Cria um compromisso/evento/aula no calendário do professor diretamente do chat, sem interação manual.',
+    descricao: 'Cria compromissos no calendário do professor diretamente do chat. Perfeito para organizar aulas, reuniões, provas e eventos.',
+    parameters: {
+      titulo: { type: 'string', required: true, description: 'Título do compromisso' },
+      data: { type: 'string', required: true, description: 'Data no formato YYYY-MM-DD' },
+      hora_inicio: { type: 'string', required: false, description: 'Hora início HH:MM' },
+      hora_fim: { type: 'string', required: false, description: 'Hora fim HH:MM' },
+      dia_todo: { type: 'boolean', required: false, description: 'Se é dia todo', default: false },
+      repeticao: { type: 'string', required: false, description: 'none/daily/weekly/monthly/yearly', default: 'none' },
+      icone: { type: 'string', required: false, description: 'pencil/check/camera/star' },
+      labels: { type: 'array', required: false, description: 'Etiquetas' },
+      professor_id: { type: 'string', required: true, description: 'ID UUID do professor' },
+    },
+    canCallAnytime: true,
+    execute: criarCompromissoCalendario,
+  },
+};
+
 export const CAPABILITIES = {
   PLANEJAR: PLANEJAR_CAPABILITIES,
   PESQUISAR: PESQUISAR_CAPABILITIES,
   DECIDIR: DECIDIR_CAPABILITIES,
   GERAR_CONTEUDO: GERAR_CONTEUDO_CAPABILITIES,
-  CRIAR: { ...CRIAR_ATIVIDADES_CAPABILITIES, ...CRIAR_ARQUIVO_CAPABILITIES },
+  CRIAR: { ...CRIAR_ATIVIDADES_CAPABILITIES, ...CRIAR_ARQUIVO_CAPABILITIES, ...CALENDARIO_CAPABILITIES },
   SALVAR: SALVAR_BD_CAPABILITIES,
 };
 

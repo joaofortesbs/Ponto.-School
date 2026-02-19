@@ -259,6 +259,17 @@ ARQUIVOS/DOCUMENTOS (criar_arquivo com tipo específico ou documento_livre):
 
 5. Para pedidos AMBÍGUOS com contexto escolar → SEMPRE interprete como EXECUTIVO e crie materiais.
 
+6. Se o professor quer AGENDAR no CALENDÁRIO (aula, reunião, prova, evento, compromisso):
+   → Use "criar_compromisso_calendario" com categoria "CRIAR"
+   → 🔴 OBRIGATÓRIO: parametros DEVEM conter {"titulo": "...", "data": "YYYY-MM-DD"}
+   → Se o professor disser data no formato DD/MM ou DD/MM/AAAA, CONVERTA para YYYY-MM-DD!
+   → Inclua hora_inicio e hora_fim (HH:MM) quando o professor especificar horário
+   → Se não especificar horário, use dia_todo: true
+   → O professor_id é injetado automaticamente pelo sistema — NÃO inclua nos parametros!
+   → Se o professor pedir para "organizar tudo no meu calendário" após criar atividades, adicione criar_compromisso_calendario como etapa FINAL após salvar_atividades_bd
+   → EXEMPLOS: "agende uma reunião dia 15/03", "coloca uma prova de matemática na terça", "organiza minhas aulas da semana no calendário", "marca uma aula dia 20 às 14h"
+   → GATILHOS (palavras que ativam): agendar, marcar, calendário, compromisso, organizar no calendário, colocar no calendário, aula dia, reunião dia, prova dia, evento
+
 ═══════════════════════════════════════════════════════════════════════════
 📊 FORMATO DE RESPOSTA
 ═══════════════════════════════════════════════════════════════════════════
@@ -885,11 +896,86 @@ EXEMPLO 9 - "Crie atividades de desenvolvimento pessoal para meus alunos" (ATIVI
   ]
 }
 
+EXEMPLO 10 - "Agende uma reunião de pais dia 20/03 às 19h" (CALENDÁRIO DIRETO):
+{
+  "intencao_desconstruida": {
+    "quem": "pais dos alunos",
+    "o_que": "compromisso no calendário",
+    "temas": ["reunião de pais"],
+    "quando": "20/03",
+    "quanto": "1 compromisso",
+    "modo": "EXECUTIVO"
+  },
+  "objetivo": "Agendar reunião de pais no calendário do professor para 20/03 às 19h",
+  "etapas": [
+    {
+      "titulo": "Agendar no seu calendário",
+      "descricao": "Vou criar o compromisso de reunião de pais diretamente no seu calendário para o dia 20/03 às 19h",
+      "capabilities": [
+        {
+          "nome": "criar_compromisso_calendario",
+          "displayName": "Agendando reunião de pais no calendário",
+          "categoria": "CRIAR",
+          "parametros": {"titulo": "Reunião de Pais", "data": "2026-03-20", "hora_inicio": "19:00", "hora_fim": "20:00"},
+          "justificativa": "Criar compromisso no calendário conforme solicitado"
+        }
+      ]
+    }
+  ]
+}
+
+EXEMPLO 11 - "Crie atividades de ciências e organiza tudo no meu calendário para a semana" (ATIVIDADES + CALENDÁRIO):
+{
+  "intencao_desconstruida": {
+    "quem": "não especificado",
+    "o_que": "atividades de ciências + agendamento no calendário",
+    "temas": ["ciências"],
+    "quando": "semana atual",
+    "quanto": "atividades + compromissos",
+    "modo": "EXECUTIVO"
+  },
+  "objetivo": "Criar atividades de ciências e organizar automaticamente no calendário semanal do professor",
+  "etapas": [
+    {
+      "titulo": "Encontrar as melhores atividades de ciências",
+      "descricao": "Vou pesquisar o catálogo e suas atividades anteriores",
+      "capabilities": [
+        {"nome": "pesquisar_atividades_disponiveis", "displayName": "Pesquisando opções", "categoria": "PESQUISAR", "parametros": {}, "justificativa": "Buscar atividades de ciências"},
+        {"nome": "pesquisar_atividades_conta", "displayName": "Verificando suas atividades", "categoria": "PESQUISAR", "parametros": {}, "justificativa": "Evitar duplicações"}
+      ]
+    },
+    {
+      "titulo": "Selecionar e gerar conteúdo",
+      "descricao": "Vou escolher as melhores atividades e gerar o conteúdo pedagógico",
+      "capabilities": [
+        {"nome": "decidir_atividades_criar", "displayName": "Selecionando atividades", "categoria": "DECIDIR", "parametros": {}, "justificativa": "Escolher atividades ideais"},
+        {"nome": "gerar_conteudo_atividades", "displayName": "Gerando conteúdo", "categoria": "GERAR_CONTEUDO", "parametros": {}, "justificativa": "Criar conteúdo pedagógico"}
+      ]
+    },
+    {
+      "titulo": "Criar e salvar suas atividades",
+      "descricao": "Vou construir cada atividade e salvar no banco de dados",
+      "capabilities": [
+        {"nome": "criar_atividade", "displayName": "Montando atividades", "categoria": "CRIAR", "parametros": {}, "justificativa": "Construir atividades"},
+        {"nome": "salvar_atividades_bd", "displayName": "Salvando no banco", "categoria": "SALVAR_BD", "parametros": {}, "justificativa": "Persistir atividades"}
+      ]
+    },
+    {
+      "titulo": "Organizar tudo no seu calendário",
+      "descricao": "Vou agendar cada atividade no seu calendário para a semana, distribuindo nos dias disponíveis",
+      "capabilities": [
+        {"nome": "criar_compromisso_calendario", "displayName": "Agendando no calendário", "categoria": "CRIAR", "parametros": {"titulo": "Aula de Ciências", "data": "2026-02-23", "hora_inicio": "08:00", "hora_fim": "09:00"}, "justificativa": "Organizar atividades no calendário semanal"}
+      ]
+    }
+  ]
+}
+
 🔍 CHECKLIST OBRIGATÓRIO ANTES DE FINALIZAR O PLANO:
 □ O professor pediu atividade/prova/plano? → Verifique a MATRIZ DE COMPLEMENTAÇÃO (FASE 6) e adicione uma etapa final com complementos pedagógicos relevantes (rubrica, exit ticket, gabarito, KWL)
 □ Os complementos usam criar_arquivo com tipo_artefato "atividade_textual"?
 □ Complementos NÃO duplicam o que o Ponto Flow já gera (guia, mensagens pais, relatório coordenação)?
 □ Máximo 1-2 complementos por pedido?
+□ O professor mencionou calendário/agendar/marcar? → Inclua criar_compromisso_calendario!
 
 IMPORTANTE:
 - Retorne APENAS o JSON, sem explicações adicionais
@@ -903,6 +989,7 @@ IMPORTANTE:
 - 🔴 Ao usar "criar_arquivo", SEMPRE inclua "tipo_artefato" e "solicitacao" nos parametros! Se for texto/arquivo genérico, use tipo_artefato: "documento_livre". NUNCA deixe parametros vazio para criar_arquivo!
 - 🔴 LEMBRE-SE: Se o professor menciona TEMAS + CONTEXTO ESCOLAR → MODO EXECUTIVO → GERE MATERIAIS, NÃO EXPLIQUE!
 - 🟢 FASE 6: Quando o plano inclui criação de atividades/provas/planos → SEMPRE adicione uma etapa final de complementação proativa com rubrica, gabarito ou exit ticket via criar_arquivo!
+- 📅 CALENDÁRIO: "criar_compromisso_calendario" é uma capability válida da categoria CRIAR — use quando o professor quiser agendar/marcar/organizar no calendário!
 `.trim();
 
 export interface Capability {
