@@ -256,24 +256,26 @@ export async function createExecutionPlan(
 
     const finalCapNames = plan.etapas.flatMap(e => e.capabilities?.map(c => c.nome) || []);
     const calendarDetected = detectsCalendarRequest(userPrompt);
-    const planHasCalendar = finalCapNames.includes('criar_compromisso_calendario');
+    const planHasCalendar = finalCapNames.includes('criar_compromisso_calendario') || finalCapNames.includes('gerenciar_calendario');
 
     if (calendarDetected && !planHasCalendar) {
-      console.log('📅🔴 [Planner] Pós-validação CRÍTICA: Professor pediu CALENDÁRIO mas IA não incluiu criar_compromisso_calendario — INJETANDO etapa final!');
+      console.log('📅🔴 [Planner] Pós-validação CRÍTICA: Professor pediu CALENDÁRIO mas IA não incluiu gerenciar_calendario — INJETANDO etapa final!');
       const calendarParams = extractCalendarParamsFromPrompt(userPrompt);
+      calendarParams.user_prompt = userPrompt;
+      calendarParams.user_objective = userPrompt;
       const ts = Date.now();
       plan.etapas.push({
         ordem: plan.etapas.length + 1,
-        titulo: 'Organizar no seu calendário',
-        descricao: 'Vou adicionar os compromissos no seu calendário automaticamente',
-        funcao: 'criar_compromisso_calendario',
+        titulo: 'Gerenciar seu calendário',
+        descricao: 'Vou gerenciar seus compromissos no calendário automaticamente',
+        funcao: 'gerenciar_calendario',
         parametros: calendarParams,
-        justificativa: 'Professor mencionou calendário/agendar/organizar — injeção automática de segurança',
+        justificativa: 'Professor mencionou calendário/agendar/organizar — injeção automática de segurança (gerenciar_calendario v1.0)',
         status: 'pendente' as const,
         capabilities: [{
           id: `cap-cal-0-${ts}`,
-          nome: 'criar_compromisso_calendario',
-          displayName: 'Organizando no seu calendário',
+          nome: 'gerenciar_calendario',
+          displayName: 'Gerenciando seu calendário',
           categoria: 'CRIAR' as CapabilityCall['categoria'],
           parametros: calendarParams,
           status: 'pending' as const,
@@ -307,6 +309,11 @@ const CALENDAR_KEYWORDS = [
   'adicionar ao calendário', 'adicionar ao calendario',
   'no meu calendário', 'no meu calendario',
   'organizar tudo', 'organize tudo',
+  'dias livres', 'disponibilidade', 'disponível', 'disponivel',
+  'meus compromissos', 'meus eventos', 'minha agenda',
+  'cancelar evento', 'excluir evento', 'remover evento',
+  'editar evento', 'alterar evento', 'mover evento',
+  'mudar compromisso', 'remarcar',
 ];
 
 const CALENDAR_CONTEXTUAL_PATTERNS = [
@@ -315,6 +322,10 @@ const CALENDAR_CONTEXTUAL_PATTERNS = [
   /(?:agende|marque|organize|coloque)\s+.+(?:dia|data|semana|mês)/i,
   /(?:reuni[ãa]o|prova|aula|evento)\s+(?:no\s+)?dia\s+\d/i,
   /(?:distribu|organiz)\w+\s+(?:as\s+)?(?:aulas|atividades|provas)\s+(?:na|pela|ao longo|durante)\s+(?:semana|mês|dias)/i,
+  /(?:quais|que|mostre?|ver|veja)\s+(?:s[ãa]o\s+)?(?:meus?\s+)?(?:compromissos?|eventos?|aulas?)/i,
+  /(?:cancel|exclu|remov|apag|delet)\w*\s+(?:o|a|meu|minha|esse|essa)?\s*(?:compromisso|evento|aula|reuni[ãa]o|prova)/i,
+  /(?:edit|alter|mud|mov|troc|remarc)\w*\s+(?:o|a|meu|minha|esse|essa)?\s*(?:compromisso|evento|aula|reuni[ãa]o|prova)/i,
+  /(?:quais|que)\s+dias?\s+(?:est[oã]u|tenho|fiqu?o?)\s+(?:livres?|dispon[íi]ve[il])/i,
 ];
 
 function detectsCalendarRequest(userPrompt: string): boolean {
@@ -758,19 +769,21 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
   ];
 
   if (detectsCalendarRequest(userPrompt)) {
-    console.log('📅 [Planner-Fallback] Detectado pedido de calendário — adicionando etapa final com criar_compromisso_calendario');
+    console.log('📅 [Planner-Fallback] Detectado pedido de calendário — adicionando etapa final com gerenciar_calendario');
     const calendarParams = extractCalendarParamsFromPrompt(userPrompt);
+    calendarParams.user_prompt = userPrompt;
+    calendarParams.user_objective = userPrompt;
     etapas.push({
       ordem: etapas.length + 1,
-      titulo: 'Organizar no seu calendário',
-      descricao: 'Vou adicionar os compromissos no seu calendário automaticamente',
-      funcao: 'criar_compromisso_calendario',
+      titulo: 'Gerenciar seu calendário',
+      descricao: 'Vou gerenciar seus compromissos no calendário automaticamente',
+      funcao: 'gerenciar_calendario',
       parametros: calendarParams,
       status: 'pendente',
       capabilities: [{
         id: `cap-cal-fb-${timestamp}`,
-        nome: 'criar_compromisso_calendario',
-        displayName: 'Organizando no seu calendário',
+        nome: 'gerenciar_calendario',
+        displayName: 'Gerenciando seu calendário',
         categoria: 'CRIAR',
         parametros: calendarParams,
         status: 'pending',

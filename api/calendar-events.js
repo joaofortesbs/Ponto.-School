@@ -123,6 +123,144 @@ export function createCalendarEventsRouter(neonDB) {
     }
   });
 
+  router.get('/:userId/range', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { dateFrom, dateTo, labels, createdBy } = req.query;
+
+      if (!dateFrom || !dateTo) {
+        return res.status(400).json({ success: false, error: 'dateFrom e dateTo são obrigatórios (formato YYYY-MM-DD)' });
+      }
+
+      let query = 'SELECT * FROM calendar_events WHERE user_id = $1 AND event_date >= $2 AND event_date <= $3';
+      const params = [userId, dateFrom, dateTo];
+
+      if (createdBy) {
+        params.push(createdBy);
+        query += ` AND created_by = $${params.length}`;
+      }
+
+      query += ' ORDER BY event_date ASC, start_time ASC';
+
+      const result = await neonDB.executeQuery(query, params);
+
+      if (!result.success) {
+        return res.status(500).json({ success: false, error: result.error });
+      }
+
+      let events = result.data;
+      if (labels) {
+        const filterLabels = labels.split(',').map(l => l.trim().toLowerCase());
+        events = events.filter(evt => {
+          const evtLabels = (typeof evt.labels === 'string' ? JSON.parse(evt.labels) : evt.labels) || [];
+          return evtLabels.some(l => filterLabels.includes(l.toLowerCase()));
+        });
+      }
+
+      return res.json({ success: true, data: events, total: events.length });
+    } catch (error) {
+      console.error('❌ [CalendarEvents] Erro ao buscar eventos por range:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  router.get('/:userId/event/:eventId', async (req, res) => {
+    try {
+      const { userId, eventId } = req.params;
+
+      const result = await neonDB.executeQuery(
+        'SELECT * FROM calendar_events WHERE id = $1 AND user_id = $2',
+        [eventId, userId]
+      );
+
+      if (!result.success) {
+        return res.status(500).json({ success: false, error: result.error });
+      }
+
+      if (result.data.length === 0) {
+        return res.status(404).json({ success: false, error: 'Evento não encontrado' });
+      }
+
+      return res.json({ success: true, data: result.data[0] });
+    } catch (error) {
+      console.error('❌ [CalendarEvents] Erro ao buscar evento específico:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  router.get('/:userId/availability', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { dateFrom, dateTo } = req.query;
+
+      if (!dateFrom || !dateTo) {
+        return res.status(400).json({ success: false, error: 'dateFrom e dateTo são obrigatórios (formato YYYY-MM-DD)' });
+      }
+
+      const result = await neonDB.executeQuery(
+        `SELECT event_date, COUNT(*) as event_count, 
+                json_agg(json_build_object('id', id, 'title', title, 'start_time', start_time, 'end_time', end_time, 'is_all_day', is_all_day)) as events
+         FROM calendar_events 
+         WHERE user_id = $1 AND event_date >= $2 AND event_date <= $3
+         GROUP BY event_date
+         ORDER BY event_date ASC`,
+        [userId, dateFrom, dateTo]
+      );
+
+      if (!result.success) {
+        return res.status(500).json({ success: false, error: result.error });
+      }
+
+      const busyDays = {};
+      for (const row of result.data) {
+        const dateStr = row.event_date instanceof Date
+          ? row.event_date.toISOString().split('T')[0]
+          : String(row.event_date).split('T')[0];
+        busyDays[dateStr] = {
+          event_count: parseInt(row.event_count),
+          events: typeof row.events === 'string' ? JSON.parse(row.events) : row.events
+        };
+      }
+
+      const start = new Date(dateFrom + 'T00:00:00');
+      const end = new Date(dateTo + 'T00:00:00');
+      const freeDays = [];
+      const busyDaysList = [];
+      const cursor = new Date(start);
+
+      while (cursor <= end) {
+        const dateStr = cursor.toISOString().split('T')[0];
+        const dayOfWeek = cursor.getDay();
+        const isWeekday = dayOfWeek !== 0 && dayOfWeek !== 6;
+
+        if (busyDays[dateStr]) {
+          busyDaysList.push({ date: dateStr, ...busyDays[dateStr], is_weekday: isWeekday });
+        } else if (isWeekday) {
+          freeDays.push({ date: dateStr, is_weekday: true });
+        }
+
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          period: { from: dateFrom, to: dateTo },
+          free_days: freeDays,
+          busy_days: busyDaysList,
+          summary: {
+            total_free_weekdays: freeDays.length,
+            total_busy_days: busyDaysList.length,
+            total_events: Object.values(busyDays).reduce((sum, d) => sum + d.event_count, 0)
+          }
+        }
+      });
+    } catch (error) {
+      console.error('❌ [CalendarEvents] Erro ao analisar disponibilidade:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   router.put('/:eventId', async (req, res) => {
     try {
       const { eventId } = req.params;

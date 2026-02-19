@@ -13,6 +13,7 @@ import { CRIAR_ATIVIDADES_CAPABILITIES } from './CRIAR_ATIVIDADES/registry';
 import { CRIAR_ARQUIVO_CAPABILITIES } from './CRIAR_ARQUIVO/registry';
 import { SALVAR_BD_CAPABILITIES } from './SALVAR_BD/registry';
 import { criarCompromissoCalendario } from './CRIAR/criar-compromisso-calendario';
+import { gerenciarCalendarioV2 } from './CRIAR/calendario/gerenciar-calendario';
 
 import type { Capability } from '../prompts/planning-prompt';
 
@@ -44,23 +45,43 @@ export interface CapabilityConfig {
 }
 
 const CALENDARIO_CAPABILITIES: Record<string, CapabilityConfig> = {
-  criar_compromisso_calendario: {
-    name: 'criar_compromisso_calendario',
-    funcao: 'criar_compromisso_calendario',
-    displayName: 'Criar Compromisso no Calendário',
+  gerenciar_calendario: {
+    name: 'gerenciar_calendario',
+    funcao: 'gerenciar_calendario',
+    displayName: 'Gerenciar Calendário',
     categoria: 'CRIAR',
-    description: 'Cria um compromisso/evento/aula no calendário do professor diretamente do chat, sem interação manual.',
-    descricao: 'Cria compromissos no calendário do professor diretamente do chat. Perfeito para organizar aulas, reuniões, provas e eventos.',
+    description: 'Gerencia o calendário do professor de forma inteligente: visualiza todos os compromissos e dias livres, cria novos eventos, edita compromissos existentes (data, hora, título, atividades vinculadas), exclui eventos e analisa disponibilidade. A IA escolhe autonomamente qual operação executar com base no pedido do professor.',
+    descricao: 'Gerencia o calendário completo do professor. Pode criar, visualizar, editar e excluir compromissos. Analisa dias livres e ocupados. Vincula atividades e arquivos aos eventos.',
     parameters: {
-      titulo: { type: 'string', required: true, description: 'Título do compromisso' },
-      data: { type: 'string', required: true, description: 'Data no formato YYYY-MM-DD' },
+      titulo: { type: 'string', required: false, description: 'Título do compromisso (para criação)' },
+      data: { type: 'string', required: false, description: 'Data no formato YYYY-MM-DD (para criação)' },
       hora_inicio: { type: 'string', required: false, description: 'Hora início HH:MM' },
       hora_fim: { type: 'string', required: false, description: 'Hora fim HH:MM' },
       dia_todo: { type: 'boolean', required: false, description: 'Se é dia todo', default: false },
       repeticao: { type: 'string', required: false, description: 'none/daily/weekly/monthly/yearly', default: 'none' },
       icone: { type: 'string', required: false, description: 'pencil/check/camera/star' },
       labels: { type: 'array', required: false, description: 'Etiquetas' },
-      professor_id: { type: 'string', required: true, description: 'ID UUID do professor' },
+      professor_id: { type: 'string', required: false, description: 'ID UUID do professor (auto-detectado)' },
+      event_id: { type: 'string', required: false, description: 'ID do evento para editar/excluir' },
+      date_from: { type: 'string', required: false, description: 'Data início para busca YYYY-MM-DD' },
+      date_to: { type: 'string', required: false, description: 'Data fim para busca YYYY-MM-DD' },
+      user_prompt: { type: 'string', required: false, description: 'Pedido original do professor' },
+      user_objective: { type: 'string', required: false, description: 'Objetivo detectado' },
+    },
+    canCallAnytime: true,
+    execute: criarCompromissoCalendario,
+  },
+  criar_compromisso_calendario: {
+    name: 'criar_compromisso_calendario',
+    funcao: 'criar_compromisso_calendario',
+    displayName: 'Criar Compromisso no Calendário',
+    categoria: 'CRIAR',
+    description: 'Alias para gerenciar_calendario — cria compromissos no calendário. Use gerenciar_calendario para funcionalidade completa.',
+    descricao: 'Cria compromissos no calendário do professor (alias para gerenciar_calendario).',
+    parameters: {
+      titulo: { type: 'string', required: false, description: 'Título do compromisso' },
+      data: { type: 'string', required: false, description: 'Data no formato YYYY-MM-DD' },
+      professor_id: { type: 'string', required: false, description: 'ID UUID do professor (auto-detectado)' },
     },
     canCallAnytime: true,
     execute: criarCompromissoCalendario,

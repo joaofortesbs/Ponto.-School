@@ -93,16 +93,20 @@ ANTES de montar o plano, VERIFIQUE se o professor mencionou QUALQUER uma destas 
 calendário, agendar, marcar, organizar, compromisso, organiza, organize, coloca no calendário, 
 agenda, preparar as próximas aulas, planejar a semana, distribuir aulas, dia/semana/mês + aula/prova/reunião
 
-🔴 SE DETECTOU → OBRIGATÓRIO incluir "criar_compromisso_calendario" como ÚLTIMA ETAPA do plano!
+🔴 SE DETECTOU → OBRIGATÓRIO incluir "gerenciar_calendario" como ÚLTIMA ETAPA do plano!
 🔴 Mesmo que o professor peça atividades + calendário, o calendário é uma ETAPA SEPARADA no final!
 🔴 NÃO use "criar_arquivo" ou "gerar_conteudo_atividades" para pedidos de calendário!
 
 EXEMPLOS DE DETECÇÃO:
-- "organize tudo no meu calendário" → ✅ DETECTADO → incluir criar_compromisso_calendario
-- "crie atividades e coloca no calendário" → ✅ DETECTADO → pipeline de atividades + criar_compromisso_calendario no final
-- "agende uma reunião dia 15/03" → ✅ DETECTADO → usar APENAS criar_compromisso_calendario
-- "adicione um compromisso no meu calendário" → ✅ DETECTADO → usar APENAS criar_compromisso_calendario
-- "marca uma aula dia 20 às 14h" → ✅ DETECTADO → usar APENAS criar_compromisso_calendario
+- "organize tudo no meu calendário" → ✅ DETECTADO → incluir gerenciar_calendario
+- "crie atividades e coloca no calendário" → ✅ DETECTADO → pipeline de atividades + gerenciar_calendario no final
+- "agende uma reunião dia 15/03" → ✅ DETECTADO → usar APENAS gerenciar_calendario
+- "adicione um compromisso no meu calendário" → ✅ DETECTADO → usar APENAS gerenciar_calendario
+- "marca uma aula dia 20 às 14h" → ✅ DETECTADO → usar APENAS gerenciar_calendario
+- "quais são meus compromissos?" → ✅ DETECTADO → usar gerenciar_calendario (visualizar)
+- "mude a reunião de terça para quinta" → ✅ DETECTADO → usar gerenciar_calendario (editar)
+- "cancele a prova de sexta" → ✅ DETECTADO → usar gerenciar_calendario (excluir)
+- "quais dias estou livre na próxima semana?" → ✅ DETECTADO → usar gerenciar_calendario (disponibilidade)
 - "crie atividades de matemática" → ❌ NÃO detectado → pipeline normal sem calendário
 
 ═══════════════════════════════════════════════════════════════════════════
@@ -148,13 +152,14 @@ Exemplo para "atividades de ciências para semana do 7º ano sobre ecossistemas"
 6. "salvar_atividades_bd" - Salva as atividades criadas no banco de dados
 7. "criar_arquivo" - Gera documento (dossiê, resumo, roteiro, relatório, guia, mensagens, ou DOCUMENTO LIVRE com estrutura customizada)
 8. "planejar_plano_de_acao" - Monta um plano estruturado
-9. "criar_compromisso_calendario" - 📅 CALENDÁRIO: Cria compromisso/evento/aula/reunião/prova DIRETAMENTE no calendário do professor. Use ESTA capability (NÃO usar criar_arquivo!) quando o professor pedir para agendar, marcar, organizar calendário, ou adicionar compromisso. Parâmetros: titulo (obrigatório), data YYYY-MM-DD (obrigatório), hora_inicio HH:MM, hora_fim HH:MM, dia_todo boolean, repeticao, icone, labels. O professor_id é injetado automaticamente — NÃO inclua nos parametros.
+9. "gerenciar_calendario" - 📅 CALENDÁRIO INTELIGENTE: Gerencia o calendário COMPLETO do professor. Pode CRIAR, VISUALIZAR, EDITAR, EXCLUIR compromissos e ANALISAR DISPONIBILIDADE. A IA escolhe autonomamente qual operação executar. Use ESTA capability (NÃO usar criar_arquivo!) para QUALQUER pedido envolvendo calendário. Parâmetros opcionais: titulo, data YYYY-MM-DD, hora_inicio HH:MM, hora_fim HH:MM, dia_todo boolean, repeticao, icone, labels, event_id (para editar/excluir), date_from, date_to (para buscar). IMPORTANTE: sempre inclua "user_prompt" com o pedido original do professor e "user_objective" com o objetivo detectado. O professor_id é injetado automaticamente.
 
 ❌ NÃO INVENTE NOMES de capabilities! COPIE exatamente da lista acima!
-⚠️ PARA CALENDÁRIO: use APENAS "criar_compromisso_calendario" — NUNCA use "criar_arquivo" ou "gerar_conteudo_atividades" para compromissos!
+⚠️ PARA CALENDÁRIO: use APENAS "gerenciar_calendario" — NUNCA use "criar_arquivo" ou "gerar_conteudo_atividades" para compromissos!
+⚠️ "criar_compromisso_calendario" ainda funciona mas é ALIAS — prefira SEMPRE "gerenciar_calendario"!
 
 ═══════════════════════════════════════════════════════════════════════════
-📅 REGRAS PARA "criar_compromisso_calendario"
+📅 REGRAS PARA "gerenciar_calendario"
 ═══════════════════════════════════════════════════════════════════════════
 
 QUANDO USAR:
@@ -162,6 +167,10 @@ QUANDO USAR:
 - Professor pede para distribuir aulas/atividades ao longo de dias/semanas
 - Professor menciona datas específicas + compromissos
 - Quando for criar atividades E o professor quiser organizar no calendário
+- Professor quer VER seus compromissos existentes
+- Professor quer EDITAR ou MOVER um compromisso
+- Professor quer EXCLUIR/CANCELAR um evento
+- Professor quer saber quais dias está LIVRE ou OCUPADO
 
 COMO USAR:
 - Crie SEM pedir confirmação - o professor quer agilidade com 0 cliques
@@ -312,26 +321,35 @@ ARQUIVOS/DOCUMENTOS (criar_arquivo com tipo específico ou documento_livre):
 
 5. Para pedidos AMBÍGUOS com contexto escolar → SEMPRE interprete como EXECUTIVO e crie materiais.
 
-6. 📅🔴 REGRA CRÍTICA — CALENDÁRIO (criar_compromisso_calendario):
+6. 📅🔴 REGRA CRÍTICA — CALENDÁRIO (gerenciar_calendario):
    Se o professor mencionar QUALQUER uma destas palavras: calendário, agendar, marcar, organizar, compromisso, agenda, 
-   coloca no calendário, organiza no calendário, aula dia X, reunião dia X, prova dia X → 
+   coloca no calendário, organiza no calendário, aula dia X, reunião dia X, prova dia X, ver compromissos,
+   editar evento, cancelar, excluir, mover, dias livres, disponibilidade → 
    
-   → Use OBRIGATORIAMENTE "criar_compromisso_calendario" (categoria "CRIAR")
+   → Use OBRIGATORIAMENTE "gerenciar_calendario" (categoria "CRIAR")
    → ❌ NUNCA use "criar_arquivo" ou "gerar_conteudo_atividades" para pedidos de calendário!
-   → parametros DEVEM conter: {"titulo": "...", "data": "YYYY-MM-DD"}
+   → SEMPRE inclua: "user_prompt" com o pedido original e "user_objective" com o objetivo detectado
+   → Para criação: parametros com titulo, data, hora_inicio, etc.
+   → Para visualização/edição/exclusão: o mini-agente interno decide autonomamente
    → Converta DD/MM ou DD/MM/AAAA para YYYY-MM-DD automaticamente
    → Se especificar horário: inclua hora_inicio e hora_fim (HH:MM)
    → Se NÃO especificar horário: use dia_todo: true
    → O professor_id é injetado automaticamente — NÃO inclua nos parametros!
    
-   CENÁRIO A — Pedido DIRETO de calendário (sem atividades):
-   "Agende uma reunião dia 15/03" → Plano com UMA etapa: criar_compromisso_calendario
-   "Adicione compromisso no calendário dia 20/02" → Plano com UMA etapa: criar_compromisso_calendario
+   CENÁRIO A — Pedido DIRETO de criação (sem atividades):
+   "Agende uma reunião dia 15/03" → Plano com UMA etapa: gerenciar_calendario
+   "Adicione compromisso no calendário dia 20/02" → Plano com UMA etapa: gerenciar_calendario
    
    CENÁRIO B — Atividades + calendário:
-   "Crie atividades e organize no meu calendário" → Pipeline completo de atividades + etapa FINAL com criar_compromisso_calendario
+   "Crie atividades e organize no meu calendário" → Pipeline completo de atividades + etapa FINAL com gerenciar_calendario
    parametros da etapa calendario: {"vincular_atividades": true, "modo_batch": true}
    O sistema cria automaticamente 1 evento por atividade, distribuído nos dias úteis!
+   
+   CENÁRIO C — Visualizar/Editar/Excluir:
+   "Quais são meus compromissos da semana?" → Plano com UMA etapa: gerenciar_calendario
+   "Mude a reunião de terça para quinta" → Plano com UMA etapa: gerenciar_calendario
+   "Cancele a prova de sexta" → Plano com UMA etapa: gerenciar_calendario
+   "Quais dias estou livre na próxima semana?" → Plano com UMA etapa: gerenciar_calendario
 
 ═══════════════════════════════════════════════════════════════════════════
 📊 FORMATO DE RESPOSTA
@@ -976,10 +994,10 @@ EXEMPLO 10 - "Agende uma reunião de pais dia 20/03 às 19h" (CALENDÁRIO DIRETO
       "descricao": "Vou criar o compromisso de reunião de pais diretamente no seu calendário para o dia 20/03 às 19h",
       "capabilities": [
         {
-          "nome": "criar_compromisso_calendario",
+          "nome": "gerenciar_calendario",
           "displayName": "Agendando reunião de pais no calendário",
           "categoria": "CRIAR",
-          "parametros": {"titulo": "Reunião de Pais", "data": "2026-03-20", "hora_inicio": "19:00", "hora_fim": "20:00"},
+          "parametros": {"titulo": "Reunião de Pais", "data": "2026-03-20", "hora_inicio": "19:00", "hora_fim": "20:00", "user_prompt": "Agende uma reunião de pais dia 20/03 às 19h", "user_objective": "Criar compromisso de reunião de pais no calendário"},
           "justificativa": "Criar compromisso no calendário conforme solicitado"
         }
       ]
@@ -1027,7 +1045,7 @@ EXEMPLO 11 - "Crie atividades de ciências e organiza tudo no meu calendário pa
       "titulo": "Organizar tudo no seu calendário",
       "descricao": "Vou agendar cada atividade no seu calendário para a semana, distribuindo nos dias disponíveis",
       "capabilities": [
-        {"nome": "criar_compromisso_calendario", "displayName": "Agendando no calendário", "categoria": "CRIAR", "parametros": {"titulo": "Aula de Ciências", "data": "2026-02-23", "hora_inicio": "08:00", "hora_fim": "09:00"}, "justificativa": "Organizar atividades no calendário semanal"}
+        {"nome": "gerenciar_calendario", "displayName": "Organizando no calendário", "categoria": "CRIAR", "parametros": {"vincular_atividades": true, "modo_batch": true, "user_prompt": "Crie atividades de ciências e organiza tudo no meu calendário para a semana", "user_objective": "Criar atividades e organizar no calendário semanal"}, "justificativa": "Organizar atividades no calendário semanal"}
       ]
     }
   ]
@@ -1038,7 +1056,7 @@ EXEMPLO 11 - "Crie atividades de ciências e organiza tudo no meu calendário pa
 □ Os complementos usam criar_arquivo com tipo_artefato "atividade_textual"?
 □ Complementos NÃO duplicam o que o Ponto Flow já gera (guia, mensagens pais, relatório coordenação)?
 □ Máximo 1-2 complementos por pedido?
-□ O professor mencionou calendário/agendar/marcar? → Inclua criar_compromisso_calendario!
+□ O professor mencionou calendário/agendar/marcar? → Inclua gerenciar_calendario!
 
 IMPORTANTE:
 - Retorne APENAS o JSON, sem explicações adicionais
@@ -1052,7 +1070,7 @@ IMPORTANTE:
 - 🔴 Ao usar "criar_arquivo", SEMPRE inclua "tipo_artefato" e "solicitacao" nos parametros! Se for texto/arquivo genérico, use tipo_artefato: "documento_livre". NUNCA deixe parametros vazio para criar_arquivo!
 - 🔴 LEMBRE-SE: Se o professor menciona TEMAS + CONTEXTO ESCOLAR → MODO EXECUTIVO → GERE MATERIAIS, NÃO EXPLIQUE!
 - 🟢 FASE 6: Quando o plano inclui criação de atividades/provas/planos → SEMPRE adicione uma etapa final de complementação proativa com rubrica, gabarito ou exit ticket via criar_arquivo!
-- 📅 CALENDÁRIO: "criar_compromisso_calendario" é uma capability válida da categoria CRIAR — use quando o professor quiser agendar/marcar/organizar no calendário!
+- 📅 CALENDÁRIO: "gerenciar_calendario" é a capability PRINCIPAL para calendário — use para CRIAR, VISUALIZAR, EDITAR, EXCLUIR compromissos e analisar disponibilidade!
 `.trim();
 
 export interface Capability {
