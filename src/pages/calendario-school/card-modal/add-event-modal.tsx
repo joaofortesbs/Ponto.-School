@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tag, Hourglass, Pencil, Sparkles, BookOpen, GripHorizontal, X, Camera, Check, Star, Plus, Clock, RefreshCw, ChevronDown, ArrowRight, Paperclip, FileText, Trash2, ClipboardList, GraduationCap, Search, ListChecks, Layers, MessageSquare, HelpCircle, CreditCard, Minus, Brain, PenTool, FileCheck, Eye } from 'lucide-react';
 import { ActivityViewModal } from '@/features/schoolpower/construction/ActivityViewModal';
+import { TextVersionModal } from '@/features/schoolpower/components/Modal-Versao-Texto/TextVersionModal';
+import { isTextVersionActivity } from '@/features/schoolpower/config/activityVersionConfig';
 import { getActivityByCode } from '@/services/activitiesApiService';
 
 interface AttachedFile {
@@ -160,6 +162,10 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   const [viewingActivity, setViewingActivity] = useState<any>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isLoadingView, setIsLoadingView] = useState(false);
+  const [isTextVersionModalOpen, setIsTextVersionModalOpen] = useState(false);
+  const [textVersionContent, setTextVersionContent] = useState('');
+  const [textVersionType, setTextVersionType] = useState('');
+  const [textVersionTitle, setTextVersionTitle] = useState('');
 
   const filteredActivities = userActivities.filter(act => {
     if (linkedActivities.some(la => la.id === act.id)) return false;
@@ -194,12 +200,28 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         } catch {
           parsed = {};
         }
+
+        const activityType = data.tipo || activity.tipo;
+
+        if (isTextVersionActivity(activityType)) {
+          const textContent =
+            parsed?.campos?.textContent ||
+            parsed?.textContent ||
+            '';
+
+          setTextVersionContent(textContent);
+          setTextVersionType(activityType);
+          setTextVersionTitle(parsed?.titulo || activity.titulo);
+          setIsTextVersionModalOpen(true);
+          return;
+        }
+
         const activityForModal = {
           id: data.id || activity.id,
           title: parsed?.titulo || activity.titulo,
           description: parsed?.campos?.descricao || parsed?.campos?.description || '',
-          type: data.tipo || activity.tipo,
-          categoryId: data.tipo || activity.tipo,
+          type: activityType,
+          categoryId: activityType,
           categoryName: ACTIVITY_TYPE_CONFIG[activity.tipo]?.label || activity.tipo,
           icon: activity.tipo,
           tags: [],
@@ -1067,6 +1089,19 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         setIsViewModalOpen(false);
         setViewingActivity(null);
       }}
+    />
+
+    <TextVersionModal
+      isOpen={isTextVersionModalOpen}
+      onClose={() => {
+        setIsTextVersionModalOpen(false);
+        setTextVersionContent('');
+        setTextVersionType('');
+        setTextVersionTitle('');
+      }}
+      activityType={textVersionType}
+      activityTitle={textVersionTitle}
+      textContent={textVersionContent}
     />
     </>
   );
