@@ -135,10 +135,13 @@ export class AgentExecutor {
       
       const salvarResult = this.capabilityResultsMap.get('salvar_atividades_bd');
       const savedMap = new Map<string, number>();
-      if (salvarResult?.success && salvarResult?.data?.saved_activities) {
-        for (const saved of salvarResult.data.saved_activities) {
-          if (saved.original_id && saved.db_id) {
-            savedMap.set(saved.original_id, saved.db_id);
+      const salvarResultsArray = salvarResult?.data?.results || salvarResult?.data?.saved_activities || [];
+      if (salvarResult?.success && salvarResultsArray.length > 0) {
+        for (const saved of salvarResultsArray) {
+          const origId = saved.original_id || saved.id;
+          const dbId = saved.db_id || saved.activity_id;
+          if (origId && dbId) {
+            savedMap.set(origId, dbId);
           }
         }
       }
@@ -1620,23 +1623,39 @@ Seja específico e forneça dados que ajudem o professor.
       const criarResult = this.capabilityResultsMap.get('criar_atividade');
       const salvarResult = this.capabilityResultsMap.get('salvar_atividades_bd');
 
-      const activitiesFromCriar = criarResult?.success && criarResult?.data?.activities
-        ? criarResult.data.activities.map((a: any) => ({
-            id: a.id || a.db_id,
-            tipo: a.tipo || a.type,
-            titulo: a.titulo || a.title,
+      const criarActivities = criarResult?.data?.activities_built || criarResult?.data?.activities || [];
+      const activitiesFromCriar = criarResult?.success && criarActivities.length > 0
+        ? criarActivities.map((a: any) => ({
+            id: a.id || a.db_id || a.activity_id,
+            tipo: a.tipo || a.type || a.activity_type || '',
+            titulo: a.titulo || a.title || a.name || '',
           })).filter((a: any) => a.id)
         : [];
 
-      const activitiesFromSalvar = salvarResult?.success && salvarResult?.data?.saved_activities
-        ? salvarResult.data.saved_activities.map((a: any) => ({
-            id: a.db_id || a.id,
-            tipo: a.tipo || a.type,
-            titulo: a.titulo || a.title,
-          })).filter((a: any) => a.id)
+      const salvarResults = salvarResult?.data?.results || salvarResult?.data?.saved_activities || [];
+      const activitiesFromSalvar = salvarResult?.success && salvarResults.length > 0
+        ? salvarResults
+            .filter((r: any) => r.success !== false)
+            .map((r: any) => ({
+              id: r.activity_id || r.db_id || r.id,
+              tipo: r.tipo || r.type || '',
+              titulo: r.titulo || r.title || '',
+            })).filter((a: any) => a.id)
         : [];
 
-      const activities = activitiesFromSalvar.length > 0 ? activitiesFromSalvar : activitiesFromCriar;
+      let activities: any[];
+      if (activitiesFromCriar.length > 0) {
+        activities = activitiesFromCriar;
+        if (activitiesFromSalvar.length > 0) {
+          const dbIdMap = new Map(activitiesFromSalvar.map((a: any) => [a.id, a.id]));
+          activities = activities.map((a: any) => ({
+            ...a,
+            id: dbIdMap.get(a.id) || a.id,
+          }));
+        }
+      } else {
+        activities = activitiesFromSalvar;
+      }
 
       if (activities.length > 0) {
         if (!enrichedParams.linked_activity_ids) {

@@ -93,40 +93,66 @@ export async function criarCompromissoCalendarioV2(input: CapabilityInput): Prom
     let activities: ActivityInfo[] = [];
     if (input.previous_results) {
       const criarResult = input.previous_results.get('criar_atividade');
-      if (criarResult?.success && criarResult?.data?.activities) {
-        activities = criarResult.data.activities
+      const criarActivities = criarResult?.data?.activities_built || criarResult?.data?.activities || [];
+      if (criarResult?.success && criarActivities.length > 0) {
+        activities = criarActivities
           .map((a: any) => ({
-            id: a.id || a.db_id || '',
-            tipo: a.tipo || a.type || '',
-            titulo: a.titulo || a.title || '',
+            id: a.id || a.db_id || a.activity_id || '',
+            tipo: a.tipo || a.type || a.activity_type || '',
+            titulo: a.titulo || a.title || a.name || '',
           }))
           .filter((a: ActivityInfo) => a.id && a.titulo);
 
         debugLog.push({
           timestamp: new Date().toISOString(),
           type: 'discovery',
-          narrative: `Encontradas ${activities.length} atividades criadas anteriormente para vincular`,
+          narrative: `Encontradas ${activities.length} atividades de criar_atividade (activities_built) para vincular`,
         });
       }
 
       const salvarResult = input.previous_results.get('salvar_atividades_bd');
-      if (salvarResult?.success && salvarResult?.data?.saved_activities) {
-        const savedActivities = salvarResult.data.saved_activities
-          .map((a: any) => ({
-            id: a.db_id || a.id || '',
-            tipo: a.tipo || a.type || '',
-            titulo: a.titulo || a.title || '',
-          }))
-          .filter((a: ActivityInfo) => a.id && a.titulo);
-        if (savedActivities.length > activities.length) {
-          activities = savedActivities;
+      const salvarResults = salvarResult?.data?.results || salvarResult?.data?.saved_activities || [];
+      if (salvarResult?.success && salvarResults.length > 0 && activities.length > 0) {
+        const dbIdMap = new Map<string, string>();
+        salvarResults.forEach((r: any) => {
+          if (r.success && r.activity_id) {
+            dbIdMap.set(r.activity_id, r.activity_id);
+          }
+        });
+        if (dbIdMap.size > 0) {
+          activities = activities.map(a => ({
+            ...a,
+            id: dbIdMap.get(a.id) || a.id,
+          }));
           debugLog.push({
             timestamp: new Date().toISOString(),
-            type: 'discovery',
-            narrative: `Usando ${savedActivities.length} atividades do banco (salvar_atividades_bd) para vincular`,
+            type: 'info',
+            narrative: `Enriquecidas ${dbIdMap.size} atividades com IDs do banco (salvar_atividades_bd)`,
           });
         }
+      } else if (salvarResult?.success && salvarResults.length > 0 && activities.length === 0) {
+        activities = salvarResults
+          .filter((r: any) => r.success)
+          .map((r: any) => ({
+            id: r.activity_id || r.db_id || r.id || '',
+            tipo: r.tipo || r.type || '',
+            titulo: r.titulo || r.title || `Atividade ${r.activity_id?.substring(0, 6) || ''}`,
+          }))
+          .filter((a: ActivityInfo) => a.id);
+        debugLog.push({
+          timestamp: new Date().toISOString(),
+          type: 'discovery',
+          narrative: `Usando ${activities.length} atividades do banco (salvar_atividades_bd) como fallback`,
+        });
       }
+    }
+
+    if (activities.length === 0 && params.vincular_atividades) {
+      debugLog.push({
+        timestamp: new Date().toISOString(),
+        type: 'warning',
+        narrative: `vincular_atividades=true mas nenhuma atividade encontrada em previous_results. Keys disponíveis: ${input.previous_results ? Array.from(input.previous_results.keys()).join(', ') : 'NONE'}`,
+      });
     }
 
     const shouldAutoGenerate = params.vincular_atividades && activities.length > 0;
