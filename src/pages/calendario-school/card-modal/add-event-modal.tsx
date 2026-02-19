@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tag, Hourglass, Pencil, Sparkles, BookOpen, GripHorizontal, X, Camera, Check, Star, Plus, Clock, RefreshCw, ChevronDown, ArrowRight, Paperclip, FileText, Trash2, ClipboardList, GraduationCap, Search, ListChecks, Layers, MessageSquare, HelpCircle, CreditCard, Minus, Brain, PenTool, FileCheck } from 'lucide-react';
+import { Tag, Hourglass, Pencil, Sparkles, BookOpen, GripHorizontal, X, Camera, Check, Star, Plus, Clock, RefreshCw, ChevronDown, ArrowRight, Paperclip, FileText, Trash2, ClipboardList, GraduationCap, Search, ListChecks, Layers, MessageSquare, HelpCircle, CreditCard, Minus, Brain, PenTool, FileCheck, Eye } from 'lucide-react';
+import { ActivityViewModal } from '@/features/schoolpower/construction/ActivityViewModal';
+import { getActivityByCode } from '@/services/activitiesApiService';
 
 interface AttachedFile {
   id: string;
@@ -155,6 +157,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   const [isActivitiesExpanded, setIsActivitiesExpanded] = useState(false);
   const [activitySearchQuery, setActivitySearchQuery] = useState('');
   const activitySearchRef = useRef<HTMLInputElement>(null);
+  const [viewingActivity, setViewingActivity] = useState<any>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isLoadingView, setIsLoadingView] = useState(false);
 
   const filteredActivities = userActivities.filter(act => {
     if (linkedActivities.some(la => la.id === act.id)) return false;
@@ -174,6 +179,47 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
   const handleRemoveLinkedActivity = (activityId: string) => {
     setLinkedActivities(prev => prev.filter(la => la.id !== activityId));
+  };
+
+  const handleViewLinkedActivity = async (activity: LinkedActivity) => {
+    try {
+      setIsLoadingView(true);
+      const result = await getActivityByCode(activity.id);
+      if (result.success && result.data) {
+        const data = result.data as any;
+        const content = data.id_json || data.conteudo;
+        let parsed: any = {};
+        try {
+          parsed = typeof content === 'string' ? JSON.parse(content) : (content || {});
+        } catch {
+          parsed = {};
+        }
+        const activityForModal = {
+          id: data.id || activity.id,
+          title: parsed?.titulo || activity.titulo,
+          description: parsed?.campos?.descricao || parsed?.campos?.description || '',
+          type: data.tipo || activity.tipo,
+          categoryId: data.tipo || activity.tipo,
+          categoryName: ACTIVITY_TYPE_CONFIG[activity.tipo]?.label || activity.tipo,
+          icon: activity.tipo,
+          tags: [],
+          difficulty: '',
+          estimatedTime: '',
+          customFields: parsed?.campos || {},
+          originalData: parsed,
+          isBuilt: true,
+          builtAt: data.created_at || activity.createdAt,
+          status: 'completed' as const,
+          progress: 100
+        };
+        setViewingActivity(activityForModal);
+        setIsViewModalOpen(true);
+      }
+    } catch (err) {
+      console.error('[Calendario] Erro ao carregar atividade:', err);
+    } finally {
+      setIsLoadingView(false);
+    }
   };
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -386,6 +432,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   if (!isOpen) return null;
 
   return (
+    <>
     <motion.div
       ref={modalRef}
       initial={{ opacity: 0, scale: 0.9 }}
@@ -822,13 +869,14 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                   return (
                     <div
                       key={act.id}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs"
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs cursor-pointer hover:brightness-110 transition-all"
                       style={{ background: `${config.color}15`, border: `1px solid ${config.color}30` }}
+                      onClick={() => handleViewLinkedActivity(act)}
                     >
                       <TypeIcon className="w-3 h-3 flex-shrink-0" style={{ color: config.color }} />
                       <span className="text-white/70 truncate max-w-[120px]">{act.titulo}</span>
                       <button
-                        onClick={() => handleRemoveLinkedActivity(act.id)}
+                        onClick={(e) => { e.stopPropagation(); handleRemoveLinkedActivity(act.id); }}
                         className="w-4 h-4 rounded flex items-center justify-center text-white/20 hover:text-red-400 transition-all flex-shrink-0"
                       >
                         <X className="w-2.5 h-2.5" />
@@ -876,17 +924,34 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                             const config = ACTIVITY_TYPE_CONFIG[act.tipo] || { label: act.tipo, icon: ClipboardList, color: '#FF6B00' };
                             const TypeIcon = config.icon;
                             return (
-                              <button
+                              <div
                                 key={act.id}
-                                onClick={() => handleRemoveLinkedActivity(act.id)}
-                                className="flex items-center gap-2 px-2 py-1.5 rounded-lg w-full text-left transition-all hover:bg-white/5 group"
+                                className="flex items-center gap-2 px-2 py-1.5 rounded-lg w-full transition-all hover:bg-white/5 group"
                               >
-                                <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${config.color}20` }}>
-                                  <TypeIcon className="w-3 h-3" style={{ color: config.color }} />
+                                <div
+                                  className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer"
+                                  onClick={() => handleViewLinkedActivity(act)}
+                                >
+                                  <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${config.color}20` }}>
+                                    <TypeIcon className="w-3 h-3" style={{ color: config.color }} />
+                                  </div>
+                                  <span className="text-white/70 text-xs truncate flex-1">{act.titulo}</span>
                                 </div>
-                                <span className="text-white/70 text-xs truncate flex-1">{act.titulo}</span>
-                                <Minus className="w-3.5 h-3.5 text-red-400/60 group-hover:text-red-400 flex-shrink-0" />
-                              </button>
+                                <button
+                                  onClick={() => handleViewLinkedActivity(act)}
+                                  className="p-1 rounded hover:bg-white/10 flex-shrink-0 transition-colors"
+                                  title="Visualizar atividade"
+                                >
+                                  <Eye className="w-3 h-3 text-white/30 group-hover:text-[#FF6B00]" />
+                                </button>
+                                <button
+                                  onClick={() => handleRemoveLinkedActivity(act.id)}
+                                  className="p-1 rounded hover:bg-red-500/10 flex-shrink-0 transition-colors"
+                                  title="Remover atividade"
+                                >
+                                  <Minus className="w-3.5 h-3.5 text-red-400/60 group-hover:text-red-400" />
+                                </button>
+                              </div>
                             );
                           })}
                         </div>
@@ -924,7 +989,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <span className="text-white/70 text-xs truncate block">{act.titulo}</span>
-                                  <span className="text-white/20 text-[10px]">{config.label}</span>
                                 </div>
                                 <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-[#FF6B00] flex-shrink-0" />
                               </button>
@@ -986,6 +1050,25 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         </div>
       </div>
     </motion.div>
+
+    {isLoadingView && (
+      <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="flex items-center gap-3 px-6 py-3 rounded-xl bg-[#0D1B2A] border border-[#FF6B00]/30">
+          <RefreshCw className="w-5 h-5 text-[#FF6B00] animate-spin" />
+          <span className="text-white/80 text-sm">Carregando atividade...</span>
+        </div>
+      </div>
+    )}
+
+    <ActivityViewModal
+      isOpen={isViewModalOpen}
+      activity={viewingActivity}
+      onClose={() => {
+        setIsViewModalOpen(false);
+        setViewingActivity(null);
+      }}
+    />
+    </>
   );
 };
 
