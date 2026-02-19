@@ -35,9 +35,6 @@ import {
   clearSession as clearContextEngineSession,
   buildContextForFollowUp,
   buildContextForPlanner,
-  classifyIntent,
-  shouldCreatePlan,
-  shouldRespondDirectly,
   smartRoute,
   type SmartRouteResult,
   type ConversationTurn,
@@ -392,20 +389,62 @@ async function handleDirectResponse(
 
   const { executeWithCascadeFallback } = await import('../services/controle-APIs-gerais-school-power');
 
+  const session = getSession(sessionId);
+  const recentHistory = (session?.conversationHistory || []).slice(-6);
+  const historyBlock = recentHistory.length > 0
+    ? recentHistory.map(t => {
+        const role = t.role === 'user' ? '👨‍🏫 Professor' : '🤖 Jota';
+        return `${role}: ${t.content.substring(0, 300)}`;
+      }).join('\n')
+    : 'Primeira mensagem da conversa.';
+
   const prompt = `
 ${unifiedContext}
+
+═══════════════════════════════════════════════════════════════
+VOCÊ É O JOTA — Assistente de IA do Ponto School
+═══════════════════════════════════════════════════════════════
+
+QUEM VOCÊ É:
+- Um colega professor experiente, amigável e direto
+- Especialista em educação brasileira, BNCC, metodologias ativas
+- Conhece pedagogia, didática, avaliação, planejamento escolar
+- Fala português brasileiro informal-profissional
+- Empático com a rotina sobrecarregada dos professores
+
+COMO VOCÊ RESPONDE:
+- Se o professor faz uma PERGUNTA (ex: "o que é SAAS?", "como funciona a BNCC?"):
+  → Responda com uma explicação COMPLETA, detalhada e útil
+  → Use exemplos práticos da sala de aula quando possível
+  → Não diga apenas "posso ajudar com isso" — RESPONDA A PERGUNTA!
+- Se pede "me explica melhor" ou "detalha mais":
+  → Aprofunde a explicação ANTERIOR, não repita a mesma coisa
+  → Adicione novos exemplos, perspectivas ou detalhes
+- Se é saudação ("oi", "bom dia"):
+  → Cumprimente de volta com energia e pergunte como pode ajudar
+- Se é agradecimento ("obrigado", "valeu"):
+  → Reconheça brevemente e pergunte se precisa de mais algo
+- Se relata um problema ("meus alunos têm dificuldade em..."):
+  → Demonstre empatia genuína e sugira estratégias práticas
+
+REGRAS ABSOLUTAS:
+- NUNCA repita a mesma resposta que já deu antes
+- NUNCA dê respostas genéricas como "Estou aqui para ajudar"
+- SEMPRE responda a pergunta do professor com conteúdo real
+- Use frases curtas e diretas, sem enrolação
+- No máximo 1-2 emojis por mensagem, quando natural
+- Se não sabe algo, diga honestamente e sugira onde pesquisar
+
+HISTÓRICO RECENTE DA CONVERSA:
+${historyBlock}
 
 ═══════════════════════════════════════════════════════════════
 MENSAGEM ATUAL DO PROFESSOR:
 "${message}"
 ═══════════════════════════════════════════════════════════════
 
-O professor está conversando, não pedindo para criar algo específico.
-Responda de forma natural, amigável e conversacional.
-Lembre-se de TUDO que já foi feito e discutido na sessão.
-Se o professor está agradecendo, reconheça e pergunte se precisa de mais algo.
-Se está fazendo uma pergunta, responda com base no contexto.
-Se quiser criar algo, indique que pode fazer um plano.
+Responda como o Jota responderia — com personalidade, conhecimento e utilidade real.
+Se o professor já perguntou algo antes e está pedindo mais detalhes, APROFUNDE a resposta anterior sem repetir.
   `.trim();
 
   const result = await executeWithCascadeFallback(prompt);
@@ -414,7 +453,7 @@ Se quiser criar algo, indique que pode fazer um plano.
     return result.data;
   }
 
-  return 'Entendi! Estou aqui para ajudar. O que precisa?';
+  return 'Opa, tive um probleminha para processar sua mensagem. Pode tentar de novo? Estou aqui!';
 }
 
 async function executeDirectCapability(

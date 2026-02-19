@@ -21,9 +21,10 @@ export interface ConversationTurn {
   content: string;
   timestamp: number;
   metadata?: {
-    type?: 'initial_response' | 'plan_message' | 'narrative' | 'final_response' | 'follow_up' | 'execution_update';
+    type?: 'initial_response' | 'plan_message' | 'narrative' | 'final_response' | 'follow_up' | 'execution_update' | 'capability_direta';
     planId?: string;
     stepIndex?: number;
+    capability?: string;
   };
 }
 
