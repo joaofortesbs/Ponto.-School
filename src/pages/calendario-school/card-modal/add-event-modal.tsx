@@ -1,6 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tag, Hourglass, Pencil, Sparkles, BookOpen, GripHorizontal, X, Camera, Check, Star, Plus, Clock, RefreshCw, ChevronDown, ArrowRight } from 'lucide-react';
+import { Tag, Hourglass, Pencil, Sparkles, BookOpen, GripHorizontal, X, Camera, Check, Star, Plus, Clock, RefreshCw, ChevronDown, ArrowRight, Paperclip, FileText, Trash2, ClipboardList, GraduationCap } from 'lucide-react';
+
+interface AttachedFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  file: File;
+}
 
 interface Event {
   id: string;
@@ -13,16 +21,17 @@ interface Event {
   endTime: string | null;
   isAllDay: boolean;
   repeat: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+  attachedFiles?: AttachedFile[];
 }
 
 interface AddEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDay: number | null;
-  onAddEvent: (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string) => void;
+  onAddEvent: (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[]) => void;
   isEditing?: boolean;
   editingEvent?: Event | null;
-  onUpdateEvent?: (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string) => void;
+  onUpdateEvent?: (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[]) => void;
   onDeleteEvent?: (eventId: string) => void;
 }
 
@@ -114,6 +123,47 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   const [isRepeatDropdownOpen, setIsRepeatDropdownOpen] = useState(false);
   const repeatDropdownRef = useRef<HTMLDivElement>(null);
 
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+  const MAX_FILES = 5;
+  const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.txt', '.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp3', '.mp4', '.zip'];
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newFiles: AttachedFile[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (attachedFiles.length + newFiles.length >= MAX_FILES) break;
+      if (file.size > MAX_FILE_SIZE) continue;
+      const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+      if (!ALLOWED_EXTENSIONS.includes(ext)) continue;
+
+      newFiles.push({
+        id: `file-${Date.now()}-${i}`,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        file: file,
+      });
+    }
+    setAttachedFiles(prev => [...prev, ...newFiles]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleRemoveFile = (fileId: string) => {
+    setAttachedFiles(prev => prev.filter(f => f.id !== fileId));
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   useEffect(() => {
     if (isOpen) {
       if (isEditing && editingEvent) {
@@ -124,6 +174,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         setStartTime(editingEvent.startTime || '09:00');
         setEndTime(editingEvent.endTime || '10:00');
         setRepeat(editingEvent.repeat || 'none');
+        setAttachedFiles(editingEvent.attachedFiles || []);
       } else {
         setTitle('');
         setSelectedIcon('pencil');
@@ -132,6 +183,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         setStartTime('09:00');
         setEndTime('10:00');
         setRepeat('none');
+        setAttachedFiles([]);
       }
       setIsIconDropdownOpen(false);
       setIsLabelDropdownOpen(false);
@@ -224,9 +276,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       const finalEndTime = isAllDay ? null : endTime;
 
       if (isEditing && onUpdateEvent) {
-        onUpdateEvent(title, selectedIcon, selectedLabels, labelData, finalStartTime, finalEndTime, isAllDay, repeat);
+        onUpdateEvent(title, selectedIcon, selectedLabels, labelData, finalStartTime, finalEndTime, isAllDay, repeat, attachedFiles.length > 0 ? attachedFiles : undefined);
       } else {
-        onAddEvent(title, selectedDay, selectedIcon, selectedLabels, labelData, finalStartTime, finalEndTime, isAllDay, repeat);
+        onAddEvent(title, selectedDay, selectedIcon, selectedLabels, labelData, finalStartTime, finalEndTime, isAllDay, repeat, attachedFiles.length > 0 ? attachedFiles : undefined);
       }
       onClose();
     }
@@ -634,31 +686,97 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           </div>
         </div>
 
-        <div className="flex gap-3 mt-4">
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept={ALLOWED_EXTENSIONS.join(',')}
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+
+        <div className="flex flex-col gap-2.5 mt-4">
           <motion.button
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex-1 flex items-center justify-center gap-2 py-3 text-white text-sm font-semibold transition-all rounded-full"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            onClick={() => fileInputRef.current?.click()}
+            disabled={attachedFiles.length >= MAX_FILES}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
-              background: 'rgba(255, 107, 0, 0.1)',
-              border: '1px solid rgba(255, 107, 0, 0.3)'
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.08)'
             }}
           >
-            <Plus className="w-4 h-4 text-[#FF6B00]" />
-            <span>Atividades</span>
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(255, 107, 0, 0.1)' }}
+            >
+              <Paperclip className="w-4 h-4 text-[#FF6B00]" />
+            </div>
+            <div className="flex-1 text-left">
+              <span className="text-white/80 text-sm font-medium">Anexar arquivos</span>
+              {attachedFiles.length > 0 && (
+                <span className="text-white/30 text-xs ml-2">({attachedFiles.length}/{MAX_FILES})</span>
+              )}
+            </div>
+            <Plus className="w-4 h-4 text-white/30" />
+          </motion.button>
+
+          {attachedFiles.length > 0 && (
+            <div className="flex flex-col gap-1.5 pl-3">
+              {attachedFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
+                  style={{ background: 'rgba(255, 255, 255, 0.02)' }}
+                >
+                  <FileText className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
+                  <span className="text-white/60 text-xs truncate flex-1">{file.name}</span>
+                  <span className="text-white/20 text-[10px] flex-shrink-0">{formatFileSize(file.size)}</span>
+                  <button
+                    onClick={() => handleRemoveFile(file.id)}
+                    className="w-5 h-5 rounded flex items-center justify-center text-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all flex-shrink-0"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.08)'
+            }}
+          >
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(255, 107, 0, 0.1)' }}
+            >
+              <ClipboardList className="w-4 h-4 text-[#FF6B00]" />
+            </div>
+            <span className="flex-1 text-left text-white/80 text-sm font-medium">Adicionar atividades</span>
+            <Plus className="w-4 h-4 text-white/30" />
           </motion.button>
 
           <motion.button
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex-1 flex items-center justify-center gap-2 py-3 text-white text-sm font-semibold transition-all rounded-full"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
             style={{
-              background: 'rgba(255, 107, 0, 0.1)',
-              border: '1px solid rgba(255, 107, 0, 0.3)'
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.08)'
             }}
           >
-            <Plus className="w-4 h-4 text-[#FF6B00]" />
-            <span>Aulas</span>
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(255, 107, 0, 0.1)' }}
+            >
+              <GraduationCap className="w-4 h-4 text-[#FF6B00]" />
+            </div>
+            <span className="flex-1 text-left text-white/80 text-sm font-medium">Adicionar aulas</span>
+            <Plus className="w-4 h-4 text-white/30" />
           </motion.button>
         </div>
 

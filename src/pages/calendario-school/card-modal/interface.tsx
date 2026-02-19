@@ -10,6 +10,14 @@ interface CalendarioSchoolPanelProps {
   onClose: () => void;
 }
 
+interface AttachedFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  file: File;
+}
+
 interface Event {
   id: string;
   title: string;
@@ -21,6 +29,7 @@ interface Event {
   endTime: string | null;
   isAllDay: boolean;
   repeat: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+  attachedFiles?: AttachedFile[];
 }
 
 interface DayData {
@@ -313,7 +322,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     setIsAddEventModalOpen(true);
   };
 
-  const handleAddEvent = (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string) => {
+  const handleAddEvent = (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[]) => {
     const labelColors: { [key: string]: string } = {};
     selectedLabels.forEach(labelId => {
       if (labelData[labelId]) {
@@ -331,7 +340,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
       startTime: isAllDay ? null : startTime,
       endTime: isAllDay ? null : endTime,
       isAllDay,
-      repeat: repeat as Event['repeat']
+      repeat: repeat as Event['repeat'],
+      attachedFiles: attachedFiles || []
     };
     setEvents([...events, newEvent]);
   };
@@ -344,7 +354,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     }
   };
 
-  const handleUpdateEvent = (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string) => {
+  const handleUpdateEvent = (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[]) => {
     if (!editingEvent) return;
 
     const labelColors: { [key: string]: string } = {};
@@ -363,7 +373,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
       startTime: isAllDay ? null : startTime,
       endTime: isAllDay ? null : endTime,
       isAllDay,
-      repeat: repeat as Event['repeat']
+      repeat: repeat as Event['repeat'],
+      attachedFiles: attachedFiles || editingEvent.attachedFiles || []
     };
 
     setEvents(events.map(e => e.id === editingEvent.id ? updatedEvent : e));
