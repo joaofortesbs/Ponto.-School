@@ -268,13 +268,15 @@ export async function smartRoute(
   }
 
   const sessionContext = buildSessionContextSummary(sessionId, userId);
-  const prompt = SMART_ROUTER_PROMPT
+  const routingUserPrompt = `MENSAGEM: "${userPrompt}"\n\nCONTEXTO: ${sessionContext}\n\nResponda APENAS JSON com: route, confidence, reasoning, capability (se CAPABILITY_DIRETA), capability_params.`;
+  const routingSystemPrompt = SMART_ROUTER_PROMPT
     .replace('{user_prompt}', userPrompt)
     .replace('{session_context}', sessionContext);
 
   try {
-    const result = await executeWithCascadeFallback(prompt, {
+    const result = await executeWithCascadeFallback(routingUserPrompt, {
       onProgress: (status) => console.log(`🧭 [SmartRouter:LLM] ${status}`),
+      systemPrompt: routingSystemPrompt,
     });
 
     if (!result.success || !result.data) {

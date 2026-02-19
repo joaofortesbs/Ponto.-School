@@ -66,6 +66,7 @@ export interface GenerateContentOptions {
   activityType?: ActivityType;
   skipCache?: boolean;
   onProgress?: (status: string) => void;
+  systemPrompt?: string;
 }
 
 export interface GenerateContentResult {

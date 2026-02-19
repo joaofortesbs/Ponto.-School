@@ -164,11 +164,12 @@ export async function executeCalendarAgent(input: CalendarAgentInput): Promise<C
     let action: AgentAction;
     try {
       const llmResult = await executeWithCascadeFallback(
-        CALENDAR_AGENT_SYSTEM + '\n\n' + decisionPrompt,
+        decisionPrompt,
         {
           onProgress: (status: string) => {
             console.log(`🧠 [CalendarAgent] LLM: ${status}`);
           },
+          systemPrompt: CALENDAR_AGENT_SYSTEM,
         }
       );
 

@@ -838,6 +838,7 @@ export async function executeWithCascadeFallback(
     userId?: string;
     bypassCache?: boolean;
     activityType?: 'general' | 'lista-exercicios' | 'quiz-interativo' | 'flash-cards' | 'plano-aula' | 'sequencia-didatica' | 'tese-redacao' | 'quadro-interativo';
+    systemPrompt?: string;
   }
 ): Promise<CascadeResult> {
   const startTime = Date.now();
@@ -866,6 +867,7 @@ export async function executeWithCascadeFallback(
       activityType: options?.activityType || 'general',
       onProgress: options?.onProgress,
       skipCache: options?.bypassCache,
+      systemPrompt: options?.systemPrompt,
     };
 
     const result = await generateContent(prompt, orchestratorOptions);

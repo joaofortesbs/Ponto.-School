@@ -17,6 +17,7 @@ export async function callGroqAPI(
     temperature?: number;
     maxTokens?: number;
     timeout?: number;
+    systemPrompt?: string;
   } = {}
 ): Promise<GenerateContentResult> {
   const startTime = Date.now();
@@ -62,7 +63,9 @@ export async function callGroqAPI(
       },
       body: JSON.stringify({
         model: model.id,
-        messages: [{ role: 'user', content: prompt }],
+        messages: options.systemPrompt
+          ? [{ role: 'system', content: options.systemPrompt }, { role: 'user', content: prompt }]
+          : [{ role: 'user', content: prompt }],
         temperature: options.temperature ?? 0.3,
         max_tokens: Math.min(options.maxTokens ?? model.maxTokens, 7000),
       }),

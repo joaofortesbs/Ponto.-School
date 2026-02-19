@@ -199,12 +199,14 @@ export async function generateContent(
           temperature: options.temperature,
           maxTokens: options.maxTokens,
           timeout: options.timeout,
+          systemPrompt: options.systemPrompt,
         });
       } else if (model.provider === 'gemini') {
         result = await callGeminiAPI(model, cleanPrompt, {
           temperature: options.temperature,
           maxTokens: options.maxTokens,
           timeout: options.timeout,
+          systemPrompt: options.systemPrompt,
         });
       } else {
         continue;

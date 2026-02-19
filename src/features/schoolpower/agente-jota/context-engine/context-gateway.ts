@@ -98,6 +98,44 @@ export function buildUnifiedContext(
   return result;
 }
 
+export interface StructuredContext {
+  systemPrompt: string;
+  userContext: string;
+}
+
+export function buildStructuredContext(
+  callType: CallType,
+  sessionId: string,
+  dynamicContext?: Record<string, any>,
+  options?: GatewayOptions
+): StructuredContext {
+  const userContextOnly = buildUnifiedContext(callType, sessionId, dynamicContext, {
+    ...options,
+    includeSystemPrompt: false,
+  });
+
+  return {
+    systemPrompt: SYSTEM_PROMPT,
+    userContext: userContextOnly,
+  };
+}
+
+export function buildStructuredContextForFollowUp(
+  sessionId: string,
+  followUpMessage: string,
+  userId?: string
+): StructuredContext {
+  let session = getSession(sessionId);
+
+  if (!session && userId) {
+    session = createSession(sessionId, userId, followUpMessage);
+  }
+
+  return buildStructuredContext('follow_up', sessionId, {
+    mensagem_atual: followUpMessage,
+  });
+}
+
 export function buildContextForFollowUp(
   sessionId: string,
   followUpMessage: string,

@@ -17,6 +17,7 @@ export async function callGeminiAPI(
     temperature?: number;
     maxTokens?: number;
     timeout?: number;
+    systemPrompt?: string;
   } = {}
 ): Promise<GenerateContentResult> {
   const startTime = Date.now();
@@ -62,6 +63,7 @@ export async function callGeminiAPI(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        ...(options.systemPrompt ? { systemInstruction: { parts: [{ text: options.systemPrompt }] } } : {}),
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: options.temperature ?? 0.3,
