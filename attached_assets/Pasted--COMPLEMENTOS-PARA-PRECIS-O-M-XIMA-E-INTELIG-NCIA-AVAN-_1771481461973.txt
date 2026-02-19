@@ -1,0 +1,39 @@
+## COMPLEMENTOS PARA PRECISÃO MÁXIMA E INTELIGÊNCIA AVANÇADA (ADICIONE SEM ALTERAR NADA ACIMA)
+
+### 1. CONTEXTUALIZAÇÃO PROFUNDA DA ARQUITETURA VIBE CODE
+Você opera na arquitetura Vibe Code: inicie sempre com VIBE ANALYSIS (analise tom/estilo do usuário: ex. urgente=execução rápida; detalhista=explicações passo-a-passo), seguido de CONTEXT GROUNDING (liste fatos conhecidos da Ponto. School: 7 Agentes IA, School Power 137 materiais, grade curricular sync, calendário atual com modal campos {título, data, hora_início/fim, dia_todo, repetição, ícone, labels}, integração Teacher App/Trilhas gamificadas), então CHAIN-OF-THOUGHT (pense em voz alta: "Passo 1: Parse input → Passo 2: Valide conflitos → ..."), VIBE ALIGN (responda no tom do usuário + empático/especialista EdTech), e VALIDATE OUTPUT (verifique: "Isso alinha BNCC? Evita conflitos? Atualiza UI real-time?"). Isso elimina 99% alucinações por grounding iterativo.
+
+### 2. EXEMPLOS GROUND TRUTH PARA NLP PARSE (USE SEMPRE COMO TEMPLATE)
+- Input: "Crie aula Funes 25/02 10h turma 9A" → Parse JSON: {"tipo": "aula", "titulo": "Aula Funes Quadráticas 9A", "data": "2026-02-25", "hora_inicio": "10:00", "hora_fim": "11:00", "labels": ["Matemática", "ENEM"], "icone": "📚", "veicular": "Trilha Semana 3 School Power", "repeticao": null}. Confirme: "Criado! [Preview visual]".
+- Input: "Adicione reunião coord dia todo 28/02 repetindo semanal" → JSON: {"tipo": "compromisso", "titulo": "Reunião Coordenação", "data": "2026-02-28", "dia_todo": true, "repeticao": "semanal", "conflitos": "Verificados: livre às 14h slot sugerido"}.
+Sempre fallback: Se ambiguo, pergunte 1x ("Confirma data 25/02?") e defina default (mês atual via user session, ano 2026).
+
+### 3. ANTI-ALUCINAÇÃO CHECKLIST (OBRIGATÓRIO POR RESPOSTA)
+- [ ] Parse 100% campos modal sem inventar (só o que existe: título/data/etc).
+- [ ] Acesse calendário real-time (query DB eventos user_id no mês visualizado).
+- [ ] Evite conflitos: Scan horários overlap → Sugira alternativas (ex. "Conflito 10h, mover para 14h?").
+- [ ] Integre ecossistema: Link trilha/atividade School Power; sync Agente Coordenador (BNCC check); notif turma.
+- [ ] UI Update: Emita event Socket.io 'calendar.refresh' para refresh automático sem reload.
+- [ ] Logs: Registre "criar_compromisso: user_id=XYZ, evento=ABC" para audit.
+
+### 4. CONTEXTO ESPECÍFICO PONTO.SCHOOL (EXPANDA SEM PERDER)
+- Calendário DB schema: table 'eventos' {id, user_id, turma_id, titulo, data (YYYY-MM-DD), hora_inicio (HH:MM), hora_fim, dia_todo (bool), repeticao (string: none/diario/semanal), icone (emoji), labels (array), veicular_id (trilha/atividade), created_by: 'jota_ia'}.
+- Mês/ano atual: Pull de session.user.calendar_view {mes: 02, ano: 2026}.
+- Powers custo: Ignorar por agora; priorize free para tração.
+- Concorrentes grounding: Teachy (planejador form-based, sem chat create); MagicSchool Raina (chat schedule gen, não DB insert); Google Gemini+Calendar (API OAuth2 parse, mas manual confirm). Nós diferenciamos: IA autônoma com 0 cliques + gamificação labels School Points.
+
+### 5. FASES ESTRATÉGICAS REFINADAS (EXPANDA SUAS 3, ADICIONE MÉTRICAS)
+Mantenha Fase 1/2/3 como base, mas refine com milestones mensuráveis:
+- Fase 1: Capacidade no card Desenvolvimento → Teste: Jota lista "criar_compromisso_calendário" em /capabilities.
+- Fase 2: LLM Orchestrator v3 → Teste: Parse 95% accuracy (95/100 inputs corretos).
+- Fase 3: DB Insert + UI Sync → Teste: 100% refresh <2s, zero conflitos não resolvidos.
+Adicione Fase 0: Research dump (colete dados web aqui); Fase 4: Voz input + Multi-evento batch. Cada fase: MVP test com 10 profs-heróis, métrica NPS>80, rollback se churn>5%.
+
+### 6. PERGUNTAS PARA CONTEXTO FINAL (FAÇA ANTES CODAR)
+1. Schema exato do modal calendário (campos + types + constraints)?
+2. API endpoints atuais (/calendar/events POST? Auth?) + libs (ex. FullCalendar React)?
+3. Integrações existentes (Socket.io room? DB ORM Prisma?)?
+4. Exemplo DB query para conflitos/mês atual?
+5. Vibe Code params (temp=0.7 precisão; max_tokens=2000)?
+
+Com esses complementos, sua execução será 10x mais precisa: vibe-aligned, data-grounded, zero alucinações. Prossiga com pesquisas web agora!
