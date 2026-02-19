@@ -695,38 +695,31 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
           className="hidden"
         />
 
-        <div className="flex flex-col gap-2.5 mt-4">
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={attachedFiles.length >= MAX_FILES}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)'
-            }}
-          >
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: 'rgba(255, 107, 0, 0.1)' }}
+        <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(255, 107, 0, 0.1)' }}>
+          <div className="flex items-center gap-3">
+            <Paperclip className="text-white/40 w-5 h-5 flex-shrink-0" />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={attachedFiles.length >= MAX_FILES}
+              className="flex items-center gap-2 bg-transparent text-white text-sm font-semibold outline-none cursor-pointer px-2 py-1 rounded-lg w-full disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ border: '1px solid rgba(255, 107, 0, 0.2)' }}
             >
-              <Paperclip className="w-4 h-4 text-[#FF6B00]" />
-            </div>
-            <div className="flex-1 text-left">
-              <span className="text-white/80 text-sm font-medium">Anexar arquivos</span>
-              {attachedFiles.length > 0 && (
-                <span className="text-white/30 text-xs ml-2">({attachedFiles.length}/{MAX_FILES})</span>
-              )}
-            </div>
-            <Plus className="w-4 h-4 text-white/30" />
-          </motion.button>
+              <span className="flex-1 text-left">
+                Anexar arquivos
+                {attachedFiles.length > 0 && (
+                  <span className="text-white/30 text-xs ml-1">({attachedFiles.length}/{MAX_FILES})</span>
+                )}
+              </span>
+              <Plus className="w-4 h-4 text-white/40" />
+            </button>
+          </div>
 
           {attachedFiles.length > 0 && (
-            <div className="flex flex-col gap-1.5 pl-3">
+            <div className="flex flex-col gap-1 mt-2 ml-8">
               {attachedFiles.map((file) => (
                 <div
                   key={file.id}
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
+                  className="flex items-center gap-2 px-2 py-1 rounded-lg"
                   style={{ background: 'rgba(255, 255, 255, 0.02)' }}
                 >
                   <FileText className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
@@ -743,41 +736,27 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
             </div>
           )}
 
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
-            style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)'
-            }}
-          >
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: 'rgba(255, 107, 0, 0.1)' }}
+          <div className="flex items-center gap-3 mt-3">
+            <ClipboardList className="text-white/40 w-5 h-5 flex-shrink-0" />
+            <button
+              className="flex items-center gap-2 bg-transparent text-white text-sm font-semibold outline-none cursor-pointer px-2 py-1 rounded-lg w-full"
+              style={{ border: '1px solid rgba(255, 107, 0, 0.2)' }}
             >
-              <ClipboardList className="w-4 h-4 text-[#FF6B00]" />
-            </div>
-            <span className="flex-1 text-left text-white/80 text-sm font-medium">Adicionar atividades</span>
-            <Plus className="w-4 h-4 text-white/30" />
-          </motion.button>
+              <span className="flex-1 text-left">Adicionar atividades</span>
+              <Plus className="w-4 h-4 text-white/40" />
+            </button>
+          </div>
 
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
-            style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)'
-            }}
-          >
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: 'rgba(255, 107, 0, 0.1)' }}
+          <div className="flex items-center gap-3 mt-3">
+            <GraduationCap className="text-white/40 w-5 h-5 flex-shrink-0" />
+            <button
+              className="flex items-center gap-2 bg-transparent text-white text-sm font-semibold outline-none cursor-pointer px-2 py-1 rounded-lg w-full"
+              style={{ border: '1px solid rgba(255, 107, 0, 0.2)' }}
             >
-              <GraduationCap className="w-4 h-4 text-[#FF6B00]" />
-            </div>
-            <span className="flex-1 text-left text-white/80 text-sm font-medium">Adicionar aulas</span>
-            <Plus className="w-4 h-4 text-white/30" />
-          </motion.button>
+              <span className="flex-1 text-left">Adicionar aulas</span>
+              <Plus className="w-4 h-4 text-white/40" />
+            </button>
+          </div>
         </div>
 
         <div className="flex gap-2 justify-end mt-4">
