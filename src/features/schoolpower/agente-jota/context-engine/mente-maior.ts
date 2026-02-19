@@ -49,6 +49,21 @@ export interface MenteMaiorInput {
   availableCapabilities: string[];
 }
 
+export type StepAction = 'keep' | 'skip' | 'adapt';
+
+export interface StepDecision {
+  stepIndex: number;
+  action: StepAction;
+  reason?: string;
+  adaptedParams?: Record<string, any>;
+  adaptedCapabilities?: Array<{
+    nome: string;
+    displayName: string;
+    categoria: string;
+    parametros: Record<string, any>;
+  }>;
+}
+
 export interface MenteMaiorOutput {
   narrative: string;
   replan: {
@@ -65,15 +80,17 @@ export interface MenteMaiorOutput {
       }>;
     }>;
   };
+  stepDecisions: StepDecision[];
   success: boolean;
 }
 
 const MENTE_MAIOR_PROMPT = `
 Você é a Mente Orquestradora do Agente Jota (Ponto School).
-Você acabou de completar uma etapa do plano de ação e precisa fazer DUAS coisas:
+Você acabou de completar uma etapa do plano e precisa fazer TRÊS coisas:
 
-1. GERAR UMA NARRATIVA curta para o professor (o que você fez e vai fazer)
-2. AVALIAR SE O PLANO PRECISA MUDAR (baseado nos resultados obtidos)
+1. GERAR UMA NARRATIVA curta para o professor (o que fez e vai fazer)
+2. DECIDIR SOBRE CADA PRÓXIMA ETAPA: manter, pular ou adaptar
+3. AVALIAR SE PRECISA REPLANEJAR (adicionar etapas novas)
 
 {context}
 
@@ -95,9 +112,16 @@ Resultados:
 INSTRUÇÕES:
 ═══════════════════════════════════════════════════════════════
 
-Responda com um JSON válido com EXATAMENTE esta estrutura:
+Responda com um JSON válido com esta estrutura:
 {
-  "narrative": "Sua mensagem curta para o professor (2-3 frases, 1ª pessoa, tom amigável)",
+  "narrative": "Mensagem curta para o professor (2-3 frases, 1ª pessoa)",
+  "step_decisions": [
+    {
+      "stepIndex": 3,
+      "action": "keep",
+      "reason": "Etapa necessária conforme planejado"
+    }
+  ],
   "replan": {
     "needed": false,
     "reason": ""
@@ -113,18 +137,29 @@ REGRAS PARA A NARRATIVA:
 - NÃO use markdown, bullets ou listas
 - NÃO repita o título da etapa
 
-REGRAS PARA O REPLAN:
-- needs=false na maioria dos casos (plano está OK)
-- needs=true APENAS se os resultados revelaram algo inesperado:
-  * Pesquisa não encontrou resultados úteis
-  * Já existem atividades similares
-  * Resultado revelou necessidade não prevista
-  * Etapa se tornou desnecessária
-  * Professor pediu calendário mas o plano não inclui criar_compromisso_calendario
-- Se needs=true, inclua "reason" com explicação breve
-- Se needs=true E etapas precisam mudar, inclua "modifications" com as etapas restantes atualizadas
-- Se for a última etapa, SEMPRE needs=false
-- 📅 Se o pedido original mencionou calendário/agendar/organizar e o plano NÃO tem criar_compromisso_calendario, faça replan para adicionar!
+REGRAS PARA STEP_DECISIONS (MICRO-DECISÕES):
+Para CADA etapa restante, decida UMA ação:
+- "keep" → Manter a etapa como está (padrão, use na maioria dos casos)
+- "skip" → Pular a etapa (SOMENTE se os resultados mostraram que é desnecessária)
+  Exemplos: pesquisa já retornou tudo necessário, etapa duplicada
+- "adapt" → Adaptar parâmetros da etapa com base nos resultados
+  Exemplos: ajustar quantidade de atividades, mudar tema baseado no que a pesquisa encontrou
+
+ATENÇÃO:
+- Use "keep" na GRANDE MAIORIA dos casos (80%+)
+- "skip" só quando a etapa se tornou CLARAMENTE desnecessária
+- "adapt" quando os resultados desta etapa influenciam diretamente a próxima
+- Se não há etapas restantes, retorne step_decisions como array vazio []
+- NUNCA pule etapas críticas como criar_atividade, salvar_atividades_bd
+- Se for a última etapa, step_decisions deve ser []
+
+REGRAS PARA REPLAN:
+- needed=false na maioria dos casos
+- needed=true APENAS se precisa ADICIONAR etapas completamente novas:
+  * Professor pediu calendário mas plano não tem gerenciar_calendario
+  * Resultado revelou necessidade não prevista no plano original
+- Se needed=true, inclua "modifications" com as etapas NOVAS a adicionar
+- Se for a última etapa, SEMPRE needed=false
 
 {capabilities_list}
 
@@ -155,16 +190,12 @@ export async function executeMenteMaior(input: MenteMaiorInput): Promise<MenteMa
 
   let nextStepSection: string;
   if (input.isLastStep) {
-    nextStepSection = 'Esta é a ÚLTIMA ETAPA. O plano está concluído.';
+    nextStepSection = 'Esta é a ÚLTIMA ETAPA. O plano está concluído. step_decisions deve ser [].';
   } else if (input.nextStep) {
-    nextStepSection = `PRÓXIMA ETAPA:\nEtapa ${input.nextStep.index}: ${input.nextStep.title}\nCapabilities: ${input.nextStep.capabilities.join(', ')}`;
-    
-    if (input.remainingSteps.length > 1) {
-      const remaining = input.remainingSteps.slice(1)
-        .map(s => `  - Etapa ${s.index}: ${s.title}`)
-        .join('\n');
-      nextStepSection += `\n\nETAPAS RESTANTES DEPOIS:\n${remaining}`;
-    }
+    const allRemaining = input.remainingSteps
+      .map(s => `  - Etapa ${s.index} (stepIndex: ${s.index}): ${s.title} [${s.capabilities.join(', ')}]`)
+      .join('\n');
+    nextStepSection = `ETAPAS RESTANTES (forneça step_decisions para CADA uma):\n${allRemaining}`;
   } else {
     nextStepSection = 'Nenhuma etapa seguinte definida.';
   }
@@ -223,6 +254,7 @@ function parseMenteMaiorResponse(raw: string, input: MenteMaiorInput): MenteMaio
         return {
           narrative: cleaned,
           replan: { needed: false },
+          stepDecisions: [],
           success: true,
         };
       }
@@ -248,6 +280,17 @@ function parseMenteMaiorResponse(raw: string, input: MenteMaiorInput): MenteMaio
       replan.needed = false;
     }
 
+    const rawDecisions = parsed.step_decisions || [];
+    const stepDecisions: StepDecision[] = rawDecisions
+      .filter((d: any) => d && d.stepIndex && d.action)
+      .map((d: any) => ({
+        stepIndex: d.stepIndex,
+        action: (['keep', 'skip', 'adapt'].includes(d.action) ? d.action : 'keep') as StepAction,
+        reason: d.reason || undefined,
+        adaptedParams: d.action === 'adapt' ? d.adaptedParams : undefined,
+        adaptedCapabilities: d.action === 'adapt' ? d.adaptedCapabilities : undefined,
+      }));
+
     return {
       narrative,
       replan: {
@@ -255,6 +298,7 @@ function parseMenteMaiorResponse(raw: string, input: MenteMaiorInput): MenteMaio
         reason: replan.reason || undefined,
         modifications: replan.needed ? replan.modifications : undefined,
       },
+      stepDecisions,
       success: true,
     };
   } catch (parseError) {
@@ -270,6 +314,7 @@ function parseMenteMaiorResponse(raw: string, input: MenteMaiorInput): MenteMaio
       return {
         narrative: cleanText,
         replan: { needed: false },
+        stepDecisions: [],
         success: true,
       };
     }
@@ -282,6 +327,7 @@ function buildFallbackResponse(input: MenteMaiorInput): MenteMaiorOutput {
   return {
     narrative: buildFallbackNarrative(input),
     replan: { needed: false },
+    stepDecisions: [],
     success: false,
   };
 }

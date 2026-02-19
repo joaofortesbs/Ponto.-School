@@ -30,7 +30,9 @@ export {
 export { 
   executeMenteMaior, 
   type MenteMaiorInput, 
-  type MenteMaiorOutput 
+  type MenteMaiorOutput,
+  type StepDecision,
+  type StepAction,
 } from './mente-maior';
 
 export {

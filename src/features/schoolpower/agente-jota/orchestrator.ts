@@ -1,10 +1,10 @@
 /**
- * ORCHESTRATOR - Orquestrador Principal do Agente Jota
+ * ORCHESTRATOR v2.0 - Orquestrador Principal do Agente Jota
  * 
- * Coordena todo o fluxo do agente com arquitetura de 3 chamadas:
- * 1. Chamada 1: Resposta Inicial (InitialResponseService)
- * 2. Chamada 2: Card de Desenvolvimento (MenteMaior unificada) 
- * 3. Chamada 3: Resposta Final (FinalResponseService)
+ * Arquitetura UNIFIED ROUTER:
+ * - UMA ÚNICA chamada LLM decide: conversar OU executar (substitui 3 chamadas separadas)
+ * - Executor com micro-decisões via MenteMaior com poder de decisão
+ * - Resposta Final ao término da execução
  * 
  * CONTEXT ENGINE v2.0 (fonte ÚNICA de verdade):
  * - SessionStore mantém toda a memória da sessão
@@ -15,6 +15,7 @@
  */
 
 import { createExecutionPlan, generatePlanMessage } from './planner';
+import { routeUserMessage, type UnifiedRouterResult } from './unified-router';
 import { AgentExecutor } from './executor';
 import { MemoryManager, createMemoryManager } from './memory-manager';
 import type { ExecutionPlan, WorkingMemoryItem, ProgressUpdate } from '../interface-chat-producao/types';
@@ -163,70 +164,64 @@ export async function processUserPrompt(
   userId: string,
   currentContext: WorkingMemoryItem[] = []
 ): Promise<ProcessPromptResult> {
-  console.log('🎯 [Orchestrator] Processando prompt:', userPrompt);
+  console.log('🎯 [Orchestrator v2.0] Processando prompt via Unified Router:', userPrompt);
   console.log('📌 [Orchestrator] Session:', sessionId, 'User:', userId);
 
   const memory = getOrCreateMemoryManager(sessionId, userId);
   sessionTimestamps.set(sessionId, Date.now());
 
-  const intent = classifyIntent(userPrompt);
-  console.log(`🧠 [Orchestrator] Intent: ${intent.type} (${(intent.confidence * 100).toFixed(0)}%) — ${intent.reasoning}`);
-
-  if (shouldRespondDirectly(intent)) {
-    console.log('💬 [Orchestrator] Modo conversacional — respondendo sem criar plano');
-
-    const existingSession = getSession(sessionId);
-    if (!existingSession) {
-      createSession(sessionId, userId, userPrompt);
-    }
-
-    addConversationTurn(sessionId, {
-      role: 'user',
-      content: userPrompt,
-      timestamp: Date.now(),
-    });
-
-    addLedgerFact(sessionId, {
-      fact: `Professor perguntou: "${userPrompt.substring(0, 150)}" [intent: ${intent.type}]`,
-      category: 'context',
-    });
-    
-    const directResponse = await handleDirectResponse(userPrompt, sessionId, userId);
-    
-    addConversationTurn(sessionId, {
-      role: 'assistant',
-      content: directResponse,
-      timestamp: Date.now(),
-      metadata: { type: 'follow_up' },
-    });
-
-    return {
-      plan: null,
-      initialMessage: directResponse,
-    };
+  const existingSession = getSession(sessionId);
+  if (!existingSession) {
+    createSession(sessionId, userId, userPrompt);
   }
 
-  const session = createSession(sessionId, userId, userPrompt);
-  
   addConversationTurn(sessionId, {
     role: 'user',
     content: userPrompt,
     timestamp: Date.now(),
   });
 
-  addLedgerFact(sessionId, {
-    fact: `Professor pediu: "${userPrompt.substring(0, 150)}" [intent: ${intent.type}]`,
-    category: 'context',
-  });
-
-  const contextForPlanner = buildContextForPlanner(sessionId, userPrompt);
-
   try {
-    const plan = await createExecutionPlan(userPrompt, {
-      workingMemory: contextForPlanner,
-      userId,
-      sessionId,
+    const routerResult = await routeUserMessage(userPrompt, sessionId, userId);
+    console.log(`🧠 [Orchestrator] Router decidiu: ${routerResult.mode} (${(routerResult.confidence * 100).toFixed(0)}%) — ${routerResult.reasoning}`);
+
+    if (routerResult.mode === 'chat' || routerResult.mode === 'quick_action') {
+      console.log(`💬 [Orchestrator] Modo ${routerResult.mode} — resposta direta do Router`);
+
+      addLedgerFact(sessionId, {
+        fact: `Professor disse: "${userPrompt.substring(0, 150)}" [mode: ${routerResult.mode}]`,
+        category: 'context',
+      });
+
+      addConversationTurn(sessionId, {
+        role: 'assistant',
+        content: routerResult.response,
+        timestamp: Date.now(),
+        metadata: { type: 'follow_up' },
+      });
+
+      return {
+        plan: null,
+        initialMessage: routerResult.response,
+      };
+    }
+
+    addLedgerFact(sessionId, {
+      fact: `Professor pediu: "${userPrompt.substring(0, 150)}" [mode: execute]`,
+      category: 'context',
     });
+
+    let plan = routerResult.plan;
+
+    if (!plan) {
+      console.warn('⚠️ [Orchestrator] Router retornou execute mas sem plano — usando Planner legado como fallback');
+      const contextForPlanner = buildContextForPlanner(sessionId, userPrompt);
+      plan = await createExecutionPlan(userPrompt, {
+        workingMemory: contextForPlanner,
+        userId,
+        sessionId,
+      });
+    }
 
     await memory.savePlan(plan);
 
@@ -249,16 +244,7 @@ export async function processUserPrompt(
       category: 'decision',
     });
 
-    let initialMessage = generatePlanMessage(plan);
-    let initialResponseData: InitialResponseResult | undefined;
-
-    try {
-      initialResponseData = await generateInitialResponse(sessionId, userPrompt);
-      initialMessage = initialResponseData.resposta;
-      console.log('💡 [Orchestrator] Interpretação:', initialResponseData.interpretacao);
-    } catch (initialError) {
-      console.warn('⚠️ [Orchestrator] Erro ao gerar resposta inicial, usando fallback:', initialError);
-    }
+    const initialMessage = routerResult.initialMessage || generatePlanMessage(plan);
 
     addConversationTurn(sessionId, {
       role: 'assistant',
@@ -267,12 +253,11 @@ export async function processUserPrompt(
       metadata: { type: 'initial_response', planId: plan.planId },
     });
 
-    console.log('✅ [Orchestrator] Plano criado e resposta inicial gerada:', plan.planId);
+    console.log('✅ [Orchestrator] Plano criado via Unified Router:', plan.planId);
 
     return {
       plan,
       initialMessage,
-      initialResponseData,
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
