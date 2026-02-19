@@ -254,6 +254,34 @@ export async function createExecutionPlan(
       });
     }
 
+    const finalCapNames = plan.etapas.flatMap(e => e.capabilities?.map(c => c.nome) || []);
+    const calendarDetected = detectsCalendarRequest(userPrompt);
+    const planHasCalendar = finalCapNames.includes('criar_compromisso_calendario');
+
+    if (calendarDetected && !planHasCalendar) {
+      console.log('📅🔴 [Planner] Pós-validação CRÍTICA: Professor pediu CALENDÁRIO mas IA não incluiu criar_compromisso_calendario — INJETANDO etapa final!');
+      const calendarParams = extractCalendarParamsFromPrompt(userPrompt);
+      const ts = Date.now();
+      plan.etapas.push({
+        ordem: plan.etapas.length + 1,
+        titulo: 'Organizar no seu calendário',
+        descricao: 'Vou adicionar os compromissos no seu calendário automaticamente',
+        funcao: 'criar_compromisso_calendario',
+        parametros: calendarParams,
+        justificativa: 'Professor mencionou calendário/agendar/organizar — injeção automática de segurança',
+        status: 'pendente' as const,
+        capabilities: [{
+          id: `cap-cal-0-${ts}`,
+          nome: 'criar_compromisso_calendario',
+          displayName: 'Organizando no seu calendário',
+          categoria: 'CRIAR' as CapabilityCall['categoria'],
+          parametros: calendarParams,
+          status: 'pending' as const,
+          ordem: 1,
+        }],
+      });
+    }
+
     console.log('✅ [Planner] Plano criado pela Mente Orquestradora:', {
       planId: plan.planId,
       objetivo: plan.objetivo,
@@ -265,6 +293,89 @@ export async function createExecutionPlan(
     console.error('❌ [Planner] Erro ao parsear resposta:', error);
     return createFallbackPlan(userPrompt);
   }
+}
+
+const CALENDAR_KEYWORDS = [
+  'calendário', 'calendario', 'agendar', 'agende', 'agenda',
+  'marcar', 'marque', 'organizar no calendário', 'organiza no calendário',
+  'organizar no calendario', 'organiza no calendario',
+  'coloca no calendário', 'coloca no calendario',
+  'coloque no calendário', 'coloque no calendario',
+  'organize no calendário', 'organize no calendario',
+  'organize tudo no meu calendário', 'organize tudo no meu calendario',
+  'compromisso', 'compromissos',
+  'adicionar ao calendário', 'adicionar ao calendario',
+  'no meu calendário', 'no meu calendario',
+  'organizar tudo', 'organize tudo',
+];
+
+const CALENDAR_CONTEXTUAL_PATTERNS = [
+  /(?:organiz|agend|marc|coloc)\w*\s+(?:tudo\s+)?(?:no|ao|na|em)\s+(?:meu\s+)?calend[áa]rio/i,
+  /calend[áa]rio/i,
+  /(?:agende|marque|organize|coloque)\s+.+(?:dia|data|semana|mês)/i,
+  /(?:reuni[ãa]o|prova|aula|evento)\s+(?:no\s+)?dia\s+\d/i,
+  /(?:distribu|organiz)\w+\s+(?:as\s+)?(?:aulas|atividades|provas)\s+(?:na|pela|ao longo|durante)\s+(?:semana|mês|dias)/i,
+];
+
+function detectsCalendarRequest(userPrompt: string): boolean {
+  const normalized = userPrompt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  const hasKeyword = CALENDAR_KEYWORDS.some(keyword => {
+    const normalizedKeyword = keyword.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return normalized.includes(normalizedKeyword);
+  });
+  if (hasKeyword) return true;
+
+  return CALENDAR_CONTEXTUAL_PATTERNS.some(pattern => pattern.test(userPrompt));
+}
+
+function extractCalendarParamsFromPrompt(userPrompt: string): Record<string, any> {
+  const params: Record<string, any> = {};
+
+  const datePatternDDMM = userPrompt.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+  if (datePatternDDMM) {
+    const day = datePatternDDMM[1].padStart(2, '0');
+    const month = datePatternDDMM[2].padStart(2, '0');
+    const year = datePatternDDMM[3] 
+      ? (datePatternDDMM[3].length === 2 ? '20' + datePatternDDMM[3] : datePatternDDMM[3])
+      : new Date().getFullYear().toString();
+    params.data = `${year}-${month}-${day}`;
+  } else {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    params.data = tomorrow.toISOString().split('T')[0];
+    params.dia_todo = true;
+  }
+
+  const timePattern = userPrompt.match(/(\d{1,2})[h:]\s*(\d{2})?/);
+  if (timePattern) {
+    const hours = timePattern[1].padStart(2, '0');
+    const minutes = timePattern[2] || '00';
+    params.hora_inicio = `${hours}:${minutes}`;
+    const endHour = (parseInt(hours) + 1).toString().padStart(2, '0');
+    params.hora_fim = `${endHour}:${minutes}`;
+  } else if (!params.dia_todo) {
+    params.dia_todo = true;
+  }
+
+  const titlePatterns = [
+    /(?:reuni[ãa]o\s+(?:de\s+)?[\w\s]+)/i,
+    /(?:aula\s+(?:de\s+)?[\w\s]+)/i,
+    /(?:prova\s+(?:de\s+)?[\w\s]+)/i,
+  ];
+  for (const pattern of titlePatterns) {
+    const match = userPrompt.match(pattern);
+    if (match) {
+      params.titulo = match[0].trim().substring(0, 60);
+      break;
+    }
+  }
+
+  if (!params.titulo) {
+    params.titulo = 'Compromisso agendado pelo Jota';
+  }
+
+  return params;
 }
 
 const FILE_REQUEST_STRONG_KEYWORDS = [
@@ -569,6 +680,28 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
       ],
     },
   ];
+
+  if (detectsCalendarRequest(userPrompt)) {
+    console.log('📅 [Planner-Fallback] Detectado pedido de calendário — adicionando etapa final com criar_compromisso_calendario');
+    const calendarParams = extractCalendarParamsFromPrompt(userPrompt);
+    etapas.push({
+      ordem: etapas.length + 1,
+      titulo: 'Organizar no seu calendário',
+      descricao: 'Vou adicionar os compromissos no seu calendário automaticamente',
+      funcao: 'criar_compromisso_calendario',
+      parametros: calendarParams,
+      status: 'pendente',
+      capabilities: [{
+        id: `cap-cal-fb-${timestamp}`,
+        nome: 'criar_compromisso_calendario',
+        displayName: 'Organizando no seu calendário',
+        categoria: 'CRIAR',
+        parametros: calendarParams,
+        status: 'pending',
+        ordem: 1,
+      }],
+    });
+  }
 
   return {
     planId: `plan-fallback-${timestamp}`,

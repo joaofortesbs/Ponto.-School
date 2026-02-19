@@ -298,10 +298,9 @@ export function validatePlanCapabilities(plan: any): {
         cap.nome = validation.normalizedName;
       }
       
-      // Sobrescrever displayName e categoria com valores canônicos do registro
       const canonicalName = cap.nome;
-      if (whitelist.displayNames[canonicalName]) {
-        console.log(`📝 [CapabilityValidator] Sobrescrevendo displayName: "${cap.displayName}" → "${whitelist.displayNames[canonicalName]}"`);
+      if (whitelist.displayNames[canonicalName] && !cap.displayName) {
+        console.log(`📝 [CapabilityValidator] Usando displayName canônico: "${whitelist.displayNames[canonicalName]}"`);
         cap.displayName = whitelist.displayNames[canonicalName];
       }
       
@@ -344,6 +343,7 @@ function getCanonicalCategory(capabilityName: string): string | null {
     'gerar_conteudo_atividades': 'GERAR_CONTEUDO',
     'criar_atividade': 'CRIAR',
     'criar_arquivo': 'CRIAR',
+    'criar_compromisso_calendario': 'CRIAR',
     'salvar_atividades_bd': 'SALVAR_BD',
     'planejar_plano_de_acao': 'PLANEJAR'
   };
