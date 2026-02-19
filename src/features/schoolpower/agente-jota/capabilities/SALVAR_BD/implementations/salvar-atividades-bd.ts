@@ -990,6 +990,8 @@ async function saveActivityToDatabase(
 
     return {
       activity_id: activity.id,
+      tipo: activity.tipo,
+      titulo: activity.titulo,
       success: true,
       saved_at: new Date().toISOString(),
       db_response: data.data
@@ -1001,6 +1003,8 @@ async function saveActivityToDatabase(
     if (errorMessage.includes('aborted')) {
       return {
         activity_id: activity.id,
+        tipo: activity.tipo,
+        titulo: activity.titulo,
         success: false,
         error: `Timeout: API não respondeu em ${API_TIMEOUT_MS}ms`
       };
@@ -1008,6 +1012,8 @@ async function saveActivityToDatabase(
 
     return {
       activity_id: activity.id,
+      tipo: activity.tipo,
+      titulo: activity.titulo,
       success: false,
       error: errorMessage
     };

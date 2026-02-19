@@ -187,56 +187,105 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
     setLinkedActivities(prev => prev.filter(la => la.id !== activityId));
   };
 
+  const openActivityData = (data: any, activity: LinkedActivity) => {
+    const content = data.id_json || data.conteudo;
+    let parsed: any = {};
+    try {
+      parsed = typeof content === 'string' ? JSON.parse(content) : (content || {});
+    } catch {
+      parsed = {};
+    }
+
+    const activityType = data.tipo || activity.tipo;
+
+    if (isTextVersionActivity(activityType)) {
+      const textContent =
+        parsed?.campos?.textContent ||
+        parsed?.textContent ||
+        '';
+
+      setTextVersionContent(textContent);
+      setTextVersionType(activityType);
+      setTextVersionTitle(parsed?.titulo || activity.titulo);
+      setIsTextVersionModalOpen(true);
+      return;
+    }
+
+    const activityForModal = {
+      id: data.id || activity.id,
+      title: parsed?.titulo || activity.titulo,
+      description: parsed?.campos?.descricao || parsed?.campos?.description || '',
+      type: activityType,
+      categoryId: activityType,
+      categoryName: ACTIVITY_TYPE_CONFIG[activity.tipo]?.label || activity.tipo,
+      icon: activity.tipo,
+      tags: [],
+      difficulty: '',
+      estimatedTime: '',
+      customFields: parsed?.campos || {},
+      originalData: parsed,
+      isBuilt: true,
+      builtAt: data.created_at || activity.createdAt,
+      status: 'completed' as const,
+      progress: 100
+    };
+    setViewingActivity(activityForModal);
+    setIsViewModalOpen(true);
+  };
+
   const handleViewLinkedActivity = async (activity: LinkedActivity) => {
     try {
       setIsLoadingView(true);
+      console.log('[Calendario] Tentando carregar atividade:', activity.id, 'tipo:', activity.tipo, 'titulo:', activity.titulo);
+
       const result = await getActivityByCode(activity.id);
       if (result.success && result.data) {
-        const data = result.data as any;
-        const content = data.id_json || data.conteudo;
-        let parsed: any = {};
-        try {
-          parsed = typeof content === 'string' ? JSON.parse(content) : (content || {});
-        } catch {
-          parsed = {};
-        }
-
-        const activityType = data.tipo || activity.tipo;
-
-        if (isTextVersionActivity(activityType)) {
-          const textContent =
-            parsed?.campos?.textContent ||
-            parsed?.textContent ||
-            '';
-
-          setTextVersionContent(textContent);
-          setTextVersionType(activityType);
-          setTextVersionTitle(parsed?.titulo || activity.titulo);
-          setIsTextVersionModalOpen(true);
-          return;
-        }
-
-        const activityForModal = {
-          id: data.id || activity.id,
-          title: parsed?.titulo || activity.titulo,
-          description: parsed?.campos?.descricao || parsed?.campos?.description || '',
-          type: activityType,
-          categoryId: activityType,
-          categoryName: ACTIVITY_TYPE_CONFIG[activity.tipo]?.label || activity.tipo,
-          icon: activity.tipo,
-          tags: [],
-          difficulty: '',
-          estimatedTime: '',
-          customFields: parsed?.campos || {},
-          originalData: parsed,
-          isBuilt: true,
-          builtAt: data.created_at || activity.createdAt,
-          status: 'completed' as const,
-          progress: 100
-        };
-        setViewingActivity(activityForModal);
-        setIsViewModalOpen(true);
+        console.log('[Calendario] Atividade encontrada por ID direto:', activity.id);
+        openActivityData(result.data, activity);
+        return;
       }
+
+      console.log('[Calendario] ID direto falhou, buscando por tipo+titulo nas atividades do usuário...');
+      const userId = (() => {
+        try {
+          const neonUser = localStorage.getItem('neon_user');
+          if (neonUser) {
+            const p = JSON.parse(neonUser);
+            if (p?.id) return p.id;
+          }
+        } catch {}
+        return localStorage.getItem('user_id') || null;
+      })();
+
+      if (userId) {
+        const { getUserActivities } = await import('@/services/activitiesApiService');
+        const allResult = await getUserActivities(userId);
+        if (allResult.success && Array.isArray(allResult.data)) {
+          const match = allResult.data.find((act: any) => {
+            const actTipo = act.tipo || '';
+            let actTitulo = '';
+            try {
+              const raw = act.conteudo || act.id_json;
+              const json = typeof raw === 'string' ? JSON.parse(raw) : raw;
+              actTitulo = json?.titulo || act.titulo || '';
+            } catch {
+              actTitulo = act.titulo || '';
+            }
+
+            if (activity.tipo && actTipo === activity.tipo && actTitulo === activity.titulo) return true;
+            if (actTitulo === activity.titulo) return true;
+            return false;
+          });
+
+          if (match) {
+            console.log('[Calendario] Atividade encontrada por tipo+titulo:', match.id || match.codigo_unico);
+            openActivityData(match, activity);
+            return;
+          }
+        }
+      }
+
+      console.warn('[Calendario] Atividade não encontrada por nenhum método:', activity.id, activity.titulo);
     } catch (err) {
       console.error('[Calendario] Erro ao carregar atividade:', err);
     } finally {

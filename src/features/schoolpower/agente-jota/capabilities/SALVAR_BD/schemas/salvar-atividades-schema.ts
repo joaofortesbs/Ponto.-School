@@ -53,6 +53,8 @@ export interface AtividadeParaSalvar {
 
 export interface ResultadoSalvamento {
   activity_id: string;
+  tipo?: string;
+  titulo?: string;
   success: boolean;
   saved_at?: string;
   error?: string;

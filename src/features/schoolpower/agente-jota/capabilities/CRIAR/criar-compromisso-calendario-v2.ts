@@ -113,23 +113,54 @@ export async function criarCompromissoCalendarioV2(input: CapabilityInput): Prom
       const salvarResult = input.previous_results.get('salvar_atividades_bd');
       const salvarResults = salvarResult?.data?.results || salvarResult?.data?.saved_activities || [];
       if (salvarResult?.success && salvarResults.length > 0 && activities.length > 0) {
-        const dbIdMap = new Map<string, string>();
-        salvarResults.forEach((r: any) => {
-          if (r.success && r.activity_id) {
-            dbIdMap.set(r.activity_id, r.activity_id);
+        const successfulSaves = salvarResults.filter((r: any) => r.success && r.activity_id);
+
+        let enrichedCount = 0;
+        activities = activities.map((a: ActivityInfo) => {
+          const directMatch = successfulSaves.find((r: any) => r.activity_id === a.id);
+          if (directMatch) {
+            enrichedCount++;
+            return { ...a, id: directMatch.activity_id };
           }
+
+          const tipoTituloMatch = successfulSaves.find((r: any) =>
+            r.tipo && r.titulo &&
+            r.tipo === a.tipo &&
+            r.titulo === a.titulo
+          );
+          if (tipoTituloMatch) {
+            enrichedCount++;
+            console.log(`📅 [CalV2] Mapped "${a.titulo}" (${a.tipo}): ${a.id} → ${tipoTituloMatch.activity_id}`);
+            return { ...a, id: tipoTituloMatch.activity_id };
+          }
+
+          const tipoOnlyMatch = successfulSaves.find((r: any) =>
+            r.tipo && r.tipo === a.tipo &&
+            !activities.some((other: ActivityInfo) => other !== a && other.tipo === a.tipo)
+          );
+          if (tipoOnlyMatch) {
+            enrichedCount++;
+            console.log(`📅 [CalV2] Mapped by tipo "${a.tipo}": ${a.id} → ${tipoOnlyMatch.activity_id}`);
+            return { ...a, id: tipoOnlyMatch.activity_id };
+          }
+
+          return a;
         });
-        if (dbIdMap.size > 0) {
-          activities = activities.map(a => ({
+
+        if (enrichedCount === 0 && successfulSaves.length === activities.length) {
+          console.log(`📅 [CalV2] Fallback: matching by index (${activities.length} activities = ${successfulSaves.length} saves)`);
+          activities = activities.map((a: ActivityInfo, i: number) => ({
             ...a,
-            id: dbIdMap.get(a.id) || a.id,
+            id: successfulSaves[i]?.activity_id || a.id,
           }));
-          debugLog.push({
-            timestamp: new Date().toISOString(),
-            type: 'info',
-            narrative: `Enriquecidas ${dbIdMap.size} atividades com IDs do banco (salvar_atividades_bd)`,
-          });
+          enrichedCount = activities.length;
         }
+
+        debugLog.push({
+          timestamp: new Date().toISOString(),
+          type: 'info',
+          narrative: `Enriquecidas ${enrichedCount}/${activities.length} atividades com IDs do banco (salvar_atividades_bd)`,
+        });
       } else if (salvarResult?.success && salvarResults.length > 0 && activities.length === 0) {
         activities = salvarResults
           .filter((r: any) => r.success)
