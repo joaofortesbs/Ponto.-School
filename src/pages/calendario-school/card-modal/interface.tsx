@@ -18,6 +18,13 @@ interface AttachedFile {
   file: File;
 }
 
+interface LinkedActivity {
+  id: string;
+  tipo: string;
+  titulo: string;
+  createdAt?: string;
+}
+
 interface Event {
   id: string;
   title: string;
@@ -30,6 +37,7 @@ interface Event {
   isAllDay: boolean;
   repeat: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
   attachedFiles?: AttachedFile[];
+  linkedActivities?: LinkedActivity[];
 }
 
 interface DayData {
@@ -144,6 +152,56 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const [isEditEventModalOpen, setIsEditEventModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
+
+  const [userActivities, setUserActivities] = useState<LinkedActivity[]>([]);
+  const [isLoadingActivities, setIsLoadingActivities] = useState(false);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const fetchActivities = async () => {
+      try {
+        let userId: string | null = null;
+        try {
+          const neonUser = localStorage.getItem('neon_user');
+          if (neonUser) {
+            const parsed = JSON.parse(neonUser);
+            userId = parsed.id || null;
+          }
+        } catch {}
+        if (!userId) {
+          userId = localStorage.getItem('user_id');
+        }
+        if (!userId) return;
+
+        setIsLoadingActivities(true);
+        const response = await fetch(`/api/atividades/usuario/${userId}`);
+        if (!response.ok) return;
+
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          const mapped: LinkedActivity[] = result.data.map((act: any) => {
+            let titulo = 'Sem título';
+            try {
+              const json = typeof act.id_json === 'string' ? JSON.parse(act.id_json) : act.id_json;
+              titulo = json?.titulo || json?.campos?.title || json?.campos?.titulo || 'Sem título';
+            } catch {}
+            return {
+              id: act.id,
+              tipo: act.tipo || 'desconhecido',
+              titulo,
+              createdAt: act.created_at
+            };
+          });
+          setUserActivities(mapped);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar atividades:', err);
+      } finally {
+        setIsLoadingActivities(false);
+      }
+    };
+    fetchActivities();
+  }, [isOpen]);
   const [viewAllEventsDay, setViewAllEventsDay] = useState<number | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPlanningModalOpen, setIsPlanningModalOpen] = useState(false);
@@ -322,7 +380,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     setIsAddEventModalOpen(true);
   };
 
-  const handleAddEvent = (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[]) => {
+  const handleAddEvent = (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[], linkedActivities?: LinkedActivity[]) => {
     const labelColors: { [key: string]: string } = {};
     selectedLabels.forEach(labelId => {
       if (labelData[labelId]) {
@@ -341,7 +399,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
       endTime: isAllDay ? null : endTime,
       isAllDay,
       repeat: repeat as Event['repeat'],
-      attachedFiles: attachedFiles || []
+      attachedFiles: attachedFiles || [],
+      linkedActivities: linkedActivities || []
     };
     setEvents([...events, newEvent]);
   };
@@ -354,7 +413,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     }
   };
 
-  const handleUpdateEvent = (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[]) => {
+  const handleUpdateEvent = (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[], linkedActivities?: LinkedActivity[]) => {
     if (!editingEvent) return;
 
     const labelColors: { [key: string]: string } = {};
@@ -374,7 +433,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
       endTime: isAllDay ? null : endTime,
       isAllDay,
       repeat: repeat as Event['repeat'],
-      attachedFiles: attachedFiles || editingEvent.attachedFiles || []
+      attachedFiles: attachedFiles || editingEvent.attachedFiles || [],
+      linkedActivities: linkedActivities || editingEvent.linkedActivities || []
     };
 
     setEvents(events.map(e => e.id === editingEvent.id ? updatedEvent : e));
@@ -957,6 +1017,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                   onClose={() => setIsAddEventModalOpen(false)}
                   selectedDay={modalSelectedDay}
                   onAddEvent={handleAddEvent}
+                  userActivities={userActivities}
+                  isLoadingActivities={isLoadingActivities}
                 />
               )}
             </AnimatePresence>
@@ -976,6 +1038,8 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                   editingEvent={editingEvent}
                   onUpdateEvent={handleUpdateEvent}
                   onDeleteEvent={handleDeleteEvent}
+                  userActivities={userActivities}
+                  isLoadingActivities={isLoadingActivities}
                 />
               )}
             </AnimatePresence>

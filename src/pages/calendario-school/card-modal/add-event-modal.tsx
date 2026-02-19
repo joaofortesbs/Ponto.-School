@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tag, Hourglass, Pencil, Sparkles, BookOpen, GripHorizontal, X, Camera, Check, Star, Plus, Clock, RefreshCw, ChevronDown, ArrowRight, Paperclip, FileText, Trash2, ClipboardList, GraduationCap } from 'lucide-react';
+import { Tag, Hourglass, Pencil, Sparkles, BookOpen, GripHorizontal, X, Camera, Check, Star, Plus, Clock, RefreshCw, ChevronDown, ArrowRight, Paperclip, FileText, Trash2, ClipboardList, GraduationCap, Search, ListChecks, Layers, MessageSquare, HelpCircle, CreditCard, Minus } from 'lucide-react';
 
 interface AttachedFile {
   id: string;
@@ -8,6 +8,13 @@ interface AttachedFile {
   size: number;
   type: string;
   file: File;
+}
+
+export interface LinkedActivity {
+  id: string;
+  tipo: string;
+  titulo: string;
+  createdAt?: string;
 }
 
 interface Event {
@@ -22,17 +29,20 @@ interface Event {
   isAllDay: boolean;
   repeat: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
   attachedFiles?: AttachedFile[];
+  linkedActivities?: LinkedActivity[];
 }
 
 interface AddEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDay: number | null;
-  onAddEvent: (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[]) => void;
+  onAddEvent: (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[], linkedActivities?: LinkedActivity[]) => void;
   isEditing?: boolean;
   editingEvent?: Event | null;
-  onUpdateEvent?: (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[]) => void;
+  onUpdateEvent?: (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[], linkedActivities?: LinkedActivity[]) => void;
   onDeleteEvent?: (eventId: string) => void;
+  userActivities?: LinkedActivity[];
+  isLoadingActivities?: boolean;
 }
 
 interface Label {
@@ -86,6 +96,15 @@ const calculateDuration = (start: string, end: string): string => {
   return `${hours}h${mins}min`;
 };
 
+const ACTIVITY_TYPE_CONFIG: { [key: string]: { label: string; icon: any; color: string } } = {
+  'plano-aula': { label: 'Plano de Aula', icon: BookOpen, color: '#3B82F6' },
+  'sequencia-didatica': { label: 'Sequência Didática', icon: Layers, color: '#8B5CF6' },
+  'lista-exercicios': { label: 'Lista de Exercícios', icon: ListChecks, color: '#10B981' },
+  'quiz-interativo': { label: 'Quiz Interativo', icon: HelpCircle, color: '#F59E0B' },
+  'flash-cards': { label: 'Flash Cards', icon: CreditCard, color: '#EC4899' },
+  'quadro-interativo': { label: 'Quadro Interativo', icon: MessageSquare, color: '#06B6D4' },
+};
+
 const AddEventModal: React.FC<AddEventModalProps> = ({
   isOpen,
   onClose,
@@ -94,7 +113,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   isEditing = false,
   editingEvent = null,
   onUpdateEvent,
-  onDeleteEvent
+  onDeleteEvent,
+  userActivities = [],
+  isLoadingActivities = false
 }) => {
   const [title, setTitle] = useState('');
   const [position, setPosition] = useState({ x: 100, y: 100 });
@@ -125,6 +146,31 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [linkedActivities, setLinkedActivities] = useState<LinkedActivity[]>([]);
+  const [isActivitiesExpanded, setIsActivitiesExpanded] = useState(false);
+  const [activitySearchQuery, setActivitySearchQuery] = useState('');
+  const activitySearchRef = useRef<HTMLInputElement>(null);
+
+  const filteredActivities = userActivities.filter(act => {
+    if (linkedActivities.some(la => la.id === act.id)) return false;
+    if (!activitySearchQuery.trim()) return true;
+    return act.titulo.toLowerCase().includes(activitySearchQuery.toLowerCase()) ||
+           act.tipo.toLowerCase().includes(activitySearchQuery.toLowerCase());
+  });
+
+  const handleToggleActivity = (activity: LinkedActivity) => {
+    const isAlreadyLinked = linkedActivities.some(la => la.id === activity.id);
+    if (isAlreadyLinked) {
+      setLinkedActivities(prev => prev.filter(la => la.id !== activity.id));
+    } else {
+      setLinkedActivities(prev => [...prev, activity]);
+    }
+  };
+
+  const handleRemoveLinkedActivity = (activityId: string) => {
+    setLinkedActivities(prev => prev.filter(la => la.id !== activityId));
+  };
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
   const MAX_FILES = 5;
@@ -175,6 +221,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         setEndTime(editingEvent.endTime || '10:00');
         setRepeat(editingEvent.repeat || 'none');
         setAttachedFiles(editingEvent.attachedFiles || []);
+        setLinkedActivities(editingEvent.linkedActivities || []);
       } else {
         setTitle('');
         setSelectedIcon('pencil');
@@ -184,7 +231,10 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         setEndTime('10:00');
         setRepeat('none');
         setAttachedFiles([]);
+        setLinkedActivities([]);
       }
+      setIsActivitiesExpanded(false);
+      setActivitySearchQuery('');
       setIsIconDropdownOpen(false);
       setIsLabelDropdownOpen(false);
       setIsCreatingLabel(false);
@@ -275,10 +325,13 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       const finalStartTime = isAllDay ? null : startTime;
       const finalEndTime = isAllDay ? null : endTime;
 
+      const finalFiles = attachedFiles.length > 0 ? attachedFiles : undefined;
+      const finalActivities = linkedActivities.length > 0 ? linkedActivities : undefined;
+
       if (isEditing && onUpdateEvent) {
-        onUpdateEvent(title, selectedIcon, selectedLabels, labelData, finalStartTime, finalEndTime, isAllDay, repeat, attachedFiles.length > 0 ? attachedFiles : undefined);
+        onUpdateEvent(title, selectedIcon, selectedLabels, labelData, finalStartTime, finalEndTime, isAllDay, repeat, finalFiles, finalActivities);
       } else {
-        onAddEvent(title, selectedDay, selectedIcon, selectedLabels, labelData, finalStartTime, finalEndTime, isAllDay, repeat, attachedFiles.length > 0 ? attachedFiles : undefined);
+        onAddEvent(title, selectedDay, selectedIcon, selectedLabels, labelData, finalStartTime, finalEndTime, isAllDay, repeat, finalFiles, finalActivities);
       }
       onClose();
     }
@@ -736,15 +789,150 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
             </div>
           )}
 
-          <div className="flex items-center gap-3 mt-3">
-            <ClipboardList className="text-white/40 w-5 h-5 flex-shrink-0" />
-            <button
-              className="flex items-center gap-2 bg-transparent text-white text-sm font-semibold outline-none cursor-pointer px-2 py-1 rounded-lg w-full"
-              style={{ border: '1px solid rgba(255, 107, 0, 0.2)' }}
-            >
-              <span className="flex-1 text-left">Adicionar atividades</span>
-              <Plus className="w-4 h-4 text-white/40" />
-            </button>
+          <div className="mt-3">
+            <div className="flex items-center gap-3">
+              <ClipboardList className="text-white/40 w-5 h-5 flex-shrink-0" />
+              <button
+                onClick={() => {
+                  setIsActivitiesExpanded(!isActivitiesExpanded);
+                  setActivitySearchQuery('');
+                }}
+                className="flex items-center gap-2 bg-transparent text-white text-sm font-semibold outline-none cursor-pointer px-2 py-1 rounded-lg w-full"
+                style={{ border: `1px solid ${isActivitiesExpanded ? 'rgba(255, 107, 0, 0.4)' : 'rgba(255, 107, 0, 0.2)'}` }}
+              >
+                <span className="flex-1 text-left">
+                  Adicionar atividades
+                  {linkedActivities.length > 0 && (
+                    <span className="text-white/30 text-xs ml-1">({linkedActivities.length})</span>
+                  )}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-white/40 transition-transform duration-200 ${isActivitiesExpanded ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+
+            {linkedActivities.length > 0 && !isActivitiesExpanded && (
+              <div className="flex flex-wrap gap-1.5 mt-2 ml-8">
+                {linkedActivities.map((act) => {
+                  const config = ACTIVITY_TYPE_CONFIG[act.tipo] || { label: act.tipo, icon: ClipboardList, color: '#FF6B00' };
+                  const TypeIcon = config.icon;
+                  return (
+                    <div
+                      key={act.id}
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs"
+                      style={{ background: `${config.color}15`, border: `1px solid ${config.color}30` }}
+                    >
+                      <TypeIcon className="w-3 h-3 flex-shrink-0" style={{ color: config.color }} />
+                      <span className="text-white/70 truncate max-w-[120px]">{act.titulo}</span>
+                      <button
+                        onClick={() => handleRemoveLinkedActivity(act.id)}
+                        className="w-4 h-4 rounded flex items-center justify-center text-white/20 hover:text-red-400 transition-all flex-shrink-0"
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <AnimatePresence>
+              {isActivitiesExpanded && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden ml-8 mt-2"
+                >
+                  <div
+                    className="rounded-xl overflow-hidden"
+                    style={{ background: 'rgba(10, 20, 52, 0.8)', border: '1px solid rgba(255, 107, 0, 0.15)' }}
+                  >
+                    <div className="p-2">
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                        <input
+                          ref={activitySearchRef}
+                          type="text"
+                          value={activitySearchQuery}
+                          onChange={(e) => setActivitySearchQuery(e.target.value)}
+                          placeholder="Pesquisar atividades..."
+                          className="w-full bg-white/5 text-white text-xs pl-8 pr-3 py-2 rounded-lg outline-none placeholder:text-white/25 focus:bg-white/8 transition-colors"
+                          style={{ border: '1px solid rgba(255, 255, 255, 0.06)' }}
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+
+                    {linkedActivities.length > 0 && (
+                      <div className="px-2 pb-1">
+                        <span className="text-white/20 text-[10px] uppercase tracking-wider px-1">Selecionadas</span>
+                        <div className="flex flex-col gap-0.5 mt-1">
+                          {linkedActivities.map((act) => {
+                            const config = ACTIVITY_TYPE_CONFIG[act.tipo] || { label: act.tipo, icon: ClipboardList, color: '#FF6B00' };
+                            const TypeIcon = config.icon;
+                            return (
+                              <button
+                                key={act.id}
+                                onClick={() => handleRemoveLinkedActivity(act.id)}
+                                className="flex items-center gap-2 px-2 py-1.5 rounded-lg w-full text-left transition-all hover:bg-white/5 group"
+                              >
+                                <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${config.color}20` }}>
+                                  <TypeIcon className="w-3 h-3" style={{ color: config.color }} />
+                                </div>
+                                <span className="text-white/70 text-xs truncate flex-1">{act.titulo}</span>
+                                <Minus className="w-3.5 h-3.5 text-red-400/60 group-hover:text-red-400 flex-shrink-0" />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="px-2 pb-2">
+                      {linkedActivities.length > 0 && (
+                        <span className="text-white/20 text-[10px] uppercase tracking-wider px-1">Disponíveis</span>
+                      )}
+                      <div className="flex flex-col gap-0.5 mt-1 max-h-[140px] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,107,0,0.2) transparent' }}>
+                        {isLoadingActivities ? (
+                          <div className="flex items-center justify-center py-4">
+                            <RefreshCw className="w-4 h-4 text-white/30 animate-spin" />
+                            <span className="text-white/30 text-xs ml-2">Carregando...</span>
+                          </div>
+                        ) : filteredActivities.length === 0 ? (
+                          <div className="text-center py-3">
+                            <span className="text-white/25 text-xs">
+                              {activitySearchQuery ? 'Nenhuma atividade encontrada' : userActivities.length === 0 ? 'Nenhuma atividade criada ainda' : 'Todas as atividades já foram adicionadas'}
+                            </span>
+                          </div>
+                        ) : (
+                          filteredActivities.map((act) => {
+                            const config = ACTIVITY_TYPE_CONFIG[act.tipo] || { label: act.tipo, icon: ClipboardList, color: '#FF6B00' };
+                            const TypeIcon = config.icon;
+                            return (
+                              <button
+                                key={act.id}
+                                onClick={() => handleToggleActivity(act)}
+                                className="flex items-center gap-2 px-2 py-1.5 rounded-lg w-full text-left transition-all hover:bg-white/5 group"
+                              >
+                                <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${config.color}20` }}>
+                                  <TypeIcon className="w-3 h-3" style={{ color: config.color }} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-white/70 text-xs truncate block">{act.titulo}</span>
+                                  <span className="text-white/20 text-[10px]">{config.label}</span>
+                                </div>
+                                <Plus className="w-3.5 h-3.5 text-white/20 group-hover:text-[#FF6B00] flex-shrink-0" />
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="flex items-center gap-3 mt-3">

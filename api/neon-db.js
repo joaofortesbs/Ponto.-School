@@ -554,10 +554,11 @@ class NeonDBManager {
   // Buscar atividades do usuário
   async getUserActivities(user_id) {
     const query = `
-      SELECT id, user_id, codigo_unico, tipo, titulo, descricao, conteudo, criado_em, atualizado_em
+      SELECT id, id_user, tipo, id_json, stars, created_at, updated_at
       FROM atividades 
-      WHERE user_id = $1 
-      ORDER BY atualizado_em DESC
+      WHERE id_user = $1 
+      ORDER BY updated_at DESC
+      LIMIT 100
     `;
 
     try {
