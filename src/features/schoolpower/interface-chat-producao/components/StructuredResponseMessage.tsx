@@ -5,6 +5,7 @@ import { RichTextMessage } from './RichTextMessage';
 import { FileText, ChevronRight, ChevronDown, Brain, Layers, Search, PenLine, TextCursorInput, Link2, ClipboardList, Sparkles, BookOpen, Target, CheckCircle2, FolderOpen } from 'lucide-react';
 import type { StructuredResponseBlock, ActivitySummaryUI } from '../types/message-types';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
+import { CompromissoCalendarioCard } from './CompromissoCalendarioCard';
 
 interface StructuredResponseMessageProps {
   blocks: StructuredResponseBlock[];
@@ -450,6 +451,12 @@ function BlockRenderer({ block, idx, onOpenArtifact, onOpenActivity }: {
         artifact={block.artifact}
         onOpen={onOpenArtifact}
       />
+    );
+  }
+
+  if (block.type === 'compromisso_card' && block.compromissoResult) {
+    return (
+      <CompromissoCalendarioCard result={block.compromissoResult} />
     );
   }
 

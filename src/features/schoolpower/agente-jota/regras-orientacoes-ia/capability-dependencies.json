@@ -101,6 +101,23 @@
       "estimated_duration_ms": 8000,
       "saves_to_database": true,
       "shows_progress": true
+    },
+
+    "criar_compromisso_calendario": {
+      "id": "cap_compromisso",
+      "category": "CRIAR",
+      "step": "independent",
+      "depends_on": [],
+      "required_inputs": ["compromissos", "user_id"],
+      "outputs": ["compromissos_criados", "total_criados", "resumo"],
+      "priority": "high",
+      "failure_handling": "retry_individual",
+      "max_retries": 2,
+      "estimated_duration_ms": 3000,
+      "saves_to_database": true,
+      "shows_progress": true,
+      "can_call_anytime": true,
+      "notes": "Pode ser chamada independentemente do pipeline de atividades. Aceita vinculação de atividades já criadas."
     }
   },
 

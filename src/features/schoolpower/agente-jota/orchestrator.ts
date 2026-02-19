@@ -344,6 +344,7 @@ export interface ExecuteAgentPlanResult {
   collectedItems: {
     activities: Array<{ id: string; titulo: string; tipo: string; db_id?: number }>;
     artifacts: any[];
+    compromissoResults?: any[];
   };
 }
 

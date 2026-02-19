@@ -128,6 +128,7 @@ Exemplo para "atividades de ciências para semana do 7º ano sobre ecossistemas"
 6. "salvar_atividades_bd" - Salva as atividades criadas no banco de dados
 7. "criar_arquivo" - Gera documento (dossiê, resumo, roteiro, relatório, guia, mensagens, ou DOCUMENTO LIVRE com estrutura customizada)
 8. "planejar_plano_de_acao" - Monta um plano estruturado
+9. "criar_compromisso_calendario" - Cria compromissos/eventos no calendário do professor (aulas, avaliações, reuniões, tarefas). Pode criar múltiplos de uma vez e vincular atividades criadas.
 
 ❌ NÃO INVENTE NOMES de capabilities! COPIE exatamente da lista acima!
 
@@ -235,6 +236,20 @@ ARQUIVOS/DOCUMENTOS (criar_arquivo com tipo específico ou documento_livre):
    → NÃO precisa criar nada!
 
 5. Para pedidos AMBÍGUOS com contexto escolar → SEMPRE interprete como EXECUTIVO e crie materiais.
+
+6. Se o professor pedir para ORGANIZAR O CALENDÁRIO, PLANEJAR AULAS NO CALENDÁRIO, ou ADICIONAR COMPROMISSOS:
+   → Use "criar_compromisso_calendario" com o array "compromissos" nos parâmetros
+   → Pode ser usado SOZINHO (apenas organizar calendário) ou APÓS criar atividades (vincular atividades ao calendário)
+   → 🔴 OBRIGATÓRIO: Cada compromisso DEVE ter "titulo" e "data" (formato YYYY-MM-DD)
+   → Campos opcionais: hora_inicio (HH:MM), hora_fim (HH:MM), dia_todo (boolean), repeticao (none/daily/weekly/monthly/yearly), icone (emoji), etiquetas (array), descricao (texto), atividades_vinculadas (array de {id, tipo, titulo})
+   → DATA ATUAL: Hoje é ${new Date().toLocaleDateString('pt-BR')} (${new Date().toISOString().split('T')[0]})
+   → EXEMPLOS DE PEDIDOS:
+     - "Organiza minhas aulas da semana que vem" → criar_compromisso_calendario com 5 compromissos (seg-sex)
+     - "Adiciona avaliação de matemática dia 25" → criar_compromisso_calendario com 1 compromisso
+     - "Planeja meu mês de março" → criar_compromisso_calendario com vários compromissos organizados
+     - "Cria atividades e organiza no calendário" → pipeline de atividades + criar_compromisso_calendario no final
+   → Quando vincular atividades: Se o professor criou atividades E quer organizar no calendário, use atividades_vinculadas com os IDs das atividades criadas
+   → DATAS: Sempre use o formato YYYY-MM-DD. Use o contexto temporal para calcular datas corretas (ex: "semana que vem" = próxima segunda a sexta)
 
 ═══════════════════════════════════════════════════════════════════════════
 📊 FORMATO DE RESPOSTA
@@ -856,6 +871,41 @@ EXEMPLO 9 - "Crie atividades de desenvolvimento pessoal para meus alunos" (ATIVI
           "categoria": "CRIAR",
           "parametros": {"tipo_artefato": "atividade_textual", "solicitacao": "Crie uma rubrica de avaliação socioemocional para atividades de desenvolvimento pessoal, com critérios: autoconhecimento, empatia, tomada de decisão, gestão emocional. Tabela com 4 níveis: Iniciante, Em Desenvolvimento, Proficiente, Avançado"},
           "justificativa": "Complemento proativo FASE 6 — rubrica para avaliar competências socioemocionais desenvolvidas nas atividades"
+        }
+      ]
+    }
+  ]
+}
+
+EXEMPLO 10 - "Organiza minhas aulas da semana que vem, tenho matemática segunda e quarta, e português terça e quinta" (CALENDÁRIO):
+{
+  "intencao_desconstruida": {
+    "quem": "professor",
+    "o_que": "organizar o calendário da semana com as aulas",
+    "temas": ["matemática", "português"],
+    "quando": "semana que vem",
+    "quanto": "4 compromissos",
+    "modo": "EXECUTIVO"
+  },
+  "objetivo": "Organizar o calendário da semana do professor com 4 compromissos de aulas distribuídos",
+  "etapas": [
+    {
+      "titulo": "Organizando seu calendário da semana",
+      "descricao": "Vou criar os compromissos de aulas no seu calendário com os horários e disciplinas indicados",
+      "capabilities": [
+        {
+          "nome": "criar_compromisso_calendario",
+          "displayName": "Criando compromissos no calendário",
+          "categoria": "CRIAR",
+          "parametros": {
+            "compromissos": [
+              {"titulo": "Aula de Matemática", "data": "2026-02-23", "hora_inicio": "08:00", "hora_fim": "09:30", "icone": "📐", "etiquetas": ["Matemática"]},
+              {"titulo": "Aula de Português", "data": "2026-02-24", "hora_inicio": "08:00", "hora_fim": "09:30", "icone": "📝", "etiquetas": ["Português"]},
+              {"titulo": "Aula de Matemática", "data": "2026-02-25", "hora_inicio": "08:00", "hora_fim": "09:30", "icone": "📐", "etiquetas": ["Matemática"]},
+              {"titulo": "Aula de Português", "data": "2026-02-26", "hora_inicio": "08:00", "hora_fim": "09:30", "icone": "📝", "etiquetas": ["Português"]}
+            ]
+          },
+          "justificativa": "Criar 4 compromissos de aulas organizados no calendário da semana"
         }
       ]
     }

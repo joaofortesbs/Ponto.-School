@@ -25,6 +25,7 @@ import { pesquisarAtividadesDisponiveisV2 } from './capabilities/PESQUISAR/imple
 import { criarAtividadeV2 } from './capabilities/CRIAR_ATIVIDADES/implementations/criar-atividade-v2';
 import { salvarAtividadesBdV2 } from './capabilities/SALVAR_BD/implementations/salvar-atividades-bd';
 import { criarArquivoV2 } from './capabilities/CRIAR_ARQUIVO/criar-arquivo-v2';
+import { criarCompromissoCalendarioV2 } from './capabilities/CRIAR_COMPROMISSO/criar-compromisso-calendario';
 import type { ArtifactData } from './capabilities/CRIAR_ARQUIVO/types';
 import type { CapabilityInput, CapabilityOutput } from './capabilities/shared/types';
 import { 
@@ -117,9 +118,10 @@ export class AgentExecutor {
     console.log('✅ [Executor] Estado limpo para nova execução');
   }
 
-  getCollectedItems(): { activities: ActivitySummary[]; artifacts: ArtifactData[] } {
+  getCollectedItems(): { activities: ActivitySummary[]; artifacts: ArtifactData[]; compromissoResults: any[] } {
     const activities: ActivitySummary[] = [];
     const artifacts: ArtifactData[] = [];
+    const compromissoResults: any[] = [];
 
     console.error(`
 ═══════════════════════════════════════════════════════════════════════
@@ -272,9 +274,15 @@ export class AgentExecutor {
       }
     }
 
-    console.error(`📊 [getCollectedItems] TOTAL: ${activities.length} atividades, ${artifacts.length} artifacts`);
+    const compromissoResult = this.capabilityResultsMap.get('criar_compromisso_calendario');
+    if (compromissoResult?.success && compromissoResult?.data) {
+      compromissoResults.push(compromissoResult.data);
+      console.error(`✅ [getCollectedItems] Compromissos coletados: ${compromissoResult.data.total_criados || 0} eventos`);
+    }
 
-    return { activities, artifacts };
+    console.error(`📊 [getCollectedItems] TOTAL: ${activities.length} atividades, ${artifacts.length} artifacts, ${compromissoResults.length} compromisso results`);
+
+    return { activities, artifacts, compromissoResults };
   }
 
   /**
@@ -658,6 +666,7 @@ export class AgentExecutor {
     ['criar_atividade', criarAtividadeV2],
     ['salvar_atividades_bd', salvarAtividadesBdV2],
     ['criar_arquivo', criarArquivoV2],
+    ['criar_compromisso_calendario', criarCompromissoCalendarioV2],
   ]);
   
   // Flag para registrar o handler global apenas uma vez
@@ -837,6 +846,9 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
                 
               } else if (capName === 'criar_arquivo') {
                 console.error(`⚠️ [Executor] criar_arquivo failed but NOT throwing - artifact generation is non-critical`);
+                
+              } else if (capName === 'criar_compromisso_calendario') {
+                console.error(`⚠️ [Executor] criar_compromisso_calendario failed but NOT throwing - calendar events are non-critical`);
                 
               } else {
                 throw new Error(`Capability crítica "${capName}" falhou: ${errorMsg}`);
@@ -1097,9 +1109,9 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
         
         // Para capabilities V2 críticas (exceto criar_atividade), propagar o erro para interromper todo o fluxo
         // criar_atividade NÃO é crítica - os cards de construção devem permanecer visíveis mesmo após falha
-        if (AgentExecutor.V2_REGISTRY.has(capName) && capName !== 'criar_atividade') {
+        if (AgentExecutor.V2_REGISTRY.has(capName) && capName !== 'criar_atividade' && capName !== 'criar_compromisso_calendario') {
           console.error(`🛑 [Executor] CRITICAL V2 capability "${capName}" failed - halting pipeline execution`);
-          throw error; // Re-lançar para interromper executeCapabilitiesForEtapa
+          throw error;
         }
         
         // Para criar_atividade, emitir evento de erro mas manter cards visíveis

@@ -363,6 +363,73 @@ const deleteEventLocally = (eventId: string) => {
   }
 };
 
+export const addEventProgrammatic = async (eventData: any): Promise<CalendarEvent | null> => {
+  try {
+    const eventWithMeta = {
+      ...eventData,
+      id: eventData.id || uuidv4(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const dbEvent = formatEventForDB(eventWithMeta);
+
+    const { data, error } = await supabase
+      .from("calendar_events")
+      .insert(dbEvent)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("[addEventProgrammatic] Erro DB:", error);
+      return saveEventLocally(eventWithMeta);
+    }
+
+    const formattedEvent = formatDBEventForApp(data);
+
+    try {
+      window.dispatchEvent(new CustomEvent('event-added', {
+        detail: { event: formattedEvent }
+      }));
+      window.dispatchEvent(new CustomEvent('agenda-events-updated'));
+    } catch (e) {
+      console.warn("[addEventProgrammatic] Não emitiu evento DOM:", e);
+    }
+
+    return formattedEvent;
+  } catch (error) {
+    console.error("[addEventProgrammatic] Erro:", error);
+    const fallback = {
+      ...eventData,
+      id: eventData.id || `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString(),
+    };
+    return saveEventLocally(fallback);
+  }
+};
+
+export const getEventsByUserIdDirect = async (userId: string): Promise<CalendarEvent[]> => {
+  try {
+    if (!userId) return [];
+
+    const { data, error } = await supabase
+      .from("calendar_events")
+      .select("*")
+      .eq("user_id", userId)
+      .order("start_date", { ascending: true });
+
+    if (error) {
+      console.error("[getEventsByUserIdDirect] Erro:", error);
+      return getLocalEvents(userId);
+    }
+
+    return (data || []).map(formatDBEventForApp);
+  } catch (error) {
+    console.error("[getEventsByUserIdDirect] Erro:", error);
+    return getLocalEvents(userId);
+  }
+};
+
 // Sincronizar eventos locais com o banco de dados
 export const syncLocalEvents = async (): Promise<void> => {
   try {

@@ -216,6 +216,7 @@ export interface FinalResponseResult {
   collectedItems?: {
     activities: Array<{ id: string; titulo: string; tipo: string; db_id?: number }>;
     artifacts: any[];
+    compromissoResults?: any[];
   };
   sucesso: boolean;
   erro?: string;
@@ -223,7 +224,7 @@ export interface FinalResponseResult {
 
 export async function generateFinalResponse(
   sessionId: string,
-  collectedItems?: { activities: Array<{ id: string; titulo: string; tipo: string; db_id?: number }>; artifacts: any[] }
+  collectedItems?: { activities: Array<{ id: string; titulo: string; tipo: string; db_id?: number }>; artifacts: any[]; compromissoResults?: any[] }
 ): Promise<FinalResponseResult> {
   console.log(`🏁 [FinalResponse] Gerando resposta final para sessão: ${sessionId}`);
 
@@ -265,6 +266,16 @@ export async function generateFinalResponse(
       collectedItems.artifacts.forEach(a => {
         createdItemsStr += `- ${a.metadata?.titulo || 'Documento'} (tipo: ${a.metadata?.tipo || 'documento'})\n`;
       });
+    }
+    if (collectedItems.compromissoResults && collectedItems.compromissoResults.length > 0) {
+      for (const cr of collectedItems.compromissoResults) {
+        createdItemsStr += `COMPROMISSOS/EVENTOS CRIADOS NO CALENDÁRIO (${cr.total_criados || 0}):\n`;
+        if (cr.compromissos_criados) {
+          cr.compromissos_criados.forEach((c: any) => {
+            createdItemsStr += `- ${c.titulo} (${c.data}${c.hora_inicio ? ` às ${c.hora_inicio}` : ''})\n`;
+          });
+        }
+      }
     }
   }
   if (!createdItemsStr) {

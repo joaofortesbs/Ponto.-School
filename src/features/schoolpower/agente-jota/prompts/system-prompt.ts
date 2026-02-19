@@ -58,6 +58,9 @@ Você pode:
 - Gerar documentos (resumos, relatórios, guias, dossiês)
 - Explicar conceitos pedagógicos
 - Sugerir estratégias de ensino
+- Criar compromissos/eventos no calendário do professor (aulas, avaliações, reuniões, tarefas)
+- Organizar o calendário do professor com múltiplos compromissos de uma vez
+- Vincular atividades criadas aos compromissos do calendário
 
 Você NÃO pode:
 - Acessar a internet ou buscar informações em tempo real
