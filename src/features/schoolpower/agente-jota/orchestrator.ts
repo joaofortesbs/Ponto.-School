@@ -34,6 +34,7 @@ import {
   getSession,
   clearSession as clearContextEngineSession,
   buildContextForFollowUp,
+  buildContextForConversation,
   buildContextForPlanner,
   smartRoute,
   type SmartRouteResult,
@@ -246,45 +247,15 @@ export async function processUserPrompt(
       };
     } catch (capError) {
       console.error(`❌ [Orchestrator] Erro na capability direta ${routeResult.capability}:`, capError);
-      console.log(`🔄 [Orchestrator] Fallback: tentando criar plano de execução para "${userPrompt.substring(0, 60)}..."`);
+      console.log(`🔄 [Orchestrator] Fallback: respondendo conversacionalmente em vez de criar plano de execução`);
 
       addLedgerFact(sessionId, {
-        fact: `Capability direta ${routeResult.capability} falhou — fallback para plano de execução`,
+        fact: `Capability direta ${routeResult.capability} falhou — respondendo conversacionalmente`,
         category: 'error',
       });
 
-      const contextForPlanner = buildContextForPlanner(sessionId, userPrompt);
-      try {
-        const plan = await createExecutionPlan(userPrompt, {
-          workingMemory: contextForPlanner,
-          userId,
-          sessionId,
-        });
-        await memory.savePlan(plan);
-        setPlan(sessionId, {
-          planId: plan.planId,
-          objetivo: plan.objetivo,
-          totalEtapas: plan.etapas.length,
-          etapasCompletas: 0,
-          etapas: plan.etapas.map(e => ({
-            ordem: e.ordem,
-            titulo: e.titulo || e.descricao,
-            descricao: e.descricao,
-            status: 'pendente' as const,
-            capabilities: e.capabilities?.map(c => c.nome) || [e.funcao],
-          })),
-        });
-        let initialMessage = generatePlanMessage(plan);
-        try {
-          const initialResponseData = await generateInitialResponse(sessionId, userPrompt);
-          initialMessage = initialResponseData.resposta;
-        } catch {}
-        return { plan, initialMessage };
-      } catch (planError) {
-        console.error(`❌ [Orchestrator] Fallback de plano também falhou:`, planError);
-        const fallbackResponse = await handleDirectResponse(userPrompt, sessionId, userId);
-        return { plan: null, initialMessage: fallbackResponse };
-      }
+      const fallbackResponse = await handleDirectResponse(userPrompt, sessionId, userId);
+      return { plan: null, initialMessage: fallbackResponse };
     }
   }
 
@@ -385,69 +356,11 @@ async function handleDirectResponse(
   sessionId: string,
   userId: string
 ): Promise<string> {
-  const unifiedContext = buildContextForFollowUp(sessionId, message, userId);
+  const conversationContext = buildContextForConversation(sessionId, message, userId);
 
   const { executeWithCascadeFallback } = await import('../services/controle-APIs-gerais-school-power');
 
-  const session = getSession(sessionId);
-  const recentHistory = (session?.conversationHistory || []).slice(-6);
-  const historyBlock = recentHistory.length > 0
-    ? recentHistory.map(t => {
-        const role = t.role === 'user' ? '👨‍🏫 Professor' : '🤖 Jota';
-        return `${role}: ${t.content.substring(0, 300)}`;
-      }).join('\n')
-    : 'Primeira mensagem da conversa.';
-
-  const prompt = `
-${unifiedContext}
-
-═══════════════════════════════════════════════════════════════
-VOCÊ É O JOTA — Assistente de IA do Ponto School
-═══════════════════════════════════════════════════════════════
-
-QUEM VOCÊ É:
-- Um colega professor experiente, amigável e direto
-- Especialista em educação brasileira, BNCC, metodologias ativas
-- Conhece pedagogia, didática, avaliação, planejamento escolar
-- Fala português brasileiro informal-profissional
-- Empático com a rotina sobrecarregada dos professores
-
-COMO VOCÊ RESPONDE:
-- Se o professor faz uma PERGUNTA (ex: "o que é SAAS?", "como funciona a BNCC?"):
-  → Responda com uma explicação COMPLETA, detalhada e útil
-  → Use exemplos práticos da sala de aula quando possível
-  → Não diga apenas "posso ajudar com isso" — RESPONDA A PERGUNTA!
-- Se pede "me explica melhor" ou "detalha mais":
-  → Aprofunde a explicação ANTERIOR, não repita a mesma coisa
-  → Adicione novos exemplos, perspectivas ou detalhes
-- Se é saudação ("oi", "bom dia"):
-  → Cumprimente de volta com energia e pergunte como pode ajudar
-- Se é agradecimento ("obrigado", "valeu"):
-  → Reconheça brevemente e pergunte se precisa de mais algo
-- Se relata um problema ("meus alunos têm dificuldade em..."):
-  → Demonstre empatia genuína e sugira estratégias práticas
-
-REGRAS ABSOLUTAS:
-- NUNCA repita a mesma resposta que já deu antes
-- NUNCA dê respostas genéricas como "Estou aqui para ajudar"
-- SEMPRE responda a pergunta do professor com conteúdo real
-- Use frases curtas e diretas, sem enrolação
-- No máximo 1-2 emojis por mensagem, quando natural
-- Se não sabe algo, diga honestamente e sugira onde pesquisar
-
-HISTÓRICO RECENTE DA CONVERSA:
-${historyBlock}
-
-═══════════════════════════════════════════════════════════════
-MENSAGEM ATUAL DO PROFESSOR:
-"${message}"
-═══════════════════════════════════════════════════════════════
-
-Responda como o Jota responderia — com personalidade, conhecimento e utilidade real.
-Se o professor já perguntou algo antes e está pedindo mais detalhes, APROFUNDE a resposta anterior sem repetir.
-  `.trim();
-
-  const result = await executeWithCascadeFallback(prompt);
+  const result = await executeWithCascadeFallback(conversationContext);
 
   if (result.success && result.data) {
     return result.data;
@@ -942,26 +855,19 @@ export async function sendFollowUpMessage(
     category: 'context',
   });
 
-  const unifiedContext = buildContextForFollowUp(sessionId, message, userId);
+  const session = getSession(sessionId);
+  const hasActivePlan = !!(session?.currentPlan && session.currentPlan.etapasCompletas < session.currentPlan.totalEtapas);
+
+  let contextForLLM: string;
+  if (hasActivePlan) {
+    contextForLLM = buildContextForFollowUp(sessionId, message, userId);
+  } else {
+    contextForLLM = buildContextForConversation(sessionId, message, userId);
+  }
 
   const { executeWithCascadeFallback } = await import('../services/controle-APIs-gerais-school-power');
 
-  const prompt = `
-${unifiedContext}
-
-═══════════════════════════════════════════════════════════════
-MENSAGEM ATUAL DO PROFESSOR:
-"${message}"
-═══════════════════════════════════════════════════════════════
-
-Responda de forma útil e amigável, considerando TODO o contexto da conversa acima.
-Lembre-se de tudo que já foi feito, criado e discutido.
-Se for uma nova solicitação que requer criação de atividades ou conteúdo, 
-indique que você pode criar um novo plano de ação.
-Se for uma conversa casual, pergunta ou agradecimento, responda naturalmente.
-  `.trim();
-
-  const result = await executeWithCascadeFallback(prompt);
+  const result = await executeWithCascadeFallback(contextForLLM);
 
   if (result.success && result.data) {
     addConversationTurn(sessionId, {
