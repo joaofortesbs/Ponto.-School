@@ -331,13 +331,73 @@ function detectsCalendarRequest(userPrompt: string): boolean {
 
 function extractCalendarParamsFromPrompt(userPrompt: string): Record<string, any> {
   const params: Record<string, any> = {};
+  const lower = userPrompt.toLowerCase();
 
-  const datePatternDDMM = userPrompt.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
-  if (datePatternDDMM) {
-    const day = datePatternDDMM[1].padStart(2, '0');
-    const month = datePatternDDMM[2].padStart(2, '0');
-    const year = datePatternDDMM[3] 
-      ? (datePatternDDMM[3].length === 2 ? '20' + datePatternDDMM[3] : datePatternDDMM[3])
+  const multiEventPatterns = [
+    /(\d+)\s*(?:aulas?|atividades?|compromissos?|eventos?)\s+(?:na\s+)?(?:semana|por\s+semana)/i,
+    /(?:segunda\s+a\s+sexta|seg\s+a\s+sex)/i,
+    /(?:organiz(?:e|ar)|distribu(?:a|ir)|coloc(?:a|ar)\s+no\s+calend)/i,
+  ];
+
+  const multiMatch = lower.match(multiEventPatterns[0]);
+  const isMultiEvent = multiMatch || multiEventPatterns.slice(1).some(p => p.test(lower));
+  const eventCount = multiMatch ? parseInt(multiMatch[1]) : (isMultiEvent ? 5 : 0);
+
+  if (isMultiEvent && eventCount > 0) {
+    params.modo_batch = true;
+
+    const hasCalendarWithActivities = /(?:atividad|cri(?:e|ar)|mont|prepar)/i.test(lower) && /(?:calend|agend|organiz|distribu)/i.test(lower);
+    if (hasCalendarWithActivities) {
+      params.vincular_atividades = true;
+    } else {
+      const dates = getNextWeekdays(eventCount);
+      const titlePatterns = [
+        /(?:aulas?\s+(?:de\s+)?)([\w\sáàãâéèêíîóòõôúùûç]+?)(?:\s+(?:para|no|na|do|da|com)\s|$)/i,
+        /(?:sobre\s+)([\w\sáàãâéèêíîóòõôúùûç]+?)(?:\s+(?:para|no|na|do|da|com)\s|$)/i,
+      ];
+      let baseTopic = '';
+      for (const p of titlePatterns) {
+        const m = userPrompt.match(p);
+        if (m) { baseTopic = m[1].trim(); break; }
+      }
+
+      params.eventos = dates.map((date: string, i: number) => ({
+        titulo: baseTopic ? `Aula - ${baseTopic} (Dia ${i + 1})` : `Compromisso (Dia ${i + 1})`,
+        data: date,
+        dia_todo: true,
+        icone: 'pencil',
+      }));
+    }
+
+    return params;
+  }
+
+  const allDates = [...userPrompt.matchAll(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/g)];
+
+  if (allDates.length > 1) {
+    params.modo_batch = true;
+    params.eventos = allDates.map((dateMatch) => {
+      const day = dateMatch[1].padStart(2, '0');
+      const month = dateMatch[2].padStart(2, '0');
+      const year = dateMatch[3]
+        ? (dateMatch[3].length === 2 ? '20' + dateMatch[3] : dateMatch[3])
+        : new Date().getFullYear().toString();
+      return {
+        titulo: 'Compromisso agendado pelo Jota',
+        data: `${year}-${month}-${day}`,
+        dia_todo: true,
+        icone: 'pencil',
+      };
+    });
+    return params;
+  }
+
+  if (allDates.length === 1) {
+    const dateMatch = allDates[0];
+    const day = dateMatch[1].padStart(2, '0');
+    const month = dateMatch[2].padStart(2, '0');
+    const year = dateMatch[3]
+      ? (dateMatch[3].length === 2 ? '20' + dateMatch[3] : dateMatch[3])
       : new Date().getFullYear().toString();
     params.data = `${year}-${month}-${day}`;
   } else {
@@ -376,6 +436,22 @@ function extractCalendarParamsFromPrompt(userPrompt: string): Record<string, any
   }
 
   return params;
+}
+
+function getNextWeekdays(count: number, startFrom?: string): string[] {
+  const dates: string[] = [];
+  const start = startFrom ? new Date(startFrom + 'T00:00:00') : new Date();
+  if (!startFrom) {
+    start.setDate(start.getDate() + 1);
+  }
+  while (dates.length < count) {
+    const day = start.getDay();
+    if (day !== 0 && day !== 6) {
+      dates.push(start.toISOString().split('T')[0]);
+    }
+    start.setDate(start.getDate() + 1);
+  }
+  return dates;
 }
 
 const FILE_REQUEST_STRONG_KEYWORDS = [

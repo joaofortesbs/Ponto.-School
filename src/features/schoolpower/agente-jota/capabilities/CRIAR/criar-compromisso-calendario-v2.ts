@@ -1,5 +1,71 @@
 import type { CapabilityInput, CapabilityOutput } from '../shared/types';
-import { criarCompromissoCalendario } from './criar-compromisso-calendario';
+import { criarCompromissoCalendario, inferIcon } from './criar-compromisso-calendario';
+
+interface ActivityInfo {
+  id: string;
+  tipo: string;
+  titulo: string;
+}
+
+const SCHOOL_HOURS = [
+  { start: '07:30', end: '08:20' },
+  { start: '08:20', end: '09:10' },
+  { start: '09:30', end: '10:20' },
+  { start: '10:20', end: '11:10' },
+  { start: '13:00', end: '13:50' },
+  { start: '13:50', end: '14:40' },
+  { start: '15:00', end: '15:50' },
+];
+
+function getNextWeekdays(count: number, startFrom?: string): string[] {
+  const dates: string[] = [];
+  const start = startFrom ? new Date(startFrom + 'T00:00:00') : new Date();
+
+  if (!startFrom) {
+    start.setDate(start.getDate() + 1);
+  }
+
+  while (dates.length < count) {
+    const day = start.getDay();
+    if (day !== 0 && day !== 6) {
+      dates.push(start.toISOString().split('T')[0]);
+    }
+    start.setDate(start.getDate() + 1);
+  }
+  return dates;
+}
+
+function inferLabelFromActivity(titulo: string): string[] {
+  const lower = titulo.toLowerCase();
+  if (lower.includes('matemática') || lower.includes('matematica') || lower.includes('funç') || lower.includes('equaç') || lower.includes('geometr')) return ['Matemática'];
+  if (lower.includes('português') || lower.includes('portugues') || lower.includes('redação') || lower.includes('interpretação') || lower.includes('leitura')) return ['Português'];
+  if (lower.includes('ciências') || lower.includes('ciencias') || lower.includes('fotossíntese') || lower.includes('ecossistema') || lower.includes('biologia')) return ['Ciências'];
+  if (lower.includes('história') || lower.includes('historia') || lower.includes('revolução') || lower.includes('guerra')) return ['História'];
+  if (lower.includes('geografia') || lower.includes('clima') || lower.includes('bioma')) return ['Geografia'];
+  if (lower.includes('inglês') || lower.includes('ingles') || lower.includes('english')) return ['Inglês'];
+  if (lower.includes('arte') || lower.includes('música') || lower.includes('musica')) return ['Artes'];
+  if (lower.includes('educação física') || lower.includes('ed. física') || lower.includes('esporte')) return ['Ed. Física'];
+  return [];
+}
+
+const LABEL_COLORS: Record<string, string> = {
+  'Matemática': '#3B82F6',
+  'Português': '#8B5CF6',
+  'Ciências': '#10B981',
+  'História': '#F59E0B',
+  'Geografia': '#06B6D4',
+  'Inglês': '#EC4899',
+  'Artes': '#F97316',
+  'Ed. Física': '#EF4444',
+};
+
+function buildLabelColors(labels: string[]): Record<string, string> {
+  const colors: Record<string, string> = {};
+  labels.forEach((label, i) => {
+    colors[`label-${i + 1}`] = LABEL_COLORS[label] || '#6B7280';
+  });
+  return colors;
+}
 
 export async function criarCompromissoCalendarioV2(input: CapabilityInput): Promise<CapabilityOutput> {
   const startTime = Date.now();
@@ -8,29 +74,11 @@ export async function criarCompromissoCalendarioV2(input: CapabilityInput): Prom
   debugLog.push({
     timestamp: new Date().toISOString(),
     type: 'action',
-    narrative: 'Iniciando criação de compromisso no calendário via V2 API-First',
+    narrative: 'Iniciando criação de compromisso(s) no calendário via V2 Batch API-First',
   });
 
   try {
-    const params = input.context || {};
-
-    if (input.previous_results) {
-      const criarResult = input.previous_results.get('criar_atividade');
-      if (criarResult?.success && criarResult?.data?.activities && !params.linked_activity_ids) {
-        params.linked_activity_ids = criarResult.data.activities
-          .map((a: any) => ({
-            id: a.id || a.db_id,
-            tipo: a.tipo || a.type,
-            titulo: a.titulo || a.title,
-          }))
-          .filter((a: any) => a.id);
-        debugLog.push({
-          timestamp: new Date().toISOString(),
-          type: 'discovery',
-          narrative: `Vinculando ${params.linked_activity_ids.length} atividades criadas anteriormente ao compromisso`,
-        });
-      }
-    }
+    const params: Record<string, any> = { ...(input.context || {}) };
 
     const authenticatedUserId = getAuthenticatedUserIdFromStorage();
     if (authenticatedUserId && !params.professor_id) {
@@ -38,7 +86,117 @@ export async function criarCompromissoCalendarioV2(input: CapabilityInput): Prom
       debugLog.push({
         timestamp: new Date().toISOString(),
         type: 'info',
-        narrative: `Professor ID injetado automaticamente: ${authenticatedUserId.substring(0, 8)}...`,
+        narrative: `Professor ID injetado: ${authenticatedUserId.substring(0, 8)}...`,
+      });
+    }
+
+    let activities: ActivityInfo[] = [];
+    if (input.previous_results) {
+      const criarResult = input.previous_results.get('criar_atividade');
+      if (criarResult?.success && criarResult?.data?.activities) {
+        activities = criarResult.data.activities
+          .map((a: any) => ({
+            id: a.id || a.db_id || '',
+            tipo: a.tipo || a.type || '',
+            titulo: a.titulo || a.title || '',
+          }))
+          .filter((a: ActivityInfo) => a.id && a.titulo);
+
+        debugLog.push({
+          timestamp: new Date().toISOString(),
+          type: 'discovery',
+          narrative: `Encontradas ${activities.length} atividades criadas anteriormente para vincular`,
+        });
+      }
+
+      const salvarResult = input.previous_results.get('salvar_atividades_bd');
+      if (salvarResult?.success && salvarResult?.data?.saved_activities) {
+        const savedActivities = salvarResult.data.saved_activities
+          .map((a: any) => ({
+            id: a.db_id || a.id || '',
+            tipo: a.tipo || a.type || '',
+            titulo: a.titulo || a.title || '',
+          }))
+          .filter((a: ActivityInfo) => a.id && a.titulo);
+        if (savedActivities.length > activities.length) {
+          activities = savedActivities;
+          debugLog.push({
+            timestamp: new Date().toISOString(),
+            type: 'discovery',
+            narrative: `Usando ${savedActivities.length} atividades do banco (salvar_atividades_bd) para vincular`,
+          });
+        }
+      }
+    }
+
+    const shouldAutoGenerate = params.vincular_atividades && activities.length > 0;
+
+    if (shouldAutoGenerate && (!params.eventos || params.eventos.length === 0)) {
+      debugLog.push({
+        timestamp: new Date().toISOString(),
+        type: 'action',
+        narrative: `Auto-gerando ${activities.length} eventos de calendário a partir das atividades criadas`,
+      });
+
+      const dates = getNextWeekdays(activities.length, params.data_inicio);
+
+      params.eventos = activities.map((activity, index) => {
+        const labels = inferLabelFromActivity(activity.titulo);
+        const hour = SCHOOL_HOURS[index % SCHOOL_HOURS.length];
+
+        return {
+          titulo: activity.titulo,
+          data: dates[index],
+          hora_inicio: hour.start,
+          hora_fim: hour.end,
+          dia_todo: false,
+          icone: inferIcon(activity.titulo, activity.tipo),
+          labels,
+          label_colors: buildLabelColors(labels),
+          linked_activity_ids: [{ id: activity.id, tipo: activity.tipo, titulo: activity.titulo }],
+        };
+      });
+
+      params.modo_batch = true;
+
+      debugLog.push({
+        timestamp: new Date().toISOString(),
+        type: 'info',
+        narrative: `Gerados ${params.eventos.length} eventos distribuídos em dias úteis com horários escolares`,
+      });
+    } else if (activities.length > 0 && params.eventos && params.eventos.length > 0) {
+      const eventCount = params.eventos.length;
+      const actPerEvent = Math.ceil(activities.length / eventCount);
+
+      params.eventos = params.eventos.map((evt: any, index: number) => {
+        const startIdx = index * actPerEvent;
+        const eventActivities = activities.slice(startIdx, startIdx + actPerEvent);
+
+        if (eventActivities.length > 0 && !evt.linked_activity_ids) {
+          evt.linked_activity_ids = eventActivities.map(a => ({
+            id: a.id, tipo: a.tipo, titulo: a.titulo
+          }));
+        }
+
+        if (!evt.labels || evt.labels.length === 0) {
+          const firstActivity = eventActivities[0] || activities[0];
+          if (firstActivity) {
+            evt.labels = inferLabelFromActivity(firstActivity.titulo);
+            evt.label_colors = buildLabelColors(evt.labels);
+          }
+        }
+
+        if (!evt.icone) {
+          evt.icone = inferIcon(evt.titulo || '');
+        }
+
+        return evt;
+      });
+
+      debugLog.push({
+        timestamp: new Date().toISOString(),
+        type: 'info',
+        narrative: `Vinculadas ${activities.length} atividades a ${eventCount} eventos pré-configurados`,
       });
     }
 
@@ -50,6 +208,8 @@ export async function criarCompromissoCalendarioV2(input: CapabilityInput): Prom
       narrative: result.message,
     });
 
+    const eventCount = result.batch_details?.successCount || (result.success ? 1 : 0);
+
     return {
       success: result.success,
       capability_id: input.capability_id,
@@ -57,8 +217,12 @@ export async function criarCompromissoCalendarioV2(input: CapabilityInput): Prom
       timestamp: new Date().toISOString(),
       data: result.success ? {
         evento: result.evento,
+        eventos: result.eventos || (result.evento ? [result.evento] : []),
         message: result.message,
         calendar_updated: true,
+        events_created: eventCount,
+        batch_details: result.batch_details,
+        linked_activities_count: activities.length,
       } : null,
       error: result.success ? null : {
         code: result.error || 'CALENDAR_ERROR',
@@ -72,11 +236,11 @@ export async function criarCompromissoCalendarioV2(input: CapabilityInput): Prom
         confirmed: result.success,
         checks: [
           {
-            id: 'evento_criado',
-            label: 'Compromisso no Calendário',
+            id: 'eventos_criados',
+            label: 'Compromissos no Calendário',
             passed: result.success,
-            expected: 'Evento criado no calendário',
-            value: result.success ? result.evento?.id : null,
+            expected: `${eventCount} evento(s) criado(s)`,
+            value: eventCount,
             message: result.message,
           },
         ],
@@ -87,14 +251,14 @@ export async function criarCompromissoCalendarioV2(input: CapabilityInput): Prom
         duration_ms: Date.now() - startTime,
         retry_count: 0,
         data_source: 'neon_postgresql',
-      },
+      } as any,
     };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     debugLog.push({
       timestamp: new Date().toISOString(),
       type: 'error',
-      narrative: `Erro ao criar compromisso: ${errorMsg}`,
+      narrative: `Erro ao criar compromisso(s): ${errorMsg}`,
     });
 
     return {

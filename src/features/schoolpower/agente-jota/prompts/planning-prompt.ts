@@ -168,12 +168,44 @@ COMO USAR:
 - SEMPRE preencha titulo e data (obrigatórios)
 - Infira o ícone automaticamente: aula→pencil, prova→check, reunião→camera, evento→star
 - Se o professor não especificar horário, use dia_todo: true
-- O professor_id vem do contexto da sessão
+- O professor_id vem do contexto da sessão — NÃO inclua nos parametros
+
+PARAMETROS ACEITOS (JSON nos parametros da capability):
+{
+  "eventos": [
+    {
+      "titulo": "Nome do compromisso",
+      "data": "YYYY-MM-DD",
+      "hora_inicio": "HH:MM",
+      "hora_fim": "HH:MM",
+      "dia_todo": true/false,
+      "repeticao": "none|daily|weekly|monthly|yearly",
+      "icone": "pencil|check|camera|star",
+      "labels": ["Matemática"],
+      "label_colors": {"label-1": "#3B82F6"}
+    }
+  ],
+  "modo_batch": true,
+  "vincular_atividades": true
+}
+
+REGRAS PARA GERAR EVENTOS:
+1. Se o professor pediu MÚLTIPLOS eventos (ex: "7 aulas na semana"), gere TODOS no array "eventos"
+2. Distribua inteligentemente: use segunda a sexta, pule fins de semana
+3. Use horários escolares padrão se não especificado: 07:30-08:20, 08:20-09:10, etc.
+4. Se "vincular_atividades": true → o sistema vincula automaticamente as atividades criadas anteriormente
+5. Se o professor pediu atividades + calendário, use "vincular_atividades": true e deixe o sistema gerar os eventos baseado nas atividades criadas
+
+CENÁRIO SIMPLIFICADO — Atividades + calendário:
+Quando o professor pede "crie atividades e organize no calendário", basta usar:
+parametros: {"vincular_atividades": true, "modo_batch": true}
+O sistema automaticamente cria um evento para cada atividade, distribuído nos dias úteis da semana.
 
 EXEMPLOS DE PARSE NLP:
-- "Crie aula Funções 25/02 10h" → {titulo: "Aula - Funções", data: "2026-02-25", hora_inicio: "10:00", hora_fim: "11:00", icone: "pencil"}
-- "Reunião coordenação dia todo 28/02 semanal" → {titulo: "Reunião Coordenação", data: "2026-02-28", dia_todo: true, repeticao: "weekly", icone: "camera"}
-- "Organize 3 aulas de matemática na semana" → Crie 3 eventos separados distribuídos nos dias da semana
+- "Crie aula Funções 25/02 10h" → parametros: {"eventos": [{"titulo": "Aula - Funções", "data": "2026-02-25", "hora_inicio": "10:00", "hora_fim": "11:00", "icone": "pencil"}]}
+- "Reunião coordenação dia todo 28/02 semanal" → parametros: {"eventos": [{"titulo": "Reunião Coordenação", "data": "2026-02-28", "dia_todo": true, "repeticao": "weekly", "icone": "camera"}]}
+- "Organize 3 aulas de matemática na semana" → parametros: {"modo_batch": true, "eventos": [{"titulo": "Aula - Matemática (Dia 1)", "data": "2026-02-23", "icone": "pencil"}, {"titulo": "Aula - Matemática (Dia 2)", "data": "2026-02-24", "icone": "pencil"}, {"titulo": "Aula - Matemática (Dia 3)", "data": "2026-02-25", "icone": "pencil"}]}
+- "Crie atividades e organize no calendário" → parametros: {"vincular_atividades": true, "modo_batch": true}
 
 ═══════════════════════════════════════════════════════════════════════════
 📋 REGRAS DE DECISÃO DE CAPABILITIES
@@ -298,6 +330,8 @@ ARQUIVOS/DOCUMENTOS (criar_arquivo com tipo específico ou documento_livre):
    
    CENÁRIO B — Atividades + calendário:
    "Crie atividades e organize no meu calendário" → Pipeline completo de atividades + etapa FINAL com criar_compromisso_calendario
+   parametros da etapa calendario: {"vincular_atividades": true, "modo_batch": true}
+   O sistema cria automaticamente 1 evento por atividade, distribuído nos dias úteis!
 
 ═══════════════════════════════════════════════════════════════════════════
 📊 FORMATO DE RESPOSTA

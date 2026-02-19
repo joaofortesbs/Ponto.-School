@@ -1618,13 +1618,37 @@ Seja específico e forneça dados que ajudem o professor.
       }
 
       const criarResult = this.capabilityResultsMap.get('criar_atividade');
-      if (criarResult?.success && criarResult?.data?.activities && !enrichedParams.linked_activity_ids) {
-        enrichedParams.linked_activity_ids = criarResult.data.activities.map((a: any) => ({
-          id: a.id || a.db_id,
-          tipo: a.tipo || a.type,
-          titulo: a.titulo || a.title,
-        })).filter((a: any) => a.id);
-        console.log(`🔗 [Executor] Injetando ${enrichedParams.linked_activity_ids.length} atividades vinculadas ao compromisso`);
+      const salvarResult = this.capabilityResultsMap.get('salvar_atividades_bd');
+
+      const activitiesFromCriar = criarResult?.success && criarResult?.data?.activities
+        ? criarResult.data.activities.map((a: any) => ({
+            id: a.id || a.db_id,
+            tipo: a.tipo || a.type,
+            titulo: a.titulo || a.title,
+          })).filter((a: any) => a.id)
+        : [];
+
+      const activitiesFromSalvar = salvarResult?.success && salvarResult?.data?.saved_activities
+        ? salvarResult.data.saved_activities.map((a: any) => ({
+            id: a.db_id || a.id,
+            tipo: a.tipo || a.type,
+            titulo: a.titulo || a.title,
+          })).filter((a: any) => a.id)
+        : [];
+
+      const activities = activitiesFromSalvar.length > 0 ? activitiesFromSalvar : activitiesFromCriar;
+
+      if (activities.length > 0) {
+        if (!enrichedParams.linked_activity_ids) {
+          enrichedParams.linked_activity_ids = activities;
+        }
+
+        if (enrichedParams.vincular_atividades) {
+          enrichedParams._injected_activities = activities;
+          console.log(`🔗 [Executor] Injetando ${activities.length} atividades para auto-geração de calendário batch`);
+        } else {
+          console.log(`🔗 [Executor] Injetando ${activities.length} atividades vinculadas ao compromisso`);
+        }
       }
     }
 
