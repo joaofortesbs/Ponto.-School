@@ -42,7 +42,7 @@ The architecture features a modular component design based on shadcn/ui patterns
 - **Supabase**: BaaS for PostgreSQL database, authentication, real-time, and file storage.
 - **Google Gemini API**: AI service for content generation and assistance.
 - **Groq API**: AI service for fast lesson content generation.
-- **Neon PostgreSQL**: Managed external PostgreSQL database.
+- **Neon PostgreSQL (Replit)**: Built-in Replit PostgreSQL database (primary data store).
 - **SendGrid**: Email notification service.
 
 ### Development & Build Tools
