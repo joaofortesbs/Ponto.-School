@@ -855,8 +855,8 @@ export async function sendFollowUpMessage(
     category: 'context',
   });
 
-  const session = getSession(sessionId);
-  const hasActivePlan = !!(session?.currentPlan && session.currentPlan.etapasCompletas < session.currentPlan.totalEtapas);
+  const currentSession = getSession(sessionId);
+  const hasActivePlan = !!(currentSession?.currentPlan && currentSession.currentPlan.etapasCompletas < currentSession.currentPlan.totalEtapas);
 
   let contextForLLM: string;
   if (hasActivePlan) {
