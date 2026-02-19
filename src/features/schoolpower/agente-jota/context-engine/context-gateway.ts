@@ -20,7 +20,7 @@
 
 import { contextAssembler, type CallType, type SessionContext } from './context-assembler';
 import { getSession, createSession } from './session-store';
-import { SYSTEM_PROMPT, SYSTEM_PROMPT_CONVERSAR } from '../prompts/system-prompt';
+import { SYSTEM_PROMPT } from '../prompts/system-prompt';
 
 export interface GatewayOptions {
   includeSystemPrompt?: boolean;
@@ -112,48 +112,6 @@ export function buildContextForFollowUp(
   return buildUnifiedContext('follow_up', sessionId, {
     mensagem_atual: followUpMessage,
   });
-}
-
-export function buildContextForConversation(
-  sessionId: string,
-  message: string,
-  userId?: string
-): string {
-  let session = getSession(sessionId);
-
-  if (!session && userId) {
-    session = createSession(sessionId, userId, message);
-  }
-
-  const layers: string[] = [];
-
-  layers.push(SYSTEM_PROMPT_CONVERSAR);
-
-  if (session) {
-    const recentTurns = (session.conversationHistory || []).slice(-6);
-    if (recentTurns.length > 0) {
-      const historyLines = recentTurns.map(t => {
-        const role = t.role === 'user' ? 'Professor' : 'Jota';
-        return `${role}: ${t.content.substring(0, 400)}`;
-      });
-      layers.push(`HISTÓRICO RECENTE:\n${historyLines.join('\n')}`);
-    }
-
-    if (session.interactionLedger && session.interactionLedger.length > 0) {
-      const recentFacts = session.interactionLedger.slice(-5);
-      const factLines = recentFacts.map(f => `- ${f.fact}`);
-      layers.push(`CONTEXTO DA SESSÃO:\n${factLines.join('\n')}`);
-    }
-
-    if (session.activitiesCreated && session.activitiesCreated.length > 0) {
-      layers.push(`Atividades já criadas nesta sessão: ${session.activitiesCreated.length}`);
-    }
-  }
-
-  layers.push(`MENSAGEM DO PROFESSOR:\n"${message}"`);
-  layers.push('Responda diretamente à mensagem do professor. Se for uma pergunta, RESPONDA com conteúdo real.');
-
-  return layers.join('\n\n');
 }
 
 export function buildContextForPlanner(

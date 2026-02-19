@@ -36,12 +36,19 @@ export {
 export {
   buildUnifiedContext,
   buildContextForFollowUp,
-  buildContextForConversation,
   buildContextForPlanner,
   buildContextForCapability,
   getContextStats,
   type GatewayOptions,
 } from './context-gateway';
+
+export {
+  classifyIntent,
+  shouldCreatePlan,
+  shouldRespondDirectly,
+  type IntentType,
+  type ClassifiedIntent,
+} from './intent-classifier';
 
 export {
   smartRoute,
