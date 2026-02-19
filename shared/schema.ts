@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, timestamp, integer, serial } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, text, timestamp, integer, serial, boolean, jsonb, date } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export const usuarios = pgTable("usuarios", {
@@ -47,3 +47,24 @@ export type Atividade = typeof atividades.$inferSelect;
 export type InsertAtividade = typeof atividades.$inferInsert;
 export type VisitanteAtividade = typeof visitantesAtividades.$inferSelect;
 export type InsertVisitanteAtividade = typeof visitantesAtividades.$inferInsert;
+
+export const calendarEvents = pgTable("calendar_events", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  eventDate: date("event_date").notNull(),
+  startTime: varchar("start_time", { length: 10 }),
+  endTime: varchar("end_time", { length: 10 }),
+  isAllDay: boolean("is_all_day").notNull().default(false),
+  repeat: varchar("repeat", { length: 20 }).notNull().default("none"),
+  icon: varchar("icon", { length: 50 }).default("pencil"),
+  labels: jsonb("labels").default([]),
+  labelColors: jsonb("label_colors").default({}),
+  linkedActivities: jsonb("linked_activities").default([]),
+  createdBy: varchar("created_by", { length: 50 }).notNull().default("user"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export type CalendarEvent = typeof calendarEvents.$inferSelect;
+export type InsertCalendarEvent = typeof calendarEvents.$inferInsert;

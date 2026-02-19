@@ -67,6 +67,20 @@ const CAPABILITY_ALIASES: Record<string, string> = {
   'criar_roteiro': 'criar_arquivo',
   'gerar_guia': 'criar_arquivo',
   'criar_artefato': 'criar_arquivo',
+
+  'criar_compromisso': 'criar_compromisso_calendario',
+  'agendar_compromisso': 'criar_compromisso_calendario',
+  'agendar_evento': 'criar_compromisso_calendario',
+  'criar_evento_calendario': 'criar_compromisso_calendario',
+  'adicionar_calendario': 'criar_compromisso_calendario',
+  'agendar_aula': 'criar_compromisso_calendario',
+  'agendar_atividade': 'criar_compromisso_calendario',
+  'organizar_calendario': 'criar_compromisso_calendario',
+  'planejar_calendario': 'criar_compromisso_calendario',
+  'marcar_compromisso': 'criar_compromisso_calendario',
+  'criar_evento': 'criar_compromisso_calendario',
+  'novo_compromisso': 'criar_compromisso_calendario',
+  'adicionar_evento': 'criar_compromisso_calendario',
 };
 
 export function getValidCapabilityNames(): string[] {

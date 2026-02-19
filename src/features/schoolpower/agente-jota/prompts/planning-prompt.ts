@@ -128,8 +128,31 @@ Exemplo para "atividades de ciências para semana do 7º ano sobre ecossistemas"
 6. "salvar_atividades_bd" - Salva as atividades criadas no banco de dados
 7. "criar_arquivo" - Gera documento (dossiê, resumo, roteiro, relatório, guia, mensagens, ou DOCUMENTO LIVRE com estrutura customizada)
 8. "planejar_plano_de_acao" - Monta um plano estruturado
+9. "criar_compromisso_calendario" - Cria compromisso/evento/aula diretamente no calendário do professor. Parâmetros: titulo (obrigatório), data YYYY-MM-DD (obrigatório), hora_inicio HH:MM, hora_fim HH:MM, dia_todo boolean, repeticao (none/daily/weekly/monthly/yearly), icone (pencil/check/camera/star), labels array, professor_id (obrigatório).
 
 ❌ NÃO INVENTE NOMES de capabilities! COPIE exatamente da lista acima!
+
+═══════════════════════════════════════════════════════════════════════════
+📅 REGRAS PARA "criar_compromisso_calendario"
+═══════════════════════════════════════════════════════════════════════════
+
+QUANDO USAR:
+- Professor pede para agendar, organizar, planejar ou marcar algo no calendário
+- Professor pede para distribuir aulas/atividades ao longo de dias/semanas
+- Professor menciona datas específicas + compromissos
+- Quando for criar atividades E o professor quiser organizar no calendário
+
+COMO USAR:
+- Crie SEM pedir confirmação - o professor quer agilidade com 0 cliques
+- SEMPRE preencha titulo e data (obrigatórios)
+- Infira o ícone automaticamente: aula→pencil, prova→check, reunião→camera, evento→star
+- Se o professor não especificar horário, use dia_todo: true
+- O professor_id vem do contexto da sessão
+
+EXEMPLOS DE PARSE NLP:
+- "Crie aula Funções 25/02 10h" → {titulo: "Aula - Funções", data: "2026-02-25", hora_inicio: "10:00", hora_fim: "11:00", icone: "pencil"}
+- "Reunião coordenação dia todo 28/02 semanal" → {titulo: "Reunião Coordenação", data: "2026-02-28", dia_todo: true, repeticao: "weekly", icone: "camera"}
+- "Organize 3 aulas de matemática na semana" → Crie 3 eventos separados distribuídos nos dias da semana
 
 ═══════════════════════════════════════════════════════════════════════════
 📋 REGRAS DE DECISÃO DE CAPABILITIES

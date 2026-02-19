@@ -101,6 +101,27 @@
       "estimated_duration_ms": 8000,
       "saves_to_database": true,
       "shows_progress": true
+    },
+
+    "criar_compromisso_calendario": {
+      "id": "cap_criar_compromisso",
+      "category": "CRIAR",
+      "step": "independent",
+      "depends_on": [],
+      "required_inputs": ["titulo", "data", "professor_id"],
+      "outputs": ["evento_criado", "calendario_atualizado"],
+      "priority": "high",
+      "failure_handling": "retry_individual",
+      "max_retries": 2,
+      "estimated_duration_ms": 3000,
+      "saves_to_database": true,
+      "shows_progress": false,
+      "can_call_anytime": true,
+      "anti_hallucination": {
+        "validates_date_format": true,
+        "validates_time_format": true,
+        "checks_required_fields": true
+      }
     }
   },
 

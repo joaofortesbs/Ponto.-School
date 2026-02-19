@@ -1,5 +1,4 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 
 export interface CalendarEvent {
@@ -22,104 +21,78 @@ export interface CalendarEvent {
   userId: string;
   createdAt: string;
   updatedAt?: string;
+  icon?: string;
+  labels?: string[];
+  labelColors?: { [key: string]: string };
+  linkedActivities?: Array<{ id: string; tipo: string; titulo: string; createdAt?: string }>;
+  isAllDay?: boolean;
+  createdBy?: string;
 }
 
-// Converter objeto para esquema da tabela
-const formatEventForDB = (event: any) => {
-  return {
-    id: event.id || uuidv4(),
-    title: event.title,
-    description: event.description || '',
-    start_date: event.startDate,
-    end_date: event.endDate || event.startDate,
-    start_time: event.startTime || '',
-    end_time: event.endTime || '',
-    location: event.location || '',
-    is_online: event.isOnline || false,
-    meeting_link: event.meetingLink || '',
-    type: event.type || 'evento',
-    discipline: event.discipline || '',
-    professor: event.professor || '',
-    reminders: event.reminders || [],
-    repeat: event.repeat || 'none',
-    visibility: event.visibility || 'private',
-    user_id: event.userId,
-    created_at: event.createdAt || new Date().toISOString(),
-    updated_at: event.updatedAt || new Date().toISOString()
-  };
-};
+const API_BASE_URL = '/api/calendar/events';
 
-// Converter esquema da tabela para objeto da interface
-const formatDBEventForApp = (dbEvent: any): CalendarEvent => {
+const formatDBToApp = (dbEvent: any): CalendarEvent => {
   return {
     id: dbEvent.id,
     title: dbEvent.title,
-    description: dbEvent.description,
-    startDate: dbEvent.start_date,
-    endDate: dbEvent.end_date,
-    startTime: dbEvent.start_time,
-    endTime: dbEvent.end_time,
-    location: dbEvent.location,
-    isOnline: dbEvent.is_online,
-    meetingLink: dbEvent.meeting_link,
-    type: dbEvent.type,
-    discipline: dbEvent.discipline,
-    professor: dbEvent.professor,
-    reminders: dbEvent.reminders,
-    repeat: dbEvent.repeat,
-    visibility: dbEvent.visibility,
+    startDate: dbEvent.event_date,
+    endDate: dbEvent.event_date,
+    startTime: dbEvent.start_time || '',
+    endTime: dbEvent.end_time || '',
+    isAllDay: dbEvent.is_all_day || false,
+    repeat: dbEvent.repeat || 'none',
+    icon: dbEvent.icon || 'pencil',
+    labels: dbEvent.labels || [],
+    labelColors: dbEvent.label_colors || {},
+    linkedActivities: dbEvent.linked_activities || [],
     userId: dbEvent.user_id,
     createdAt: dbEvent.created_at,
-    updatedAt: dbEvent.updated_at
+    updatedAt: dbEvent.updated_at,
+    createdBy: dbEvent.created_by || 'user',
+    type: 'evento',
+    visibility: 'private',
   };
 };
 
-// Adicionar um novo evento
 export const addEvent = async (event: Omit<CalendarEvent, "id" | "createdAt">): Promise<CalendarEvent | null> => {
   try {
-    // Verificar autenticação
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.error("Usuário não autenticado");
-      // Fallback para armazenamento local
-      const eventWithMeta = {
-        ...event,
-        id: uuidv4(),
-        createdAt: new Date().toISOString(),
-      };
-      return saveEventLocally(eventWithMeta);
+    if (!event.userId) {
+      console.error("userId é obrigatório para criar evento");
+      return saveEventLocally({ ...event, id: uuidv4(), createdAt: new Date().toISOString() });
     }
 
-    const eventWithMeta = {
-      ...event,
-      id: uuidv4(),
-      userId: user.id,
-      createdAt: new Date().toISOString(),
-    };
+    const response = await fetch(API_BASE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: event.userId,
+        title: event.title,
+        eventDate: event.startDate,
+        startTime: event.startTime || null,
+        endTime: event.endTime || null,
+        isAllDay: event.isAllDay || false,
+        repeat: event.repeat || 'none',
+        icon: event.icon || 'pencil',
+        labels: event.labels || [],
+        labelColors: event.labelColors || {},
+        linkedActivities: event.linkedActivities || [],
+        createdBy: event.createdBy || 'user',
+      }),
+    });
 
-    const dbEvent = formatEventForDB(eventWithMeta);
+    const result = await response.json();
 
-    const { data, error } = await supabase
-      .from("calendar_events")
-      .insert(dbEvent)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Erro ao adicionar evento no DB:", error);
-      // Fallback para armazenamento local
-      return saveEventLocally(eventWithMeta);
+    if (!result.success) {
+      console.error("Erro ao adicionar evento no Neon:", result.error);
+      return saveEventLocally({ ...event, id: uuidv4(), createdAt: new Date().toISOString() });
     }
 
-    const formattedEvent = formatDBEventForApp(data);
+    const formattedEvent = formatDBToApp(result.data);
 
-    // Notificar a interface sobre o novo evento
     try {
-      window.dispatchEvent(new CustomEvent('event-added', { 
-        detail: { event: formattedEvent }
-      }));
+      window.dispatchEvent(new CustomEvent('event-added', { detail: { event: formattedEvent } }));
       window.dispatchEvent(new CustomEvent('agenda-events-updated'));
+      window.dispatchEvent(new CustomEvent('calendar-events-updated'));
     } catch (e) {
       console.warn("Não foi possível emitir evento de atualização:", e);
     }
@@ -127,137 +100,109 @@ export const addEvent = async (event: Omit<CalendarEvent, "id" | "createdAt">): 
     return formattedEvent;
   } catch (error) {
     console.error("Erro ao adicionar evento:", error);
-    // Fallback para armazenamento local
-    const eventWithMeta = {
-      ...event,
-      id: uuidv4(),
-      createdAt: new Date().toISOString(),
-    };
-    return saveEventLocally(eventWithMeta);
+    return saveEventLocally({ ...event, id: uuidv4(), createdAt: new Date().toISOString() });
   }
 };
 
-// Obter todos os eventos de um usuário
-export const getEventsByUserId = async (userId?: string): Promise<CalendarEvent[]> => {
+export const getEventsByUserId = async (userId?: string, month?: number, year?: number): Promise<CalendarEvent[]> => {
   try {
-    // Verificar autenticação
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.log("Usuário não autenticado, carregando eventos locais");
+    if (!userId) {
+      console.log("userId não fornecido, carregando eventos locais");
       return getLocalEvents('anonymous');
     }
 
-    const { data, error } = await supabase
-      .from("calendar_events")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("start_date", { ascending: true });
-
-    if (error) {
-      console.error("Erro ao buscar eventos do usuário no DB:", error);
-      // Fallback para armazenamento local
-      return getLocalEvents(user.id);
+    let url = `${API_BASE_URL}/${userId}`;
+    if (month !== undefined && year !== undefined) {
+      url += `?month=${month}&year=${year}`;
     }
 
-    const formattedEvents = (data || []).map(formatDBEventForApp);
+    const response = await fetch(url);
+    const result = await response.json();
 
-    // Mesclar com eventos locais se existirem
-    const localEvents = getLocalEvents(user.id);
-    const localOnlyEvents = localEvents.filter(le => 
-      !formattedEvents.some(fe => fe.id === le.id)
+    if (!result.success) {
+      console.error("Erro ao buscar eventos do Neon:", result.error);
+      return getLocalEvents(userId);
+    }
+
+    const formattedEvents = (result.data || []).map(formatDBToApp);
+
+    const localEvents = getLocalEvents(userId);
+    const localOnlyEvents = localEvents.filter(le =>
+      !formattedEvents.some((fe: CalendarEvent) => fe.id === le.id)
     );
 
     return [...formattedEvents, ...localOnlyEvents];
   } catch (error) {
-    console.error("Erro ao buscar eventos do usuário:", error);
-    return getLocalEvents('anonymous');
+    console.error("Erro ao buscar eventos:", error);
+    return getLocalEvents(userId || 'anonymous');
   }
 };
 
-// Obter todos os eventos
 export const getAllEvents = async (): Promise<CalendarEvent[]> => {
   return getEventsByUserId();
 };
 
-// Atualizar um evento existente
 export const updateEvent = async (event: CalendarEvent): Promise<CalendarEvent | null> => {
   try {
-    // Verificar autenticação
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.error("Usuário não autenticado");
-      return updateEventLocally(event);
-    }
-
     if (!event.id) {
       console.error("ID é obrigatório para atualizar um evento");
       return null;
     }
 
     if (event.id.startsWith('local-')) {
-      // Para eventos locais, atualizar apenas no localStorage
       return updateEventLocally(event);
     }
 
-    const dbEvent = formatEventForDB({
-      ...event,
-      userId: user.id,
-      updatedAt: new Date().toISOString()
+    const response = await fetch(`${API_BASE_URL}/${event.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: event.title,
+        eventDate: event.startDate,
+        startTime: event.startTime || null,
+        endTime: event.endTime || null,
+        isAllDay: event.isAllDay || false,
+        repeat: event.repeat || 'none',
+        icon: event.icon || 'pencil',
+        labels: event.labels || [],
+        labelColors: event.labelColors || {},
+        linkedActivities: event.linkedActivities || [],
+      }),
     });
 
-    const { data, error } = await supabase
-      .from("calendar_events")
-      .update(dbEvent)
-      .eq("id", event.id)
-      .eq("user_id", user.id)
-      .select()
-      .single();
+    const result = await response.json();
 
-    if (error) {
-      console.error("Erro ao atualizar evento:", error);
-      // Fallback para armazenamento local
+    if (!result.success) {
+      console.error("Erro ao atualizar evento:", result.error);
       return updateEventLocally(event);
     }
 
-    return formatDBEventForApp(data);
+    return formatDBToApp(result.data);
   } catch (error) {
     console.error("Erro ao atualizar evento:", error);
     return updateEventLocally(event);
   }
 };
 
-// Remover um evento
 export const deleteEvent = async (eventId: string): Promise<boolean> => {
   try {
-    // Verificar autenticação
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.error("Usuário não autenticado");
-      return deleteEventLocally(eventId);
-    }
-
     if (!eventId) {
       console.error("ID é obrigatório para excluir um evento");
       return false;
     }
 
     if (eventId.startsWith('local-')) {
-      // Para eventos locais, excluir apenas no localStorage
       return deleteEventLocally(eventId);
     }
 
-    const { error } = await supabase
-      .from("calendar_events")
-      .delete()
-      .eq("id", eventId)
-      .eq("user_id", user.id);
+    const response = await fetch(`${API_BASE_URL}/${eventId}`, {
+      method: 'DELETE',
+    });
 
-    if (error) {
-      console.error("Erro ao remover evento:", error);
-      // Fallback para armazenamento local
+    const result = await response.json();
+
+    if (!result.success) {
+      console.error("Erro ao remover evento:", result.error);
       return deleteEventLocally(eventId);
     }
 
@@ -268,10 +213,8 @@ export const deleteEvent = async (eventId: string): Promise<boolean> => {
   }
 };
 
-// Funções para armazenamento local como backup
 const EVENTS_STORAGE_KEY = "calendar_events";
 
-// Salvar todos os eventos localmente
 const saveEventsLocally = (events: CalendarEvent[]) => {
   try {
     localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
@@ -282,14 +225,12 @@ const saveEventsLocally = (events: CalendarEvent[]) => {
   }
 };
 
-// Inicializar o armazenamento local se não existir
 export const initLocalStorage = () => {
   if (!localStorage.getItem(EVENTS_STORAGE_KEY)) {
     saveEventsLocally([]);
   }
 };
 
-// Obter todos os eventos armazenados localmente
 export const getAllLocalEvents = (): CalendarEvent[] => {
   try {
     const eventsJson = localStorage.getItem(EVENTS_STORAGE_KEY);
@@ -301,7 +242,6 @@ export const getAllLocalEvents = (): CalendarEvent[] => {
   }
 };
 
-// Obter eventos locais para um usuário específico
 const getLocalEvents = (userId: string): CalendarEvent[] => {
   try {
     if (!userId) return [];
@@ -315,7 +255,6 @@ const getLocalEvents = (userId: string): CalendarEvent[] => {
   }
 };
 
-// Salvar um evento localmente
 const saveEventLocally = (event: any) => {
   try {
     const allEvents = getAllLocalEvents();
@@ -325,7 +264,6 @@ const saveEventLocally = (event: any) => {
       createdAt: event.createdAt || new Date().toISOString(),
     };
 
-    // Remover qualquer duplicata
     const filteredEvents = allEvents.filter(e => e.id !== newEvent.id);
     saveEventsLocally([...filteredEvents, newEvent]);
     return newEvent;
@@ -335,11 +273,10 @@ const saveEventLocally = (event: any) => {
   }
 };
 
-// Atualizar um evento localmente
 const updateEventLocally = (event: CalendarEvent) => {
   try {
     const allEvents = getAllLocalEvents();
-    const updatedEvents = allEvents.map(e => 
+    const updatedEvents = allEvents.map(e =>
       e.id === event.id ? { ...event, updatedAt: new Date().toISOString() } : e
     );
     saveEventsLocally(updatedEvents);
@@ -350,7 +287,6 @@ const updateEventLocally = (event: CalendarEvent) => {
   }
 };
 
-// Remover um evento localmente
 const deleteEventLocally = (eventId: string) => {
   try {
     const allEvents = getAllLocalEvents();
@@ -363,31 +299,22 @@ const deleteEventLocally = (eventId: string) => {
   }
 };
 
-// Sincronizar eventos locais com o banco de dados
 export const syncLocalEvents = async (): Promise<void> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.log("Usuário não autenticado para sincronização");
-      return;
-    }
-
-    const localEvents = getLocalEvents(user.id);
+    const localEvents = getAllLocalEvents();
     const localOnlyEvents = localEvents.filter(e => e.id.startsWith('local-'));
 
     for (const event of localOnlyEvents) {
       const { id, ...eventData } = event;
-      const result = await addEvent({ ...eventData, userId: user.id });
+      const result = await addEvent(eventData);
       if (result) {
         console.log("Evento sincronizado:", id, "->", result.id);
       }
     }
 
-    // Limpar eventos locais sincronizados
     if (localOnlyEvents.length > 0) {
       const allEvents = getAllLocalEvents();
-      const remainingEvents = allEvents.filter(e => !e.id.startsWith('local-') || e.userId !== user.id);
+      const remainingEvents = allEvents.filter(e => !e.id.startsWith('local-'));
       saveEventsLocally(remainingEvents);
     }
   } catch (error) {

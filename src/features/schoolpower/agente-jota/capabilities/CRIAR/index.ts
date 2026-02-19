@@ -7,6 +7,7 @@
 import { criarAtividade } from './criar-atividade';
 import { criarPlanoAula } from './criar-plano-aula';
 import { criarAvaliacaoDiagnostica } from './criar-avaliacao-diagnostica';
+import { criarCompromissoCalendario } from './criar-compromisso-calendario';
 import type { CapabilityConfig } from '../index';
 
 export const CRIAR_CAPABILITIES: Record<string, CapabilityConfig> = {
@@ -123,6 +124,76 @@ export const CRIAR_CAPABILITIES: Record<string, CapabilityConfig> = {
       }
     },
     execute: criarAvaliacaoDiagnostica
+  },
+
+  criar_compromisso_calendario: {
+    name: 'criar_compromisso_calendario',
+    funcao: 'criar_compromisso_calendario',
+    displayName: 'Criar Compromisso no Calendário',
+    categoria: 'CRIAR',
+    description: 'Cria um compromisso/evento/aula no calendário do professor. Pode configurar título, data, horário, repetição, ícone, labels e vincular atividades. O calendário atualiza automaticamente após a criação.',
+    descricao: 'Cria compromissos no calendário do professor diretamente do chat, sem necessidade de interação manual. Perfeito para organizar aulas, reuniões, provas e eventos.',
+    parameters: {
+      titulo: {
+        type: 'string',
+        required: true,
+        description: 'Título do compromisso (ex: "Aula de Matemática - Funções", "Reunião de Coordenação")'
+      },
+      data: {
+        type: 'string',
+        required: true,
+        description: 'Data do compromisso no formato YYYY-MM-DD (ex: "2026-02-25")'
+      },
+      hora_inicio: {
+        type: 'string',
+        required: false,
+        description: 'Hora de início no formato HH:MM (ex: "10:00"). Se não informado e dia_todo=false, será null.'
+      },
+      hora_fim: {
+        type: 'string',
+        required: false,
+        description: 'Hora de fim no formato HH:MM (ex: "11:00"). Se não informado, será null.'
+      },
+      dia_todo: {
+        type: 'boolean',
+        required: false,
+        description: 'Se true, o compromisso ocupa o dia todo. Default: false.',
+        default: false
+      },
+      repeticao: {
+        type: 'string',
+        required: false,
+        description: 'Frequência de repetição: "none", "daily", "weekly", "monthly", "yearly". Default: "none".',
+        default: 'none'
+      },
+      icone: {
+        type: 'string',
+        required: false,
+        description: 'Ícone do compromisso: "pencil" (aula), "check" (prova/avaliação), "camera" (reunião), "star" (evento especial). Se não informado, será inferido do título.'
+      },
+      labels: {
+        type: 'array',
+        required: false,
+        description: 'Lista de etiquetas/labels para categorizar (ex: ["Matemática", "9º Ano"])'
+      },
+      label_colors: {
+        type: 'object',
+        required: false,
+        description: 'Cores das labels no formato {labelName: "#hexcolor"}'
+      },
+      linked_activity_ids: {
+        type: 'array',
+        required: false,
+        description: 'Lista de atividades School Power vinculadas ao compromisso [{id, tipo, titulo}]'
+      },
+      professor_id: {
+        type: 'string',
+        required: true,
+        description: 'ID UUID do professor (obtido do contexto da sessão)'
+      }
+    },
+    canCallAnytime: true,
+    execute: criarCompromissoCalendario
   }
 
 };

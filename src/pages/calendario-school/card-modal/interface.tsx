@@ -5,6 +5,7 @@ import { Calendar, ChevronLeft, ChevronRight, X, Settings, Users2, ChevronDown, 
 import CalendarViewSelector from './calendar-view-selector';
 import AddEventModal from './add-event-modal';
 import { getUserActivities } from '@/services/activitiesApiService';
+import { getEventsByUserId, addEvent as addCalendarEvent, updateEvent as updateCalendarEvent, deleteEvent as deleteCalendarEvent, type CalendarEvent } from '@/services/calendarEventService';
 
 interface CalendarioSchoolPanelProps {
   isOpen: boolean;
@@ -177,6 +178,57 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     } catch {}
     return null;
   }, []);
+
+  const calendarEventToLocal = useCallback((ce: CalendarEvent, month: number, year: number): Event | null => {
+    const eventDate = new Date(ce.startDate + 'T00:00:00');
+    if (eventDate.getMonth() !== month || eventDate.getFullYear() !== year) return null;
+    return {
+      id: ce.id,
+      title: ce.title,
+      day: eventDate.getDate(),
+      icon: ce.icon || 'pencil',
+      selectedLabels: ce.labels || [],
+      labelColors: ce.labelColors || {},
+      startTime: ce.startTime || null,
+      endTime: ce.endTime || null,
+      isAllDay: ce.isAllDay || false,
+      repeat: (ce.repeat as Event['repeat']) || 'none',
+      linkedActivities: ce.linkedActivities,
+    };
+  }, []);
+
+  const loadEventsFromNeon = useCallback(async () => {
+    const userId = resolveUserId();
+    if (!userId) return;
+    try {
+      const month = currentDate.getMonth();
+      const year = currentDate.getFullYear();
+      const calendarEvents = await getEventsByUserId(userId, month + 1, year);
+      const localEvents: Event[] = [];
+      for (const ce of calendarEvents) {
+        const ev = calendarEventToLocal(ce, month, year);
+        if (ev) localEvents.push(ev);
+      }
+      setEvents(localEvents);
+    } catch (error) {
+      console.error('[Calendario] Erro ao carregar eventos do Neon:', error);
+    }
+  }, [resolveUserId, currentDate, calendarEventToLocal]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    loadEventsFromNeon();
+  }, [isOpen, currentDate, loadEventsFromNeon]);
+
+  useEffect(() => {
+    const handleCalendarUpdate = () => {
+      loadEventsFromNeon();
+    };
+    window.addEventListener('calendar-events-updated', handleCalendarUpdate);
+    return () => {
+      window.removeEventListener('calendar-events-updated', handleCalendarUpdate);
+    };
+  }, [loadEventsFromNeon]);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -397,13 +449,16 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     setIsAddEventModalOpen(true);
   };
 
-  const handleAddEvent = (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[], linkedActivities?: LinkedActivity[]) => {
+  const handleAddEvent = async (title: string, day: number, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[], linkedActivities?: LinkedActivity[]) => {
     const labelColors: { [key: string]: string } = {};
     selectedLabels.forEach(labelId => {
       if (labelData[labelId]) {
         labelColors[labelId] = labelData[labelId].color;
       }
     });
+
+    const eventDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const userId = resolveUserId();
 
     const newEvent: Event = {
       id: `event-${Date.now()}`,
@@ -420,6 +475,26 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
       linkedActivities: linkedActivities || []
     };
     setEvents([...events, newEvent]);
+
+    if (userId) {
+      const saved = await addCalendarEvent({
+        title,
+        startDate: eventDate,
+        startTime: isAllDay ? undefined : (startTime || undefined),
+        endTime: isAllDay ? undefined : (endTime || undefined),
+        isAllDay,
+        repeat: repeat || 'none',
+        icon: selectedIcon,
+        labels: selectedLabels,
+        labelColors,
+        linkedActivities: linkedActivities || [],
+        userId,
+        createdBy: 'user',
+      });
+      if (saved) {
+        setEvents(prev => prev.map(e => e.id === newEvent.id ? { ...e, id: saved.id } : e));
+      }
+    }
   };
 
   const handleEditEvent = (eventId: string) => {
@@ -430,7 +505,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     }
   };
 
-  const handleUpdateEvent = (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[], linkedActivities?: LinkedActivity[]) => {
+  const handleUpdateEvent = async (title: string, selectedIcon: string, selectedLabels: string[], labelData: { [key: string]: { name: string; color: string } }, startTime: string | null, endTime: string | null, isAllDay: boolean, repeat: string, attachedFiles?: AttachedFile[], linkedActivities?: LinkedActivity[]) => {
     if (!editingEvent) return;
 
     const labelColors: { [key: string]: string } = {};
@@ -457,12 +532,36 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
     setEvents(events.map(e => e.id === editingEvent.id ? updatedEvent : e));
     setIsEditEventModalOpen(false);
     setEditingEvent(null);
+
+    const userId = resolveUserId();
+    if (userId && !editingEvent.id.startsWith('event-')) {
+      const eventDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(editingEvent.day).padStart(2, '0')}`;
+      await updateCalendarEvent({
+        id: editingEvent.id,
+        title,
+        startDate: eventDate,
+        startTime: isAllDay ? undefined : (startTime || undefined),
+        endTime: isAllDay ? undefined : (endTime || undefined),
+        isAllDay,
+        repeat: repeat || 'none',
+        icon: selectedIcon,
+        labels: selectedLabels,
+        labelColors,
+        linkedActivities: linkedActivities || [],
+        userId,
+        createdAt: '',
+      });
+    }
   };
 
-  const handleDeleteEvent = (eventId: string) => {
+  const handleDeleteEvent = async (eventId: string) => {
     setEvents(events.filter(e => e.id !== eventId));
     setIsEditEventModalOpen(false);
     setEditingEvent(null);
+
+    if (!eventId.startsWith('event-')) {
+      await deleteCalendarEvent(eventId);
+    }
     console.log('🗑️ Evento deletado');
   };
 
