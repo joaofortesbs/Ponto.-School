@@ -403,13 +403,6 @@ export class AgentExecutor {
         console.error(`🛑 [Executor] Skipping etapa ${etapa.ordem} due to critical failure in previous step`);
         break;
       }
-
-      // Se MenteMaior marcou esta etapa para pular
-      if ((etapa as any)._skip) {
-        console.log(`⏭️ [Executor] Etapa ${etapa.ordem} pulada por decisão da MenteMaior`);
-        results.push({ etapa: etapa.ordem, resultado: { skipped: true, reason: 'MenteMaior decision' } });
-        continue;
-      }
       
       // Limpar array de capabilities da etapa anterior para contexto limpo
       this.currentEtapaCapabilities = [];
@@ -586,38 +579,7 @@ export class AgentExecutor {
             console.log(`🧠 [MenteMaior] Narrativa: ${menteMaiorResult.narrative.substring(0, 80)}...`);
           }
 
-          // Aplicar micro-decisões (step_decisions) às etapas restantes
-          if (menteMaiorResult.stepDecisions && menteMaiorResult.stepDecisions.length > 0) {
-            for (const decision of menteMaiorResult.stepDecisions) {
-              const targetStep = plan.etapas.find(e => e.ordem === decision.stepIndex);
-              if (!targetStep) continue;
-
-              if (decision.action === 'skip') {
-                console.log(`⏭️ [MenteMaior] Pulando etapa ${decision.stepIndex}: ${decision.reason || 'desnecessária'}`);
-                (targetStep as any)._skip = true;
-                this.emitProgress({
-                  sessionId: this.sessionId,
-                  status: 'narrative',
-                  etapaAtual: etapa.ordem,
-                  descricao: `Ajustando plano: pulando "${targetStep.titulo || targetStep.descricao}" — ${decision.reason || 'não é mais necessária'}`,
-                } as any);
-              } else if (decision.action === 'adapt') {
-                console.log(`🔧 [MenteMaior] Adaptando etapa ${decision.stepIndex}: ${decision.reason || 'ajuste baseado nos resultados'}`);
-                if (decision.adaptedCapabilities && decision.adaptedCapabilities.length > 0) {
-                  targetStep.capabilities = decision.adaptedCapabilities;
-                } else if (decision.adaptedParams && targetStep.capabilities && targetStep.capabilities.length > 0) {
-                  for (const cap of targetStep.capabilities) {
-                    cap.parametros = { ...cap.parametros, ...decision.adaptedParams };
-                  }
-                }
-                if (!decision.adaptedParams && !decision.adaptedCapabilities) {
-                  console.warn(`⚠️ [MenteMaior] Adapt decision for step ${decision.stepIndex} has no adaptedParams or adaptedCapabilities — treating as keep`);
-                }
-              }
-            }
-          }
-
-          // Emitir replan (se necessário — para etapas NOVAS)
+          // Emitir replan (se necessário)
           if (menteMaiorResult.replan.needed && menteMaiorResult.replan.reason) {
             console.log(`🔄 [MenteMaior] Replanning: ${menteMaiorResult.replan.reason}`);
             
