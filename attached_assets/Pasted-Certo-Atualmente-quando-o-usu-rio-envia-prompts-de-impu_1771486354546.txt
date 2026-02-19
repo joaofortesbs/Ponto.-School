@@ -1,0 +1,23 @@
+Certo. Atualmente quando o usuário envia prompts de imputs como "Jota, assuma o controle da minha semana letiva. Preciso que você planeje aulas para a turma 8 ano D sobre os temas desenvolvimento embrionário das mulheres. Considere que tenho 7 aulas disponíveis. Use uma abordagem focada em discontraido. Ao finalizar, organize tudo no meu calendário e prepare o Dossiê Ponto. Flow completo." o Jota/IA ainda não adiciona a capacidade de "criar_compromisso_calendario" dentro do card de Desenvolvimento, para que ela adicione as respectivas atividades criadas dentro do calendário do usuário!
+
+Seus objetivo agora são:
+
+Corrija esse erro que eu te expliquei agora da mostragem/visualização/adição da capacidade de "criar_compromisso_calendario" dentro do card de Desenvolvimento!
+
+Quando o usuário envia uma mensagem de imput para o Jota dentro da seção de School Power como "Crie um novo compromisso da minha aula de matematica no dia X/X/X", a IA ainda não está escolhendo da maneira correta a capacidade de "criar_compromisso_calendario"!
+
+Analise todas as alterações que você fez anteriormente sobre a capaciade de "criar_compromisso_calendario", e me diga o que você fez que pode estar errado, e o que pode estar faltando, e porque esses erros que eu te falei ainda estão acontecendo!
+
+Muitos dos erros que eu estou te dizendo que ainda estão acontecendo atualmente, estão acontecendo por alguns erros ou incongruencias ou quebras dentro das instruções, que ainda não estão completamente alinhadas e bem configuradas dentro do prompt sytem! Analise todas as instruções e Prompt System e me diga as incongruencias ainda existentes e como resolvelas, e quais vão ser os efeitos reais dessas alterações!
+
+Analise todos os arquivos e todo o fluxo de dentro da plataforma e toda a arquitetura para entender perfeitamente como está a plataforma atualmente! Analise todos os dados de arquitetura de dentro dos nossos concorrentes e benchmarkings para que voc6e entenda e reflita como eles funcionam e corrijiram esses mesmos erros que estamos passando agora!
+
+Os erros que eu te falei ainda não foram corrigidos, analise e reflita sobre todos os arquivos de dentro da plataforma! Analise e pense o porque esses erros acontecem, analise todas as alternativas e age como se você fosse o seu melhor modelo, na versão mais poderosa, e mais estratégica! Analise todas as possibilidades, e altere os arquivos com a absoluta precisão!!!!!!!
+
+Considerações: - Faça uma plano completo com Macro-steps de objetivos principais de execução e micro-steps em ordem inteligente para fazer todas essas alterações da maneira correta, e incluindo testes, validações e verificações, para garantir que tudo seja feito corretamente!
+
+Reflita antes de cada alteração, e faça um mapeamento completo para identificar a melhor forma, de maneira segura, robusta, alinhada, profissional, avançada e sofisticada! Não cometa erros ou bugs dentro do código, e não deixe o código ser corrompido! Garanta também que todo o sistema não tenha brechas para erros ou bugs!
+Revise todas as suas modificações depois de cada finalização, não deixe brechas pra erros, não prejudique o funcionamento geral, refine as alterações, e garanta que nenhum sistema considerável foi influenciado ou modificado negativamente! Teste tudo que você fez para garantir o funcionamento perfeito!
+No final de tudo, me explique todas as alterações que você fez, como elas foram feitas, e principalmente porque você decidiu fazer essas alterações!
+No final de tudo, liste todos os seus aprendizados com base em todas as alterações que você fez, para que você possa ir se aprimorando conforme as próximas alterações, e melhorando a sua janela de contexto, para que esses erros em hipotese alguma acontecem novamente dentro da plataforma!
+No final, me sugira as próximas alterações dentro da própria plataforma que a gente precisa fazer, ou que seria muito bom, para deixar a plataforma ainda mais completa, sem nenhum erro ou perigo!
