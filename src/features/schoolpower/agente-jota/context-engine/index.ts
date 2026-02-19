@@ -49,3 +49,9 @@ export {
   type IntentType,
   type ClassifiedIntent,
 } from './intent-classifier';
+
+export {
+  smartRoute,
+  type SmartRouteResult,
+  type SmartRouteType,
+} from './smart-router';

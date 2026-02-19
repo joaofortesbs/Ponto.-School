@@ -259,7 +259,7 @@ export async function createExecutionPlan(
     const planHasCalendar = finalCapNames.includes('criar_compromisso_calendario') || finalCapNames.includes('gerenciar_calendario');
 
     if (calendarDetected && !planHasCalendar) {
-      console.log('📅🔴 [Planner] Pós-validação CRÍTICA: Professor pediu CALENDÁRIO mas IA não incluiu gerenciar_calendario — INJETANDO etapa final!');
+      console.log('📅 [Planner] Calendário detectado em pedido composto (EXECUTAR) — injetando gerenciar_calendario como etapa final');
       const calendarParams = extractCalendarParamsFromPrompt(userPrompt);
       calendarParams.user_prompt = userPrompt;
       calendarParams.user_objective = userPrompt;
@@ -267,10 +267,10 @@ export async function createExecutionPlan(
       plan.etapas.push({
         ordem: plan.etapas.length + 1,
         titulo: 'Gerenciar seu calendário',
-        descricao: 'Vou gerenciar seus compromissos no calendário automaticamente',
+        descricao: 'Vou gerenciar seus compromissos no calendário',
         funcao: 'gerenciar_calendario',
         parametros: calendarParams,
-        justificativa: 'Professor mencionou calendário/agendar/organizar — injeção automática de segurança (gerenciar_calendario v1.0)',
+        justificativa: 'Pedido composto inclui calendário — injeção de segurança para fluxo EXECUTAR',
         status: 'pendente' as const,
         capabilities: [{
           id: `cap-cal-0-${ts}`,

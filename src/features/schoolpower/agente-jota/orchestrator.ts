@@ -38,6 +38,8 @@ import {
   classifyIntent,
   shouldCreatePlan,
   shouldRespondDirectly,
+  smartRoute,
+  type SmartRouteResult,
   type ConversationTurn,
 } from './context-engine';
 
@@ -169,10 +171,10 @@ export async function processUserPrompt(
   const memory = getOrCreateMemoryManager(sessionId, userId);
   sessionTimestamps.set(sessionId, Date.now());
 
-  const intent = classifyIntent(userPrompt);
-  console.log(`🧠 [Orchestrator] Intent: ${intent.type} (${(intent.confidence * 100).toFixed(0)}%) — ${intent.reasoning}`);
+  const routeResult = await smartRoute(userPrompt, sessionId, userId);
+  console.log(`🧭 [Orchestrator] SmartRouter: ${routeResult.route} (${(routeResult.confidence * 100).toFixed(0)}%) — ${routeResult.reasoning}`);
 
-  if (shouldRespondDirectly(intent)) {
+  if (routeResult.route === 'CONVERSAR') {
     console.log('💬 [Orchestrator] Modo conversacional — respondendo sem criar plano');
 
     const existingSession = getSession(sessionId);
@@ -187,7 +189,7 @@ export async function processUserPrompt(
     });
 
     addLedgerFact(sessionId, {
-      fact: `Professor perguntou: "${userPrompt.substring(0, 150)}" [intent: ${intent.type}]`,
+      fact: `Professor perguntou: "${userPrompt.substring(0, 150)}" [route: CONVERSAR]`,
       category: 'context',
     });
     
@@ -206,6 +208,89 @@ export async function processUserPrompt(
     };
   }
 
+  if (routeResult.route === 'CAPABILITY_DIRETA' && routeResult.capability) {
+    console.log(`⚡ [Orchestrator] Capability direta: ${routeResult.capability}`);
+
+    const existingSession = getSession(sessionId);
+    if (!existingSession) {
+      createSession(sessionId, userId, userPrompt);
+    }
+
+    addConversationTurn(sessionId, {
+      role: 'user',
+      content: userPrompt,
+      timestamp: Date.now(),
+    });
+
+    addLedgerFact(sessionId, {
+      fact: `Professor solicitou capability direta: ${routeResult.capability} — "${userPrompt.substring(0, 150)}"`,
+      category: 'decision',
+    });
+
+    try {
+      const directResult = await executeDirectCapability(
+        routeResult.capability,
+        userPrompt,
+        sessionId,
+        userId,
+        routeResult.capability_params
+      );
+
+      addConversationTurn(sessionId, {
+        role: 'assistant',
+        content: directResult,
+        timestamp: Date.now(),
+        metadata: { type: 'capability_direta', capability: routeResult.capability },
+      });
+
+      return {
+        plan: null,
+        initialMessage: directResult,
+      };
+    } catch (capError) {
+      console.error(`❌ [Orchestrator] Erro na capability direta ${routeResult.capability}:`, capError);
+      console.log(`🔄 [Orchestrator] Fallback: tentando criar plano de execução para "${userPrompt.substring(0, 60)}..."`);
+
+      addLedgerFact(sessionId, {
+        fact: `Capability direta ${routeResult.capability} falhou — fallback para plano de execução`,
+        category: 'error',
+      });
+
+      const contextForPlanner = buildContextForPlanner(sessionId, userPrompt);
+      try {
+        const plan = await createExecutionPlan(userPrompt, {
+          workingMemory: contextForPlanner,
+          userId,
+          sessionId,
+        });
+        await memory.savePlan(plan);
+        setPlan(sessionId, {
+          planId: plan.planId,
+          objetivo: plan.objetivo,
+          totalEtapas: plan.etapas.length,
+          etapasCompletas: 0,
+          etapas: plan.etapas.map(e => ({
+            ordem: e.ordem,
+            titulo: e.titulo || e.descricao,
+            descricao: e.descricao,
+            status: 'pendente' as const,
+            capabilities: e.capabilities?.map(c => c.nome) || [e.funcao],
+          })),
+        });
+        let initialMessage = generatePlanMessage(plan);
+        try {
+          const initialResponseData = await generateInitialResponse(sessionId, userPrompt);
+          initialMessage = initialResponseData.resposta;
+        } catch {}
+        return { plan, initialMessage };
+      } catch (planError) {
+        console.error(`❌ [Orchestrator] Fallback de plano também falhou:`, planError);
+        const fallbackResponse = await handleDirectResponse(userPrompt, sessionId, userId);
+        return { plan: null, initialMessage: fallbackResponse };
+      }
+    }
+  }
+
   const session = createSession(sessionId, userId, userPrompt);
   
   addConversationTurn(sessionId, {
@@ -215,7 +300,7 @@ export async function processUserPrompt(
   });
 
   addLedgerFact(sessionId, {
-    fact: `Professor pediu: "${userPrompt.substring(0, 150)}" [intent: ${intent.type}]`,
+    fact: `Professor pediu: "${userPrompt.substring(0, 150)}" [route: EXECUTAR]`,
     category: 'context',
   });
 
@@ -330,6 +415,66 @@ Se quiser criar algo, indique que pode fazer um plano.
   }
 
   return 'Entendi! Estou aqui para ajudar. O que precisa?';
+}
+
+async function executeDirectCapability(
+  capabilityName: string,
+  userPrompt: string,
+  sessionId: string,
+  userId: string,
+  params?: Record<string, any>
+): Promise<string> {
+  console.log(`⚡ [Orchestrator] Executando capability direta: ${capabilityName}`);
+
+  const capabilityInput = {
+    capability_id: capabilityName,
+    execution_id: `direct_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+    context: {
+      user_prompt: userPrompt,
+      user_objective: userPrompt,
+      professor_id: userId,
+      user_id: userId,
+      session_id: sessionId,
+      ...(params || {}),
+    },
+    previous_results: new Map(),
+  };
+
+  if (capabilityName === 'gerenciar_calendario') {
+    const { gerenciarCalendarioV2 } = await import('./capabilities/CRIAR/calendario/gerenciar-calendario');
+    const result = await gerenciarCalendarioV2(capabilityInput);
+
+    if (result.success && result.data) {
+      const data = result.data as any;
+      return data.resposta_para_professor || data.summary || data.message || JSON.stringify(data);
+    }
+
+    throw new Error(result.error?.message || 'Falha ao executar gerenciar_calendario');
+  }
+
+  if (capabilityName === 'pesquisar_atividades_conta') {
+    const { pesquisarAtividadesConta } = await import('./capabilities/PESQUISAR/implementations/pesquisar-atividades-conta');
+    const result = await pesquisarAtividadesConta({ professor_id: userId });
+
+    if (result && result.found && result.activities && result.activities.length > 0) {
+      const lines = result.activities.map((a: any, i: number) => `${i + 1}. **${a.titulo || a.nome}** (${a.tipo || 'atividade'})`);
+      return `Encontrei ${result.count} atividade(s) na sua conta:\n\n${lines.join('\n')}\n\nDeseja ver alguma em detalhes ou criar novas atividades?`;
+    }
+    return 'Você ainda não tem atividades salvas. Quer que eu crie alguma?';
+  }
+
+  if (capabilityName === 'pesquisar_atividades_disponiveis') {
+    const { pesquisarAtividadesDisponiveisV2 } = await import('./capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis');
+    const result = await pesquisarAtividadesDisponiveisV2(capabilityInput);
+
+    if (result.success && result.data) {
+      const data = result.data as any;
+      return data.formatted_text || data.summary || 'Aqui estão os tipos de atividades disponíveis na plataforma.';
+    }
+    return 'Desculpe, não consegui buscar o catálogo de atividades no momento.';
+  }
+
+  throw new Error(`Capability direta não suportada: ${capabilityName}`);
 }
 
 export interface ExecutePlanResult {
