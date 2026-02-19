@@ -25,6 +25,7 @@ import { pesquisarAtividadesDisponiveisV2 } from './capabilities/PESQUISAR/imple
 import { criarAtividadeV2 } from './capabilities/CRIAR_ATIVIDADES/implementations/criar-atividade-v2';
 import { salvarAtividadesBdV2 } from './capabilities/SALVAR_BD/implementations/salvar-atividades-bd';
 import { criarArquivoV2 } from './capabilities/CRIAR_ARQUIVO/criar-arquivo-v2';
+import { criarCompromissoCalendarioV2 } from './capabilities/CRIAR/criar-compromisso-calendario-v2';
 import type { ArtifactData } from './capabilities/CRIAR_ARQUIVO/types';
 import type { CapabilityInput, CapabilityOutput } from './capabilities/shared/types';
 import { 
@@ -658,6 +659,7 @@ export class AgentExecutor {
     ['criar_atividade', criarAtividadeV2],
     ['salvar_atividades_bd', salvarAtividadesBdV2],
     ['criar_arquivo', criarArquivoV2],
+    ['criar_compromisso_calendario', criarCompromissoCalendarioV2],
   ]);
   
   // Flag para registrar o handler global apenas uma vez
@@ -837,6 +839,9 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
                 
               } else if (capName === 'criar_arquivo') {
                 console.error(`⚠️ [Executor] criar_arquivo failed but NOT throwing - artifact generation is non-critical`);
+                
+              } else if (capName === 'criar_compromisso_calendario') {
+                console.error(`⚠️ [Executor] criar_compromisso_calendario failed but NOT throwing - calendar is non-critical`);
                 
               } else {
                 throw new Error(`Capability crítica "${capName}" falhou: ${errorMsg}`);

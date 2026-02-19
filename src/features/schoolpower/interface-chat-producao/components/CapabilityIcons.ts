@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Database,
   FileText,
+  CalendarPlus,
   type LucideIcon
 } from 'lucide-react';
 
@@ -78,6 +79,11 @@ const capabilityIconMap: Record<string, CapabilityIconConfig> = {
     color: 'text-green-400',
     bgColor: 'bg-green-500/20',
   },
+  criar_compromisso_calendario: {
+    icon: CalendarPlus,
+    color: 'text-sky-400',
+    bgColor: 'bg-sky-500/20',
+  },
   criar_arquivo: {
     icon: FileText,
     color: 'text-violet-400',
@@ -108,6 +114,9 @@ export function getCapabilityIcon(capabilityName: string): CapabilityIconConfig 
   }
   if (normalizedName.includes('gerar') || normalizedName.includes('criar_conteudo')) {
     return capabilityIconMap.gerar_conteudo_atividades;
+  }
+  if (normalizedName.includes('calendario') || normalizedName.includes('compromisso') || normalizedName.includes('agendar')) {
+    return capabilityIconMap.criar_compromisso_calendario;
   }
   if (normalizedName.includes('criar') || normalizedName.includes('construir')) {
     return capabilityIconMap.criar_atividade;

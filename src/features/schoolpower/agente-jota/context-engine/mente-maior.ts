@@ -120,9 +120,11 @@ REGRAS PARA O REPLAN:
   * Já existem atividades similares
   * Resultado revelou necessidade não prevista
   * Etapa se tornou desnecessária
+  * Professor pediu calendário mas o plano não inclui criar_compromisso_calendario
 - Se needs=true, inclua "reason" com explicação breve
 - Se needs=true E etapas precisam mudar, inclua "modifications" com as etapas restantes atualizadas
 - Se for a última etapa, SEMPRE needs=false
+- 📅 Se o pedido original mencionou calendário/agendar/organizar e o plano NÃO tem criar_compromisso_calendario, faça replan para adicionar!
 
 {capabilities_list}
 
