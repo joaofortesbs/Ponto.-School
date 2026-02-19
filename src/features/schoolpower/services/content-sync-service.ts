@@ -118,3 +118,7 @@ class ContentSyncServiceImpl {
 }
 
 export const ContentSyncService = new ContentSyncServiceImpl();
+
+if (typeof window !== 'undefined') {
+  (window as any).__ContentSyncService = ContentSyncService;
+}

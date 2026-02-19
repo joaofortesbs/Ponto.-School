@@ -175,11 +175,12 @@ export class AgentExecutor {
         
         if (!contentSnapshot || Object.keys(contentSnapshot).length <= 2) {
           try {
-            const syncModule = require('../services/content-sync-service');
-            const syncData = syncModule.ContentSyncService.getContent(actId, actTipo);
-            if (syncData && Object.keys(syncData).length > 2) {
-              contentSnapshot = { ...(contentSnapshot || {}), ...syncData };
-              console.error(`📸 [getCollectedItems] Snapshot ContentSync para ${actId}: ${Object.keys(syncData).length} campos`);
+            if (typeof window !== 'undefined' && (window as any).__ContentSyncService) {
+              const syncData = (window as any).__ContentSyncService.getContent(actId, actTipo);
+              if (syncData && Object.keys(syncData).length > 2) {
+                contentSnapshot = { ...(contentSnapshot || {}), ...syncData };
+                console.error(`📸 [getCollectedItems] Snapshot ContentSync para ${actId}: ${Object.keys(syncData).length} campos`);
+              }
             }
           } catch (e) {
             console.warn(`⚠️ [getCollectedItems] Erro snapshot ContentSync para ${actId}:`, e);

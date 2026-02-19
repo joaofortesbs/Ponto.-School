@@ -1,6 +1,16 @@
 
 import { v4 as uuidv4 } from 'uuid';
 
+function safeParseJSON<T>(value: any, fallback: T): T {
+  if (value == null) return fallback;
+  if (typeof value !== 'string') return value ?? fallback;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
 export interface CalendarEvent {
   id: string;
   title: string;
@@ -31,20 +41,38 @@ export interface CalendarEvent {
 
 const API_BASE_URL = '/api/calendar/events';
 
+function normalizeDateToISO(val: any): string {
+  if (!val) {
+    console.warn('[CalendarService] normalizeDateToISO: received empty value, defaulting to today');
+    return new Date().toISOString().split('T')[0];
+  }
+  if (val instanceof Date) return val.toISOString().split('T')[0];
+  const str = String(val);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  if (/^\d{4}-\d{2}-\d{2}T/.test(str)) return str.split('T')[0];
+  const parsed = new Date(str);
+  if (isNaN(parsed.getTime())) {
+    console.warn('[CalendarService] normalizeDateToISO: invalid date value:', val, '- defaulting to today');
+    return new Date().toISOString().split('T')[0];
+  }
+  return parsed.toISOString().split('T')[0];
+}
+
 const formatDBToApp = (dbEvent: any): CalendarEvent => {
+  const dateStr = normalizeDateToISO(dbEvent.event_date);
   return {
-    id: dbEvent.id,
+    id: dbEvent.id || `local-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
     title: dbEvent.title,
-    startDate: dbEvent.event_date,
-    endDate: dbEvent.event_date,
+    startDate: dateStr,
+    endDate: dateStr,
     startTime: dbEvent.start_time || '',
     endTime: dbEvent.end_time || '',
     isAllDay: dbEvent.is_all_day || false,
     repeat: dbEvent.repeat || 'none',
     icon: dbEvent.icon || 'pencil',
-    labels: dbEvent.labels || [],
-    labelColors: dbEvent.label_colors || {},
-    linkedActivities: dbEvent.linked_activities || [],
+    labels: safeParseJSON(dbEvent.labels, []),
+    labelColors: safeParseJSON(dbEvent.label_colors, {}),
+    linkedActivities: safeParseJSON(dbEvent.linked_activities, []),
     userId: dbEvent.user_id,
     createdAt: dbEvent.created_at,
     updatedAt: dbEvent.updated_at,

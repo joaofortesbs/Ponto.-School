@@ -126,17 +126,30 @@ function buildEventPayload(evt: CalendarEventParams, professorId: string): any |
   };
 }
 
+function normalizeEventDate(raw: any): Date {
+  if (raw instanceof Date) return raw;
+  const str = String(raw || '');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return new Date(str + 'T00:00:00');
+  if (/^\d{4}-\d{2}-\d{2}T/.test(str)) return new Date(str);
+  const parsed = new Date(str);
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
 function formatEventConfirmation(events: any[]): string {
+  if (events.length === 0) return '📅 Nenhum compromisso criado.';
+
   if (events.length === 1) {
     const e = events[0];
-    const d = new Date(e.event_date + 'T00:00:00');
+    const dateRaw = e.event_date || e.eventDate || e.startDate;
+    const d = normalizeEventDate(dateRaw);
     const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
     const timeStr = e.is_all_day ? 'dia todo' : `${e.start_time || ''}${e.end_time ? ' até ' + e.end_time : ''}`;
     return `📅 Compromisso "${e.title}" criado para ${d.getDate()} de ${monthNames[d.getMonth()]} (${timeStr}). Calendário atualizado!`;
   }
 
   const lines = events.map((e: any, i: number) => {
-    const d = new Date(e.event_date + 'T00:00:00');
+    const dateRaw = e.event_date || e.eventDate || e.startDate;
+    const d = normalizeEventDate(dateRaw);
     const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     const dayName = dayNames[d.getDay()];
     const timeStr = e.is_all_day ? 'dia todo' : `${e.start_time || ''}${e.end_time ? '-' + e.end_time : ''}`;
