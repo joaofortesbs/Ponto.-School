@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tag, Hourglass, Pencil, Sparkles, BookOpen, GripHorizontal, X, Camera, Check, Star, Plus, Clock, RefreshCw, ChevronDown, ArrowRight, Paperclip, FileText, Trash2, ClipboardList, GraduationCap, Search, ListChecks, Layers, MessageSquare, HelpCircle, CreditCard, Minus } from 'lucide-react';
+import { Tag, Hourglass, Pencil, Sparkles, BookOpen, GripHorizontal, X, Camera, Check, Star, Plus, Clock, RefreshCw, ChevronDown, ArrowRight, Paperclip, FileText, Trash2, ClipboardList, GraduationCap, Search, ListChecks, Layers, MessageSquare, HelpCircle, CreditCard, Minus, Brain, PenTool, FileCheck } from 'lucide-react';
 
 interface AttachedFile {
   id: string;
@@ -103,6 +103,10 @@ const ACTIVITY_TYPE_CONFIG: { [key: string]: { label: string; icon: any; color: 
   'quiz-interativo': { label: 'Quiz Interativo', icon: HelpCircle, color: '#F59E0B' },
   'flash-cards': { label: 'Flash Cards', icon: CreditCard, color: '#EC4899' },
   'quadro-interativo': { label: 'Quadro Interativo', icon: MessageSquare, color: '#06B6D4' },
+  'atividade-textual': { label: 'Atividade Textual', icon: FileText, color: '#FF6B00' },
+  'tese-redacao': { label: 'Tese / Redação', icon: PenTool, color: '#F97316' },
+  'prova-personalizada': { label: 'Prova Personalizada', icon: FileCheck, color: '#EF4444' },
+  'mapa-mental': { label: 'Mapa Mental', icon: Brain, color: '#A855F7' },
 };
 
 const AddEventModal: React.FC<AddEventModalProps> = ({

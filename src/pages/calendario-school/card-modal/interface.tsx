@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, ChevronLeft, ChevronRight, X, Settings, Users2, ChevronDown, Plus, Pencil, Camera, Check, Star, Share2, Download, Plug, FileText, Zap, BookOpen, Users, Presentation, Search, Filter, GraduationCap, Brain, Target, Shield } from 'lucide-react';
 import CalendarViewSelector from './calendar-view-selector';
 import AddEventModal from './add-event-modal';
+import { getUserActivities } from '@/services/activitiesApiService';
 
 interface CalendarioSchoolPanelProps {
   isOpen: boolean;
@@ -156,52 +157,68 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
   const [userActivities, setUserActivities] = useState<LinkedActivity[]>([]);
   const [isLoadingActivities, setIsLoadingActivities] = useState(false);
 
+  const resolveUserId = useCallback((): string | null => {
+    try {
+      const neonUser = localStorage.getItem('neon_user');
+      if (neonUser) {
+        const parsed = JSON.parse(neonUser);
+        if (parsed?.id) return parsed.id;
+      }
+    } catch {}
+    const userId = localStorage.getItem('user_id');
+    if (userId) return userId;
+    try {
+      const keys = Object.keys(localStorage);
+      const sbKey = keys.find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+      if (sbKey) {
+        const sbData = JSON.parse(localStorage.getItem(sbKey) || '');
+        if (sbData?.user?.id) return sbData.user.id;
+      }
+    } catch {}
+    return null;
+  }, []);
+
   React.useEffect(() => {
     if (!isOpen) return;
     const fetchActivities = async () => {
+      const userId = resolveUserId();
+      console.log('[Calendario] resolveUserId =>', userId);
+      if (!userId) {
+        console.warn('[Calendario] Nenhum userId encontrado - atividades não serão carregadas');
+        return;
+      }
+
       try {
-        let userId: string | null = null;
-        try {
-          const neonUser = localStorage.getItem('neon_user');
-          if (neonUser) {
-            const parsed = JSON.parse(neonUser);
-            userId = parsed.id || null;
-          }
-        } catch {}
-        if (!userId) {
-          userId = localStorage.getItem('user_id');
-        }
-        if (!userId) return;
-
         setIsLoadingActivities(true);
-        const response = await fetch(`/api/atividades/usuario/${userId}`);
-        if (!response.ok) return;
+        const result = await getUserActivities(userId);
+        console.log('[Calendario] getUserActivities result:', result.success, 'count:', result.data?.length);
 
-        const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
           const mapped: LinkedActivity[] = result.data.map((act: any) => {
             let titulo = 'Sem título';
             try {
-              const json = typeof act.id_json === 'string' ? JSON.parse(act.id_json) : act.id_json;
-              titulo = json?.titulo || json?.campos?.title || json?.campos?.titulo || 'Sem título';
+              const raw = act.conteudo || act.id_json;
+              const json = typeof raw === 'string' ? JSON.parse(raw) : raw;
+              titulo = json?.titulo || json?.campos?.title || json?.campos?.titulo || act.titulo || 'Sem título';
             } catch {}
             return {
-              id: act.id,
+              id: act.id || act.codigo_unico,
               tipo: act.tipo || 'desconhecido',
               titulo,
-              createdAt: act.created_at
+              createdAt: act.criado_em || act.created_at
             };
           });
           setUserActivities(mapped);
+          console.log('[Calendario] Atividades mapeadas:', mapped.length);
         }
       } catch (err) {
-        console.error('Erro ao buscar atividades:', err);
+        console.error('[Calendario] Erro ao buscar atividades:', err);
       } finally {
         setIsLoadingActivities(false);
       }
     };
     fetchActivities();
-  }, [isOpen]);
+  }, [isOpen, resolveUserId]);
   const [viewAllEventsDay, setViewAllEventsDay] = useState<number | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPlanningModalOpen, setIsPlanningModalOpen] = useState(false);
