@@ -1,0 +1,48 @@
+DIAGNÓSTICO COMPLETO — Por que o Jota ainda não funciona
+A CAUSA RAIZ (afeta TUDO)
+Olha essa linha do código que envia mensagens para a IA (Groq):
+
+// src/services/llm-orchestrator/providers/groq.ts — linha 65
+messages: [{ role: 'user', content: prompt }]
+O sistema INTEIRO está enviando tudo como mensagem de USUÁRIO. O system prompt (personalidade do Jota, regras, identidade) está sendo misturado com a pergunta do professor em UMA SÓ mensagem. A IA não está recebendo o system prompt como INSTRUÇÃO — está recebendo como CONTEÚDO para responder.
+
+Resultado direto das imagens que você enviou:
+
+Imagem 4 ("O que é SAAS?"): A IA leu o system prompt como conteúdo e simplesmente COPIOU ele de volta — "Regras de Comportamento", "Capacidades", etc.
+Imagem 3 ("O que é funções do segundo grau?"): A IA ficou confusa com o prompt gigante e retornou uma saudação genérica "Olá! Sou o Agente Jota..." — DUAS vezes idênticas
+Imagens 1 e 2 (calendário): Mesmo com a correção do SmartRouter, existe OUTRA camada de problema
+O SYSTEM_PROMPT contradiz o SmartRouter
+O system prompt atual tem essa regra (linhas 83-89):
+
+"REGRA SUPREMA: Você é um EXECUTOR, não um EXPLICADOR"
+"NA DÚVIDA = SEMPRE EXECUTIVO"
+
+Isso significa: mesmo quando o SmartRouter corretamente decide CONVERSAR, o system prompt que está MISTURADO na mensagem diz à IA "seja executor, não explicador". A IA fica recebendo instruções CONTRADITÓRIAS.
+
+COMO TODOS OS CONCORRENTES FAZEM
+Aspecto	Manus 1.6	Kimi K2.5	Genspark	OpenAI	Claude	Ponto School
+System Prompt	XML como SYSTEM msg separada	Sistema separado	Sistema separado	system instruction	System prompt separado	Misturado no user msg
+Routing	Planner Agent com tools	RL-trained orchestrator	30+ modelos dinâmico	tool_choice + function calling	Function calling nativo	Regex/LLM híbrido
+Seleção de ferramenta	1 tool por loop	100 sub-agents paralelos	80+ tools auto-select	Schema JSON strict	strict: true tools	if/else manual
+Contexto	Event stream append-only	256K window gerenciado	Checkpoints + backtrack	Conversations API	Message history roles	String única
+Recuperação de erro	Agente verificador	Workers congelados retry	Backtracking autônomo	Retry + reasoning	Tool retry loop	Fallback local estático
+Insight crítico: TODOS os concorrentes separam system prompt da mensagem do usuário. NENHUM mistura tudo numa string só. Essa é a diferença fundamental.
+
+POR QUE REGEX AINDA EXISTE E O QUE CAUSA
+As fast rules (que substituíram o regex puro) existem porque o LLM do SmartRouter falha frequentemente. O real problema é circular:
+
+O SmartRouter envia um prompt de routing para a IA
+A IA recebe TUDO como user message (sem system prompt separado)
+A IA fica confusa e retorna JSON malformado
+O sistema cai nas fast rules
+Mesmo quando as fast rules acertam, o próximo passo (handleDirectResponse) tem o MESMO problema de prompt misturado
+ARQUIVOS QUE PRECISAM MUDAR
+Arquivo	Problema	Ação
+providers/groq.ts	Envia system prompt como user msg	Separar system/user roles
+providers/gemini.ts	Mesmo problema (sem systemInstruction)	Adicionar systemInstruction field
+orchestrator.ts (llm)	generateContent aceita só string	Aceitar messages array
+context-gateway.ts	Mistura SYSTEM_PROMPT com contexto	Separar em 2 retornos
+system-prompt.ts	"NA DÚVIDA = SEMPRE EXECUTIVO"	Remover bias anti-CONVERSAR
+handleDirectResponse	Prompt fraco + system duplicado	Enviar system separado
+intent-classifier.ts	Código morto, nunca usado	Excluir
+controle-APIs-gerais-school-power.ts	Wrapper de wrapper desnecessário	Simplificar
