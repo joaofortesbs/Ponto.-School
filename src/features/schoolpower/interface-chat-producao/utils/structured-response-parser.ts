@@ -4,7 +4,6 @@ import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/
 export interface CollectedItems {
   activities: ActivitySummaryUI[];
   artifacts: ArtifactData[];
-  compromissoResults?: any[];
 }
 
 function sanitizeResponseText(text: string): string {
@@ -220,12 +219,6 @@ export function parseStructuredResponse(
   for (const artifact of items.artifacts) {
     if (!usedArtifactIds.has(artifact.id)) {
       blocks.push({ type: 'artifact_card', artifact });
-    }
-  }
-
-  if (items.compromissoResults && items.compromissoResults.length > 0) {
-    for (const compromissoResult of items.compromissoResults) {
-      blocks.push({ type: 'compromisso_card', compromissoResult });
     }
   }
 

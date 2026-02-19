@@ -694,7 +694,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 
       const collectedActivities = result.collectedItems?.activities || [];
       const collectedArtifacts = result.collectedItems?.artifacts || [];
-      const collectedCompromissos = result.collectedItems?.compromissoResults || [];
       
       console.error(`
 ╔════════════════════════════════════════════════════════════════════════╗
@@ -702,7 +701,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
 ║════════════════════════════════════════════════════════════════════════║
 ║ Atividades coletadas: ${collectedActivities.length}
 ║ Artifacts coletados: ${collectedArtifacts.length}
-║ Compromissos coletados: ${collectedCompromissos.length}
 ║ Pending artifacts: ${pendingArtifactsRef.current.length}
 ║ Resposta length: ${result.resposta?.length || 0}
 ║ Tem marcadores [[: ${result.resposta?.includes('[[') || false}
@@ -731,7 +729,6 @@ export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: 
       const blocks = parseStructuredResponse(result.resposta, {
         activities: collectedActivities,
         artifacts: uniqueArtifacts,
-        compromissoResults: collectedCompromissos,
       });
 
       console.error(`📦 [ChatLayout] Parsed blocks: ${blocks.length} — types: ${blocks.map(b => b.type).join(', ')}`);

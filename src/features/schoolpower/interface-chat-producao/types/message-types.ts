@@ -56,12 +56,11 @@ export interface PlanCardData {
 }
 
 export interface StructuredResponseBlock {
-  type: 'text' | 'activities_card' | 'artifact_card' | 'single_activity_card' | 'phase_separator' | 'compromisso_card';
+  type: 'text' | 'activities_card' | 'artifact_card' | 'single_activity_card' | 'phase_separator';
   content?: string;
   activities?: ActivitySummaryUI[];
   activity?: ActivitySummaryUI;
   artifact?: any;
-  compromissoResult?: any;
   phaseTitle?: string;
   phaseEmoji?: string;
   phaseDescription?: string;
