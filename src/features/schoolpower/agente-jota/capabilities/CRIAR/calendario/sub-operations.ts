@@ -98,30 +98,6 @@ export async function visualizarEventos(params: {
       narrative: `Encontrados ${events.length} evento(s) no calendário`,
     });
 
-    let formattedMessage: string;
-    if (events.length === 0) {
-      formattedMessage = '## 📅 Calendário\n\nNenhum compromisso encontrado no período selecionado.';
-    } else {
-      const grouped: Record<string, CalendarEvent[]> = {};
-      for (const evt of events) {
-        const dateKey = evt.event_date?.split('T')[0] || 'sem-data';
-        if (!grouped[dateKey]) grouped[dateKey] = [];
-        grouped[dateKey].push(evt);
-      }
-
-      const sections = Object.entries(grouped).map(([dateKey, evts]) => {
-        const dateLabel = formatDateForDisplay(dateKey);
-        const items = evts.map(evt => {
-          const timeStr = evt.is_all_day ? 'Dia todo' : `${evt.start_time || ''}${evt.end_time ? ' - ' + evt.end_time : ''}`;
-          const labelsStr = Array.isArray(evt.labels) && evt.labels.length > 0 ? ` · ${evt.labels.join(', ')}` : '';
-          return `- **${evt.title}** — ${timeStr}${labelsStr}`;
-        });
-        return `### ${dateLabel}\n${items.join('\n')}`;
-      });
-
-      formattedMessage = `## 📅 Seus Compromissos\n\n**${events.length}** evento(s) encontrado(s)\n\n${sections.join('\n\n')}`;
-    }
-
     return {
       success: true,
       operation: 'visualizar_eventos',
@@ -131,7 +107,9 @@ export async function visualizarEventos(params: {
         events_summary: eventsSummary,
         period: date_from && date_to ? { from: date_from, to: date_to } : { month, year },
       },
-      message: formattedMessage,
+      message: events.length > 0
+        ? `📅 ${events.length} compromisso(s) encontrado(s):\n${eventsSummary.map((s, i) => `  ${i + 1}. ${s}`).join('\n')}`
+        : '📅 Nenhum compromisso encontrado no período.',
       debug_entries: debug,
     };
   } catch (error) {
@@ -179,23 +157,16 @@ export async function analisarDisponibilidade(params: {
       narrative: `${summary.total_free_weekdays} dia(s) livre(s), ${summary.total_busy_days} dia(s) ocupado(s), ${summary.total_events} evento(s) total`,
     });
 
-    const fromDisplay = formatDateForDisplay(date_from);
-    const toDisplay = formatDateForDisplay(date_to);
-
-    const availabilityMessage = `## 📊 Análise de Disponibilidade\n\n` +
-      `**Período:** ${fromDisplay} → ${toDisplay}\n\n` +
-      `| | Quantidade |\n|---|---|\n` +
-      `| **Dias livres** | ${summary.total_free_weekdays} |\n` +
-      `| **Dias ocupados** | ${summary.total_busy_days} |\n` +
-      `| **Total de eventos** | ${summary.total_events} |\n\n` +
-      (freeDaysList.length > 0 ? `### 🟢 Dias Livres\n${freeDaysList.map((d: string) => `- ${d}`).join('\n')}\n\n` : '') +
-      (busyDaysList.length > 0 ? `### 🔴 Dias Ocupados\n${busyDaysList.map((d: string) => `- ${d}`).join('\n')}` : '');
-
     return {
       success: true,
       operation: 'analisar_disponibilidade',
       data: result.data,
-      message: availabilityMessage,
+      message: `📊 Análise de disponibilidade (${date_from} a ${date_to}):\n` +
+        `  Dias úteis livres: ${summary.total_free_weekdays}\n` +
+        `  Dias ocupados: ${summary.total_busy_days}\n` +
+        `  Total de eventos: ${summary.total_events}\n` +
+        (freeDaysList.length > 0 ? `\n  🟢 Dias livres:\n${freeDaysList.map((d: string) => `    - ${d}`).join('\n')}` : '') +
+        (busyDaysList.length > 0 ? `\n  🔴 Dias ocupados:\n${busyDaysList.map((d: string) => `    - ${d}`).join('\n')}` : ''),
       debug_entries: debug,
     };
   } catch (error) {
@@ -251,22 +222,11 @@ export async function editarEvento(params: {
       narrative: `Evento "${result.data.title}" atualizado com sucesso`,
     });
 
-    const editedEvt = result.data;
-    const dateDisplay = editedEvt.event_date ? formatDateForDisplay(editedEvt.event_date.split('T')[0]) : '';
-    const timeStr = editedEvt.is_all_day ? 'Dia todo' : `${editedEvt.start_time || ''}${editedEvt.end_time ? ' - ' + editedEvt.end_time : ''}`;
-
-    const editMessage = `## ✏️ Compromisso Atualizado\n\n` +
-      `**${editedEvt.title}** foi editado com sucesso!\n\n` +
-      `- **Data:** ${dateDisplay}\n` +
-      `- **Horário:** ${timeStr}\n` +
-      `- **Campos modificados:** ${changeFields.join(', ')}\n\n` +
-      `Calendário atualizado!`;
-
     return {
       success: true,
       operation: 'editar_evento',
       data: result.data,
-      message: editMessage,
+      message: `✏️ Compromisso "${result.data.title}" atualizado com sucesso! Campos modificados: ${changeFields.join(', ')}`,
       debug_entries: debug,
     };
   } catch (error) {
@@ -307,13 +267,11 @@ export async function excluirEvento(params: {
       narrative: `Evento excluído com sucesso`,
     });
 
-    const deleteMessage = `## 🗑️ Compromisso Excluído\n\nO compromisso foi **removido** do seu calendário com sucesso.\n\nCalendário atualizado!`;
-
     return {
       success: true,
       operation: 'excluir_evento',
       data: { deleted_id: event_id },
-      message: deleteMessage,
+      message: `🗑️ Compromisso excluído com sucesso do calendário!`,
       debug_entries: debug,
     };
   } catch (error) {
@@ -342,28 +300,11 @@ export async function criarEventos(params: Record<string, any>): Promise<SubOper
       narrative: result.message,
     });
 
-    let createMessage: string;
-    if (result.success) {
-      const eventos = result.eventos || (result.evento ? [result.evento] : []);
-      if (eventos.length > 0) {
-        const eventItems = eventos.map((evt: any) => {
-          const dateDisplay = evt.event_date ? formatDateForDisplay(evt.event_date.split('T')[0]) : '';
-          const timeStr = evt.is_all_day ? 'Dia todo' : `${evt.start_time || ''}${evt.end_time ? ' - ' + evt.end_time : ''}`;
-          return `- **${evt.title}** — ${dateDisplay} (${timeStr})`;
-        });
-        createMessage = `## ✅ Compromisso${eventos.length > 1 ? 's' : ''} Criado${eventos.length > 1 ? 's' : ''}\n\n${eventItems.join('\n')}\n\nCalendário atualizado!`;
-      } else {
-        createMessage = `## ✅ Compromisso Criado\n\n${result.message}\n\nCalendário atualizado!`;
-      }
-    } else {
-      createMessage = result.message;
-    }
-
     return {
       success: result.success,
       operation: 'criar_eventos',
       data: result,
-      message: createMessage,
+      message: result.message,
       debug_entries: debug,
     };
   } catch (error) {

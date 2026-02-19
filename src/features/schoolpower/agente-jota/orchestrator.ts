@@ -151,19 +151,10 @@ function getOrCreateExecutor(sessionId: string, memory: MemoryManager): AgentExe
   return executors.get(sessionId)!;
 }
 
-export interface DirectCapabilityMeta {
-  capability: string;
-  displayName: string;
-  status: 'concluido' | 'erro';
-  operations?: Array<{ operation: string; success: boolean; summary: string }>;
-  duration?: number;
-}
-
 export interface ProcessPromptResult {
   plan: ExecutionPlan | null;
   initialMessage: string;
   initialResponseData?: InitialResponseResult;
-  directCapabilityMeta?: DirectCapabilityMeta;
 }
 
 export async function processUserPrompt(
@@ -245,15 +236,14 @@ export async function processUserPrompt(
 
       addConversationTurn(sessionId, {
         role: 'assistant',
-        content: directResult.message,
+        content: directResult,
         timestamp: Date.now(),
         metadata: { type: 'capability_direta', capability: routeResult.capability },
       });
 
       return {
         plan: null,
-        initialMessage: directResult.message,
-        directCapabilityMeta: directResult.meta,
+        initialMessage: directResult,
       };
     } catch (capError) {
       console.error(`❌ [Orchestrator] Erro na capability direta ${routeResult.capability}:`, capError);
@@ -447,26 +437,14 @@ function resolveUserIdFallback(userId: string): string {
   return userId;
 }
 
-interface DirectCapabilityResult {
-  message: string;
-  meta: DirectCapabilityMeta;
-}
-
-const CAPABILITY_DISPLAY_NAMES: Record<string, string> = {
-  gerenciar_calendario: 'Gerenciar Calendário',
-  pesquisar_atividades_conta: 'Pesquisar Atividades',
-  pesquisar_atividades_disponiveis: 'Catálogo de Atividades',
-};
-
 async function executeDirectCapability(
   capabilityName: string,
   userPrompt: string,
   sessionId: string,
   userId: string,
   params?: Record<string, any>
-): Promise<DirectCapabilityResult> {
+): Promise<string> {
   const resolvedUserId = resolveUserIdFallback(userId);
-  const startTime = Date.now();
   console.log(`⚡ [Orchestrator] Executando capability direta: ${capabilityName} (userId: ${resolvedUserId.substring(0, 8)}...)`);
 
   const capabilityInput = {
@@ -483,24 +461,13 @@ async function executeDirectCapability(
     previous_results: new Map(),
   };
 
-  const displayName = CAPABILITY_DISPLAY_NAMES[capabilityName] || capabilityName;
-
   if (capabilityName === 'gerenciar_calendario') {
     const { gerenciarCalendarioV2 } = await import('./capabilities/CRIAR/calendario/gerenciar-calendario');
     const result = await gerenciarCalendarioV2(capabilityInput);
-    const duration = Date.now() - startTime;
 
     if (result.success && result.data) {
       const data = result.data as any;
-      const operations = (data.operations || []).map((op: any) => ({
-        operation: op.operation,
-        success: op.success,
-        summary: op.summary,
-      }));
-      return {
-        message: data.resposta_para_professor || data.summary || data.message || JSON.stringify(data),
-        meta: { capability: capabilityName, displayName, status: 'concluido', operations, duration },
-      };
+      return data.resposta_para_professor || data.summary || data.message || JSON.stringify(data);
     }
 
     throw new Error(result.error?.message || 'Falha ao executar gerenciar_calendario');
@@ -509,37 +476,23 @@ async function executeDirectCapability(
   if (capabilityName === 'pesquisar_atividades_conta') {
     const { pesquisarAtividadesConta } = await import('./capabilities/PESQUISAR/implementations/pesquisar-atividades-conta');
     const result = await pesquisarAtividadesConta({ professor_id: resolvedUserId });
-    const duration = Date.now() - startTime;
 
     if (result && result.found && result.activities && result.activities.length > 0) {
       const lines = result.activities.map((a: any, i: number) => `${i + 1}. **${a.titulo || a.nome}** (${a.tipo || 'atividade'})`);
-      return {
-        message: `Encontrei ${result.count} atividade(s) na sua conta:\n\n${lines.join('\n')}\n\nDeseja ver alguma em detalhes ou criar novas atividades?`,
-        meta: { capability: capabilityName, displayName, status: 'concluido', duration },
-      };
+      return `Encontrei ${result.count} atividade(s) na sua conta:\n\n${lines.join('\n')}\n\nDeseja ver alguma em detalhes ou criar novas atividades?`;
     }
-    return {
-      message: 'Você ainda não tem atividades salvas. Quer que eu crie alguma?',
-      meta: { capability: capabilityName, displayName, status: 'concluido', duration },
-    };
+    return 'Você ainda não tem atividades salvas. Quer que eu crie alguma?';
   }
 
   if (capabilityName === 'pesquisar_atividades_disponiveis') {
     const { pesquisarAtividadesDisponiveisV2 } = await import('./capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis');
     const result = await pesquisarAtividadesDisponiveisV2(capabilityInput);
-    const duration = Date.now() - startTime;
 
     if (result.success && result.data) {
       const data = result.data as any;
-      return {
-        message: data.formatted_text || data.summary || 'Aqui estão os tipos de atividades disponíveis na plataforma.',
-        meta: { capability: capabilityName, displayName, status: 'concluido', duration },
-      };
+      return data.formatted_text || data.summary || 'Aqui estão os tipos de atividades disponíveis na plataforma.';
     }
-    return {
-      message: 'Desculpe, não consegui buscar o catálogo de atividades no momento.',
-      meta: { capability: capabilityName, displayName, status: 'erro', duration },
-    };
+    return 'Desculpe, não consegui buscar o catálogo de atividades no momento.';
   }
 
   throw new Error(`Capability direta não suportada: ${capabilityName}`);

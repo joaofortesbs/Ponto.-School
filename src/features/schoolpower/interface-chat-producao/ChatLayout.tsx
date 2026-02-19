@@ -16,7 +16,7 @@ import { ActivityViewModal } from '../construction/ActivityViewModal';
 import { ContextModal } from './ContextModal';
 import { useChatState } from './state/chatState';
 import { processUserPrompt, executeAgentPlan } from '../agente-jota/orchestrator';
-import type { ExecuteAgentPlanResult, DirectCapabilityMeta } from '../agente-jota/orchestrator';
+import type { ExecuteAgentPlanResult } from '../agente-jota/orchestrator';
 import { generateSessionId } from '../agente-jota/memory-manager';
 import type { ArtifactData } from '../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 import { parseStructuredResponse } from './utils/structured-response-parser';
@@ -463,7 +463,7 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
     setLoading(true);
 
     try {
-      const { plan, initialMessage: aiMessage, directCapabilityMeta } = await processUserPrompt(
+      const { plan, initialMessage: aiMessage } = await processUserPrompt(
         userInput,
         sessionId,
         userId,
@@ -471,43 +471,6 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
       );
 
       setLoading(false);
-
-      if (directCapabilityMeta) {
-        const capOps = (directCapabilityMeta.operations || []).map((op, idx) => ({
-          id: `cap-direct-${idx}-${Date.now()}`,
-          nome: op.operation,
-          displayName: op.summary || op.operation,
-          status: op.success ? 'concluido' as const : 'erro' as const,
-        }));
-
-        if (capOps.length === 0) {
-          capOps.push({
-            id: `cap-direct-0-${Date.now()}`,
-            nome: directCapabilityMeta.capability,
-            displayName: directCapabilityMeta.displayName,
-            status: directCapabilityMeta.status === 'concluido' ? 'concluido' as const : 'erro' as const,
-          });
-        }
-
-        const overallStatus = directCapabilityMeta.status === 'concluido' ? 'concluido' as const : 'erro' as const;
-        const etapaStatus = capOps.some(c => c.status === 'erro') ? 'concluido' as const : 'concluido' as const;
-
-        addDevModeCard({
-          plano: { objetivo: directCapabilityMeta.displayName, etapas: [] },
-          status: overallStatus,
-          etapaAtual: 0,
-          etapas: [{
-            ordem: 0,
-            titulo: directCapabilityMeta.displayName,
-            descricao: `Execução direta: ${directCapabilityMeta.displayName}`,
-            status: etapaStatus,
-            capabilities: capOps,
-          }],
-        });
-
-        console.log(`✅ [ChatLayout] DevModeCard criado para capability direta: ${directCapabilityMeta.capability}`);
-      }
-
       addTextMessage('assistant', aiMessage);
 
       if (plan) {
