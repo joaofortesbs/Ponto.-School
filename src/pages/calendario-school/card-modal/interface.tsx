@@ -858,7 +858,7 @@ const CalendarioSchoolPanel: React.FC<CalendarioSchoolPanelProps> = ({
                         ? 'linear-gradient(135deg, #FF6B00 0%, #FF8533 100%)'
                         : dayData.isToday 
                           ? 'rgba(255, 107, 0, 0.15)'
-                          : 'rgba(26, 43, 60, 0.5)',
+                          : '#0c1334',
                       border: dayData.isToday && !isSelected
                         ? '2px solid rgba(255, 107, 0, 0.5)'
                         : dayData.isCurrentMonth 
