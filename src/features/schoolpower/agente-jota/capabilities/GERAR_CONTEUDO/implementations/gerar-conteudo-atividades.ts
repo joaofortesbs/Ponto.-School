@@ -44,6 +44,10 @@ interface GerarConteudoParams {
   session_id: string;
   conversation_context: string;
   user_objective: string;
+  tema_limpo?: string;
+  temas_extraidos?: string[];
+  disciplina_extraida?: string;
+  turma_extraida?: string;
   activities_to_fill?: ChosenActivity[];
   on_progress?: (update: ProgressUpdate) => void;
 }
@@ -163,41 +167,62 @@ function generateThemeFromObjective(objective: string, subject: string): string 
     return defaultThemes[subject] || 'Tema a ser definido';
   }
   
-  let theme = objective
-    .replace(/^(preciso|quero|gostaria de|criar|fazer|desenvolver|crie|gere|monte|elabore|prepare)\s+/gi, '')
+  let cleaned = objective;
+  
+  cleaned = cleaned
+    .replace(/[.,;!]\s*(?:considere|lembre|use|utilize|tenha|aplique|adote|faça|foque|priorize|inclua)\s+.*/gi, '')
+    .replace(/[.,;!]\s*(?:a abordagem|abordagem|o método|o foco|a metodologia)\s+.*/gi, '')
+    .replace(/[.,;!]\s*(?:ao finalizar|no final|depois|após|em seguida|por favor)\s+.*/gi, '')
+    .replace(/[.,;!]\s*(?:organize|coloque|coloca|agende|marque)\s+.*(?:calendário|calendario|agenda)\s*.*/gi, '')
+    .replace(/\d+\s*aulas?\s*(?:disponíveis|por semana|semanais|na semana)?/gi, '')
+    .replace(/(?:considere\s+que\s+)?tenho\s+\d+\s*aulas?/gi, '')
+    .replace(/(?:use|utilize|com)\s+(?:uma?\s+)?abordagem\s+(?:focada?\s+(?:em|no|na)\s+)?[\w\sãõéêíóúâô]+/gi, '')
+    .replace(/turma\s+\w+/gi, '')
+    .replace(/para\s+(?:a\s+)?turma\s+\w+/gi, '')
+    .replace(/\d+[º°ª]\s*(?:ano|série|serie)/gi, '')
+    .replace(/ensino\s+(?:fundamental|médio|medio)/gi, '')
+    .trim();
+  
+  const sobreMatch = cleaned.match(/(?:sobre|de|tema[s]?\s*(?::|é|são)?)\s+([^.,;!]+?)(?:\s+(?:para|com|dentro|que|considere|organize|ao finalizar|use|utilize|lembre|tenho|turma)\b|[.,;!]|$)/i);
+  if (sobreMatch && sobreMatch[1] && sobreMatch[1].trim().length >= 3) {
+    let theme = sobreMatch[1].trim();
+    theme = theme.replace(/\s+(para|com|que|dentro|ao|no|na)\s*$/i, '').trim();
+    if (theme.length >= 3 && theme.length <= 120) {
+      console.log(`🎯 [generateThemeFromObjective] Tema extraído via "sobre/de": "${theme}"`);
+      return theme.charAt(0).toUpperCase() + theme.slice(1);
+    }
+  }
+  
+  let theme = cleaned
+    .replace(/^(preciso|quero|gostaria de|criar|fazer|desenvolver|crie|gere|monte|elabore|prepare|planeje)\s+/gi, '')
     .replace(/^(algumas?|alguns?|as|os|a|o|um|uma|uns|umas)\s+/gi, '')
-    .replace(/^(atividades?|exercícios?|plano|planos|aulas?)\s+(de|sobre|para|com)\s+/gi, '')
+    .replace(/^(atividades?|exercícios?|plano|planos|aulas?|materiais?|conteúdos?)\s+(de|sobre|para|com)\s+/gi, '')
     .replace(/^próximas?\s+atividades?\s+(de|sobre|para)\s+/gi, '')
     .replace(/^(sobre|para|com|de)\s+/gi, '')
     .replace(/^(como|o que é|quais são|quando|onde)\s+/gi, '')
     .trim();
   
-  const MAX_THEME_LENGTH = 50;
+  const MAX_THEME_LENGTH = 80;
   if (theme.length > MAX_THEME_LENGTH) {
-    const sobreMatch = theme.match(/sobre\s+(.+?)(?:\s+(?:dentro|para|com|que|e)\s|$)/i);
-    if (sobreMatch && sobreMatch[1]) {
-      theme = sobreMatch[1].trim();
-    } else {
-      const words = theme.split(/\s+/);
-      const keyWords: string[] = [];
-      let charCount = 0;
+    const words = theme.split(/\s+/);
+    const keyWords: string[] = [];
+    let charCount = 0;
+    
+    for (const word of words) {
+      const skipWords = ['de', 'da', 'do', 'das', 'dos', 'em', 'na', 'no', 'nas', 'nos', 
+                        'para', 'por', 'com', 'sem', 'sob', 'sobre', 'entre', 'até',
+                        'que', 'como', 'quando', 'onde', 'quais', 'qual', 'dentro'];
+      if (skipWords.includes(word.toLowerCase()) && keyWords.length === 0) continue;
       
-      for (const word of words) {
-        const skipWords = ['de', 'da', 'do', 'das', 'dos', 'em', 'na', 'no', 'nas', 'nos', 
-                          'para', 'por', 'com', 'sem', 'sob', 'sobre', 'entre', 'até',
-                          'que', 'como', 'quando', 'onde', 'quais', 'qual', 'dentro'];
-        if (skipWords.includes(word.toLowerCase()) && keyWords.length === 0) continue;
-        
-        if (charCount + word.length + 1 <= MAX_THEME_LENGTH) {
-          keyWords.push(word);
-          charCount += word.length + 1;
-        } else {
-          break;
-        }
+      if (charCount + word.length + 1 <= MAX_THEME_LENGTH) {
+        keyWords.push(word);
+        charCount += word.length + 1;
+      } else {
+        break;
       }
-      
-      theme = keyWords.join(' ');
     }
+    
+    theme = keyWords.join(' ');
   }
   
   theme = theme.replace(/\.\.\.$/, '').replace(/\.$/, '').trim();
@@ -217,6 +242,8 @@ function generateThemeFromObjective(objective: string, subject: string): string 
   }
   
   theme = theme.charAt(0).toUpperCase() + theme.slice(1);
+  
+  console.log(`🎯 [generateThemeFromObjective] Tema extraído (fallback): "${theme}" — de objetivo: "${objective.substring(0, 60)}..."`);
   
   return theme;
 }
@@ -620,7 +647,10 @@ async function generateContentForActivity(
   capabilityId?: string,
   capabilityName?: string,
   batchIndex?: number,
-  batchTotal?: number
+  batchTotal?: number,
+  temaLimpo?: string,
+  disciplinaExtraida?: string,
+  turmaExtraida?: string
 ): Promise<GeneratedFieldsResult> {
   const correlationId = generateCorrelationId();
   const activityStartTime = Date.now();
@@ -664,16 +694,21 @@ async function generateContentForActivity(
     try {
       const generator = new ListaExerciciosGenerator();
       
-      // MELHORIA: Inferir valores padrão quando não especificados (mesma abordagem das outras atividades)
       const inferredSubject = activity.campos_preenchidos?.subject || 
                               activity.campos_preenchidos?.disciplina || 
                               activity.materia || 
+                              disciplinaExtraida ||
                               inferSubjectFromObjective(userObjective) || 
                               'Matemática';
       
       const inferredTheme = activity.campos_preenchidos?.theme || 
                             activity.campos_preenchidos?.tema || 
+                            temaLimpo ||
                             generateThemeFromObjective(userObjective, inferredSubject);
+      
+      if (temaLimpo) {
+        console.log(`🎯 [GerarConteudo] LISTA-EXERCICIOS usando tema limpo do plano: "${temaLimpo}"`);
+      }
       
       const inferredSchoolYear = activity.campos_preenchidos?.schoolYear || 
                                   activity.campos_preenchidos?.anoEscolaridade || 
@@ -862,16 +897,21 @@ async function generateContentForActivity(
     try {
       const generator = new QuizInterativoGenerator();
       
-      // MELHORIA: Inferir valores padrão quando não especificados (mesma abordagem das versões texto)
       const inferredSubject = activity.campos_preenchidos?.subject || 
                               activity.campos_preenchidos?.disciplina || 
                               activity.materia || 
+                              disciplinaExtraida ||
                               inferSubjectFromObjective(userObjective) || 
                               'Matemática';
       
       const inferredTheme = activity.campos_preenchidos?.theme || 
                             activity.campos_preenchidos?.tema || 
+                            temaLimpo ||
                             generateThemeFromObjective(userObjective, inferredSubject);
+      
+      if (temaLimpo) {
+        console.log(`🎯 [GerarConteudo] QUIZ usando tema limpo do plano: "${temaLimpo}"`);
+      }
       
       const inferredSchoolYear = activity.campos_preenchidos?.schoolYear || 
                                   activity.campos_preenchidos?.anoEscolaridade || 
@@ -1057,16 +1097,21 @@ async function generateContentForActivity(
     try {
       const generator = new FlashCardsGenerator();
       
-      // MELHORIA: Inferir valores padrão quando não especificados
       const inferredSubject = activity.campos_preenchidos?.subject || 
                               activity.campos_preenchidos?.disciplina || 
                               activity.materia || 
+                              disciplinaExtraida ||
                               inferSubjectFromObjective(userObjective) || 
                               'Português';
       
       const inferredTheme = activity.campos_preenchidos?.theme || 
                             activity.campos_preenchidos?.tema || 
+                            temaLimpo ||
                             generateThemeFromObjective(userObjective, inferredSubject);
+      
+      if (temaLimpo) {
+        console.log(`🎯 [GerarConteudo] FLASH-CARDS usando tema limpo do plano: "${temaLimpo}"`);
+      }
       
       const inferredSchoolYear = activity.campos_preenchidos?.schoolYear || 
                                   activity.campos_preenchidos?.anoEscolaridade || 
@@ -1227,20 +1272,26 @@ async function generateContentForActivity(
     );
     
     try {
-      // MELHORIA: Inferir valores padrão quando não especificados
       const inferredSubject = activity.campos_preenchidos?.subject || 
                               activity.campos_preenchidos?.disciplina || 
                               activity.materia || 
+                              disciplinaExtraida ||
                               inferSubjectFromObjective(userObjective) || 
                               'Matemática';
       
       const inferredSchoolYear = activity.campos_preenchidos?.schoolYear || 
                                   activity.campos_preenchidos?.serie || 
+                                  turmaExtraida ||
                                   '7º Ano - Ensino Fundamental';
       
       const inferredTheme = activity.campos_preenchidos?.theme || 
                             activity.campos_preenchidos?.tema || 
+                            temaLimpo ||
                             generateThemeFromObjective(userObjective, inferredSubject);
+      
+      if (temaLimpo) {
+        console.log(`🎯 [GerarConteudo] GENÉRICO usando tema limpo do plano: "${temaLimpo}"`);
+      }
       
       const inferredObjectives = activity.campos_preenchidos?.objectives || 
                                   activity.campos_preenchidos?.objetivos || 
@@ -1935,7 +1986,10 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
       CAPABILITY_ID,
       CAPABILITY_NAME,
       i,
-      totalActivities
+      totalActivities,
+      params.tema_limpo,
+      params.disciplina_extraida,
+      params.turma_extraida
     );
 
     // A função generateContentForActivity já registra debug entries detalhadas
@@ -2424,14 +2478,22 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
         { model_cascade: ['llama3.3-70b', 'llama3.1-8b', 'gemini-1.5-flash'] }
       );
       
-      // Gerar conteúdo usando a função existente
+      const v2TemaLimpo = input.context.tema_limpo || '';
+      const v2DisciplinaExtraida = input.context.disciplina_extraida || '';
+      const v2TurmaExtraida = input.context.turma_extraida || '';
+      
       const result = await generateContentForActivity(
         activity,
         conversationContext,
         userObjective,
         undefined, // on_progress
         CAPABILITY_ID,
-        'Gerando conteúdo V2'
+        'Gerando conteúdo V2',
+        i,
+        chosenActivities.length,
+        v2TemaLimpo,
+        v2DisciplinaExtraida,
+        v2TurmaExtraida
       );
       
       results.push(result);

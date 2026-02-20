@@ -24,6 +24,9 @@ export interface MessageAttachment {
 export interface ExecutionPlan {
   planId: string;
   objetivo: string;
+  temas_extraidos?: string[];
+  disciplina_extraida?: string;
+  turma_extraida?: string;
   etapas: ExecutionStep[];
   status: 'aguardando_aprovacao' | 'em_execucao' | 'concluido' | 'erro';
   createdAt: number;

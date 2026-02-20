@@ -82,9 +82,20 @@ export async function createExecutionPlan(
     );
     const planAlreadyHasSalvarBd = allCapabilityNames.includes('salvar_atividades_bd');
 
+    const temasExtraidos = validatedPlan.intencao_desconstruida?.temas || [];
+    const disciplinaExtraida = inferDisciplinaFromTemas(temasExtraidos, userPrompt);
+    const turmaExtraida = validatedPlan.intencao_desconstruida?.quem || '';
+
+    console.log(`🎯 [Planner] Temas extraídos para pipeline: [${temasExtraidos.join(', ')}]`);
+    console.log(`🎯 [Planner] Disciplina inferida: ${disciplinaExtraida}`);
+    console.log(`🎯 [Planner] Turma extraída: ${turmaExtraida}`);
+
     const plan: ExecutionPlan = {
       planId: `plan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       objetivo: validatedPlan.objetivo,
+      temas_extraidos: temasExtraidos,
+      disciplina_extraida: disciplinaExtraida,
+      turma_extraida: turmaExtraida,
       etapas: validatedPlan.etapas.map((etapa: ParsedEtapa, idx: number) => {
         const validatedCapabilities = (etapa.capabilities || []).map((cap: ParsedCapability, capIdx: number) => {
           const capValidation = validateCapabilityName(cap.nome);
@@ -799,6 +810,29 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
     status: 'em_execucao',
     createdAt: timestamp,
   };
+}
+
+function inferDisciplinaFromTemas(temas: string[], userPrompt: string): string {
+  const allText = [...temas, userPrompt].join(' ').toLowerCase();
+  
+  const subjectPatterns: Record<string, string[]> = {
+    'Matemática': ['matemática', 'matemat', 'cálculo', 'álgebra', 'geometria', 'equação', 'fração', 'número', 'função', 'funções', 'porcentagem', 'trigonometria'],
+    'Língua Portuguesa': ['português', 'redação', 'gramática', 'texto', 'leitura', 'escrita', 'literatura', 'ortografia', 'verbo', 'substantivo', 'crônica'],
+    'Ciências': ['ciência', 'biologia', 'física', 'química', 'natureza', 'experimento', 'célula', 'átomo', 'energia', 'fotossíntese', 'ecossistema'],
+    'História': ['história', 'histórico', 'revolução', 'guerra', 'período', 'civilização', 'século', 'era', 'independência'],
+    'Geografia': ['geografia', 'geográfico', 'mapa', 'país', 'continente', 'clima', 'relevo', 'população', 'planeta', 'bioma'],
+    'Arte': ['arte', 'artístico', 'pintura', 'música', 'desenho', 'escultura', 'teatro'],
+    'Educação Física': ['educação física', 'esporte', 'exercício físico', 'movimento corporal'],
+    'Inglês': ['inglês', 'english', 'vocabulary', 'grammar'],
+  };
+  
+  for (const [subject, patterns] of Object.entries(subjectPatterns)) {
+    if (patterns.some(p => allText.includes(p))) {
+      return subject;
+    }
+  }
+  
+  return '';
 }
 
 export function generatePlanMessage(plan: ExecutionPlan): string {

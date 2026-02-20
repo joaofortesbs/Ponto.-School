@@ -565,16 +565,28 @@ export async function decidirAtividadesCriarV2(
 
     // 2. EXTRAIR CONTEXTO
     const userObjective = input.context.user_objective || input.context.objetivo || 'Criar atividades educacionais';
+    const temaLimpo = input.context.tema_limpo || '';
+    const disciplinaExtraida = input.context.disciplina_extraida || '';
+    const turmaExtraida = input.context.turma_extraida || '';
     const maxActivities = input.context.max_activities || DEFAULT_MAX_ACTIVITIES;
     const userContext = input.context.user_context || {};
 
+    if (temaLimpo) {
+      console.log(`🎯 [decidirAtividadesCriarV2] Tema limpo disponível: "${temaLimpo}"`);
+      console.log(`🎯 [decidirAtividadesCriarV2] Disciplina extraída: "${disciplinaExtraida}"`);
+    }
+
     // 3. CONSTRUIR CONTEXTO DE DECISÃO
+    const objectiveForDecision = temaLimpo 
+      ? `${userObjective}\n\n🎯 TEMA PRINCIPAL EXTRAÍDO: ${temaLimpo}` 
+      : userObjective;
+
     const decisionContext: DecisionContext = {
-      user_objective: userObjective,
+      user_objective: objectiveForDecision,
       user_context: {
-        disciplina: userContext.disciplina || input.context.disciplina,
-        turma: userContext.turma,
-        objetivo_pedagogico: userContext.objetivo_pedagogico || userObjective
+        disciplina: userContext.disciplina || input.context.disciplina || disciplinaExtraida,
+        turma: userContext.turma || (turmaExtraida ? { nome: turmaExtraida, nivel: '' } : undefined),
+        objetivo_pedagogico: temaLimpo || userContext.objetivo_pedagogico || userObjective
       },
       available_activities: catalog,
       previous_activities: input.context.previous_activities || [],

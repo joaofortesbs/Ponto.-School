@@ -71,6 +71,9 @@ export class AgentExecutor {
   private conversationContext: string = '';
   private currentEtapaCapabilities: ResultadoCapability[] = [];
   private currentPlanObjective: string = '';
+  private currentPlanTemas: string[] = [];
+  private currentPlanDisciplina: string = '';
+  private currentPlanTurma: string = '';
 
   constructor(sessionId: string, memory: MemoryManager) {
     this.sessionId = sessionId;
@@ -115,6 +118,9 @@ export class AgentExecutor {
     this.currentEtapaCapabilities = [];
     this.conversationContext = '';
     this.currentPlanObjective = '';
+    this.currentPlanTemas = [];
+    this.currentPlanDisciplina = '';
+    this.currentPlanTurma = '';
     this.onProgress = null;
     console.log('✅ [Executor] Estado limpo para nova execução');
   }
@@ -370,6 +376,13 @@ export class AgentExecutor {
     `);
 
     this.currentPlanObjective = plan.objetivo || '';
+    this.currentPlanTemas = plan.temas_extraidos || [];
+    this.currentPlanDisciplina = plan.disciplina_extraida || '';
+    this.currentPlanTurma = plan.turma_extraida || '';
+    
+    console.log(`🎯 [Executor] Temas do plano: [${this.currentPlanTemas.join(', ')}]`);
+    console.log(`🎯 [Executor] Disciplina do plano: ${this.currentPlanDisciplina}`);
+    console.log(`🎯 [Executor] Turma do plano: ${this.currentPlanTurma}`);
     
     this.capabilityResultsMap.clear();
     console.log('🧹 [Executor] Mapa de resultados limpo para nova execução');
@@ -767,6 +780,9 @@ export class AgentExecutor {
             const authenticatedUserId = this.getAuthenticatedUserId();
             
             const userPromptFromPlan = this.currentPlanObjective || '';
+            const temaLimpo = this.currentPlanTemas.length > 0 
+              ? this.currentPlanTemas.join(', ') 
+              : '';
             
             const capabilityInput: CapabilityInput = {
               capability_id: capName,
@@ -778,10 +794,18 @@ export class AgentExecutor {
                 conversation_context: this.conversationContext || capability.parametros?.conversation_context || capability.parametros?.contexto || '',
                 user_objective: capability.parametros?.user_objective || capability.parametros?.contexto || userPromptFromPlan || '',
                 user_prompt: capability.parametros?.solicitacao || capability.parametros?.contexto || userPromptFromPlan || '',
-                session_id: this.sessionId
+                session_id: this.sessionId,
+                tema_limpo: temaLimpo,
+                temas_extraidos: this.currentPlanTemas,
+                disciplina_extraida: this.currentPlanDisciplina,
+                turma_extraida: this.currentPlanTurma,
               },
               previous_results: this.capabilityResultsMap
             };
+            
+            if (temaLimpo) {
+              console.log(`🎯 [Executor] Tema limpo injetado para ${capName}: "${temaLimpo}"`);
+            }
             
             console.error(`🔐 [Executor] user_id para ${capName}: ${authenticatedUserId || 'NÃO AUTENTICADO'}`);
             
@@ -1585,14 +1609,23 @@ Seja específico e forneça dados que ajudem o professor.
         enrichedParams.session_id = this.sessionId;
         enrichedParams.user_objective = decisionResult.estrategia_pedagogica || params.contexto || '';
         enrichedParams.conversation_context = decisionResult.estrategia_pedagogica || '';
+        enrichedParams.tema_limpo = this.currentPlanTemas.length > 0 ? this.currentPlanTemas.join(', ') : '';
+        enrichedParams.temas_extraidos = this.currentPlanTemas;
+        enrichedParams.disciplina_extraida = this.currentPlanDisciplina;
+        enrichedParams.turma_extraida = this.currentPlanTurma;
         
         console.error(`   📦 Atividades: ${enrichedParams.activities_to_fill.map((a: any) => a.titulo).join(', ')}`);
+        console.error(`   🎯 Tema limpo para conteúdo: "${enrichedParams.tema_limpo}"`);
       } else if (storeActivities.length > 0) {
         console.error(`⚠️ [Executor] Fallback: Using ${storeActivities.length} activities from ChosenActivitiesStore`);
         enrichedParams.activities_to_fill = storeActivities;
         enrichedParams.session_id = storeState.sessionId || this.sessionId;
         enrichedParams.user_objective = storeState.estrategiaPedagogica || params.contexto || '';
         enrichedParams.conversation_context = storeState.estrategiaPedagogica || '';
+        enrichedParams.tema_limpo = this.currentPlanTemas.length > 0 ? this.currentPlanTemas.join(', ') : '';
+        enrichedParams.temas_extraidos = this.currentPlanTemas;
+        enrichedParams.disciplina_extraida = this.currentPlanDisciplina;
+        enrichedParams.turma_extraida = this.currentPlanTurma;
       } else {
         console.error(`❌ [Executor] CRITICAL: No activities found from ANY source!`);
         console.error(`   capabilityResultsMap contents:`);
