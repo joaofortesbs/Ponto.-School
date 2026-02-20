@@ -18,50 +18,29 @@ PEDIDO DO USUÁRIO:
 "{user_input}"
 
 SUA TAREFA:
-Gere uma RESPOSTA INICIAL executiva e direta seguindo o "Protocolo de Intenção" com 3 pilares:
-1. VALIDAÇÃO: Confirme o tema, turma e dados específicos do pedido (mostra que você entendeu)
-2. MAPA DE EXECUÇÃO: Diga exatamente o que vai entregar (gera antecipação)
+Gere uma RESPOSTA INICIAL executiva e direta com 3 pilares:
+1. VALIDAÇÃO: Confirme o TEMA EXATO, turma e dados ESPECÍFICOS que o professor mencionou
+2. MAPA DE EXECUÇÃO: Diga exatamente o que vai entregar
 3. INÍCIO IMEDIATO: Não peça permissão, apenas comece a trabalhar
 
-REGRAS:
+REGRAS CRÍTICAS:
+- EXTRAIA os dados REAIS do pedido do professor (tema, turma, série, disciplina, quantidade)
+- Use EXATAMENTE o tema que o professor pediu — NUNCA substitua por outro tema
 - Seja direto e executivo (2-4 frases no corpo principal)
-- Use tom confiante e profissional — como um assistente que já está resolvendo
-- Mencione elementos ESPECÍFICOS do pedido do usuário
+- Use tom confiante e profissional
 - NÃO use frases genéricas como "Vou te ajudar com isso"
 - NÃO liste etapas técnicas ou "plano de ação"
-- NÃO faça perguntas na primeira mensagem — assuma padrões e diga que o professor pode ajustar depois
-- NÃO use callouts (> 💡, > ✅, > 📌) — responda em TEXTO PURO corrido
-- NÃO use separadores (---)
-- NÃO use blockquotes (>) de nenhum tipo
+- NÃO faça perguntas na primeira mensagem — assuma padrões
+- NÃO use callouts (> 💡, > ✅, > 📌), separadores (---) ou blockquotes (>)
 - Finalize com uma frase curta que demonstre que você JÁ está trabalhando
 
 FORMATAÇÃO PERMITIDA (APENAS estas):
-- **Negrito** em nomes de atividades, temas, séries, quantidades e dados importantes (ex: **5 atividades**, **Ecossistemas**, **7º ano**)
-- *Itálico* para termos pedagógicos e referências curriculares (ex: *BNCC*, *metodologias ativas*)
+- **Negrito** nos dados específicos do pedido (temas, séries, quantidades, turmas)
+- *Itálico* para termos pedagógicos e referências curriculares
 - Parágrafos curtos (2-4 frases no máximo)
-- PROIBIDO: > (blockquote), > 💡, > ✅, > 📌, ---, listas com marcadores, emojis de início de linha
 
-EXEMPLOS DE RESPOSTAS PARA DIFERENTES TIPOS DE PEDIDO:
-
-Plano de aula:
-- Pedido: "Monte um plano de aula sobre Brasil Colonial para a turma 1 ano D, 7 aulas"
-  Resposta: "Entendido, Professor! Vou estruturar um **plano de aula completo** sobre **Brasil Colonial** para a **turma 1º ano D**, distribuído em **7 aulas** com objetivos alinhados à *BNCC*. Vou incluir atividades de engajamento, metodologia adequada e preparar seu **Dossiê Ponto** com todo o material necessário. Já estou montando sua trilha pedagógica agora."
-
-Criação de atividades:
-- Pedido: "Crie 3 atividades de matemática para 7º ano"
-  Resposta: "Perfeito! Vou criar **3 atividades de matemática** para o **7º ano**, selecionando os melhores formatos para engajar seus alunos na *faixa etária*. Assumi um nível intermediário de dificuldade, mas você pode ajustar depois. Já estou preparando o conteúdo."
-
-Explicação/Texto:
-- Pedido: "Me explique o que é metodologia ativa"
-  Resposta: "Claro! Vou preparar uma explicação completa sobre **metodologia ativa**, com conceitos, exemplos práticos e dicas de como aplicar em sala de aula. Já estou organizando o conteúdo para você."
-
-Pesquisa:
-- Pedido: "Quais atividades eu já criei?"
-  Resposta: "Vou consultar suas **atividades anteriores** agora mesmo! Em instantes você terá uma lista completa do que já foi criado."
-
-Semana completa:
-- Pedido: "Salve minha semana de Funções do 2º Grau para o 1º C"
-  Resposta: "Entendido, Professor! Vou assumir o controle e estruturar sua semana de **Funções do 2º Grau** para a **Turma 1º C**. Vou organizar um roteiro pedagógico alinhado à *BNCC*, gerar atividades de engajamento e preparar seu **Dossiê Ponto** de fechamento com rubricas de avaliação. Já estou renderizando sua trilha agora."
+PADRÃO DE RESPOSTA (adapte ao pedido real, NUNCA copie temas de exemplo):
+"Entendido, Professor! Vou [AÇÃO do pedido] sobre **[TEMA EXATO do pedido]** para a **[TURMA/SÉRIE do pedido]**, [detalhes específicos]. Já estou [ação de início]."
 
 RETORNE A RESPOSTA EM TEXTO PURO (apenas negrito e itálico, SEM callouts, SEM blockquotes, SEM separadores).
 `.trim();
@@ -118,10 +97,16 @@ export async function generateInitialResponse(
   contextManager.atualizarEstado('respondendo_inicial');
 
   try {
+    const initialSystemPrompt = INITIAL_RESPONSE_PROMPT;
+    const initialUserMessage = `PEDIDO DO USUÁRIO:\n"${userInput}"\n\nGere a resposta inicial seguindo as instruções do sistema. Use EXATAMENTE o tema e dados do pedido acima.`;
+
     const [responseResult, interpretationResult] = await Promise.all([
       executeWithCascadeFallback(
-        INITIAL_RESPONSE_PROMPT.replace('{user_input}', userInput),
-        { onProgress: (status) => console.log(`📝 [InitialResponse] ${status}`) }
+        initialUserMessage,
+        {
+          onProgress: (status) => console.log(`📝 [InitialResponse] ${status}`),
+          systemPrompt: initialSystemPrompt,
+        }
       ),
       executeWithCascadeFallback(
         INTERPRETATION_PROMPT.replace('{user_input}', userInput),
@@ -196,10 +181,11 @@ export async function generateInitialResponse(
 }
 
 export async function getInitialResponseOnly(userInput: string): Promise<string> {
-  const prompt = INITIAL_RESPONSE_PROMPT.replace('{user_input}', userInput);
+  const userMessage = `PEDIDO DO USUÁRIO:\n"${userInput}"\n\nGere a resposta inicial seguindo as instruções do sistema. Use EXATAMENTE o tema e dados do pedido acima.`;
   
-  const result = await executeWithCascadeFallback(prompt, {
+  const result = await executeWithCascadeFallback(userMessage, {
     onProgress: (status) => console.log(`📝 [InitialResponse] ${status}`),
+    systemPrompt: INITIAL_RESPONSE_PROMPT,
   });
 
   if (result.success && result.data) {

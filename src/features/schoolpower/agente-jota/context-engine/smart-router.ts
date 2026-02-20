@@ -34,18 +34,18 @@ ROTAS:
 
 2. "EXECUTAR" — Criar materiais pedagógicos: atividades, planos de aula, provas, quiz, documentos escolares.
    Exemplos: "crie 5 atividades de matemática", "monte um plano de aula sobre fotossíntese"
-   IMPORTANTE: "compromisso", "evento", "agenda", "calendário" NÃO são materiais pedagógicos!
+   INCLUI pedidos compostos que envolvem criação + calendário (ex: "planeje aulas e organize no calendário")
 
-3. "CAPABILITY_DIRETA" — Ação específica sobre DADOS DO PROFESSOR (não criação de material):
-   - "gerenciar_calendario": calendário, compromissos, eventos, agenda, reuniões, disponibilidade
+3. "CAPABILITY_DIRETA" — Ação ISOLADA sobre dados do professor (sem criação de material):
+   - "gerenciar_calendario": APENAS quando o professor quer consultar, criar, editar ou excluir compromissos SEM criar material pedagógico
    - "pesquisar_atividades_conta": consultar atividades já criadas
    - "pesquisar_atividades_disponiveis": ver catálogo de atividades
 
 REGRA DE OURO:
-- Se menciona "compromisso", "calendário", "agenda", "evento", "reunião", "agendar" → CAPABILITY_DIRETA (gerenciar_calendario)
-- Se menciona "crie/faça/monte" + tema escolar (matemática, ciências, etc.) → EXECUTAR
+- Se menciona "crie/faça/monte/planeje/elabore/prepare" + tema escolar → EXECUTAR (mesmo que mencione calendário)
+- Se APENAS gerencia calendário/agenda sem criar material → CAPABILITY_DIRETA (gerenciar_calendario)
 - Se é pergunta, saudação, agradecimento ou conversa → CONVERSAR
-- "Crie um compromisso" = CAPABILITY_DIRETA (gerenciar_calendario), NÃO é EXECUTAR!
+- Pedidos COMPOSTOS (criar + agendar, planejar + calendário) → EXECUTAR (o planner decompõe internamente)
 
 Responda APENAS JSON:
 {
@@ -80,33 +80,192 @@ function buildSessionContextSummary(sessionId: string, userId: string): string {
   return parts.length > 0 ? parts.join(' · ') : 'Sem contexto.';
 }
 
-function fastRulesClassify(userPrompt: string): SmartRouteResult | null {
+const CREATION_VERBS = /\b(cri[ae]|mont[ae]|ger[ae]|fa[cçz]a|prepar[ae]|elabor[ae]|produz|planej[ae]|estrutur[ae]|organiz[ae]|assum[ae])/i;
+const PEDAGOGICAL_CONTENT = /\b(atividade|plano\s+de\s+aula|prova|quiz|exerc[ií]cio|avalia[cç][aã]o|apostila|roteiro|dossi[eê]|cruzadinha|ca[cç]a[\s-]palavras|sequ[eê]ncia\s+did[aá]tica|aula|aulas|li[cç][aã]o|material|conte[uú]do)/i;
+const SCHOOL_SUBJECT = /\b(matem[aá]tica|portugu[eê]s|ci[eê]ncias|hist[oó]ria|geografia|ingl[eê]s|educa[cç][aã]o\s+f[ií]sica|artes?|biologia|qu[ií]mica|f[ií]sica|sociologia|filosofia|BNCC|fun[cç][oõ]es|fra[cç][oõ]es|equa[cç][oõ]es|geometria|[aá]lgebra|gram[aá]tica|reda[cç][aã]o|literatura|ecossistema|fotoss[ií]ntese|segundo\s+grau)/i;
+const GRADE_LEVEL = /\b(\d+[ºªo]?\s*ano|turma|s[eé]rie|fundamental|m[eé]dio|infantil|EJA)\b/i;
+
+const CALENDAR_KEYWORDS = [
+  'calendario', 'compromisso', 'compromissos', 'agenda', 'agendar', 'agende',
+  'evento', 'eventos', 'reuniao', 'reuniões', 'reunioes',
+  'dias livres', 'dia livre', 'disponibilidade', 'disponivel',
+  'meus eventos', 'meu calendario', 'minha agenda',
+  'cancele o evento', 'cancele o compromisso', 'exclua o evento',
+  'edite o evento', 'altere o compromisso', 'mude o horario',
+  'quais compromissos', 'quais eventos', 'o que tenho agendado',
+  'marque uma reuniao', 'marcar reuniao',
+];
+
+const CALENDAR_ONLY_PATTERNS = [
+  /^(agende|agendar|marque|marcar|crie?\s+(um\s+)?compromisso|crie?\s+(um\s+)?evento)/i,
+  /^(cancele|exclua|edite|altere|mude)\s+(o\s+)?(compromisso|evento|hor[aá]rio)/i,
+  /^(quais|mostre?|ver|listar?)\s+(meus\s+)?(compromissos|eventos|agenda)/i,
+  /^(minha\s+agenda|meu\s+calend[aá]rio|o\s+que\s+tenho\s+agendado)/i,
+];
+
+function detectSignals(userPrompt: string) {
   const trimmed = userPrompt.trim().toLowerCase();
-  const normalized = trimmed
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+  const normalized = trimmed.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-  const calendarKeywords = [
-    'calendario', 'compromisso', 'compromissos', 'agenda', 'agendar', 'agende',
-    'evento', 'eventos', 'reuniao', 'reuniões', 'reunioes',
-    'dias livres', 'dia livre', 'disponibilidade', 'disponivel',
-    'meus eventos', 'meu calendario', 'minha agenda',
-    'cancele o evento', 'cancele o compromisso', 'exclua o evento',
-    'edite o evento', 'altere o compromisso', 'mude o horario',
-    'quais compromissos', 'quais eventos', 'o que tenho agendado',
-    'marque uma reuniao', 'marcar reuniao',
-  ];
+  const hasCreationVerb = CREATION_VERBS.test(trimmed);
+  const hasPedagogicalContent = PEDAGOGICAL_CONTENT.test(trimmed);
+  const hasSchoolSubject = SCHOOL_SUBJECT.test(trimmed);
+  const hasGradeLevel = GRADE_LEVEL.test(trimmed);
+  const hasCalendarKeyword = CALENDAR_KEYWORDS.some(kw => normalized.includes(kw));
+  const isCalendarOnly = CALENDAR_ONLY_PATTERNS.some(p => p.test(trimmed));
+  const isLongMessage = trimmed.length > 80;
 
-  const hasCalendarKeyword = calendarKeywords.some(kw => normalized.includes(kw));
+  const executarScore =
+    (hasCreationVerb ? 2 : 0) +
+    (hasPedagogicalContent ? 2 : 0) +
+    (hasSchoolSubject ? 1 : 0) +
+    (hasGradeLevel ? 1 : 0);
 
-  if (hasCalendarKeyword) {
-    console.log(`⚡ [SmartRouter:FastRules] Calendário detectado: "${userPrompt.substring(0, 60)}"`);
+  return {
+    trimmed,
+    normalized,
+    hasCreationVerb,
+    hasPedagogicalContent,
+    hasSchoolSubject,
+    hasGradeLevel,
+    hasCalendarKeyword,
+    isCalendarOnly,
+    isLongMessage,
+    executarScore,
+  };
+}
+
+function fastRulesClassify(userPrompt: string): SmartRouteResult | null {
+  const s = detectSignals(userPrompt);
+
+  const pureGreetings = /^(oi|ol[aá]|bom\s+dia|boa\s+tarde|boa\s+noite|e\s+a[ií]|fala|hey|hello|hi|opa|tudo\s+bem|como\s+vai)[\s!?.]*$/i;
+  if (pureGreetings.test(s.trimmed)) {
     return {
-      route: 'CAPABILITY_DIRETA',
+      route: 'CONVERSAR',
       confidence: 0.95,
-      reasoning: 'Regra rápida: palavra-chave de calendário detectada',
-      capability: 'gerenciar_calendario',
-      capability_params: { user_prompt: userPrompt, user_objective: userPrompt },
+      reasoning: 'Regra rápida: saudação pura',
+      source: 'fast_rules',
+    };
+  }
+
+  const pureThanks = /^(obrigad[oa]|valeu|perfeito|[oó]timo|otimo|legal|bacana|top|show|massa|excelente|maravilh|muito\s+bom|adorei|gostei|ficou\s+[oó]timo)[\s!?.]*$/i;
+  if (pureThanks.test(s.trimmed)) {
+    return {
+      route: 'CONVERSAR',
+      confidence: 0.95,
+      reasoning: 'Regra rápida: agradecimento/feedback',
+      source: 'fast_rules',
+    };
+  }
+
+  const simpleConfirmation = /^(ok|sim|n[aã]o|entendi|certo|t[aá]|claro|pode\s+ser|beleza|bora|vamos)[\s!?.]*$/i;
+  if (simpleConfirmation.test(s.trimmed)) {
+    return {
+      route: 'CONVERSAR',
+      confidence: 0.90,
+      reasoning: 'Regra rápida: confirmação simples',
+      source: 'fast_rules',
+    };
+  }
+
+  const followUpConversation = /^(me\s+explic|explica\s+melhor|pode\s+explicar|o\s+que\s+[eé]|como\s+funciona|me\s+fala\s+(mais\s+)?sobre|conta\s+mais|detalh|aprofund)/i;
+  if (followUpConversation.test(s.trimmed)) {
+    return {
+      route: 'CONVERSAR',
+      confidence: 0.90,
+      reasoning: 'Regra rápida: pedido de explicação/aprofundamento',
+      source: 'fast_rules',
+    };
+  }
+
+  const aboutJota = /o\s+que\s+voc[eê]\s+(pode|sabe|faz|consegue)/i;
+  if (aboutJota.test(s.trimmed)) {
+    return {
+      route: 'CONVERSAR',
+      confidence: 0.90,
+      reasoning: 'Regra rápida: pergunta sobre capacidades do Jota',
+      source: 'fast_rules',
+    };
+  }
+
+  if (s.executarScore >= 3 && s.hasCalendarKeyword) {
+    console.log(`⚡ [SmartRouter:FastRules] Pedido COMPOSTO detectado (EXECUTAR + calendário): "${userPrompt.substring(0, 80)}"`);
+    console.log(`   → executarScore=${s.executarScore}, calendário presente mas NÃO é intent principal`);
+    return {
+      route: 'EXECUTAR',
+      confidence: 0.95,
+      reasoning: 'Regra rápida: pedido composto — criação pedagógica + calendário → EXECUTAR (planner decompõe)',
+      source: 'fast_rules',
+    };
+  }
+
+  if (s.hasCreationVerb && s.hasPedagogicalContent) {
+    return {
+      route: 'EXECUTAR',
+      confidence: 0.92,
+      reasoning: 'Regra rápida: verbo de criação + tipo de material pedagógico',
+      source: 'fast_rules',
+    };
+  }
+
+  if (s.hasCreationVerb && s.hasSchoolSubject && s.hasGradeLevel) {
+    return {
+      route: 'EXECUTAR',
+      confidence: 0.90,
+      reasoning: 'Regra rápida: verbo de criação + disciplina + ano/série',
+      source: 'fast_rules',
+    };
+  }
+
+  if (s.hasPedagogicalContent && s.hasSchoolSubject && (s.hasGradeLevel || s.hasCreationVerb)) {
+    return {
+      route: 'EXECUTAR',
+      confidence: 0.85,
+      reasoning: 'Regra rápida: material pedagógico + disciplina + contexto escolar',
+      source: 'fast_rules',
+    };
+  }
+
+  if (s.isLongMessage && s.executarScore >= 2 && s.hasCalendarKeyword) {
+    console.log(`⚡ [SmartRouter:FastRules] Mensagem longa com sinais de EXECUTAR + calendário: "${userPrompt.substring(0, 80)}"`);
+    return {
+      route: 'EXECUTAR',
+      confidence: 0.88,
+      reasoning: 'Regra rápida: mensagem longa com sinais de criação + calendário → EXECUTAR',
+      source: 'fast_rules',
+    };
+  }
+
+  if (s.hasCalendarKeyword) {
+    if (s.isCalendarOnly || s.trimmed.length < 80) {
+      console.log(`⚡ [SmartRouter:FastRules] Calendário ISOLADO detectado: "${userPrompt.substring(0, 60)}"`);
+      return {
+        route: 'CAPABILITY_DIRETA',
+        confidence: 0.95,
+        reasoning: 'Regra rápida: pedido isolado de calendário',
+        capability: 'gerenciar_calendario',
+        capability_params: { user_prompt: userPrompt, user_objective: userPrompt },
+        source: 'fast_rules',
+      };
+    }
+
+    if (!s.hasCreationVerb && !s.hasPedagogicalContent && !s.hasSchoolSubject) {
+      console.log(`⚡ [SmartRouter:FastRules] Calendário sem sinais pedagógicos: "${userPrompt.substring(0, 60)}"`);
+      return {
+        route: 'CAPABILITY_DIRETA',
+        confidence: 0.90,
+        reasoning: 'Regra rápida: calendário sem sinais de criação pedagógica',
+        capability: 'gerenciar_calendario',
+        capability_params: { user_prompt: userPrompt, user_objective: userPrompt },
+        source: 'fast_rules',
+      };
+    }
+
+    console.log(`⚡ [SmartRouter:FastRules] Calendário detectado mas com sinais pedagógicos — delegando ao LLM`);
+    return {
+      route: 'EXECUTAR',
+      confidence: 0.70,
+      reasoning: 'Regra rápida: calendário + sinais pedagógicos — confiança baixa, delegar ao LLM',
       source: 'fast_rules',
     };
   }
@@ -120,7 +279,7 @@ function fastRulesClassify(userPrompt: string): SmartRouteResult | null {
     /meus\s+materiais/i,
     /o\s+que\s+eu\s+tenho\s+salvo/i,
   ];
-  if (myActivitiesPatterns.some(p => p.test(trimmed))) {
+  if (myActivitiesPatterns.some(p => p.test(s.trimmed))) {
     console.log(`⚡ [SmartRouter:FastRules] Pesquisa de atividades: "${userPrompt.substring(0, 60)}"`);
     return {
       route: 'CAPABILITY_DIRETA',
@@ -137,7 +296,7 @@ function fastRulesClassify(userPrompt: string): SmartRouteResult | null {
     /quais\s+atividades?\s+est[aã]o\s+dispon[ií]veis/i,
     /catalogo\s+de\s+atividades/i,
   ];
-  if (catalogPatterns.some(p => p.test(trimmed))) {
+  if (catalogPatterns.some(p => p.test(s.trimmed))) {
     return {
       route: 'CAPABILITY_DIRETA',
       confidence: 0.90,
@@ -147,94 +306,7 @@ function fastRulesClassify(userPrompt: string): SmartRouteResult | null {
     };
   }
 
-  const pureGreetings = /^(oi|ol[aá]|bom\s+dia|boa\s+tarde|boa\s+noite|e\s+a[ií]|fala|hey|hello|hi|opa|tudo\s+bem|como\s+vai)[\s!?.]*$/i;
-  if (pureGreetings.test(trimmed)) {
-    return {
-      route: 'CONVERSAR',
-      confidence: 0.95,
-      reasoning: 'Regra rápida: saudação pura',
-      source: 'fast_rules',
-    };
-  }
-
-  const pureThanks = /^(obrigad[oa]|valeu|perfeito|[oó]timo|otimo|legal|bacana|top|show|massa|excelente|maravilh|muito\s+bom|adorei|gostei|ficou\s+[oó]timo)[\s!?.]*$/i;
-  if (pureThanks.test(trimmed)) {
-    return {
-      route: 'CONVERSAR',
-      confidence: 0.95,
-      reasoning: 'Regra rápida: agradecimento/feedback',
-      source: 'fast_rules',
-    };
-  }
-
-  const simpleConfirmation = /^(ok|sim|n[aã]o|entendi|certo|t[aá]|claro|pode\s+ser|beleza|bora|vamos)[\s!?.]*$/i;
-  if (simpleConfirmation.test(trimmed)) {
-    return {
-      route: 'CONVERSAR',
-      confidence: 0.90,
-      reasoning: 'Regra rápida: confirmação simples',
-      source: 'fast_rules',
-    };
-  }
-
-  const followUpConversation = /^(me\s+explic|explica\s+melhor|pode\s+explicar|o\s+que\s+[eé]|como\s+funciona|me\s+fala\s+(mais\s+)?sobre|conta\s+mais|detalh|aprofund)/i;
-  if (followUpConversation.test(trimmed)) {
-    return {
-      route: 'CONVERSAR',
-      confidence: 0.90,
-      reasoning: 'Regra rápida: pedido de explicação/aprofundamento',
-      source: 'fast_rules',
-    };
-  }
-
-  const aboutJota = /o\s+que\s+voc[eê]\s+(pode|sabe|faz|consegue)/i;
-  if (aboutJota.test(trimmed)) {
-    return {
-      route: 'CONVERSAR',
-      confidence: 0.90,
-      reasoning: 'Regra rápida: pergunta sobre capacidades do Jota',
-      source: 'fast_rules',
-    };
-  }
-
-  const creationVerbs = /\b(cri[ae]|mont[ae]|ger[ae]|fa[cçz]a|prepar[ae]|elabor[ae]|produz)/i;
-  const pedagogicalContent = /\b(atividade|plano\s+de\s+aula|prova|quiz|exerc[ií]cio|avalia[cç][aã]o|apostila|roteiro|dossi[eê]|cruzadinha|ca[cç]a[\s-]palavras|sequ[eê]ncia\s+did[aá]tica)/i;
-  const schoolSubject = /\b(matem[aá]tica|portugu[eê]s|ci[eê]ncias|hist[oó]ria|geografia|ingl[eê]s|educa[cç][aã]o\s+f[ií]sica|artes?|biologia|qu[ií]mica|f[ií]sica|sociologia|filosofia|BNCC)/i;
-  const gradeLevel = /\b(\d+[ºªo]?\s*ano|turma|s[eé]rie|fundamental|m[eé]dio|infantil|EJA)\b/i;
-
-  const hasCreationVerb = creationVerbs.test(trimmed);
-  const hasPedagogicalContent = pedagogicalContent.test(trimmed);
-  const hasSchoolSubject = schoolSubject.test(trimmed);
-  const hasGradeLevel = gradeLevel.test(trimmed);
-
-  if (hasCreationVerb && hasPedagogicalContent) {
-    return {
-      route: 'EXECUTAR',
-      confidence: 0.92,
-      reasoning: 'Regra rápida: verbo de criação + tipo de material pedagógico',
-      source: 'fast_rules',
-    };
-  }
-
-  if (hasCreationVerb && hasSchoolSubject && hasGradeLevel) {
-    return {
-      route: 'EXECUTAR',
-      confidence: 0.90,
-      reasoning: 'Regra rápida: verbo de criação + disciplina + ano/série',
-      source: 'fast_rules',
-    };
-  }
-
-  if (hasPedagogicalContent && hasSchoolSubject && (hasGradeLevel || hasCreationVerb)) {
-    return {
-      route: 'EXECUTAR',
-      confidence: 0.85,
-      reasoning: 'Regra rápida: material pedagógico + disciplina + contexto escolar',
-      source: 'fast_rules',
-    };
-  }
-
-  if (trimmed.endsWith('?') && !hasCreationVerb && !hasPedagogicalContent) {
+  if (s.trimmed.endsWith('?') && !s.hasCreationVerb && !s.hasPedagogicalContent) {
     return {
       route: 'CONVERSAR',
       confidence: 0.80,
@@ -314,13 +386,36 @@ export async function smartRoute(
           source: 'llm',
         };
       }
+
+      const signals = detectSignals(userPrompt);
+      if (signals.executarScore >= 3) {
+        console.log(`🧭 [SmartRouter] ⚠️ LLM disse CAPABILITY_DIRETA mas mensagem tem sinais fortes de EXECUTAR (score=${signals.executarScore}) — corrigindo para EXECUTAR`);
+        return {
+          route: 'EXECUTAR',
+          confidence: 0.90,
+          reasoning: `LLM sugeriu CAPABILITY_DIRETA mas sinais pedagógicos fortes (score=${signals.executarScore}) → EXECUTAR`,
+          source: 'llm',
+        };
+      }
     }
 
     if (fastResult && fastResult.confidence >= 0.80 && fastResult.route !== parsed.route) {
       console.log(`🧭 [SmartRouter] ⚠️ Conflito! FastRules=${fastResult.route} vs LLM=${parsed.route}`);
 
+      if (fastResult.route === 'EXECUTAR' && parsed.route === 'CAPABILITY_DIRETA') {
+        console.log(`🧭 [SmartRouter] → Priorizando FastRules EXECUTAR sobre LLM CAPABILITY_DIRETA (pedido composto)`);
+        console.log(`🧭 [SmartRouter] ═══════════════════════════════════════\n`);
+        return { ...fastResult, reasoning: `FastRules priorizou EXECUTAR sobre LLM CAPABILITY_DIRETA: ${fastResult.reasoning}` };
+      }
+
       if (fastResult.route === 'CAPABILITY_DIRETA' && parsed.route === 'EXECUTAR') {
-        console.log(`🧭 [SmartRouter] → Priorizando FastRules (CAPABILITY_DIRETA > EXECUTAR para dados do professor)`);
+        const signals = detectSignals(userPrompt);
+        if (signals.executarScore >= 2) {
+          console.log(`🧭 [SmartRouter] → LLM EXECUTAR prevalece sobre FastRules CAPABILITY_DIRETA (sinais pedagógicos encontrados)`);
+          console.log(`🧭 [SmartRouter] ═══════════════════════════════════════\n`);
+          return { ...parsed, source: 'llm', reasoning: `LLM EXECUTAR prevaleceu: sinais pedagógicos (score=${signals.executarScore})` };
+        }
+        console.log(`🧭 [SmartRouter] → Priorizando FastRules (CAPABILITY_DIRETA > EXECUTAR, sem sinais pedagógicos fortes)`);
         console.log(`🧭 [SmartRouter] ═══════════════════════════════════════\n`);
         return { ...fastResult, reasoning: `FastRules priorizou CAPABILITY_DIRETA sobre LLM EXECUTAR: ${fastResult.reasoning}` };
       }
@@ -380,8 +475,8 @@ function emergencyFallback(userPrompt: string): SmartRouteResult {
     return { route: 'CONVERSAR', confidence: 0.55, reasoning: 'Emergency fallback: mensagem curta ou pergunta → conversar', source: 'fallback' };
   }
 
-  const hasCreation = /\b(cri[ae]|mont[ae]|ger[ae]|fa[cçz]a|prepar|elabor|produz)/i.test(trimmed);
-  const hasSchool = /\b(atividade|plano|prova|quiz|exerc|aula|apost)/i.test(trimmed);
+  const hasCreation = /\b(cri[ae]|mont[ae]|ger[ae]|fa[cçz]a|prepar|elabor|produz|planej)/i.test(trimmed);
+  const hasSchool = /\b(atividade|plano|prova|quiz|exerc|aula|apost|dossi)/i.test(trimmed);
 
   if (hasCreation && hasSchool) {
     return { route: 'EXECUTAR', confidence: 0.60, reasoning: 'Emergency fallback: criação + material escolar', source: 'fallback' };
