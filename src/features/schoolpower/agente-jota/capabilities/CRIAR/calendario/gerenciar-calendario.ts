@@ -81,6 +81,7 @@ export async function gerenciarCalendarioV2(input: CapabilityInput): Promise<Cap
         operations: agentResult.operations_executed,
         final_data: agentResult.data,
         message: agentResult.final_message,
+        resposta_para_professor: agentResult.final_message,
         calendar_updated: true,
         iterations: agentResult.iterations,
       } : null,
