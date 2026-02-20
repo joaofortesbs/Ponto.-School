@@ -16,7 +16,6 @@ import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDe
 import { HistoricoAtividadesCriadas } from "../../features/schoolpower/construction/HistoricoAtividadesCriadas";
 import { ChatLayout } from "../../features/schoolpower/interface-chat-producao/ChatLayout";
 import { useIsMobile } from "../../hooks/useIsMobile";
-import { useProfile } from "../../contexts/ProfileContext";
 import { 
   getPendingMessage, 
   clearPendingMessage, 
@@ -51,7 +50,6 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const [presetMessage, setPresetMessage] = useState<string | null>(null);
   const [templateNodes, setTemplateNodes] = useState<PromptNode[] | null>(null);
   const isMobile = useIsMobile();
-  const { profile } = useProfile();
   const pendingMessageProcessed = useRef(false);
 
   const {
@@ -271,7 +269,6 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
         >
           <ChatLayout
             initialMessage={flowData.initialMessage}
-            userId={profile?.id}
             onBack={handleBack}
           />
         </motion.div>

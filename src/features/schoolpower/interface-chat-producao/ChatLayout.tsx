@@ -71,27 +71,7 @@ const CHAT_CONFIG = {
   widthPx: '1600px',
 };
 
-function resolveUserId(propUserId?: string): string {
-  if (propUserId && propUserId !== 'user-default') return propUserId;
-  try {
-    const storedId = localStorage.getItem('user_id');
-    if (storedId && storedId !== 'user-default') return storedId;
-    const neonUser = localStorage.getItem('neon_user');
-    if (neonUser) {
-      const parsed = JSON.parse(neonUser);
-      if (parsed?.id) return parsed.id;
-    }
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsed = JSON.parse(userData);
-      if (parsed?.id) return parsed.id;
-    }
-  } catch {}
-  return propUserId || 'user-default';
-}
-
-export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatLayoutProps) {
-  const userId = resolveUserId(propUserId);
+export function ChatLayout({ initialMessage, userId = 'user-default', onBack }: ChatLayoutProps) {
   const [executionPlan, setExecutionPlan] = useState<ExecutionPlan | null>(null);
   const [workingMemory, setWorkingMemory] = useState<WorkingMemoryItem[]>([]);
   const [isExecuting, setIsExecutingLocal] = useState(false);

@@ -142,13 +142,6 @@ export async function executeCalendarAgent(input: CalendarAgentInput): Promise<C
       summary: createResult.message,
     });
 
-    if (createResult.success && typeof window !== 'undefined') {
-      try {
-        window.dispatchEvent(new CustomEvent('calendar-events-updated'));
-        console.log('📅 [CalendarAgent] Fast-path: CustomEvent calendar-events-updated disparado');
-      } catch {}
-    }
-
     return {
       success: createResult.success,
       operations_executed: operationsExecuted,
@@ -236,16 +229,6 @@ export async function executeCalendarAgent(input: CalendarAgentInput): Promise<C
   const allMessages = operationsExecuted.map(op => op.summary);
   const lastSuccessMessage = allMessages.filter((_, i) => operationsExecuted[i].success).pop();
   const anySuccess = operationsExecuted.some(op => op.success);
-
-  const hasMutation = operationsExecuted.some(op =>
-    op.success && ['criar_eventos', 'editar_evento', 'excluir_evento'].includes(op.operation)
-  );
-  if (hasMutation && typeof window !== 'undefined') {
-    try {
-      window.dispatchEvent(new CustomEvent('calendar-events-updated'));
-      console.log('📅 [CalendarAgent] CustomEvent calendar-events-updated disparado');
-    } catch {}
-  }
 
   return {
     success: anySuccess,
