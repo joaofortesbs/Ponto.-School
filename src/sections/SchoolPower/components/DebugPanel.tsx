@@ -201,10 +201,14 @@ export default function DebugPanel() {
           apiCall.processingSteps.push(`Erro ao extrair dados da requisição: ${error}`);
         }
 
-        // Salvar chamada inicial
-        const existingCalls = JSON.parse(localStorage.getItem('gemini_api_calls') || '[]');
-        existingCalls.push(apiCall);
-        localStorage.setItem('gemini_api_calls', JSON.stringify(existingCalls));
+        try {
+          const rawCalls = localStorage.getItem('gemini_api_calls');
+          const existingCalls = Array.isArray(JSON.parse(rawCalls || '[]')) ? JSON.parse(rawCalls || '[]') : [];
+          existingCalls.push(apiCall);
+          localStorage.setItem('gemini_api_calls', JSON.stringify(existingCalls));
+        } catch {
+          localStorage.setItem('gemini_api_calls', JSON.stringify([apiCall]));
+        }
 
         try {
           // Atualizar status

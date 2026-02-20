@@ -16,6 +16,9 @@
  */
 
 import { executeWithCascadeFallback } from '../../../../services/controle-APIs-gerais-school-power';
+import { callGeminiWithFunctionCalling } from '../../../../services/llm-orchestrator/providers/gemini';
+import { getModelById } from '../../../../services/llm-orchestrator/config';
+import { isCircuitOpen } from '../../../../services/llm-orchestrator/guards';
 import { 
   ActivityFromCatalog,
   AtividadeForAI,
@@ -145,12 +148,25 @@ function extractQuantityFromObjective(objective: string): number | null {
   return null;
 }
 
+function normalizeDecisionKeys(data: any): any {
+  if (data && data.atividades_selecionadas && !data.atividades_escolhidas) {
+    data.atividades_escolhidas = data.atividades_selecionadas;
+    delete data.atividades_selecionadas;
+  }
+  if (data && data.total_selecionado && !data.total_escolhidas) {
+    data.total_escolhidas = data.total_selecionado;
+    delete data.total_selecionado;
+  }
+  return data;
+}
+
 function tolerantJsonParse(rawText: string): { success: boolean; data: any; strategy: string } {
   const cleaned = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
   // Strategy 1: Direct parse
   try {
-    const data = JSON.parse(cleaned);
+    let data = JSON.parse(cleaned);
+    data = normalizeDecisionKeys(data);
     if (data && data.atividades_escolhidas) {
       return { success: true, data, strategy: 'direct_parse' };
     }
@@ -160,7 +176,8 @@ function tolerantJsonParse(rawText: string): { success: boolean; data: any; stra
   const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     try {
-      const data = JSON.parse(jsonMatch[0]);
+      let data = JSON.parse(jsonMatch[0]);
+      data = normalizeDecisionKeys(data);
       if (data && data.atividades_escolhidas) {
         return { success: true, data, strategy: 'regex_extract' };
       }
@@ -176,7 +193,8 @@ function tolerantJsonParse(rawText: string): { success: boolean; data: any; stra
         .replace(/'/g, '"')
         .replace(/\n/g, '\\n')
         .replace(/\t/g, '\\t');
-      const data = JSON.parse(fixed);
+      let data = JSON.parse(fixed);
+      data = normalizeDecisionKeys(data);
       if (data && data.atividades_escolhidas) {
         return { success: true, data, strategy: 'auto_repair' };
       }
@@ -943,6 +961,121 @@ export async function decidirAtividadesCriarV2(
     let lastError: string | null = null;
     let lastRawResponse: string | null = null;
 
+    // ═══ PHASE 4.0: TRY GEMINI FUNCTION CALLING FIRST (Layer 0) ═══
+    const geminiModel = getModelById('gemini-2.0-flash');
+    if (geminiModel && !isCircuitOpen('gemini-2.0-flash')) {
+      try {
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'action',
+          narrative: `Tentando Gemini Function Calling (structured output) antes do retry loop regular.`
+        });
+
+        const validIdsList = validIds.slice(0, 80).join(', ');
+        const fcPrompt = `Analise o catálogo de atividades e selecione as mais adequadas para o objetivo do professor.\n\nObjetivo: ${userObjective}\n\nIDs válidos do catálogo: [${validIdsList}]\n\nCatálogo:\n${catalog.slice(0, 30).map(a => `- ${a.id}: ${a.titulo} (tipo: ${a.tipo}, matéria: ${a.materia})`).join('\n')}\n\nQuantidade solicitada: ${requestedQuantity || 'até ' + maxActivities}`;
+
+        const fcResult = await callGeminiWithFunctionCalling(
+          geminiModel,
+          fcPrompt,
+          [{
+            name: 'selecionar_atividades',
+            description: 'Seleciona atividades educacionais do catálogo para o professor',
+            parameters: {
+              type: 'object',
+              properties: {
+                atividades_escolhidas: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string', description: 'ID da atividade do catálogo' },
+                      titulo: { type: 'string', description: 'Título da atividade' },
+                      justificativa: { type: 'string', description: 'Por que esta atividade foi escolhida' },
+                      ordem_sugerida: { type: 'number', description: 'Ordem sugerida de criação' },
+                    },
+                    required: ['id', 'titulo', 'justificativa', 'ordem_sugerida'],
+                  },
+                },
+                estrategia_pedagogica: { type: 'string', description: 'Estratégia pedagógica geral aplicada' },
+              },
+              required: ['atividades_escolhidas', 'estrategia_pedagogica'],
+            },
+          }],
+          { systemPrompt: DECISION_SYSTEM_PROMPT, temperature: 0.2 }
+        );
+
+        if (fcResult.success && fcResult.data) {
+          debug_log.push({
+            timestamp: new Date().toISOString(),
+            type: 'discovery',
+            narrative: `Gemini Function Calling respondeu com sucesso. Processando resultado estruturado.`
+          });
+
+          const fcParsed = tolerantJsonParse(fcResult.data);
+          if (fcParsed.success) {
+            const { repaired, validation, repairs } = softValidateAndRepair(fcParsed.data, catalog, maxActivities);
+            
+            if (repaired.atividades_escolhidas.length > 0) {
+              let chosenActivities = enrichChosenActivities(repaired.atividades_escolhidas, catalog);
+              chosenActivities = chosenActivities.map(a => {
+                const catalogEntry = catalog.find(c => c.id === a.id);
+                return {
+                  ...a,
+                  pipeline: catalogEntry?.pipeline || a.pipeline || 'standard',
+                  text_activity_template_id: catalogEntry?.text_activity_template_id || a.text_activity_template_id
+                };
+              });
+
+              if (requestedQuantity && chosenActivities.length > requestedQuantity) {
+                chosenActivities = chosenActivities.slice(0, requestedQuantity);
+              }
+
+              const elapsedTime = Date.now() - startTime;
+              console.error(`✅ [decidirAtividadesCriarV2] SUCESSO via Gemini Function Calling | ${chosenActivities.length} atividades | ${elapsedTime}ms`);
+
+              return {
+                success: true,
+                capability_id: 'decidir_atividades_criar',
+                execution_id: input.execution_id,
+                timestamp: new Date().toISOString(),
+                data: {
+                  chosen_activities: chosenActivities,
+                  estrategia: repaired.estrategia_pedagogica || 'Estratégia via Gemini Function Calling',
+                  count: chosenActivities.length,
+                  validation
+                },
+                error: null,
+                debug_log,
+                data_confirmation: createDataConfirmation([
+                  createDataCheck('gemini_fc', 'Gemini Function Calling utilizado', true, true, 'structured output'),
+                  createDataCheck('activities_chosen', 'Atividades escolhidas', chosenActivities.length > 0, chosenActivities.length, '> 0'),
+                ]),
+                metadata: {
+                  duration_ms: elapsedTime,
+                  retry_count: 0,
+                  data_source: 'gemini-function-calling',
+                } as Record<string, any>
+              };
+            }
+          }
+
+          debug_log.push({
+            timestamp: new Date().toISOString(),
+            type: 'warning',
+            narrative: `Gemini FC respondeu mas validação falhou. Caindo para retry loop regular.`
+          });
+        }
+      } catch (fcError) {
+        const fcMsg = fcError instanceof Error ? fcError.message : String(fcError);
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'warning',
+          narrative: `Gemini Function Calling falhou: ${fcMsg}. Continuando com retry loop regular.`
+        });
+      }
+    }
+
+    // ═══ PHASE 4.1: REGULAR RETRY LOOP (Layer 2) ═══
     for (let attempt = 1; attempt <= MAX_RETRIES_V2 + 1; attempt++) {
       retryCount = attempt - 1;
       
@@ -971,6 +1104,28 @@ export async function decidirAtividadesCriarV2(
         }
 
         lastRawResponse = aiResponse.data;
+
+        const contaminationPatterns = [
+          /^#\s+/m,
+          /^\*\*Disciplina:\*\*/m,
+          /^## Introdução/m,
+          /^## Conceitos Principais/m,
+          /Material gerado pelo Sistema Ponto School/,
+          /^## Objetivo Geral/m,
+          /^\*\*Série:\*\*/m,
+        ];
+        const isContaminated = contaminationPatterns.some(p => p.test(aiResponse.data));
+        
+        if (isContaminated) {
+          lastError = 'Resposta contaminada: LLM retornou conteúdo educacional em Markdown ao invés de JSON de decisão (provavelmente fallback local interceptou)';
+          debug_log.push({
+            timestamp: new Date().toISOString(),
+            type: 'warning',
+            narrative: `Tentativa ${attempt}: CONTAMINAÇÃO DETECTADA — resposta é conteúdo educacional, não JSON de decisão. Pulando para próximo modelo. Preview: "${aiResponse.data.substring(0, 100)}..."`,
+            technical_data: { contaminated: true, model: aiResponse.modelUsed, preview: aiResponse.data.substring(0, 200) }
+          });
+          continue;
+        }
 
         // Layer 1: Tolerant JSON parsing
         const parseResult = tolerantJsonParse(aiResponse.data);
@@ -1076,9 +1231,7 @@ export async function decidirAtividadesCriarV2(
             duration_ms: elapsedTime,
             retry_count: retryCount,
             data_source: aiResponse.modelUsed || 'llm_decision',
-            parse_strategy: parseResult.strategy,
-            repairs_applied: repairs.length
-          }
+          } as Record<string, any>
         };
 
       } catch (attemptError) {

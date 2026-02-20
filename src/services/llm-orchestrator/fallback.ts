@@ -22,6 +22,25 @@ export function generateLocalFallback(
   activityType?: ActivityType
 ): GenerateContentResult {
   const startTime = Date.now();
+
+  if (isDecisionPrompt(prompt)) {
+    console.log(`🏠 [LocalFallback] Detectado prompt de DECISÃO — gerando JSON de seleção`);
+    const content = generateDecisionFallback(prompt);
+    const latencyMs = Date.now() - startTime;
+    console.log(`✅ [LocalFallback] Decisão local gerada em ${latencyMs}ms (${content.length} chars)`);
+    return {
+      success: true,
+      data: content,
+      model: 'local-fallback-decision',
+      provider: 'local',
+      tier: 'fallback',
+      latencyMs,
+      cached: false,
+      attemptsMade: 1,
+      errors: [],
+    };
+  }
+
   const type = activityType || detectActivityType(prompt);
   
   console.log(`🏠 [LocalFallback] Gerando conteúdo local para: ${type}`);
@@ -476,4 +495,179 @@ Este material aborda ${ctx.tema} no contexto de ${ctx.disciplina}, oferecendo um
 ---
 
 *Material gerado pelo Sistema Ponto School*`;
+}
+
+function isDecisionPrompt(prompt: string): boolean {
+  const decisionIndicators = [
+    /selecione.*atividades/i,
+    /escolha.*atividades/i,
+    /decidir.*atividades/i,
+    /quais.*atividades.*criar/i,
+    /retorne.*json.*atividades_selecionadas/i,
+    /atividades_selecionadas/i,
+    /atividades_escolhidas/i,
+    /catalogo.*atividades.*dispon[ií]veis/i,
+    /"id":\s*"[^"]*",\s*"titulo"/,
+    /selecionar.*do.*cat[aá]logo/i,
+    /estrat[eé]gia_pedag[oó]gica/i,
+    /justificativa.*pedag[oó]gica/i,
+  ];
+
+  return decisionIndicators.some(pattern => pattern.test(prompt));
+}
+
+interface CatalogEntry {
+  id: string;
+  titulo: string;
+  tipo?: string;
+  materia?: string;
+  nivel_dificuldade?: string;
+  tags?: string[];
+  pipeline?: string;
+  template?: string;
+  campos_obrigatorios?: string[];
+  campos_opcionais?: string[];
+  schema_campos?: Record<string, any>;
+}
+
+function extractCatalogFromPrompt(prompt: string): CatalogEntry[] {
+  const entries: CatalogEntry[] = [];
+
+  const jsonBlockMatch = prompt.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+  if (jsonBlockMatch) {
+    try {
+      const parsed = JSON.parse(jsonBlockMatch[1]);
+      if (Array.isArray(parsed)) return parsed;
+      if (parsed.atividades && Array.isArray(parsed.atividades)) return parsed.atividades;
+    } catch {}
+  }
+
+  const idTitlePattern = /"id"\s*:\s*"([^"]+)"[\s\S]*?"titulo"\s*:\s*"([^"]+)"/g;
+  let match;
+  while ((match = idTitlePattern.exec(prompt)) !== null) {
+    const entryBlock = prompt.substring(Math.max(0, match.index - 20), prompt.indexOf('}', match.index + match[0].length) + 1);
+    
+    const tipoMatch = entryBlock.match(/"tipo"\s*:\s*"([^"]+)"/);
+    const materiaMatch = entryBlock.match(/"materia"\s*:\s*"([^"]+)"/);
+    const nivelMatch = entryBlock.match(/"nivel_dificuldade"\s*:\s*"([^"]+)"/);
+    const pipelineMatch = entryBlock.match(/"pipeline"\s*:\s*"([^"]+)"/);
+    const templateMatch = entryBlock.match(/"template"\s*:\s*"([^"]+)"/);
+    
+    entries.push({
+      id: match[1],
+      titulo: match[2],
+      tipo: tipoMatch?.[1],
+      materia: materiaMatch?.[1],
+      nivel_dificuldade: nivelMatch?.[1],
+      pipeline: pipelineMatch?.[1],
+      template: templateMatch?.[1],
+    });
+  }
+  
+  return entries;
+}
+
+function extractRequestedQuantity(prompt: string): number {
+  const qtyPatterns = [
+    /selecione\s+(\d+)/i,
+    /escolha\s+(\d+)/i,
+    /(\d+)\s+atividades/i,
+    /quantidade[:\s]+(\d+)/i,
+    /m[aá]ximo[:\s]+(\d+)/i,
+  ];
+  
+  for (const pattern of qtyPatterns) {
+    const match = prompt.match(pattern);
+    if (match) return Math.min(parseInt(match[1], 10), 10);
+  }
+  return 3;
+}
+
+function scoreActivityForObjective(entry: CatalogEntry, objective: string): number {
+  let score = 0;
+  const lowerObjective = objective.toLowerCase();
+  const tags = entry.tags || [];
+  const titulo = (entry.titulo || '').toLowerCase();
+  const tipo = (entry.tipo || '').toLowerCase();
+  
+  const objectiveWords = lowerObjective.split(/\s+/).filter(w => w.length > 3);
+  for (const word of objectiveWords) {
+    if (titulo.includes(word)) score += 3;
+    if (tipo.includes(word)) score += 2;
+    if (tags.some(t => t.toLowerCase().includes(word))) score += 1;
+  }
+  
+  const varietyTypes = new Set(['plano-aula', 'lista-exercicios', 'quiz-interativo', 'flash-cards', 'sequencia-didatica', 'avaliacao-diagnostica', 'quadro-interativo']);
+  if (varietyTypes.has(tipo)) score += 1;
+  
+  return score;
+}
+
+function generateDecisionFallback(prompt: string): string {
+  const catalog = extractCatalogFromPrompt(prompt);
+  const requestedQty = extractRequestedQuantity(prompt);
+  
+  let objectiveMatch = prompt.match(/objetivo[:\s]+["']?([^"'\n]+)/i);
+  if (!objectiveMatch) objectiveMatch = prompt.match(/professor.*(?:quer|pediu|deseja)[:\s]*["']?([^"'\n]+)/i);
+  const objective = objectiveMatch?.[1] || '';
+  
+  let selected: CatalogEntry[];
+  
+  if (catalog.length === 0) {
+    console.warn(`⚠️ [LocalFallback-Decision] Catálogo vazio no prompt, gerando seleção genérica`);
+    selected = [];
+  } else if (catalog.length <= requestedQty) {
+    selected = catalog;
+  } else {
+    const scored = catalog.map(entry => ({
+      entry,
+      score: scoreActivityForObjective(entry, objective)
+    }));
+    scored.sort((a, b) => b.score - a.score);
+    
+    const typeSeen = new Set<string>();
+    const diverse: CatalogEntry[] = [];
+    
+    for (const { entry } of scored) {
+      const tipo = entry.tipo || 'unknown';
+      if (!typeSeen.has(tipo)) {
+        diverse.push(entry);
+        typeSeen.add(tipo);
+        if (diverse.length >= requestedQty) break;
+      }
+    }
+    
+    if (diverse.length < requestedQty) {
+      for (const { entry } of scored) {
+        if (!diverse.includes(entry)) {
+          diverse.push(entry);
+          if (diverse.length >= requestedQty) break;
+        }
+      }
+    }
+    
+    selected = diverse.slice(0, requestedQty);
+  }
+  
+  const result = {
+    atividades_escolhidas: selected.map((entry, idx) => ({
+      id: entry.id,
+      titulo: entry.titulo,
+      tipo: entry.tipo || 'atividade',
+      materia: entry.materia || 'Multidisciplinar',
+      nivel_dificuldade: entry.nivel_dificuldade || 'medio',
+      tags: entry.tags || [],
+      campos_obrigatorios: entry.campos_obrigatorios || [],
+      campos_opcionais: entry.campos_opcionais || [],
+      schema_campos: entry.schema_campos || {},
+      pipeline: entry.pipeline,
+      template: entry.template,
+      justificativa: `Atividade selecionada automaticamente (fallback local) — ${entry.titulo} é adequada para o objetivo pedagógico informado.`,
+      ordem_sugerida: idx + 1,
+    })),
+    estrategia_pedagogica: `Seleção automática por relevância (fallback local). ${selected.length} atividades escolhidas do catálogo de ${catalog.length} disponíveis, priorizando diversidade de tipos e relevância ao objetivo.`,
+    total_escolhidas: selected.length,
+  };
+  
+  return JSON.stringify(result, null, 2);
 }
