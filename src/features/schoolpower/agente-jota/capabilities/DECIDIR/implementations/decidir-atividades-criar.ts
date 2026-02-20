@@ -132,7 +132,8 @@ REGRAS ABSOLUTAS:
 2. Use SOMENTE IDs que existem na lista de IDs válidos fornecida
 3. NUNCA invente IDs — se não tem certeza, escolha o mais próximo do catálogo
 4. Cada atividade DEVE ter: id, titulo, justificativa (>10 chars), ordem_sugerida
-5. Respeite a quantidade solicitada pelo professor`;
+5. Respeite a quantidade solicitada pelo professor
+6. PREFERÊNCIA INTERATIVA: Sempre que o professor mencionar exercícios, lista, quiz ou flash cards, PRIORIZE as versões interativas (lista-exercicios, quiz-interativo, flash-cards) e complemente com atividades textuais variadas`;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // LAYER 1: TOLERANT JSON PARSER
@@ -381,14 +382,31 @@ function smartFallbackSelection(
 
   const targetCount = requestedQuantity || Math.min(3, maxActivities);
 
+  const PREFERRED_INTERACTIVE_IDS = ['lista-exercicios', 'quiz-interativo', 'flash-cards'];
+  const interactiveKeywords = ['exerc', 'lista', 'quiz', 'flash', 'card', 'cartõ', 'question'];
+  const mentionsInteractive = interactiveKeywords.some(kw => objectiveLower.includes(kw));
+
   if (matchedIds.size > 0) {
     let selected = catalog.filter(a => matchedIds.has(a.id));
 
+    if (mentionsInteractive) {
+      for (const prefId of PREFERRED_INTERACTIVE_IDS) {
+        if (!matchedIds.has(prefId) && catalog.some(a => a.id === prefId) && selected.length < targetCount) {
+          const interactiveActivity = catalog.find(a => a.id === prefId);
+          if (interactiveActivity) {
+            selected.push(interactiveActivity);
+            matchedIds.add(prefId);
+            matchReasons.push(`preferência interativa → ${prefId}`);
+          }
+        }
+      }
+    }
+
     if (selected.length < targetCount) {
       const remaining = catalog.filter(a => !matchedIds.has(a.id));
-      const textual = remaining.filter(a => (a as any).pipeline === 'criar_arquivo_textual');
       const standard = remaining.filter(a => (a as any).pipeline === 'standard' || !(a as any).pipeline);
-      const extras = [...textual, ...standard].slice(0, targetCount - selected.length);
+      const textual = remaining.filter(a => (a as any).pipeline === 'criar_arquivo_textual');
+      const extras = [...standard, ...textual].slice(0, targetCount - selected.length);
       selected = [...selected, ...extras];
     }
 
@@ -400,13 +418,13 @@ function smartFallbackSelection(
     };
   }
 
-  const textual = catalog.filter(a => (a as any).pipeline === 'criar_arquivo_textual');
   const standard = catalog.filter(a => (a as any).pipeline === 'standard' || !(a as any).pipeline);
+  const textual = catalog.filter(a => (a as any).pipeline === 'criar_arquivo_textual');
 
   let diverseSelection: ActivityFromCatalog[] = [];
   const categories = new Set<string>();
 
-  for (const a of [...textual, ...standard]) {
+  for (const a of [...standard, ...textual]) {
     if (diverseSelection.length >= targetCount) break;
     if (!categories.has(a.categoria)) {
       diverseSelection.push(a);
@@ -501,15 +519,22 @@ IDs VÁLIDOS: ${context.available_activities.map(a => a.id).join(', ')}
    - Professor pediu "caça-palavras" → use caca-palavras
    - Professor pediu "plano de aula" → use plano-aula
 4. VARIEDADE: quando criar múltiplas, use categorias DIFERENTES
-5. PRIORIZE atividades textuais especializadas sobre atividades genéricas (lista/quiz/flash)
+5. ⭐ REGRA DE PREFERÊNCIA POR ATIVIDADES INTERATIVAS: Quando o professor pedir "exercícios", "lista", "quiz", "flash cards" ou qualquer variação dessas palavras, SEMPRE escolha a versão INTERATIVA:
+   - "exercícios" / "lista de exercícios" / "lista" → lista-exercicios (versão interativa)
+   - "quiz" / "questionário" / "teste rápido" → quiz-interativo (versão interativa)
+   - "flash cards" / "flashcards" / "cartões" → flash-cards (versão interativa)
+   Essas 3 atividades interativas são as MELHORES do catálogo e devem ser SEMPRE incluídas quando o professor solicitar algo relacionado. Além disso, COMPLEMENTE com outras atividades textuais variadas para criar um pacote pedagógico rico.
 
-🎯 PRINCÍPIO: O catálogo textual tem 61 templates especializados. USE-OS! Não force tudo em lista/quiz/flash cards.
+🎯 PRINCÍPIO DE COMPOSIÇÃO: Quando o professor pedir exercícios, quiz ou flash cards, inclua a versão interativa E adicione atividades textuais complementares para criar variedade pedagógica. O pacote ideal combina atividades interativas com materiais textuais especializados.
 
 Exemplos de decisão CORRETA:
-- "Crie uma prova de frações" → prova-personalizada (1 atividade)
-- "Crie um bingo sobre sistema solar" → bingo-educativo (1 atividade)
-- "3 atividades sobre crônicas" → interpretacao-texto + prompt-escrita + quiz-interativo (3 atividades variadas)
+- "Crie exercícios de frações" → lista-exercicios (interativa) + exercicios-multipla-escolha (1 interativa + 1 textual)
+- "Quiz sobre sistema solar" → quiz-interativo (interativa, versão prioritária)
+- "3 atividades sobre crônicas" → lista-exercicios (interativa) + interpretacao-texto + prompt-escrita (1 interativa + 2 textuais variadas)
+- "Flash cards de vocabulário" → flash-cards (interativa, versão prioritária)
+- "Atividades completas sobre biomas" → quiz-interativo + lista-exercicios + estudo-de-caso (2 interativas + 1 textual)
 - "Atividade sobre biomas, tenho alunos com necessidades especiais" → atividade-diferenciada-inclusao (1 atividade)
+- "Crie uma prova de frações" → prova-personalizada (1 atividade — prova NÃO é exercício)
 
 ## ⚠️ REGRA ANTI-ALUCINAÇÃO
 - Use APENAS IDs da lista de IDs válidos acima
