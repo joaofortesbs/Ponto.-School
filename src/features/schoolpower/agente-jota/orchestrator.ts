@@ -417,26 +417,6 @@ async function handleDirectResponse(
   return 'Opa, tive um probleminha para processar sua mensagem. Pode tentar de novo? Estou aqui!';
 }
 
-function resolveUserIdFallback(userId: string): string {
-  if (userId && userId !== 'user-default') return userId;
-  try {
-    if (typeof window === 'undefined' || !window.localStorage) return userId;
-    const storedId = localStorage.getItem('user_id');
-    if (storedId && storedId !== 'user-default') return storedId;
-    const neonUser = localStorage.getItem('neon_user');
-    if (neonUser) {
-      const parsed = JSON.parse(neonUser);
-      if (parsed?.id) return parsed.id;
-    }
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsed = JSON.parse(userData);
-      if (parsed?.id) return parsed.id;
-    }
-  } catch {}
-  return userId;
-}
-
 async function executeDirectCapability(
   capabilityName: string,
   userPrompt: string,
@@ -444,8 +424,7 @@ async function executeDirectCapability(
   userId: string,
   params?: Record<string, any>
 ): Promise<string> {
-  const resolvedUserId = resolveUserIdFallback(userId);
-  console.log(`⚡ [Orchestrator] Executando capability direta: ${capabilityName} (userId: ${resolvedUserId.substring(0, 8)}...)`);
+  console.log(`⚡ [Orchestrator] Executando capability direta: ${capabilityName}`);
 
   const capabilityInput = {
     capability_id: capabilityName,
@@ -453,8 +432,8 @@ async function executeDirectCapability(
     context: {
       user_prompt: userPrompt,
       user_objective: userPrompt,
-      professor_id: resolvedUserId,
-      user_id: resolvedUserId,
+      professor_id: userId,
+      user_id: userId,
       session_id: sessionId,
       ...(params || {}),
     },
@@ -475,7 +454,7 @@ async function executeDirectCapability(
 
   if (capabilityName === 'pesquisar_atividades_conta') {
     const { pesquisarAtividadesConta } = await import('./capabilities/PESQUISAR/implementations/pesquisar-atividades-conta');
-    const result = await pesquisarAtividadesConta({ professor_id: resolvedUserId });
+    const result = await pesquisarAtividadesConta({ professor_id: userId });
 
     if (result && result.found && result.activities && result.activities.length > 0) {
       const lines = result.activities.map((a: any, i: number) => `${i + 1}. **${a.titulo || a.nome}** (${a.tipo || 'atividade'})`);
