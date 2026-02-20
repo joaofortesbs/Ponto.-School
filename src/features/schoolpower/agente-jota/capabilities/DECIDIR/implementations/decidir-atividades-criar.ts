@@ -5,6 +5,14 @@
  * contexto do usuário) e decide estrategicamente quais atividades criar.
  * 
  * Inputs: Resultado de pesquisar_atividades_conta + pesquisar_atividades_disponiveis + contexto
+ * 
+ * Architecture: Multi-Layer Resilience System v2.0
+ * ═══════════════════════════════════════════════════
+ * Layer 1: Tolerant JSON Parser (4-strategy extraction)
+ * Layer 2: System Prompt Separation + Retry Loop (2 retries with corrective prompting)
+ * Layer 3: Soft Validation + Auto-Repair (fix minor issues, only reject invalid IDs)
+ * Layer 4: Smart Context-Aware Fallback (keyword-matching, respects quantity)
+ * Layer 5: Pipeline & Template Field Integrity (preserve downstream-critical fields)
  */
 
 import { executeWithCascadeFallback } from '../../../../services/controle-APIs-gerais-school-power';
@@ -47,8 +55,357 @@ interface DecidirAtividadesCriarParams {
   };
 }
 
+const MAX_RETRIES_V2 = 2;
 const MAX_RETRIES = 2;
 const DEFAULT_MAX_ACTIVITIES = 50;
+
+const WORD_TO_NUMBER: Record<string, number> = {
+  'uma': 1, 'um': 1, 'dois': 2, 'duas': 2, 'três': 3, 'tres': 3,
+  'quatro': 4, 'cinco': 5, 'seis': 6, 'sete': 7, 'oito': 8, 'nove': 9, 'dez': 10
+};
+
+const KEYWORD_TO_ACTIVITY_MAP: Record<string, string[]> = {
+  'prova': ['prova-personalizada', 'simulado', 'multipla-escolha'],
+  'simulado': ['simulado', 'prova-personalizada'],
+  'bingo': ['bingo-educativo'],
+  'caça-palavras': ['caca-palavras'],
+  'caca-palavras': ['caca-palavras'],
+  'palavras cruzadas': ['palavras-cruzadas'],
+  'quiz': ['quiz-interativo'],
+  'flash': ['flash-cards'],
+  'flash card': ['flash-cards'],
+  'lista': ['lista-exercicios'],
+  'exercício': ['lista-exercicios'],
+  'exercicio': ['lista-exercicios'],
+  'plano de aula': ['plano-aula'],
+  'aula': ['plano-aula', 'sequencia-didatica'],
+  'sequência': ['sequencia-didatica'],
+  'sequencia': ['sequencia-didatica'],
+  'rubrica': ['rubrica-avaliacao'],
+  'mapa mental': ['mapa-mental'],
+  'redação': ['atividade-redacao', 'tese-redacao', 'prompt-escrita'],
+  'redacao': ['atividade-redacao', 'tese-redacao', 'prompt-escrita'],
+  'jogo': ['bingo-educativo', 'caca-palavras', 'jogo-show-milhao', 'desafios-sala'],
+  'avaliação': ['prova-personalizada', 'avaliacao-diagnostica', 'rubrica-avaliacao'],
+  'avaliacao': ['prova-personalizada', 'avaliacao-diagnostica', 'rubrica-avaliacao'],
+  'planejamento': ['plano-aula', 'planejamento-anual', 'plano-unidade'],
+  'resumo': ['resumo-fichamento', 'guia-estudo-apostila'],
+  'estudo de caso': ['estudo-de-caso'],
+  'debate': ['debate-estruturado'],
+  'seminário': ['seminario-socratico'],
+  'seminario': ['seminario-socratico'],
+  'projeto': ['roteiro-projeto-pbl', 'atividade-steam'],
+  'steam': ['atividade-steam', 'roteiro-laboratorio'],
+  'laboratório': ['roteiro-laboratorio'],
+  'laboratorio': ['roteiro-laboratorio'],
+  'inclusão': ['atividade-diferenciada-inclusao', 'material-adaptado-nivel', 'plano-apoio-individualizado'],
+  'inclusao': ['atividade-diferenciada-inclusao', 'material-adaptado-nivel', 'plano-apoio-individualizado'],
+  'adaptado': ['material-adaptado-nivel', 'atividade-diferenciada-inclusao'],
+  'cronograma': ['cronograma-estudos'],
+  'apresentação': ['roteiro-apresentacao'],
+  'apresentacao': ['roteiro-apresentacao'],
+  'infográfico': ['infografico-textual'],
+  'infografico': ['infografico-textual'],
+  'gabarito': ['gabarito-comentado'],
+  'texto': ['interpretacao-texto', 'leitura-com-perguntas', 'texto-mentor'],
+  'leitura': ['leitura-com-perguntas', 'interpretacao-texto'],
+  'vocabulário': ['lista-vocabulario-definicoes'],
+  'vocabulario': ['lista-vocabulario-definicoes'],
+  'diário': ['diario-reflexivo'],
+  'diario': ['diario-reflexivo'],
+  'newsletter': ['newsletter-turma'],
+  'boletim': ['boletim-comentado-individual', 'comentarios-boletim'],
+  'comunicado': ['comunicado-institucional'],
+  'convite': ['convite-evento'],
+  'resenha': ['resenha-critica'],
+  'apostila': ['guia-estudo-apostila'],
+  'guia': ['guia-estudo-apostila'],
+};
+
+const DECISION_SYSTEM_PROMPT = `Você é um especialista pedagógico que seleciona atividades educacionais de um catálogo.
+
+REGRAS ABSOLUTAS:
+1. Responda APENAS com JSON válido — sem texto antes, sem texto depois, sem markdown
+2. Use SOMENTE IDs que existem na lista de IDs válidos fornecida
+3. NUNCA invente IDs — se não tem certeza, escolha o mais próximo do catálogo
+4. Cada atividade DEVE ter: id, titulo, justificativa (>10 chars), ordem_sugerida
+5. Respeite a quantidade solicitada pelo professor`;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LAYER 1: TOLERANT JSON PARSER
+// ═══════════════════════════════════════════════════════════════════════════
+
+function extractQuantityFromObjective(objective: string): number | null {
+  const numericMatch = objective.match(/(\d+)\s*(atividade|exerc|quest|prova|material|lista|quiz|flash|jogo|rubrica|plano|aula|sequência|sequencia)/i);
+  if (numericMatch) return parseInt(numericMatch[1]);
+
+  const wordMatch = objective.match(/\b(uma?|dois|duas|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez)\s+(atividade|exerc|quest|prova|material|lista|quiz|flash|jogo|rubrica|plano|aula|sequência|sequencia)/i);
+  if (wordMatch) return WORD_TO_NUMBER[wordMatch[1].toLowerCase()] || null;
+
+  return null;
+}
+
+function tolerantJsonParse(rawText: string): { success: boolean; data: any; strategy: string } {
+  const cleaned = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+  // Strategy 1: Direct parse
+  try {
+    const data = JSON.parse(cleaned);
+    if (data && data.atividades_escolhidas) {
+      return { success: true, data, strategy: 'direct_parse' };
+    }
+  } catch {}
+
+  // Strategy 2: Regex extract JSON object
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      const data = JSON.parse(jsonMatch[0]);
+      if (data && data.atividades_escolhidas) {
+        return { success: true, data, strategy: 'regex_extract' };
+      }
+    } catch {}
+  }
+
+  // Strategy 3: Fix common JSON issues (trailing commas, single quotes, unescaped newlines)
+  if (jsonMatch) {
+    try {
+      let fixed = jsonMatch[0]
+        .replace(/,\s*}/g, '}')
+        .replace(/,\s*]/g, ']')
+        .replace(/'/g, '"')
+        .replace(/\n/g, '\\n')
+        .replace(/\t/g, '\\t');
+      const data = JSON.parse(fixed);
+      if (data && data.atividades_escolhidas) {
+        return { success: true, data, strategy: 'auto_repair' };
+      }
+    } catch {}
+  }
+
+  // Strategy 4: Extract array of activities even without wrapper object
+  const arrayMatch = cleaned.match(/\[[\s\S]*\]/);
+  if (arrayMatch) {
+    try {
+      const arr = JSON.parse(arrayMatch[0]);
+      if (Array.isArray(arr) && arr.length > 0 && arr[0].id) {
+        return {
+          success: true,
+          data: {
+            atividades_escolhidas: arr,
+            estrategia_pedagogica: 'Extraído de array parcial',
+            total_escolhidas: arr.length
+          },
+          strategy: 'array_extract'
+        };
+      }
+    } catch {}
+  }
+
+  // Strategy 5: Line-by-line ID extraction as last resort
+  const idMatches = cleaned.match(/"id"\s*:\s*"([^"]+)"/g);
+  if (idMatches && idMatches.length > 0) {
+    const extracted = idMatches.map((m, idx) => {
+      const idVal = m.match(/"id"\s*:\s*"([^"]+)"/);
+      const titleMatch = cleaned.match(new RegExp(`"titulo"\\s*:\\s*"([^"]*)"`, 'g'));
+      return {
+        id: idVal ? idVal[1] : '',
+        titulo: titleMatch && titleMatch[idx] ? titleMatch[idx].match(/"titulo"\s*:\s*"([^"]*)"/)?.[1] || '' : '',
+        justificativa: 'Extraído por recuperação de emergência',
+        ordem_sugerida: idx + 1
+      };
+    }).filter(a => a.id);
+
+    if (extracted.length > 0) {
+      return {
+        success: true,
+        data: {
+          atividades_escolhidas: extracted,
+          estrategia_pedagogica: 'Recuperação de emergência por extração de IDs',
+          total_escolhidas: extracted.length
+        },
+        strategy: 'emergency_id_extraction'
+      };
+    }
+  }
+
+  return { success: false, data: null, strategy: 'all_failed' };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LAYER 3: SOFT VALIDATION + AUTO-REPAIR
+// ═══════════════════════════════════════════════════════════════════════════
+
+function softValidateAndRepair(
+  aiResponse: any,
+  catalog: ActivityFromCatalog[],
+  maxActivities: number
+): { repaired: any; validation: DecisionValidation; repairs: string[] } {
+  const repairs: string[] = [];
+  const errors: string[] = [];
+
+  if (!aiResponse || !aiResponse.atividades_escolhidas || !Array.isArray(aiResponse.atividades_escolhidas)) {
+    return {
+      repaired: aiResponse,
+      validation: {
+        all_ids_valid: false, count_within_limit: false, has_justification: false,
+        no_duplicates: false, fields_complete: false,
+        errors: ['Resposta da IA não contém atividades_escolhidas como array']
+      },
+      repairs: []
+    };
+  }
+
+  const validIds = new Set(catalog.map(a => a.id));
+  const catalogMap = new Map(catalog.map(a => [a.id, a]));
+
+  const repairedActivities: any[] = [];
+  const seenIds = new Set<string>();
+
+  for (const choice of aiResponse.atividades_escolhidas) {
+    if (!choice.id) continue;
+
+    let id = choice.id;
+
+    if (!validIds.has(id)) {
+      const fuzzyMatch = catalog.find(a =>
+        a.id.includes(id) || id.includes(a.id) ||
+        a.titulo.toLowerCase().includes(id.toLowerCase()) ||
+        id.toLowerCase().includes(a.titulo.toLowerCase())
+      );
+      if (fuzzyMatch) {
+        repairs.push(`ID "${id}" corrigido para "${fuzzyMatch.id}" por fuzzy match`);
+        id = fuzzyMatch.id;
+      } else {
+        errors.push(`ID "${id}" não existe no catálogo e não foi possível corrigir`);
+        continue;
+      }
+    }
+
+    if (seenIds.has(id)) {
+      repairs.push(`ID duplicado "${id}" removido`);
+      continue;
+    }
+    seenIds.add(id);
+
+    const catalogEntry = catalogMap.get(id);
+    const titulo = choice.titulo || catalogEntry?.titulo || id;
+    const justificativa = (choice.justificativa && choice.justificativa.length > 5)
+      ? choice.justificativa
+      : `Atividade ${titulo} selecionada para atender ao objetivo pedagógico`;
+
+    if (choice.justificativa !== justificativa) {
+      repairs.push(`Justificativa de "${id}" auto-reparada (era "${choice.justificativa || 'vazia'}")`);
+    }
+    if (choice.titulo !== titulo) {
+      repairs.push(`Título de "${id}" preenchido do catálogo`);
+    }
+
+    repairedActivities.push({
+      ...choice,
+      id,
+      titulo,
+      justificativa,
+      ordem_sugerida: choice.ordem_sugerida || repairedActivities.length + 1
+    });
+  }
+
+  const repairedResponse = {
+    ...aiResponse,
+    atividades_escolhidas: repairedActivities,
+    total_escolhidas: repairedActivities.length
+  };
+
+  const all_ids_valid = repairedActivities.every(a => validIds.has(a.id));
+  const count_within_limit = repairedActivities.length <= maxActivities;
+  const has_justification = repairedActivities.every(a => a.justificativa && a.justificativa.length > 5);
+  const no_duplicates = new Set(repairedActivities.map(a => a.id)).size === repairedActivities.length;
+  const fields_complete = repairedActivities.every(a => a.id && a.titulo && a.ordem_sugerida !== undefined);
+
+  if (repairedActivities.length === 0 && aiResponse.atividades_escolhidas.length > 0) {
+    errors.push('Todos os IDs foram inválidos e não puderam ser reparados');
+  }
+
+  return {
+    repaired: repairedResponse,
+    validation: { all_ids_valid, count_within_limit, has_justification, no_duplicates, fields_complete, errors },
+    repairs
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LAYER 4: SMART CONTEXT-AWARE FALLBACK
+// ═══════════════════════════════════════════════════════════════════════════
+
+function smartFallbackSelection(
+  catalog: ActivityFromCatalog[],
+  userObjective: string,
+  requestedQuantity: number | null,
+  maxActivities: number
+): { activities: ActivityFromCatalog[]; strategy: string } {
+  const objectiveLower = userObjective.toLowerCase();
+  const matchedIds = new Set<string>();
+  const matchReasons: string[] = [];
+
+  const sortedKeywords = Object.entries(KEYWORD_TO_ACTIVITY_MAP)
+    .sort((a, b) => b[0].length - a[0].length);
+
+  for (const [keyword, activityIds] of sortedKeywords) {
+    if (objectiveLower.includes(keyword)) {
+      for (const id of activityIds) {
+        if (catalog.some(a => a.id === id)) {
+          matchedIds.add(id);
+          matchReasons.push(`"${keyword}" → ${id}`);
+        }
+      }
+    }
+  }
+
+  const targetCount = requestedQuantity || Math.min(3, maxActivities);
+
+  if (matchedIds.size > 0) {
+    let selected = catalog.filter(a => matchedIds.has(a.id));
+
+    if (selected.length < targetCount) {
+      const remaining = catalog.filter(a => !matchedIds.has(a.id));
+      const textual = remaining.filter(a => (a as any).pipeline === 'criar_arquivo_textual');
+      const standard = remaining.filter(a => (a as any).pipeline === 'standard' || !(a as any).pipeline);
+      const extras = [...textual, ...standard].slice(0, targetCount - selected.length);
+      selected = [...selected, ...extras];
+    }
+
+    selected = selected.slice(0, targetCount);
+
+    return {
+      activities: selected,
+      strategy: `Seleção inteligente por palavras-chave: ${matchReasons.slice(0, 3).join(', ')}`
+    };
+  }
+
+  const textual = catalog.filter(a => (a as any).pipeline === 'criar_arquivo_textual');
+  const standard = catalog.filter(a => (a as any).pipeline === 'standard' || !(a as any).pipeline);
+
+  let diverseSelection: ActivityFromCatalog[] = [];
+  const categories = new Set<string>();
+
+  for (const a of [...textual, ...standard]) {
+    if (diverseSelection.length >= targetCount) break;
+    if (!categories.has(a.categoria)) {
+      diverseSelection.push(a);
+      categories.add(a.categoria);
+    }
+  }
+
+  if (diverseSelection.length < targetCount) {
+    const remaining = catalog.filter(a => !diverseSelection.some(s => s.id === a.id));
+    diverseSelection = [...diverseSelection, ...remaining.slice(0, targetCount - diverseSelection.length)];
+  }
+
+  return {
+    activities: diverseSelection.slice(0, targetCount),
+    strategy: 'Seleção diversificada por categorias (fallback genérico)'
+  };
+}
 
 function buildDecisionPrompt(context: DecisionContext): string {
   const accountContext = context.previous_activities.length > 0
@@ -267,18 +624,7 @@ export async function decidirAtividadesCriar(
   const startTime = Date.now();
   const maxActivities = params.constraints?.max_activities || DEFAULT_MAX_ACTIVITIES;
 
-  const WORD_TO_NUMBER: Record<string, number> = {
-    'uma': 1, 'um': 1, 'dois': 2, 'duas': 2, 'três': 3, 'tres': 3,
-    'quatro': 4, 'cinco': 5, 'seis': 6, 'sete': 7, 'oito': 8, 'nove': 9, 'dez': 10
-  };
-  const objective = params.user_objective || '';
-  const numericMatch = objective.match(/(\d+)\s*(atividade|exerc|quest|prova|material|lista|quiz|flash|jogo|rubrica|plano)/i);
-  const wordMatch = objective.match(/\b(uma?|dois|duas|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez)\s+(atividade|exerc|quest|prova|material|lista|quiz|flash|jogo|rubrica|plano)/i);
-  const requestedQuantity = numericMatch
-    ? parseInt(numericMatch[1])
-    : wordMatch
-      ? (WORD_TO_NUMBER[wordMatch[1].toLowerCase()] || null)
-      : null;
+  const requestedQuantity = extractQuantityFromObjective(params.user_objective || '');
   if (requestedQuantity) {
     console.log(`🔢 [Capability:DECIDIR] Quantidade explícita detectada: ${requestedQuantity}`);
   }
@@ -505,7 +851,7 @@ Próximo passo: Capability 4 (criar_atividade) iniciará a construção.
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// VERSÃO V2 - API-FIRST CAPABILITY
+// VERSÃO V2 - API-FIRST CAPABILITY (Multi-Layer Resilience v2.0)
 // ═══════════════════════════════════════════════════════════════════════════
 
 export async function decidirAtividadesCriarV2(
@@ -513,48 +859,32 @@ export async function decidirAtividadesCriarV2(
 ): Promise<CapabilityOutput> {
   const debug_log: DebugEntry[] = [];
   const startTime = Date.now();
+  let retryCount = 0;
 
   try {
-    // 1. OBTER RESULTADO DA CAPABILITY ANTERIOR
-    console.error(`
-═══════════════════════════════════════════════════════════════════════
-🔍 [decidirAtividadesCriarV2] VERIFICANDO DEPENDÊNCIAS
-═══════════════════════════════════════════════════════════════════════
-📦 previous_results disponível: ${!!input.previous_results}
-📦 previous_results.size: ${input.previous_results?.size || 0}
-📦 Chaves no Map: ${input.previous_results ? Array.from(input.previous_results.keys()).join(', ') : 'NENHUMA'}
-═══════════════════════════════════════════════════════════════════════`);
+    // ═══ PHASE 1: DEPENDENCY VERIFICATION ═══
+    console.error(`[decidirAtividadesCriarV2] Verificando dependências | previous_results: ${input.previous_results?.size || 0} | Chaves: ${input.previous_results ? Array.from(input.previous_results.keys()).join(', ') : 'NENHUMA'}`);
     
     const catalogResult = input.previous_results?.get('pesquisar_atividades_disponiveis');
 
-    console.error(`
-📦 catalogResult existe: ${!!catalogResult}
-📦 catalogResult.success: ${catalogResult?.success}
-📦 catalogResult.data existe: ${!!catalogResult?.data}
-📦 catalogResult.data.catalog existe: ${!!catalogResult?.data?.catalog}
-📦 catalogResult.data.catalog.length: ${catalogResult?.data?.catalog?.length ?? 'N/A'}
-═══════════════════════════════════════════════════════════════════════`);
+    if (!catalogResult || !catalogResult.success || !catalogResult.data?.catalog) {
+      const reason = !catalogResult ? 'não encontrada' : !catalogResult.success ? 'falhou' : 'catalog undefined';
+      console.error(`❌ [decidirAtividadesCriarV2] Dependência ${reason}`);
+      
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'error',
+        narrative: `Dependência pesquisar_atividades_disponiveis ${reason}. Impossível decidir sem catálogo.`,
+        technical_data: { reason, has_result: !!catalogResult, success: catalogResult?.success }
+      });
 
-    if (!catalogResult) {
-      throw new Error('Dependency não encontrada: pesquisar_atividades_disponiveis');
-    }
-
-    if (!catalogResult.success) {
-      throw new Error('Dependency falhou: catálogo não foi carregado');
-    }
-
-    // Verificar se data.catalog existe
-    if (!catalogResult.data || !catalogResult.data.catalog) {
-      console.error(`❌ [decidirAtividadesCriarV2] catalogResult.data.catalog está undefined!`);
-      console.error(`   catalogResult.data:`, JSON.stringify(catalogResult.data, null, 2).slice(0, 500));
-      throw new Error('Dependency inválida: catalogResult.data.catalog está undefined');
+      return buildCriticalFailureResponse(input, debug_log, startTime, `Dependência ${reason}: catálogo não disponível`);
     }
 
     const catalog = catalogResult.data.catalog as ActivityFromCatalog[];
     const validIds = catalogResult.data.valid_ids as string[];
     
-    console.error(`✅ [decidirAtividadesCriarV2] Catálogo obtido: ${catalog.length} atividades`);
-    console.error(`   IDs: ${catalog.map(a => a.id).join(', ')}`)
+    console.error(`✅ [decidirAtividadesCriarV2] Catálogo: ${catalog.length} atividades`);
 
     debug_log.push({
       timestamp: new Date().toISOString(),
@@ -563,7 +893,7 @@ export async function decidirAtividadesCriarV2(
       technical_data: { catalog_count: catalog.length, valid_ids: validIds }
     });
 
-    // 2. EXTRAIR CONTEXTO
+    // ═══ PHASE 2: CONTEXT EXTRACTION ═══
     const userObjective = input.context.user_objective || input.context.objetivo || 'Criar atividades educacionais';
     const temaLimpo = input.context.tema_limpo || '';
     const disciplinaExtraida = input.context.disciplina_extraida || '';
@@ -571,12 +901,16 @@ export async function decidirAtividadesCriarV2(
     const maxActivities = input.context.max_activities || DEFAULT_MAX_ACTIVITIES;
     const userContext = input.context.user_context || {};
 
-    if (temaLimpo) {
-      console.log(`🎯 [decidirAtividadesCriarV2] Tema limpo disponível: "${temaLimpo}"`);
-      console.log(`🎯 [decidirAtividadesCriarV2] Disciplina extraída: "${disciplinaExtraida}"`);
+    const requestedQuantity = extractQuantityFromObjective(userObjective);
+    if (requestedQuantity) {
+      console.log(`🔢 [decidirAtividadesCriarV2] Quantidade explícita detectada: ${requestedQuantity}`);
     }
 
-    // 3. CONSTRUIR CONTEXTO DE DECISÃO
+    if (temaLimpo) {
+      console.log(`🎯 [decidirAtividadesCriarV2] Tema limpo: "${temaLimpo}" | Disciplina: "${disciplinaExtraida}"`);
+    }
+
+    // ═══ PHASE 3: BUILD DECISION CONTEXT ═══
     const objectiveForDecision = temaLimpo 
       ? `${userObjective}\n\n🎯 TEMA PRINCIPAL EXTRAÍDO: ${temaLimpo}` 
       : userObjective;
@@ -600,211 +934,171 @@ export async function decidirAtividadesCriarV2(
     debug_log.push({
       timestamp: new Date().toISOString(),
       type: 'action',
-      narrative: `Construindo prompt de decisão para IA. Objetivo: "${userObjective}". Max atividades: ${maxActivities}`,
-      technical_data: { objective: userObjective, max: maxActivities }
+      narrative: `Contexto: objetivo="${userObjective.substring(0, 80)}..." | max=${maxActivities} | qty_solicitada=${requestedQuantity || 'auto'}`,
+      technical_data: { objective: userObjective, max: maxActivities, requested_quantity: requestedQuantity }
     });
 
-    // 4. CONSTRUIR PROMPT COM DADOS REAIS
+    // ═══ PHASE 4: LLM CALL WITH RETRY LOOP (Layer 2) ═══
     const prompt = buildDecisionPrompt(decisionContext);
+    let lastError: string | null = null;
+    let lastRawResponse: string | null = null;
 
-    debug_log.push({
-      timestamp: new Date().toISOString(),
-      type: 'action',
-      narrative: `Enviando prompt para IA com catálogo completo de ${catalog.length} atividades.`,
-      technical_data: { prompt_length: prompt.length }
-    });
-
-    // 5. CHAMAR LLM
-    const aiResponse = await executeWithCascadeFallback(prompt);
-
-    if (!aiResponse.success || !aiResponse.data) {
-      throw new Error('Falha na chamada da API');
-    }
-
-    const cleanedText = aiResponse.data.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-
-    if (!jsonMatch) {
-      throw new Error('Resposta não contém JSON válido');
-    }
-
-    const parsedResponse = JSON.parse(jsonMatch[0]);
-
-    debug_log.push({
-      timestamp: new Date().toISOString(),
-      type: 'discovery',
-      narrative: `IA retornou decisão: ${parsedResponse.atividades_escolhidas?.length || 0} atividades escolhidas.`
-    });
-
-    // 6. VALIDAR RESPOSTA
-    const validation = validateDecision(parsedResponse, catalog, maxActivities);
-
-    if (validation.errors.length > 0) {
-      debug_log.push({
-        timestamp: new Date().toISOString(),
-        type: 'error',
-        narrative: `❌ VALIDAÇÃO FALHOU: ${validation.errors.join('; ')}. IA escolheu IDs inválidos ou campos incorretos.`,
-        technical_data: { errors: validation.errors }
-      });
-
-      throw new Error(`Validação falhou: ${validation.errors.join('; ')}`);
-    }
-
-    // 7. ENRIQUECER ATIVIDADES ESCOLHIDAS
-    const chosenActivities = enrichChosenActivities(
-      parsedResponse.atividades_escolhidas,
-      catalog
-    );
-
-    debug_log.push({
-      timestamp: new Date().toISOString(),
-      type: 'decision',
-      narrative: `✅ Decisão validada. Atividades escolhidas: ${chosenActivities.map(a => a.titulo).join(', ')}. Estratégia: ${parsedResponse.estrategia_pedagogica || 'Não especificada'}.`
-    });
-
-    const elapsedTime = Date.now() - startTime;
-
-    // SISTEMA DE CONFIRMAÇÃO DE DADOS
-    const dataConfirmation = createDataConfirmation([
-      createDataCheck('catalog_received', 'Catálogo recebido da etapa anterior', catalog.length > 0, catalog.length, '> 0 atividades'),
-      createDataCheck('ai_responded', 'IA respondeu com decisão', !!parsedResponse, true, 'JSON válido'),
-      createDataCheck('activities_chosen', 'Atividades foram escolhidas', chosenActivities.length > 0, chosenActivities.length, '> 0'),
-      createDataCheck('all_ids_valid', 'Todos IDs escolhidos existem no catálogo', validation.all_ids_valid, validation.all_ids_valid, 'true'),
-      createDataCheck('no_duplicates', 'Sem atividades duplicadas', validation.no_duplicates, validation.no_duplicates, 'true'),
-      createDataCheck('has_justifications', 'Todas têm justificativa', validation.has_justification, validation.has_justification, 'true'),
-      createDataCheck('within_limit', 'Dentro do limite máximo', validation.count_within_limit, chosenActivities.length, `<= ${maxActivities}`)
-    ]);
-
-    debug_log.push({
-      timestamp: new Date().toISOString(),
-      type: 'confirmation',
-      narrative: dataConfirmation.summary,
-      technical_data: { checks: dataConfirmation.checks.map(c => ({ id: c.id, passed: c.passed, value: c.value })) }
-    });
-
-    console.error(`
-╔════════════════════════════════════════════════════════════════════════╗
-║ ✅ decidirAtividadesCriarV2 - RETURNING SUCCESS RESPONSE
-║════════════════════════════════════════════════════════════════════════║
-║ execution_id: ${input.execution_id}
-║ chosen_activities.length: ${chosenActivities.length}
-║ estrategia: ${parsedResponse.estrategia_pedagogica?.substring(0, 50) || 'default'}
-║════════════════════════════════════════════════════════════════════════║
-ATIVIDADES SELECIONADAS:
-${chosenActivities.map((a, i) => `  ${i+1}. ${a.titulo} (ID: ${a.id}, Tipo: ${a.tipo})`).join('\n')}
-║════════════════════════════════════════════════════════════════════════║
-    `);
-
-    return {
-      success: true,
-      capability_id: 'decidir_atividades_criar',
-      execution_id: input.execution_id,
-      timestamp: new Date().toISOString(),
-      data: {
-        chosen_activities: chosenActivities,
-        estrategia: parsedResponse.estrategia_pedagogica || 'Estratégia pedagógica baseada em diversidade',
-        count: chosenActivities.length,
-        validation
-      },
-      error: null,
-      debug_log,
-      data_confirmation: dataConfirmation,
-      metadata: {
-        duration_ms: elapsedTime,
-        retry_count: 0,
-        data_source: aiResponse.modelUsed || 'llm_decision'
-      }
-    };
-
-  } catch (error) {
-    const elapsedTime = Date.now() - startTime;
-    const errorMessage = error instanceof Error ? error.message : String(error);
-
-    // LOG DETALHADO DO ERRO
-    console.error(`
-═══════════════════════════════════════════════════════════════════════
-❌ [decidirAtividadesCriarV2] ERRO CAPTURADO
-═══════════════════════════════════════════════════════════════════════
-Mensagem: ${errorMessage}
-Previous results disponíveis: ${input.previous_results?.size || 0}
-Chaves no Map: ${input.previous_results ? Array.from(input.previous_results.keys()).join(', ') : 'NENHUMA'}
-═══════════════════════════════════════════════════════════════════════`);
-
-    debug_log.push({
-      timestamp: new Date().toISOString(),
-      type: 'error',
-      narrative: `❌ ERRO: ${errorMessage}. Tentando seleção de fallback.`,
-      technical_data: { 
-        error: errorMessage, 
-        stack: error instanceof Error ? error.stack : undefined,
-        previous_results_size: input.previous_results?.size || 0,
-        previous_results_keys: input.previous_results ? Array.from(input.previous_results.keys()) : []
-      }
-    });
-
-    // FALLBACK: Tentar obter catálogo do Map
-    const catalogResult = input.previous_results?.get('pesquisar_atividades_disponiveis');
-    
-    // Diagnóstico detalhado do catalogResult
-    console.error(`📦 [decidirAtividadesCriarV2] catalogResult:`, {
-      exists: !!catalogResult,
-      success: catalogResult?.success,
-      hasData: !!catalogResult?.data,
-      catalogLength: catalogResult?.data?.catalog?.length || 0
-    });
-    
-    // Verificar se temos catálogo válido
-    const catalog = catalogResult?.data?.catalog || [];
-    
-    // Se não temos catálogo, FALHAR - não mascarar o erro
-    if (catalog.length === 0) {
-      debug_log.push({
-        timestamp: new Date().toISOString(),
-        type: 'error',
-        narrative: `❌ CRÍTICO: Catálogo vazio ou não disponível. Não é possível decidir atividades sem o catálogo.`,
-        technical_data: { 
-          catalog_available: false,
-          original_error: errorMessage
+    for (let attempt = 1; attempt <= MAX_RETRIES_V2 + 1; attempt++) {
+      retryCount = attempt - 1;
+      
+      try {
+        let currentPrompt = prompt;
+        
+        if (attempt > 1 && lastError) {
+          currentPrompt = `${prompt}\n\n⚠️ CORREÇÃO (Tentativa ${attempt}): Sua resposta anterior foi REJEITADA: ${lastError}\n${lastRawResponse ? `Resposta anterior (primeiros 200 chars): ${lastRawResponse.substring(0, 200)}` : ''}\nCorrija e retorne JSON válido com IDs do catálogo.`;
         }
-      });
 
-      const failureConfirmation = createDataConfirmation([
-        createDataCheck('catalog_available', 'Catálogo disponível', false, 0, '> 0'),
-        createDataCheck('can_proceed', 'Pode continuar', false, 'não', 'sim')
-      ]);
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'action',
+          narrative: `Tentativa ${attempt}/${MAX_RETRIES_V2 + 1}: Enviando para LLM com system prompt separado. Prompt: ${currentPrompt.length} chars.`,
+          technical_data: { attempt, prompt_length: currentPrompt.length }
+        });
 
-      return {
-        success: false,
-        capability_id: 'decidir_atividades_criar',
-        execution_id: input.execution_id,
-        timestamp: new Date().toISOString(),
-        data: {
-          chosen_activities: [],
-          estrategia: '',
-          count: 0,
-          is_fallback: true
-        },
-        error: {
-          code: 'CATALOG_NOT_AVAILABLE',
-          message: `Não foi possível decidir atividades: ${errorMessage}. O catálogo de atividades não foi carregado corretamente.`,
-          severity: 'critical',
-          recoverable: false,
-          recovery_suggestion: 'Verificar se pesquisar_atividades_disponiveis foi executado com sucesso antes desta capability.'
-        },
-        debug_log,
-        data_confirmation: failureConfirmation,
-        metadata: {
-          duration_ms: elapsedTime,
-          retry_count: 0,
-          data_source: 'none'
+        const aiResponse = await executeWithCascadeFallback(currentPrompt, {
+          systemPrompt: DECISION_SYSTEM_PROMPT
+        });
+
+        if (!aiResponse.success || !aiResponse.data) {
+          lastError = 'LLM não retornou resposta válida';
+          lastRawResponse = null;
+          continue;
         }
-      };
+
+        lastRawResponse = aiResponse.data;
+
+        // Layer 1: Tolerant JSON parsing
+        const parseResult = tolerantJsonParse(aiResponse.data);
+
+        if (!parseResult.success) {
+          lastError = `JSON inválido (estratégias tentadas: ${parseResult.strategy})`;
+          debug_log.push({
+            timestamp: new Date().toISOString(),
+            type: 'warning',
+            narrative: `Tentativa ${attempt}: Parse falhou com todas as estratégias. Raw: "${aiResponse.data.substring(0, 150)}..."`,
+            technical_data: { strategy: parseResult.strategy, raw_preview: aiResponse.data.substring(0, 300) }
+          });
+          continue;
+        }
+
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'discovery',
+          narrative: `JSON extraído via "${parseResult.strategy}": ${parseResult.data.atividades_escolhidas?.length || 0} atividades.`
+        });
+
+        // Layer 3: Soft validation + auto-repair
+        const { repaired, validation, repairs } = softValidateAndRepair(parseResult.data, catalog, maxActivities);
+
+        if (repairs.length > 0) {
+          debug_log.push({
+            timestamp: new Date().toISOString(),
+            type: 'info',
+            narrative: `Auto-reparos aplicados: ${repairs.join('; ')}`,
+            technical_data: { repairs }
+          });
+        }
+
+        if (validation.errors.length > 0 && repaired.atividades_escolhidas.length === 0) {
+          lastError = validation.errors.join('; ');
+          debug_log.push({
+            timestamp: new Date().toISOString(),
+            type: 'warning',
+            narrative: `Tentativa ${attempt}: Validação falhou mesmo após auto-reparo: ${lastError}`,
+            technical_data: { errors: validation.errors }
+          });
+          continue;
+        }
+
+        // ═══ SUCCESS PATH ═══
+        let chosenActivities = enrichChosenActivities(repaired.atividades_escolhidas, catalog);
+
+        // Layer 5: Pipeline & template field integrity
+        chosenActivities = chosenActivities.map(a => {
+          const catalogEntry = catalog.find(c => c.id === a.id);
+          return {
+            ...a,
+            pipeline: catalogEntry?.pipeline || a.pipeline || 'standard',
+            text_activity_template_id: catalogEntry?.text_activity_template_id || a.text_activity_template_id
+          };
+        });
+
+        if (requestedQuantity && chosenActivities.length > requestedQuantity) {
+          debug_log.push({
+            timestamp: new Date().toISOString(),
+            type: 'info',
+            narrative: `Trimming: IA retornou ${chosenActivities.length}, professor pediu ${requestedQuantity}`
+          });
+          chosenActivities = chosenActivities.slice(0, requestedQuantity);
+        }
+
+        const elapsedTime = Date.now() - startTime;
+
+        const dataConfirmation = createDataConfirmation([
+          createDataCheck('catalog_received', 'Catálogo recebido da etapa anterior', catalog.length > 0, catalog.length, '> 0 atividades'),
+          createDataCheck('ai_responded', 'IA respondeu com decisão', true, true, 'JSON válido'),
+          createDataCheck('parse_strategy', 'Estratégia de parse', true, parseResult.strategy, 'qualquer'),
+          createDataCheck('activities_chosen', 'Atividades foram escolhidas', chosenActivities.length > 0, chosenActivities.length, '> 0'),
+          createDataCheck('all_ids_valid', 'Todos IDs existem no catálogo', validation.all_ids_valid, validation.all_ids_valid, 'true'),
+          createDataCheck('no_duplicates', 'Sem duplicatas', validation.no_duplicates, validation.no_duplicates, 'true'),
+          createDataCheck('repairs_applied', 'Auto-reparos aplicados', repairs.length > 0, repairs.length, '0 = perfeito'),
+          createDataCheck('within_limit', 'Dentro do limite', validation.count_within_limit, chosenActivities.length, `<= ${maxActivities}`)
+        ]);
+
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'decision',
+          narrative: `✅ Decisão validada (tentativa ${attempt}). Atividades: ${chosenActivities.map(a => `${a.titulo}[${a.pipeline || 'std'}]`).join(', ')}.`
+        });
+
+        console.error(`✅ [decidirAtividadesCriarV2] SUCESSO | ${chosenActivities.length} atividades | tentativa ${attempt} | ${elapsedTime}ms | parse: ${parseResult.strategy} | reparos: ${repairs.length}`);
+
+        return {
+          success: true,
+          capability_id: 'decidir_atividades_criar',
+          execution_id: input.execution_id,
+          timestamp: new Date().toISOString(),
+          data: {
+            chosen_activities: chosenActivities,
+            estrategia: repaired.estrategia_pedagogica || 'Estratégia pedagógica baseada em diversidade',
+            count: chosenActivities.length,
+            validation
+          },
+          error: null,
+          debug_log,
+          data_confirmation: dataConfirmation,
+          metadata: {
+            duration_ms: elapsedTime,
+            retry_count: retryCount,
+            data_source: aiResponse.modelUsed || 'llm_decision',
+            parse_strategy: parseResult.strategy,
+            repairs_applied: repairs.length
+          }
+        };
+
+      } catch (attemptError) {
+        lastError = attemptError instanceof Error ? attemptError.message : String(attemptError);
+        console.error(`⚠️ [decidirAtividadesCriarV2] Tentativa ${attempt} falhou: ${lastError}`);
+      }
     }
 
-    // Se temos catálogo, podemos fazer fallback
-    const maxActivities = input.context.max_activities || DEFAULT_MAX_ACTIVITIES;
+    // ═══ ALL RETRIES FAILED → SMART FALLBACK (Layer 4) ═══
+    console.error(`⚠️ [decidirAtividadesCriarV2] Todas as tentativas LLM falharam. Ativando fallback inteligente.`);
+    
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'warning',
+      narrative: `Todas as ${MAX_RETRIES_V2 + 1} tentativas LLM falharam (último erro: ${lastError}). Ativando seleção inteligente por palavras-chave.`
+    });
 
-    const fallbackActivities = catalog.slice(0, Math.min(3, maxActivities)).map((a: ActivityFromCatalog, idx: number) => ({
+    const fallback = smartFallbackSelection(catalog, userObjective, requestedQuantity, maxActivities);
+    
+    const fallbackActivities = fallback.activities.map((a, idx) => ({
       id: a.id,
       titulo: a.titulo,
       tipo: a.tipo,
@@ -816,30 +1110,35 @@ Chaves no Map: ${input.previous_results ? Array.from(input.previous_results.keys
       campos_opcionais: a.campos_opcionais || [],
       schema_campos: a.schema_campos,
       campos_preenchidos: {},
-      justificativa: 'Seleção automática (fallback após erro de IA)',
+      justificativa: `${fallback.strategy} — seleção automática após falha de IA`,
       ordem_sugerida: idx + 1,
       status_construcao: 'aguardando' as const,
-      progresso: 0
+      progresso: 0,
+      pipeline: (a.pipeline || 'standard') as 'standard' | 'criar_arquivo_textual',
+      text_activity_template_id: a.text_activity_template_id
     }));
+
+    const elapsedTime = Date.now() - startTime;
 
     debug_log.push({
       timestamp: new Date().toISOString(),
-      type: 'warning',
-      narrative: `Usando fallback: ${fallbackActivities.length} atividades selecionadas automaticamente do catálogo.`
+      type: 'info',
+      narrative: `Fallback inteligente: ${fallbackActivities.length} atividades selecionadas. Estratégia: ${fallback.strategy}`
     });
 
-    // CONFIRMAÇÃO DE FALLBACK
     const fallbackConfirmation = createDataConfirmation([
-      createDataCheck('fallback_used', 'Fallback acionado', true, 'sim', 'por erro de IA'),
-      createDataCheck('fallback_has_activities', 'Fallback gerou atividades', fallbackActivities.length > 0, fallbackActivities.length, '> 0'),
-      createDataCheck('catalog_available', 'Catálogo estava disponível', catalog.length > 0, catalog.length, '> 0')
+      createDataCheck('fallback_used', 'Fallback acionado', true, 'sim', 'após falha LLM'),
+      createDataCheck('smart_selection', 'Seleção inteligente', true, fallback.strategy.substring(0, 50), 'keyword-matching'),
+      createDataCheck('fallback_count', 'Atividades selecionadas', fallbackActivities.length > 0, fallbackActivities.length, `>= 1`),
+      createDataCheck('pipeline_preserved', 'Pipelines preservados', true, fallbackActivities.map(a => a.pipeline).join(','), 'standard|criar_arquivo_textual'),
+      createDataCheck('catalog_available', 'Catálogo disponível', catalog.length > 0, catalog.length, '> 0')
     ]);
 
     debug_log.push({
       timestamp: new Date().toISOString(),
       type: 'confirmation',
       narrative: fallbackConfirmation.summary,
-      technical_data: { is_fallback: true, original_error: errorMessage }
+      technical_data: { is_fallback: true, original_error: lastError, strategy: fallback.strategy }
     });
 
     return {
@@ -849,7 +1148,7 @@ Chaves no Map: ${input.previous_results ? Array.from(input.previous_results.keys
       timestamp: new Date().toISOString(),
       data: {
         chosen_activities: fallbackActivities,
-        estrategia: 'Seleção automática (fallback)',
+        estrategia: fallback.strategy,
         count: fallbackActivities.length,
         is_fallback: true
       },
@@ -858,9 +1157,133 @@ Chaves no Map: ${input.previous_results ? Array.from(input.previous_results.keys
       data_confirmation: fallbackConfirmation,
       metadata: {
         duration_ms: elapsedTime,
-        retry_count: 0,
-        data_source: 'fallback_selection'
+        retry_count: retryCount,
+        data_source: 'smart_fallback'
+      }
+    };
+
+  } catch (error) {
+    const elapsedTime = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    console.error(`❌ [decidirAtividadesCriarV2] ERRO CRÍTICO: ${errorMessage}`);
+
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'error',
+      narrative: `❌ ERRO CRÍTICO: ${errorMessage}`,
+      technical_data: { 
+        error: errorMessage, 
+        stack: error instanceof Error ? error.stack : undefined,
+        previous_results_size: input.previous_results?.size || 0,
+        previous_results_keys: input.previous_results ? Array.from(input.previous_results.keys()) : []
+      }
+    });
+
+    // Last-resort: try smart fallback even from catch block
+    const catalogResult = input.previous_results?.get('pesquisar_atividades_disponiveis');
+    const catalog = catalogResult?.data?.catalog || [];
+    
+    if (catalog.length === 0) {
+      return buildCriticalFailureResponse(input, debug_log, startTime, errorMessage);
+    }
+
+    const userObjective = input.context.user_objective || input.context.objetivo || '';
+    const requestedQuantity = extractQuantityFromObjective(userObjective);
+    const maxActivities = input.context.max_activities || DEFAULT_MAX_ACTIVITIES;
+    const fallback = smartFallbackSelection(catalog, userObjective, requestedQuantity, maxActivities);
+
+    const emergencyActivities = fallback.activities.map((a: ActivityFromCatalog, idx: number) => ({
+      id: a.id,
+      titulo: a.titulo,
+      tipo: a.tipo,
+      categoria: a.categoria,
+      materia: a.materia,
+      nivel_dificuldade: a.nivel_dificuldade,
+      tags: a.tags,
+      campos_obrigatorios: a.campos_obrigatorios,
+      campos_opcionais: a.campos_opcionais || [],
+      schema_campos: a.schema_campos,
+      campos_preenchidos: {},
+      justificativa: `Recuperação de emergência: ${fallback.strategy}`,
+      ordem_sugerida: idx + 1,
+      status_construcao: 'aguardando' as const,
+      progresso: 0,
+      pipeline: (a.pipeline || 'standard') as 'standard' | 'criar_arquivo_textual',
+      text_activity_template_id: a.text_activity_template_id
+    }));
+
+    debug_log.push({
+      timestamp: new Date().toISOString(),
+      type: 'warning',
+      narrative: `Recuperação de emergência: ${emergencyActivities.length} atividades via ${fallback.strategy}`
+    });
+
+    const emergencyConfirmation = createDataConfirmation([
+      createDataCheck('emergency_fallback', 'Recuperação de emergência', true, 'ativa', 'último recurso'),
+      createDataCheck('activities_recovered', 'Atividades recuperadas', emergencyActivities.length > 0, emergencyActivities.length, '>= 1')
+    ]);
+
+    return {
+      success: true,
+      capability_id: 'decidir_atividades_criar',
+      execution_id: input.execution_id,
+      timestamp: new Date().toISOString(),
+      data: {
+        chosen_activities: emergencyActivities,
+        estrategia: `Recuperação de emergência: ${fallback.strategy}`,
+        count: emergencyActivities.length,
+        is_fallback: true
+      },
+      error: null,
+      debug_log,
+      data_confirmation: emergencyConfirmation,
+      metadata: {
+        duration_ms: elapsedTime,
+        retry_count: retryCount,
+        data_source: 'emergency_fallback'
       }
     };
   }
+}
+
+function buildCriticalFailureResponse(
+  input: CapabilityInput,
+  debug_log: DebugEntry[],
+  startTime: number,
+  errorMessage: string
+): CapabilityOutput {
+  const elapsedTime = Date.now() - startTime;
+  
+  const failureConfirmation = createDataConfirmation([
+    createDataCheck('catalog_available', 'Catálogo disponível', false, 0, '> 0'),
+    createDataCheck('can_proceed', 'Pode continuar', false, 'não', 'sim')
+  ]);
+
+  return {
+    success: false,
+    capability_id: 'decidir_atividades_criar',
+    execution_id: input.execution_id,
+    timestamp: new Date().toISOString(),
+    data: {
+      chosen_activities: [],
+      estrategia: '',
+      count: 0,
+      is_fallback: true
+    },
+    error: {
+      code: 'CATALOG_NOT_AVAILABLE',
+      message: `Não foi possível decidir atividades: ${errorMessage}. O catálogo de atividades não foi carregado corretamente.`,
+      severity: 'critical',
+      recoverable: false,
+      recovery_suggestion: 'Verificar se pesquisar_atividades_disponiveis foi executado com sucesso antes desta capability.'
+    },
+    debug_log,
+    data_confirmation: failureConfirmation,
+    metadata: {
+      duration_ms: elapsedTime,
+      retry_count: 0,
+      data_source: 'none'
+    }
+  };
 }
