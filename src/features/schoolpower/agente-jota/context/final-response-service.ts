@@ -68,8 +68,8 @@ const PHASE_DEFINITIONS: Record<string, { title: string; description: string; or
     order: 4,
   },
   'complementos': {
-    title: 'Complementos',
-    description: 'Material de apoio para o professor',
+    title: 'Documentos Complementares',
+    description: 'Materiais estratégicos que antecipam suas próximas necessidades',
     order: 5,
   },
 };
@@ -303,7 +303,7 @@ Quando um documento do tipo "Documento" ou "documento_livre" foi criado, use o t
 ESTRUTURA NARRATIVA OBRIGATÓRIA (para 3+ atividades):
 1. ABERTURA PERSONALIZADA (1-2 frases): Resuma o que foi feito. Mencione quantidade, tema, turma/série.
 2. FASES ORGANIZADAS: Para cada grupo de atividades, coloque um [[FASE:titulo|descrição]], depois um PARÁGRAFO ESTRATÉGICO de 2-4 frases com insights pedagógicos valiosos (por que, como, quando aplicar), e em seguida todos os marcadores [[ATIVIDADE:titulo]] juntos consecutivamente.
-3. FASE DE COMPLEMENTOS (se houver documentos): Use [[FASE:Complementos|Material de apoio para o professor]], um breve parágrafo estratégico explicando como usar os documentos, e coloque os [[ARQUIVO:titulo]] juntos.
+3. FASE DE COMPLEMENTOS (OBRIGATÓRIA quando houver documentos): Use [[FASE:Documentos Complementares|Materiais estratégicos que antecipam suas próximas necessidades]], seguido de um PARÁGRAFO ESTRATÉGICO de 3-5 frases que explique o VALOR REAL de cada documento — não apenas liste, mas mostre ao professor como cada um resolve uma dor específica do dia a dia (ex: "A **Mensagem para os Pais** já está pronta em 3 versões — formal, WhatsApp e objetiva — para você não perder tempo redigindo comunicados"). Depois do parágrafo, coloque os [[ARQUIVO:titulo]] juntos consecutivamente.
 4. ENCERRAMENTO ESTRATÉGICO (3-5 frases): Um parágrafo de fechamento onde o Jota dá sua OPINIÃO formada sobre o roteiro criado, sugere PRÓXIMOS PASSOS concretos que o professor pode pedir (ex: "Se quiser, posso criar uma avaliação diagnóstica para aplicar antes de começar, ou adaptar as atividades para uma turma com mais dificuldade"), e fecha com uma pergunta engajadora. Depois do parágrafo, opcionalmente use > 💡 para uma dica extra ou > 📌 para um lembrete prático. NÃO use > ✅ (ele é redundante).
 
 PARA 1-2 ATIVIDADES: Não use fases. Use formato simples com [[ATIVIDADES]] ou [[ATIVIDADE:titulo]].
@@ -366,11 +366,13 @@ Prof., use o Quiz Interativo como **avaliação formativa** (sem nota) — ele m
 [[ATIVIDADE:Quiz Interativo]]
 [[ATIVIDADE:Rubrica de Avaliação]]
 
-[[FASE:Complementos|Material de apoio para o professor]]
+[[FASE:Documentos Complementares|Materiais estratégicos que antecipam suas próximas necessidades]]
 
-Este guia reúne orientações práticas de aplicação, incluindo sugestões de adaptação para turmas com diferentes níveis de domínio em *álgebra*.
+Prof., além das atividades, preparei **3 documentos** que resolvem as tarefas burocráticas que viriam depois: o **Guia de Aplicação** traz o passo a passo para aplicar tudo em sala com cronograma e dicas de mediação. A **Mensagem para os Pais** já está pronta em **3 versões** (formal, WhatsApp e objetiva) — é só copiar e enviar, sem precisar redigir nada. E o **Relatório para Coordenação** documenta todo o trabalho com justificativa pedagógica e alinhamento *BNCC*, pronto para apresentar.
 
 [[ARQUIVO:Guia de Aplicação em Sala de Aula]]
+[[ARQUIVO:Mensagem Explicativa para os Pais]]
+[[ARQUIVO:Relatório de Criação para Coordenadores]]
 
 Prof., esse roteiro cobre desde a **ativação do conhecimento prévio** até a **avaliação individualizada**, o que significa que você pode usar essas atividades ao longo de **4 a 5 aulas** sem precisar montar nada do zero. Se quiser, posso criar uma **avaliação diagnóstica** para aplicar antes de começar (assim você identifica o nível real da turma), ou adaptar esse roteiro para outra turma com um perfil diferente. Também posso aprofundar qualquer fase com mais atividades — o que prefere?
 
@@ -515,7 +517,13 @@ function generateFallbackParagraphs(
         fases[phase.phaseKey] = `Use ${count > 1 ? 'essas ferramentas' : 'essa ferramenta'} como **avaliação formativa** — ${count > 1 ? 'juntas, elas dão um mapa completo do aprendizado da turma sobre **' + temaLimpo + '**' : 'ela mostra em tempo real quais conceitos a turma dominou sobre **' + temaLimpo + '**'}, permitindo ajustar o ritmo antes de avançar. Aplique preferencialmente no final da sequência ou como fechamento de aula.`;
         break;
       case 'complementos':
-        fases[phase.phaseKey] = `${count > 1 ? 'Esses materiais reúnem orientações práticas' : 'Este material reúne orientações práticas'} de aplicação sobre **${temaLimpo}**, incluindo sugestões de adaptação para turmas com diferentes níveis de domínio no conteúdo.`;
+        if (count >= 3) {
+          fases[phase.phaseKey] = `Prof., além das atividades, preparei **${count} documentos complementares** que antecipam suas próximas necessidades: desde orientações práticas de aplicação em sala até comunicação pronta para pais e documentação formal para a coordenação. Cada documento sobre **${temaLimpo}** está pronto para usar — é só abrir, revisar e aplicar, sem precisar redigir nada do zero.`;
+        } else if (count === 2) {
+          fases[phase.phaseKey] = `Prof., preparei **2 documentos complementares** sobre **${temaLimpo}** que resolvem tarefas que viriam depois: orientações práticas de aplicação e comunicação pronta para enviar. Ambos estão prontos para uso — é só abrir e aplicar.`;
+        } else {
+          fases[phase.phaseKey] = `Este material reúne orientações práticas de aplicação sobre **${temaLimpo}**, incluindo sugestões de adaptação para turmas com diferentes níveis de domínio no conteúdo.`;
+        }
         break;
     }
   }
