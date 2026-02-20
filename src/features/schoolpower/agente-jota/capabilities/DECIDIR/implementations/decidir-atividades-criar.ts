@@ -16,9 +16,9 @@
  */
 
 import { executeWithCascadeFallback } from '../../../../services/controle-APIs-gerais-school-power';
-import { callGeminiWithFunctionCalling } from '../../../../services/llm-orchestrator/providers/gemini';
-import { getModelById } from '../../../../services/llm-orchestrator/config';
-import { isCircuitOpen } from '../../../../services/llm-orchestrator/guards';
+import { callGeminiWithFunctionCalling } from '../../../../../../services/llm-orchestrator/providers/gemini';
+import { getModelById } from '../../../../../../services/llm-orchestrator/config';
+import { isCircuitOpen } from '../../../../../../services/llm-orchestrator/guards';
 import { 
   ActivityFromCatalog,
   AtividadeForAI,
@@ -1054,7 +1054,7 @@ export async function decidirAtividadesCriarV2(
                   duration_ms: elapsedTime,
                   retry_count: 0,
                   data_source: 'gemini-function-calling',
-                } as Record<string, any>
+                }
               };
             }
           }
@@ -1231,7 +1231,7 @@ export async function decidirAtividadesCriarV2(
             duration_ms: elapsedTime,
             retry_count: retryCount,
             data_source: aiResponse.modelUsed || 'llm_decision',
-          } as Record<string, any>
+          }
         };
 
       } catch (attemptError) {
