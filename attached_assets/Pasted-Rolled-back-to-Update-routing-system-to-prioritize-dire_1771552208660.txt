@@ -1,0 +1,216 @@
+Rolled back to 'Update routing system to prioritize direct actions and improve conversational responses'
+Finished
+I've finished reverting, what should I do now?
+
+Certo. Agora precisamos ser super cuidados nas próximas alterações dentro da plataforma:
+
+Acredito que o sistema do Chat Jota ainda está muito bagunçado! Qual é o objetivo do SMART_ROUTER_PROMPT? (Eu estou achando o prompt de SMART_ROUTER_PROMPT bem fraco) Qual é o objetivo do prompt dentro do arquivo de "orchestrator.ts"? Existe alguns arquivos existentes que deveriam ser excluidos ou unificados? Se sim, como aconteceria e porque?
+
+Atualmente parece que o sistema de SmartRouter v1.0 que deveria ser um orquestrador super inteligente de rotas para o Jota seguir, ainda não está muito inteligente! O Jota/IA ainda não está conseguindo escolher os caminhso correto e seguir esse caminho! Analise todos os casos de uso que eu te representei dentro da imagem que eu te enviei agora! Analise todos os arquivos de dentro da plataforma atual e analise todas as alterações que foram feitas anteriormente! Identifique e verifique se todos os sistemas estão corretamente ataulizados, sem códigos duplicados, ou corrompimentos!
+
+Insight principal dos concorrentes: NENHUM deles usa regex para decidir entre conversa e execução. Todos usam LLM com prompt rico que inclui personalidade + contexto. O Genspark é o mais relevante — filosofia "less control, more tools" com backtracking autônomo. Porque a gente ainda usa? E quais são os problemas que isso causa?
+
+Analise todos os nossos concorrentes e benchmarkings antes de chegar em uma resposta para mim! Faça diversas pesquisas dentro da web e internet com diferentes metodologias para identificar todas as plataformas que fazem algo parecido com o que a gente tá fazendo atualmente! E pesquise todas as plataformas de Agentes IA, como a Manus IA 1.6 Max, Kimi Agent Swarm, Genspark IA, entre outros! Pesquise referencias dentro e fora do nosso nicho! Entenda a estrutura e arquitetura dentro deles, entenda os seus promtps systems, suas capacidades, suas ferramentas, entre outros! Verfiique se as capacidades de "criar_compromisso_calendario" e de "gerenciar_calendario" estão corretamente configuradas, prontas para uso perfeito!
+
+ATENÇÃO: No final de tudo me entregue sugestões sólidas das próximas alterações de coisas que realmente geram um resultado significativo e considerável dentro da plataforma! Entenda pontos essenciais e pontos de Aha moment incriveis! Precisamos ser indiscutivelmente os melhores no que a gente faz e propõem! PRECISAM SER SUJESTÕES SUPER EXATAS, E SUPER BEM ALINHADAS E DETALHADAS E ESPECIFICAS E INTELIGENTES!
+
+Vou fazer a análise completa que você pediu. Primeiro, preciso entender por que as mudanças que fiz ainda não estão funcionando (as imagens mostram que o problema persiste), e depois fazer a pesquisa de concorrentes.
+
+Now let me do the deep code analysis to understand WHY the changes still aren't working:
+
+Now let me also check the LLM orchestrator to understand how it sends the prompt:
+
+Now let me check the most critical part — how the LLM orchestrator actually sends messages to the API:
+
+Achei o PROBLEMA RAIZ. Olha a linha 65:
+
+messages: [{ role: 'user', content: prompt }],
+O sistema INTEIRO envia TUDO como mensagem de USUÁRIO. O SYSTEM_PROMPT (identidade do Jota, regras, personalidade) está sendo enviado como se fosse uma mensagem do professor, não como instrução de sistema. Isso causa TODOS os problemas que você mostrou nas imagens.
+
+Deixa eu verificar o Gemini provider também:
+
+Agora tenho a análise completa. Encontrei a CAUSA RAIZ de todos os problemas. Deixa eu te explicar tudo com clareza total.
+
+DIAGNÓSTICO COMPLETO — Por que o Jota ainda não funciona
+A CAUSA RAIZ (afeta TUDO)
+Olha essa linha do código que envia mensagens para a IA (Groq):
+
+// src/services/llm-orchestrator/providers/groq.ts — linha 65
+messages: [{ role: 'user', content: prompt }]
+O sistema INTEIRO está enviando tudo como mensagem de USUÁRIO. O system prompt (personalidade do Jota, regras, identidade) está sendo misturado com a pergunta do professor em UMA SÓ mensagem. A IA não está recebendo o system prompt como INSTRUÇÃO — está recebendo como CONTEÚDO para responder.
+
+Resultado direto das imagens que você enviou:
+
+Imagem 4 ("O que é SAAS?"): A IA leu o system prompt como conteúdo e simplesmente COPIOU ele de volta — "Regras de Comportamento", "Capacidades", etc.
+Imagem 3 ("O que é funções do segundo grau?"): A IA ficou confusa com o prompt gigante e retornou uma saudação genérica "Olá! Sou o Agente Jota..." — DUAS vezes idênticas
+Imagens 1 e 2 (calendário): Mesmo com a correção do SmartRouter, existe OUTRA camada de problema
+O SYSTEM_PROMPT contradiz o SmartRouter
+O system prompt atual tem essa regra (linhas 83-89):
+
+"REGRA SUPREMA: Você é um EXECUTOR, não um EXPLICADOR"
+"NA DÚVIDA = SEMPRE EXECUTIVO"
+
+Isso significa: mesmo quando o SmartRouter corretamente decide CONVERSAR, o system prompt que está MISTURADO na mensagem diz à IA "seja executor, não explicador". A IA fica recebendo instruções CONTRADITÓRIAS.
+
+COMO TODOS OS CONCORRENTES FAZEM
+Aspecto	Manus 1.6	Kimi K2.5	Genspark	OpenAI	Claude	Ponto School
+System Prompt	XML como SYSTEM msg separada	Sistema separado	Sistema separado	system instruction	System prompt separado	Misturado no user msg
+Routing	Planner Agent com tools	RL-trained orchestrator	30+ modelos dinâmico	tool_choice + function calling	Function calling nativo	Regex/LLM híbrido
+Seleção de ferramenta	1 tool por loop	100 sub-agents paralelos	80+ tools auto-select	Schema JSON strict	strict: true tools	if/else manual
+Contexto	Event stream append-only	256K window gerenciado	Checkpoints + backtrack	Conversations API	Message history roles	String única
+Recuperação de erro	Agente verificador	Workers congelados retry	Backtracking autônomo	Retry + reasoning	Tool retry loop	Fallback local estático
+Insight crítico: TODOS os concorrentes separam system prompt da mensagem do usuário. NENHUM mistura tudo numa string só. Essa é a diferença fundamental.
+
+POR QUE REGEX AINDA EXISTE E O QUE CAUSA
+As fast rules (que substituíram o regex puro) existem porque o LLM do SmartRouter falha frequentemente. O real problema é circular:
+
+O SmartRouter envia um prompt de routing para a IA
+A IA recebe TUDO como user message (sem system prompt separado)
+A IA fica confusa e retorna JSON malformado
+O sistema cai nas fast rules
+Mesmo quando as fast rules acertam, o próximo passo (handleDirectResponse) tem o MESMO problema de prompt misturado
+ARQUIVOS QUE PRECISAM MUDAR
+Arquivo	Problema	Ação
+providers/groq.ts	Envia system prompt como user msg	Separar system/user roles
+providers/gemini.ts	Mesmo problema (sem systemInstruction)	Adicionar systemInstruction field
+orchestrator.ts (llm)	generateContent aceita só string	Aceitar messages array
+context-gateway.ts	Mistura SYSTEM_PROMPT com contexto	Separar em 2 retornos
+system-prompt.ts	"NA DÚVIDA = SEMPRE EXECUTIVO"	Remover bias anti-CONVERSAR
+handleDirectResponse	Prompt fraco + system duplicado	Enviar system separado
+intent-classifier.ts	Código morto, nunca usado	Excluir
+controle-APIs-gerais-school-power.ts	Wrapper de wrapper desnecessário	Simplificar
+SUGESTÕES DE ALTERAÇÕES (Ordem de Impacto)
+Created task list
+Certo. Agora a gente sabe o que precisa ser modificado, o seu principal objetivo atual é: Você precisa melhorar esse plano de ação, você vai analisar cuidadosamente toda a sua analise, vai fazer ua nova analise e pesquisa, e depois vai gerar um novo plano de ação super micro envolvendo babysteps, com uma metodologia Macro e Micro (Ex: Macro 1 -> Micro 1 a 5)! No final me entregue um relatorio super detalhado de cada alteração que você precisa fazer e vai, e porque vai funcionar, toda a metodolgoia e detalhes, entre outros...
+
+Faça uma plano completo com Macro-steps de objetivos principais de execução e micro-steps em ordem inteligente para fazer todas essas alterações da maneira correta, e incluindo testes, validações e verificações, para garantir que tudo seja feito corretamente!
+Vou fazer a análise final profunda para criar o plano Macro/Micro definitivo. Preciso verificar alguns pontos críticos no código antes:
+
+Now let me check handleDirectResponse to see its full implementation:
+
+Agora tenho a análise completa de TODO o sistema. Deixa eu organizar o plano Macro/Micro definitivo com cada baby step detalhado.
+
+RELATÓRIO COMPLETO DE ANÁLISE E PLANO DE EXECUÇÃO
+MAPA DO FLUXO ATUAL (QUEBRADO)
+Usuário digita → processUserPrompt() → SmartRouter classifica rota
+                                            ├── CONVERSAR → handleDirectResponse()
+                                            │     └── buildContextForFollowUp() → SYSTEM_PROMPT + context + mensagem = UMA STRING
+                                            │           └── executeWithCascadeFallback(prompt_gigante)
+                                            │                 └── generateContent(prompt_gigante)
+                                            │                       └── callGroqAPI(model, prompt_gigante)
+                                            │                             └── messages: [{ role: 'user', content: TUDO_JUNTO }]  ← BUG
+                                            │
+                                            ├── CAPABILITY_DIRETA → executeDirectCapability()
+                                            │     └── gerenciarCalendarioV2() → também usa executeWithCascadeFallback ← MESMO BUG
+                                            │
+                                            └── EXECUTAR → createExecutionPlan() → capabilities → MESMO BUG
+POR QUE CADA PROBLEMA ACONTECE
+Imagem	Teste	Rota Esperada	O que acontece	Causa raiz
+Imagem 4	"O que é SAAS?"	CONVERSAR	Jota despeja o SYSTEM_PROMPT como resposta	SYSTEM_PROMPT enviado como role:'user' → IA lê como conteúdo
+Imagem 3	"funções do segundo grau?"	CONVERSAR	"Olá! Sou o Agente Jota..." repetido 2x	Prompt gigante confunde IA → resposta genérica padrão
+Imagem 1	"Crie um compromisso..."	CAPABILITY_DIRETA	Card "Criar conteúdo para você"	SmartRouter acerta, MAS após execução o SYSTEM_PROMPT diz "NA DÚVIDA = SEMPRE EXECUTIVO"
+Imagem 2	"Quais compromissos..."	CAPABILITY_DIRETA	Card de atividade em vez de lista	Mesmo problema: calendário detectado mas prompt contradiz
+COMPATIBILIDADE RETROATIVA
+Existem 22 arquivos que usam executeWithCascadeFallback. A estratégia é:
+
+systemPrompt será parâmetro OPCIONAL em todas as funções
+Quando NÃO fornecido → comportamento idêntico ao atual (nada quebra)
+Quando fornecido → enviado como role: 'system' separado
+Migração gradual: só os caminhos críticos usam o novo formato inicialmente
+DEPENDÊNCIAS ENTRE MACROS
+MACRO 1 (Providers) ← Fundação. Tudo depende disso.
+    ↓
+MACRO 2 (Pipeline) ← Conecta providers com chamadores
+    ↓
+MACRO 3 (CONVERSAR) ← Fix mais visível (Imagens 3 e 4)
+    ↓
+MACRO 4 (System Prompt) ← Remove contradições de routing
+    ↓
+MACRO 5 (SmartRouter) ← Melhora qualidade do routing LLM
+    ↓
+MACRO 6 (Calendário) ← Fix das Imagens 1 e 2
+    ↓
+MACRO 7 (Limpeza) ← Código morto
+Aqui está o plano detalhado com todos os baby steps:
+
+Created task list
+Start building
+Vou começar a implementação seguindo o plano Macro/Micro. Primeiro, vou marcar o progresso e ler os arquivos necessários para as primeiras mudanças:
+
+Vou implementar os Micros 1.1 a 1.4 em paralelo, já que são edições em arquivos diferentes:
+
+Agora vou aplicar os 4 edits do MACRO 1 em paralelo:
+
+Now let me update the Gemini provider body and the LLM orchestrator:
+
+MACRO 1 concluído. Agora vamos para o MACRO 2 — atualizar o pipeline. Vou ler o executeWithCascadeFallback e atualizar:
+
+Now let me update executeWithCascadeFallback and create the structured context functions:
+
+Now let me update executeWithCascadeFallback and the context gateway in parallel:
+
+Good. Now M2.1 is done. Let me do M2.2 and M2.3 — creating structured context functions:
+
+Now add the structured context functions to context-gateway.ts:
+
+Now export the new functions from context-engine/index.ts:
+
+MACRO 2 is complete. Now let me do MACRO 3 + MACRO 4 together since they're closely related — rewriting handleDirectResponse with proper system prompt separation:
+
+Now let me do MACRO 3 (rewrite handleDirectResponse) and MACRO 4 (fix system prompt) together. First, let me read the current system prompt to plan the edits:
+
+Now let me do MACRO 4 first (edit system-prompt.ts) and MACRO 3 (rewrite handleDirectResponse) simultaneously:
+
+Now let me remove the contradictory sections from system-prompt.ts (MACRO 4.1 + 4.2) and create the CONVERSAR variant (MACRO 4.3):
+
+Now let me create the SYSTEM_PROMPT_CONVERSAR variant (MACRO 4.3) and update the exports:
+
+Now update the prompts/index.ts exports:
+
+Now the most critical edit — rewrite handleDirectResponse to use the separated system prompt (MACRO 3.1 + 4.4):
+
+Now let me check what imports the orchestrator needs and rewrite handleDirectResponse:
+
+Now rewrite handleDirectResponse — the core fix:
+
+Excellent! Now MACRO 5 — fix the SmartRouter to use systemPrompt:
+
+Good. Now let me do MACRO 6 — check and fix the calendar capabilities. Let me look at the calendar files:
+
+Found it! The calendar agent is also mixing system prompt with user prompt. Let me fix it:
+
+Good. Now MACRO 7 — clean up dead code. Let me check if intent-classifier is imported anywhere active:
+
+The intent-classifier is only referenced in its own file and the index.ts exports. Safe to clean up:
+
+Now let me delete the intent-classifier.ts file and validate compilation:
+
+Good. Now let me update all task statuses and validate compilation:
+
+Now let me restart the App workflow and check for compilation errors:
+
+A compilação está limpa. Vite rodou sem erros TypeScript, app está running, sem erros no console. Agora vou atualizar o replit.md e fazer a revisão com o architect:
+
+Now let me call the architect to review all changes before marking complete:
+
+A revisão do architect confirma que todas as mudanças estão corretas. Vou marcar tudo como concluído:
+
+All done! Here's a summary of what was implemented:
+
+The core fix: Your AI assistant (Jota) was sending its internal instructions mixed into user messages, which caused the AI to echo system instructions back, give generic responses, and misroute calendar requests. Now, system instructions are properly separated from user messages across the entire AI stack.
+
+What changed:
+
+Groq provider - Now sends system instructions as a dedicated role: 'system' message, separate from the user's message
+Gemini provider - Now uses the dedicated systemInstruction field instead of mixing instructions into content
+Conversational responses - A specialized conversational prompt (SYSTEM_PROMPT_CONVERSAR) is sent as a system instruction, so Jota's personality stays consistent without leaking into responses
+SmartRouter - Routing classification now sends its instructions separately, which should produce cleaner JSON responses and better routing accuracy
+Calendar handling - Calendar agent now properly separates its system instructions
+Removed contradictions - The old "when in doubt, always execute" protocol was removed since it conflicted with the SmartRouter's decisions
+Cleaned up dead code - The old intent classifier file was fully removed
+Everything compiles cleanly and both the frontend and backend are running. You should now see much better quality responses from Jota - actual answers to questions instead of system prompt dumps or generic greetings.
+
+Agora o seu principal objetivo é resolver completamente o erro da resposta final que a IA/Jota está gerando depois que ela executou algumas capacidades dentro do card de Desenvolvimento! Parece que a IA/Jota ainda está bugando em alguns casos e seguindo um caminho diferente do apropiado! Analise todas as opçÕES, TODOS os caminhos que a IA/Jota pode seguir assim que analisa o imput do usuário! Analise todas as possibilidades e caminhos possiveis que a IA pode seguir! E analise todas as possibilidades e caminhos possiveis de soluções que podemos implementar para que esses erros não aconteçam novamente (Não podem acontecer de forma alguma)! Não altere coisas fora de contexto! Não cause ou gere loops de erros ou bugs e não corrompa o código!
+Analise todos os nossos concorrentes e benchmarkings antes de chegar em uma resposta para mim! Faça diversas pesquisas dentro da web e internet com diferentes metodologias para identificar todas as plataformas que fazem algo parecido com o que a gente tá fazendo atualmente! E pesquise todas as plataformas de Agentes IA, como a Manus IA 1.6 Max, Kimi Agent Swarm, Genspark IA, entre outros! Pesquise referencias dentro e fora do nosso nicho! Entenda a estrutura e arquitetura dentro deles, entenda os seus promtps systems, suas capacidades, suas ferramentas, entre outros!
+
+ATENÇÃO: No final de tudo me entregue sugestões sólidas das próximas alterações de coisas que realmente geram um resultado significativo e considerável dentro da plataforma! Entenda pontos essenciais e pontos de Aha moment incriveis! Precisamos ser indiscutivelmente os melhores no que a gente faz e propõem! PRECISAM SER SUJESTÕES SUPER EXATAS, E SUPER BEM ALINHADAS E DETALHADAS E ESPECIFICAS E INTELIGENTES!
