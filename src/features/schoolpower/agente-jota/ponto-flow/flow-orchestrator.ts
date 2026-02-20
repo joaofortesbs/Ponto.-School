@@ -1,5 +1,6 @@
 import type { ArtifactType, ArtifactData } from '../capabilities/CRIAR_ARQUIVO/types';
 import { generateArtifact } from '../capabilities/CRIAR_ARQUIVO/artifact-generator';
+import { executeWithCascadeFallback } from '../../services/controle-APIs-gerais-school-power';
 
 export interface FlowDocumentoLivrePlan {
   titulo: string;
@@ -31,45 +32,205 @@ const FLOW_PROFILES: Record<FlowType, ArtifactType[]> = {
   minimo: ['guia_aplicacao', 'mensagem_pais'],
 };
 
-interface ContextSignals {
-  isWeekPlan: boolean;
-  isSubstantialBatch: boolean;
-  isMultipleActivities: boolean;
-  mentionsPais: boolean;
-  mentionsAlunos: boolean;
-  mentionsCoordenacao: boolean;
-  mentionsAvaliacao: boolean;
-  mentionsProjeto: boolean;
-  mentionsInclusao: boolean;
-  mentionsDificuldade: boolean;
-  mentionsQuiz: boolean;
-  mentionsPlanoAula: boolean;
-  mentionsRedacao: boolean;
-  mentionsExercicios: boolean;
-  mentionsLaboratorio: boolean;
-  mentionsApresentacao: boolean;
+const ARTIFACT_CATALOG: Record<string, { tipo: ArtifactType; titulo: string }> = {
+  guia_aplicacao: { tipo: 'guia_aplicacao', titulo: 'Guia de Aplicação em Sala de Aula' },
+  mensagem_pais: { tipo: 'mensagem_pais', titulo: 'Mensagem Explicativa para os Pais' },
+  relatorio_coordenacao: { tipo: 'relatorio_coordenacao', titulo: 'Relatório de Criação para Coordenadores' },
+  mensagem_alunos: { tipo: 'mensagem_alunos', titulo: 'Mensagens Motivacionais para os Alunos' },
+  roteiro_aula: { tipo: 'roteiro_aula', titulo: 'Roteiro Detalhado de Aula' },
+  resumo_executivo: { tipo: 'resumo_executivo', titulo: 'Resumo Executivo da Sessão' },
+  dossie_pedagogico: { tipo: 'dossie_pedagogico', titulo: 'Dossiê Pedagógico Completo' },
+  relatorio_progresso: { tipo: 'relatorio_progresso', titulo: 'Relatório de Progresso' },
+};
+
+const AI_SELECTION_SYSTEM_PROMPT = `Você é o Jota, agente de IA pedagógico do Ponto School. Sua missão é antecipar as necessidades do professor ANTES que ele precise pedir. Você usa a Metodologia de Antecipação de Dor (MAD): para cada atividade criada, pense nos próximos passos burocráticos e pedagógicos que o professor enfrentará e gere documentos que resolvam essas tarefas antecipadamente.`;
+
+function buildAISelectionPrompt(
+  activityCount: number,
+  activityNames: string[],
+  userPrompt: string,
+): string {
+  const minDocs = activityCount >= 4 ? 3 : (activityCount >= 2 ? 3 : 2);
+  const maxDocs = activityCount >= 4 ? 4 : (activityCount >= 2 ? 3 : 2);
+
+  return `
+CONTEXTO:
+O professor pediu: "${userPrompt}"
+Foram criadas ${activityCount} atividade(s): ${activityNames.join(', ')}
+
+DOCUMENTOS COMPLEMENTARES DISPONÍVEIS (escolha ${minDocs} a ${maxDocs}):
+1. guia_aplicacao — Manual prático de como aplicar as atividades em sala, com cronograma, dicas de mediação e materiais necessários
+2. mensagem_pais — Comunicação pronta para enviar aos pais/responsáveis em 3 versões (formal, WhatsApp, objetiva)
+3. relatorio_coordenacao — Relatório formal com justificativa pedagógica, alinhamento BNCC e cronograma para apresentar à coordenação
+4. mensagem_alunos — Mensagens de motivação e engajamento para apresentar as atividades aos alunos
+5. roteiro_aula — Roteiro cronológico minuto a minuto para aplicar as atividades em sala
+6. resumo_executivo — Síntese rápida de tudo que foi criado para o professor ter uma visão geral
+7. dossie_pedagogico — Documento completo com análise pedagógica, alinhamento BNCC e recomendações
+8. relatorio_progresso — Análise detalhada do que foi construído e próximos passos
+
+SUA TAREFA:
+Analise o pedido do professor e as atividades criadas. Pense como um consultor pedagógico experiente:
+- Quais tarefas burocráticas o professor vai precisar resolver DEPOIS de receber as atividades?
+- Que comunicações ele vai precisar enviar?
+- Que documentação a escola vai exigir?
+- Que apoio prático ele precisa para aplicar o material em sala?
+
+Escolha entre ${minDocs} e ${maxDocs} documentos que MAIS AJUDAM esse professor específico nesse contexto específico.
+
+RESPONDA EXCLUSIVAMENTE em formato JSON válido (sem markdown, sem texto antes/depois):
+{
+  "documentos": [
+    {
+      "tipo": "identificador_do_documento",
+      "razao": "Explicação de 1-2 frases do porquê esse documento é estratégico para esse professor nesse contexto"
+    }
+  ]
 }
 
-function extractContextSignals(userPrompt: string): ContextSignals {
+REGRAS:
+- Escolha EXATAMENTE entre ${minDocs} e ${maxDocs} documentos
+- NÃO repita o mesmo tipo
+- Cada "tipo" deve ser um dos identificadores listados acima (guia_aplicacao, mensagem_pais, etc.)
+- A "razao" deve ser ESPECÍFICA ao contexto do professor, não genérica
+- RETORNE APENAS o JSON, sem nenhum texto adicional`.trim();
+}
+
+interface AIDocumentChoice {
+  tipo: string;
+  razao: string;
+}
+
+function parseAIResponse(rawResponse: string, minDocs: number, maxDocs: number): AIDocumentChoice[] | null {
+  try {
+    let cleaned = rawResponse.trim();
+    cleaned = cleaned.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+
+    console.log(`🔍 [PontoFlow-AI] Resposta bruta (primeiros 500 chars): ${cleaned.substring(0, 500)}`);
+
+    const jsonMatch = cleaned.match(/\{[\s\S]*"documentos"[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.warn('⚠️ [PontoFlow-AI] Nenhum JSON com "documentos" encontrado na resposta');
+      return null;
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    if (!parsed.documentos || !Array.isArray(parsed.documentos)) {
+      console.warn('⚠️ [PontoFlow-AI] Campo "documentos" ausente ou não é array');
+      return null;
+    }
+
+    const validChoices: AIDocumentChoice[] = [];
+    const seenTypes = new Set<string>();
+
+    for (const doc of parsed.documentos) {
+      if (!doc.tipo || typeof doc.tipo !== 'string') continue;
+      const tipoClean = doc.tipo.toLowerCase().trim().replace(/[^a-z_]/g, '');
+      if (!ARTIFACT_CATALOG[tipoClean]) {
+        console.warn(`⚠️ [PontoFlow-AI] Tipo desconhecido ignorado: "${doc.tipo}"`);
+        continue;
+      }
+      if (seenTypes.has(tipoClean)) continue;
+      seenTypes.add(tipoClean);
+      validChoices.push({
+        tipo: tipoClean,
+        razao: typeof doc.razao === 'string' ? doc.razao : '',
+      });
+    }
+
+    if (validChoices.length < minDocs) {
+      console.warn(`⚠️ [PontoFlow-AI] IA retornou ${validChoices.length} documentos, mínimo exigido: ${minDocs} — rejeitando`);
+      return null;
+    }
+
+    return validChoices.slice(0, maxDocs);
+  } catch (error) {
+    console.warn('⚠️ [PontoFlow-AI] Erro ao parsear resposta da IA:', error);
+    return null;
+  }
+}
+
+function determineFallbackArtifacts(
+  activityCount: number,
+  userPrompt: string,
+): FlowArtifactPlan[] {
+  const plan: FlowArtifactPlan[] = [];
+  const addedTypes = new Set<ArtifactType>();
+
+  function addArtifact(tipo: ArtifactType, prioridade: 'obrigatorio' | 'recomendado', razao: string) {
+    if (addedTypes.has(tipo)) return;
+    const cat = ARTIFACT_CATALOG[tipo];
+    if (!cat) return;
+    addedTypes.add(tipo);
+    plan.push({ tipo: cat.tipo, titulo: cat.titulo, prioridade, razao });
+  }
+
+  addArtifact('guia_aplicacao', 'obrigatorio', 'Orientação prática para aplicar as atividades em sala');
+
   const lower = userPrompt.toLowerCase();
-  return {
-    isWeekPlan: /\b(semana|semanal|semanas)\b/.test(lower),
-    isSubstantialBatch: false,
-    isMultipleActivities: false,
-    mentionsPais: /\b(pais|responsáveis|responsaveis|família|familia)\b/.test(lower),
-    mentionsAlunos: /\b(alunos|estudantes|turma)\b/.test(lower),
-    mentionsCoordenacao: /\b(coordena|diretor|gestão|gestao|institucional)\b/.test(lower),
-    mentionsAvaliacao: /avalia[çc][aã]o\b|prova\s+(bimestral|mensal|final)|simulado|diagn[oó]stic/.test(lower),
-    mentionsProjeto: /\bprojeto\b|pbl|maker|steam|interdisciplinar/.test(lower),
-    mentionsInclusao: /inclus[aã]o|inclusiv|adaptad|diferencia[çc]|pei\b|iep\b|necessidades\s+especiais/.test(lower),
-    mentionsDificuldade: /dificuldade|refor[çc]o|recupera[çc][aã]o|nivelamento|defasagem|lacuna/.test(lower),
-    mentionsQuiz: /quiz|question[aá]rio|teste|prova|exerc[ií]cio/.test(lower),
-    mentionsPlanoAula: /plano\s+de\s+aula|sequência\s+did[aá]tica|sequencia\s+did[aá]tica|roteiro/.test(lower),
-    mentionsRedacao: /reda[çc][aã]o|escrita|texto|produ[çc][aã]o\s+textual|interpreta[çc][aã]o/.test(lower),
-    mentionsExercicios: /exerc[ií]cio|lista|fixa[çc][aã]o|pr[aá]tica|treino/.test(lower),
-    mentionsLaboratorio: /laborat[oó]rio|experimento|pr[aá]tica\s+experimental|investiga[çc][aã]o/.test(lower),
-    mentionsApresentacao: /apresenta[çc][aã]o|semin[aá]rio|oral|exposi[çc][aã]o/.test(lower),
-  };
+  if (/\b(pais|responsáveis|responsaveis|família|familia)\b/.test(lower)) {
+    addArtifact('mensagem_pais', 'obrigatorio', 'Professor mencionou pais/responsáveis');
+  }
+  if (/\b(coordena|diretor|gestão|gestao|institucional)\b/.test(lower)) {
+    addArtifact('relatorio_coordenacao', 'obrigatorio', 'Professor mencionou coordenação/gestão');
+  }
+
+  const minArtifacts = activityCount >= 2 ? 3 : 2;
+  const fallbackOrder: ArtifactType[] = ['mensagem_pais', 'relatorio_coordenacao', 'mensagem_alunos', 'roteiro_aula', 'resumo_executivo'];
+  for (const tipo of fallbackOrder) {
+    if (plan.length >= minArtifacts) break;
+    addArtifact(tipo, 'recomendado', 'Documento complementar estratégico para o professor');
+  }
+
+  const maxArtifacts = activityCount >= 4 ? 4 : (activityCount >= 2 ? 3 : 2);
+  return plan.slice(0, maxArtifacts);
+}
+
+export async function determineFlowArtifactsWithAI(
+  activityCount: number,
+  activityNames: string[],
+  userPrompt: string,
+): Promise<FlowArtifactPlan[]> {
+  if (activityCount === 0) return [];
+
+  const minDocs = activityCount >= 4 ? 3 : (activityCount >= 2 ? 3 : 2);
+  const maxDocs = activityCount >= 4 ? 4 : (activityCount >= 2 ? 3 : 2);
+
+  console.log(`\n🧠 [PontoFlow-AI] Solicitando à IA seleção de ${minDocs}-${maxDocs} documentos complementares...`);
+
+  try {
+    const prompt = buildAISelectionPrompt(activityCount, activityNames, userPrompt);
+    const result = await executeWithCascadeFallback(prompt, {
+      systemPrompt: AI_SELECTION_SYSTEM_PROMPT,
+    });
+
+    if (result.success && result.data) {
+      const choices = parseAIResponse(result.data, minDocs, maxDocs);
+
+      if (choices && choices.length >= minDocs) {
+        const finalChoices = choices;
+        const plan: FlowArtifactPlan[] = finalChoices.map(choice => {
+          const cat = ARTIFACT_CATALOG[choice.tipo];
+          return {
+            tipo: cat.tipo,
+            titulo: cat.titulo,
+            prioridade: 'recomendado' as const,
+            razao: choice.razao || 'Selecionado pela IA com base no contexto pedagógico',
+          };
+        });
+
+        console.log(`✅ [PontoFlow-AI] IA selecionou ${plan.length} documentos: ${plan.map(p => p.tipo).join(', ')}`);
+        plan.forEach(p => console.log(`   📄 ${p.tipo}: ${p.razao}`));
+        return plan;
+      }
+
+      console.warn('⚠️ [PontoFlow-AI] Resposta da IA inválida ou insuficiente, usando fallback...');
+    }
+  } catch (error) {
+    console.warn('⚠️ [PontoFlow-AI] Erro na chamada de IA, usando fallback:', error);
+  }
+
+  console.log('🔄 [PontoFlow-AI] Usando fallback determinístico...');
+  return determineFallbackArtifacts(activityCount, userPrompt);
 }
 
 export function determineFlowArtifacts(
@@ -77,132 +238,7 @@ export function determineFlowArtifacts(
   userPrompt: string,
   _sessionContext?: string
 ): FlowArtifactPlan[] {
-  if (activityCount === 0) return [];
-
-  const signals = extractContextSignals(userPrompt);
-  signals.isSubstantialBatch = activityCount >= 3;
-  signals.isMultipleActivities = activityCount >= 2;
-
-  const plan: FlowArtifactPlan[] = [];
-  const addedTypes = new Set<ArtifactType>();
-
-  function addArtifact(tipo: ArtifactType, titulo: string, prioridade: 'obrigatorio' | 'recomendado' | 'opcional', razao: string) {
-    if (addedTypes.has(tipo)) return;
-    addedTypes.add(tipo);
-    plan.push({ tipo, titulo, prioridade, razao });
-  }
-
-  addArtifact(
-    'guia_aplicacao',
-    'Guia de Aplicação em Sala de Aula',
-    'obrigatorio',
-    'Documento essencial que orienta o professor passo a passo na aplicação prática das atividades criadas, com cronograma, dicas de mediação e materiais necessários',
-  );
-
-  if (signals.mentionsPais) {
-    addArtifact('mensagem_pais', 'Mensagem Explicativa para os Pais', 'obrigatorio',
-      'Professor mencionou pais/responsáveis — comunicação direta com 3 versões (formal, WhatsApp e objetiva) pronta para copiar e enviar');
-  }
-  if (signals.mentionsCoordenacao) {
-    addArtifact('relatorio_coordenacao', 'Relatório de Criação para Coordenadores', 'obrigatorio',
-      'Professor mencionou coordenação/gestão — relatório formal com justificativa pedagógica, alinhamento BNCC e cronograma');
-  }
-  if (signals.mentionsAlunos) {
-    addArtifact('mensagem_alunos', 'Mensagens Motivacionais para os Alunos', 'obrigatorio',
-      'Professor mencionou alunos diretamente — mensagens de engajamento, motivação e desafio para a turma');
-  }
-
-  if (signals.mentionsInclusao) {
-    addArtifact('mensagem_pais', 'Mensagem Explicativa para os Pais', 'obrigatorio',
-      'Atividades com diferenciação/inclusão exigem comunicação com os pais sobre as estratégias adaptativas aplicadas');
-    addArtifact('relatorio_coordenacao', 'Relatório de Criação para Coordenadores', 'obrigatorio',
-      'Estratégias de inclusão requerem documentação formal para a coordenação pedagógica acompanhar e validar');
-  }
-
-  if (signals.mentionsProjeto) {
-    addArtifact('relatorio_coordenacao', 'Relatório de Criação para Coordenadores', 'obrigatorio',
-      'Projetos (PBL/STEAM/Maker) exigem justificativa pedagógica formal para a coordenação aprovar e acompanhar');
-    addArtifact('mensagem_pais', 'Mensagem Explicativa para os Pais', 'recomendado',
-      'Projetos interdisciplinares se beneficiam do engajamento dos pais — comunicar o objetivo e como apoiar em casa');
-  }
-
-  if (signals.isWeekPlan) {
-    addArtifact('mensagem_pais', 'Mensagem Explicativa para os Pais', 'obrigatorio',
-      'Planejamento semanal completo requer comunicação com os pais sobre a sequência de atividades e como apoiar o aprendizado em casa');
-    addArtifact('relatorio_coordenacao', 'Relatório de Criação para Coordenadores', 'obrigatorio',
-      'Planejamento semanal requer documentação formal para alinhamento com a coordenação pedagógica');
-    if (activityCount >= 3) {
-      addArtifact('mensagem_alunos', 'Mensagens Motivacionais para os Alunos', 'recomendado',
-        'Semana completa de atividades se beneficia de mensagens de motivação para manter o engajamento dos alunos ao longo dos dias');
-    }
-  }
-
-  if (signals.mentionsAvaliacao) {
-    addArtifact('mensagem_pais', 'Mensagem Explicativa para os Pais', 'recomendado',
-      'Avaliações impactam os pais — comunicar o formato, conteúdo e como ajudar na preparação do aluno em casa');
-    addArtifact('relatorio_coordenacao', 'Relatório de Criação para Coordenadores', 'recomendado',
-      'Avaliações requerem alinhamento com a coordenação sobre critérios, formato e objetivos de aprendizagem');
-  }
-
-  if (signals.mentionsDificuldade) {
-    addArtifact('mensagem_pais', 'Mensagem Explicativa para os Pais', 'recomendado',
-      'Atividades de reforço/recuperação exigem parceria com os pais — comunicar as estratégias e como apoiar o aluno em casa');
-  }
-
-  if (signals.mentionsPlanoAula) {
-    addArtifact('mensagem_pais', 'Mensagem Explicativa para os Pais', 'recomendado',
-      'Plano de aula estruturado se complementa com comunicação para os pais sobre o que será trabalhado e como apoiar');
-    addArtifact('relatorio_coordenacao', 'Relatório de Criação para Coordenadores', 'recomendado',
-      'Plano de aula com justificativa pedagógica formal ajuda o professor a documentar seu trabalho para a coordenação');
-  }
-
-  const minArtifacts = activityCount >= 4 ? 3 : (activityCount >= 2 ? 3 : 2);
-  const maxArtifacts = activityCount >= 4 ? 4 : (activityCount >= 2 ? 3 : 2);
-
-  if (plan.length < minArtifacts) {
-    const smartFillOptions: Array<{ tipo: ArtifactType; titulo: string; razao: string }> = [
-      {
-        tipo: 'mensagem_pais',
-        titulo: 'Mensagem Explicativa para os Pais',
-        razao: 'Todo trabalho pedagógico ganha mais impacto quando os pais entendem o que está sendo feito e como apoiar em casa — comunicação pronta em 3 versões (formal, WhatsApp e objetiva)',
-      },
-      {
-        tipo: 'relatorio_coordenacao',
-        titulo: 'Relatório de Criação para Coordenadores',
-        razao: 'Documentação formal que valoriza o trabalho do professor — justificativa pedagógica, alinhamento curricular e cronograma prontos para apresentar à coordenação',
-      },
-      {
-        tipo: 'mensagem_alunos',
-        titulo: 'Mensagens Motivacionais para os Alunos',
-        razao: 'Mensagens de engajamento e desafio que o professor pode usar para apresentar as atividades e motivar a turma — prontas para copiar e usar',
-      },
-      {
-        tipo: 'roteiro_aula',
-        titulo: 'Roteiro Detalhado de Aula',
-        razao: 'Roteiro cronológico minuto a minuto para aplicar as atividades em sala — com tempos, transições e dicas de mediação pedagógica',
-      },
-      {
-        tipo: 'resumo_executivo',
-        titulo: 'Resumo Executivo da Sessão',
-        razao: 'Síntese rápida de tudo que foi criado — perfeito para o professor ter uma visão geral e compartilhar com colegas',
-      },
-    ];
-
-    for (const option of smartFillOptions) {
-      if (plan.length >= minArtifacts) break;
-      addArtifact(option.tipo, option.titulo, 'recomendado', option.razao);
-    }
-  }
-
-  if (plan.length > maxArtifacts) {
-    const sorted = plan.sort((a, b) => {
-      const prioOrder = { obrigatorio: 0, recomendado: 1, opcional: 2 };
-      return prioOrder[a.prioridade] - prioOrder[b.prioridade];
-    });
-    return sorted.slice(0, maxArtifacts);
-  }
-
-  return plan;
+  return determineFallbackArtifacts(activityCount, userPrompt);
 }
 
 export function getFlowType(activityCount: number, userPrompt: string): FlowType {

@@ -81,9 +81,9 @@ const CATEGORY_TO_PHASE: Record<string, string> = {
   'escrita': 'conteudo',
   'pratica': 'pratica',
   'avaliacao': 'avaliacao',
-  'organizacao': 'complementos',
-  'comunicacao': 'complementos',
-  'diferenciacao': 'complementos',
+  'organizacao': 'pratica',
+  'comunicacao': 'pratica',
+  'diferenciacao': 'pratica',
 };
 
 const TIPO_TO_PHASE: Record<string, string> = {
@@ -163,28 +163,37 @@ function classifyActivityToPhase(activity: ActivityItem): string {
   const tipo = (activity.tipo || '').toLowerCase();
   const titulo = (activity.titulo || '').toLowerCase();
 
-  if (TIPO_TO_PHASE[tipo]) {
-    return TIPO_TO_PHASE[tipo];
-  }
+  let phase = 'pratica';
 
-  if (tipo === 'atividade-textual') {
+  if (TIPO_TO_PHASE[tipo]) {
+    phase = TIPO_TO_PHASE[tipo];
+  } else if (tipo === 'atividade-textual') {
     const exactCategory = TITLE_TO_CATEGORY[titulo];
     if (exactCategory) {
-      return CATEGORY_TO_PHASE[exactCategory] || 'pratica';
-    }
-
-    for (const [knownTitle, category] of Object.entries(TITLE_TO_CATEGORY)) {
-      if (titulo.includes(knownTitle) || knownTitle.includes(titulo)) {
-        return CATEGORY_TO_PHASE[category] || 'pratica';
+      phase = CATEGORY_TO_PHASE[exactCategory] || 'pratica';
+    } else {
+      let found = false;
+      for (const [knownTitle, category] of Object.entries(TITLE_TO_CATEGORY)) {
+        if (titulo.includes(knownTitle) || knownTitle.includes(titulo)) {
+          phase = CATEGORY_TO_PHASE[category] || 'pratica';
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        console.warn(`⚠️ [FinalResponse] Atividade textual sem mapeamento de fase: "${activity.titulo}" — usando fallback 'pratica'`);
       }
     }
-
-    console.warn(`⚠️ [FinalResponse] Atividade textual sem mapeamento de fase: "${activity.titulo}" — usando fallback 'pratica'`);
-    return 'pratica';
+  } else {
+    console.warn(`⚠️ [FinalResponse] Tipo de atividade desconhecido: "${activity.tipo}" título: "${activity.titulo}" — usando fallback 'pratica'`);
   }
 
-  console.warn(`⚠️ [FinalResponse] Tipo de atividade desconhecido: "${activity.tipo}" título: "${activity.titulo}" — usando fallback 'pratica'`);
-  return 'pratica';
+  if (phase === 'complementos') {
+    console.warn(`🛡️ [FinalResponse] Atividade "${activity.titulo}" classificada como 'complementos' — reclassificando para 'pratica'`);
+    phase = 'pratica';
+  }
+
+  return phase;
 }
 
 function classifyArtifactToPhase(_artifact: ArtifactItem): string {
@@ -303,7 +312,7 @@ Quando um documento do tipo "Documento" ou "documento_livre" foi criado, use o t
 ESTRUTURA NARRATIVA OBRIGATÓRIA (para 3+ atividades):
 1. ABERTURA PERSONALIZADA (1-2 frases): Resuma o que foi feito. Mencione quantidade, tema, turma/série.
 2. FASES ORGANIZADAS: Para cada grupo de atividades, coloque um [[FASE:titulo|descrição]], depois um PARÁGRAFO ESTRATÉGICO de 2-4 frases com insights pedagógicos valiosos (por que, como, quando aplicar), e em seguida todos os marcadores [[ATIVIDADE:titulo]] juntos consecutivamente.
-3. FASE DE COMPLEMENTOS (OBRIGATÓRIA quando houver documentos): Use [[FASE:Documentos Complementares|Materiais estratégicos que antecipam suas próximas necessidades]], seguido de um PARÁGRAFO ESTRATÉGICO de 3-5 frases que explique o VALOR REAL de cada documento — não apenas liste, mas mostre ao professor como cada um resolve uma dor específica do dia a dia (ex: "A **Mensagem para os Pais** já está pronta em 3 versões — formal, WhatsApp e objetiva — para você não perder tempo redigindo comunicados"). Depois do parágrafo, coloque os [[ARQUIVO:titulo]] juntos consecutivamente.
+3. FASE DE COMPLEMENTOS (OBRIGATÓRIA quando houver documentos): Use [[FASE:Documentos Complementares|Materiais estratégicos que antecipam suas próximas necessidades]], seguido de um PARÁGRAFO ESTRATÉGICO de 3-5 frases que explique o VALOR REAL de cada documento — não apenas liste, mas mostre ao professor como cada um resolve uma dor específica do dia a dia (ex: "A **Mensagem para os Pais** já está pronta em 3 versões — formal, WhatsApp e objetiva — para você não perder tempo redigindo comunicados"). Depois do parágrafo, coloque os [[ARQUIVO:titulo]] juntos consecutivamente. PROIBIDO: NÃO use callouts (> 💡, > 📌, > ✅) dentro desta fase — callouts só são permitidos no ENCERRAMENTO.
 4. ENCERRAMENTO ESTRATÉGICO (3-5 frases): Um parágrafo de fechamento onde o Jota dá sua OPINIÃO formada sobre o roteiro criado, sugere PRÓXIMOS PASSOS concretos que o professor pode pedir (ex: "Se quiser, posso criar uma avaliação diagnóstica para aplicar antes de começar, ou adaptar as atividades para uma turma com mais dificuldade"), e fecha com uma pergunta engajadora. Depois do parágrafo, opcionalmente use > 💡 para uma dica extra ou > 📌 para um lembrete prático. NÃO use > ✅ (ele é redundante).
 
 PARA 1-2 ATIVIDADES: Não use fases. Use formato simples com [[ATIVIDADES]] ou [[ATIVIDADE:titulo]].

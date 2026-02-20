@@ -25,7 +25,7 @@ import {
   type FinalResponseResult,
 } from './context';
 import type { ArtifactData } from './capabilities/CRIAR_ARQUIVO';
-import { determineFlowArtifacts, executeFlowPackage } from './ponto-flow/flow-orchestrator';
+import { determineFlowArtifacts, determineFlowArtifactsWithAI, executeFlowPackage } from './ponto-flow/flow-orchestrator';
 import {
   createSession,
   addConversationTurn,
@@ -614,8 +614,10 @@ export async function executeAgentPlan(
       console.log(`\n🌊 [Orchestrator] Ponto Flow: ${collectedItems.activities.length} atividades detectadas, gerando pacote complementar...`);
       
       try {
-        const flowPlan = determineFlowArtifacts(
+        const activityNames = collectedItems.activities.map(a => a.titulo || a.title || 'Atividade');
+        const flowPlan = await determineFlowArtifactsWithAI(
           collectedItems.activities.length,
+          activityNames,
           plan.objetivo,
         );
 
@@ -754,7 +756,8 @@ export async function executeAgentPlanWithDetails(
     // LAYER 6: PONTO FLOW (executeFollowUp path)
     if (collectedItems.activities.length > 0) {
       try {
-        const flowPlan = determineFlowArtifacts(collectedItems.activities.length, plan.objetivo);
+        const activityNamesFollowUp = collectedItems.activities.map(a => a.titulo || a.title || 'Atividade');
+        const flowPlan = await determineFlowArtifactsWithAI(collectedItems.activities.length, activityNamesFollowUp, plan.objetivo);
         if (flowPlan.length > 0) {
           onProgress?.({
             type: 'flow:etapa_added',

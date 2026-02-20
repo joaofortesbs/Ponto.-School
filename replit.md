@@ -24,7 +24,7 @@ The platform features a modern, glass-morphism inspired design with blur backgro
     - **Database Persistence Pipeline**: A 4-phase pipeline (COLLECT, VALIDATE, PERSIST, VERIFY) for persisting activities.
     - **ContentSyncService**: In-memory event-driven singleton for real-time synchronization of AI-generated content.
     - **Agentic Artifacts System (CRIAR_ARQUIVO) v5.0**: Generates 10 types of pedagogical artifacts with intelligent routing.
-    - **Ponto. Flow**: Automatic Package Delivery System that generates administrative complementary documents.
+    - **Ponto. Flow v2.0**: AI-driven Automatic Package Delivery System that uses Gemini structured output (JSON) for intelligent document selection via MAD methodology (Metodologia de Antecipação de Dor). The AI analyzes teacher context, created activities, and pedagogical needs to strategically choose 2-4 complementary documents. Includes deterministic regex fallback for resilience. Activity classification enforces that activities NEVER appear in the Documentos Complementares section (reserved for artifacts only). Callout post-processing strips emoji callouts from the complementos section.
     - **Powers System v4.1**: Virtual currency for AI capabilities with per-action pricing.
     - **Calendário School Multi-View System**: Portal-rendered calendar panel with 4 view modes, using a Strategy Pattern for event display.
     - **AI Calendar Management (gerenciar_calendario) v1.1**: Comprehensive AI-powered calendar management system with a mini-agent architecture for autonomous decision-making loops for viewing, analyzing availability, editing, deleting, and creating events.

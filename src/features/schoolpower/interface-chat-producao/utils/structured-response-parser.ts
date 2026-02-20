@@ -6,11 +6,37 @@ export interface CollectedItems {
   artifacts: ArtifactData[];
 }
 
+function stripCalloutsFromComplementos(text: string): string {
+  const lowerText = text.toLowerCase();
+  const complementosPatterns = ['[[fase:documentos complementares', '[[fase:complementos', '[[fase:materiais'];
+  let complementosStart = -1;
+  for (const pattern of complementosPatterns) {
+    const idx = lowerText.indexOf(pattern);
+    if (idx !== -1) {
+      complementosStart = idx;
+      break;
+    }
+  }
+  if (complementosStart === -1) return text;
+
+  const nextFaseAfter = lowerText.indexOf('[[fase:', complementosStart + 10);
+  const sectionEnd = nextFaseAfter !== -1 ? nextFaseAfter : text.length;
+
+  const before = text.substring(0, complementosStart);
+  const section = text.substring(complementosStart, sectionEnd);
+  const after = text.substring(sectionEnd);
+
+  const cleanedSection = section.replace(/^\s*>\s*[💡📌✅🎯📋🔍⚡🌟✨🚀💪🎓📊🧠].*/gm, '').replace(/\n{3,}/g, '\n\n');
+
+  return before + cleanedSection + after;
+}
+
 function sanitizeResponseText(text: string): string {
   let cleaned = text;
   cleaned = cleaned.replace(/```json[\s\S]*?```/g, '');
   cleaned = cleaned.replace(/\[?\{[\s\S]*?"id"\s*:\s*"[\s\S]*?\}\]?/g, '');
   cleaned = cleaned.replace(/^\s*[\[\{](?!\[)[\s\S]*?[\]\}]\s*$/gm, '');
+  cleaned = stripCalloutsFromComplementos(cleaned);
   cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
   cleaned = cleaned.trim();
   return cleaned || text;
