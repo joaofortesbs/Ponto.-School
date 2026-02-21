@@ -17,7 +17,7 @@ The platform features a modern, glass-morphism inspired design with blur backgro
 - **AI Integration**: A unified, resilient multi-model cascade system (LLM Orchestrator v3.0 Enterprise) with a 5-tier architecture across 7 models, including circuit breakers, rate limiters, retry mechanisms, input sanitization, smart routing, and in-memory caching. The core AI agent, "Mente Orquestradora Architecture v7.0," features autonomous capability selection, a supreme unified context engine (`Context Engine v2.0`), `SessionStore` v2.0 with `InteractionLedger`, `ContextAssembler`, `ConversationCompactor`, `GoalReciter`, and `SmartRouter v1.2`. This includes system message separation for LLMs and a `SmartRouter` for intelligent request routing. Route-specific system prompts are used for various AI tasks.
 - **Authentication & User Management**: Hybrid system using Neon PostgreSQL for user data and sessions, and Supabase for file storage.
 - **Core Features**:
-    - **School Power**: AI-powered lesson planning with "Mente Orquestradora" architecture, supporting activity creation, explanations, text generation, lesson plans, and research.
+    - **School Power**: AI-powered lesson planning with "Mente Orquestradora" architecture, supporting activity creation, explanations, text generation, lesson plans, and research. Includes BNCC curriculum alignment via `pesquisar_bncc` capability.
     - **MenteMaior**: Unified inner monologue using the ReAct pattern.
     - **Structured Response System**: Collects created items using `[[ATIVIDADES]]` and `[[ARQUIVO:titulo]]` markers.
     - **API-First Architecture (V2)**: Uses standardized contracts and a central `CapabilityExecutor`.

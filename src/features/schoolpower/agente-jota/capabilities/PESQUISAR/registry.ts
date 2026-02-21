@@ -4,11 +4,14 @@
  * Capabilities Core:
  * 1. pesquisar_atividades_conta - Busca no banco Neon (atividades do professor)
  * 2. pesquisar_atividades_disponiveis - Busca no catálogo JSON local
+ * 3. pesquisar_bncc - Pesquisa habilidades da BNCC para alinhamento curricular
  */
 
 import { pesquisarAtividadesDisponiveis, pesquisarAtividadesDisponiveisV2, formatAvailableActivitiesForPrompt } from './implementations/pesquisar-atividades-disponiveis';
 import { pesquisarAtividadesConta, formatAccountActivitiesForPrompt } from './implementations/pesquisar-atividades-conta';
+import { pesquisarBnccV2 } from './implementations/pesquisar-bncc';
 import { pesquisarAtividadesDisponiveisSchema } from './schemas/pesquisar-atividades-schema';
+import { pesquisarBnccSchema } from './schemas/pesquisar-bncc-schema';
 import { createDebugEntry } from '../../../interface-chat-producao/debug-system/DebugStore';
 
 export const PESQUISAR_CAPABILITIES = {
@@ -130,6 +133,80 @@ export const PESQUISAR_CAPABILITIES = {
     showProgress: true,
     cacheResults: true,
     cacheTTL: 300000
+  },
+
+  pesquisar_bncc: {
+    funcao: 'pesquisar_bncc',
+    name: 'pesquisar_bncc',
+    displayName: 'Vou pesquisar habilidades BNCC para alinhamento curricular',
+    categoria: 'PESQUISAR',
+    description: 'Pesquisa habilidades da BNCC (Base Nacional Comum Curricular) por componente curricular, ano/série, código ou palavra-chave para garantir alinhamento curricular nas atividades geradas',
+    descricao: 'Pesquisa habilidades BNCC para alinhamento curricular das atividades',
+    schema: pesquisarBnccSchema,
+    execute: async (params: any) => {
+      const capabilityId = 'pesquisar_bncc';
+      const executionId = `exec_${Date.now()}`;
+
+      const v2Result = await pesquisarBnccV2({
+        capability_id: capabilityId,
+        execution_id: executionId,
+        context: params
+      });
+
+      if (v2Result.debug_log && v2Result.debug_log.length > 0) {
+        console.log(`📋 [Registry:PESQUISAR_BNCC] Injetando ${v2Result.debug_log.length} entries no DebugStore`);
+
+        v2Result.debug_log.forEach((entry) => {
+          const severity = entry.type === 'error' ? 'high' :
+                          entry.type === 'warning' ? 'medium' :
+                          entry.type === 'confirmation' ? (entry.technical_data?.status === 'FALHA' ? 'high' : 'low') :
+                          'low';
+
+          createDebugEntry(
+            capabilityId,
+            'Pesquisar Habilidades BNCC',
+            entry.type as any,
+            entry.narrative,
+            severity,
+            entry.technical_data
+          );
+        });
+      }
+
+      if (v2Result.success && v2Result.data) {
+        return {
+          found: v2Result.data.count > 0,
+          count: v2Result.data.count,
+          habilidades: v2Result.data.habilidades,
+          componentes: v2Result.data.componentes,
+          anos: v2Result.data.anos,
+          prompt_context: v2Result.data.prompt_context,
+          summary: v2Result.data.summary,
+          debug_log: v2Result.debug_log,
+          data_confirmation: v2Result.data_confirmation
+        };
+      }
+
+      return {
+        found: false,
+        count: 0,
+        habilidades: [],
+        error: v2Result.error?.message || 'Erro desconhecido',
+        debug_log: v2Result.debug_log,
+        data_confirmation: v2Result.data_confirmation
+      };
+    },
+    parameters: {
+      componente: { type: 'string', required: false, description: 'Componente curricular (Matemática, Língua Portuguesa, Ciências, História, Geografia)' },
+      ano_serie: { type: 'string', required: false, description: 'Ano/série (ex: 7º Ano)' },
+      busca_texto: { type: 'string', required: false, description: 'Palavra-chave para busca' },
+      codigo: { type: 'string', required: false, description: 'Código BNCC específico (ex: EF07MA17)' },
+      max_resultados: { type: 'number', required: false, description: 'Máximo de resultados (padrão: 5)' }
+    },
+    isSequential: false,
+    showProgress: true,
+    cacheResults: true,
+    cacheTTL: 600000
   }
 };
 

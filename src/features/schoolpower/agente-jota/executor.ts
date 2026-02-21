@@ -22,6 +22,7 @@ import { useChosenActivitiesStore, saveChosenActivitiesFromDecision } from '../i
 import { gerarConteudoAtividadesV2 } from './capabilities/GERAR_CONTEUDO/implementations/gerar-conteudo-atividades';
 import { decidirAtividadesCriarV2 } from './capabilities/DECIDIR/implementations/decidir-atividades-criar';
 import { pesquisarAtividadesDisponiveisV2 } from './capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis';
+import { pesquisarBnccV2 } from './capabilities/PESQUISAR/implementations/pesquisar-bncc';
 import { criarAtividadeV2 } from './capabilities/CRIAR_ATIVIDADES/implementations/criar-atividade-v2';
 import { salvarAtividadesBdV2 } from './capabilities/SALVAR_BD/implementations/salvar-atividades-bd';
 import { criarArquivoV2 } from './capabilities/CRIAR_ARQUIVO/criar-arquivo-v2';
@@ -672,6 +673,7 @@ export class AgentExecutor {
 
   private static readonly V2_REGISTRY: Map<string, (input: CapabilityInput) => Promise<CapabilityOutput>> = new Map([
     ['pesquisar_atividades_disponiveis', pesquisarAtividadesDisponiveisV2],
+    ['pesquisar_bncc', pesquisarBnccV2],
     ['decidir_atividades_criar', decidirAtividadesCriarV2],
     ['gerar_conteudo_atividades', gerarConteudoAtividadesV2],
     ['criar_atividade', criarAtividadeV2],
@@ -1161,13 +1163,20 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
       return `Pesquisei as atividades já criadas na conta do professor. Encontrei ${count} atividade(s) registrada(s) no banco de dados.`;
     }
     if (capName.includes('pesquisar_atividades_disponiveis')) {
-      // Suporte para formato V2 (data.catalog) e legado (catalog/activities)
       const data = resultado?.data || resultado || {};
       const count = data.count || data.catalog?.length || resultado?.count || resultado?.catalog?.length || resultado?.activities?.length || resultado?.total || 0;
       const types = data.types?.length || resultado?.types?.length || 0;
       const ids = data.valid_ids?.length || resultado?.valid_ids?.length || count;
       const catalogIds = (data.catalog || resultado?.catalog || []).map((a: any) => a?.id).filter(Boolean).join(', ');
       return `Consultei o catálogo de atividades. Encontrei ${count} atividade(s) disponível(is) com ${types} tipo(s). IDs: ${catalogIds || 'N/A'}.`;
+    }
+    if (capName === 'pesquisar_bncc') {
+      const data = resultado?.data || resultado || {};
+      const count = data.count || resultado?.count || 0;
+      const componentes = data.componentes || resultado?.componentes || [];
+      const habs = data.habilidades || resultado?.habilidades || [];
+      const codigos = habs.map((h: any) => h?.codigo).filter(Boolean).join(', ');
+      return `Consultei a BNCC (Base Nacional Comum Curricular). Encontrei ${count} habilidade(s) curricular(es) de ${componentes.join(', ') || 'componente não especificado'}. Códigos: ${codigos || 'N/A'}.`;
     }
     if (capName.includes('decidir_atividades')) {
       // Suporte para formato V2 (data.chosen_activities) e legado (chosen_activities)
@@ -1536,6 +1545,22 @@ Seja específico e forneça dados que ajudem o professor.
         console.log(`📝 [Executor] Sem atividades anteriores da conta (professor novo)`);
         enrichedParams.account_activities = { activities: [], total: 0 };
       }
+
+      // Buscar resultado de pesquisar_bncc
+      const bnccResult = this.capabilityResultsMap.get('pesquisar_bncc');
+      if (bnccResult) {
+        console.log(`🔗 [Executor] Injetando habilidades BNCC em decidir_atividades_criar`);
+        enrichedParams.bncc_habilidades = {
+          habilidades: bnccResult.habilidades || [],
+          componentes: bnccResult.componentes || [],
+          anos: bnccResult.anos || [],
+          prompt_context: bnccResult.prompt_context || '',
+          count: bnccResult.count || 0
+        };
+        console.log(`   📚 ${enrichedParams.bncc_habilidades.count} habilidades BNCC injetadas`);
+      } else {
+        console.log(`📝 [Executor] Sem dados BNCC disponíveis (pesquisar_bncc não executado)`);
+      }
     }
 
     // Para gerar_conteudo_atividades, injetar atividades decididas e contexto
@@ -1741,7 +1766,23 @@ Seja específico e forneça dados que ajudem o professor.
       };
     }
     
-    // Dados técnicos específicos para pesquisar_atividades_conta
+    if (capName === 'pesquisar_bncc') {
+      const habilidades = resultado?.habilidades || resultado?.data?.habilidades || [];
+      return {
+        resultado_resumo: `Encontradas ${habilidades.length} habilidade(s) BNCC`,
+        total_habilidades: habilidades.length,
+        componentes: resultado?.componentes || [],
+        anos: resultado?.anos || [],
+        habilidades: habilidades.map((h: any) => ({
+          codigo: h.codigo,
+          descricao: h.descricao?.substring(0, 100),
+          objetoConhecimento: h.objetoConhecimento,
+          componente: h.componente,
+          ano: h.ano
+        }))
+      };
+    }
+
     if (capName.includes('pesquisar_atividades_conta')) {
       const atividades = resultado?.atividades || resultado?.activities || [];
       return {
