@@ -506,6 +506,13 @@ EXEMPLO 2 - "Preciso criar atividades para minha semana, de segunda a sexta! Tó
           "categoria": "PESQUISAR",
           "parametros": {},
           "justificativa": "Evitar repetir atividades"
+        },
+        {
+          "nome": "pesquisar_bncc",
+          "displayName": "Consultando habilidades BNCC de Matemática",
+          "categoria": "PESQUISAR",
+          "parametros": {"componente": "Matemática", "ano_serie": "2º Ano EM"},
+          "justificativa": "Garantir alinhamento curricular com a BNCC para funções"
         }
       ]
     },
@@ -643,6 +650,13 @@ EXEMPLO 4 - "Preciso falar sobre revolução francesa com meus alunos do 9º ano
           "categoria": "PESQUISAR",
           "parametros": {},
           "justificativa": "Encontrar formatos adequados para história no 9º ano"
+        },
+        {
+          "nome": "pesquisar_bncc",
+          "displayName": "Consultando habilidades BNCC de História",
+          "categoria": "PESQUISAR",
+          "parametros": {"componente": "História", "ano_serie": "9º Ano"},
+          "justificativa": "Garantir alinhamento curricular com a BNCC para Revolução Francesa"
         }
       ]
     },
@@ -934,6 +948,13 @@ EXEMPLO 9 - "Crie atividades de desenvolvimento pessoal para meus alunos" (ATIVI
           "categoria": "PESQUISAR",
           "parametros": {},
           "justificativa": "Evitar duplicações"
+        },
+        {
+          "nome": "pesquisar_bncc",
+          "displayName": "Consultando habilidades BNCC relacionadas",
+          "categoria": "PESQUISAR",
+          "parametros": {},
+          "justificativa": "Garantir alinhamento curricular com a BNCC"
         }
       ]
     },
@@ -1038,7 +1059,8 @@ EXEMPLO 11 - "Crie atividades de ciências e organiza tudo no meu calendário pa
       "descricao": "Vou pesquisar o catálogo e suas atividades anteriores",
       "capabilities": [
         {"nome": "pesquisar_atividades_disponiveis", "displayName": "Pesquisando opções", "categoria": "PESQUISAR", "parametros": {}, "justificativa": "Buscar atividades de ciências"},
-        {"nome": "pesquisar_atividades_conta", "displayName": "Verificando suas atividades", "categoria": "PESQUISAR", "parametros": {}, "justificativa": "Evitar duplicações"}
+        {"nome": "pesquisar_atividades_conta", "displayName": "Verificando suas atividades", "categoria": "PESQUISAR", "parametros": {}, "justificativa": "Evitar duplicações"},
+        {"nome": "pesquisar_bncc", "displayName": "Consultando habilidades BNCC de Ciências", "categoria": "PESQUISAR", "parametros": {"componente": "Ciências"}, "justificativa": "Garantir alinhamento curricular"}
       ]
     },
     {
@@ -1068,6 +1090,7 @@ EXEMPLO 11 - "Crie atividades de ciências e organiza tudo no meu calendário pa
 }
 
 🔍 CHECKLIST OBRIGATÓRIO ANTES DE FINALIZAR O PLANO:
+□ A etapa de PESQUISA inclui "pesquisar_bncc"? → OBRIGATÓRIO em TODA pipeline de atividades! Garante alinhamento curricular nacional.
 □ O professor pediu atividade/prova/plano? → Verifique a MATRIZ DE COMPLEMENTAÇÃO (FASE 6) e adicione uma etapa final com complementos pedagógicos relevantes (rubrica, exit ticket, gabarito, KWL)
 □ Os complementos usam criar_arquivo com tipo_artefato "atividade_textual"?
 □ Complementos NÃO duplicam o que o Ponto Flow já gera (guia, mensagens pais, relatório coordenação)?

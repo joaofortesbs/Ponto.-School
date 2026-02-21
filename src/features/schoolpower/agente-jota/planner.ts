@@ -719,6 +719,15 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
           status: 'pending',
           ordem: 2,
         },
+        {
+          id: `cap-0-2-${timestamp}`,
+          nome: 'pesquisar_bncc',
+          displayName: 'Consultando habilidades da BNCC',
+          categoria: 'PESQUISAR',
+          parametros: {},
+          status: 'pending',
+          ordem: 3,
+        },
       ],
     },
     {
