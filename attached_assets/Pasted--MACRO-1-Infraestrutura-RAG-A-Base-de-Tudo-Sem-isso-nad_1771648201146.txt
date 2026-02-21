@@ -1,0 +1,149 @@
+
+MACRO 1: Infraestrutura RAG (A Base de Tudo)
+Sem isso, nada funciona. É o alicerce.
+
+Micro 1.1 — Escolher e configurar o banco vetorial
+
+Definir qual banco vetorial usar (ex: embeddings do Gemini + armazenamento no PostgreSQL com pgvector, ou serviço externo como Pinecone)
+Configurar a conexão e criar as tabelas/índices necessários
+Por que primeiro: tudo depende de ter onde armazenar e buscar vetores
+Micro 1.2 — Criar o serviço de embeddings
+
+Criar um serviço que transforma texto em vetores (usando a API de embeddings do Gemini ou outro provider)
+Criar funções de: ingestão (texto → vetor → armazenar) e busca (query → vetor → buscar similares)
+Por que segundo: é a "engrenagem" que conecta o conteúdo ao banco vetorial
+Micro 1.3 — Criar o serviço RAG central
+
+Um serviço unificado que recebe uma pergunta, busca nos bancos vetoriais relevantes, e retorna contexto enriquecido
+Deve suportar múltiplas "coleções" (BNCC, questões, web) e combinar resultados
+Incluir rankeamento dos resultados por relevância
+Por que terceiro: é o "cérebro" que orquestra as buscas
+MACRO 2: Banco de Dados BNCC (Primeira Fonte de Verdade)
+É a melhoria com maior impacto imediato. Afeta 100% das atividades.
+
+Micro 2.1 — Obter e processar o documento oficial da BNCC
+
+Baixar o documento completo da BNCC (disponível publicamente no site do MEC)
+Extrair e estruturar: códigos de habilidades, descrições, componentes curriculares, anos escolares, campos de experiência
+Resultado: um JSON/banco estruturado com todas as habilidades organizadas por área/ano
+Micro 2.2 — Ingerir a BNCC no banco vetorial
+
+Transformar cada habilidade BNCC em vetor e armazenar
+Incluir metadados: código, área, ano escolar, componente curricular
+Permitir busca por: tema ("frações"), ano ("7º ano"), área ("Ciências"), ou combinação
+Testar: buscar "célula animal 7º ano" deve retornar EF07CI01, EF07CI02, etc.
+Micro 2.3 — Criar a Capacidade "pesquisar_bncc"
+
+Nova capacidade do Jota, seguindo o padrão existente de capabilities
+Input: tema, matéria, ano escolar do professor
+Output: lista de habilidades BNCC relevantes com códigos e descrições
+Integrar com o serviço RAG central
+Micro 2.4 — Integrar BNCC no pipeline de geração (EXECUTAR)
+
+Modificar o criar_arquivo_textual para chamar pesquisar_bncc ANTES de gerar
+Injetar as habilidades encontradas no prompt template (novo campo {bncc_context})
+Instruir o LLM a referenciar os códigos BNCC no conteúdo gerado
+Testar com 5-10 tipos de atividades para validar qualidade
+MACRO 3: Banco de Questões Públicas (Segunda Fonte)
+Impacto direto nas atividades de avaliação (provas, simulados, exercícios).
+
+Micro 3.1 — Coletar e estruturar questões públicas
+
+Fontes: ENEM (INEP publica as provas anualmente), vestibulares públicos, Prova Brasil
+Estruturar: enunciado, alternativas, resposta correta, área, tema, dificuldade, ano da prova
+Estimar volume: ENEM tem ~180 questões/ano × 20+ anos = 3.600+ questões só de ENEM
+Micro 3.2 — Ingerir questões no banco vetorial
+
+Cada questão vira um vetor com metadados (área, dificuldade, ano, fonte)
+Coleção separada da BNCC no banco vetorial
+Busca deve funcionar por tema semântico: "genética" encontra questões sobre DNA, hereditariedade, Mendel, etc.
+Micro 3.3 — Criar a Capacidade "pesquisar_banco_questoes"
+
+Nova capacidade do Jota
+Input: tema, área, dificuldade desejada
+Output: 3-5 questões reais relevantes como referência
+As questões servem de MODELO para o LLM (não são copiadas direto)
+Micro 3.4 — Integrar banco de questões no pipeline de geração
+
+Para atividades de avaliação (prova, simulado, exercícios), buscar questões referência
+Injetar no prompt: "Use estas questões reais como referência de qualidade e estilo: [questões]"
+Novo campo no template: {questoes_referencia}
+Testar com simulados e provas — comparar qualidade antes/depois
+MACRO 4: Pesquisa Web Acadêmica (Terceira Fonte)
+A mais complexa. Ativa quando as fontes locais não são suficientes.
+
+Micro 4.1 — Integrar API de pesquisa web
+
+Escolher provider (Google Custom Search API, Serper, ou Tavily focado em AI)
+Configurar para priorizar fontes acadêmicas (.edu, .gov, scielo, periódicos)
+Criar filtros por tipo de conteúdo (artigos, dados estatísticos, definições)
+Micro 4.2 — Criar o sistema de pesquisa em camadas
+
+Camada 1: Definições e conceitos básicos (rápida, sempre)
+Camada 2: Dados e estatísticas recentes (quando o tema pede)
+Camada 3: Fontes primárias e artigos acadêmicos (para conteúdo aprofundado)
+O Jota decide qual camada ativar baseado no tipo de atividade
+Micro 4.3 — Criar a Capacidade "pesquisar_web_academica"
+
+Nova capacidade com lógica de decisão: nem toda atividade precisa de pesquisa web
+Ativar automaticamente para: temas científicos atuais, dados estatísticos, eventos históricos específicos
+Não ativar para: exercícios matemáticos puros, jogos educativos, atividades de escrita criativa
+Micro 4.4 — Integrar pesquisa web no pipeline de geração
+
+Injetar resultados da pesquisa como contexto adicional
+Novo campo: {dados_academicos}
+Forçar citação: o LLM deve citar a fonte quando usar dados da web
+MACRO 5: Interface Visual no Card de Desenvolvimento
+Tudo funciona por baixo. Agora mostrar para o professor.
+
+Micro 5.1 — Redesenhar o card de Desenvolvimento
+
+Adicionar seção de "Pesquisa Inteligente" no card
+Mostrar as 3 capacidades como etapas visuais com ícones e status
+Exemplo visual: "Pesquisando BNCC... ✓ 3 habilidades encontradas"
+Micro 5.2 — Criar feedback em tempo real
+
+Enquanto pesquisa, mostrar progresso ao professor
+Mostrar o que foi encontrado: "Habilidade EF07CI02 — Diferenciar temperatura, calor..."
+Usar animações suaves (estilo glass-morphism do sistema)
+Micro 5.3 — Mostrar fontes no resultado final
+
+No documento gerado, incluir seção "Fontes e Alinhamento"
+Listar: códigos BNCC usados, questões de referência consultadas, fontes acadêmicas
+Isso é o que o professor mostra pro coordenador
+MACRO 6: Integração com Caminho CONVERSAR
+Estender o RAG para o chat, não só para geração de atividades.
+
+Micro 6.1 — Integrar BNCC nas respostas do Jota no chat
+
+Quando o professor pergunta sobre currículo, o Jota consulta a BNCC real
+Respostas passam a incluir códigos e referências curriculares
+Afeta a capacidade "conversar" existente
+Micro 6.2 — Permitir consulta direta pelo professor
+
+Professor pode perguntar: "Quais habilidades BNCC do 5º ano de Matemática?"
+Jota retorna lista completa direto do banco vetorial
+Transforma o Jota numa ferramenta de consulta curricular
+MACRO 7: Validação, Feedback e Melhoria Contínua
+Fechar o ciclo de qualidade.
+
+Micro 7.1 — Sistema de feedback do professor
+
+Após cada atividade gerada, botão de "Conteúdo preciso?" (sim/não + comentário opcional)
+Armazenar feedback vinculado ao tipo de atividade + tema + habilidades BNCC usadas
+Micro 7.2 — Dashboard de qualidade
+
+Métricas: taxa de aprovação por tipo de atividade, temas com mais rejeições, habilidades BNCC mais usadas
+Identificar onde o sistema está falhando e priorizar melhorias
+Ordem de Execução Resumida
+Ordem	Macro	Tempo Estimado	Impacto
+1º	MACRO 1 — Infraestrutura RAG	Base para tudo	Nenhum sozinho
+2º	MACRO 2 — BNCC	Onde começa o valor real	ALTO — 100% das atividades
+3º	MACRO 5 — Interface Visual	Professor vê a melhoria	ALTO — percepção de valor
+4º	MACRO 3 — Banco de Questões	Avaliações ficam profissionais	ALTO — provas e simulados
+5º	MACRO 6 — Chat com BNCC	Chat fica inteligente	MÉDIO
+6º	MACRO 4 — Pesquisa Web	Conteúdo de ponta	MÉDIO
+7º	MACRO 7 — Feedback	Melhoria contínua	Longo prazo
+MACRO 1 + MACRO 2 + MACRO 5 são o MVP. Quando esses 3 estiverem prontos, o professor já sente a diferença. O resto escala em cima dessa base.
+
+Quer que eu comece a implementar pela MACRO 1 (infraestrutura RAG)?
