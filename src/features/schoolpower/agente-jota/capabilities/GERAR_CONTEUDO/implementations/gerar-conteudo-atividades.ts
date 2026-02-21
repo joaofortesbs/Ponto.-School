@@ -40,6 +40,22 @@ import {
 import { isTextVersionActivity } from '../../../../config/activityVersionConfig';
 import { storageSet, isHeavyActivityType } from '@/features/schoolpower/services/StorageOrchestrator';
 
+interface BnccContextData {
+  habilidades: any[];
+  componentes: string[];
+  anos: string[];
+  prompt_context: string;
+  count: number;
+}
+
+interface QuestoesReferenciaData {
+  questoes: any[];
+  componentes: string[];
+  temas: string[];
+  prompt_context: string;
+  count: number;
+}
+
 interface GerarConteudoParams {
   session_id: string;
   conversation_context: string;
@@ -50,6 +66,8 @@ interface GerarConteudoParams {
   turma_extraida?: string;
   activities_to_fill?: ChosenActivity[];
   on_progress?: (update: ProgressUpdate) => void;
+  bncc_context?: BnccContextData;
+  questoes_referencia?: QuestoesReferenciaData;
 }
 
 interface ProgressUpdate {
@@ -437,7 +455,9 @@ function buildContentGenerationPrompt(
   conversationContext: string,
   userObjective: string,
   batchIndex?: number,
-  batchTotal?: number
+  batchTotal?: number,
+  bnccContext?: BnccContextData,
+  questoesReferencia?: QuestoesReferenciaData
 ): string {
   const qualityCtx: QualityContext = {
     tema: activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || activity.titulo || '',
@@ -532,7 +552,17 @@ ${fieldsDescription}
 ${optionalFieldsDescription ? `## CAMPOS OPCIONAIS (GERE TODOS TAMBÉM)
 ${optionalFieldsDescription}` : ''}
 
-## INSTRUÇÕES CRÍTICAS PARA GERAÇÃO DE CONTEÚDO
+${bnccContext?.prompt_context ? `## ALINHAMENTO CURRICULAR — BNCC (Base Nacional Comum Curricular)
+As seguintes habilidades da BNCC foram identificadas como relevantes para esta atividade.
+Você DEVE incorporar essas habilidades no conteúdo gerado:
+- Referencie os CÓDIGOS BNCC (ex: EF07CI02) nos campos de objetivos, habilidades ou competências
+- Alinhe o conteúdo pedagógico às descrições dessas habilidades
+- Se houver campo "habilidadesBNCC" ou "bnccCompetencias", preencha com os códigos encontrados
+
+${bnccContext.prompt_context}
+` : ''}${questoesReferencia?.prompt_context ? `## QUESTÕES DE REFERÊNCIA (Modelos de Qualidade)
+${questoesReferencia.prompt_context}
+` : ''}## INSTRUÇÕES CRÍTICAS PARA GERAÇÃO DE CONTEÚDO
 
 ### REGRA DE EXPANSÃO DE CONTEXTO
 Se o objetivo do usuário for vago ou curto (ex: "matemática aplicada", "criar atividades"), você DEVE:
@@ -540,7 +570,7 @@ Se o objetivo do usuário for vago ou curto (ex: "matemática aplicada", "criar 
 2. Sugerir uma série/ano escolar apropriada (padrão: Ensino Fundamental II ou Ensino Médio)
 3. Criar um tema específico e concreto relacionado ao objetivo
 4. Gerar conteúdo rico e detalhado que seria útil para um professor real
-5. Incluir exemplos práticos, metodologias pedagógicas modernas e alinhamento com BNCC
+5. Incluir exemplos práticos, metodologias pedagógicas modernas e alinhamento com BNCC${bnccContext?.count ? ` (use os códigos BNCC listados acima)` : ''}
 
 ### PADRÕES DE QUALIDADE PARA CADA TIPO DE CAMPO
 1. **CAMPOS TEXT**: Gere texto claro e específico (mínimo 10 caracteres)
@@ -650,7 +680,9 @@ async function generateContentForActivity(
   batchTotal?: number,
   temaLimpo?: string,
   disciplinaExtraida?: string,
-  turmaExtraida?: string
+  turmaExtraida?: string,
+  bnccContext?: BnccContextData,
+  questoesReferencia?: QuestoesReferenciaData
 ): Promise<GeneratedFieldsResult> {
   const correlationId = generateCorrelationId();
   const activityStartTime = Date.now();
@@ -1560,7 +1592,9 @@ async function generateContentForActivity(
     conversationContext,
     userObjective,
     batchIndex,
-    batchTotal
+    batchTotal,
+    bnccContext,
+    questoesReferencia
   );
 
   let lastError: string = '';
@@ -1989,7 +2023,9 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
       totalActivities,
       params.tema_limpo,
       params.disciplina_extraida,
-      params.turma_extraida
+      params.turma_extraida,
+      params.bncc_context,
+      params.questoes_referencia
     );
 
     // A função generateContentForActivity já registra debug entries detalhadas
@@ -2482,6 +2518,9 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
       const v2DisciplinaExtraida = input.context.disciplina_extraida || '';
       const v2TurmaExtraida = input.context.turma_extraida || '';
       
+      const v2BnccContext = input.context.bncc_context as BnccContextData | undefined;
+      const v2QuestoesReferencia = input.context.questoes_referencia as QuestoesReferenciaData | undefined;
+
       const result = await generateContentForActivity(
         activity,
         conversationContext,
@@ -2493,7 +2532,9 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
         chosenActivities.length,
         v2TemaLimpo,
         v2DisciplinaExtraida,
-        v2TurmaExtraida
+        v2TurmaExtraida,
+        v2BnccContext,
+        v2QuestoesReferencia
       );
       
       results.push(result);

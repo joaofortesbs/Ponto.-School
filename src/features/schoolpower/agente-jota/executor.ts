@@ -1686,6 +1686,36 @@ Seja específico e forneça dados que ajudem o professor.
       }
       
       console.error(`📦 [Executor] FINAL enrichedParams.activities_to_fill: ${enrichedParams.activities_to_fill?.length || 0} activities`);
+
+      const bnccResult = this.capabilityResultsMap.get('pesquisar_bncc');
+      if (bnccResult) {
+        console.log(`🔗 [Executor] Injetando habilidades BNCC em gerar_conteudo_atividades`);
+        enrichedParams.bncc_context = {
+          habilidades: bnccResult.habilidades || [],
+          componentes: bnccResult.componentes || [],
+          anos: bnccResult.anos || [],
+          prompt_context: bnccResult.prompt_context || '',
+          count: bnccResult.count || 0
+        };
+        console.log(`   📚 ${enrichedParams.bncc_context.count} habilidades BNCC injetadas para geração de conteúdo`);
+      } else {
+        console.log(`📝 [Executor] Sem dados BNCC para geração de conteúdo`);
+      }
+
+      const bancoQuestoesResult = this.capabilityResultsMap.get('pesquisar_banco_questoes');
+      if (bancoQuestoesResult) {
+        console.log(`🔗 [Executor] Injetando questões de referência em gerar_conteudo_atividades`);
+        enrichedParams.questoes_referencia = {
+          questoes: bancoQuestoesResult.questoes || [],
+          componentes: bancoQuestoesResult.componentes || [],
+          temas: bancoQuestoesResult.temas || [],
+          prompt_context: bancoQuestoesResult.prompt_context || '',
+          count: bancoQuestoesResult.count || 0
+        };
+        console.log(`   📝 ${enrichedParams.questoes_referencia.count} questões de referência injetadas para geração de conteúdo`);
+      } else {
+        console.log(`📝 [Executor] Sem questões de referência para geração de conteúdo`);
+      }
     }
 
     // Para criar_atividade, injetar decisões
