@@ -1,0 +1,75 @@
+Fontes oficiais (texto base)
+Site oficial BNCC (MEC)
+
+Portal geral e PDFs por etapa/componente: 
+https://basenacionalcomum.mec.gov.br
+ e /abase/.
+
+Aqui estão TODAS as habilidades, mas em PDF/HTML, não em API.
+
+PDFs espelhados (Alex.pro.br)
+
+Vários PDFs da BNCC organizados por componente: Língua Portuguesa, Matemática, Ciências, etc. (ex.: BNCC Matemática.pdf, BNCC Língua Portuguesa.pdf).
+
+Praticamente o mesmo conteúdo do MEC, só que em outro host.
+
+Fontes em tabela / navegação web
+CIEB – Currículo em Rede
+
+Lista navegável de habilidades da BNCC, por etapa/componente: https://curriculo.cieb.net.br/habilidades/bncc.
+​
+
+Focado em uso pedagógico, boa referência para estruturar seu modelo de dados.
+
+Tudo Sala de Aula
+
+Organiza “todas as habilidades da BNCC do Ensino Fundamental” por ano e disciplina, de forma navegável para professor.
+​
+
+Útil como fonte cruzada e para conferir organização por turma.
+
+Instituto Reúna – Mapas de Foco
+
+Mapas de foco da BNCC (habilidades focais + comentários), com planilhas e PDFs por componente.
+
+Não são TODAS as habilidades, e sim um subconjunto prioritário; bom para metadados (foco, comentários).
+
+Nova Escola
+
+Tabelas de habilidades prioritárias por componente/ano (por exemplo Língua Portuguesa 3º–5º ano).
+​
+
+Também não cobre tudo, mas agrega marcações de prioridade e planos de aula.
+
+Fontes em API / dados estruturados
+API BNCC – Cientificar 1992
+
+Endpoint web para visualizar habilidades da BNCC (todas as etapas/disciplinas), pensado como API/dados.
+​
+
+Bom para bootstrap do seu dataset ou consumo online, mas depende da disponibilidade do serviço.
+
+Repositórios GitHub
+
+joaobertacchi/bncc – base.json com habilidades e metadados estruturados.
+​
+
+neuberoliveira/bncc – codes.json com códigos e descrições.
+​
+
+São ótimos para montar rapidamente o seu banco + servir de referência cruzada com MEC.
+
+Soluções comerciais / de terceiros
+
+Classificador BNCC (LobData) e outros serviços mencionam APIs ou modelos de classificação alinhados à BNCC.
+
+Servem mais para classificação/IA do que como fonte “definitiva” de dados.
+
+Fontes derivadas / enriquecimento
+Instituto Reúna – Mapas de Foco (planilhas): habilidades focais + chaves de leitura e sugestões de prática.
+​
+
+Materiais de priorização da Nova Escola: seleção + prioridades (alta/média/baixa).
+​
+
+Currículos de referência (ex.: CIEB PDFs): ajudam a relacionar habilidades BNCC com currículos de tecnologia, etc.
