@@ -27,7 +27,6 @@ export async function pesquisarBnccV2(
   const debug_log: DebugEntry[] = [];
   const startTime = Date.now();
   const params = (input.context || {}) as PesquisarBnccParams;
-  const maxResults = params.max_resultados || 15;
 
   if (!params.componente && params.disciplina_extraida) {
     params.componente = params.disciplina_extraida;
@@ -46,13 +45,13 @@ export async function pesquisarBnccV2(
     debug_log.push({
       timestamp: new Date().toISOString(),
       type: 'action',
-      narrative: '📚 ETAPA 1: Iniciando pesquisa na base BNCC (Base Nacional Comum Curricular)...',
+      narrative: '📚 ETAPA 1: Iniciando pesquisa na base BNCC completa (9 componentes, ~1.312 habilidades)...',
       technical_data: {
         componente: params.componente || 'todos',
         ano_serie: params.ano_serie || 'todos',
         busca_texto: params.busca_texto || 'nenhuma',
         codigo: params.codigo || 'nenhum',
-        max_resultados: maxResults,
+        cobertura: Object.keys(BNCC_HABILIDADES),
       },
     });
 
@@ -80,17 +79,20 @@ export async function pesquisarBnccV2(
       debug_log.push({
         timestamp: new Date().toISOString(),
         type: 'action',
-        narrative: `🔍 ETAPA 2: Buscando habilidades de ${params.componente} para ${params.ano_serie}`,
+        narrative: `🔍 ETAPA 2: Buscando TODAS as habilidades de ${params.componente} para ${params.ano_serie}`,
         technical_data: { modo: 'busca_componente_ano', componente: params.componente, ano_serie: params.ano_serie },
       });
 
-      const habs = getBNCCHabilidades(params.componente, params.ano_serie, maxResults);
-      resultados = habs.map(h => ({ ...h, componente: params.componente!, ano: params.ano_serie! }));
+      const resolvedComp = findComponent(params.componente);
+      if (resolvedComp) {
+        const habs = getBNCCHabilidades(resolvedComp, params.ano_serie);
+        resultados = habs.map(h => ({ ...h, componente: resolvedComp, ano: params.ano_serie! }));
+      }
     } else if (params.componente) {
       debug_log.push({
         timestamp: new Date().toISOString(),
         type: 'action',
-        narrative: `🔍 ETAPA 2: Listando habilidades de ${params.componente} para todos os anos`,
+        narrative: `🔍 ETAPA 2: Listando TODAS as habilidades de ${params.componente} para todos os anos`,
         technical_data: { modo: 'busca_componente', componente: params.componente },
       });
 
@@ -106,12 +108,12 @@ export async function pesquisarBnccV2(
       debug_log.push({
         timestamp: new Date().toISOString(),
         type: 'action',
-        narrative: `🔍 ETAPA 2: Listando habilidades de todos os componentes para ${params.ano_serie}`,
+        narrative: `🔍 ETAPA 2: Listando habilidades de TODOS os componentes para ${params.ano_serie}`,
         technical_data: { modo: 'busca_ano', ano_serie: params.ano_serie },
       });
 
-      for (const [compName, compData] of Object.entries(BNCC_HABILIDADES)) {
-        const habs = getBNCCHabilidades(compName, params.ano_serie, maxResults);
+      for (const [compName, _compData] of Object.entries(BNCC_HABILIDADES)) {
+        const habs = getBNCCHabilidades(compName, params.ano_serie);
         for (const hab of habs) {
           resultados.push({ ...hab, componente: compName, ano: params.ano_serie });
         }
@@ -120,7 +122,7 @@ export async function pesquisarBnccV2(
       debug_log.push({
         timestamp: new Date().toISOString(),
         type: 'action',
-        narrative: '🔍 ETAPA 2: Nenhum filtro específico — listando amostra de todas as habilidades',
+        narrative: '🔍 ETAPA 2: Nenhum filtro específico — listando TODAS as habilidades da base BNCC',
         technical_data: { modo: 'busca_geral' },
       });
 
@@ -134,14 +136,13 @@ export async function pesquisarBnccV2(
     }
 
     if (params.busca_texto && params.busca_texto.trim().length > 0) {
-      const searchLower = params.busca_texto.toLowerCase();
+      const searchTerms = params.busca_texto.toLowerCase().split(/\s+/).filter(t => t.length > 2);
       const beforeFilter = resultados.length;
-      resultados = resultados.filter(
-        r =>
-          r.descricao.toLowerCase().includes(searchLower) ||
-          r.objetoConhecimento.toLowerCase().includes(searchLower) ||
-          r.codigo.toLowerCase().includes(searchLower)
-      );
+
+      resultados = resultados.filter(r => {
+        const text = `${r.descricao} ${r.objetoConhecimento} ${r.codigo}`.toLowerCase();
+        return searchTerms.some(term => text.includes(term));
+      });
 
       debug_log.push({
         timestamp: new Date().toISOString(),
@@ -149,21 +150,42 @@ export async function pesquisarBnccV2(
         narrative: `🔎 ETAPA 3: Filtro textual "${params.busca_texto}" aplicado: ${beforeFilter} → ${resultados.length} habilidades`,
         technical_data: {
           busca_texto: params.busca_texto,
+          termos_busca: searchTerms,
           antes_filtro: beforeFilter,
           depois_filtro: resultados.length,
         },
       });
+
+      if (resultados.length === 0 && searchTerms.length > 1) {
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'action',
+          narrative: `🔄 ETAPA 3b: Backtracking — relaxando filtro textual para busca individual por termo...`,
+          technical_data: { modo: 'backtracking_individual_terms' },
+        });
+
+        const allCandidates = getAllResultsForScope(params);
+        resultados = allCandidates.filter(r => {
+          const text = `${r.descricao} ${r.objetoConhecimento} ${r.codigo}`.toLowerCase();
+          return searchTerms.some(term => text.includes(term));
+        });
+
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'discovery',
+          narrative: `🔄 Backtracking recuperou ${resultados.length} habilidade(s) usando termos individuais`,
+          technical_data: { resultados_recuperados: resultados.length },
+        });
+      }
     }
 
-    resultados = resultados.slice(0, maxResults);
-
-    const componentesEncontrados = [...new Set(resultados.map(r => r.componente))];
-    const anosEncontrados = [...new Set(resultados.map(r => r.ano))];
+    const componentesEncontrados = Array.from(new Set(resultados.map(r => r.componente)));
+    const anosEncontrados = Array.from(new Set(resultados.map(r => r.ano)));
 
     debug_log.push({
       timestamp: new Date().toISOString(),
       type: 'discovery',
-      narrative: `📋 ETAPA 4: Encontradas ${resultados.length} habilidade(s) BNCC relevantes de ${componentesEncontrados.length} componente(s) curricular(es)`,
+      narrative: `📋 ETAPA 4: Encontradas ${resultados.length} habilidade(s) BNCC de ${componentesEncontrados.length} componente(s) curricular(es)`,
       technical_data: {
         total_encontrado: resultados.length,
         componentes: componentesEncontrados,
@@ -188,7 +210,7 @@ export async function pesquisarBnccV2(
     debug_log.push({
       timestamp: new Date().toISOString(),
       type: 'confirmation',
-      narrative: `✅ ETAPA 5: Pesquisa BNCC concluída em ${elapsedTime}ms — ${resultados.length} habilidade(s) encontrada(s)`,
+      narrative: `✅ ETAPA 5: Pesquisa BNCC concluída em ${elapsedTime}ms — ${resultados.length} habilidade(s) encontrada(s) (sem limites)`,
       technical_data: {
         duracao_ms: elapsedTime,
         total_resultados: resultados.length,
@@ -217,7 +239,7 @@ export async function pesquisarBnccV2(
       metadata: {
         duration_ms: elapsedTime,
         retry_count: 0,
-        data_source: 'BNCC Reference Module (bncc-reference.ts)',
+        data_source: 'BNCC Reference Module - Cobertura Completa (9 componentes)',
       },
     };
   } catch (error) {
@@ -282,6 +304,25 @@ function findComponent(input: string): string | null {
     'his': 'História',
     'geografia': 'Geografia',
     'geo': 'Geografia',
+    'arte': 'Arte',
+    'artes': 'Arte',
+    'educacao fisica': 'Educação Física',
+    'educação física': 'Educação Física',
+    'ed fisica': 'Educação Física',
+    'ed. física': 'Educação Física',
+    'ed. fisica': 'Educação Física',
+    'edfis': 'Educação Física',
+    'ef': 'Educação Física',
+    'ensino religioso': 'Ensino Religioso',
+    'religiao': 'Ensino Religioso',
+    'religião': 'Ensino Religioso',
+    'er': 'Ensino Religioso',
+    'lingua inglesa': 'Língua Inglesa',
+    'língua inglesa': 'Língua Inglesa',
+    'ingles': 'Língua Inglesa',
+    'inglês': 'Língua Inglesa',
+    'english': 'Língua Inglesa',
+    'li': 'Língua Inglesa',
   };
 
   if (aliases[inputLower]) return aliases[inputLower];
@@ -291,6 +332,31 @@ function findComponent(input: string): string | null {
   }
 
   return null;
+}
+
+function getAllResultsForScope(params: PesquisarBnccParams): Array<BNCCHabilidade & { componente: string; ano: string }> {
+  const results: Array<BNCCHabilidade & { componente: string; ano: string }> = [];
+
+  if (params.componente) {
+    const comp = findComponent(params.componente);
+    if (comp && BNCC_HABILIDADES[comp]) {
+      for (const [ano, habs] of Object.entries(BNCC_HABILIDADES[comp].habilidades)) {
+        for (const hab of habs) {
+          results.push({ ...hab, componente: comp, ano });
+        }
+      }
+    }
+  } else {
+    for (const [compName, compData] of Object.entries(BNCC_HABILIDADES)) {
+      for (const [ano, habs] of Object.entries(compData.habilidades)) {
+        for (const hab of habs) {
+          results.push({ ...hab, componente: compName, ano });
+        }
+      }
+    }
+  }
+
+  return results;
 }
 
 function formatBnccResultsForPrompt(
@@ -308,7 +374,7 @@ function formatBnccResultsForPrompt(
   }
 
   const parts: string[] = ['HABILIDADES BNCC ENCONTRADAS:'];
-  for (const [group, habs] of grouped) {
+  for (const [group, habs] of Array.from(grouped)) {
     parts.push(`\n📘 ${group}:`);
     for (const h of habs) {
       parts.push(`  - ${h.codigo}: ${h.descricao}`);
