@@ -818,6 +818,36 @@ export class AgentExecutor {
             console.error(`📊 [Executor] CapabilityInput built with ${this.capabilityResultsMap.size} previous results:
    Keys: ${Array.from(this.capabilityResultsMap.keys()).join(', ')}`);
             
+            // ═══════════════════════════════════════════════════════════════════════
+            // BNCC AUTO-ENRICHMENT: Garantir dados BNCC para capabilities críticas
+            // Executa pesquisar_bncc automaticamente se ainda não executada,
+            // e injeta bncc_context no input.context para a capability consumir
+            // ═══════════════════════════════════════════════════════════════════════
+            const BNCC_CONSUMER_CAPABILITIES = ['gerar_conteudo_atividades', 'decidir_atividades_criar', 'criar_arquivo'];
+            if (BNCC_CONSUMER_CAPABILITIES.includes(capName)) {
+              await this.ensureBnccExecution();
+              const bnccCtx = this.extractBnccContextFromMap();
+              if (bnccCtx) {
+                capabilityInput.context.bncc_context = bnccCtx;
+                console.log(`📚 [Executor] BNCC context injetado em ${capName}: ${bnccCtx.count} habilidade(s)`);
+              } else {
+                console.log(`📝 [Executor] Sem dados BNCC disponíveis para ${capName}`);
+              }
+
+              if (capName === 'gerar_conteudo_atividades') {
+                const questoesResult = this.capabilityResultsMap.get('pesquisar_banco_questoes');
+                if (questoesResult?.success && questoesResult?.data) {
+                  capabilityInput.context.questoes_referencia = {
+                    questoes: questoesResult.data.questoes || [],
+                    componentes: questoesResult.data.componentes || [],
+                    prompt_context: questoesResult.data.prompt_context || '',
+                    count: questoesResult.data.count || 0,
+                  };
+                  console.log(`📋 [Executor] Questões de referência injetadas em gerar_conteudo_atividades: ${questoesResult.data.count || 0} questões`);
+                }
+              }
+            }
+
             // Executar a capability V2 correspondente
             let v2Result: CapabilityOutput | null = null;
             
@@ -1793,6 +1823,75 @@ Seja específico e forneça dados que ajudem o professor.
     }
 
     return enrichedParams;
+  }
+
+  private async ensureBnccExecution(): Promise<void> {
+    if (this.capabilityResultsMap.has('pesquisar_bncc')) {
+      const existing = this.capabilityResultsMap.get('pesquisar_bncc');
+      console.log(`📚 [Executor] pesquisar_bncc já executada — reutilizando (${existing?.data?.count || 0} habilidades)`);
+      return;
+    }
+
+    console.log(`📚 [Executor] AUTO-EXEC: pesquisar_bncc NÃO encontrada no plano — executando automaticamente para garantir cobertura BNCC`);
+
+    const bnccInput: CapabilityInput = {
+      capability_id: 'pesquisar_bncc',
+      execution_id: `exec_auto_bncc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      context: {
+        disciplina_extraida: this.currentPlanDisciplina || '',
+        turma_extraida: this.currentPlanTurma || '',
+        tema_limpo: this.currentPlanTemas.length > 0 ? this.currentPlanTemas.join(', ') : '',
+        session_id: this.sessionId,
+      },
+      previous_results: this.capabilityResultsMap,
+    };
+
+    try {
+      const bnccResult = await pesquisarBnccV2(bnccInput);
+      if (bnccResult?.success && bnccResult?.data) {
+        this.capabilityResultsMap.set('pesquisar_bncc', bnccResult);
+        console.log(`✅ [Executor] AUTO-EXEC pesquisar_bncc: ${bnccResult.data.count || 0} habilidades encontradas de ${(bnccResult.data.componentes || []).length} componente(s)`);
+
+        const autoDebugId = `cap-auto-bncc-${Date.now()}`;
+        useDebugStore.getState().startCapability(autoDebugId, 'Pesquisando Base BNCC (automático)');
+        createDebugEntry(
+          autoDebugId,
+          'Pesquisando Base BNCC (automático)',
+          'discovery',
+          `📚 Auto-execução: encontradas ${bnccResult.data.count} habilidade(s) BNCC de ${(bnccResult.data.componentes || []).join(', ') || 'todos componentes'}`,
+          'medium',
+          {
+            auto_executed: true,
+            count: bnccResult.data.count,
+            componentes: bnccResult.data.componentes,
+            anos: bnccResult.data.anos,
+          }
+        );
+        useDebugStore.getState().completeCapability(autoDebugId, 'completed');
+
+        if (bnccResult.debug_log) {
+          for (const entry of bnccResult.debug_log) {
+            createDebugEntry(autoDebugId, 'Pesquisando Base BNCC (automático)', entry.type as any, entry.narrative, 'low', entry.technical_data);
+          }
+        }
+      } else {
+        console.warn(`⚠️ [Executor] AUTO-EXEC pesquisar_bncc retornou success=false ou sem dados`);
+      }
+    } catch (error) {
+      console.error(`⚠️ [Executor] AUTO-EXEC pesquisar_bncc falhou (não-crítico):`, error instanceof Error ? error.message : error);
+    }
+  }
+
+  private extractBnccContextFromMap(): { habilidades: any[]; componentes: string[]; anos: string[]; prompt_context: string; count: number } | null {
+    const bnccResult = this.capabilityResultsMap.get('pesquisar_bncc');
+    if (!bnccResult?.success || !bnccResult?.data) return null;
+    return {
+      habilidades: bnccResult.data.habilidades || [],
+      componentes: bnccResult.data.componentes || [],
+      anos: bnccResult.data.anos || [],
+      prompt_context: bnccResult.data.prompt_context || '',
+      count: bnccResult.data.count || 0,
+    };
   }
 
   private formatTechnicalDataForDebug(capName: string, resultado: any): Record<string, any> {

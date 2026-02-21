@@ -194,14 +194,23 @@ function extractTitleFromMarkdown(rawText: string): string | null {
   return null;
 }
 
+export interface BnccContextData {
+  habilidades: any[];
+  componentes: string[];
+  anos: string[];
+  prompt_context: string;
+  count: number;
+}
+
 export async function generateArtifact(
   sessionId: string,
   tipoForce?: string,
-  solicitacao?: string
+  solicitacao?: string,
+  bnccContext?: BnccContextData
 ): Promise<ArtifactData | null> {
   const startTime = Date.now();
   
-  console.log(`📄 [ArtifactGenerator] Iniciando geração de artefato para sessão: ${sessionId}`);
+  console.log(`📄 [ArtifactGenerator] Iniciando geração de artefato para sessão: ${sessionId}${bnccContext ? ` | BNCC: ${bnccContext.count} habilidade(s)` : ''}`);
   
   const contextManager = getContextManager(sessionId);
   const contexto = contextManager.obterContexto();
@@ -245,20 +254,32 @@ export async function generateArtifact(
   
   let prompt: string;
   
+  const bnccPromptSection = bnccContext?.prompt_context ? `
+
+## ALINHAMENTO CURRICULAR — BNCC (Base Nacional Comum Curricular)
+As seguintes habilidades da BNCC foram identificadas como relevantes para este documento.
+Você DEVE incorporar essas habilidades no conteúdo gerado:
+- Referencie os CÓDIGOS BNCC (ex: EF07CI02) quando mencionar objetivos, competências ou habilidades
+- Alinhe o conteúdo pedagógico às descrições dessas habilidades
+- Cite os códigos BNCC de forma natural no texto do documento
+
+${bnccContext.prompt_context}
+` : '';
+
   if (useTextActivityPrompt && routerResult) {
     const textPrompt = getPromptForRoute(routerResult, userRequest, sanitizedContext);
     if (textPrompt) {
-      prompt = textPrompt;
-      console.log(`📄 [ArtifactGenerator] Usando prompt especializado do template: ${routerResult.templateId}`);
+      prompt = textPrompt + bnccPromptSection;
+      console.log(`📄 [ArtifactGenerator] Usando prompt especializado do template: ${routerResult.templateId}${bnccContext ? ' + BNCC' : ''}`);
     } else {
       prompt = config.promptTemplate
         .replace('{contexto}', sanitizedContext)
-        .replace('{solicitacao}', userRequest);
+        .replace('{solicitacao}', userRequest) + bnccPromptSection;
     }
   } else {
     prompt = config.promptTemplate
       .replace('{contexto}', sanitizedContext)
-      .replace('{solicitacao}', userRequest);
+      .replace('{solicitacao}', userRequest) + bnccPromptSection;
   }
   
   try {

@@ -2,6 +2,14 @@ import type { CapabilityInput, CapabilityOutput, DebugEntry } from '../shared/ty
 import { generateArtifact, shouldGenerateArtifact } from './artifact-generator';
 import type { ArtifactData } from './types';
 
+export interface BnccContextForArtifact {
+  habilidades: any[];
+  componentes: string[];
+  anos: string[];
+  prompt_context: string;
+  count: number;
+}
+
 export async function criarArquivoV2(input: CapabilityInput): Promise<CapabilityOutput> {
   const startTime = Date.now();
   const debugLog: DebugEntry[] = [];
@@ -9,12 +17,13 @@ export async function criarArquivoV2(input: CapabilityInput): Promise<Capability
   const sessionId = input.context.session_id || input.context.sessionId || input.execution_id;
   const tipoForce = (input.context.tipo_artefato || input.context.tipo) as string | undefined;
   const solicitacao = (input.context.solicitacao || input.context.tema || input.context.user_prompt || input.context.user_objective) as string | undefined;
+  const bnccContext = input.context.bncc_context as BnccContextForArtifact | undefined;
 
   debugLog.push({
     timestamp: new Date().toISOString(),
     type: 'action',
-    narrative: `Iniciando geração de artefato para sessão ${sessionId}${tipoForce ? ` (tipo forçado: ${tipoForce})` : ' (tipo automático)'}`,
-    technical_data: { sessionId, tipoForce }
+    narrative: `Iniciando geração de artefato para sessão ${sessionId}${tipoForce ? ` (tipo forçado: ${tipoForce})` : ' (tipo automático)'}${bnccContext ? ` | BNCC: ${bnccContext.count} habilidade(s)` : ''}`,
+    technical_data: { sessionId, tipoForce, has_bncc: !!bnccContext, bncc_count: bnccContext?.count || 0 }
   });
 
   if (!sessionId) {
@@ -50,7 +59,7 @@ export async function criarArquivoV2(input: CapabilityInput): Promise<Capability
   });
 
   try {
-    const artifact: ArtifactData | null = await generateArtifact(sessionId, tipoForce, solicitacao);
+    const artifact: ArtifactData | null = await generateArtifact(sessionId, tipoForce, solicitacao, bnccContext);
 
     if (!artifact) {
       debugLog.push({

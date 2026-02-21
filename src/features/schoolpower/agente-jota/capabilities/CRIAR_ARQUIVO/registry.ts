@@ -14,7 +14,8 @@ export const CRIAR_ARQUIVO_CAPABILITIES = {
       return await generateArtifact(
         params.session_id || params.sessionId,
         params.tipo_artefato || params.tipo,
-        params.solicitacao || params.tema
+        params.solicitacao || params.tema,
+        params.bncc_context
       );
     },
     parameters: {
