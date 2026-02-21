@@ -37,7 +37,7 @@ console.log(`🌍 Ambiente: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
 
 // Middleware
 app.use(cors({
-  origin: isProduction ? true : ['http://localhost:5000', 'http://127.0.0.1:5000', 'http://0.0.0.0:5000', 'http://localhost:3000', 'http://0.0.0.0:3000'],
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
@@ -113,6 +113,7 @@ app.use('/api/enviar-email', emailRoutes);
 app.use('/api/perfis', perfilsHandler);
 app.use('/api/upload-avatar', uploadAvatarRoutes);
 app.use('/api/atividades-neon', atividadesRoutes);
+app.use('/api/atividades', atividadesRoutes);
 app.use('/api/visitantes', visitantesRoutes);
 app.use('/api/translate', translateRoutes);
 app.use('/api/calendar/events', createCalendarEventsRouter(neonDB));

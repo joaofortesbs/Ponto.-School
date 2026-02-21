@@ -24,11 +24,7 @@ export interface ProcessedResult {
 }
 
 function getApiBaseUrl(): string {
-  const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
-  if (isProduction) {
-    return '';
-  }
-  return 'http://localhost:3001';
+  return '';
 }
 
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
