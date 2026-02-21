@@ -37,6 +37,17 @@ const CAPABILITY_ALIASES: Record<string, string> = {
   'pesquisar_minhas_atividades': 'pesquisar_atividades_conta',
   'buscar_atividades_anteriores': 'pesquisar_atividades_conta',
   'minhas_atividades': 'pesquisar_atividades_conta',
+
+  'pesquisar_questoes': 'pesquisar_banco_questoes',
+  'buscar_questoes': 'pesquisar_banco_questoes',
+  'banco_questoes': 'pesquisar_banco_questoes',
+  'questoes_referencia': 'pesquisar_banco_questoes',
+  'pesquisar_banco': 'pesquisar_banco_questoes',
+
+  'pesquisar_curriculo': 'pesquisar_bncc',
+  'buscar_bncc': 'pesquisar_bncc',
+  'consultar_bncc': 'pesquisar_bncc',
+  'habilidades_bncc': 'pesquisar_bncc',
   
   'decidir_atividades': 'decidir_atividades_criar',
   'escolher_atividades': 'decidir_atividades_criar',
@@ -339,6 +350,8 @@ function getCanonicalCategory(capabilityName: string): string | null {
   const categoryMap: Record<string, string> = {
     'pesquisar_atividades_disponiveis': 'PESQUISAR',
     'pesquisar_atividades_conta': 'PESQUISAR',
+    'pesquisar_bncc': 'PESQUISAR',
+    'pesquisar_banco_questoes': 'PESQUISAR',
     'decidir_atividades_criar': 'ANALISAR',
     'gerar_conteudo_atividades': 'GERAR_CONTEUDO',
     'criar_atividade': 'CRIAR',

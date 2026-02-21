@@ -23,6 +23,7 @@ import { gerarConteudoAtividadesV2 } from './capabilities/GERAR_CONTEUDO/impleme
 import { decidirAtividadesCriarV2 } from './capabilities/DECIDIR/implementations/decidir-atividades-criar';
 import { pesquisarAtividadesDisponiveisV2 } from './capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis';
 import { pesquisarBnccV2 } from './capabilities/PESQUISAR/implementations/pesquisar-bncc';
+import { pesquisarBancoQuestoesV2 } from './capabilities/PESQUISAR/implementations/pesquisar-banco-questoes';
 import { criarAtividadeV2 } from './capabilities/CRIAR_ATIVIDADES/implementations/criar-atividade-v2';
 import { salvarAtividadesBdV2 } from './capabilities/SALVAR_BD/implementations/salvar-atividades-bd';
 import { criarArquivoV2 } from './capabilities/CRIAR_ARQUIVO/criar-arquivo-v2';
@@ -674,6 +675,7 @@ export class AgentExecutor {
   private static readonly V2_REGISTRY: Map<string, (input: CapabilityInput) => Promise<CapabilityOutput>> = new Map([
     ['pesquisar_atividades_disponiveis', pesquisarAtividadesDisponiveisV2],
     ['pesquisar_bncc', pesquisarBnccV2],
+    ['pesquisar_banco_questoes', pesquisarBancoQuestoesV2],
     ['decidir_atividades_criar', decidirAtividadesCriarV2],
     ['gerar_conteudo_atividades', gerarConteudoAtividadesV2],
     ['criar_atividade', criarAtividadeV2],
@@ -1178,6 +1180,13 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
       const codigos = habs.map((h: any) => h?.codigo).filter(Boolean).join(', ');
       return `Consultei a BNCC (Base Nacional Comum Curricular). Encontrei ${count} habilidade(s) curricular(es) de ${componentes.join(', ') || 'componente não especificado'}. Códigos: ${codigos || 'N/A'}.`;
     }
+    if (capName === 'pesquisar_banco_questoes') {
+      const data = resultado?.data || resultado || {};
+      const count = data.count || resultado?.count || 0;
+      const temas = data.temas || resultado?.temas || [];
+      const componentes = data.componentes || resultado?.componentes || [];
+      return `Consultei o Banco de Questões de Referência. Encontrei ${count} questão(ões) modelo de ${componentes.join(', ') || 'componente não especificado'} sobre ${temas.join(', ') || 'temas variados'}.`;
+    }
     if (capName.includes('decidir_atividades')) {
       // Suporte para formato V2 (data.chosen_activities) e legado (chosen_activities)
       const data = resultado?.data || resultado || {};
@@ -1561,6 +1570,21 @@ Seja específico e forneça dados que ajudem o professor.
       } else {
         console.log(`📝 [Executor] Sem dados BNCC disponíveis (pesquisar_bncc não executado)`);
       }
+
+      const bancoQuestoesResult = this.capabilityResultsMap.get('pesquisar_banco_questoes');
+      if (bancoQuestoesResult) {
+        console.log(`🔗 [Executor] Injetando questões de referência em decidir_atividades_criar`);
+        enrichedParams.banco_questoes = {
+          questoes: bancoQuestoesResult.questoes || [],
+          componentes: bancoQuestoesResult.componentes || [],
+          temas: bancoQuestoesResult.temas || [],
+          prompt_context: bancoQuestoesResult.prompt_context || '',
+          count: bancoQuestoesResult.count || 0
+        };
+        console.log(`   📝 ${enrichedParams.banco_questoes.count} questões de referência injetadas`);
+      } else {
+        console.log(`📝 [Executor] Sem questões de referência (pesquisar_banco_questoes não executado)`);
+      }
     }
 
     // Para gerar_conteudo_atividades, injetar atividades decididas e contexto
@@ -1779,6 +1803,25 @@ Seja específico e forneça dados que ajudem o professor.
           objetoConhecimento: h.objetoConhecimento,
           componente: h.componente,
           ano: h.ano
+        }))
+      };
+    }
+
+    if (capName === 'pesquisar_banco_questoes') {
+      const questoes = resultado?.questoes || resultado?.data?.questoes || [];
+      return {
+        resultado_resumo: `Encontradas ${questoes.length} questão(ões) de referência`,
+        total_questoes: questoes.length,
+        componentes: resultado?.componentes || [],
+        temas: resultado?.temas || [],
+        dificuldades: resultado?.dificuldades || [],
+        questoes: questoes.map((q: any) => ({
+          id: q.id,
+          tipo: q.tipo,
+          componente: q.componente,
+          tema: q.tema,
+          dificuldade: q.dificuldade,
+          enunciado: q.enunciado?.substring(0, 80)
         }))
       };
     }

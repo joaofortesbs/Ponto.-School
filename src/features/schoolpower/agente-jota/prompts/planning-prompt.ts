@@ -147,13 +147,14 @@ Exemplo para "atividades de ciências para semana do 7º ano sobre ecossistemas"
 1. "pesquisar_atividades_disponiveis" - Pesquisa atividades no catálogo da plataforma
 2. "pesquisar_atividades_conta" - Busca atividades já criadas pelo professor
 3. "pesquisar_bncc" - 📚 Pesquisa habilidades da BNCC (Base Nacional Comum Curricular) para garantir alinhamento curricular. Retorna códigos, descrições e objetos de conhecimento. Parâmetros opcionais: componente (Matemática, Língua Portuguesa, Ciências, História, Geografia), ano_serie (ex: 7º Ano), busca_texto (palavra-chave), codigo (ex: EF07MA17). QUANDO USAR: Sempre que o professor mencionar turma/série + tema/disciplina, pesquise a BNCC para alinhar o conteúdo ao currículo nacional. O resultado alimenta as etapas seguintes com habilidades curriculares reais.
-4. "decidir_atividades_criar" - Analisa e decide quais atividades criar baseado no catálogo
-5. "gerar_conteudo_atividades" - Gera o conteúdo pedagógico para as atividades decididas
-6. "criar_atividade" - Cria/constrói as atividades com todos os campos preenchidos
-7. "salvar_atividades_bd" - Salva as atividades criadas no banco de dados
-8. "criar_arquivo" - Gera documento (dossiê, resumo, roteiro, relatório, guia, mensagens, ou DOCUMENTO LIVRE com estrutura customizada)
-9. "planejar_plano_de_acao" - Monta um plano estruturado
-10. "gerenciar_calendario" - 📅 CALENDÁRIO INTELIGENTE: Gerencia o calendário COMPLETO do professor. Pode CRIAR, VISUALIZAR, EDITAR, EXCLUIR compromissos e ANALISAR DISPONIBILIDADE. A IA escolhe autonomamente qual operação executar. Use ESTA capability (NÃO usar criar_arquivo!) para QUALQUER pedido envolvendo calendário. Parâmetros opcionais: titulo, data YYYY-MM-DD, hora_inicio HH:MM, hora_fim HH:MM, dia_todo boolean, repeticao, icone, labels, event_id (para editar/excluir), date_from, date_to (para buscar). IMPORTANTE: sempre inclua "user_prompt" com o pedido original do professor e "user_objective" com o objetivo detectado. O professor_id é injetado automaticamente.
+4. "pesquisar_banco_questoes" - 📝 Pesquisa questões de referência no banco de questões curado para servir como modelo de qualidade e padrão pedagógico. Parâmetros opcionais: componente, ano_serie, tema (assunto específico), dificuldade (facil/medio/dificil), tipo_questao (multipla_escolha/dissertativa/verdadeiro_falso/todos). QUANDO USAR: Sempre que for criar atividades com exercícios, questões ou avaliações. O resultado fornece referências de qualidade e estilo para a geração de conteúdo.
+5. "decidir_atividades_criar" - Analisa e decide quais atividades criar baseado no catálogo
+6. "gerar_conteudo_atividades" - Gera o conteúdo pedagógico para as atividades decididas
+7. "criar_atividade" - Cria/constrói as atividades com todos os campos preenchidos
+8. "salvar_atividades_bd" - Salva as atividades criadas no banco de dados
+9. "criar_arquivo" - Gera documento (dossiê, resumo, roteiro, relatório, guia, mensagens, ou DOCUMENTO LIVRE com estrutura customizada)
+10. "planejar_plano_de_acao" - Monta um plano estruturado
+11. "gerenciar_calendario" - 📅 CALENDÁRIO INTELIGENTE: Gerencia o calendário COMPLETO do professor. Pode CRIAR, VISUALIZAR, EDITAR, EXCLUIR compromissos e ANALISAR DISPONIBILIDADE. A IA escolhe autonomamente qual operação executar. Use ESTA capability (NÃO usar criar_arquivo!) para QUALQUER pedido envolvendo calendário. Parâmetros opcionais: titulo, data YYYY-MM-DD, hora_inicio HH:MM, hora_fim HH:MM, dia_todo boolean, repeticao, icone, labels, event_id (para editar/excluir), date_from, date_to (para buscar). IMPORTANTE: sempre inclua "user_prompt" com o pedido original do professor e "user_objective" com o objetivo detectado. O professor_id é injetado automaticamente.
 
 ❌ NÃO INVENTE NOMES de capabilities! COPIE exatamente da lista acima!
 ⚠️ PARA CALENDÁRIO: use APENAS "gerenciar_calendario" — NUNCA use "criar_arquivo" ou "gerar_conteudo_atividades" para compromissos!
@@ -283,8 +284,9 @@ ARQUIVOS/DOCUMENTOS (criar_arquivo com tipo específico ou documento_livre):
 ⚠️ Mas PODE usar criar_arquivo com atividade_textual para provas, simulados, caça-palavras, jogos textuais, rubricas, etc!
 
 1. Se o professor quer CRIAR ATIVIDADES (exercícios, quiz, prova, lista, etc):
-   → Use o pipeline COMPLETO: pesquisar_atividades_disponiveis + pesquisar_bncc → decidir_atividades_criar → gerar_conteudo_atividades → criar_atividade → salvar_atividades_bd
+   → Use o pipeline COMPLETO: pesquisar_atividades_disponiveis + pesquisar_bncc + pesquisar_banco_questoes → decidir_atividades_criar → gerar_conteudo_atividades → criar_atividade → salvar_atividades_bd
    → 📚 REGRA BNCC: Sempre que houver turma/série + disciplina/tema, inclua "pesquisar_bncc" na etapa de pesquisa com os parâmetros componente e ano_serie preenchidos. Isso garante alinhamento curricular nacional.
+   → 📝 REGRA BANCO DE QUESTÕES: Sempre que for criar exercícios, questões ou avaliações, inclua "pesquisar_banco_questoes" na etapa de pesquisa com os parâmetros componente e tema preenchidos. Isso garante qualidade e padrão nas questões geradas.
    → IMPORTANTE: Se incluir criar_atividade, SEMPRE inclua salvar_atividades_bd logo depois
    → O sistema Ponto. Flow gera automaticamente documentos complementares (guia de aplicação, mensagens para pais, relatório para coordenação) após a criação das atividades
    → PORÉM: Quando a FASE 6 (Complementação Proativa) recomendar materiais pedagógicos específicos (rubrica, exit ticket, KWL, gabarito), ADICIONE uma etapa extra com criar_arquivo após a criação das atividades! O Ponto. Flow NÃO gera esses materiais pedagógicos — apenas documentos administrativos.
@@ -1060,7 +1062,8 @@ EXEMPLO 11 - "Crie atividades de ciências e organiza tudo no meu calendário pa
       "capabilities": [
         {"nome": "pesquisar_atividades_disponiveis", "displayName": "Pesquisando opções", "categoria": "PESQUISAR", "parametros": {}, "justificativa": "Buscar atividades de ciências"},
         {"nome": "pesquisar_atividades_conta", "displayName": "Verificando suas atividades", "categoria": "PESQUISAR", "parametros": {}, "justificativa": "Evitar duplicações"},
-        {"nome": "pesquisar_bncc", "displayName": "Consultando habilidades BNCC de Ciências", "categoria": "PESQUISAR", "parametros": {"componente": "Ciências"}, "justificativa": "Garantir alinhamento curricular"}
+        {"nome": "pesquisar_bncc", "displayName": "Consultando habilidades BNCC de Ciências", "categoria": "PESQUISAR", "parametros": {"componente": "Ciências"}, "justificativa": "Garantir alinhamento curricular"},
+        {"nome": "pesquisar_banco_questoes", "displayName": "Buscando questões de referência", "categoria": "PESQUISAR", "parametros": {"componente": "Ciências"}, "justificativa": "Garantir qualidade das questões"}
       ]
     },
     {
@@ -1091,6 +1094,7 @@ EXEMPLO 11 - "Crie atividades de ciências e organiza tudo no meu calendário pa
 
 🔍 CHECKLIST OBRIGATÓRIO ANTES DE FINALIZAR O PLANO:
 □ A etapa de PESQUISA inclui "pesquisar_bncc"? → OBRIGATÓRIO em TODA pipeline de atividades! Garante alinhamento curricular nacional.
+□ A etapa de PESQUISA inclui "pesquisar_banco_questoes"? → RECOMENDADO quando o professor pede exercícios, questões ou avaliações. Garante qualidade e padrão nas questões.
 □ O professor pediu atividade/prova/plano? → Verifique a MATRIZ DE COMPLEMENTAÇÃO (FASE 6) e adicione uma etapa final com complementos pedagógicos relevantes (rubrica, exit ticket, gabarito, KWL)
 □ Os complementos usam criar_arquivo com tipo_artefato "atividade_textual"?
 □ Complementos NÃO duplicam o que o Ponto Flow já gera (guia, mensagens pais, relatório coordenação)?

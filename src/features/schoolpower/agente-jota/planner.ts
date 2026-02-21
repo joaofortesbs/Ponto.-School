@@ -728,6 +728,15 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
           status: 'pending',
           ordem: 3,
         },
+        {
+          id: `cap-0-3-${timestamp}`,
+          nome: 'pesquisar_banco_questoes',
+          displayName: 'Buscando questões de referência',
+          categoria: 'PESQUISAR',
+          parametros: {},
+          status: 'pending',
+          ordem: 4,
+        },
       ],
     },
     {
