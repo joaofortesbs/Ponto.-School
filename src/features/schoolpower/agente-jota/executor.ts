@@ -1177,15 +1177,21 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
       const count = data.count || resultado?.count || 0;
       const componentes = data.componentes || resultado?.componentes || [];
       const habs = data.habilidades || resultado?.habilidades || [];
-      const codigos = habs.map((h: any) => h?.codigo).filter(Boolean).join(', ');
-      return `Consultei a BNCC (Base Nacional Comum Curricular). Encontrei ${count} habilidade(s) curricular(es) de ${componentes.join(', ') || 'componente não especificado'}. Códigos: ${codigos || 'N/A'}.`;
+      const codigos = habs.map((h: any) => h?.codigo).filter(Boolean);
+      const anos = data.anos || resultado?.anos || [];
+      const codigosDisplay = codigos.length > 5 ? `${codigos.slice(0, 5).join(', ')} e mais ${codigos.length - 5}` : codigos.join(', ');
+      const anosDisplay = anos.length > 0 ? ` para ${anos.join(', ')}` : '';
+      return `Consultei a BNCC (Base Nacional Comum Curricular). Encontrei ${count} habilidade(s) curricular(es) de ${componentes.join(', ') || 'componente não especificado'}${anosDisplay}. Códigos: ${codigosDisplay || 'N/A'}.`;
     }
     if (capName === 'pesquisar_banco_questoes') {
       const data = resultado?.data || resultado || {};
       const count = data.count || resultado?.count || 0;
       const temas = data.temas || resultado?.temas || [];
       const componentes = data.componentes || resultado?.componentes || [];
-      return `Consultei o Banco de Questões de Referência. Encontrei ${count} questão(ões) modelo de ${componentes.join(', ') || 'componente não especificado'} sobre ${temas.join(', ') || 'temas variados'}.`;
+      const dificuldades = data.dificuldades || resultado?.dificuldades || [];
+      const temasDisplay = temas.length > 3 ? `${temas.slice(0, 3).join(', ')} e mais ${temas.length - 3} tema(s)` : temas.join(', ');
+      const difDisplay = dificuldades.length > 0 ? ` (dificuldade: ${dificuldades.join(', ')})` : '';
+      return `Consultei o Banco de Questões de Referência. Encontrei ${count} questão(ões) modelo de ${componentes.join(', ') || 'componente não especificado'} sobre ${temasDisplay || 'temas variados'}${difDisplay}.`;
     }
     if (capName.includes('decidir_atividades')) {
       // Suporte para formato V2 (data.chosen_activities) e legado (chosen_activities)

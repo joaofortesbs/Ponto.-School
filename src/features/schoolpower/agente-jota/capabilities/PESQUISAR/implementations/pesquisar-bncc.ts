@@ -16,6 +16,9 @@ interface PesquisarBnccParams {
   busca_texto?: string;
   codigo?: string;
   max_resultados?: number;
+  disciplina_extraida?: string;
+  turma_extraida?: string;
+  tema_limpo?: string;
 }
 
 export async function pesquisarBnccV2(
@@ -24,7 +27,20 @@ export async function pesquisarBnccV2(
   const debug_log: DebugEntry[] = [];
   const startTime = Date.now();
   const params = (input.context || {}) as PesquisarBnccParams;
-  const maxResults = params.max_resultados || 5;
+  const maxResults = params.max_resultados || 15;
+
+  if (!params.componente && params.disciplina_extraida) {
+    params.componente = params.disciplina_extraida;
+    console.log(`📚 [pesquisar_bncc] Usando disciplina_extraida como componente: "${params.componente}"`);
+  }
+  if (!params.ano_serie && params.turma_extraida) {
+    params.ano_serie = params.turma_extraida;
+    console.log(`📚 [pesquisar_bncc] Usando turma_extraida como ano_serie: "${params.ano_serie}"`);
+  }
+  if (!params.busca_texto && params.tema_limpo) {
+    params.busca_texto = params.tema_limpo;
+    console.log(`📚 [pesquisar_bncc] Usando tema_limpo como busca_texto: "${params.busca_texto}"`);
+  }
 
   try {
     debug_log.push({
