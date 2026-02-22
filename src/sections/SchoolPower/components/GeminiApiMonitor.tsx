@@ -358,7 +358,7 @@ export default function GeminiApiMonitor() {
           <div className="pt-2 border-t border-green-500/30">
             <div className="text-xs text-gray-400">
               <div>Endpoint: generativelanguage.googleapis.com</div>
-              <div>Modelo: gemini-1.5-flash-latest</div>
+              <div>Modelo: gemini-2.5-flash</div>
               <div>Monitoramento: Ativo</div>
             </div>
           </div>

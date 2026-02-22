@@ -3,34 +3,37 @@
  * 
  * 9 providers, 16 modelos em cascata inteligente.
  * 
- * ARQUITETURA DE 5 TIERS:
+ * ARQUITETURA DE 5 TIERS — CASCATA OTIMIZADA (APIs VALIDADAS EM PROD):
  * ┌─────────────────────────────────────────────────────────────────────────────┐
- * │ TIER 1: ULTRA-FAST (< 500ms) — Respostas instantâneas                       │
+ * │ TIER 1: ULTRA-FAST (< 500ms) — Respostas instantâneas       [✅ ATIVO]      │
  * │ └─ llama-3.1-8b-instant        (Groq LPU)                                   │
  * ├─────────────────────────────────────────────────────────────────────────────┤
- * │ TIER 2: FAST (500ms-2s) — Equilíbrio velocidade/qualidade                   │
+ * │ TIER 2: FAST (500ms-2s) — Equilíbrio velocidade/qualidade   [✅ ATIVO]      │
  * │ ├─ llama-3.3-70b-versatile     (Groq LPU — principal)                       │
- * │ ├─ llama-3.3-70b-specdec       (Groq LPU — SpecDec)                         │
- * │ └─ Llama-3.3-70B-Turbo         (Together AI — 3º backup 70B)               │
+ * │ └─ llama-3.3-70b-specdec       (Groq LPU — SpecDec)                         │
+ * │ [⏸ INATIVO] Llama-3.3-70B-Turbo (Together AI — chave inválida)             │
  * ├─────────────────────────────────────────────────────────────────────────────┤
- * │ TIER 3: BALANCED — Raciocínio mais profundo                                  │
+ * │ TIER 3: BALANCED — Raciocínio mais profundo                  [✅ ATIVO]      │
  * │ ├─ llama-4-scout-17b           (Groq LPU — Llama 4)                         │
- * │ ├─ llama-4-maverick:free        (OpenRouter — Llama 4 Maverick grátis)       │
- * │ ├─ Qwen2.5-72B-Turbo           (Together AI — alternativa)                  │
- * │ └─ Llama-3.3-70B               (DeepInfra — mais barato do mercado)         │
- * ├─────────────────────────────────────────────────────────────────────────────┤
- * │ TIER 4: POWERFUL — Máxima qualidade e raciocínio                            │
- * │ ├─ gemini-2.5-flash            (Google — 1M context, multimodal)            │
+ * │ ├─ gemini-2.5-flash            (Google — 1M context, CHAVE NOVA ✅)         │
  * │ ├─ gemini-2.5-flash-lite       (Google — versão lite)                        │
- * │ ├─ DeepSeek-V3                 (DeepInfra — reasoning excelente)             │
- * │ ├─ deepseek-r1:free            (OpenRouter — reasoning grátis)               │
- * │ ├─ claude-3-5-haiku            (XRoute — Claude via créditos)               │
- * │ ├─ gpt-4o-mini                 (EdenAI — GPT via créditos)                  │
- * │ └─ Mistral-7B-Instruct         (HuggingFace — open-source, lento)           │
+ * │ [⏸ INATIVO] Qwen2.5-72B-Turbo (Together AI — chave inválida)               │
+ * │ [⏸ INATIVO] Llama-3.3-70B     (DeepInfra — sem saldo)                      │
  * ├─────────────────────────────────────────────────────────────────────────────┤
- * │ TIER 5: FALLBACK LOCAL — NUNCA FALHA                                         │
+ * │ TIER 4: POWERFUL — Qualidade e raciocínio                    [✅ ATIVO]      │
+ * │ ├─ gemma-3-4b-it:free          (OpenRouter — grátis, confirmado ✅)          │
+ * │ ├─ deepseek-r1:free            (OpenRouter — reasoning grátis)               │
+ * │ [⏸ INATIVO] DeepSeek-V3       (DeepInfra — sem saldo)                      │
+ * │ [⏸ INATIVO] claude-3-5-haiku  (XRoute — HTTP 500 persistente)               │
+ * │ [⏸ INATIVO] gpt-4o-mini       (EdenAI — sem créditos)                      │
+ * │ [⏸ INATIVO] Mistral-7B        (HuggingFace — endpoint migrado)              │
+ * ├─────────────────────────────────────────────────────────────────────────────┤
+ * │ TIER 5: FALLBACK LOCAL — NUNCA FALHA                         [✅ ATIVO]      │
  * │ └─ local-fallback              (Geração local inteligente)                   │
  * └─────────────────────────────────────────────────────────────────────────────┘
+ * 
+ * CASCATA ATIVA: Groq (4 modelos) → Gemini (2 modelos) → OpenRouter (2 modelos) → Local
+ * PROVIDERS INATIVOS: Together AI, DeepInfra, XRoute, EdenAI, HuggingFace
  * 
  * @version 4.0.0 — 9 providers, 16 modelos
  * @author Ponto School
@@ -174,8 +177,8 @@ export const LLM_MODELS: LLMModel[] = [
     maxTokens: 8000,
     contextWindow: 131072,
     tier: 'fast',
-    priority: 4,
-    isActive: true,
+    priority: 12,
+    isActive: false,
     avgLatencyMs: 1500,
     bestFor: ['lista-exercicios', 'plano-aula', 'sequencia-didatica', 'tese-redacao', 'general'],
   },
@@ -191,7 +194,7 @@ export const LLM_MODELS: LLMModel[] = [
     maxTokens: 8000,
     contextWindow: 131072,
     tier: 'balanced',
-    priority: 5,
+    priority: 4,
     isActive: true,
     avgLatencyMs: 500,
     bestFor: ['plano-aula', 'sequencia-didatica', 'general', 'avaliacao-diagnostica'],
@@ -204,7 +207,7 @@ export const LLM_MODELS: LLMModel[] = [
     maxTokens: 8000,
     contextWindow: 131072,
     tier: 'balanced',
-    priority: 6,
+    priority: 7,
     isActive: true,
     avgLatencyMs: 1500,
     bestFor: ['plano-aula', 'sequencia-didatica', 'lista-exercicios', 'general'],
@@ -217,8 +220,8 @@ export const LLM_MODELS: LLMModel[] = [
     maxTokens: 8000,
     contextWindow: 32768,
     tier: 'balanced',
-    priority: 7,
-    isActive: true,
+    priority: 13,
+    isActive: false,
     avgLatencyMs: 2000,
     bestFor: ['plano-aula', 'sequencia-didatica', 'tese-redacao', 'avaliacao-diagnostica', 'general'],
   },
@@ -230,8 +233,8 @@ export const LLM_MODELS: LLMModel[] = [
     maxTokens: 8000,
     contextWindow: 131072,
     tier: 'balanced',
-    priority: 8,
-    isActive: true,
+    priority: 14,
+    isActive: false,
     avgLatencyMs: 1800,
     bestFor: ['lista-exercicios', 'plano-aula', 'quiz-interativo', 'general'],
   },
@@ -247,7 +250,7 @@ export const LLM_MODELS: LLMModel[] = [
     maxTokens: 8192,
     contextWindow: 1000000,
     tier: 'powerful',
-    priority: 9,
+    priority: 5,
     isActive: true,
     avgLatencyMs: 2000,
     bestFor: ['lista-exercicios', 'plano-aula', 'sequencia-didatica', 'tese-redacao', 'quiz-interativo', 'flash-cards', 'general'],
@@ -260,7 +263,7 @@ export const LLM_MODELS: LLMModel[] = [
     maxTokens: 8192,
     contextWindow: 1000000,
     tier: 'powerful',
-    priority: 10,
+    priority: 6,
     isActive: true,
     avgLatencyMs: 1500,
     bestFor: ['quiz-interativo', 'flash-cards', 'general'],
@@ -273,8 +276,8 @@ export const LLM_MODELS: LLMModel[] = [
     maxTokens: 8000,
     contextWindow: 131072,
     tier: 'powerful',
-    priority: 11,
-    isActive: true,
+    priority: 15,
+    isActive: false,
     avgLatencyMs: 3000,
     bestFor: ['plano-aula', 'sequencia-didatica', 'tese-redacao', 'avaliacao-diagnostica', 'general'],
   },
@@ -286,7 +289,7 @@ export const LLM_MODELS: LLMModel[] = [
     maxTokens: 8000,
     contextWindow: 131072,
     tier: 'powerful',
-    priority: 12,
+    priority: 8,
     isActive: true,
     avgLatencyMs: 4000,
     bestFor: ['plano-aula', 'sequencia-didatica', 'avaliacao-diagnostica', 'tese-redacao', 'general'],
@@ -299,8 +302,8 @@ export const LLM_MODELS: LLMModel[] = [
     maxTokens: 8000,
     contextWindow: 200000,
     tier: 'powerful',
-    priority: 13,
-    isActive: true,
+    priority: 16,
+    isActive: false,
     avgLatencyMs: 3000,
     bestFor: ['plano-aula', 'sequencia-didatica', 'tese-redacao', 'lista-exercicios', 'general'],
   },
@@ -312,8 +315,8 @@ export const LLM_MODELS: LLMModel[] = [
     maxTokens: 8000,
     contextWindow: 128000,
     tier: 'powerful',
-    priority: 14,
-    isActive: true,
+    priority: 17,
+    isActive: false,
     avgLatencyMs: 3500,
     bestFor: ['quiz-interativo', 'flash-cards', 'lista-exercicios', 'general'],
   },
@@ -325,7 +328,7 @@ export const LLM_MODELS: LLMModel[] = [
     maxTokens: 2000,
     contextWindow: 32768,
     tier: 'powerful',
-    priority: 15,
+    priority: 18,
     isActive: false,
     avgLatencyMs: 8000,
     bestFor: ['general', 'flash-cards', 'quiz-interativo'],
@@ -342,7 +345,7 @@ export const LLM_MODELS: LLMModel[] = [
     maxTokens: 10000,
     contextWindow: 50000,
     tier: 'fallback',
-    priority: 16,
+    priority: 9,
     isActive: true,
     avgLatencyMs: 10,
     bestFor: ['lista-exercicios', 'quiz-interativo', 'flash-cards', 'plano-aula', 'sequencia-didatica', 'quadro-interativo', 'tese-redacao', 'avaliacao-diagnostica', 'general'],

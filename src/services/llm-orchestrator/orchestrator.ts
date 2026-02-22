@@ -414,8 +414,8 @@ export function resetOrchestratorStats(): void {
 }
 
 console.log(`🚀 [LLM-Orchestrator v4.0] Sistema Unificado Enterprise inicializado`);
-console.log(`   📊 Modelos disponíveis: ${getActiveModels().length} (meta: 16)`);
-console.log(`   🌐 Providers: Groq, Gemini, Together, OpenRouter, DeepInfra, XRoute, EdenAI, HuggingFace, Local`);
+console.log(`   📊 Modelos ATIVOS: ${getActiveModels().length}/16 — Cascata: Groq → Gemini → OpenRouter → Local`);
+console.log(`   🌐 Providers ativos: Groq ✅ | Gemini ✅ | OpenRouter ✅ | Local ✅`);
 console.log(`   💾 Cache: ${ORCHESTRATOR_CONFIG.enableCache ? 'Habilitado' : 'Desabilitado'}`);
 console.log(`   🔒 Circuit Breaker: ${ORCHESTRATOR_CONFIG.enableCircuitBreaker ? 'Habilitado' : 'Desabilitado'}`);
 console.log(`   ⏱️ Rate Limiting: ${ORCHESTRATOR_CONFIG.enableRateLimiting ? 'Habilitado' : 'Desabilitado'}`);

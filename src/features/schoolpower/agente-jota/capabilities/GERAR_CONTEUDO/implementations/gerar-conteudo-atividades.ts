@@ -2009,7 +2009,7 @@ user_objective: ${params.user_objective?.substring(0, 50) || 'NOT PROVIDED'}
     activityDebugStore.log(
       activity.id, 'api', 'GerarConteudo',
       'Chamando API de IA (Groq/Gemini) para gerar campos...',
-      { model_cascade: ['llama3.3-70b', 'llama3.1-8b', 'gemini-1.5-flash'] }
+      { model_cascade: ['llama3.3-70b', 'llama3.1-8b', 'gemini-2.5-flash'] }
     );
 
     const result = await generateContentForActivity(
@@ -2712,7 +2712,7 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
       activityDebugStore.log(
         activity.id, 'api', 'GerarConteudoV2',
         'Chamando API de IA (Groq/Gemini) para gerar campos...',
-        { model_cascade: ['llama3.3-70b', 'llama3.1-8b', 'gemini-1.5-flash'] }
+        { model_cascade: ['llama3.3-70b', 'llama3.1-8b', 'gemini-2.5-flash'] }
       );
       
       const v2TemaLimpo = input.context.tema_limpo || '';

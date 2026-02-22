@@ -17,7 +17,7 @@ export const API_URLS = {
 export const API_MODELS = {
   GROQ: 'llama-3.3-70b-versatile',
   GROQ_FALLBACK: 'llama-3.1-8b-instant',
-  GEMINI: 'gemini-1.5-flash',
+  GEMINI: 'gemini-2.5-flash',
 } as const;
 
 // Configurações de timeout e retry

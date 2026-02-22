@@ -13,7 +13,7 @@
  * │ TIER 1 (Ultra-Fast): llama-3.1-8b, gemma2-9b               │
  * │ TIER 2 (Fast): llama-3.3-70b, mixtral-8x7b, llama3-70b     │
  * │ TIER 3 (Balanced): llama-3-tool-use, llama-4-scout         │
- * │ TIER 4 (Powerful): gemini-2.5-flash, gemini-2.0-flash      │
+ * │ TIER 4 (Powerful): gemini-2.5-flash ✅                      │
  * │ TIER 5 (Local): Fallback local que NUNCA FALHA             │
  * └─────────────────────────────────────────────────────────────┘
  * 
@@ -82,10 +82,10 @@ export const API_MODELS_CASCADE: APIModel[] = [
     isActive: true,
   },
   {
-    id: 'gemini-2.0-flash',
-    name: 'Gemini 2.0 Flash',
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
     provider: 'gemini',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
     maxTokens: 8192,
     contextWindow: 1000000,
     priority: 4,
@@ -203,7 +203,7 @@ function getOptimalModelForComplexity(complexity: QueryComplexity): string[] {
     case 'moderate':
       return ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
     case 'complex':
-      return ['llama-3.3-70b-versatile', 'gemini-2.0-flash'];
+      return ['llama-3.3-70b-versatile', 'gemini-2.5-flash'];
   }
 }
 
