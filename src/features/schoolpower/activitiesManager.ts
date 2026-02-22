@@ -19,8 +19,7 @@ export interface ActionPlanActivity {
   approved: boolean;
 }
 
-// Chave da API Gemini para School Power
-export const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
+export const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 
 /**
  * Encontra uma atividade do School Power pelo ID

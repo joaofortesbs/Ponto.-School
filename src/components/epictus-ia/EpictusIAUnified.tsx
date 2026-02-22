@@ -117,16 +117,7 @@ export default function EpictusIAUnified() {
     try {
       setIsAiResponding(true);
       // Simulação de chamada de API - em produção, substituir pela chamada real
-      // const response = await fetch("https://api.your-ai-service.com/respond", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     "Authorization": "Bearer AIzaSyDaMGN00DG-3KHgV9b7Fm_SHGvfruuMdgM"
-      //   },
-      //   body: JSON.stringify({ message: userMessage }),
-      // });
-      // const data = await response.json();
-      // return data.response;
+      // API call placeholder (not implemented)
 
       // Simulação de resposta para desenvolvimento
       await new Promise((resolve) => setTimeout(resolve, 1500)); // Simula o tempo de resposta da API

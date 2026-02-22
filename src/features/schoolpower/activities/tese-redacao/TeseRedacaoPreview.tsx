@@ -227,7 +227,7 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
 
     try {
       // Usar API Key do ambiente
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
 
       if (!apiKey) {
         throw new Error('API Key do Gemini não configurada');
