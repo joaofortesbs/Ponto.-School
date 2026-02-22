@@ -115,12 +115,38 @@ const STATUS_CONFIG = {
   }
 };
 
-function ActivityCard({ activity, onBuild, onActivityClick, onViewClick, onDebugClick }: { 
+type VerificationStatus = 'pending' | 'verified' | 'regenerating' | 'flagged';
+
+function VerificationBadge({ status, score }: { status: VerificationStatus; score?: number }) {
+  if (status === 'pending') return null;
+  if (status === 'verified') return (
+    <span className="flex items-center gap-1 text-xs text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-2 py-0.5 font-medium" title={`Verificado${score !== undefined ? ` (${score}/10)` : ''}`}>
+      <Check className="w-3 h-3" />
+      {score !== undefined ? score : '✓'}
+    </span>
+  );
+  if (status === 'regenerating') return (
+    <span className="flex items-center gap-1 text-xs text-orange-400 bg-orange-400/10 border border-orange-400/20 rounded-full px-2 py-0.5 font-medium" title="Regenerando...">
+      <Loader2 className="w-3 h-3 animate-spin" />
+    </span>
+  );
+  if (status === 'flagged') return (
+    <span className="flex items-center gap-1 text-xs text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 rounded-full px-2 py-0.5 font-medium" title={`Sinalizado${score !== undefined ? ` (${score}/10)` : ''}`}>
+      <AlertCircle className="w-3 h-3" />
+      {score !== undefined ? score : '⚠'}
+    </span>
+  );
+  return null;
+}
+
+function ActivityCard({ activity, onBuild, onActivityClick, onViewClick, onDebugClick, verificationStatus, verificationScore }: { 
   activity: ActivityToBuild; 
   onBuild?: () => void;
   onActivityClick?: (activity: ActivityToBuild) => void;
   onViewClick?: (activity: ActivityToBuild) => void;
   onDebugClick?: (activity: ActivityToBuild) => void;
+  verificationStatus?: VerificationStatus;
+  verificationScore?: number;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const config = STATUS_CONFIG[activity.status];
@@ -168,6 +194,9 @@ function ActivityCard({ activity, onBuild, onActivityClick, onViewClick, onDebug
           </div>
 
           <div className="flex items-center gap-2">
+            {verificationStatus && verificationStatus !== 'pending' && (
+              <VerificationBadge status={verificationStatus} score={verificationScore} />
+            )}
             {activity.status === 'waiting' && onBuild && (
               <button
                 onClick={(e) => {
@@ -436,6 +465,8 @@ export function ConstructionInterface({
   const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
   const [debugActivityId, setDebugActivityId] = useState<string | null>(null);
   const [debugActivityName, setDebugActivityName] = useState<string>('');
+  const [verificationStatusMap, setVerificationStatusMap] = useState<Record<string, VerificationStatus>>({});
+  const [verificationScoreMap, setVerificationScoreMap] = useState<Record<string, number>>({});
 
   // Callback ref para registrar o modal quando ele for montado
   const setEditModalRef = useCallback((handle: EditActivityModalHandle | null) => {
@@ -523,6 +554,39 @@ export function ConstructionInterface({
       window.removeEventListener('construction:queue_completed', handleQueueCompleted as EventListener);
     };
   }, [onActivityStatusChange]);
+
+  useEffect(() => {
+    const handleVerificationStarted = (event: CustomEvent) => {
+      const { activity_id } = event.detail;
+      setVerificationStatusMap(prev => ({ ...prev, [activity_id]: 'regenerating' }));
+    };
+    const handleVerificationPassed = (event: CustomEvent) => {
+      const { activity_id, score } = event.detail;
+      setVerificationStatusMap(prev => ({ ...prev, [activity_id]: 'verified' }));
+      if (score !== undefined) setVerificationScoreMap(prev => ({ ...prev, [activity_id]: score }));
+    };
+    const handleVerificationFailed = (event: CustomEvent) => {
+      const { activity_id, score } = event.detail;
+      setVerificationStatusMap(prev => ({ ...prev, [activity_id]: 'flagged' }));
+      if (score !== undefined) setVerificationScoreMap(prev => ({ ...prev, [activity_id]: score }));
+    };
+    const handleVerificationCompleted = (event: CustomEvent) => {
+      const { activity_id, approved, score, quality_flag } = event.detail;
+      const status: VerificationStatus = quality_flag ? 'flagged' : (approved ? 'verified' : 'flagged');
+      setVerificationStatusMap(prev => ({ ...prev, [activity_id]: status }));
+      if (score !== undefined) setVerificationScoreMap(prev => ({ ...prev, [activity_id]: score }));
+    };
+    window.addEventListener('activity:verification:started', handleVerificationStarted as EventListener);
+    window.addEventListener('activity:verification:passed', handleVerificationPassed as EventListener);
+    window.addEventListener('activity:verification:failed', handleVerificationFailed as EventListener);
+    window.addEventListener('activity:verification:completed', handleVerificationCompleted as EventListener);
+    return () => {
+      window.removeEventListener('activity:verification:started', handleVerificationStarted as EventListener);
+      window.removeEventListener('activity:verification:passed', handleVerificationPassed as EventListener);
+      window.removeEventListener('activity:verification:failed', handleVerificationFailed as EventListener);
+      window.removeEventListener('activity:verification:completed', handleVerificationCompleted as EventListener);
+    };
+  }, []);
 
   const handleActivityClick = useCallback((activity: ActivityToBuild) => {
     console.log('🔧 [ConstructionInterface] Abrindo modal de EDIÇÃO para atividade:', activity.name);
@@ -827,6 +891,8 @@ export function ConstructionInterface({
               onActivityClick={handleActivityClick}
               onViewClick={handleViewClick}
               onDebugClick={handleDebugClick}
+              verificationStatus={verificationStatusMap[activity.activity_id] || verificationStatusMap[activity.id]}
+              verificationScore={verificationScoreMap[activity.activity_id] || verificationScoreMap[activity.id]}
             />
           </motion.div>
         ))}

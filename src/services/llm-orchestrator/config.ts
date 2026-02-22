@@ -7,27 +7,24 @@
  * ARQUITETURA DE 5 TIERS:
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │ TIER 1: ULTRA-FAST (< 500ms) - Para respostas instantâneas             │
- * │ ├─ llama-3.1-8b-instant        (Groq - 8B params)                      │
- * │ └─ gemma2-9b-it                (Groq - 9B params)                      │
+ * │ └─ llama-3.1-8b-instant        (Groq - 8B params)                      │
  * ├─────────────────────────────────────────────────────────────────────────┤
  * │ TIER 2: FAST (500ms-2s) - Equilíbrio velocidade/qualidade              │
  * │ ├─ llama-3.3-70b-versatile     (Groq - 70B params, principal)          │
- * │ ├─ mixtral-8x7b-32768          (Groq - 56B MoE, contexto longo)        │
- * │ └─ llama3-70b-8192             (Groq - 70B params, contexto curto)     │
+ * │ └─ llama-3.3-70b-specdec       (Groq - 70B SpecDec)                    │
  * ├─────────────────────────────────────────────────────────────────────────┤
  * │ TIER 3: BALANCED - Para tarefas que precisam de raciocínio             │
- * │ ├─ llama-3-groq-70b-tool-use   (Groq - Tool calling)                   │
- * │ └─ llama-4-scout-17b-16e-instruct (Groq - Novo modelo)                 │
+ * │ └─ llama-4-scout-17b-16e-instruct (Groq - Llama 4 Scout)               │
  * ├─────────────────────────────────────────────────────────────────────────┤
  * │ TIER 4: POWERFUL - Modelos mais potentes (fallback externo)            │
  * │ ├─ gemini-2.5-flash            (Google - 1M context, multimodal)       │
- * │ └─ gemini-2.5-pro              (Google - Mais potente)                 │
+ * │ └─ gemini-2.5-flash-lite       (Google - Versão lite mais rápida)      │
  * ├─────────────────────────────────────────────────────────────────────────┤
  * │ TIER 5: FALLBACK LOCAL - NUNCA FALHA                                   │
  * │ └─ local-fallback              (Geração local inteligente)             │
  * └─────────────────────────────────────────────────────────────────────────┘
  * 
- * @version 3.0.0
+ * @version 3.1.0 — Gemini 2.5 Flash (migração de 2.0 depreciado)
  * @author Ponto School
  */
 
@@ -128,25 +125,25 @@ export const LLM_MODELS: LLMModel[] = [
     bestFor: ['plano-aula', 'sequencia-didatica', 'general', 'avaliacao-diagnostica'],
   },
 
-  // ========== TIER 4: POWERFUL (Gemini) ==========
+  // ========== TIER 4: POWERFUL (Gemini 2.5) ==========
   {
-    id: 'gemini-2.0-flash',
-    name: 'Gemini 2.0 Flash',
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
     provider: 'gemini',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
     maxTokens: 8192,
     contextWindow: 1000000,
     tier: 'powerful',
     priority: 5,
     isActive: true,
     avgLatencyMs: 2000,
-    bestFor: ['lista-exercicios', 'plano-aula', 'sequencia-didatica', 'tese-redacao', 'general'],
+    bestFor: ['lista-exercicios', 'plano-aula', 'sequencia-didatica', 'tese-redacao', 'quiz-interativo', 'flash-cards', 'general'],
   },
   {
-    id: 'gemini-2.0-flash-lite',
-    name: 'Gemini 2.0 Flash Lite',
+    id: 'gemini-2.5-flash-lite',
+    name: 'Gemini 2.5 Flash Lite',
     provider: 'gemini',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent',
     maxTokens: 8192,
     contextWindow: 1000000,
     tier: 'powerful',
@@ -202,8 +199,8 @@ export const CACHE_CONFIG: CacheConfig = {
 // ============================================================================
 
 export const CIRCUIT_BREAKER_CONFIG: CircuitBreakerConfig = {
-  failureThreshold: 3,         // 3 falhas para abrir o circuito
-  recoveryTimeMs: 30000,       // 30 segundos para tentar recuperar
+  failureThreshold: 5,         // 5 falhas para abrir o circuito (menos sensível a erros transitórios)
+  recoveryTimeMs: 20000,       // 20 segundos para tentar recuperar (mais rápido)
   halfOpenSuccessThreshold: 2, // 2 sucessos para fechar o circuito
 };
 
@@ -213,12 +210,12 @@ export const CIRCUIT_BREAKER_CONFIG: CircuitBreakerConfig = {
 
 export const RATE_LIMITER_CONFIG: Record<string, RateLimiterConfig> = {
   groq: {
-    maxRequestsPerMinute: 30,    // 30 requests/min (free tier)
-    maxTokensPerMinute: 50000,   // 50K tokens/min
+    maxRequestsPerMinute: 50,    // 50 requests/min (conservador — ajuste conforme tier da conta)
+    maxTokensPerMinute: 100000,  // 100K tokens/min
     windowMs: 60000,             // 1 minuto
   },
   gemini: {
-    maxRequestsPerMinute: 15,    // 15 requests/min (free tier)
+    maxRequestsPerMinute: 30,    // 30 requests/min (Gemini 2.5 Flash tem limite maior)
     maxTokensPerMinute: 1000000, // 1M tokens/min
     windowMs: 60000,             // 1 minuto
   },

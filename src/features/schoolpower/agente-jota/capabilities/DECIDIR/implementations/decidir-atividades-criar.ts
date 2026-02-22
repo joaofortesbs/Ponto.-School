@@ -1009,8 +1009,8 @@ export async function decidirAtividadesCriarV2(
     let lastRawResponse: string | null = null;
 
     // ═══ PHASE 4.0: TRY GEMINI FUNCTION CALLING FIRST (Layer 0) ═══
-    const geminiModel = getModelById('gemini-2.0-flash');
-    if (geminiModel && !isCircuitOpen('gemini-2.0-flash')) {
+    const geminiModel = getModelById('gemini-2.5-flash');
+    if (geminiModel && !isCircuitOpen('gemini-2.5-flash')) {
       try {
         debug_log.push({
           timestamp: new Date().toISOString(),

@@ -531,28 +531,27 @@ interface CatalogEntry {
 }
 
 function extractCatalogFromPrompt(prompt: string): CatalogEntry[] {
-  const entries: CatalogEntry[] = [];
-
+  // STRATEGY 1: JSON block (```json...```)
   const jsonBlockMatch = prompt.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
   if (jsonBlockMatch) {
     try {
       const parsed = JSON.parse(jsonBlockMatch[1]);
-      if (Array.isArray(parsed)) return parsed;
-      if (parsed.atividades && Array.isArray(parsed.atividades)) return parsed.atividades;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (parsed.atividades && Array.isArray(parsed.atividades) && parsed.atividades.length > 0) return parsed.atividades;
     } catch {}
   }
 
+  // STRATEGY 2: Inline JSON objects with "id": "..." pattern
+  const entries: CatalogEntry[] = [];
   const idTitlePattern = /"id"\s*:\s*"([^"]+)"[\s\S]*?"titulo"\s*:\s*"([^"]+)"/g;
   let match;
   while ((match = idTitlePattern.exec(prompt)) !== null) {
     const entryBlock = prompt.substring(Math.max(0, match.index - 20), prompt.indexOf('}', match.index + match[0].length) + 1);
-    
     const tipoMatch = entryBlock.match(/"tipo"\s*:\s*"([^"]+)"/);
     const materiaMatch = entryBlock.match(/"materia"\s*:\s*"([^"]+)"/);
     const nivelMatch = entryBlock.match(/"nivel_dificuldade"\s*:\s*"([^"]+)"/);
     const pipelineMatch = entryBlock.match(/"pipeline"\s*:\s*"([^"]+)"/);
     const templateMatch = entryBlock.match(/"template"\s*:\s*"([^"]+)"/);
-    
     entries.push({
       id: match[1],
       titulo: match[2],
@@ -563,8 +562,47 @@ function extractCatalogFromPrompt(prompt: string): CatalogEntry[] {
       template: templateMatch?.[1],
     });
   }
-  
-  return entries;
+  if (entries.length > 0) return entries;
+
+  // STRATEGY 3: Plain text format — "- id: titulo (tipo: X, categoria: Y)"
+  // This is the format used in the DECIDIR prompt catalog listing
+  const plainTextEntries: CatalogEntry[] = [];
+  const plainTextPattern = /^[-•]\s+([a-z0-9-]+):\s+(.+?)(?:\s+\(tipo:\s*([^,)]+)(?:,\s*categoria:\s*([^)]+))?\))?$/gm;
+  let ptMatch;
+  while ((ptMatch = plainTextPattern.exec(prompt)) !== null) {
+    const id = ptMatch[1].trim();
+    const titulo = ptMatch[2].trim();
+    const tipo = ptMatch[3]?.trim();
+    if (id && titulo && id.length > 2 && id.length < 60) {
+      plainTextEntries.push({ id, titulo, tipo });
+    }
+  }
+  if (plainTextEntries.length > 0) {
+    console.log(`🔍 [LocalFallback] Catálogo extraído via plain text: ${plainTextEntries.length} entradas`);
+    return plainTextEntries;
+  }
+
+  // STRATEGY 4: "IDs VÁLIDOS: id1, id2, id3..." pattern
+  const validIdsMatch = prompt.match(/IDs?\s+V[ÁA]LIDOS?[:\s]+([^\n]+)/i);
+  if (validIdsMatch) {
+    const ids = validIdsMatch[1].split(/[,\s]+/).map(s => s.trim().replace(/[[\]]/g, '')).filter(s => s.length > 2 && s.includes('-'));
+    if (ids.length > 0) {
+      console.log(`🔍 [LocalFallback] Catálogo extraído via IDs VÁLIDOS: ${ids.length} IDs`);
+      return ids.map(id => ({ id, titulo: id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }));
+    }
+  }
+
+  // STRATEGY 5: Emergency hardcoded fallback — known activity IDs from the platform catalog
+  // Used only when ALL extraction strategies fail — guarantees at least a minimal valid selection
+  console.warn(`⚠️ [LocalFallback] Todas as estratégias de extração de catálogo falharam. Usando seleção de emergência.`);
+  return [
+    { id: 'plano-aula', titulo: 'Plano de Aula', tipo: 'plano' },
+    { id: 'lista-exercicios', titulo: 'Lista de Exercícios', tipo: 'lista' },
+    { id: 'quiz-interativo', titulo: 'Quiz Interativo', tipo: 'quiz' },
+    { id: 'flash-cards', titulo: 'Flash Cards', tipo: 'flash-cards' },
+    { id: 'sequencia-didatica', titulo: 'Sequência Didática', tipo: 'sequencia' },
+    { id: 'avaliacao-diagnostica', titulo: 'Avaliação Diagnóstica', tipo: 'avaliacao' },
+  ];
 }
 
 function extractRequestedQuantity(prompt: string): number {

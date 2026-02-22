@@ -384,8 +384,26 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
     };
   }, []);
 
-  // Estado para atividades completadas (usadas pelo ProgressiveExecutionCard)
   const [completedActivities, setCompletedActivities] = useState<ActivityToBuild[]>([]);
+
+  const [packageCoherence, setPackageCoherence] = useState<{
+    coherence_score: number;
+    coherence_issues: string[];
+    sequence_ok: boolean;
+    verified_count?: number;
+    flagged_count?: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const handleCoherenceCompleted = (event: CustomEvent) => {
+      const { coherence_score, coherence_issues, sequence_ok, verified_count, flagged_count } = event.detail;
+      setPackageCoherence({ coherence_score, coherence_issues: coherence_issues || [], sequence_ok, verified_count, flagged_count });
+    };
+    window.addEventListener('package:coherence:completed', handleCoherenceCompleted as EventListener);
+    return () => {
+      window.removeEventListener('package:coherence:completed', handleCoherenceCompleted as EventListener);
+    };
+  }, []);
 
 
   const objectivesForProgressiveCard = useMemo((): ObjectiveItem[] => {
@@ -447,6 +465,43 @@ export function DeveloperModeCard({ cardId, data, isStatic = true }: DeveloperMo
             console.log('✅ [DeveloperModeCard] Todos os objetivos concluídos');
           }}
         />
+        {packageCoherence && (
+          <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-white/60 uppercase tracking-wide">Coerência do Pacote</span>
+              <div className="flex items-center gap-2">
+                {packageCoherence.verified_count !== undefined && (
+                  <span className="text-xs text-emerald-400 bg-emerald-400/10 rounded-full px-2 py-0.5">
+                    {packageCoherence.verified_count} verificadas
+                  </span>
+                )}
+                {packageCoherence.flagged_count !== undefined && packageCoherence.flagged_count > 0 && (
+                  <span className="text-xs text-yellow-400 bg-yellow-400/10 rounded-full px-2 py-0.5">
+                    {packageCoherence.flagged_count} sinalizadas
+                  </span>
+                )}
+                <span className={`text-xs font-bold rounded-full px-2 py-0.5 ${packageCoherence.coherence_score >= 7 ? 'text-emerald-400 bg-emerald-400/10' : packageCoherence.coherence_score >= 5 ? 'text-yellow-400 bg-yellow-400/10' : 'text-red-400 bg-red-400/10'}`}>
+                  {packageCoherence.coherence_score}/10
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`text-xs ${packageCoherence.sequence_ok ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                {packageCoherence.sequence_ok ? '✓ Sequência pedagógica OK' : '⚠ Sequência a revisar'}
+              </span>
+            </div>
+            {packageCoherence.coherence_issues.length > 0 && (
+              <ul className="mt-1 space-y-0.5">
+                {packageCoherence.coherence_issues.slice(0, 3).map((issue, i) => (
+                  <li key={i} className="text-xs text-white/50 flex items-start gap-1">
+                    <span className="text-yellow-400 mt-0.5">·</span>
+                    <span>{issue}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
     </motion.div>
   );

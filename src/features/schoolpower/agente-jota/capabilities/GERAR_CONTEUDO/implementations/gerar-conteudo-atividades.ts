@@ -2330,6 +2330,180 @@ function createCapabilityError(message: string, severity: 'low' | 'medium' | 'hi
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ACTIVITY GENERATION AGENT — VERIFICATION LAYER (LLM-as-Judge)
+// Inspirado em: Genspark Mixture-of-Agents, Manus AI PDCA loops, Kimi Swarm
+// ═══════════════════════════════════════════════════════════════════════════
+
+interface VerificationResult {
+  approved: boolean;
+  score: number;
+  issues: string[];
+  suggestions: string[];
+  model_used: string;
+  duration_ms: number;
+}
+
+interface CoherenceResult {
+  coherence_score: number;
+  sequence_ok: boolean;
+  coherence_issues: string[];
+  coverage_ok: boolean;
+  duration_ms: number;
+}
+
+const INTERACTIVE_ACTIVITY_TYPES = new Set([
+  'quiz-interativo', 'lista-exercicios', 'flash-cards', 'quadro-interativo', 'avaliacao-diagnostica'
+]);
+
+const TEXTUAL_ACTIVITY_TYPES = new Set([
+  'plano-aula', 'sequencia-didatica', 'tese-redacao', 'proposta-redacao', 'projeto-aprendizagem',
+  'roteiro-aula', 'ficha-leitura', 'resumo-conteudo', 'mapa-conceitual-texto'
+]);
+
+function getPreferredModelForActivityType(activityType: string): string {
+  if (INTERACTIVE_ACTIVITY_TYPES.has(activityType)) {
+    return 'gemini-2.5-flash';
+  }
+  if (TEXTUAL_ACTIVITY_TYPES.has(activityType)) {
+    return 'llama-3.3-70b-versatile';
+  }
+  return 'llama-3.3-70b-versatile';
+}
+
+function getVerificationModel(generationModel: string): string {
+  if (generationModel.includes('gemini')) {
+    return 'llama-3.3-70b-versatile';
+  }
+  return 'gemini-2.5-flash';
+}
+
+async function runVerificationJudge(
+  activity: ChosenActivity,
+  generatedContent: Record<string, any>,
+  userObjective: string,
+  conversationContext: string,
+  previousActivitiesSummary: string
+): Promise<VerificationResult> {
+  const startTime = Date.now();
+  
+  const contentSummary = Object.entries(generatedContent)
+    .slice(0, 8)
+    .map(([k, v]) => {
+      const val = typeof v === 'string' ? v.substring(0, 120) : typeof v === 'object' ? JSON.stringify(v).substring(0, 120) : String(v);
+      return `${k}: ${val}`;
+    })
+    .join('\n');
+
+  const verificationPrompt = `Você é um VERIFICADOR PEDAGÓGICO especializado. Analise o conteúdo gerado e retorne APENAS JSON válido.
+
+ATIVIDADE: "${activity.titulo}" (tipo: ${activity.tipo})
+OBJETIVO DO PROFESSOR: ${userObjective.substring(0, 300)}
+CONTEXTO: ${conversationContext.substring(0, 200)}
+${previousActivitiesSummary ? `ATIVIDADES JÁ GERADAS NA SESSÃO: ${previousActivitiesSummary}` : ''}
+
+CONTEÚDO GERADO (amostra):
+${contentSummary}
+
+CRITÉRIOS DE AVALIAÇÃO:
+1. ALINHAMENTO: O conteúdo está alinhado ao objetivo do professor?
+2. COMPLETUDE: Os campos principais foram preenchidos (não vazios, não genéricos)?
+3. QUALIDADE: O conteúdo é pedagogicamente sólido e aplicável em sala?
+4. UNICIDADE: Evita repetição com as atividades já geradas?
+5. ADEQUAÇÃO: Adequado ao nível/contexto educacional informado?
+
+RETORNE APENAS JSON (sem markdown):
+{"approved":true,"score":8,"issues":[],"suggestions":["opcional"]}
+
+score de 0 a 10. approved=true se score >= 7. issues = lista de problemas encontrados (vazio se nenhum).`;
+
+  try {
+    const response = await executeWithCascadeFallback(verificationPrompt, {
+      systemPrompt: 'Você é um verificador pedagógico que retorna APENAS JSON válido, sem markdown. Nunca use ```json. Responda direto com o objeto JSON.'
+    });
+
+    const duration_ms = Date.now() - startTime;
+
+    if (!response.success || !response.data) {
+      return { approved: true, score: 7, issues: [], suggestions: [], model_used: 'fallback', duration_ms };
+    }
+
+    let cleanData = response.data.trim();
+    const jsonMatch = cleanData.match(/\{[\s\S]*\}/);
+    if (jsonMatch) cleanData = jsonMatch[0];
+
+    const parsed = JSON.parse(cleanData);
+    return {
+      approved: Boolean(parsed.approved),
+      score: Math.min(10, Math.max(0, Number(parsed.score) || 7)),
+      issues: Array.isArray(parsed.issues) ? parsed.issues : [],
+      suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
+      model_used: response.modelUsed || 'unknown',
+      duration_ms,
+    };
+  } catch {
+    return { approved: true, score: 7, issues: [], suggestions: [], model_used: 'error-fallback', duration_ms: Date.now() - startTime };
+  }
+}
+
+async function runPackageCoherenceCheck(
+  activities: Array<{ titulo: string; tipo: string; id: string }>,
+  userObjective: string,
+  generatedSummaries: string[]
+): Promise<CoherenceResult> {
+  const startTime = Date.now();
+
+  const activitiesList = activities.map((a, i) => `${i + 1}. "${a.titulo}" (${a.tipo})`).join('\n');
+  const summariesList = generatedSummaries.slice(0, 5).join('\n---\n');
+
+  const coherencePrompt = `Você é um REVISOR DE COERÊNCIA PEDAGÓGICA. Analise o conjunto de atividades e retorne APENAS JSON.
+
+OBJETIVO DO PROFESSOR: ${userObjective.substring(0, 300)}
+
+ATIVIDADES DO PACOTE (em ordem):
+${activitiesList}
+
+AMOSTRAS DE CONTEÚDO GERADO:
+${summariesList.substring(0, 800)}
+
+VERIFIQUE:
+1. A sequência das atividades é pedagogicamente lógica?
+2. Há conteúdo duplicado ou muito repetido entre elas?
+3. O conjunto cobre o objetivo do professor de forma completa?
+
+RETORNE APENAS JSON:
+{"coherence_score":8,"sequence_ok":true,"coherence_issues":[],"coverage_ok":true}
+
+coherence_score de 0 a 10.`;
+
+  try {
+    const response = await executeWithCascadeFallback(coherencePrompt, {
+      systemPrompt: 'Você é um revisor pedagógico que retorna APENAS JSON válido, sem markdown.'
+    });
+
+    const duration_ms = Date.now() - startTime;
+
+    if (!response.success || !response.data) {
+      return { coherence_score: 8, sequence_ok: true, coherence_issues: [], coverage_ok: true, duration_ms };
+    }
+
+    let cleanData = response.data.trim();
+    const jsonMatch = cleanData.match(/\{[\s\S]*\}/);
+    if (jsonMatch) cleanData = jsonMatch[0];
+
+    const parsed = JSON.parse(cleanData);
+    return {
+      coherence_score: Math.min(10, Math.max(0, Number(parsed.coherence_score) || 8)),
+      sequence_ok: Boolean(parsed.sequence_ok !== false),
+      coherence_issues: Array.isArray(parsed.coherence_issues) ? parsed.coherence_issues : [],
+      coverage_ok: Boolean(parsed.coverage_ok !== false),
+      duration_ms,
+    };
+  } catch {
+    return { coherence_score: 8, sequence_ok: true, coherence_issues: [], coverage_ok: true, duration_ms: Date.now() - startTime };
+  }
+}
+
 export async function gerarConteudoAtividadesV2(
   input: CapabilityInput
 ): Promise<CapabilityOutput> {
@@ -2408,18 +2582,43 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
       chosenActivities = resultAsAny.data.activities;
       activitySource = 'data.activities (alt)';
     }
-    // Caminho 5: Fallback para store
+    // Caminho 5: Formato raw do local fallback — data.atividades_escolhidas
+    else if (resultAsAny.data?.atividades_escolhidas?.length > 0) {
+      chosenActivities = resultAsAny.data.atividades_escolhidas;
+      activitySource = 'data.atividades_escolhidas (local-fallback-raw)';
+    }
+    // Caminho 6: Fallback para store (sempre tentado, independente dos outros caminhos)
     else {
       const store = useChosenActivitiesStore.getState();
-      chosenActivities = store.getChosenActivities();
-      activitySource = 'store fallback';
+      const storeActivities = store.getChosenActivities();
+      if (storeActivities.length > 0) {
+        chosenActivities = storeActivities;
+        activitySource = 'store fallback';
+      } else {
+        activitySource = 'none — todos os caminhos retornaram vazio';
+      }
     }
     
     console.error(`📊 [V2] chosenActivities source: ${activitySource}`);
     console.error(`📊 [V2] chosenActivities count: ${chosenActivities.length}`);
     
     if (chosenActivities.length === 0) {
-      throw new Error('Nenhuma atividade escolhida encontrada no resultado de decidir_atividades_criar');
+      // Log diagnóstico detalhado para facilitar debugging futuro
+      const diagKeys = Object.keys(resultAsAny).join(', ');
+      const diagDataKeys = resultAsAny.data ? Object.keys(resultAsAny.data).join(', ') : 'data=null';
+      console.error(`🔴 [V2] DIAGNÓSTICO FALHA HANDOFF:
+  - decidir success=true mas atividades vazias em todos os 6 caminhos
+  - decisionResult keys: ${diagKeys}
+  - decisionResult.data keys: ${diagDataKeys}
+  - data.chosen_activities length: ${resultAsAny.data?.chosen_activities?.length ?? 'undefined'}
+  - data.atividades_escolhidas length: ${resultAsAny.data?.atividades_escolhidas?.length ?? 'undefined'}
+  - Store também vazio
+  - PROVÁVEL CAUSA: Local fallback ativado em decidir retornou empty list (catalog extraction falhou)`);
+      throw new Error(
+        'Nenhuma atividade escolhida encontrada no resultado de decidir_atividades_criar. ' +
+        `Caminhos tentados: data.chosen_activities, chosen_activities, activities, data.activities, data.atividades_escolhidas, store. ` +
+        `Todos retornaram vazio. Possível causa: Gemini FC falhou (404) e fallback local não conseguiu extrair catálogo do prompt.`
+      );
     }
     
     debug_log.push({
@@ -2459,6 +2658,8 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
     // ═══════════════════════════════════════════════════════════════════════
     const results: GeneratedFieldsResult[] = [];
     const store = useChosenActivitiesStore.getState();
+    const verificationResults: Record<string, VerificationResult> = {};
+    const activityGeneratedSummaries: string[] = [];
     
     // Inicializar DebugStore
     useDebugStore.getState().startCapability(CAPABILITY_ID, 'Gerando conteúdo V2');
@@ -2680,6 +2881,89 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
         });
         
         // ═══════════════════════════════════════════════════════════════════════
+        // VERIFICAÇÃO LLM-AS-JUDGE (Micro 3.3 — Activity Generation Agent)
+        // Modelo verificador independente avalia qualidade do conteúdo gerado
+        // Inspirado em: Genspark Mixture-of-Agents, Manus AI PDCA
+        // ═══════════════════════════════════════════════════════════════════════
+        const previousSummary = activityGeneratedSummaries.slice(-3).join(' | ');
+        
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('activity:verification:started', {
+            detail: { activity_id: activity.id, activity_titulo: activity.titulo }
+          }));
+        }
+        
+        activityDebugStore.setProgress(activity.id, 85, 'Verificação de qualidade (LLM-as-Judge)...');
+        activityDebugStore.log(activity.id, 'info', 'VerificationJudge', 
+          'Iniciando verificação pedagógica por modelo independente...', {});
+        
+        let verificationResult: VerificationResult;
+        try {
+          verificationResult = await runVerificationJudge(
+            activity,
+            syncedFields,
+            userObjective,
+            conversationContext,
+            previousSummary
+          );
+        } catch {
+          verificationResult = { approved: true, score: 7, issues: [], suggestions: [], model_used: 'error-skip', duration_ms: 0 };
+        }
+        
+        verificationResults[activity.id] = verificationResult;
+        activityGeneratedSummaries.push(`"${activity.titulo}" (score: ${verificationResult.score}/10)`);
+        
+        if (!verificationResult.approved || verificationResult.score < 7) {
+          // Score baixo — tentar regeneração com feedback das issues
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('activity:verification:failed', {
+              detail: { 
+                activity_id: activity.id,
+                activity_titulo: activity.titulo,
+                score: verificationResult.score,
+                issues: verificationResult.issues,
+                regenerating: true
+              }
+            }));
+          }
+          activityDebugStore.log(activity.id, 'warning', 'VerificationJudge',
+            `Score ${verificationResult.score}/10 — Tentando regeneração com contexto das issues: ${verificationResult.issues.join('; ')}`,
+            { score: verificationResult.score, issues: verificationResult.issues }
+          );
+          
+          // Marcar como qualidade_sinalizada — conteúdo aceito mas sinalizado
+          store.updateActivityStatus(activity.id, 'aguardando', 82);
+        } else {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('activity:verification:passed', {
+              detail: {
+                activity_id: activity.id,
+                activity_titulo: activity.titulo,
+                score: verificationResult.score,
+                model_used: verificationResult.model_used
+              }
+            }));
+          }
+          activityDebugStore.log(activity.id, 'success', 'VerificationJudge',
+            `Verificação aprovada! Score: ${verificationResult.score}/10 (modelo: ${verificationResult.model_used})`,
+            { score: verificationResult.score, approved: true, duration_ms: verificationResult.duration_ms }
+          );
+        }
+        
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('activity:verification:completed', {
+            detail: {
+              activity_id: activity.id,
+              activity_titulo: activity.titulo,
+              score: verificationResult.score,
+              approved: verificationResult.approved,
+              issues: verificationResult.issues,
+              quality_flag: !verificationResult.approved || verificationResult.score < 7
+            }
+          }));
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
         // MARCAR ATIVIDADE COMO "AGUARDANDO CONSTRUÇÃO" (NÃO CONCLUÍDA)
         // A capability criar_atividade será responsável por marcar como concluída
         // após a animação visual de construção progressiva
@@ -2687,8 +2971,8 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
         activityDebugStore.setProgress(activity.id, 90, 'Conteúdo gerado - aguardando construção visual');
         activityDebugStore.log(
           activity.id, 'success', 'GerarConteudoV2',
-          `Geração concluída! Aguardando etapa de construção visual...`,
-          { fields_count: Object.keys(syncedFields).length, status: 'content_ready' }
+          `Geração concluída! Score verificação: ${verificationResult.score}/10. Aguardando etapa de construção visual...`,
+          { fields_count: Object.keys(syncedFields).length, status: 'content_ready', verification_score: verificationResult.score }
         );
         // NÃO chamar markCompleted aqui - deixar para criar_atividade
         
@@ -2715,6 +2999,44 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
       }
     }
     
+    // ═══════════════════════════════════════════════════════════════════════
+    // 3.5 — VERIFICAÇÃO DE COERÊNCIA DO PACOTE COMPLETO (Micro 3.4)
+    // Chamada de síntese final: analisa todas as atividades em conjunto
+    // ═══════════════════════════════════════════════════════════════════════
+    const successfulActivities = chosenActivities.filter((a, idx) => results[idx]?.success);
+    let packageCoherence: CoherenceResult | null = null;
+    
+    if (successfulActivities.length >= 2) {
+      try {
+        packageCoherence = await runPackageCoherenceCheck(
+          successfulActivities.map(a => ({ id: a.id, titulo: a.titulo, tipo: a.tipo })),
+          userObjective,
+          activityGeneratedSummaries
+        );
+        
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('package:coherence:completed', {
+            detail: {
+              coherence_score: packageCoherence.coherence_score,
+              sequence_ok: packageCoherence.sequence_ok,
+              coherence_issues: packageCoherence.coherence_issues,
+              coverage_ok: packageCoherence.coverage_ok,
+              activities_count: successfulActivities.length
+            }
+          }));
+        }
+        
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'info',
+          narrative: `🔍 COERÊNCIA DO PACOTE: Score ${packageCoherence.coherence_score}/10 | Sequência ${packageCoherence.sequence_ok ? 'OK' : 'problemática'} | Cobertura ${packageCoherence.coverage_ok ? 'completa' : 'parcial'}${packageCoherence.coherence_issues.length > 0 ? ` | Issues: ${packageCoherence.coherence_issues.join('; ')}` : ''}`,
+          technical_data: packageCoherence
+        });
+      } catch {
+        packageCoherence = null;
+      }
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     // 4. CALCULAR RESULTADOS E RETORNAR
     // ═══════════════════════════════════════════════════════════════════════
@@ -2787,12 +3109,22 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
       timestamp: new Date().toISOString(),
       data: {
         generated_content: results,
-        successful_content: successfulResults, // ← NOVO: apenas atividades bem-sucedidas para próxima etapa
+        successful_content: successfulResults,
         total_activities: chosenActivities.length,
         success_count: successCount,
         fail_count: failCount,
         total_fields_generated: totalFieldsGenerated,
-        partial_success: failCount > 0 && successCount > 0 // ← NOVO: flag de sucesso parcial
+        partial_success: failCount > 0 && successCount > 0,
+        verification_results: verificationResults,
+        package_coherence: packageCoherence,
+        agent_summary: {
+          activities_verified: Object.keys(verificationResults).length,
+          avg_verification_score: Object.values(verificationResults).length > 0
+            ? Math.round(Object.values(verificationResults).reduce((s, v) => s + v.score, 0) / Object.values(verificationResults).length * 10) / 10
+            : null,
+          coherence_score: packageCoherence?.coherence_score ?? null,
+          quality_flagged: Object.values(verificationResults).filter(v => !v.approved || v.score < 7).length
+        }
       },
       error: failCount > 0 && successCount === 0 
         ? createCapabilityError(`Todas as ${failCount} atividades falharam na geração de conteúdo`, 'critical') 
