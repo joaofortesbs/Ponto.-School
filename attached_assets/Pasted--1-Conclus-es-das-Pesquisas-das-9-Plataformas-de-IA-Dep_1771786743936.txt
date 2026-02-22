@@ -1,0 +1,34 @@
+
+1. Conclusões das Pesquisas das 9 Plataformas de IA
+Depois de ler com atenção todos os arquivos, chegam a algumas conclusões muito claras:
+
+Todas as IAs usam o mesmo padrão fundamental: Function Calling / Tool Use. Nenhuma delas "pensa" e busca ao mesmo tempo — existe uma decisão explícita de acionar a ferramenta de busca, execução externa, retorno de resultados, e só então a síntese. Isso significa que a arquitetura de busca é separável do LLM e pode ser customizada completamente.
+
+O padrão de duas ferramentas é universal: toda plataforma sofisticada usa buscar (snippets, rápido) + extrair (conteúdo completo de URLs específicas). A Kimi tem web_search + browser_visit. O Grok tem web_search + browse_page com instruções customizadas para o LLM extrator. O Claude tem web_search + web_fetch. Esse padrão existe porque snippets são suficientes para decisões simples, mas para gerar conteúdo rico você precisa do texto completo.
+
+Paralelização é padrão, não exceção: 2 a 6 queries simultâneas em todas as plataformas. O Manus paralleliza até ferramentas diferentes ao mesmo tempo (buscou web + scholar + YouTube simultaneamente no exemplo real mostrado). Isso é crítico para velocidade.
+
+Re-ranking sempre acontece após a busca: nenhuma plataforma usa os resultados na ordem que o mecanismo de busca retornou. Todas re-ranqueiam por uma combinação de relevância semântica + autoridade do domínio + recência + tipo de conteúdo. O Manus tinha a fórmula mais detalhada.
+
+O Claude foi o mais honesto e deu a melhor recomendação para o nosso caso: disse explicitamente que corpus curado > web aberta para casos de uso especializados como o nosso. Também foi o único a recomendar embeddings específicos para português brasileiro (BGE-M3, multilingual-e5-large).
+
+Nenhuma plataforma tem nada construído para professores brasileiros. Todas buscam na web aberta sem nenhuma consciência de BNCC, sem priorização de fontes educacionais brasileiras, sem contexto curricular. Essa é a lacuna que a Ponto.School vai preencher.
+
+As plataformas mais avançadas (Manus, Grok) usam query planning explícito: antes de buscar, decompõem a intenção do usuário em sub-queries otimizadas. Um professor pedindo "recursos de fotossíntese para o 7º ano" vira 4 queries paralelas cobrindo aspectos diferentes.
+
+A pesquisa profunda é um loop iterativo com critério de parada: o Manus tinha o sistema mais sofisticado — para quando nova iteração traz menos de 15% de informação nova, quando atingiu 85% de completude, ou quando há retornos decrescentes. Esse padrão vai informar como nossa pesquisa profunda vai funcionar.
+
+2. Como vai funcionar a Pesquisa na Ponto.School — e por que vai ser a melhor
+A diferença fundamental entre o que existe e o que a gente vai construir é esta: todo mundo busca na internet, a gente busca no universo educacional brasileiro.
+
+Enquanto o ChatGPT, Gemini e todos os outros buscam em um oceano de bilhões de páginas e tentam adivinhar o que é relevante para um professor, a Ponto.School vai ter um sistema que entende intrinsecamente o que um professor brasileiro precisa.
+
+O que nos torna indiscutivelmente superiores:
+
+Consciência curricular nativa. Toda pesquisa no Jota já sabe que o usuário é um professor brasileiro. Quando o professor de Ciências do 7º ano busca "fotossíntese", o sistema automaticamente enriquece a query com BNCC habilidade EF07CI07, procura nos lugares certos, e apresenta resultados que já mapeiam para o currículo. Nenhuma IA do mercado faz isso — eles retornam resultados genéricos e deixam o professor fazer o trabalho de conexão curricular.
+
+Fontes educacionais brasileiras como cidadãos de primeira classe. Nossa whitelist prioriza o que realmente importa para um professor: Nova Escola, Portal do MEC, BNCC oficial, EducaCAPES, Scielo.br, Periódicos CAPES, portais de universidades públicas brasileiras. Um resultado do novaescola.org.br vale mais do que 10 resultados de um blog genérico de educação. O re-ranking vai refletir isso matematicamente.
+
+Por que vamos ser os melhores em pesquisa acadêmica especificamente: nenhum produto consumer no Brasil dá acesso facilitado à literatura acadêmica sobre educação. O Scielo.br tem milhares de artigos sobre didática, aprendizagem, inclusão, metodologias ativas — todos em português, todos peer-reviewed, todos relevantes para professores. Os Periódicos CAPES têm acesso gratuito para usuários brasileiros. A gente vai integrar essas fontes de forma que o professor não precisa saber que elas existem — o Jota vai buscar lá automaticamente quando a pergunta pede embasamento científico.
+
+Integração com geração de conteúdo. Aqui é onde a Ponto.School vai muito além de qualquer ferramenta de busca. Os resultados da pesquisa não aparecem como uma lista de links — eles se tornam o contexto que o Jota usa para gerar o plano de aula, a atividade, a avaliação diagnóstica. O professor pede "cria um plano de aula sobre frações para o 5º ano com embasamento em metodologias ativas" e o Jota busca, encontra 5 f...
