@@ -12,6 +12,7 @@ import { scoreResult, deduplicateResults } from './search-providers/scorer.js';
 import { buildEducationalFallback } from './search-providers/fallback.js';
 import { planSearchQueries } from './search-providers/query-planner.js';
 import { isProviderHealthy, recordSuccess, recordFailure, getCircuitState, getAllCircuitStates } from './search-providers/circuit-breaker.js';
+import { extractContentFromUrls } from './search-providers/content-extractor.js';
 
 const router = express.Router();
 
@@ -308,9 +309,16 @@ router.post('/web', async (req, res) => {
     finalResults = [...finalResults, ...newFallbacks].slice(0, max_results);
   }
 
+  if (search_depth === 'advanced') {
+    finalResults = await extractContentFromUrls(finalResults);
+  }
+
   const activeProviders = Object.entries(providerStatus)
     .filter(([, v]) => v)
     .map(([k]) => k);
+
+  const contentExtractedCount = finalResults.filter(r => r.content_extracted).length;
+  const contentExtractedUrls = finalResults.filter(r => r.content_extracted).map(r => r.url);
 
   const breakdown = {
     official: finalResults.filter(r => r.domain_tier === 'official').length,
@@ -325,7 +333,7 @@ router.post('/web', async (req, res) => {
   };
 
   const duration = Date.now() - startTime;
-  console.log(`[SearchOrchestrator] Concluído em ${duration}ms | ${finalResults.length} resultados | Providers: ${activeProviders.join(', ')} | Raw: ${allRawResults.length}`);
+  console.log(`[SearchOrchestrator] Concluído em ${duration}ms | ${finalResults.length} resultados | Providers: ${activeProviders.join(', ')} | Raw: ${allRawResults.length}${contentExtractedCount > 0 ? ` | Jina: ${contentExtractedCount} extraídos` : ''}`);
 
   res.json({
     results: finalResults,
@@ -343,6 +351,8 @@ router.post('/web', async (req, res) => {
       original_query: query,
       queries: allInputQueries,
     },
+    content_extracted_count: contentExtractedCount,
+    content_extracted_urls: contentExtractedUrls.length > 0 ? contentExtractedUrls : undefined,
     errors: errors.length > 0 ? errors : undefined,
   });
 });

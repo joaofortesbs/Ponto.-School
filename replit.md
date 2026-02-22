@@ -54,9 +54,9 @@ The architecture features a modular component design based on shadcn/ui patterns
 - **Neon PostgreSQL (Replit)**: Primary data store.
 - **SendGrid**: Email notification service.
 
-### Search API Orchestrator v2.0 (pesquisar_web)
+### Search API Orchestrator v3.0 (pesquisar_web)
 
-**Arquitetura:** `api/search-web.js` (orquestrador principal, 300+ linhas) + `api/search-providers/` (12 arquivos)
+**Arquitetura:** `api/search-web.js` (orquestrador, 360+ linhas) + `api/search-providers/` (13 arquivos) + capability TypeScript `pesquisar-web.ts` (sub-agente autônomo com gap analysis iterativo)
 
 #### Providers de busca ativos (9 fontes simultâneas)
 | Provider | Arquivo | Chave | Modo de ativação |
@@ -71,25 +71,39 @@ The architecture features a modular component design based on shadcn/ui patterns
 | OpenLibrary livros PT | `openlibrary.js` | pública | advanced only |
 | ArXiv preprints STEM | `arxiv.js` | pública | advanced only |
 
-#### Infraestrutura
+#### Infraestrutura Backend
 - **Circuit Breakers** (`circuit-breaker.js`): Monitora falhas por provider. ≥ 3 falhas em 5 min → OPEN (skip automático). Recovery após 10 min via HALF_OPEN.
-- **LLM Query Planning** (`query-planner.js`): Groq `llama-3.1-8b-instant` gera 3 queries educacionais otimizadas antes de buscar. Fallback regex (`extractCleanThemeFromPrompt`) se Groq indisponível.
-- **Query Variants por Provider** (`search-web.js`): Cada provider recebe a query otimizada para seu índice:
-  - `allInputQueries[0]` → Serper (Google PT-BR), OpenLibrary, ArXiv
-  - `intlQuery` (PT→EN traduzido, max 5 palavras, só ASCII) → OpenAlex, CORE, Semantic Scholar
-  - `shortIntlQuery` (max 3 palavras, exclui números) → PubMed
-  - `europePMCQuery` (max 4 palavras, exclui termos de nível como "grade") → EuropePMC
-  - `buildDOAJQuery()` (max 3 palavras-chave PT, strip stop words) → DOAJ
-- **PT→EN Translation Map** (`PT_EN_MAP`): 40+ mapeamentos PT→EN para frações→fractions, matemática→mathematics, gamificação→gamification, etc. Filtro `ASCII_ONLY` remove residuais de acentuação não mapeados.
-- **Re-ranking educacional** (`scorer.js`): 39 domínios BR mapeados. Pesos: domínio (0.35) + semântica (0.30) + eduBoost (0.20) + keywords pedagógicas (0.15). Boosts: BNCC, ensino fundamental, sequência didática, aprendizagem, metodologia.
-- **Deduplicação** (`scorer.js`): Remove duplicatas por URL normalizada + título (primeiros 60 chars).
+- **LLM Query Planning** (`query-planner.js`): Groq `llama-3.1-8b-instant` gera 3 queries educacionais otimizadas. **ATIVO em produção** — frontend envia apenas `query` (não mais extra queries que burlavam o planner).
+- **Jina Reader Content Extraction** (`content-extractor.js`): Para top 3 URLs com score ≥ 0.40 em modo `advanced`, faz `GET r.jina.ai/{url}` extraindo até 2500 chars de Markdown real. Gratuito, sem API key. Paralelo com `Promise.allSettled()`, timeout 8s por URL. Response inclui `content_full`, `content_extracted: true`, `content_extracted_count`, `content_extracted_urls`.
+- **Query Variants por Provider**: `allInputQueries[0]` → Serper; `intlQuery` (PT→EN, max 5 palavras, só ASCII) → OpenAlex/CORE/Semantic Scholar; `shortIntlQuery` (max 3 palavras) → PubMed; `europePMCQuery` (max 4 palavras, exclui "grade") → EuropePMC; `buildDOAJQuery()` (max 3 keywords PT) → DOAJ.
+- **PT→EN Translation Map** (`PT_EN_MAP`): 40+ mapeamentos. Filtro `ASCII_ONLY` remove residuais de acentuação não mapeados.
+- **Re-ranking educacional** (`scorer.js`): 39 domínios BR. Pesos: domínio (0.35) + semântica (0.30) + eduBoost (0.20) + keywords pedagógicas (0.15).
+- **Deduplicação** (`scorer.js`): Remove duplicatas por URL normalizada + título (60 chars).
 - **Fallback estático** (`fallback.js`): 4 links BNCC/Nova Escola/MEC/EducaCAPES como último recurso.
 
-#### Resultados típicos (modo full + advanced)
-- **Providers ativos**: 6 consistentemente (serper_web, serper_scholar, openalex, doaj, core, pubmed) + 2 intermitentes (semantic_scholar=rate limited, europepmc=rate limited)
-- **Raw results**: 44-55 resultados brutos antes de deduplicação
-- **Final**: 10-12 melhores após scoring educacional
-- **Latência**: ~1.5-2.5 segundos total (paralelo)
+#### Sub-agente Autônomo Frontend (`pesquisar-web.ts`)
+A capability agora implementa o padrão de agentes como Manus AI e Genspark:
+- **Gap Analysis Iterativo**: Após round 1, calcula `coverage_score` (has_curricular + has_pedagogical + has_academic + has_official) / 4. Se < 0.5 OU < 5 resultados → dispara Rodada 2 com gap query direcionada.
+- **Debug transparente (padrão Manus)**: 7 tipos de entrada no debug (ETAPA 1-5 + DECISÃO LLM + RODADA 2 + WARNING):
+  - ETAPA 1: Análise de intenção pedagógica
+  - ETAPA 2: Consultas preliminares (2 queries estáticas — NOT passed to backend)
+  - ETAPA 3: Disparo dos 9 providers em paralelo
+  - DECISION: "🧠 PLANO DE BUSCA INTELIGENTE GERADO" com as 3 queries do Groq
+  - ETAPA 4: Lista top 5 resultados reais com título/fonte/score/breakdown por provider
+  - ACTION: "📄 Conteúdo completo extraído de X fontes via Jina Reader"
+  - WARNING: "⚠ LACUNA IDENTIFICADA: [gaps]" (quando coverage < 0.5)
+  - ACTION RODADA 2: "🔎 RODADA 2: Refinando pesquisa..."
+  - DISCOVERY RODADA 2: Resultados adicionais + merged total
+  - CONFIRMATION: Total final com rodadas + conteúdos extraídos + tempo
+- **prompt_context enriquecido**: Para resultados com `content_full`, usa primeiros 800 chars em vez de snippet de 400. Adiciona seção "📄 CONTEÚDO COMPLETO EXTRAÍDO" e seção "📚 FONTES CONSULTADAS" com instrução obrigatória de citar.
+- **search_depth='advanced' por padrão**: Planner LLM-path inject e fallback-path inject agora passam `search_depth: 'advanced', search_mode: 'full'` nos parametros.
+
+#### Resultados típicos (modo full + advanced, validado em produção)
+- **Providers ativos**: 6 consistentemente (serper_web, serper_scholar, openalex, doaj, core, pubmed) + 2 intermitentes (semantic_scholar rate-limited, europepmc rate-limited)
+- **Raw results**: 50-55 brutos antes de deduplicação
+- **Final**: 8-12 melhores após scoring educacional
+- **Jina Reader**: 3 fontes com conteúdo completo extraído (novaescola.org.br, scielo.br, UFAM, etc.)
+- **Latência**: ~3-5s sem Jina (basic), ~8-12s com Jina (advanced), ~15-20s com rodada 2 (gap analysis)
 
 #### APIs analisadas e descartadas como search providers
 - **OpenCitations**: API de grafo de citações — recebe DOI como input, não texto. Chave existe mas sem endpoint de text search.
