@@ -33,11 +33,13 @@ export function classifyComplexity(prompt: string): QueryComplexity {
   const hasSimpleKeywords = /\b(o que é|defina|liste|enumere|quanto|quando|onde|quem|sim ou não|verdadeiro ou falso)\b/i.test(prompt);
   const hasEducationalKeywords = /\b(questões|exercícios|quiz|flash.?cards|atividade|avaliação|prova|teste)\b/i.test(prompt);
 
+  const isDecisionPrompt = /IDs VÁLIDOS:|CATÁLOGO COMPLETO|atividades_escolhidas|REGRA DE QUANTIDADE|DECIDIR quais atividades/i.test(prompt);
+
   if (hasExpertKeywords || (hasComplexKeywords && hasCodeKeywords) || wordCount > 500) {
     return 'expert';
   }
 
-  if (hasComplexKeywords || hasCodeKeywords || wordCount > 200 || charCount > 2000) {
+  if (isDecisionPrompt || hasComplexKeywords || hasCodeKeywords || wordCount > 200 || charCount > 2000) {
     return 'complex';
   }
 

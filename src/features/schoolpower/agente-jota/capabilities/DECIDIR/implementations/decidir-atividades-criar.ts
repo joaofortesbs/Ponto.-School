@@ -1029,6 +1029,7 @@ export async function decidirAtividadesCriarV2(
                 atividades_escolhidas: {
                   type: 'array',
                   description: 'Lista de atividades escolhidas. Deve ter pelo menos 2 atividades de categorias diferentes, exceto para pedidos ultra-específicos de 1 atividade.',
+                  minItems: 2,
                   items: {
                     type: 'object',
                     properties: {
