@@ -770,6 +770,15 @@ function createFallbackPlan(userPrompt: string): ExecutionPlan {
           status: 'pending',
           ordem: 4,
         },
+        {
+          id: `cap-0-4-${timestamp}`,
+          nome: 'pesquisar_web',
+          displayName: 'Pesquisando fontes educacionais na web',
+          categoria: 'PESQUISAR',
+          parametros: { busca_texto: userPrompt, solicitacao: userPrompt },
+          status: 'pending',
+          ordem: 5,
+        },
       ],
     },
     {

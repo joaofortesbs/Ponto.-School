@@ -1,0 +1,21 @@
+Para que você consiga fazer essa alteração e impleentação da capacidade de "pesquisar_web" dentro do Card de Desenvolvimento atual, siga esse processo de pesquisa:
+
+Analise toda a estrutura de dentro das capacidades existentes dentro do chat Jota. Depois disso analise precisamente toda estrutura, orquestração, engenharia de dados, back-end e front-end (UI e UX) dentro das capacidades de dentro da categoria "PESQUISAR", para que você tenha informações como: Como as capacidades da categoria de "PESQUISAR" aparecem dentro da interface do card de Desenvolvimento? Quais são as configurações necessárias dentro do back-end e front-end para que isso aconteça corretamente? Seu objetivo é comparar as capacidades já existentes com a capacidade atual de "pesquisar_web"!
+
+Analise todos os system prompts e instruções de dentro do Chat Jota, para que você não altere coisas fora de contexto ou prejudique funcionaldiaes, instruções, e comandos já existentes (Internos ou externos).
+
+RESTRIÇÕES:
+
+Não retire ou prejudique os system prompts e instruções de dentro do Chat Jota de planner ou da Mente orquestradora de dentro do Card de Desenvolvimento, você precisa focar exclusivamente na implementação individual da capacidade "pesquisar_web".
+
+Não tente configurar toda a capacidade de "pesquisar_web" para que ela fique 100% funcional, vamos focar na implementação visual inicialmente, e depois configuramos a respectiva capacidade de "pesquisar_web" para que ela possa ajudar e ser últl dentro do card de Desenvolvimento.
+
+Não cometa erros ou bugs dentro da plataforma! E não altere coisas fora de contexto! Faça uma pesquisa em todos os arquivos dentro da plataforma e dentro do chat Jota para você ter uma visão geral, e depois antes de começar a modificar os arquivos necessários, analise eles por inteiro para identificar exatamente o que precisa ser modificado de maneira exata e cuidadosa e minunciosa! Abra e analise diversos arquivos, execute comandos para ter acesso a dados, ative o arquiteto se for necessário, reflita sobre todos os resultados… Não alucine sobre informações ou dados, sempre confira e confirme tudo antes!
+
+Considerações: - Faça uma plano completo com Macro-steps de objetivos principais de execução e micro-steps em ordem inteligente para fazer todas essas alterações da maneira correta, e incluindo testes, validações e verificações, para garantir que tudo seja feito corretamente!
+
+Reflita antes de cada alteração, e faça um mapeamento completo para identificar a melhor forma, de maneira segura, robusta, alinhada, profissional, avançada e sofisticada! Não cometa erros ou bugs dentro do código, e não deixe o código ser corrompido! Garanta também que todo o sistema não tenha brechas para erros ou bugs!
+Revise todas as suas modificações depois de cada finalização, não deixe brechas pra erros, não prejudique o funcionamento geral, refine as alterações, e garanta que nenhum sistema considerável foi influenciado ou modificado negativamente! Teste tudo que você fez para garantir o funcionamento perfeito!
+No final de tudo, me explique todas as alterações que você fez, como elas foram feitas, e principalmente porque você decidiu fazer essas alterações!
+No final de tudo, liste todos os seus aprendizados com base em todas as alterações que você fez, para que você possa ir se aprimorando conforme as próximas alterações, e melhorando a sua janela de contexto, para que esses erros em hipotese alguma acontecem novamente dentro da plataforma!
+No final, me sugira as próximas alterações dentro da própria plataforma que a gente precisa fazer, ou que seria muito bom, para deixar a plataforma ainda mais completa, sem nenhum erro ou perigo!
