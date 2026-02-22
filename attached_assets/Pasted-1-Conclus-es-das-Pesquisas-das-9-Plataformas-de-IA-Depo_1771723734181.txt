@@ -1,0 +1,95 @@
+1. Conclusões das Pesquisas das 9 Plataformas de IA
+Depois de ler com atenção todos os arquivos, chegam a algumas conclusões muito claras:
+
+Todas as IAs usam o mesmo padrão fundamental: Function Calling / Tool Use. Nenhuma delas "pensa" e busca ao mesmo tempo — existe uma decisão explícita de acionar a ferramenta de busca, execução externa, retorno de resultados, e só então a síntese. Isso significa que a arquitetura de busca é separável do LLM e pode ser customizada completamente.
+
+O padrão de duas ferramentas é universal: toda plataforma sofisticada usa buscar (snippets, rápido) + extrair (conteúdo completo de URLs específicas). A Kimi tem web_search + browser_visit. O Grok tem web_search + browse_page com instruções customizadas para o LLM extrator. O Claude tem web_search + web_fetch. Esse padrão existe porque snippets são suficientes para decisões simples, mas para gerar conteúdo rico você precisa do texto completo.
+
+Paralelização é padrão, não exceção: 2 a 6 queries simultâneas em todas as plataformas. O Manus paralleliza até ferramentas diferentes ao mesmo tempo (buscou web + scholar + YouTube simultaneamente no exemplo real mostrado). Isso é crítico para velocidade.
+
+Re-ranking sempre acontece após a busca: nenhuma plataforma usa os resultados na ordem que o mecanismo de busca retornou. Todas re-ranqueiam por uma combinação de relevância semântica + autoridade do domínio + recência + tipo de conteúdo. O Manus tinha a fórmula mais detalhada.
+
+O Claude foi o mais honesto e deu a melhor recomendação para o nosso caso: disse explicitamente que corpus curado > web aberta para casos de uso especializados como o nosso. Também foi o único a recomendar embeddings específicos para português brasileiro (BGE-M3, multilingual-e5-large).
+
+Nenhuma plataforma tem nada construído para professores brasileiros. Todas buscam na web aberta sem nenhuma consciência de BNCC, sem priorização de fontes educacionais brasileiras, sem contexto curricular. Essa é a lacuna que a Ponto.School vai preencher.
+
+As plataformas mais avançadas (Manus, Grok) usam query planning explícito: antes de buscar, decompõem a intenção do usuário em sub-queries otimizadas. Um professor pedindo "recursos de fotossíntese para o 7º ano" vira 4 queries paralelas cobrindo aspectos diferentes.
+
+A pesquisa profunda é um loop iterativo com critério de parada: o Manus tinha o sistema mais sofisticado — para quando nova iteração traz menos de 15% de informação nova, quando atingiu 85% de completude, ou quando há retornos decrescentes. Esse padrão vai informar como nossa pesquisa profunda vai funcionar.
+
+2. Como vai funcionar a Pesquisa na Ponto.School — e por que vai ser a melhor
+A diferença fundamental entre o que existe e o que a gente vai construir é esta: todo mundo busca na internet, a gente busca no universo educacional brasileiro.
+
+Enquanto o ChatGPT, Gemini e todos os outros buscam em um oceano de bilhões de páginas e tentam adivinhar o que é relevante para um professor, a Ponto.School vai ter um sistema que entende intrinsecamente o que um professor brasileiro precisa.
+
+O que nos torna indiscutivelmente superiores:
+
+Consciência curricular nativa. Toda pesquisa no Jota já sabe que o usuário é um professor brasileiro. Quando o professor de Ciências do 7º ano busca "fotossíntese", o sistema automaticamente enriquece a query com BNCC habilidade EF07CI07, procura nos lugares certos, e apresenta resultados que já mapeiam para o currículo. Nenhuma IA do mercado faz isso — eles retornam resultados genéricos e deixam o professor fazer o trabalho de conexão curricular.
+
+Fontes educacionais brasileiras como cidadãos de primeira classe. Nossa whitelist prioriza o que realmente importa para um professor: Nova Escola, Portal do MEC, BNCC oficial, EducaCAPES, Scielo.br, Periódicos CAPES, portais de universidades públicas brasileiras. Um resultado do novaescola.org.br vale mais do que 10 resultados de um blog genérico de educação. O re-ranking vai refletir isso matematicamente.
+
+Por que vamos ser os melhores em pesquisa acadêmica especificamente: nenhum produto consumer no Brasil dá acesso facilitado à literatura acadêmica sobre educação. O Scielo.br tem milhares de artigos sobre didática, aprendizagem, inclusão, metodologias ativas — todos em português, todos peer-reviewed, todos relevantes para professores. Os Periódicos CAPES têm acesso gratuito para usuários brasileiros. A gente vai integrar essas fontes de forma que o professor não precisa saber que elas existem — o Jota vai buscar lá automaticamente quando a pergunta pede embasamento científico.
+
+Integração com geração de conteúdo. Aqui é onde a Ponto.School vai muito além de qualquer ferramenta de busca. Os resultados da pesquisa não aparecem como uma lista de links — eles se tornam o contexto que o Jota usa para gerar o plano de aula, a atividade, a avaliação diagnóstica. O professor pede "cria um plano de aula sobre frações para o 5º ano com embasamento em metodologias ativas" e o Jota busca, encontra 5 fontes de qualidade, e usa esse conteúdo real para construir o plano. As fontes aparecem citadas no resultado final. Isso é algo que nenhuma ferramenta educacional no Brasil oferece.
+
+Contexto do professor como filtro permanente. Se o sistema sabe que o professor leciona para o 6º ano em escola pública no interior de Minas Gerais, as buscas são enriquecidas com esse contexto automaticamente. Um recurso que precisa de laboratório equipado vai ter score menor do que um que funciona com material reciclável. O Manus tinha esse conceito no pseudocódigo — um boost de +0.4 para "professor" no perfil do usuário. A gente vai implementar isso especificamente para o contexto brasileiro.
+
+3. Como deve funcionar a Capability pesquisar_web
+Quando é acionada
+Modo automático (planner detecta): o planejador inclui pesquisar_web no stage de PESQUISA quando detecta que o conteúdo a ser gerado se beneficia de fontes externas. Exemplos: criação de plano de aula sobre tema específico, atividade que menciona metodologia concreta, avaliação diagnóstica sobre conteúdo curricular. A lógica é: se vou criar algo que um professor vai usar em sala, preciso que seja embasado.
+
+Modo explícito (usuário pede): quando o professor diz "pesquise sobre", "busque informações", "o que existe de recurso sobre", "me traga materiais de referência". Nesse caso a pesquisa é o próprio objetivo, não apenas enriquecimento.
+
+O fluxo dentro do Card de Desenvolvimento
+O professor vai ver as etapas acontecendo em tempo real, com narrativa clara:
+
+"Analisando sua solicitação para identificar o que pesquisar..." — aqui o sistema faz query planning: extrai tema, disciplina, ano escolar, tipo de recurso
+"Formulando 3 consultas educacionais sobre [tema] para o [ano]..." — mostra as queries que vão ser executadas
+"Buscando em fontes educacionais brasileiras confiáveis..." — execução paralela das queries
+"Encontrei 23 resultados. Avaliando relevância pedagógica e alinhamento ao currículo..." — re-ranking educacional
+"Extraindo conteúdo das 4 melhores fontes para enriquecer a resposta..." — Jina Reader nas top URLs (quando modo avançado)
+"Pesquisa concluída: 8 recursos selecionados, incluindo 2 artigos acadêmicos e 3 planos de aula de referência"
+O Pipeline Técnico Completo
+Etapa 1 — Query Planning Educacional:
+A partir da intenção do usuário, o sistema gera 2 a 4 queries paralelas cobrindo aspectos diferentes:
+
+Query curricular: {tema} {disciplina} {ano escolar} BNCC
+Query pedagógica: plano de aula {tema} {ano escolar} ensino fundamental Brasil
+Query prática: atividades práticas {tema} professor baixo custo (quando relevante)
+Query acadêmica: {tema} educação básica metodologia ensino scielo (quando o professor precisa de embasamento)
+Etapa 2 — Busca Paralela com Priorização de Domínio:
+Todas as queries rodam ao mesmo tempo com include_domains para priorizar a whitelist educacional. Os resultados vêm com título, URL, snippet e metadados de fonte.
+
+Etapa 3 — Re-ranking Educacional:
+Cada resultado recebe um score composto. Fontes como novaescola.org.br sobem automaticamente. PDFs do MEC sobem. Blogs genéricos sem identificação descem. Conteúdo muito antigo (>3 anos) perde pontos para informações pedagógicas que mudam.
+
+Etapa 4 — Extração de Conteúdo Completo (modo avançado):
+Para as top-3 a 5 URLs com maior score, o sistema usa o Jina Reader (r.jina.ai/{url}) — que é gratuito e sem chave — para extrair o conteúdo completo da página limpo de anúncios, navegação e boilerplate. Isso é o que diferencia pesquisa rápida de pesquisa profunda: com snippets você tem contexto superficial, com conteúdo completo você tem material real para o Jota usar na geração.
+
+Etapa 5 — Formatação do Contexto:
+
+O resultado final é formatado assim para injeção no LLM downstream:
+
+PESQUISA WEB EDUCACIONAL — Jota Ponto.School
+Tema: Fotossíntese | Disciplina: Ciências | Ano: 7º ano EF
+[Fonte 1] ⭐ ALTA RELEVÂNCIA — Plano de Aula Verificado
+Título: Fotossíntese: Do Conceito ao Experimento
+Origem: novaescola.org.br | Tipo: Plano de Aula | Alinhamento: EF07CI07
+Conteúdo principal: "A atividade propõe que os alunos observem..."
+[URL completa]
+[Fonte 2] 📚 EMBASAMENTO CIENTÍFICO
+Título: Estratégias para o Ensino de Fotossíntese no EF
+Origem: scielo.br | Tipo: Artigo Acadêmico (peer-reviewed)
+Conteúdo principal: "Estudos mostram que abordagens experimentais..."
+[URL completa]
+[Fonte 3] 🏛️ FONTE OFICIAL
+Título: Habilidade EF07CI07 — Descrição Completa
+Origem: basenacionalcomum.mec.gov.br | Tipo: Documento Oficial BNCC
+[...]
+Dois modos de operação
+Pesquisa Rápida (padrão para a maioria dos casos): 1 rodada, 2-3 queries paralelas, somente snippets dos resultados, ~2-3 segundos. Suficiente para o Jota ter contexto e gerar conteúdo de qualidade.
+
+Pesquisa Profunda (quando o professor pede embasamento real, ou quando o planner detecta que é necessário — ex: plano de aula completo com referências bibliográficas): múltiplas rodadas, extração de conteúdo completo via Jina Reader nas melhores fontes, análise de gaps entre iterações, até 3 rodadas ou quando 85%+ de completude for atingido. ~8-15 segundos, mas o resultado é substancialmente mais rico.
+
+Como isso se conecta com o restante do sistema
+A pesquisar_web não vive isolada — ela é a fundação para tudo que vem depois. Quando o criar_plano_aula rodar, o prompt_context da pesquisa já está disponível no capabilityResultsMap. O Jota não vai inventar — vai usar o que foi encontrado. As fontes aparecem citadas no documento final. O professor pode clicar e verificar. Isso cria confiança, que é o que diferencia um produto de verdade de um brinquedo de IA.

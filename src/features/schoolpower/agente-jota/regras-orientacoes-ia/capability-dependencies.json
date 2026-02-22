@@ -103,6 +103,29 @@
       "shows_progress": true
     },
 
+    "pesquisar_web": {
+      "id": "cap_pesq_web",
+      "category": "PESQUISAR",
+      "step": "parallel_with_bncc",
+      "depends_on": [],
+      "required_before": ["criar_arquivo", "gerar_conteudo_atividades", "criar_atividade"],
+      "outputs": ["results", "prompt_context", "queries_used"],
+      "priority": "high",
+      "failure_handling": "continue_without",
+      "estimated_duration_ms": 5000,
+      "source": "DuckDuckGo API + BNCC Local Database + Fontes Educacionais BR",
+      "description": "Pesquisa web em fontes educacionais brasileiras confiáveis (BNCC, MEC, Nova Escola, Scielo) para enriquecer o conteúdo gerado",
+      "search_modes": {
+        "basic": "snippets + BNCC local enrichment (1-3s)",
+        "advanced": "conteúdo completo extraído via DuckDuckGo + re-ranking educacional (3-8s)"
+      },
+      "anti_hallucination": {
+        "returns_validated_data": true,
+        "includes_count": true,
+        "includes_sources": true
+      }
+    },
+
     "criar_compromisso_calendario": {
       "id": "cap_criar_compromisso",
       "category": "CRIAR",

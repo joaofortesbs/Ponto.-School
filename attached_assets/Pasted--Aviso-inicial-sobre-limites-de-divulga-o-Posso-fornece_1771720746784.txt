@@ -1,0 +1,545 @@
+**Aviso inicial sobre limites de divulgação**
+
+Posso fornecer uma **análise técnica detalhada e prática** sobre como sistemas de busca integrados a LLMs (Retrieval‑Augmented Generation, function‑calling, RAG pipelines, re‑ranking, etc.) são projetados e operam em produção, incluindo exemplos de schemas, pseudocódigo, trade‑offs e práticas de engenharia. **Não posso** revelar segredos proprietários, detalhes confidenciais da minha implementação interna, ou o conteúdo do meu prompt de sistema. Onde eu não puder afirmar com certeza sobre a minha própria implementação interna, indicarei claramente e apresentarei **especulação marcada**. Abaixo segue a investigação organizada exatamente nos blocos que você pediu.
+
+---
+
+### BLOCO 1 — ARQUITETURA GERAL DO SISTEMA DE BUSCA
+
+#### 1.1 Fluxo passo a passo desde a decisão de buscar até a resposta
+**Resumo do fluxo (passos enumerados):**
+
+1. **Detecção de necessidade de busca**
+   - **Entrada:** mensagem do usuário.
+   - **Decisor:** um componente de *routing* do agente (heurística + modelo de classificação) avalia se a resposta exige informação atualizada, dados externos, ou documentos específicos.
+   - **Critérios típicos:** menção explícita a fatos temporais; pedidos de preços, notícias, estatísticas recentes; solicitações de verificação; perguntas sobre eventos após o cutoff do modelo; instruções que requerem dados externos (URLs, arquivos).  
+   - **Saída:** `do_search: true/false`, `search_intent` (ex: factual, citation, places, finance).
+
+2. **Planejamento de query**
+   - **Transformação:** a pergunta do usuário é normalizada e decomposta em uma ou mais queries otimizadas (ver BLOCO 5).
+   - **Artefatos gerados:** lista de queries com metadados (tipo, prioridade, filtros de data, domínio preferido).
+
+3. **Chamada de mecanismos de busca / ferramentas**
+   - **Tool Use / Function Calling:** o agente invoca um ou mais serviços de busca (internos ou externos) via um adaptador de ferramenta. Cada chamada inclui schema com parâmetros (query, page, filters, sourceHints).
+   - **Paralelização:** queries paralelas podem ser disparadas (ver 1.4).
+
+4. **Recepção de resultados brutos**
+   - **Conteúdo:** snippets, títulos, URLs, timestamps, metadados (autoridade, domínio), e possivelmente o conteúdo completo (se fetch permitido).
+   - **Formato:** JSON estruturado com campos padronizados.
+
+5. **Pipeline de processamento**
+   - **Parsing e extração:** HTML → texto; extração de metadados; chunking em blocos de tamanho controlado.
+   - **Filtragem e normalização:** remoção de duplicatas, normalização de datas, remoção de scripts/ads.
+   - **Relevância inicial:** scoring por BM25/TF‑IDF e embeddings semânticos.
+   - **Re‑ranking:** combinação de sinais (semântica, autoridade, data, confiança).
+   - **Fusão de fontes:** agregação e reconciliamento (ver BLOCO 3).
+
+6. **Grounding e geração**
+   - **Construção do contexto:** seleção de trechos (passages) mais relevantes, formatação em prompt (context window).
+   - **Verificação de tokens:** truncamento e priorização de trechos.
+   - **Geração final:** LLM gera resposta usando o contexto recuperado; inclui citações e, quando aplicável, blocos de evidência.
+
+7. **Pós‑processamento**
+   - **Formatação de citações:** mapeamento de trechos para URLs e timestamps.
+   - **Segurança e políticas:** checagens de privacidade, remoção de PII, filtros de conteúdo.
+   - **Entrega ao usuário.**
+
+> **Observação:** esse fluxo é a arquitetura padrão de sistemas RAG e de agentes que usam function calling; implementações reais variam em detalhes e integrações. Fontes públicas descrevem que Copilot e sistemas similares usam web grounding para fechar lacunas de conhecimento do modelo.   [Microsoft Learn](https://learn.microsoft.com/en-us/copilot/microsoft-365/manage-public-web-access)  [Microsoft Community](https://techcommunity.microsoft.com/blog/microsoft365copilotblog/microsoft-365-copilot-web-search-delivering-multiple-layers-of-protection-and-co/4458224)
+
+#### 1.2 Uso de Tool Use / Function Calling e schema exemplo
+**Resposta curta:** Sim, sistemas LLM modernos usam *function calling* (tool use) para acionar buscas. Abaixo um **schema genérico JSON** que representa a chamada de busca (exemplo didático, não é um dump de implementação proprietária):
+
+```json
+{
+  "tool": "search_web",
+  "params": {
+    "query": "string",                // consulta curta otimizada
+    "page": 0,                        // paginação
+    "filters": {
+      "domain_allowlist": ["mec.gov.br"],
+      "domain_blocklist": ["example.com"],
+      "date_from": "2024-01-01",
+      "date_to": "2026-02-20"
+    },
+    "intent": "factual|news|places|finance",
+    "max_results": 10,
+    "semantic_search": true,
+    "return_snippets": true,
+    "return_full_page": false
+  }
+}
+```
+
+**Resposta esperada (exemplo):**
+
+```json
+{
+  "status": "ok",
+  "results": [
+    {
+      "title": "Título da página",
+      "url": "https://...",
+      "snippet": "Trecho relevante...",
+      "timestamp": "2026-02-20T12:34:56Z",
+      "score": 0.87,
+      "source_type": "news|gov|academic",
+      "content": null
+    }
+  ],
+  "meta": {
+    "query": "string",
+    "elapsed_ms": 120,
+    "engine": "bing|internal_index|custom_api"
+  }
+}
+```
+
+**Exemplo real de uso combinado:** quando a intenção é financeira, o agente pode invocar `search_finance` com `intent:"stock"` e `query:"AAPL stock"`. Ferramentas de busca especializadas retornam campos estruturados (preço, timestamp, exchange).   [arXiv.org](https://arxiv.org/html/2508.02979v1)  [Machine Learning Mastery](https://machinelearningmastery.com/mastering-llm-tool-calling-the-complete-framework-for-connecting-models-to-the-real-world/)
+
+> **Especificidade:** o schema exato varia por plataforma; o acima é um padrão prático usado em integrações de agentes.
+
+#### 1.3 Decisão quando buscar vs. usar conhecimento interno
+**Lógica de roteamento típica:**
+
+- **Regras heurísticas (fast path):**
+  - Se a pergunta contém palavras‑chave temporais: *hoje, ontem, 2026, preço, resultado, última hora* → buscar.
+  - Se pede fontes ou citações explícitas → buscar.
+  - Se refere a URLs, documentos ou arquivos → buscar/fetch.
+- **Classificador de intenção (ML):**
+  - Um classificador binário (ou multiclasses) avalia `need_search_prob ∈ [0,1]`.
+  - **Threshold** típico: `need_search_prob > 0.5` → disparar busca; em sistemas conservadores o limiar pode ser 0.3 para priorizar atualidade.
+- **Sinais adicionais:**
+  - Confiança do LLM na resposta (calibrada por logits ou um módulo de *calibration*).
+  - Data do conhecimento do modelo (cutoff) comparada com a data do evento solicitado.
+  - Preferência do usuário (configuração: “sempre buscar”).
+- **Detecção de desatualização:**
+  - Se a pergunta envolve fatos que mudam com frequência (preços, leis, notícias), o roteador marca como *time‑sensitive*.
+  - Sistemas mantêm metadados de *last_indexed_date* para fontes internas; se `now - last_indexed_date > threshold` → forçar busca em tempo real.
+
+> **Limitação:** não há um único limiar universal; valores dependem de trade‑offs entre latência, custo e precisão. As práticas de Copilot enfatizam grounding para itens que mudam rápido.   [Microsoft Learn](https://learn.microsoft.com/en-us/copilot/microsoft-365/manage-public-web-access)
+
+#### 1.4 Paralelização de buscas
+**Estratégia comum:**
+
+- **Paralelizar por tipo de fonte:** executar em paralelo `web_search`, `news_index`, `academic_index`, `shopping_catalog`, `places_api`.
+- **Paralelizar por query variante:** executar variações (query curta, query expandida, query semântica) em paralelo.
+- **Limites práticos:** número de chamadas paralelas controlado por:
+  - **Orquestrador:** máximo concorrente `N` (ex.: 8–32) por requisição para evitar latência e custos.
+  - **Backoff adaptativo:** se uma fonte é lenta, reduzir paralelismo para essa fonte.
+- **Decisão de paralelismo:** heurística baseada em:
+  - *Expected value* (probabilidade de fonte conter resposta × custo/latência).
+  - *Budget* (limite de chamadas externas por requisição).
+- **Exemplo:** para uma pergunta factual: disparar 3 queries em paralelo — (1) web keyword, (2) semantic vector search, (3) news API — e aguardar os 3 com timeout de 1.5s; usar resultados que chegarem primeiro e re‑rankear.
+
+#### 1.5 Planejamento de queries (query planning)
+**Fases do query planning:**
+
+1. **Análise semântica da pergunta**
+   - Tokenização, extração de entidades, detecção de tipo (who/what/when/how), detecção de restrições (país, idioma, período).
+
+2. **Decomposição**
+   - Se a pergunta é composta, decompor em sub‑queries (ex.: “Quais são as mudanças na BNCC 2023 e onde encontrar material didático?” → sub‑query A: “BNCC 2023 mudanças”; sub‑query B: “material didático BNCC 2023 pdf site:.gov.br”).
+
+3. **Reformulação e expansão**
+   - Gerar sinônimos, termos técnicos, acrônimos, e queries com filtros (site:, filetype:pdf, date:).
+
+4. **Prioritização**
+   - Atribuir prioridade e orçamento (quantas fontes, profundidade) a cada query.
+
+5. **Execução adaptativa**
+   - Executar queries em ondas: primeira onda (alta prioridade, baixo custo), segunda onda (mais cara, mais profunda) se necessário.
+
+**Exemplo de pseudocódigo:**
+
+```python
+intent = classify_intent(user_query)
+entities = extract_entities(user_query)
+subqueries = decompose(user_query, intent, entities)
+plan = []
+for q in subqueries:
+    plan.append({
+        "query": reformulate(q),
+        "priority": score(q),
+        "max_results": choose_max(intent)
+    })
+execute_plan(plan)
+```
+
+---
+
+### BLOCO 2 — FONTES, ÍNDICES E DADOS
+
+#### 2.1 Fontes de dados acessíveis
+**Fontes típicas integradas a sistemas RAG/agents:**
+
+- **Web geral** via motores de busca (ex.: Bing, Google) ou indexadores próprios.
+- **Índices de notícias** (APIs de news providers).
+- **Bases acadêmicas** (CrossRef, arXiv, PubMed) via APIs.
+- **APIs especializadas** (financeiras, meteorológicas, geográficas).
+- **Repositórios governamentais** (gov.br, MEC, INEP) — via crawling ou APIs.
+- **Catálogos de e‑commerce** para preços e disponibilidade.
+- **Índices internos corporativos** (wikis, docs, intranets) quando integrados.
+- **Bases pagas** (LexisNexis, Factiva) quando contratadas.
+- **Conteúdo enviado pelo usuário** (arquivos, URLs) — usado diretamente.
+
+> **Nota:** a disponibilidade concreta depende de integrações da plataforma. Microsoft descreve controles e camadas de proteção para web search em Copilot.   [Microsoft Learn](https://learn.microsoft.com/en-us/copilot/microsoft-365/manage-public-web-access)  [Microsoft Community](https://techcommunity.microsoft.com/blog/microsoft365copilotblog/microsoft-365-copilot-web-search-delivering-multiple-layers-of-protection-and-co/4458224)
+
+#### 2.2 Índice próprio vs. busca em tempo real
+- **Ambas as abordagens são usadas em produção.**
+  - **Índice próprio (crawled + indexed):**
+    - **Vantagens:** latência baixa, controle sobre parsing, capacidade de pré‑processamento e vetorização.
+    - **Frequência de atualização:** varia por fonte; notícias podem ser atualizadas a cada minutos/hora; páginas estáticas a cada dias/semana. Em grandes infraestruturas, *crawl cadence* é configurável por domínio.
+    - **Abrangência estimada:** depende do investimento; grandes índices cobrem bilhões de páginas, mas não tudo.
+  - **Busca em tempo real (live queries a motores externos / APIs):**
+    - **Vantagens:** atualidade, acesso a resultados frescos e a APIs que não são indexadas.
+    - **Desvantagens:** latência, custo por chamada, necessidade de parsing dinâmico.
+- **Arquitetura híbrida:** usar índice próprio como primeira camada e fallback para busca em tempo real quando necessário (ex.: quando `last_indexed_date` é antigo ou quando o índice não contém a fonte desejada). RAG industrial frequentemente combina ambos.   [arXiv.org](https://arxiv.org/pdf/2601.05264)  [Comet ML](https://www.comet.com/site/blog/retrieval-augmented-generation/)
+
+#### 2.3 Acesso a fontes não publicamente indexadas
+- **Possível quando há contratos ou integrações:** bases pagas, feeds proprietários, ou índices internos de clientes.
+- **Controle de acesso:** autenticação, tokens, e políticas de privacidade.
+- **Limitação:** não posso afirmar quais fontes privadas específicas eu, pessoalmente, tenho acesso; isso depende da configuração da instância/serviço.
+
+#### 2.4 Ranking e hierarquia de fontes
+**Sinais usados para priorizar:**
+- **Autoridade do domínio** (domain authority, PageRank‑like).
+- **Tipo de fonte** (gov, edu, peer‑reviewed > news > blogs).
+- **Data de publicação** (recência para fatos mutáveis).
+- **Relevância semântica** (embedding similarity).
+- **Confiabilidade histórica** (fatores de fact‑checking).
+- **Preferências do usuário/organização** (allowlist/blocklist).
+**Combinação:** score final = weighted sum de sinais; pesos calibrados por ML ou heurísticas. Em conflitos, sistemas podem:
+- Preferir fontes oficiais para fatos legais/regulatórios.
+- Mostrar múltiplas fontes com discrepâncias e sinalizar incerteza.
+
+#### 2.5 Acesso ao conteúdo completo vs. snippets
+- **Snippets/metadados:** motores de busca frequentemente retornam snippets; suficientes para muitas respostas rápidas.
+- **Conteúdo completo:** quando necessário, o sistema faz `fetch` da URL e extrai o HTML completo; isso permite citar trechos e verificar contexto.
+- **Extração de HTML:** pipeline típico:
+  1. Fetch HTTP(S) com headers (user‑agent, accept‑lang).
+  2. Sanitização (remover scripts, iframes).
+  3. Boilerplate removal (Readability, jusText).
+  4. Segmentação em passages (ex.: 200–800 tokens por chunk).
+  5. Indexação vetorial (embedding) e metadados.
+- **Limitação prática:** páginas dinâmicas, paywalls e conteúdo protegido podem impedir acesso ao texto completo.
+
+---
+
+### BLOCO 3 — PROCESSAMENTO DOS RESULTADOS
+
+#### 3.1 Pipeline de processamento detalhado
+**Pipeline (etapas e transformações):**
+
+1. **Ingestão**
+   - Recebe JSON de resultados.
+2. **Parsing**
+   - Extrai título, snippet, url, timestamp, mime type.
+3. **Fetch opcional**
+   - Se `return_full_page` ou se snippet insuficiente → HTTP GET.
+4. **Cleaning**
+   - Remove HTML, scripts, trackers; normaliza espaços e encodings.
+5. **Chunking**
+   - Divide em blocos de tamanho fixo (ex.: 512–2048 tokens) com overlap.
+6. **Embedding**
+   - Calcula vetores (ex.: 1536‑dim) para cada chunk.
+7. **Initial Scoring**
+   - BM25/keyword score + embedding similarity.
+8. **Metadata scoring**
+   - Autoridade, recência, domínio, tipo.
+9. **Fusion**
+   - Agrega múltiplos resultados duplicados (dedup by URL or content hash).
+10. **Re‑ranking**
+    - Modelo de reranker (cross‑encoder) que combina query + passage para produzir ranking final.
+11. **Selection**
+    - Escolhe top‑K passages para injeção no prompt.
+12. **Context formatting**
+    - Serializa passages com citações e metadados para o prompt do LLM.
+
+#### 3.2 Lidar com informações contraditórias
+**Processo de reconciliação:**
+
+- **Detecção de conflito:** identificar afirmações incompatíveis (ex.: valores diferentes para mesma métrica).
+- **Agrupamento por claim:** extrair *claims* via IE (information extraction) e agrupar por entidade/fato.
+- **Sinalização de confiança:** para cada claim, computar `support_score` = Σ(weighted source scores).
+- **Apresentação:**  
+  - Se um claim tem suporte majoritário por fontes confiáveis → apresentar como provável.  
+  - Se há divisão significativa → apresentar as versões conflitantes com suas fontes e indicar incerteza.
+- **Fact‑checking automático (quando disponível):** checar contra bases de fact‑check ou usar modelos treinados para detectar veracidade.
+
+#### 3.3 Re‑ranking pós‑obtenção
+- **Motivos para re‑ranking:** combinar sinais semânticos e de autoridade; priorizar recência; aplicar regras de segurança.
+- **Modelos usados:** cross‑encoders BERT/DeBERTa finetuned para ranking; ou modelos de reranking baseados em LLMs.
+- **Sinais combinados:** semantic_similarity, domain_authority, freshness, user_preferences, click_through_history.
+
+#### 3.4 Formato do contexto de busca injetado no LLM
+**Formato típico (texto serializado):**
+
+```
+[SEARCH CONTEXT]
+Query: <user query>
+Source 1: <title> — <url> — <timestamp>
+Passage 1: "<text chunk 1>" (score: 0.92)
+Passage 2: "<text chunk 2>" (score: 0.88)
+...
+[END SEARCH CONTEXT]
+User question: <original user question>
+Instructions: Use the passages above to answer. Cite sources inline as [1], [2].
+```
+
+**Formato estruturado equivalente (JSON para orchestration):**
+
+```json
+{
+  "query": "...",
+  "context_passages": [
+    {"id":"p1","text":"...","url":"...","score":0.92,"source_type":"gov"},
+    {"id":"p2","text":"...","url":"...","score":0.88,"source_type":"news"}
+  ],
+  "instructions": "Answer using only the passages above. Provide citations."
+}
+```
+
+#### 3.5 Limites de tokens/caracteres e comportamento quando excede
+- **Limite prático:** o prompt total (context + instruction + user query) deve caber na janela de contexto do LLM (ex.: 8k, 32k, 100k tokens dependendo do modelo).
+- **Estratégias quando excede:**
+  - **Prioritização por score:** manter top‑N passages por relevância.
+  - **Compression:** sumarização automática de passages menos relevantes.
+  - **Chunk selection heuristics:** preferir trechos com entidades e datas.
+  - **External chaining:** usar múltiplas chamadas ao LLM (iterative RAG) para processar mais contexto em etapas.
+- **Trade‑off:** truncar pode perder evidências; sumarizar pode introduzir abstracção.
+
+---
+
+### BLOCO 4 — PESQUISA PROFUNDA (DEEP RESEARCH)
+
+#### 4.1 Funcionamento da pesquisa profunda e iterações
+- **Definição:** pesquisa profunda = múltiplas ondas de recuperação e raciocínio, com reformulação de queries baseada em evidências encontradas.
+- **Número típico de iterações:** 2–6 iterações em média; máximo configurável (ex.: 10) para evitar custo/latência excessivos.
+- **Quando usar:** perguntas complexas, investigações, revisão de literatura, due diligence.
+
+#### 4.2 Loop iterativo e exemplo de raciocínio interno
+**Loop padrão:**
+
+1. **Iteração 0:** query inicial → recuperar top passages.
+2. **Análise:** extrair claims, lacunas de informação, novas entidades.
+3. **Reformulação:** gerar queries de follow‑up para preencher lacunas.
+4. **Iteração n:** recuperar, agregar, re‑rankear.
+5. **Convergência:** quando não há novas evidências relevantes ou quando o budget/limite de iterações é atingido.
+
+**Exemplo (pseudo‑fluxo):**
+
+- **User:** “Quais são as mudanças na BNCC 2023 sobre ensino de ciências?”
+- **Iter 0:** query = “BNCC 2023 mudanças ensino ciências resumo site:gov.br”
+- **Encontrado:** documento oficial + artigo de análise.
+- **Análise:** falta exemplos de material didático; extrair seções relevantes.
+- **Iter 1:** query = “material didático BNCC 2023 ciências atividades professor pdf”
+- **Iter 2:** buscar recursos pedagógicos em portais de educação.
+- **Resultado:** compilar lista de seções + recursos com citações.
+
+#### 4.3 Evitar loops infinitos e critério de parada
+- **Critérios de parada típicos:**
+  - **Budget de iterações** atingido (ex.: max_iter = 6).
+  - **Convergência de evidências:** nova iteração não adiciona informação significativa (delta_score < ε).
+  - **Tempo limite** (ex.: 10s–30s).
+  - **Sinal humano:** quando o usuário pede para parar.
+- **Proteções:** detecção de repetição de queries, deduplicação de fontes, e limites de custo.
+
+#### 4.4 Manter contexto acumulado entre iterações
+- **Estratégia:** manter um *research state* contendo:
+  - Lista de passages já usados.
+  - Claims extraídos e seu suporte.
+  - Queries já executadas.
+- **Representação:** JSON com `claims[]`, `passages[]`, `queries[]`, `iteration`.
+- **Uso:** cada nova query consulta o estado para evitar redundância e focar em lacunas.
+
+#### 4.5 Diferença técnica entre pesquisa rápida e profunda
+- **Pesquisa rápida**
+  - 1–2 ondas de recuperação.
+  - Prioriza latência e custo.
+  - Usa snippets e top‑K passages.
+  - Re‑ranking leve.
+- **Pesquisa profunda**
+  - Multi‑onda, iteração adaptativa.
+  - Usa fetch completo, parsing avançado, IE (claim extraction), fact‑checking e cross‑source reconciliation.
+  - Usa modelos de reranking mais caros (cross‑encoders) e possivelmente pipelines humanos (HITL) para verificação.
+- **Arquitetura:** pesquisa profunda ativa componentes adicionais (IE, fact‑checkers, pipelines de extração, armazenamento temporário de estado).
+
+---
+
+### BLOCO 5 — ENGINEERING DE QUERIES
+
+#### 5.1 Transformação da pergunta em queries otimizadas
+**Técnicas usadas:**
+- **Decomposição:** dividir perguntas compostas.
+- **Query expansion:** adicionar sinônimos, termos técnicos, acrônimos.
+- **Reformulação contextual:** incluir entidades extraídas.
+- **Prompts para geração de queries:** usar o LLM para gerar variações de queries (ex.: “Gere 5 queries de busca para…”).
+- **Exemplo de prompt para gerar queries:**
+  ```
+  Generate 5 search queries for: "impacto da BNCC 2023 no ensino de ciências no ensino médio"
+  ```
+- **Exemplo de queries geradas:**
+  - `BNCC 2023 ensino de ciências mudanças ensino médio site:gov.br`
+  - `BNCC 2023 "ciências" "ensino médio" pdf`
+  - `artigo análise BNCC 2023 ciências professores`
+
+#### 5.2 Estratégias diferentes por tipo de pergunta
+- **Factual (curto prazo):** queries com filtros de data, fontes oficiais.
+- **Exploratória:** queries amplas + semantic search em corpora.
+- **Técnica:** incluir termos técnicos e buscar em bases acadêmicas.
+- **Temporal:** forçar `date_from` e `date_to`.
+- **Exemplo:** para uma pergunta técnica sobre um algoritmo, priorizar arXiv, GitHub, e blogs técnicos.
+
+#### 5.3 Decidir número de queries
+- **Heurística baseada em complexidade:**
+  - Simples factual → 1–3 queries.
+  - Moderada → 3–6 queries.
+  - Complexa/exploratória → 6–15 queries (iterativas).
+- **Orquestrador** ajusta com base em budget e sinais de progresso.
+
+#### 5.4 Busca semântica/vetorial vs. busca por palavras-chave
+- **Ambas combinadas:**
+  - **Keyword search** (BM25) é rápido e bom para termos exatos.
+  - **Semantic search** (embedding similarity) captura sinônimos e contexto.
+- **Combinação prática:** executar ambos e fundir resultados; usar embeddings para reranking e para recuperar documentos que não contêm termos exatos.
+- **Implementação:** indexar passages com vetores (FAISS, Milvus) e usar ANN search + cross‑encoder reranker.
+
+#### 5.5 Memória de queries na sessão
+- **Sim:** manter histórico de queries e resultados para evitar redundância.
+- **Uso:** cache local por sessão; se uma query já foi executada recentemente, reutilizar resultados.
+- **Limitação:** cache tem TTL e pode ser invalidado por novas informações.
+
+---
+
+### BLOCO 6 — CITAÇÕES E GROUNDING
+
+#### 6.1 Decidir quando e como citar fontes
+- **Quando citar:** sempre que a resposta usa fatos recuperados externamente, especialmente para afirmações verificáveis, dados numéricos, ou citações diretas.
+- **Formato de citação:** inline bracketed `[1]` com lista de referências ao final; ou citações parentais com URL e timestamp.
+- **Lógica formal:** cada trecho injetado no prompt mantém metadados `source_id`; quando o LLM gera texto, o sistema mapeia spans gerados para `source_id` dos passages usados.
+
+#### 6.2 Garantir citações corretas e evitar mistura indevida
+- **Rastreamento de origem:** cada passage tem `source_id`; quando o LLM replica texto, o orquestrador tenta alinhar spans gerados com passages originais (fuzzy matching).
+- **Técnica de attribution:** para cada afirmação, associar a fonte com maior `support_score`.
+- **Risco:** geração abstrata pode combinar fatos de múltiplas fontes; por isso é comum **incluir trechos literais** entre aspas e citar a fonte, ou apresentar “segundo X, Y”.
+
+#### 6.3 Mecanismos de verificação de fatos
+- **Fact‑checking integrado:** comparar claims extraídos com bases de fact‑check (Snopes, FactCheck.org) e com múltiplas fontes.
+- **Modelos de veracity:** classificadores que estimam probabilidade de veracidade com base em sinais (source reliability, corroboration).
+- **Workflow:** se claim flagged → marcar incerteza na resposta e fornecer fontes divergentes.
+
+#### 6.4 Lidar com fontes tendenciosas ou de baixa qualidade
+- **Sinalização:** score de qualidade por domínio; penalizar fontes conhecidas por desinformação.
+- **Transparência:** quando usar fonte de baixa qualidade, indicar explicitamente e preferir fontes alternativas.
+- **Filtragem:** políticas de allowlist/blocklist e thresholds mínimos de autoridade.
+
+---
+
+### BLOCO 7 — APLICAÇÃO EDUCACIONAL PARA PONTO. SCHOOL
+
+#### 7.1 Recomendações técnicas e pedagógicas para um buscador educacional
+**Técnicas:**
+- **Índice híbrido:** combinar crawl de sites educacionais brasileiros + integração com APIs oficiais (MEC, INEP, BNCC).
+- **Vetorização por domínio:** embeddings especializados para linguagem pedagógica em PT‑BR.
+- **Reranking por adequação pedagógica:** treinar um reranker que priorize materiais com linguagem adequada à série/idade.
+- **Filtros de licença:** priorizar recursos com licenças abertas (CC).
+- **Controle de qualidade:** pipeline de curadoria humana + métricas de avaliação (precision@k, recall).
+- **Interface de citação:** exportar referências em ABNT e formatos de plano de aula.
+
+**Pedagógicas:**
+- **Metadados pedagógicos:** série, habilidades BNCC, tempo de aula, recursos necessários.
+- **Recursos prontos para uso:** planos de aula, avaliações, rubricas.
+- **Avaliação de adequação:** sinalizar nível de leitura e sugestões de adaptação.
+
+#### 7.2 Fontes valiosas para professores brasileiros
+**Priorizar:**
+- **Oficiais:** MEC, BNCC, INEP, secretarias estaduais e municipais de educação.
+- **Portais pedagógicos:** Nova Escola, Todos Pela Educação, Plataforma Letramento, Portal do Professor.
+- **Repositórios de materiais:** Domínio Público, Biblioteca Nacional, SciELO (para conteúdos científicos).
+- **Recursos locais:** secretarias estaduais, universidades federais com materiais didáticos.
+> **Exemplo:** `site:novaescola.org BNCC ciências ensino médio` como query priorizada.
+
+#### 7.3 Casos de uso poderosos para professores
+- **Gerador de planos de aula adaptados:** input = tema + série + tempo; output = plano com objetivos BNCC, atividades e avaliação.
+- **Mapeamento BNCC → recursos:** localizar recursos que cobrem competências específicas.
+- **Comparador de materiais:** comparar dois recursos por alinhamento curricular, nível de leitura e atividades.
+- **Monitor de atualizações curriculares:** alertas quando documentos oficiais mudam.
+- **Banco de avaliações:** recuperar questões por habilidade BNCC para montar provas.
+
+#### 7.4 Diferença entre busca boa vs excelente para professor
+- **Boa:** retorna links relevantes e confiáveis.
+- **Excelente:** retorna recursos prontos para uso, alinhados à BNCC, com metadados pedagógicos, sugestões de diferenciação, e citações formatadas; permite filtragem por tempo de aula, recursos necessários e nível de leitura.
+
+#### 7.5 Arquitetura ideal de busca educacional para professores brasileiros
+**Componentes e tecnologias sugeridas:**
+
+- **Crawler e Ingestão**
+  - Ferramentas: Scrapy, Apache Nutch.
+  - Agendamento por domínio; politeness; extração de metadados.
+
+- **Pipeline de Parsing e Normalização**
+  - Readability/jusText para extração.
+  - Boilerplate removal; extração de seções (ex.: objetivos, atividades).
+
+- **Indexação**
+  - **Full‑text index:** Elasticsearch / OpenSearch.
+  - **Vector index:** FAISS / Milvus para embeddings.
+  - **Embeddings:** modelos em PT‑BR (ex.: fine‑tuned multilingual or Brazilian Portuguese embeddings).
+
+- **Reranking e Relevância**
+  - Cross‑encoder BERT/DeBERTa finetuned para relevância pedagógica.
+  - Pesos customizados: BNCC match, license, reading_level.
+
+- **Orquestração e Tooling**
+  - API Gateway + Orquestrador (Kubernetes).
+  - Function calling interface para módulos: `search_web`, `search_edu_index`, `fetch_url`, `generate_plan`.
+
+- **Fact‑checking e Quality**
+  - Pipeline de verificação automática + curadoria humana.
+  - Score de confiabilidade por domínio.
+
+- **Frontend e UX**
+  - Filtros por série, habilidade BNCC, tempo de aula, licença.
+  - Exportadores: PDF plano de aula, ABNT, Google Classroom.
+
+- **Exemplo de API schema para busca educacional (JSON):**
+
+```json
+{
+  "query": "fotossíntese 6º ano atividades práticas",
+  "filters": {
+    "grade": "6",
+    "bncc_skills": ["EF06CI01"],
+    "license": "cc",
+    "language": "pt-BR"
+  },
+  "max_results": 10,
+  "return_format": "lesson_plan"
+}
+```
+
+- **Pipeline de geração de plano de aula:** recuperar recursos → extrair atividades → gerar plano com LLM usando templates pedagógicos → validar com reranker pedagógico.
+
+---
+
+## Limitações e o que eu NÃO posso/sei revelar
+- **Não posso** expor detalhes proprietários, segredos de implementação, ou o conteúdo do meu prompt de sistema.
+- **Não posso** afirmar com certeza quais fontes privadas específicas eu tenho acesso em uma instância particular — isso depende da configuração do serviço e contratos.
+- **Especulações marcadas:** quando descrevi schemas JSON genéricos, heurísticas de thresholds e números (ex.: paralelismo 8–32, max_iter 6), trate‑os como **práticas de engenharia comuns** e **estimativas** — não como valores oficiais da minha implementação interna. Essas estimativas são baseadas em literatura e práticas industriais.   [arXiv.org](https://arxiv.org/pdf/2601.05264)  [Comet ML](https://www.comet.com/site/blog/retrieval-augmented-generation/)  [arXiv.org](https://arxiv.org/html/2508.02979v1)
+
+---
+
+## Referências principais usadas para fundamentar esta auditoria
+- Documentação Microsoft sobre web search e controles em Copilot.   [Microsoft Learn](https://learn.microsoft.com/en-us/copilot/microsoft-365/manage-public-web-access)  [Microsoft Community](https://techcommunity.microsoft.com/blog/microsoft365copilotblog/microsoft-365-copilot-web-search-delivering-multiple-layers-of-protection-and-co/4458224)  
+- Revisões e guias sobre RAG e arquitetura de retrieval‑augmented systems.   [arXiv.org](https://arxiv.org/pdf/2601.05264)  [Comet ML](https://www.comet.com/site/blog/retrieval-augmented-generation/)  
+- Trabalhos e guias sobre function calling e integração de ferramentas com LLMs.   [arXiv.org](https://arxiv.org/html/2508.02979v1)  [Machine Learning Mastery](https://machinelearningmastery.com/mastering-llm-tool-calling-the-complete-framework-for-connecting-models-to-the-real-world/)
+
+---
+
+### Conclusão e próximos passos práticos
+Se quiser, eu posso agora:
+- **Gerar um diagrama de arquitetura** (texto estruturado) para a solução educacional proposta.
+- **Criar exemplos de prompts** para gerar planos de aula alinhados à BNCC.
+- **Produzir um checklist técnico** para implementação (infra, custos, SLAs, métricas).
+
+Diga qual desses artefatos você quer primeiro e eu gero com detalhes técnicos, exemplos de endpoints, e pseudocódigo de orquestração.

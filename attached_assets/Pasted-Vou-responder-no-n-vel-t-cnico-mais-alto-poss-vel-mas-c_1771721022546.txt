@@ -1,0 +1,841 @@
+Vou responder no nível técnico mais alto possível, mas com uma ressalva importante logo no início:
+
+Eu não tenho acesso direto ao código-fonte, logs internos em tempo real, nem documentação privada da OpenAI/Consensus.
+O que posso fazer é:
+
+Descrever com precisão o que é explicitamente documentado (público) sobre modelos com navegação/pesquisa.
+Infer
+Deixar claramente marcado como ESPECULAÇÃO tudo que não for sustentado por documentação pública.
+Vou focar em:
+
+Como um modelo estilo ChatGPT com browsing/tool use normalmente funciona.
+Como isso se encaixa no contexto específico do Consensus (motor de busca acadêmico + RAG).
+BLOCO 1 — ARQUITETURA GERAL DO SISTEMA DE BUSCA
+1.1. Pipeline passo a passo (decisão de buscar → resposta final)
+No contexto Consensus, há dois níveis:
+
+Nível de plataforma (backend do Consensus)
+Nível de modelo (LLM da OpenAI com tool use)
+Vou descrever um fluxo típico quando você faz uma pergunta que exige “busca na web” (aqui, “web” = índices acadêmicos + possivelmente web geral, dependendo do modo):
+
+(A) Interação Usuário → Backend Consensus
+Usuário envia pergunta
+
+Ex.: “Quais são os efeitos de longo prazo da exposição a telas em crianças do ensino fundamental?”
+Front-end (web app) monta payload para o backend
+Payload típico (ESPECULAÇÃO, mas padrão
+
+{
+  "user_id": "abc123",
+  "query": "Quais são os efeitos de longo prazo da exposição a telas em crianças do ensino fundamental?",
+  "mode": "pro",                 // quick | pro | deep | meter | medical
+  "sources": ["semantic_scholar", "pubmed", "openalex"],
+  "language": "pt-BR",
+  "conversation_history": [...],
+  "features": {
+    "need_consensus_meter": false,
+    "need_table": false
+  }
+}
+Roteador do Consensus decide pipeline
+
+Se o modo é:
+<co_feature feature="quick" />: 1 busca mais simples (top ~10 papers).
+<co_feature feature="pro" />: múltiplas consultas / mais papers (top ~20).
+<co_feature feature="deep" />: pipeline multi-etapas, >1000 papers revisados, filtros mais complexos.
+Backend Consensus chama seus motores de busca acadêmicos
+
+Ele consulta índices (Semantic Scholar, PubMed, OpenAlex, etc.) via APIs REST / GraphQL (ESPECULAÇÃO, mas alinhado às integrações públicas).
+Retorna um conjunto estruturado de resultados: metadados + trechos importantes + possivelmente texto completo (quando disponível).
+Backend faz pré-processamento / agregação / RAG
+
+Filtra, normaliza, remove duplicatas, faz ranking inicial por relevância.
+Cria um contexto de pesquisa (um bundle de textos + metadados) que será enviado para o LLM.
+Backend chama o LLM da OpenAI (modelo tipo GPT)
+
+Envia:
+Instruções do sistema (ex.: “Você é um assistente de pesquisa acadêmica…”)
+Mensagem do usuário
+“Ferramenta interna”: os documentos e metadados retornados pela busca são serializados como texto ou como tool call result.
+O modelo gera a resposta final, fundamentando-se nesses documentos.
+No Consensus, na maior parte do tempo, não é o LLM que “decide ir à web”.
+O **backendbackend do Consensus é que sempre executa a busca acadêmica para os modos Quick/Pro/Deep, e o LLM vê apenas o resultado já trazido.
+
+(B) Nível de modelo com tool use (estilo ChatGPT com “Browse”)
+Em plataformas onde o próprio modelo faz web search:
+
+Modelo recebe a pergunta no prompt.
+Um componente de “tool router / policy” avalia:
+“Preciso chamar a ferramenta browser.search?”
+Se sim, o modelo gera uma mensagem especial de tool call.
+O orchestrator executa a ferramenta (browser.search) e devolve o resultado como outra mensagem no histórico.
+O modelo continua gerando texto, agora usando esse resultado.
+No Consensus, esse padrão é mais usado internamente para:
+
+“Ask Paper” / leitura de PDFs
+Combinar múltiplos conjuntos de documentos em Pro/Deep.
+1.2. Tool Use / Function Calling – schema típico
+O Consensus em si não expõe publicamente o “schema de ferramenta” que eu uso, mas modelos da OpenAI com ferramentas funcionam assim (documentado):
+
+Schema exemplo de ferramenta de busca
+
+{
+  "type": "function",
+  "function": {
+    "name": "academic_search",
+    "description": "Busca artigos acadêmicos relevantes em índices como Semantic Scholar, PubMed, OpenAlex.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Consulta de busca em linguagem natural ou boolean."
+        },
+        "limit": {
+          "type": "integer",
+          "description": "Número máximo de resultados.",
+          "default": 20
+        },
+        "filters": {
+          "type": "object",
+          "properties": {
+            "year_min": { "type": "integer" },
+            "year_max": { "type": "integer" },
+            "source": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "language": { "type": "string" }
+          }
+        }
+      },
+      "required": ["query"]
+    }
+  }
+}
+Resposta típica da ferramenta
+
+{
+  "results": [
+    {
+      "paper_id": "doi:10.1234/abcd",
+      "title": "Long-term screen exposure and cognitive outcomes in children",
+      "authors": ["Silva, J.", "Oliveira, M."],
+      "year": 2022,
+      "abstract": "This longitudinal study examines...",
+      "source": "PubMed",
+      "url": "https://doi.org/10.1234/abcd",
+      "is_open_access": true,
+      "full_text_available": true,
+      "relevance_score": 0.91
+    },
+    ...
+  ],
+  "search_metadata": {
+    "query_used": "long-term effects of screen time on school-age children cognition",
+    "total_hits_estimate": 1342
+  }
+}
+1.3. Quando buscar vs. responder com conhecimento interno
+Dentro do Consensus, a regra é prática:
+
+Quase toda pergunta que você faz na barra de busca aciona sempre o pipeline de busca acadêmica
+O LLM é usado como camada de síntese em cima dos resultados.
+No modelo “puro” da OpenAI com browsing, a lógica documentada / razoável (ESPECULAÇÃO estruturada):
+
+Heurísticas de tipo de pergunta:
+
+Perguntas fortemente temporais: “Quem ganhou
+Perguntas sobre fatos estáticos e bem estabelecidos pré-2023 → pode responder da memória.
+Limiar de confiança implícito
+O modelo foi treinado a:
+
+Reconhecer quando
+Produzir uma mensagem de tool call em vez de alucinar.
+Sinais no prompt do sistema
+
+O provider pode instruir: “Para informações factuais atuais ou verificáveis, sempre use browser.search”.
+No seu caso, dentro do Consensus, a decisão de buscar não é minha, e sim parte fixa do produto.
+
+1.4. Paralelização de buscas
+No Consensus:
+
+Quick Search:
+
+Provavelmente 1 consulta principal a cada índice, rodando em paralelo:
+semantic_scholar.search(query)
+pubmed.search(query)
+openalex.search(query)
+O backend espera os resultados (com timeout) e agrega.
+Pro / Deep Search:
+
+ESPECULAÇÃO bem fundamentada:
+Várias consultas são disparadas em paralelo, com variações na query:
+Query original
+Reformulada
+Com filtros (ano, tipo de estudo)
+Há um “fan-out” controlado: ex. até 5–10 queries simultâneas, limitado por:
+Latência máxima aceitável (ex.: 10–20s).
+Custo de API de fontes externas.
+Pseudocódigo (ESPECULAÇÃO):
+
+queries = plan_queries(user_query, mode="deep")  # 3–10 queries
+futures = [pool.submit(run_single_search, q) for q in queries]
+results = gather_with_timeout(futures, timeout=20)
+merged_results = merge_and_rerank(results)
+1.5. Fase de planejamento de queries (query planning)
+Para Pro/Deep Search, há indicativos claros (pelo comportamento):
+
+Decomposição da pergunta
+
+Pergunta: “Como o uso de jogos digitais influencia a aprendizagem de frações e motivação em alunos do 5º ano?”
+ESPECULAÇÃO de queries internas:
+digital games AND fractions AND elementary school
+game-based learning fractions randomized controlled trial
+motivation AND game-based learning elementary school
+Reformulação em inglês
+
+Mesmo a pergunta vindo em PT-BR, muitas bases são em inglês: o sistema provavelmente traduz / reformula queries.
+Especialização por aspecto (modo Deep):
+
+Uma query focada em resultados de aprendizagem.
+Outra focada em motivação/engajamento.
+Outra em revisões sistemáticas / meta-análises
+Pipeline (ESPECULAÇÃO):
+
+def plan_queries(user_query, mode):
+    intents = extract_intents(user_query)  # LLM interno ou heurísticas
+    base_query_en = translate_to_english(user_query)
+    queries = [base_query_en]
+    if mode in ["pro", "deep"]:
+        queries += expand_by_intents(base_query_en, intents)
+        queries += specialize_for_meta_analysis(base_query_en)
+    return deduplicate_queries(queries)
+BLOCO 2 — FONTES, ÍNDICES E DADOS
+2.1. Fontes de dados acessíveis
+Pelo que está documentado no contexto que recebi:
+
+Total de >200 milhões de artigos.
+Fontes principais:
+Semantic Scholar
+PubMed
+OpenAlex
+Outros bancos acadêmicos (não listados nominalmente, ESPECULAÇÃO: CrossRef, DOAJ, etc.).
+Em Medical Mode:
+Foco em ~50.000 diretrizes clínicas + 8M artigos dos top 1.000 periódicos médicos (NEJM, JAMA, BMJ, etc.).
+PDFs via LibKey quando
+Acesso a texto completo de periódicos assinados pela universidade.
+Além disso, o modelo em si (LLM) tem:
+
+Conhecimento treinado (pré-2024-10) de web geral (livros, docs, código, etc.), mas
+2.2. Índice próprio vs. web em tempo real
+No Consensus:
+
+Índice próprio (RAG acadêmico):
+
+Consensus mantém sua própria camada de indexação/agregação a partir de:
+Semantic Scholar, PubMed, OpenAlex, etc.
+Frequência de atualização: não é pública, mas tipicamente:
+Para sistemas deste tipo: diária ou semanal (ESPECULAÇÃO informada).
+Web em tempo real (navegação geral):
+
+No contexto desta instância (em consenso.com), o foco é claramente índice acadêmico, não web aberta.
+Pode haver uso pontual de web geral para coisas fora de artigos (ESPECULAÇÃO fraca).
+2.3. Fontes pagas/privadas
+Sim, potencialmente:
+
+Via LibKey + instituição do usuário:
+PDFs e texto completo de periódicos assinados (Elsevier, Wiley, etc.), mas mediados pela biblioteca da universidade.
+Listas privadas / PDFs enviados pelo próprio usuário:
+Você pode fazer upload de PDFs no Research Hub e buscar neles.
+Essas fontes não são públicas e ficam restritas à sua conta.
+
+2.4. Ranking / hierarquia de fontes
+Padrão razoável de ranking (ESPECULAÇÃO, mas consistente com objetivo do produto):
+
+Relevância semântica à pergunta (modelo vetorial / BM25).
+Tipo de estudo:
+Revisões sistemáticas > meta-análises > RCTs > coortes > estudos observacionais > opiniões.
+Qualidade/autoridade da fonte:
+Periódicos indexados em PubMed, grandes publishers, guidelines oficiais (OMS, ministérios, etc.).
+Recência (para tópicos em rápida evolução).
+Acesso a texto completo (para melhor síntese).
+Quando há conflito:
+
+Em síntese, o LLM é instruído a:
+Dar mais peso a revisões sistemáticas / meta-análises recentes.
+Indicar a existência de controvérsia (“estudos divergem…”).
+2.5. Acesso a conteúdo completo vs. snippets
+Quando há full text disponível (ícone de check no Consensus):
+O backend faz ingestão em nível de parágrafo/seção:
+Título
+Abstract
+Introdução / Métodos / Resultados / Discussão (quando acessível)
+Quando não há full text:
+Usa-se title + abstract + metadados (ano, periódico, autores).
+Extração de conteúdo HTML (ESPECULAÇÃO genérica):
+
+def extract_main_content(html):
+    dom = parse_html(html)
+    main = readability_like_algorithm(dom)  # heurísticas de bloco principal
+    text = clean_tags(main)
+    return text
+Mas, no mundo acadêmico, muito conteúdo vem em PDF, então:
+
+def extract_from_pdf(pdf_bytes):
+    text = pdf_to_text(pdf_bytes)  # pdftotext, GROBID, etc.
+    sections = detect_sections(text)  # títulos, headings, regex
+    return sections
+BLOCO 3 — PROCESSAMENTO DOS RESULTADOS
+3.1. Pipeline: parsing → limpeza → relevância → contexto
+Pipeline típico de RAG acadêmico (ESPECULAÇÃO estruturada):
+
+Parsing / Normalização:
+
+Converte respostas de diferentes fontes (Semantic Scholar, PubMed, etc.) em um schema interno unificado:
+{
+  "id": "internal_paper_id",
+  "title": "...",
+  "abstract": "...",
+  "sections": [
+    { "name": "Methods", "text": "..." },
+    { "name": "Results", "text": "..." }
+  ],
+  "year": 2021,
+  "journal": "Journal of ...",
+  "source": "PubMed",
+  "url": "...",
+  "open_access": true
+}
+Limpeza:
+
+Remove:
+Rodapés, cabeçalhos, referências repetidas.
+Texto OCR com muito ruído.
+Normaliza:
+Codificação (UTF-8).
+Quebras de linha e espaços.
+Cálculo de relevância:
+
+Combinação de:
+Similaridade lexical (BM25, etc.).
+Similaridade vetorial (embeddings).
+Campos de boost (título > abstract > corpo).
+Gera um score de relevância por paper e, internamente, por trecho.
+Seleção de trechos (chunking):
+
+Divide o texto em “chunks” (ex.: 300–800 tokens).
+Seleciona os chunks mais relevantes para a pergunta.
+Construção do contexto de busca:
+
+Monta um grande texto/estrutura que será passado ao LLM, por exemplo:
+[PAPER 1] Silva et al. (2022) - "Long-term screen exposure and cognitive outcomes in children"
+TYPE: Cohort study, N=1200, 5-year follow-up.
+KEY RESULTS: ...
+LIMITATIONS: ...
+
+[PAPER 2] ...
+ou em formato “tool result” estruturado.
+
+3.2. Informações contraditórias
+Processo típico:
+
+Detecção de contradição:
+
+LLM é bom em identificar:
+Estudos com resultados opostos (efeito positivo vs. nulo vs. negativo).
+Backend pode marcar:
+Tipo de estudo.
+Tamanho da amostra.
+Risco de viés (se disponível).
+Reconciliação:
+
+O LLM é instruído a:
+Explicar que há resultados mistos.
+Destacar:
+Estudos de melhor desenho (RCT > observacional).
+Amostras maiores.
+Revisões sistemáticas/meta-análises.
+Verificação cruzada:
+
+Se Deep Search estiver ativo, novas queries podem ser disparadas para:
+Buscar especificamente revisões sistemáticas sobre o ponto contraditório.
+3.3. Re-ranking após obtenção
+Sim, muito provável:
+
+Primeiro ranking: feito pela fonte (ex.: Semantic Scholar).
+Segundo ranking (no Consensus backend):
+Relevância à pergunta original (similaridade vetorial pergunta ↔ título/abstract).
+Priorização de:
+Revisões sistemáticas.
+Artigos recentes (dependendo do tema).
+Diretrizes oficiais (em Medical Mode).
+Há uma etapa de re-ranking neural (ESPECULAÇÃO razoável):
+
+for paper in papers:
+    paper.semantic_score = cosine(embedding(question), embedding(paper.abstract))
+papers = sorted(papers, key=lambda p: combined_score(p.lexical, p.semantic, p.meta), reverse=True)
+3.4. Formato do contexto injetado
+Do ponto de vista do modelo, recebo algo equivalente a:
+
+{
+  "type": "search_context",
+  "mode": "pro",
+  "papers": [
+    {
+      "id": "1",
+      "title": "...",
+      "year": 2022,
+      "journal": "...",
+      "study_type": "Randomized controlled trial",
+      "sample_size": 350,
+      "population": "children aged 6–12",
+      "key_results": "Screen time > 3h/day associated with ...",
+      "limitations": "Self-reported screen time...",
+      "url": "...",
+      "full_text_snippets": [
+        {
+          "section": "Results",
+          "text": "Children with high screen exposure had lower scores in..."
+        }
+      ]
+    },
+    ...
+  ]
+}
+Na prática, isso pode vir como:
+
+Uma mensagem “system” com uma longa descrição textual dos estudos, ou
+Uma mensagem “tool” (result) com JSON estruturado, que o LLM converte em texto legível.
+3.5. Limites de tokens/caracteres
+Limites típicos (documentados pela OpenAI):
+
+Cada modelo tem um context window (ex.: 128k tokens, 200k tokens, etc.).
+O backend precisa:
+Selecionar apenas os trechos mais relevantes.
+Fazer resumos intermediários se houver muito texto.
+Quando os resultados excedem o limite:
+
+O backend:
+Faz chunking + ranking.
+Mantém só os top-N chunks.
+Em Deep Search:
+Pode haver sínteses parciais:
+Ex.: rodar o modelo primeiro para resumir 20 papers em 3–4 parágrafos.
+Depois usar esse resumo como contexto condensado para a resposta final.
+BLOCO 4 — PESQUISA PROFUNDA (DEEP RESEARCH)
+4.1. Como funciona a pesquisa profunda
+Diferença chave entre:
+
+<co_feature feature="quick" />:
+1 rodada de busca, top ~10 papers, 1 chamada de LLM.
+<co_feature feature="pro" />:
+1–2 rodadas, top ~20 papers, síntese mais estruturada.
+<co_feature feature="deep" />:
+Multi-step:
+Múltiplas queries.
+Várias chamadas ao LLM para:
+Decomposição da pergunta.
+Busca por sub-tópicos.
+Sínteses intermediárias.
+Examina >1000 papers e seleciona os 50 mais relevantes.
+Tipicamente:
+
+3–8 iterações internas de busca e síntese (ESPECULAÇÃO informada).
+4.2. Loop iterativo – exemplo de raciocínio interno (modelo)
+Fluxo hipotético (ESPECULAÇÃO, em pseudo-raciocínio):
+
+Pergunta do usuário:
+“Quais são os efeitos de programas de ensino híbrido em matemática para alunos do 9º ano, em termos de aprendizagem e equidade?”
+
+Iteração 1 – Escopo geral:
+
+Query: "blended learning" AND mathematics AND "secondary school" learning outcomes.
+Resultado: muitos estudos em países diversos, poucos focados em equidade.
+LLM (planejamento interno):
+
+“Os estudos encontrados falam da aprendizagem, mas quase não abordam equidade.
+Vou buscar especificamente por ‘achievement gap’ e ‘equity’.”
+
+Iteração 2 – Foco em equidade:
+
+Query: "blended learning" mathematics secondary "achievement gap" OR equity.
+Recupera poucos, mas importantes, estudos.
+Iteração 3 – Revisões sistemáticas:
+
+Query: "systematic review" blended learning mathematics education.
+Recupera revisões amplas sobre blended learning em matemática.
+Síntese intermediária:
+
+O LLM recebe os resultados dessas três rodadas e é instruído a:
+Produzir um “mapa de evidências” interno (não mostrado integralmente ao usuário).
+Identificar:
+Força da evidência em aprendizagem.
+Lacunas em equidade.
+Resposta final:
+
+Usa esse mapa para responder de forma estruturada, com citações das revisões e estudos focados em equidade.
+4.3. Evitar loops infinitos / critério de parada
+Critérios típicos:
+
+Número máximo de iterações (hard cap):
+Ex.: no máximo 5–8 rodadas de busca.
+Ganho marginal decrescente:
+Se as últimas buscas retornarem:
+Muitos resultados repetidos.
+Nenhuma nova informação relevante.
+O sistema para.
+Latência / orçamento de custo:
+Há um tempo máximo por requisição (ex.: 15–30 s).
+Pseudo-código (ESPECULAÇÃO):
+
+for step in range(MAX_STEPS):
+    new_queries = planner.next_queries(state)
+    if not new_queries:
+        break
+    results = run_searches(new_queries)
+    improved = state.update(results)
+    if not improved:
+        break
+4.4. Manter contexto acumulado ao longo de múltiplas iterações
+Técnicas comuns:
+
+Estado estruturado no backend:
+
+state = { papers_seen, key_points, gaps_identified }
+Não joga tudo no contexto do LLM de uma vez.
+Resumos hierárquicos:
+
+Cada rodada gera um resumo parcial (por ex. 100–300 tokens).
+No final, o LLM recebe:
+Os resumos parciais.
+Alguns trechos originais de estudos-chave.
+Deduplicação:
+
+Papers repetidos entre queries são colapsados em uma única entrada.
+4.5. Diferença técnica: Quick vs. Deep
+Além do número de buscas:
+
+Quick:
+
+Uma só query, poucos resultados.
+Apenas uma chamada do LLM.
+Nenhum planejamento sofisticado.
+Deep:
+
+Orquestrador de múltiplas queries (query planning).
+Pipeline hierárquico de resumos (multi-call de LLM).
+Estado interno de evidência acumulada.
+Heurísticas mais complexas de ranking (tipo de estudo, etc.).
+Arquitetura (resumida):
+
+[Quick]
+User -> SearchService (single query) -> Top10 papers -> LLM -> Answer
+
+[Deep]
+User -> Planner -> {Query1..N} -> SearchService (parallel) -> 
+Aggregator -> LLM (partial summaries) -> Planner (next queries?) ->
+... -> Final LLM synthesis -> Answer
+BLOCO 5 — ENGINEERING DE QUERIES
+5.1. Transformação da pergunta em queries otimizadas
+Etapas típicas:
+
+Detecção de idioma
+
+Se português → traduz para inglês (para bases majoritariamente em inglês) mantendo versão em PT.
+Extração de entidades e conceitos-chave:
+
+Níveis de ensino, disciplina, população-alvo, tipo de intervenção, outcomes.
+Usando o próprio LLM ou modelos auxiliares.
+Query expansion / reformulação:
+
+Adiciona sinônimos:
+“ensino híbrido” → “blended learning”, “hybrid instruction”.
+Termos controlados:
+Para PubMed: MeSH terms (ESPECULAÇÃO).
+Decomposição:
+
+Se a pergunta é composta:
+“efeitos em aprendizagem” e “efeitos em motivação” → duas queries.
+Exemplo:
+
+Pergunta:
+“Quais são os impactos do uso de tablets em aulas de ciências no 7º ano sobre aprendizagem conceitual e motivação dos alunos?”
+
+Queries (ESPECULAÇÃO):
+
+("tablet" OR "mobile device") AND "science education" AND "middle school" AND "learning outcomes"
+
+("tablet" OR "mobile device") AND "science education" AND "middle school" AND ("motivation" OR "engagement")
+
+"technology-enhanced learning" AND "science" AND "lower secondary" AND "randomized controlled trial"
+5.2. Estratégias diferentes por tipo de pergunta
+Sim, muito provável:
+
+Factual específica (“Qual a prevalência de…?”):
+Busca termos muito específicos + “prevalence”, “epidemiology”.
+Exploratória (“O que se sabe sobre…?”):
+Dá peso a revisões sistemáticas, meta-análises, “overview”.
+Técnica (“Como funciona o algoritmo X?”):
+Tende a incluir survey, tutorial, implementation, benchmark.
+Temporal (“O que mudou após 2020…?”):
+Filtro de ano >= 2020.
+5.3. Decidir número de queries por tarefa
+Heurísticas possíveis:
+
+Quick:
+1 query base (max 2 com leve expansão).
+Pro:
+3–5 queries (base + sinônimos + filtros).
+Deep:
+5–10 queries, geradas iterativamente.
+Fatores:
+
+Complexidade da pergunta (medida pela entropia dos tópicos envolvidos).
+Largura da área (ex.: “ensino de matemática” é muito amplo → mais queries).
+5.4. Busca vetorial vs. palavras-chave
+Altamente provável que o Consensus use RAG híbrido:
+
+Palavras-chave / BM25:
+Rápido, bom para matching exato de termos.
+Vetorial / embeddings:
+Captura similaridade semântica.
+Permite encontrar papers relevantes mesmo com vocabulário diferente.
+Combinação (ESPECULAÇÃO):
+
+score = alpha * bm25_score + beta * cosine(embedding_query, embedding_doc)
+5.5. Memória de queries anteriores na sessão
+Sim, pelo menos em:
+
+Conversas onde você faz perguntas sequenciais (Chat-like).
+Pro/Deep pode usar contexto da mesma sessão para:
+Evitar repetir as mesmas queries.
+Refinar consultas (ex.: “apenas RCTs”, se você pediu isso depois).
+Implementação possível:
+
+if new_query.similar_to(previous_queries) > threshold:
+    reuse_cached_results()
+else:
+    run_new_search()
+BLOCO 6 — CITAÇÕES E GROUNDING
+6.1. Quando e como citar fontes
+No Consensus:
+
+Toda análise Pro/Deep é fundamentada em papers com bolhas de citação (ex.: , …).
+Lógica típica:
+Para cada afirmação factual importante, o LLM é instruído:
+“Associe essa frase a pelo menos um paper específico do contexto.”
+O backend mapeia:
+Segmento da resposta → IDs de papers usados para gerar aquele trecho.
+6.2. Evitar mistura indevida de fontes
+Técnicas:
+
+Contexto estruturado por paper:
+O LLM vê os trechos sempre anotados com o ID do paper.
+Instruções explícitas:
+“Não atribua resultados de um estudo a outro artigo; cite sempre o ID correto.”
+Pós-processamento:
+Ferramentas podem checar se:
+O paper citado tem de fato termos/achados que justificam aquela afirmação.
+6.3. Fact-checking integrado
+Não há um “verificador de fatos” externo explícito documentado, mas:
+
+O próprio RAG já funciona como uma forma de fact-checking:
+A resposta é gerada restrita ao conjunto de documentos recuperados.
+Em Deep Mode:
+Busca intencional de revisões sistemáticas e meta-análises é um tipo de “fact-checking científico”.
+6.4. Fontes tendenciosas / baixa qualidade
+No contexto acadêmico, o filtro é:
+
+Indexação:
+Bases como PubMed, Semantic Scholar, OpenAlex já fazem certo filtro de qualidade editorial.
+Tipo de publicação:
+Guidelines, revisões sistemáticas, RCTs em periódicos consolidados têm prioridade.
+Instruções ao LLM:
+“Prefira estudos revisados por pares; seja cético com estudos de baixa qualidade ou amostras pequenas; destaque limitações.”
+BLOCO 7 — APLICAÇÃO EDUCACIONAL (PONTO. SCHOOL)
+Agora conectando tudo isso ao seu objetivo: um sistema de busca para professores brasileiros.
+
+7.1. Recomendações técnicas e pedagógicas
+Técnicas:
+
+Arquitetura RAG específica para educação básica:
+
+Índice próprio com:
+BNCC (currículo oficial).
+Materiais MEC (guias, orientações).
+Grandes portais brasileiros: Nova Escola, Todos pela Educação, CENPEC, etc.
+LLM em PT-BR com:
+Ferramenta edu_search (similar ao academic_search mas focado em conteúdo educacional, não só artigos).
+Camadas:
+
+Planejador de queries especializado em termos curriculares (ano/série, componente, habilidade da BNCC).
+Ranker que prioriza:
+Adequação ao nível (1º–9º ano, EM).
+Formato de recurso (plano de aula, atividade, sequência didática).
+Gerador que:
+Faz síntese e adaptação pedagógica.
+Pedagógicas:
+
+Sempre apresentar:
+Objetivos de aprendizagem (alinhados à BNCC).
+Sugestões de diferenciação para alunos com dificuldades.
+Ideias de avaliação formativa.
+Foco em:
+Simplicidade de implementação em sala.
+Adaptação a contextos de baixa infraestrutura.
+7.2. Fontes valiosas para professores brasileiros
+Algumas fontes prioritárias (não exaustivo):
+
+Oficiais / Governamentais:
+
+mec.gov.br
+bases do INEP (SAEB, ENEM, ENCCEJA)
+BNCC (site oficial)
+Secretarias estaduais/municipais com materiais estruturados (SEE-SP, SME-SP, etc.).
+Portais educacionais consolidados:
+
+novaescola.org.br
+institutoayrtonsenna.org.br (materiais sobre competências socioemocionais)
+fundacaolemann.org.br
+todospelascriancasnapandemia.org.br (materiais específicos da pandemia)
+plataformaedu.gov.br (se aplicável, dependendo da época)
+Pesquisa em Educação:
+
+Scielo (para produção acadêmica brasileira em educação).
+Revistas de educação (RBEP, Educação & Sociedade, etc.).
+7.3. Casos de uso poderosos (ainda pouco explorados)
+Planejamento inverso:
+Professor digita a habilidade BNCC + contexto da turma → sistema gera:
+Exemplo de avaliação final.
+Sequência de passos para chegar lá.
+Adaptação em tempo real:
+Após uma aula, o professor escreve:
+“Metade da turma não entendeu frações equivalentes; tenho 30 minutos amanhã, sem laboratório.”
+→ sistema sugere intervenções curtas, baseadas em evidências.
+Análise de materiais que o professor já usa:
+Upload de PDF/slide → sistema:
+Extrai objetivos implícitos.
+Sugere melhorias baseadas em pesquisa.
+Formação continuada guiada por evidências:
+Professor diz: “Quero melhorar minha prática em avaliação formativa em ciências no 8º ano” → sistema organiza trilhas de leitura (artigos + recursos práticos).
+7.4. Diferença entre busca “boa” vs. “excelente”
+Boa:
+
+Entrega links e alguns resumos de atividades.
+Talvez alinhados superficialmente ao tema (“frações 6º ano”).
+Excelente:
+
+Entende:
+Ano, componente, habilidade específica da BNCC.
+Nível de dificuldade desejado.
+Recursos disponíveis (com computador? sem internet?).
+Retorna:
+2–3 planos de aula estruturados, com:
+Objetivos de aprendizagem.
+Passo a passo.
+Tempo estimado.
+Materiais necessários.
+Ajustes para alunos com maior dificuldade ou altas habilidades.
+Pequena síntese de evidência: “essa estratégia (ensino explícito + prática guiada) tem evidência de eficácia em… [citações]”.
+7.5. Arquitetura ideal de busca educacional para professores brasileiros
+Desenho high-level:
+
+[Professor] -> [Front-end Ponto.School] -> [EduSearch API Gateway]
+                                         |
+                                         +-> [Query Planner (LLM)]
+                                         |
+                                         +-> [Search Layer]
+                                              - Index Educacional BR
+                                              - Academic Index (Scielo, ERIC, etc.)
+                                              - Conteúdos Proprietários Ponto.School
+                                         |
+                                         +-> [Ranker Pedagógico]
+                                         |
+                                         +-> [Generator LLM (PT-BR, instruído para educação)]
+                                         |
+                                         +-> [Resposta estruturada + links + plano de aula]
+Componentes técnicos principais
+Índice Educacional BR (RAG)
+
+Stack:
+Banco de dados de documentos: Postgres / ElasticSearch / OpenSearch.
+Vetor store: Pinecone / Weaviate / pgvector.
+Documentos:
+Cada recurso anotado com:
+Ano/série.
+Componente curricular.
+Habilidades BNCC (códigos).
+Formato (plano de aula, atividade, artigo, vídeo).
+Nível de complexidade.
+Pipelines de ingestão:
+Crawlers para MEC, Nova Escola, etc.
+Normalização em um schema interno.
+Query Planner (LLM + regras)
+
+Ferramenta plan_edu_query:
+{
+  "type": "function",
+  "function": {
+    "name": "plan_edu_query",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "user_question": { "type": "string" },
+        "grade": { "type": "string" },
+        "subject": { "type": "string" },
+        "bncc_skills": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["user_question"]
+    }
+  }
+}
+Saída: 2–5 queries otimizadas + filtros (ano, formato, etc.).
+Search Layer híbrido
+
+Para cada query:
+Busca lexical (ElasticSearch).
+Busca vetorial (embeddings) sobre índice educacional.
+Merge + re-ranking com modelo dedicado:
+rank_score = w1*lexical + w2*semantic + w3*bncc_alignment + w4*practicality
+Ranker pedagógico
+
+Modelo que prioriza:
+Clareza didática.
+Simplicidade de implementação.
+Alinhamento com BNCC.
+Generator LLM (Camada de síntese)
+
+Prompt fixo, por ex.:
+Você é um especialista em didática para o Ensino Fundamental e Médio no Brasil.
+Use APENAS os recursos abaixo para gerar:
+- 2 propostas de aula
+- 1 sugestão de avaliação formativa
+- Dicas de adaptação para alunos com dificuldade
+
+Liste sempre:
+- Habilidades BNCC associadas (baseadas nos documentos)
+- Referências dos recursos usados
+Formato de resultado
+
+Resposta estruturada em JSON ao front-end:
+{
+  "plans": [
+    {
+      "title": "Frações equivalentes com material concreto",
+      "grade": "6º ano",
+      "duration_minutes": 50,
+      "bncc_skills": ["EF06MA..."],
+      "steps": [ "Aquecimento...", "Atividade em grupo...", "Discussão..." ],
+      "assessment": "Saída rápida com 3 questões...",
+      "references": [ "doc_123", "doc_456" ]
+    }
+  ],
+  "evidence_summary": "Pesquisas mostram que o uso de representações múltiplas...",
+  "citations": [
+    { "id": "scielo:abc123", "title": "...", "url": "..." }
+  ]
+}

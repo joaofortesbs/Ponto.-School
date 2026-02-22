@@ -24,6 +24,7 @@ import { decidirAtividadesCriarV2 } from './capabilities/DECIDIR/implementations
 import { pesquisarAtividadesDisponiveisV2 } from './capabilities/PESQUISAR/implementations/pesquisar-atividades-disponiveis';
 import { pesquisarBnccV2 } from './capabilities/PESQUISAR/implementations/pesquisar-bncc';
 import { pesquisarBancoQuestoesV2 } from './capabilities/PESQUISAR/implementations/pesquisar-banco-questoes';
+import { pesquisarWebV2 } from './capabilities/PESQUISAR/implementations/pesquisar-web';
 import { criarAtividadeV2 } from './capabilities/CRIAR_ATIVIDADES/implementations/criar-atividade-v2';
 import { salvarAtividadesBdV2 } from './capabilities/SALVAR_BD/implementations/salvar-atividades-bd';
 import { criarArquivoV2 } from './capabilities/CRIAR_ARQUIVO/criar-arquivo-v2';
@@ -676,6 +677,7 @@ export class AgentExecutor {
     ['pesquisar_atividades_disponiveis', pesquisarAtividadesDisponiveisV2],
     ['pesquisar_bncc', pesquisarBnccV2],
     ['pesquisar_banco_questoes', pesquisarBancoQuestoesV2],
+    ['pesquisar_web', pesquisarWebV2],
     ['decidir_atividades_criar', decidirAtividadesCriarV2],
     ['gerar_conteudo_atividades', gerarConteudoAtividadesV2],
     ['criar_atividade', criarAtividadeV2],
@@ -1222,6 +1224,14 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
       const temasDisplay = temas.length > 3 ? `${temas.slice(0, 3).join(', ')} e mais ${temas.length - 3} tema(s)` : temas.join(', ');
       const difDisplay = dificuldades.length > 0 ? ` (dificuldade: ${dificuldades.join(', ')})` : '';
       return `Consultei o Banco de Questões de Referência. Encontrei ${count} questão(ões) modelo de ${componentes.join(', ') || 'componente não especificado'} sobre ${temasDisplay || 'temas variados'}${difDisplay}.`;
+    }
+    if (capName === 'pesquisar_web') {
+      const data = resultado?.data || resultado || {};
+      const count = data.count || resultado?.count || 0;
+      const query = data.query_principal || data.query || 'pesquisa educacional';
+      const bnccCount = data.breakdown?.habilidades_bncc || 0;
+      const fonteCount = data.breakdown?.fontes_educacionais || 0;
+      return `Pesquisei em fontes educacionais brasileiras confiáveis sobre "${query}". Encontrei ${count} recurso(s): ${bnccCount} habilidade(s) BNCC e ${fonteCount} fonte(s) educacional(is) selecionada(s).`;
     }
     if (capName.includes('decidir_atividades')) {
       // Suporte para formato V2 (data.chosen_activities) e legado (chosen_activities)

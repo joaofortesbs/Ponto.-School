@@ -1,0 +1,614 @@
+importante de transparência:
+
+Eu não tenho acesso direto ao meu código-fonte interno, pesos de modelo ou à infraestrutura proprietária da OpenAI.
+O que posso fazer é descrever com precisão técnica baseada na minha arquitetura pública, comportamento observável e engenharia típica de sistemas LLM + tool use, e deixar claro quando algo é inferência técnica.
+
+Quando eu usar [Inferência Técnica], significa que estou deduzindo com base em padrões de engenharia de sistemas LLM modernos.
+
+🔬 BLOCO 1 — ARQUITETURA GERAL DO SISTEMA DE BUSCA
+1.1 Pipeline completo: da decisão até a resposta final
+
+Quando eu uso o web.run, o fluxo real é aproximadamente assim:
+
+ETAPA 0 — Análise da intenção
+
+O modelo recebe sua mensagem.
+
+Eu faço:
+
+Classificação implícita da intenção.
+
+Avaliação se a pergunta é:
+
+Temporal (ex: "quem é o presidente atual")
+
+Sensível a atualização
+
+Específica demais para depender apenas de conhecimento interno
+
+Exige fonte verificável
+
+Se a pergunta se enquadra nos critérios de "necessita web", ativo a ferramenta.
+
+Essa decisão não é um if programático simples.
+É um roteamento aprendido via fine-tuning + policy layers.
+
+ETAPA 1 — Planejamento da busca (Query Planning)
+
+Antes de chamar web.run, eu:
+
+Quebro a pergunta em sub-objetivos.
+
+Identifico entidades nomeadas.
+
+Determino:
+
+Termos obrigatórios
+
+Termos opcionais
+
+Filtros temporais
+
+Exemplo:
+
+Pergunta:
+
+"Quem é o atual presidente do Brasil e quando ele assumiu?"
+
+Planejamento:
+
+Query 1:
+
+"presidente atual do Brasil 2026"
+
+Query 2:
+
+"Lula data de posse mandato atual"
+ETAPA 2 — Chamada da ferramenta (Tool Use)
+
+Sim, eu uso Tool Use / Function Calling.
+
+O schema disponível é este:
+
+{
+  "open": [
+    {
+      "ref_id": "string",
+      "lineno": "integer | null"
+    }
+  ],
+  "search_query": [
+    {
+      "q": "string",
+      "recency": "integer | null",
+      "domains": ["string"] | null
+    }
+  ]
+}
+ETAPA 3 — Execução pelo Web Tool
+
+O web.run executa:
+
+Search engine query
+
+Retorna:
+
+Lista de resultados
+
+Cada resultado tem:
+
+ID interno (ex: turn2search5)
+
+Título
+
+Snippet
+
+URL (não exposto diretamente)
+
+Opcionalmente:
+
+Eu faço open para extrair conteúdo completo.
+
+ETAPA 4 — Parsing + Ranking interno
+
+Quando os resultados voltam:
+
+Eles vêm como "webpage sources"
+
+Identificados como:
+【turnXsearchY】
+
+Eu então:
+
+Faço leitura semântica
+
+Extraio trechos relevantes
+
+Comparo consistência entre fontes
+
+ETAPA 5 — Injeção no contexto
+
+O conteúdo relevante é comprimido e injetado no contexto como evidência estruturada.
+
+Formato interno aproximado:
+
+SOURCE turn2search5:
+Title: ...
+Snippet: ...
+Extracted Content: ...
+ETAPA 6 — Geração da resposta final
+
+Eu:
+
+Produzo texto.
+
+Anexo citações com formato:
+
+1.2 Uso de Tool Use
+
+Sim. Sempre via web.run.
+
+Exemplo real:
+
+{
+  "search_query": [
+    {
+      "q": "presidente atual do Brasil 2026",
+      "recency": null,
+      "domains": null
+    }
+  ]
+}
+
+Resposta da tool:
+
+Webpage source:
+【turn1search2】
+Title: ...
+Snippet: ...
+1.3 Decisão: buscar vs usar conhecimento interno
+Critérios principais:
+
+A pergunta envolve:
+
+Dados após meu cutoff
+
+Estatísticas atuais
+
+Resultados esportivos recentes
+
+Políticas atuais
+
+Informações que mudam rapidamente
+
+[Inferência Técnica]
+
+Existe provavelmente um classificador interno que:
+
+Estima risco de obsolescência
+
+Detecta marcadores temporais (hoje, atual, 2026, agora)
+
+Detecta alto risco factual
+
+1.4 Paralelização
+
+Sim.
+
+Se há múltiplas search_query, elas são enviadas como array.
+
+O executor da tool pode executar paralelamente.
+
+Decisão de paralelizar depende de:
+
+Complexidade da pergunta
+
+Sub-perguntas independentes
+
+1.5 Existe Query Planning?
+
+Sim, implícito.
+
+Não é um módulo separado visível, mas ocorre como:
+
+User Question
+   ↓
+Internal reasoning
+   ↓
+List of search intents
+   ↓
+Batch tool call
+🔎 BLOCO 2 — FONTES E ÍNDICES
+2.1 Fontes acessíveis
+
+Via web.run:
+
+Web pública indexada
+
+Notícias
+
+Blogs
+
+Artigos acadêmicos abertos
+
+Sites governamentais
+
+Não tenho acesso direto a:
+
+JSTOR pago
+
+Scopus
+
+Bases privadas
+
+Paywalls fechados
+
+2.2 Índice próprio ou tempo real?
+
+Eu não rastreio a web sozinho.
+
+O web.run acessa mecanismos de busca externos.
+
+Provavelmente:
+
+Bing API
+
+Ou mecanismo proprietário da OpenAI
+
+[Inferência Técnica]
+
+É altamente provável que haja:
+
+Índice intermediário cacheado
+
+Atualização frequente
+
+Pré-processamento de snippets
+
+2.3 Fontes privadas?
+
+Não.
+
+Apenas conteúdo acessível publicamente.
+
+2.4 Hierarquia de fontes
+
+Sim, implicitamente.
+
+Critérios de priorização:
+
+Domínio (.gov > blog aleatório)
+
+Autoridade da marca
+
+Data
+
+Consistência cruzada
+
+2.5 Conteúdo completo ou snippet?
+
+Eu posso:
+
+Ler snippet inicial
+
+Fazer open para obter conteúdo completo
+
+Extração envolve:
+
+Remoção de HTML
+
+Limpeza de boilerplate
+
+Extração de texto principal
+
+[Inferência Técnica]
+Provavelmente usa:
+
+Boilerpipe-like extractor
+
+Ou modelo de extração neural
+
+🧠 BLOCO 3 — PROCESSAMENTO
+3.1 Pipeline
+Raw results
+   ↓
+Semantic filtering
+   ↓
+Relevance scoring
+   ↓
+Conflict detection
+   ↓
+Context compression
+   ↓
+Injection
+3.2 Informações contraditórias
+
+Eu:
+
+Verifico número de fontes
+
+Verifico autoridade
+
+Verifico data
+
+Se conflito forte:
+
+Apresento ambas
+
+Cito ambas
+
+3.3 Re-ranking
+
+Sim.
+
+Critérios:
+
+Similaridade semântica
+
+Autoridade
+
+Recência
+
+Diversidade
+
+3.4 Formato do contexto
+
+Formato aproximado:
+
+[SOURCE turn3search1]
+Content:
+...
+3.5 Limite de tokens
+
+Sim.
+
+Limite depende do modelo ativo.
+
+Quando excede:
+
+Compressão
+
+Seleção de trechos
+
+Descarte de redundâncias
+
+🔬 BLOCO 4 — DEEP RESEARCH
+4.1 Iterações
+
+Pesquisa profunda envolve:
+
+Busca 1
+ ↓
+Síntese parcial
+ ↓
+Nova query refinada
+ ↓
+Busca 2
+
+Tipicamente:
+
+2–6 iterações
+Máximo: limitado por orçamento de tokens.
+
+4.2 Loop iterativo
+
+Exemplo:
+
+Pergunta: impacto da BNCC no IDEB.
+
+Iteração 1:
+
+Buscar BNCC impacto IDEB
+
+Iteração 2:
+
+Buscar estudo empírico específico
+
+Iteração 3:
+
+Buscar dados recentes MEC
+
+4.3 Critério de parada
+
+Suficiência de evidência
+
+Saturação informacional
+
+Limite de tokens
+
+Limite de iterações
+
+4.4 Manutenção de contexto
+
+Uso:
+
+Resumos intermediários
+
+Compressão progressiva
+
+4.5 Diferença entre rápida e profunda
+Rápida	Profunda
+1–2 queries	3–6 queries
+Sem refinamento	Com refinamento iterativo
+Menor síntese intermediária	Sínteses sucessivas
+🧩 BLOCO 5 — ENGINEERING DE QUERIES
+5.1 Transformação da pergunta
+
+Técnicas usadas:
+
+Query decomposition
+
+Query expansion
+
+Entity extraction
+
+Temporal expansion
+
+5.2 Estratégias diferentes
+Tipo	Estratégia
+Factual	Query direta
+Técnica	Decomposição
+Temporal	Adição de ano
+Exploratória	Queries amplas
+5.3 Número de queries
+
+Depende de:
+
+Número de sub-perguntas
+
+Ambiguidade
+
+Grau técnico
+
+5.4 Busca semântica?
+
+[Inferência Técnica]
+
+Provável combinação de:
+
+Keyword search
+
+Ranking neural
+
+5.5 Memória de queries
+
+Sim, dentro da mesma resposta.
+
+Não mantenho cache permanente entre sessões.
+
+📚 BLOCO 6 — CITAÇÕES
+6.1 Decisão de citar
+
+Sempre que:
+
+Informação vem do web.run
+
+6.2 Evitar mistura incorreta
+
+Cada afirmação factual é vinculada a um ID específico.
+
+6.3 Fact-checking
+
+Não existe módulo externo explícito.
+
+Validação ocorre por:
+
+Consistência cruzada
+
+Comparação de fontes
+
+6.4 Fontes ruins
+
+Eu:
+
+Prefiro múltiplas fontes
+
+Evito sites de baixa credibilidade quando possível
+
+🇧🇷 BLOCO 7 — APLICAÇÃO EDUCACIONAL (PONTO.SCHOOL)
+
+Agora a parte estratégica.
+
+7.1 Recomendações técnicas
+
+Para professores brasileiros:
+
+Camadas recomendadas:
+
+Web Search API
+
+Filtro por domínio educacional
+
+Classificador BNCC
+
+Ranking pedagógico
+
+Formatação didática
+
+7.2 Fontes prioritárias
+
+Ministério da Educação
+
+Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira
+
+Nova Escola
+
+Todos Pela Educação
+
+Fundação Lemann
+
+7.3 Casos de uso poderosos
+
+Atualizações curriculares automáticas
+
+Geração de plano de aula com fontes atuais
+
+Detecção de mudanças no ENEM
+
+Comparação de livros didáticos
+
+7.4 Busca boa vs excelente
+
+Boa:
+
+Retorna links relevantes
+
+Excelente:
+
+Mapeia para BNCC
+
+Estrutura em plano de aula
+
+Oferece exercícios
+
+Indica habilidades
+
+7.5 Arquitetura ideal
+
+Eu faria:
+
+User Query
+   ↓
+Intent Classifier
+   ↓
+BNCC Mapper
+   ↓
+Query Planner
+   ↓
+Multi-source Search API
+   ↓
+Authority Ranking
+   ↓
+Pedagogical Structurer
+   ↓
+Didactic Formatter
+
+Tecnologias:
+
+Vector DB (Pinecone/Weaviate)
+
+Reranker cross-encoder
+
+LLM para síntese
+
+Cache Redis
+
+PostgreSQL para histórico
+
+🔐 LIMITAÇÕES E HONESTIDADE FINAL
+
+Eu NÃO sei:
+
+O mecanismo exato de busca usado pela OpenAI
+
+Se é Bing ou sistema próprio
+
+A frequência real de atualização
+
+O algoritmo exato de ranking
+
+Tudo que descrevi além da tool visível é:
+
+Engenharia inferida
+
+Arquitetura padrão de LLM + Search

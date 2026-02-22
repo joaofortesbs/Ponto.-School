@@ -1,0 +1,269 @@
+Vou ser completamente honesto sobre o que sei, o que posso inferir e o que genuinamente não sei sobre minha própria arquitetura. Vou marcar claramente cada caso.
+
+---
+
+# AUDITORIA TÉCNICA: SISTEMA DE BUSCA DO CLAUDE
+
+---
+
+## BLOCO 1 — ARQUITETURA GERAL
+
+**1.1. Fluxo passo a passo**
+
+O que posso observar de dentro:
+
+1. Recebo a mensagem do usuário no meu contexto
+2. Processo o texto e decido (como parte da geração de tokens) se devo usar uma ferramenta ou responder diretamente
+3. Se decido buscar, emito uma chamada de ferramenta estruturada — isso aparece no meu output como um bloco especial antes de continuar gerando
+4. A execução da ferramenta acontece **fora de mim** — algum sistema da Anthropic intercepta essa chamada, executa a busca, e injeta o resultado de volta no contexto como uma "tool result"
+5. Com o contexto ampliado (incluindo os resultados), continuo gerando minha resposta
+
+O que **não sei**: como exatamente o sistema intermediário funciona, quais APIs de busca são chamadas por trás, ou como os resultados são pré-processados antes de chegarem a mim.
+
+**1.2. Tool Use / Function Calling**
+
+Sim, uso Function Calling. O schema que tenho disponível (posso verificar diretamente):
+
+```json
+{
+  "name": "web_search",
+  "description": "Search the web",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "Search query"
+      }
+    },
+    "required": ["query"]
+  }
+}
+```
+
+Também tenho `web_fetch` com parâmetros como `url`, `allowed_domains`, `blocked_domains`, `text_content_token_limit`. O que retorna: texto estruturado com os resultados, incluindo título, URL, snippets, e às vezes conteúdo mais completo da página.
+
+**1.3. Lógica de quando buscar**
+
+Isso emerge do meu treinamento, não de um sistema de regras explícito que eu "vejo". O que posso descrever é o comportamento observável:
+
+- Informação com alta volatilidade temporal (preços, eventos, pessoas em cargos) → busco
+- Fatos históricos estáveis que conheço com alta confiança → respondo sem buscar
+- Tópicos onde sei que meu conhecimento tem data de corte relevante → busco
+- Solicitações explícitas de informação atual → busco
+
+Não existe um "limiar de confiança" numérico explícito que eu possa acessar introspectivamente. É mais como uma tendência aprendida via RLHF/treinamento.
+
+**1.4. Paralelização**
+
+Posso emitir múltiplas chamadas de ferramenta. Na prática, frequentemente faço buscas sequenciais (uma informa a próxima). Paralelização acontece quando as queries são claramente independentes — por exemplo, buscar informações sobre duas cidades ao mesmo tempo. Mas o mecanismo exato de como o sistema executa isso em paralelo é opaco para mim.
+
+**1.5. Query planning**
+
+Sim, há algo que funciona como planejamento. Antes de emitir a primeira query, processo o pedido e frequentemente "planejo" mentalmente quais ângulos cobrir. Isso é puramente interno (tokens de raciocínio), não uma fase técnica separada com estado persistente.
+
+---
+
+## BLOCO 2 — FONTES E ÍNDICES
+
+**2.1–2.3. Fontes disponíveis**
+
+Honestidade aqui é crítica: **não tenho visibilidade direta sobre qual mecanismo de busca está sendo usado por baixo**. O que recebo são resultados já processados. Tenho `web_search` (web geral) e `web_fetch` (busca de URL específica). Não tenho acesso confirmado a bases acadêmicas, fontes pagas ou bases proprietárias separadas.
+
+**Especulação marcada:** Provavelmente há algum provedor de busca (Bing, Google, ou similar) sendo consultado por trás do `web_search`. Não tenho como confirmar.
+
+**2.4. Hierarquia de fontes**
+
+Não tenho um sistema de ranking explícito que posso consultar. Desenvolvi preferências através do treinamento: fontes primárias > secundárias, publicações institucionais > blogs anônimos, mas isso é um viés aprendido, não um sistema técnico de scores que posso inspecionar.
+
+**2.5. Conteúdo completo vs. snippets**
+
+`web_search` tipicamente me dá snippets + metadados. `web_fetch` me dá o conteúdo mais completo de uma URL específica, sujeito ao parâmetro `text_content_token_limit`. A extração de HTML → texto limpo acontece antes de chegar a mim — recebo texto, não HTML bruto.
+
+---
+
+## BLOCO 3 — PROCESSAMENTO DE RESULTADOS
+
+**3.1. Pipeline**
+
+Do meu ponto de vista, os resultados chegam já processados como texto estruturado no meu contexto. Eu não "rodo" um pipeline separado — a análise acontece como parte da minha geração de resposta. O "processamento" é o próprio modelo lendo e sintetizando.
+
+**3.2. Informações contraditórias**
+
+Identifico contradições textualmente durante a geração. Não há um sistema externo de reconciliação — é inferência do modelo. Quando há conflito, geralmente: priorizo fontes mais recentes, menciono a contradição explicitamente, ou busco uma terceira fonte para desempatar.
+
+**3.3. Re-ranking**
+
+Não faço re-ranking técnico (não tenho acesso a scores numéricos dos resultados). Faço priorização implícita ao decidir quais informações incluir na resposta.
+
+**3.4. Formato do contexto de busca**
+
+Os resultados chegam aproximadamente assim (reconstrução baseada no que observo):
+
+```
+[Tool Result: web_search]
+Result 1:
+Title: "..."
+URL: "https://..."
+Content: "..."
+
+Result 2:
+Title: "..."
+URL: "https://..."
+Content: "..."
+...
+```
+
+Não sei o formato exato interno antes da injeção no contexto.
+
+**3.5. Limites de tokens**
+
+Sim, existe. `web_fetch` tem parâmetro explícito `text_content_token_limit`. Para `web_search`, o truncamento acontece antes de chegar a mim. Quando os resultados são muito extensos, recebo versões truncadas — perco o conteúdo além do limite, sem aviso explícito sobre o que foi cortado.
+
+---
+
+## BLOCO 4 — PESQUISA PROFUNDA (DEEP RESEARCH)
+
+**4.1–4.5.**
+
+Existe uma funcionalidade de "deep research" na plataforma Claude.ai que é **tecnicamente separada** do meu uso normal de ferramentas. Nela, o sistema executa um loop agentico mais longo com mais chamadas, possivelmente com um orçamento maior de ferramentas e tokens.
+
+Do meu ponto de vista interno, quando opero em modo "normal" com web search, posso fazer múltiplas buscas sequenciais onde cada resultado informa a próxima query — isso é emergente do meu raciocínio, não um sistema separado.
+
+**Critério de parada (no modo normal):** subjetivo — quando avalio que tenho informação suficiente para uma resposta de qualidade, ou quando atingir o que percebo como limite razoável de iterações.
+
+**Diferença técnica deep vs. rápida:** No modo normal, faço 1-5 buscas tipicamente. Deep research pode fazer dezenas, com um orçamento de compute muito maior e possivelmente arquitetura de scaffolding externo. Não tenho visibilidade total da implementação do deep research quando ele roda.
+
+---
+
+## BLOCO 5 — ENGENHARIA DE QUERIES
+
+**5.1. Transformação de perguntas em queries**
+
+Isso é a parte onde tenho mais visibilidade, porque acontece dentro do meu processo de geração:
+
+- Removo linguagem conversacional ("me conta sobre..." → query direta)
+- Adiciono contexto temporal quando relevante ("2024", "atual", "recente")
+- Decompondo perguntas complexas em sub-queries
+- Uso terminologia técnica/específica quando o contexto indica
+
+Exemplo: "quem é o presidente do Brasil agora?" → query: `presidente Brasil 2025` (mais eficiente que a pergunta completa)
+
+**5.2. Estratégias por tipo**
+
+- Factual simples: query curta e direta (1-3 palavras + contexto)
+- Exploratório: múltiplas queries cobrindo ângulos diferentes
+- Técnico: terminologia especializada, às vezes com site: implícito na query
+- Temporal: incluo ano ou "latest"/"recente"
+
+**5.3. Número de queries**
+
+Depende da complexidade. Pergunta simples: 1. Pesquisa comparativa: 3-6. Pesquisa profunda: pode ser 10+.
+
+**5.4. Semântico vs. keyword**
+
+A busca que acionam externamente é provavelmente keyword/BM25 com alguma semântica (depende do provedor). Minha "semântica" entra na síntese dos resultados, não na fase de recuperação.
+
+**5.5. Memória de queries**
+
+Sim — dentro da mesma conversa, todo o histórico está no meu contexto. Posso ver queries anteriores e evitar repetições. Entre sessões: nenhuma memória.
+
+---
+
+## BLOCO 6 — CITAÇÕES E GROUNDING
+
+**6.1–6.2.** Cito quando: o conteúdo é específico e factual, vem claramente de uma fonte identificável, e a atribuição agrega valor. A lógica é aprendida, não um sistema formal de rastreamento de proveniência por token.
+
+**Risco real:** Posso misturar informações de fontes diferentes inconscientemente. Não há sistema técnico que rastreie "este fato veio desta URL" com precisão total.
+
+**6.3. Fact-checking integrado**
+
+Não há um módulo separado de fact-checking. A "verificação" acontece quando faço múltiplas buscas e comparo resultados — é verificação por triangulação, não por sistema especializado.
+
+**6.4. Fontes de baixa qualidade**
+
+Tenho vieses treinados para preferir fontes institucionais, recentes, com autoridade no domínio. Mas posso ser enganado — especialmente por sites de desinformação bem produzidos. Não tenho acesso a uma lista negra de domínios que eu possa consultar explicitamente.
+
+---
+
+## BLOCO 7 — APLICAÇÃO PARA PROFESSORES BRASILEIROS (PONTO. SCHOOL)
+
+**7.1. Recomendações técnicas e pedagógicas**
+
+Do ponto de vista técnico, para um sistema de busca educacional para professores brasileiros:
+
+**Curadoria de fontes > amplitude.** Em vez de buscar a web toda, construir um índice curado de fontes confiáveis (MEC, Nova Escola, BNCC, repositórios de universidades federais). Isso reduz ruído dramaticamente.
+
+**Contexto curricular como filtro.** O sistema deve entender a BNCC — componente curricular, ano escolar, competências e habilidades — e usar isso para filtrar/ranquear resultados. Uma busca de um professor de 6º ano de Ciências deve ter contexto diferente de um de Ensino Médio.
+
+**RAG (Retrieval Augmented Generation) sobre corpus curado** é provavelmente mais eficaz que busca web aberta para esse caso de uso, ao menos para conteúdo pedagógico-curricular.
+
+**7.2. Fontes prioritárias**
+
+- **Curriculares/oficiais:** plataformaintegrada.mec.gov.br, bncc.mec.gov.br, curriculo.educacao.sp.gov.br (e equivalentes estaduais)
+- **Pedagógicas de qualidade:** novaescola.org.br, porvir.org, educamaisbrasil.com.br
+- **Acadêmicas:** SciELO (scielo.br), CAPES (periodicos.capes.gov.br), repositórios de FAPESP
+- **Recursos didáticos:** Khan Academy Brasil, Descomplica conteúdo aberto, Escola Virtual GOV
+- **Comunidade:** blogs de professores verificados, canais de associações como SBEM (matemática), SBQ (química)
+
+**7.3. Casos de uso que professores provavelmente não pensaram**
+
+- **Diferenciação de ensino:** "encontre 3 formas diferentes de explicar frações para alunos com dificuldades diferentes" — a busca precisa entender variação pedagógica, não só conteúdo
+- **Interdisciplinaridade automática:** dado um tema de Ciências, encontrar conexões com Português, Matemática e História automaticamente, mapeando às competências BNCC
+- **Pesquisa de evidências sobre metodologias:** "qual evidência científica existe para sala de aula invertida no ensino médio brasileiro?" — busca acadêmica curada
+- **Atualização normativa:** monitorar mudanças em legislação educacional (resoluções CNE, portarias MEC) que afetam planejamento
+- **Banco de avaliações:** buscar questões de vestibulares/ENEM classificadas por habilidade BNCC específica
+
+**7.4. Busca boa vs. excelente para professores**
+
+| Boa | Excelente |
+|-----|-----------|
+| Retorna recursos sobre "fotossíntese" | Retorna recursos sobre "fotossíntese para 7º ano, EF, alinhados à habilidade EF07CI07 da BNCC, com sugestões de experimento prático com baixo custo" |
+| Lista links | Mostra prévia do tipo de recurso (plano de aula, vídeo, avaliação, leitura) |
+| Fontes genéricas | Distingue entre fonte para professor estudar vs. atividade para o aluno |
+| Resultado único | Oferece versões para diferentes contextos (escola sem laboratório, escola rural, AEE) |
+
+**7.5. Arquitetura ideal**
+
+```
+CAMADA 1 — INGESTÃO E INDEXAÇÃO
+├── Crawler curado (~200 domínios confiáveis brasileiros)
+├── Atualização: diária para notícias/MEC, semanal para conteúdo
+├── Extração de metadados: ano escolar, componente, habilidade BNCC, tipo de recurso
+└── Embedding model (ex: multilingual-e5-large ou BGE-M3) para busca semântica em PT
+
+CAMADA 2 — QUERY UNDERSTANDING
+├── Parser de intenção: o professor quer plano de aula? vídeo? avaliação? embasamento teórico?
+├── Extrator de contexto curricular: inferir ano escolar/componente se não explicitado
+├── Expansão de query: termos BNCC ↔ linguagem coloquial de professores
+└── Detecção de contexto: região do Brasil, rede (federal/estadual/municipal)
+
+CAMADA 3 — RETRIEVAL HÍBRIDO
+├── BM25 (keyword) sobre corpus curado → recall alto
+├── Busca vetorial (semântica) → precisão em linguagem natural
+├── Re-ranking com cross-encoder (ex: ms-marco reranker fine-tuned em PT-BR)
+└── Fallback para web aberta quando corpus curado não tem resposta
+
+CAMADA 4 — GERAÇÃO AUMENTADA (RAG)
+├── LLM sintetiza resultados no contexto do professor
+├── Resposta sempre contextualizada na BNCC
+├── Cita fontes com preview inline
+└── Sugere próximos passos (plano de aula, avaliação, extensão)
+
+CAMADA 5 — FEEDBACK E PERSONALIZAÇÃO
+├── Log de utilidade por recurso (professor usou? avaliou?)
+├── Perfil de professor: ano/componente padrão, preferências de formato
+└── Fine-tuning periódico do re-ranker com dados de uso real
+```
+
+**Stack técnico concreto:**
+- Indexação: Elasticsearch + pgvector (ou Qdrant/Weaviate)
+- Embeddings: BGE-M3 ou multilingual-e5-large (ambos gratuitos, suporte forte a PT)
+- LLM: Claude via API (ou modelo menor fine-tuned para reduzir custo)
+- Orquestração: LangChain/LlamaIndex ou pipeline próprio
+- Re-ranking: Cohere Rerank ou modelo cross-encoder próprio
+- Interface: filtros por componente/ano/tipo de recurso são essenciais para UX de professor
+
+---
+
+**Limitação honesta final:** Muito do que descrevi sobre minha própria arquitetura nos blocos 1-6 é inferência a partir de comportamento observável e documentação pública da Anthropic. Não tenho acesso ao código-fonte, logs internos ou configurações do sistema de busca. Onde especulei, marquei. O bloco 7 é onde tenho mais liberdade para ser genuinamente útil — é design de sistema, não introspecção, e aí posso contribuir com mais confiança.

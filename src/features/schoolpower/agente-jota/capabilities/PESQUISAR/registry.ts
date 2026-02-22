@@ -6,12 +6,14 @@
  * 2. pesquisar_atividades_disponiveis - Busca no catálogo JSON local
  * 3. pesquisar_bncc - Pesquisa habilidades da BNCC para alinhamento curricular
  * 4. pesquisar_banco_questoes - Pesquisa questões de referência no banco de questões
+ * 5. pesquisar_web - Pesquisa web em fontes educacionais brasileiras (BNCC, MEC, Nova Escola, Scielo)
  */
 
 import { pesquisarAtividadesDisponiveis, pesquisarAtividadesDisponiveisV2, formatAvailableActivitiesForPrompt } from './implementations/pesquisar-atividades-disponiveis';
 import { pesquisarAtividadesConta, formatAccountActivitiesForPrompt } from './implementations/pesquisar-atividades-conta';
 import { pesquisarBnccV2 } from './implementations/pesquisar-bncc';
 import { pesquisarBancoQuestoesV2 } from './implementations/pesquisar-banco-questoes';
+import { pesquisarWebV2 } from './implementations/pesquisar-web';
 import { pesquisarAtividadesDisponiveisSchema } from './schemas/pesquisar-atividades-schema';
 import { pesquisarBnccSchema } from './schemas/pesquisar-bncc-schema';
 import { pesquisarBancoQuestoesSchema } from './schemas/pesquisar-banco-questoes-schema';
@@ -286,6 +288,79 @@ export const PESQUISAR_CAPABILITIES = {
     showProgress: true,
     cacheResults: true,
     cacheTTL: 600000
+  },
+
+  pesquisar_web: {
+    funcao: 'pesquisar_web',
+    name: 'pesquisar_web',
+    displayName: 'Vou pesquisar em fontes educacionais brasileiras confiáveis',
+    categoria: 'PESQUISAR',
+    description: 'Pesquisa na web em fontes educacionais brasileiras confiáveis (BNCC, MEC, Nova Escola, Scielo, EducaCAPES) para enriquecer o conteúdo com habilidades curriculares, planos de aula, atividades pedagógicas e embasamento científico',
+    descricao: 'Busca educacional web em fontes brasileiras confiáveis para enriquecer planos de aula e atividades com referências reais',
+    schema: null,
+    execute: async (params: any) => {
+      const capabilityId = 'pesquisar_web';
+      const executionId = `exec_${Date.now()}`;
+
+      const v2Result = await pesquisarWebV2({
+        capability_id: capabilityId,
+        execution_id: executionId,
+        context: params
+      });
+
+      if (v2Result.debug_log && v2Result.debug_log.length > 0) {
+        console.log(`📋 [Registry:PESQUISAR_WEB] Injetando ${v2Result.debug_log.length} entries no DebugStore`);
+
+        v2Result.debug_log.forEach((entry) => {
+          const severity = entry.type === 'error' ? 'high' :
+                          entry.type === 'warning' ? 'medium' :
+                          entry.type === 'confirmation' ? (entry.technical_data?.status === 'FALHA' ? 'high' : 'low') :
+                          'low';
+
+          createDebugEntry(
+            capabilityId,
+            'Pesquisar Fontes Educacionais Web',
+            entry.type as any,
+            entry.narrative,
+            severity,
+            entry.technical_data
+          );
+        });
+      }
+
+      if (v2Result.success && v2Result.data) {
+        return {
+          found: v2Result.data.count > 0,
+          count: v2Result.data.count,
+          results: v2Result.data.results,
+          queries_used: v2Result.data.queries_used,
+          prompt_context: v2Result.data.prompt_context,
+          summary: v2Result.data.summary,
+          debug_log: v2Result.debug_log,
+          data_confirmation: v2Result.data_confirmation
+        };
+      }
+
+      return {
+        found: false,
+        count: 0,
+        results: [],
+        error: v2Result.error?.message || 'Erro desconhecido na pesquisa web',
+        debug_log: v2Result.debug_log,
+        data_confirmation: v2Result.data_confirmation
+      };
+    },
+    parameters: {
+      query: { type: 'string', required: false, description: 'Consulta de pesquisa (tema, assunto ou habilidade a pesquisar)' },
+      tema: { type: 'string', required: false, description: 'Tema pedagógico específico (ex: frações, fotossíntese, ditadura)' },
+      disciplina: { type: 'string', required: false, description: 'Componente curricular (Matemática, Ciências, História, etc.)' },
+      ano_serie: { type: 'string', required: false, description: 'Ano/série do professor (ex: 5º Ano, 7º Ano)' },
+      busca_texto: { type: 'string', required: false, description: 'Texto livre para busca educacional' },
+    },
+    isSequential: false,
+    showProgress: true,
+    cacheResults: false,
+    cacheTTL: 0
   }
 };
 
