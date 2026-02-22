@@ -717,55 +717,6 @@ export class AgentExecutor {
       return [];
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // HARD ENFORCEMENT: pesquisar_web DEVE executar em etapas PESQUISAR
-    // Garante que pesquisar_web seja sempre incluída e apareça no card de desenvolvimento
-    // Mirrors the pattern usado para criar_atividade (linhas 476-527)
-    // ═══════════════════════════════════════════════════════════════════════
-    const PESQUISAR_TRIGGER_CAPS = ['pesquisar_atividades_disponiveis', 'pesquisar_bncc', 'pesquisar_banco_questoes'];
-    const etapaHasPesquisarCaps = capabilities.some(c => PESQUISAR_TRIGGER_CAPS.includes(c.nome));
-    const etapaHasWebSearch = capabilities.some(c => c.nome === 'pesquisar_web');
-    const webSearchAlreadyExecuted = this.capabilityResultsMap.has('pesquisar_web');
-
-    if (etapaHasPesquisarCaps && !etapaHasWebSearch && !webSearchAlreadyExecuted) {
-      const temaParaWeb = this.currentPlanTemas.join(', ') || this.currentPlanObjective || 'conteúdo educacional';
-      const webSearchCap: CapabilityCall = {
-        id: `cap-executor-web-${Date.now()}`,
-        nome: 'pesquisar_web',
-        displayName: `Pesquisando fontes educacionais sobre ${temaParaWeb}`,
-        categoria: 'PESQUISAR' as CapabilityCall['categoria'],
-        parametros: {
-          tema: this.currentPlanTemas[0] || '',
-          disciplina: this.currentPlanDisciplina || '',
-          ano_serie: this.currentPlanTurma || '',
-          tema_limpo: temaParaWeb,
-        },
-        status: 'pending' as const,
-        ordem: 0,
-      };
-
-      // Inserir PRIMEIRO na lista para executar antes das outras pesquisas
-      capabilities.unshift(webSearchCap);
-
-      // Emitir evento apareceu para adicionar sub-card ao card de desenvolvimento imediatamente
-      this.emitProgress({
-        type: 'capability:apareceu',
-        stepIndex: objectiveIndex,
-        capability_id: webSearchCap.id,
-        capability_name: 'pesquisar_web',
-        displayName: webSearchCap.displayName,
-      } as any);
-
-      console.error(`
-╔════════════════════════════════════════════════════════════════════════╗
-║ 🔧 [Executor] HARD ENFORCE: pesquisar_web INJETADA na etapa ${etapa.ordem}
-║════════════════════════════════════════════════════════════════════════║
-║ tema: "${temaParaWeb}"
-║ caps antes: [${capabilities.slice(1).map(c => c.nome).join(', ')}]
-║ caps agora: [${capabilities.map(c => c.nome).join(', ')}]
-╚════════════════════════════════════════════════════════════════════════╝`);
-    }
-
     for (const capability of capabilities) {
       const startTime = Date.now();
       const capId = capability.id;
@@ -885,12 +836,6 @@ export class AgentExecutor {
                 console.log(`📝 [Executor] Sem dados BNCC disponíveis para ${capName}`);
               }
 
-              const webCtx = this.extractWebSearchContextFromMap();
-              if (webCtx) {
-                capabilityInput.context.web_search_context = webCtx;
-                console.log(`🌐 [Executor] Web search context injetado em ${capName}: ${webCtx.count} recurso(s) educacional(is)`);
-              }
-
               if (capName === 'gerar_conteudo_atividades') {
                 const questoesResult = this.capabilityResultsMap.get('pesquisar_banco_questoes');
                 if (questoesResult?.success && questoesResult?.data) {
@@ -963,9 +908,6 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
                 
               } else if (capName === 'criar_compromisso_calendario') {
                 console.error(`⚠️ [Executor] criar_compromisso_calendario failed but NOT throwing - calendar is non-critical`);
-                
-              } else if (capName === 'pesquisar_web') {
-                console.error(`⚠️ [Executor] pesquisar_web failed but NOT throwing - web search enrichment is non-critical`);
                 
               } else {
                 throw new Error(`Capability crítica "${capName}" falhou: ${errorMsg}`);
@@ -1959,19 +1901,6 @@ Seja específico e forneça dados que ajudem o professor.
       anos: bnccResult.data.anos || [],
       prompt_context: bnccResult.data.prompt_context || '',
       count: bnccResult.data.count || 0,
-    };
-  }
-
-  private extractWebSearchContextFromMap(): { results: any[]; prompt_context: string; count: number; query: string } | null {
-    const webResult = this.capabilityResultsMap.get('pesquisar_web');
-    if (!webResult?.success || !webResult?.data) return null;
-    const data = webResult.data;
-    if (!data.results || data.results.length === 0) return null;
-    return {
-      results: data.results || [],
-      prompt_context: data.prompt_context || '',
-      count: data.count || data.results.length,
-      query: data.query_principal || '',
     };
   }
 
