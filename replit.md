@@ -53,3 +53,13 @@ The architecture features a modular component design based on shadcn/ui patterns
 - **HuggingFace Inference API**: Open-source model hosting for Mistral 7B (last resort).
 - **Neon PostgreSQL (Replit)**: Primary data store.
 - **SendGrid**: Email notification service.
+
+### Search API Orchestrator (pesquisar_web)
+- **Serper API** (`SERPER_API_KEY`): Google Search real (Web + Scholar + News) — PT-BR, 2500 req/mês grátis. **Provedor principal.** Endpoint: `https://google.serper.dev/{search|scholar|news}`
+- **OpenAlex API** (`OPEN_ALEX_API_KEY`): Base acadêmica aberta com 250M+ artigos — filtro `language:pt` para PT-BR. Endpoint: `https://api.openalex.org/works`
+- **DOAJ** (público): Directory of Open Access Journals — artigos peer-reviewed em acesso aberto, forte cobertura brasileira. Endpoint: `https://doaj.org/api/search/articles/{query}`
+- **ArXiv** (público): Preprints de ciências exatas e STEM, sem chave necessária. Endpoint: `https://export.arxiv.org/api/query`
+- **OpenCitations** (`OPEN_CITATIONS_API_KEY`): Metadados de citações acadêmicas. Reservado para uso futuro.
+- **CORE** (`CORE_API_KEY`): Repositório de artigos de acesso aberto. Chave retornou 401 — aguarda re-validação. Reservado para uso futuro.
+- **Arquitetura**: `api/search-web.js` (orquestrador) + `api/search-providers/` (serper.js, openalex.js, doaj.js, arxiv.js, scorer.js, fallback.js). Re-ranking educacional em `scorer.js` com pesos: domínio (0.35) + semântica (0.30) + eduBoost (0.20) + BNCC/BR/pedagógico (0.15). Provedor primário → fallbacks automáticos → educational_fallback estático.
+- **Bug fixes aplicados**: (1) `extractCleanThemeFromPrompt()` extrai tema limpo do prompt bruto evitando query = 240+ chars do professor; (2) `buildContentGenerationPrompt()` recebe `webSearchContext` e adiciona bloco "FONTES EDUCACIONAIS REAIS" no prompt do LLM quando resultados reais existem.

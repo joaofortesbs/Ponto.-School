@@ -457,7 +457,8 @@ function buildContentGenerationPrompt(
   batchIndex?: number,
   batchTotal?: number,
   bnccContext?: BnccContextData,
-  questoesReferencia?: QuestoesReferenciaData
+  questoesReferencia?: QuestoesReferenciaData,
+  webSearchContext?: WebSearchContextData
 ): string {
   const qualityCtx: QualityContext = {
     tema: activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || activity.titulo || '',
@@ -562,6 +563,14 @@ Você DEVE incorporar essas habilidades no conteúdo gerado:
 ${bnccContext.prompt_context}
 ` : ''}${questoesReferencia?.prompt_context ? `## QUESTÕES DE REFERÊNCIA (Modelos de Qualidade)
 ${questoesReferencia.prompt_context}
+` : ''}${webSearchContext?.prompt_context && webSearchContext.count > 0 ? `## FONTES EDUCACIONAIS REAIS — Pesquisa Web do Jota
+O Jota pesquisou ${webSearchContext.count} fontes educacionais brasileiras reais sobre "${webSearchContext.query}".
+USE estas fontes para enriquecer e embasar o conteúdo gerado com exemplos, metodologias e referências reais:
+- Cite as fontes quando relevante para dar credibilidade pedagógica ao material
+- Incorpore dados, abordagens e metodologias encontradas nessas fontes
+- Prefira informações de fontes oficiais (MEC, BNCC) e especializadas (Nova Escola, SciELO)
+
+${webSearchContext.prompt_context}
 ` : ''}## INSTRUÇÕES CRÍTICAS PARA GERAÇÃO DE CONTEÚDO
 
 ### REGRA DE EXPANSÃO DE CONTEXTO
@@ -669,6 +678,13 @@ function validateGeneratedFields(
   };
 }
 
+interface WebSearchContextData {
+  results: unknown[];
+  prompt_context: string;
+  count: number;
+  query: string;
+}
+
 async function generateContentForActivity(
   activity: ChosenActivity,
   conversationContext: string,
@@ -682,7 +698,8 @@ async function generateContentForActivity(
   disciplinaExtraida?: string,
   turmaExtraida?: string,
   bnccContext?: BnccContextData,
-  questoesReferencia?: QuestoesReferenciaData
+  questoesReferencia?: QuestoesReferenciaData,
+  webSearchContext?: WebSearchContextData
 ): Promise<GeneratedFieldsResult> {
   const correlationId = generateCorrelationId();
   const activityStartTime = Date.now();
@@ -1594,7 +1611,8 @@ async function generateContentForActivity(
     batchIndex,
     batchTotal,
     bnccContext,
-    questoesReferencia
+    questoesReferencia,
+    webSearchContext
   );
 
   let lastError: string = '';
@@ -2721,6 +2739,11 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
       
       const v2BnccContext = input.context.bncc_context as BnccContextData | undefined;
       const v2QuestoesReferencia = input.context.questoes_referencia as QuestoesReferenciaData | undefined;
+      const v2WebSearchContext = input.context.web_search_context as WebSearchContextData | undefined;
+
+      if (v2WebSearchContext?.count && v2WebSearchContext.count > 0) {
+        console.log(`🌐 [GerarConteudo] Web search context disponível: ${v2WebSearchContext.count} fontes reais para "${v2WebSearchContext.query}"`);
+      }
 
       const result = await generateContentForActivity(
         activity,
@@ -2735,7 +2758,8 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
         v2DisciplinaExtraida,
         v2TurmaExtraida,
         v2BnccContext,
-        v2QuestoesReferencia
+        v2QuestoesReferencia,
+        v2WebSearchContext
       );
       
       results.push(result);
