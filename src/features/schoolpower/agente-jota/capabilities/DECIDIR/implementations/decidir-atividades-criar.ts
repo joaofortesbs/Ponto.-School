@@ -545,15 +545,23 @@ Exemplos de decisão CORRETA:
 {
   "atividades_escolhidas": [
     {
-      "id": "prova-personalizada",
-      "titulo": "Prova Personalizada",
-      "justificativa": "Professor pediu prova — template especializado para provas",
+      "id": "quiz-interativo",
+      "titulo": "Quiz Interativo",
+      "justificativa": "Professor pediu atividade gamificada — quiz interativo engaja os alunos com feedback imediato",
       "ordem_sugerida": 1
+    },
+    {
+      "id": "plano-aula",
+      "titulo": "Plano de Aula",
+      "justificativa": "Estrutura as aulas para o semestre conforme solicitado pelo professor",
+      "ordem_sugerida": 2
     }
   ],
-  "estrategia_pedagogica": "Explicação da escolha",
-  "total_escolhidas": 1
+  "estrategia_pedagogica": "Combinação de atividade interativa com planejamento para atender ao contexto pedagógico solicitado",
+  "total_escolhidas": 2
 }
+
+ATENÇÃO: O JSON acima é apenas um EXEMPLO DE ESTRUTURA. Você DEVE escolher os IDs que realmente fazem sentido para o objetivo do professor — não copie os IDs do exemplo.
 
 Retorne APENAS o JSON, sem texto adicional.
   `.trim();
