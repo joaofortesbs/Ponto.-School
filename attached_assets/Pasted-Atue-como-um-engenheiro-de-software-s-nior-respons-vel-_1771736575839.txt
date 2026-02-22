@@ -1,0 +1,109 @@
+Atue como um engenheiro de software sênior responsável por auditar e recuperar este projeto do Replit, que começou a quebrar após um rollback e continua com erros mesmo quando clonado em outra conta.
+
+Seu objetivo é encontrar a causa raiz e deixar o projeto rodando de forma estável.
+
+Contexto
+O projeto funcionava em um momento anterior.
+
+Após usar rollback, começaram a aparecer erros novos.
+
+Mesmo importando o mesmo repositório em outra conta do Replit, os mesmos erros continuam aparecendo.
+
+Já testei alterar o SESSION_SECRET e isso não resolveu.
+
+O que quero que você faça, passo a passo
+Auditoria de dependências e build
+
+Analise o package.json (dependências, versões, scripts).
+
+Verifique se há versões incompatíveis ou libs quebradas para a versão de Node usada.
+
+Verifique os scripts "dev", "build" e "start" e confirme se estão corretos para a stack deste projeto.
+
+Se houver lockfile (package-lock.json ou pnpm-lock.yaml), considere que ele pode estar em estado ruim e proponha a limpeza e reinstalação adequada.
+
+Configuração do Replit e ambiente
+
+Analise o arquivo .replit e confirme se o comando run está correto e compatível com os scripts do package.json.
+
+Verifique se há replit.nix ou outra configuração de runtime que possa estar definindo uma versão de Node incompatível.
+
+Verifique se as variáveis de ambiente necessárias (Secrets) estão sendo lidas corretamente (principalmente as essenciais para o app subir).
+
+Erros de frontend (React/Vite/Next, se for o caso)
+
+Rode o projeto e observe o log do terminal e o console do navegador (build e runtime).
+
+Identifique erros de importação (Module not found, arquivos inexistentes, paths errados).
+
+Identifique erros de runtime em componentes (acesso a undefined/null, hooks usados incorretamente, uso de window/document em ambiente SSR, etc.).
+
+Para cada erro encontrado, mostre: arquivo, linha e explicação breve do que está errado.
+
+Erros de backend/API (se houver)
+
+Verifique se o servidor backend está subindo corretamente (porta, listen, imports).
+
+Verifique chamadas para banco de dados ou serviços externos (URLs, credenciais, libs).
+
+Identifique rotas que o frontend chama mas que não existem ou retornam erro (404/500) e explique.
+
+Sessão e autenticação
+
+Analise como o SESSION_SECRET e outras secrets de sessão/autenticação são usados.
+
+Verifique se há erros de sessão/cookies no log (sessão inválida, secret ausente, etc.).
+
+Confirme se o uso de sessão não está impedindo o app de subir (por exemplo, crash no middleware de sessão).
+
+Problemas de performance ou travamento
+
+Verifique se há loops, renders excessivos ou código que possa travar o navegador ou o preview.
+
+Se encontrar algo assim, explique onde está e proponha uma correção.
+
+Inconsistências de arquitetura/rollback
+
+Verifique se há mistura de código antigo com novo (arquivos que se referem a funções/paths que não existem mais).
+
+Identifique qualquer referência a arquivos, pastas ou endpoints removidos ou renomeados.
+
+Entregáveis que eu quero de você
+Uma lista clara e organizada de todos os problemas encontrados, agrupados por categoria:
+
+Dependências/build
+
+Configuração do Replit/ambiente
+
+Frontend
+
+Backend/API
+
+Sessão/autenticação
+
+Performance/travamento
+
+Arquitetura/rollback
+
+Para cada problema relevante:
+
+Explique em 2–3 frases qual é a causa raiz.
+
+Mostre o código ou arquivo que precisa ser alterado (com trechos ou diffs).
+
+Proponha a correção concreta (alteração de código/config, comando a ser rodado, etc.).
+
+No final, me diga exatamente:
+
+Qual comando devo usar para rodar o projeto no Replit (ex.: npm run dev).
+
+Se preciso apagar algo antes (por exemplo, node_modules, lockfile, pastas de build).
+
+Em que arquivos principais você mexeu para estabilizar o projeto.
+
+Regras importantes
+Não esconda erros com try/catch vazios ou solução “gambiarra”. Corrija a causa real.
+
+Se precisar fazer mudanças invasivas, explique rapidamente o porquê antes de aplicar.
+
+Priorize deixar o projeto rodando estável no ambiente atual do Replit.

@@ -730,7 +730,7 @@ export class AgentExecutor {
     if (etapaHasPesquisarCaps && !etapaHasWebSearch && !webSearchAlreadyExecuted) {
       const temaParaWeb = this.currentPlanTemas.join(', ') || this.currentPlanObjective || 'conteúdo educacional';
       const webSearchCap: CapabilityCall = {
-        id: `cap-executor-web-${Date.now()}`,
+        id: `cap-executor-web-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
         nome: 'pesquisar_web',
         displayName: `Pesquisando fontes educacionais sobre ${temaParaWeb}`,
         categoria: 'PESQUISAR' as CapabilityCall['categoria'],
