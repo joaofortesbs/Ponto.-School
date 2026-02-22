@@ -1,0 +1,43 @@
+Resposta 1: Por que esses erros estão aparecendo AGORA
+Causa Raiz Primária (Confirmada): Os modelos Gemini 2.0 Flash foram depreciados pelo Google
+
+gemini-2.0-flash e gemini-2.0-flash-lite estão oficialmente em processo de shutdown pelo Google — data de encerramento: 31 de março de 2026. Mas o Google já começou a degradar esses endpoints agora em fevereiro, fazendo com que retornem erros 404 de forma permanente.
+
+O impacto direto:
+
+No arquivo decidir-atividades-criar.ts, a linha 1012 chama explicitamente getModelById('gemini-2.0-flash') para o caminho de Function Calling. Esse caminho SEMPRE falha agora com 404.
+A configuração do Circuit Breaker tem failureThreshold: 3 — apenas 3 falhas abre o circuito. Com os Gemini retornando 404 em todas as chamadas, os dois modelos ficam com circuito aberto permanentemente.
+Causa Raiz Secundária: Esgotamento do rate limit do Groq → Cascade de circuit breakers
+
+Nas sessões complexas como a do professor (7 aulas, semana letiva, Dossiê Ponto. Flow), o sistema executa:
+
+4 sub-capacidades em PESQUISAR (atividades disponíveis, conta, BNCC, banco de questões)
+DECIDIR, GERAR, SALVAR
+São 6–8+ chamadas LLM em sequência. O limite do Groq free tier é 30 req/min. Isso esgota rapidamente os modelos llama-3.3-70b-versatile e llama-4-scout, que também abrem seus circuit breakers.
+
+Causa Raiz Terciária: Apenas o modelo 8B sobrevive — e ele não consegue executar o DECIDIR
+
+Com 4 dos 7 modelos circuit-broken, o sistema cai para o llama-3.1-8b-instant. Um modelo de 8B de parâmetros não consegue processar o prompt de decisão com 67+ atividades no catálogo. Ele retorna JSON inválido ou IDs inventados que não existem no catálogo. A validação rejeita e o loop de retries falha.
+
+Fator Agravante: O local fallback também falha silenciosamente
+
+O fallback local tem uma função generateDecisionFallback que tenta extrair o catálogo do texto do prompt via regex JSON ("id": "...", "titulo": "..."). Mas o prompt lista as atividades em formato plain text (- id: titulo (tipo, categoria)), não em JSON. Resultado: extractCatalogFromPrompt retorna array vazio → local fallback produz {"atividades_escolhidas": [], "total_escolhidas": 0}.
+
+gerar_conteudo_atividades então encontra zero atividades em todos os 5 caminhos de busca → lança "Nenhuma atividade escolhida" → CRITICAL FAILURE.
+
+Por que especificamente AGORA: A combinação de (1) Google degradando Gemini 2.0 Flash antes do prazo oficial, (2) prompts mais longos e complexos consumindo mais do budget do Groq, e (3) sessões mais ricas (BNCC, 7 aulas, Dossiê completo) = a cascata explodiu em sessões reais pela primeira vez.
+
+Resposta 2: Como transformar gerar_conteudo_atividades em um Agente IA Dedicado
+Pesquisei profundamente Manus AI, Genspark Super Agent, Kimi Agent Swarm, e as melhores práticas de EdTech AI de 2025/2026. As conclusões relevantes para vocês:
+
+Manus AI usa loops PDCA (Plan-Do-Check-Act) com autocorreção. Cada step tem observação do resultado.
+Genspark usa "Mixture-of-Agents" com 9 LLMs especializados + LLM-as-Judge para verificação de qualidade — modelo A gera, modelo B avalia.
+Kimi Agent Swarm usa orquestrador + sub-agentes isolados que trabalham independentemente. Falha de um não bloqueia os outros.
+Plataformas de EdTech de ponta (MagicSchool, Khanmigo) isolam a geração de conteúdo por tipo de atividade com validação curricular automática.
+A proposta para vocês combina essas referências em 5 fases:
+
+Isolamento por atividade — cada atividade tem seu próprio loop de execução (3 retries independentes). Uma atividade que falha não bloqueia as outras.
+Roteamento de modelo por tipo — atividades interativas (quiz, flash cards, lista) rotean para modelos otimizados para JSON estruturado; atividades textuais roteiam para modelos com geração de prosa mais rica.
+Camada de Verificação LLM-as-Judge — após gerar o conteúdo, um segundo modelo independente avalia: alinhamento ao objetivo, adequação ao nível da turma, completude dos campos, qualidade pedagógica, unicidade. Score de 0–10. Se reprovado ou score < 7, regeneração automática com o feedback das issues.
+Verificação de Coerência do Pacote — após todas as atividades individuais, uma chamada de síntese verifica se o conjunto todo cobre o objetivo do professor de forma lógica e sem duplicações.
+Status em tempo real na UI — badges de verificação (✓ verificado / ↺ regenerando / ⚠ sinalizado) nos cards de construção.

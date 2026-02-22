@@ -1,0 +1,17 @@
+Algumas coisas que você precisa verificar orbigatoriamente (Além da sua verificação e investigação e busca profunda):
+
+Verifique se a IA/Jota com o sistema de LLM Orchestrator v3.0 Enterprise está corretamente configurado dentro da capacidade de "gerar_conteudo_atividades" para gerar os conteúdos das respectivas atividades que foram escolhidas/decididas/selecionadas dentro da capacidade de "decidir_atividades_criar"!
+
+Verifique se a Mente maior do Jota/IA dentro do card de Desenvolvimento está conseguindo conduzir corretamente todo o fluxo de criação, dentro do smartrouter de EXECUTAR!
+
+Verifique se existe algum iconssistencia dentro das instruções para dentro da IA integrada dentro da respectiva capacidade de "gerar_conteudo_atividades" ou "decidir_atividades_criar"! E verfique se não existe nenhum Regex ou fallback muito limitante ou rigido/restrito dentro de alguma área do chat Jota que pode estar afetando a capacidade atual de "gerar_conteudo_atividades" ou "decidir_atividades_criar"!
+
+Verfique se todas as LLMs de dentro do sistema de "LLM Orchestrator v3.0" está com alguma limitação rigorosa que pode estar prejudicando a IA/Jota dentro do chat Jota, ou alguma capacidade existente que tenha IA integrada dentro dela?
+
+Analise se o ainda problema real é dentro do back-end ou front-end, ou dentro da UI ou UX, ou dentro do servidores, ou dentro do próprio Replit e suas Secrets, ou dentro do ambiente, entre outros... E analise se pode ser dentro de algum arquivo compartilhado ou individual! Analise absolutamente todas as etapas individuais e compartilhadas de dentro do chat Jota, e de dentro do smartrouter de EXECUTAR, para que voc6e identifique todos os possiveis furos/quebras/erros/rompimentos de dentro do fluxo/funil, que podem ser prejudiciais para que você corrija da maneria correta!
+
+Verifique se dentro do fluxo de dentro do card de Desenvolvimento existe alguma etapa que acaba prejudicando a outra! Ou alguma capacidade que depende de outra! Analise todo o fluxo de interação e atividade interno e externo! Aja como um lead oculto para que você consiga entender perfeitamente aonde estão os erros!
+
+Não cometa erros ou bugs dentro da plataforma! E não altere coisas fora de contexto! Faça uma pesquisa em todos os arquivos dentro da plataforma e dentro do chat Jota para você ter uma visão geral, e depois antes de começar a modificar os arquivos necessários, analise eles por inteiro para identificar exatamente o que precisa ser modificado de maneira exata e cuidadosa e minunciosa!
+
+Analise todos os nossos concorrentes e benchmarkings antes de chegar em uma resposta para mim! Faça diversas pesquisas dentro da web e internet com diferentes metodologias para identificar todas as plataformas que fazem algo parecido com o que a gente tá fazendo atualmente! E pesquise todas as plataformas de Agentes IA, como a Manus IA 1.6 Max, Kimi Agent Swarm, Genspark IA, entre outros! Pesquise referencias dentro e fora do nosso nicho! Entenda a estrutura e arquitetura dentro deles, entenda os seus promtps systems, suas capacidades, suas ferramentas, entre outros! Depois dessa pesquisa e investigações profunda, compare com todo o sistema atual de dentro da plataforma para entender perfeitamente todos os cenários!
