@@ -14,6 +14,7 @@ import {
   Database,
   FileText,
   CalendarPlus,
+  Globe,
   type LucideIcon
 } from 'lucide-react';
 
@@ -33,6 +34,26 @@ const capabilityIconMap: Record<string, CapabilityIconConfig> = {
     icon: FileSearch,
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-500/20',
+  },
+  pesquisar_atividades_conta: {
+    icon: Database,
+    color: 'text-sky-300',
+    bgColor: 'bg-sky-500/15',
+  },
+  pesquisar_bncc: {
+    icon: BookOpen,
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/20',
+  },
+  pesquisar_banco_questoes: {
+    icon: FileSearch,
+    color: 'text-violet-400',
+    bgColor: 'bg-violet-500/20',
+  },
+  pesquisar_web: {
+    icon: Globe,
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/20',
   },
   decidir_atividades_criar: {
     icon: Brain,
@@ -101,11 +122,14 @@ export function getCapabilityIcon(capabilityName: string): CapabilityIconConfig 
   const normalizedName = capabilityName.toLowerCase().replace(/\s+/g, '_');
   
   for (const [key, config] of Object.entries(capabilityIconMap)) {
-    if (normalizedName.includes(key) || key.includes(normalizedName)) {
+    if (normalizedName === key || normalizedName.includes(key) || key.includes(normalizedName)) {
       return config;
     }
   }
   
+  if (normalizedName.includes('pesquisar_web') || normalizedName.includes('buscar_web') || normalizedName.includes('pesquisa_web')) {
+    return capabilityIconMap.pesquisar_web;
+  }
   if (normalizedName.includes('pesquisar') || normalizedName.includes('buscar')) {
     return capabilityIconMap.pesquisar_atividades_disponiveis;
   }
