@@ -423,6 +423,7 @@ export function ConstructionInterface({
   const allCompleted = completedCount === activities.length && activities.length > 0;
 
   const hasStartedRef = useRef(false);
+  const prevActivityIdsRef = useRef('');
   const buildControllerRef = useRef<(() => void) | null>(null);
   const editModalRef = useRef<EditActivityModalHandle>(null);
   
@@ -697,6 +698,15 @@ export function ConstructionInterface({
     setDebugActivityName(activity.name);
     setIsDebugModalOpen(true);
   }, []);
+
+  useEffect(() => {
+    const currentIds = activities.map(a => a.id).sort().join(',');
+    if (currentIds && currentIds !== prevActivityIdsRef.current) {
+      console.log(`🔄 [ConstructionInterface] Nova sessão de atividades detectada — resetando hasStartedRef`);
+      prevActivityIdsRef.current = currentIds;
+      hasStartedRef.current = false;
+    }
+  }, [activities]);
 
   useEffect(() => {
     if (

@@ -134,20 +134,27 @@ REGRAS ABSOLUTAS:
 4. Cada atividade DEVE ter: id, titulo, justificativa (>10 chars), ordem_sugerida
 5. Respeite a quantidade solicitada pelo professor
 6. VARIEDADE OBRIGATÓRIA: Nunca escolha a mesma atividade duas vezes. Use CATEGORIAS DIFERENTES para criar um pacote pedagógico completo e diversificado
-7. EQUILÍBRIO INTERATIVO-TEXTUAL: Inclua tanto atividades interativas (quiz-interativo, lista-exercicios, flash-cards) quanto textuais (planos, provas, jogos) conforme o contexto exigir`;
+7. EQUILÍBRIO INTERATIVO-TEXTUAL: Inclua tanto atividades interativas quanto textuais conforme o contexto exigir — NUNCA escolha apenas atividades do mesmo tipo
+8. MÍNIMO DE ATIVIDADES: Para qualquer pedido que não seja ultra-específico (ex: "uma prova específica"), escolha pelo menos 2 atividades de tipos DIFERENTES. Para pedidos de planejamento de aulas ou semanas, escolha entre 4 e 8 atividades complementares`;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // LAYER 1: TOLERANT JSON PARSER
 // ═══════════════════════════════════════════════════════════════════════════
 
 function extractQuantityFromObjective(objective: string): number | null {
-  const numericMatch = objective.match(/(\d+)\s*(atividade|exerc|quest|prova|material|lista|quiz|flash|jogo|rubrica|plano|aula|sequência|sequencia)/i);
+  // NOTE: "aula" is intentionally excluded — "6 aulas" means 6 class sessions,
+  // not 6 activities. Multi-class requests fall into the complex-request path (4-8 activities).
+  const numericMatch = objective.match(/(\d+)\s*(atividade|exerc|quest|prova|material|lista|quiz|flash|jogo|rubrica|plano|sequência|sequencia)/i);
   if (numericMatch) return parseInt(numericMatch[1]);
 
-  const wordMatch = objective.match(/\b(uma?|dois|duas|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez)\s+(atividade|exerc|quest|prova|material|lista|quiz|flash|jogo|rubrica|plano|aula|sequência|sequencia)/i);
+  const wordMatch = objective.match(/\b(uma?|dois|duas|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez)\s+(atividade|exerc|quest|prova|material|lista|quiz|flash|jogo|rubrica|plano|sequência|sequencia)/i);
   if (wordMatch) return WORD_TO_NUMBER[wordMatch[1].toLowerCase()] || null;
 
   return null;
+}
+
+function isComplexMultiClassRequest(objective: string): boolean {
+  return /semana\s+letiva|planejamento.*(?:semana|m[eê]s|per[ií]odo|bimestre|trimestre|semestre)|(\d+)\s*aulas?|dossi[eê]|flow\s+completo|pacote\s+completo|materiais\s+completos|período\s+letivo/i.test(objective);
 }
 
 function normalizeDecisionKeys(data: any): any {
@@ -531,15 +538,15 @@ IDs VÁLIDOS: ${context.available_activities.map(a => a.id).join(', ')}
 
 🎯 PRINCÍPIO DO PACOTE COMPLETO: Para pedidos complexos (semana letiva, planejamento de período, "Dossiê Ponto. Flow"), o pacote pedagógico ideal combina: planejamento estrutural + atividades de prática + avaliação + engajamento/gamificação.
 
-Exemplos de decisão CORRETA (NÃO copie os IDs — são apenas referências pedagógicas):
-- "Crie exercícios de frações" → lista-exercicios + uma atividade textual complementar (2 atividades)
-- "Quiz sobre sistema solar" → quiz-interativo + plano-aula complementar (2 atividades)
-- "3 atividades sobre crônicas" → lista-exercicios + interpretacao-texto + prompt-escrita (exatamente 3)
-- "Flash cards de vocabulário" → flash-cards + exercicios-multipla-escolha (2 atividades)
-- "Planeje aulas para 6 semanas" → plano-aula + sequencia-didatica + quiz-interativo + lista-exercicios + rubrica-avaliacao + atividade de engajamento (6 atividades)
-- "Materiais completos sobre biomas" → quiz-interativo + lista-exercicios + estudo-de-caso + plano-aula + rubrica-avaliacao (5 atividades)
-- "Atividade sobre biomas, tenho alunos com necessidades especiais" → atividade-diferenciada-inclusao (1 atividade específica)
-- "Crie uma prova de frações" → prova-personalizada (1 atividade — prova NÃO é exercício)
+⚠️ EXEMPLOS DE PADRÕES PEDAGÓGICOS — USE APENAS IDs DA LISTA ACIMA, NUNCA COPIE IDs DOS EXEMPLOS:
+- "Crie exercícios de frações" → [atividade de exercícios do catálogo] + [atividade de plano ou avaliação do catálogo] (2 atividades)
+- "Quiz sobre sistema solar" → [atividade tipo quiz do catálogo] + [plano ou sequência didática do catálogo] (2 atividades)
+- "3 atividades sobre crônicas" → [atividade de prática] + [atividade de leitura/interpretação] + [atividade de produção/escrita] (exatamente 3 — tipos DIFERENTES entre si)
+- "Flash cards de vocabulário" → [atividade de memorização do catálogo] + [atividade complementar de prática] (2 atividades)
+- "Semana letiva / planejamento de múltiplas aulas" → [plano estrutural] + [sequência didática] + [atividade interativa de prática] + [lista ou exercícios] + [rubrica ou avaliação] + [atividade de engajamento] (4-8 atividades variadas por categorias)
+- "Materiais completos sobre um tema" → [quiz] + [exercícios] + [estudo de caso ou projeto] + [plano] + [rubrica] (5 atividades de categorias diferentes)
+- "Atividade inclusiva para alunos com necessidades especiais" → [atividade inclusiva ou adaptada do catálogo] (1 atividade específica — ÚNICA exceção para 1 atividade)
+- "Crie uma prova de frações" → [prova ou avaliação do catálogo] (1 atividade — prova NÃO é exercício genérico)
 
 ## ⚠️ REGRA ANTI-ALUCINAÇÃO
 - Use APENAS IDs da lista de IDs válidos acima
@@ -1012,10 +1019,13 @@ export async function decidirAtividadesCriarV2(
         });
 
         const validIdsList = validIds.join(', ');
+        const complexRequest = isComplexMultiClassRequest(userObjective);
         const targetQty = requestedQuantity 
           ? `EXATAMENTE ${requestedQuantity} atividade(s)` 
-          : 'entre 2 e 6 atividades variadas e complementares (NUNCA apenas 1, a menos que seja um pedido extremamente específico)';
-        const fcPrompt = `Você é um especialista pedagógico. Analise o catálogo e selecione as atividades MAIS ADEQUADAS para o objetivo do professor.\n\nObjetivo do professor: ${userObjective}\n\nQuantidade OBRIGATÓRIA: ${targetQty}\n\nREGRA DE VARIEDADE: Escolha atividades de CATEGORIAS DIFERENTES. Combine interativas (quiz, lista, flash cards) com textuais (planos, provas, jogos). NUNCA escolha apenas 1 tipo.\n\nCatálogo completo:\n${catalog.map(a => `- ${a.id}: ${a.titulo} (tipo: ${a.tipo}, categoria: ${a.categoria})`).join('\n')}\n\nIDs válidos: [${validIdsList}]`;
+          : complexRequest
+            ? 'entre 4 e 8 atividades variadas e complementares (é um planejamento de múltiplas aulas/período — DIVERSIFIQUE entre categorias: planejamento + prática + avaliação + engajamento)'
+            : 'entre 2 e 4 atividades variadas e complementares (NUNCA apenas 1, a menos que seja um pedido extremamente específico de 1 atividade)';
+        const fcPrompt = `Você é um especialista pedagógico. Analise o catálogo e selecione as atividades MAIS ADEQUADAS para o objetivo do professor.\n\nObjetivo do professor: ${userObjective}\n\nQuantidade OBRIGATÓRIA: ${targetQty}\n\nREGRA DE VARIEDADE: Escolha atividades de CATEGORIAS DIFERENTES. Combine interativas (quiz, lista, flash cards) com textuais (planos, provas, jogos). NUNCA escolha apenas 1 tipo. NUNCA copie IDs de exemplos — use apenas IDs do catálogo abaixo.\n\nCatálogo completo:\n${catalog.map(a => `- ${a.id}: ${a.titulo} (tipo: ${a.tipo}, categoria: ${a.categoria})`).join('\n')}\n\nIDs válidos: [${validIdsList}]`;
 
         const fcResult = await callGeminiWithFunctionCalling(
           geminiModel,
