@@ -836,6 +836,12 @@ export class AgentExecutor {
                 console.log(`📝 [Executor] Sem dados BNCC disponíveis para ${capName}`);
               }
 
+              const webCtx = this.extractWebSearchContextFromMap();
+              if (webCtx) {
+                capabilityInput.context.web_search_context = webCtx;
+                console.log(`🌐 [Executor] Web search context injetado em ${capName}: ${webCtx.count} recurso(s) educacional(is)`);
+              }
+
               if (capName === 'gerar_conteudo_atividades') {
                 const questoesResult = this.capabilityResultsMap.get('pesquisar_banco_questoes');
                 if (questoesResult?.success && questoesResult?.data) {
@@ -908,6 +914,9 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
                 
               } else if (capName === 'criar_compromisso_calendario') {
                 console.error(`⚠️ [Executor] criar_compromisso_calendario failed but NOT throwing - calendar is non-critical`);
+                
+              } else if (capName === 'pesquisar_web') {
+                console.error(`⚠️ [Executor] pesquisar_web failed but NOT throwing - web search enrichment is non-critical`);
                 
               } else {
                 throw new Error(`Capability crítica "${capName}" falhou: ${errorMsg}`);
@@ -1901,6 +1910,19 @@ Seja específico e forneça dados que ajudem o professor.
       anos: bnccResult.data.anos || [],
       prompt_context: bnccResult.data.prompt_context || '',
       count: bnccResult.data.count || 0,
+    };
+  }
+
+  private extractWebSearchContextFromMap(): { results: any[]; prompt_context: string; count: number; query: string } | null {
+    const webResult = this.capabilityResultsMap.get('pesquisar_web');
+    if (!webResult?.success || !webResult?.data) return null;
+    const data = webResult.data;
+    if (!data.results || data.results.length === 0) return null;
+    return {
+      results: data.results || [],
+      prompt_context: data.prompt_context || '',
+      count: data.count || data.results.length,
+      query: data.query_principal || '',
     };
   }
 

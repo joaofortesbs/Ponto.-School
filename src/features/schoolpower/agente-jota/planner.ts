@@ -81,6 +81,7 @@ export async function createExecutionPlan(
       })
     );
     const planAlreadyHasSalvarBd = allCapabilityNames.includes('salvar_atividades_bd');
+    const planAlreadyHasPesquisarWeb = allCapabilityNames.includes('pesquisar_web');
 
     const temasExtraidos = validatedPlan.intencao_desconstruida?.temas || [];
     const disciplinaExtraida = inferDisciplinaFromTemas(temasExtraidos, userPrompt);
@@ -135,6 +136,26 @@ export async function createExecutionPlan(
             nome: 'salvar_atividades_bd',
             displayName: 'Vou salvar suas atividades no banco de dados',
             categoria: 'SALVAR_BD' as CapabilityCall['categoria'],
+            parametros: {},
+            status: 'pending' as const,
+            ordem: validatedCapabilities.length + 1,
+          });
+        }
+
+        const hasPesquisarCapabilities = validatedCapabilities.some(
+          cap => ['pesquisar_atividades_disponiveis', 'pesquisar_bncc', 'pesquisar_banco_questoes'].includes(cap.nome)
+        );
+        const hasWebSearchInEtapa = validatedCapabilities.some(cap => cap.nome === 'pesquisar_web');
+        
+        if (hasPesquisarCapabilities && !hasWebSearchInEtapa && !planAlreadyHasPesquisarWeb) {
+          const timestamp = Date.now();
+          console.log('🔧 [Planner] Auto-inject: Adicionando pesquisar_web à etapa de pesquisa');
+          const temaInjetado = temasExtraidos.join(', ') || 'conteúdo educacional';
+          validatedCapabilities.push({
+            id: `cap-${idx}-${validatedCapabilities.length}-${timestamp}`,
+            nome: 'pesquisar_web',
+            displayName: `Pesquisando fontes educacionais sobre ${temaInjetado}`,
+            categoria: 'PESQUISAR' as CapabilityCall['categoria'],
             parametros: {},
             status: 'pending' as const,
             ordem: validatedCapabilities.length + 1,
