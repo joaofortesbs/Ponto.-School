@@ -133,7 +133,8 @@ REGRAS ABSOLUTAS:
 3. NUNCA invente IDs — se não tem certeza, escolha o mais próximo do catálogo
 4. Cada atividade DEVE ter: id, titulo, justificativa (>10 chars), ordem_sugerida
 5. Respeite a quantidade solicitada pelo professor
-6. PREFERÊNCIA INTERATIVA: Sempre que o professor mencionar exercícios, lista, quiz ou flash cards, PRIORIZE as versões interativas (lista-exercicios, quiz-interativo, flash-cards) e complemente com atividades textuais variadas`;
+6. VARIEDADE OBRIGATÓRIA: Nunca escolha a mesma atividade duas vezes. Use CATEGORIAS DIFERENTES para criar um pacote pedagógico completo e diversificado
+7. EQUILÍBRIO INTERATIVO-TEXTUAL: Inclua tanto atividades interativas (quiz-interativo, lista-exercicios, flash-cards) quanto textuais (planos, provas, jogos) conforme o contexto exigir`;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // LAYER 1: TOLERANT JSON PARSER
@@ -493,10 +494,11 @@ ${accountContext}
 ## 🔢 REGRA DE QUANTIDADE (OBRIGATÓRIA)
 ${quantidadeSolicitada
   ? `O professor pediu EXATAMENTE ${quantidadeSolicitada} atividade(s). Você DEVE escolher exatamente ${quantidadeSolicitada}. NÃO escolha mais nem menos.`
-  : `O professor NÃO especificou quantidade. Analise o pedido:
-  - Se pediu UMA coisa específica (ex: "uma prova", "um bingo") → escolha 1 atividade
-  - Se pediu algo genérico (ex: "atividades sobre X") → escolha 2-3 atividades variadas
-  - Se pediu pacote/vários (ex: "materiais completos") → escolha 3-5 atividades variadas`}
+  : `O professor NÃO especificou quantidade. Analise o pedido com atenção ao contexto:
+  - Se pediu UMA coisa MUITO específica (ex: "uma prova", "um bingo específico") → escolha 1 atividade
+  - Se pediu atividades para uma aula ou tema (ex: "atividades sobre X") → escolha 2-3 atividades variadas
+  - Se pediu planejamento de múltiplas aulas ou semanas (ex: "6 aulas", "semana letiva", "materiais para o semestre") → escolha 4-8 atividades variadas e complementares
+  - Se pediu materiais completos ou pacote pedagógico (ex: "tudo sobre X", "plano completo") → escolha 5-8 atividades variadas`}
 
 ## CATÁLOGO COMPLETO — ATIVIDADES DISPONÍVEIS
 
@@ -518,22 +520,25 @@ IDs VÁLIDOS: ${context.available_activities.map(a => a.id).join(', ')}
    - Professor pediu "rubrica" → use rubrica-avaliacao
    - Professor pediu "caça-palavras" → use caca-palavras
    - Professor pediu "plano de aula" → use plano-aula
-4. VARIEDADE: quando criar múltiplas, use categorias DIFERENTES
-5. ⭐ REGRA DE PREFERÊNCIA POR ATIVIDADES INTERATIVAS: Quando o professor pedir "exercícios", "lista", "quiz", "flash cards" ou qualquer variação dessas palavras, SEMPRE escolha a versão INTERATIVA:
-   - "exercícios" / "lista de exercícios" / "lista" → lista-exercicios (versão interativa)
-   - "quiz" / "questionário" / "teste rápido" → quiz-interativo (versão interativa)
-   - "flash cards" / "flashcards" / "cartões" → flash-cards (versão interativa)
-   Essas 3 atividades interativas são as MELHORES do catálogo e devem ser SEMPRE incluídas quando o professor solicitar algo relacionado. Além disso, COMPLEMENTE com outras atividades textuais variadas para criar um pacote pedagógico rico.
+4. VARIEDADE OBRIGATÓRIA: quando criar múltiplas atividades, use categorias DIFERENTES entre elas — nunca repita a mesma categoria
+5. EQUILÍBRIO INTERATIVO-TEXTUAL: misture atividades interativas com textuais conforme o contexto:
+   - "exercícios" / "lista" → inclua lista-exercicios (interativa) E complemente com textual variada
+   - "quiz" → quiz-interativo (interativa) E complemente com outras atividades
+   - "flash cards" → flash-cards (interativa) E complemente com outras atividades
+   - NÃO escolha APENAS atividades interativas, NÃO escolha APENAS textuais — EQUILIBRE o pacote
+6. CONTEXTO PEDAGÓGICO: Para pedidos de planejamento de aulas ou semanas letivas, SEMPRE escolha um conjunto diversificado:
+   - plano de aula ou sequência didática + atividades de prática + avaliação/rubrica + material de engajamento
 
-🎯 PRINCÍPIO DE COMPOSIÇÃO: Quando o professor pedir exercícios, quiz ou flash cards, inclua a versão interativa E adicione atividades textuais complementares para criar variedade pedagógica. O pacote ideal combina atividades interativas com materiais textuais especializados.
+🎯 PRINCÍPIO DO PACOTE COMPLETO: Para pedidos complexos (semana letiva, planejamento de período, "Dossiê Ponto. Flow"), o pacote pedagógico ideal combina: planejamento estrutural + atividades de prática + avaliação + engajamento/gamificação.
 
-Exemplos de decisão CORRETA:
-- "Crie exercícios de frações" → lista-exercicios (interativa) + exercicios-multipla-escolha (1 interativa + 1 textual)
-- "Quiz sobre sistema solar" → quiz-interativo (interativa, versão prioritária)
-- "3 atividades sobre crônicas" → lista-exercicios (interativa) + interpretacao-texto + prompt-escrita (1 interativa + 2 textuais variadas)
-- "Flash cards de vocabulário" → flash-cards (interativa, versão prioritária)
-- "Atividades completas sobre biomas" → quiz-interativo + lista-exercicios + estudo-de-caso (2 interativas + 1 textual)
-- "Atividade sobre biomas, tenho alunos com necessidades especiais" → atividade-diferenciada-inclusao (1 atividade)
+Exemplos de decisão CORRETA (NÃO copie os IDs — são apenas referências pedagógicas):
+- "Crie exercícios de frações" → lista-exercicios + uma atividade textual complementar (2 atividades)
+- "Quiz sobre sistema solar" → quiz-interativo + plano-aula complementar (2 atividades)
+- "3 atividades sobre crônicas" → lista-exercicios + interpretacao-texto + prompt-escrita (exatamente 3)
+- "Flash cards de vocabulário" → flash-cards + exercicios-multipla-escolha (2 atividades)
+- "Planeje aulas para 6 semanas" → plano-aula + sequencia-didatica + quiz-interativo + lista-exercicios + rubrica-avaliacao + atividade de engajamento (6 atividades)
+- "Materiais completos sobre biomas" → quiz-interativo + lista-exercicios + estudo-de-caso + plano-aula + rubrica-avaliacao (5 atividades)
+- "Atividade sobre biomas, tenho alunos com necessidades especiais" → atividade-diferenciada-inclusao (1 atividade específica)
 - "Crie uma prova de frações" → prova-personalizada (1 atividade — prova NÃO é exercício)
 
 ## ⚠️ REGRA ANTI-ALUCINAÇÃO
@@ -542,28 +547,30 @@ Exemplos de decisão CORRETA:
 
 ## FORMATO DE RESPOSTA (JSON VÁLIDO)
 
+Retorne um objeto JSON com esta estrutura exata:
+
 {
   "atividades_escolhidas": [
     {
-      "id": "quiz-interativo",
-      "titulo": "Quiz Interativo",
-      "justificativa": "Professor pediu atividade gamificada — quiz interativo engaja os alunos com feedback imediato",
+      "id": "<ID_EXATO_DO_CATALOGO>",
+      "titulo": "<Título da Atividade>",
+      "justificativa": "<Explique por que esta atividade serve para o objetivo do professor>",
       "ordem_sugerida": 1
     },
     {
-      "id": "plano-aula",
-      "titulo": "Plano de Aula",
-      "justificativa": "Estrutura as aulas para o semestre conforme solicitado pelo professor",
+      "id": "<ID_EXATO_DO_CATALOGO>",
+      "titulo": "<Título da Atividade>",
+      "justificativa": "<Explique por que esta atividade complementa as demais>",
       "ordem_sugerida": 2
     }
   ],
-  "estrategia_pedagogica": "Combinação de atividade interativa com planejamento para atender ao contexto pedagógico solicitado",
+  "estrategia_pedagogica": "<Descreva a estratégia pedagógica geral do conjunto escolhido>",
   "total_escolhidas": 2
 }
 
-ATENÇÃO: O JSON acima é apenas um EXEMPLO DE ESTRUTURA. Você DEVE escolher os IDs que realmente fazem sentido para o objetivo do professor — não copie os IDs do exemplo.
+⚠️ IMPORTANTE: Os campos <ID_EXATO_DO_CATALOGO> devem ser substituídos por IDs REAIS da lista de IDs válidos acima. NÃO use esses textos literalmente. NÃO copie IDs de exemplos. Escolha IDs que realmente atendam ao objetivo do professor.
 
-Retorne APENAS o JSON, sem texto adicional.
+Retorne APENAS o JSON, sem texto adicional, sem markdown, sem explicações fora do JSON.
   `.trim();
 }
 
@@ -1004,37 +1011,41 @@ export async function decidirAtividadesCriarV2(
           narrative: `Tentando Gemini Function Calling (structured output) antes do retry loop regular.`
         });
 
-        const validIdsList = validIds.slice(0, 80).join(', ');
-        const fcPrompt = `Analise o catálogo de atividades e selecione as mais adequadas para o objetivo do professor.\n\nObjetivo: ${userObjective}\n\nIDs válidos do catálogo: [${validIdsList}]\n\nCatálogo:\n${catalog.slice(0, 30).map(a => `- ${a.id}: ${a.titulo} (tipo: ${a.tipo}, matéria: ${a.materia})`).join('\n')}\n\nQuantidade solicitada: ${requestedQuantity || 'até ' + maxActivities}`;
+        const validIdsList = validIds.join(', ');
+        const targetQty = requestedQuantity 
+          ? `EXATAMENTE ${requestedQuantity} atividade(s)` 
+          : 'entre 2 e 6 atividades variadas e complementares (NUNCA apenas 1, a menos que seja um pedido extremamente específico)';
+        const fcPrompt = `Você é um especialista pedagógico. Analise o catálogo e selecione as atividades MAIS ADEQUADAS para o objetivo do professor.\n\nObjetivo do professor: ${userObjective}\n\nQuantidade OBRIGATÓRIA: ${targetQty}\n\nREGRA DE VARIEDADE: Escolha atividades de CATEGORIAS DIFERENTES. Combine interativas (quiz, lista, flash cards) com textuais (planos, provas, jogos). NUNCA escolha apenas 1 tipo.\n\nCatálogo completo:\n${catalog.map(a => `- ${a.id}: ${a.titulo} (tipo: ${a.tipo}, categoria: ${a.categoria})`).join('\n')}\n\nIDs válidos: [${validIdsList}]`;
 
         const fcResult = await callGeminiWithFunctionCalling(
           geminiModel,
           fcPrompt,
           [{
             name: 'selecionar_atividades',
-            description: 'Seleciona atividades educacionais do catálogo para o professor',
+            description: 'Seleciona múltiplas atividades educacionais do catálogo para o professor, com variedade entre categorias',
             parameters: {
               type: 'object',
               properties: {
                 atividades_escolhidas: {
                   type: 'array',
+                  description: 'Lista de atividades escolhidas. Deve ter pelo menos 2 atividades de categorias diferentes, exceto para pedidos ultra-específicos de 1 atividade.',
                   items: {
                     type: 'object',
                     properties: {
-                      id: { type: 'string', description: 'ID da atividade do catálogo' },
-                      titulo: { type: 'string', description: 'Título da atividade' },
-                      justificativa: { type: 'string', description: 'Por que esta atividade foi escolhida' },
-                      ordem_sugerida: { type: 'number', description: 'Ordem sugerida de criação' },
+                      id: { type: 'string', description: 'ID EXATO da atividade do catálogo (copie sem modificar)' },
+                      titulo: { type: 'string', description: 'Título da atividade conforme catálogo' },
+                      justificativa: { type: 'string', description: 'Por que esta atividade atende o objetivo do professor (mín. 20 chars)' },
+                      ordem_sugerida: { type: 'number', description: 'Posição na sequência pedagógica (começar em 1)' },
                     },
                     required: ['id', 'titulo', 'justificativa', 'ordem_sugerida'],
                   },
                 },
-                estrategia_pedagogica: { type: 'string', description: 'Estratégia pedagógica geral aplicada' },
+                estrategia_pedagogica: { type: 'string', description: 'Estratégia pedagógica geral que conecta todas as atividades escolhidas' },
               },
               required: ['atividades_escolhidas', 'estrategia_pedagogica'],
             },
           }],
-          { systemPrompt: DECISION_SYSTEM_PROMPT, temperature: 0.2 }
+          { systemPrompt: DECISION_SYSTEM_PROMPT, temperature: 0.3 }
         );
 
         if (fcResult.success && fcResult.data) {

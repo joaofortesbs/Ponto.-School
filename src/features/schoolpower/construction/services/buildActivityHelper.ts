@@ -67,10 +67,10 @@ export async function buildActivityFromFormData(
           id: activityId,
           tema: formData.theme || formData.tema,
           disciplina: formData.subject || formData.disciplina,
-          numeroQuestoes: formData.numberOfQuestions || formData.numeroQuestoes,
-          modeloQuestoes: formData.questionModel || formData.modeloQuestoes,
-          nivelDificuldade: formData.difficultyLevel || formData.nivelDificuldade,
-          titulo: formData.title || formData.titulo
+          numeroQuestoes: formData.numberOfQuestions,
+          modeloQuestoes: formData.questionModel,
+          nivelDificuldade: formData.difficultyLevel,
+          titulo: formData.title
         });
         
         console.log('✅ [buildActivityHelper] Pipeline unificada processou:', {

@@ -1889,7 +1889,7 @@ Seja específico e forneça dados que ajudem o professor.
             anos: bnccResult.data.anos,
           }
         );
-        useDebugStore.getState().completeCapability(autoDebugId, 'completed');
+        useDebugStore.getState().endCapability(autoDebugId);
 
         if (bnccResult.debug_log) {
           for (const entry of bnccResult.debug_log) {

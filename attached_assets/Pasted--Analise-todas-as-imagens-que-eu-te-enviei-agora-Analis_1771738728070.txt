@@ -1,0 +1,60 @@
+[Analise todas as imagens que eu te enviei agora! Analise absolutamente todos os logs e debugs da plataforma e servidores! Faça diferentes pesquisas dentro da web e dentro da internet para voc6e entender perfeitamente porque esses erros acontecem, e se já aconteceu com alguém ou alguma empresa ou sistema! Faça diversas pesquisas em diversas fontes diferentes!]
+
+Quero que você faça uma depuração abrangente de toda a plataforma Ponto. School. Antes de propor ou executar QUALQUER alteração em código, fluxos ou configurações, siga exatamente as etapas abaixo:
+​
+
+Varredura de contexto
+
+Leia e analise todos os arquivos individuais e compartilhados do projeto: front-end, back-end, scripts, automações, componentes, temas, arquivos de configuração, envs fictícios (quando existirem), documentação técnica e de produto.
+
+Identifique todos os fluxos, sistemas, módulos, funcionalidades e integrações existentes (internas e externas).
+
+Monte um mapa mental/estrutura textual da plataforma, listando: módulos principais, dependências entre módulos, pontos de entrada (rotas, handlers, triggers), integrações com APIs externas, filas, webhooks, jobs agendados, etc.
+
+Entendimento funcional
+
+Para cada fluxo/sistema importante (ex.: onboarding, login, pagamentos, emissão de certificados, relatórios, painel do aluno, painel do admin), descreva: objetivo, arquivos envolvidos, ponto de início e ponto de fim, principais regras de negócio e dependências críticas.
+
+Identifique onde estão centralizadas configurações sensíveis (ex.: chaves, secrets, variáveis de ambiente, constantes globais).
+
+Diagnóstico de problemas potenciais
+
+Procure por: código duplicado, funções/módulos mortos (não utilizados), anti-patterns evidentes, problemas de segurança óbvios, pontos frágeis de performance, validações ausentes ou incompletas, tratamento de erros deficiente, queries pesadas, timeouts prováveis.
+
+Liste bugs conhecidos ou potenciais que você inferir a partir do código, comentários e TODOs.
+
+Aponte riscos de acoplamento excessivo entre módulos e quaisquer pontos que dificultem manutenção ou evolução futura.
+
+Documentação antes de alterar qualquer coisa
+
+Antes de modificar qualquer arquivo, faça um resumo estruturado do entendimento global da plataforma, incluindo:
+
+Visão geral da arquitetura (em texto)
+
+Lista de módulos/funcionalidades com breve descrição
+
+Principais integrações externas e onde estão implementadas
+
+Principais problemas identificados (com prioridade: alta, média, baixa)
+
+Apresente esse resumo para validação, em formato organizado (títulos, listas e seções claras).
+
+Política de alterações (apenas após o contexto completo)
+
+Somente depois de concluir todo o entendimento e o diagnóstico acima, comece a sugerir alterações.
+
+Para cada alteração proposta, detalhe: objetivo, impacto esperado, arquivos a serem tocados, riscos, plano de rollback e testes recomendados.
+
+Faça mudanças de forma incremental, sempre explicando o que será feito ANTES de aplicar e pedindo confirmação explícita.
+
+Regras importantes:
+
+Não assuma nada sem antes buscar contexto em TODOS os arquivos e referências do projeto.
+
+Não apague nem reescreva grandes blocos de código sem justificar exatamente o motivo.
+
+Priorize manter compatibilidade com os fluxos existentes, evitando que funcionalidades atuais quebrem.
+
+Sempre que estiver em dúvida sobre intenção de negócio, pergunte antes de alterar.
+
+Agora, comece pela etapa 1: faça a leitura global de todos os arquivos e me entregue um mapa completo da plataforma Ponto. School antes de tocar em qualquer linha de código.
