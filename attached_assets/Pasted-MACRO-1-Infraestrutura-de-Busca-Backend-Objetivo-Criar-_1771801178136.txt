@@ -1,0 +1,322 @@
+MACRO 1 — Infraestrutura de Busca Backend
+Objetivo: Criar o motor de busca educacional como endpoint de API. Assim que concluído, já é possível testar a busca diretamente e verificar se os resultados são pedagogicamente superiores às ferramentas genéricas.
+
+Por que primeiro: Toda a capability depende desta base. Se o backend não funcionar, nada acima funciona. E ao fazer isso primeiro, temos um resultado concreto e testável imediatamente — pode-se fazer um curl e ver resultados reais.
+
+Micro 1.1 — Verificação dos Secrets de Ambiente
+Como está agora: Não se sabe quais chaves de API de busca estão disponíveis no ambiente. O código da capability precisará ser diferente dependendo do provider disponível (Tavily vs. fallback gratuito).
+
+Como deve ficar depois: Verificação completa de TAVILY_API_KEY, SERPER_API_KEY, e BRAVE_SEARCH_API_KEY nos secrets de ambiente. Decisão documentada de qual provider usar. Se Tavily existir: ele será o primário. Se não existir nenhuma chave: implementar com DuckDuckGo HTML + Jina Reader (100% gratuito, sem registro).
+
+Impacto: Determina toda a implementação subsequente do backend.
+
+Micro 1.2 — Criar arquivo api/search.js
+Como está agora: Não existe nenhum arquivo api/search.js. Não há rota de busca web no backend. O api/server.js tem rotas para email, perfis, atividades, calendário — mas zero capacidade de buscar na internet.
+
+Como deve ficar depois: Um arquivo api/search.js existe com:
+
+Rota POST /api/search/web aceitando { query, queries?, search_depth?, max_results? }
+A whitelist educacional embutida com 15+ domínios brasileiros em ordem de prioridade
+Suporte a múltiplas queries paralelas (usando Promise.all)
+Retorno estruturado: { results: [...], query, total_found, provider, duration_ms }
+Cada resultado no array results terá: { title, url, content, snippet, score, domain_tier, source_type, published_date }.
+
+Micro 1.3 — Provider de Busca com DuckDuckGo + Jina Reader
+Como está agora: Sem Tavily, não há forma gratuita de buscar. DuckDuckGo tem uma interface HTML não oficial que pode ser raspada com cheerio. Jina Reader (r.jina.ai/{url}) converte qualquer URL em Markdown limpo, sem custo e sem autenticação.
+
+Como deve ficar depois: O sistema consegue buscar em 2-3 queries paralelas via DuckDuckGo HTML, extrair título, URL e snippet de cada resultado, e para as top-3 URLs com maior score educacional, usar Jina Reader para extrair o conteúdo completo da página. O resultado de uma busca por "fotossíntese 7º ano BNCC" retorna resultados reais da Nova Escola, MEC, e Scielo — não de blogs aleatórios.
+
+Nota importante: Se Tavily estiver disponível, substitui o DuckDuckGo inteiramente, mantendo o Jina Reader apenas para extração de conteúdo completo. Tavily tem include_domains nativo, o que elimina a necessidade de whitelist manual na busca.
+
+Micro 1.4 — Motor de Re-ranking Educacional
+Como está agora: Sem re-ranking. Resultados de busca genérica aparecem em ordem de relevância genérica do mecanismo de busca. Um blog de um professor desconhecido poderia aparecer antes de um documento oficial do MEC.
+
+Como deve ficar depois: Função calculateEducationalScore(result) que aplica a fórmula consolidada dos benchmarkings:
+
+score_final =
+  0.40 × relevância_semântica   (keyword overlap com query original)
+  0.25 × autoridade_domínio     (gov.br=100, edu.br=90, org.br curado=85, .br geral=50, outros=20)
+  0.15 × recência               (conteúdo atual=1.0, 1-2 anos=0.8, 3+ anos=0.5)
+  0.10 × tipo_conteúdo          (PDF oficial=1.3x, .gov=1.4x, artigo acadêmico=1.2x, blog=0.7x)
+  0.10 × boost_educacional_br   (novaescola, mec, bncc, scielo = +0.4 flat)
+Resultado: um artigo da Nova Escola sobre metodologias ativas SEMPRE aparece antes de um artigo genérico de autoajuda que casualmente menciona "educação". Isso é o que nos separa das plataformas genéricas.
+
+Micro 1.5 — Registrar Rota no api/server.js
+Como está agora: api/server.js não importa nem monta nenhuma rota de busca web. Qualquer chamada a /api/search/web retornaria 404.
+
+Como deve ficar depois: api/server.js tem import searchRoutes from './search.js' e app.use('/api/search', searchRoutes). Um curl -X POST http://localhost:3001/api/search/web -H "Content-Type: application/json" -d '{"query":"plano de aula fotossíntese 7o ano BNCC"}' retorna JSON com resultados reais ranqueados.
+
+Resultado tangível do MACRO 1: A API de busca educacional existe, funciona, e já produz resultados superiores a qualquer ferramenta genérica. Pode ser testada independentemente de qualquer outra parte do sistema.
+
+MACRO 2 — Implementação V2 da Capability TypeScript
+Objetivo: Criar o arquivo pesquisar-web.ts que é o cérebro da capability — com query planning inteligente, múltiplas rodadas de busca visíveis no card de desenvolvimento, e formatação de contexto para injeção downstream.
+
+Por que segundo: Com o backend funcionando, podemos construir sobre ele. Esta é a etapa onde a capability "ganha vida" no sistema.
+
+Micro 2.1 — Criar pesquisar-web.ts com Estrutura Base
+Como está agora: O diretório PESQUISAR/implementations/ tem pesquisar-bncc.ts, pesquisar-atividades-disponiveis.ts, pesquisar-atividades-conta.ts, pesquisar-banco-questoes.ts. Nenhum arquivo pesquisar-web.ts existe.
+
+Como deve ficar depois: Existe PESQUISAR/implementations/pesquisar-web.ts com:
+
+interface PesquisarWebParams {
+  query: string;                           // Pedido original do professor
+  search_depth?: 'basic' | 'advanced';    // quick snippets vs full extraction
+  focus_type?: 'plano_aula' | 'atividade' | 'avaliacao' | 'metodologia' | 'geral';
+  disciplina?: string;                     // contexto curricular
+  ano_serie?: string;                      // para enriquecer queries
+  tema?: string;                           // tema pedagógico específico
+  max_rounds?: number;                     // máximo de rodadas iterativas (default: 2)
+}
+export async function pesquisarWebV2(input: CapabilityInput): Promise<CapabilityOutput>
+A estrutura segue EXATAMENTE o padrão de pesquisar-bncc.ts: const debug_log: DebugEntry[] = [], const startTime = Date.now(), try/catch com retorno padronizado de erro, createDataConfirmation, createDataCheck.
+
+Micro 2.2 — Query Planning Educacional com LLM Interno
+Como está agora: Nenhuma capability existente faz query planning. Todas recebem parâmetros diretos e os usam literalmente. O professor precisaria saber exatamente o que pesquisar.
+
+Como deve ficar depois: Antes de qualquer busca, pesquisarWebV2 faz uma chamada ao Groq (modelo llama-3.1-8b-instant — rápido e barato) com um prompt de sistema específico para gerar 2-4 queries educacionais otimizadas.
+
+O prompt de sistema do query planner será algo como:
+
+"Você é um especialista em busca educacional brasileira. Dado o pedido de um professor, gere 2-4 queries de busca otimizadas cobrindo aspectos diferentes: curricular (com BNCC), pedagógico (plano de aula/atividade), prático (recursos baixo custo), acadêmico (scielo, capes). Retorne JSON com array de queries."
+
+Para "quero criar uma aula sobre frações para o 5º ano usando jogos", o planner gera:
+
+[
+  "frações 5º ano Matemática BNCC EF05MA07 habilidades",
+  "plano de aula frações ensino fundamental jogos pedagógicos",
+  "atividades lúdicas frações anos iniciais material concreto baixo custo",
+  "jogos matemáticos frações 5 ano site:novaescola.org.br OR site:mec.gov.br"
+]
+Isso é o que separa nossa pesquisa de uma busca literal — inteligência pedagógica na formulação das queries.
+
+Micro 2.3 — Debug Log com Múltiplas Rodadas Visíveis (Padrão Manus/Genspark/Kimi)
+Como está agora: No card de Desenvolvimento, pesquisar_bncc aparece UMA VEZ com suas etapas internas. Não há conceito de "rodadas iterativas" visíveis ao professor.
+
+Como deve ficar depois: pesquisarWebV2 usa múltiplos blocos de debug_log.push() que aparecem como entradas separadas no card. Cada rodada de busca aparece como uma entrada independente:
+
+ETAPA 1: Analisando pedido e identificando intenção pedagógica...
+  → Tema: Frações | Disciplina: Matemática | Ano: 5º ano | Foco: Jogos
+  
+ETAPA 2: Gerando 4 consultas educacionais especializadas...
+  → Query 1: "frações 5º ano Matemática BNCC EF05MA07"
+  → Query 2: "plano de aula frações jogos ensino fundamental"
+  → Query 3: "atividades lúdicas frações material concreto baixo custo"
+  → Query 4: "jogos matemáticos frações 5 ano Nova Escola"
+🔎 RODADA 1: Buscando em fontes educacionais brasileiras...
+  → 4 queries paralelas executadas
+  → 23 resultados brutos obtidos
+  → Re-ranking aplicado: 8 resultados com score > 0.7
+  → Cobertura: curricular ✓ | pedagógico ✓ | prático ⚠ (fraco)
+⚠ LACUNA IDENTIFICADA: Poucos recursos práticos encontrados.
+  Jota vai buscar mais especificamente...
+🔎 RODADA 2: Refinando pesquisa — foco em recursos práticos...
+  → 2 queries adicionais sobre materiais concretos
+  → 5 resultados adicionais encontrados
+  → Cobertura agora: curricular ✓ | pedagógico ✓ | prático ✓
+ETAPA FINAL: Extraindo conteúdo completo das 3 melhores fontes...
+  → Fonte 1: novaescola.org.br (Jina Reader aplicado)
+  → Fonte 2: portaldoprofessor.mec.gov.br (Jina Reader aplicado)  
+  → Fonte 3: scielo.br (Jina Reader aplicado)
+✅ PESQUISA CONCLUÍDA: 11 recursos selecionados de 28 encontrados
+   2 artigos acadêmicos | 4 planos de aula | 3 atividades práticas | 2 documentos oficiais
+Este é o pattern do Genspark (Sparkpages iterativos), do Manus (gap analysis por rodada), e do Kimi (entries separadas por search round) — todos consolidados numa experiência nativa para o professor brasileiro.
+
+Micro 2.4 — Construção do prompt_context para Injeção Downstream
+Como está agora: Quando pesquisar_bncc termina, seu prompt_context é uma string formatada que o criar_arquivo pode usar. Não existe equivalente para dados da web.
+
+Como deve ficar depois: pesquisarWebV2 produz um prompt_context estruturado:
+
+══════════════════════════════════════════════════════
+PESQUISA WEB EDUCACIONAL — Jota Ponto.School
+Tema: Frações | Disciplina: Matemática | Ano: 5º ano EF
+Rodadas: 2 | Fontes consultadas: 28 | Selecionadas: 11
+══════════════════════════════════════════════════════
+[1] ⭐ ALTA RELEVÂNCIA — Plano de Aula Verificado
+Título: Aprendendo Frações com Jogos — Sequência Didática
+Origem: novaescola.org.br | Tipo: Plano de Aula | Alinhamento: EF05MA07
+Trecho completo: "A sequência didática propõe três momentos: no primeiro, 
+os alunos exploram frações com materiais concretos (papel dobrado, régua 
+fracionária). No segundo, jogam o 'Bingo de Frações'..."
+URL: https://novaescola.org.br/...
+[2] 📚 EMBASAMENTO CIENTÍFICO — Artigo Acadêmico
+Título: O Uso de Jogos no Ensino de Frações: Uma Revisão Sistemática
+Origem: scielo.br | Tipo: Artigo Peer-Reviewed | Ano: 2023
+Trecho: "Estudos indicam que o uso de jogos matemáticos aumenta em 34% 
+o engajamento e melhora a compreensão conceitual de frações..."
+URL: https://scielo.br/...
+[3] 🏛️ FONTE OFICIAL — Documento MEC
+Título: Habilidade EF05MA07 — Associar a Representação Fracionária
+Origem: basenacionalcomum.mec.gov.br | Tipo: BNCC Oficial
+[...]
+══════════════════════════════════════════════════════
+INSTRUÇÃO PARA IA: Use as fontes acima como referência ao gerar conteúdo.
+Cite as fontes explicitamente no resultado final. Priorize [1] e [3] para 
+o plano de aula. Use [2] para embasamento científico se necessário.
+══════════════════════════════════════════════════════
+Este contexto vai direto para o prompt do criar_arquivo e criar_plano_aula — o Jota não inventa, ele usa evidências reais.
+
+Micro 2.5 — Lógica de Gap Analysis e Critério de Parada
+Como está agora: Nenhuma capability tem lógica iterativa. Todas executam uma vez e retornam.
+
+Como deve ficar depois: pesquisarWebV2 implementa a lógica de convergência inspirada no Manus:
+
+function analyzeGaps(results: SearchResult[], focus_type: string): GapAnalysis {
+  return {
+    has_curricular: results.some(r => r.content.includes('BNCC') || r.domain.includes('mec.gov')),
+    has_pedagogical: results.some(r => r.source_type === 'plano_aula' || r.source_type === 'atividade'),
+    has_practical: results.some(r => r.content.includes('material') || r.content.includes('baixo custo')),
+    has_academic: results.some(r => r.domain.includes('scielo') || r.domain.includes('capes')),
+    coverage_score: /* weighted score */,
+  };
+}
+// Para quando coverage_score >= 0.80 ou quando rounds >= max_rounds (default: 2)
+// Nunca mais de 3 rounds — máximo de 15s total
+A segunda rodada só acontece se a análise de gaps identificar lacunas reais. Isso evita buscas redundantes e mantém o tempo total aceitável (< 10 segundos para pesquisa avançada).
+
+Resultado tangível do MACRO 2: A capability existe, funciona localmente, produz debug log multi-rodada visível no card, e gera prompt_context rico. Pode ser testada chamando a função diretamente, mesmo sem estar registrada no executor.
+
+MACRO 3 — Registro e Integração no Sistema
+Objetivo: Conectar a capability ao sistema existente para que o executor saiba que ela existe, possa rodá-la, e o sistema anti-alucinação a reconheça.
+
+Por que terceiro: Sem isso, mesmo que a implementação esteja perfeita, o executor não consegue rodá-la. Este passo é onde a capability se torna "real" para o sistema.
+
+Micro 3.1 — Adicionar ao PESQUISAR/registry.ts
+Como está agora: registry.ts tem 4 capabilities: pesquisar_atividades_conta, pesquisar_atividades_disponiveis, pesquisar_bncc, pesquisar_banco_questoes. pesquisar_web não existe no objeto PESQUISAR_CAPABILITIES.
+
+Como deve ficar depois: PESQUISAR_CAPABILITIES tem uma quinta entrada pesquisar_web com:
+
+displayName: 'Vou pesquisar em fontes educacionais brasileiras confiáveis'
+description: descrição completa para o planner entender quando usar
+parameters: query, search_depth, focus_type, disciplina, ano_serie, max_rounds
+execute: wrapper que chama pesquisarWebV2 com o padrão V2 exato (incluindo createDebugEntry para cada debug_log entry)
+showProgress: true, isSequential: false, cacheResults: false (busca sempre fresh)
+O wrapper no registry segue o mesmo padrão dos outros: chama o V2, converte debug_log para createDebugEntry, converte output V2 para formato legado.
+
+Micro 3.2 — Adicionar ao V2_REGISTRY no executor.ts
+Como está agora: O V2_REGISTRY do executor (linha 675) tem 10 capabilities. pesquisar_web não está no Map. Se o executor encontrar pesquisar_web num plano, cai no fallback legado/AI.
+
+Como deve ficar depois: O V2_REGISTRY tem ['pesquisar_web', pesquisarWebV2] como entrada. O executor reconhece a capability e a executa via V2 diretamente. O capabilityResultsMap armazenará o resultado de pesquisar_web com chave 'pesquisar_web' para acesso downstream.
+
+A linha a adicionar é simples — apenas 1 linha no Map existente. Sem risco de efeitos colaterais.
+
+Micro 3.3 — Adicionar Aliases no capability-validator.ts
+Como está agora: CAPABILITY_ALIASES no validator não tem entradas para variações de pesquisar_web. Se o planner (LLM) gerar buscar_web, pesquisa_web, ou pesquisar_internet, o sistema vai rejeitar como capability inválida.
+
+Como deve ficar depois: CAPABILITY_ALIASES inclui:
+
+'buscar_web': 'pesquisar_web',
+'pesquisa_web': 'pesquisar_web',
+'buscar_na_internet': 'pesquisar_web',
+'pesquisar_internet': 'pesquisar_web',
+'buscar_recursos': 'pesquisar_web',
+'pesquisar_fontes': 'pesquisar_web',
+'buscar_referencias': 'pesquisar_web',
+'buscar_artigos': 'pesquisar_web',
+'pesquisar_scielo': 'pesquisar_web',
+'buscar_materiais': 'pesquisar_web',
+E getCanonicalCategory inclui 'pesquisar_web': 'PESQUISAR'.
+
+Isso garante que mesmo se o LLM do planner usar um nome ligeiramente diferente, o sistema corrige automaticamente — nunca rejeita.
+
+Micro 3.4 — Atualizar capability-dependencies.json
+Como está agora: O arquivo JSON de dependências não tem entrada para pesquisar_web. O planner/executor não sabe que ela pode (e deve) rodar antes de criar_arquivo.
+
+Como deve ficar depois: Nova entrada no JSON:
+
+"pesquisar_web": {
+  "category": "PESQUISAR",
+  "depends_on": [],
+  "optional_before": ["criar_arquivo", "gerar_conteudo_atividades"],
+  "failure_handling": "continue_without",
+  "description": "Busca em fontes educacionais brasileiras (novaescola, mec, scielo) para embasar conteúdo gerado",
+  "search_modes": {
+    "basic": "snippets, 2-3 queries, ~2-3s",
+    "advanced": "conteúdo completo via Jina Reader, até 3 rodadas, ~8-15s"
+  },
+  "triggers": ["pesquise", "busque", "procure", "encontre", "quero embasamento", "fontes", "referencias"]
+}
+Resultado tangível do MACRO 3: pesquisar_web está completamente integrada ao sistema. O executor roda, o validator reconhece, as dependências estão definidas. Um teste manual criando um plano com pesquisar_web funciona do início ao fim.
+
+MACRO 4 — Inteligência do Planner e Injeção de Contexto
+Objetivo: Fazer o Jota saber quando incluir pesquisar_web automaticamente, e garantir que os resultados da busca alimentem as capabilities de criação downstream.
+
+Por que quarto: Sem este passo, a capability só funciona quando o professor explicitamente pedir. Com este passo, ela funciona automaticamente quando o Jota detectar que o conteúdo se beneficia de fontes externas.
+
+Micro 4.1 — Atualizar PLANNING_PROMPT em prompts/planning-prompt.ts
+Como está agora: O PLANNING_PROMPT tem instruções detalhadas sobre pesquisar_bncc e pesquisar_banco_questoes, mas zero menção a pesquisar_web. O planner (LLM) não tem orientação de quando usar busca web.
+
+Como deve ficar depois: O PLANNING_PROMPT ganha uma seção nova após as instruções de pesquisar_bncc:
+
+📡 pesquisar_web — Busca Web Educacional Inteligente
+QUANDO USAR:
+- Professor menciona explicitamente: "pesquise", "busque", "procure na internet", 
+  "me traga fontes", "quero referências", "com embasamento científico"
+- Professor quer criar plano de aula sobre metodologia específica não trivial 
+  (PBL, sala de aula invertida, metodologia ativa, gamificação)
+- Professor pede conteúdo com citação de fontes externas
+- Professor menciona: "o que existe sobre", "como outros fazem", "boas práticas de"
+- Quando o tema pedagógico é específico e se beneficiaria de exemplos reais
+PARÂMETROS A DEFINIR:
+- query: reformule o pedido como uma query de pesquisa clara
+- search_depth: "basic" para pesquisas rápidas, "advanced" quando precisa de conteúdo rico
+- focus_type: "plano_aula", "atividade", "metodologia", "avaliacao", ou "geral"
+- disciplina e ano_serie: se conhecidos no contexto
+REGRA CRÍTICA: pesquisar_web deve SEMPRE aparecer ANTES de criar_arquivo ou 
+gerar_conteudo_atividades. Nunca depois.
+POSIÇÃO NO PLANO: Etapa PESQUISA, junto com pesquisar_bncc (podem ser paralelas).
+Micro 4.2 — Injeção de Contexto Web no Executor para Capabilities Downstream
+Como está agora: O executor tem ensureBnccExecution() que injeta contexto BNCC automaticamente antes de gerar_conteudo_atividades. Não existe equivalente para contexto web. Mesmo que pesquisar_web rode antes de criar_arquivo, o criar_arquivo não sabe que os resultados existem.
+
+Como deve ficar depois: No executor.ts, antes de executar criar_arquivo, gerar_conteudo_atividades, adicionar:
+
+// Extrai contexto de pesquisa web do capabilityResultsMap
+const webSearchResult = this.capabilityResultsMap.get('pesquisar_web');
+if (webSearchResult?.data?.prompt_context) {
+  enrichedParams.web_search_context = webSearchResult.data.prompt_context;
+  enrichedParams.web_sources_found = webSearchResult.data.results?.length || 0;
+  // Log no debug para o professor ver
+  debug_log.push({
+    type: 'info',
+    narrative: `🌐 Contexto web injetado: ${webSearchResult.data.results?.length} fontes educacionais disponíveis para enriquecer o conteúdo`
+  });
+}
+As capabilities criar_arquivo e gerar_conteudo_atividades já recebem enrichedParams, então web_search_context fica disponível automaticamente no input.context dessas capabilities. Seus prompts LLM internos precisarão de uma instrução: "Se web_search_context estiver disponível, USE as fontes listadas e cite-as no resultado."
+
+NÃO implementar auto-execução forçada — diferente do ensureBnccExecution() que é obrigatório, pesquisar_web é enriquecimento opcional. Se o planner não a incluiu, é porque não foi necessária.
+
+Resultado tangível do MACRO 4: O fluxo completo funciona end-to-end. Professor diz "pesquise sobre metodologias ativas para frações no 5º ano e crie um plano de aula" → Planner inclui pesquisar_web + criar_arquivo → Executor roda pesquisar_web primeiro → Card mostra as 2 rodadas de busca → Executor injeta contexto → criar_arquivo gera um plano que CITA as fontes reais da Nova Escola e do Scielo. Isso é o produto final.
+
+MACRO 5 — Polimento, Correção de Bugs e Validação Final
+Objetivo: Garantir que tudo funciona sem erros, corrigir os 3 bugs LSP existentes, e documentar.
+
+Por que último: Só faz sentido polir depois que tudo funciona. Fazer isso antes desperdiça tempo em código que pode mudar.
+
+Micro 5.1 — Corrigir os 3 Erros LSP Existentes
+Como está agora: orchestrator.ts tem 2 erros LSP e executor.ts tem 1 erro LSP. Esses erros já existem antes da nossa implementação — mas depois das nossas modificações no executor.ts, podem se propagar se não corrigidos.
+
+Como deve ficar depois: Diagnóstico completo dos 3 erros com get_latest_lsp_diagnostics. Correção cirúrgica de cada um sem alterar comportamento funcional. Zero erros LSP no projeto.
+
+Micro 5.2 — Teste End-to-End com Screenshot
+Como está agora: Não há como verificar visualmente se o card de Desenvolvimento mostra as múltiplas rodadas de pesquisa como planejado.
+
+Como deve ficar depois: Screenshot do chat Jota com o prompt de teste: "Pesquise sobre metodologias ativas para o ensino de frações no 5º ano e me ajude a criar um plano de aula". Verificar:
+
+Card de Desenvolvimento mostra pesquisar_web aparecendo 2+ vezes (Rodada 1, Rodada 2)
+Cada rodada lista as queries e resultados encontrados
+O plano de aula gerado menciona fontes reais (Nova Escola, MEC, Scielo)
+Nenhum erro no console do backend
+Micro 5.3 — Atualizar Documentação
+Como está agora: replit.md não menciona pesquisar_web.
+
+Como deve ficar depois: replit.md documenta a nova capability com: propósito, arquitetura (2 fases, multi-rodada), providers suportados, whitelist de domínios, e o fluxo de integração com capabilities downstream.
+
+Resumo da Ordem e Resultados por Etapa
+Macro	Resultado após conclusão	Tempo estimado
+MACRO 1	API de busca testável via curl, retorna resultados reais ranqueados	~1h
+MACRO 2	Capability funcional com multi-rodada, debug log rico, prompt_context	~2h
+MACRO 3	Capability registrada no sistema, executor a reconhece e executa	~30min
+MACRO 4	Fluxo E2E completo: planner inclui automaticamente, conteúdo cita fontes	~1h
+MACRO 5	Sistema limpo, sem bugs, documentado, testado visualmente	~30min
+Total estimado: ~5 horas de implementação
+
+A ordem garante que a partir do MACRO 1 já há algo concreto e testável. A partir do MACRO 3 a capability já pode ser acionada manualmente por qualquer prompt que inclua pesquisar_web. A partir do MACRO 4, ela funciona automaticamente — sem o professor precisar pedir explicitamente — e o output é fundamentalmente superior ao de qualquer ferramenta genérica no mercado.
