@@ -1,9 +1,10 @@
 /**
  * LLM ORCHESTRATOR - TYPES
  * 
- * Tipos centralizados para o Sistema Unificado de LLMs v3.0 Enterprise
+ * Tipos centralizados para o Sistema Unificado de LLMs v4.0 Enterprise
+ * 9 providers, 16 modelos em cascata.
  * 
- * @version 3.0.0
+ * @version 4.0.0
  * @author Ponto School
  */
 
@@ -11,14 +12,23 @@
 // PROVIDER TYPES
 // ============================================================================
 
-export type LLMProvider = 'groq' | 'gemini' | 'local';
+export type LLMProvider = 
+  | 'groq'         // Groq LPU — ultra-rápido, primário
+  | 'gemini'       // Google Gemini — contexto longo, multimodal
+  | 'together'     // Together AI — 200+ modelos, bom custo-benefício
+  | 'openrouter'   // OpenRouter — agregador: Claude, GPT-4, DeepSeek, free models
+  | 'deepinfra'    // DeepInfra — mais barato do mercado, ótima performance
+  | 'xroute'       // XRoute — Claude, GPT-5, Grok via créditos premium
+  | 'edenai'       // EdenAI — agregador multi-provider com failover
+  | 'huggingface'  // HuggingFace — modelos open-source, fallback gratuito
+  | 'local';       // Local Fallback — NUNCA FALHA
 
 export type ModelTier = 
-  | 'ultra-fast'    // Tier 1: Modelos mais rápidos (< 1s)
-  | 'fast'          // Tier 2: Modelos rápidos (1-3s)
-  | 'balanced'      // Tier 3: Equilíbrio velocidade/qualidade
-  | 'powerful'      // Tier 4: Modelos mais potentes
-  | 'fallback';     // Tier 5: Fallback local (nunca falha)
+  | 'ultra-fast'    // Tier 1: < 500ms
+  | 'fast'          // Tier 2: 500ms-2s
+  | 'balanced'      // Tier 3: equilíbrio velocidade/qualidade
+  | 'powerful'      // Tier 4: máxima qualidade
+  | 'fallback';     // Tier 5: nunca falha
 
 export type ActivityType = 
   | 'lista-exercicios'
@@ -178,5 +188,5 @@ export interface OrchestratorStats {
   cacheMisses: number;
   avgLatencyMs: number;
   modelUsage: Record<string, number>;
-  providerUsage: Record<LLMProvider, number>;
+  providerUsage: Record<string, number>;
 }

@@ -1,7 +1,8 @@
 /**
- * LLM ORCHESTRATOR - MAIN ENGINE
+ * LLM ORCHESTRATOR - MAIN ENGINE v4.0
  * 
- * Orquestrador principal do Sistema Unificado de LLMs v3.0 Enterprise.
+ * Orquestrador principal do Sistema Unificado de LLMs v4.0 Enterprise.
+ * 9 providers, 16 modelos em cascata inteligente por tier.
  * 
  * ARQUITETURA:
  * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -14,12 +15,13 @@
  * │ 3. SMART ROUTING                                                        │
  * │    └── router.ts: makeRoutingDecision()                                 │
  * ├─────────────────────────────────────────────────────────────────────────┤
- * │ 4. CASCADE EXECUTION (11 modelos em 5 tiers)                            │
- * │    ├── TIER 1: Ultra-Fast (llama-3.1-8b, gemma2-9b)                     │
- * │    ├── TIER 2: Fast (llama-3.3-70b, mixtral-8x7b, llama3-70b)           │
- * │    ├── TIER 3: Balanced (llama-3-tool-use, llama-4-scout)               │
- * │    ├── TIER 4: Powerful (gemini-2.5-flash, gemini-2.0-flash)            │
- * │    └── TIER 5: Local Fallback (NUNCA FALHA)                             │
+ * │ 4. CASCADE EXECUTION (16 modelos em 5 tiers)                            │
+ * │    ├── TIER 1: Ultra-Fast  — Groq Llama 3.1 8B                          │
+ * │    ├── TIER 2: Fast        — Groq 70B + Together 70B                    │
+ * │    ├── TIER 3: Balanced    — Groq Llama4 + OpenRouter + Together + DInf │
+ * │    ├── TIER 4: Powerful    — Gemini + DeepInfra + OpenRouter + XRoute   │
+ * │    │                         + EdenAI + HuggingFace                     │
+ * │    └── TIER 5: Fallback    — Local (NUNCA FALHA)                        │
  * ├─────────────────────────────────────────────────────────────────────────┤
  * │ 5. PROTECTION SYSTEMS                                                   │
  * │    ├── Circuit Breaker (por modelo)                                     │
@@ -30,7 +32,7 @@
  * │    └── cache.ts: setCacheResponse()                                     │
  * └─────────────────────────────────────────────────────────────────────────┘
  * 
- * @version 3.0.0
+ * @version 4.0.0 — 9 providers, 16 modelos
  */
 
 import type { 
@@ -44,10 +46,14 @@ import type {
 import { 
   getActiveModels, 
   getModelById, 
+  getApiKeyForProvider,
   ORCHESTRATOR_CONFIG 
 } from './config';
 import { callGroqAPI } from './providers/groq';
 import { callGeminiAPI } from './providers/gemini';
+import { callOpenAICompatibleAPI } from './providers/openai-compatible';
+import { callEdenAIAPI } from './providers/edenai';
+import { callHuggingFaceAPI } from './providers/huggingface';
 import { getCachedResponse, setCacheResponse, getCacheStats } from './cache';
 import { 
   sanitizePrompt, 
@@ -77,9 +83,93 @@ const stats: OrchestratorStats = {
   providerUsage: {
     groq: 0,
     gemini: 0,
+    together: 0,
+    openrouter: 0,
+    deepinfra: 0,
+    xroute: 0,
+    edenai: 0,
+    huggingface: 0,
     local: 0,
   },
 };
+
+// ============================================================================
+// PROVIDER DISPATCH — Rota correta por provider
+// ============================================================================
+
+async function dispatchToProvider(
+  model: LLMModel,
+  prompt: string,
+  options: GenerateContentOptions
+): Promise<GenerateContentResult> {
+  const apiKey = getApiKeyForProvider(model.provider);
+
+  switch (model.provider) {
+    case 'groq':
+      return callGroqAPI(model, prompt, {
+        temperature: options.temperature,
+        maxTokens: options.maxTokens,
+        timeout: options.timeout,
+        systemPrompt: options.systemPrompt,
+      });
+
+    case 'gemini':
+      return callGeminiAPI(model, prompt, {
+        temperature: options.temperature,
+        maxTokens: options.maxTokens,
+        timeout: options.timeout,
+        systemPrompt: options.systemPrompt,
+      });
+
+    case 'together':
+    case 'openrouter':
+    case 'xroute':
+    case 'deepinfra':
+      return callOpenAICompatibleAPI(model, prompt, {
+        temperature: options.temperature,
+        maxTokens: options.maxTokens,
+        timeout: options.timeout,
+        systemPrompt: options.systemPrompt,
+        apiKey,
+      });
+
+    case 'edenai':
+      return callEdenAIAPI(model, prompt, {
+        temperature: options.temperature,
+        maxTokens: options.maxTokens,
+        timeout: options.timeout,
+        systemPrompt: options.systemPrompt,
+        apiKey,
+      });
+
+    case 'huggingface':
+      return callHuggingFaceAPI(model, prompt, {
+        temperature: options.temperature,
+        maxTokens: options.maxTokens,
+        timeout: options.timeout,
+        systemPrompt: options.systemPrompt,
+        apiKey,
+      });
+
+    default:
+      return {
+        success: false,
+        data: null,
+        model: model.id,
+        provider: model.provider,
+        tier: model.tier,
+        latencyMs: 0,
+        cached: false,
+        attemptsMade: 1,
+        errors: [{
+          model: model.id,
+          provider: model.provider,
+          error: `Provider desconhecido: ${model.provider}`,
+          timestamp: Date.now(),
+        }],
+      };
+  }
+}
 
 // ============================================================================
 // MAIN GENERATE FUNCTION
@@ -95,16 +185,9 @@ export async function generateContent(
   const errors: ModelError[] = [];
   let attemptsMade = 0;
 
-  console.log(`\n🤖 [LLM-Orchestrator] ====== NOVA REQUISIÇÃO ======`);
+  console.log(`\n🤖 [LLM-Orchestrator v4.0] ====== NOVA REQUISIÇÃO ======`);
   console.log(`🤖 [LLM-Orchestrator] Prompt length: ${prompt.length} chars`);
-  console.log(`🤖 [LLM-Orchestrator] Verificando API keys...`);
-  
-  // Log detalhado das API keys
-  const groqKey = (import.meta.env.VITE_GROQ_API_KEY || '').trim();
-  const geminiKey = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
-  console.log(`🔑 [LLM-Orchestrator] VITE_GROQ_API_KEY: ${groqKey ? `${groqKey.substring(0, 8)}...` : 'NÃO ENCONTRADA'}`);
-  console.log(`🔑 [LLM-Orchestrator] VITE_GEMINI_API_KEY: ${geminiKey ? `${geminiKey.substring(0, 8)}...` : 'NÃO ENCONTRADA'}`);
-  console.log(`📊 [LLM-Orchestrator] Modelos ativos: ${getActiveModels().length}`);
+  console.log(`📊 [LLM-Orchestrator] Modelos ativos: ${getActiveModels().length} (9 providers)`);
 
   const sanitized = sanitizePrompt(prompt);
   if (!sanitized.valid) {
@@ -159,7 +242,7 @@ export async function generateContent(
     .filter((m): m is LLMModel => m !== undefined);
 
   if (options.onProgress) {
-    options.onProgress(`Iniciando com ${modelsToTry.length} modelos disponíveis...`);
+    options.onProgress(`Iniciando com ${modelsToTry.length} modelos disponíveis (9 providers)...`);
   }
 
   for (const model of modelsToTry) {
@@ -192,25 +275,7 @@ export async function generateContent(
         options.onProgress(`Tentando ${model.name}${retry > 0 ? ` (retry ${retry + 1})` : ''}...`);
       }
 
-      let result: GenerateContentResult;
-
-      if (model.provider === 'groq') {
-        result = await callGroqAPI(model, cleanPrompt, {
-          temperature: options.temperature,
-          maxTokens: options.maxTokens,
-          timeout: options.timeout,
-          systemPrompt: options.systemPrompt,
-        });
-      } else if (model.provider === 'gemini') {
-        result = await callGeminiAPI(model, cleanPrompt, {
-          temperature: options.temperature,
-          maxTokens: options.maxTokens,
-          timeout: options.timeout,
-          systemPrompt: options.systemPrompt,
-        });
-      } else {
-        continue;
-      }
+      const result = await dispatchToProvider(model, cleanPrompt, options);
 
       recordRequest(model.provider);
 
@@ -223,12 +288,12 @@ export async function generateContent(
 
         stats.successfulRequests++;
         stats.modelUsage[model.id] = (stats.modelUsage[model.id] || 0) + 1;
-        stats.providerUsage[model.provider]++;
+        stats.providerUsage[model.provider] = (stats.providerUsage[model.provider] || 0) + 1;
 
         const totalLatency = Date.now() - startTime;
         stats.avgLatencyMs = (stats.avgLatencyMs * (stats.successfulRequests - 1) + totalLatency) / stats.successfulRequests;
 
-        console.log(`✅ [LLM-Orchestrator] Sucesso com ${model.id} em ${totalLatency}ms`);
+        console.log(`✅ [LLM-Orchestrator] Sucesso com ${model.id} [${model.provider}] em ${totalLatency}ms`);
 
         if (options.onProgress) {
           options.onProgress(`Concluído com ${model.name}`);
@@ -245,13 +310,13 @@ export async function generateContent(
       errors.push(...result.errors);
 
       if (result.errors.some(e => e.statusCode === 429)) {
-        console.log(`⏭️ [LLM-Orchestrator] ${model.id} rate limited, pulando para próximo modelo`);
+        console.log(`⏭️ [LLM-Orchestrator] ${model.id} rate limited (429), pulando para próximo modelo`);
         break;
       }
     }
   }
 
-  console.log(`⚠️ [LLM-Orchestrator] Todas as APIs falharam, usando fallback local`);
+  console.log(`⚠️ [LLM-Orchestrator] Todos os ${modelsToTry.length} modelos falharam, usando fallback local`);
 
   if (options.onProgress) {
     options.onProgress('Gerando conteúdo localmente...');
@@ -261,7 +326,7 @@ export async function generateContent(
   
   stats.successfulRequests++;
   stats.modelUsage['local-fallback'] = (stats.modelUsage['local-fallback'] || 0) + 1;
-  stats.providerUsage.local++;
+  stats.providerUsage['local'] = (stats.providerUsage['local'] || 0) + 1;
 
   return {
     ...localResult,
@@ -293,6 +358,7 @@ export async function executeWithCascadeFallback(
     maxTokens?: number;
     timeout?: number;
     activityType?: ActivityType;
+    systemPrompt?: string;
   }
 ): Promise<CascadeResult> {
   const result = await generateContent(prompt, {
@@ -301,6 +367,7 @@ export async function executeWithCascadeFallback(
     maxTokens: options?.maxTokens,
     timeout: options?.timeout,
     activityType: options?.activityType,
+    systemPrompt: options?.systemPrompt,
   });
 
   return {
@@ -333,11 +400,22 @@ export function resetOrchestratorStats(): void {
   stats.cacheMisses = 0;
   stats.avgLatencyMs = 0;
   stats.modelUsage = {};
-  stats.providerUsage = { groq: 0, gemini: 0, local: 0 };
+  stats.providerUsage = {
+    groq: 0,
+    gemini: 0,
+    together: 0,
+    openrouter: 0,
+    deepinfra: 0,
+    xroute: 0,
+    edenai: 0,
+    huggingface: 0,
+    local: 0,
+  };
 }
 
-console.log(`🚀 [LLM-Orchestrator] Sistema Unificado v3.0 Enterprise inicializado`);
-console.log(`   📊 Modelos disponíveis: ${getActiveModels().length}`);
+console.log(`🚀 [LLM-Orchestrator v4.0] Sistema Unificado Enterprise inicializado`);
+console.log(`   📊 Modelos disponíveis: ${getActiveModels().length} (meta: 16)`);
+console.log(`   🌐 Providers: Groq, Gemini, Together, OpenRouter, DeepInfra, XRoute, EdenAI, HuggingFace, Local`);
 console.log(`   💾 Cache: ${ORCHESTRATOR_CONFIG.enableCache ? 'Habilitado' : 'Desabilitado'}`);
 console.log(`   🔒 Circuit Breaker: ${ORCHESTRATOR_CONFIG.enableCircuitBreaker ? 'Habilitado' : 'Desabilitado'}`);
 console.log(`   ⏱️ Rate Limiting: ${ORCHESTRATOR_CONFIG.enableRateLimiting ? 'Habilitado' : 'Desabilitado'}`);
