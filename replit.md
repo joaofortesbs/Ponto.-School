@@ -54,12 +54,54 @@ The architecture features a modular component design based on shadcn/ui patterns
 - **Neon PostgreSQL (Replit)**: Primary data store.
 - **SendGrid**: Email notification service.
 
-### Search API Orchestrator (pesquisar_web)
-- **Serper API** (`SERPER_API_KEY`): Google Search real (Web + Scholar + News) — PT-BR, 2500 req/mês grátis. **Provedor principal.** Endpoint: `https://google.serper.dev/{search|scholar|news}`
-- **OpenAlex API** (`OPEN_ALEX_API_KEY`): Base acadêmica aberta com 250M+ artigos — filtro `language:pt` para PT-BR. Endpoint: `https://api.openalex.org/works`
-- **DOAJ** (público): Directory of Open Access Journals — artigos peer-reviewed em acesso aberto, forte cobertura brasileira. Endpoint: `https://doaj.org/api/search/articles/{query}`
-- **ArXiv** (público): Preprints de ciências exatas e STEM, sem chave necessária. Endpoint: `https://export.arxiv.org/api/query`
-- **OpenCitations** (`OPEN_CITATIONS_API_KEY`): Metadados de citações acadêmicas. Reservado para uso futuro.
-- **CORE** (`CORE_API_KEY`): Repositório de artigos de acesso aberto. Chave retornou 401 — aguarda re-validação. Reservado para uso futuro.
-- **Arquitetura**: `api/search-web.js` (orquestrador) + `api/search-providers/` (serper.js, openalex.js, doaj.js, arxiv.js, scorer.js, fallback.js). Re-ranking educacional em `scorer.js` com pesos: domínio (0.35) + semântica (0.30) + eduBoost (0.20) + BNCC/BR/pedagógico (0.15). Provedor primário → fallbacks automáticos → educational_fallback estático.
-- **Bug fixes aplicados**: (1) `extractCleanThemeFromPrompt()` extrai tema limpo do prompt bruto evitando query = 240+ chars do professor; (2) `buildContentGenerationPrompt()` recebe `webSearchContext` e adiciona bloco "FONTES EDUCACIONAIS REAIS" no prompt do LLM quando resultados reais existem.
+### Search API Orchestrator v2.0 (pesquisar_web)
+
+**Arquitetura:** `api/search-web.js` (orquestrador principal, 300+ linhas) + `api/search-providers/` (12 arquivos)
+
+#### Providers de busca ativos (9 fontes simultâneas)
+| Provider | Arquivo | Chave | Modo de ativação |
+|---|---|---|---|
+| Serper Web + Scholar + News | `serper.js` | `SERPER_API_KEY` ✅ | sempre (se chave) |
+| OpenAlex 250M+ artigos | `openalex.js` | `OPEN_ALEX_API_KEY` ✅ | full/academic |
+| DOAJ periódicos abertos | `doaj.js` | pública | full/academic |
+| CORE 200M+ artigos c/ PDF | `core.js` | `CORE_API_KEY` ✅ | full/academic (se chave) |
+| Semantic Scholar 46M papers | `semantic-scholar.js` | pública | full/academic |
+| EuropePMC 40M+ artigos | `europepmc.js` | pública | full/academic |
+| PubMed NCBI | `pubmed.js` | pública | full (se não quick) |
+| OpenLibrary livros PT | `openlibrary.js` | pública | advanced only |
+| ArXiv preprints STEM | `arxiv.js` | pública | advanced only |
+
+#### Infraestrutura
+- **Circuit Breakers** (`circuit-breaker.js`): Monitora falhas por provider. ≥ 3 falhas em 5 min → OPEN (skip automático). Recovery após 10 min via HALF_OPEN.
+- **LLM Query Planning** (`query-planner.js`): Groq `llama-3.1-8b-instant` gera 3 queries educacionais otimizadas antes de buscar. Fallback regex (`extractCleanThemeFromPrompt`) se Groq indisponível.
+- **Query Variants por Provider** (`search-web.js`): Cada provider recebe a query otimizada para seu índice:
+  - `allInputQueries[0]` → Serper (Google PT-BR), OpenLibrary, ArXiv
+  - `intlQuery` (PT→EN traduzido, max 5 palavras, só ASCII) → OpenAlex, CORE, Semantic Scholar
+  - `shortIntlQuery` (max 3 palavras, exclui números) → PubMed
+  - `europePMCQuery` (max 4 palavras, exclui termos de nível como "grade") → EuropePMC
+  - `buildDOAJQuery()` (max 3 palavras-chave PT, strip stop words) → DOAJ
+- **PT→EN Translation Map** (`PT_EN_MAP`): 40+ mapeamentos PT→EN para frações→fractions, matemática→mathematics, gamificação→gamification, etc. Filtro `ASCII_ONLY` remove residuais de acentuação não mapeados.
+- **Re-ranking educacional** (`scorer.js`): 39 domínios BR mapeados. Pesos: domínio (0.35) + semântica (0.30) + eduBoost (0.20) + keywords pedagógicas (0.15). Boosts: BNCC, ensino fundamental, sequência didática, aprendizagem, metodologia.
+- **Deduplicação** (`scorer.js`): Remove duplicatas por URL normalizada + título (primeiros 60 chars).
+- **Fallback estático** (`fallback.js`): 4 links BNCC/Nova Escola/MEC/EducaCAPES como último recurso.
+
+#### Resultados típicos (modo full + advanced)
+- **Providers ativos**: 6 consistentemente (serper_web, serper_scholar, openalex, doaj, core, pubmed) + 2 intermitentes (semantic_scholar=rate limited, europepmc=rate limited)
+- **Raw results**: 44-55 resultados brutos antes de deduplicação
+- **Final**: 10-12 melhores após scoring educacional
+- **Latência**: ~1.5-2.5 segundos total (paralelo)
+
+#### APIs analisadas e descartadas como search providers
+- **OpenCitations**: API de grafo de citações — recebe DOI como input, não texto. Chave existe mas sem endpoint de text search.
+- **ORCID**: Perfis de autores, não conteúdo pedagógico.
+- **Unpaywall**: Resolve DOI → PDF, não é busca por query.
+- **INEP Dados Abertos**: Estatísticas escolares (IDEB, censo) — não é busca de conteúdo.
+- **MEC CMDE API**: Gestão escolar (matrículas, turmas) — não é busca de conteúdo.
+- **Kaggle**: Datasets científicos com OAuth — sem relevância para planos de aula.
+
+#### Limites de uso
+- Serper: 2500 req/mês grátis. Semantic Scholar: rate-limitado sem chave premium (graceful 429). Resto: público e ilimitado.
+
+#### Integração com geração de conteúdo
+- `pesquisar-web.ts`: `extractCleanThemeFromPrompt()` extrai tema limpo do prompt bruto do professor
+- `gerar-conteudo-atividades.ts`: `buildContentGenerationPrompt()` recebe `webSearchContext` e adiciona bloco "FONTES EDUCACIONAIS REAIS" no prompt do LLM quando `has_real_results: true`

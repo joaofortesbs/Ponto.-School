@@ -28,6 +28,12 @@ const EDUCATIONAL_DOMAINS = [
   { domain: 'rededosaber.sp.gov.br', label: 'Rede do Saber SP', tier: 'media', score: 0.73 },
   { domain: 'sedf.df.gov.br', label: 'SEDF', tier: 'media', score: 0.72 },
   { domain: 'sed.sc.gov.br', label: 'SED-SC', tier: 'media', score: 0.72 },
+  { domain: 'core.ac.uk', label: 'CORE Open Access', tier: 'alta', score: 0.82 },
+  { domain: 'europepmc.org', label: 'EuropePMC', tier: 'alta', score: 0.78 },
+  { domain: 'semanticscholar.org', label: 'Semantic Scholar', tier: 'alta', score: 0.80 },
+  { domain: 'pubmed.ncbi.nlm.nih.gov', label: 'PubMed', tier: 'alta', score: 0.78 },
+  { domain: 'ncbi.nlm.nih.gov', label: 'NCBI', tier: 'alta', score: 0.76 },
+  { domain: 'openlibrary.org', label: 'Open Library', tier: 'media', score: 0.65 },
 ];
 
 export function extractDomain(url) {
@@ -72,11 +78,14 @@ export function scoreResult(result, queryTerms) {
 
   let typeMultiplier = 1.0;
   if (result.source_type === 'academic') typeMultiplier = 1.25;
+  else if (result.source_type === 'book') typeMultiplier = 0.90;
   else if (result.source_type === 'news') typeMultiplier = 0.80;
 
   const bnccBoost = text.includes('bncc') ? 0.10 : 0;
   const brasilBoost = (text.includes('brasil') || text.includes('brasileir') || text.includes('ensino fundamental')) ? 0.08 : 0;
   const pedagogicoBoost = (text.includes('plano de aula') || text.includes('sequência didática') || text.includes('atividade pedagógic')) ? 0.10 : 0;
+  const aprendizagemBoost = text.includes('aprendizagem') ? 0.05 : 0;
+  const metodologiaBoost = (text.includes('metodologia') || text.includes('abordagem') || text.includes('didática')) ? 0.05 : 0;
 
   const rawScore =
     domainScore * 0.35 +
@@ -84,7 +93,9 @@ export function scoreResult(result, queryTerms) {
     eduBoost * 0.20 +
     bnccBoost +
     brasilBoost +
-    pedagogicoBoost;
+    pedagogicoBoost +
+    aprendizagemBoost +
+    metodologiaBoost;
 
   const finalScore = Math.min(1.0, rawScore * typeMultiplier);
 
