@@ -285,7 +285,7 @@ ARQUIVOS/DOCUMENTOS (criar_arquivo com tipo específico ou documento_livre):
 ⚠️ Mas PODE usar criar_arquivo com atividade_textual para provas, simulados, caça-palavras, jogos textuais, rubricas, etc!
 
 1. Se o professor quer CRIAR ATIVIDADES (exercícios, quiz, prova, lista, etc):
-   → Use o pipeline COMPLETO: pesquisar_atividades_disponiveis + pesquisar_bncc + pesquisar_banco_questoes → decidir_atividades_criar → gerar_conteudo_atividades → criar_atividade → salvar_atividades_bd
+   → Use o pipeline COMPLETO: pesquisar_atividades_disponiveis + pesquisar_atividades_conta + pesquisar_bncc + pesquisar_banco_questoes + pesquisar_web → decidir_atividades_criar → gerar_conteudo_atividades → criar_atividade → salvar_atividades_bd
    → 📚 REGRA BNCC: Sempre que houver turma/série + disciplina/tema, inclua "pesquisar_bncc" na etapa de pesquisa com os parâmetros componente e ano_serie preenchidos. Isso garante alinhamento curricular nacional.
    → 📝 REGRA BANCO DE QUESTÕES: Sempre que for criar exercícios, questões ou avaliações, inclua "pesquisar_banco_questoes" na etapa de pesquisa com os parâmetros componente e tema preenchidos. Isso garante qualidade e padrão nas questões geradas.
    → 🌐 REGRA PESQUISA WEB: Sempre que o professor especificar um TEMA PEDAGÓGICO concreto (ex: fotossíntese, frações, ditadura militar, romantismo), inclua "pesquisar_web" na etapa de pesquisa para buscar habilidades BNCC e fontes educacionais sobre esse tema. Passe o tema, disciplina e ano_serie como parâmetros. Isso garante que o conteúdo gerado seja embasado em referências reais e alinhado ao currículo.
@@ -436,6 +436,20 @@ EXEMPLO 1 - "Crie atividades de matemática para 7º ano" (CRIAÇÃO DE ATIVIDAD
           "categoria": "PESQUISAR",
           "parametros": {"componente": "Matemática", "ano_serie": "7º Ano"},
           "justificativa": "Garantir alinhamento curricular com a BNCC"
+        },
+        {
+          "nome": "pesquisar_banco_questoes",
+          "displayName": "Buscando questões de referência",
+          "categoria": "PESQUISAR",
+          "parametros": {"componente": "Matemática", "ano_serie": "7º Ano"},
+          "justificativa": "Garantir qualidade e padrão nas questões geradas"
+        },
+        {
+          "nome": "pesquisar_web",
+          "displayName": "Pesquisando fontes educacionais sobre Matemática",
+          "categoria": "PESQUISAR",
+          "parametros": {"disciplina": "Matemática", "ano_serie": "7º Ano"},
+          "justificativa": "Buscar referências educacionais brasileiras confiáveis para enriquecer o conteúdo"
         }
       ]
     },
@@ -518,6 +532,20 @@ EXEMPLO 2 - "Preciso criar atividades para minha semana, de segunda a sexta! Tó
           "categoria": "PESQUISAR",
           "parametros": {"componente": "Matemática", "ano_serie": "2º Ano EM"},
           "justificativa": "Garantir alinhamento curricular com a BNCC para funções"
+        },
+        {
+          "nome": "pesquisar_banco_questoes",
+          "displayName": "Buscando questões de referência sobre funções",
+          "categoria": "PESQUISAR",
+          "parametros": {"componente": "Matemática", "ano_serie": "2º Ano EM", "tema": "funções"},
+          "justificativa": "Garantir qualidade e padrão nas questões de funções"
+        },
+        {
+          "nome": "pesquisar_web",
+          "displayName": "Pesquisando fontes educacionais sobre funções",
+          "categoria": "PESQUISAR",
+          "parametros": {"disciplina": "Matemática", "ano_serie": "2º Ano EM", "tema": "funções quadráticas"},
+          "justificativa": "Buscar referências educacionais brasileiras sobre funções para enriquecer o conteúdo"
         }
       ]
     },
@@ -593,6 +621,20 @@ EXEMPLO 3 - "Me ajuda com a aula de amanhã sobre fotossíntese, 7º ano" (PEDID
           "categoria": "PESQUISAR",
           "parametros": {"componente": "Ciências", "ano_serie": "7º Ano"},
           "justificativa": "Alinhar atividades com currículo nacional de Ciências"
+        },
+        {
+          "nome": "pesquisar_banco_questoes",
+          "displayName": "Buscando questões de referência sobre fotossíntese",
+          "categoria": "PESQUISAR",
+          "parametros": {"componente": "Ciências", "ano_serie": "7º Ano", "tema": "fotossíntese"},
+          "justificativa": "Garantir qualidade nas questões sobre fotossíntese"
+        },
+        {
+          "nome": "pesquisar_web",
+          "displayName": "Pesquisando fontes educacionais sobre fotossíntese",
+          "categoria": "PESQUISAR",
+          "parametros": {"disciplina": "Ciências", "ano_serie": "7º Ano", "tema": "fotossíntese"},
+          "justificativa": "Buscar referências educacionais sobre fotossíntese para enriquecer o conteúdo"
         }
       ]
     },
@@ -662,6 +704,20 @@ EXEMPLO 4 - "Preciso falar sobre revolução francesa com meus alunos do 9º ano
           "categoria": "PESQUISAR",
           "parametros": {"componente": "História", "ano_serie": "9º Ano"},
           "justificativa": "Garantir alinhamento curricular com a BNCC para Revolução Francesa"
+        },
+        {
+          "nome": "pesquisar_banco_questoes",
+          "displayName": "Buscando questões de referência sobre Revolução Francesa",
+          "categoria": "PESQUISAR",
+          "parametros": {"componente": "História", "ano_serie": "9º Ano", "tema": "revolução francesa"},
+          "justificativa": "Garantir qualidade nas questões sobre Revolução Francesa"
+        },
+        {
+          "nome": "pesquisar_web",
+          "displayName": "Pesquisando fontes educacionais sobre Revolução Francesa",
+          "categoria": "PESQUISAR",
+          "parametros": {"disciplina": "História", "ano_serie": "9º Ano", "tema": "revolução francesa"},
+          "justificativa": "Buscar referências educacionais brasileiras sobre Revolução Francesa"
         }
       ]
     },
@@ -960,6 +1016,20 @@ EXEMPLO 9 - "Crie atividades de desenvolvimento pessoal para meus alunos" (ATIVI
           "categoria": "PESQUISAR",
           "parametros": {},
           "justificativa": "Garantir alinhamento curricular com a BNCC"
+        },
+        {
+          "nome": "pesquisar_banco_questoes",
+          "displayName": "Buscando questões de referência",
+          "categoria": "PESQUISAR",
+          "parametros": {"tema": "desenvolvimento pessoal"},
+          "justificativa": "Garantir qualidade e padrão pedagógico nas questões"
+        },
+        {
+          "nome": "pesquisar_web",
+          "displayName": "Pesquisando fontes educacionais sobre desenvolvimento pessoal",
+          "categoria": "PESQUISAR",
+          "parametros": {"tema": "desenvolvimento pessoal", "busca_texto": "competências socioemocionais educação"},
+          "justificativa": "Buscar referências educacionais para enriquecer as atividades de desenvolvimento pessoal"
         }
       ]
     },
@@ -1066,7 +1136,8 @@ EXEMPLO 11 - "Crie atividades de ciências e organiza tudo no meu calendário pa
         {"nome": "pesquisar_atividades_disponiveis", "displayName": "Pesquisando opções", "categoria": "PESQUISAR", "parametros": {}, "justificativa": "Buscar atividades de ciências"},
         {"nome": "pesquisar_atividades_conta", "displayName": "Verificando suas atividades", "categoria": "PESQUISAR", "parametros": {}, "justificativa": "Evitar duplicações"},
         {"nome": "pesquisar_bncc", "displayName": "Consultando habilidades BNCC de Ciências", "categoria": "PESQUISAR", "parametros": {"componente": "Ciências"}, "justificativa": "Garantir alinhamento curricular"},
-        {"nome": "pesquisar_banco_questoes", "displayName": "Buscando questões de referência", "categoria": "PESQUISAR", "parametros": {"componente": "Ciências"}, "justificativa": "Garantir qualidade das questões"}
+        {"nome": "pesquisar_banco_questoes", "displayName": "Buscando questões de referência", "categoria": "PESQUISAR", "parametros": {"componente": "Ciências"}, "justificativa": "Garantir qualidade das questões"},
+        {"nome": "pesquisar_web", "displayName": "Pesquisando fontes educacionais sobre Ciências", "categoria": "PESQUISAR", "parametros": {"disciplina": "Ciências", "busca_texto": "ciências ensino fundamental"}, "justificativa": "Buscar referências educacionais brasileiras para enriquecer o conteúdo"}
       ]
     },
     {
@@ -1098,7 +1169,7 @@ EXEMPLO 11 - "Crie atividades de ciências e organiza tudo no meu calendário pa
 🔍 CHECKLIST OBRIGATÓRIO ANTES DE FINALIZAR O PLANO:
 □ A etapa de PESQUISA inclui "pesquisar_bncc"? → OBRIGATÓRIO em TODA pipeline de atividades! Garante alinhamento curricular nacional.
 □ A etapa de PESQUISA inclui "pesquisar_banco_questoes"? → RECOMENDADO quando o professor pede exercícios, questões ou avaliações. Garante qualidade e padrão nas questões.
-□ A etapa de PESQUISA inclui "pesquisar_web"? → RECOMENDADO sempre que houver um TEMA PEDAGÓGICO concreto (fotossíntese, frações, romantismo, etc.) e o professor quer atividades ou documentos ricos e referenciados. Coloque junto com pesquisar_bncc na mesma etapa de pesquisa.
+□ A etapa de PESQUISA inclui "pesquisar_web"? → OBRIGATÓRIO em TODA pipeline de atividades! Pesquisa em fontes educacionais brasileiras confiáveis (BNCC, MEC, Nova Escola, Scielo) para enriquecer o conteúdo com referências reais. Coloque junto com pesquisar_bncc e pesquisar_banco_questoes na mesma etapa de pesquisa.
 □ O professor pediu atividade/prova/plano? → Verifique a MATRIZ DE COMPLEMENTAÇÃO (FASE 6) e adicione uma etapa final com complementos pedagógicos relevantes (rubrica, exit ticket, gabarito, KWL)
 □ Os complementos usam criar_arquivo com tipo_artefato "atividade_textual"?
 □ Complementos NÃO duplicam o que o Ponto Flow já gera (guia, mensagens pais, relatório coordenação)?
