@@ -17,6 +17,7 @@ import orchestrator from './orchestrator/lessonOrchestrator.js';
 import { loadActivitiesCatalog } from './orchestrator/agents/activitySuggestionAgent.js';
 import { log as orchestratorLog, LOG_PREFIXES } from './orchestrator/debugLogger.js';
 import { createCalendarEventsRouter } from './calendar-events.js';
+import searchWebRoutes from './search-web.js';
 
 dotenv.config();
 
@@ -117,6 +118,7 @@ app.use('/api/atividades', atividadesRoutes);
 app.use('/api/visitantes', visitantesRoutes);
 app.use('/api/translate', translateRoutes);
 app.use('/api/calendar/events', createCalendarEventsRouter(neonDB));
+app.use('/api/search', searchWebRoutes);
 
 // ========================================
 // ROTAS DE IA GROQ
