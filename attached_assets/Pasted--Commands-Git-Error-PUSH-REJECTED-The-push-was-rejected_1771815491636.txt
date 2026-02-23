@@ -1,0 +1,1417 @@
+
+Commands
+/
+
+Git Error
+PUSH_REJECTED
+The push was rejected by the remote. This is usually because the remote has commits that aren't in the local repository.
+Remote Updates
+origin/main•upstream
+last fetched 1 hour ago
+Commit
+Message
+⌘
+↵
+Review Changes
+4 changes
+4 changed files
+Pasted--Analise-todos-os-nossos-concorrentes-e-benchmarkings-a_1771805138132.txt
+A
+Pasted-Agora-o-seu-principal-objetivo-fazer-uam-analise-comple_1771805120078.txt
+A
+debug_cap-0-4-1771803737248_1771805098644_1771805104174.md
+A
+image_1771805184768.png
+A
+Committing will automatically stage your changes.
+Secrets
+PRODUCTION_DB_URL
+••••••••
+DEPLOYMENT_DB_URL
+••••••••
+DATABASE_URL
+••••••••
+VITE_GROQ_API_KEY
+••••••••
+GROQ_API_KEY
+••••••••
+SESSION_SECRET
+••••••••
+VITE_DEEPINFRA_API_KEY
+••••••••
+VITE_EDENAI_API_KEY
+••••••••
+VITE_HUGGINGFACE_API_KEY
+••••••••
+VITE_OPENROUTER_API_KEY
+••••••••
+VITE_XROUTE_API_KEY
+••••••••
+VITE_TOGETHER_API_KEY
+••••••••
+VITE_GEMINI_API_KEY
+••••••••
+OPEN_ALEX_API_KEY
+••••••••
+OPEN_CITATIONS_API_KEY
+••••••••
+SERPER_API_KEY
+••••••••
+CORE_API_KEY
+••••••••
+Configurations
+Configurations are similar to secrets, but should only be used for non-sensitive information. They're useful for having a variable that's different between your published app and when testing on Replit.
+NODE_ENV
+development
+PORT
+3001
+VITE_SUPABASE_ANON_KEY
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3bXpub3BkenVqY3h6dWppamdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAzNjM3NjgsImV4cCI6MjA1NTkzOTc2OH0.CiihfkrmPoyiE0R_nFONFHYgwIbq8BaNcYNEavQKRK8
+VITE_SUPABASE_URL
+https://zwmznopdzujcxzujijge.supabase.co
+Objetivo
+Eliminar o problema de "água contaminada no contexto" — corrigir a raiz do porquê resultados irrelevantes chegam ao LLM de gerar_conteudo_atividades, implementar um pipeline de 2 estágios de qualidade (como Perplexity), e garantir que o contexto injetado seja denso, relevante e verificado antes de chegar ao LLM de geração.
+
+Diagnóstico — "A Água Contaminada" Explicada em Detalhe
+O que acontece hoje (o problema real, com números)
+O scorer atual usa esta fórmula:
+
+rawScore = (domainScore × 0.35) + (semanticScore × 0.30) + (eduBoost × 0.20) + boosts educacionais (até 0.38)
+finalScore = rawScore × typeMultiplier (1.25 para academic)
+O problema crítico: `domainScore × 0.35 + eduBoost × 0.20 = 55% do score é autoridade de domínio ANTES de relevância semântica.**
+
+Simulação real — SciELO publica artigo sobre alimentos funcionais, busca é sobre Revolução Francesa:
+
+SciELO "Os alimentos funcionais: a nova fronteira da indústria alimentar":
+  domainScore = 0.90 × 0.35   = 0.315  (SciELO é sempre 0.90)
+  eduBoost    = 0.35 × 0.20   = 0.070  (tier 'alta' = eduBoost 0.35)
+  semanticScore = 0  × 0.30   = 0.000  (zero termos de "revolução francesa")
+  typeMultiplier = 1.25 (source_type = academic)
+  ──────────────────────────────────────
+  finalScore = (0.315 + 0.070) × 1.25 = 0.481
+  + pedagogicoBoost (se snippet contém "aprendizagem") = +0.05
+  + brasilBoost = +0.08
+  ──────────────────────────────────────
+  finalScore = 0.621  ← resultado irrelevante no TOP 3
+Este artigo entra no prompt_context com 800 chars de conteúdo sobre alimentos via Jina Reader. O LLM de gerar_conteudo recebe esse conteúdo e ou o usa erroneamente, ou o ignora — mas ocupa espaço de contexto valioso.
+
+O que a ciência diz sobre contexto contaminado
+Research recente (2024-2025) confirma que documentos irrelevantes no contexto RAG causam degradação ativa — não são neutros, são "hard negatives" que ativamente enganam o modelo:
+
+Inserir apenas 25% de documentos irrelevantes pode reduzir a acurácia do LLM em até 30%
+"Hard negatives" (documentos parecidos mas errados) são piores que ruído aleatório
+Aumentar k (número de resultados) sem filtro de qualidade: performance sobe até k=10 e depois declina
+Modelos com contexto longo sofrem mais — o LLM "processa" o texto irrelevante e se confunde
+Como os líderes de mercado resolvem
+Perplexity — Pipeline de 2 estágios:
+
+Stage 1: Retrieval de alta cobertura (30-100 candidatos), sem filtro de qualidade ainda
+Stage 2: Cross-encoder reranker (modelo que analisa QUERY + DOCUMENTO juntos) — aplica threshold duro: qualquer resultado abaixo do corte é descartado, não penalizado. Chamam de "sculpting"
+Sub-document scoring: extrai o trecho mais relevante dentro do documento, não o documento inteiro
+Context compression: trunca para o orçamento de tokens priorizando relevância, não posição
+Manus AI — Context Engineering:
+
+Após cada ferramenta executada, valida se o resultado é útil para o objetivo atual
+Resultados validados ficam no contexto; resultados inúteis vão para "arquivo compactado"
+Só carrega no LLM o que passou pela validação
+Princípio: "o LLM só deve ver o que é relevante para a próxima ação"
+Genspark — Fact-checking cruzado:
+
+Múltiplos modelos analisam os resultados de forma independente
+Consenso entre modelos determina o que vai para o contexto final
+Resultados sem consenso são descartados
+O que o sistema atual tem que os concorrentes NÃO têm
+39 domínios brasileiros curados com autoridade real
+BNCC integration nativa
+Pipeline completo (pesquisa → atividade → calendário)
+Custo ~$0.001/busca vs. Manus ($10+/sessão) e Genspark
+O gap é só de qualidade de filtragem — a estrutura de pesquisa já é competitiva.
+
+Estado Atual dos Arquivos Críticos
+api/search-providers/scorer.js — BUG CONFIRMADO
+// Linha 90-100:
+const rawScore =
+  domainScore * 0.35 +      // ← 35% para autoridade de domínio
+  semanticScore * 0.30 +    // ← 30% para relevância semântica
+  eduBoost * 0.20 +         // ← 20% para tier educacional
+  bnccBoost + brasilBoost + pedagogicoBoost + ...
+const finalScore = Math.min(1.0, rawScore * typeMultiplier); // ← academic × 1.25
+Resultado: autoridade de domínio + tier educacional = 55% do peso antes da semântica.
+
+api/search-web.js — PT_EN_MAP INCOMPLETO
+// PT_EN_MAP atual tem apenas termos de STEM + básicos:
+'frações': 'fractions', 'matemática': 'mathematics', 'ciências': 'science', 'história': 'history'
+// FALTA COMPLETAMENTE: revolução, francesa, guerra, política, bioma, célula, etc.
+// Resultado: OpenAlex, CORE, EuropePMC retornam ZERO para 70% dos professores de Humanas
+api/search-providers/content-extractor.js — FILTRO PDF INCOMPLETO
+// Linha 10-12 atual:
+if (url.endsWith('.pdf') || url.includes('.pdf?')) return false;
+if (url.includes('doi.org')) return false;
+// FALTA: url.includes('format=pdf'), url.includes('?f='), url.includes('/pdf/')
+// Resultado: Jina extrai PDFs binários disfarçados como HTML e retorna lixo
+pesquisar-web.ts — GAP ANALYSIS COM FALSO POSITIVO
+// Linha 140-148:
+const has_pedagogical = results.some(r => {
+  const t = text(r);
+  return (
+    t.includes('plano de aula') ||        // singular — OK
+    t.includes('sequência didática')      // singular — OK
+    // FALTA: 'planos de aula', 'sequencias didaticas', 'atividades pedagógicas'
+  );
+});
+// Resultado: "3 planos de aula" não detecta has_pedagogical → dispara round 2 desnecessário → +6s
+pesquisar-web.ts → gerar_conteudo_atividades — SEM FILTRO ANTES DO LLM
+O formatResultsForPrompt() passa TODOS os resultados para o prompt, inclusive os irrelevantes. Não há filtro pós-scoring que valide se o conteúdo extraído pelo Jina é realmente sobre o tema. Não há threshold mínimo de relevância semântica para entrar no prompt_context.
+
+Tasks
+T001: Scorer — Semantic Gate + Rebalanceamento de Pesos
+Blocked By: []
+
+Arquivo: api/search-providers/scorer.js
+
+Impacto: CRÍTICO — elimina resultados tipo "alimentos em aula de história" independente da fonte
+
+Detalhes precisos:
+
+1. Semantic Gate (regra dura — o coração da mudança):
+
+// ANTES de calcular rawScore, verificar gate semântico
+const SEMANTIC_GATE_THRESHOLD = 0.10; // mínimo para não-oficiais
+const passedSemanticGate = semanticScore >= SEMANTIC_GATE_THRESHOLD
+  || (eduInfo && eduInfo.tier === 'official'); // fontes oficiais são sempre incluídas
+// Se não passou o gate: cap máximo de 0.38 (abaixo do threshold de "BOA RELEVÂNCIA")
+const scoreCapFromGate = passedSemanticGate ? 1.0 : 0.38;
+2. Penalidade ativa por zero semântica (não só cap — penalidade real):
+
+const semanticPenalty = semanticScore === 0 ? -0.15 : 0; // penaliza quem não tem nenhum match
+3. Rebalanceamento dos pesos:
+
+// DEPOIS (novo):
+const rawScore =
+  domainScore * 0.25 +      // reduz de 0.35 para 0.25 (autoridade de domínio)
+  semanticScore * 0.42 +    // aumenta de 0.30 para 0.42 (semântica é o fator dominante)
+  eduBoost * 0.18 +         // reduz de 0.20 para 0.18
+  bnccBoost + brasilBoost + pedagogicoBoost + aprendizagemBoost + metodologiaBoost
+  + semanticPenalty;        // penalidade ativa por zero match
+const finalScore = Math.min(scoreCapFromGate, rawScore * typeMultiplier);
+4. Corrigir boosts pedagógicos (plurais faltando):
+
+const pedagogicoBoost = (
+  text.includes('plano de aula') ||
+  text.includes('planos de aula') ||        // BUG FIX
+  text.includes('sequência didática') ||
+  text.includes('sequencias didaticas') ||  // BUG FIX
+  text.includes('atividade pedagógic') ||
+  text.includes('atividades pedagógic') ||  // BUG FIX
+  text.includes('material didático') ||     // NOVO
+  text.includes('proposta pedagógica')      // NOVO
+) ? 0.10 : 0;
+5. Domain diversity cap (nova função applyDomainDiversityCap):
+
+function applyDomainDiversityCap(results, maxPerDomain = 3) {
+  const domainCounts = {};
+  return results.filter(r => {
+    const domain = extractDomain(r.url);
+    const current = domainCounts[domain] || 0;
+    const limit = r.domain_tier === 'official' ? 5 : maxPerDomain;
+    if (current >= limit) return false;
+    domainCounts[domain] = current + 1;
+    return true;
+  });
+}
+// Chamar APÓS deduplicateResults() e ANTES do slice final
+Acceptance:
+
+Busca "revolução francesa" → "Os alimentos funcionais" com semanticScore=0 recebe finalScore ≤ 0.38, fica fora do top 5
+Busca "revolução francesa" → artigo "Revolução Francesa e seus impactos" com semanticScore=0.8 recebe finalScore ~0.82
+Máximo 3 resultados de qualquer domínio único (exceto oficiais)
+T002: PT_EN_MAP — Expansão Completa para Todas as Disciplinas
+Blocked By: []
+
+Arquivo: api/search-web.js
+
+Impacto: ALTO — desbloqueia 5/9 providers internacionais (OpenAlex, CORE, EuropePMC, PubMed, ArXiv) para professores de Humanas/Ciências/Artes
+
+Detalhes precisos: Adicionar ao objeto PT_EN_MAP (após a linha 91):
+
+// História e Ciências Sociais
+'revolução': 'revolution', 'revoluções': 'revolutions',
+'francesa': 'french', 'francesa': 'french',
+'guerra': 'war', 'guerras': 'wars',
+'política': 'politics', 'politica': 'politics',
+'político': 'political', 'politico': 'political',
+'império': 'empire', 'imperialismo': 'imperialism',
+'colônia': 'colony', 'colonialismo': 'colonialism',
+'ditadura': 'dictatorship', 'democracia': 'democracy',
+'feudalismo': 'feudalism', 'renascimento': 'renaissance',
+'iluminismo': 'enlightenment', 'capitalismo': 'capitalism',
+'socialismo': 'socialism', 'fascismo': 'fascism',
+'escravidão': 'slavery', 'escravismo': 'slavery',
+'independência': 'independence', 'república': 'republic',
+// Geografia
+'bioma': 'biome', 'biomas': 'biomes',
+'clima': 'climate', 'climático': 'climatic',
+'urbanização': 'urbanization', 'urbano': 'urban',
+'território': 'territory', 'população': 'population',
+'relevo': 'relief', 'floresta': 'forest',
+'amazônia': 'amazon', 'semiárido': 'semiarid',
+'sustentabilidade': 'sustainability', 'ambiental': 'environmental',
+'migração': 'migration', 'globalização': 'globalization',
+// Biologia/Ciências Naturais
+'biologia': 'biology', 'célula': 'cell',
+'fotossíntese': 'photosynthesis', 'evolução': 'evolution',
+'ecossistema': 'ecosystem', 'genética': 'genetics',
+'microrganismo': 'microorganism', 'vírus': 'virus',
+'bactéria': 'bacteria', 'animal': 'animal',
+'planta': 'plant', 'nutrição': 'nutrition',
+'reprodução': 'reproduction', 'sistema': 'system',
+// Química
+'química': 'chemistry', 'quimica': 'chemistry',
+'átomo': 'atom', 'molécula': 'molecule',
+'reação': 'reaction', 'solução': 'solution',
+'ácido': 'acid', 'base': 'base',
+'tabela periódica': 'periodic table', 'elemento': 'element',
+// Física
+'física': 'physics', 'fisica': 'physics',
+'força': 'force', 'energia': 'energy',
+'movimento': 'motion', 'velocidade': 'velocity',
+'eletricidade': 'electricity', 'magnetismo': 'magnetism',
+'óptica': 'optics', 'termodinâmica': 'thermodynamics',
+'ondas': 'waves', 'gravitação': 'gravitation',
+// Literatura e Língua Portuguesa
+'literatura': 'literature', 'conto': 'short story',
+'crônica': 'chronicle', 'poema': 'poem', 'poesia': 'poetry',
+'romantismo': 'romanticism', 'modernismo': 'modernism',
+'realismo': 'realism', 'barroco': 'baroque',
+'gramática': 'grammar', 'redação': 'writing',
+'narrador': 'narrator', 'personagem': 'character',
+// Artes e Cultura
+'artes': 'arts', 'arte': 'art',
+'música': 'music', 'teatro': 'theater',
+'dança': 'dance', 'pintura': 'painting',
+'escultura': 'sculpture', 'cultura': 'culture',
+// Sociologia e Filosofia
+'sociologia': 'sociology', 'filosofia': 'philosophy',
+'cidadania': 'citizenship', 'sociedade': 'society',
+'ética': 'ethics', 'moral': 'moral',
+'direitos': 'rights', 'desigualdade': 'inequality',
+Acceptance: buildInternationalQuery("revolução francesa ensino história 9 ano") retorna "revolution french history teaching grade brazil" — todos os providers internacionais recebem query com termos válidos em inglês.
+
+T003: Content Extractor — Filtro PDF + Validação de Relevância Pós-Extração
+Blocked By: []
+
+Arquivo: api/search-providers/content-extractor.js
+
+Impacto: ALTO — garante que o conteúdo Jina extraído seja sobre o tema, não sobre alimentos
+
+Detalhes precisos:
+
+1. Ampliar filtro de URLs inextratíveis:
+
+function isExtractableUrl(url) {
+  if (!url || !url.startsWith('http')) return false;
+  if (url.endsWith('.pdf') || url.includes('.pdf?')) return false;
+  if (url.includes('doi.org')) return false;
+  // NOVOS:
+  if (url.includes('format=pdf')) return false;    // SciELO PDFs disfarçados
+  if (url.includes('?f=')) return false;           // Outro padrão SciELO
+  if (url.includes('/pdf/')) return false;         // Path PDF
+  if (url.includes('arxiv.org/pdf')) return false; // ArXiv PDF direto
+  if (url.includes('download=true')) return false;  // Downloads genéricos
+  return true;
+}
+2. Validação de relevância pós-extração (nova função):
+
+function validateContentRelevance(content, queryTerms) {
+  if (!content || queryTerms.length === 0) return { relevant: false, score: 0 };
+  const contentLower = content.toLowerCase();
+  const matchCount = queryTerms.filter(term => contentLower.includes(term)).length;
+  const relevanceRatio = matchCount / queryTerms.length;
+  return {
+    relevant: matchCount >= 1,               // ao menos 1 termo do query
+    score: relevanceRatio,                    // 0.0 a 1.0
+    matchCount,
+    label: matchCount === 0 ? 'invalido'
+         : relevanceRatio < 0.3 ? 'baixa'
+         : relevanceRatio < 0.6 ? 'media'
+         : 'alta'
+  };
+}
+3. Integrar validação em extractContentFromUrls():
+
+// Assinar a função com queryTerms opcional:
+export async function extractContentFromUrls(results, options = {}) {
+  const { extractContent, queryTerms = [] } = options;
+  // ...
+  // Após obter content:
+  const relevance = validateContentRelevance(content, queryTerms);
+  if (!relevance.relevant) {
+    console.log(`[ContentExtractor] ❌ Conteúdo descartado (0 query terms): ${url}`);
+    return { url, content: null, relevance }; // descartado
+  }
+  return { url, content, relevance };
+}
+4. Adicionar content_relevance ao resultado enriquecido:
+
+return { ...r, content_full: content, content_extracted: true, content_relevance: relevance.label };
+5. Passar queryTerms do search-web.js:
+
+// Na linha onde chama extractContentFromUrls:
+const queryTerms = extractQueryTerms(allInputQueries[0]); // já existe
+if (search_depth === 'advanced') {
+  finalResults = await extractContentFromUrls(finalResults, { queryTerms });
+}
+Acceptance: Busca "revolução francesa" → Jina extrai conteúdo de artigo SciELO sobre alimentos → validateContentRelevance(content, ['revolução','francesa']) retorna {relevant: false, matchCount: 0} → conteúdo descartado, log mostra "❌ Conteúdo descartado". O resultado mantém content_extracted: false.
+
+T004: Gap Analysis — Correção de Detecção de Plurais + Threshold Ajustado
+Blocked By: []
+
+Arquivo: src/features/schoolpower/agente-jota/capabilities/PESQUISAR/implementations/pesquisar-web.ts
+
+Impacto: MÉDIO — elimina round 2 falso positivo que adiciona 6s de latência desnecessária
+
+Detalhes precisos:
+
+1. Corrigir has_pedagogical (linhas ~140-148): Substituir a detecção de singular para incluir plurais e variantes:
+
+const has_pedagogical = results.some(r => {
+  const t = text(r);
+  return (
+    t.includes('plano de aula') ||
+    t.includes('planos de aula') ||          // PLURAL FIX
+    t.includes('plano aula') ||
+    t.includes('planos aula') ||
+    t.includes('sequência didática') ||
+    t.includes('sequencia didatica') ||
+    t.includes('sequências didáticas') ||    // PLURAL FIX
+    t.includes('atividade pedagóg') ||
+    t.includes('atividades pedagóg') ||      // PLURAL FIX
+    t.includes('material didático') ||       // NOVO
+    t.includes('proposta pedagógica') ||     // NOVO
+    t.includes('recurso didático')           // NOVO
+  );
+});
+2. Corrigir has_curricular para ser mais abrangente:
+
+const has_curricular = results.some(r => {
+  const t = text(r);
+  return (
+    t.includes('bncc') ||
+    t.includes('base nacional') ||
+    t.includes('currículo') ||
+    t.includes('curriculo') ||
+    t.includes('habilidade ef') ||     // padrão de código BNCC como EF07HI03
+    t.includes('habilidade em') ||     // Ensino Médio
+    t.includes('competência') ||
+    t.includes('objetivo de aprendizagem') ||
+    r.url?.includes('mec.gov')
+  );
+});
+3. Ajustar threshold de round 2 (de < 0.5 para < 0.25):
+
+// ANTES: dispara round 2 se coverage_score < 0.5 (2+ dimensões faltando)
+// DEPOIS: dispara round 2 só se coverage_score < 0.25 (3+ dimensões faltando)
+// Isso reduz round 2 desnecessário em ~60% das buscas
+if ((gapAnalysis.coverage_score < 0.25 || round1Results.length < 5) && round1Results.length > 0) {
+Acceptance:
+
+Busca retorna resultado da Nova Escola com título "3 planos de aula sobre Revolução Francesa" → has_pedagogical: true detectado → round 2 NÃO dispara
+Busca sobre tema muito obscuro sem resultados pedagógicos → has_pedagogical: false, has_curricular: false, has_academic: false → coverage_score = 0.25 → round 2 dispara
+Em buscas normais (tema pedagógico conhecido), latência cai de ~8s para ~4-5s
+T005: Groq Reranker — Filtro LLM de Relevância (Pipeline de 2 Estágios)
+Blocked By: [T001]
+
+Arquivos: api/search-providers/query-planner.js, api/search-web.js
+
+Impacto: MÁXIMO — implementa o mesmo princípio do cross-encoder da Perplexity usando o Groq já disponível. Elimina resultados irrelevantes APÓS o scoring inicial, antes de Jina e do contexto LLM
+
+Detalhes precisos:
+
+Nova função em query-planner.js — Pointwise LLM Reranking (abordagem mais rápida, O(1) por batch):
+
+export async function rerankWithLLM(query, results, options = {}) {
+  const { groqApiKey, topN = 8, timeoutMs = 5000 } = options;
+  if (!groqApiKey || !results || results.length === 0) return results;
+  
+  const candidates = results.slice(0, 15); // pega top 15 do scoring inicial
+  
+  const candidatesList = candidates.map((r, i) =>
+    `[${i}] "${r.title.slice(0, 80)}" — ${r.source_label || r.provider || 'Web'}\n` +
+    `    ${(r.snippet || '').slice(0, 120)}`
+  ).join('\n\n');
+  
+  const prompt = `Você é especialista em educação brasileira K-12.
+Query do professor: "${query}"
+Avalie a RELEVÂNCIA EDUCACIONAL de cada resultado para esta query específica.
+Responda APENAS com JSON válido, sem markdown:
+{"scores":[{"idx":0,"score":8},{"idx":1,"score":2},...]}`
+Critérios de score (0-10):
+- 10: Diretamente sobre o tema, para professores, contexto BR
+- 7-9: Relacionado ao tema, educacional, útil
+- 4-6: Parcialmente relevante ou periférico
+- 1-3: Pouco relacionado
+- 0: Completamente irrelevante para "${query}"
+Resultados para avaliar:
+${candidatesList}`;
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Authorization': `Bearer ${groqApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.0,
+        max_tokens: 400,
+      }),
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) return results; // falha silenciosa
+    
+    const data = await response.json();
+    const rawContent = data?.choices?.[0]?.message?.content || '';
+    const parsed = JSON.parse(rawContent.replace(/```json\n?|\n?```/g, '').trim());
+    
+    if (!parsed.scores || !Array.isArray(parsed.scores)) return results;
+    
+    // Criar mapa idx → groq_score
+    const scoreMap = {};
+    for (const s of parsed.scores) {
+      if (typeof s.idx === 'number' && typeof s.score === 'number') {
+        scoreMap[s.idx] = s.score;
+      }
+    }
+    
+    // Aplicar reranking:
+    // - groq_score < 3: penalizar (× 0.35) — resultado irrelevante descartado na prática
+    // - groq_score >= 3 e < 7: neutro
+    // - groq_score >= 7: boost (× 1.15)
+    const reranked = candidates.map((r, i) => {
+      const gs = scoreMap[i] ?? 5; // default neutro se não retornou
+      const multiplier = gs < 3 ? 0.35 : gs >= 7 ? 1.15 : 1.0;
+      return {
+        ...r,
+        score: Math.min(1.0, r.score * multiplier),
+        groq_relevance_score: gs,
+      };
+    });
+    
+    // Reordenar pelos novos scores, adicionar resultados não-candidatos no final
+    const rerankedSorted = reranked.sort((a, b) => b.score - a.score);
+    const remainingResults = results.slice(15); // resultados além dos 15 candidatos
+    
+    console.log(`[LLMReranker] Groq reclassificou ${candidates.length} resultados para query "${query.slice(0, 40)}"`);
+    return [...rerankedSorted, ...remainingResults];
+    
+  } catch (err) {
+    console.warn('[LLMReranker] Falha silenciosa, mantendo ranking original:', err.message);
+    return results; // falha silenciosa sempre
+  }
+}
+Integração em search-web.js:
+
+// Após scoreResult + deduplicateResults + applyDomainDiversityCap:
+if (groqKey && search_depth === 'advanced' && sortedResults.length > 3) {
+  console.log(`[SearchOrchestrator] Iniciando LLM reranking de ${Math.min(sortedResults.length, 15)} candidatos...`);
+  sortedResults = await rerankWithLLM(allInputQueries[0], sortedResults, {
+    groqApiKey: groqKey,
+    topN: max_results,
+    timeoutMs: 5000,
+  });
+}
+Adicionar ao response JSON:
+
+llm_reranking_used: groqKey && search_depth === 'advanced',
+Latência adicional: +0.8s a 1.5s (Groq llama-3.1-8b-instant é extremamente rápido para 400 tokens) Custo: ~150-200 tokens por busca = frações de centavo
+
+Acceptance:
+
+Busca "revolução francesa" → "Os alimentos funcionais" recebe groq_relevance_score: 0 → score final penalizado para 0.621 × 0.35 = 0.217 → fora do top 8
+"Revolução Francesa e seu contexto histórico" recebe groq_relevance_score: 9 → score final boosted 0.621 × 1.15 = 0.714 → top 2
+Log: [LLMReranker] Groq reclassificou 15 resultados para query "revolução francesa"
+Se Groq falhar: timeout de 5s → fallback silencioso para ranking original, zero impacto
+T006: Context Quality Layer — Filtro Semântico no formatResultsForPrompt
+Blocked By: [T003]
+
+Arquivo: src/features/schoolpower/agente-jota/capabilities/PESQUISAR/implementations/pesquisar-web.ts
+
+Impacto: ALTO — última linha de defesa antes de o conteúdo chegar ao LLM de geração
+
+Detalhes precisos:
+
+1. Separar resultados em camadas de relevância antes de formatar:
+
+function categorizeResultsByRelevance(results: WebResult[]): {
+  principal: WebResult | null;
+  alta: WebResult[];
+  boa: WebResult[];
+  complementar: WebResult[];
+} {
+  const sorted = [...results].sort((a, b) => b.score - a.score);
+  return {
+    principal: sorted[0] || null,              // O mais relevante (destacado)
+    alta: sorted.filter(r => r.score >= 0.70).slice(0, 4),
+    boa: sorted.filter(r => r.score >= 0.45 && r.score < 0.70).slice(0, 4),
+    complementar: sorted.filter(r => r.score >= 0.30 && r.score < 0.45).slice(0, 2),
+  };
+}
+2. Guard de título — antes de incluir qualquer resultado no prompt_context:
+
+function resultIsRelevantToQuery(result: WebResult, queryTerms: string[]): boolean {
+  if (result.domain_tier === 'official') return true; // fontes oficiais sempre entram
+  const titleLower = (result.title || '').toLowerCase();
+  const hasAnyTermInTitle = queryTerms.some(term => titleLower.includes(term));
+  return hasAnyTermInTitle || (result.score >= 0.70); // alta pontuação = confiança
+}
+3. Adicionar "Fonte Principal" destacada no prompt_context:
+
+⭐ FONTE PRINCIPAL (mais relevante para "${query}"):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Título] — [Source Label]
+[URL]
+[content_full.slice(0, 900) se disponível, ou snippet.slice(0, 500)]
+INSTRUÇÃO: Esta é a fonte mais relevante. Priorize metodologias, exemplos e dados desta fonte.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. Limitar tamanho total do prompt_context:
+
+const MAX_PROMPT_CONTEXT_CHARS = 8000; // era ilimitado (podia chegar a 20000+)
+// Distribuição: Fonte Principal (900) + Alta relevância (400×4=1600) + Boa (250×4=1000)
+// + seção Conteúdo Completo Jina (800×3=2400) + Fontes (500) = ~7400 chars úteis
+5. Filtrar conteúdo Jina inválido (usa content_relevance do T003):
+
+// Só incluir na seção "CONTEÚDO COMPLETO EXTRAÍDO" se content_relevance !== 'invalido'
+const withValidContent = results.filter(r =>
+  r.content_full && r.content_relevance !== 'invalido'
+);
+Acceptance:
+
+prompt_context de busca "revolução francesa" contém APENAS fontes com "Revolução" ou "Francesa" em título/snippet (guard de título funcionando)
+Seção "FONTE PRINCIPAL" aparece destacada com 900 chars do conteúdo mais relevante
+Tamanho total do prompt_context ≤ 8000 chars (antes podia passar de 20000 chars com Jina)
+Artigo sobre alimentos: content_relevance: 'invalido' → não aparece na seção "CONTEÚDO COMPLETO"
+T007: Prompt Guard em gerar_conteudo_atividades — Instrução de Relevância
+Blocked By: [T006]
+
+Arquivo: src/features/schoolpower/agente-jota/capabilities/GERAR_CONTEUDO/implementations/gerar-conteudo-atividades.ts
+
+Impacto: ALTO — camada final de proteção. Ensina o LLM de geração a rejeitar ativamente fontes irrelevantes em vez de usá-las ou ignorá-las silenciosamente
+
+Detalhes precisos:
+
+Modificar a seção de fontes web no prompt (linha ~566-574):
+
+ANTES (atual):
+
+USE estas fontes para enriquecer e embasar o conteúdo gerado com exemplos, metodologias e referências reais:
+- Cite as fontes quando relevante para dar credibilidade pedagógica ao material
+- Incorpore dados, abordagens e metodologias encontradas nessas fontes
+DEPOIS (novo):
+
+// Extrair tema da atividade para injetar na instrução
+const temaAtividade = activity.titulo || params.tema || 'o tema solicitado';
+// Instrução nova:
+`## FONTES EDUCACIONAIS REAIS — Pesquisa Web do Jota
+O Jota pesquisou ${webSearchContext.count} fontes educacionais brasileiras reais sobre "${webSearchContext.query}".
+⭐ FONTE PRINCIPAL (priorize esta fonte acima de todas as outras):
+[injetada pelo T006]
+REGRAS OBRIGATÓRIAS DE USO DAS FONTES:
+1. RELEVÂNCIA: Só incorpore informações de uma fonte se ela tratar DIRETAMENTE de "${temaAtividade}"
+2. REJEIÇÃO: Se uma fonte parecer tratar de assunto DIFERENTE de "${temaAtividade}", IGNORE-A completamente
+3. NÃO FORCE CONEXÕES: Não invente ligações artificiais entre fontes e o tema
+4. CITAÇÃO HONESTA: Só cite uma URL em "fontes_consultadas" se você REALMENTE usou informação dela
+5. PREFERÊNCIA: Priorize a Fonte Principal → ALTA RELEVÂNCIA → BOA RELEVÂNCIA (nessa ordem)
+VERIFICAÇÃO OBRIGATÓRIA ANTES DE RETORNAR O JSON:
+- Cada URL em "fontes_consultadas" está relacionada a "${temaAtividade}"? Se não → remova-a
+- Você incorporou pelo menos 1 exemplo ou metodologia real da Fonte Principal? Se não → revise
+${webSearchContext.prompt_context}`
+Acceptance:
+
+Atividade sobre "Revolução Francesa" → seção "Fontes Consultadas" contém APENAS URLs sobre história/Revolução Francesa
+Nenhuma URL sobre alimentos, Portugal, ou outros temas não-relacionados nas fontes citadas
+Conteúdo da atividade referencia exemplos reais da Nova Escola ou SciELO de forma coerente
+Se todas as fontes forem irrelevantes (edge case): LLM retorna atividade sem "Fontes Consultadas" em vez de citar fontes falsas
+Antes vs. Depois — O que o LLM de Geração vai Receber
+ANTES (problema real documentado):
+FONTES EDUCACIONAIS REAIS:
+[1] ⭐ ALTA RELEVÂNCIA — Artigo Acadêmico Peer-Reviewed
+    Título: A Revolução Francesa e seu eco na América Latina
+    SciELO Brasil (score: 0.782) ← relevante
+[2] ✓ BOA RELEVÂNCIA — Artigo Acadêmico Peer-Reviewed  
+    Título: Os alimentos funcionais: a nova fronteira da indústria alimentar
+    SciELO Brasil (score: 0.581) ← COMPLETAMENTE IRRELEVANTE
+    📄 CONTEÚDO EXTRAÍDO (Jina Reader):
+    "Os alimentos funcionais são definidos como alimentos que, além de suas funções 
+    nutricionais básicas, quando consumidos como parte de uma dieta usual, produzem 
+    efeitos metabólicos e/ou fisiológicos e/ou efeitos benéficos à saúde..." 
+    ← 800 chars sobre ALIMENTOS no contexto de aula de HISTÓRIA
+DEPOIS (com T001+T003+T005+T006+T007):
+⭐ FONTE PRINCIPAL (score 0.94, Groq: 9/10):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"A Revolução Francesa e seu eco na América Latina" — SciELO Brasil
+https://scielo.br/...
+[900 chars de conteúdo Jina sobre revolução, validado com content_relevance: 'alta']
+INSTRUÇÃO: Esta é a fonte mais relevante. Priorize metodologias e dados desta fonte.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ALTA RELEVÂNCIA:
+[2] "3 planos de aula sobre Revolução Francesa" — Nova Escola (score 0.87)
+[3] "Revolução Francesa: causas e impactos" — Portal do Professor (score 0.79)
+[4] "Revolução Francesa BNCC 9º ano" — educapes.capes.gov.br (score 0.74)
+BOA RELEVÂNCIA:
+[5] "Iluminismo e Revolução Francesa" — DOAJ (score 0.61)
+[artigo sobre alimentos: groq_score 0 → score 0.203 → abaixo do threshold → EXCLUÍDO]
+[artigo sobre Portugal cidadania: guard de título → sem "revolução" → EXCLUÍDO]
+CONTEÚDO COMPLETO EXTRAÍDO — Use como base de referência real:
+[1] Nova Escola — "3 planos de aula..."
+    [800 chars reais sobre métodos de ensino da Revolução Francesa]
+    content_relevance: 'alta' ✓
+Ordem de Execução
+T001 (Scorer) ──────────────────────────────────────────► T005 (Groq Reranker) ──┐
+T002 (PT_EN_MAP) ────────────────────────────────────────────────────────────────┤
+T003 (Jina Validação) ──────────────────────────────────► T006 (Context Layer) ──┤──► T007 (Prompt Guard)
+T004 (Gap Analysis Fix) ─────────────────────────────────────────────────────────┘
+T001, T002, T003, T004: completamente independentes → executar em paralelo
+
+T005: depende do T001 (usa o ranking inicial melhorado como base para reranking)
+
+T006: depende do T003 (usa content_relevance da validação Jina)
+
+T007: depende do T006 (usa temaAtividade e recebe prompt_context filtrado)
+
+Impacto Esperado por Métrica
+Métrica	Antes	Depois
+Resultados irrelevantes no top 10	2-4 por busca (estimado)	0-1 por busca
+Query terms no conteúdo Jina extraído	~40% de cobertura	~90%+
+Providers ativos para Humanas (História, Geo)	4/9	6-7/9
+Round 2 falso positivo	~40% das buscas	~10%
+Chars úteis no prompt_context	~30% úteis, 70% ruído	~85% úteis
+Tamanho total do prompt_context	~15000-20000 chars	~6000-8000 chars densos
+Latência adicional (Groq reranker)	N/A	+0.8s a 1.5s
+Fontes citadas incorretamente no output	Frequente	Raro/nulo
+Referências Técnicas Usadas
+Perplexity RAG Pipeline (2025): Dual retrieval (BM25 + semantic) → Multi-stage reranking → Cross-encoder → Threshold filtering → Context compression
+Manus AI Context Engineering: Validation after each tool call, file system for stale data, only validated results enter LLM context
+Research: "Context Pollution in RAG" (2024-2025): Hard negatives (irrelevant docs) actively degrade LLM accuracy by up to 30%, not just neutral noise
+Pointwise LLM Reranking (Fin.ai, 2025): Fast O(1) batch scoring via Groq llama-3.1-8b-instant, production-proven approach
+npm run dev
+106m
+ • 
+2 hours ago
+node api/server.js
+106m
+ • 
+2 hours ago
+import { executeWithCascadeFallback } from '../../services/controle-APIs-gerais-school-power';
+import { getSession } from './session-store';
+
+export type SmartRouteType = 'CONVERSAR' | 'EXECUTAR' | 'CAPABILITY_DIRETA';
+
+export interface SmartRouteResult {
+  route: SmartRouteType;
+  confidence: number;
+  reasoning: string;
+  capability?: string;
+  capability_params?: Record<string, any>;
+  resposta_direta?: string;
+  source: 'fast_rules' | 'llm' | 'fallback';
+}
+
+const VALID_DIRECT_CAPABILITIES = [
+  'gerenciar_calendario',
+  'pesquisar_atividades_conta',
+  'pesquisar_atividades_disponiveis',
+];
+
+const SMART_ROUTER_PROMPT = `
+Você é o roteador do Jota, assistente de IA para professores brasileiros.
+Analise a mensagem e decida o caminho CORRETO.
+
+MENSAGEM: "{user_prompt}"
+
+CONTEXTO: {session_context}
+
+ROTAS:
+
+1. "CONVERSAR" — Conversa, pergunta, saudação, agradecimento, dúvida conceitual.
+   Exemplos: "oi", "obrigado", "o que é SAAS?", "como funciona a BNCC?", "me explica melhor"
+
+2. "EXECUTAR" — Criar materiais pedagógicos: atividades, planos de aula, provas, quiz, documentos escolares.
+   Exemplos: "crie 5 atividades de matemática", "monte um plano de aula sobre fotossíntese"
+   INCLUI pedidos compostos que envolvem criação + calendário (ex: "planeje aulas e organize no calendário")
+
+3. "CAPABILITY_DIRETA" — Ação ISOLADA sobre dados do professor (sem criação de material):
+   - "gerenciar_calendario": APENAS quando o professor quer consultar, criar, editar ou excluir compromissos SEM criar material pedagógico
+   - "pesquisar_atividades_conta": consultar atividades já criadas
+   - "pesquisar_atividades_disponiveis": ver catálogo de atividades
+
+REGRA DE OURO:
+- Se menciona "crie/faça/monte/planeje/elabore/prepare" + tema escolar → EXECUTAR (mesmo que mencione calendário)
+- Se APENAS gerencia calendário/agenda sem criar material → CAPABILITY_DIRETA (gerenciar_calendario)
+- Se é pergunta, saudação, agradecimento ou conversa → CONVERSAR
+- Pedidos COMPOSTOS (criar + agendar, planejar + calendário) → EXECUTAR (o planner decompõe internamente)
+
+Responda APENAS JSON:
+{
+  "route": "CONVERSAR" | "EXECUTAR" | "CAPABILITY_DIRETA",
+  "confidence": 0.0 a 1.0,
+  "reasoning": "explicação curta",
+  "capability": "nome (só para CAPABILITY_DIRETA)",
+  "capability_params": {} 
+}
+`.trim();
+
+function buildSessionContextSummary(sessionId: string, userId: string): string {
+  const session = getSession(sessionId);
+  if (!session) return 'Primeira interação.';
+
+  const parts: string[] = [];
+
+  if (session.currentPlan) {
+    parts.push(`Plano ativo: "${session.currentPlan.objetivo}" (${session.currentPlan.etapasCompletas}/${session.currentPlan.totalEtapas} etapas)`);
+  }
+
+  if (session.activitiesCreated && session.activitiesCreated.length > 0) {
+    parts.push(`Atividades criadas: ${session.activitiesCreated.length}`);
+  }
+
+  const recentTurns = (session.conversationHistory || []).slice(-3);
+Objetivo
+Eliminar o problema de "água contaminada no contexto" — corrigir a raiz do porquê resultados irrelevantes chegam ao LLM de gerar_conteudo_atividades, implementar um pipeline de 2 estágios de qualidade (como Perplexity), e garantir que o contexto injetado seja denso, relevante e verificado antes de chegar ao LLM de geração.
+
+Diagnóstico — "A Água Contaminada" Explicada em Detalhe
+O que acontece hoje (o problema real, com números)
+O scorer atual usa esta fórmula:
+
+rawScore = (domainScore × 0.35) + (semanticScore × 0.30) + (eduBoost × 0.20) + boosts educacionais (até 0.38)
+finalScore = rawScore × typeMultiplier (1.25 para academic)
+O problema crítico: `domainScore × 0.35 + eduBoost × 0.20 = 55% do score é autoridade de domínio ANTES de relevância semântica.**
+
+Simulação real — SciELO publica artigo sobre alimentos funcionais, busca é sobre Revolução Francesa:
+
+SciELO "Os alimentos funcionais: a nova fronteira da indústria alimentar":
+  domainScore = 0.90 × 0.35   = 0.315  (SciELO é sempre 0.90)
+  eduBoost    = 0.35 × 0.20   = 0.070  (tier 'alta' = eduBoost 0.35)
+  semanticScore = 0  × 0.30   = 0.000  (zero termos de "revolução francesa")
+  typeMultiplier = 1.25 (source_type = academic)
+  ──────────────────────────────────────
+  finalScore = (0.315 + 0.070) × 1.25 = 0.481
+  + pedagogicoBoost (se snippet contém "aprendizagem") = +0.05
+  + brasilBoost = +0.08
+  ──────────────────────────────────────
+  finalScore = 0.621  ← resultado irrelevante no TOP 3
+Este artigo entra no prompt_context com 800 chars de conteúdo sobre alimentos via Jina Reader. O LLM de gerar_conteudo recebe esse conteúdo e ou o usa erroneamente, ou o ignora — mas ocupa espaço de contexto valioso.
+
+O que a ciência diz sobre contexto contaminado
+Research recente (2024-2025) confirma que documentos irrelevantes no contexto RAG causam degradação ativa — não são neutros, são "hard negatives" que ativamente enganam o modelo:
+
+Inserir apenas 25% de documentos irrelevantes pode reduzir a acurácia do LLM em até 30%
+"Hard negatives" (documentos parecidos mas errados) são piores que ruído aleatório
+Aumentar k (número de resultados) sem filtro de qualidade: performance sobe até k=10 e depois declina
+Modelos com contexto longo sofrem mais — o LLM "processa" o texto irrelevante e se confunde
+Como os líderes de mercado resolvem
+Perplexity — Pipeline de 2 estágios:
+
+Stage 1: Retrieval de alta cobertura (30-100 candidatos), sem filtro de qualidade ainda
+Stage 2: Cross-encoder reranker (modelo que analisa QUERY + DOCUMENTO juntos) — aplica threshold duro: qualquer resultado abaixo do corte é descartado, não penalizado. Chamam de "sculpting"
+Sub-document scoring: extrai o trecho mais relevante dentro do documento, não o documento inteiro
+Context compression: trunca para o orçamento de tokens priorizando relevância, não posição
+Manus AI — Context Engineering:
+
+Após cada ferramenta executada, valida se o resultado é útil para o objetivo atual
+Resultados validados ficam no contexto; resultados inúteis vão para "arquivo compactado"
+Só carrega no LLM o que passou pela validação
+Princípio: "o LLM só deve ver o que é relevante para a próxima ação"
+Genspark — Fact-checking cruzado:
+
+Múltiplos modelos analisam os resultados de forma independente
+Consenso entre modelos determina o que vai para o contexto final
+Resultados sem consenso são descartados
+O que o sistema atual tem que os concorrentes NÃO têm
+39 domínios brasileiros curados com autoridade real
+BNCC integration nativa
+Pipeline completo (pesquisa → atividade → calendário)
+Custo ~$0.001/busca vs. Manus ($10+/sessão) e Genspark
+O gap é só de qualidade de filtragem — a estrutura de pesquisa já é competitiva.
+
+Estado Atual dos Arquivos Críticos
+api/search-providers/scorer.js — BUG CONFIRMADO
+// Linha 90-100:
+const rawScore =
+  domainScore * 0.35 +      // ← 35% para autoridade de domínio
+  semanticScore * 0.30 +    // ← 30% para relevância semântica
+  eduBoost * 0.20 +         // ← 20% para tier educacional
+  bnccBoost + brasilBoost + pedagogicoBoost + ...
+const finalScore = Math.min(1.0, rawScore * typeMultiplier); // ← academic × 1.25
+Resultado: autoridade de domínio + tier educacional = 55% do peso antes da semântica.
+
+api/search-web.js — PT_EN_MAP INCOMPLETO
+// PT_EN_MAP atual tem apenas termos de STEM + básicos:
+'frações': 'fractions', 'matemática': 'mathematics', 'ciências': 'science', 'história': 'history'
+// FALTA COMPLETAMENTE: revolução, francesa, guerra, política, bioma, célula, etc.
+// Resultado: OpenAlex, CORE, EuropePMC retornam ZERO para 70% dos professores de Humanas
+api/search-providers/content-extractor.js — FILTRO PDF INCOMPLETO
+// Linha 10-12 atual:
+if (url.endsWith('.pdf') || url.includes('.pdf?')) return false;
+if (url.includes('doi.org')) return false;
+// FALTA: url.includes('format=pdf'), url.includes('?f='), url.includes('/pdf/')
+// Resultado: Jina extrai PDFs binários disfarçados como HTML e retorna lixo
+pesquisar-web.ts — GAP ANALYSIS COM FALSO POSITIVO
+// Linha 140-148:
+const has_pedagogical = results.some(r => {
+  const t = text(r);
+  return (
+    t.includes('plano de aula') ||        // singular — OK
+    t.includes('sequência didática')      // singular — OK
+    // FALTA: 'planos de aula', 'sequencias didaticas', 'atividades pedagógicas'
+  );
+});
+// Resultado: "3 planos de aula" não detecta has_pedagogical → dispara round 2 desnecessário → +6s
+pesquisar-web.ts → gerar_conteudo_atividades — SEM FILTRO ANTES DO LLM
+O formatResultsForPrompt() passa TODOS os resultados para o prompt, inclusive os irrelevantes. Não há filtro pós-scoring que valide se o conteúdo extraído pelo Jina é realmente sobre o tema. Não há threshold mínimo de relevância semântica para entrar no prompt_context.
+
+Tasks
+T001: Scorer — Semantic Gate + Rebalanceamento de Pesos
+Blocked By: []
+
+Arquivo: api/search-providers/scorer.js
+
+Impacto: CRÍTICO — elimina resultados tipo "alimentos em aula de história" independente da fonte
+
+Detalhes precisos:
+
+1. Semantic Gate (regra dura — o coração da mudança):
+
+// ANTES de calcular rawScore, verificar gate semântico
+const SEMANTIC_GATE_THRESHOLD = 0.10; // mínimo para não-oficiais
+const passedSemanticGate = semanticScore >= SEMANTIC_GATE_THRESHOLD
+  || (eduInfo && eduInfo.tier === 'official'); // fontes oficiais são sempre incluídas
+// Se não passou o gate: cap máximo de 0.38 (abaixo do threshold de "BOA RELEVÂNCIA")
+const scoreCapFromGate = passedSemanticGate ? 1.0 : 0.38;
+2. Penalidade ativa por zero semântica (não só cap — penalidade real):
+
+const semanticPenalty = semanticScore === 0 ? -0.15 : 0; // penaliza quem não tem nenhum match
+3. Rebalanceamento dos pesos:
+
+// DEPOIS (novo):
+const rawScore =
+  domainScore * 0.25 +      // reduz de 0.35 para 0.25 (autoridade de domínio)
+  semanticScore * 0.42 +    // aumenta de 0.30 para 0.42 (semântica é o fator dominante)
+  eduBoost * 0.18 +         // reduz de 0.20 para 0.18
+  bnccBoost + brasilBoost + pedagogicoBoost + aprendizagemBoost + metodologiaBoost
+  + semanticPenalty;        // penalidade ativa por zero match
+const finalScore = Math.min(scoreCapFromGate, rawScore * typeMultiplier);
+4. Corrigir boosts pedagógicos (plurais faltando):
+
+const pedagogicoBoost = (
+  text.includes('plano de aula') ||
+  text.includes('planos de aula') ||        // BUG FIX
+  text.includes('sequência didática') ||
+  text.includes('sequencias didaticas') ||  // BUG FIX
+  text.includes('atividade pedagógic') ||
+  text.includes('atividades pedagógic') ||  // BUG FIX
+  text.includes('material didático') ||     // NOVO
+  text.includes('proposta pedagógica')      // NOVO
+) ? 0.10 : 0;
+5. Domain diversity cap (nova função applyDomainDiversityCap):
+
+function applyDomainDiversityCap(results, maxPerDomain = 3) {
+  const domainCounts = {};
+  return results.filter(r => {
+    const domain = extractDomain(r.url);
+    const current = domainCounts[domain] || 0;
+    const limit = r.domain_tier === 'official' ? 5 : maxPerDomain;
+    if (current >= limit) return false;
+    domainCounts[domain] = current + 1;
+    return true;
+  });
+}
+// Chamar APÓS deduplicateResults() e ANTES do slice final
+Acceptance:
+
+Busca "revolução francesa" → "Os alimentos funcionais" com semanticScore=0 recebe finalScore ≤ 0.38, fica fora do top 5
+Busca "revolução francesa" → artigo "Revolução Francesa e seus impactos" com semanticScore=0.8 recebe finalScore ~0.82
+Máximo 3 resultados de qualquer domínio único (exceto oficiais)
+T002: PT_EN_MAP — Expansão Completa para Todas as Disciplinas
+Blocked By: []
+
+Arquivo: api/search-web.js
+
+Impacto: ALTO — desbloqueia 5/9 providers internacionais (OpenAlex, CORE, EuropePMC, PubMed, ArXiv) para professores de Humanas/Ciências/Artes
+
+Detalhes precisos: Adicionar ao objeto PT_EN_MAP (após a linha 91):
+
+// História e Ciências Sociais
+'revolução': 'revolution', 'revoluções': 'revolutions',
+'francesa': 'french', 'francesa': 'french',
+'guerra': 'war', 'guerras': 'wars',
+'política': 'politics', 'politica': 'politics',
+'político': 'political', 'politico': 'political',
+'império': 'empire', 'imperialismo': 'imperialism',
+'colônia': 'colony', 'colonialismo': 'colonialism',
+'ditadura': 'dictatorship', 'democracia': 'democracy',
+'feudalismo': 'feudalism', 'renascimento': 'renaissance',
+'iluminismo': 'enlightenment', 'capitalismo': 'capitalism',
+'socialismo': 'socialism', 'fascismo': 'fascism',
+'escravidão': 'slavery', 'escravismo': 'slavery',
+'independência': 'independence', 'república': 'republic',
+// Geografia
+'bioma': 'biome', 'biomas': 'biomes',
+'clima': 'climate', 'climático': 'climatic',
+'urbanização': 'urbanization', 'urbano': 'urban',
+'território': 'territory', 'população': 'population',
+'relevo': 'relief', 'floresta': 'forest',
+'amazônia': 'amazon', 'semiárido': 'semiarid',
+'sustentabilidade': 'sustainability', 'ambiental': 'environmental',
+'migração': 'migration', 'globalização': 'globalization',
+// Biologia/Ciências Naturais
+'biologia': 'biology', 'célula': 'cell',
+'fotossíntese': 'photosynthesis', 'evolução': 'evolution',
+'ecossistema': 'ecosystem', 'genética': 'genetics',
+'microrganismo': 'microorganism', 'vírus': 'virus',
+'bactéria': 'bacteria', 'animal': 'animal',
+'planta': 'plant', 'nutrição': 'nutrition',
+'reprodução': 'reproduction', 'sistema': 'system',
+// Química
+'química': 'chemistry', 'quimica': 'chemistry',
+'átomo': 'atom', 'molécula': 'molecule',
+'reação': 'reaction', 'solução': 'solution',
+'ácido': 'acid', 'base': 'base',
+'tabela periódica': 'periodic table', 'elemento': 'element',
+// Física
+'física': 'physics', 'fisica': 'physics',
+'força': 'force', 'energia': 'energy',
+'movimento': 'motion', 'velocidade': 'velocity',
+'eletricidade': 'electricity', 'magnetismo': 'magnetism',
+'óptica': 'optics', 'termodinâmica': 'thermodynamics',
+'ondas': 'waves', 'gravitação': 'gravitation',
+// Literatura e Língua Portuguesa
+'literatura': 'literature', 'conto': 'short story',
+'crônica': 'chronicle', 'poema': 'poem', 'poesia': 'poetry',
+'romantismo': 'romanticism', 'modernismo': 'modernism',
+'realismo': 'realism', 'barroco': 'baroque',
+'gramática': 'grammar', 'redação': 'writing',
+'narrador': 'narrator', 'personagem': 'character',
+// Artes e Cultura
+'artes': 'arts', 'arte': 'art',
+'música': 'music', 'teatro': 'theater',
+'dança': 'dance', 'pintura': 'painting',
+'escultura': 'sculpture', 'cultura': 'culture',
+// Sociologia e Filosofia
+'sociologia': 'sociology', 'filosofia': 'philosophy',
+'cidadania': 'citizenship', 'sociedade': 'society',
+'ética': 'ethics', 'moral': 'moral',
+'direitos': 'rights', 'desigualdade': 'inequality',
+Acceptance: buildInternationalQuery("revolução francesa ensino história 9 ano") retorna "revolution french history teaching grade brazil" — todos os providers internacionais recebem query com termos válidos em inglês.
+
+T003: Content Extractor — Filtro PDF + Validação de Relevância Pós-Extração
+Blocked By: []
+
+Arquivo: api/search-providers/content-extractor.js
+
+Impacto: ALTO — garante que o conteúdo Jina extraído seja sobre o tema, não sobre alimentos
+
+Detalhes precisos:
+
+1. Ampliar filtro de URLs inextratíveis:
+
+function isExtractableUrl(url) {
+  if (!url || !url.startsWith('http')) return false;
+  if (url.endsWith('.pdf') || url.includes('.pdf?')) return false;
+  if (url.includes('doi.org')) return false;
+  // NOVOS:
+  if (url.includes('format=pdf')) return false;    // SciELO PDFs disfarçados
+  if (url.includes('?f=')) return false;           // Outro padrão SciELO
+  if (url.includes('/pdf/')) return false;         // Path PDF
+  if (url.includes('arxiv.org/pdf')) return false; // ArXiv PDF direto
+  if (url.includes('download=true')) return false;  // Downloads genéricos
+  return true;
+}
+2. Validação de relevância pós-extração (nova função):
+
+function validateContentRelevance(content, queryTerms) {
+  if (!content || queryTerms.length === 0) return { relevant: false, score: 0 };
+  const contentLower = content.toLowerCase();
+  const matchCount = queryTerms.filter(term => contentLower.includes(term)).length;
+  const relevanceRatio = matchCount / queryTerms.length;
+  return {
+    relevant: matchCount >= 1,               // ao menos 1 termo do query
+    score: relevanceRatio,                    // 0.0 a 1.0
+    matchCount,
+    label: matchCount === 0 ? 'invalido'
+         : relevanceRatio < 0.3 ? 'baixa'
+         : relevanceRatio < 0.6 ? 'media'
+         : 'alta'
+  };
+}
+3. Integrar validação em extractContentFromUrls():
+
+// Assinar a função com queryTerms opcional:
+export async function extractContentFromUrls(results, options = {}) {
+  const { extractContent, queryTerms = [] } = options;
+  // ...
+  // Após obter content:
+  const relevance = validateContentRelevance(content, queryTerms);
+  if (!relevance.relevant) {
+    console.log(`[ContentExtractor] ❌ Conteúdo descartado (0 query terms): ${url}`);
+    return { url, content: null, relevance }; // descartado
+  }
+  return { url, content, relevance };
+}
+4. Adicionar content_relevance ao resultado enriquecido:
+
+return { ...r, content_full: content, content_extracted: true, content_relevance: relevance.label };
+5. Passar queryTerms do search-web.js:
+
+// Na linha onde chama extractContentFromUrls:
+const queryTerms = extractQueryTerms(allInputQueries[0]); // já existe
+if (search_depth === 'advanced') {
+  finalResults = await extractContentFromUrls(finalResults, { queryTerms });
+}
+Acceptance: Busca "revolução francesa" → Jina extrai conteúdo de artigo SciELO sobre alimentos → validateContentRelevance(content, ['revolução','francesa']) retorna {relevant: false, matchCount: 0} → conteúdo descartado, log mostra "❌ Conteúdo descartado". O resultado mantém content_extracted: false.
+
+T004: Gap Analysis — Correção de Detecção de Plurais + Threshold Ajustado
+Blocked By: []
+
+Arquivo: src/features/schoolpower/agente-jota/capabilities/PESQUISAR/implementations/pesquisar-web.ts
+
+Impacto: MÉDIO — elimina round 2 falso positivo que adiciona 6s de latência desnecessária
+
+Detalhes precisos:
+
+1. Corrigir has_pedagogical (linhas ~140-148): Substituir a detecção de singular para incluir plurais e variantes:
+
+const has_pedagogical = results.some(r => {
+  const t = text(r);
+  return (
+    t.includes('plano de aula') ||
+    t.includes('planos de aula') ||          // PLURAL FIX
+    t.includes('plano aula') ||
+    t.includes('planos aula') ||
+    t.includes('sequência didática') ||
+    t.includes('sequencia didatica') ||
+    t.includes('sequências didáticas') ||    // PLURAL FIX
+    t.includes('atividade pedagóg') ||
+    t.includes('atividades pedagóg') ||      // PLURAL FIX
+    t.includes('material didático') ||       // NOVO
+    t.includes('proposta pedagógica') ||     // NOVO
+    t.includes('recurso didático')           // NOVO
+  );
+});
+2. Corrigir has_curricular para ser mais abrangente:
+
+const has_curricular = results.some(r => {
+  const t = text(r);
+  return (
+    t.includes('bncc') ||
+    t.includes('base nacional') ||
+    t.includes('currículo') ||
+    t.includes('curriculo') ||
+    t.includes('habilidade ef') ||     // padrão de código BNCC como EF07HI03
+    t.includes('habilidade em') ||     // Ensino Médio
+    t.includes('competência') ||
+    t.includes('objetivo de aprendizagem') ||
+    r.url?.includes('mec.gov')
+  );
+});
+3. Ajustar threshold de round 2 (de < 0.5 para < 0.25):
+
+// ANTES: dispara round 2 se coverage_score < 0.5 (2+ dimensões faltando)
+// DEPOIS: dispara round 2 só se coverage_score < 0.25 (3+ dimensões faltando)
+// Isso reduz round 2 desnecessário em ~60% das buscas
+if ((gapAnalysis.coverage_score < 0.25 || round1Results.length < 5) && round1Results.length > 0) {
+Acceptance:
+
+Busca retorna resultado da Nova Escola com título "3 planos de aula sobre Revolução Francesa" → has_pedagogical: true detectado → round 2 NÃO dispara
+Busca sobre tema muito obscuro sem resultados pedagógicos → has_pedagogical: false, has_curricular: false, has_academic: false → coverage_score = 0.25 → round 2 dispara
+Em buscas normais (tema pedagógico conhecido), latência cai de ~8s para ~4-5s
+T005: Groq Reranker — Filtro LLM de Relevância (Pipeline de 2 Estágios)
+Blocked By: [T001]
+
+Arquivos: api/search-providers/query-planner.js, api/search-web.js
+
+Impacto: MÁXIMO — implementa o mesmo princípio do cross-encoder da Perplexity usando o Groq já disponível. Elimina resultados irrelevantes APÓS o scoring inicial, antes de Jina e do contexto LLM
+
+Detalhes precisos:
+
+Nova função em query-planner.js — Pointwise LLM Reranking (abordagem mais rápida, O(1) por batch):
+
+export async function rerankWithLLM(query, results, options = {}) {
+  const { groqApiKey, topN = 8, timeoutMs = 5000 } = options;
+  if (!groqApiKey || !results || results.length === 0) return results;
+  
+  const candidates = results.slice(0, 15); // pega top 15 do scoring inicial
+  
+  const candidatesList = candidates.map((r, i) =>
+    `[${i}] "${r.title.slice(0, 80)}" — ${r.source_label || r.provider || 'Web'}\n` +
+    `    ${(r.snippet || '').slice(0, 120)}`
+  ).join('\n\n');
+  
+  const prompt = `Você é especialista em educação brasileira K-12.
+Query do professor: "${query}"
+Avalie a RELEVÂNCIA EDUCACIONAL de cada resultado para esta query específica.
+Responda APENAS com JSON válido, sem markdown:
+{"scores":[{"idx":0,"score":8},{"idx":1,"score":2},...]}`
+Critérios de score (0-10):
+- 10: Diretamente sobre o tema, para professores, contexto BR
+- 7-9: Relacionado ao tema, educacional, útil
+- 4-6: Parcialmente relevante ou periférico
+- 1-3: Pouco relacionado
+- 0: Completamente irrelevante para "${query}"
+Resultados para avaliar:
+${candidatesList}`;
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Authorization': `Bearer ${groqApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.0,
+        max_tokens: 400,
+      }),
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) return results; // falha silenciosa
+    
+    const data = await response.json();
+    const rawContent = data?.choices?.[0]?.message?.content || '';
+    const parsed = JSON.parse(rawContent.replace(/```json\n?|\n?```/g, '').trim());
+    
+    if (!parsed.scores || !Array.isArray(parsed.scores)) return results;
+    
+    // Criar mapa idx → groq_score
+    const scoreMap = {};
+    for (const s of parsed.scores) {
+      if (typeof s.idx === 'number' && typeof s.score === 'number') {
+        scoreMap[s.idx] = s.score;
+      }
+    }
+    
+    // Aplicar reranking:
+    // - groq_score < 3: penalizar (× 0.35) — resultado irrelevante descartado na prática
+    // - groq_score >= 3 e < 7: neutro
+    // - groq_score >= 7: boost (× 1.15)
+    const reranked = candidates.map((r, i) => {
+      const gs = scoreMap[i] ?? 5; // default neutro se não retornou
+      const multiplier = gs < 3 ? 0.35 : gs >= 7 ? 1.15 : 1.0;
+      return {
+        ...r,
+        score: Math.min(1.0, r.score * multiplier),
+        groq_relevance_score: gs,
+      };
+    });
+    
+    // Reordenar pelos novos scores, adicionar resultados não-candidatos no final
+    const rerankedSorted = reranked.sort((a, b) => b.score - a.score);
+    const remainingResults = results.slice(15); // resultados além dos 15 candidatos
+    
+    console.log(`[LLMReranker] Groq reclassificou ${candidates.length} resultados para query "${query.slice(0, 40)}"`);
+    return [...rerankedSorted, ...remainingResults];
+    
+  } catch (err) {
+    console.warn('[LLMReranker] Falha silenciosa, mantendo ranking original:', err.message);
+    return results; // falha silenciosa sempre
+  }
+}
+Integração em search-web.js:
+
+// Após scoreResult + deduplicateResults + applyDomainDiversityCap:
+if (groqKey && search_depth === 'advanced' && sortedResults.length > 3) {
+  console.log(`[SearchOrchestrator] Iniciando LLM reranking de ${Math.min(sortedResults.length, 15)} candidatos...`);
+  sortedResults = await rerankWithLLM(allInputQueries[0], sortedResults, {
+    groqApiKey: groqKey,
+    topN: max_results,
+    timeoutMs: 5000,
+  });
+}
+Adicionar ao response JSON:
+
+llm_reranking_used: groqKey && search_depth === 'advanced',
+Latência adicional: +0.8s a 1.5s (Groq llama-3.1-8b-instant é extremamente rápido para 400 tokens) Custo: ~150-200 tokens por busca = frações de centavo
+
+Acceptance:
+
+Busca "revolução francesa" → "Os alimentos funcionais" recebe groq_relevance_score: 0 → score final penalizado para 0.621 × 0.35 = 0.217 → fora do top 8
+"Revolução Francesa e seu contexto histórico" recebe groq_relevance_score: 9 → score final boosted 0.621 × 1.15 = 0.714 → top 2
+Log: [LLMReranker] Groq reclassificou 15 resultados para query "revolução francesa"
+Se Groq falhar: timeout de 5s → fallback silencioso para ranking original, zero impacto
+T006: Context Quality Layer — Filtro Semântico no formatResultsForPrompt
+Blocked By: [T003]
+
+Arquivo: src/features/schoolpower/agente-jota/capabilities/PESQUISAR/implementations/pesquisar-web.ts
+
+Impacto: ALTO — última linha de defesa antes de o conteúdo chegar ao LLM de geração
+
+Detalhes precisos:
+
+1. Separar resultados em camadas de relevância antes de formatar:
+
+function categorizeResultsByRelevance(results: WebResult[]): {
+  principal: WebResult | null;
+  alta: WebResult[];
+  boa: WebResult[];
+  complementar: WebResult[];
+} {
+  const sorted = [...results].sort((a, b) => b.score - a.score);
+  return {
+    principal: sorted[0] || null,              // O mais relevante (destacado)
+    alta: sorted.filter(r => r.score >= 0.70).slice(0, 4),
+    boa: sorted.filter(r => r.score >= 0.45 && r.score < 0.70).slice(0, 4),
+    complementar: sorted.filter(r => r.score >= 0.30 && r.score < 0.45).slice(0, 2),
+  };
+}
+2. Guard de título — antes de incluir qualquer resultado no prompt_context:
+
+function resultIsRelevantToQuery(result: WebResult, queryTerms: string[]): boolean {
+  if (result.domain_tier === 'official') return true; // fontes oficiais sempre entram
+  const titleLower = (result.title || '').toLowerCase();
+  const hasAnyTermInTitle = queryTerms.some(term => titleLower.includes(term));
+  return hasAnyTermInTitle || (result.score >= 0.70); // alta pontuação = confiança
+}
+3. Adicionar "Fonte Principal" destacada no prompt_context:
+
+⭐ FONTE PRINCIPAL (mais relevante para "${query}"):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Título] — [Source Label]
+[URL]
+[content_full.slice(0, 900) se disponível, ou snippet.slice(0, 500)]
+INSTRUÇÃO: Esta é a fonte mais relevante. Priorize metodologias, exemplos e dados desta fonte.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. Limitar tamanho total do prompt_context:
+
+const MAX_PROMPT_CONTEXT_CHARS = 8000; // era ilimitado (podia chegar a 20000+)
+// Distribuição: Fonte Principal (900) + Alta relevância (400×4=1600) + Boa (250×4=1000)
+// + seção Conteúdo Completo Jina (800×3=2400) + Fontes (500) = ~7400 chars úteis
+5. Filtrar conteúdo Jina inválido (usa content_relevance do T003):
+
+// Só incluir na seção "CONTEÚDO COMPLETO EXTRAÍDO" se content_relevance !== 'invalido'
+const withValidContent = results.filter(r =>
+  r.content_full && r.content_relevance !== 'invalido'
+);
+Acceptance:
+
+prompt_context de busca "revolução francesa" contém APENAS fontes com "Revolução" ou "Francesa" em título/snippet (guard de título funcionando)
+Seção "FONTE PRINCIPAL" aparece destacada com 900 chars do conteúdo mais relevante
+Tamanho total do prompt_context ≤ 8000 chars (antes podia passar de 20000 chars com Jina)
+Artigo sobre alimentos: content_relevance: 'invalido' → não aparece na seção "CONTEÚDO COMPLETO"
+T007: Prompt Guard em gerar_conteudo_atividades — Instrução de Relevância
+Blocked By: [T006]
+
+Arquivo: src/features/schoolpower/agente-jota/capabilities/GERAR_CONTEUDO/implementations/gerar-conteudo-atividades.ts
+
+Impacto: ALTO — camada final de proteção. Ensina o LLM de geração a rejeitar ativamente fontes irrelevantes em vez de usá-las ou ignorá-las silenciosamente
+
+Detalhes precisos:
+
+Modificar a seção de fontes web no prompt (linha ~566-574):
+
+ANTES (atual):
+
+USE estas fontes para enriquecer e embasar o conteúdo gerado com exemplos, metodologias e referências reais:
+- Cite as fontes quando relevante para dar credibilidade pedagógica ao material
+- Incorpore dados, abordagens e metodologias encontradas nessas fontes
+DEPOIS (novo):
+
+// Extrair tema da atividade para injetar na instrução
+const temaAtividade = activity.titulo || params.tema || 'o tema solicitado';
+// Instrução nova:
+`## FONTES EDUCACIONAIS REAIS — Pesquisa Web do Jota
+O Jota pesquisou ${webSearchContext.count} fontes educacionais brasileiras reais sobre "${webSearchContext.query}".
+⭐ FONTE PRINCIPAL (priorize esta fonte acima de todas as outras):
+[injetada pelo T006]
+REGRAS OBRIGATÓRIAS DE USO DAS FONTES:
+1. RELEVÂNCIA: Só incorpore informações de uma fonte se ela tratar DIRETAMENTE de "${temaAtividade}"
+2. REJEIÇÃO: Se uma fonte parecer tratar de assunto DIFERENTE de "${temaAtividade}", IGNORE-A completamente
+3. NÃO FORCE CONEXÕES: Não invente ligações artificiais entre fontes e o tema
+4. CITAÇÃO HONESTA: Só cite uma URL em "fontes_consultadas" se você REALMENTE usou informação dela
+5. PREFERÊNCIA: Priorize a Fonte Principal → ALTA RELEVÂNCIA → BOA RELEVÂNCIA (nessa ordem)
+VERIFICAÇÃO OBRIGATÓRIA ANTES DE RETORNAR O JSON:
+- Cada URL em "fontes_consultadas" está relacionada a "${temaAtividade}"? Se não → remova-a
+- Você incorporou pelo menos 1 exemplo ou metodologia real da Fonte Principal? Se não → revise
+${webSearchContext.prompt_context}`
+Acceptance:
+
+Atividade sobre "Revolução Francesa" → seção "Fontes Consultadas" contém APENAS URLs sobre história/Revolução Francesa
+Nenhuma URL sobre alimentos, Portugal, ou outros temas não-relacionados nas fontes citadas
+Conteúdo da atividade referencia exemplos reais da Nova Escola ou SciELO de forma coerente
+Se todas as fontes forem irrelevantes (edge case): LLM retorna atividade sem "Fontes Consultadas" em vez de citar fontes falsas
+Antes vs. Depois — O que o LLM de Geração vai Receber
+ANTES (problema real documentado):
+FONTES EDUCACIONAIS REAIS:
+[1] ⭐ ALTA RELEVÂNCIA — Artigo Acadêmico Peer-Reviewed
+    Título: A Revolução Francesa e seu eco na América Latina
+    SciELO Brasil (score: 0.782) ← relevante
+[2] ✓ BOA RELEVÂNCIA — Artigo Acadêmico Peer-Reviewed  
+    Título: Os alimentos funcionais: a nova fronteira da indústria alimentar
+    SciELO Brasil (score: 0.581) ← COMPLETAMENTE IRRELEVANTE
+    📄 CONTEÚDO EXTRAÍDO (Jina Reader):
+    "Os alimentos funcionais são definidos como alimentos que, além de suas funções 
+    nutricionais básicas, quando consumidos como parte de uma dieta usual, produzem 
+    efeitos metabólicos e/ou fisiológicos e/ou efeitos benéficos à saúde..." 
+    ← 800 chars sobre ALIMENTOS no contexto de aula de HISTÓRIA
+DEPOIS (com T001+T003+T005+T006+T007):
+⭐ FONTE PRINCIPAL (score 0.94, Groq: 9/10):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"A Revolução Francesa e seu eco na América Latina" — SciELO Brasil
+https://scielo.br/...
+[900 chars de conteúdo Jina sobre revolução, validado com content_relevance: 'alta']
+INSTRUÇÃO: Esta é a fonte mais relevante. Priorize metodologias e dados desta fonte.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ALTA RELEVÂNCIA:
+[2] "3 planos de aula sobre Revolução Francesa" — Nova Escola (score 0.87)
+[3] "Revolução Francesa: causas e impactos" — Portal do Professor (score 0.79)
+[4] "Revolução Francesa BNCC 9º ano" — educapes.capes.gov.br (score 0.74)
+BOA RELEVÂNCIA:
+[5] "Iluminismo e Revolução Francesa" — DOAJ (score 0.61)
+[artigo sobre alimentos: groq_score 0 → score 0.203 → abaixo do threshold → EXCLUÍDO]
+[artigo sobre Portugal cidadania: guard de título → sem "revolução" → EXCLUÍDO]
+CONTEÚDO COMPLETO EXTRAÍDO — Use como base de referência real:
+[1] Nova Escola — "3 planos de aula..."
+    [800 chars reais sobre métodos de ensino da Revolução Francesa]
+    content_relevance: 'alta' ✓
+Ordem de Execução
+T001 (Scorer) ──────────────────────────────────────────► T005 (Groq Reranker) ──┐
+T002 (PT_EN_MAP) ────────────────────────────────────────────────────────────────┤
+T003 (Jina Validação) ──────────────────────────────────► T006 (Context Layer) ──┤──► T007 (Prompt Guard)
+T004 (Gap Analysis Fix) ─────────────────────────────────────────────────────────┘
+T001, T002, T003, T004: completamente independentes → executar em paralelo
+
+T005: depende do T001 (usa o ranking inicial melhorado como base para reranking)
+
+T006: depende do T003 (usa content_relevance da validação Jina)
+
+T007: depende do T006 (usa temaAtividade e recebe prompt_context filtrado)
+
+Impacto Esperado por Métrica
+Métrica	Antes	Depois
+Resultados irrelevantes no top 10	2-4 por busca (estimado)	0-1 por busca
+Query terms no conteúdo Jina extraído	~40% de cobertura	~90%+
+Providers ativos para Humanas (História, Geo)	4/9	6-7/9
+Round 2 falso positivo	~40% das buscas	~10%
+Chars úteis no prompt_context	~30% úteis, 70% ruído	~85% úteis
+Tamanho total do prompt_context	~15000-20000 chars	~6000-8000 chars densos
+Latência adicional (Groq reranker)	N/A	+0.8s a 1.5s
+Fontes citadas incorretamente no output	Frequente	Raro/nulo
+Referências Técnicas Usadas
+Perplexity RAG Pipeline (2025): Dual retrieval (BM25 + semantic) → Multi-stage reranking → Cross-encoder → Threshold filtering → Context compression
+Manus AI Context Engineering: Validation after each tool call, file system for stale data, only validated results enter LLM context
+Research: "Context Pollution in RAG" (2024-2025): Hard negatives (irrelevant docs) actively degrade LLM accuracy by up to 30%, not just neutral noise
+Pointwise LLM Reranking (Fin.ai, 2025): Fast O(1) batch scoring via Groq llama-3.1-8b-instant, production-proven approach

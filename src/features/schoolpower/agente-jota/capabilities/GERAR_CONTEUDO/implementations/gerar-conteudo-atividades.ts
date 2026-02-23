@@ -565,10 +565,13 @@ ${bnccContext.prompt_context}
 ${questoesReferencia.prompt_context}
 ` : ''}${webSearchContext?.prompt_context && webSearchContext.count > 0 ? `## FONTES EDUCACIONAIS REAIS — Pesquisa Web do Jota
 O Jota pesquisou ${webSearchContext.count} fontes educacionais brasileiras reais sobre "${webSearchContext.query}".
-USE estas fontes para enriquecer e embasar o conteúdo gerado com exemplos, metodologias e referências reais:
-- Cite as fontes quando relevante para dar credibilidade pedagógica ao material
-- Incorpore dados, abordagens e metodologias encontradas nessas fontes
-- Prefira informações de fontes oficiais (MEC, BNCC) e especializadas (Nova Escola, SciELO)
+
+⚠️ REGRAS OBRIGATÓRIAS DE USO DAS FONTES (leia antes de usar qualquer fonte):
+1. RELEVÂNCIA: Só incorpore informações de uma fonte se ela tratar DIRETAMENTE de "${activity.titulo || webSearchContext.query}"
+2. REJEIÇÃO: Se uma fonte parecer tratar de assunto DIFERENTE do tema principal, IGNORE-A completamente — não force conexões artificiais
+3. HONESTIDADE: Só cite uma URL em "fontes_consultadas" se você REALMENTE utilizou informação concreta dela
+4. PRIORIDADE: A ⭐ FONTE PRINCIPAL (marcada no contexto abaixo) deve ser priorizada sobre as demais
+5. VERIFICAÇÃO FINAL: Antes de retornar o JSON, confirme que cada URL citada está relacionada ao tema da atividade
 
 ${webSearchContext.prompt_context}
 ` : ''}## INSTRUÇÕES CRÍTICAS PARA GERAÇÃO DE CONTEÚDO

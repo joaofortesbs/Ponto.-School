@@ -36,6 +36,8 @@ const EDUCATIONAL_DOMAINS = [
   { domain: 'openlibrary.org', label: 'Open Library', tier: 'media', score: 0.65 },
 ];
 
+const SEMANTIC_GATE_THRESHOLD = 0.10;
+
 export function extractDomain(url) {
   try {
     return new URL(url).hostname.replace('www.', '');
@@ -63,7 +65,6 @@ export function getEducationalDomainInfo(url) {
 
 export function scoreResult(result, queryTerms) {
   const text = `${result.title} ${result.snippet || ''} ${result.keywords || ''}`.toLowerCase();
-  const queryText = queryTerms.join(' ').toLowerCase();
 
   const termMatches = queryTerms.filter(t => t.length > 2 && text.includes(t)).length;
   const semanticScore = queryTerms.length > 0 ? termMatches / queryTerms.length : 0;
@@ -76,34 +77,55 @@ export function scoreResult(result, queryTerms) {
     eduInfo.tier === 'media' ? 0.20 : 0
   ) : 0;
 
+  const isOfficial = eduInfo && eduInfo.tier === 'official';
+  const passedSemanticGate = semanticScore >= SEMANTIC_GATE_THRESHOLD || isOfficial;
+  const scoreCapFromGate = passedSemanticGate ? 1.0 : 0.38;
+
+  const semanticPenalty = semanticScore === 0 && !isOfficial ? -0.15 : 0;
+
   let typeMultiplier = 1.0;
-  if (result.source_type === 'academic') typeMultiplier = 1.25;
+  if (result.source_type === 'academic') typeMultiplier = 1.20;
   else if (result.source_type === 'book') typeMultiplier = 0.90;
   else if (result.source_type === 'news') typeMultiplier = 0.80;
 
   const bnccBoost = text.includes('bncc') ? 0.10 : 0;
   const brasilBoost = (text.includes('brasil') || text.includes('brasileir') || text.includes('ensino fundamental')) ? 0.08 : 0;
-  const pedagogicoBoost = (text.includes('plano de aula') || text.includes('sequência didática') || text.includes('atividade pedagógic')) ? 0.10 : 0;
+  const pedagogicoBoost = (
+    text.includes('plano de aula') ||
+    text.includes('planos de aula') ||
+    text.includes('sequência didática') ||
+    text.includes('sequencia didatica') ||
+    text.includes('sequências didáticas') ||
+    text.includes('atividade pedagóg') ||
+    text.includes('atividades pedagóg') ||
+    text.includes('material didático') ||
+    text.includes('proposta pedagógica') ||
+    text.includes('recurso didático')
+  ) ? 0.10 : 0;
   const aprendizagemBoost = text.includes('aprendizagem') ? 0.05 : 0;
   const metodologiaBoost = (text.includes('metodologia') || text.includes('abordagem') || text.includes('didática')) ? 0.05 : 0;
 
   const rawScore =
-    domainScore * 0.35 +
-    semanticScore * 0.30 +
-    eduBoost * 0.20 +
+    domainScore * 0.25 +
+    semanticScore * 0.42 +
+    eduBoost * 0.18 +
     bnccBoost +
     brasilBoost +
     pedagogicoBoost +
     aprendizagemBoost +
-    metodologiaBoost;
+    metodologiaBoost +
+    semanticPenalty;
 
-  const finalScore = Math.min(1.0, rawScore * typeMultiplier);
+  const cappedRaw = Math.max(0, rawScore);
+  const finalScore = Math.min(scoreCapFromGate, cappedRaw * typeMultiplier);
 
   return {
     ...result,
     score: Math.round(finalScore * 1000) / 1000,
     domain_tier: eduInfo ? eduInfo.tier : 'baixa',
     source_label: eduInfo ? eduInfo.label : extractDomain(result.url || ''),
+    semantic_score: Math.round(semanticScore * 1000) / 1000,
+    passed_semantic_gate: passedSemanticGate,
   };
 }
 
@@ -117,6 +139,18 @@ export function deduplicateResults(results) {
     if (seenUrls.has(normalUrl) || seenTitles.has(normalTitle)) return false;
     seenUrls.add(normalUrl);
     seenTitles.add(normalTitle);
+    return true;
+  });
+}
+
+export function applyDomainDiversityCap(results, maxPerDomain = 3) {
+  const domainCounts = {};
+  return results.filter(r => {
+    const domain = extractDomain(r.url || '');
+    const current = domainCounts[domain] || 0;
+    const limit = (r.domain_tier === 'official') ? 5 : maxPerDomain;
+    if (current >= limit) return false;
+    domainCounts[domain] = current + 1;
     return true;
   });
 }

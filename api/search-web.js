@@ -8,9 +8,9 @@ import { searchSemanticScholar } from './search-providers/semantic-scholar.js';
 import { searchEuropePMC } from './search-providers/europepmc.js';
 import { searchOpenLibrary } from './search-providers/openlibrary.js';
 import { searchPubMed } from './search-providers/pubmed.js';
-import { scoreResult, deduplicateResults } from './search-providers/scorer.js';
+import { scoreResult, deduplicateResults, applyDomainDiversityCap } from './search-providers/scorer.js';
 import { buildEducationalFallback } from './search-providers/fallback.js';
-import { planSearchQueries } from './search-providers/query-planner.js';
+import { planSearchQueries, rerankWithLLM } from './search-providers/query-planner.js';
 import { isProviderHealthy, recordSuccess, recordFailure, getCircuitState, getAllCircuitStates } from './search-providers/circuit-breaker.js';
 import { extractContentFromUrls } from './search-providers/content-extractor.js';
 
@@ -88,6 +88,77 @@ const PT_EN_MAP = {
   'vida': 'everyday', 'real': 'real', 'cotidiano': 'everyday',
   'representação': 'representation', 'representacao': 'representation',
   'operações': 'operations', 'operacao': 'operation',
+  'revolução': 'revolution', 'revoluções': 'revolutions',
+  'revolucao': 'revolution', 'revolucoes': 'revolutions',
+  'francesa': 'french', 'france': 'french',
+  'guerra': 'war', 'guerras': 'wars',
+  'política': 'politics', 'politica': 'politics',
+  'político': 'political', 'politico': 'political',
+  'império': 'empire', 'imperialismo': 'imperialism',
+  'imperio': 'empire', 'imperialismo': 'imperialism',
+  'colônia': 'colony', 'colonialismo': 'colonialism',
+  'colonia': 'colony',
+  'ditadura': 'dictatorship', 'democracia': 'democracy',
+  'feudalismo': 'feudalism', 'renascimento': 'renaissance',
+  'iluminismo': 'enlightenment', 'capitalismo': 'capitalism',
+  'socialismo': 'socialism', 'fascismo': 'fascism',
+  'escravidão': 'slavery', 'escravismo': 'slavery',
+  'escravidao': 'slavery',
+  'independência': 'independence', 'república': 'republic',
+  'independencia': 'independence', 'republica': 'republic',
+  'bioma': 'biome', 'biomas': 'biomes',
+  'clima': 'climate', 'climático': 'climatic', 'climatico': 'climatic',
+  'urbanização': 'urbanization', 'urbano': 'urban', 'urbanizacao': 'urbanization',
+  'território': 'territory', 'população': 'population',
+  'territorio': 'territory', 'populacao': 'population',
+  'relevo': 'relief', 'floresta': 'forest',
+  'amazônia': 'amazon', 'amazonia': 'amazon',
+  'semiárido': 'semiarid', 'semiarido': 'semiarid',
+  'sustentabilidade': 'sustainability', 'ambiental': 'environmental',
+  'migração': 'migration', 'globalização': 'globalization',
+  'migracao': 'migration', 'globalizacao': 'globalization',
+  'biologia': 'biology', 'célula': 'cell', 'celula': 'cell',
+  'fotossíntese': 'photosynthesis', 'fotossintese': 'photosynthesis',
+  'evolução': 'evolution', 'evolucao': 'evolution',
+  'ecossistema': 'ecosystem', 'genética': 'genetics', 'genetica': 'genetics',
+  'microrganismo': 'microorganism', 'vírus': 'virus', 'virus': 'virus',
+  'bactéria': 'bacteria', 'bacteria': 'bacteria',
+  'nutrição': 'nutrition', 'nutricao': 'nutrition',
+  'reprodução': 'reproduction', 'reproducao': 'reproduction',
+  'química': 'chemistry', 'quimica': 'chemistry',
+  'átomo': 'atom', 'atomo': 'atom',
+  'molécula': 'molecule', 'molecula': 'molecule',
+  'reação': 'reaction', 'reacao': 'reaction',
+  'solução': 'solution', 'solucao': 'solution',
+  'ácido': 'acid', 'acido': 'acid',
+  'elemento': 'element',
+  'física': 'physics', 'fisica': 'physics',
+  'força': 'force', 'forca': 'force',
+  'energia': 'energy', 'movimento': 'motion',
+  'velocidade': 'velocity', 'aceleração': 'acceleration', 'aceleracao': 'acceleration',
+  'eletricidade': 'electricity', 'magnetismo': 'magnetism',
+  'óptica': 'optics', 'optica': 'optics',
+  'termodinâmica': 'thermodynamics', 'termodinamica': 'thermodynamics',
+  'ondas': 'waves', 'gravitação': 'gravitation', 'gravitacao': 'gravitation',
+  'literatura': 'literature',
+  'conto': 'short story', 'crônica': 'chronicle', 'cronica': 'chronicle',
+  'poema': 'poem', 'poesia': 'poetry',
+  'romantismo': 'romanticism', 'modernismo': 'modernism',
+  'realismo': 'realism', 'barroco': 'baroque',
+  'gramática': 'grammar', 'gramatica': 'grammar',
+  'redação': 'writing', 'redacao': 'writing',
+  'narrador': 'narrator', 'personagem': 'character',
+  'artes': 'arts', 'arte': 'art',
+  'música': 'music', 'musica': 'music',
+  'teatro': 'theater', 'dança': 'dance', 'danca': 'dance',
+  'pintura': 'painting', 'escultura': 'sculpture',
+  'cultura': 'culture', 'cultural': 'cultural',
+  'sociologia': 'sociology', 'filosofia': 'philosophy',
+  'cidadania': 'citizenship', 'sociedade': 'society',
+  'ética': 'ethics', 'etica': 'ethics',
+  'direitos': 'rights', 'desigualdade': 'inequality',
+  'identidade': 'identity', 'diversidade': 'diversity',
+  'sistema': 'system', 'animal': 'animal', 'planta': 'plant',
 };
 
 const PT_STOP_WORDS = new Set([
@@ -297,7 +368,22 @@ router.post('/web', async (req, res) => {
     .map(r => scoreResult(r, queryTerms))
     .sort((a, b) => b.score - a.score);
 
-  let finalResults = scoredResults.slice(0, Math.max(max_results, 5));
+  const diverseResults = applyDomainDiversityCap(scoredResults, 3);
+
+  let llmRerankingUsed = false;
+  let candidatePool = diverseResults.slice(0, Math.max(max_results * 2, 20));
+
+  if (groqKey && search_depth === 'advanced' && candidatePool.length > 3) {
+    console.log(`[SearchOrchestrator] Iniciando LLM reranking de ${Math.min(candidatePool.length, 15)} candidatos...`);
+    candidatePool = await rerankWithLLM(allInputQueries[0], candidatePool, {
+      groqApiKey: groqKey,
+      topN: max_results,
+      timeoutMs: 5000,
+    });
+    llmRerankingUsed = true;
+  }
+
+  let finalResults = candidatePool.slice(0, Math.max(max_results, 5));
 
   const hasGoodResults = finalResults.some(r => r.score >= 0.40);
   const hasRealResults = finalResults.some(r => r.provider !== 'educational_fallback');
@@ -310,7 +396,7 @@ router.post('/web', async (req, res) => {
   }
 
   if (search_depth === 'advanced') {
-    finalResults = await extractContentFromUrls(finalResults);
+    finalResults = await extractContentFromUrls(finalResults, { queryTerms });
   }
 
   const activeProviders = Object.entries(providerStatus)
@@ -353,6 +439,7 @@ router.post('/web', async (req, res) => {
     },
     content_extracted_count: contentExtractedCount,
     content_extracted_urls: contentExtractedUrls.length > 0 ? contentExtractedUrls : undefined,
+    llm_reranking_used: llmRerankingUsed,
     errors: errors.length > 0 ? errors : undefined,
   });
 });

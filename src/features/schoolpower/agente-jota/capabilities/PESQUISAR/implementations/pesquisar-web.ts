@@ -35,6 +35,11 @@ interface WebResult {
   authors?: string;
   content_extracted?: boolean;
   content_full?: string;
+  content_relevance?: string;
+  groq_relevance_score?: number;
+  semantic_score?: number;
+  passed_semantic_gate?: boolean;
+  keywords?: string;
 }
 
 interface GapAnalysis {
@@ -60,6 +65,7 @@ interface SearchApiResponse {
   query_plan?: { planning_used: boolean; queries: string[]; original_query: string };
   content_extracted_count?: number;
   content_extracted_urls?: string[];
+  llm_reranking_used?: boolean;
 }
 
 const STOP_WORDS = new Set([
@@ -135,15 +141,40 @@ function buildPreliminaryQueries(params: PesquisarWebParams, cleanTheme: string)
 function analyzeSearchGaps(results: WebResult[]): GapAnalysis {
   const text = (r: WebResult) => `${r.title} ${r.snippet || ''} ${r.url}`.toLowerCase();
 
-  const has_curricular = results.some(r =>
-    text(r).includes('bncc') || r.url.includes('mec.gov') || text(r).includes('currículo')
-  );
-  const has_pedagogical = results.some(r =>
-    text(r).includes('plano de aula') ||
-    text(r).includes('sequência didática') ||
-    text(r).includes('atividade pedagóg') ||
-    text(r).includes('recurso pedagóg')
-  );
+  const has_curricular = results.some(r => {
+    const t = text(r);
+    return (
+      t.includes('bncc') ||
+      t.includes('base nacional') ||
+      t.includes('currículo') ||
+      t.includes('curriculo') ||
+      t.includes('habilidade ef') ||
+      t.includes('habilidade em') ||
+      t.includes('competência') ||
+      t.includes('competencia') ||
+      t.includes('objetivo de aprendizagem') ||
+      r.url?.includes('mec.gov')
+    );
+  });
+  const has_pedagogical = results.some(r => {
+    const t = text(r);
+    return (
+      t.includes('plano de aula') ||
+      t.includes('planos de aula') ||
+      t.includes('plano aula') ||
+      t.includes('planos aula') ||
+      t.includes('sequência didática') ||
+      t.includes('sequencia didatica') ||
+      t.includes('sequências didáticas') ||
+      t.includes('atividade pedagóg') ||
+      t.includes('atividades pedagóg') ||
+      t.includes('recurso pedagóg') ||
+      t.includes('material didático') ||
+      t.includes('material didatico') ||
+      t.includes('proposta pedagógica') ||
+      t.includes('recurso didático')
+    );
+  });
   const has_academic = results.some(r =>
     r.source_type === 'academic' && (r.score || 0) > 0.40
   );
@@ -186,6 +217,28 @@ function deduplicateByUrl(results: WebResult[]): WebResult[] {
   });
 }
 
+const MAX_PROMPT_CONTEXT_CHARS = 8000;
+
+function extractSimpleTerms(query: string): string[] {
+  const stopWords = new Set([
+    'de','da','do','das','dos','em','no','na','nos','nas','para','por','com',
+    'sem','sobre','entre','que','um','uma','uns','umas','o','a','os','as',
+    'e','ou','ao','à','se','me','te','lhe','ano','série','turma',
+  ]);
+  return query.toLowerCase()
+    .split(/\s+/)
+    .filter(t => t.length > 2 && !stopWords.has(t));
+}
+
+function resultHasQueryTermInTitle(result: WebResult, queryTerms: string[]): boolean {
+  if (!queryTerms || queryTerms.length === 0) return true;
+  if (result.domain_tier === 'official') return true;
+  if ((result.score || 0) >= 0.70) return true;
+  const titleLower = (result.title || '').toLowerCase();
+  const snippetLower = (result.snippet || '').toLowerCase();
+  return queryTerms.some(term => titleLower.includes(term) || snippetLower.includes(term));
+}
+
 function formatResultsForPrompt(
   results: WebResult[],
   query: string,
@@ -197,66 +250,94 @@ function formatResultsForPrompt(
     return 'Nenhum resultado encontrado para a pesquisa web educacional realizada.';
   }
 
+  const queryTerms = extractSimpleTerms(query);
+
+  const relevantResults = results.filter(r => resultHasQueryTermInTitle(r, queryTerms));
+  const displayResults = relevantResults.length >= 3 ? relevantResults : results;
+
+  const sorted = [...displayResults].sort((a, b) => (b.score || 0) - (a.score || 0));
+  const principal = sorted[0] || null;
+  const others = sorted.slice(1);
+
   const parts: string[] = [
     '══════════════════════════════════════════════════════',
     '🌐 PESQUISA WEB EDUCACIONAL — Jota Ponto.School',
     `Tema pesquisado: "${query}"`,
-    `Consultas realizadas: ${queriesUsed.length} | Rodadas: ${rounds} | Recursos selecionados: ${results.length}`,
-    `Cobertura: ${breakdown.official || 0} fontes oficiais | ${breakdown.academic || 0} artigos acadêmicos | ${breakdown.web || 0} web`,
+    `Consultas: ${queriesUsed.length} | Rodadas: ${rounds} | Recursos: ${displayResults.length} (${results.length - displayResults.length} filtrados por irrelevância)`,
+    `Cobertura: ${breakdown.official || 0} oficiais | ${breakdown.academic || 0} acadêmicos | ${breakdown.web || 0} web`,
     '══════════════════════════════════════════════════════',
     '',
   ];
 
-  results.forEach((r, idx) => {
-    const relevancia = r.score >= 0.75 ? '⭐ ALTA RELEVÂNCIA' :
+  if (principal) {
+    const principalContent = principal.content_full && principal.content_relevance !== 'invalido'
+      ? principal.content_full.slice(0, 900)
+      : (principal.snippet || '').slice(0, 500);
+    parts.push('⭐ FONTE PRINCIPAL (mais relevante para o tema):');
+    parts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    parts.push(`Título: ${principal.title}`);
+    parts.push(`Fonte: ${principal.source_label || principal.provider || 'Web'}${principal.year ? ` (${principal.year})` : ''}`);
+    parts.push(`URL: ${principal.url}`);
+    if (principalContent) {
+      parts.push(`Conteúdo: ${principalContent}`);
+    }
+    parts.push('PRIORIDADE: Utilize dados, exemplos e metodologias desta fonte acima das demais.');
+    parts.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    parts.push('');
+  }
+
+  others.slice(0, 7).forEach((r, idx) => {
+    const relevancia = r.score >= 0.70 ? '⭐ ALTA RELEVÂNCIA' :
                        r.score >= 0.50 ? '✓ BOA RELEVÂNCIA' : '◦ RELEVÂNCIA MODERADA';
 
-    const tierLabel = r.domain_tier === 'official' ? '🏛️ Fonte Oficial Governamental' :
-                      r.domain_tier === 'alta' ? '📚 Fonte Educacional Especializada' :
-                      r.source_type === 'academic' ? '🔬 Artigo Acadêmico Peer-Reviewed' :
+    const tierLabel = r.domain_tier === 'official' ? '🏛️ Fonte Oficial' :
+                      r.domain_tier === 'alta' ? '📚 Fonte Especializada' :
+                      r.source_type === 'academic' ? '🔬 Artigo Acadêmico' :
                       r.source_type === 'book' ? '📖 Livro Didático' :
-                      r.source_type === 'news' ? '📰 Notícia Educacional Recente' :
-                      '🌐 Recurso Web Educacional';
+                      r.source_type === 'news' ? '📰 Notícia Educacional' :
+                      '🌐 Recurso Web';
 
-    parts.push(`[${idx + 1}] ${relevancia} — ${tierLabel}`);
+    parts.push(`[${idx + 2}] ${relevancia} — ${tierLabel}`);
     parts.push(`Título: ${r.title}`);
-    parts.push(`Fonte: ${r.source_label || r.provider || 'Web'}${r.year ? ` (${r.year})` : ''}${r.authors ? ` | Autores: ${r.authors}` : ''}`);
+    parts.push(`Fonte: ${r.source_label || r.provider || 'Web'}${r.year ? ` (${r.year})` : ''}`);
     parts.push(`URL: ${r.url}`);
-
-    if (r.content_full) {
-      parts.push(`📄 CONTEÚDO EXTRAÍDO (Jina Reader):`);
-      parts.push(r.content_full.slice(0, 800));
-    } else if (r.snippet) {
-      parts.push(`Conteúdo: ${r.snippet.slice(0, 400)}`);
+    if (r.snippet) {
+      parts.push(`Resumo: ${r.snippet.slice(0, 300)}`);
     }
     parts.push('');
   });
 
-  const withContent = results.filter(r => r.content_full);
-  if (withContent.length > 0) {
+  const withValidContent = displayResults.filter(r =>
+    r.content_full && r.content_relevance !== 'invalido'
+  );
+  if (withValidContent.length > 0) {
     parts.push('══════════════════════════════════════════════════════');
-    parts.push('📄 CONTEÚDO COMPLETO EXTRAÍDO — Use como base de referência real:');
+    parts.push('📄 CONTEÚDO COMPLETO EXTRAÍDO — Extratos reais das páginas:');
     parts.push('══════════════════════════════════════════════════════');
-    withContent.forEach((r, idx) => {
+    withValidContent.slice(0, 3).forEach((r, idx) => {
       parts.push(`[${idx + 1}] ${r.source_label || r.provider} — ${r.title}`);
       parts.push(r.content_full!.slice(0, 800));
       parts.push('---');
     });
     parts.push('');
-    parts.push('INSTRUÇÃO: Os conteúdos acima são extratos reais das páginas. Incorpore exemplos, atividades e metodologias descritas nesses conteúdos no material gerado. Cite os autores e fontes explicitamente.');
+    parts.push('INSTRUÇÃO: Os conteúdos acima são extratos REAIS das páginas. Incorpore exemplos, atividades e metodologias reais no material gerado. Cite os autores e fontes explicitamente.');
     parts.push('');
   }
 
   parts.push('══════════════════════════════════════════════════════');
   parts.push('📚 FONTES CONSULTADAS (inclua ao final do documento gerado):');
-  results.slice(0, 5).forEach((r, idx) => {
+  displayResults.slice(0, 5).forEach((r, idx) => {
     parts.push(`[${idx + 1}] ${r.title} — ${r.url} (${r.source_label || r.provider || 'Web'}${r.year ? `, ${r.year}` : ''})`);
   });
   parts.push('');
   parts.push('INSTRUÇÃO OBRIGATÓRIA: Inclua uma seção "Fontes Consultadas" ao final de qualquer documento, plano de aula ou atividade gerada. Use exatamente esses URLs.');
   parts.push('══════════════════════════════════════════════════════');
 
-  return parts.join('\n');
+  const fullText = parts.join('\n');
+  if (fullText.length > MAX_PROMPT_CONTEXT_CHARS) {
+    return fullText.slice(0, MAX_PROMPT_CONTEXT_CHARS) + '\n[...contexto truncado para otimização de tokens]';
+  }
+  return fullText;
 }
 
 export async function pesquisarWebV2(
@@ -410,7 +491,7 @@ export async function pesquisarWebV2(
 
     const gapAnalysis = analyzeSearchGaps(round1Results);
 
-    if ((gapAnalysis.coverage_score < 0.5 || round1Results.length < 5) && round1Results.length > 0) {
+    if ((gapAnalysis.coverage_score < 0.25 || round1Results.length < 5) && round1Results.length > 0) {
       debug_log.push({
         timestamp: new Date().toISOString(),
         type: 'warning',
