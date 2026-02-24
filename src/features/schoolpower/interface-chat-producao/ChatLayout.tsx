@@ -472,8 +472,10 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
 
       setLoading(false);
 
-      if (researchEnrichmentMeta && researchEnrichmentMeta.searchExecuted) {
+      if (researchEnrichmentMeta && researchEnrichmentMeta.searchExecuted && !directCapabilityMeta) {
         addTextMessage('assistant', aiMessage);
+
+        const relCapId = researchEnrichmentMeta.capabilityId || `rel-search-${Date.now()}`;
 
         addDevModeCard({
           plano: { objetivo: 'Pesquisa Educacional', etapas: [] },
@@ -485,7 +487,7 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
             descricao: researchEnrichmentMeta.displayName,
             status: 'concluido',
             capabilities: [{
-              id: `rel-search-${Date.now()}`,
+              id: relCapId,
               nome: 'pesquisar_web',
               displayName: researchEnrichmentMeta.displayName,
               status: researchEnrichmentMeta.status === 'concluido' ? 'concluido' as const : 'erro' as const,
@@ -505,6 +507,28 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
       if (directCapabilityMeta) {
         if (capabilityInitialMessage) {
           addTextMessage('assistant', capabilityInitialMessage);
+        }
+
+        if (researchEnrichmentMeta && researchEnrichmentMeta.searchExecuted) {
+          const relCapId = researchEnrichmentMeta.capabilityId || `rel-search-${Date.now()}`;
+          addDevModeCard({
+            plano: { objetivo: 'Pesquisa Educacional', etapas: [] },
+            status: researchEnrichmentMeta.status === 'concluido' ? 'concluido' as const : 'erro' as const,
+            etapaAtual: 0,
+            etapas: [{
+              ordem: 0,
+              titulo: 'Pesquisar Fontes Educacionais',
+              descricao: researchEnrichmentMeta.displayName,
+              status: 'concluido',
+              capabilities: [{
+                id: relCapId,
+                nome: 'pesquisar_web',
+                displayName: researchEnrichmentMeta.displayName,
+                status: researchEnrichmentMeta.status === 'concluido' ? 'concluido' as const : 'erro' as const,
+              }],
+            }],
+          });
+          console.log(`🔬 [ChatLayout] REL + CAPABILITY_DIRETA: ${researchEnrichmentMeta.sourcesFound} fontes encontradas em ${researchEnrichmentMeta.searchDuration}ms`);
         }
 
         const capOps = (directCapabilityMeta.operations || []).map((op, idx) => ({

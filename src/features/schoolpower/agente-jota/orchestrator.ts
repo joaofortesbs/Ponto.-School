@@ -167,6 +167,7 @@ export interface ResearchEnrichmentMeta {
   capability: 'pesquisar_web';
   displayName: string;
   status: 'concluido' | 'erro';
+  capabilityId?: string;
 }
 
 export interface ProcessPromptResult {
@@ -249,6 +250,7 @@ export async function processUserPrompt(
           capability: 'pesquisar_web',
           displayName: `Pesquisei ${sourcesFound} fontes educacionais`,
           status: 'concluido',
+          capabilityId: relResult.capabilityId,
         },
       };
     }
@@ -280,13 +282,29 @@ export async function processUserPrompt(
 
     const capInitialMessage = generateCapabilityInitialMessage(routeResult.capability, userPrompt);
 
+    let relResultForCapDireta: import('./research-enrichment-layer/research-enrichment').ResearchEnrichmentResult | undefined;
     try {
+      const { executeResearchEnrichment } = await import('./research-enrichment-layer/research-enrichment');
+      relResultForCapDireta = await executeResearchEnrichment(userPrompt, sessionId, userId);
+      if (relResultForCapDireta?.enriched) {
+        console.log(`🔬 [Orchestrator] REL enriqueceu CAPABILITY_DIRETA com ${relResultForCapDireta.debugInfo.sourcesFound} fontes`);
+      }
+    } catch (relErr) {
+      console.warn('⚠️ [Orchestrator] REL falhou para CAPABILITY_DIRETA, continuando sem enriquecimento:', relErr);
+    }
+
+    try {
+      const extraParams: Record<string, any> = { ...(routeResult.capability_params || {}) };
+      if (relResultForCapDireta?.enriched && relResultForCapDireta.formattedContext) {
+        extraParams.research_context = relResultForCapDireta.formattedContext;
+      }
+
       const directResult = await executeDirectCapability(
         routeResult.capability,
         userPrompt,
         sessionId,
         userId,
-        routeResult.capability_params
+        extraParams
       );
 
       addConversationTurn(sessionId, {
@@ -296,11 +314,32 @@ export async function processUserPrompt(
         metadata: { type: 'capability_direta', capability: routeResult.capability },
       });
 
+      let relMetaForCapDireta: ResearchEnrichmentMeta | undefined;
+      if (relResultForCapDireta?.enriched && relResultForCapDireta.searchExecuted) {
+        const { extractSearchSummary } = await import('./research-enrichment-layer/research-enrichment');
+        const summary = relResultForCapDireta.searchData ? extractSearchSummary(relResultForCapDireta.searchData) : null;
+        const sourcesFound = summary?.sourcesFound || relResultForCapDireta.debugInfo.sourcesFound || 0;
+        const searchQuery = summary?.searchQuery || userPrompt.substring(0, 80);
+        const searchDuration = relResultForCapDireta.debugInfo.searchDuration || 0;
+
+        relMetaForCapDireta = {
+          searchExecuted: true,
+          sourcesFound,
+          searchQuery,
+          searchDuration,
+          capability: 'pesquisar_web',
+          displayName: `Pesquisei ${sourcesFound} fontes educacionais`,
+          status: 'concluido',
+          capabilityId: relResultForCapDireta.capabilityId,
+        };
+      }
+
       return {
         plan: null,
         initialMessage: directResult.message,
         directCapabilityMeta: directResult.meta,
         capabilityInitialMessage: capInitialMessage,
+        researchEnrichmentMeta: relMetaForCapDireta,
       };
     } catch (capError) {
       console.error(`❌ [Orchestrator] Erro na capability direta ${routeResult.capability}:`, capError);
