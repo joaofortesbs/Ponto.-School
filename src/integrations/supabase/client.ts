@@ -247,6 +247,9 @@ export const supabase = {
   from(_table: string) {
     return makeQueryBuilder();
   },
+  rpc(_fn: string, _params?: Record<string, any>) {
+    return Promise.resolve({ data: null, error: null });
+  },
   channel(_name: string) {
     return {
       on: () => ({ subscribe: () => ({ unsubscribe: () => {} }) }),

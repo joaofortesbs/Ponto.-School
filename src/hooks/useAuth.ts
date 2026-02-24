@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, SupabaseUser, SupabaseSession } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { User, Session, AuthError } from '@supabase/supabase-js';
+
+type User = SupabaseUser;
+type Session = SupabaseSession;
+type AuthError = Error;
 
 interface AuthState {
   user: User | null;
