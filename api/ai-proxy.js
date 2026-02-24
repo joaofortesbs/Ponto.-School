@@ -146,7 +146,12 @@ router.post('/gemini', async (req, res) => {
     ? `${endpoint}?key=${apiKey}`
     : `https://generativelanguage.googleapis.com/v1beta/models/${model_id}:generateContent?key=${apiKey}`;
 
-  const body = { contents, generationConfig };
+  const safeGenConfig = generationConfig ? { ...generationConfig } : {};
+  if (!safeGenConfig.maxOutputTokens || safeGenConfig.maxOutputTokens < 1024) {
+    safeGenConfig.maxOutputTokens = 2048;
+  }
+
+  const body = { contents, generationConfig: safeGenConfig };
   if (systemInstruction) body.systemInstruction = systemInstruction;
   if (tools) body.tools = tools;
   if (toolConfig) body.toolConfig = toolConfig;

@@ -9,22 +9,23 @@
  * │ └─ llama-3.1-8b-instant        (Groq LPU)                                   │
  * ├─────────────────────────────────────────────────────────────────────────────┤
  * │ TIER 2: FAST (500ms-2s) — Equilíbrio velocidade/qualidade   [✅ ATIVO]      │
- * │ ├─ llama-3.3-70b-versatile     (Groq LPU — principal)                       │
- * │ └─ llama-3.3-70b-specdec       (Groq LPU — SpecDec)                         │
+ * │ └─ llama-3.3-70b-versatile     (Groq LPU — principal)                       │
+ * │ [⏸ INATIVO] llama-3.3-70b-specdec (Groq — DESCOMISSIONADO em fev/2026)    │
  * │ [⏸ INATIVO] Llama-3.3-70B-Turbo (Together AI — chave inválida)             │
  * ├─────────────────────────────────────────────────────────────────────────────┤
  * │ TIER 3: BALANCED — Raciocínio mais profundo                  [✅ ATIVO]      │
  * │ ├─ llama-4-scout-17b           (Groq LPU — Llama 4)                         │
- * │ ├─ gemini-2.5-flash            (Google — 1M context, CHAVE NOVA ✅)         │
- * │ ├─ gemini-2.5-flash-lite       (Google — versão lite)                        │
+ * │ ├─ gemini-2.5-flash            (Google — 1M context ✅)                      │
+ * │ ├─ gemini-2.5-flash-lite       (Google — versão lite ✅)                     │
  * │ [⏸ INATIVO] Qwen2.5-72B-Turbo (Together AI — chave inválida)               │
  * │ [⏸ INATIVO] Llama-3.3-70B     (DeepInfra — sem saldo)                      │
  * ├─────────────────────────────────────────────────────────────────────────────┤
  * │ TIER 4: POWERFUL — Qualidade e raciocínio                    [✅ ATIVO]      │
- * │ ├─ gemma-3-4b-it:free          (OpenRouter — grátis, confirmado ✅)          │
- * │ ├─ deepseek-r1:free            (OpenRouter — reasoning grátis)               │
+ * │ ├─ gemma-3-4b-it:free          (OpenRouter — grátis ✅)                      │
+ * │ ├─ gemma-3-12b-it:free         (OpenRouter — grátis ✅ NOVO)                 │
+ * │ [⏸ INATIVO] deepseek-r1:free  (OpenRouter — removido do free tier)          │
  * │ [⏸ INATIVO] DeepSeek-V3       (DeepInfra — sem saldo)                      │
- * │ [⏸ INATIVO] claude-3-5-haiku  (XRoute — HTTP 500 persistente)               │
+ * │ [⏸ INATIVO] claude-3-5-haiku  (XRoute — chave inválida)                    │
  * │ [⏸ INATIVO] gpt-4o-mini       (EdenAI — sem créditos)                      │
  * │ [⏸ INATIVO] Mistral-7B        (HuggingFace — endpoint migrado)              │
  * ├─────────────────────────────────────────────────────────────────────────────┤
@@ -32,10 +33,15 @@
  * │ └─ local-fallback              (Geração local inteligente)                   │
  * └─────────────────────────────────────────────────────────────────────────────┘
  * 
- * CASCATA ATIVA: Groq (4 modelos) → Gemini (2 modelos) → OpenRouter (2 modelos) → Local
+ * CASCATA ATIVA: Groq (3 modelos) → Gemini (2 modelos) → OpenRouter (2 modelos) → Local
  * PROVIDERS INATIVOS: Together AI, DeepInfra, XRoute, EdenAI, HuggingFace
  * 
- * @version 4.0.0 — 9 providers, 16 modelos
+ * ÚLTIMA VALIDAÇÃO: 2026-02-24
+ * - Groq llama-3.3-70b-specdec: DESCOMISSIONADO (substituído por versatile)
+ * - OpenRouter deepseek-r1:free: REMOVIDO do free tier (substituído por gemma-3-12b)
+ * - Gemini 2.5-flash: OK com maxOutputTokens >= 2048 (modelo "thinking")
+ * 
+ * @version 4.0.1 — 9 providers, 16 modelos
  * @author Ponto School
  */
 
@@ -121,7 +127,7 @@ export const LLM_MODELS: LLMModel[] = [
     contextWindow: 131072,
     tier: 'fast',
     priority: 3,
-    isActive: true,
+    isActive: false,
     avgLatencyMs: 800,
     bestFor: ['plano-aula', 'sequencia-didatica', 'general'],
   },
@@ -238,8 +244,8 @@ export const LLM_MODELS: LLMModel[] = [
     bestFor: ['plano-aula', 'sequencia-didatica', 'tese-redacao', 'avaliacao-diagnostica', 'general'],
   },
   {
-    id: 'deepseek/deepseek-r1:free',
-    name: 'DeepSeek R1 (OpenRouter Free)',
+    id: 'google/gemma-3-12b-it:free',
+    name: 'Gemma 3 12B (OpenRouter Free)',
     provider: 'openrouter',
     endpoint: 'https://openrouter.ai/api/v1/chat/completions',
     maxTokens: 8000,
@@ -247,6 +253,19 @@ export const LLM_MODELS: LLMModel[] = [
     tier: 'powerful',
     priority: 8,
     isActive: true,
+    avgLatencyMs: 3000,
+    bestFor: ['plano-aula', 'sequencia-didatica', 'avaliacao-diagnostica', 'tese-redacao', 'general'],
+  },
+  {
+    id: 'deepseek/deepseek-r1:free',
+    name: 'DeepSeek R1 (OpenRouter Free)',
+    provider: 'openrouter',
+    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+    maxTokens: 8000,
+    contextWindow: 131072,
+    tier: 'powerful',
+    priority: 18,
+    isActive: false,
     avgLatencyMs: 4000,
     bestFor: ['plano-aula', 'sequencia-didatica', 'avaliacao-diagnostica', 'tese-redacao', 'general'],
   },
@@ -280,11 +299,11 @@ export const LLM_MODELS: LLMModel[] = [
     id: 'mistralai/Mistral-7B-Instruct-v0.3',
     name: 'Mistral 7B (HuggingFace)',
     provider: 'huggingface',
-    endpoint: 'https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.3/v1/chat/completions',
+    endpoint: 'https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.3',
     maxTokens: 2000,
     contextWindow: 32768,
     tier: 'powerful',
-    priority: 18,
+    priority: 19,
     isActive: false,
     avgLatencyMs: 8000,
     bestFor: ['general', 'flash-cards', 'quiz-interativo'],
