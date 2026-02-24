@@ -1,0 +1,20 @@
+Agora você precisa responder as seguintes perguntas para mim de maneira completamente verdadeira, sincera, honesta, realista, sem nenhum tipo de alucinações, e levando como base a plataforma atual:
+1. Atualmente os resultados das pesquisas e toda a analise da LLM dentro da própria capacidade de "pesquisar_web", estão melhorando o conteúdo de dentro das capacidades como "gerar_conteudo_atividades" ou "decidir_atividades_criar"? E as pesquisas conseguem deixar a IA/Jota com mais contexto, e inteligente para IA/Jota?
+2. Atualmente a capacidade atual de "pesquisar_web" está aparecendo em quais situações ou casos de uso (Smartrouter 'CONVERSAR' | 'EXECUTAR' | 'CAPABILITY_DIRETA'?) Quais são as regras, limitações, restrições, instruções, entre outros...
+3. Atualmente em quais casos de uso a capaciade de "pesquisar_web" funciona? E em quais ela ainda não funciona? (Entenda toda a rotina do professor e entenda perfeitamente como eles podem usar a plataforma)
+4. A IA/Jota ainda não consegue usar a capacidade de "pesquisar_web" para fazer alguma investigação sobre algum tema/tópico/matéria para encontrar algo especifico, sabe? E ainda ocorre muitos casos em que a IA alucina sobre muitas coisas e principalmente atualizadas, respondendo de maneira errada o professor, entende? Como podemos resolver problemas assim?
+[Atualmente eu percebo que em casos de uso em que o usuário não pede algo explicitamente, mas ele pede um conteúdo ou informação mais precisa, a IA/Jota ainda não consegue usar a capacidade de "pesquisar_web" ao decerrer da conversa sabe? Por exemplo, dentro da Manus IA, a própria IA escolhe chamar uma capacidade ou algumas capacidades ao decorrer da conversa.]
+Analise todos os nossos concorrentes e benchmarkings antes de chegar em uma resposta para mim! Faça diversas pesquisas dentro da web e internet com diferentes metodologias para identificar todas as plataformas que fazem algo parecido com o que a gente tá fazendo atualmente! E pesquise todas as plataformas de Agentes IA, como a Manus IA 1.6 Max, Kimi Agent Swarm, Genspark IA, Replit Agent V3, entre outros! Pesquise referencias dentro e fora do nosso nicho! Entenda a estrutura e arquitetura dentro deles, entenda os seus promtps systems, suas capacidades, suas ferramentas, entre outros! Depois dessa pesquisa e investigações profunda, compare com todo o sistema atual de dentro da plataforma para entender perfeitamente todos os cenários! Analise diversos sites e forúms de programadores e desenvolvedores, principalmente dentro das redes sociais para buscar temas/assuntos/tópicos parecidos, para que você tenha mais contexto!
+ATENÇÃO: No final de tudo me entregue sugestões sólidas das próximas alterações de coisas que realmente geram um resultado significativo e considerável dentro da plataforma! Entenda pontos essenciais e pontos de Aha moment incriveis! Precisamos ser indiscutivelmente os melhores no que a gente faz e propõem! PRECISAM SER SUJESTÕES SUPER EXATAS, E SUPER BEM ALINHADAS E DETALHADAS E ESPECIFICAS E INTELIGENTES!
+
+Analise todos os arquivos de dentro da plataforma:
+
+Pasted--AUDITORIA-T-CNICA-COMPLETA-DO-SISTEMA-DE-BUSCA-WEB-Vou_1771720084712.txt
+auditoria_tecnica_sistema_busca_1771720170030.md
+3.Pasted-importante-de-transpar-ncia-Eu-n-o-tenho-acesso-direto-_1771720269676.txt
+Pasted-Resumo-do-meu-racioc-nio-Como-uma-IA-n-o-tenho-acesso-i_1771720297582.txt
+Pasted--MISS-O-AUDITORIA-T-CNICA-COMPLETA-DO-MEU-SISTEMA-DE-BU_1771720318075.txt
+Pasted-Vou-ser-completamente-honesto-sobre-o-que-sei-o-que-pos_1771720634161.txt
+Pasted-Ol-Lara-aqui-Que-desafio-incr-vel-Adoro-ajudar-a-constr_1771720659997.txt
+Pasted--Aviso-inicial-sobre-limites-de-divulga-o-Posso-fornece_1771720746784.txt
+Pasted-Vou-responder-no-n-vel-t-cnico-mais-alto-poss-vel-mas-c_1771721022546.txt
