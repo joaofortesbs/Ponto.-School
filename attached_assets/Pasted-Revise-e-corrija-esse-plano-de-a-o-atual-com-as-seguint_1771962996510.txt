@@ -1,0 +1,23 @@
+Revise e corrija esse plano de ação atual com as seguintes considerações, para depois você deixar o plano de ação atual atualizado, e bem mais completo em questão de detalhes:
+
+
+1. Não vamos fazer as tasks de "T005".
+2.Dentro da Task T002, você não acha melhor a gente ao invés adicionar 4ª rota ao SmartRouter, podemos implementar um sistema de "Manus 1.6 Max: durante o agentic loop, a IA avalia se tem confiança suficiente no conhecimento interno; se não, executa web_search antes de responder" nas routers atuais de 'CONVERSAR' e de 'CAPABILITY_DIRETA', para que ela não fale um conteúdo não imbasado em dados reais e veridicos! Exemplos de trigger: "pesquise sobre...", "me encontre informações sobre...", "o que existe de novo sobre...", "quais são as últimas pesquisas sobre...", "busque exemplos de...", "me explica com fontes...". Aqui nos vamos juntar as duas tasks de T001 e T002: Research Enrichment Layer no flow CONVERSAR e de CAPABILITY_DIRETA!
+
+
+Esse sistema de "Research Enrichment Layer" deve ter uma organização e arquitetura super organizada, e ele deve ser implementado APENAS DENTRO DAS SMARTROUTERS ATUAIS DE CONVERSAR e de CAPABILITY_DIRETA! Você não deve alterar absolutamente nada dentro da rota de "EXECUTAR" ATUAL, deixe ela intacta! É extremamente proibido você implementar o sistema de "Research Enrichment Layer" dentro da smartrouter de "EXECUTAR"!
+
+
+E a capacidade de "pesquisar_web" que vai ser chamada pelo sistema de "Research Enrichment Layer" precisa ser exatamente igual, com a mesma estrutura e sistemas atuais, da mesma capacidade de "pesquisar_web", de dentro da smartrouter de "EXECUTAR"!
+
+
+Outra coisa importante que você precisa incluir no plano de ação: A capacidade de "pesquisar_web" que o sistema de "Research Enrichment Layer" vai chamar em alguns casos dentro do chat Jota nas smartrouters de "CONVERSAR" e de "CAPABILITY_DIRETA", deve aparecer visivelmente no front-end/UI de dentro do chat de resposta da IA/Jota, para o usuário saber que a capacidade de "pesquisar_web" foi executada/carregada/concluida corretamente! Outra coisa importante, é você configurar a resposta dentro das duas seguintes smartrouters de "CONVERSAR" e de "CAPABILITY_DIRETA", para que :
+
+
+1. Nos casos de que a smartrouter de "CAPABILITY_DIRETA" for escolhida, o Jota antes de executar a capacidade dentro do card de Desenvolvimento, o Jota precisa mostrar uma resposta inicial, estilo a smartrouter de "EXECUTAR", do mesmo estilo e formato!
+
+
+2. Nos casos de que a smartrouter de "CONVERSAR" for escolhida, e o sistema de "Research Enrichment Layer" for escolhido/ativado, o Jota precisa mostrar uma resposta inicial, estilo a smartrouter de "EXECUTAR", do mesmo estilo e formato!
+
+
+Research Enrichment Layer — durante as rotas CONVERSAR e CAPABILITY_DIRETA, o Jota avalia autonomamente se precisa de dados externos antes de responder. Se sim, executa pesquisar_web antes de gerar a resposta, eliminando alucinação e injetando fontes reais.
