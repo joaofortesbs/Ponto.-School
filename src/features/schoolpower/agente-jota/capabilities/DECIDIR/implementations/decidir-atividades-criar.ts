@@ -975,6 +975,71 @@ export async function decidirAtividadesCriarV2(
       console.log(`🎯 [decidirAtividadesCriarV2] Tema limpo: "${temaLimpo}" | Disciplina: "${disciplinaExtraida}"`);
     }
 
+    // ═══ PHASE 2.5: WEB SEARCH ENRICHMENT ═══
+    const webSearchResult = input.previous_results?.get('pesquisar_web');
+    let webSearchContext = '';
+    if (webSearchResult?.success && webSearchResult.data) {
+      const wsData = webSearchResult.data;
+      const wsResults = wsData.results || wsData.finalResults || [];
+      const wsQuery = wsData.query || wsData.mainQuery || temaLimpo || '';
+
+      if (wsResults.length > 0) {
+        const officialSources = wsResults.filter((r: any) => r.domain_tier === 'official');
+        const academicSources = wsResults.filter((r: any) => r.source_type === 'academic');
+        const pedagogicalSources = wsResults.filter((r: any) => {
+          const text = `${r.title || ''} ${r.snippet || ''}`.toLowerCase();
+          return text.includes('plano de aula') || text.includes('atividade') || text.includes('sequência didática') || text.includes('sequencia didatica') || text.includes('recurso pedagóg');
+        });
+
+        const topicsFound = new Set<string>();
+        for (const r of wsResults.slice(0, 8)) {
+          const text = `${r.title || ''} ${r.snippet || ''}`.toLowerCase();
+          if (text.includes('quiz') || text.includes('questionário')) topicsFound.add('questionários/quiz');
+          if (text.includes('jogo') || text.includes('gamific') || text.includes('lúdic')) topicsFound.add('jogos/gamificação');
+          if (text.includes('visual') || text.includes('mapa mental') || text.includes('infográfico')) topicsFound.add('recursos visuais');
+          if (text.includes('exercício') || text.includes('exercicio') || text.includes('lista')) topicsFound.add('exercícios/listas');
+          if (text.includes('prova') || text.includes('avaliação') || text.includes('avaliacao')) topicsFound.add('avaliações/provas');
+          if (text.includes('flash') || text.includes('cartõ') || text.includes('memoriz')) topicsFound.add('flash cards/memorização');
+          if (text.includes('projeto') || text.includes('steam') || text.includes('pbl')) topicsFound.add('projetos/STEAM');
+          if (text.includes('debate') || text.includes('seminário') || text.includes('seminario')) topicsFound.add('debates/seminários');
+          if (text.includes('redação') || text.includes('redacao') || text.includes('escrita')) topicsFound.add('produção textual');
+          if (text.includes('laboratório') || text.includes('laboratorio') || text.includes('experiment')) topicsFound.add('atividades experimentais');
+        }
+
+        webSearchContext = `
+## CONTEXTO DE PESQUISA WEB
+O Jota pesquisou fontes educacionais e encontrou:
+- Fontes oficiais: ${officialSources.length} (MEC, BNCC, etc.)
+- Fontes acadêmicas: ${academicSources.length} (artigos, papers)
+- Fontes pedagógicas: ${pedagogicalSources.length} (planos de aula, atividades)
+- Total de fontes: ${wsResults.length}
+- Tema pesquisado: "${wsQuery}"
+${topicsFound.size > 0 ? `- Tipos de recursos encontrados: ${Array.from(topicsFound).join(', ')}` : ''}
+
+Use estas informações para priorizar tipos de atividades que melhor se alinhem
+com o conteúdo real disponível sobre o tema. Se a pesquisa encontrou muitos recursos
+visuais, priorize atividades visuais (mapa mental, flash cards). Se encontrou
+questões prontas, priorize lista de exercícios ou quiz. Se encontrou projetos e
+gamificação, priorize atividades interativas e jogos educacionais.
+`;
+
+        console.log(`🌐 [decidirAtividadesCriarV2] Web search context injected: ${wsResults.length} results, ${topicsFound.size} topic types`);
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'info',
+          narrative: `Contexto de pesquisa web injetado: ${wsResults.length} fontes encontradas. Tipos: ${Array.from(topicsFound).join(', ')}`,
+          technical_data: {
+            web_results_count: wsResults.length,
+            official_count: officialSources.length,
+            academic_count: academicSources.length,
+            pedagogical_count: pedagogicalSources.length,
+            topics_found: Array.from(topicsFound),
+            query: wsQuery
+          }
+        });
+      }
+    }
+
     // ═══ PHASE 3: BUILD DECISION CONTEXT ═══
     const objectiveForDecision = temaLimpo 
       ? `${userObjective}\n\n🎯 TEMA PRINCIPAL EXTRAÍDO: ${temaLimpo}` 
@@ -1004,7 +1069,8 @@ export async function decidirAtividadesCriarV2(
     });
 
     // ═══ PHASE 4: LLM CALL WITH RETRY LOOP (Layer 2) ═══
-    const prompt = buildDecisionPrompt(decisionContext);
+    const basePrompt = buildDecisionPrompt(decisionContext);
+    const prompt = webSearchContext ? `${basePrompt}\n\n${webSearchContext}` : basePrompt;
     let lastError: string | null = null;
     let lastRawResponse: string | null = null;
 
@@ -1025,7 +1091,7 @@ export async function decidirAtividadesCriarV2(
           : complexRequest
             ? 'entre 4 e 8 atividades variadas e complementares (é um planejamento de múltiplas aulas/período — DIVERSIFIQUE entre categorias: planejamento + prática + avaliação + engajamento)'
             : 'entre 2 e 4 atividades variadas e complementares (NUNCA apenas 1, a menos que seja um pedido extremamente específico de 1 atividade)';
-        const fcPrompt = `Você é um especialista pedagógico. Analise o catálogo e selecione as atividades MAIS ADEQUADAS para o objetivo do professor.\n\nObjetivo do professor: ${userObjective}\n\nQuantidade OBRIGATÓRIA: ${targetQty}\n\nREGRA DE VARIEDADE: Escolha atividades de CATEGORIAS DIFERENTES. Combine interativas (quiz, lista, flash cards) com textuais (planos, provas, jogos). NUNCA escolha apenas 1 tipo. NUNCA copie IDs de exemplos — use apenas IDs do catálogo abaixo.\n\nCatálogo completo:\n${catalog.map(a => `- ${a.id}: ${a.titulo} (tipo: ${a.tipo}, categoria: ${a.categoria})`).join('\n')}\n\nIDs válidos: [${validIdsList}]`;
+        const fcPrompt = `Você é um especialista pedagógico. Analise o catálogo e selecione as atividades MAIS ADEQUADAS para o objetivo do professor.\n\nObjetivo do professor: ${userObjective}\n\nQuantidade OBRIGATÓRIA: ${targetQty}\n\nREGRA DE VARIEDADE: Escolha atividades de CATEGORIAS DIFERENTES. Combine interativas (quiz, lista, flash cards) com textuais (planos, provas, jogos). NUNCA escolha apenas 1 tipo. NUNCA copie IDs de exemplos — use apenas IDs do catálogo abaixo.\n\nCatálogo completo:\n${catalog.map(a => `- ${a.id}: ${a.titulo} (tipo: ${a.tipo}, categoria: ${a.categoria})`).join('\n')}\n\nIDs válidos: [${validIdsList}]${webSearchContext ? `\n\n${webSearchContext}` : ''}`;
 
         const fcResult = await callGeminiWithFunctionCalling(
           geminiModel,

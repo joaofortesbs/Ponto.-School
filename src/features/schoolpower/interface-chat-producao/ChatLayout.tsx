@@ -16,7 +16,7 @@ import { ActivityViewModal } from '../construction/ActivityViewModal';
 import { ContextModal } from './ContextModal';
 import { useChatState } from './state/chatState';
 import { processUserPrompt, executeAgentPlan } from '../agente-jota/orchestrator';
-import type { ExecuteAgentPlanResult, DirectCapabilityMeta } from '../agente-jota/orchestrator';
+import type { ExecuteAgentPlanResult, DirectCapabilityMeta, ResearchEnrichmentMeta } from '../agente-jota/orchestrator';
 import { generateSessionId } from '../agente-jota/memory-manager';
 import type { ArtifactData } from '../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 import { parseStructuredResponse } from './utils/structured-response-parser';
@@ -463,7 +463,7 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
     setLoading(true);
 
     try {
-      const { plan, initialMessage: aiMessage, directCapabilityMeta } = await processUserPrompt(
+      const { plan, initialMessage: aiMessage, directCapabilityMeta, capabilityInitialMessage, researchEnrichmentMeta, enrichedFinalMessage } = await processUserPrompt(
         userInput,
         sessionId,
         userId,
@@ -472,7 +472,41 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
 
       setLoading(false);
 
+      if (researchEnrichmentMeta && researchEnrichmentMeta.searchExecuted) {
+        addTextMessage('assistant', aiMessage);
+
+        addDevModeCard({
+          plano: { objetivo: 'Pesquisa Educacional', etapas: [] },
+          status: researchEnrichmentMeta.status === 'concluido' ? 'concluido' as const : 'erro' as const,
+          etapaAtual: 0,
+          etapas: [{
+            ordem: 0,
+            titulo: 'Pesquisar Fontes Educacionais',
+            descricao: researchEnrichmentMeta.displayName,
+            status: 'concluido',
+            capabilities: [{
+              id: `rel-search-${Date.now()}`,
+              nome: 'pesquisar_web',
+              displayName: researchEnrichmentMeta.displayName,
+              status: researchEnrichmentMeta.status === 'concluido' ? 'concluido' as const : 'erro' as const,
+            }],
+          }],
+        });
+
+        if (enrichedFinalMessage) {
+          addTextMessage('assistant', enrichedFinalMessage);
+        }
+
+        console.log(`🔬 [ChatLayout] REL: ${researchEnrichmentMeta.sourcesFound} fontes encontradas em ${researchEnrichmentMeta.searchDuration}ms`);
+        setIsLoading(false);
+        return;
+      }
+
       if (directCapabilityMeta) {
+        if (capabilityInitialMessage) {
+          addTextMessage('assistant', capabilityInitialMessage);
+        }
+
         const capOps = (directCapabilityMeta.operations || []).map((op, idx) => ({
           id: `cap-direct-${idx}-${Date.now()}`,
           nome: op.operation,

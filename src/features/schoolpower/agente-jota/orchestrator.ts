@@ -159,11 +159,24 @@ export interface DirectCapabilityMeta {
   duration?: number;
 }
 
+export interface ResearchEnrichmentMeta {
+  searchExecuted: boolean;
+  sourcesFound: number;
+  searchQuery: string;
+  searchDuration: number;
+  capability: 'pesquisar_web';
+  displayName: string;
+  status: 'concluido' | 'erro';
+}
+
 export interface ProcessPromptResult {
   plan: ExecutionPlan | null;
   initialMessage: string;
+  enrichedFinalMessage?: string;
   initialResponseData?: InitialResponseResult;
   directCapabilityMeta?: DirectCapabilityMeta;
+  capabilityInitialMessage?: string;
+  researchEnrichmentMeta?: ResearchEnrichmentMeta;
 }
 
 export async function processUserPrompt(
@@ -200,7 +213,7 @@ export async function processUserPrompt(
       category: 'context',
     });
     
-    const directResponse = await handleDirectResponse(userPrompt, sessionId, userId);
+    const { response: directResponse, relResult } = await handleDirectResponseWithREL(userPrompt, sessionId, userId);
     
     addConversationTurn(sessionId, {
       role: 'assistant',
@@ -208,6 +221,37 @@ export async function processUserPrompt(
       timestamp: Date.now(),
       metadata: { type: 'follow_up' },
     });
+
+    if (relResult && relResult.enriched && relResult.searchExecuted) {
+      const { extractSearchSummary } = await import('./research-enrichment-layer/research-enrichment');
+      const summary = relResult.searchData ? extractSearchSummary(relResult.searchData) : null;
+      const sourcesFound = summary?.sourcesFound || relResult.debugInfo.sourcesFound || 0;
+      const searchQuery = summary?.searchQuery || relResult.debugInfo.needDetection.reasoning || userPrompt.substring(0, 80);
+      const searchDuration = relResult.debugInfo.searchDuration || 0;
+
+      addLedgerFact(sessionId, {
+        fact: `Jota pesquisou sobre "${searchQuery}" e encontrou ${sourcesFound} fontes. Top fonte: ${summary?.topSourceTitle || 'N/A'}`,
+        category: 'research' as any,
+      });
+
+      const tema = searchQuery.length > 50 ? searchQuery.substring(0, 47) + '...' : searchQuery;
+      const relInitialMessage = `Boa pergunta! Vou **pesquisar em fontes educacionais brasileiras** sobre **${tema}** para te dar uma resposta fundamentada.`;
+
+      return {
+        plan: null,
+        initialMessage: relInitialMessage,
+        enrichedFinalMessage: directResponse,
+        researchEnrichmentMeta: {
+          searchExecuted: true,
+          sourcesFound,
+          searchQuery,
+          searchDuration,
+          capability: 'pesquisar_web',
+          displayName: `Pesquisei ${sourcesFound} fontes educacionais`,
+          status: 'concluido',
+        },
+      };
+    }
 
     return {
       plan: null,
@@ -234,6 +278,8 @@ export async function processUserPrompt(
       category: 'decision',
     });
 
+    const capInitialMessage = generateCapabilityInitialMessage(routeResult.capability, userPrompt);
+
     try {
       const directResult = await executeDirectCapability(
         routeResult.capability,
@@ -254,6 +300,7 @@ export async function processUserPrompt(
         plan: null,
         initialMessage: directResult.message,
         directCapabilityMeta: directResult.meta,
+        capabilityInitialMessage: capInitialMessage,
       };
     } catch (capError) {
       console.error(`❌ [Orchestrator] Erro na capability direta ${routeResult.capability}:`, capError);
@@ -293,7 +340,7 @@ export async function processUserPrompt(
         return { plan, initialMessage };
       } catch (planError) {
         console.error(`❌ [Orchestrator] Fallback de plano também falhou:`, planError);
-        const fallbackResponse = await handleDirectResponse(userPrompt, sessionId, userId);
+        const { response: fallbackResponse } = await handleDirectResponseWithREL(userPrompt, sessionId, userId);
         return { plan: null, initialMessage: fallbackResponse };
       }
     }
@@ -391,13 +438,26 @@ export async function processUserPrompt(
   }
 }
 
-async function handleDirectResponse(
+interface HandleDirectResponseResult {
+  response: string;
+  relResult?: import('./research-enrichment-layer/research-enrichment').ResearchEnrichmentResult;
+}
+
+async function handleDirectResponseWithREL(
   message: string,
   sessionId: string,
   userId: string
-): Promise<string> {
+): Promise<HandleDirectResponseResult> {
+  const { executeResearchEnrichment } = await import('./research-enrichment-layer/research-enrichment');
   const { SYSTEM_PROMPT_CONVERSAR } = await import('./prompts/system-prompt');
   const { executeWithCascadeFallback } = await import('../services/controle-APIs-gerais-school-power');
+
+  let relResult: import('./research-enrichment-layer/research-enrichment').ResearchEnrichmentResult | undefined;
+  try {
+    relResult = await executeResearchEnrichment(message, sessionId, userId);
+  } catch (relError) {
+    console.warn('⚠️ [Orchestrator] REL falhou, continuando sem enriquecimento:', relError);
+  }
 
   const structured = buildStructuredContextForFollowUp(sessionId, message, userId);
 
@@ -410,21 +470,37 @@ async function handleDirectResponse(
       }).join('\n')
     : '';
 
-  const userPrompt = [
+  const promptParts = [
     structured.userContext ? `CONTEXTO DA SESSÃO:\n${structured.userContext}` : '',
     historyBlock ? `HISTÓRICO RECENTE:\n${historyBlock}` : '',
-    `MENSAGEM DO PROFESSOR:\n"${message}"`,
-  ].filter(Boolean).join('\n\n');
+  ];
+
+  if (relResult?.enriched && relResult.formattedContext) {
+    promptParts.push(relResult.formattedContext);
+  }
+
+  promptParts.push(`MENSAGEM DO PROFESSOR:\n"${message}"`);
+
+  const userPrompt = promptParts.filter(Boolean).join('\n\n');
 
   const result = await executeWithCascadeFallback(userPrompt, {
     systemPrompt: SYSTEM_PROMPT_CONVERSAR,
   });
 
   if (result.success && result.data) {
-    return result.data;
+    return { response: result.data, relResult };
   }
 
-  return 'Opa, tive um probleminha para processar sua mensagem. Pode tentar de novo? Estou aqui!';
+  return { response: 'Opa, tive um probleminha para processar sua mensagem. Pode tentar de novo? Estou aqui!' };
+}
+
+function generateCapabilityInitialMessage(capability: string, userPrompt: string): string {
+  const messages: Record<string, string> = {
+    gerenciar_calendario: 'Certo! Vou **verificar sua agenda** e organizar o que precisa. Já estou acessando seu calendário...',
+    pesquisar_atividades_conta: 'Vou **buscar suas atividades salvas** para te mostrar. Já estou pesquisando...',
+    pesquisar_atividades_disponiveis: 'Vou **verificar o catálogo completo de atividades** disponíveis para você. Já estou buscando...',
+  };
+  return messages[capability] || `Entendido! Vou **executar** o que você pediu. Já estou trabalhando nisso...`;
 }
 
 function resolveUserIdFallback(userId: string): string {
