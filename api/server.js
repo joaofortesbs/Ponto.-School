@@ -18,6 +18,7 @@ import { loadActivitiesCatalog } from './orchestrator/agents/activitySuggestionA
 import { log as orchestratorLog, LOG_PREFIXES } from './orchestrator/debugLogger.js';
 import { createCalendarEventsRouter } from './calendar-events.js';
 import searchWebRoutes from './search-web.js';
+import aiProxyRoutes from './ai-proxy.js';
 
 dotenv.config();
 
@@ -119,6 +120,7 @@ app.use('/api/visitantes', visitantesRoutes);
 app.use('/api/translate', translateRoutes);
 app.use('/api/calendar/events', createCalendarEventsRouter(neonDB));
 app.use('/api/search', searchWebRoutes);
+app.use('/api/ai', aiProxyRoutes);
 
 // ========================================
 // ROTAS DE IA GROQ

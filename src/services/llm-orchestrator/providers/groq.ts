@@ -8,7 +8,7 @@
  */
 
 import type { LLMModel, GenerateContentResult, ModelError } from '../types';
-import { getGroqApiKey, validateGroqApiKey, ORCHESTRATOR_CONFIG } from '../config';
+import { ORCHESTRATOR_CONFIG } from '../config';
 
 export async function callGroqAPI(
   model: LLMModel,
@@ -21,33 +21,9 @@ export async function callGroqAPI(
   } = {}
 ): Promise<GenerateContentResult> {
   const startTime = Date.now();
-  const apiKey = getGroqApiKey();
   const errors: ModelError[] = [];
 
   console.log(`🚀 [GROQ] Tentando modelo: ${model.name} (${model.id})`);
-
-  if (!validateGroqApiKey(apiKey)) {
-    const error: ModelError = {
-      model: model.id,
-      provider: 'groq',
-      error: 'API Key inválida ou não configurada',
-      timestamp: Date.now(),
-    };
-    errors.push(error);
-    console.warn(`⚠️ [GROQ] API Key inválida`);
-    
-    return {
-      success: false,
-      data: null,
-      model: model.id,
-      provider: 'groq',
-      tier: model.tier,
-      latencyMs: Date.now() - startTime,
-      cached: false,
-      attemptsMade: 1,
-      errors,
-    };
-  }
 
   const timeout = options.timeout || ORCHESTRATOR_CONFIG.timeout;
 
@@ -55,13 +31,11 @@ export async function callGroqAPI(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    const response = await fetch(model.endpoint, {
+    const response = await fetch('/api/ai/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        provider: 'groq',
         model: model.id,
         messages: options.systemPrompt
           ? [{ role: 'system', content: options.systemPrompt }, { role: 'user', content: prompt }]

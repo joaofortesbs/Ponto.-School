@@ -264,19 +264,8 @@ export interface CascadeResult {
 // FUNÇÕES AUXILIARES
 // ============================================================================
 
-function getGroqApiKey(): string {
-  return (import.meta.env.VITE_GROQ_API_KEY || '').trim();
-}
-
-function getGeminiApiKey(): string {
-  return (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
-}
-
-function validateApiKey(key: string, provider: string): boolean {
-  if (!key) return false;
-  if (provider === 'groq') return key.startsWith('gsk_') && key.length > 10;
-  if (provider === 'gemini') return key.length > 10;
-  return false;
+function validateApiKey(_key: string, _provider: string): boolean {
+  return true;
 }
 
 async function sleep(ms: number): Promise<void> {
@@ -290,20 +279,18 @@ async function sleep(ms: number): Promise<void> {
 async function callGroqAPI(
   model: APIModel,
   prompt: string,
-  apiKey: string
+  _apiKey?: string
 ): Promise<APICallResult> {
   const startTime = Date.now();
   
   console.log(`🚀 [GROQ] Tentando modelo: ${model.name}`);
   
   try {
-    const response = await fetch(model.endpoint, {
+    const response = await fetch('/api/ai/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        provider: 'groq',
         model: model.id,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
@@ -372,21 +359,18 @@ async function callGroqAPI(
 async function callGeminiAPI(
   model: APIModel,
   prompt: string,
-  apiKey: string
+  _apiKey?: string
 ): Promise<APICallResult> {
   const startTime = Date.now();
   
   console.log(`🚀 [GEMINI] Tentando modelo: ${model.name}`);
   
   try {
-    const url = `${model.endpoint}?key=${apiKey}`;
-    
-    const response = await fetch(url, {
+    const response = await fetch('/api/ai/gemini', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        endpoint: model.endpoint,
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.3,
@@ -955,21 +939,17 @@ export function getAPIStatus(): {
   totalModels: number;
   orchestratorVersion: string;
 } {
-  const groqKey = getGroqApiKey();
-  const geminiKey = getGeminiApiKey();
-  
   // Usar modelos do orchestrator
   const orchestratorModels = getOrchestratorModels();
   const groqModels = orchestratorModels.filter(m => m.provider === 'groq');
-  const geminiModels = orchestratorModels.filter(m => m.provider === 'gemini');
   
   return {
     groq: {
-      configured: validateApiKey(groqKey, 'groq'),
+      configured: true,
       modelsAvailable: groqModels.length,
     },
     gemini: {
-      configured: validateApiKey(geminiKey, 'gemini'),
+      configured: true,
     },
     totalModels: orchestratorModels.length,
     orchestratorVersion: '3.0',

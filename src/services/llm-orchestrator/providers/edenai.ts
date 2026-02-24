@@ -33,35 +33,13 @@ export async function callEdenAIAPI(
     maxTokens?: number;
     timeout?: number;
     systemPrompt?: string;
-    apiKey: string;
+    apiKey?: string;
   }
 ): Promise<GenerateContentResult> {
   const startTime = Date.now();
   const errors: ModelError[] = [];
 
   console.log(`🚀 [EDENAI] Tentando modelo: ${model.name} (${model.id})`);
-
-  if (!options.apiKey || options.apiKey.trim().length < 20) {
-    const error: ModelError = {
-      model: model.id,
-      provider: 'edenai',
-      error: 'EdenAI API Key inválida ou não configurada',
-      timestamp: Date.now(),
-    };
-    errors.push(error);
-    console.warn(`⚠️ [EDENAI] API Key inválida`);
-    return {
-      success: false,
-      data: null,
-      model: model.id,
-      provider: 'edenai',
-      tier: model.tier,
-      latencyMs: Date.now() - startTime,
-      cached: false,
-      attemptsMade: 1,
-      errors,
-    };
-  }
 
   const timeout = options.timeout || ORCHESTRATOR_CONFIG.timeout;
   const { provider: edenProvider, modelName } = parseEdenAIModelId(model.id);
@@ -74,20 +52,15 @@ export async function callEdenAIAPI(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    const response = await fetch('https://api.edenai.run/v2/text/generation', {
+    const response = await fetch('/api/ai/edenai', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${options.apiKey}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         providers: edenProvider,
         text: fullPrompt,
         temperature: options.temperature ?? 0.3,
         max_tokens: Math.min(options.maxTokens ?? model.maxTokens, 4096),
-        settings: {
-          [edenProvider]: modelName,
-        },
+        model: modelName,
       }),
       signal: controller.signal,
     });

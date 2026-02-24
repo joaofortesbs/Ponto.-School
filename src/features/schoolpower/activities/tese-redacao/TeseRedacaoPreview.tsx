@@ -4,7 +4,7 @@ import { Clock, Award, CheckCircle, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+
 import { storageSet, safeSetJSON } from '@/features/schoolpower/services/StorageOrchestrator';
 
 interface TeseRedacaoContent {
@@ -226,15 +226,7 @@ export default function TeseRedacaoPreview({ content, isLoading }: TeseRedacaoPr
     console.log('🤖 [Gemini] Iniciando geração de relatório...');
 
     try {
-      // Usar API Key do ambiente
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-
-      if (!apiKey) {
-        throw new Error('API Key do Gemini não configurada');
-      }
-
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      // Usar backend proxy para Gemini (chave gerenciada pelo servidor)
 
       const prompt = `
 Você é um avaliador especialista do ENEM com profundo conhecimento das competências de redação.
@@ -281,10 +273,18 @@ Retorne APENAS um objeto JSON válido (sem markdown, sem \`\`\`json) com esta es
 }
 `;
 
-      console.log('📤 [Gemini] Enviando prompt para avaliação...');
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text().trim();
+      console.log('📤 [Gemini] Enviando prompt para avaliação via backend proxy...');
+      const proxyRes = await fetch('/api/ai/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model_id: 'gemini-2.5-flash',
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
+        }),
+      });
+      const geminiData = await proxyRes.json();
+      const text = (geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
       console.log('📥 [Gemini] Resposta recebida:', text.substring(0, 300));
 
       // Limpar markdown se existir

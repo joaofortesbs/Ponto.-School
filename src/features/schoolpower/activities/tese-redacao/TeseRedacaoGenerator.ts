@@ -1,6 +1,4 @@
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
 interface TeseRedacaoData {
   title: string;
   temaRedacao: string;        // Tema da Redação
@@ -11,21 +9,8 @@ interface TeseRedacaoData {
 }
 
 export class TeseRedacaoGenerator {
-  private genAI: GoogleGenerativeAI;
-  private model: any;
-
   constructor() {
-    // Usar GEMINI_API_KEY do Replit Secrets
-    const apiKey = import.meta.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || '';
-    
-    if (!apiKey) {
-      console.error('❌ [TeseRedacaoGenerator] GEMINI_API_KEY não encontrada nos Secrets!');
-    } else {
-      console.log('✅ [TeseRedacaoGenerator] API Key do Gemini encontrada');
-    }
-    
-    this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+    console.log('✅ [TeseRedacaoGenerator] Usando backend proxy para Gemini');
   }
 
   async generateTeseRedacaoContent(data: TeseRedacaoData): Promise<any> {
@@ -156,9 +141,17 @@ IMPORTANTE:
       console.log('🚀 [TeseRedacaoGenerator] Enviando prompt para API Gemini...');
       console.log('📤 [TeseRedacaoGenerator] Tamanho do prompt:', prompt.length, 'caracteres');
       
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const proxyRes = await fetch('/api/ai/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model_id: 'gemini-2.0-flash',
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
+        }),
+      });
+      const geminiData = await proxyRes.json();
+      const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
       console.log('📥 [TeseRedacaoGenerator] Resposta bruta da API:', text.substring(0, 500) + '...');
       console.log('📏 [TeseRedacaoGenerator] Tamanho da resposta:', text.length, 'caracteres');

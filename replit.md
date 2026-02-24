@@ -36,8 +36,15 @@ The platform features a modern, glass-morphism inspired design with blur backgro
     - **SmartRouter v1.3**: Added explicit detection of decision prompts (patterns: `IDs VÁLIDOS:`, `CATÁLOGO COMPLETO`, `atividades_escolhidas`, `REGRA DE QUANTIDADE`, `DECIDIR quais atividades`) to guarantee they always classify as `complex` complexity and route to balanced/powerful tier models instead of ultra-fast Tier 1 models.
     - **Final Response Service v2.0**: Hybrid deterministic and AI-driven final response generation for the EXECUTAR path, classifying activities into pedagogical phases, building structured responses, and using AI for strategic paragraphs with robust fallback mechanisms.
 
+### Security Architecture (Feb 2026 - Completed Migration)
+**API Key Security**: All AI provider keys (Groq, Gemini, OpenRouter, XAI, HuggingFace, EdenAI, Together AI, DeepInfra) are now exclusively stored in Replit Secrets server-side. No VITE_* environment variable key exposure to browser bundle. Architecture:
+- **Backend AI Proxy** (`api/ai-proxy.js`): Routes `/api/ai/chat`, `/api/ai/gemini`, `/api/ai/huggingface`, `/api/ai/edenai`. All providers use `resolveKey()` to look up from Replit Secrets.
+- **Frontend providers**: All 5 LLM providers (groq.ts, gemini.ts, openai-compatible.ts, huggingface.ts, edenai.ts) call backend proxy endpoints — zero VITE_* reads.
+- **Auth**: Supabase stub client (`src/integrations/supabase/client.ts`) provides API compatibility using localStorage + backend `/api/perfis/login`.
+- **Config**: `config.ts` API key getters return empty strings (keys managed by backend). `isGroqApiKeyConfigured()` returns `true` (backend has keys).
+
 ### System Design Choices
-The architecture features a modular component design based on shadcn/ui patterns. Data persistence uses Neon PostgreSQL for primary data, Supabase PostgreSQL for authentication, and Supabase Storage for file assets. Supabase Realtime supports live features. The system is designed for VM deployment to maintain backend state and real-time database connections, with dynamic section synchronization and isolated lesson creation sessions.
+The architecture features a modular component design based on shadcn/ui patterns. Data persistence uses Neon PostgreSQL for primary data. The Supabase dependency is fully replaced by the backend proxy for auth and API calls. The system is designed for VM deployment to maintain backend state and real-time database connections, with dynamic section synchronization and isolated lesson creation sessions.
 
 ## External Dependencies
 

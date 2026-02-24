@@ -68,10 +68,8 @@ export const clearChatHistory = (sessionId: string): void => {
   }
 };
 
-import { API_KEYS, API_URLS, API_MODELS, API_CONFIG, validateGroqApiKey, fetchWithRetry } from '@/config/apiKeys';
+import { API_MODELS, API_CONFIG } from '@/config/apiKeys';
 
-const GROQ_API_KEY = (API_KEYS.GROQ || '').trim();
-const GROQ_BASE_URL = API_URLS.GROQ;
 const GROQ_MODEL = API_MODELS.GROQ;
 
 // Função para gerar sugestões de foco com base no perfil do usuário e dados da agenda
@@ -151,22 +149,15 @@ Retorne um objeto JSON com a seguinte estrutura:
   ]
 }`;
 
-    if (!validateGroqApiKey(GROQ_API_KEY)) {
-      throw new Error('Chave da API Groq inválida ou não configurada');
-    }
-
-    const response = await fetchWithRetry(GROQ_BASE_URL, {
+    const response = await fetch('/api/ai/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        provider: 'groq',
         model: GROQ_MODEL,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
         max_tokens: Math.min(2048, API_CONFIG.maxTokens),
-        top_p: 0.8
       })
     });
 
@@ -327,22 +318,15 @@ Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
     // Configuração para análise de dados ou chat normal
     const temperature = isDataAnalysisRequest ? 0.2 : 0.7;
 
-    if (!validateGroqApiKey(GROQ_API_KEY)) {
-      throw new Error('Chave da API Groq inválida ou não configurada');
-    }
-
-    const response = await fetchWithRetry(GROQ_BASE_URL, {
+    const response = await fetch('/api/ai/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        provider: 'groq',
         model: GROQ_MODEL,
         messages: [{ role: 'user', content: prompt }],
         temperature: temperature,
         max_tokens: Math.min(2048, API_CONFIG.maxTokens),
-        top_p: 0.95
       })
     });
 

@@ -1,8 +1,9 @@
 
 // Configuração centralizada das chaves de API
+// As chaves são gerenciadas pelo backend proxy (/api/ai/*) e nunca chegam ao browser
 export const API_KEYS = {
-  GROQ: import.meta.env.VITE_GROQ_API_KEY || '',
-  GEMINI: import.meta.env.VITE_GEMINI_API_KEY || '',
+  GROQ: '',
+  GEMINI: '',
   CLAUDE: '',
 } as const;
 
@@ -46,11 +47,11 @@ export function validateGeminiApiKey(apiKey: string): boolean {
 }
 
 export function isGroqApiKeyConfigured(): boolean {
-  return validateGroqApiKey(API_KEYS.GROQ);
+  return true;
 }
 
 export function isGeminiApiKeyConfigured(): boolean {
-  return validateGeminiApiKey(API_KEYS.GEMINI);
+  return true;
 }
 
 export async function fetchWithRetry(

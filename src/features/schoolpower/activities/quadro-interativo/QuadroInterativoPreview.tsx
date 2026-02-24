@@ -87,7 +87,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   };
 
   // Gerar conteúdo usando API Gemini
-  const generateContent = async () => {
+  const handleGenerate = async () => {
     if (isLoading) return;
 
     console.log('🚀 [QUADRO INTERATIVO] Iniciando geração de conteúdo');
@@ -95,17 +95,6 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
     setError(null);
 
     try {
-      // Verificar API Key
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      
-      if (!apiKey) {
-        throw new Error('VITE_GEMINI_API_KEY não configurada nas variáveis de ambiente');
-      }
-
-      if (apiKey.length < 20) {
-        throw new Error('API Key do Gemini inválida (muito curta)');
-      }
-
       // Extrair dados
       const extractedData = extractData();
       console.log('📋 [QUADRO INTERATIVO] Dados extraídos:', extractedData);
@@ -253,7 +242,7 @@ Gere o conteúdo agora:`;
     if (!hasGenerated && !isLoading && data?.id) {
       console.log('🤖 [QUADRO INTERATIVO] Iniciando auto-geração');
       setTimeout(() => {
-        generateContent();
+        handleGenerate();
       }, 1000);
     }
   }, [hasGenerated, isLoading, data?.id]);
@@ -285,7 +274,7 @@ Gere o conteúdo agora:`;
             {error}
           </p>
           <Button 
-            onClick={generateContent}
+            onClick={handleGenerate}
             variant="outline"
             size="sm"
             className="mt-4"

@@ -19,7 +19,7 @@ export interface ActionPlanActivity {
   approved: boolean;
 }
 
-export const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+export const GEMINI_API_KEY = '';
 
 /**
  * Encontra uma atividade do School Power pelo ID

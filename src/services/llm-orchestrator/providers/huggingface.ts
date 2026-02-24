@@ -24,35 +24,13 @@ export async function callHuggingFaceAPI(
     maxTokens?: number;
     timeout?: number;
     systemPrompt?: string;
-    apiKey: string;
+    apiKey?: string;
   }
 ): Promise<GenerateContentResult> {
   const startTime = Date.now();
   const errors: ModelError[] = [];
 
   console.log(`🚀 [HUGGINGFACE] Tentando modelo: ${model.name} (${model.id})`);
-
-  if (!options.apiKey || !options.apiKey.startsWith('hf_')) {
-    const error: ModelError = {
-      model: model.id,
-      provider: 'huggingface',
-      error: 'HuggingFace API Key inválida (deve começar com hf_)',
-      timestamp: Date.now(),
-    };
-    errors.push(error);
-    console.warn(`⚠️ [HUGGINGFACE] API Key inválida`);
-    return {
-      success: false,
-      data: null,
-      model: model.id,
-      provider: 'huggingface',
-      tier: model.tier,
-      latencyMs: Date.now() - startTime,
-      cached: false,
-      attemptsMade: 1,
-      errors,
-    };
-  }
 
   const timeout = options.timeout || Math.max(ORCHESTRATOR_CONFIG.timeout, 60000);
   const formattedPrompt = formatHFPrompt(prompt, options.systemPrompt);
@@ -61,13 +39,11 @@ export async function callHuggingFaceAPI(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    const response = await fetch(model.endpoint, {
+    const response = await fetch('/api/ai/huggingface', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${options.apiKey}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        endpoint: model.endpoint,
         inputs: formattedPrompt,
         parameters: {
           max_new_tokens: Math.min(options.maxTokens ?? 2000, 2000),

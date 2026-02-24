@@ -8,7 +8,7 @@
  */
 
 import type { LLMModel, GenerateContentResult, ModelError } from '../types';
-import { getGeminiApiKey, validateGeminiApiKey, ORCHESTRATOR_CONFIG } from '../config';
+import { ORCHESTRATOR_CONFIG } from '../config';
 
 export interface GeminiFunctionDeclaration {
   name: string;
@@ -32,32 +32,15 @@ export async function callGeminiWithFunctionCalling(
   } = {}
 ): Promise<GenerateContentResult> {
   const startTime = Date.now();
-  const apiKey = getGeminiApiKey();
   const errors: ModelError[] = [];
 
   console.log(`🚀 [GEMINI-FC] Function Calling com ${model.name} (${model.id})`);
-
-  if (!validateGeminiApiKey(apiKey)) {
-    return {
-      success: false,
-      data: null,
-      model: model.id,
-      provider: 'gemini',
-      tier: model.tier,
-      latencyMs: Date.now() - startTime,
-      cached: false,
-      attemptsMade: 1,
-      errors: [{ model: model.id, provider: 'gemini', error: 'API Key inválida', timestamp: Date.now() }],
-    };
-  }
 
   const timeout = options.timeout || ORCHESTRATOR_CONFIG.timeout;
 
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-    const url = `${model.endpoint}?key=${apiKey}`;
 
     const body: any = {
       contents: [{ parts: [{ text: prompt }] }],
@@ -73,10 +56,13 @@ export async function callGeminiWithFunctionCalling(
       body.systemInstruction = { parts: [{ text: options.systemPrompt }] };
     }
 
-    const response = await fetch(url, {
+    const response = await fetch('/api/ai/gemini', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        endpoint: model.endpoint,
+        ...body,
+      }),
       signal: controller.signal,
     });
 
@@ -172,33 +158,9 @@ export async function callGeminiAPI(
   } = {}
 ): Promise<GenerateContentResult> {
   const startTime = Date.now();
-  const apiKey = getGeminiApiKey();
   const errors: ModelError[] = [];
 
   console.log(`🚀 [GEMINI] Tentando modelo: ${model.name} (${model.id})`);
-
-  if (!validateGeminiApiKey(apiKey)) {
-    const error: ModelError = {
-      model: model.id,
-      provider: 'gemini',
-      error: 'API Key inválida ou não configurada',
-      timestamp: Date.now(),
-    };
-    errors.push(error);
-    console.warn(`⚠️ [GEMINI] API Key inválida`);
-    
-    return {
-      success: false,
-      data: null,
-      model: model.id,
-      provider: 'gemini',
-      tier: model.tier,
-      latencyMs: Date.now() - startTime,
-      cached: false,
-      attemptsMade: 1,
-      errors,
-    };
-  }
 
   const timeout = options.timeout || ORCHESTRATOR_CONFIG.timeout;
 
@@ -206,14 +168,11 @@ export async function callGeminiAPI(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    const url = `${model.endpoint}?key=${apiKey}`;
-
-    const response = await fetch(url, {
+    const response = await fetch('/api/ai/gemini', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        endpoint: model.endpoint,
         ...(options.systemPrompt ? { systemInstruction: { parts: [{ text: options.systemPrompt }] } } : {}),
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {

@@ -48,52 +48,18 @@ import type {
 } from './types';
 
 // ============================================================================
-// API KEY GETTERS — Cada provider tem seu getter seguro
+// API KEY GETTERS — Chaves são gerenciadas pelo backend proxy (/api/ai/*)
+// Os providers chamam /api/ai/chat, /api/ai/gemini etc. sem expor chaves no browser
 // ============================================================================
 
-export function getGroqApiKey(): string {
-  const key = (import.meta.env.VITE_GROQ_API_KEY || '').trim();
-  const isValid = key.startsWith('gsk_') && key.length > 20;
-  console.log(`🔑 [Config] getGroqApiKey(): ${key ? `${key.substring(0, 8)}...${key.substring(key.length - 4)}` : 'NÃO CONFIGURADA'} (válida: ${isValid})`);
-  return key;
-}
-
-export function getGeminiApiKey(): string {
-  const key = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
-  const isValid = key.startsWith('AIza') && key.length > 20;
-  console.log(`🔑 [Config] getGeminiApiKey(): ${key ? `${key.substring(0, 8)}...${key.substring(key.length - 4)}` : 'NÃO CONFIGURADA'} (válida: ${isValid})`);
-  return key;
-}
-
-export function getOpenRouterApiKey(): string {
-  const key = (import.meta.env.VITE_OPENROUTER_API_KEY || '').trim();
-  return key;
-}
-
-export function getXRouteApiKey(): string {
-  const key = (import.meta.env.VITE_XROUTE_API_KEY || '').trim();
-  return key;
-}
-
-export function getTogetherApiKey(): string {
-  const key = (import.meta.env.VITE_TOGETHER_API_KEY || '').trim();
-  return key;
-}
-
-export function getDeepInfraApiKey(): string {
-  const key = (import.meta.env.VITE_DEEPINFRA_API_KEY || '').trim();
-  return key;
-}
-
-export function getEdenAIApiKey(): string {
-  const key = (import.meta.env.VITE_EDENAI_API_KEY || '').trim();
-  return key;
-}
-
-export function getHuggingFaceApiKey(): string {
-  const key = (import.meta.env.VITE_HUGGINGFACE_API_KEY || '').trim();
-  return key;
-}
+export function getGroqApiKey(): string { return ''; }
+export function getGeminiApiKey(): string { return ''; }
+export function getOpenRouterApiKey(): string { return ''; }
+export function getXRouteApiKey(): string { return ''; }
+export function getTogetherApiKey(): string { return ''; }
+export function getDeepInfraApiKey(): string { return ''; }
+export function getEdenAIApiKey(): string { return ''; }
+export function getHuggingFaceApiKey(): string { return ''; }
 
 export function validateGroqApiKey(key: string): boolean {
   return key.startsWith('gsk_') && key.length > 20;
@@ -103,18 +69,8 @@ export function validateGeminiApiKey(key: string): boolean {
   return key.startsWith('AIza') && key.length > 20;
 }
 
-export function getApiKeyForProvider(provider: string): string {
-  switch (provider) {
-    case 'groq': return getGroqApiKey();
-    case 'gemini': return getGeminiApiKey();
-    case 'openrouter': return getOpenRouterApiKey();
-    case 'xroute': return getXRouteApiKey();
-    case 'together': return getTogetherApiKey();
-    case 'deepinfra': return getDeepInfraApiKey();
-    case 'edenai': return getEdenAIApiKey();
-    case 'huggingface': return getHuggingFaceApiKey();
-    default: return '';
-  }
+export function getApiKeyForProvider(_provider: string): string {
+  return '';
 }
 
 // ============================================================================

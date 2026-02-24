@@ -1,10 +1,5 @@
 import axios from 'axios';
 
-const XAI_API_KEY = (import.meta.env.VITE_XAI_API_KEY || '').trim();
-const GROQ_API_KEY = (import.meta.env.VITE_GROQ_API_KEY || '').trim();
-
-const XAI_BASE_URL = 'https://api.x.ai/v1/chat/completions';
-const GROQ_BASE_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 // Interface para mensagens
@@ -442,22 +437,18 @@ Lá você poderá atualizar seu telefone, localização e outras informações d
       ];
     }
 
-    // Configuração da solicitação para a API xAI
-    const response = await axios.post(
-      XAI_BASE_URL,
-      {
-        messages: conversationHistory[sessionId],
+    // Configuração da solicitação para a API xAI via proxy backend
+    const proxyRes = await fetch('/api/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: 'xai',
         model: 'grok-3-latest',
-        stream: false,
-        temperature: 0.7
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${XAI_API_KEY}`
-        }
-      }
-    );
+        messages: conversationHistory[sessionId],
+        temperature: 0.7,
+      }),
+    });
+    const response = { data: await proxyRes.json() };
 
     // Extrai a resposta
     let aiResponse = response.data.choices[0].message.content;
@@ -779,23 +770,19 @@ FUNCIONALIDADES: EpictusIA, Mentor IA, Planos de Estudo, Conexão Expert, Portal
 
     console.log(`Enviando histórico de conversa para Groq com ${groqMessages.length} mensagens`);
 
-    // Usar o endpoint de chat Groq
-    const response = await axios.post(
-      GROQ_BASE_URL,
-      {
+    // Usar o endpoint de chat Groq via proxy backend
+    const proxyRes = await fetch('/api/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: 'groq',
         model: GROQ_MODEL,
         messages: groqMessages,
         temperature: 0.7,
         max_tokens: 2048,
-        top_p: 0.95
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GROQ_API_KEY}`
-        }
-      }
-    );
+      }),
+    });
+    const response = { data: await proxyRes.json() };
 
     // Extrai a resposta
     let aiResponse = response.data.choices[0].message.content;

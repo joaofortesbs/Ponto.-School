@@ -20,7 +20,7 @@ interface OpenAICompatibleOptions {
   maxTokens?: number;
   timeout?: number;
   systemPrompt?: string;
-  apiKey: string;
+  apiKey?: string;
 }
 
 export async function callOpenAICompatibleAPI(
@@ -34,44 +34,11 @@ export async function callOpenAICompatibleAPI(
 
   console.log(`🚀 [${provider.toUpperCase()}] Tentando modelo: ${model.name} (${model.id})`);
 
-  if (!options.apiKey || options.apiKey.trim().length < 10) {
-    const error: ModelError = {
-      model: model.id,
-      provider,
-      error: `API Key inválida ou não configurada para provider: ${provider}`,
-      timestamp: Date.now(),
-    };
-    errors.push(error);
-    console.warn(`⚠️ [${provider.toUpperCase()}] API Key inválida`);
-    return {
-      success: false,
-      data: null,
-      model: model.id,
-      provider,
-      tier: model.tier,
-      latencyMs: Date.now() - startTime,
-      cached: false,
-      attemptsMade: 1,
-      errors,
-    };
-  }
-
   const timeout = options.timeout || ORCHESTRATOR_CONFIG.timeout;
 
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${options.apiKey}`,
-    };
-
-    // OpenRouter requires these additional headers
-    if (provider === 'openrouter') {
-      headers['HTTP-Referer'] = 'https://pontoschool.com.br';
-      headers['X-Title'] = 'Ponto School - Plataforma Educacional';
-    }
 
     const messages = options.systemPrompt
       ? [
@@ -80,10 +47,11 @@ export async function callOpenAICompatibleAPI(
         ]
       : [{ role: 'user', content: prompt }];
 
-    const response = await fetch(model.endpoint, {
+    const response = await fetch('/api/ai/chat', {
       method: 'POST',
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        provider,
         model: model.id,
         messages,
         temperature: options.temperature ?? 0.3,
