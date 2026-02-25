@@ -12,6 +12,7 @@ import { GERAR_CONTEUDO_CAPABILITIES } from './GERAR_CONTEUDO/registry';
 import { CRIAR_ATIVIDADES_CAPABILITIES } from './CRIAR_ATIVIDADES/registry';
 import { CRIAR_ARQUIVO_CAPABILITIES } from './CRIAR_ARQUIVO/registry';
 import { SALVAR_BD_CAPABILITIES } from './SALVAR_BD/registry';
+import { LER_ARQUIVOS_CAPABILITIES } from './LER_ARQUIVOS/registry';
 import { criarCompromissoCalendario } from './CRIAR/criar-compromisso-calendario';
 import { gerenciarCalendarioV2 } from './CRIAR/calendario/gerenciar-calendario';
 
@@ -95,6 +96,7 @@ export const CAPABILITIES = {
   GERAR_CONTEUDO: GERAR_CONTEUDO_CAPABILITIES,
   CRIAR: { ...CRIAR_ATIVIDADES_CAPABILITIES, ...CRIAR_ARQUIVO_CAPABILITIES, ...CALENDARIO_CAPABILITIES },
   SALVAR: SALVAR_BD_CAPABILITIES,
+  LER_ARQUIVOS: LER_ARQUIVOS_CAPABILITIES,
 };
 
 export const CRIAR_CAPABILITIES = CRIAR_ATIVIDADES_CAPABILITIES;

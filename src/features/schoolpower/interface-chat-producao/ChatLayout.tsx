@@ -16,7 +16,7 @@ import { ActivityViewModal } from '../construction/ActivityViewModal';
 import { ContextModal } from './ContextModal';
 import { useChatState } from './state/chatState';
 import { processUserPrompt, executeAgentPlan } from '../agente-jota/orchestrator';
-import type { ExecuteAgentPlanResult, DirectCapabilityMeta, ResearchEnrichmentMeta, PendingEnrichmentResult } from '../agente-jota/orchestrator';
+import type { ExecuteAgentPlanResult, DirectCapabilityMeta, ResearchEnrichmentMeta, PendingEnrichmentResult, FileAttachmentForOrchestrator, FileProcessingMeta } from '../agente-jota/orchestrator';
 import { generateSessionId } from '../agente-jota/memory-manager';
 import type { ArtifactData } from '../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 import { parseStructuredResponse } from './utils/structured-response-parser';
@@ -35,8 +35,10 @@ import type {
 } from './types';
 
 import { ChatInputJota } from './chat-input-jota';
+import type { FileAttachment } from './chat-input-jota/ChatInputJota';
 import { CardSuperiorSuasCriacoes } from './card-superior-suas-criacoes-input';
 import { ProgressBadge } from './components/ProgressBadge';
+import { FileProcessingCard } from './components/FileProcessingCard';
 
 const EXECUTION_LOCK_KEY = 'agente-jota-execution-lock';
 
@@ -110,6 +112,12 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
   const isMountedRef = useRef(true);
   const autoExecTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingEnrichmentRef = useRef<Promise<PendingEnrichmentResult> | null>(null);
+  const [fileProcessingStatus, setFileProcessingStatus] = useState<{
+    active: boolean;
+    fileNames: string[];
+    status: 'processing' | 'complete' | 'error';
+    processedCount: number;
+  }>({ active: false, fileNames: [], status: 'processing', processedCount: 0 });
 
   const { 
     messages,
@@ -454,8 +462,27 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
     setWorkingMemory(prev => [...prev, newItem]);
   }, []);
 
-  const handleUserPrompt = async (userInput: string) => {
-    if (!userInput.trim()) return;
+  const convertFilesToOrchestrator = async (uiFiles: FileAttachment[]): Promise<FileAttachmentForOrchestrator[]> => {
+    const results: FileAttachmentForOrchestrator[] = [];
+    for (const f of uiFiles) {
+      try {
+        const buffer = await f.file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+        results.push({ base64, name: f.name, type: f.type, size: f.size });
+      } catch (err) {
+        console.error(`❌ [ChatLayout] Erro ao converter arquivo ${f.name}:`, err);
+      }
+    }
+    return results;
+  };
+
+  const handleUserPrompt = async (userInput: string, files?: FileAttachment[]) => {
+    if (!userInput.trim() && (!files || files.length === 0)) return;
 
     if (pendingEnrichmentRef.current) {
       console.log('⏳ [ChatLayout] Aguardando enriquecimento pendente antes de processar novo prompt...');
@@ -463,21 +490,49 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
       pendingEnrichmentRef.current = null;
     }
 
-    console.log('📨 [ChatLayout] Processando prompt do usuário:', userInput);
+    const effectiveInput = userInput.trim() || 'Analise os arquivos anexados';
+    console.log('📨 [ChatLayout] Processando prompt do usuário:', effectiveInput);
+    if (files?.length) {
+      console.log(`📎 [ChatLayout] ${files.length} arquivo(s) anexado(s)`);
+    }
 
-    addTextMessage('user', userInput);
+    addTextMessage('user', effectiveInput);
     setIsLoading(true);
     setLoading(true);
 
+    let orchestratorFiles: FileAttachmentForOrchestrator[] | undefined;
+    if (files && files.length > 0) {
+      setFileProcessingStatus({
+        active: true,
+        fileNames: files.map(f => f.name),
+        status: 'processing',
+        processedCount: 0,
+      });
+      orchestratorFiles = await convertFilesToOrchestrator(files);
+    }
+
     try {
-      const { plan, initialMessage: aiMessage, directCapabilityMeta, capabilityInitialMessage, researchEnrichmentMeta, enrichedFinalMessage, pendingEnrichment } = await processUserPrompt(
-        userInput,
+      const { plan, initialMessage: aiMessage, directCapabilityMeta, capabilityInitialMessage, researchEnrichmentMeta, enrichedFinalMessage, pendingEnrichment, fileProcessingMeta } = await processUserPrompt(
+        effectiveInput,
         sessionId,
         userId,
-        workingMemory
+        workingMemory,
+        orchestratorFiles
       );
 
       setLoading(false);
+
+      if (fileProcessingMeta && fileProcessingMeta.filesProcessed > 0) {
+        setFileProcessingStatus(prev => ({
+          ...prev,
+          status: 'complete',
+          processedCount: fileProcessingMeta.filesProcessed,
+        }));
+        setTimeout(() => setFileProcessingStatus(prev => ({ ...prev, active: false })), 4000);
+      } else if (orchestratorFiles && orchestratorFiles.length > 0) {
+        setFileProcessingStatus(prev => ({ ...prev, status: 'error' }));
+        setTimeout(() => setFileProcessingStatus(prev => ({ ...prev, active: false })), 4000);
+      }
 
       if (pendingEnrichment) {
         addTextMessage('assistant', aiMessage);
@@ -977,6 +1032,15 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
       <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-64 relative">
         <div className="max-w-[1200px] mx-auto w-full">
           <MessageStream onApplyPlan={handleExecutePlan} onOpenArtifact={handleOpenArtifact} onOpenActivity={handleOpenActivity} />
+          <AnimatePresence>
+            {fileProcessingStatus.active && (
+              <FileProcessingCard
+                fileNames={fileProcessingStatus.fileNames}
+                status={fileProcessingStatus.status}
+                processedCount={fileProcessingStatus.processedCount}
+              />
+            )}
+          </AnimatePresence>
         </div>
         <div ref={messagesEndRef} />
       </div>
@@ -993,9 +1057,9 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
             onOpenContext={() => setShowContextModal(true)}
           />
           <ChatInputJota 
-            onSend={(msg) => {
-              if (msg.trim() && !isLoading && !isExecuting) {
-                handleUserPrompt(msg);
+            onSend={(msg, files) => {
+              if ((msg.trim() || (files && files.length > 0)) && !isLoading && !isExecuting) {
+                handleUserPrompt(msg || 'Analise os arquivos anexados', files);
               }
             }}
             isLoading={isLoading}

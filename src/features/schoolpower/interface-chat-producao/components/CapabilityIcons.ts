@@ -15,6 +15,7 @@ import {
   FileText,
   CalendarPlus,
   Globe,
+  Paperclip,
   type LucideIcon
 } from 'lucide-react';
 
@@ -110,6 +111,11 @@ const capabilityIconMap: Record<string, CapabilityIconConfig> = {
     color: 'text-violet-400',
     bgColor: 'bg-violet-500/20',
   },
+  ler_arquivos: {
+    icon: Paperclip,
+    color: 'text-cyan-400',
+    bgColor: 'bg-cyan-500/20',
+  },
 };
 
 const defaultConfig: CapabilityIconConfig = {
@@ -141,6 +147,9 @@ export function getCapabilityIcon(capabilityName: string): CapabilityIconConfig 
   }
   if (normalizedName.includes('calendario') || normalizedName.includes('compromisso') || normalizedName.includes('agendar')) {
     return capabilityIconMap.criar_compromisso_calendario;
+  }
+  if (normalizedName.includes('ler_arquivo') || normalizedName.includes('leitura') || normalizedName.includes('anexo')) {
+    return capabilityIconMap.ler_arquivos;
   }
   if (normalizedName.includes('criar') || normalizedName.includes('construir')) {
     return capabilityIconMap.criar_atividade;

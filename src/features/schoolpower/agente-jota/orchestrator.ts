@@ -130,6 +130,7 @@ function cleanupExpiredSessions(): void {
       memoryManagers.delete(sessionId);
       executors.delete(sessionId);
       sessionTimestamps.delete(sessionId);
+      sessionFileContexts.delete(sessionId);
     }
   }
 }
@@ -175,6 +176,21 @@ export interface PendingEnrichmentResult {
   researchMeta: ResearchEnrichmentMeta | null;
 }
 
+export interface FileAttachmentForOrchestrator {
+  base64: string;
+  name: string;
+  type: string;
+  size: number;
+}
+
+export interface FileProcessingMeta {
+  filesProcessed: number;
+  fileNames: string[];
+  processingTime: number;
+  capabilityId?: string;
+  promptContext: string;
+}
+
 export interface ProcessPromptResult {
   plan: ExecutionPlan | null;
   initialMessage: string;
@@ -184,19 +200,77 @@ export interface ProcessPromptResult {
   capabilityInitialMessage?: string;
   researchEnrichmentMeta?: ResearchEnrichmentMeta;
   pendingEnrichment?: Promise<PendingEnrichmentResult>;
+  fileProcessingMeta?: FileProcessingMeta;
+}
+
+const sessionFileContexts: Map<string, string> = new Map();
+
+async function processFileAttachments(
+  files: FileAttachmentForOrchestrator[],
+  sessionId: string,
+): Promise<{ meta: FileProcessingMeta; debugEntries: any[] }> {
+  const { lerArquivosV2 } = await import('./capabilities/LER_ARQUIVOS/implementations/ler-arquivos-v2');
+
+  const result = await lerArquivosV2({
+    capability_id: 'ler_arquivos',
+    execution_id: `ler_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    context: {
+      files: files.map(f => ({
+        base64: f.base64,
+        name: f.name,
+        type: f.type,
+        size: f.size,
+      })),
+    },
+  });
+
+  const promptContext = result.success && result.data?.prompt_context
+    ? result.data.prompt_context
+    : '';
+
+  if (promptContext) {
+    const existing = sessionFileContexts.get(sessionId) || '';
+    sessionFileContexts.set(sessionId, existing ? `${existing}\n\n${promptContext}` : promptContext);
+  }
+
+  return {
+    meta: {
+      filesProcessed: result.data?.count || 0,
+      fileNames: result.data?.arquivos?.map((a: any) => a.original_name) || files.map(f => f.name),
+      processingTime: result.metadata.duration_ms,
+      promptContext,
+    },
+    debugEntries: result.debug_log,
+  };
+}
+
+function getSessionFileContext(sessionId: string): string {
+  return sessionFileContexts.get(sessionId) || '';
 }
 
 export async function processUserPrompt(
   userPrompt: string,
   sessionId: string,
   userId: string,
-  currentContext: WorkingMemoryItem[] = []
+  currentContext: WorkingMemoryItem[] = [],
+  files?: FileAttachmentForOrchestrator[]
 ): Promise<ProcessPromptResult> {
   console.log('🎯 [Orchestrator] Processando prompt:', userPrompt);
   console.log('📌 [Orchestrator] Session:', sessionId, 'User:', userId);
+  if (files?.length) {
+    console.log(`📎 [Orchestrator] ${files.length} arquivo(s) anexado(s):`, files.map(f => f.name));
+  }
 
   const memory = getOrCreateMemoryManager(sessionId, userId);
   sessionTimestamps.set(sessionId, Date.now());
+
+  let fileProcessingMeta: FileProcessingMeta | undefined;
+  if (files && files.length > 0) {
+    console.log('📎 [Orchestrator] Processando arquivos antes do roteamento...');
+    const { meta } = await processFileAttachments(files, sessionId);
+    fileProcessingMeta = meta;
+    console.log(`📎 [Orchestrator] ${meta.filesProcessed} arquivo(s) processado(s) em ${meta.processingTime}ms`);
+  }
 
   const routeResult = await smartRoute(userPrompt, sessionId, userId);
   console.log(`🧭 [Orchestrator] SmartRouter: ${routeResult.route} (${(routeResult.confidence * 100).toFixed(0)}%) — ${routeResult.reasoning}`);
@@ -277,6 +351,7 @@ export async function processUserPrompt(
         plan: null,
         initialMessage: relInitialMessage,
         pendingEnrichment,
+        fileProcessingMeta,
       };
     }
 
@@ -292,6 +367,7 @@ export async function processUserPrompt(
     return {
       plan: null,
       initialMessage: directResponse,
+      fileProcessingMeta,
     };
   }
 
@@ -543,9 +619,12 @@ async function handleDirectResponseWithREL(
       }).join('\n')
     : '';
 
+  const fileContext = getSessionFileContext(sessionId);
+
   const promptParts = [
     structured.userContext ? `CONTEXTO DA SESSÃO:\n${structured.userContext}` : '',
     historyBlock ? `HISTÓRICO RECENTE:\n${historyBlock}` : '',
+    fileContext ? fileContext : '',
   ];
 
   if (relResult?.enriched && relResult.formattedContext) {
@@ -1022,6 +1101,7 @@ export async function clearSession(sessionId: string): Promise<void> {
 
   executors.delete(sessionId);
   sessionTimestamps.delete(sessionId);
+  sessionFileContexts.delete(sessionId);
 
   clearContextEngineSession(sessionId);
 }

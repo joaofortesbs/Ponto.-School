@@ -30,6 +30,7 @@ import { salvarAtividadesBdV2 } from './capabilities/SALVAR_BD/implementations/s
 import { criarArquivoV2 } from './capabilities/CRIAR_ARQUIVO/criar-arquivo-v2';
 import { criarCompromissoCalendarioV2 } from './capabilities/CRIAR/criar-compromisso-calendario-v2';
 import { gerenciarCalendarioV2 } from './capabilities/CRIAR/calendario/gerenciar-calendario';
+import { lerArquivosV2 } from './capabilities/LER_ARQUIVOS/implementations/ler-arquivos-v2';
 import type { ArtifactData } from './capabilities/CRIAR_ARQUIVO/types';
 import type { CapabilityInput, CapabilityOutput } from './capabilities/shared/types';
 import { 
@@ -685,6 +686,7 @@ export class AgentExecutor {
     ['criar_arquivo', criarArquivoV2],
     ['gerenciar_calendario', gerenciarCalendarioV2],
     ['criar_compromisso_calendario', gerenciarCalendarioV2],
+    ['ler_arquivos', lerArquivosV2],
   ]);
   
   // Flag para registrar o handler global apenas uma vez

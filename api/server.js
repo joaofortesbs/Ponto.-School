@@ -19,6 +19,7 @@ import { log as orchestratorLog, LOG_PREFIXES } from './orchestrator/debugLogger
 import { createCalendarEventsRouter } from './calendar-events.js';
 import searchWebRoutes from './search-web.js';
 import aiProxyRoutes from './ai-proxy.js';
+import fileProcessorRoutes from './file-processor.js';
 
 dotenv.config();
 
@@ -121,6 +122,7 @@ app.use('/api/translate', translateRoutes);
 app.use('/api/calendar/events', createCalendarEventsRouter(neonDB));
 app.use('/api/search', searchWebRoutes);
 app.use('/api/ai', aiProxyRoutes);
+app.use('/api/files', fileProcessorRoutes);
 
 // ========================================
 // ROTAS DE IA GROQ
