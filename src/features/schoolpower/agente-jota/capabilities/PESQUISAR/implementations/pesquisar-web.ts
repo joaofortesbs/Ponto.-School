@@ -217,6 +217,193 @@ function deduplicateByUrl(results: WebResult[]): WebResult[] {
   });
 }
 
+const TRUSTED_DOMAINS = new Set([
+  'mec.gov.br', 'gov.br', 'edu.br', 'scielo.br', 'capes.gov.br',
+  'inep.gov.br', 'basenacionalcomum.mec.gov.br', 'novaescola.org.br',
+  'educacao.rs.gov.br', 'educacao.sp.gov.br', 'portal.mec.gov.br',
+  'scholar.google.com', 'core.ac.uk', 'doaj.org', 'openalex.org',
+  'pubmed.ncbi.nlm.nih.gov', 'arxiv.org', 'semanticscholar.org',
+]);
+
+function isDomainTrusted(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    for (const trusted of TRUSTED_DOMAINS) {
+      if (hostname === trusted || hostname.endsWith('.' + trusted)) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+interface CrossVerificationResult {
+  verified_claims: VerifiedClaim[];
+  consensus_score: number;
+  low_confidence_warnings: string[];
+  sources_agreement_map: Record<string, number>;
+}
+
+interface VerifiedClaim {
+  claim_key: string;
+  value: string;
+  sources_count: number;
+  sources: string[];
+  confidence: 'high' | 'medium' | 'low';
+  is_trusted_source: boolean;
+}
+
+function extractKeyClaimsFromResult(result: WebResult): Map<string, string> {
+  const claims = new Map<string, string>();
+  const text = `${result.title || ''} ${result.snippet || ''} ${(result.content_full || '').slice(0, 1500)}`.toLowerCase();
+
+  const yearPatterns = text.match(/\b(20[1-2]\d)\b/g);
+  if (yearPatterns) {
+    for (const year of yearPatterns) {
+      claims.set(`year_mention_${year}`, year);
+    }
+  }
+
+  const numberPatterns = text.match(/\b(\d+(?:\.\d+)?)\s*(%|por cento|milhões?|bilhões?|mil)\b/gi);
+  if (numberPatterns) {
+    for (const num of numberPatterns) {
+      const normalized = num.toLowerCase().trim();
+      claims.set(`stat_${normalized.replace(/\s+/g, '_').slice(0, 50)}`, normalized);
+    }
+  }
+
+  const bnccPatterns = text.match(/\b(ef\d{2}[a-z]{2}\d{2}|em\d{2}[a-z]{2}\d{2})\b/gi);
+  if (bnccPatterns) {
+    for (const code of bnccPatterns) {
+      claims.set(`bncc_${code.toUpperCase()}`, code.toUpperCase());
+    }
+  }
+
+  const namePatterns = text.match(/(?:tema|título|assunto|resultado|vencedor|campeão|aprovad[oa])\s*(?:foi|é|será|eram?|:)\s*["""]?([^""".,;\n]{5,80})["""]?/gi);
+  if (namePatterns) {
+    for (const match of namePatterns) {
+      const parts = match.split(/(?:foi|é|será|eram?|:)\s*/i);
+      if (parts.length >= 2) {
+        const key = parts[0].trim().toLowerCase().replace(/\s+/g, '_').slice(0, 40);
+        const val = parts[1].replace(/["""]/g, '').trim();
+        if (val.length > 3 && val.length < 100) {
+          claims.set(`fact_${key}`, val.toLowerCase());
+        }
+      }
+    }
+  }
+
+  return claims;
+}
+
+function crossVerifyResults(results: WebResult[]): CrossVerificationResult {
+  if (results.length === 0) {
+    return {
+      verified_claims: [],
+      consensus_score: 0,
+      low_confidence_warnings: [],
+      sources_agreement_map: {},
+    };
+  }
+
+  const allClaims = new Map<string, { value: string; sources: string[]; trusted: boolean }[]>();
+
+  for (const result of results) {
+    const claims = extractKeyClaimsFromResult(result);
+    const isTrusted = isDomainTrusted(result.url) || result.domain_tier === 'official';
+    const sourceId = result.url;
+
+    for (const [key, value] of claims) {
+      if (!allClaims.has(key)) {
+        allClaims.set(key, []);
+      }
+      allClaims.get(key)!.push({ value, sources: [sourceId], trusted: isTrusted });
+    }
+  }
+
+  const verified_claims: VerifiedClaim[] = [];
+  const low_confidence_warnings: string[] = [];
+  const sources_agreement_map: Record<string, number> = {};
+
+  for (const [claimKey, occurrences] of allClaims) {
+    const valueGroups = new Map<string, { count: number; sources: string[]; hasTrusted: boolean }>();
+
+    for (const occ of occurrences) {
+      const normalizedVal = occ.value.trim().toLowerCase();
+      if (!valueGroups.has(normalizedVal)) {
+        valueGroups.set(normalizedVal, { count: 0, sources: [], hasTrusted: false });
+      }
+      const group = valueGroups.get(normalizedVal)!;
+      group.count++;
+      group.sources.push(...occ.sources);
+      if (occ.trusted) group.hasTrusted = true;
+    }
+
+    for (const [value, group] of valueGroups) {
+      let confidence: 'high' | 'medium' | 'low';
+
+      if (group.count >= 3 || (group.count >= 2 && group.hasTrusted)) {
+        confidence = 'high';
+      } else if (group.count >= 2 || group.hasTrusted) {
+        confidence = 'medium';
+      } else {
+        confidence = 'low';
+      }
+
+      if (confidence === 'low' && claimKey.startsWith('fact_')) {
+        low_confidence_warnings.push(
+          `Dado "${value}" encontrado em apenas 1 fonte não-oficial — baixa confiança`
+        );
+      }
+
+      verified_claims.push({
+        claim_key: claimKey,
+        value,
+        sources_count: group.count,
+        sources: group.sources,
+        confidence,
+        is_trusted_source: group.hasTrusted,
+      });
+
+      sources_agreement_map[claimKey] = group.count;
+    }
+  }
+
+  const totalClaims = verified_claims.length;
+  const highConfidenceClaims = verified_claims.filter(c => c.confidence === 'high' || c.confidence === 'medium').length;
+  const consensus_score = totalClaims > 0 ? highConfidenceClaims / totalClaims : 0;
+
+  return {
+    verified_claims,
+    consensus_score,
+    low_confidence_warnings,
+    sources_agreement_map,
+  };
+}
+
+function boostTrustedSources(results: WebResult[]): WebResult[] {
+  return results.map(r => {
+    let scoreBoost = 0;
+
+    if (isDomainTrusted(r.url)) {
+      scoreBoost += 0.15;
+    }
+
+    if (r.domain_tier === 'official') {
+      scoreBoost += 0.10;
+    }
+
+    if (r.source_type === 'academic' && r.year && r.year >= 2020) {
+      scoreBoost += 0.05;
+    }
+
+    return {
+      ...r,
+      score: Math.min((r.score || 0) + scoreBoost, 1.0),
+    };
+  });
+}
+
 const MAX_PROMPT_CONTEXT_CHARS = 8000;
 
 function extractSimpleTerms(query: string): string[] {
@@ -244,7 +431,8 @@ function formatResultsForPrompt(
   query: string,
   queriesUsed: string[],
   breakdown: Record<string, unknown>,
-  rounds: number
+  rounds: number,
+  crossVerification?: CrossVerificationResult
 ): string {
   if (results.length === 0) {
     return 'Nenhum resultado encontrado para a pesquisa web educacional realizada.';
@@ -320,7 +508,7 @@ function formatResultsForPrompt(
       parts.push('---');
     });
     parts.push('');
-    parts.push('INSTRUÇÃO: Os conteúdos acima são extratos REAIS das páginas. Incorpore exemplos, atividades e metodologias reais no material gerado. Cite os autores e fontes explicitamente.');
+    parts.push('INSTRUÇÃO: Os conteúdos acima são extratos REAIS das páginas. Incorpore exemplos, atividades e metodologias reais no material gerado. Cite os autores e fontes explicitamente. Use SOMENTE dados que aparecem nestes extratos — NUNCA invente ou extrapole informações além do que as fontes dizem.');
     parts.push('');
   }
 
@@ -332,6 +520,41 @@ function formatResultsForPrompt(
   parts.push('');
   parts.push('INSTRUÇÃO OBRIGATÓRIA: Inclua uma seção "Fontes Consultadas" ao final de qualquer documento, plano de aula ou atividade gerada. Use exatamente esses URLs.');
   parts.push('══════════════════════════════════════════════════════');
+
+  if (crossVerification) {
+    parts.push('');
+    parts.push('══════════════════════════════════════════════════════');
+    parts.push('🔍 VERIFICAÇÃO CRUZADA DE DADOS (Cross-Verification)');
+    parts.push(`Score de consenso entre fontes: ${(crossVerification.consensus_score * 100).toFixed(0)}%`);
+    parts.push('══════════════════════════════════════════════════════');
+
+    if (crossVerification.low_confidence_warnings.length > 0) {
+      parts.push('');
+      parts.push('⚠️ ALERTAS DE BAIXA CONFIANÇA:');
+      for (const warning of crossVerification.low_confidence_warnings.slice(0, 5)) {
+        parts.push(`  - ${warning}`);
+      }
+    }
+
+    const highConfidence = crossVerification.verified_claims.filter(c => c.confidence === 'high');
+    if (highConfidence.length > 0) {
+      parts.push('');
+      parts.push('✅ DADOS CONFIRMADOS POR MÚLTIPLAS FONTES (use com confiança):');
+      for (const claim of highConfidence.slice(0, 8)) {
+        parts.push(`  - "${claim.value}" (${claim.sources_count} fontes${claim.is_trusted_source ? ', fonte oficial' : ''})`);
+      }
+    }
+
+    parts.push('');
+    parts.push('REGRAS ANTI-ALUCINAÇÃO OBRIGATÓRIAS:');
+    parts.push('1. NUNCA invente dados, estatísticas, datas ou nomes que NÃO aparecem nas fontes acima');
+    parts.push('2. Use SOMENTE dados confirmados por 2+ fontes OU por 1 fonte oficial (.gov.br, .edu.br)');
+    parts.push('3. Para dados encontrados em apenas 1 fonte não-oficial, diga "segundo [fonte], ..." com ressalva');
+    parts.push('4. Se NÃO encontrar confirmação suficiente, diga explicitamente: "Não encontrei confirmação suficiente nas fontes consultadas"');
+    parts.push('5. NUNCA "chute" uma resposta — prefira dizer "não tenho informação confirmada" a inventar');
+    parts.push('6. Dados marcados como "baixa confiança" NÃO devem ser apresentados como fatos — cite como "possível" ou omita');
+    parts.push('══════════════════════════════════════════════════════');
+  }
 
   const fullText = parts.join('\n');
   if (fullText.length > MAX_PROMPT_CONTEXT_CHARS) {
@@ -564,15 +787,46 @@ export async function pesquisarWebV2(
       }
     }
 
-    const finalResults = allResults.slice(0, Math.max(params.max_resultados || 10, 5));
+    const boostedResults = boostTrustedSources(allResults);
+    boostedResults.sort((a, b) => (b.score || 0) - (a.score || 0));
+    const finalResults = boostedResults.slice(0, Math.max(params.max_resultados || 10, 5));
+
+    const verification = crossVerifyResults(finalResults);
 
     const officialCount = finalResults.filter(r => r.domain_tier === 'official').length;
     const highTierCount = finalResults.filter(r => r.domain_tier === 'alta').length;
     const academicCount = finalResults.filter(r => r.source_type === 'academic').length;
+    const trustedCount = finalResults.filter(r => isDomainTrusted(r.url)).length;
     const elapsedTime = Date.now() - startTime;
 
+    if (verification.low_confidence_warnings.length > 0) {
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'warning',
+        narrative: `⚠️ CROSS-VERIFICATION: ${verification.low_confidence_warnings.length} dado(s) com baixa confiança detectado(s). Score de consenso: ${(verification.consensus_score * 100).toFixed(0)}%`,
+        technical_data: {
+          consensus_score: verification.consensus_score,
+          warnings: verification.low_confidence_warnings,
+          verified_claims_count: verification.verified_claims.length,
+          high_confidence_count: verification.verified_claims.filter(c => c.confidence === 'high').length,
+          trusted_sources_count: trustedCount,
+        },
+      });
+    } else {
+      debug_log.push({
+        timestamp: new Date().toISOString(),
+        type: 'confirmation',
+        narrative: `✅ CROSS-VERIFICATION: Consenso de ${(verification.consensus_score * 100).toFixed(0)}% entre fontes. ${verification.verified_claims.filter(c => c.confidence === 'high').length} dado(s) confirmados por múltiplas fontes.`,
+        technical_data: {
+          consensus_score: verification.consensus_score,
+          verified_claims_count: verification.verified_claims.length,
+          trusted_sources_count: trustedCount,
+        },
+      });
+    }
+
     const queriesUsedDisplay = queryPlan?.queries || searchData.queries_used || [mainQuery];
-    const promptContext = formatResultsForPrompt(finalResults, mainQuery, queriesUsedDisplay, breakdown, rounds);
+    const promptContext = formatResultsForPrompt(finalResults, mainQuery, queriesUsedDisplay, breakdown, rounds, verification);
 
     debug_log.push({
       timestamp: new Date().toISOString(),
@@ -611,16 +865,23 @@ export async function pesquisarWebV2(
         query_principal: mainQuery,
         query_extraida: cleanTheme,
         prompt_context: promptContext,
-        summary: `Pesquisa web concluída: ${finalResults.length} recursos de ${activeProviders.length} provedores${params.disciplina ? ` para ${params.disciplina}` : ''}${params.ano_serie ? ` — ${params.ano_serie}` : ''}. Fontes: ${officialCount} oficiais, ${academicCount} acadêmicos. Rodadas: ${rounds}. Conteúdo extraído: ${contentExtractedCount} fontes.`,
+        summary: `Pesquisa web concluída: ${finalResults.length} recursos de ${activeProviders.length} provedores${params.disciplina ? ` para ${params.disciplina}` : ''}${params.ano_serie ? ` — ${params.ano_serie}` : ''}. Fontes: ${officialCount} oficiais, ${academicCount} acadêmicos, ${trustedCount} confiáveis. Consenso: ${(verification.consensus_score * 100).toFixed(0)}%. Rodadas: ${rounds}. Conteúdo extraído: ${contentExtractedCount} fontes.`,
         breakdown: {
           fontes_oficiais: officialCount,
           fontes_educacionais: highTierCount,
           artigos_academicos: academicCount,
+          fontes_confiaveis: trustedCount,
           has_real_results: hasRealResults,
           active_providers: activeProviders,
           provider: searchData.provider,
           rounds,
           content_extracted_count: contentExtractedCount,
+        },
+        cross_verification: {
+          consensus_score: verification.consensus_score,
+          verified_claims_count: verification.verified_claims.length,
+          high_confidence_count: verification.verified_claims.filter(c => c.confidence === 'high').length,
+          low_confidence_warnings: verification.low_confidence_warnings,
         },
       },
       error: null,

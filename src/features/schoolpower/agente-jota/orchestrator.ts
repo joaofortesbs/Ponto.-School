@@ -170,6 +170,11 @@ export interface ResearchEnrichmentMeta {
   capabilityId?: string;
 }
 
+export interface PendingEnrichmentResult {
+  enrichedMessage: string;
+  researchMeta: ResearchEnrichmentMeta | null;
+}
+
 export interface ProcessPromptResult {
   plan: ExecutionPlan | null;
   initialMessage: string;
@@ -178,6 +183,7 @@ export interface ProcessPromptResult {
   directCapabilityMeta?: DirectCapabilityMeta;
   capabilityInitialMessage?: string;
   researchEnrichmentMeta?: ResearchEnrichmentMeta;
+  pendingEnrichment?: Promise<PendingEnrichmentResult>;
 }
 
 export async function processUserPrompt(
@@ -213,47 +219,75 @@ export async function processUserPrompt(
       fact: `Professor perguntou: "${userPrompt.substring(0, 150)}" [route: CONVERSAR]`,
       category: 'context',
     });
-    
-    const { response: directResponse, relResult } = await handleDirectResponseWithREL(userPrompt, sessionId, userId);
-    
+
+    const { detectResearchNeed } = await import('./research-enrichment-layer/need-detection');
+    const needResult = await detectResearchNeed(userPrompt);
+
+    if (needResult.needsResearch) {
+      console.log('🔬 [Orchestrator] CONVERSAR+REL: Retornando mensagem inicial imediatamente, pesquisa em background');
+
+      const searchQuery = needResult.suggestedQuery || userPrompt;
+      const tema = searchQuery.length > 50 ? searchQuery.substring(0, 47) + '...' : searchQuery;
+      const relInitialMessage = `Boa pergunta! Vou **pesquisar em fontes educacionais brasileiras** sobre **${tema}** para te dar uma resposta fundamentada.`;
+
+      const pendingEnrichment = (async (): Promise<PendingEnrichmentResult> => {
+        const { response: directResponse, relResult } = await handleDirectResponseWithREL(userPrompt, sessionId, userId);
+
+        addConversationTurn(sessionId, {
+          role: 'assistant',
+          content: directResponse,
+          timestamp: Date.now(),
+          metadata: { type: 'follow_up' },
+        });
+
+        if (relResult && relResult.enriched && relResult.searchExecuted) {
+          const { extractSearchSummary } = await import('./research-enrichment-layer/research-enrichment');
+          const summary = relResult.searchData ? extractSearchSummary(relResult.searchData) : null;
+          const sourcesFound = summary?.sourcesFound || relResult.debugInfo.sourcesFound || 0;
+          const searchQueryResult = summary?.searchQuery || relResult.debugInfo.needDetection.reasoning || userPrompt.substring(0, 80);
+          const searchDuration = relResult.debugInfo.searchDuration || 0;
+
+          addLedgerFact(sessionId, {
+            fact: `Jota pesquisou sobre "${searchQueryResult}" e encontrou ${sourcesFound} fontes. Top fonte: ${summary?.topSourceTitle || 'N/A'}`,
+            category: 'research' as any,
+          });
+
+          return {
+            enrichedMessage: directResponse,
+            researchMeta: {
+              searchExecuted: true,
+              sourcesFound,
+              searchQuery: searchQueryResult,
+              searchDuration,
+              capability: 'pesquisar_web',
+              displayName: `Pesquisei ${sourcesFound} fontes educacionais`,
+              status: 'concluido',
+              capabilityId: relResult.capabilityId,
+            },
+          };
+        }
+
+        return {
+          enrichedMessage: directResponse,
+          researchMeta: null,
+        };
+      })();
+
+      return {
+        plan: null,
+        initialMessage: relInitialMessage,
+        pendingEnrichment,
+      };
+    }
+
+    const { response: directResponse } = await handleDirectResponseWithREL(userPrompt, sessionId, userId);
+
     addConversationTurn(sessionId, {
       role: 'assistant',
       content: directResponse,
       timestamp: Date.now(),
       metadata: { type: 'follow_up' },
     });
-
-    if (relResult && relResult.enriched && relResult.searchExecuted) {
-      const { extractSearchSummary } = await import('./research-enrichment-layer/research-enrichment');
-      const summary = relResult.searchData ? extractSearchSummary(relResult.searchData) : null;
-      const sourcesFound = summary?.sourcesFound || relResult.debugInfo.sourcesFound || 0;
-      const searchQuery = summary?.searchQuery || relResult.debugInfo.needDetection.reasoning || userPrompt.substring(0, 80);
-      const searchDuration = relResult.debugInfo.searchDuration || 0;
-
-      addLedgerFact(sessionId, {
-        fact: `Jota pesquisou sobre "${searchQuery}" e encontrou ${sourcesFound} fontes. Top fonte: ${summary?.topSourceTitle || 'N/A'}`,
-        category: 'research' as any,
-      });
-
-      const tema = searchQuery.length > 50 ? searchQuery.substring(0, 47) + '...' : searchQuery;
-      const relInitialMessage = `Boa pergunta! Vou **pesquisar em fontes educacionais brasileiras** sobre **${tema}** para te dar uma resposta fundamentada.`;
-
-      return {
-        plan: null,
-        initialMessage: relInitialMessage,
-        enrichedFinalMessage: directResponse,
-        researchEnrichmentMeta: {
-          searchExecuted: true,
-          sourcesFound,
-          searchQuery,
-          searchDuration,
-          capability: 'pesquisar_web',
-          displayName: `Pesquisei ${sourcesFound} fontes educacionais`,
-          status: 'concluido',
-          capabilityId: relResult.capabilityId,
-        },
-      };
-    }
 
     return {
       plan: null,

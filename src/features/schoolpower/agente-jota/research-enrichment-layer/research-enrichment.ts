@@ -170,6 +170,24 @@ export async function executeResearchEnrichment(
     const summary = extractSearchSummary(searchOutput);
     const formattedContext = formatResearchContextForConversation(searchOutput, searchQuery);
 
+    const crossVerification = searchOutput.data?.cross_verification;
+    if (crossVerification) {
+      const cvNarrative = crossVerification.low_confidence_warnings?.length > 0
+        ? `⚠️ Verificação cruzada: ${crossVerification.low_confidence_warnings.length} dado(s) com baixa confiança. Consenso: ${(crossVerification.consensus_score * 100).toFixed(0)}%. Dados confirmados: ${crossVerification.high_confidence_count || 0}.`
+        : `✅ Verificação cruzada OK: consenso de ${(crossVerification.consensus_score * 100).toFixed(0)}% entre fontes. ${crossVerification.high_confidence_count || 0} dado(s) confirmados por múltiplas fontes.`;
+
+      createDebugEntry(capId, capDisplayName,
+        crossVerification.low_confidence_warnings?.length > 0 ? 'warning' : 'confirmation',
+        cvNarrative, 'low', {
+          consensus_score: crossVerification.consensus_score,
+          verified_claims_count: crossVerification.verified_claims_count,
+          high_confidence_count: crossVerification.high_confidence_count,
+          warnings: crossVerification.low_confidence_warnings,
+        }
+      );
+      console.log(`🔬 [REL] ${cvNarrative}`);
+    }
+
     const narrativeSummary = formatPesquisarWebNarrative(searchOutput, searchQuery);
     createDebugEntry(capId, capDisplayName, 'discovery', narrativeSummary, 'low', {
       count: summary.sourcesFound,

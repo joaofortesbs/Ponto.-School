@@ -32,17 +32,33 @@ export function formatResearchContextForConversation(
 
   const tema = data.query_principal || originalQuery;
 
+  const crossVerification = data.cross_verification;
+  const consensusScore = crossVerification?.consensus_score ?? null;
+  const lowConfidenceWarnings: string[] = crossVerification?.low_confidence_warnings || [];
+
   const parts: string[] = [
     '## FONTES EDUCACIONAIS PESQUISADAS PELO JOTA',
     `O Jota pesquisou ${sourcesCount} fontes educacionais brasileiras sobre "${tema}".`,
+    consensusScore !== null ? `Score de consenso entre fontes: ${(consensusScore * 100).toFixed(0)}%` : '',
     '',
-    '⚠️ REGRAS:',
-    '1. Use APENAS informações das fontes abaixo para responder — NÃO invente dados',
-    '2. Cite as fontes quando usar informações específicas (ex: "Segundo o MEC...", "De acordo com a Nova Escola...")',
-    '3. Se nenhuma fonte responde à pergunta, diga honestamente o que encontrou e o que não',
-    '4. Inclua ao final uma seção "Fontes consultadas" com nomes e URLs das fontes usadas',
+    '⚠️ REGRAS ANTI-ALUCINAÇÃO (OBRIGATÓRIAS):',
+    '1. Use APENAS informações que aparecem EXPLICITAMENTE nas fontes abaixo — NUNCA invente, extrapole ou "chute" dados',
+    '2. Para FATOS ESPECÍFICOS (datas, nomes, números, resultados): use SOMENTE se confirmado por 2+ fontes OU por 1 fonte oficial (.gov.br, .edu.br)',
+    '3. Para dados de apenas 1 fonte não-oficial: diga "segundo [nome da fonte], ..." com ressalva explícita',
+    '4. Se NENHUMA fonte responde à pergunta com dados confirmados, diga: "Não encontrei confirmação suficiente nas fontes consultadas sobre [tema]. Recomendo verificar em [sugestão]."',
+    '5. NUNCA apresente informações não-confirmadas como se fossem fatos — prefira omitir a inventar',
+    '6. Cite as fontes quando usar informações específicas (ex: "Segundo o MEC...", "De acordo com a Nova Escola...")',
+    '7. Inclua ao final uma seção "Fontes consultadas" com nomes e URLs das fontes REALMENTE usadas na resposta',
     '',
   ];
+
+  if (lowConfidenceWarnings.length > 0) {
+    parts.push('⚠️ DADOS COM BAIXA CONFIANÇA (NÃO use como fatos confirmados):');
+    for (const warning of lowConfidenceWarnings.slice(0, 5)) {
+      parts.push(`  - ${warning}`);
+    }
+    parts.push('');
+  }
 
   const sorted = [...results].sort((a, b) => (b.score || 0) - (a.score || 0));
 

@@ -16,7 +16,7 @@ import { ActivityViewModal } from '../construction/ActivityViewModal';
 import { ContextModal } from './ContextModal';
 import { useChatState } from './state/chatState';
 import { processUserPrompt, executeAgentPlan } from '../agente-jota/orchestrator';
-import type { ExecuteAgentPlanResult, DirectCapabilityMeta, ResearchEnrichmentMeta } from '../agente-jota/orchestrator';
+import type { ExecuteAgentPlanResult, DirectCapabilityMeta, ResearchEnrichmentMeta, PendingEnrichmentResult } from '../agente-jota/orchestrator';
 import { generateSessionId } from '../agente-jota/memory-manager';
 import type { ArtifactData } from '../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 import { parseStructuredResponse } from './utils/structured-response-parser';
@@ -109,6 +109,7 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
   const hasProcessedInitialMessageRef = useRef(false);
   const isMountedRef = useRef(true);
   const autoExecTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingEnrichmentRef = useRef<Promise<PendingEnrichmentResult> | null>(null);
 
   const { 
     messages,
@@ -456,6 +457,12 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
   const handleUserPrompt = async (userInput: string) => {
     if (!userInput.trim()) return;
 
+    if (pendingEnrichmentRef.current) {
+      console.log('⏳ [ChatLayout] Aguardando enriquecimento pendente antes de processar novo prompt...');
+      try { await pendingEnrichmentRef.current; } catch {}
+      pendingEnrichmentRef.current = null;
+    }
+
     console.log('📨 [ChatLayout] Processando prompt do usuário:', userInput);
 
     addTextMessage('user', userInput);
@@ -463,7 +470,7 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
     setLoading(true);
 
     try {
-      const { plan, initialMessage: aiMessage, directCapabilityMeta, capabilityInitialMessage, researchEnrichmentMeta, enrichedFinalMessage } = await processUserPrompt(
+      const { plan, initialMessage: aiMessage, directCapabilityMeta, capabilityInitialMessage, researchEnrichmentMeta, enrichedFinalMessage, pendingEnrichment } = await processUserPrompt(
         userInput,
         sessionId,
         userId,
@@ -471,6 +478,76 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
       );
 
       setLoading(false);
+
+      if (pendingEnrichment) {
+        addTextMessage('assistant', aiMessage);
+
+        const placeholderCapId = `rel-search-pending-${Date.now()}`;
+        addDevModeCard({
+          plano: { objetivo: 'Pesquisa Educacional', etapas: [] },
+          status: 'executando' as const,
+          etapaAtual: 0,
+          etapas: [{
+            ordem: 0,
+            titulo: 'Pesquisar Fontes Educacionais',
+            descricao: 'Pesquisando fontes educacionais...',
+            status: 'executando',
+            capabilities: [{
+              id: placeholderCapId,
+              nome: 'pesquisar_web',
+              displayName: 'Pesquisando fontes educacionais...',
+              status: 'executando' as const,
+            }],
+          }],
+        });
+
+        setIsLoading(false);
+        pendingEnrichmentRef.current = pendingEnrichment;
+        console.log('⚡ [ChatLayout] CONVERSAR+REL: Mensagem inicial e card exibidos instantaneamente, aguardando enriquecimento...');
+
+        try {
+          const enrichmentResult = await pendingEnrichment;
+          const currentDevCardId = useChatState.getState().activeDevModeCardId;
+
+          if (enrichmentResult.researchMeta) {
+            const meta = enrichmentResult.researchMeta;
+            if (currentDevCardId) {
+              useChatState.getState().updateCardData(currentDevCardId, {
+                status: 'concluido' as const,
+                etapas: [{
+                  ordem: 0,
+                  titulo: 'Pesquisar Fontes Educacionais',
+                  descricao: meta.displayName,
+                  status: 'concluido' as const,
+                  capabilities: [{
+                    id: meta.capabilityId || placeholderCapId,
+                    nome: 'pesquisar_web',
+                    displayName: meta.displayName,
+                    status: 'concluido' as const,
+                  }],
+                }],
+              });
+            }
+            addTextMessage('assistant', enrichmentResult.enrichedMessage);
+            console.log(`🔬 [ChatLayout] REL concluído: ${meta.sourcesFound} fontes em ${meta.searchDuration}ms`);
+          } else {
+            addTextMessage('assistant', enrichmentResult.enrichedMessage);
+            if (currentDevCardId) {
+              useChatState.getState().updateCardData(currentDevCardId, { status: 'concluido' as const });
+            }
+          }
+          pendingEnrichmentRef.current = null;
+        } catch (enrichError) {
+          console.error('❌ [ChatLayout] Erro no enriquecimento pendente:', enrichError);
+          pendingEnrichmentRef.current = null;
+          const currentDevCardId = useChatState.getState().activeDevModeCardId;
+          if (currentDevCardId) {
+            useChatState.getState().updateCardData(currentDevCardId, { status: 'erro' as const });
+          }
+          addTextMessage('assistant', 'Desculpe, não consegui completar a pesquisa. Pode tentar novamente?');
+        }
+        return;
+      }
 
       if (researchEnrichmentMeta && researchEnrichmentMeta.searchExecuted && !directCapabilityMeta) {
         addTextMessage('assistant', aiMessage);
