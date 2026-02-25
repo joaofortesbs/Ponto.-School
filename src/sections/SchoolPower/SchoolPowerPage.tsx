@@ -15,6 +15,7 @@ import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerF
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 import { HistoricoAtividadesCriadas } from "../../features/schoolpower/construction/HistoricoAtividadesCriadas";
 import { ChatLayout } from "../../features/schoolpower/interface-chat-producao/ChatLayout";
+import type { FileAttachment } from "../../features/schoolpower/interface-chat-producao/chat-input-jota/ChatInputJota";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { useProfile } from "../../contexts/ProfileContext";
 import { 
@@ -53,6 +54,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const isMobile = useIsMobile();
   const { profile } = useProfile();
   const pendingMessageProcessed = useRef(false);
+  const initialFilesRef = useRef<FileAttachment[]>([]);
 
   const {
     flowState,
@@ -93,6 +95,21 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const handleSendMessage = async (message: string, files?: any[]) => {
     console.log('📨 Mensagem recebida:', message);
     console.log('📎 Arquivos recebidos:', files?.length || 0);
+
+    if (files && files.length > 0) {
+      initialFilesRef.current = files.map((f: any): FileAttachment => ({
+        id: f.id || `file-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        file: f.file,
+        name: f.file?.name || f.name || 'arquivo',
+        size: f.file?.size ?? f.size ?? 0,
+        type: f.file?.type || f.type || 'application/octet-stream',
+        preview: f.preview,
+        status: 'done',
+        progress: 100,
+      }));
+    } else {
+      initialFilesRef.current = [];
+    }
 
     if (message.trim()) {
       handleSendInitialMessage(message);
@@ -273,6 +290,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
             initialMessage={flowData.initialMessage}
             userId={profile?.id}
             onBack={handleBack}
+            initialFiles={initialFilesRef.current.length > 0 ? initialFilesRef.current : undefined}
           />
         </motion.div>
       )}

@@ -65,6 +65,7 @@ interface ChatLayoutProps {
   initialMessage: string;
   userId?: string;
   onBack: () => void;
+  initialFiles?: FileAttachment[];
 }
 
 const CHAT_CONFIG = {
@@ -91,7 +92,7 @@ function resolveUserId(propUserId?: string): string {
   return propUserId || 'user-default';
 }
 
-export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatLayoutProps) {
+export function ChatLayout({ initialMessage, userId: propUserId, onBack, initialFiles }: ChatLayoutProps) {
   const userId = resolveUserId(propUserId);
   const [executionPlan, setExecutionPlan] = useState<ExecutionPlan | null>(null);
   const [workingMemory, setWorkingMemory] = useState<WorkingMemoryItem[]>([]);
@@ -111,6 +112,7 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
   const isMountedRef = useRef(true);
   const autoExecTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingEnrichmentRef = useRef<Promise<PendingEnrichmentResult> | null>(null);
+  const initialFilesRef = useRef<FileAttachment[] | undefined>(initialFiles);
   const { 
     messages,
     addTextMessage, 
@@ -438,9 +440,14 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
     
     if (initialMessage && !initialMessageProcessed) {
       console.log('📨 [ChatLayout] Processando mensagem inicial (primeira vez):', initialMessage);
+      if (initialFilesRef.current?.length) {
+        console.log(`📎 [ChatLayout] ${initialFilesRef.current.length} arquivo(s) inicial(is) detectado(s)`);
+      }
       hasProcessedInitialMessageRef.current = true;
       setLastProcessedInitialMessage(initialMessage);
-      handleUserPrompt(initialMessage);
+      const filesToSend = initialFilesRef.current;
+      initialFilesRef.current = undefined;
+      handleUserPrompt(initialMessage, filesToSend);
     } else if (initialMessageProcessed) {
       console.log('🔄 [ChatLayout] Sessão restaurada - NÃO reenviando mensagem inicial');
       hasProcessedInitialMessageRef.current = true;
