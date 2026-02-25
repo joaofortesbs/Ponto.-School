@@ -1,0 +1,51 @@
+Certo, agora vamos tirar o foco da capacidade de "pesquisar_web", e vamos focar em uma nova capacidade!
+
+Agora o seu principal objetivo é chegar em uma conclusão precisa de qual é a melhor opção para a Ponto. School configurar o chat Jota, para conseguir ler imagens e arquivos de diversos formatos.
+
+As opções que a gente tem até agora que eu pensei foram:
+
+1. Fazer que a própria LLM no back-end assim que o usuário envia as imagens e arquivos consiga ler eles e já responder o usuário com o contexto dos arquivos.
+
+2. Adicionar uma nova capacidade chamada "ler_arquivos", essa capacidade consegue ler e interpretar arquivos completos e imagens usando LLMs/APIs especificas, e ela é chamada todas as vezes que o usuário enviar um documento ou imagem para dentro do chat Jota, de maneira automatica! Podemos adicionar uma configuração que para a IA não esquecer do contexto, essa capacidade transforma a leitura dessa imagem em um documento transcrito completo e detalhado que durante todo o fluxo o Jota tem acesso a ele, para lembrar dos arquivos ou imagens caso precise durante o processo!
+
+Talvez exista outras opções que podemos implementar para que o Jota fique mais inteligente ainda e consiga finalmente ler arquivos e imagens e interpretalos perfeitamente, para isso eu preciso que você faça diversas pesquisas em diversas plataformas de IA e IA Agents e entre nossos concorrentes para entender perfeitamente como eles fazem esse sistema de leitura e interpretação, e como podemos implementar de uma maneira muito mais completa, sofisticada, avançada e moderna, superando de maneira imcomparavel nossos concorrentes e qualquer outro tipo de plataforma envolvendo IA!!!!!!!
+
+Analise plataformas de IA e IA Agents como por exemplo (Busque e pesquise mais que essas, você precisa de muitos exemplos e contexto):
+
+- ChatGPT PRO/ envolvidos 
+- Grok
+- Claude MAX/ envolvidos 
+- Perplexity MAX/ envolvidos
+- Manus IA 1.6 Max
+- Genspark IA
+- Kimi Agent e Swarm / envolvidos
+- Replit Agent V3
+- Mistral
+- Gemini
+- Devin AI (Cognition)
+- Cursor Composer
+- Copilot Workspace
+- DeepSeek V3
+- Vellum Agent Builder
+- Retool AI
+- Qwen IA (Chinesa)
+
+Concorrentes:
+    - Teachy - [teachy.com.br](http://teachy.com.br)
+    - Risely - https://risely.ai/
+    - Youlearn - https://www.youlearn.ai/
+    - Straia - https://www.straia.io/
+    - Alice - https://www.alice.tech/
+    - Eduaide - https://www.eduaide.ai/
+    - Ensinei - https://ensinei.com.br/
+    - Magic School - [app.magicschool.ai](http://app.magicschool.ai/)
+    - Kira - https://www.kira-learning.com/
+    - Brisk Teaching - https://www.briskteaching.com/pt-br
+    - Edcafe AI - https://www.edcafe.ai/
+    - Monsha - https://monsha.ai/
+    - Brisk Teachig - [app.briskteaching.com](http://app.briskteaching.com/)
+    - To - Teach - https://to-teach.ai/
+    - Eduaide - https://www.eduaide.ai/
+    - TPT - https://www.teacherspayteachers.com/
+    - Kajabi - https://kajabi.com/
+    - Teachable - https://www.teachable.com/
