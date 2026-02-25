@@ -38,7 +38,6 @@ import { ChatInputJota } from './chat-input-jota';
 import type { FileAttachment } from './chat-input-jota/ChatInputJota';
 import { CardSuperiorSuasCriacoes } from './card-superior-suas-criacoes-input';
 import { ProgressBadge } from './components/ProgressBadge';
-import { FileProcessingCard } from './components/FileProcessingCard';
 
 const EXECUTION_LOCK_KEY = 'agente-jota-execution-lock';
 
@@ -112,13 +111,6 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
   const isMountedRef = useRef(true);
   const autoExecTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingEnrichmentRef = useRef<Promise<PendingEnrichmentResult> | null>(null);
-  const [fileProcessingStatus, setFileProcessingStatus] = useState<{
-    active: boolean;
-    fileNames: string[];
-    status: 'processing' | 'complete' | 'error';
-    processedCount: number;
-  }>({ active: false, fileNames: [], status: 'processing', processedCount: 0 });
-
   const { 
     messages,
     addTextMessage, 
@@ -128,6 +120,8 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
     addStructuredResponse,
     setExecuting,
     setLoading,
+    setFileProcessingStatus,
+    setFileDebugEntries,
     clearMessages,
     activeDevModeCardId,
     startExecution,
@@ -496,7 +490,13 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
       console.log(`📎 [ChatLayout] ${files.length} arquivo(s) anexado(s)`);
     }
 
-    addTextMessage('user', effectiveInput);
+    const messageAttachments = files?.map(f => ({
+      name: f.name,
+      type: f.type,
+      size: f.size,
+      preview: f.preview,
+    }));
+    addTextMessage('user', effectiveInput, messageAttachments);
     setIsLoading(true);
     setLoading(true);
 
@@ -508,11 +508,12 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
         status: 'processing',
         processedCount: 0,
       });
+      setFileDebugEntries([]);
       orchestratorFiles = await convertFilesToOrchestrator(files);
     }
 
     try {
-      const { plan, initialMessage: aiMessage, directCapabilityMeta, capabilityInitialMessage, researchEnrichmentMeta, enrichedFinalMessage, pendingEnrichment, fileProcessingMeta } = await processUserPrompt(
+      const { plan, initialMessage: aiMessage, directCapabilityMeta, capabilityInitialMessage, researchEnrichmentMeta, enrichedFinalMessage, pendingEnrichment, fileProcessingMeta, fileDebugEntries: debugEntries } = await processUserPrompt(
         effectiveInput,
         sessionId,
         userId,
@@ -522,16 +523,26 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
 
       setLoading(false);
 
+      if (debugEntries && debugEntries.length > 0) {
+        setFileDebugEntries(debugEntries);
+      }
+
       if (fileProcessingMeta && fileProcessingMeta.filesProcessed > 0) {
-        setFileProcessingStatus(prev => ({
-          ...prev,
+        setFileProcessingStatus({
+          active: true,
+          fileNames: fileProcessingMeta.fileNames,
           status: 'complete',
           processedCount: fileProcessingMeta.filesProcessed,
-        }));
-        setTimeout(() => setFileProcessingStatus(prev => ({ ...prev, active: false })), 4000);
+        });
+        setTimeout(() => setFileProcessingStatus({ active: false, fileNames: [], status: 'processing', processedCount: 0 }), 4000);
       } else if (orchestratorFiles && orchestratorFiles.length > 0) {
-        setFileProcessingStatus(prev => ({ ...prev, status: 'error' }));
-        setTimeout(() => setFileProcessingStatus(prev => ({ ...prev, active: false })), 4000);
+        setFileProcessingStatus({
+          active: true,
+          fileNames: orchestratorFiles.map(f => f.name),
+          status: 'error',
+          processedCount: 0,
+        });
+        setTimeout(() => setFileProcessingStatus({ active: false, fileNames: [], status: 'processing', processedCount: 0 }), 4000);
       }
 
       if (pendingEnrichment) {
@@ -1032,15 +1043,6 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack }: ChatL
       <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-64 relative">
         <div className="max-w-[1200px] mx-auto w-full">
           <MessageStream onApplyPlan={handleExecutePlan} onOpenArtifact={handleOpenArtifact} onOpenActivity={handleOpenActivity} />
-          <AnimatePresence>
-            {fileProcessingStatus.active && (
-              <FileProcessingCard
-                fileNames={fileProcessingStatus.fileNames}
-                status={fileProcessingStatus.status}
-                processedCount={fileProcessingStatus.processedCount}
-              />
-            )}
-          </AnimatePresence>
         </div>
         <div ref={messagesEndRef} />
       </div>

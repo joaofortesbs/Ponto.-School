@@ -1,9 +1,17 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Message, DevModeCardData, PlanCardData, CapabilityState } from '../types/message-types';
+import type { Message, MessageAttachment, DevModeCardData, PlanCardData, CapabilityState } from '../types/message-types';
+import type { AIDebugEntry } from '../debug-system/types';
 
 function generateId(): string {
   return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+export interface FileProcessingStatus {
+  active: boolean;
+  fileNames: string[];
+  status: 'processing' | 'complete' | 'error';
+  processedCount: number;
 }
 
 interface ChatState {
@@ -17,11 +25,13 @@ interface ChatState {
   initialMessageProcessed: boolean;
   lastProcessedInitialMessage: string | null;
   _hasHydrated: boolean;
+  fileProcessingStatus: FileProcessingStatus;
+  fileDebugEntries: AIDebugEntry[];
 
   setHasHydrated: (state: boolean) => void;
   setLastProcessedInitialMessage: (message: string) => void;
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
-  addTextMessage: (role: 'user' | 'assistant', content: string) => void;
+  addTextMessage: (role: 'user' | 'assistant', content: string, attachments?: MessageAttachment[]) => void;
   addPlanCard: (planData: PlanCardData) => void;
   addDevModeCard: (devModeData: DevModeCardData) => void;
   startExecution: () => boolean;
@@ -35,6 +45,8 @@ interface ChatState {
   addEtapaToCard: (cardId: string, etapa: { titulo: string; descricao: string; status: 'pendente' | 'executando' | 'concluido'; capabilities: CapabilityState[] }) => void;
   setExecuting: (isExecuting: boolean) => void;
   setLoading: (isLoading: boolean) => void;
+  setFileProcessingStatus: (status: FileProcessingStatus) => void;
+  setFileDebugEntries: (entries: AIDebugEntry[]) => void;
   clearMessages: () => void;
   setSessionId: (sessionId: string) => void;
   setInitialMessageProcessed: (processed: boolean) => void;
@@ -57,6 +69,8 @@ export const useChatState = create<ChatState>()(
   initialMessageProcessed: false,
   lastProcessedInitialMessage: null,
   _hasHydrated: false,
+  fileProcessingStatus: { active: false, fileNames: [], status: 'processing' as const, processedCount: 0 },
+  fileDebugEntries: [],
 
   setHasHydrated: (state) => {
     set({ _hasHydrated: state });
@@ -78,13 +92,14 @@ export const useChatState = create<ChatState>()(
     }));
   },
 
-  addTextMessage: (role, content) => {
+  addTextMessage: (role, content, attachments) => {
     const newMessage: Message = {
       id: generateId(),
       type: role === 'user' ? 'user' : 'assistant',
       role,
       content,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      ...(attachments && attachments.length > 0 ? { attachments } : {}),
     };
 
     set((state) => ({
@@ -418,6 +433,14 @@ export const useChatState = create<ChatState>()(
     set({ isLoading });
   },
 
+  setFileProcessingStatus: (status) => {
+    set({ fileProcessingStatus: status });
+  },
+
+  setFileDebugEntries: (entries) => {
+    set({ fileDebugEntries: entries });
+  },
+
   clearMessages: () => {
     set({
       messages: [],
@@ -427,7 +450,9 @@ export const useChatState = create<ChatState>()(
       executionStarted: false,
       sessionId: null,
       initialMessageProcessed: false,
-      lastProcessedInitialMessage: null
+      lastProcessedInitialMessage: null,
+      fileProcessingStatus: { active: false, fileNames: [], status: 'processing' as const, processedCount: 0 },
+      fileDebugEntries: [],
     });
   },
 

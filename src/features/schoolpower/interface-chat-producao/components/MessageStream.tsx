@@ -8,6 +8,7 @@ import { DeveloperModeCard } from './DeveloperModeCard';
 import { ActivityConstructionCard } from './ActivityConstructionCard';
 import { ArtifactCard } from './ArtifactCard';
 import { StructuredResponseMessage } from './StructuredResponseMessage';
+import { FileProcessingCard } from './FileProcessingCard';
 import type { ArtifactData } from '../../agente-jota/capabilities/CRIAR_ARQUIVO/types';
 import type { ActivitySummaryUI } from '../types/message-types';
 
@@ -20,13 +21,15 @@ interface MessageStreamProps {
 export function MessageStream({ onApplyPlan, onOpenArtifact, onOpenActivity }: MessageStreamProps) {
   const messages = useChatState((state) => state.messages);
   const isLoading = useChatState((state) => state.isLoading);
+  const fileProcessingStatus = useChatState((state) => state.fileProcessingStatus);
+  const fileDebugEntries = useChatState((state) => state.fileDebugEntries);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, fileProcessingStatus]);
 
   useEffect(() => {
     const devModeCards = messages.filter(m => m.type === 'dev_mode_card');
@@ -35,6 +38,10 @@ export function MessageStream({ onApplyPlan, onOpenArtifact, onOpenActivity }: M
     console.log('📊 [MessageStream] DevModeCards:', devModeCards.length, devModeCards.map(c => c.id));
     console.log('📊 [MessageStream] PlanCards:', planCards.length, planCards.map(c => c.id));
   }, [messages]);
+
+  const showFileProcessing = isLoading && fileProcessingStatus.active && fileProcessingStatus.status === 'processing';
+  const showFileComplete = fileProcessingStatus.active && fileProcessingStatus.status === 'complete';
+  const showThinking = isLoading && !showFileProcessing;
 
   return (
     <div 
@@ -53,7 +60,7 @@ export function MessageStream({ onApplyPlan, onOpenArtifact, onOpenActivity }: M
             className="w-full flex flex-col"
           >
             {message.type === 'user' && (
-              <UserMessage content={message.content} />
+              <UserMessage content={message.content} attachments={message.attachments} />
             )}
 
             {message.type === 'assistant' && (
@@ -100,8 +107,44 @@ export function MessageStream({ onApplyPlan, onOpenArtifact, onOpenActivity }: M
             )}
           </motion.div>
         ))}
+
+        {showFileProcessing && (
+          <motion.div
+            key="file-processing-indicator"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="w-full flex flex-col"
+          >
+            <FileProcessingCard
+              fileNames={fileProcessingStatus.fileNames}
+              status="processing"
+              processedCount={fileProcessingStatus.processedCount}
+              debugEntries={fileDebugEntries}
+            />
+          </motion.div>
+        )}
+
+        {showFileComplete && (
+          <motion.div
+            key="file-complete-indicator"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="w-full flex flex-col"
+          >
+            <FileProcessingCard
+              fileNames={fileProcessingStatus.fileNames}
+              status="complete"
+              processedCount={fileProcessingStatus.processedCount}
+              debugEntries={fileDebugEntries}
+            />
+          </motion.div>
+        )}
         
-        {isLoading && (
+        {showThinking && (
           <motion.div
             key="thinking-indicator"
             initial={{ opacity: 0, y: 20 }}

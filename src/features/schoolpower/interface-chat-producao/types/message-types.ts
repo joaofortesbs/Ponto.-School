@@ -9,12 +9,20 @@ export type MessageType =
   | 'structured_response'
   | 'system';
 
+export interface MessageAttachment {
+  name: string;
+  type: string;
+  size: number;
+  preview?: string;
+}
+
 export interface Message {
   id: string;
   type: MessageType;
   role: 'user' | 'assistant' | 'system';
   content: string | any;
   timestamp: number;
+  attachments?: MessageAttachment[];
   metadata?: {
     cardType?: 'plan' | 'dev_mode' | 'construction' | 'content_generation' | 'artifact' | 'structured_response';
     cardData?: any;

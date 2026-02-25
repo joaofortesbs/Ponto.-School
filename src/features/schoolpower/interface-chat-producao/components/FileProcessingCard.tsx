@@ -1,14 +1,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FileText, CheckCircle, Loader2, Paperclip } from 'lucide-react';
+import { DebugIcon } from '../debug-system/DebugIcon';
+import type { AIDebugEntry } from '../debug-system/types';
 
 interface FileProcessingCardProps {
   fileNames: string[];
   status: 'processing' | 'complete' | 'error';
   processedCount?: number;
+  debugEntries?: AIDebugEntry[];
 }
 
-export function FileProcessingCard({ fileNames, status, processedCount }: FileProcessingCardProps) {
+export function FileProcessingCard({ fileNames, status, processedCount, debugEntries }: FileProcessingCardProps) {
   const totalFiles = fileNames.length;
   const processed = processedCount ?? (status === 'complete' ? totalFiles : 0);
   const progress = totalFiles > 0 ? (processed / totalFiles) * 100 : 0;
@@ -20,7 +23,17 @@ export function FileProcessingCard({ fileNames, status, processedCount }: FilePr
       transition={{ duration: 0.3 }}
       className="w-full max-w-md mx-auto my-2"
     >
-      <div className="rounded-xl border border-white/10 bg-[#1a1a2e]/80 backdrop-blur-sm overflow-hidden">
+      <div className="relative rounded-xl border border-white/10 bg-[#1a1a2e]/80 backdrop-blur-sm overflow-hidden">
+        {debugEntries && debugEntries.length > 0 && (
+          <div className="absolute top-2 right-2 z-10">
+            <DebugIcon
+              capabilityId="ler_arquivos"
+              capabilityName="Leitura de Arquivos"
+              entries={debugEntries}
+            />
+          </div>
+        )}
+
         <div className="px-4 py-3 flex items-center gap-2 text-sm text-gray-400">
           <span className="relative flex h-2 w-2">
             {status === 'processing' && (

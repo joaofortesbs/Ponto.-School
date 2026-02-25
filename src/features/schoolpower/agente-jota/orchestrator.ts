@@ -18,6 +18,7 @@ import { createExecutionPlan, generatePlanMessage } from './planner';
 import { AgentExecutor } from './executor';
 import { MemoryManager, createMemoryManager } from './memory-manager';
 import type { ExecutionPlan, WorkingMemoryItem, ProgressUpdate } from '../interface-chat-producao/types';
+import type { AIDebugEntry } from '../interface-chat-producao/debug-system/types';
 import { 
   generateInitialResponse,
   generateFinalResponse,
@@ -201,6 +202,7 @@ export interface ProcessPromptResult {
   researchEnrichmentMeta?: ResearchEnrichmentMeta;
   pendingEnrichment?: Promise<PendingEnrichmentResult>;
   fileProcessingMeta?: FileProcessingMeta;
+  fileDebugEntries?: AIDebugEntry[];
 }
 
 const sessionFileContexts: Map<string, string> = new Map();
@@ -208,7 +210,7 @@ const sessionFileContexts: Map<string, string> = new Map();
 async function processFileAttachments(
   files: FileAttachmentForOrchestrator[],
   sessionId: string,
-): Promise<{ meta: FileProcessingMeta; debugEntries: any[] }> {
+): Promise<{ meta: FileProcessingMeta; debugEntries: AIDebugEntry[] }> {
   const { lerArquivosV2 } = await import('./capabilities/LER_ARQUIVOS/implementations/ler-arquivos-v2');
 
   const result = await lerArquivosV2({
@@ -265,10 +267,12 @@ export async function processUserPrompt(
   sessionTimestamps.set(sessionId, Date.now());
 
   let fileProcessingMeta: FileProcessingMeta | undefined;
+  let fileDebugEntries: AIDebugEntry[] | undefined;
   if (files && files.length > 0) {
     console.log('📎 [Orchestrator] Processando arquivos antes do roteamento...');
-    const { meta } = await processFileAttachments(files, sessionId);
+    const { meta, debugEntries } = await processFileAttachments(files, sessionId);
     fileProcessingMeta = meta;
+    fileDebugEntries = debugEntries;
     console.log(`📎 [Orchestrator] ${meta.filesProcessed} arquivo(s) processado(s) em ${meta.processingTime}ms`);
   }
 
@@ -352,6 +356,7 @@ export async function processUserPrompt(
         initialMessage: relInitialMessage,
         pendingEnrichment,
         fileProcessingMeta,
+        fileDebugEntries,
       };
     }
 
@@ -368,6 +373,7 @@ export async function processUserPrompt(
       plan: null,
       initialMessage: directResponse,
       fileProcessingMeta,
+      fileDebugEntries,
     };
   }
 
@@ -450,6 +456,8 @@ export async function processUserPrompt(
         directCapabilityMeta: directResult.meta,
         capabilityInitialMessage: capInitialMessage,
         researchEnrichmentMeta: relMetaForCapDireta,
+        fileProcessingMeta,
+        fileDebugEntries,
       };
     } catch (capError) {
       console.error(`❌ [Orchestrator] Erro na capability direta ${routeResult.capability}:`, capError);
