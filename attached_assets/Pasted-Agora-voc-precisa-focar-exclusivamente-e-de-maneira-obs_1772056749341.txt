@@ -1,0 +1,14 @@
+Agora você precisa focar exclusivamente e de maneira obsessiva na seção dentro da seção de School Power, mais precisamente dentro do Chat Jota, na capacidade de "ler_arquivo" e seus envolvdos, focando toda a sua atenção dentro dessa seção, com o contexto focado nela:
+
+Ainda não está aparecendo as 3 seguintes coisas:
+
+1. Mostrar anexos/imagens abaixo da mensagem do usuário no chat (padrão ChatGPT/Perplexity das imagens de referência)
+2. FileProcessingCard substitui "Pensando..." quando há arquivos, antes da resposta da IA
+3. DebugIcon no FileProcessingCard com modal de debug completo dos 5 passos da capability
+4. Quais que são as camadas e etapas de todo o fluxo de dentro da capacidade de "ler_arquivos" para que todo o processo de dentro dela funcione corretamente?
+
+-> Faça que os arquivos ou imagens que foram adicicionados dentro da caixa de enviar mensagens do chat Jota quando enviadas, dentro da interface principal da seção School Power ou dentro da própria interface de através de dentro do chat Jota com a caixa de enviar mensagens flutuantes: As imagens/arquivos precisam aparecer abaixo da mensagem de imput do usuário, da mesma maneira que eu te representei dentro da imagem que eu te enviei agora, onde possui um card pequeno com as bordas das laterais arredondadas (Menos a borda do canto superior direito), e mostra o anexo/imagem/arquivo ou a quantidade de anexos se foi +1 anexo adicionado dentro da mesma mensagem quando enviadas!
+
+-> Faça que quando o usuário enviar imagens ou arquivos dentro da mensagem de imput para dentro do Chat Jota, ao invés de aparecer instantaneamente que o Jota está "Pensando...", vai aparecer o Card de processamento de arquivo, da task T005 que você fez anteriormente, do componente de FileProcessingCard, (padrão Perplexity da imagem)! Esse card deve aparecer inicialmente no lugar do texto de "Pensando..." (Abaixo do texto/nome "Jota", que fica ao lado direito do avatar circular com a imagem do Jota), e somente após o carregamento desse card que processou todas as imagens e arquivos anexados, aparece o texto de "Pensando...", até ser substituida pela mensagem inicial!!!!!!!
+
+-> Garanta que todas as etapas e camadas de todo o fluxo de dentro da capacidade de "ler_arquivos" fiquem corretamente visiveis em formato de debugs dentro do card de "Card de processamento de arquivo" (FileProcessingCard), de maneira super detalhada! Ou seja, adicione um icone de debug exatamente igual ao icone presente dentro dos sub-cards retangulares de capacidades de dentro do Card interativo, e esse icone vai abrir o modal de debugs mostrando os do respectivo card de "Card de processamento de arquivo" (FileProcessingCard), completamente e corretamente configurado de maneira exata e precisa!!!!!!!
