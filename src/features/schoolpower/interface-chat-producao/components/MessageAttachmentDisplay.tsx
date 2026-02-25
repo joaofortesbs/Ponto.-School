@@ -7,12 +7,6 @@ interface MessageAttachmentDisplayProps {
   attachments: MessageAttachment[];
 }
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 function isImageType(type: string): boolean {
   return type.startsWith('image/');
 }
@@ -52,7 +46,6 @@ function SingleAttachment({ attachment }: { attachment: MessageAttachment }) {
         />
         <div className="flex-1 min-w-0 pr-2">
           <p className="text-xs text-white/90 truncate font-medium">{attachment.name}</p>
-          <p className="text-[10px] text-blue-200/60">{formatFileSize(attachment.size)}</p>
         </div>
       </div>
     );
@@ -71,7 +64,6 @@ function SingleAttachment({ attachment }: { attachment: MessageAttachment }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-white/90 truncate font-medium">{attachment.name}</p>
-        <p className="text-[10px] text-blue-200/60">{formatFileSize(attachment.size)}</p>
       </div>
     </div>
   );
@@ -91,14 +83,22 @@ export function MessageAttachmentDisplay({ attachments }: MessageAttachmentDispl
   }
 
   return (
-    <div className="mt-1.5">
+    <div className="mt-1.5 max-w-[220px]">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-1.5 text-xs text-blue-200/80 hover:text-blue-100 transition-colors bg-blue-700/30 rounded-lg px-2.5 py-1.5 border border-blue-500/20"
+        className="w-full flex items-center gap-2 bg-blue-700/40 rounded-xl rounded-tr-md p-2 border border-blue-500/20 hover:bg-blue-700/55 transition-colors"
       >
-        <Paperclip className="w-3.5 h-3.5" />
-        <span>{attachments.length} anexos</span>
-        {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        <div className="w-8 h-8 rounded-lg bg-blue-800/60 flex items-center justify-center flex-shrink-0">
+          <Paperclip className="w-4 h-4 text-blue-300" />
+        </div>
+        <div className="flex-1 min-w-0 text-left">
+          <p className="text-xs text-white/90 font-medium">{attachments.length} anexos</p>
+        </div>
+        {expanded ? (
+          <ChevronUp className="w-3.5 h-3.5 text-blue-300/70 flex-shrink-0" />
+        ) : (
+          <ChevronDown className="w-3.5 h-3.5 text-blue-300/70 flex-shrink-0" />
+        )}
       </button>
       <AnimatePresence>
         {expanded && (
@@ -107,10 +107,10 @@ export function MessageAttachmentDisplay({ attachments }: MessageAttachmentDispl
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="mt-1.5 flex flex-col gap-1 overflow-hidden"
+            className="mt-1 flex flex-col gap-1 overflow-hidden"
           >
             {attachments.map((att, i) => (
-              <div key={i} className="max-w-[220px]">
+              <div key={i}>
                 <SingleAttachment attachment={att} />
               </div>
             ))}

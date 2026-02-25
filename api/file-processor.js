@@ -5,7 +5,7 @@ import crypto from 'crypto';
 const router = express.Router();
 
 const ALLOWED_MIME_TYPES = [
-  'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff',
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff', 'image/svg+xml',
   'application/pdf',
   'text/plain', 'text/csv', 'text/markdown', 'text/html',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -32,13 +32,16 @@ const upload = multer({
   },
 });
 
-function resolveKey(primary, fallback) {
-  return (process.env[primary] || process.env[fallback] || '').trim();
+function resolveGeminiKey() {
+  return (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '').trim();
 }
 
 async function callGeminiVision(base64Data, mimeType, promptText) {
-  const apiKey = resolveKey('GEMINI_API_KEY', 'VITE_GEMINI_API_KEY');
-  if (!apiKey) throw new Error('Chave Gemini não configurada');
+  const apiKey = resolveGeminiKey();
+  if (!apiKey) {
+    console.warn('[FileProcessor] GEMINI_API_KEY não configurada — retornando fallback');
+    return null;
+  }
 
   const model = 'gemini-2.5-flash-preview-05-20';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -75,16 +78,41 @@ async function callGeminiVision(base64Data, mimeType, promptText) {
 
     const data = await response.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    return text;
+    return text || null;
   } catch (err) {
     clearTimeout(timeout);
     throw err;
   }
 }
 
+function parseGeminiJson(rawText, fallbackType = 'documento') {
+  if (!rawText) return null;
+  try {
+    const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
+    return JSON.parse(cleaned);
+  } catch {
+    return {
+      summary: rawText.substring(0, 200),
+      full_content: rawText,
+      metadata: {
+        language: 'pt-BR',
+        document_type: fallbackType,
+        subject: '',
+        grade_level: '',
+        page_count_estimate: 1,
+        has_images: false,
+        has_tables: false,
+        has_formulas: false,
+      },
+      visual_elements: [],
+      pedagogical_context: '',
+    };
+  }
+}
+
 const VISION_PROMPT = `Você é um assistente educacional especializado em transcrever e interpretar documentos para professores brasileiros.
 
-Analise este documento/imagem com atenção e forneça uma transcrição COMPLETA e ESTRUTURADA.
+Analise esta imagem/documento com atenção e forneça uma transcrição COMPLETA e ESTRUTURADA.
 
 Responda EXATAMENTE no seguinte formato JSON (sem markdown code blocks, apenas o JSON puro):
 
@@ -93,15 +121,15 @@ Responda EXATAMENTE no seguinte formato JSON (sem markdown code blocks, apenas o
   "full_content": "Transcrição completa e detalhada de TODO o texto visível, preservando a estrutura original (títulos, listas, parágrafos, tabelas). Se houver elementos visuais, descreva-os entre [colchetes].",
   "metadata": {
     "language": "idioma principal do documento",
-    "document_type": "tipo do documento (prova, exercício, apostila, slide, foto de quadro, diagrama, tabela, etc.)",
+    "document_type": "tipo do documento (prova, exercício, apostila, slide, foto de quadro, diagrama, tabela, foto, imagem etc.)",
     "subject": "disciplina/matéria se identificável",
     "grade_level": "nível de ensino se identificável",
     "page_count_estimate": 1,
-    "has_images": false,
+    "has_images": true,
     "has_tables": false,
     "has_formulas": false
   },
-  "visual_elements": ["lista de elementos visuais encontrados: gráficos, diagramas, figuras, fotos, etc."],
+  "visual_elements": ["lista de elementos visuais encontrados: objetos, pessoas, lugares, gráficos, diagramas, figuras, fotos, etc."],
   "pedagogical_context": "Contexto pedagógico: para que este material pode ser usado, qual o objetivo educacional provável, como um professor poderia aproveitá-lo em sala de aula."
 }`;
 
@@ -128,24 +156,54 @@ Responda EXATAMENTE no seguinte formato JSON (sem markdown code blocks, apenas o
   "pedagogical_context": "contexto pedagógico e como um professor pode usar este material"
 }`;
 
+const OFFICE_VISION_PROMPT = `Você é um assistente educacional especializado em transcrever apresentações e planilhas para professores brasileiros.
+
+Analise este documento Office (PowerPoint/Excel) e extraia TODO o conteúdo textual e visual de forma organizada.
+
+Responda EXATAMENTE no seguinte formato JSON (sem markdown code blocks, apenas o JSON puro):
+
+{
+  "summary": "Resumo conciso do conteúdo em 2-3 frases",
+  "full_content": "Transcrição completa e organizada de TODO o conteúdo. Para apresentações: slide por slide. Para planilhas: tabela formatada com todos os dados.",
+  "metadata": {
+    "language": "idioma principal",
+    "document_type": "apresentação ou planilha",
+    "subject": "disciplina se identificável",
+    "grade_level": "nível de ensino se identificável",
+    "page_count_estimate": 1,
+    "has_images": false,
+    "has_tables": true,
+    "has_formulas": false
+  },
+  "visual_elements": ["elementos visuais encontrados"],
+  "pedagogical_context": "contexto pedagógico e como um professor pode usar este material"
+}`;
+
 async function processImage(buffer, mimeType, originalName) {
   const base64 = buffer.toString('base64');
-  const rawText = await callGeminiVision(base64, mimeType, VISION_PROMPT);
 
-  let transcription;
-  try {
-    const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
-    transcription = JSON.parse(cleaned);
-  } catch {
-    transcription = {
-      summary: rawText.substring(0, 200),
-      full_content: rawText,
-      metadata: { language: 'pt-BR', document_type: 'imagem', subject: '', grade_level: '', page_count_estimate: 1, has_images: true, has_tables: false, has_formulas: false },
-      visual_elements: [],
-      pedagogical_context: '',
+  const supportedVisionMimes = [
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
+  ];
+  const effectiveMime = supportedVisionMimes.includes(mimeType) ? mimeType : 'image/jpeg';
+
+  const rawText = await callGeminiVision(base64, effectiveMime, VISION_PROMPT);
+
+  if (!rawText) {
+    return {
+      pages: 1,
+      transcription: {
+        summary: `Imagem: ${originalName}`,
+        full_content: `[Imagem anexada: ${originalName}. A API de visão não está configurada — configure GEMINI_API_KEY para habilitar leitura de imagens.]`,
+        metadata: { language: 'pt-BR', document_type: 'imagem', subject: '', grade_level: '', page_count_estimate: 1, has_images: true, has_tables: false, has_formulas: false },
+        visual_elements: [],
+        pedagogical_context: '',
+      },
+      method: 'fallback_no_api_key',
     };
   }
 
+  const transcription = parseGeminiJson(rawText, 'imagem');
   return { pages: 1, transcription, method: 'gemini_vision' };
 }
 
@@ -170,20 +228,21 @@ async function processPDF(buffer, originalName) {
     const base64 = buffer.toString('base64');
     const rawText = await callGeminiVision(base64, 'application/pdf', PDF_VISION_PROMPT);
 
-    let transcription;
-    try {
-      const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
-      transcription = JSON.parse(cleaned);
-    } catch {
-      transcription = {
-        summary: rawText.substring(0, 200),
-        full_content: rawText,
-        metadata: { language: 'pt-BR', document_type: 'pdf_escaneado', subject: '', grade_level: '', page_count_estimate: pageCount, has_images: true, has_tables: false, has_formulas: false },
-        visual_elements: [],
-        pedagogical_context: '',
+    if (!rawText) {
+      return {
+        pages: pageCount,
+        transcription: {
+          summary: `PDF escaneado: ${originalName}`,
+          full_content: `[PDF escaneado: ${originalName}. Configure GEMINI_API_KEY para habilitar leitura de PDFs escaneados.]`,
+          metadata: { language: 'pt-BR', document_type: 'pdf_escaneado', subject: '', grade_level: '', page_count_estimate: pageCount, has_images: true, has_tables: false, has_formulas: false },
+          visual_elements: [],
+          pedagogical_context: '',
+        },
+        method: 'fallback_no_api_key',
       };
     }
 
+    const transcription = parseGeminiJson(rawText, 'pdf_escaneado');
     return { pages: pageCount, transcription, method: 'gemini_vision_pdf' };
   }
 
@@ -217,11 +276,12 @@ Responda EXATAMENTE no seguinte formato JSON (sem markdown code blocks, apenas o
 
     try {
       const rawText = await callGeminiVision(base64, 'application/pdf', enrichPrompt);
-      const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
-      const transcription = JSON.parse(cleaned);
-      return { pages: pageCount, transcription, method: 'pdf_parse_plus_gemini' };
-    } catch {
-      // fall through to text-only
+      if (rawText) {
+        const transcription = parseGeminiJson(rawText, 'pdf');
+        if (transcription) return { pages: pageCount, transcription, method: 'pdf_parse_plus_gemini' };
+      }
+    } catch (err) {
+      console.warn(`[FileProcessor] Enriquecimento Gemini falhou: ${err.message}`);
     }
   }
 
@@ -268,6 +328,28 @@ async function processDOCX(buffer, originalName) {
   return { pages: transcription.metadata.page_count_estimate, transcription, method: 'mammoth' };
 }
 
+async function processOfficeFile(buffer, mimeType, originalName) {
+  const base64 = buffer.toString('base64');
+  const rawText = await callGeminiVision(base64, mimeType, OFFICE_VISION_PROMPT);
+
+  if (!rawText) {
+    return {
+      pages: 1,
+      transcription: {
+        summary: `Arquivo Office: ${originalName}`,
+        full_content: `[Arquivo ${originalName} não pôde ser lido diretamente. Configure GEMINI_API_KEY para habilitar leitura de arquivos Office.]`,
+        metadata: { language: 'pt-BR', document_type: 'office', subject: '', grade_level: '', page_count_estimate: 1, has_images: false, has_tables: true, has_formulas: false },
+        visual_elements: [],
+        pedagogical_context: '',
+      },
+      method: 'fallback_no_api_key',
+    };
+  }
+
+  const transcription = parseGeminiJson(rawText, mimeType.includes('presentation') ? 'apresentação' : 'planilha');
+  return { pages: 1, transcription, method: 'gemini_vision_office' };
+}
+
 async function processTextFile(buffer, mimeType, originalName) {
   const text = buffer.toString('utf-8');
 
@@ -291,8 +373,14 @@ async function processTextFile(buffer, mimeType, originalName) {
   return { pages: transcription.metadata.page_count_estimate, transcription, method: 'text_direct' };
 }
 
-router.post('/process', upload.single('file'), async (req, res) => {
+router.post('/process', (req, res, next) => {
+  upload.single('file')(req, res, (err) => {
+    if (err) return next(err);
+    next();
+  });
+}, async (req, res) => {
   const startTime = Date.now();
+  res.setHeader('Content-Type', 'application/json');
 
   try {
     const file = req.file;
@@ -314,7 +402,13 @@ router.post('/process', upload.single('file'), async (req, res) => {
       file.mimetype === 'application/msword'
     ) {
       result = await processDOCX(file.buffer, file.originalname);
-    } else if (file.mimetype.startsWith('text/') || file.mimetype === 'text/csv') {
+    } else if (
+      file.mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+      file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      file.mimetype === 'application/vnd.ms-excel'
+    ) {
+      result = await processOfficeFile(file.buffer, file.mimetype, file.originalname);
+    } else if (file.mimetype.startsWith('text/')) {
       result = await processTextFile(file.buffer, file.mimetype, file.originalname);
     } else {
       result = await processTextFile(file.buffer, file.mimetype, file.originalname);
@@ -346,6 +440,7 @@ router.post('/process', upload.single('file'), async (req, res) => {
 });
 
 router.use((err, _req, res, _next) => {
+  res.setHeader('Content-Type', 'application/json');
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({ success: false, error: 'Arquivo excede o limite de 25MB' });
@@ -356,7 +451,7 @@ router.use((err, _req, res, _next) => {
     return res.status(415).json({ success: false, error: err.message });
   }
   console.error('[FileProcessor] Erro inesperado:', err);
-  res.status(500).json({ success: false, error: 'Erro interno no processamento de arquivo' });
+  res.status(500).json({ success: false, error: err.message || 'Erro interno no processamento de arquivo' });
 });
 
 export default router;

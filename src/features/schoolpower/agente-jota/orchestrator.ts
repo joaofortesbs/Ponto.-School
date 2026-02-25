@@ -235,6 +235,22 @@ async function processFileAttachments(
     sessionFileContexts.set(sessionId, existing ? `${existing}\n\n${promptContext}` : promptContext);
   }
 
+  const aiDebugEntries: AIDebugEntry[] = result.debug_log.map((entry, idx) => ({
+    id: `ler-arquivo-${Date.now()}-${idx}`,
+    timestamp: entry.timestamp,
+    capability_id: 'ler_arquivos',
+    entry_type: entry.type as AIDebugEntry['entry_type'],
+    narrative: entry.narrative,
+    technical_data: entry.technical_data as Record<string, any> | undefined,
+    severity: entry.type === 'error' ? 'high' : entry.type === 'warning' ? 'medium' : 'low',
+  }));
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('jota:file-processing-complete', {
+      detail: { sessionId, filesProcessed: result.data?.count || 0 },
+    }));
+  }
+
   return {
     meta: {
       filesProcessed: result.data?.count || 0,
@@ -242,7 +258,7 @@ async function processFileAttachments(
       processingTime: result.metadata.duration_ms,
       promptContext,
     },
-    debugEntries: result.debug_log,
+    debugEntries: aiDebugEntries,
   };
 }
 

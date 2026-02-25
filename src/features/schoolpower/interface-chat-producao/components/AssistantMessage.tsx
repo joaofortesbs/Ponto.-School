@@ -6,9 +6,10 @@ import { RichTextMessage } from './RichTextMessage';
 interface AssistantMessageProps {
   content: string;
   isThinking?: boolean;
+  children?: React.ReactNode;
 }
 
-export function AssistantMessage({ content, isThinking = false }: AssistantMessageProps) {
+export function AssistantMessage({ content, isThinking = false, children }: AssistantMessageProps) {
   return (
     <motion.div 
       className="flex justify-start"
@@ -41,7 +42,9 @@ export function AssistantMessage({ content, isThinking = false }: AssistantMessa
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.3 }}
           >
-            {isThinking ? (
+            {children ? (
+              children
+            ) : isThinking ? (
               <motion.div 
                 className="flex items-center gap-2"
                 initial={{ opacity: 0 }}

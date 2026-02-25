@@ -40,7 +40,6 @@ export function MessageStream({ onApplyPlan, onOpenArtifact, onOpenActivity }: M
   }, [messages]);
 
   const showFileProcessing = isLoading && fileProcessingStatus.active && fileProcessingStatus.status === 'processing';
-  const showFileComplete = fileProcessingStatus.active && fileProcessingStatus.status === 'complete';
   const showThinking = isLoading && !showFileProcessing;
 
   return (
@@ -117,30 +116,14 @@ export function MessageStream({ onApplyPlan, onOpenArtifact, onOpenActivity }: M
             transition={{ duration: 0.3 }}
             className="w-full flex flex-col"
           >
-            <FileProcessingCard
-              fileNames={fileProcessingStatus.fileNames}
-              status="processing"
-              processedCount={fileProcessingStatus.processedCount}
-              debugEntries={fileDebugEntries}
-            />
-          </motion.div>
-        )}
-
-        {showFileComplete && (
-          <motion.div
-            key="file-complete-indicator"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="w-full flex flex-col"
-          >
-            <FileProcessingCard
-              fileNames={fileProcessingStatus.fileNames}
-              status="complete"
-              processedCount={fileProcessingStatus.processedCount}
-              debugEntries={fileDebugEntries}
-            />
+            <AssistantMessage content="">
+              <FileProcessingCard
+                fileNames={fileProcessingStatus.fileNames}
+                status="processing"
+                processedCount={fileProcessingStatus.processedCount}
+                debugEntries={fileDebugEntries.length > 0 ? fileDebugEntries : undefined}
+              />
+            </AssistantMessage>
           </motion.div>
         )}
         

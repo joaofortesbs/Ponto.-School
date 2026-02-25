@@ -170,6 +170,21 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack, initial
   const pendingArtifactsRef = useRef<ArtifactData[]>([]);
 
   useEffect(() => {
+    const handleFileProcessingComplete = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (detail?.sessionId === sessionId) {
+        console.log('📎 [ChatLayout] Processamento de arquivo concluído — transitando para Pensando...');
+        const current = useChatState.getState().fileProcessingStatus;
+        setFileProcessingStatus({ ...current, status: 'complete' });
+      }
+    };
+    window.addEventListener('jota:file-processing-complete', handleFileProcessingComplete);
+    return () => {
+      window.removeEventListener('jota:file-processing-complete', handleFileProcessingComplete);
+    };
+  }, [sessionId, setFileProcessingStatus]);
+
+  useEffect(() => {
     const handleArtifactGenerated = (event: Event) => {
       const artifactData = (event as CustomEvent).detail as ArtifactData;
       if (artifactData) {
