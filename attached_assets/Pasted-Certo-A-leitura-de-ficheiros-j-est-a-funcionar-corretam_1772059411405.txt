@@ -1,0 +1,61 @@
+Certo. A leitura de ficheiros já está a funcionar corretamente! A partir de agora, o seu objetivo é ajustar alguns aspetos visuais relacionados com o cartão FileProcessingCard e corrigir outros erros.
+
+1. O card de FileProcessingCard atualmente está aparecendo centralizado verticalmente dentro da interface de Chat Jota, mas não é assim que é pra ficar. Faça que quando o usuário enviar imagens ou arquivos dentro da mensagem de imput para dentro do Chat Jota, ao invés de aparecer instantaneamente que o Jota está "Pensando...", vai aparecer o Card de processamento de arquivo, em formato de card retangular bem mais fino, com um único texto de "Lendo X arquivos anexados", do componente de FileProcessingCard! Esse card deve aparecer inicialmente no lugar do texto de "Pensando..." (Abaixo do texto/nome "Jota", que fica ao lado direito do avatar circular com a imagem do Jota), e somente após o carregamento desse card que processou todas as imagens e arquivos anexados, aparece o texto de "Pensando...", até ser substituida pela mensagem inicial! Ou seja, instantaneamente já vai aparecer o avatar Jota lendo o card, não apenas o card de FileProcessingCard como está atualmente!
+
+Outro coisa é que você ainda não adicionou o icone de debug que da acesso ao modal de debug (Estilo das capacidades) dentro do card de FileProcessingCard, com todos os respectivos debugs cm etapas e camadas estruturdas funcionando perfeitamente e muito bem organizadas e detalhadas dentro do debug!
+
+2. Atualmente a IA só está conseguindo ler arquivos, mas ela ainda não está conseguindo ler imagens! A IA simplesmente processa a imagem via FileProcessingCard, porém ela alucina e gera uma resposta alucinogica mais "provavel"! Analise todos os tipos/formatos de arquivos e imagens que a IA consegue ler/visualizar/extrair, se tiver limitações adicione dentro da capacidade camadas de fallback inteligentes que mandam o determinado formato invalido no primeiro momento para outro LLM ou outro modelo de extração de conteúdo! Analise também se a capacidade de "ler_arquivo" está configurada de meneira profissional e sofisticada e organizada corretamente para suportar ler +1 arquivo ao mesmo tempo!
+
+3. Algumas correções de desing:
+
+1. Os cards de anexos mostrados abaixo da mensagem do usuário no chat (padrão ChatGPT/Perplexity das imagens de referência), atualmente é mostrado a imagem/arquivo e ao lado direito o tamanho dele e seu nome, mas precisam aparecer apenas a imagem/arquivo e ao lado direito apenas o nome, ou seja, você precisa deixar mais fino!
+
+2. Quando o usuário envia +1 anexo dentro do chat, aparece um mini-card flutuante abaixo da mensagem do usuário no chat, porém ele precisa seguir o mesmo modelo dos cards de quando são enviados apenas um arquivo/imagem, ou seja, o mesmo foramto e proporção de bordas!
+
+Analise como funciona o sistema interno de empresas/plataformas de IA e IA Agents como:
+
+- ChatGPT PRO/ envolvidos
+- Grok
+- Claude MAX/ envolvidos
+- Perplexity MAX/ envolvidos
+- Manus IA 1.6 Max
+- Genspark IA
+- Kimi Agent e Swarm / envolvidos
+- Replit Agent V3
+- Mistral
+- Gemini
+- Devin AI (Cognition)
+- Cursor Composer
+- Copilot Workspace
+- DeepSeek V3
+- Vellum Agent Builder
+- Retool AI
+- Qwen IA (Chinesa)
+- Jenova AI (Multi-model)
+- OpenClaw (Open-source)
+- Lumio AI (Multi-model workspace)
+- Proton Lumo (Privacidade-first chatbot)
+- Character.ai
+- Salesforce Agentforce
+
+Concorrentes da Ponto. School diretos:
+
+- **Concorrentes:**
+    - Teachy - [teachy.com.br](http://teachy.com.br)
+    - Risely - https://risely.ai/
+    - Youlearn - https://www.youlearn.ai/
+    - Straia - https://www.straia.io/
+    - Alice - https://www.alice.tech/
+    - Eduaide - https://www.eduaide.ai/
+    - Ensinei - https://ensinei.com.br/
+    - Magic School - [app.magicschool.ai](http://app.magicschool.ai/)
+    - Kira - https://www.kira-learning.com/
+    - Brisk Teaching - https://www.briskteaching.com/pt-br
+    - Edcafe AI - https://www.edcafe.ai/
+    - Monsha - https://monsha.ai/
+    - Brisk Teachig - [app.briskteaching.com](http://app.briskteaching.com/)
+    - To - Teach - https://to-teach.ai/
+    - Eduaide - https://www.eduaide.ai/
+    - TPT - https://www.teacherspayteachers.com/
+    - Kajabi - https://kajabi.com/
+    - Teachable - https://www.teachable.com/
