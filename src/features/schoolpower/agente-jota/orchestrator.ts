@@ -231,8 +231,16 @@ async function processFileAttachments(
     : '';
 
   if (promptContext) {
+    const anchoredContext = [
+      '⚓ REGRA DE PRIORIDADE — LEIA ANTES DO ARQUIVO:',
+      'O OBJETIVO PRINCIPAL DO JOTA É SEMPRE A MENSAGEM DO PROFESSOR.',
+      'O material abaixo é REFERÊNCIA COMPLEMENTAR — use para enriquecer e personalizar o conteúdo, mas NUNCA substitua o pedido do professor pelo conteúdo do arquivo.',
+      'Se a mensagem do professor não mencionar explicitamente o arquivo, siga exatamente o que ele pediu e use o arquivo apenas como contexto de fundo.',
+      '',
+      promptContext,
+    ].join('\n');
     const existing = sessionFileContexts.get(sessionId) || '';
-    sessionFileContexts.set(sessionId, existing ? `${existing}\n\n${promptContext}` : promptContext);
+    sessionFileContexts.set(sessionId, existing ? `${existing}\n\n${anchoredContext}` : anchoredContext);
   }
 
   const aiDebugEntries: AIDebugEntry[] = result.debug_log.map((entry, idx) => ({

@@ -106,8 +106,12 @@ ${t.transcription.full_content}`;
 ${sections.join('\n\n---\n\n')}
 
 ═══════════════════════════════════════════════════
-INSTRUÇÃO: Use o conteúdo acima como referência para responder ao professor.
-Cite trechos específicos quando relevante. Nunca invente dados que não estão nos documentos.`;
+INSTRUÇÃO DE USO DO ARQUIVO:
+• O objetivo principal vem da MENSAGEM do professor — siga-o à risca
+• Use o arquivo como REFERÊNCIA COMPLEMENTAR para enriquecer o conteúdo gerado
+• Cite o arquivo quando o professor pedir explicitamente ou quando agregar valor direto
+• NUNCA invente dados que não estão no arquivo
+• NUNCA substitua o pedido do professor pelo conteúdo do arquivo`;
 }
 
 function formatErrorContextForPrompt(errors: Array<{ name: string; error: string }>): string {
