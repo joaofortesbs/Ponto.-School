@@ -40,7 +40,9 @@ async function processFileViaBackend(
     bytes[i] = binaryStr.charCodeAt(i);
   }
   const blob = new Blob([bytes], { type: mimeType });
-  formData.append('file', blob, fileName);
+
+  const safeFileName = encodeURIComponent(fileName);
+  formData.append('file', blob, safeFileName);
 
   const response = await fetch('/api/files/process', {
     method: 'POST',
@@ -89,6 +91,13 @@ INSTRUÇÃO: Use o conteúdo acima como referência para responder ao professor.
 Cite trechos específicos quando relevante. Nunca invente dados que não estão nos documentos.`;
 }
 
+function formatErrorContextForPrompt(errors: Array<{ name: string; error: string }>): string {
+  const reason = errors[0]?.error || 'falha desconhecida';
+  return `📎 AVISO: ${errors.length} arquivo(s) foram enviados mas não puderam ser lidos.
+Motivo: ${reason}
+INSTRUÇÃO: Informe ao professor com clareza que não foi possível acessar o conteúdo dos arquivos neste momento e explique o motivo. Não invente conteúdo sobre os arquivos.`;
+}
+
 function getMimeIcon(mimeType: string): string {
   if (mimeType.startsWith('image/')) return '🖼️';
   if (mimeType === 'application/pdf') return '📄';
@@ -97,6 +106,31 @@ function getMimeIcon(mimeType: string): string {
   if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return '📈';
   if (mimeType.startsWith('text/')) return '📃';
   return '📎';
+}
+
+function getExtractionMethod(mimeType: string): string {
+  if (mimeType.startsWith('image/')) return 'Gemini Vision (cascade: OpenRouter)';
+  if (mimeType === 'application/pdf') return 'Gemini Vision (PDF nativo)';
+  if (mimeType.includes('word') || mimeType.includes('document')) return 'Extração de texto (mammoth)';
+  if (mimeType.startsWith('text/')) return 'Leitura direta UTF-8';
+  return 'Gemini Vision';
+}
+
+function isFallbackMethod(method: string): boolean {
+  return method?.startsWith('fallback_') || method === 'quota_exceeded';
+}
+
+function getFallbackReason(method: string): string {
+  const reasons: Record<string, string> = {
+    fallback_no_api_key: 'API de visão não configurada (GEMINI_API_KEY ou OPENROUTER_API_KEY ausente)',
+    fallback_quota_exceeded: 'Cota da API de visão temporariamente esgotada — tente novamente em alguns minutos',
+    fallback_pdf_no_gemini: 'Leitura de PDFs requer GEMINI_API_KEY configurada',
+    fallback_api_error: 'Erro na API de visão ao processar o arquivo',
+    fallback_network_error: 'Erro de rede ao contactar a API de visão',
+    fallback_openrouter_error: 'Erro no OpenRouter ao processar o arquivo',
+    quota_exceeded: 'Cota da API de visão temporariamente esgotada — tente novamente em alguns minutos',
+  };
+  return reasons[method] || 'Falha desconhecida ao processar o arquivo';
 }
 
 export async function lerArquivosV2(
@@ -170,7 +204,7 @@ export async function lerArquivosV2(
     debug_log.push({
       timestamp: new Date().toISOString(),
       type: 'action',
-      narrative: `📖 ETAPA 3${fileNum}: Extraindo conteúdo de "${file.name}" via ${file.type.startsWith('image/') ? 'Gemini Vision' : file.type === 'application/pdf' ? 'PDF Parser + Gemini' : 'Text Extraction'}`,
+      narrative: `📖 ETAPA 3${fileNum}: Extraindo conteúdo de "${file.name}" via ${getExtractionMethod(file.type)}`,
       technical_data: { file_name: file.name, mime_type: file.type },
     });
 
@@ -181,21 +215,40 @@ export async function lerArquivosV2(
         file.type,
         file.size
       );
-      transcriptions.push(result);
 
-      debug_log.push({
-        timestamp: new Date().toISOString(),
-        type: 'discovery',
-        narrative: `🧠 ETAPA 4${fileNum}: Transcrição gerada — "${result.transcription.summary.substring(0, 100)}${result.transcription.summary.length > 100 ? '...' : ''}"`,
-        technical_data: {
-          file_id: result.file_id,
-          processing_method: result.processing_method,
-          pages: result.pages,
-          content_length: result.transcription.full_content.length,
-          visual_elements: result.transcription.visual_elements?.length || 0,
-          processing_time_ms: result.processing_time_ms,
-        },
-      });
+      const fallback = isFallbackMethod(result.processing_method);
+
+      if (fallback) {
+        const reason = getFallbackReason(result.processing_method);
+        errors.push({ name: file.name, error: reason });
+
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'error',
+          narrative: `❌ ETAPA 4${fileNum}: Falha ao ler "${file.name}" — ${reason}`,
+          technical_data: {
+            file_name: file.name,
+            processing_method: result.processing_method,
+            reason,
+          },
+        });
+      } else {
+        transcriptions.push(result);
+
+        debug_log.push({
+          timestamp: new Date().toISOString(),
+          type: 'discovery',
+          narrative: `🧠 ETAPA 4${fileNum}: Transcrição gerada — "${result.transcription.summary.substring(0, 100)}${result.transcription.summary.length > 100 ? '...' : ''}"`,
+          technical_data: {
+            file_id: result.file_id,
+            processing_method: result.processing_method,
+            pages: result.pages,
+            content_length: result.transcription.full_content.length,
+            visual_elements: result.transcription.visual_elements?.length || 0,
+            processing_time_ms: result.processing_time_ms,
+          },
+        });
+      }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       errors.push({ name: file.name, error: errorMsg });
@@ -210,13 +263,37 @@ export async function lerArquivosV2(
   }
 
   const totalTime = Date.now() - startTime;
-  const promptContext = formatTranscriptionsForPrompt(transcriptions);
-  const summaryParts = transcriptions.map(t => t.original_name);
+
+  const promptContext = transcriptions.length > 0
+    ? formatTranscriptionsForPrompt(transcriptions)
+    : errors.length > 0
+      ? formatErrorContextForPrompt(errors)
+      : '';
+
+  const summaryParts = transcriptions.length > 0
+    ? transcriptions.map(t => t.original_name)
+    : files.map(f => f.name);
+
+  const allFailed = transcriptions.length === 0 && errors.length > 0;
+  const partialSuccess = transcriptions.length > 0 && errors.length > 0;
+
+  let etapa5Type: DebugEntry['type'] = 'confirmation';
+  let etapa5Narrative: string;
+
+  if (allFailed) {
+    etapa5Type = 'error';
+    etapa5Narrative = `❌ ETAPA 5: 0 de ${files.length} documento(s) lido(s) — ${errors[0].error}`;
+  } else if (partialSuccess) {
+    etapa5Type = 'warning' as DebugEntry['type'];
+    etapa5Narrative = `⚠️ ETAPA 5: ${transcriptions.length} de ${files.length} documento(s) lido(s) (${errors.length} falhou) — ${summaryParts.join(', ')} — ${totalTime}ms`;
+  } else {
+    etapa5Narrative = `✅ ETAPA 5: ${transcriptions.length} documento(s) transcrito(s) com sucesso — ${summaryParts.join(', ')} — ${totalTime}ms`;
+  }
 
   debug_log.push({
     timestamp: new Date().toISOString(),
-    type: 'confirmation',
-    narrative: `✅ ETAPA 5: ${transcriptions.length} documento(s) transcrito(s) com sucesso${errors.length > 0 ? ` (${errors.length} erro(s))` : ''} — ${summaryParts.join(', ')} — ${totalTime}ms`,
+    type: etapa5Type,
+    narrative: etapa5Narrative,
     technical_data: {
       total_transcribed: transcriptions.length,
       total_errors: errors.length,
@@ -229,7 +306,9 @@ export async function lerArquivosV2(
     arquivos: transcriptions,
     count: transcriptions.length,
     prompt_context: promptContext,
-    summary: `${transcriptions.length} arquivo(s) lido(s): ${summaryParts.join(', ')}`,
+    summary: allFailed
+      ? `0 arquivo(s) lido(s) — ${errors[0]?.error || 'falha'}`
+      : `${transcriptions.length} arquivo(s) lido(s): ${summaryParts.join(', ')}`,
     total_processing_time_ms: totalTime,
   };
 
@@ -245,7 +324,7 @@ export async function lerArquivosV2(
           message: `Todos os ${files.length} arquivo(s) falharam: ${errors.map(e => e.error).join('; ')}`,
           severity: 'high',
           recoverable: true,
-          recovery_suggestion: 'Verifique se os arquivos são válidos e tente novamente',
+          recovery_suggestion: 'Verifique a configuração das chaves de API (GEMINI_API_KEY, OPENROUTER_API_KEY) e tente novamente',
         }
       : null,
     debug_log,
@@ -275,7 +354,7 @@ export async function lerArquivosV2(
     metadata: {
       duration_ms: totalTime,
       retry_count: 0,
-      data_source: 'Gemini 2.5 Flash Vision + pdf-parse + mammoth',
+      data_source: 'gemini-2.0-flash Vision (cascade: OpenRouter) + mammoth',
     },
   };
 }

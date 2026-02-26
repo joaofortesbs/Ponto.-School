@@ -36,12 +36,13 @@ function resolveGeminiKey() {
   return (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '').trim();
 }
 
+function resolveOpenRouterKey() {
+  return (process.env.OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY || '').trim();
+}
+
 async function callGeminiVision(base64Data, mimeType, promptText) {
   const apiKey = resolveGeminiKey();
-  if (!apiKey) {
-    console.warn('[FileProcessor] GEMINI_API_KEY não configurada — retornando fallback');
-    return null;
-  }
+  if (!apiKey) return { text: null, method: 'fallback_no_api_key' };
 
   const model = 'gemini-2.0-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -53,10 +54,7 @@ async function callGeminiVision(base64Data, mimeType, promptText) {
         { inline_data: { mime_type: mimeType, data: base64Data } },
       ],
     }],
-    generationConfig: {
-      temperature: 0.2,
-      maxOutputTokens: 8192,
-    },
+    generationConfig: { temperature: 0.2, maxOutputTokens: 8192 },
   };
 
   const controller = new AbortController();
@@ -73,18 +71,112 @@ async function callGeminiVision(base64Data, mimeType, promptText) {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error(`[FileProcessor] Gemini Vision erro ${response.status}:`, errText.substring(0, 300));
-      return null;
+      console.error(`[FileProcessor] Gemini Vision erro ${response.status}:`, errText.substring(0, 200));
+      const code = response.status;
+      return { text: null, method: code === 429 ? 'quota_exceeded' : 'fallback_api_error', statusCode: code };
     }
 
     const data = await response.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    return text || null;
+    return { text: text || null, method: 'gemini_vision' };
   } catch (err) {
     clearTimeout(timeout);
     console.error('[FileProcessor] Gemini Vision erro de rede:', err.message);
-    return null;
+    return { text: null, method: 'fallback_network_error' };
   }
+}
+
+async function callOpenRouterVision(base64Data, mimeType, promptText) {
+  const apiKey = resolveOpenRouterKey();
+  if (!apiKey) return { text: null, method: 'fallback_no_openrouter_key' };
+
+  const supportedImageMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const effectiveMime = supportedImageMimes.includes(mimeType) ? mimeType : 'image/jpeg';
+  const dataUrl = `data:${effectiveMime};base64,${base64Data}`;
+
+  const body = {
+    model: 'google/gemini-2.0-flash-001',
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image_url', image_url: { url: dataUrl } },
+        { type: 'text', text: promptText },
+      ],
+    }],
+    max_tokens: 8192,
+    temperature: 0.2,
+  };
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120000);
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://pontoschool.app',
+        'X-Title': 'Ponto. School',
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`[FileProcessor] OpenRouter Vision erro ${response.status}:`, errText.substring(0, 200));
+      return { text: null, method: 'fallback_openrouter_error' };
+    }
+
+    const data = await response.json();
+    const text = data?.choices?.[0]?.message?.content || '';
+    return { text: text || null, method: 'openrouter_vision' };
+  } catch (err) {
+    clearTimeout(timeout);
+    console.error('[FileProcessor] OpenRouter Vision erro de rede:', err.message);
+    return { text: null, method: 'fallback_network_error' };
+  }
+}
+
+async function callVisionCascade(base64Data, mimeType, promptText) {
+  const geminiKey = resolveGeminiKey();
+  const openRouterKey = resolveOpenRouterKey();
+
+  if (!geminiKey && !openRouterKey) {
+    console.warn('[FileProcessor] Nenhuma API de visão configurada');
+    return { text: null, method: 'fallback_no_api_key' };
+  }
+
+  if (geminiKey) {
+    const geminiResult = await callGeminiVision(base64Data, mimeType, promptText);
+    if (geminiResult.text) {
+      console.log(`[FileProcessor] Gemini Vision bem-sucedido`);
+      return geminiResult;
+    }
+
+    if (geminiResult.method === 'quota_exceeded') {
+      console.warn('[FileProcessor] Gemini cota esgotada (429) — tentando OpenRouter...');
+    } else if (geminiResult.method !== 'fallback_no_api_key') {
+      console.warn(`[FileProcessor] Gemini falhou (${geminiResult.method}) — tentando OpenRouter...`);
+    }
+  }
+
+  if (openRouterKey && !mimeType.includes('pdf')) {
+    const orResult = await callOpenRouterVision(base64Data, mimeType, promptText);
+    if (orResult.text) {
+      console.log(`[FileProcessor] OpenRouter Vision bem-sucedido`);
+      return orResult;
+    }
+    console.warn(`[FileProcessor] OpenRouter também falhou: ${orResult.method}`);
+  }
+
+  if (mimeType.includes('pdf') && !resolveGeminiKey()) {
+    return { text: null, method: 'fallback_pdf_no_gemini' };
+  }
+
+  return { text: null, method: 'fallback_quota_exceeded' };
 }
 
 function parseGeminiJson(rawText, fallbackType = 'documento') {
@@ -110,6 +202,24 @@ function parseGeminiJson(rawText, fallbackType = 'documento') {
       pedagogical_context: '',
     };
   }
+}
+
+function makeFallbackTranscription(originalName, method) {
+  const reasons = {
+    fallback_no_api_key: 'Configure GEMINI_API_KEY ou OPENROUTER_API_KEY para habilitar leitura de arquivos.',
+    fallback_quota_exceeded: 'Cota da API de visão temporariamente esgotada. Tente novamente em alguns minutos.',
+    fallback_pdf_no_gemini: 'PDFs requerem a API do Gemini configurada (GEMINI_API_KEY).',
+    fallback_api_error: 'Erro na API de visão ao processar o arquivo.',
+    fallback_network_error: 'Erro de rede ao contactar a API de visão.',
+  };
+  const reason = reasons[method] || 'Falha desconhecida ao processar o arquivo.';
+  return {
+    summary: `${originalName} — leitura indisponível`,
+    full_content: `[Arquivo: ${originalName}. ${reason}]`,
+    metadata: { language: 'pt-BR', document_type: 'inacessível', subject: '', grade_level: '', page_count_estimate: 1, has_images: false, has_tables: false, has_formulas: false },
+    visual_elements: [],
+    pedagogical_context: '',
+  };
 }
 
 const VISION_PROMPT = `Você é um assistente educacional especializado em transcrever e interpretar documentos para professores brasileiros.
@@ -184,47 +294,35 @@ Responda EXATAMENTE no seguinte formato JSON (sem markdown code blocks, apenas o
 async function processImage(buffer, mimeType, originalName) {
   const base64 = buffer.toString('base64');
 
-  const supportedVisionMimes = [
-    'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
-  ];
+  const supportedVisionMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
   const effectiveMime = supportedVisionMimes.includes(mimeType) ? mimeType : 'image/jpeg';
 
-  const rawText = await callGeminiVision(base64, effectiveMime, VISION_PROMPT);
+  const { text: rawText, method } = await callVisionCascade(base64, effectiveMime, VISION_PROMPT);
 
   if (!rawText) {
     return {
       pages: 1,
-      transcription: {
-        summary: `Imagem: ${originalName}`,
-        full_content: `[Imagem anexada: ${originalName}. A API de visão não está configurada — configure GEMINI_API_KEY para habilitar leitura de imagens.]`,
-        metadata: { language: 'pt-BR', document_type: 'imagem', subject: '', grade_level: '', page_count_estimate: 1, has_images: true, has_tables: false, has_formulas: false },
-        visual_elements: [],
-        pedagogical_context: '',
-      },
-      method: 'fallback_no_api_key',
+      transcription: makeFallbackTranscription(originalName, method),
+      method,
     };
   }
 
   const transcription = parseGeminiJson(rawText, 'imagem');
-  return { pages: 1, transcription, method: 'gemini_vision' };
+  return { pages: 1, transcription, method };
 }
 
 async function processPDF(buffer, originalName) {
   console.log(`[FileProcessor] PDF: enviando diretamente ao Gemini Vision (${(buffer.length / 1024).toFixed(1)}KB)`);
   const base64 = buffer.toString('base64');
-  const rawText = await callGeminiVision(base64, 'application/pdf', PDF_VISION_PROMPT);
+
+  const { text: rawText, method } = await callGeminiVision(base64, 'application/pdf', PDF_VISION_PROMPT);
 
   if (!rawText) {
+    const reason = method === 'quota_exceeded' ? 'fallback_quota_exceeded' : method;
     return {
       pages: 1,
-      transcription: {
-        summary: `PDF: ${originalName}`,
-        full_content: `[PDF: ${originalName}. A API de visão não retornou conteúdo — verifique a configuração da GEMINI_API_KEY.]`,
-        metadata: { language: 'pt-BR', document_type: 'pdf', subject: '', grade_level: '', page_count_estimate: 1, has_images: false, has_tables: false, has_formulas: false },
-        visual_elements: [],
-        pedagogical_context: '',
-      },
-      method: 'fallback_no_api_key',
+      transcription: makeFallbackTranscription(originalName, reason),
+      method: reason,
     };
   }
 
@@ -266,24 +364,18 @@ async function processDOCX(buffer, originalName) {
 
 async function processOfficeFile(buffer, mimeType, originalName) {
   const base64 = buffer.toString('base64');
-  const rawText = await callGeminiVision(base64, mimeType, OFFICE_VISION_PROMPT);
+  const { text: rawText, method } = await callVisionCascade(base64, mimeType, OFFICE_VISION_PROMPT);
 
   if (!rawText) {
     return {
       pages: 1,
-      transcription: {
-        summary: `Arquivo Office: ${originalName}`,
-        full_content: `[Arquivo ${originalName} não pôde ser lido diretamente. Configure GEMINI_API_KEY para habilitar leitura de arquivos Office.]`,
-        metadata: { language: 'pt-BR', document_type: 'office', subject: '', grade_level: '', page_count_estimate: 1, has_images: false, has_tables: true, has_formulas: false },
-        visual_elements: [],
-        pedagogical_context: '',
-      },
-      method: 'fallback_no_api_key',
+      transcription: makeFallbackTranscription(originalName, method),
+      method,
     };
   }
 
   const transcription = parseGeminiJson(rawText, mimeType.includes('presentation') ? 'apresentação' : 'planilha');
-  return { pages: 1, transcription, method: 'gemini_vision_office' };
+  return { pages: 1, transcription, method };
 }
 
 async function processTextFile(buffer, mimeType, originalName) {
@@ -324,39 +416,44 @@ router.post('/process', (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Nenhum arquivo enviado' });
     }
 
-    console.log(`[FileProcessor] Processando: ${file.originalname} (${file.mimetype}, ${(file.size / 1024).toFixed(1)}KB)`);
+    const originalName = (() => {
+      try { return decodeURIComponent(file.originalname); }
+      catch { return file.originalname; }
+    })();
+
+    console.log(`[FileProcessor] Processando: ${originalName} (${file.mimetype}, ${(file.size / 1024).toFixed(1)}KB)`);
 
     const fileId = crypto.randomUUID();
     let result;
 
     if (file.mimetype.startsWith('image/')) {
-      result = await processImage(file.buffer, file.mimetype, file.originalname);
+      result = await processImage(file.buffer, file.mimetype, originalName);
     } else if (file.mimetype === 'application/pdf') {
-      result = await processPDF(file.buffer, file.originalname);
+      result = await processPDF(file.buffer, originalName);
     } else if (
       file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       file.mimetype === 'application/msword'
     ) {
-      result = await processDOCX(file.buffer, file.originalname);
+      result = await processDOCX(file.buffer, originalName);
     } else if (
       file.mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
       file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
       file.mimetype === 'application/vnd.ms-excel'
     ) {
-      result = await processOfficeFile(file.buffer, file.mimetype, file.originalname);
+      result = await processOfficeFile(file.buffer, file.mimetype, originalName);
     } else if (file.mimetype.startsWith('text/')) {
-      result = await processTextFile(file.buffer, file.mimetype, file.originalname);
+      result = await processTextFile(file.buffer, file.mimetype, originalName);
     } else {
-      result = await processTextFile(file.buffer, file.mimetype, file.originalname);
+      result = await processTextFile(file.buffer, file.mimetype, originalName);
     }
 
     const processingTime = Date.now() - startTime;
-    console.log(`[FileProcessor] Concluído: ${file.originalname} em ${processingTime}ms (método: ${result.method})`);
+    console.log(`[FileProcessor] Concluído: ${originalName} em ${processingTime}ms (método: ${result.method})`);
 
     res.json({
       success: true,
       file_id: fileId,
-      original_name: file.originalname,
+      original_name: originalName,
       mime_type: file.mimetype,
       file_size: file.size,
       pages: result.pages,
