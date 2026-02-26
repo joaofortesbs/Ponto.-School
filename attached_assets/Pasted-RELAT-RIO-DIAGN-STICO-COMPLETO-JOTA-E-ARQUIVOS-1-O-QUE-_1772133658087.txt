@@ -1,0 +1,232 @@
+RELATÓRIO DIAGNÓSTICO COMPLETO — JOTA E ARQUIVOS
+1. O QUE A IA FEZ EM CADA CASO
+Prompt 1 — Crônicas (arquivo: Revolução Francesa)
+O que aconteceu: O Jota gerou 1 atividade de texto sobre crônicas — tema correto, mas quantidade errada (pediu 5, entregou 1).
+Como a IA interpretou: Leu a mensagem, identificou "crônicas" como tema, roteou para EXECUTAR. O arquivo foi lido (1 arquivo lido com sucesso), mas como o conteúdo do arquivo nunca chegou ao gerador de conteúdo, o Jota usou apenas as habilidades padrão do Planner. Gerou 1 atividade texto porque o Planner não recebeu contexto suficiente para inferir que eram necessárias 5 atividades variadas.
+
+Prompt 2 — Prova baseada no arquivo (arquivo: Revolução Francesa)
+O que aconteceu: Gerou 5 questões de matemática do 1º ano com códigos BNCC como título das questões (EF01MA01, EF01MA03...) — completamente diferente do arquivo enviado.
+Como a IA interpretou: O Planner recebeu "crie uma prova... use o arquivo..." mas como o conteúdo do arquivo NÃO chegou ao gerador, o sistema usou os valores de exemplo hardcoded no código (padrão: subject: 'Matemática', schoolYear: '7º Ano'). Quando a IA não tem conteúdo real para preencher os campos, ela ecoa os exemplos — daí as questões de Matemática com códigos BNCC do 1º ano como "número" das questões.
+
+Prompt 3 — Plano de aula Iluminismo (arquivo: Revolução Francesa)
+O que aconteceu: Funcionou corretamente. Produziu um plano completo sobre Iluminismo com BNCC.
+Como a IA interpretou: O professor especificou o tema EXPLICITAMENTE na mensagem ("Iluminismo"). O Planner não precisou do arquivo para identificar o tema — pegou direto da mensagem. Por isso funcionou: quando o tema está explícito no texto, o arquivo ausente no contexto não faz diferença.
+
+Prompt 4 — "3 atividades sobre o conteúdo desse arquivo" + calendário
+O que aconteceu: Criou "Flash Cards: O conteúdo desse arquivo" com questões como "O que é o conteúdo desse arquivo?" e "Como é possível melhorar a compreensão do conteúdo de um arquivo?" — falha total de identidade de conteúdo.
+Como a IA interpretou: O Planner recebeu a mensagem literalmente: "o conteúdo desse arquivo" virou o TEMA das atividades. Sem ter o conteúdo real do arquivo, o sistema tratou a REFERÊNCIA ao arquivo como se fosse o próprio tema pedagógico. O Planner extraiu temas: ["o conteúdo desse arquivo"] e propagou isso por todo o pipeline — daí as questões absurdas sobre "arquivos".
+
+Prompt 5 — Reescrita para 6º ano (arquivo: Revolução Francesa)
+O que aconteceu: Criou Flash Cards com título sendo a mensagem inteira do professor, com conteúdo sobre "Técnicas de Reescrita" — ignorou completamente a Revolução Francesa.
+Como a IA interpretou: Viu "reescreve tudo adaptado" na mensagem e interpretou que o TEMA era "reescrita de texto". Sem o conteúdo do arquivo disponível, não tinha como saber que deveria estar gerando conteúdo sobre a Revolução Francesa. Gerou atividades sobre o processo de reescrita em si.
+
+2. CAUSAS-RAIZ: INDIVIDUAIS E COMPARTILHADAS
+CAUSA-RAIZ 1 — CRÍTICA (Compartilhada por todos os 5 prompts): O sessionFileContexts é invisível para o fluxo EXECUTAR
+Este é o problema principal e mais grave. Veja o que acontece tecnicamente:
+
+O que existe:
+
+Em orchestrator.ts (linha 208): const sessionFileContexts: Map<string, string> = new Map() — um Map em RAM separado
+Após LER_ARQUIVOS rodar, o conteúdo extraído é salvo nesse Map com a âncora de prioridade (linhas 236-246)
+getSessionFileContext(sessionId) recupera esse conteúdo (linha 287)
+Onde o arquivo VAI (correto):
+
+Linha 668: const fileContext = getSessionFileContext(sessionId) — dentro de handleDirectResponseWithREL — este é o fluxo CONVERSAR
+Onde o arquivo NÃO VAI (o bug):
+
+Linha 557: const contextForPlanner = buildContextForPlanner(sessionId, userPrompt) — buildContextForPlanner chama buildUnifiedContext('planner', ...) que usa apenas o SessionContext da session-store. O sessionFileContexts não faz parte do SessionContext e nunca é incluído aqui
+executeAgentPlan (linha 837): recebe conversationHistory que vem do ChatLayout.tsx linha 937-940 — construído a partir das mensagens do chat UI (só texto digitado pelo usuário), sem nenhum conteúdo extraído de arquivo
+executor.setConversationContext(conversationHistory) (linha 874): define o contexto do executor sem o conteúdo do arquivo
+Resultado: O Planner nunca vê o arquivo. O gerar_conteudo_atividades nunca vê o arquivo. O decidir_atividades_criar nunca vê o arquivo. Tudo que envolve EXECUTAR opera no escuro.
+
+O arquivo é lido corretamente pelo LER_ARQUIVOS (o badge "1 arquivo lido com sucesso" aparece), mas o conteúdo fica preso no sessionFileContexts Map, acessível APENAS para o fluxo CONVERSAR.
+
+CAUSA-RAIZ 2 — CRÍTICA (Prompts 4 e 5): Literalismo do Planner sem contexto de arquivo
+Quando o professor usa expressões referenciais como "o conteúdo desse arquivo", "as questões do arquivo", "esse documento", o Planner — por não ter o conteúdo real do arquivo — trata a REFERÊNCIA como o TEMA. A extração de temas do Planner pega a string literal "o conteúdo desse arquivo" e propaga por todo o pipeline como se fosse o assunto pedagógico.
+
+Cascata do problema:
+
+currentPlanTemas = ["o conteúdo desse arquivo"]
+temaLimpo = "o conteúdo desse arquivo" (executor.ts linha 795-796)
+activity.titulo = "O conteúdo desse arquivo"
+Questões geradas: "O que é o conteúdo desse arquivo?"
+CAUSA-RAIZ 3 — CRÍTICA (Prompt 2): Valores de exemplo hardcoded contaminam o output
+Em gerar-conteudo-atividades.ts (linhas 496-515), a função getExampleValueForField tem valores default:
+
+'subject': 'Matemática',
+'disciplina': 'Língua Portuguesa',
+'theme': 'Operações com Frações',
+'schoolYear': '7º Ano - Ensino Fundamental',
+Quando a IA não tem conteúdo real para preencher os campos (porque o arquivo não chegou), ela copia os valores de exemplo do próprio prompt como se fossem instruções reais. Por isso a prova saiu com questões de Matemática do 1º ano — a IA pegou os exemplos da função e os usou como conteúdo de verdade.
+
+CAUSA-RAIZ 4 — ESTRUTURAL: conversation_context em gerar_conteudo_atividades não é o contexto real da conversa
+Em executor.ts linha 1720:
+
+enrichedParams.conversation_context = decisionResult.estrategia_pedagogica || '';
+O conversation_context enviado ao gerador de conteúdo é na verdade o campo estrategia_pedagogica retornado pelo decidir_atividades_criar — uma string gerada pela IA descrevendo a estratégia pedagógica, não o conteúdo real do arquivo. Mesmo que o arquivo tivesse chegado ao conversationContext do executor, o pipeline do gerar_conteudo_atividades substitui esse contexto pelo campo estrategia_pedagogica.
+
+CAUSA-RAIZ 5 — SECUNDÁRIA (Prompt 1): Undergeneration de atividades (1 em vez de 5)
+O Planner gerou apenas 1 atividade para "5 atividades de crônicas". Isso é um problema separado do arquivo: quando o tema é puramente textual (crônicas, interpretação), o Planner tende a criar um único entregável em formato de texto, em vez de 5 atividades variadas. A falta do contexto do arquivo pode ter empobrecido o planning.
+
+3. COMO OS CONCORRENTES E GRANDES PLATAFORMAS RESOLVEM ISSO
+Manus AI (1.6 Max) — Sandbox com Filesystem Persistente
+O Manus não passa conteúdo de arquivo por memória RAM. Ele usa um filesystem Linux persistente (/workspace). Quando você faz upload de um PDF, ele salva como arquivo real. O agente planejador lê o arquivo diretamente do disco em qualquer etapa do pipeline. Todos os sub-agentes compartilham o mesmo filesystem — não existe o problema de "Map que só um agente vê".
+
+Padrão: File → Filesystem → Qualquer agente pode ler quando precisar.
+
+Brisk Teaching — Contexto de documento injetado antes de qualquer generation step
+O Brisk extrai o conteúdo do documento logo após o upload e injeta esse conteúdo como contexto base em TODOS os passos seguintes. Não há diferença entre "fluxo de conversa" e "fluxo de geração" — ambos recebem o mesmo bloco de contexto do documento. A geração de quiz, plano de aula e atividade diferenciada parte do mesmo conteúdo extraído.
+
+Padrão: File → Extract → Contexto Base Compartilhado → Todos os geradores.
+
+MagicSchool AI — RAG centralizado, não por fluxo
+Documentos ficam em um Knowledge Base central. Qualquer ferramenta (quiz maker, lesson planner, IEP writer) consulta o mesmo Knowledge Base via RAG. Não existe um Map específico para um tipo de chamada — o conteúdo fica disponível universalmente.
+
+Padrão: File → Vector Store → Retrieval em qualquer tool.
+
+ChatGPT (Projects) / Claude (Projects) — Arquivo vinculado ao projeto, não à mensagem
+Quando você faz upload de um arquivo em um "Project", ele fica disponível para TODAS as mensagens seguintes, permanentemente, injetado automaticamente em todo sistema prompt. O LLM nunca precisa "lembrar" do arquivo — ele sempre está lá.
+
+Padrão: File → Project Context → Presente em toda chamada de LLM.
+
+Genspark (Mixture-of-Agents) — Handoff explícito com artefatos
+O Genspark trata o conteúdo extraído do arquivo como um "artefato" que é passado explicitamente entre os agentes no handoff. O planner recebe o artefato, os executores recebem o artefato. Nunca fica preso em um módulo isolado.
+
+Padrão: File → Artefato Estruturado → Handoff explícito entre agentes.
+
+Kimi Agent (2M context window) — Arquivo inteiro no contexto
+Com janela de contexto de 2M tokens, o Kimi simplesmente inclui o arquivo inteiro em todo contexto. Não há problema de "chegou ou não chegou" — o arquivo está sempre presente.
+
+Padrão: File → Tudo no contexto.
+
+Replit Agent V3 — Contexto durável por sessão
+O Replit Agent mantém um contexto durável por sessão onde arquivos processados são armazenados em estrutura acessível a TODOS os passos do agente — não em um Map separado por tipo de chamada.
+
+Conclusão Competitiva
+Todos os concorrentes sólidos compartilham um princípio: O conteúdo do arquivo é tratado como contexto de sessão universal, acessível em qualquer etapa do pipeline, não como dado temporário de um módulo específico. A Ponto. School tem o sistema de extração funcionando perfeitamente, mas o conteúdo extraído fica confinado ao fluxo CONVERSAR em vez de estar disponível universalmente.
+
+4. PLANO DE AÇÃO — CORREÇÕES PRECISAS E PRIORITIZADAS
+CORREÇÃO 1 — CRÍTICA: Injetar sessionFileContexts no fluxo EXECUTAR (Planner + Executor)
+Onde: src/features/schoolpower/agente-jota/orchestrator.ts
+
+Problema exato:
+
+Linha 557: buildContextForPlanner não inclui o arquivo
+Linha 841: conversationHistory vem do ChatLayout sem o arquivo
+Linha 874: executor.setConversationContext(conversationHistory) sem o arquivo
+Correção — Parte A: Na função que processa o prompt EXECUTAR (onde está a linha 557), após chamar buildContextForPlanner, adicionar o conteúdo do arquivo:
+
+// ANTES (linha 557):
+const contextForPlanner = buildContextForPlanner(sessionId, userPrompt);
+// DEPOIS:
+const fileCtx = getSessionFileContext(sessionId);
+const rawPlannerCtx = buildContextForPlanner(sessionId, userPrompt);
+const contextForPlanner = fileCtx 
+  ? `${rawPlannerCtx}\n\n${fileCtx}` 
+  : rawPlannerCtx;
+Correção — Parte B: Na função executeAgentPlan (linha 837), antes de chamar executor.setConversationContext, injetar o arquivo no contexto:
+
+// DEPOIS de linha 874:
+const fileCtxForExec = getSessionFileContext(sessionId);
+const fullConversationHistory = fileCtxForExec
+  ? `${conversationHistory || ''}\n\n${fileCtxForExec}`
+  : (conversationHistory || '');
+executor.setConversationContext(fullConversationHistory);
+Impacto: Resolve Prompts 2, 4 e 5 completamente. O Planner saberá o tema real do arquivo, e gerar_conteudo_atividades receberá o conteúdo correto.
+
+CORREÇÃO 2 — CRÍTICA: Salvar metadados do arquivo no InteractionLedger da sessão
+Onde: src/features/schoolpower/agente-jota/orchestrator.ts — função processFileAttachments (após linha 247)
+
+Problema: O sessionFileContexts é uma ilha de memória isolada. A solução de longo prazo é também salvar um registro do arquivo no interactionLedger da sessão, que é automaticamente incluído em todos os contextos via buildUnifiedContext:
+
+// Após salvar em sessionFileContexts (linha 247), adicionar:
+addLedgerFact(sessionId, {
+  fact: `Arquivo lido: "${arquivo.nome}" | Tipo: ${arquivo.tipo} | Tema identificado: ${topicFromFile} | Resumo disponível no contexto da sessão.`,
+  category: 'context',
+});
+Impacto: Cria uma âncora persistente no ledger que sobrevive a qualquer reestruturação de fluxo, garante que o Planner sempre saiba que há um arquivo disponível.
+
+CORREÇÃO 3 — CRÍTICA: Anti-Literalismo no Prompt do Planner
+Onde: src/features/schoolpower/agente-jota/prompts/planning-prompt.ts
+
+Problema: O Planner não tem instrução para resolver referências indiretas a arquivos. Quando o professor diz "o conteúdo desse arquivo", o Planner deveria extrair o tema DO arquivo, não usar a frase literal.
+
+Correção: Adicionar uma regra explícita na seção de extração de temas:
+
+REGRA ANTI-LITERALISMO DE ARQUIVO:
+Se a mensagem do professor contém expressões como "esse arquivo", "o documento", "o conteúdo desse arquivo", "as questões do arquivo" ou similares:
+1. NUNCA use essas expressões como nome de tema ou título de atividade
+2. PROCURE no contexto da sessão o conteúdo extraído do arquivo
+3. Extraia o TEMA REAL a partir do conteúdo do arquivo (ex: "Revolução Francesa", "Frações", "Fotossíntese")
+4. Use o tema real para nomear as atividades
+5. Se não encontrar o tema real, use "Conteúdo do Material Enviado" como placeholder e avise no objetivo
+Impacto: Resolve Prompts 4 e 5 diretamente. Elimina o literalismo catastrófico.
+
+CORREÇÃO 4 — IMPORTANTE: Enriquecer conversation_context de gerar_conteudo_atividades com conteúdo real
+Onde: src/features/schoolpower/agente-jota/executor.ts — linhas 1719-1720 e 1732-1733
+
+Problema: O conversation_context passado ao gerar_conteudo_atividades é substituído pelo estrategia_pedagogica do decidir_atividades_criar, perdendo qualquer contexto de arquivo que tenha chegado.
+
+Correção: Ao enriquecer os params para gerar_conteudo_atividades, compor o conversation_context como:
+
+// ANTES:
+enrichedParams.conversation_context = decisionResult.estrategia_pedagogica || '';
+// DEPOIS:
+const fileCtxForContent = getSessionFileContext(this.sessionId);
+enrichedParams.conversation_context = [
+  decisionResult.estrategia_pedagogica || '',
+  fileCtxForContent || '',
+].filter(Boolean).join('\n\n');
+Para isso funcionar, o executor precisa importar getSessionFileContext do orchestrator.
+
+Alternativa mais simples: Exportar getSessionFileContext do orchestrator e importar no executor.
+
+Impacto: Garante que as questões geradas pelo gerar_conteudo_atividades tenham acesso ao conteúdo real do arquivo, eliminando o fallback para valores de exemplo (Matemática, EF01MA01, etc.).
+
+CORREÇÃO 5 — SECUNDÁRIA: Substituir valores de exemplo hardcoded por conteúdo contextual
+Onde: gerar-conteudo-atividades.ts — função getExampleValueForField (linhas 496-515)
+
+Problema: Os exemplos hardcoded ('Matemática', 'Operações com Frações') contaminam o output quando a IA não tem contexto real.
+
+Correção: Tornar os exemplos dinâmicos baseados no qualityCtx:
+
+// ANTES:
+'subject': 'Matemática',
+'theme': 'Operações com Frações',
+// DEPOIS: 
+'subject': qualityCtx.disciplina || '[INFERIR DO CONTEXTO]',
+'theme': qualityCtx.tema || '[EXTRAIR DO MATERIAL ENVIADO]',
+E adicionar instrução no prompt gerado:
+
+ATENÇÃO: Os valores entre [colchetes] devem ser inferidos do CONTEXTO COMPLETO DA CONVERSA acima.
+NUNCA use "[INFERIR DO CONTEXTO]" literalmente no JSON — substitua pelo valor correto.
+Impacto: Elimina o problema de Matemática/1º ano saindo em prompts sobre outros temas.
+
+CORREÇÃO 6 — SECUNDÁRIA: Geração de múltiplas atividades para prompts textuais
+Onde: src/features/schoolpower/agente-jota/prompts/planning-prompt.ts — seção de criação em lote
+
+Problema (Prompt 1): Para pedidos de atividades de interpretação/texto, o Planner gerou apenas 1 em vez de 5.
+
+Correção: Adicionar instrução explícita para honrar contagem numérica:
+
+REGRA DE QUANTIDADE OBRIGATÓRIA:
+Se o professor especificar um número (ex: "5 atividades", "3 exercícios"), esse número é ABSOLUTO.
+Você DEVE criar exatamente esse número de atividades, independentemente do tipo.
+Para atividades textuais (interpretação, crônicas, redação), crie variações:
+- Questão de interpretação (múltipla escolha)
+- Questão de interpretação (verdadeiro/falso)
+- Questão aberta
+- Atividade de completar lacunas
+- Produção textual guiada
+Impacto: Garante que "5 atividades" gere exatamente 5, não 1.
+
+RESUMO EXECUTIVO — ORDEM DE IMPLEMENTAÇÃO
+Prioridade	Correção	Arquivos	Prompts Resolvidos
+🔴 1	Injetar sessionFileContexts no Planner (EXECUTAR)	orchestrator.ts	2, 4, 5
+🔴 2	Injetar sessionFileContexts no Executor	orchestrator.ts	2, 4, 5
+🔴 3	Anti-Literalismo no Planner	planning-prompt.ts	4, 5
+🟡 4	Enriquecer conversation_context com arquivo	executor.ts	2
+🟡 5	Salvar arquivo no InteractionLedger	orchestrator.ts	Todos (longo prazo)
+🟢 6	Exemplos dinâmicos no gerador	gerar-conteudo-atividades.ts	2
+🟢 7	Quantidade obrigatória no Planner	planning-prompt.ts	1
+As Correções 1, 2 e 3 resolvem ~90% dos problemas reportados. As correções 4-7 fecham os 10% restantes e blindam o sistema contra regressões futuras.

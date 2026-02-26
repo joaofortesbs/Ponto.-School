@@ -241,6 +241,7 @@ async function processFileAttachments(
     ].join('\n');
     const existing = sessionFileContexts.get(sessionId) || '';
     sessionFileContexts.set(sessionId, existing ? `${existing}\n\n${anchoredContext}` : anchoredContext);
+
   }
 
   const aiDebugEntries: AIDebugEntry[] = result.debug_log.map((entry, idx) => ({
@@ -273,14 +274,22 @@ async function processFileAttachments(
     }));
   }
 
+  const fileNames = result.data?.arquivos?.map((a: any) => a.original_name) || files.map(f => f.name);
+  const resumoMatch = promptContext.match(/\*\*Resumo:\*\*\s*(.+?)(?:\n|$)/);
+  const resumoBreve = resumoMatch ? resumoMatch[1].substring(0, 120) : 'conteúdo pedagógico disponível no contexto';
+  const ledgerNote = promptContext
+    ? `📎 Arquivo(s) lido(s): "${fileNames.join(', ')}" — Resumo: ${resumoBreve} — Conteúdo completo disponível como referência pedagógica nesta sessão.`
+    : '';
+
   return {
     meta: {
       filesProcessed: result.data?.count || 0,
-      fileNames: result.data?.arquivos?.map((a: any) => a.original_name) || files.map(f => f.name),
+      fileNames,
       processingTime: result.metadata.duration_ms,
       promptContext,
     },
     debugEntries: aiDebugEntries,
+    ledgerNote,
   };
 }
 
@@ -306,11 +315,13 @@ export async function processUserPrompt(
 
   let fileProcessingMeta: FileProcessingMeta | undefined;
   let fileDebugEntries: AIDebugEntry[] | undefined;
+  let fileLedgerNote = '';
   if (files && files.length > 0) {
     console.log('📎 [Orchestrator] Processando arquivos antes do roteamento...');
-    const { meta, debugEntries } = await processFileAttachments(files, sessionId);
+    const { meta, debugEntries, ledgerNote } = await processFileAttachments(files, sessionId);
     fileProcessingMeta = meta;
     fileDebugEntries = debugEntries;
+    fileLedgerNote = ledgerNote;
     console.log(`📎 [Orchestrator] ${meta.filesProcessed} arquivo(s) processado(s) em ${meta.processingTime}ms`);
   }
 
@@ -335,6 +346,10 @@ export async function processUserPrompt(
       fact: `Professor perguntou: "${userPrompt.substring(0, 150)}" [route: CONVERSAR]`,
       category: 'context',
     });
+
+    if (fileLedgerNote) {
+      addLedgerFact(sessionId, { fact: fileLedgerNote, category: 'context' });
+    }
 
     const { detectResearchNeed } = await import('./research-enrichment-layer/need-detection');
     const needResult = await detectResearchNeed(userPrompt);
@@ -506,7 +521,11 @@ export async function processUserPrompt(
         category: 'error',
       });
 
-      const contextForPlanner = buildContextForPlanner(sessionId, userPrompt);
+      const fileCtxForFallback = getSessionFileContext(sessionId);
+      const rawFallbackCtx = buildContextForPlanner(sessionId, userPrompt);
+      const contextForPlanner = fileCtxForFallback
+        ? `${rawFallbackCtx}\n\n${fileCtxForFallback}`
+        : rawFallbackCtx;
       try {
         const plan = await createExecutionPlan(userPrompt, {
           workingMemory: contextForPlanner,
@@ -554,7 +573,19 @@ export async function processUserPrompt(
     category: 'context',
   });
 
-  const contextForPlanner = buildContextForPlanner(sessionId, userPrompt);
+  if (fileLedgerNote) {
+    addLedgerFact(sessionId, { fact: fileLedgerNote, category: 'context' });
+  }
+
+  const fileCtxForPlanner = getSessionFileContext(sessionId);
+  const rawContextForPlanner = buildContextForPlanner(sessionId, userPrompt);
+  const contextForPlanner = fileCtxForPlanner
+    ? `${rawContextForPlanner}\n\n${fileCtxForPlanner}`
+    : rawContextForPlanner;
+
+  if (fileCtxForPlanner) {
+    console.log(`📎 [Orchestrator] Contexto de arquivo injetado no Planner (${fileCtxForPlanner.length} chars)`);
+  }
 
   try {
     const plan = await createExecutionPlan(userPrompt, {

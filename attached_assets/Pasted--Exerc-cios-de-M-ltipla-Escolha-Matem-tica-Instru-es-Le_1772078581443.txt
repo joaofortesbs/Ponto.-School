@@ -1,0 +1,66 @@
+## Exercícios de Múltipla Escolha — Matemática
+
+
+
+---
+
+## Instruções
+
+- Leia atentamente cada questão.
+- Escolha a resposta que você acredita ser correta.
+- Não há limite de tempo, mas é importante que você conclua as questões com atenção.
+
+---
+
+## Questões
+
+1. **EF01MA01**: Qual é o objetivo de utilizar números naturais como indicador de quantidade ou de ordem em diferentes situações cotidianas?
+   - A) Apenas para contar objetos
+   - B) Para indicar quantidade, ordem e código de identificação
+   - C) Somente para identificar objetos
+   - D) Nenhuma das alternativas
+
+2. **EF01MA03**: Você tem dois conjuntos de objetos, um com 15 objetos e outro com 20 objetos. Como você pode comparar essas quantidades?
+   - A) Contando os objetos de um em um
+   - B) Fazendo um pareamento
+   - C) Estimando e comparando
+   - D) Todas as alternativas
+
+3. **EF01MA05**: Qual é o objetivo de comparar números naturais de até duas ordens em situações cotidianas?
+   - A) Identificar números maiores e menores
+   - B) Ordenar números em ordem crescente
+   - C) Compreender o valor posicional e a função do zero
+   - D) Todas as alternativas
+
+4. **EF01MA08**: Você tem 5 lápis em sua caixa e ganha mais 2. Quantos lápis você tem agora?
+   - A) 3
+   - B) 5
+   - C) 7
+   - D) 10
+
+5. **EF01MA14**: Qual é o nome da figura plana que tem quatro lados iguais?
+   - A) Quadrado
+   - B) Retângulo
+   - C) Triângulo
+   - D) Círculo
+
+---
+
+## Gabarito
+
+1. **B) Para indicar quantidade, ordem e código de identificação**
+   - Justificativa: O objetivo de utilizar números naturais é para indicar quantidade, ordem e código de identificação em diferentes situações cotidianas.
+
+2. **D) Todas as alternativas**
+   - Justificativa: É possível comparar as quantidades de objetos de dois conjuntos por estimativa, contagem um a um, pareamento ou outros agrupamentos.
+
+3. **D) Todas as alternativas**
+   - Justificativa: Comparar números naturais de até duas ordens ajuda a identificar números maiores e menores, ordenar números em ordem crescente e compreender o valor posicional e a função do zero.
+
+4. **C) 7**
+   - Justificativa: Se você tem 5 lápis e ganha mais 2, você terá 7 lápis no total.
+
+5. **A) Quadrado**
+   - Justificativa: O quadrado é uma figura plana que tem quatro lados iguais.
+
+Lembre-se de revisar os conceitos e habilidades da BNCC para entender melhor os objetivos de cada questão. Boa sorte!
