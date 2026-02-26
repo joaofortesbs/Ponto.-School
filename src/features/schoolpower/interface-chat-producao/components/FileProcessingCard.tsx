@@ -11,10 +11,9 @@ interface FileProcessingCardProps {
   debugEntries?: AIDebugEntry[];
 }
 
-export function FileProcessingCard({ fileNames, status, processedCount, debugEntries }: FileProcessingCardProps) {
+export function FileProcessingCard({ fileNames, status, processedCount, debugEntries = [] }: FileProcessingCardProps) {
   const totalFiles = fileNames.length;
   const processed = processedCount ?? (status === 'complete' ? totalFiles : 0);
-  const progress = totalFiles > 0 ? (processed / totalFiles) * 100 : 0;
 
   const label = status === 'processing'
     ? `Lendo ${totalFiles} arquivo${totalFiles !== 1 ? 's' : ''} anexado${totalFiles !== 1 ? 's' : ''}...`
@@ -22,62 +21,61 @@ export function FileProcessingCard({ fileNames, status, processedCount, debugEnt
       ? `${processed} arquivo${processed !== 1 ? 's' : ''} lido${processed !== 1 ? 's' : ''} com sucesso`
       : `Erro ao ler ${totalFiles} arquivo${totalFiles !== 1 ? 's' : ''}`;
 
+  const hasDebug = debugEntries.length > 0;
+
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.25 }}
-      className="flex items-center gap-2 relative"
+      className="rounded-xl border border-white/10 bg-[#0d0d1a]/70 backdrop-blur-sm px-4 py-3 max-w-sm"
     >
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        {status === 'processing' && (
-          <Loader2 className="w-3.5 h-3.5 text-cyan-400 animate-spin flex-shrink-0" />
-        )}
-        {status === 'complete' && (
-          <span className="relative flex h-2 w-2 flex-shrink-0">
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-          </span>
-        )}
-        {status === 'error' && (
-          <span className="relative flex h-2 w-2 flex-shrink-0">
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-          </span>
-        )}
-
-        <div className="flex flex-col gap-1 flex-1 min-w-0">
-          <span
-            style={{
-              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-              fontSize: '14px',
-              fontStyle: 'italic',
-              color: status === 'error'
-                ? 'rgba(248, 113, 113, 0.85)'
-                : 'rgba(255, 255, 255, 0.55)',
-            }}
-          >
-            {label}
-          </span>
-
+      <div className="flex items-center gap-2.5">
+        <div className="flex-shrink-0">
           {status === 'processing' && (
-            <div className="w-48 bg-white/5 rounded-full h-0.5 overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 rounded-full"
-                initial={{ width: '5%' }}
-                animate={{ width: '80%' }}
-                transition={{ duration: 2.5, ease: 'easeInOut' }}
-              />
-            </div>
+            <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+          )}
+          {status === 'complete' && (
+            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          )}
+          {status === 'error' && (
+            <span className="flex h-2.5 w-2.5 rounded-full bg-red-500" />
           )}
         </div>
-      </div>
 
-      {debugEntries && debugEntries.length > 0 && (
-        <div className="flex-shrink-0 ml-1">
+        <span
+          className="flex-1 min-w-0 truncate"
+          style={{
+            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+            fontSize: '13px',
+            fontStyle: 'italic',
+            color: status === 'error'
+              ? 'rgba(248, 113, 113, 0.9)'
+              : status === 'complete'
+                ? 'rgba(52, 211, 153, 0.85)'
+                : 'rgba(255, 255, 255, 0.6)',
+          }}
+        >
+          {label}
+        </span>
+
+        <div className={`flex-shrink-0 transition-opacity duration-300 ${hasDebug ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
           <DebugIcon
             capabilityId="ler_arquivos"
             capabilityName="Leitura de Arquivos"
             entries={debugEntries}
+          />
+        </div>
+      </div>
+
+      {status === 'processing' && (
+        <div className="mt-2.5 w-full bg-white/5 rounded-full h-1 overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-cyan-500 to-blue-400 rounded-full"
+            initial={{ width: '4%' }}
+            animate={{ width: '82%' }}
+            transition={{ duration: 3, ease: 'easeInOut' }}
           />
         </div>
       )}
