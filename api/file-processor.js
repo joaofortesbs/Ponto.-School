@@ -36,13 +36,17 @@ function resolveGeminiKey() {
   return (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '').trim();
 }
 
+function resolveGroqKey() {
+  return (process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY || '').trim();
+}
+
 function resolveOpenRouterKey() {
   return (process.env.OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY || '').trim();
 }
 
 async function callGeminiVision(base64Data, mimeType, promptText) {
   const apiKey = resolveGeminiKey();
-  if (!apiKey) return { text: null, method: 'fallback_no_api_key' };
+  if (!apiKey) return { text: null, method: 'fallback_no_api_key', statusCode: 0 };
 
   const model = 'gemini-2.0-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -71,17 +75,73 @@ async function callGeminiVision(base64Data, mimeType, promptText) {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error(`[FileProcessor] Gemini Vision erro ${response.status}:`, errText.substring(0, 200));
       const code = response.status;
+      console.error(`[FileProcessor] Gemini Vision erro ${code}:`, errText.substring(0, 200));
       return { text: null, method: code === 429 ? 'quota_exceeded' : 'fallback_api_error', statusCode: code };
     }
 
     const data = await response.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    return { text: text || null, method: 'gemini_vision' };
+    return { text: text || null, method: 'gemini_vision', statusCode: 200 };
   } catch (err) {
     clearTimeout(timeout);
     console.error('[FileProcessor] Gemini Vision erro de rede:', err.message);
+    return { text: null, method: 'fallback_network_error', statusCode: 0 };
+  }
+}
+
+async function callGroqVision(base64Data, mimeType, promptText) {
+  const apiKey = resolveGroqKey();
+  if (!apiKey) return { text: null, method: 'fallback_no_api_key' };
+
+  const supportedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const effectiveMime = supportedMimes.includes(mimeType) ? mimeType : 'image/jpeg';
+  const dataUrl = `data:${effectiveMime};base64,${base64Data}`;
+
+  const body = {
+    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image_url', image_url: { url: dataUrl } },
+        { type: 'text', text: promptText },
+      ],
+    }],
+    max_tokens: 8192,
+    temperature: 0.2,
+  };
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120000);
+
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`[FileProcessor] Groq Vision erro ${response.status}:`, errText.substring(0, 200));
+      return { text: null, method: 'fallback_groq_error' };
+    }
+
+    const data = await response.json();
+    const text = data?.choices?.[0]?.message?.content || '';
+    if (!text) {
+      console.warn('[FileProcessor] Groq Vision retornou resposta vazia');
+      return { text: null, method: 'fallback_groq_empty' };
+    }
+    return { text, method: 'groq_vision' };
+  } catch (err) {
+    clearTimeout(timeout);
+    console.error('[FileProcessor] Groq Vision erro de rede:', err.message);
     return { text: null, method: 'fallback_network_error' };
   }
 }
@@ -95,7 +155,7 @@ async function callOpenRouterVision(base64Data, mimeType, promptText) {
   const dataUrl = `data:${effectiveMime};base64,${base64Data}`;
 
   const body = {
-    model: 'google/gemini-2.0-flash-001',
+    model: 'openai/gpt-4o-mini',
     messages: [{
       role: 'user',
       content: [
@@ -132,7 +192,11 @@ async function callOpenRouterVision(base64Data, mimeType, promptText) {
 
     const data = await response.json();
     const text = data?.choices?.[0]?.message?.content || '';
-    return { text: text || null, method: 'openrouter_vision' };
+    if (!text) {
+      console.warn('[FileProcessor] OpenRouter Vision retornou resposta vazia');
+      return { text: null, method: 'fallback_openrouter_empty' };
+    }
+    return { text, method: 'openrouter_vision' };
   } catch (err) {
     clearTimeout(timeout);
     console.error('[FileProcessor] OpenRouter Vision erro de rede:', err.message);
@@ -142,9 +206,10 @@ async function callOpenRouterVision(base64Data, mimeType, promptText) {
 
 async function callVisionCascade(base64Data, mimeType, promptText) {
   const geminiKey = resolveGeminiKey();
+  const groqKey = resolveGroqKey();
   const openRouterKey = resolveOpenRouterKey();
 
-  if (!geminiKey && !openRouterKey) {
+  if (!geminiKey && !groqKey && !openRouterKey) {
     console.warn('[FileProcessor] Nenhuma API de visão configurada');
     return { text: null, method: 'fallback_no_api_key' };
   }
@@ -152,31 +217,53 @@ async function callVisionCascade(base64Data, mimeType, promptText) {
   if (geminiKey) {
     const geminiResult = await callGeminiVision(base64Data, mimeType, promptText);
     if (geminiResult.text) {
-      console.log(`[FileProcessor] Gemini Vision bem-sucedido`);
+      console.log('[FileProcessor] Gemini Vision bem-sucedido');
       return geminiResult;
     }
+    const reason = geminiResult.statusCode === 429 ? 'cota esgotada (429)' : geminiResult.method;
+    console.warn(`[FileProcessor] Gemini falhou (${reason}) — tentando Groq Vision...`);
+  }
 
-    if (geminiResult.method === 'quota_exceeded') {
-      console.warn('[FileProcessor] Gemini cota esgotada (429) — tentando OpenRouter...');
-    } else if (geminiResult.method !== 'fallback_no_api_key') {
-      console.warn(`[FileProcessor] Gemini falhou (${geminiResult.method}) — tentando OpenRouter...`);
+  if (groqKey && !mimeType.includes('pdf')) {
+    const groqResult = await callGroqVision(base64Data, mimeType, promptText);
+    if (groqResult.text) {
+      console.log('[FileProcessor] Groq Vision bem-sucedido');
+      return groqResult;
     }
+    console.warn(`[FileProcessor] Groq Vision falhou (${groqResult.method}) — tentando OpenRouter...`);
   }
 
   if (openRouterKey && !mimeType.includes('pdf')) {
     const orResult = await callOpenRouterVision(base64Data, mimeType, promptText);
     if (orResult.text) {
-      console.log(`[FileProcessor] OpenRouter Vision bem-sucedido`);
+      console.log('[FileProcessor] OpenRouter Vision bem-sucedido');
       return orResult;
     }
-    console.warn(`[FileProcessor] OpenRouter também falhou: ${orResult.method}`);
-  }
-
-  if (mimeType.includes('pdf') && !resolveGeminiKey()) {
-    return { text: null, method: 'fallback_pdf_no_gemini' };
+    console.warn(`[FileProcessor] OpenRouter Vision também falhou: ${orResult.method}`);
   }
 
   return { text: null, method: 'fallback_quota_exceeded' };
+}
+
+async function extractPdfTextFallback(buffer, originalName) {
+  try {
+    const { PDFParse } = await import('pdf-parse');
+    const parser = new PDFParse({ data: buffer, verbosity: 0 });
+    await parser.load();
+    const result = await parser.getText();
+    const extractedText = result?.text?.trim() || '';
+
+    if (!extractedText || extractedText.length < 20) {
+      console.warn(`[FileProcessor] pdf-parse extraiu texto insuficiente (${extractedText.length} chars) — PDF provavelmente é escaneado`);
+      return null;
+    }
+
+    console.log(`[FileProcessor] pdf-parse extraiu ${extractedText.length} chars de texto do PDF`);
+    return extractedText;
+  } catch (err) {
+    console.error('[FileProcessor] pdf-parse falhou:', err.message?.substring(0, 100));
+    return null;
+  }
 }
 
 function parseGeminiJson(rawText, fallbackType = 'documento') {
@@ -206,7 +293,7 @@ function parseGeminiJson(rawText, fallbackType = 'documento') {
 
 function makeFallbackTranscription(originalName, method) {
   const reasons = {
-    fallback_no_api_key: 'Configure GEMINI_API_KEY ou OPENROUTER_API_KEY para habilitar leitura de arquivos.',
+    fallback_no_api_key: 'Configure GEMINI_API_KEY, GROQ_API_KEY ou OPENROUTER_API_KEY para habilitar leitura de arquivos.',
     fallback_quota_exceeded: 'Cota da API de visão temporariamente esgotada. Tente novamente em alguns minutos.',
     fallback_pdf_no_gemini: 'PDFs requerem a API do Gemini configurada (GEMINI_API_KEY).',
     fallback_api_error: 'Erro na API de visão ao processar o arquivo.',
@@ -312,22 +399,49 @@ async function processImage(buffer, mimeType, originalName) {
 }
 
 async function processPDF(buffer, originalName) {
-  console.log(`[FileProcessor] PDF: enviando diretamente ao Gemini Vision (${(buffer.length / 1024).toFixed(1)}KB)`);
+  console.log(`[FileProcessor] PDF: tentando Gemini Vision (${(buffer.length / 1024).toFixed(1)}KB)`);
   const base64 = buffer.toString('base64');
 
-  const { text: rawText, method } = await callGeminiVision(base64, 'application/pdf', PDF_VISION_PROMPT);
+  const geminiResult = await callGeminiVision(base64, 'application/pdf', PDF_VISION_PROMPT);
 
-  if (!rawText) {
-    const reason = method === 'quota_exceeded' ? 'fallback_quota_exceeded' : method;
+  if (geminiResult.text) {
+    const transcription = parseGeminiJson(geminiResult.text, 'pdf');
+    return { pages: transcription?.metadata?.page_count_estimate || 1, transcription, method: 'gemini_vision_pdf' };
+  }
+
+  console.warn(`[FileProcessor] Gemini PDF falhou (${geminiResult.method}) — tentando extração de texto via pdf-parse...`);
+  const extractedText = await extractPdfTextFallback(buffer, originalName);
+
+  if (extractedText) {
+    const transcription = {
+      summary: extractedText.substring(0, 250) + (extractedText.length > 250 ? '...' : ''),
+      full_content: extractedText,
+      metadata: {
+        language: 'pt-BR',
+        document_type: 'pdf',
+        subject: '',
+        grade_level: '',
+        page_count_estimate: Math.max(1, Math.ceil(extractedText.length / 3000)),
+        has_images: false,
+        has_tables: false,
+        has_formulas: false,
+      },
+      visual_elements: [],
+      pedagogical_context: '',
+    };
     return {
-      pages: 1,
-      transcription: makeFallbackTranscription(originalName, reason),
-      method: reason,
+      pages: transcription.metadata.page_count_estimate,
+      transcription,
+      method: 'pdf_text_extract',
     };
   }
 
-  const transcription = parseGeminiJson(rawText, 'pdf');
-  return { pages: transcription?.metadata?.page_count_estimate || 1, transcription, method: 'gemini_vision_pdf' };
+  const reason = geminiResult.statusCode === 429 ? 'fallback_quota_exceeded' : (geminiResult.method.startsWith('fallback') ? geminiResult.method : 'fallback_quota_exceeded');
+  return {
+    pages: 1,
+    transcription: makeFallbackTranscription(originalName, reason),
+    method: reason,
+  };
 }
 
 async function processDOCX(buffer, originalName) {
@@ -417,6 +531,7 @@ router.post('/process', (req, res, next) => {
     }
 
     const originalName = (() => {
+      if (req.body?.originalName) return req.body.originalName;
       try { return decodeURIComponent(file.originalname); }
       catch { return file.originalname; }
     })();

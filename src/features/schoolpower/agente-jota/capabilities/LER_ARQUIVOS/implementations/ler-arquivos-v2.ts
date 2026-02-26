@@ -41,8 +41,9 @@ async function processFileViaBackend(
   }
   const blob = new Blob([bytes], { type: mimeType });
 
-  const safeFileName = encodeURIComponent(fileName);
-  formData.append('file', blob, safeFileName);
+  const ext = fileName.includes('.') ? fileName.split('.').pop() : 'bin';
+  formData.append('file', blob, `upload_${Date.now()}.${ext}`);
+  formData.append('originalName', fileName);
 
   const response = await fetch('/api/files/process', {
     method: 'POST',
@@ -109,11 +110,11 @@ function getMimeIcon(mimeType: string): string {
 }
 
 function getExtractionMethod(mimeType: string): string {
-  if (mimeType.startsWith('image/')) return 'Gemini Vision (cascade: OpenRouter)';
-  if (mimeType === 'application/pdf') return 'Gemini Vision (PDF nativo)';
+  if (mimeType.startsWith('image/')) return 'Gemini/Groq/OpenRouter Vision (cascade)';
+  if (mimeType === 'application/pdf') return 'Gemini Vision PDF (fallback: extração de texto)';
   if (mimeType.includes('word') || mimeType.includes('document')) return 'Extração de texto (mammoth)';
   if (mimeType.startsWith('text/')) return 'Leitura direta UTF-8';
-  return 'Gemini Vision';
+  return 'Gemini Vision (cascade)';
 }
 
 function isFallbackMethod(method: string): boolean {
@@ -122,12 +123,15 @@ function isFallbackMethod(method: string): boolean {
 
 function getFallbackReason(method: string): string {
   const reasons: Record<string, string> = {
-    fallback_no_api_key: 'API de visão não configurada (GEMINI_API_KEY ou OPENROUTER_API_KEY ausente)',
-    fallback_quota_exceeded: 'Cota da API de visão temporariamente esgotada — tente novamente em alguns minutos',
+    fallback_no_api_key: 'API de visão não configurada (GEMINI_API_KEY, GROQ_API_KEY ou OPENROUTER_API_KEY ausente)',
+    fallback_quota_exceeded: 'Cota da API de visão esgotada em todos os provedores (Gemini, Groq, OpenRouter) — tente novamente em alguns minutos',
     fallback_pdf_no_gemini: 'Leitura de PDFs requer GEMINI_API_KEY configurada',
     fallback_api_error: 'Erro na API de visão ao processar o arquivo',
     fallback_network_error: 'Erro de rede ao contactar a API de visão',
     fallback_openrouter_error: 'Erro no OpenRouter ao processar o arquivo',
+    fallback_groq_error: 'Erro no Groq ao processar o arquivo',
+    fallback_groq_empty: 'Groq Vision retornou resposta vazia',
+    fallback_openrouter_empty: 'OpenRouter Vision retornou resposta vazia',
     quota_exceeded: 'Cota da API de visão temporariamente esgotada — tente novamente em alguns minutos',
   };
   return reasons[method] || 'Falha desconhecida ao processar o arquivo';
@@ -354,7 +358,7 @@ export async function lerArquivosV2(
     metadata: {
       duration_ms: totalTime,
       retry_count: 0,
-      data_source: 'gemini-2.0-flash Vision (cascade: OpenRouter) + mammoth',
+      data_source: 'Gemini Vision + Groq Vision + OpenRouter cascade + mammoth',
     },
   };
 }
