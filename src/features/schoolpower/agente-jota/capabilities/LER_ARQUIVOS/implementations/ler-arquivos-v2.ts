@@ -39,10 +39,28 @@ async function processFileViaBackend(
   for (let i = 0; i < binaryStr.length; i++) {
     bytes[i] = binaryStr.charCodeAt(i);
   }
-  const blob = new Blob([bytes], { type: mimeType });
 
-  const ext = fileName.includes('.') ? fileName.split('.').pop() : 'bin';
-  formData.append('file', blob, `upload_${Date.now()}.${ext}`);
+  let uploadBlob = new Blob([bytes], { type: mimeType });
+  let uploadExt = fileName.includes('.') ? fileName.split('.').pop()! : 'bin';
+
+  const isHeic =
+    mimeType === 'image/heic' ||
+    mimeType === 'image/heif' ||
+    fileName.toLowerCase().endsWith('.heic') ||
+    fileName.toLowerCase().endsWith('.heif');
+
+  if (isHeic) {
+    try {
+      const heic2any = (await import('heic2any')).default;
+      const converted = await (heic2any as any)({ blob: uploadBlob, toType: 'image/jpeg', quality: 0.85 });
+      uploadBlob = Array.isArray(converted) ? converted[0] : (converted as Blob);
+      uploadExt = 'jpg';
+    } catch (heicErr) {
+      console.warn('[LerArquivos] Conversão HEIC→JPEG falhou, enviando original:', heicErr);
+    }
+  }
+
+  formData.append('file', uploadBlob, `upload_${Date.now()}.${uploadExt}`);
   formData.append('originalName', fileName);
 
   const response = await fetch('/api/files/process', {

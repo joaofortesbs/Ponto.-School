@@ -6,6 +6,7 @@ const router = express.Router();
 
 const ALLOWED_MIME_TYPES = [
   'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff', 'image/svg+xml',
+  'image/heic', 'image/heif',
   'application/pdf',
   'text/plain', 'text/csv', 'text/markdown', 'text/html',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -155,7 +156,7 @@ async function callOpenRouterVision(base64Data, mimeType, promptText) {
   const dataUrl = `data:${effectiveMime};base64,${base64Data}`;
 
   const body = {
-    model: 'openai/gpt-4o-mini',
+    model: 'mistralai/mistral-small-3.1-24b-instruct:free',
     messages: [{
       role: 'user',
       content: [
