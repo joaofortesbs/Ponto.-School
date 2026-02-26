@@ -23,6 +23,8 @@ export {
   addStepResult, 
   registerActivity, 
   addLedgerFact,
+  addFileContext,
+  getFileContexts,
   clearSession,
   warmupSession,
 } from './session-store';

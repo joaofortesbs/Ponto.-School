@@ -197,6 +197,21 @@ export function addLedgerFact(
   });
 }
 
+export function addFileContext(sessionId: string, fileContext: string): void {
+  const session = sessionStore.get(sessionId);
+  if (!session || !fileContext) return;
+  if (!session.fileContexts) session.fileContexts = [];
+  if (!session.fileContexts.includes(fileContext)) {
+    session.fileContexts.push(fileContext);
+    console.log(`📎 [SessionStore] Contexto de arquivo adicionado à sessão ${sessionId} (${fileContext.length} chars)`);
+  }
+}
+
+export function getFileContexts(sessionId: string): string[] {
+  const session = sessionStore.get(sessionId);
+  return session?.fileContexts || [];
+}
+
 export function clearSession(sessionId: string): void {
   sessionStore.delete(sessionId);
   console.log(`🧹 [SessionStore] Sessão removida: ${sessionId}`);

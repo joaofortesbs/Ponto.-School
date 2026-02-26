@@ -1,0 +1,152 @@
+Três problemas confirmados por análise profunda de código + pesquisa de mercado (Teachy, MagicSchool, Brisk Teaching, Manus AI, Kimi, Genspark):
+
+Falha crítica de pipeline: O gerar-conteudo-atividades.ts (gerador final do EXECUTAR) recebe conversation_context = estrategia_pedagogica — uma string gerada pelo Decidir, nunca o conteúdo real do arquivo. O arquivo lido com sucesso nunca chega ao ponto mais importante do pipeline.
+
+Contexto de arquivo volátil: O sessionFileContexts é uma Map em RAM puro no orchestrator.ts. Se o servidor reiniciar (acontece em deploys), o contexto desaparece. A solução correta é persistir o conteúdo dentro do SessionContext do session-store.ts, que já tem lifecycle gerenciado de 4h.
+
+Arquitetura insustentável: gerar-conteudo-atividades.ts tem 3.203 linhas — 8x o limite recomendado por qualquer referência (Manus AI, Cursor, MagicSchool usam módulos de 200-400 linhas). Cada ajuste futuro custa 3x mais tempo e tem 3x mais chance de introduzir bugs colaterais.
+
+Restrições absolutas:
+
+NUNCA tocar na rota EXECUTAR (o endpoint da API)
+NUNCA importar orchestrator.ts de dentro de executor.ts (dependência circular)
+Tasks
+T001: Adicionar fileContexts ao SessionContext e popular via orchestrator.ts
+Blocked By: []
+
+Arquivos:
+
+src/features/schoolpower/agente-jota/context-engine/context-assembler.ts
+src/features/schoolpower/agente-jota/context-engine/session-store.ts
+src/features/schoolpower/agente-jota/orchestrator.ts
+Details: Adicionar fileContexts?: string[] à interface SessionContext no context-assembler.ts. Isso elimina a dependência do sessionFileContexts Map volátil e torna o conteúdo dos arquivos acessível de qualquer ponto do sistema que já use getSession(sessionId) — incluindo o executor.ts sem criar dependência circular.
+
+context-assembler.ts — adicionar na interface SessionContext (após interactionLedger?):
+
+fileContexts?: string[];  // Conteúdo completo dos arquivos lidos nesta sessão
+session-store.ts — adicionar as duas funções exportadas:
+
+export function addFileContext(sessionId: string, fileContext: string): void {
+  const session = sessionStore.get(sessionId);
+  if (!session) return;
+  if (!session.fileContexts) session.fileContexts = [];
+  session.fileContexts.push(fileContext);
+}
+export function getFileContexts(sessionId: string): string[] {
+  const session = sessionStore.get(sessionId);
+  return session?.fileContexts || [];
+}
+orchestrator.ts — importar addFileContext, getFileContexts de session-store. No bloco CONVERSAR (após createSession ~linha 334) e EXECUTAR (após createSession ~linha 559), chamar:
+
+if (fileLedgerNote && fileProcessingMeta?.promptContext) {
+  addFileContext(sessionId, fileProcessingMeta.promptContext);
+}
+Manter o sessionFileContexts Map existente para compatibilidade com o getSessionFileContext() já usado no Planner injection — ele pode continuar como está. O novo addFileContext é adicional, não substitutivo.
+
+Acceptance: getFileContexts(sessionId) retorna array não-vazio após upload de arquivo no path CONVERSAR e EXECUTAR. FileProcessingMeta já tem promptContext no campo meta retornado por processFileAttachments.
+
+T002: Injetar conteúdo real do arquivo no gerador final de conteúdo
+Blocked By: [T001]
+
+Arquivos:
+
+src/features/schoolpower/agente-jota/executor.ts
+src/features/schoolpower/agente-jota/capabilities/GERAR_CONTEUDO/implementations/gerar-conteudo-atividades.ts
+Details: O maior impacto da plataforma: quando um professor anexa um livro didático, uma prova ou imagem do quadro, o Jota deve usar esse material como matéria-prima para as atividades. Hoje isso não acontece porque o conteúdo do arquivo nunca chega ao gerador.
+
+executor.ts — no bloco de enriquecimento de params para gerar_conteudo_atividades (perto das linhas 1718-1745, após a injeção de BNCC e questões de referência), adicionar:
+
+import { getFileContexts } from '../context-engine/session-store';
+// ...
+// Logo após injetar bncc_context e questoes_referencia:
+const sessionFileContexts = getFileContexts(this.sessionId);
+if (sessionFileContexts.length > 0) {
+  const fileBlock = sessionFileContexts.join('\n\n---\n\n');
+  enrichedParams.file_context = fileBlock;
+  // Também enriquecer conversation_context para retrocompatibilidade:
+  enrichedParams.conversation_context = enrichedParams.conversation_context
+    ? `${enrichedParams.conversation_context}\n\n${fileBlock}`
+    : fileBlock;
+  console.error(`📎 [Executor] Arquivo injetado em gerar_conteudo (${fileBlock.length} chars)`);
+}
+gerar-conteudo-atividades.ts — adicionar file_context?: string ao GerarConteudoParams (linha ~61) e ao buildContentGenerationPrompt, inserindo seção dedicada após ## CONTEXTO COMPLETO DA CONVERSA:
+
+// Em GerarConteudoParams:
+file_context?: string;
+// Em buildContentGenerationPrompt, após a seção CONTEXTO DA CONVERSA:
+${params.file_context ? `
+## 📎 MATERIAL DO PROFESSOR — USE COMO MATÉRIA-PRIMA
+⚓ REGRA DE USO:
+• Se o professor pediu um tipo específico de atividade → use o arquivo para PREENCHER o conteúdo daquele tipo
+• Se o pedido foi vago ("crie atividades") → use o arquivo como TEMA E FONTE de todo o conteúdo
+• NUNCA ignore o arquivo quando ele está presente e o pedido é escolar
+• NUNCA substitua o TIPO de atividade pedido pelo conteúdo do arquivo
+${params.file_context}
+` : ''}
+Acceptance: Com arquivo de texto sobre fotossíntese e pedido "crie 3 exercícios de múltipla escolha", o Jota gera exercícios de múltipla escolha COM perguntas baseadas no conteúdo específico do arquivo (não genéricas). Log 📎 [Executor] Arquivo injetado aparece no console.
+
+T003: Regra anti-desvio no Planner — uso correto de arquivos
+Blocked By: [T001]
+
+Arquivos:
+
+src/features/schoolpower/agente-jota/prompts/planning-prompt.ts
+Details: O Planner recebe o arquivo como parte do {context} genérico. Sem instrução específica, o LLM pode confundir o TEMA do arquivo com o TEMA das atividades. Isso é especialmente problemático quando o arquivo é rico em conteúdo mas o pedido do professor é sobre outro assunto.
+
+Na seção FASE 3 — REGRA DE FERRO ANTI-LITERALISMO do PLANNING_PROMPT (após os exemplos na linha ~80), adicionar bloco:
+
+═══════════════════════════════════════════════════════════════════════════
+📎 REGRA ESPECIAL — QUANDO HÁ ARQUIVO NO CONTEXTO
+═══════════════════════════════════════════════════════════════════════════
+Se o contexto contém "📎 DOCUMENTOS DO PROFESSOR" ou "⚓ REGRA DE PRIORIDADE":
+❌ ERRADO: Usar o TEMA do arquivo como tema das atividades quando o professor não pediu isso
+✅ CERTO: O tema vem da MENSAGEM do professor. O arquivo é a MATÉRIA-PRIMA ou REFERÊNCIA.
+COMO USAR O ARQUIVO NO PLANO:
+• Pedido vago + arquivo presente → TEMA = conteúdo do arquivo, TIPO = o mais adequado pedagogicamente
+• Pedido específico de tema + arquivo → TEMA = pedido do professor, arquivo = enriquecimento
+• Pedido sem relação com arquivo → siga o pedido; arquivo pode ser mencionado como contexto adicional
+EXEMPLOS:
+❌ Professor diz "exercícios de gramática" + anexou PDF de matemática → NÃO gere exercícios de matemática
+✅ Gere exercícios de GRAMÁTICA; se possível use um trecho do PDF como texto de base
+❌ Professor diz "atividades para amanhã" + anexou foto do quadro sobre fotossíntese → NÃO ignore a foto
+✅ Use o conteúdo da foto como TEMA e FONTE para as atividades de fotossíntese
+Acceptance: Com arquivo de Revolução Francesa e mensagem "crie exercícios de gramática para o 6º ano", o plano gerado pelo Jota é sobre gramática, não sobre Revolução Francesa.
+
+T004: Refatorar gerar-conteudo-atividades.ts de 3.203 para módulos ≤ 500 linhas
+Blocked By: [T002]
+
+Arquivos:
+
+src/features/schoolpower/agente-jota/capabilities/GERAR_CONTEUDO/implementations/gerar-conteudo-atividades.ts (vira orquestrador ≤ 300 linhas)
+src/features/schoolpower/agente-jota/capabilities/GERAR_CONTEUDO/implementations/content-types.ts (NOVO — interfaces e tipos)
+src/features/schoolpower/agente-jota/capabilities/GERAR_CONTEUDO/implementations/content-prompt-builders.ts (NOVO — funções de prompt)
+src/features/schoolpower/agente-jota/capabilities/GERAR_CONTEUDO/implementations/content-field-processors.ts (NOVO — parse, validate, fallback)
+src/features/schoolpower/agente-jota/capabilities/GERAR_CONTEUDO/implementations/content-activity-loop.ts (NOVO — loop de geração por atividade)
+Details: Divisão por responsabilidade única. Zero mudança de comportamento — apenas reorganização de código.
+
+Módulo	Responsabilidade	Linhas alvo
+content-types.ts	Todas as interfaces: GerarConteudoParams, BnccContextData, QuestoesReferenciaData, ProgressUpdate, GeneratedFieldsResult	~80
+content-prompt-builders.ts	buildContentGenerationPrompt, buildBatchGenerationPrompt, helpers de texto do prompt	~450
+content-field-processors.ts	parseGeneratedFields, validateAndCleanFields, getExampleValueForField, getFallbackValue, getFieldsToGenerate	~380
+content-activity-loop.ts	Loop principal for (const activity of activitiesToFill), lógica de retry, progress updates, integração com stores	~450
+gerar-conteudo-atividades.ts	gerarConteudoAtividades como orquestrador: imports + orquestração de alto nível apenas	~280
+Regra de implementação: Não alterar NENHUM comportamento. Mover funções inteiras sem modificá-las. Ajustar apenas imports/exports conforme necessário.
+
+Acceptance:
+
+gerar-conteudo-atividades.ts ≤ 300 linhas
+Cada módulo novo ≤ 500 linhas
+Backend reinicia sem erros de TypeScript
+Comportamento idêntico ao pré-refatoração (zero regressão funcional)
+T005: Validação final — Backend restart + checklist de logs
+Blocked By: [T001, T002, T003, T004]
+
+Details: Reiniciar Backend e validar que tudo funciona via logs.
+
+Checklist:
+
+Backend inicia sem erros de compilação TypeScript
+Log 📎 [Orchestrator] Contexto de arquivo injetado no Planner aparece ao enviar arquivo
+Log 📎 [Executor] Arquivo injetado em gerar_conteudo aparece no fluxo EXECUTAR
+Nenhum erro de importação circular nos logs
+Acceptance: Backend RUNNING, sem erros TypeScript, logs de injeção confirmados.

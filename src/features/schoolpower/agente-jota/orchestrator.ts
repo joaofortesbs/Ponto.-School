@@ -32,6 +32,7 @@ import {
   addConversationTurn,
   setPlan,
   addLedgerFact,
+  addFileContext,
   getSession,
   clearSession as clearContextEngineSession,
   buildContextForFollowUp,
@@ -351,6 +352,10 @@ export async function processUserPrompt(
       addLedgerFact(sessionId, { fact: fileLedgerNote, category: 'context' });
     }
 
+    if (fileProcessingMeta?.promptContext) {
+      addFileContext(sessionId, fileProcessingMeta.promptContext);
+    }
+
     const { detectResearchNeed } = await import('./research-enrichment-layer/need-detection');
     const needResult = await detectResearchNeed(userPrompt);
 
@@ -575,6 +580,10 @@ export async function processUserPrompt(
 
   if (fileLedgerNote) {
     addLedgerFact(sessionId, { fact: fileLedgerNote, category: 'context' });
+  }
+
+  if (fileProcessingMeta?.promptContext) {
+    addFileContext(sessionId, fileProcessingMeta.promptContext);
   }
 
   const fileCtxForPlanner = getSessionFileContext(sessionId);

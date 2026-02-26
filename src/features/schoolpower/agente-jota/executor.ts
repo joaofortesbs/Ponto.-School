@@ -41,11 +41,10 @@ import {
 import { 
   executeMenteMaior, 
   type MenteMaiorInput, 
-  type MenteMaiorOutput 
-} from './context-engine';
-import { 
+  type MenteMaiorOutput,
   getSession, 
   addStepResult, 
+  getFileContexts,
   type SessionContext 
 } from './context-engine';
 
@@ -1775,6 +1774,18 @@ Seja específico e forneça dados que ajudem o professor.
         console.log(`   📝 ${enrichedParams.questoes_referencia.count} questões de referência injetadas para geração de conteúdo`);
       } else {
         console.log(`📝 [Executor] Sem questões de referência para geração de conteúdo`);
+      }
+
+      const sessionFileContexts = getFileContexts(this.sessionId);
+      if (sessionFileContexts.length > 0) {
+        const fileBlock = sessionFileContexts.join('\n\n---\n\n');
+        enrichedParams.file_context = fileBlock;
+        enrichedParams.conversation_context = enrichedParams.conversation_context
+          ? `${enrichedParams.conversation_context}\n\n${fileBlock}`
+          : fileBlock;
+        console.error(`📎 [Executor] Material do professor injetado em gerar_conteudo (${fileBlock.length} chars — ${sessionFileContexts.length} arquivo(s))`);
+      } else {
+        console.log(`📝 [Executor] Sem material de arquivo para gerar_conteudo_atividades`);
       }
     }
 

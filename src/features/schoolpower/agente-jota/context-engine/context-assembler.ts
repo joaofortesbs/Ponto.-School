@@ -70,6 +70,7 @@ export interface SessionContext {
     timestamp: number;
   }>;
   interactionLedger: LedgerFact[];
+  fileContexts?: string[];
 }
 
 const MAX_CONTEXT_CHARS: Record<CallType, number> = {
