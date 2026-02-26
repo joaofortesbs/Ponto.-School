@@ -7,6 +7,7 @@ export type MessageType =
   | 'content_generation_card'
   | 'artifact_card'
   | 'structured_response'
+  | 'file_processing_complete'
   | 'system';
 
 export interface MessageAttachment {

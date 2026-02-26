@@ -43,7 +43,7 @@ async function callGeminiVision(base64Data, mimeType, promptText) {
     return null;
   }
 
-  const model = 'gemini-2.5-flash-preview-05-20';
+  const model = 'gemini-2.0-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const body = {
@@ -73,7 +73,8 @@ async function callGeminiVision(base64Data, mimeType, promptText) {
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Gemini API error ${response.status}: ${errText.substring(0, 500)}`);
+      console.error(`[FileProcessor] Gemini Vision erro ${response.status}:`, errText.substring(0, 300));
+      return null;
     }
 
     const data = await response.json();
@@ -81,7 +82,8 @@ async function callGeminiVision(base64Data, mimeType, promptText) {
     return text || null;
   } catch (err) {
     clearTimeout(timeout);
-    throw err;
+    console.error('[FileProcessor] Gemini Vision erro de rede:', err.message);
+    return null;
   }
 }
 
@@ -133,9 +135,9 @@ Responda EXATAMENTE no seguinte formato JSON (sem markdown code blocks, apenas o
   "pedagogical_context": "Contexto pedagógico: para que este material pode ser usado, qual o objetivo educacional provável, como um professor poderia aproveitá-lo em sala de aula."
 }`;
 
-const PDF_VISION_PROMPT = `Você é um assistente educacional especializado em transcrever PDFs escaneados para professores brasileiros.
+const PDF_VISION_PROMPT = `Você é um assistente educacional especializado em transcrever PDFs para professores brasileiros.
 
-Este é um PDF que parece ser escaneado (pouco texto extraível por OCR convencional). Analise CADA PÁGINA como imagem e transcreva TODO o conteúdo visível.
+Analise CADA PÁGINA deste PDF e extraia TODO o conteúdo: texto, tabelas, fórmulas, listas, títulos e elementos visuais relevantes.
 
 Responda EXATAMENTE no seguinte formato JSON (sem markdown code blocks, apenas o JSON puro):
 
@@ -208,92 +210,26 @@ async function processImage(buffer, mimeType, originalName) {
 }
 
 async function processPDF(buffer, originalName) {
-  let extractedText = '';
-  let pageCount = 1;
+  console.log(`[FileProcessor] PDF: enviando diretamente ao Gemini Vision (${(buffer.length / 1024).toFixed(1)}KB)`);
+  const base64 = buffer.toString('base64');
+  const rawText = await callGeminiVision(base64, 'application/pdf', PDF_VISION_PROMPT);
 
-  try {
-    const pdfParse = (await import('pdf-parse')).default;
-    const pdfData = await pdfParse(buffer);
-    extractedText = (pdfData.text || '').trim();
-    pageCount = pdfData.numpages || 1;
-  } catch (err) {
-    console.warn(`[FileProcessor] pdf-parse falhou para ${originalName}:`, err.message);
+  if (!rawText) {
+    return {
+      pages: 1,
+      transcription: {
+        summary: `PDF: ${originalName}`,
+        full_content: `[PDF: ${originalName}. A API de visão não retornou conteúdo — verifique a configuração da GEMINI_API_KEY.]`,
+        metadata: { language: 'pt-BR', document_type: 'pdf', subject: '', grade_level: '', page_count_estimate: 1, has_images: false, has_tables: false, has_formulas: false },
+        visual_elements: [],
+        pedagogical_context: '',
+      },
+      method: 'fallback_no_api_key',
+    };
   }
 
-  const MIN_TEXT_THRESHOLD = 100;
-  const isScanned = extractedText.length < MIN_TEXT_THRESHOLD;
-
-  if (isScanned) {
-    console.log(`[FileProcessor] PDF parece escaneado (${extractedText.length} chars), usando Gemini Vision`);
-    const base64 = buffer.toString('base64');
-    const rawText = await callGeminiVision(base64, 'application/pdf', PDF_VISION_PROMPT);
-
-    if (!rawText) {
-      return {
-        pages: pageCount,
-        transcription: {
-          summary: `PDF escaneado: ${originalName}`,
-          full_content: `[PDF escaneado: ${originalName}. Configure GEMINI_API_KEY para habilitar leitura de PDFs escaneados.]`,
-          metadata: { language: 'pt-BR', document_type: 'pdf_escaneado', subject: '', grade_level: '', page_count_estimate: pageCount, has_images: true, has_tables: false, has_formulas: false },
-          visual_elements: [],
-          pedagogical_context: '',
-        },
-        method: 'fallback_no_api_key',
-      };
-    }
-
-    const transcription = parseGeminiJson(rawText, 'pdf_escaneado');
-    return { pages: pageCount, transcription, method: 'gemini_vision_pdf' };
-  }
-
-  console.log(`[FileProcessor] PDF com texto extraível (${extractedText.length} chars, ${pageCount} páginas)`);
-
-  if (extractedText.length > 500) {
-    const base64 = buffer.toString('base64');
-    const enrichPrompt = `Você é um assistente educacional. Analise este PDF e o texto extraído abaixo. Gere uma transcrição estruturada completa.
-
-TEXTO EXTRAÍDO POR OCR:
-${extractedText.substring(0, 15000)}
-
-Responda EXATAMENTE no seguinte formato JSON (sem markdown code blocks, apenas o JSON puro):
-
-{
-  "summary": "Resumo conciso em 2-3 frases",
-  "full_content": "Conteúdo completo e bem formatado, corrigindo erros de OCR e preservando estrutura",
-  "metadata": {
-    "language": "idioma",
-    "document_type": "tipo",
-    "subject": "disciplina",
-    "grade_level": "nível",
-    "page_count_estimate": ${pageCount},
-    "has_images": false,
-    "has_tables": false,
-    "has_formulas": false
-  },
-  "visual_elements": [],
-  "pedagogical_context": "contexto pedagógico"
-}`;
-
-    try {
-      const rawText = await callGeminiVision(base64, 'application/pdf', enrichPrompt);
-      if (rawText) {
-        const transcription = parseGeminiJson(rawText, 'pdf');
-        if (transcription) return { pages: pageCount, transcription, method: 'pdf_parse_plus_gemini' };
-      }
-    } catch (err) {
-      console.warn(`[FileProcessor] Enriquecimento Gemini falhou: ${err.message}`);
-    }
-  }
-
-  const transcription = {
-    summary: extractedText.substring(0, 200) + (extractedText.length > 200 ? '...' : ''),
-    full_content: extractedText,
-    metadata: { language: 'pt-BR', document_type: 'pdf', subject: '', grade_level: '', page_count_estimate: pageCount, has_images: false, has_tables: false, has_formulas: false },
-    visual_elements: [],
-    pedagogical_context: '',
-  };
-
-  return { pages: pageCount, transcription, method: 'pdf_parse_text' };
+  const transcription = parseGeminiJson(rawText, 'pdf');
+  return { pages: transcription?.metadata?.page_count_estimate || 1, transcription, method: 'gemini_vision_pdf' };
 }
 
 async function processDOCX(buffer, originalName) {

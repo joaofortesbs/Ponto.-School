@@ -246,6 +246,20 @@ async function processFileAttachments(
   }));
 
   if (typeof window !== 'undefined') {
+    const { useChatState } = await import('../interface-chat-producao/state/chatState');
+    useChatState.getState().addMessage({
+      type: 'file_processing_complete',
+      role: 'assistant',
+      content: '',
+      metadata: {
+        cardData: {
+          fileNames: result.data?.arquivos?.map((a: any) => a.original_name) || files.map(f => f.name),
+          filesProcessed: result.data?.count || 0,
+          debugEntries: aiDebugEntries,
+        },
+      },
+    });
+
     window.dispatchEvent(new CustomEvent('jota:file-processing-complete', {
       detail: { sessionId, filesProcessed: result.data?.count || 0 },
     }));

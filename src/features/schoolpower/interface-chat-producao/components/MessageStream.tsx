@@ -104,6 +104,17 @@ export function MessageStream({ onApplyPlan, onOpenArtifact, onOpenActivity }: M
                 onOpenActivity={onOpenActivity}
               />
             )}
+
+            {message.type === 'file_processing_complete' && (
+              <AssistantMessage content="">
+                <FileProcessingCard
+                  fileNames={message.metadata?.cardData?.fileNames || []}
+                  status={message.metadata?.cardData?.filesProcessed > 0 ? 'complete' : 'error'}
+                  processedCount={message.metadata?.cardData?.filesProcessed || 0}
+                  debugEntries={message.metadata?.cardData?.debugEntries || []}
+                />
+              </AssistantMessage>
+            )}
           </motion.div>
         ))}
 
