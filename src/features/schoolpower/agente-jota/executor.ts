@@ -564,7 +564,9 @@ export class AgentExecutor {
               title: etapa.titulo || etapa.descricao,
               description: etapa.descricao,
               capabilityResults: this.currentEtapaCapabilities.map((c, capIdx) => {
-                const rawSummary = this.formatResultSummary(etapaResultados[capIdx] ?? c.dados ?? c).substring(0, 600);
+                const wrapperOrRaw = etapaResultados[capIdx];
+                const actualResult = (wrapperOrRaw as any)?.resultado ?? wrapperOrRaw ?? c.dados ?? c;
+                const rawSummary = this.formatResultSummary(actualResult).substring(0, 600);
                 const discoveries = c.descobertas?.slice(0, 3) || [];
                 const decisions = c.decisoes?.slice(0, 2) || [];
                 const discoveryText = discoveries.length > 0 ? `Descobertas: ${discoveries.join('; ')}` : '';
@@ -2178,10 +2180,32 @@ Seja específico e forneça dados que ajudem o professor.
       if (resultado.resultados && Array.isArray(resultado.resultados)) {
         return `${resultado.resultados.length} capabilities executadas com sucesso`;
       }
+
+      // V2: decidir_atividades_criar — chosen_activities com títulos
+      const chosen = resultado.data?.chosen_activities || resultado.chosen_activities;
+      if (chosen && Array.isArray(chosen) && chosen.length > 0) {
+        const titles = chosen.slice(0, 5).map((a: any) => a.titulo || a.nome || '?').join(', ');
+        const estrategia = resultado.data?.estrategia || resultado.data?.estrategia_pedagogica || '';
+        return `Decidiu criar ${chosen.length} atividade(s): ${titles}${estrategia ? '. Estratégia: ' + estrategia.substring(0, 120) : ''}`;
+      }
+
+      // V2: gerar_conteudo_atividades — success_count e total_activities
+      const sc = resultado.data?.success_count ?? resultado.success_count;
+      const ta = resultado.data?.total_activities ?? resultado.total_activities;
+      if (sc !== undefined && ta !== undefined) {
+        return `Gerou conteúdo para ${sc} de ${ta} atividade(s) com sucesso`;
+      }
+
+      // V2: message legível (qualquer capability V2 pode ter isso)
+      if (resultado.message && typeof resultado.message === 'string' && resultado.message.length < 300) {
+        return resultado.message;
+      }
+
+      // Campos legados
       if (resultado.conteudo) return String(resultado.conteudo);
       if (resultado.mensagem) return String(resultado.mensagem);
       if (resultado.summary) return String(resultado.summary);
-      
+
       const keys = Object.keys(resultado);
       return `Resultado com ${keys.length} campos: ${keys.slice(0, 3).join(', ')}...`;
     }

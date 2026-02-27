@@ -204,7 +204,7 @@ export class ContextAssembler {
         }
       }
       
-      if (result.narrativeGenerated) {
+      if (result.narrativeGenerated && callType !== 'mente_maior') {
         detailLines.push(`    Narrativa: "${result.narrativeGenerated}"`);
       }
       

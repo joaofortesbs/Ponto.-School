@@ -86,7 +86,7 @@ Etapa {step_index}: {step_title}
 Capabilities executadas NESTA ETAPA:
 {capabilities_summary}
 
-O que aconteceu NESTA ETAPA (use ESTES dados na narrativa):
+O que aconteceu NESTA ETAPA — use SOMENTE estes dados na narrativa:
 {results_summary}
 
 {next_step_section}
@@ -95,9 +95,22 @@ O que aconteceu NESTA ETAPA (use ESTES dados na narrativa):
 INSTRUÇÕES CRÍTICAS PARA A NARRATIVA:
 ═══════════════════════════════════════════════════════════════
 
-⚠️ ATENÇÃO: A narrativa deve descrever EXCLUSIVAMENTE o que aconteceu NA ETAPA "{step_title}" acima.
-NÃO repita dados de etapas anteriores. NÃO repita dados do contexto geral da sessão.
-FOQUE nos "O que aconteceu NESTA ETAPA" listados acima.
+⚠️ REGRA ABSOLUTA: A narrativa deve descrever EXCLUSIVAMENTE o que aconteceu NA ETAPA "{step_title}" acima.
+NÃO copie, repita ou mencione narrativas de etapas anteriores.
+NÃO repita dados de pesquisa se esta etapa foi de decisão ou geração.
+FOQUE apenas nos dados de "O que aconteceu NESTA ETAPA" listados acima.
+
+REGRAS PARA A NARRATIVA:
+- Fale na 1ª pessoa ("Decidi criar...", "Gerei o conteúdo de...", "Analisei...", "Escolhi...", "Pronto!")
+- Seja ESPECÍFICO sobre o que ESTA ETAPA fez — use números, nomes e dados concretos dos resultados acima
+- Se houver próxima etapa, mencione o que vai fazer a seguir
+- Se for a última etapa, dê um fechamento positivo e específico
+- Máximo 2-3 frases curtas e naturais
+- NÃO use markdown, bullets ou listas
+- NÃO repita o título da etapa literalmente
+
+GUIA PARA ESTE TIPO DE ETAPA:
+{step_type_guidance}
 
 Responda com um JSON válido com EXATAMENTE esta estrutura:
 {
@@ -107,22 +120,6 @@ Responda com um JSON válido com EXATAMENTE esta estrutura:
     "reason": ""
   }
 }
-
-REGRAS PARA A NARRATIVA:
-- Fale na 1ª pessoa ("Decidi criar...", "Gerei o conteúdo de...", "Analisei...", "Escolhi...", "Pronto!")
-- Seja ESPECÍFICO sobre o que ESTA ETAPA fez (use os dados de "O que aconteceu NESTA ETAPA")
-- Mencione NÚMEROS, NOMES de atividades e dados concretos desta etapa quando disponíveis
-- Se houver próxima etapa, mencione o que vai fazer AGORA
-- Se for a última etapa, dê um fechamento positivo e específico
-- Máximo 2-3 frases curtas e naturais
-- NÃO use markdown, bullets ou listas
-- NÃO repita o título da etapa literalmente
-- NÃO mencione dados de etapas anteriores (BNCC, questões, pesquisas) se esta etapa foi sobre decidir ou gerar conteúdo
-
-EXEMPLOS DE NARRATIVAS CORRETAS para diferentes etapas:
-- Etapa de PESQUISA: "Encontrei 47 atividades no catálogo e analisei 2074 habilidades BNCC relevantes para o tema. Vou agora decidir estrategicamente quais criar para a turma."
-- Etapa de DECISÃO: "Decidi criar 4 atividades: Flash Cards, Quiz Interativo, Lista de Exercícios e Desafio em Sala. Escolhi essa combinação para garantir engajamento e fixação. Agora vou gerar o conteúdo personalizado de cada uma."
-- Etapa de GERAÇÃO: "Pronto! Gerei o conteúdo completo para as 4 atividades com questões e exercícios específicos sobre o tema pedido. Tudo pronto para usar em sala de aula!"
 
 REGRAS PARA O REPLAN:
 - needed=false na maioria dos casos (plano está OK)
@@ -137,10 +134,54 @@ REGRAS PARA O REPLAN:
 - Se for a última etapa, SEMPRE needed=false
 - 📅 Se o pedido original mencionou calendário/agendar/organizar e o plano NÃO tem criar_compromisso_calendario, faça replan para adicionar!
 
+{previous_narratives_warning}
+
 {capabilities_list}
 
 RESPONDA APENAS COM O JSON. Nada mais.
 `.trim();
+
+function buildStepTypeGuidance(capabilityResults: MenteMaiorInput['completedStep']['capabilityResults']): string {
+  const capNames = capabilityResults.map(c => c.name.toLowerCase());
+
+  const isPesquisa = capNames.some(n =>
+    n.includes('pesquisar_catalog') || n.includes('buscar_atividades') ||
+    n.includes('questoes_referencia') || n.includes('busca_web') ||
+    n.includes('search') || n.includes('catalog')
+  );
+  const isDecisao = capNames.some(n => n.includes('decidir_atividades'));
+  const isGeracao = capNames.some(n => n.includes('gerar_conteudo'));
+  const isConstrucao = capNames.some(n =>
+    n.includes('criar_atividade') || n.includes('salvar_atividades')
+  );
+
+  if (isDecisao && isGeracao) {
+    return `Esta é uma etapa de DECISÃO + GERAÇÃO. Mencione QUANTAS atividades foram decididas e seus NOMES, e confirme que o conteúdo foi gerado. NÃO mencione dados de pesquisa (BNCC, catálogo, questões) — esses ficaram na etapa anterior.
+Exemplo: "Decidi criar 4 atividades: Flash Cards, Quiz Interativo, Lista de Exercícios e Mapa Mental. Gerei o conteúdo completo para todas elas. Agora vou construí-las e salvá-las."`;
+  }
+
+  if (isDecisao) {
+    return `Esta é uma etapa de DECISÃO. Mencione OS NOMES específicos das atividades que foram escolhidas e por que essa combinação foi selecionada. NÃO mencione dados de pesquisa (BNCC, catálogo) — esses ficaram na etapa anterior.
+Exemplo: "Decidi criar 3 atividades: Flash Cards sobre fotossíntese, Quiz de múltipla escolha e Lista de exercícios práticos. Agora vou gerar o conteúdo personalizado para cada uma."`;
+  }
+
+  if (isGeracao) {
+    return `Esta é uma etapa de GERAÇÃO DE CONTEÚDO. Mencione QUANTAS atividades tiveram conteúdo gerado e o que foi produzido. Use tom conclusivo/positivo. NÃO repita a decisão da etapa anterior.
+Exemplo: "Pronto! Gerei o conteúdo completo para as 4 atividades com questões e exercícios específicos sobre o tema. Agora vou construí-las e salvá-las na sua conta."`;
+  }
+
+  if (isConstrucao) {
+    return `Esta é uma etapa de CONSTRUÇÃO E SALVAMENTO. Confirme que as atividades foram montadas e salvas. Use tom de entrega/conclusão.
+Exemplo: "Suas atividades foram construídas e salvas com sucesso! Tudo pronto para usar em sala de aula."`;
+  }
+
+  if (isPesquisa) {
+    return `Esta é uma etapa de PESQUISA. Mencione NÚMEROS concretos: quantas atividades/recursos/habilidades foram encontrados. Anuncie o que virá a seguir.
+Exemplo: "Analisei o catálogo e encontrei 47 tipos de atividades disponíveis, além de 2074 habilidades BNCC relevantes para o tema. Agora vou decidir quais criar para a turma."`;
+  }
+
+  return `Descreva em 2-3 frases o que foi feito nesta etapa usando os dados específicos dos resultados acima. Mencione o que vem a seguir se houver próxima etapa.`;
+}
 
 export async function executeMenteMaior(input: MenteMaiorInput): Promise<MenteMaiorOutput> {
   console.log(`🧠 [MenteMaior] Processando etapa ${input.completedStep.index}: ${input.completedStep.title}`);
@@ -162,14 +203,14 @@ export async function executeMenteMaior(input: MenteMaiorInput): Promise<MenteMa
       }
       return items;
     })
-    .join('\n') || 'Sem dados específicos';
+    .join('\n') || 'Sem dados específicos desta etapa';
 
   let nextStepSection: string;
   if (input.isLastStep) {
     nextStepSection = 'Esta é a ÚLTIMA ETAPA. O plano está concluído.';
   } else if (input.nextStep) {
     nextStepSection = `PRÓXIMA ETAPA:\nEtapa ${input.nextStep.index}: ${input.nextStep.title}\nCapabilities: ${input.nextStep.capabilities.join(', ')}`;
-    
+
     if (input.remainingSteps.length > 1) {
       const remaining = input.remainingSteps.slice(1)
         .map(s => `  - Etapa ${s.index}: ${s.title}`)
@@ -187,13 +228,23 @@ export async function executeMenteMaior(input: MenteMaiorInput): Promise<MenteMa
   const recentNarratives = (input.session.stepResults || [])
     .filter(sr => sr.narrativeGenerated)
     .slice(-3);
-  const previousNarrativesSection = recentNarratives.length > 0
-    ? `\n⚠️ NARRATIVAS JÁ GERADAS (NÃO REPITA):\n${
-        recentNarratives
-          .map(sr => `- Etapa ${sr.stepIndex}: "${sr.narrativeGenerated!.substring(0, 150)}"`)
-          .join('\n')
-      }\nGere uma narrativa DIFERENTE e ESPECÍFICA para esta etapa.\n`
+
+  const previousNarrativesWarning = recentNarratives.length > 0
+    ? `═══════════════════════════════════════════════════════════════
+⛔ NARRATIVAS JÁ GERADAS NAS ETAPAS ANTERIORES — NÃO REPITA ESTAS:
+═══════════════════════════════════════════════════════════════
+${recentNarratives
+    .map(sr => `Etapa ${sr.stepIndex} ("${sr.stepTitle}"): "${sr.narrativeGenerated!.substring(0, 200)}"`)
+    .join('\n')}
+A sua narrativa para ESTA etapa deve ser COMPLETAMENTE DIFERENTE das acima.`
     : '';
+
+  const stepTypeGuidance = buildStepTypeGuidance(input.completedStep.capabilityResults);
+
+  console.log(`🧠 [MenteMaior Input] Etapa ${input.completedStep.index} — "${input.completedStep.title}":`);
+  input.completedStep.capabilityResults.forEach(c => {
+    console.log(`  📦 ${c.name}: summary="${c.summary?.substring(0, 150)}" | disc=${c.discoveries?.length || 0} | dec=${c.decisions?.length || 0}`);
+  });
 
   const prompt = MENTE_MAIOR_PROMPT
     .replace('{context}', context)
@@ -201,8 +252,10 @@ export async function executeMenteMaior(input: MenteMaiorInput): Promise<MenteMa
     .replace(/{step_title}/g, input.completedStep.title)
     .replace('{step_description}', input.completedStep.description)
     .replace('{capabilities_summary}', capabilitiesSummary)
-    .replace('{results_summary}', resultsSummary + previousNarrativesSection)
+    .replace('{results_summary}', resultsSummary)
     .replace('{next_step_section}', nextStepSection)
+    .replace('{step_type_guidance}', stepTypeGuidance)
+    .replace('{previous_narratives_warning}', previousNarrativesWarning)
     .replace('{capabilities_list}', capabilitiesList);
 
   try {
@@ -259,6 +312,8 @@ function parseMenteMaiorResponse(raw: string, input: MenteMaiorInput): MenteMaio
       replan.needed = false;
     }
 
+    console.log(`🧠 [MenteMaior] Narrativa gerada: "${narrative.substring(0, 250)}"`);
+
     return {
       narrative,
       replan: {
@@ -299,20 +354,47 @@ function buildFallbackResponse(input: MenteMaiorInput): MenteMaiorOutput {
 
 function buildFallbackNarrative(input: MenteMaiorInput): string {
   const step = input.completedStep;
+  const capNames = step.capabilityResults.map(c => c.name.toLowerCase());
   const successCount = step.capabilityResults.filter(c => c.success).length;
   const totalCount = step.capabilityResults.length;
 
+  const isDecisao = capNames.some(n => n.includes('decidir_atividades'));
+  const isGeracao = capNames.some(n => n.includes('gerar_conteudo'));
+  const isConstrucao = capNames.some(n => n.includes('criar_atividade') || n.includes('salvar_atividades'));
+
+  const allDiscoveries = step.capabilityResults.flatMap(c => c.discoveries || []);
+  const allDecisions = step.capabilityResults.flatMap(c => c.decisions || []);
+
   if (input.isLastStep) {
-    return `Concluí a última etapa "${step.title}" com sucesso. Tudo pronto!`;
+    if (isConstrucao && successCount === totalCount) {
+      return `Suas atividades foram construídas e salvas com sucesso! Tudo pronto para usar em sala de aula.`;
+    }
+    return `Concluí todas as etapas do plano com sucesso. Suas atividades estão prontas!`;
+  }
+
+  if (isDecisao && allDecisions.length > 0) {
+    const mainDecision = allDecisions[0].substring(0, 150);
+    return `${mainDecision}${input.nextStep ? ` Agora vou ${input.nextStep.title.toLowerCase()}.` : ''}`;
+  }
+
+  if (isGeracao) {
+    const genDisc = allDiscoveries.find(d => d.includes('atividade') || d.includes('Conteúdo'));
+    return genDisc
+      ? `${genDisc}${input.nextStep ? ` Agora vou para: ${input.nextStep.title}.` : ' Pronto!'}`
+      : `Gerei o conteúdo das atividades com sucesso.${input.nextStep ? ` Agora vou para: ${input.nextStep.title}.` : ''}`;
+  }
+
+  if (allDiscoveries.length > 0) {
+    return `${allDiscoveries[0].substring(0, 150)}${input.nextStep ? ` Agora vou para: ${input.nextStep.title}.` : ''}`;
   }
 
   if (successCount === totalCount && input.nextStep) {
-    return `Concluí "${step.title}" com sucesso. Agora vou para: ${input.nextStep.title}.`;
+    return `Concluí esta etapa com sucesso. Agora vou para: ${input.nextStep.title}.`;
   }
 
   if (successCount < totalCount) {
-    return `Finalizei "${step.title}" com ${successCount} de ${totalCount} operações bem-sucedidas. Seguindo em frente.`;
+    return `Finalizei esta etapa com ${successCount} de ${totalCount} operações bem-sucedidas. Seguindo em frente.`;
   }
 
-  return `Etapa "${step.title}" concluída. Continuando o plano.`;
+  return `Etapa concluída. Continuando o plano.`;
 }
