@@ -70,30 +70,34 @@ export interface MenteMaiorOutput {
 
 const MENTE_MAIOR_PROMPT = `
 Você é a Mente Orquestradora do Agente Jota (Ponto School).
-Você acabou de completar uma etapa do plano de ação e precisa fazer DUAS coisas:
+Você acabou de completar UMA ETAPA ESPECÍFICA do plano e precisa fazer DUAS coisas:
 
-1. GERAR UMA NARRATIVA curta para o professor (o que você fez e vai fazer)
+1. GERAR UMA NARRATIVA curta para o professor (o que você fez NESTA ETAPA e o que vai fazer a seguir)
 2. AVALIAR SE O PLANO PRECISA MUDAR (baseado nos resultados obtidos)
 
 {context}
 
 ═══════════════════════════════════════════════════════════════
-ETAPA QUE ACABOU DE SER CONCLUÍDA:
+⚠️ ETAPA QUE ACABOU DE SER CONCLUÍDA AGORA:
 ═══════════════════════════════════════════════════════════════
 Etapa {step_index}: {step_title}
 {step_description}
 
-Capabilities executadas:
+Capabilities executadas NESTA ETAPA:
 {capabilities_summary}
 
-Resultados:
+O que aconteceu NESTA ETAPA (use ESTES dados na narrativa):
 {results_summary}
 
 {next_step_section}
 
 ═══════════════════════════════════════════════════════════════
-INSTRUÇÕES:
+INSTRUÇÕES CRÍTICAS PARA A NARRATIVA:
 ═══════════════════════════════════════════════════════════════
+
+⚠️ ATENÇÃO: A narrativa deve descrever EXCLUSIVAMENTE o que aconteceu NA ETAPA "{step_title}" acima.
+NÃO repita dados de etapas anteriores. NÃO repita dados do contexto geral da sessão.
+FOQUE nos "O que aconteceu NESTA ETAPA" listados acima.
 
 Responda com um JSON válido com EXATAMENTE esta estrutura:
 {
@@ -105,25 +109,32 @@ Responda com um JSON válido com EXATAMENTE esta estrutura:
 }
 
 REGRAS PARA A NARRATIVA:
-- Fale na 1ª pessoa ("Encontrei...", "Vou agora...", "Pronto!")
-- Seja específico sobre resultados (ex: "Encontrei 5 tipos de atividades")
-- Se houver próxima etapa, mencione o que vai fazer
-- Se for a última, dê um fechamento positivo
+- Fale na 1ª pessoa ("Decidi criar...", "Gerei o conteúdo de...", "Analisei...", "Escolhi...", "Pronto!")
+- Seja ESPECÍFICO sobre o que ESTA ETAPA fez (use os dados de "O que aconteceu NESTA ETAPA")
+- Mencione NÚMEROS, NOMES de atividades e dados concretos desta etapa quando disponíveis
+- Se houver próxima etapa, mencione o que vai fazer AGORA
+- Se for a última etapa, dê um fechamento positivo e específico
 - Máximo 2-3 frases curtas e naturais
 - NÃO use markdown, bullets ou listas
-- NÃO repita o título da etapa
+- NÃO repita o título da etapa literalmente
+- NÃO mencione dados de etapas anteriores (BNCC, questões, pesquisas) se esta etapa foi sobre decidir ou gerar conteúdo
+
+EXEMPLOS DE NARRATIVAS CORRETAS para diferentes etapas:
+- Etapa de PESQUISA: "Encontrei 47 atividades no catálogo e analisei 2074 habilidades BNCC relevantes para o tema. Vou agora decidir estrategicamente quais criar para a turma."
+- Etapa de DECISÃO: "Decidi criar 4 atividades: Flash Cards, Quiz Interativo, Lista de Exercícios e Desafio em Sala. Escolhi essa combinação para garantir engajamento e fixação. Agora vou gerar o conteúdo personalizado de cada uma."
+- Etapa de GERAÇÃO: "Pronto! Gerei o conteúdo completo para as 4 atividades com questões e exercícios específicos sobre o tema pedido. Tudo pronto para usar em sala de aula!"
 
 REGRAS PARA O REPLAN:
-- needs=false na maioria dos casos (plano está OK)
-- needs=true APENAS se os resultados revelaram algo inesperado:
+- needed=false na maioria dos casos (plano está OK)
+- needed=true APENAS se os resultados revelaram algo inesperado:
   * Pesquisa não encontrou resultados úteis
   * Já existem atividades similares
   * Resultado revelou necessidade não prevista
   * Etapa se tornou desnecessária
   * Professor pediu calendário mas o plano não inclui criar_compromisso_calendario
-- Se needs=true, inclua "reason" com explicação breve
-- Se needs=true E etapas precisam mudar, inclua "modifications" com as etapas restantes atualizadas
-- Se for a última etapa, SEMPRE needs=false
+- Se needed=true, inclua "reason" com explicação breve
+- Se needed=true E etapas precisam mudar, inclua "modifications" com as etapas restantes atualizadas
+- Se for a última etapa, SEMPRE needed=false
 - 📅 Se o pedido original mencionou calendário/agendar/organizar e o plano NÃO tem criar_compromisso_calendario, faça replan para adicionar!
 
 {capabilities_list}
@@ -186,8 +197,8 @@ export async function executeMenteMaior(input: MenteMaiorInput): Promise<MenteMa
 
   const prompt = MENTE_MAIOR_PROMPT
     .replace('{context}', context)
-    .replace('{step_index}', String(input.completedStep.index))
-    .replace('{step_title}', input.completedStep.title)
+    .replace(/{step_index}/g, String(input.completedStep.index))
+    .replace(/{step_title}/g, input.completedStep.title)
     .replace('{step_description}', input.completedStep.description)
     .replace('{capabilities_summary}', capabilitiesSummary)
     .replace('{results_summary}', resultsSummary + previousNarrativesSection)

@@ -1410,10 +1410,31 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
     }
     
     if (typeof resultado === 'object') {
+      // decidir_atividades_criar: chosen_activities array com títulos
+      const chosenActivities = resultado.chosen_activities || resultado.data?.chosen_activities;
+      if (chosenActivities && Array.isArray(chosenActivities) && chosenActivities.length > 0) {
+        const titles = chosenActivities.slice(0, 4).map((a: any) => a.titulo || a.nome || a.id || '?').join(', ');
+        discoveries.push(`${chosenActivities.length} atividade(s) escolhida(s): ${titles}`);
+      }
+
+      // gerar_conteudo_atividades: success_count e total_activities
+      const successCount = resultado.data?.success_count ?? resultado.success_count;
+      const totalActivities = resultado.data?.total_activities ?? resultado.total_activities;
+      if (successCount !== undefined && totalActivities !== undefined) {
+        discoveries.push(`Conteúdo gerado para ${successCount} de ${totalActivities} atividade(s)`);
+      }
+
+      // estrategia pedagógica do decidir
+      const estrategia = resultado.data?.estrategia || resultado.data?.estrategia_pedagogica || resultado.estrategia;
+      if (estrategia && typeof estrategia === 'string' && estrategia.length > 5 && estrategia.length < 300) {
+        discoveries.push(`Estratégia: ${estrategia.substring(0, 200)}`);
+      }
+
+      // Campos genéricos
       if (resultado.total !== undefined) {
         discoveries.push(`Encontrei ${resultado.total} itens`);
       }
-      if (resultado.count !== undefined) {
+      if (resultado.count !== undefined && !chosenActivities) {
         discoveries.push(`Total de ${resultado.count} resultados`);
       }
       if (resultado.atividades && Array.isArray(resultado.atividades)) {
@@ -1428,7 +1449,7 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
       if (resultado.items && Array.isArray(resultado.items)) {
         discoveries.push(`${resultado.items.length} itens processados`);
       }
-      if (resultado.data && typeof resultado.data === 'object') {
+      if (resultado.data && typeof resultado.data === 'object' && !chosenActivities && successCount === undefined) {
         const nested = this.extractDiscoveries(resultado.data);
         discoveries.push(...nested);
       }
@@ -1436,7 +1457,7 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
         const nested = this.extractDiscoveries(resultado.resultado);
         discoveries.push(...nested);
       }
-      if (resultado.message && typeof resultado.message === 'string') {
+      if (resultado.message && typeof resultado.message === 'string' && resultado.message.length < 200) {
         discoveries.push(resultado.message);
       }
       if (resultado.summary && typeof resultado.summary === 'string') {
@@ -1450,7 +1471,7 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
       }
     }
     
-    return discoveries.slice(0, 3);
+    return discoveries.slice(0, 4);
   }
 
   private extractDecisions(resultado: any): string[] {
@@ -1466,6 +1487,27 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
     }
     
     if (typeof resultado === 'object') {
+      // decidir_atividades_criar: estrategia_pedagogica como decisão principal
+      const estrategia = resultado.data?.estrategia || resultado.data?.estrategia_pedagogica || resultado.estrategia;
+      if (estrategia && typeof estrategia === 'string' && estrategia.length > 5) {
+        decisions.push(estrategia.substring(0, 200));
+      }
+
+      // decidir: lista das atividades escolhidas como decisão
+      const chosenActivities = resultado.data?.chosen_activities || resultado.chosen_activities;
+      if (chosenActivities && Array.isArray(chosenActivities) && chosenActivities.length > 0 && !estrategia) {
+        const titles = chosenActivities.slice(0, 3).map((a: any) => a.titulo || a.nome || a.id).join(', ');
+        decisions.push(`Decidi criar: ${titles}`);
+      }
+
+      // gerar_conteudo: sucesso na geração
+      const successCount = resultado.data?.success_count ?? resultado.success_count;
+      const totalActivities = resultado.data?.total_activities ?? resultado.total_activities;
+      if (successCount !== undefined && totalActivities !== undefined) {
+        decisions.push(`Gerado conteúdo completo para ${successCount} de ${totalActivities} atividade(s)`);
+      }
+
+      // Campos genéricos de decisão
       if (resultado.decisao) {
         decisions.push(String(resultado.decisao));
       }
@@ -1486,7 +1528,7 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
       }
     }
     
-    return decisions.slice(0, 2);
+    return decisions.slice(0, 3);
   }
 
   private extractMetrics(resultado: any): Record<string, number | string> {
@@ -1508,6 +1550,14 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
       if (resultado.atividades && Array.isArray(resultado.atividades)) {
         metrics['Atividades'] = resultado.atividades.length;
       }
+      // gerar_conteudo
+      const sc = resultado.data?.success_count ?? resultado.success_count;
+      const ta = resultado.data?.total_activities ?? resultado.total_activities;
+      if (sc !== undefined) metrics['Geradas com sucesso'] = sc;
+      if (ta !== undefined) metrics['Total de atividades'] = ta;
+      // decidir
+      const ca = resultado.data?.chosen_activities || resultado.chosen_activities;
+      if (ca && Array.isArray(ca)) metrics['Atividades decididas'] = ca.length;
     }
     
     return metrics;
