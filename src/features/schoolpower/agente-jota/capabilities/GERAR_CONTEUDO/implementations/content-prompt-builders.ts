@@ -152,6 +152,51 @@ function getExampleValueForField(field: FieldDefinition): string {
 // ============================================================
 // buildContentGenerationPrompt — prompt principal para geração de campos
 // ============================================================
+function extractPedagogicalContextFromConversation(conversationContext: string): {
+  grauExtraido: string;
+  disciplinaExtraida: string;
+  temaExtraido: string;
+} {
+  const ctx = conversationContext || '';
+
+  const grauMatch = ctx.match(/(\d+)[ºª°]?\s*ano/i);
+  const grauExtraido = grauMatch ? `${grauMatch[1]}º Ano` : '';
+
+  const DISCIPLINAS = [
+    'Português', 'Língua Portuguesa', 'Matemática', 'Ciências', 'História',
+    'Geografia', 'Inglês', 'Educação Física', 'Arte', 'Artes', 'Biologia',
+    'Química', 'Física', 'Sociologia', 'Filosofia', 'Literatura', 'Redação',
+    'Ed. Física', 'Educação Financeira', 'Espanhol'
+  ];
+  let disciplinaExtraida = '';
+  for (const d of DISCIPLINAS) {
+    if (new RegExp(`\\b${d}\\b`, 'i').test(ctx)) {
+      disciplinaExtraida = d;
+      break;
+    }
+  }
+
+  let temaExtraido = '';
+  const temaPatterns = [
+    /\bsobre\s+([^.,\n!?]{5,60})/i,
+    /\btema[:\s]+([^.,\n!?]{5,60})/i,
+    /\btrabalhando\s+(?:com\s+)?([^.,\n!?]{5,60})/i,
+    /\bestudando\s+(?:sobre\s+)?([^.,\n!?]{5,60})/i,
+    /\bconteúdo[:\s]+([^.,\n!?]{5,60})/i,
+    /\bassunto[:\s]+([^.,\n!?]{5,60})/i,
+  ];
+  const FORBIDDEN_TEMA_WORDS = /\b(ajuda|urgente|urgência|preciso|manhã|tarde|noite|semana|aula|atividade|criar|material|professor|professora|turma|alunos|obrigad|valeu|oi|olá|bom\s+dia|boa\s+tarde)\b/i;
+  for (const pattern of temaPatterns) {
+    const m = ctx.match(pattern);
+    if (m && m[1] && !FORBIDDEN_TEMA_WORDS.test(m[1].trim())) {
+      temaExtraido = m[1].trim().replace(/\s+/g, ' ');
+      break;
+    }
+  }
+
+  return { grauExtraido, disciplinaExtraida, temaExtraido };
+}
+
 export function buildContentGenerationPrompt(
   activity: ChosenActivity,
   fieldsMapping: ActivityFieldsMapping,
@@ -164,10 +209,12 @@ export function buildContentGenerationPrompt(
   webSearchContext?: WebSearchContextData,
   fileContext?: string
 ): string {
+  const { grauExtraido, disciplinaExtraida, temaExtraido } = extractPedagogicalContextFromConversation(conversationContext);
+
   const qualityCtx: QualityContext = {
-    tema: activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || activity.titulo || '',
-    disciplina: activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina || activity.materia || 'Não especificada',
-    anoSerie: activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.anoSerie || '7º Ano',
+    tema: temaExtraido || activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || '',
+    disciplina: disciplinaExtraida || activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina || activity.materia || 'Não especificada',
+    anoSerie: grauExtraido || activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.anoSerie || '',
     objetivo: userObjective,
     solicitacaoOriginal: userObjective
   };
@@ -249,13 +296,39 @@ O Jota pesquisou ${webSearchContext.count} fontes educacionais brasileiras reais
 ${webSearchContext.prompt_context}
 ` : ''}## INSTRUÇÕES CRÍTICAS PARA GERAÇÃO DE CONTEÚDO
 
+### ⚠️ EXTRAÇÃO OBRIGATÓRIA DO CONTEXTO — LEIA ANTES DE GERAR QUALQUER CAMPO
+
+**PASSO 1 — IDENTIFIQUE O TEMA PEDAGÓGICO REAL:**
+O TEMA desta atividade é o ASSUNTO ESCOLAR ensinado, NÃO palavras de urgência ou contexto do professor.
+
+✅ TEMA CORRETO (assunto escolar): "Fotossíntese", "Sistema Solar", "Tipos de narrador", "Operações com frações", "Biomas brasileiros", "Substantivos próprios e comuns", "Revolução Industrial"
+❌ TEMA PROIBIDO (contexto/urgência): "ajuda urgente", "preciso de material", "manhã", "urgente", "criar atividade", "turma difícil", "semana que vem"
+
+→ Leia o bloco "CONTEXTO COMPLETO DA CONVERSA" e "OBJETIVO ORIGINAL DO USUÁRIO" acima.
+→ Extraia o ASSUNTO ESCOLAR mencionado pelo professor.
+→ Se não houver assunto claro, combine DISCIPLINA + SÉRIE para criar um tema específico e concreto.
+→ NUNCA use palavras de urgência, contexto administrativo ou frases do professor como tema.
+
+**PASSO 2 — IDENTIFIQUE A SÉRIE/ANO:**
+→ Leia o contexto acima e encontre o ano/série mencionado pelo professor (ex: "8º ano", "turma do 6o ano").
+→ Use EXATAMENTE o que o professor disse — não substitua por um padrão.
+→ Somente se o ano não estiver mencionado em NENHUM lugar, use o ano mais comum para a disciplina identificada.
+
+**PASSO 3 — IDENTIFIQUE A DISCIPLINA:**
+→ Leia o contexto acima e encontre a disciplina mencionada pelo professor.
+→ Use EXATAMENTE o que o professor disse — não substitua por "geral" ou "Não especificada".
+→ Somente se a disciplina não estiver mencionada, infira pelo tema (ex: fotossíntese → Ciências/Biologia).
+
+**PASSO 4 — RESPEITE RESTRIÇÕES DA TURMA:**
+→ Se o professor mencionou restrições (ex: alunos com TEA, turma com dificuldades, preferência por jogos), aplique-as em TODOS os campos gerados.
+→ NUNCA invente dados da turma (quantidade de alunos, nome da turma, perfil) que não foram mencionados.
+
 ### REGRA DE EXPANSÃO DE CONTEXTO
-Se o objetivo do usuário for vago ou curto (ex: "matemática aplicada", "criar atividades"), você DEVE:
-1. Inferir a disciplina mais provável com base no contexto
-2. Sugerir uma série/ano escolar apropriada (padrão: Ensino Fundamental II ou Ensino Médio)
-3. Criar um tema específico e concreto relacionado ao objetivo
-4. Gerar conteúdo rico e detalhado que seria útil para um professor real
-5. Incluir exemplos práticos, metodologias pedagógicas modernas e alinhamento com BNCC${bnccContext?.count ? ` (use os códigos BNCC listados acima)` : ''}
+Aplique SOMENTE se o objetivo do usuário for vago E o contexto da conversa não contiver informações suficientes:
+1. Use a disciplina e série já identificadas no PASSO 1–3 acima
+2. Crie um tema específico e concreto compatível com a série identificada
+3. Gerar conteúdo rico e detalhado que seria útil para um professor real
+4. Incluir exemplos práticos, metodologias pedagógicas modernas e alinhamento com BNCC${bnccContext?.count ? ` (use os códigos BNCC listados acima)` : ''}
 
 ### PADRÕES DE QUALIDADE PARA CADA TIPO DE CAMPO
 1. **CAMPOS TEXT**: Gere texto claro e específico (mínimo 10 caracteres)
@@ -267,9 +340,9 @@ Se o objetivo do usuário for vago ou curto (ex: "matemática aplicada", "criar 
 4. **CAMPOS SELECT**: Use EXATAMENTE uma das opções listadas
 
 ### REGRAS DE COERÊNCIA
-1. **DISCIPLINA**: Se não especificada, infira do contexto (Matemática, Português, Ciências, etc.)
-2. **SÉRIE/ANO**: Se não especificado, use "7º Ano - Ensino Fundamental" como padrão
-3. **TEMA**: Seja específico! Em vez de "matemática", use "Operações com Frações" ou "Equações do 1º Grau"
+1. **DISCIPLINA**: Extraia do contexto da conversa (PASSO 3 acima). Se não encontrar, infira pelo tema.
+2. **SÉRIE/ANO**: Extraia do contexto da conversa (PASSO 2 acima). Se não encontrar, use o mais adequado para a disciplina.
+3. **TEMA**: Use o assunto escolar identificado no PASSO 1 — específico e pedagógico.
 4. **OBJETIVOS**: Liste múltiplos objetivos de aprendizagem mensuráveis
 5. **MATERIAIS**: Liste recursos concretos que serão utilizados
 
