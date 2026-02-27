@@ -93,9 +93,12 @@ export async function generateContentForActivity(
         total_fields: requiredFieldNames.length + optionalFieldNames.length } }
   );
 
+  console.log(`📋 [GerarConteudo] turmaExtraida="${ctx.turmaExtraida}" → gerando "${activity.tipo}" (${activity.titulo})`);
+
   const prompt = buildContentGenerationPrompt(
     activity, fieldsMapping, conversationContext, userObjective,
-    batchIndex, batchTotal, bnccContext, questoesReferencia, webSearchContext, fileContext
+    batchIndex, batchTotal, bnccContext, questoesReferencia, webSearchContext, fileContext,
+    ctx.turmaExtraida || undefined
   );
 
   let lastError: string = '';
@@ -181,12 +184,32 @@ export async function generateContentForActivity(
         console.log(`⚠️ [GerarConteudo] Correções aplicadas: ${validation.errors.join(', ')}`);
       }
 
-      for (const [fieldName, fieldValue] of Object.entries(validation.correctedFields)) {
+      const finalFields = { ...validation.correctedFields };
+
+      if (ctx.turmaExtraida) {
+        const gradeFields = ['schoolYear', 'anoSerie', 'serie', 'anoEscolaridade'];
+        let overrideApplied = false;
+        for (const field of gradeFields) {
+          if (finalFields[field] !== undefined) {
+            console.log(`✅ [GerarConteudo] Grade override: ${field} "${finalFields[field]}" → "${ctx.turmaExtraida}"`);
+            finalFields[field] = ctx.turmaExtraida;
+            overrideApplied = true;
+          }
+        }
+        if (finalFields.context && typeof finalFields.context === 'string' && /\d+[ºo]?\s*[Aa]no/i.test(finalFields.context)) {
+          finalFields.context = finalFields.context.replace(/\d+[ºo]?\s*[Aa]no[^,.]*/i, ctx.turmaExtraida);
+        }
+        if (overrideApplied) {
+          console.log(`🎯 [GerarConteudo] Override de turma aplicado: "${ctx.turmaExtraida}" em ${gradeFields.filter(f => finalFields[f] === ctx.turmaExtraida).join(', ')}`);
+        }
+      }
+
+      for (const [fieldName, fieldValue] of Object.entries(finalFields)) {
         onProgress?.({ type: 'field_generated', activity_id: activity.id, activity_title: activity.titulo,
           field_name: fieldName, field_value: String(fieldValue).substring(0, 50) + '...' });
       }
 
-      const fieldsGeneratedSummary = Object.entries(validation.correctedFields)
+      const fieldsGeneratedSummary = Object.entries(finalFields)
         .map(([key, value]) => `• ${key}: "${truncateForDebug(value, 80)}"`)
         .join('\n');
 
@@ -194,12 +217,12 @@ export async function generateContentForActivity(
         `[POST-GEN] Geração concluída para "${activity.titulo}":\n${fieldsGeneratedSummary}`,
         'low', { correlation_id: correlationId, stage: 'post_generation', activity_id: activity.id,
           total_execution_time_ms: Date.now() - activityStartTime, api_response_time_ms: apiResponseTime,
-          fields_count: Object.keys(validation.correctedFields).length,
-          generated_fields: validation.correctedFields }
+          fields_count: Object.keys(finalFields).length,
+          generated_fields: finalFields }
       );
 
       return { activity_id: activity.id, activity_type: activity.tipo,
-        generated_fields: validation.correctedFields, success: true };
+        generated_fields: finalFields, success: true };
 
     } catch (error) {
       lastError = error instanceof Error ? error.message : 'Erro desconhecido';

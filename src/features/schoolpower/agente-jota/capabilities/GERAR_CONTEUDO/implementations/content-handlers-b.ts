@@ -28,7 +28,7 @@ export async function handleFlashCards(
   activity: ChosenActivity,
   ctx: HandlerContext
 ): Promise<GeneratedFieldsResult> {
-  const { correlationId, capabilityId, capabilityName, userObjective, temaLimpo, disciplinaExtraida, onProgress } = ctx;
+  const { correlationId, capabilityId, capabilityName, userObjective, temaLimpo, disciplinaExtraida, turmaExtraida, onProgress } = ctx;
 
   console.log(`🃏 [GerarConteudo] ====== HANDLER ESPECIALIZADO: FLASH CARDS ======`);
   console.log(`🃏 [GerarConteudo] Atividade: ${activity.titulo} (${activity.id})`);
@@ -54,7 +54,8 @@ export async function handleFlashCards(
     if (temaLimpo) console.log(`🎯 [GerarConteudo] FLASH-CARDS usando tema limpo do plano: "${temaLimpo}"`);
 
     const inferredSchoolYear = activity.campos_preenchidos?.schoolYear ||
-      activity.campos_preenchidos?.anoEscolaridade || '7º Ano - Ensino Fundamental';
+      activity.campos_preenchidos?.anoEscolaridade || turmaExtraida || '7º Ano - Ensino Fundamental';
+    console.log(`🎯 [FLASH-CARDS] turmaExtraida="${turmaExtraida}" → schoolYear="${inferredSchoolYear}"`);
 
     const inferredTopicos = activity.campos_preenchidos?.topicos ||
       activity.campos_preenchidos?.topics ||
@@ -167,6 +168,8 @@ export async function handleTextVersion(
 
     const inferredSchoolYear = activity.campos_preenchidos?.schoolYear ||
       activity.campos_preenchidos?.serie || turmaExtraida || '7º Ano - Ensino Fundamental';
+    const finalSchoolYear = turmaExtraida || inferredSchoolYear;
+    console.log(`📄 [VERSÃO-TEXTO] turmaExtraida="${turmaExtraida}" → finalSchoolYear="${finalSchoolYear}"`);
 
     const inferredTheme = activity.campos_preenchidos?.theme ||
       activity.campos_preenchidos?.tema || temaLimpo ||
@@ -184,7 +187,7 @@ export async function handleTextVersion(
 
     const inferredContext = activity.campos_preenchidos?.context ||
       activity.campos_preenchidos?.perfilTurma ||
-      `Turma de ${inferredSchoolYear} com conhecimentos básicos em ${inferredSubject}`;
+      `Turma de ${finalSchoolYear} com conhecimentos básicos em ${inferredSubject}`;
 
     const inferredCompetencies = activity.campos_preenchidos?.competencies ||
       activity.campos_preenchidos?.habilidadesBNCC || '';
@@ -205,7 +208,7 @@ export async function handleTextVersion(
       activityType: activity.tipo,
       activityId: activity.id,
       context: {
-        tema: inferredTheme, disciplina: inferredSubject, serie: inferredSchoolYear,
+        tema: inferredTheme, disciplina: inferredSubject, serie: finalSchoolYear,
         objetivos: inferredObjectives, materiais: inferredMaterials,
         perfilTurma: inferredContext, metodologia: inferredDifficultyLevel,
         duracao: inferredTimeLimit,
@@ -236,15 +239,15 @@ export async function handleTextVersion(
 
       if (activity.tipo === 'plano-aula') {
         activityTypeFields = {
-          subject: inferredSubject, theme: inferredTheme, schoolYear: inferredSchoolYear,
+          subject: inferredSubject, theme: inferredTheme, schoolYear: finalSchoolYear,
           objectives: inferredObjectives, materials: inferredMaterials, context: inferredContext,
           competencies: inferredCompetencies, timeLimit: inferredTimeLimit,
           difficultyLevel: inferredDifficultyLevel, evaluation: inferredEvaluation,
         };
       } else if (activity.tipo === 'sequencia-didatica') {
         activityTypeFields = {
-          tituloTemaAssunto: inferredTheme, anoSerie: inferredSchoolYear, disciplina: inferredSubject,
-          publicoAlvo: `Turma de ${inferredSchoolYear} em ${inferredSubject}, com perfil heterogêneo e conhecimentos prévios básicos. Os alunos demonstram interesse em atividades práticas e colaborativas.`,
+          tituloTemaAssunto: inferredTheme, anoSerie: finalSchoolYear, disciplina: inferredSubject,
+          publicoAlvo: `Turma de ${finalSchoolYear} em ${inferredSubject}, com perfil heterogêneo e conhecimentos prévios básicos. Os alunos demonstram interesse em atividades práticas e colaborativas.`,
           objetivosAprendizagem: inferredObjectives,
           quantidadeAulas: Number(activity.campos_preenchidos?.quantidadeAulas) || 4,
           quantidadeDiagnosticos: Number(activity.campos_preenchidos?.quantidadeDiagnosticos) || 1,
@@ -272,7 +275,7 @@ export async function handleTextVersion(
         };
       } else if (activity.tipo === 'atividade-textual' || isTextVersionActivity(activity.tipo)) {
         activityTypeFields = {
-          theme: inferredTheme, subject: inferredSubject, schoolYear: inferredSchoolYear,
+          theme: inferredTheme, subject: inferredSubject, schoolYear: finalSchoolYear,
           objectives: inferredObjectives, materials: inferredMaterials || '', context: inferredContext || '',
           competencies: inferredCompetencies || '', difficultyLevel: inferredDifficultyLevel || 'Médio',
           textContent: textVersionResult.textContent || '', sections: textVersionResult.sections || [],

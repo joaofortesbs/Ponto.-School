@@ -22,7 +22,7 @@ export async function handleListaExercicios(
   activity: ChosenActivity,
   ctx: HandlerContext
 ): Promise<GeneratedFieldsResult> {
-  const { correlationId, activityStartTime, capabilityId, capabilityName, userObjective, temaLimpo, disciplinaExtraida, onProgress } = ctx;
+  const { correlationId, activityStartTime, capabilityId, capabilityName, userObjective, temaLimpo, disciplinaExtraida, turmaExtraida, onProgress } = ctx;
 
   console.log(`📝 [GerarConteudo] ====== HANDLER ESPECIALIZADO: LISTA DE EXERCÍCIOS ======`);
   console.log(`📝 [GerarConteudo] Atividade: ${activity.titulo} (${activity.id})`);
@@ -49,7 +49,8 @@ export async function handleListaExercicios(
     if (temaLimpo) console.log(`🎯 [GerarConteudo] LISTA-EXERCICIOS usando tema limpo do plano: "${temaLimpo}"`);
 
     const inferredSchoolYear = activity.campos_preenchidos?.schoolYear ||
-      activity.campos_preenchidos?.anoEscolaridade || '7º Ano - Ensino Fundamental';
+      activity.campos_preenchidos?.anoEscolaridade || turmaExtraida || '7º Ano - Ensino Fundamental';
+    console.log(`🎯 [LISTA-EXERCICIOS] turmaExtraida="${turmaExtraida}" → schoolYear="${inferredSchoolYear}"`);
 
     const rawDifficulty = activity.campos_preenchidos?.difficultyLevel ||
       activity.campos_preenchidos?.nivelDificuldade || 'Médio';
@@ -155,7 +156,7 @@ export async function handleQuizInterativo(
   activity: ChosenActivity,
   ctx: HandlerContext
 ): Promise<GeneratedFieldsResult> {
-  const { correlationId, capabilityId, capabilityName, userObjective, temaLimpo, disciplinaExtraida, onProgress } = ctx;
+  const { correlationId, capabilityId, capabilityName, userObjective, temaLimpo, disciplinaExtraida, turmaExtraida, onProgress } = ctx;
 
   console.log(`🎯 [GerarConteudo] ====== HANDLER ESPECIALIZADO: QUIZ INTERATIVO ======`);
   console.log(`🎯 [GerarConteudo] Atividade: ${activity.titulo} (${activity.id})`);
@@ -181,7 +182,8 @@ export async function handleQuizInterativo(
     if (temaLimpo) console.log(`🎯 [GerarConteudo] QUIZ usando tema limpo do plano: "${temaLimpo}"`);
 
     const inferredSchoolYear = activity.campos_preenchidos?.schoolYear ||
-      activity.campos_preenchidos?.anoEscolaridade || '7º Ano - Ensino Fundamental';
+      activity.campos_preenchidos?.anoEscolaridade || turmaExtraida || '7º Ano - Ensino Fundamental';
+    console.log(`🎯 [QUIZ-INTERATIVO] turmaExtraida="${turmaExtraida}" → schoolYear="${inferredSchoolYear}"`);
 
     const inferredObjectives = activity.campos_preenchidos?.objectives ||
       activity.campos_preenchidos?.objetivos ||

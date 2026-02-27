@@ -127,8 +127,8 @@ function getExampleValueForField(field: FieldDefinition): string {
     'disciplina': 'Língua Portuguesa',
     'theme': 'Operações com Frações',
     'tema': 'Substantivos e Adjetivos',
-    'schoolYear': '7º Ano - Ensino Fundamental',
-    'anoSerie': '6º Ano do Ensino Fundamental',
+    'schoolYear': '[série/turma especificada pelo professor]',
+    'anoSerie': '[ano/série especificado]',
     'objectives': 'Compreender os conceitos fundamentais e aplicar em situações práticas do cotidiano',
     'objetivos': 'Desenvolver habilidades de análise crítica e resolução de problemas',
     'materials': 'Quadro branco, projetor, material impresso, calculadora',
@@ -136,7 +136,7 @@ function getExampleValueForField(field: FieldDefinition): string {
     'context': 'Turma de 25 alunos com conhecimentos básicos na disciplina',
     'perfilTurma': 'Alunos engajados com interesse em atividades práticas',
     'tituloTemaAssunto': 'Substantivos Próprios e Comuns',
-    'publicoAlvo': 'Alunos do 6º ano com perfil heterogêneo',
+    'publicoAlvo': '[alunos da turma especificada pelo professor]',
     'objetivosAprendizagem': 'Identificar e classificar substantivos em textos diversos',
     'temaRedacao': 'Desafios da mobilidade urbana no Brasil',
     'objetivo': 'Desenvolver argumentação crítica sobre o tema proposto',
@@ -207,14 +207,17 @@ export function buildContentGenerationPrompt(
   bnccContext?: BnccContextData,
   questoesReferencia?: QuestoesReferenciaData,
   webSearchContext?: WebSearchContextData,
-  fileContext?: string
+  fileContext?: string,
+  turmaExtraida?: string
 ): string {
   const { grauExtraido, disciplinaExtraida, temaExtraido } = extractPedagogicalContextFromConversation(conversationContext);
+
+  const resolvedGrade = turmaExtraida || grauExtraido || activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.anoSerie || '';
 
   const qualityCtx: QualityContext = {
     tema: temaExtraido || activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || '',
     disciplina: disciplinaExtraida || activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina || activity.materia || 'Não especificada',
-    anoSerie: grauExtraido || activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.anoSerie || '',
+    anoSerie: resolvedGrade,
     objetivo: userObjective,
     solicitacaoOriginal: userObjective
   };
@@ -243,7 +246,13 @@ ${idx + 1}. "${field.name}" (${field.label}) [OPCIONAL - MAS GERE]
 # TAREFA: Gerar Conteúdo Completo para Atividade Educacional
 
 Você é um especialista pedagógico brasileiro gerando conteúdo detalhado para uma atividade educacional.
-
+${turmaExtraida ? `
+## ⚡ DADO CONFIRMADO PELO PROFESSOR — PRIORIDADE MÁXIMA
+**TURMA/SÉRIE: ${turmaExtraida}**
+→ Este valor foi confirmado DIRETAMENTE pelo professor. USE EXATAMENTE "${turmaExtraida}" em todos os campos relacionados a série, ano, turma, público-alvo.
+→ NÃO substitua por "7º Ano", "Ensino Fundamental" ou qualquer outro valor.
+→ NÃO tente "normalizar" ou "padronizar" este valor.
+` : ''}
 ## CONTEXTO COMPLETO DA CONVERSA
 ${conversationContext}
 
@@ -310,7 +319,7 @@ O TEMA desta atividade é o ASSUNTO ESCOLAR ensinado, NÃO palavras de urgência
 → NUNCA use palavras de urgência, contexto administrativo ou frases do professor como tema.
 
 **PASSO 2 — IDENTIFIQUE A SÉRIE/ANO:**
-→ Leia o contexto acima e encontre o ano/série mencionado pelo professor (ex: "8º ano", "turma do 6o ano").
+${turmaExtraida ? `→ ⚡ CONFIRMADO: O professor especificou EXATAMENTE "${turmaExtraida}" — USE ESTE VALOR EM TODOS OS CAMPOS DE SÉRIE/ANO/TURMA. Não mude, não normalize, não substitua.` : '→ Leia o contexto acima e encontre o ano/série mencionado pelo professor (ex: "8º ano", "turma do 6o ano").'}
 → Use EXATAMENTE o que o professor disse — não substitua por um padrão.
 → Somente se o ano não estiver mencionado em NENHUM lugar, use o ano mais comum para a disciplina identificada.
 
