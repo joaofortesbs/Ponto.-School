@@ -359,6 +359,7 @@ export async function executeWithCascadeFallback(
     timeout?: number;
     activityType?: ActivityType;
     systemPrompt?: string;
+    skipCache?: boolean;
   }
 ): Promise<CascadeResult> {
   const result = await generateContent(prompt, {
@@ -368,6 +369,7 @@ export async function executeWithCascadeFallback(
     timeout: options?.timeout,
     activityType: options?.activityType,
     systemPrompt: options?.systemPrompt,
+    skipCache: options?.skipCache,
   });
 
   return {

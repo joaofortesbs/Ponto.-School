@@ -69,18 +69,9 @@ export interface MenteMaiorOutput {
 }
 
 const MENTE_MAIOR_PROMPT = `
-Você é a Mente Orquestradora do Agente Jota (Ponto School).
-Você acabou de completar UMA ETAPA ESPECÍFICA do plano e precisa fazer DUAS coisas:
-
-1. GERAR UMA NARRATIVA curta para o professor (o que você fez NESTA ETAPA e o que vai fazer a seguir)
-2. AVALIAR SE O PLANO PRECISA MUDAR (baseado nos resultados obtidos)
-
-{context}
-
 ═══════════════════════════════════════════════════════════════
-⚠️ ETAPA QUE ACABOU DE SER CONCLUÍDA AGORA:
+⚠️ ETAPA QUE ACABOU DE SER CONCLUÍDA AGORA — ETAPA {step_index}: {step_title}
 ═══════════════════════════════════════════════════════════════
-Etapa {step_index}: {step_title}
 {step_description}
 
 Capabilities executadas NESTA ETAPA:
@@ -90,6 +81,15 @@ O que aconteceu NESTA ETAPA — use SOMENTE estes dados na narrativa:
 {results_summary}
 
 {next_step_section}
+═══════════════════════════════════════════════════════════════
+
+Você é a Mente Orquestradora do Agente Jota (Ponto School).
+Você acabou de completar a etapa acima e precisa fazer DUAS coisas:
+
+1. GERAR UMA NARRATIVA curta para o professor (o que você fez NESTA ETAPA e o que vai fazer a seguir)
+2. AVALIAR SE O PLANO PRECISA MUDAR (baseado nos resultados obtidos)
+
+{context}
 
 ═══════════════════════════════════════════════════════════════
 INSTRUÇÕES CRÍTICAS PARA A NARRATIVA:
@@ -258,13 +258,20 @@ A sua narrativa para ESTA etapa deve ser COMPLETAMENTE DIFERENTE das acima.`
     .replace('{previous_narratives_warning}', previousNarrativesWarning)
     .replace('{capabilities_list}', capabilitiesList);
 
+  console.log(`🧠 [MenteMaior-Step${input.completedStep.index}] resultsSummary="${resultsSummary.substring(0, 200)}"`);
+  console.log(`🧠 [MenteMaior-Step${input.completedStep.index}] capabilityResults[${input.completedStep.capabilityResults.length}]:`,
+    input.completedStep.capabilityResults.map(c => `${c.name}: summary="${c.summary?.substring(0, 80)}"`));
+
   try {
     const result = await executeWithCascadeFallback(prompt, {
       onProgress: (status) => console.log(`🧠 [MenteMaior] ${status}`),
+      skipCache: true,
     });
 
     if (result.success && result.data) {
-      return parseMenteMaiorResponse(result.data, input);
+      const parsed = parseMenteMaiorResponse(result.data, input);
+      console.log(`✅ [MenteMaior-Step${input.completedStep.index}] Narrativa="${parsed.narrative.substring(0, 250)}"`);
+      return parsed;
     }
 
     return buildFallbackResponse(input);

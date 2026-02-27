@@ -35,7 +35,7 @@ let cacheStats = {
 function hashPrompt(prompt: string): string {
   const normalized = prompt.toLowerCase().trim().replace(/\s+/g, ' ');
   let hash = 0;
-  for (let i = 0; i < Math.min(normalized.length, 1000); i++) {
+  for (let i = 0; i < normalized.length; i++) {
     const char = normalized.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash;
