@@ -1,0 +1,111 @@
+Prompt 1 — Teste do Gerador de Conteúdo (T003)
+O que testa: Se o gerar_conteudo recebe e usa a conversa real do professor (antes era estrategia_pedagogica genérica; agora deve ser a fala real do professor + estratégia).
+
+Envie essa única mensagem para o Jota:
+
+Sou professora de Ciências do 7º ano, tenho uma turma muito bagunceira do período da tarde — eles conseguem focar no máximo 10 minutos em qualquer coisa. Odeiam exercícios com textos longos e ficam animados só quando tem competição ou trabalho em grupo. A gente acabou de terminar o conteúdo de fotossíntese mas eles ainda confundem os reagentes com os produtos. Crie atividades para revisar fotossíntese com eles.
+
+O que o Jota DEVE entregar:
+
+Atividades curtas (com tempo implicitamente curto ou estrutura em etapas rápidas)
+Formatos competitivos ou em grupo (quiz em time, jogo de perguntas, etc.)
+Mínimo texto de leitura nas instruções ou no enunciado
+As questões devem trabalhar especificamente reagentes vs produtos da fotossíntese — não fotossíntese em geral
+Provavelmente o Jota vai decidir por: quiz interativo, lista de exercícios curta, ou flash cards
+Sinal de que funcionou: As atividades refletem as preferências específicas — mencionam grupos, competição, são curtas. Se as atividades forem genéricas ("leia o texto e responda..."), o contexto ainda não está chegando no gerador.
+
+Sinal de falha: Atividades longas, sem menção a grupos/competição, sobre fotossíntese em geral sem focar na confusão reagentes/produtos.
+
+Prompt 2 — Teste do Fluxo CONVERSAR → EXECUTAR (T001 + T002)
+O que testa: Se o Planner consegue ver o histórico do que o professor disse antes de pedir criação (a condição que corrigimos de previousInteractions.length > 0 para conversationHistory.length > 0).
+
+Envie como DUAS mensagens separadas, no mesmo chat, uma depois da outra:
+
+Mensagem 1 (mande, espere a resposta, depois mande a 2):
+
+Oi Jota! Sou professor de História do 9º ano, minha escola fica no interior do Piauí, é uma escola pública bem simples — os alunos não têm acesso a internet em casa, a maioria vem de famílias de agricultores. Tenho uma turma de 38 alunos e a sala só tem lousa e giz. Estou trabalhando o tema da Ditadura Militar Brasileira agora.
+
+Mensagem 2 (após o Jota responder a primeira):
+
+Crie atividades sobre esse tema pra mim.
+
+O que o Jota DEVE fazer na Mensagem 2:
+
+O plano gerado deve mencionar: 9º ano, História, Ditadura Militar, sem recursos tecnológicos, escola pública
+As atividades criadas devem ser analógicas (sem dependência de tecnologia, internet ou celular)
+O Jota não deve perguntar "qual disciplina?" ou "qual série?" — ele já sabe
+A resposta inicial ("entendi, vou criar...") deve referenciar o contexto da Ditadura Militar e o perfil da escola
+Sinal de que funcionou: O Jota cria atividades claramente voltadas para a realidade daquela escola — lousa, giz, trabalho em grupo presencial, análise de documentos impressos. Menciona a Ditadura Militar no título ou nas instruções das atividades.
+
+Sinal de falha: Jota pergunta "sobre qual assunto?" ou cria atividades com recursos digitais, ou faz uma entrega genérica que ignora o contexto dado na Mensagem 1.
+
+Prompt 3 — Teste do Decidir com Restrições (T007)
+O que testa: Se a capability decidir_atividades_criar recebe o conversationContext real e usa as restrições para decidir quais atividades criar (antes recebia contexto vazio).
+
+Envie essa única mensagem:
+
+Sou coordenadora pedagógica e preciso montar uma aula demonstração amanhã de manhã — tenho literalmente 45 minutos com uma turma de 8º ano que eu nunca vi antes. O assunto é sistema solar. Importante: não posso usar projetor, não tenho notebook, e a turma pode ser de qualquer nível. Precisa ser algo que funcione com qualquer tipo de aluno, do mais avançado ao que tem mais dificuldade, e que eu consiga montar hoje à noite em 30 minutos. Me dá atividades que sirvam pra isso.
+
+O que o Jota DEVE decidir criar:
+
+Atividades que não precisam de tecnologia
+Formatos inclusivos (funcionam para diferentes níveis)
+Algo que a professora consiga preparar rapidamente (material simples, instrução clara)
+Provavelmente: plano de aula estruturado, lista de exercícios escalonados por dificuldade, flash cards físicos, ou atividade de debate/discussão
+NÃO deve criar: quiz interativo digital, atividade que requer projetor, atividade complexa que exija muito tempo de preparação
+Sinal de que funcionou: O tipo de atividade escolhido é analógico e acessível. A justificativa do Jota menciona as restrições ("sem projetor", "qualquer nível").
+
+Sinal de falha: Jota cria quiz interativo digital ou atividade que pressupõe tecnologia. Ou ignora completamente as restrições de tempo e nível.
+
+Prompt 4 — Teste de Memória Multi-Turno (T005 + T006)
+O que testa: Se o Jota mantém os turnos recentes verbatim (aumentamos de 4 para 6 turnos) e se referencia informações dadas algumas mensagens atrás.
+
+Envie como UMA SEQUÊNCIA de 4 mensagens, esperando a resposta de cada uma:
+
+Mensagem 1:
+
+Oi! Trabalho com educação inclusiva em uma escola municipal de Porto Alegre. Tenho dois alunos com TEA leve na minha turma.
+
+Mensagem 2:
+
+Minha disciplina é Matemática, turma de 5º ano. A gente tá em setembro, então faltam 3 meses pro fim do ano.
+
+Mensagem 3:
+
+O conteúdo que eles ainda têm mais dificuldade é fração — especialmente a parte de comparar frações com denominadores diferentes.
+
+Mensagem 4:
+
+Me ajuda a criar algo pra trabalhar isso com eles?
+
+O que o Jota DEVE fazer na Mensagem 4:
+
+Não perguntar "qual matéria?" ou "qual série?" — já sabe
+As atividades devem ser sobre frações com denominadores diferentes
+Deve contemplar ou mencionar os dois alunos com TEA (linguagem clara, etapas visuais, menos texto)
+Deve ser contextualizado para 5º ano Matemática
+Pode mencionar o calendário (3 meses restantes, setembro) como dado relevante
+Sinal de que funcionou: O Jota usa todas as 4 informações dadas em turnos separados. As atividades têm adaptações para TEA e focam especificamente em comparar frações com denominadores diferentes.
+
+Sinal de falha: Jota pergunta a série, ignora o TEA, ou cria atividades genéricas de fração sem a especificidade dos denominadores diferentes.
+
+Prompt 5 — Stress Test Completo (Pipeline Inteiro)
+O que testa: Todo o pipeline junto — Planner recebe contexto rico, decidir escolhe com base nas restrições, gerar_conteudo usa a conversa real. É o teste mais exigente.
+
+Envie essa única mensagem (é longa por design — teste se o Jota absorve tudo):
+
+Preciso de ajuda urgente. Sou professor de Português, trabalho com o 6º ano do ensino fundamental numa escola particular de alto padrão em São Paulo. Tenho uma turma muito heterogênea: metade dos alunos lê muito bem e fica entediada com exercícios básicos, a outra metade ainda tem dificuldade de interpretação. O conteúdo é tipos de narrador — narrador em 1ª pessoa vs narrador em 3ª pessoa. Os alunos odeiam copiar do livro e adoram coisas criativas. Tenho 2 aulas de 50 minutos pra trabalhar isso. Uma coisa importante: meu diretor vai observar a segunda aula, então ela precisa ser impactante e visualmente bonita quando documentada. Crie as atividades.
+
+O que o Jota DEVE entregar — checklist completo:
+
+Tema exato: Tipos de narrador (1ª vs 3ª pessoa) — não narrativa em geral
+Nível: 6º ano, Português, escola particular
+Turma heterogênea: deve ter atividades escalonadas OU uma atividade que funcione para diferentes níveis
+Criatividade: atividades criativas, não exercícios de cópia do livro
+Tempo: algo estruturado para 2 aulas de 50 min
+Impacto visual: a segunda atividade ou a entrega final deve ser algo visualmente apresentável (pode ser um plano de aula estruturado, uma produção textual com rubrica, etc.)
+BNCC alinhado: Jota deve ter pesquisado e incluir referências às habilidades de Língua Portuguesa do 6º ano relacionadas à narração
+Sinal de que funcionou: Pelo menos 5 dos 7 pontos do checklist aparecem nas atividades geradas. As atividades são criativas e específicas sobre narrador, não genéricas de Português.
+
+Sinal de falha: Atividades genéricas de Português, sem diferenciação por nível, sem criatividade, sem menção à observação do diretor ou à heterogeneidade da turma.
+
