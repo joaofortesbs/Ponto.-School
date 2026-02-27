@@ -386,6 +386,25 @@ export class AgentExecutor {
     console.log(`🎯 [Executor] Temas do plano: [${this.currentPlanTemas.join(', ')}]`);
     console.log(`🎯 [Executor] Disciplina do plano: ${this.currentPlanDisciplina}`);
     console.log(`🎯 [Executor] Turma do plano: ${this.currentPlanTurma}`);
+
+    const sessionForContext = getSession(this.sessionId);
+    if (sessionForContext && sessionForContext.conversationHistory.length > 0) {
+      const recentTurns = sessionForContext.conversationHistory.slice(-6);
+      const conversationLines = recentTurns.map(turn => {
+        const prefix = turn.role === 'user' ? 'Professor' : 'Jota';
+        const content = turn.content.substring(0, 400);
+        return `${prefix}: ${content}`;
+      });
+      this.conversationContext = conversationLines.join('\n');
+
+      if (sessionForContext.originalGoal && !this.conversationContext.includes(sessionForContext.originalGoal.substring(0, 50))) {
+        this.conversationContext = `Objetivo original: ${sessionForContext.originalGoal.substring(0, 300)}\n\n${this.conversationContext}`;
+      }
+      console.log(`📝 [Executor] conversationContext construído: ${this.conversationContext.length} chars, ${recentTurns.length} turnos da sessão`);
+    } else {
+      this.conversationContext = plan.objetivo || '';
+      console.log(`📝 [Executor] conversationContext fallback para objetivo do plano: ${this.conversationContext.length} chars`);
+    }
     
     this.capabilityResultsMap.clear();
     console.log('🧹 [Executor] Mapa de resultados limpo para nova execução');
@@ -544,15 +563,23 @@ export class AgentExecutor {
               index: etapa.ordem,
               title: etapa.titulo || etapa.descricao,
               description: etapa.descricao,
-              capabilityResults: this.currentEtapaCapabilities.map((c, capIdx) => ({
-                name: c.capabilityName,
-                displayName: c.displayName,
-                success: c.sucesso,
-                summary: this.formatResultSummary(etapaResultados[capIdx] ?? c.dados ?? c).substring(0, 300),
-                discoveries: c.descobertas,
-                decisions: c.decisoes,
-                metrics: c.metricas,
-              })),
+              capabilityResults: this.currentEtapaCapabilities.map((c, capIdx) => {
+                const rawSummary = this.formatResultSummary(etapaResultados[capIdx] ?? c.dados ?? c).substring(0, 600);
+                const discoveries = c.descobertas?.slice(0, 3) || [];
+                const decisions = c.decisoes?.slice(0, 2) || [];
+                const discoveryText = discoveries.length > 0 ? `Descobertas: ${discoveries.join('; ')}` : '';
+                const decisionText = decisions.length > 0 ? `Decisões: ${decisions.join('; ')}` : '';
+                const fullSummary = [rawSummary, discoveryText, decisionText].filter(Boolean).join(' | ').substring(0, 800);
+                return {
+                  name: c.capabilityName,
+                  displayName: c.displayName,
+                  success: c.sucesso,
+                  summary: fullSummary,
+                  discoveries: c.descobertas,
+                  decisions: c.decisoes,
+                  metrics: c.metricas,
+                };
+              }),
             },
             nextStep: nextEtapa ? {
               index: nextEtapa.ordem,
@@ -1644,6 +1671,11 @@ Seja específico e forneça dados que ajudem o professor.
       } else {
         console.log(`📝 [Executor] Sem questões de referência (pesquisar_banco_questoes não executado)`);
       }
+
+      if (this.conversationContext) {
+        enrichedParams.conversation_context = this.conversationContext;
+        console.log(`🎯 [Executor] conversationContext injetado no decidir: ${this.conversationContext.length} chars`);
+      }
     }
 
     // Para gerar_conteudo_atividades, injetar atividades decididas e contexto
@@ -1715,8 +1747,14 @@ Seja específico e forneça dados que ajudem o professor.
           progresso: 0
         }));
         enrichedParams.session_id = this.sessionId;
-        enrichedParams.user_objective = decisionResult.estrategia_pedagogica || params.contexto || '';
-        enrichedParams.conversation_context = decisionResult.estrategia_pedagogica || '';
+        const estrategia = decisionResult.estrategia_pedagogica || params.contexto || '';
+        const conversaReal = this.conversationContext || '';
+        const enrichedConversationContext = [
+          conversaReal ? `## O QUE O PROFESSOR DISSE:\n${conversaReal}` : '',
+          estrategia ? `## ESTRATÉGIA PEDAGÓGICA DEFINIDA:\n${estrategia}` : '',
+        ].filter(Boolean).join('\n\n');
+        enrichedParams.user_objective = estrategia || params.contexto || '';
+        enrichedParams.conversation_context = enrichedConversationContext || estrategia;
         enrichedParams.tema_limpo = this.currentPlanTemas.length > 0 ? this.currentPlanTemas.join(', ') : '';
         enrichedParams.temas_extraidos = this.currentPlanTemas;
         enrichedParams.disciplina_extraida = this.currentPlanDisciplina;
@@ -1724,12 +1762,21 @@ Seja específico e forneça dados que ajudem o professor.
         
         console.error(`   📦 Atividades: ${enrichedParams.activities_to_fill.map((a: any) => a.titulo).join(', ')}`);
         console.error(`   🎯 Tema limpo para conteúdo: "${enrichedParams.tema_limpo}"`);
+        console.log(`🎯 [Executor] conversation_context para gerar_conteudo: ${enrichedConversationContext.length} chars`);
+        console.log(`   - Conversa real: ${conversaReal.length} chars`);
+        console.log(`   - Estratégia: ${estrategia.length} chars`);
       } else if (storeActivities.length > 0) {
         console.error(`⚠️ [Executor] Fallback: Using ${storeActivities.length} activities from ChosenActivitiesStore`);
         enrichedParams.activities_to_fill = storeActivities;
         enrichedParams.session_id = storeState.sessionId || this.sessionId;
-        enrichedParams.user_objective = storeState.estrategiaPedagogica || params.contexto || '';
-        enrichedParams.conversation_context = storeState.estrategiaPedagogica || '';
+        const estrategiaStore = storeState.estrategiaPedagogica || params.contexto || '';
+        const conversaRealStore = this.conversationContext || '';
+        const enrichedContextStore = [
+          conversaRealStore ? `## O QUE O PROFESSOR DISSE:\n${conversaRealStore}` : '',
+          estrategiaStore ? `## ESTRATÉGIA PEDAGÓGICA DEFINIDA:\n${estrategiaStore}` : '',
+        ].filter(Boolean).join('\n\n');
+        enrichedParams.user_objective = estrategiaStore;
+        enrichedParams.conversation_context = enrichedContextStore || estrategiaStore;
         enrichedParams.tema_limpo = this.currentPlanTemas.length > 0 ? this.currentPlanTemas.join(', ') : '';
         enrichedParams.temas_extraidos = this.currentPlanTemas;
         enrichedParams.disciplina_extraida = this.currentPlanDisciplina;

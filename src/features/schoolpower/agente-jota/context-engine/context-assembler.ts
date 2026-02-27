@@ -114,12 +114,20 @@ export class ContextAssembler {
   private buildSessionLayer(callType: CallType, session: SessionContext, budget: number): string {
     const parts: string[] = [];
 
-    if (session.previousInteractions.length > 0 && callType !== 'interpretation') {
-      const historyBudget = Math.floor(budget * 0.3);
+    if (session.conversationHistory.length > 0 && callType !== 'interpretation') {
+      const historyRatio = callType === 'planner' ? 0.45 :
+                           callType === 'follow_up' ? 0.4 :
+                           callType === 'mente_maior' ? 0.35 : 0.3;
+      const historyBudget = Math.floor(budget * historyRatio);
+
+      const recentTurns = callType === 'planner' ? 6 :
+                          callType === 'follow_up' ? 5 :
+                          callType === 'mente_maior' ? 4 : 3;
+
       const compacted = this.compactor.compact(
         session.conversationHistory,
         historyBudget,
-        callType === 'mente_maior' ? 3 : 2
+        recentTurns
       );
       if (compacted) {
         parts.push(`HISTÓRICO DA CONVERSA:\n${compacted}`);
