@@ -80,6 +80,17 @@ export class ConversationCompactor {
     }
 
     if (type === 'narrative' || type === 'execution_update') {
+      // T003: Mesmo mensagens "narrative" podem anunciar criações — promover para HIGH
+      const contentLower = turn.content.toLowerCase();
+      const CREATION_INDICATORS = [
+        'criei', 'criou', 'atividade criada', 'quiz criado', 'sequência didática',
+        'flash cards', 'lista de exercícios', 'plano de aula', 'concluíd',
+        'gerado com sucesso', 'pronto', 'finaliz', '✅'
+      ];
+      if (CREATION_INDICATORS.some(ind => contentLower.includes(ind))) {
+        console.log(`[Compactor] narrative promovido → HIGH (contém indicador de criação)`);
+        return { turn, priority: 'high' };
+      }
       return { turn, priority: 'low' };
     }
 
@@ -103,19 +114,27 @@ export class ConversationCompactor {
     let remaining = Math.max(budget, 500);
 
     if (critical.length > 0) {
+      // T001: CRITICAL (mensagens do professor) preservados com 400 chars (era 200)
       const criticalText = critical
-        .map(p => `Professor: ${this.semanticSummarize(p.turn.content, 200)}`)
+        .map(p => {
+          const summarized = this.semanticSummarize(p.turn.content, 400);
+          console.log(`[Compactor] CRITICAL: ${p.turn.content.length} chars → ${summarized.length} chars preservados`);
+          return `Professor: ${summarized}`;
+        })
         .join('\n');
       parts.push(criticalText);
       remaining -= criticalText.length;
     }
 
     if (high.length > 0 && remaining > 200) {
-      const perItem = Math.max(120, Math.floor(remaining / (high.length + 1)));
+      // T003: HIGH items (criações de atividades) garantem mínimo de 300 chars
+      const perItem = Math.max(300, Math.floor(remaining / (high.length + 1)));
       const highText = high
         .map(p => {
           const label = p.turn.metadata?.type || 'resposta';
-          return `[${label}] ${this.semanticSummarize(p.turn.content, perItem)}`;
+          const summarized = this.semanticSummarize(p.turn.content, perItem);
+          console.log(`[Compactor] HIGH "${label}": ${p.turn.content.length} → ${summarized.length} chars`);
+          return `[${label}] ${summarized}`;
         })
         .join('\n');
       parts.push(highText);

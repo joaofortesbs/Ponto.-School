@@ -115,9 +115,11 @@ export class ContextAssembler {
     const parts: string[] = [];
 
     if (session.conversationHistory.length > 0 && callType !== 'interpretation') {
+      // T002: follow_up aumentado de 0.4 → 0.5 (10k×50% = 5.000 chars histórico, era 4.000)
       const historyRatio = callType === 'planner' ? 0.45 :
-                           callType === 'follow_up' ? 0.4 :
+                           callType === 'follow_up' ? 0.5 :
                            callType === 'mente_maior' ? 0.35 : 0.3;
+      console.log(`[Assembler] ${callType}: history budget = ${Math.floor(budget * historyRatio)} chars (${Math.round(historyRatio * 100)}%)`);
       const historyBudget = Math.floor(budget * historyRatio);
 
       const recentTurns = callType === 'planner' ? 6 :

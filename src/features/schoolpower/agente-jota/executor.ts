@@ -45,6 +45,7 @@ import {
   getSession, 
   addStepResult, 
   getFileContexts,
+  addLedgerFact,
   type SessionContext 
 } from './context-engine';
 
@@ -1085,6 +1086,25 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
               
             } else {
               console.error('❌ [Executor] FAILED to save chosen activities!');
+            }
+
+            // T004: Enriquecer ledger com justificativas pedagógicas de cada atividade escolhida
+            const chosenForLedger = (resultado as any)?.data?.chosen_activities || (resultado as any)?.chosen_activities;
+            if (Array.isArray(chosenForLedger) && chosenForLedger.length > 0) {
+              for (const act of chosenForLedger) {
+                const justificativa = act.justificativa || '';
+                const fact = justificativa.length >= 10
+                  ? `Atividade "${act.titulo || act.id}" (${act.tipo}) foi escolhida porque: ${justificativa}`
+                  : `Atividade "${act.titulo || act.id}" (${act.tipo}) incluída no plano pedagógico`;
+                addLedgerFact(this.sessionId, { category: 'decision', fact, metadata: { activityId: act.id, tipo: act.tipo } });
+                console.log(`[Ledger] Fato salvo: category=decision fact="${fact.substring(0, 80)}..."`);
+              }
+              // Salvar estratégia pedagógica geral se disponível
+              const estrategia = (resultado as any)?.data?.estrategia || (resultado as any)?.data?.estrategia_pedagogica;
+              if (estrategia && typeof estrategia === 'string' && estrategia.length > 10) {
+                addLedgerFact(this.sessionId, { category: 'preference', fact: `Estratégia pedagógica adotada: ${estrategia.substring(0, 300)}` });
+                console.log(`[Ledger] Fato salvo: category=preference fact="${estrategia.substring(0, 60)}..."`);
+              }
             }
           }
           
