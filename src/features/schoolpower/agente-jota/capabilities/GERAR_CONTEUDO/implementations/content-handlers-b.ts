@@ -161,18 +161,21 @@ export async function handleTextVersion(
   );
 
   try {
-    const inferredSubject = activity.campos_preenchidos?.subject ||
-      activity.campos_preenchidos?.disciplina ||
-      activity.materia || disciplinaExtraida ||
+    const rawSubject = activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina || '';
+    const inferredSubject = disciplinaExtraida ||
+      (rawSubject && rawSubject !== 'geral' && rawSubject !== '' ? rawSubject : null) ||
+      activity.materia ||
       inferSubjectFromObjective(userObjective) || 'Matemática';
 
     const inferredSchoolYear = activity.campos_preenchidos?.schoolYear ||
       activity.campos_preenchidos?.serie || turmaExtraida || '7º Ano - Ensino Fundamental';
     const finalSchoolYear = turmaExtraida || inferredSchoolYear;
-    console.log(`📄 [VERSÃO-TEXTO] turmaExtraida="${turmaExtraida}" → finalSchoolYear="${finalSchoolYear}"`);
+    console.log(`📄 [VERSÃO-TEXTO] turmaExtraida="${turmaExtraida}" → finalSchoolYear="${finalSchoolYear}" | disciplinaExtraida="${disciplinaExtraida}" → subject="${inferredSubject}"`);
 
-    const inferredTheme = activity.campos_preenchidos?.theme ||
-      activity.campos_preenchidos?.tema || temaLimpo ||
+    const rawTheme = activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || '';
+    const GENERIC_TEMA_FALLBACKS_TEXT = new Set(['Atividades', 'Sequência Didática', 'Lista de Exercícios', 'Quiz Interativo', 'Flash Cards', 'Plano de Aula', '']);
+    const inferredTheme = temaLimpo ||
+      (rawTheme && !GENERIC_TEMA_FALLBACKS_TEXT.has(rawTheme) ? rawTheme : null) ||
       generateThemeFromObjective(userObjective, inferredSubject);
 
     if (temaLimpo) console.log(`🎯 [GerarConteudo] GENÉRICO usando tema limpo do plano: "${temaLimpo}"`);

@@ -197,6 +197,36 @@ function extractPedagogicalContextFromConversation(conversationContext: string):
   return { grauExtraido, disciplinaExtraida, temaExtraido };
 }
 
+function extractPedagogicalInstructions(userObjective: string): string {
+  const obj = userObjective || '';
+  const instructions: string[] = [];
+
+  const contextPatterns = [
+    /contexto\s+de\s+([^.,!?\n]{3,50})/i,
+    /usando\s+(?:o\s+contexto\s+de\s+|contexto\s+de\s+)?([^.,!?\n]{3,50})\s+(?:como\s+exemplo|nos\s+exemplos|em\s+todos)/i,
+    /exemplos?\s+(?:devem?\s+usar?|com|usando?|de)\s+([^.,!?\n]{3,50})/i,
+  ];
+  for (const p of contextPatterns) {
+    const m = obj.match(p);
+    if (m && m[1]) { instructions.push(`use contexto de ${m[1].trim()} em todos os exemplos`); break; }
+  }
+
+  if (/linguagem\s+simples|língua\s+simples|vocabulário\s+simples/i.test(obj)) {
+    instructions.push('use linguagem simples e acessível');
+  }
+  if (/dificuldade\s+de\s+leitura|dificuldade\s+para\s+ler|leitura\s+difícil/i.test(obj)) {
+    instructions.push('textos curtos e diretos, adequados para alunos com dificuldade de leitura');
+  }
+  if (/exemplos?\s+do\s+dia\s+a\s+dia|cotidiano|vida\s+real/i.test(obj)) {
+    instructions.push('use exemplos do dia a dia e situações do cotidiano');
+  }
+  if (/abordagem\s+lúdica|jogos?|gamifica/i.test(obj)) {
+    instructions.push('abordagem lúdica e gamificada');
+  }
+
+  return instructions.slice(0, 3).join('; ');
+}
+
 export function buildContentGenerationPrompt(
   activity: ChosenActivity,
   fieldsMapping: ActivityFieldsMapping,
@@ -208,15 +238,19 @@ export function buildContentGenerationPrompt(
   questoesReferencia?: QuestoesReferenciaData,
   webSearchContext?: WebSearchContextData,
   fileContext?: string,
-  turmaExtraida?: string
+  turmaExtraida?: string,
+  temaLimpo?: string,
+  disciplinaExtraida?: string
 ): string {
-  const { grauExtraido, disciplinaExtraida, temaExtraido } = extractPedagogicalContextFromConversation(conversationContext);
+  const { grauExtraido, disciplinaExtraida: disciplinaFromCtx, temaExtraido } = extractPedagogicalContextFromConversation(conversationContext);
 
   const resolvedGrade = turmaExtraida || grauExtraido || activity.campos_preenchidos?.schoolYear || activity.campos_preenchidos?.anoSerie || '';
+  const resolvedTema = temaLimpo || temaExtraido || activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || '';
+  const resolvedDisciplina = disciplinaExtraida || disciplinaFromCtx || activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina || activity.materia || 'Não especificada';
 
   const qualityCtx: QualityContext = {
-    tema: temaExtraido || activity.campos_preenchidos?.theme || activity.campos_preenchidos?.tema || '',
-    disciplina: disciplinaExtraida || activity.campos_preenchidos?.subject || activity.campos_preenchidos?.disciplina || activity.materia || 'Não especificada',
+    tema: resolvedTema,
+    disciplina: resolvedDisciplina,
     anoSerie: resolvedGrade,
     objetivo: userObjective,
     solicitacaoOriginal: userObjective
@@ -246,12 +280,14 @@ ${idx + 1}. "${field.name}" (${field.label}) [OPCIONAL - MAS GERE]
 # TAREFA: Gerar Conteúdo Completo para Atividade Educacional
 
 Você é um especialista pedagógico brasileiro gerando conteúdo detalhado para uma atividade educacional.
-${turmaExtraida ? `
-## ⚡ DADO CONFIRMADO PELO PROFESSOR — PRIORIDADE MÁXIMA
-**TURMA/SÉRIE: ${turmaExtraida}**
-→ Este valor foi confirmado DIRETAMENTE pelo professor. USE EXATAMENTE "${turmaExtraida}" em todos os campos relacionados a série, ano, turma, público-alvo.
-→ NÃO substitua por "7º Ano", "Ensino Fundamental" ou qualquer outro valor.
-→ NÃO tente "normalizar" ou "padronizar" este valor.
+${(turmaExtraida || resolvedTema || (resolvedDisciplina && resolvedDisciplina !== 'Não especificada')) ? `
+## ⚡ DADOS CONFIRMADOS PELO PROFESSOR — PRIORIDADE MÁXIMA
+${turmaExtraida ? `**TURMA/SÉRIE: ${turmaExtraida}**` : ''}
+${resolvedTema ? `**TEMA/ASSUNTO: ${resolvedTema}**` : ''}
+${resolvedDisciplina && resolvedDisciplina !== 'Não especificada' ? `**DISCIPLINA: ${resolvedDisciplina}**` : ''}
+→ USE EXATAMENTE estes valores nos campos correspondentes.
+→ NÃO substitua turma por "7º Ano", tema por "Atividades", disciplina por "geral".
+→ NÃO tente "normalizar" ou "padronizar" nenhum desses valores.
 ` : ''}
 ## CONTEXTO COMPLETO DA CONVERSA
 ${conversationContext}
@@ -312,9 +348,7 @@ O TEMA desta atividade é o ASSUNTO ESCOLAR ensinado, NÃO palavras de urgência
 
 ✅ TEMA CORRETO (assunto escolar): "Fotossíntese", "Sistema Solar", "Tipos de narrador", "Operações com frações", "Biomas brasileiros", "Substantivos próprios e comuns", "Revolução Industrial"
 ❌ TEMA PROIBIDO (contexto/urgência): "ajuda urgente", "preciso de material", "manhã", "urgente", "criar atividade", "turma difícil", "semana que vem"
-
-→ Leia o bloco "CONTEXTO COMPLETO DA CONVERSA" e "OBJETIVO ORIGINAL DO USUÁRIO" acima.
-→ Extraia o ASSUNTO ESCOLAR mencionado pelo professor.
+${resolvedTema ? `→ ⚡ CONFIRMADO: O assunto específico é "${resolvedTema}" — USE ESTE TEMA em tituloTemaAssunto, theme, tema e todos os campos de assunto. NÃO substitua por "Atividades" ou qualquer genérico.` : '→ Leia o bloco "CONTEXTO COMPLETO DA CONVERSA" e "OBJETIVO ORIGINAL DO USUÁRIO" acima.\n→ Extraia o ASSUNTO ESCOLAR mencionado pelo professor.'}
 → Se não houver assunto claro, combine DISCIPLINA + SÉRIE para criar um tema específico e concreto.
 → NUNCA use palavras de urgência, contexto administrativo ou frases do professor como tema.
 
@@ -324,13 +358,14 @@ ${turmaExtraida ? `→ ⚡ CONFIRMADO: O professor especificou EXATAMENTE "${tur
 → Somente se o ano não estiver mencionado em NENHUM lugar, use o ano mais comum para a disciplina identificada.
 
 **PASSO 3 — IDENTIFIQUE A DISCIPLINA:**
-→ Leia o contexto acima e encontre a disciplina mencionada pelo professor.
+${resolvedDisciplina && resolvedDisciplina !== 'Não especificada' ? `→ ⚡ CONFIRMADO: A disciplina é "${resolvedDisciplina}" — USE EXATAMENTE este valor nos campos subject, disciplina e correlatos. NÃO use "geral".` : '→ Leia o contexto acima e encontre a disciplina mencionada pelo professor.'}
 → Use EXATAMENTE o que o professor disse — não substitua por "geral" ou "Não especificada".
 → Somente se a disciplina não estiver mencionada, infira pelo tema (ex: fotossíntese → Ciências/Biologia).
 
-**PASSO 4 — RESPEITE RESTRIÇÕES DA TURMA:**
+**PASSO 4 — RESPEITE RESTRIÇÕES PEDAGÓGICAS ESPECÍFICAS:**
 → Se o professor mencionou restrições (ex: alunos com TEA, turma com dificuldades, preferência por jogos), aplique-as em TODOS os campos gerados.
 → NUNCA invente dados da turma (quantidade de alunos, nome da turma, perfil) que não foram mencionados.
+${extractPedagogicalInstructions(userObjective) ? `→ ⚡ INSTRUÇÃO ESPECIAL DO PROFESSOR: "${extractPedagogicalInstructions(userObjective)}" — aplique em TODO o conteúdo gerado.` : ''}
 
 ### REGRA DE EXPANSÃO DE CONTEXTO
 Aplique SOMENTE se o objetivo do usuário for vago E o contexto da conversa não contiver informações suficientes:

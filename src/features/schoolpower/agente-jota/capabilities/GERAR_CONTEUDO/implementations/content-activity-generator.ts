@@ -93,12 +93,14 @@ export async function generateContentForActivity(
         total_fields: requiredFieldNames.length + optionalFieldNames.length } }
   );
 
-  console.log(`📋 [GerarConteudo] turmaExtraida="${ctx.turmaExtraida}" → gerando "${activity.tipo}" (${activity.titulo})`);
+  console.log(`📋 [GerarConteudo] temaLimpo="${ctx.temaLimpo}" | disciplina="${ctx.disciplinaExtraida}" | turma="${ctx.turmaExtraida}" → gerando "${activity.tipo}" (${activity.titulo})`);
 
   const prompt = buildContentGenerationPrompt(
     activity, fieldsMapping, conversationContext, userObjective,
     batchIndex, batchTotal, bnccContext, questoesReferencia, webSearchContext, fileContext,
-    ctx.turmaExtraida || undefined
+    ctx.turmaExtraida || undefined,
+    ctx.temaLimpo || undefined,
+    ctx.disciplinaExtraida || undefined
   );
 
   let lastError: string = '';
@@ -203,6 +205,37 @@ export async function generateContentForActivity(
           console.log(`🎯 [GerarConteudo] Override de turma aplicado: "${ctx.turmaExtraida}" em ${gradeFields.filter(f => finalFields[f] === ctx.turmaExtraida).join(', ')}`);
         }
       }
+
+      const GENERIC_TEMA_FALLBACKS = new Set(['Atividades', 'Sequência Didática', 'Lista de Exercícios', 'Quiz Interativo', 'Flash Cards', 'Plano de Aula', '']);
+      if (ctx.temaLimpo) {
+        const temaFields = ['theme', 'tema', 'tituloTemaAssunto'];
+        for (const field of temaFields) {
+          if (finalFields[field] !== undefined && GENERIC_TEMA_FALLBACKS.has(String(finalFields[field]))) {
+            console.log(`✅ [GerarConteudo] Tema override: ${field} "${finalFields[field]}" → "${ctx.temaLimpo}"`);
+            finalFields[field] = ctx.temaLimpo;
+          }
+        }
+        if (finalFields.titulo && GENERIC_TEMA_FALLBACKS.has(String(finalFields.titulo))) {
+          finalFields.titulo = `${activity.tipo === 'sequencia-didatica' ? 'Sequência Didática' : activity.tipo === 'lista-exercicios' ? 'Lista de Exercícios' : 'Quiz'}: ${ctx.temaLimpo}`;
+        }
+      }
+
+      if (ctx.disciplinaExtraida && ctx.disciplinaExtraida !== '') {
+        const disciplinaFields = ['subject', 'disciplina'];
+        for (const field of disciplinaFields) {
+          if (finalFields[field] !== undefined && (finalFields[field] === 'geral' || finalFields[field] === '' || finalFields[field] === 'Não especificada')) {
+            console.log(`✅ [GerarConteudo] Disciplina override: ${field} "${finalFields[field]}" → "${ctx.disciplinaExtraida}"`);
+            finalFields[field] = ctx.disciplinaExtraida;
+          }
+        }
+      }
+
+      if (finalFields.publicoAlvo && typeof finalFields.publicoAlvo === 'string' &&
+          finalFields.publicoAlvo.includes('geral') && ctx.turmaExtraida) {
+        finalFields.publicoAlvo = `Alunos da turma ${ctx.turmaExtraida}${ctx.disciplinaExtraida ? ` - ${ctx.disciplinaExtraida}` : ''}`;
+      }
+
+      console.log(`🎯 [GerarConteudo-Override] tema="${finalFields.tituloTemaAssunto || finalFields.theme}" | disciplina="${finalFields.subject || finalFields.disciplina}" | série="${finalFields.anoSerie || finalFields.schoolYear}"`);
 
       for (const [fieldName, fieldValue] of Object.entries(finalFields)) {
         onProgress?.({ type: 'field_generated', activity_id: activity.id, activity_title: activity.titulo,

@@ -1419,11 +1419,42 @@ error: ${v2Result.error ? JSON.stringify(v2Result.error) : 'NONE'}
         discoveries.push(`${chosenActivities.length} atividade(s) escolhida(s): ${titles}`);
       }
 
-      // gerar_conteudo_atividades: success_count e total_activities
+      // gerar_conteudo_atividades: success_count e total_activities + conteúdo real para memória de follow-up
       const successCount = resultado.data?.success_count ?? resultado.success_count;
       const totalActivities = resultado.data?.total_activities ?? resultado.total_activities;
       if (successCount !== undefined && totalActivities !== undefined) {
         discoveries.push(`Conteúdo gerado para ${successCount} de ${totalActivities} atividade(s)`);
+      }
+      // Extrair conteúdo real das atividades geradas para o ledger (para follow-up)
+      const generatedContent = resultado.data?.generated_content || resultado.data?.successful_content;
+      if (generatedContent && Array.isArray(generatedContent)) {
+        for (const actResult of generatedContent.slice(0, 3)) {
+          if (!actResult?.success || !actResult?.generated_fields) continue;
+          const fields = actResult.generated_fields;
+          const tipo = actResult.activity_type || '';
+          const tema = fields.theme || fields.tituloTemaAssunto || fields.tema || '';
+          const serie = fields.schoolYear || fields.anoSerie || '';
+          let contentSummary = '';
+          if (tipo === 'quiz-interativo' && Array.isArray(fields.questions) && fields.questions.length > 0) {
+            const firstThree = fields.questions.slice(0, 3);
+            contentSummary = firstThree.map((q: any, i: number) =>
+              `Q${i + 1}: "${q.question || q.enunciado || ''}" → Resp: "${q.correctAnswer || q.respostaCorreta || ''}"`
+            ).join(' | ');
+          } else if (tipo === 'lista-exercicios' && Array.isArray(fields.exercises || fields.exercicios) && (fields.exercises || fields.exercicios).length > 0) {
+            const exs = (fields.exercises || fields.exercicios).slice(0, 3);
+            contentSummary = exs.map((e: any, i: number) => `E${i + 1}: "${e.question || e.enunciado || e.texto || ''}"`).join(' | ');
+          } else if (tipo === 'flash-cards' && Array.isArray(fields.flashcards || fields.cards) && (fields.flashcards || fields.cards).length > 0) {
+            const cards = (fields.flashcards || fields.cards).slice(0, 5);
+            contentSummary = cards.map((c: any) => `"${c.front || c.frente || ''}" → "${c.back || c.verso || ''}"`).join(' | ');
+          } else if (fields.textContent && typeof fields.textContent === 'string') {
+            contentSummary = fields.textContent.substring(0, 300);
+          } else if (fields.objetivosAprendizagem) {
+            contentSummary = String(fields.objetivosAprendizagem).substring(0, 200);
+          }
+          if (tema || contentSummary) {
+            discoveries.push(`Atividade "${tipo}"${tema ? ` sobre "${tema}"` : ''}${serie ? ` para ${serie}` : ''}${contentSummary ? ': ' + contentSummary.substring(0, 200) : ''}`);
+          }
+        }
       }
 
       // estrategia pedagógica do decidir
