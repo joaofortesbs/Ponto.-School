@@ -305,10 +305,15 @@ ${fileContext}
 ` : ''}## OBJETIVO ORIGINAL DO USUÁRIO
 ${userObjective}
 
+## INTENÇÃO PEDAGÓGICA DA ATIVIDADE
+${activity.justificativa && activity.justificativa.length > 10
+  ? `Esta atividade foi especificamente escolhida porque: "${activity.justificativa}"\n→ Gere o conteúdo com ESTE objetivo pedagógico em mente — a justificativa revela o que o professor precisa.`
+  : `Atividade do tipo ${fieldsMapping.displayName} para atender ao objetivo do professor descrito acima.`
+}
+
 ## ATIVIDADE A PREENCHER
 - **Tipo**: ${fieldsMapping.displayName} (${activity.tipo})
 - **Título**: ${activity.titulo}
-- **Justificativa da escolha**: ${activity.justificativa}
 - **Categoria**: ${activity.categoria || 'Não especificada'}
 - **Matéria**: ${activity.materia || 'Não especificada'}
 

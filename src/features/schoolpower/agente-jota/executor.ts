@@ -67,6 +67,34 @@ export interface CapabilityProgressUpdate extends ProgressUpdate {
   capabilityDuration?: number;
 }
 
+// T001: Extrai tema pedagógico do objetivo quando o Planner retorna tema_limpo vazio
+function extractTemaFromObjective(objetivo: string): string {
+  if (!objetivo) return '';
+  const PALAVRAS_PROIBIDAS = /^(urgente|preciso|criar|atividade|atividades|aula|conteúdo|material|ajuda|hoje|amanhã|manhã|tarde|semana|preciso de|quero|queria|gostaria|professor|aluno|turma|escola|serie|série)$/i;
+
+  // Padrões de extração em ordem de confiança
+  const patterns = [
+    /\bsobre\s+([\wÀ-ÿ\s]{5,60}?)(?:\s+para|\s+do|\s+de|\s+com|[.,!?\n]|$)/i,
+    /\btema[:\s]+([^\n.,!?]{5,60})/i,
+    /\bassunto[:\s]+([^\n.,!?]{5,60})/i,
+    /\bestudando\s+([\wÀ-ÿ\s]{5,60}?)(?:\s+para|\s+do|[.,!?\n]|$)/i,
+    /\btrabalhando com\s+([\wÀ-ÿ\s]{5,60}?)(?:\s+para|\s+do|[.,!?\n]|$)/i,
+    /\bde\s+([\wÀ-ÿ]{5,40}(?:\s+[\wÀ-ÿ]+){0,4})(?:\s+para o|\s+do|\s+de |[.,!?\n]|$)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = objetivo.match(pattern);
+    if (match?.[1]) {
+      const candidate = match[1].trim().replace(/\s+/g, ' ');
+      const words = candidate.split(/\s+/);
+      if (!PALAVRAS_PROIBIDAS.test(words[0]) && candidate.length >= 4) {
+        return candidate.substring(0, 60);
+      }
+    }
+  }
+  return '';
+}
+
 export class AgentExecutor {
   private sessionId: string;
   private memory: MemoryManager;
@@ -382,6 +410,18 @@ export class AgentExecutor {
     this.currentPlanTemas = plan.temas_extraidos || [];
     this.currentPlanDisciplina = plan.disciplina_extraida || '';
     this.currentPlanTurma = plan.turma_extraida || '';
+
+    // T001: Validar e recuperar tema_limpo se vier vazio do Planner
+    if (!this.currentPlanTemas.length || !this.currentPlanTemas[0] || this.currentPlanTemas[0].trim() === '') {
+      console.warn(`⚠️ [Executor] tema_limpo vazio do Planner — tentando extrair do objetivo do plano`);
+      const temaFallback = extractTemaFromObjective(plan.objetivo || this.currentPlanObjective);
+      if (temaFallback) {
+        this.currentPlanTemas = [temaFallback];
+        console.log(`✅ [Executor] tema_limpo recuperado por fallback: "${temaFallback}"`);
+      } else {
+        console.error(`❌ [Executor] ATENÇÃO: tema_limpo continua vazio. Geração usará apenas contexto da conversa.`);
+      }
+    }
     
     console.log(`🎯 [Executor] Temas do plano: [${this.currentPlanTemas.join(', ')}]`);
     console.log(`🎯 [Executor] Disciplina do plano: ${this.currentPlanDisciplina}`);
@@ -390,16 +430,29 @@ export class AgentExecutor {
     const sessionForContext = getSession(this.sessionId);
     if (sessionForContext && sessionForContext.conversationHistory.length > 0) {
       const recentTurns = sessionForContext.conversationHistory.slice(-6);
-      const conversationLines = recentTurns.map(turn => {
+      // T002: Últimos 2 turns recebem 600 chars (mais detalhes pedagógicos do pedido atual)
+      const conversationLines = recentTurns.map((turn, i) => {
         const prefix = turn.role === 'user' ? 'Professor' : 'Jota';
-        const content = turn.content.substring(0, 400);
+        const charLimit = i >= recentTurns.length - 2 ? 600 : 400;
+        const content = turn.content.substring(0, charLimit);
         return `${prefix}: ${content}`;
       });
       this.conversationContext = conversationLines.join('\n');
 
+      // T002: originalGoal com 500 chars (era 300)
       if (sessionForContext.originalGoal && !this.conversationContext.includes(sessionForContext.originalGoal.substring(0, 50))) {
-        this.conversationContext = `Objetivo original: ${sessionForContext.originalGoal.substring(0, 300)}\n\n${this.conversationContext}`;
+        this.conversationContext = `Objetivo original: ${sessionForContext.originalGoal.substring(0, 500)}\n\n${this.conversationContext}`;
       }
+
+      // T002: Garantir que o pedido atual do professor apareça explicitamente no topo
+      const currentMessage = sessionForContext.conversationHistory.slice(-1)[0];
+      if (currentMessage?.role === 'user' && !this.conversationContext.startsWith('PEDIDO ATUAL')) {
+        const currentMsgPreview = currentMessage.content.substring(0, 30);
+        if (!this.conversationContext.includes(currentMsgPreview)) {
+          this.conversationContext = `PEDIDO ATUAL DO PROFESSOR:\n${currentMessage.content}\n\n${this.conversationContext}`;
+        }
+      }
+
       console.log(`📝 [Executor] conversationContext construído: ${this.conversationContext.length} chars, ${recentTurns.length} turnos da sessão`);
     } else {
       this.conversationContext = plan.objetivo || '';

@@ -718,6 +718,25 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
       technical_data: { activities_count: chosenActivities.length, activity_ids: chosenActivities.map(a => a.id) }
     });
 
+    // T003: Recuperar justificativas do previous_results para atividades que vieram sem ela
+    const decisionResultForJust = input.previous_results?.get?.('decidir_atividades_criar');
+    const chosenWithJust = (decisionResultForJust as any)?.data?.chosen_activities as ChosenActivity[] | undefined;
+    if (chosenWithJust?.length) {
+      let justInjected = 0;
+      for (const activity of chosenActivities) {
+        if (!activity.justificativa || activity.justificativa.length < 10) {
+          const match = chosenWithJust.find((c: ChosenActivity) => c.id === activity.id);
+          if (match?.justificativa && match.justificativa.length >= 10) {
+            activity.justificativa = match.justificativa;
+            justInjected++;
+          }
+        }
+      }
+      if (justInjected > 0) {
+        console.log(`✅ [GerarConteudo] Justificativas recuperadas do previous_results: ${justInjected} atividades enriquecidas`);
+      }
+    }
+
     const conversationContext = input.context.conversation_context ||
                                 input.context.conversa || 'Contexto educacional';
     const userObjective = input.context.user_objective ||
@@ -773,6 +792,21 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
       const v2TemaLimpo = input.context.tema_limpo || '';
       const v2DisciplinaExtraida = input.context.disciplina_extraida || '';
       const v2TurmaExtraida = input.context.turma_extraida || '';
+
+      // T004: Diagnóstico explícito de tema_limpo, disciplina e turma ao gerar cada atividade
+      if (!v2TemaLimpo) {
+        console.warn(`⚠️ [GerarConteudo] tema_limpo chegou VAZIO para "${activity.titulo}"! Verificar extração no Planner e Executor.`);
+        console.warn(`⚠️ [GerarConteudo] userObjective="${userObjective.substring(0, 120)}"... A IA tentará extrair o tema do contexto.`);
+      } else {
+        console.log(`✅ [GerarConteudo] tema_limpo recebido: "${v2TemaLimpo}" | disciplina="${v2DisciplinaExtraida}" | turma="${v2TurmaExtraida}" | atividade="${activity.titulo}"`);
+      }
+      if (!v2DisciplinaExtraida) {
+        console.warn(`⚠️ [GerarConteudo] disciplina_extraida vazia para "${activity.titulo}"`);
+      }
+      if (!v2TurmaExtraida) {
+        console.warn(`⚠️ [GerarConteudo] turma_extraida vazia para "${activity.titulo}"`);
+      }
+      console.log(`📋 [GerarConteudo] justificativa: "${(activity.justificativa || '').substring(0, 80)}" | ${activity.justificativa?.length > 10 ? '✅ preenchida' : '⚠️ vazia/curta'}`);
 
       const v2BnccContext = input.context.bncc_context as BnccContextData | undefined;
       const v2QuestoesReferencia = input.context.questoes_referencia as QuestoesReferenciaData | undefined;
