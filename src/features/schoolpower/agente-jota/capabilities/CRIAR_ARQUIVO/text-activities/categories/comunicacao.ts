@@ -65,34 +65,52 @@ SOLICITAÇÃO DO PROFESSOR:
 CONTEXTO DA SESSÃO (se disponível):
 {contexto}
 
+DIRETRIZES DE QUALIDADE OBRIGATÓRIAS:
+- Use linguagem AFETIVA e CONSTRUTIVA em todo o documento — o relatório será lido pela família do aluno
+- Sempre mencione PONTOS FORTES antes de áreas de desenvolvimento (sequência: positivo → a melhorar → sugestão)
+- Use exemplos de COMPORTAMENTOS OBSERVÁVEIS e concretos — nunca adjetivos vagos como "bom aluno" ou "participativo"
+- EVITE termos diagnósticos clínicos (ex: "déficit", "transtorno") sem indicação médica — prefira "apresenta dificuldades em"
+- Cada observação deve sugerir um próximo passo prático e alcançável
+- Linguagem acessível para famílias sem formação pedagógica
+
 ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
 
 # Relatório Individual do Aluno
 
 ## Dados do Aluno
-Campos para: Nome, Turma, Período avaliado, Professor(a).
+Campos para: Nome do Aluno, Turma, Série/Ano, Período avaliado, Professor(a), Data de emissão.
 
 ## Desempenho Acadêmico
-Análise por área do conhecimento/disciplina. Use indicadores qualitativos: Superou expectativas / Atingiu / Em desenvolvimento / Necessita apoio.
+Análise por área do conhecimento/disciplina com indicadores qualitativos:
+✅ Superou expectativas | 🎯 Atingiu as expectativas | 📈 Em desenvolvimento | 🤝 Necessita apoio adicional
+Para cada nível, descreva COM EXEMPLOS CONCRETOS o que foi observado em sala (ex: "Demonstrou domínio ao resolver problemas de fração em atividade em grupo no dia XX").
 
 ## Aspectos Socioemocionais
-Observações sobre: participação, interação com colegas, autonomia, responsabilidade, curiosidade.
+Observações descritivas sobre:
+- **Participação**: como o aluno se engaja nas atividades (com exemplo específico)
+- **Interação**: como se relaciona com colegas (situações observadas)
+- **Autonomia**: capacidade de trabalhar de forma independente
+- **Responsabilidade**: cumprimento de tarefas e combinados
+- **Resiliência**: como reage a desafios e dificuldades
 
 ## Pontos Fortes
-Destaques positivos do aluno com exemplos concretos de situações observadas.
+3-4 destaques positivos ESPECÍFICOS com exemplos de situações reais observadas em sala.
+Celebre conquistas concretas — não use elogios genéricos.
 
 ## Áreas de Desenvolvimento
-Aspectos que precisam ser trabalhados, com sugestões construtivas.
+2-3 aspectos a desenvolver, sempre com:
+- Descrição objetiva do que foi observado (sem julgamentos)
+- Sugestão prática e específica de como melhorar
+- Indicação de como a escola está apoiando
 
-## Recomendações
-Sugestões para a família apoiar o desenvolvimento em casa. Encaminhamentos se necessário.
+## Recomendações para a Família
+Sugestões concretas e realizáveis para apoiar o desenvolvimento em casa:
+- Atividades específicas (ex: "Ler juntos por 15 minutos antes de dormir")
+- Como conversar sobre o tema com o aluno
+- Encaminhamentos ou parcerias quando necessário
 
-REGRAS:
-- Tom construtivo e respeitoso
-- Exemplos concretos, não genéricos
-- Linguagem acessível para pais
-- Modelo que o professor adapta para cada aluno
-- NÃO retorne JSON`
+IMPORTANTE: Todo o conteúdo deve ser específico para a solicitação "{solicitacao}". Nunca use placeholders como [nome do aluno] ou [inserir]. Entregue o modelo completo e pronto para uso.
+NÃO retorne JSON`
   },
   {
     id: 'convite_evento',

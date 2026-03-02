@@ -134,8 +134,8 @@ REGRAS ABSOLUTAS:
 4. Cada atividade DEVE ter: id, titulo, justificativa (>10 chars), ordem_sugerida
 5. Respeite a quantidade solicitada pelo professor
 6. VARIEDADE OBRIGATÓRIA: Nunca escolha a mesma atividade duas vezes. Use CATEGORIAS DIFERENTES para criar um pacote pedagógico completo e diversificado
-7. EQUILÍBRIO INTERATIVO-TEXTUAL: Inclua tanto atividades interativas quanto textuais conforme o contexto exigir — NUNCA escolha apenas atividades do mesmo tipo
-8. MÍNIMO DE ATIVIDADES: Para qualquer pedido que não seja ultra-específico (ex: "uma prova específica"), escolha pelo menos 2 atividades de tipos DIFERENTES. Para pedidos de planejamento de aulas ou semanas, escolha entre 4 e 8 atividades complementares`;
+7. VARIEDADE INTELIGENTE: Quando o professor nomear explicitamente um tipo específico (ex: "crie uma rubrica", "preciso de um bingo", "quero um caça-palavras"), entregue exatamente isso — NÃO adicione tipos não solicitados. Quando o pedido for amplo (ex: "atividades sobre fotossíntese", "materiais para a semana"), use categorias complementares: planejamento + prática + avaliação. NUNCA repita a mesma atividade duas vezes.
+8. MÍNIMO DE ATIVIDADES: Para qualquer pedido que não seja ultra-específico (ex: "uma prova específica", "uma rubrica"), escolha pelo menos 2 atividades de tipos DIFERENTES. Para pedidos de planejamento de aulas ou semanas, escolha entre 4 e 8 atividades complementares`;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // LAYER 1: TOLERANT JSON PARSER
@@ -527,12 +527,12 @@ IDs VÁLIDOS: ${context.available_activities.map(a => a.id).join(', ')}
    - Professor pediu "rubrica" → use rubrica-avaliacao
    - Professor pediu "caça-palavras" → use caca-palavras
    - Professor pediu "plano de aula" → use plano-aula
-4. VARIEDADE OBRIGATÓRIA: quando criar múltiplas atividades, use categorias DIFERENTES entre elas — nunca repita a mesma categoria
-5. EQUILÍBRIO INTERATIVO-TEXTUAL: misture atividades interativas com textuais conforme o contexto:
-   - "exercícios" / "lista" → inclua lista-exercicios (interativa) E complemente com textual variada
-   - "quiz" → quiz-interativo (interativa) E complemente com outras atividades
-   - "flash cards" → flash-cards (interativa) E complemente com outras atividades
-   - NÃO escolha APENAS atividades interativas, NÃO escolha APENAS textuais — EQUILIBRE o pacote
+4. VARIEDADE OBRIGATÓRIA: quando criar múltiplas atividades, use categorias DIFERENTES entre elas — nunca repita a mesma atividade duas vezes
+5. VARIEDADE INTELIGENTE: ajuste a seleção ao tipo de pedido:
+   - Pedido EXPLÍCITO (professor nomeia tipo específico): "crie uma rubrica" → entregue rubrica; "preciso de um bingo" → entregue bingo. Não force outros tipos não pedidos.
+   - Pedido AMPLO (professor descreve tema ou objetivo): "exercícios de frações", "materiais sobre fotossíntese" → misture tipos complementares (prática + avaliação + engajamento)
+   - Pedido de PLANEJAMENTO (semana, período, dossiê): misture obrigatoriamente planejamento + prática + avaliação + engajamento
+   - Em caso de dúvida sobre se o pedido é explícito ou amplo, prefira respeitar a intenção mais óbvia do professor
 6. CONTEXTO PEDAGÓGICO: Para pedidos de planejamento de aulas ou semanas letivas, SEMPRE escolha um conjunto diversificado:
    - plano de aula ou sequência didática + atividades de prática + avaliação/rubrica + material de engajamento
 

@@ -240,7 +240,8 @@ export function buildContentGenerationPrompt(
   fileContext?: string,
   turmaExtraida?: string,
   temaLimpo?: string,
-  disciplinaExtraida?: string
+  disciplinaExtraida?: string,
+  previousActivitiesSummary?: string
 ): string {
   const { grauExtraido, disciplinaExtraida: disciplinaFromCtx, temaExtraido } = extractPedagogicalContextFromConversation(conversationContext);
 
@@ -398,7 +399,7 @@ Aplique SOMENTE se o objetivo do usuário for vago E o contexto da conversa não
 ## DIRETRIZES DE QUALIDADE PEDAGÓGICA (ESPECÍFICAS PARA ${fieldsMapping.displayName.toUpperCase()})
 ${qualityDirectives}
 
-${(batchIndex !== undefined && batchTotal !== undefined && batchTotal > 1) ? getBatchProgressionPrompt(batchIndex, batchTotal, []) : ''}
+${(batchIndex !== undefined && batchTotal !== undefined && batchTotal > 1) ? getBatchProgressionPrompt(batchIndex, batchTotal, [], previousActivitiesSummary) : ''}
 
 ## FORMATO DE RESPOSTA - JSON COMPLETO
 

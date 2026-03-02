@@ -821,6 +821,14 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
         console.log(`📎 [GerarConteudo] Material do professor disponível (${v2FileContext.length} chars) — será usado como matéria-prima pedagógica`);
       }
 
+      // T001 BatchProgression: passar resumo REAL das atividades já geradas neste lote
+      const previousActivitiesContent = i > 0
+        ? activityGeneratedSummaries.slice(0, i).join('\n')
+        : '';
+      if (previousActivitiesContent) {
+        console.log(`📊 [BatchProgression] Atividade ${i + 1}/${chosenActivities.length}: recebeu ${previousActivitiesContent.length} chars de contexto das ${i} atividades anteriores`);
+      }
+
       const result = await generateContentForActivity(
         activity,
         conversationContext,
@@ -836,7 +844,8 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
         v2BnccContext,
         v2QuestoesReferencia,
         v2WebSearchContext,
-        v2FileContext
+        v2FileContext,
+        previousActivitiesContent
       );
 
       results.push(result);
@@ -958,7 +967,17 @@ decisionResult.data?.chosen_activities length: ${(decisionResult as any)?.data?.
         }
 
         verificationResults[activity.id] = verificationResult;
-        activityGeneratedSummaries.push(`"${activity.titulo}" (score: ${verificationResult.score}/10)`);
+        // T001 BatchProgression: construir resumo REAL do conteúdo gerado para alimentar atividades seguintes
+        const contentFieldsForSummary = Object.entries(syncedFields)
+          .filter(([k]) => ['perguntas', 'conteudo', 'texto', 'descricao', 'objetivo', 'tema', 'enunciado', 'instrucoes'].some(key => k.toLowerCase().includes(key)))
+          .map(([k, v]) => `${k}: ${String(v).substring(0, 80)}`)
+          .slice(0, 3)
+          .join('; ');
+        const summaryEntry = contentFieldsForSummary
+          ? `"${activity.titulo}" (${activity.tipo}): ${contentFieldsForSummary.substring(0, 250)}`
+          : `"${activity.titulo}" (${activity.tipo}) [score: ${verificationResult.score}/10]`;
+        activityGeneratedSummaries.push(summaryEntry);
+        console.log(`📊 [BatchProgression] Atividade ${i + 1}/${chosenActivities.length} concluída. Resumo: "${summaryEntry.substring(0, 80)}..."`);
 
         if (!verificationResult.approved || verificationResult.score < 7) {
           if (typeof window !== 'undefined') {

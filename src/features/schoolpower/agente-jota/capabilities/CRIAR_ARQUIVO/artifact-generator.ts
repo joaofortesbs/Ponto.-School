@@ -225,6 +225,16 @@ export async function generateArtifact(
   
   const userRequest = solicitacao || contexto.inputOriginal?.texto || '';
 
+  // T003: Enriquecer {contexto} com disciplina e turma extraídas para que o LLM receba dados pedagógicos explícitos
+  const disciplinaEnriquecida = (contexto as any).disciplina || (contexto as any).inputOriginal?.disciplina || '';
+  const turmaEnriquecida = (contexto as any).turma || (contexto as any).inputOriginal?.turma || '';
+  const enrichedContext = [
+    disciplinaEnriquecida ? `DISCIPLINA: ${disciplinaEnriquecida}` : '',
+    turmaEnriquecida ? `TURMA/ANO: ${turmaEnriquecida}` : '',
+    sanitizedContext ? `CONTEXTO DA SESSÃO:\n${sanitizedContext.substring(0, 800)}` : '',
+  ].filter(Boolean).join('\n\n');
+  console.log(`📄 [ArtifactGenerator] Contexto enriquecido: disciplina="${disciplinaEnriquecida}", turma="${turmaEnriquecida}", bncc=${bnccContext?.count || 0} habilidades, contexto_total=${enrichedContext.length} chars`);
+
   let routerResult: TextActivityRouterResult | null = null;
   let useTextActivityPrompt = false;
 
@@ -266,20 +276,21 @@ Você DEVE incorporar essas habilidades no conteúdo gerado:
 ${bnccContext.prompt_context}
 ` : '';
 
+  // T003: BNCC inserido ANTES do restante do template (maior peso para o LLM)
   if (useTextActivityPrompt && routerResult) {
-    const textPrompt = getPromptForRoute(routerResult, userRequest, sanitizedContext);
+    const textPrompt = getPromptForRoute(routerResult, userRequest, enrichedContext);
     if (textPrompt) {
-      prompt = textPrompt + bnccPromptSection;
-      console.log(`📄 [ArtifactGenerator] Usando prompt especializado do template: ${routerResult.templateId}${bnccContext ? ' + BNCC' : ''}`);
+      prompt = bnccPromptSection + textPrompt;
+      console.log(`📄 [ArtifactGenerator] Usando prompt especializado do template: ${routerResult.templateId}${bnccContext ? ' + BNCC (posicionado no início)' : ''}`);
     } else {
-      prompt = config.promptTemplate
-        .replace('{contexto}', sanitizedContext)
-        .replace('{solicitacao}', userRequest) + bnccPromptSection;
+      prompt = bnccPromptSection + config.promptTemplate
+        .replace('{contexto}', enrichedContext)
+        .replace('{solicitacao}', userRequest);
     }
   } else {
-    prompt = config.promptTemplate
-      .replace('{contexto}', sanitizedContext)
-      .replace('{solicitacao}', userRequest) + bnccPromptSection;
+    prompt = bnccPromptSection + config.promptTemplate
+      .replace('{contexto}', enrichedContext)
+      .replace('{solicitacao}', userRequest);
   }
   
   try {

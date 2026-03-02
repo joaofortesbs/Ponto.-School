@@ -19,42 +19,77 @@ SOLICITAÇÃO DO PROFESSOR:
 CONTEXTO DA SESSÃO (se disponível):
 {contexto}
 
+DIRETRIZES DE QUALIDADE OBRIGATÓRIAS:
+- Crie OBRIGATORIAMENTE as 3 versões: BÁSICA, INTERMEDIÁRIA e AVANÇADA — nunca omita uma delas
+- As 3 versões devem cobrir EXATAMENTE o mesmo conteúdo central, com abordagens diferentes
+- BÁSICA: vocabulário simples, frases curtas (máx. 15 palavras), conceitos concretos, analogias do dia a dia, apoio visual descrito
+- INTERMEDIÁRIA: padrão curricular, vocabulário da série, explicações completas, exercícios variados
+- AVANÇADA: vocabulário técnico/científico, análise crítica, conexões interdisciplinares, pesquisa e síntese
+- Nunca rotule as versões com adjetivos que exponham o nível do aluno — use "Versão A/B/C" ou nomes neutros na distribuição
+- Todo conteúdo deve ser específico para o tema solicitado — não use exemplos genéricos
+
 ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
 
 # Material Adaptado — {tema}
 
-## Conteúdo Original
-Resumo do conteúdo a ser trabalhado e seus objetivos de aprendizagem.
+## Objetivo de Aprendizagem Comum
+O objetivo que TODOS os alunos devem atingir ao final, independente do nível. Use linguagem clara e mensurável.
 
-## Nível Básico
-Versão simplificada com:
-- Vocabulário acessível
-- Frases curtas e diretas
-- Apoio visual (descrição de imagens sugeridas)
-- Exercícios de fixação simples
-- Ideal para alunos com dificuldades de leitura ou inclusão
+## Versão BÁSICA
+**Para quem:** Alunos em processo de alfabetização, com dificuldades de leitura, ELL, ou que precisam de suporte adicional.
+**Características desta versão:**
+- Vocabulário acessível e do cotidiano
+- Frases curtas e diretas (máximo 15 palavras)
+- Apoio visual: descreva quais imagens, diagramas ou ícones acompanhariam o texto
+- Exemplos concretos e próximos da realidade do aluno
 
-## Nível Intermediário
-Versão padrão com:
-- Vocabulário adequado à série
-- Explicações completas
-- Exercícios variados
-- Conexões com o cotidiano
+**Texto Adaptado:**
+[Escreva o conteúdo completo neste nível — mínimo 150 palavras]
 
-## Nível Avançado
-Versão desafiadora com:
-- Vocabulário técnico
-- Textos complementares
-- Questões de análise e síntese
-- Desafios extras e pesquisa
+**Exercícios de Fixação (nível básico):**
+2-3 exercícios simples de compreensão ou aplicação direta
 
-## Orientações ao Professor
-Como distribuir os materiais sem rotular os alunos. Estratégias de agrupamento.
+---
 
-REGRAS:
-- Mesmo conteúdo, três abordagens
-- Respeitar a dignidade de todos os alunos
-- NÃO retorne JSON`
+## Versão INTERMEDIÁRIA
+**Para quem:** A maioria da turma — nível padrão para a série.
+**Características desta versão:**
+- Vocabulário adequado à série e disciplina
+- Explicações completas com exemplos
+- Conexões com o cotidiano e com outros conteúdos
+
+**Texto Adaptado:**
+[Escreva o conteúdo completo neste nível — mínimo 200 palavras]
+
+**Exercícios (nível intermediário):**
+3-4 exercícios variados (compreensão, aplicação e análise)
+
+---
+
+## Versão AVANÇADA
+**Para quem:** Alunos que dominam o conteúdo e precisam de desafios maiores.
+**Características desta versão:**
+- Vocabulário técnico/científico da área
+- Texto com maior densidade conceitual
+- Conexões interdisciplinares e contexto histórico/social
+
+**Texto Adaptado:**
+[Escreva o conteúdo completo neste nível — mínimo 250 palavras]
+
+**Exercícios de Aprofundamento:**
+3-4 exercícios de análise, síntese, avaliação e criação (Bloom superior)
+Inclua pelo menos 1 questão de pesquisa ou projeto
+
+---
+
+## Guia do Professor
+- Como distribuir os materiais preservando a dignidade de todos (evitar exposição do nível)
+- Estratégias de agrupamento: homogêneo x heterogêneo, quando usar cada um
+- Como mediar as diferentes versões na mesma aula
+- Indicadores para perceber quando um aluno está pronto para avançar de versão
+
+IMPORTANTE: Todo o conteúdo deve ser específico para "{solicitacao}". Nunca deixe seções genéricas ou com placeholders. Entregue as 3 versões completas.
+NÃO retorne JSON`
   },
   {
     id: 'choice_board',
@@ -121,38 +156,66 @@ SOLICITAÇÃO DO PROFESSOR:
 CONTEXTO DA SESSÃO (se disponível):
 {contexto}
 
+DIRETRIZES DE QUALIDADE OBRIGATÓRIAS:
+- Inclua OBJETIVOS SMART: Específicos, Mensuráveis, Alcançáveis, Relevantes, com Prazo definido
+- Diferencie claramente: adaptações de CONTEÚDO (o quê ensinar), de METODOLOGIA (como ensinar) e de AVALIAÇÃO (como avaliar)
+- Inclua seção de COMUNICAÇÃO FAMÍLIA-ESCOLA com frequência e canais de acompanhamento
+- Foque em POTENCIALIDADES e competências — nunca apenas em limitações
+- Estratégias de ensino diferenciadas ESPECÍFICAS (não genéricas como "dar mais tempo") — explique o método concreto
+- Linguagem técnica mas acessível para outros professores que irão implementar o plano
+
 ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
 
 # Plano de Apoio Individualizado
 
 ## Dados do Aluno
-Campos para: Nome, turma, idade, diagnóstico/laudo (se houver), profissionais envolvidos.
+Campos para: Nome, Turma, Série/Ano, Idade, Data de elaboração, Período de vigência do plano, Profissionais envolvidos (professor, coordenador, psicopedagogo, outros).
 
 ## Perfil de Aprendizagem
-Pontos fortes do aluno, áreas de dificuldade, estilo de aprendizagem preferido, interesses.
+**Potencialidades:** O que o aluno faz bem, seus interesses e motivações.
+**Estilo de aprendizagem:** Como o aluno aprende melhor (visual, auditivo, cinestésico, lúdico).
+**Área de atenção:** Dificuldades específicas identificadas com exemplos observáveis (sem julgamentos).
+**Contexto familiar:** Informações relevantes sobre o suporte em casa (sem invasão de privacidade).
 
-## Objetivos
-Objetivos de curto prazo (bimestral) e longo prazo (anual), específicos e mensuráveis.
+## Objetivos SMART
+**Objetivos de Curto Prazo** (até o final do bimestre):
+Liste 3-4 objetivos no formato: "O aluno conseguirá [verbo de ação mensurável] [conteúdo específico] [com que critério/condição] até [data]"
 
-## Estratégias e Adaptações
-Lista detalhada de adaptações por área:
-- Adaptações de conteúdo
-- Adaptações de metodologia
-- Adaptações de avaliação
-- Adaptações de ambiente
-- Recursos de apoio (tecnologias assistivas, materiais concretos)
+**Objetivos de Longo Prazo** (até o final do ano):
+Liste 2-3 objetivos maiores, alinhados com as competências da BNCC para a série.
 
-## Cronograma
-Agenda de intervenções, frequência de atendimento, datas de reavaliação.
+## Estratégias e Adaptações Pedagógicas
+**Adaptações de Conteúdo:**
+- O que será modificado no currículo e como (ex: redução de extensão, priorização de conceitos-chave)
 
-## Monitoramento
-Indicadores de progresso, registro de observações, formulário de acompanhamento.
+**Adaptações de Metodologia:**
+- Estratégias de ensino específicas e detalhadas (ex: "Usar manipuláveis concretos antes de introduzir o abstrato", "Dividir tarefas em 3 etapas com checklist")
+- Recursos de apoio: tecnologias assistivas, materiais concretos, pares tutores
 
-REGRAS:
-- Respeitar a individualidade e dignidade do aluno
-- Focar em potencialidades, não apenas dificuldades
-- Linguagem técnica mas acessível
-- NÃO retorne JSON`
+**Adaptações de Avaliação:**
+- Como o aluno demonstrará seu aprendizado de forma diferenciada
+- Formatos alternativos (oral, portfolio, projeto) e critérios específicos
+
+**Adaptações de Ambiente:**
+- Posicionamento na sala, agrupamento, nível de ruído, iluminação
+
+## Cronograma de Intervenções
+Tabela com: Atividade de intervenção | Frequência | Responsável | Local | Recurso utilizado
+Inclua datas de reavaliação do plano (sugestão: a cada bimestre).
+
+## Comunicação Família-Escola
+- Frequência dos contatos (semanal, quinzenal, mensal)
+- Canal principal (agenda, WhatsApp, reunião presencial)
+- Modelo de registro de comunicação
+- Orientações para a família apoiar em casa (específicas e realizáveis)
+
+## Monitoramento e Evidências
+- Indicadores de progresso observáveis e mensuráveis
+- Como registrar o avanço (portfólio, rubrica, checklist de observação)
+- Formulário de acompanhamento semanal/quinzenal
+
+IMPORTANTE: Todo o conteúdo deve ser específico para "{solicitacao}". Entregue o plano completo e pronto para uso.
+NÃO retorne JSON`
   },
   {
     id: 'atividade_diferenciada_inclusao',

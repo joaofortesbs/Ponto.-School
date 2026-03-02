@@ -313,51 +313,91 @@ SOLICITAÇÃO DO PROFESSOR:
 CONTEXTO DA SESSÃO (se disponível):
 {contexto}
 
+DIRETRIZES DE QUALIDADE OBRIGATÓRIAS:
+- Especifique o TEMPO EXATO de cada fase em minutos (Think: 2-3 min, Pair: 3-5 min, Share: 5-10 min)
+- Use uma QUESTÃO GATILHO instigante e aberta — não factual (não "O que é fotossíntese?" mas "Por que as plantas usam luz solar em vez de outro tipo de energia?")
+- As perguntas devem ter MÚLTIPLAS respostas válidas — evite perguntas com resposta única correta
+- Inclua FALAS SUGERIDAS para o professor em cada transição de etapa
+- Ficha do aluno deve ter espaço físico suficiente para escrita em cada etapa
+- Todo conteúdo deve ser específico para o tema — nunca genérico
+
 ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
 
 # Think-Pair-Share — {tema}
 
-## Sobre o Think-Pair-Share
-Explique a metodologia em 3 etapas:
-- **Think (Pensar)**: Reflexão individual silenciosa
-- **Pair (Dupla)**: Discussão em dupla para trocar ideias
-- **Share (Compartilhar)**: Compartilhamento com a turma toda
-Por que funciona: tempo para pensar antes de falar, todos participam, reduz ansiedade.
+## Questão Gatilho Principal
+Uma pergunta instigante, aberta e provocativa sobre o tema.
+**Por que esta pergunta funciona:** Explique brevemente por que ela gera reflexão profunda.
+**Nível de complexidade:** [Básico / Intermediário / Avançado]
+**Tempo total estimado da atividade:** XX minutos
 
-## Perguntas para Reflexão
-5-8 perguntas provocativas organizadas por complexidade crescente:
-- Perguntas de compreensão (nível básico)
-- Perguntas de análise (nível intermediário)
-- Perguntas de avaliação/criação (nível avançado)
-Cada pergunta deve estimular reflexão profunda e ter múltiplas respostas possíveis.
+## Banco de Perguntas para Reflexão
+5-8 perguntas organizadas por complexidade (Taxonomia de Bloom):
+**Nível 1 — Compreensão:** (alunos reconhecem e descrevem)
+- Pergunta 1: ...
+**Nível 2 — Análise:** (alunos examinam relações)
+- Pergunta 2: ...
+- Pergunta 3: ...
+**Nível 3 — Avaliação/Criação:** (alunos julgam e propõem)
+- Pergunta 4: ...
+Cada pergunta deve admitir múltiplas respostas válidas.
 
-## Roteiro da Atividade
-Roteiro detalhado com tempos definidos:
-- **Think (2 minutos)**: O que o professor diz, como os alunos registram
-- **Pair (3 minutos)**: Como formar duplas, orientações para a discussão
-- **Share (5 minutos)**: Como conduzir o compartilhamento, como registrar no quadro
-Inclua falas sugeridas para o professor em cada etapa.
+## Roteiro Completo com Tempos e Falas
+**Preparação (2 min):** Como organizar a turma, anunciar a atividade.
+*Fala sugerida: "Hoje vamos..."*
 
-## Ficha do Aluno
-Ficha para o aluno preencher durante a atividade:
-- Espaço "Minhas ideias individuais" (etapa Think)
-- Espaço "O que discutimos em dupla" (etapa Pair)
-- Espaço "Ideias da turma" (etapa Share)
-- Espaço para reflexão final
+**THINK — Pensar Individualmente (__ minutos):**
+- O que o professor faz: ...
+- O que os alunos fazem: reflexão silenciosa, registram no caderno/ficha
+- *Fala sugerida ao iniciar: "Quero que cada um pense individualmente por __ minutos..."*
+- *Fala sugerida ao encerrar: "Ótimo. Agora formem duplas com a pessoa ao lado."*
 
-## Variações
-Variações criativas da metodologia:
-- **Write-Pair-Share**: Escrever antes de discutir
-- **Think-Pair-Square**: Duplas se juntam em quartetos
-- **Think-Pair-Share-Square**: Progressão completa
-- **Think-Draw-Pair-Share**: Desenhar a ideia
-- Adaptações para turmas grandes e pequenas
+**PAIR — Discutir em Dupla (__ minutos):**
+- Como formar as duplas (aleatório, por afinidade, estratégico)
+- Orientações para a discussão: cada um compartilha, depois constroem juntos
+- *Fala sugerida: "Compartilhem suas ideias com o colega. Ouçam com atenção e construam uma resposta juntos."*
 
-REGRAS:
-- Perguntas abertas que gerem discussão rica
-- Tempos realistas para cada etapa
-- Inclusivo — todos os alunos participam
-- NÃO retorne JSON`
+**SHARE — Compartilhar com a Turma (__ minutos):**
+- Como selecionar quem compartilha (voluntário, aleatório, todos)
+- Como registrar as ideias no quadro/coletivamente
+- Como conectar as respostas diferentes
+- *Fala sugerida para encerrar: "O que podemos concluir a partir das ideias que surgiram?"*
+
+## Ficha do Aluno — Pronta para Imprimir
+
+---
+Nome: _________________ Turma: _____ Data: _________
+
+🤔 THINK — Minhas Ideias (__ minutos):
+___________________________________________________
+___________________________________________________
+___________________________________________________
+___________________________________________________
+___________________________________________________
+
+👥 PAIR — O que Discutimos (__ minutos):
+___________________________________________________
+___________________________________________________
+___________________________________________________
+
+🗣️ SHARE — Ideias da Turma:
+___________________________________________________
+___________________________________________________
+
+💭 Reflexão Final:
+O que ficou mais marcante para mim foi:
+___________________________________________________
+---
+
+## Variações e Adaptações
+- **Write-Pair-Share**: Todos escrevem antes de discutir (ideal para alunos introvertidos)
+- **Think-Pair-Square**: Duplas se juntam em grupos de 4 antes do Share coletivo
+- **Think-Draw-Pair-Share**: Alunos desenham a ideia antes de verbalizar
+- **Adaptação para turmas grandes (30+ alunos)**: Use "Share" em grupos de 6, não com toda a turma
+- **Adaptação digital**: Padlet, Mentimeter ou Google Jamboard para o Share
+
+IMPORTANTE: Todo o conteúdo deve ser específico para "{solicitacao}". Nunca use perguntas genéricas que funcionariam para qualquer tema.
+NÃO retorne JSON`
   },
   {
     id: 'gallery_walk',
@@ -377,50 +417,66 @@ SOLICITAÇÃO DO PROFESSOR:
 CONTEXTO DA SESSÃO (se disponível):
 {contexto}
 
+DIRETRIZES DE QUALIDADE OBRIGATÓRIAS:
+- Defina o NÚMERO EXATO de estações (5-8 recomendado) e o TEMPO por estação (3-5 min)
+- Cada estação deve ter um PRODUTO esperado claro (o que o aluno registra ou faz naquela estação)
+- Define como os alunos registram: post-its, formulário impresso, caderno, ferramenta digital
+- O conteúdo de cada estação deve ser AUTOEXPLICATIVO — alunos entendem sem o professor explicar
+- Estações devem cobrir ângulos ou aspectos DIFERENTES do tema — não repetir a mesma abordagem
+- Inclua pelo menos 1 estação com atividade prática/interativa (não apenas leitura)
+
 ESTRUTURE COM AS SEGUINTES SEÇÕES (use headers markdown ##):
 
 # Gallery Walk — {tema}
 
-## Sobre o Gallery Walk
-Explique a metodologia:
-- O que é: alunos circulam pela sala visitando estações como em uma galeria de arte
-- Como funciona: grupos visitam cada estação, analisam o conteúdo, registram observações
-- Benefícios: movimento físico, aprendizagem ativa, colaboração, múltiplas perspectivas
+## Configuração Rápida
+- **Número de estações:** X estações
+- **Tempo por estação:** X minutos
+- **Tempo total da atividade:** X minutos
+- **Tamanho dos grupos:** X alunos por grupo
+- **Produto de registro:** [post-its / ficha impressa / caderno / Padlet]
+- **Materiais necessários:** Lista completa para o professor preparar
 
-## Preparação das Estações
-Guia de preparação com 5-8 estações:
-- Layout sugerido da sala (como distribuir as estações)
-- Materiais necessários para cada estação
-- Tempo por estação (3-5 minutos)
-- Como organizar os grupos e a rotação
-- Regras de circulação
+## Layout da Sala e Logística
+- Sugestão de onde posicionar cada estação (croqui em texto: "Estação 1 — mesa do fundo esquerdo", etc.)
+- Como organizar os grupos e a ordem de rotação
+- Sinal para trocar de estação (cronômetro, palma, sinal visual)
+- Regras de circulação e comportamento
 
-## Conteúdo de Cada Estação
-Conteúdo detalhado para cada estação:
-- **Estação 1**: Título, texto informativo, pergunta provocativa, atividade interativa
-- **Estação 2**: (mesmo formato)
-- Continue para todas as estações
-Cada estação deve ter: título visual, conteúdo (texto/imagem descrita), 1-2 perguntas, atividade prática.
+## Conteúdo Completo de Cada Estação
+Para CADA estação, inclua:
 
-## Ficha de Registro
-Ficha para o aluno preencher em cada estação:
-- Nome da estação visitada
-- O que aprendi / O que achei mais interessante
-- Minha resposta à pergunta da estação
-- Dúvida ou curiosidade
-Formato de tabela ou quadro organizado.
+### Estação 1 — [Título Específico sobre o Tema]
+📌 **Foco desta estação:** [aspecto específico do tema]
+📄 **Conteúdo (texto que fica afixado):**
+[Texto informativo de 80-120 palavras, autoexplicativo, específico]
+🔍 **Pergunta provocativa:** [pergunta aberta que gera reflexão]
+✏️ **Atividade:** [o que o aluno faz nesta estação — ex: "Complete a tabela", "Vote na opção", "Escreva um exemplo"]
 
-## Discussão Final
-Guia para a roda de discussão final:
-- Perguntas para síntese: "Qual estação mais chamou atenção e por quê?"
-- Como conectar os conteúdos das estações
-- Atividade de fechamento (mapa conceitual coletivo, votação, etc.)
+### Estação 2 — [Título Específico sobre o Tema]
+[Mesmo formato — aspecto diferente do tema]
 
-REGRAS:
-- Estações visuais e interativas
-- Conteúdo autoexplicativo (alunos devem entender sem professor)
-- Movimento e engajamento ativo
-- NÃO retorne JSON`
+[Continue para todas as estações com o mesmo nível de detalhe]
+
+## Ficha de Registro do Aluno — Pronta para Imprimir
+Formato de tabela:
+| Estação | O que aprendi | Resposta à pergunta | Minha dúvida/curiosidade |
+|---------|--------------|---------------------|--------------------------|
+| Est. 1 — [título] | | | |
+| Est. 2 — [título] | | | |
+[Continue para todas as estações]
+
+**Reflexão final:** "Qual estação foi mais surpreendente para você e por quê?"
+
+## Discussão Final (10-15 min)
+Roteiro para a roda de discussão:
+- Pergunta de abertura: "Qual estação chamou mais atenção? Por quê?"
+- Pergunta de síntese: "O que todas as estações têm em comum?"
+- Pergunta de aplicação: "Como o que aprendemos hoje se conecta com [contexto real]?"
+- Atividade de fechamento: [ex: cada grupo compartilha 1 insight principal; votação no quadro; mapa conceitual coletivo]
+
+IMPORTANTE: Todo o conteúdo de TODAS as estações deve ser específico para "{solicitacao}". Entregue conteúdo real e completo para cada estação.
+NÃO retorne JSON`
   },
   {
     id: 'seminario_socratico',

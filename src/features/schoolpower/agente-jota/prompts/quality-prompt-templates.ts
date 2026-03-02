@@ -387,13 +387,18 @@ export function getQualityEnhancementForType(
 export function getBatchProgressionPrompt(
   batchIndex: number,
   batchTotal: number,
-  previousTypes: string[]
+  previousTypes: string[],
+  previousActivitiesSummary?: string
 ): string {
   if (batchTotal <= 1) return '';
 
   const progressionPhase = getProgressionPhase(batchIndex, batchTotal);
   const avoidTypes = previousTypes.length > 0 
     ? `\nTIPOS JÁ USADOS (EVITE REPETIR FORMATO): ${previousTypes.join(', ')}` 
+    : '';
+
+  const previousContentBlock = previousActivitiesSummary && previousActivitiesSummary.trim()
+    ? `\nATIVIDADES JÁ GERADAS NA SESSÃO (use para PROGRESSÃO PEDAGÓGICA real — não repita exemplos, tópicos ou conteúdo):\n${previousActivitiesSummary}\n→ Esta atividade DEVE construir sobre o que já foi gerado, avançando no tema ou aprofundando o aprendizado.`
     : '';
 
   return `
@@ -404,6 +409,7 @@ OBJETIVO DESTA FASE: ${progressionPhase.objetivo}
 NÍVEL DE BLOOM PREDOMINANTE: ${progressionPhase.bloomLevel}
 TIPO DE ATIVIDADE SUGERIDO: ${progressionPhase.tipoSugerido}
 ${avoidTypes}
+${previousContentBlock}
 
 REGRA DE VARIEDADE: Em lotes, NUNCA repita o mesmo formato de atividade consecutivamente.
 Alterne entre: Quiz, Exercícios, Dinâmica em Grupo, Pesquisa, Jogo, Produção Textual, Debate, Mapa Mental.

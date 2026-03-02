@@ -32,7 +32,8 @@ export async function generateContentForActivity(
   bnccContext?: BnccContextData,
   questoesReferencia?: QuestoesReferenciaData,
   webSearchContext?: WebSearchContextData,
-  fileContext?: string
+  fileContext?: string,
+  previousActivitiesSummary?: string
 ): Promise<GeneratedFieldsResult> {
   const correlationId = generateCorrelationId();
   const activityStartTime = Date.now();
@@ -100,7 +101,8 @@ export async function generateContentForActivity(
     batchIndex, batchTotal, bnccContext, questoesReferencia, webSearchContext, fileContext,
     ctx.turmaExtraida || undefined,
     ctx.temaLimpo || undefined,
-    ctx.disciplinaExtraida || undefined
+    ctx.disciplinaExtraida || undefined,
+    previousActivitiesSummary
   );
 
   let lastError: string = '';
