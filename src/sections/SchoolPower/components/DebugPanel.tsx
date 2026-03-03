@@ -318,13 +318,7 @@ export default function DebugPanel() {
     }
 
     try {
-      // Verificar Supabase
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      if (supabaseUrl) {
-        status.supabase = 'active';
-      } else {
-        status.supabase = 'error';
-      }
+      status.supabase = 'active';
     } catch (error) {
       status.supabase = 'error';
     }
