@@ -98,12 +98,21 @@ export default function Sidebar({
             borderBottomLeftRadius: '0px',
             borderLeft: 'none',
             marginLeft: '0px',
+            cursor: sidebarCollapsed ? 'e-resize' : 'w-resize',
           }}
           key="sidebar-container"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleToggleCollapse();
+            }
+          }}
         >
-          <div className="relative flex-1 flex flex-col overflow-hidden">
+          <div
+            className="relative flex-1 flex flex-col overflow-hidden"
+            style={{ cursor: 'auto' }}
+          >
             <SidebarNav
               isCollapsed={sidebarCollapsed}
               onToggleCollapse={handleToggleCollapse}
@@ -118,6 +127,7 @@ export default function Sidebar({
               variant="outline"
               size="icon"
               onClick={handleToggleCollapse}
+              style={{ cursor: 'pointer' }}
               className={cn(
                 "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 shadow-sm hover:shadow-md z-10 mx-auto",
                 sidebarCollapsed
