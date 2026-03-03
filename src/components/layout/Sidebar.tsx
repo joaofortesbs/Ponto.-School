@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar/SidebarNav";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 const SIDEBAR_WIDTH_EXPANDED = 260;
 const SIDEBAR_WIDTH_COLLAPSED = 72;
@@ -22,10 +22,8 @@ export default function Sidebar({
 }: SidebarProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isCollapsed);
-  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-
     const handleResize = () => {
       if (window.innerWidth < 1024) {
         setSidebarCollapsed(true);
@@ -41,10 +39,29 @@ export default function Sidebar({
   }, []);
 
   const handleToggleCollapse = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
+    setSidebarCollapsed((prev) => !prev);
     if (onToggleCollapse) {
       onToggleCollapse();
     }
+  };
+
+  const handleSidebarClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    let node: HTMLElement | null = e.target as HTMLElement;
+    const container = e.currentTarget as HTMLElement;
+    while (node && node !== container) {
+      const tag = (node.tagName || "").toUpperCase();
+      if (["BUTTON", "A", "INPUT", "SELECT", "TEXTAREA"].includes(tag)) return;
+      if (node.classList) {
+        if (
+          node.classList.contains("menu-item") ||
+          node.classList.contains("sub-item") ||
+          node.classList.contains("expandable-item") ||
+          node.classList.contains("cursor-pointer")
+        ) return;
+      }
+      node = node.parentElement;
+    }
+    handleToggleCollapse();
   };
 
   return (
@@ -72,7 +89,7 @@ export default function Sidebar({
         onClick={() => setIsMobileOpen(false)}
       />
 
-      {/* Sidebar Container - Container vertical que envolve todo o menu */}
+      {/* Sidebar Container */}
       <div
         className={cn(
           "fixed top-0 left-0 z-[10000] h-full flex flex-col transition-[width,transform] duration-[380ms] ease-in-out md:relative",
@@ -83,77 +100,37 @@ export default function Sidebar({
           width: sidebarCollapsed ? `${SIDEBAR_WIDTH_COLLAPSED}px` : `${SIDEBAR_WIDTH_EXPANDED}px`,
           paddingTop: `${SIDEBAR_MARGIN_Y}px`,
           paddingBottom: `${SIDEBAR_MARGIN_Y}px`,
-          willChange: 'width',
+          willChange: "width",
         }}
         {...props}
       >
         {/* Card principal do menu lateral */}
         <aside
           className={cn(
-            "flex-1 flex flex-col bg-white dark:bg-[#030C2A] border border-gray-200 dark:border-gray-800/50 transition-all duration-300 ease-in-out overflow-hidden backdrop-blur-sm shadow-lg"
+            "flex-1 flex flex-col bg-white dark:bg-[#030C2A] border border-gray-200 dark:border-gray-800/50 overflow-hidden backdrop-blur-sm shadow-lg"
           )}
           style={{
             borderTopRightRadius: `${SIDEBAR_BORDER_RADIUS}px`,
             borderBottomRightRadius: `${SIDEBAR_BORDER_RADIUS}px`,
-            borderTopLeftRadius: '0px',
-            borderBottomLeftRadius: '0px',
-            borderLeft: 'none',
-            marginLeft: '0px',
-            cursor: sidebarCollapsed ? 'e-resize' : 'w-resize',
+            borderTopLeftRadius: "0px",
+            borderBottomLeftRadius: "0px",
+            borderLeft: "none",
+            marginLeft: "0px",
+            cursor: sidebarCollapsed ? "e-resize" : "w-resize",
           }}
-          key="sidebar-container"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
           <div
             className="relative flex-1 flex flex-col overflow-hidden"
-            onClick={(e) => {
-              const path = e.composedPath() as Element[];
-              const isInteractive = path.some((el: any) => {
-                if (!el || !el.tagName) return false;
-                const tag = (el.tagName as string).toUpperCase();
-                if (['BUTTON', 'A', 'INPUT', 'SELECT'].includes(tag)) return true;
-                if (el.classList) {
-                  return (
-                    el.classList.contains('menu-item') ||
-                    el.classList.contains('sub-item') ||
-                    el.classList.contains('expandable-item') ||
-                    el.classList.contains('cursor-pointer')
-                  );
-                }
-                return false;
-              });
-              if (!isInteractive) handleToggleCollapse();
-            }}
+            onClick={handleSidebarClick}
           >
             <SidebarNav
               isCollapsed={sidebarCollapsed}
               onToggleCollapse={handleToggleCollapse}
               className={cn(
                 "p-2 flex-1 overflow-y-auto",
-                sidebarCollapsed ? "pt-4" : "pt-4"
+                "pt-4"
               )}
             />
-
-            {/* Toggle Button */}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleToggleCollapse}
-              style={{ cursor: 'pointer' }}
-              className={cn(
-                "h-6 w-6 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 border-[#FF6B00]/30 transition-all duration-300 shadow-sm hover:shadow-md z-10 mx-auto",
-                sidebarCollapsed
-                  ? cn("mb-4", isHovered ? "opacity-100" : "opacity-0")
-                  : cn("absolute top-4 right-2", isHovered ? "opacity-100" : "opacity-0")
-              )}
-            >
-              {sidebarCollapsed ? (
-                <ChevronRight className="h-3 w-3" />
-              ) : (
-                <ChevronLeft className="h-3 w-3" />
-              )}
-            </Button>
           </div>
         </aside>
       </div>
