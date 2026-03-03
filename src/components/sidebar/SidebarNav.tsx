@@ -670,18 +670,16 @@ export function SidebarNav({
                           <i className={item.icon}></i>
                           <div className="icon-glow"></div>
                         </div>
+                        <div className="item-text">
+                          <span className="item-title">{item.label}</span>
+                        </div>
                         {!isCollapsed && (
-                          <>
-                            <div className="item-text">
-                              <span className="item-title">{item.label}</span>
-                            </div>
-                            <div className="expand-icon">
-                              <i className={cn(
-                                "fas fa-chevron-down",
-                                expandedSection === item.label && "rotated"
-                              )}></i>
-                            </div>
-                          </>
+                          <div className="expand-icon">
+                            <i className={cn(
+                              "fas fa-chevron-down",
+                              expandedSection === item.label && "rotated"
+                            )}></i>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -737,11 +735,9 @@ export function SidebarNav({
                         <i className={item.icon}></i>
                         <div className="icon-glow"></div>
                       </div>
-                      {!isCollapsed && (
-                        <div className="item-text">
-                          <span className="item-title">{item.label}</span>
-                        </div>
-                      )}
+                      <div className="item-text">
+                        <span className="item-title">{item.label}</span>
+                      </div>
                       <div className="item-indicator"></div>
                     </div>
                   </div>
@@ -913,6 +909,8 @@ export function SidebarNav({
           justify-content: center !important;
           min-width: 0 !important;
           overflow: hidden !important;
+          max-width: 200px;
+          transition: opacity 0.25s ease, max-width 0.3s ease, flex 0.3s ease, min-height 0.3s ease, padding 0.2s ease, margin 0.2s ease;
         }
 
         .item-title {
@@ -948,7 +946,14 @@ export function SidebarNav({
 
         /* Estilos para sidebar colapsado - apenas ícones */
         .sidebar-collapsed .item-text {
-          display: none !important;
+          opacity: 0 !important;
+          max-width: 0 !important;
+          flex: 0 0 0px !important;
+          overflow: hidden !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          min-height: 0 !important;
+          gap: 0 !important;
         }
 
         .sidebar-collapsed .menu-item {

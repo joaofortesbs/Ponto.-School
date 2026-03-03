@@ -75,7 +75,7 @@ export default function Sidebar({
       {/* Sidebar Container - Container vertical que envolve todo o menu */}
       <div
         className={cn(
-          "fixed top-0 left-0 z-[10000] h-full flex flex-col transition-all duration-300 ease-in-out md:relative",
+          "fixed top-0 left-0 z-[10000] h-full flex flex-col transition-[width,transform] duration-[380ms] ease-in-out md:relative",
           isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           className,
         )}
@@ -83,6 +83,7 @@ export default function Sidebar({
           width: sidebarCollapsed ? `${SIDEBAR_WIDTH_COLLAPSED}px` : `${SIDEBAR_WIDTH_EXPANDED}px`,
           paddingTop: `${SIDEBAR_MARGIN_Y}px`,
           paddingBottom: `${SIDEBAR_MARGIN_Y}px`,
+          willChange: 'width',
         }}
         {...props}
       >
@@ -104,7 +105,27 @@ export default function Sidebar({
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <div className="relative flex-1 flex flex-col overflow-hidden">
+          <div
+            className="relative flex-1 flex flex-col overflow-hidden"
+            onClick={(e) => {
+              const path = e.composedPath() as Element[];
+              const isInteractive = path.some((el: any) => {
+                if (!el || !el.tagName) return false;
+                const tag = (el.tagName as string).toUpperCase();
+                if (['BUTTON', 'A', 'INPUT', 'SELECT'].includes(tag)) return true;
+                if (el.classList) {
+                  return (
+                    el.classList.contains('menu-item') ||
+                    el.classList.contains('sub-item') ||
+                    el.classList.contains('expandable-item') ||
+                    el.classList.contains('cursor-pointer')
+                  );
+                }
+                return false;
+              });
+              if (!isInteractive) handleToggleCollapse();
+            }}
+          >
             <SidebarNav
               isCollapsed={sidebarCollapsed}
               onToggleCollapse={handleToggleCollapse}
