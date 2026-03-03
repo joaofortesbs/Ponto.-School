@@ -103,16 +103,8 @@ export default function Sidebar({
           key="sidebar-container"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              handleToggleCollapse();
-            }
-          }}
         >
-          <div
-            className="relative flex-1 flex flex-col overflow-hidden"
-            style={{ cursor: 'auto' }}
-          >
+          <div className="relative flex-1 flex flex-col overflow-hidden">
             <SidebarNav
               isCollapsed={sidebarCollapsed}
               onToggleCollapse={handleToggleCollapse}
