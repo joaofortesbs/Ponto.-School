@@ -965,6 +965,7 @@ export function SidebarNav({
         .sidebar-collapsed .item-content {
           justify-content: center !important;
           padding: 12px 8px !important;
+          gap: 0 !important;
         }
 
         .sidebar-collapsed .item-indicator {

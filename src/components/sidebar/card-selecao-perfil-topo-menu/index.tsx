@@ -18,36 +18,50 @@ export const CardSelecaoPerfilTopoMenu: React.FC<CardSelecaoPerfilTopoMenuProps>
     >
       <div
         className={cn(
-          "flex items-center justify-between border border-gray-200 dark:border-gray-800/50 rounded-full transition-all duration-300 backdrop-blur-sm relative z-20",
+          "flex items-center justify-between border border-gray-200 dark:border-gray-800/50 transition-all duration-300 backdrop-blur-sm relative z-20",
           "bg-white dark:bg-[#29335C]/20",
-          isCollapsed 
-            ? "w-12 h-6 p-0 justify-center" 
-            : "w-full h-auto py-0 px-4"
+          isCollapsed
+            ? "w-12 h-12 p-0 justify-center rounded-2xl"
+            : "w-full h-auto py-0 px-4 rounded-full"
         )}
       >
         <div className={cn(
           "flex items-center justify-center",
-          isCollapsed ? "w-full" : "flex-1"
+          isCollapsed ? "w-full h-full" : "flex-1"
         )}>
-          <img
-            src="/lovable-uploads/Logo-Ponto. School.webp"
-            alt="Ponto School Logo"
-            className={cn(
-              "object-contain transition-all duration-300",
-              isCollapsed ? "h-14 w-14" : "h-16 w-auto"
-            )}
-            loading="eager"
-            onError={(e) => {
-              console.error("Erro ao renderizar logo no CardSelecaoPerfilTopoMenu");
-              e.currentTarget.style.display = "none";
-              const fallbackText = document.createElement("span");
-              fallbackText.className = "font-bold text-xs text-[#001427] dark:text-white";
-              fallbackText.innerHTML = 'Ponto<span class="text-[#FF6B00]">.</span>School';
-              e.currentTarget.parentNode?.appendChild(fallbackText);
-            }}
-          />
+          {isCollapsed ? (
+            <img
+              src="/lovable-uploads/Logo-Ponto.School-Icone.webp"
+              alt="Ponto School Ícone"
+              className="h-8 w-8 object-contain transition-all duration-300"
+              loading="eager"
+              onError={(e) => {
+                console.error("Erro ao renderizar ícone no CardSelecaoPerfilTopoMenu");
+                e.currentTarget.style.display = "none";
+                const fallback = document.createElement("span");
+                fallback.className = "font-bold text-sm text-[#FF6B00]";
+                fallback.textContent = "S";
+                e.currentTarget.parentNode?.appendChild(fallback);
+              }}
+            />
+          ) : (
+            <img
+              src="/lovable-uploads/Logo-Ponto. School.webp"
+              alt="Ponto School Logo"
+              className="h-16 w-auto object-contain transition-all duration-300"
+              loading="eager"
+              onError={(e) => {
+                console.error("Erro ao renderizar logo no CardSelecaoPerfilTopoMenu");
+                e.currentTarget.style.display = "none";
+                const fallbackText = document.createElement("span");
+                fallbackText.className = "font-bold text-xs text-[#001427] dark:text-white";
+                fallbackText.innerHTML = 'Ponto<span class="text-[#FF6B00]">.</span>School';
+                e.currentTarget.parentNode?.appendChild(fallbackText);
+              }}
+            />
+          )}
         </div>
-        
+
         {!isCollapsed && (
           <div className="flex items-center justify-center ml-2">
             <ChevronDown className="h-4 w-4 text-[#FF6B00]" strokeWidth={2.5} />
