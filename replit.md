@@ -6,6 +6,19 @@ Ponto. School is an AI-powered educational platform providing personalized learn
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Artifact Title & Subtitle Generation v1.0 (Março 2026)
+Corrigido o problema de títulos e subtítulos genéricos nos artefatos textuais do `ArtifactViewModal`.
+
+### Arquivo
+- `agente-jota/capabilities/CRIAR_ARQUIVO/artifact-generator.ts`
+
+### O que mudou
+- **`METADATA_HEADER_INSTRUCTIONS`** (constante): Injetada no início de TODOS os prompts de geração de artefato (antes do BNCC e do template). Instrui a IA a gerar obrigatoriamente: (1) `#` header com título específico do tema (5-12 palavras, sem prefixo de tipo); (2) linha `**Subtítulo:**` imediatamente abaixo (60-120 chars descrevendo tipo + turma + objetivo pedagógico).
+- **`extractSubtitleFromMarkdown(rawText)`**: Extrai o `**Subtítulo:**` gerado pela IA. Aceita variações: `Subtítulo`, `Subtitulo`, `Subtitle` (case-insensitive). Limita a 160 chars.
+- **`buildSmartSubtitle(routerResult, userRequest, contexto)`**: Fallback inteligente quando a IA não gera subtítulo. Combina `template.nome` + turma + disciplina + tema extraído do `userRequest` (removendo verbos de comando). Formato: "[Tipo] para [turma] de [disciplina] — [tema]".
+- **Título universal**: Extração de título da IA agora aplica-se a TODOS os tipos de artefato (antes era só `atividade_textual` e `documento_livre`). Ordem de fallback: IA → template.nome → userRequest truncado → config.nome.
+- **`parseMarkdownSections`**: Strips a linha `**Subtítulo:**` além do `#` header antes de parsear seções, evitando que apareça no conteúdo das seções.
+
 ## Artifact Export Dropdown v1.1 (Março 2026)
 Dropdown de exportação no header do `ArtifactViewModal` (botão Download). Corrigido em v1.1 após bugs críticos na v1.0.
 

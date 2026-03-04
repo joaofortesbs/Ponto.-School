@@ -133,10 +133,11 @@ function detectBestArtifactType(contexto: string, solicitacao?: string): Artifac
 function parseMarkdownSections(rawText: string, config: ArtifactTypeConfig): ArtifactSection[] {
   const sections: ArtifactSection[] = [];
   
-  let textToParse = rawText;
-  if (config.tipo === 'documento_livre' || config.tipo === 'atividade_textual') {
-    textToParse = rawText.replace(/^#\s+.+$/m, '').trim();
-  }
+  let textToParse = rawText
+    .replace(/^#\s+.+$/m, '')
+    .replace(/^\*\*Subt[ií]tulo:\*\*\s*.+$/im, '')
+    .replace(/^\*\*Subtitle:\*\*\s*.+$/im, '')
+    .trim();
   
   const headerRegex = /^##\s+(.+)$/gm;
   const matches: { titulo: string; startIndex: number }[] = [];
@@ -186,12 +187,65 @@ function generatePreview(sections: ArtifactSection[]): string {
   return (sentences.slice(0, 2).join('. ') + '.').substring(0, 200);
 }
 
+const METADATA_HEADER_INSTRUCTIONS = `INSTRUÇÕES DE METADADOS DO DOCUMENTO (OBRIGATÓRIO — siga antes de qualquer outra coisa):
+▶ A PRIMEIRA linha da sua resposta DEVE ser um título com #:
+  # [Título específico do conteúdo — entre 5 e 12 palavras — use o TEMA real, NÃO comece com o tipo da atividade]
+▶ A SEGUNDA linha (imediatamente após o título) DEVE ser o subtítulo:
+  **Subtítulo:** [Frase de 60 a 120 caracteres descrevendo o que este documento cobre — inclua tipo de atividade, turma/série e objetivo pedagógico quando disponível]
+
+Exemplos CORRETOS:
+# A Revolução Francesa e seus Impactos na Europa Moderna
+**Subtítulo:** Sequência didática de 5 aulas para o 9º ano — causas, desenrolar e legado histórico
+
+# Frações: Conceitos Fundamentais e Operações Básicas
+**Subtítulo:** Plano de unidade para o 6º ano com 6 aulas — identificação, comparação e operações com frações
+
+Exemplos ERRADOS (não faça isso):
+# Sequência Didática — Revolução Francesa   ← errado: começa com o tipo
+# Plano de Aula                              ← errado: genérico, sem tema
+**Subtítulo:** Atividade do tipo textual     ← errado: não descreve o conteúdo
+
+---
+`;
+
 function extractTitleFromMarkdown(rawText: string): string | null {
   const h1Match = rawText.match(/^#\s+(.+)$/m);
   if (h1Match) return h1Match[1].trim();
   const h2Match = rawText.match(/^##\s+(.+)$/m);
   if (h2Match) return h2Match[1].trim();
   return null;
+}
+
+function extractSubtitleFromMarkdown(rawText: string): string | null {
+  const ptMatch = rawText.match(/^\*\*Subtítulo:\*\*\s*(.+)$/im);
+  if (ptMatch) return ptMatch[1].trim().substring(0, 160);
+  const enMatch = rawText.match(/^\*\*Subtitle:\*\*\s*(.+)$/im);
+  if (enMatch) return enMatch[1].trim().substring(0, 160);
+  const plainMatch = rawText.match(/^\*\*Subt[ií]tulo:\*\*\s*(.+)$/im);
+  if (plainMatch) return plainMatch[1].trim().substring(0, 160);
+  return null;
+}
+
+function buildSmartSubtitle(
+  routerResult: TextActivityRouterResult | null,
+  userRequest: string,
+  contexto: any
+): string {
+  const tipoPart = routerResult?.template?.nome || '';
+  const turmaPart = (contexto as any)?.turma || (contexto as any)?.inputOriginal?.turma || '';
+  const disciplinaPart = (contexto as any)?.disciplina || (contexto as any)?.inputOriginal?.disciplina || '';
+
+  const cleanRequest = userRequest
+    .replace(/^(crie?|gere?|faça|elabore?|desenvolva?|monte?)\s+(um|uma|o|a)?\s*/i, '')
+    .replace(/^(sequência didática|plano de aula|atividade|exercício|avaliação)\s*(de|sobre|para)?\s*/i, '')
+    .trim();
+
+  const temaPart = cleanRequest.length > 80 ? cleanRequest.substring(0, 77) + '...' : cleanRequest;
+
+  const parts = [tipoPart, turmaPart ? `para ${turmaPart}` : '', disciplinaPart ? `de ${disciplinaPart}` : ''].filter(Boolean).join(' ');
+
+  const subtitle = parts && temaPart ? `${parts} — ${temaPart}` : parts || temaPart || 'Documento pedagógico gerado pelo Jota';
+  return subtitle.substring(0, 160);
 }
 
 export interface BnccContextData {
@@ -280,15 +334,15 @@ ${bnccContext.prompt_context}
   if (useTextActivityPrompt && routerResult) {
     const textPrompt = getPromptForRoute(routerResult, userRequest, enrichedContext);
     if (textPrompt) {
-      prompt = bnccPromptSection + textPrompt;
+      prompt = METADATA_HEADER_INSTRUCTIONS + bnccPromptSection + textPrompt;
       console.log(`📄 [ArtifactGenerator] Usando prompt especializado do template: ${routerResult.templateId}${bnccContext ? ' + BNCC (posicionado no início)' : ''}`);
     } else {
-      prompt = bnccPromptSection + config.promptTemplate
+      prompt = METADATA_HEADER_INSTRUCTIONS + bnccPromptSection + config.promptTemplate
         .replace('{contexto}', enrichedContext)
         .replace('{solicitacao}', userRequest);
     }
   } else {
-    prompt = bnccPromptSection + config.promptTemplate
+    prompt = METADATA_HEADER_INSTRUCTIONS + bnccPromptSection + config.promptTemplate
       .replace('{contexto}', enrichedContext)
       .replace('{solicitacao}', userRequest);
   }
@@ -308,24 +362,27 @@ ${bnccContext.prompt_context}
     const totalWords = countWords(rawText);
     const tempoGeracao = Date.now() - startTime;
     
-    let titulo = config.nome;
-    if (tipoNormalized === 'documento_livre' || tipoNormalized === 'atividade_textual') {
-      const aiTitle = extractTitleFromMarkdown(rawText);
-      if (aiTitle) {
-        titulo = aiTitle;
-      } else if (useTextActivityPrompt && routerResult?.template) {
-        titulo = routerResult.template.nome;
-      } else if (userRequest.length > 0) {
-        titulo = userRequest.length > 60 ? userRequest.substring(0, 57) + '...' : userRequest;
-      }
+    const aiTitle = extractTitleFromMarkdown(rawText);
+    let titulo: string;
+    if (aiTitle) {
+      titulo = aiTitle;
+    } else if (useTextActivityPrompt && routerResult?.template) {
+      titulo = routerResult.template.nome;
+    } else if (userRequest.length > 0) {
+      titulo = userRequest.length > 60 ? userRequest.substring(0, 57) + '...' : userRequest;
+    } else {
+      titulo = config.nome;
     }
-    
+
+    const aiSubtitle = extractSubtitleFromMarkdown(rawText);
+    const subtitulo = aiSubtitle || buildSmartSubtitle(routerResult, userRequest, contexto);
+
     const artifact: ArtifactData = {
       id: generateArtifactId(),
       metadata: {
         tipo: tipoNormalized,
         titulo,
-        subtitulo: contexto.objetivoGeral || contexto.inputOriginal.texto.substring(0, 80),
+        subtitulo,
         geradoEm: Date.now(),
         sessaoId: sessionId,
         versao: '1.0',
