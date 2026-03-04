@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { X, Copy, Check, Download, GripVertical, Trash2, CopyPlus, ArrowUp, ArrowDown, Bold, Italic, Strikethrough, Code, Link2, Type, ListOrdered, List as ListIcon, ChevronUp, Quote, ListChecks, Maximize2, Minimize2, Printer } from 'lucide-react';
+import ExportDropdown from './ExportDropdown';
 import {
   DndContext,
   closestCenter,
@@ -1260,6 +1261,8 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
   const [editableTitle, setEditableTitle] = useState('');
   const [editableSubtitle, setEditableSubtitle] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
+  const exportButtonRef = useRef<HTMLButtonElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const config = ARTIFACT_TYPE_CONFIGS[artifact.metadata.tipo];
@@ -1797,8 +1800,14 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                   )}
                 </button>
                 <button
-                  className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
-                  title="Download"
+                  ref={exportButtonRef}
+                  onClick={() => setIsExportDropdownOpen((prev) => !prev)}
+                  className="p-2 rounded-lg transition-colors"
+                  title="Exportar / Salvar"
+                  style={{
+                    color: isExportDropdownOpen ? '#93c5fd' : '#94a3b8',
+                    background: isExportDropdownOpen ? 'rgba(147,197,253,0.1)' : 'transparent',
+                  }}
                 >
                   <Download className="w-4 h-4" />
                 </button>
@@ -1922,6 +1931,15 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
             </div>
           </div>
         </div>
+        <ExportDropdown
+          artifact={artifact}
+          blocks={blocks}
+          editableTitle={editableTitle}
+          editableSubtitle={editableSubtitle}
+          isOpen={isExportDropdownOpen}
+          onClose={() => setIsExportDropdownOpen(false)}
+          anchorRef={exportButtonRef}
+        />
       </div>,
     document.body
   );
