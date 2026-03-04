@@ -6,6 +6,27 @@ Ponto. School is an AI-powered educational platform providing personalized learn
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Artifact Export Dropdown v1.1 (Março 2026)
+Dropdown de exportação no header do `ArtifactViewModal` (botão Download). Corrigido em v1.1 após bugs críticos na v1.0.
+
+### Arquivos
+- `services/artifact-export-service.ts` — serviço central de exportação (única fonte de verdade)
+- `components/ExportDropdown.tsx` — dropdown com 3 opções + estados loading/success/error
+- `components/export-icons.tsx` — ícones SVG (Markdown, PDF, Docx)
+
+### Funções no serviço
+- `parseInlineHtml(text)` — converte `<b>`, `<i>`, `<strong>`, `<em>` em `TextRun[]` para DOCX
+- `buildMarkdownContent(...)` — converte blocos EditorJS em Markdown puro (todos os tipos de bloco)
+- `buildBodyHtml(...)` — gera HTML com **estilos inline** para o PDF (não usa `<head>/<style>`)
+- `exportAsMarkdown(...)` — gera e baixa arquivo `.md`
+- `exportAsPDF(...)` — usa `html2pdf.js` com container de estilos inline (corrige bug de estilos perdidos)
+- `exportAsDocx(...)` — usa biblioteca `docx` com rich text e tabelas formatadas
+
+### Bugs corrigidos em v1.1
+1. **Markdown**: `buildMarkdownContent` havia sido deletada acidentalmente → restaurada completa
+2. **PDF**: `container.innerHTML = fullHTMLDoc` descartava os `<style>` do `<head>` → migrado para estilos inline em cada elemento HTML
+3. **DOCX**: `stripHtml` removia bold/italic → implementado `parseInlineHtml` que preserva formatação; bordas de tabela reforçadas (`size: 6`), cor de header `C5D8FF`, células com margens internas
+
 ## System Architecture
 
 ### UI/UX Decisions
