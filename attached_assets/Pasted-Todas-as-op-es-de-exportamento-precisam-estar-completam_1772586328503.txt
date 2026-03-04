@@ -1,0 +1,12 @@
+Todas as opções de exportamento precisam estar completamente funcionais e configuradas para o usuário receber todo o respectivo conteúdo de dentro da interface do modal de Artefato!
+
+Lance diversos sub-agents de pesquisas/investigações/depurações para pesquisas como configurar individualmente cada uma das opções de exportação da maneira correta e completamente funcional e aplicavel!
+
+Considerações:
+
+Faça uma plano completo com Macro-steps de objetivos principais de execução e micro-steps (Envolvendo babysteps) em ordem inteligente para fazer todas essas alterações da maneira correta, e incluindo testes, validações e verificações, para garantir que tudo seja feito corretamente! Para fazer tudo da melhor forma, lance diversos sub-agentes de pesquisas, investigações, depurações, analises, para ter o máximo de contexto possível antes de começar a aplicar qualquer coisa!!!!!!!
+Reflita antes de cada alteração, e faça um mapeamento completo para identificar a melhor forma, de maneira segura, robusta, alinhada, profissional, avançada e sofisticada! Não cometa erros ou bugs dentro do código, e não deixe o código ser corrompido! Garanta também que todo o sistema não tenha brechas para erros ou bugs!
+Revise todas as suas modificações depois de cada finalização, não deixe brechas pra erros, não prejudique o funcionamento geral, refine as alterações, e garanta que nenhum sistema considerável foi influenciado ou modificado negativamente! Teste tudo que você fez para garantir o funcionamento perfeito!
+No final de tudo, me explique todas as alterações que você fez, como elas foram feitas, e principalmente porque você decidiu fazer essas alterações!
+No final de tudo, liste todos os seus aprendizados com base em todas as alterações que você fez, para que você possa ir se aprimorando conforme as próximas alterações, e melhorando a sua janela de contexto, para que esses erros em hipotese alguma acontecem novamente dentro da plataforma!
+No final, me sugira as próximas alterações dentro da própria plataforma que a gente precisa fazer, ou que seria muito bom, para deixar a plataforma ainda mais completa, sem nenhum erro ou perigo!

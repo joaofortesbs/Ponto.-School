@@ -321,10 +321,6 @@ export async function exportAsPDF(
 
   const container = document.createElement('div');
   container.style.cssText = [
-    'position:absolute',
-    'left:-9999px',
-    'top:0',
-    'width:794px',
     'background:#ffffff',
     'padding:48px 56px',
     'box-sizing:border-box',
@@ -333,34 +329,26 @@ export async function exportAsPDF(
     'line-height:1.7',
   ].join(';');
   container.innerHTML = bodyHtml;
-  document.body.appendChild(container);
 
-  try {
-    const html2pdf = (await import('html2pdf.js')).default;
-    const filename = `${sanitizeFileName(cleanTitle) || 'documento'}.pdf`;
+  const html2pdf = (await import('html2pdf.js')).default;
+  const filename = `${sanitizeFileName(cleanTitle) || 'documento'}.pdf`;
 
-    await html2pdf()
-      .from(container)
-      .set({
-        margin: [15, 15, 20, 15],
-        filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: 900,
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-      })
-      .save();
-  } finally {
-    if (document.body.contains(container)) {
-      document.body.removeChild(container);
-    }
-  }
+  await html2pdf()
+    .from(container)
+    .set({
+      margin: [15, 15, 20, 15],
+      filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+    })
+    .save();
 }
 
 // ─── DOCX EXPORT ──────────────────────────────────────────────────────────────
