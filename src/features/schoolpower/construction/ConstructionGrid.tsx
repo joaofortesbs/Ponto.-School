@@ -147,36 +147,62 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
       const textData = retrieveTextVersionContent(activity.id, activityType);
       const textContent = textData?.textContent || activity.customFields?.textContent || activity.originalData?.textContent || '';
       const sections = textData?.sections || activity.customFields?.sections || activity.originalData?.sections || [];
-      
+
+      const extractMetaFromTextContent = (raw: string) => {
+        const lines = raw.split('\n');
+        let title = '';
+        let subtitle = '';
+        const cleanedLines: string[] = [];
+        for (const line of lines) {
+          const trimmed = line.trim();
+          const h1Match = trimmed.match(/^#{1,2}\s+(.+)$/);
+          if (!title && h1Match) {
+            title = h1Match[1].trim();
+            continue;
+          }
+          const subMatch = trimmed.match(/^\*\*Subt[ií]tulo:\*\*\s*(.+)$/i);
+          if (!subtitle && subMatch) {
+            subtitle = subMatch[1].replace(/\*\*/g, '').trim();
+            continue;
+          }
+          cleanedLines.push(line);
+        }
+        return { title, subtitle, cleaned: cleanedLines.join('\n') };
+      };
+      const { title: extractedTitle, subtitle: extractedSubtitle, cleaned: cleanedContent } = extractMetaFromTextContent(textContent);
+
       const artifactSections = Array.isArray(sections) ? sections.map((sec: any, idx: number) => ({
         id: sec.id || `section-${idx}`,
-        titulo: sec.titulo || sec.title || `Seção ${idx + 1}`,
+        titulo: (sec.titulo || sec.title || `Seção ${idx + 1}`).replace(/^#+\s+/, ''),
         conteudo: sec.conteudo || sec.content || '',
         icone: sec.icone || sec.icon || '',
         ordem: sec.ordem ?? idx,
       })) : [];
       
-      if (artifactSections.length === 0 && textContent) {
-        const markdownSections = textContent.split(/^##\s+/m).filter(Boolean);
+      if (artifactSections.length === 0 && cleanedContent.trim()) {
+        const markdownSections = cleanedContent.split(/^##\s+/m).filter((s: string) => s.trim().length > 0);
         markdownSections.forEach((block: string, idx: number) => {
           const lines = block.split('\n');
-          const title = lines[0]?.trim() || `Seção ${idx + 1}`;
+          const rawTitle = lines[0]?.trim() || '';
+          const title = rawTitle.replace(/^#+\s+/, '') || `Seção ${idx + 1}`;
           const content = lines.slice(1).join('\n').trim();
-          artifactSections.push({
-            id: `section-${idx}`,
-            titulo: title,
-            conteudo: content,
-            icone: '',
-            ordem: idx,
-          });
+          if (title || content) {
+            artifactSections.push({
+              id: `section-${idx}`,
+              titulo: title,
+              conteudo: content,
+              icone: '',
+              ordem: idx,
+            });
+          }
         });
       }
       
       if (artifactSections.length === 0) {
         artifactSections.push({
           id: 'section-0',
-          titulo: activity.title || 'Conteúdo',
-          conteudo: textContent || 'Conteúdo não disponível. Tente gerar novamente.',
+          titulo: 'Conteúdo',
+          conteudo: cleanedContent || textContent || 'Conteúdo não disponível. Tente gerar novamente.',
           icone: '',
           ordem: 0,
         });
@@ -186,8 +212,8 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         id: activity.id,
         metadata: {
           tipo: 'atividade_textual',
-          titulo: activity.title || 'Atividade em Texto',
-          subtitulo: activity.description || '',
+          titulo: extractedTitle || activity.title || 'Atividade em Texto',
+          subtitulo: extractedSubtitle || '',
           geradoEm: Date.now(),
           sessaoId: activity.id,
           versao: '2.0',
