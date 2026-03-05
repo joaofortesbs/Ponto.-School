@@ -40,6 +40,16 @@ Dropdown de exportação no header do `ArtifactViewModal` (botão Download). Cor
 2. **PDF**: `container.innerHTML = fullHTMLDoc` descartava os `<style>` do `<head>` → migrado para estilos inline em cada elemento HTML
 3. **DOCX**: `stripHtml` removia bold/italic → implementado `parseInlineHtml` que preserva formatação; bordas de tabela reforçadas (`size: 6`), cor de header `C5D8FF`, células com margens internas
 
+## Replit Migration (Março 2026)
+Migração concluída do ambiente Replit Agent para Replit.
+
+### O que foi feito
+- **Pacotes instalados**: `npm install` executado com sucesso (904 pacotes)
+- **Supabase substituído**: O cliente Supabase foi completamente substituído por um stub (`src/integrations/supabase/client.ts`) que roteia auth via localStorage e chamadas DB para o backend Express/Neon. Nenhum dado passa mais pelo Supabase.
+- **Backend Neon ativo**: `api/server.js` usa `api/neon-db.js` para conectar ao banco Neon PostgreSQL via `DATABASE_URL`.
+- **Variáveis de ambiente**: `DATABASE_URL`, `GROQ_API_KEY`, e várias `VITE_*` API keys já estão configuradas como secrets no Replit.
+- **Ambos os workflows rodando**: "App" (Vite dev server na porta 5000) e "Backend" (Express API na porta 3001).
+
 ## System Architecture
 
 ### UI/UX Decisions
