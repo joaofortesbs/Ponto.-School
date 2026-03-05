@@ -1777,12 +1777,10 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold text-slate-200" style={FONT_STYLES.ui}>
-                    {config.nome}
+                    {editableTitle || config.nome}
                   </h2>
                   <p className="text-[11px] text-slate-500 mt-0.5" style={FONT_STYLES.ui}>
-                    {artifact.metadata.subtitulo
-                      ? artifact.metadata.subtitulo
-                      : `Última modificação: ${formatDate(artifact.metadata.geradoEm)}`}
+                    {`Última modificação: ${formatDate(artifact.metadata.geradoEm)}`}
                   </p>
                 </div>
               </div>

@@ -134,9 +134,9 @@ function parseMarkdownSections(rawText: string, config: ArtifactTypeConfig): Art
   const sections: ArtifactSection[] = [];
   
   let textToParse = rawText
-    .replace(/^#\s+.+$/m, '')
-    .replace(/^\*\*Subt[ií]tulo:\*\*\s*.+$/im, '')
-    .replace(/^\*\*Subtitle:\*\*\s*.+$/im, '')
+    .replace(/^#\s+.+$/gm, '')
+    .replace(/^\*\*Subt[ií]tulo:\*\*\s*.+$/gim, '')
+    .replace(/^\*\*Subtitle:\*\*\s*.+$/gim, '')
     .trim();
   
   const headerRegex = /^##\s+(.+)$/gm;
@@ -187,28 +187,32 @@ function generatePreview(sections: ArtifactSection[]): string {
   return (sentences.slice(0, 2).join('. ') + '.').substring(0, 200);
 }
 
-const METADATA_HEADER_INSTRUCTIONS = `INSTRUÇÕES DE METADADOS DO DOCUMENTO (OBRIGATÓRIO — siga EXATAMENTE estas regras antes de qualquer outra coisa):
-▶ A PRIMEIRA linha da sua resposta DEVE ser um título com # (hash único):
-  # [Título específico do TEMA/CONTEÚDO — entre 5 e 12 palavras — comece pelo assunto real, NÃO pelo tipo da atividade]
-▶ A SEGUNDA linha (imediatamente após o título, sem linha em branco entre elas) DEVE ser o subtítulo:
-  **Subtítulo:** [Frase de 60 a 120 caracteres descrevendo o que este documento cobre — inclua tipo de atividade, turma/série e objetivo pedagógico quando disponível]
-▶ NUNCA use o nome/tipo da atividade como título. Exemplos proibidos como título: "Atividade em Texto", "Sequência Didática", "Plano de Aula", "Lista de Exercícios", "Avaliação", "Documento".
+const METADATA_HEADER_INSTRUCTIONS = `METADADOS DO DOCUMENTO — SIGA RIGOROSAMENTE ANTES DE QUALQUER OUTRA COISA:
+
+▶ LINHA 1 — TÍTULO (obrigatório, único # na resposta inteira):
+  # [emoji relevante ao tema] [Tema/Conteúdo Real]: [Aspecto ou Foco]
+  Regras: 6 a 14 palavras | Comece pelo TEMA real | Use emoji que represente a disciplina ou assunto | NUNCA use o nome do tipo de atividade como título
+
+▶ LINHA 2 — SUBTÍTULO (imediatamente após o título, sem linha em branco):
+  **Subtítulo:** [Frase completa de 80 a 160 caracteres no formato: "Este documento [verbo] [conteúdo] para [turma/público], [objetivo pedagógico]."]
+
+▶ PROIBIDO como título: "Atividade em Texto", "Sequência Didática", "Plano de Aula", "Debate Estruturado", "Lista de Exercícios", "Avaliação", "Documento", ou qualquer nome de tipo/formato de atividade sozinho.
 
 Exemplos CORRETOS:
-# A Revolução Francesa e seus Impactos na Europa Moderna
-**Subtítulo:** Sequência didática de 5 aulas para o 9º ano — causas, desenrolar e legado histórico
+# 🎭 Revolução Francesa: Causas, Desenrolar e Legado Histórico
+**Subtítulo:** Este documento organiza um debate estruturado para o 9º ano de História sobre os fatores que desencadearam a Revolução Francesa e seus impactos na Europa moderna.
 
-# Frações: Conceitos Fundamentais e Operações Básicas
-**Subtítulo:** Plano de unidade para o 6º ano — identificação, comparação e operações com frações
+# 🔢 Frações: Identificação, Comparação e Operações Básicas
+**Subtítulo:** Este roteiro pedagógico apresenta atividades sequenciadas para o 6º ano de Matemática, cobrindo equivalência de frações, comparação e as quatro operações fundamentais.
 
-# Ecossistemas Brasileiros: Biomas, Fauna e Flora
-**Subtítulo:** Atividade de estudo dirigido para o 7º ano — características, ameaças e preservação
+# 🌿 Ecossistemas Brasileiros: Biomas, Biodiversidade e Preservação
+**Subtítulo:** Este material de estudo dirigido para o 7º ano de Ciências explora as características dos principais biomas brasileiros, sua fauna, flora e os desafios da conservação ambiental.
 
-Exemplos ERRADOS (não faça isso):
-# Sequência Didática — Revolução Francesa   ← errado: começa com o tipo
-# Plano de Aula                              ← errado: genérico, sem tema
-# Atividade em Texto                         ← errado: é o nome do tipo, não o tema
-**Subtítulo:** Atividade do tipo textual     ← errado: não descreve o conteúdo
+Exemplos ERRADOS (nunca faça isso):
+# Debate Estruturado — Revolução Francesa   ← errado: começa com o tipo de atividade
+# Plano de Aula                              ← errado: genérico, sem tema real
+# Atividade em Texto                         ← errado: é nome do tipo, não o conteúdo
+**Subtítulo:** Atividade do tipo atividade-textual  ← errado: não descreve nada útil
 
 ---
 `;
@@ -274,6 +278,18 @@ function isGenericTitle(
   return false;
 }
 
+function isGenericSubtitle(subtitle: string): boolean {
+  const s = subtitle.trim().toLowerCase();
+  if (s.length < 20) return true;
+  if (/^atividade do tipo/i.test(s)) return true;
+  if (/^documento do tipo/i.test(s)) return true;
+  if (/^atividade textual$/i.test(s)) return true;
+  if (/^texto livre$/i.test(s)) return true;
+  if (/^atividade pedagógica$/i.test(s)) return true;
+  if (/^gerado automaticamente$/i.test(s)) return true;
+  return false;
+}
+
 function cleanUserRequestForTitle(userRequest: string): string {
   return userRequest
     .replace(/^(crie?|gere?|faça|elabore?|desenvolva?|monte?|cria|gera|produz[a]?|escreva?)\s+(um|uma|o|a)?\s*/i, '')
@@ -287,26 +303,29 @@ function buildSmartTitle(
   routerResult: TextActivityRouterResult | null,
   contexto: any
 ): string {
+  const emoji = routerResult?.template?.icone || '';
+  const prefix = emoji ? `${emoji} ` : '';
   const cleaned = cleanUserRequestForTitle(userRequest);
 
   if (cleaned.length >= 10) {
     const capitalized = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-    return capitalized.length > 80 ? capitalized.substring(0, 77) + '...' : capitalized;
+    const titled = prefix + capitalized;
+    return titled.length > 85 ? titled.substring(0, 82) + '...' : titled;
   }
 
   const turmaPart = (contexto as any)?.turma || (contexto as any)?.inputOriginal?.turma || '';
   const templateNome = routerResult?.template?.nome || '';
 
   if (templateNome && turmaPart) {
-    return `${templateNome} — ${turmaPart}`;
+    return `${prefix}${templateNome} — ${turmaPart}`;
   }
   if (templateNome) {
-    return templateNome;
+    return `${prefix}${templateNome}`;
   }
   if (config.nome) {
-    return config.nome;
+    return `${prefix}${config.nome}`;
   }
-  return 'Atividade Pedagógica';
+  return `${prefix}Atividade Pedagógica`.trim();
 }
 
 function buildSmartSubtitle(
@@ -319,23 +338,28 @@ function buildSmartSubtitle(
   const disciplinaPart = (contexto as any)?.disciplina || (contexto as any)?.inputOriginal?.disciplina || '';
 
   const temaCleaned = cleanUserRequestForTitle(userRequest);
-  const temaPart = temaCleaned.length > 80 ? temaCleaned.substring(0, 77) + '...' : temaCleaned;
+  const temaPart = temaCleaned.length > 100 ? temaCleaned.substring(0, 97) + '...' : temaCleaned;
 
-  const contextParts = [
-    tipoPart,
+  const contextSuffix = [
     turmaPart ? `para ${turmaPart}` : '',
     disciplinaPart ? `de ${disciplinaPart}` : '',
   ].filter(Boolean).join(' ');
 
   let subtitle: string;
-  if (temaPart && contextParts) {
-    subtitle = `${temaPart} — ${contextParts}`;
+  if (tipoPart && temaPart && contextSuffix) {
+    subtitle = `Este documento apresenta ${tipoPart.toLowerCase()} sobre ${temaPart} ${contextSuffix}.`;
+  } else if (tipoPart && temaPart) {
+    subtitle = `Este documento apresenta ${tipoPart.toLowerCase()} sobre ${temaPart}.`;
+  } else if (tipoPart && contextSuffix) {
+    subtitle = `Este documento apresenta ${tipoPart.toLowerCase()} ${contextSuffix}.`;
+  } else if (temaPart && contextSuffix) {
+    subtitle = `Conteúdo pedagógico sobre ${temaPart} ${contextSuffix}.`;
   } else if (temaPart) {
-    subtitle = temaPart;
-  } else if (contextParts) {
-    subtitle = contextParts;
+    subtitle = `Conteúdo pedagógico sobre ${temaPart}.`;
+  } else if (tipoPart) {
+    subtitle = `Este documento apresenta ${tipoPart.toLowerCase()} gerado pelo Jota.`;
   } else {
-    subtitle = 'Documento pedagógico gerado pelo Jota';
+    subtitle = 'Documento pedagógico gerado pelo Jota.';
   }
   return subtitle.substring(0, 160);
 }
@@ -459,7 +483,8 @@ ${bnccContext.prompt_context}
     const titulo = validAiTitle || buildSmartTitle(userRequest, config, routerResult, contexto);
 
     const aiSubtitle = extractSubtitleFromMarkdown(rawText);
-    const subtitulo = aiSubtitle || buildSmartSubtitle(routerResult, userRequest, contexto);
+    const validAiSubtitle = aiSubtitle && !isGenericSubtitle(aiSubtitle) ? aiSubtitle : null;
+    const subtitulo = validAiSubtitle || buildSmartSubtitle(routerResult, userRequest, contexto);
 
     const artifact: ArtifactData = {
       id: generateArtifactId(),
