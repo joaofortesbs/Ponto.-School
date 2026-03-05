@@ -1271,9 +1271,9 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
 
   useEffect(() => {
     setBlocks(editorData.blocks);
-    setEditableTitle(artifact.metadata.titulo || config.nome || '');
+    setEditableTitle(artifact.metadata.titulo || '');
     setEditableSubtitle(artifact.metadata.subtitulo || '');
-  }, [editorData, artifact.metadata.titulo, artifact.metadata.subtitulo, config.nome]);
+  }, [editorData, artifact.metadata.titulo, artifact.metadata.subtitulo]);
 
   const tocItems = useMemo(() => extractTOCFromBlocks(blocks), [blocks]);
 

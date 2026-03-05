@@ -187,22 +187,27 @@ function generatePreview(sections: ArtifactSection[]): string {
   return (sentences.slice(0, 2).join('. ') + '.').substring(0, 200);
 }
 
-const METADATA_HEADER_INSTRUCTIONS = `INSTRUÇÕES DE METADADOS DO DOCUMENTO (OBRIGATÓRIO — siga antes de qualquer outra coisa):
-▶ A PRIMEIRA linha da sua resposta DEVE ser um título com #:
-  # [Título específico do conteúdo — entre 5 e 12 palavras — use o TEMA real, NÃO comece com o tipo da atividade]
-▶ A SEGUNDA linha (imediatamente após o título) DEVE ser o subtítulo:
+const METADATA_HEADER_INSTRUCTIONS = `INSTRUÇÕES DE METADADOS DO DOCUMENTO (OBRIGATÓRIO — siga EXATAMENTE estas regras antes de qualquer outra coisa):
+▶ A PRIMEIRA linha da sua resposta DEVE ser um título com # (hash único):
+  # [Título específico do TEMA/CONTEÚDO — entre 5 e 12 palavras — comece pelo assunto real, NÃO pelo tipo da atividade]
+▶ A SEGUNDA linha (imediatamente após o título, sem linha em branco entre elas) DEVE ser o subtítulo:
   **Subtítulo:** [Frase de 60 a 120 caracteres descrevendo o que este documento cobre — inclua tipo de atividade, turma/série e objetivo pedagógico quando disponível]
+▶ NUNCA use o nome/tipo da atividade como título. Exemplos proibidos como título: "Atividade em Texto", "Sequência Didática", "Plano de Aula", "Lista de Exercícios", "Avaliação", "Documento".
 
 Exemplos CORRETOS:
 # A Revolução Francesa e seus Impactos na Europa Moderna
 **Subtítulo:** Sequência didática de 5 aulas para o 9º ano — causas, desenrolar e legado histórico
 
 # Frações: Conceitos Fundamentais e Operações Básicas
-**Subtítulo:** Plano de unidade para o 6º ano com 6 aulas — identificação, comparação e operações com frações
+**Subtítulo:** Plano de unidade para o 6º ano — identificação, comparação e operações com frações
+
+# Ecossistemas Brasileiros: Biomas, Fauna e Flora
+**Subtítulo:** Atividade de estudo dirigido para o 7º ano — características, ameaças e preservação
 
 Exemplos ERRADOS (não faça isso):
 # Sequência Didática — Revolução Francesa   ← errado: começa com o tipo
 # Plano de Aula                              ← errado: genérico, sem tema
+# Atividade em Texto                         ← errado: é o nome do tipo, não o tema
 **Subtítulo:** Atividade do tipo textual     ← errado: não descreve o conteúdo
 
 ---
@@ -226,6 +231,84 @@ function extractSubtitleFromMarkdown(rawText: string): string | null {
   return null;
 }
 
+const GENERIC_TITLE_PATTERNS = [
+  /^atividade em texto$/i,
+  /^atividade textual$/i,
+  /^sequência didática$/i,
+  /^sequencia didatica$/i,
+  /^plano de aula$/i,
+  /^roteiro de aula$/i,
+  /^lista de exercícios$/i,
+  /^lista de exercicios$/i,
+  /^avaliação$/i,
+  /^avaliacao$/i,
+  /^documento$/i,
+  /^texto$/i,
+  /^atividade$/i,
+  /^exercício$/i,
+  /^exercicio$/i,
+  /^prova$/i,
+  /^teste$/i,
+  /^questionário$/i,
+  /^questionario$/i,
+  /^resumo$/i,
+  /^relatório$/i,
+  /^relatorio$/i,
+  /^guia$/i,
+  /^mensagem$/i,
+  /^dossiê$/i,
+  /^dossie$/i,
+];
+
+function isGenericTitle(
+  title: string,
+  config: ArtifactTypeConfig,
+  routerResult: TextActivityRouterResult | null
+): boolean {
+  const trimmed = title.trim();
+  if (trimmed.toLowerCase() === config.nome.toLowerCase()) return true;
+  if (routerResult?.template?.nome && trimmed.toLowerCase() === routerResult.template.nome.toLowerCase()) return true;
+  for (const pattern of GENERIC_TITLE_PATTERNS) {
+    if (pattern.test(trimmed)) return true;
+  }
+  return false;
+}
+
+function cleanUserRequestForTitle(userRequest: string): string {
+  return userRequest
+    .replace(/^(crie?|gere?|faça|elabore?|desenvolva?|monte?|cria|gera|produz[a]?|escreva?)\s+(um|uma|o|a)?\s*/i, '')
+    .replace(/^(sequência didática|sequencia didatica|plano de aula|plano-de-aula|atividade de|atividade sobre|atividade para|atividades de|exercício de|exercícios de|exercicio de|exercicios de|avaliação de|avaliacao de|lista de exercícios|lista de exercicios|lista de atividades|jogo de|jogo sobre|trilha de|quiz de|quiz sobre|questões de|questoes de|roteiro de aula|roteiro sobre)\s*/i, '')
+    .trim();
+}
+
+function buildSmartTitle(
+  userRequest: string,
+  config: ArtifactTypeConfig,
+  routerResult: TextActivityRouterResult | null,
+  contexto: any
+): string {
+  const cleaned = cleanUserRequestForTitle(userRequest);
+
+  if (cleaned.length >= 10) {
+    const capitalized = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    return capitalized.length > 80 ? capitalized.substring(0, 77) + '...' : capitalized;
+  }
+
+  const turmaPart = (contexto as any)?.turma || (contexto as any)?.inputOriginal?.turma || '';
+  const templateNome = routerResult?.template?.nome || '';
+
+  if (templateNome && turmaPart) {
+    return `${templateNome} — ${turmaPart}`;
+  }
+  if (templateNome) {
+    return templateNome;
+  }
+  if (config.nome) {
+    return config.nome;
+  }
+  return 'Atividade Pedagógica';
+}
+
 function buildSmartSubtitle(
   routerResult: TextActivityRouterResult | null,
   userRequest: string,
@@ -235,16 +318,25 @@ function buildSmartSubtitle(
   const turmaPart = (contexto as any)?.turma || (contexto as any)?.inputOriginal?.turma || '';
   const disciplinaPart = (contexto as any)?.disciplina || (contexto as any)?.inputOriginal?.disciplina || '';
 
-  const cleanRequest = userRequest
-    .replace(/^(crie?|gere?|faça|elabore?|desenvolva?|monte?)\s+(um|uma|o|a)?\s*/i, '')
-    .replace(/^(sequência didática|plano de aula|atividade|exercício|avaliação)\s*(de|sobre|para)?\s*/i, '')
-    .trim();
+  const temaCleaned = cleanUserRequestForTitle(userRequest);
+  const temaPart = temaCleaned.length > 80 ? temaCleaned.substring(0, 77) + '...' : temaCleaned;
 
-  const temaPart = cleanRequest.length > 80 ? cleanRequest.substring(0, 77) + '...' : cleanRequest;
+  const contextParts = [
+    tipoPart,
+    turmaPart ? `para ${turmaPart}` : '',
+    disciplinaPart ? `de ${disciplinaPart}` : '',
+  ].filter(Boolean).join(' ');
 
-  const parts = [tipoPart, turmaPart ? `para ${turmaPart}` : '', disciplinaPart ? `de ${disciplinaPart}` : ''].filter(Boolean).join(' ');
-
-  const subtitle = parts && temaPart ? `${parts} — ${temaPart}` : parts || temaPart || 'Documento pedagógico gerado pelo Jota';
+  let subtitle: string;
+  if (temaPart && contextParts) {
+    subtitle = `${temaPart} — ${contextParts}`;
+  } else if (temaPart) {
+    subtitle = temaPart;
+  } else if (contextParts) {
+    subtitle = contextParts;
+  } else {
+    subtitle = 'Documento pedagógico gerado pelo Jota';
+  }
   return subtitle.substring(0, 160);
 }
 
@@ -363,16 +455,8 @@ ${bnccContext.prompt_context}
     const tempoGeracao = Date.now() - startTime;
     
     const aiTitle = extractTitleFromMarkdown(rawText);
-    let titulo: string;
-    if (aiTitle) {
-      titulo = aiTitle;
-    } else if (useTextActivityPrompt && routerResult?.template) {
-      titulo = routerResult.template.nome;
-    } else if (userRequest.length > 0) {
-      titulo = userRequest.length > 60 ? userRequest.substring(0, 57) + '...' : userRequest;
-    } else {
-      titulo = config.nome;
-    }
+    const validAiTitle = aiTitle && !isGenericTitle(aiTitle, config, routerResult) ? aiTitle : null;
+    const titulo = validAiTitle || buildSmartTitle(userRequest, config, routerResult, contexto);
 
     const aiSubtitle = extractSubtitleFromMarkdown(rawText);
     const subtitulo = aiSubtitle || buildSmartSubtitle(routerResult, userRequest, contexto);
