@@ -1,0 +1,55 @@
+Considerações:
+
+Faça uma plano completo com Macro-steps de objetivos principais de execução e micro-steps (Envolvendo babysteps) em ordem inteligente para fazer todas essas alterações da maneira correta, e incluindo testes, validações e verificações, para garantir que tudo seja feito corretamente! Para fazer tudo da melhor forma, lance diversos sub-agentes de pesquisas, investigações, depurações, analises, para ter o máximo de contexto possível antes de começar a aplicar qualquer coisa!!!!!!!
+Reflita antes de cada alteração, e faça um mapeamento completo para identificar a melhor forma, de maneira segura, robusta, alinhada, profissional, avançada e sofisticada! Não cometa erros ou bugs dentro do código, e não deixe o código ser corrompido! Garanta também que todo o sistema não tenha brechas para erros ou bugs!
+Revise todas as suas modificações depois de cada finalização, não deixe brechas pra erros, não prejudique o funcionamento geral, refine as alterações, e garanta que nenhum sistema considerável foi influenciado ou modificado negativamente! Teste tudo que você fez para garantir o funcionamento perfeito!
+No final de tudo, me explique todas as alterações que você fez, como elas foram feitas, e principalmente porque você decidiu fazer essas alterações!
+No final de tudo, liste todos os seus aprendizados com base em todas as alterações que você fez, para que você possa ir se aprimorando conforme as próximas alterações, e melhorando a sua janela de contexto, para que esses erros em hipotese alguma acontecem novamente dentro da plataforma!
+No final, me sugira as próximas alterações dentro da própria plataforma que a gente precisa fazer, ou que seria muito bom, para deixar a plataforma ainda mais completa, sem nenhum erro ou perigo!
+Analise como funciona o sistema interno de empresas/plataformas de IA e IA Agents como:
+
+ChatGPT PRO/ envolvidos
+Grok
+Claude MAX/ envolvidos
+Perplexity MAX/ envolvidos / Computador
+Manus IA 1.6 Max
+Genspark IA
+Kimi Agent e Swarm / envolvidos
+Replit Agent V3
+Mistral
+Gemini
+Devin AI (Cognition)
+Cursor Composer
+Copilot Workspace
+DeepSeek V3
+Vellum Agent Builder
+Retool AI
+Qwen IA (Chinesa)
+Jenova AI (Multi-model)
+OpenClaw (Open-source)
+Lumio AI (Multi-model workspace)
+Proton Lumo (Privacidade-first chatbot)
+Character.ai
+Salesforce Agentforce
+
+Concorrentes da Ponto. School diretos:
+
+Concorrentes:
+Teachy - teachy.com.br
+Risely - https://risely.ai/
+Youlearn - https://www.youlearn.ai/
+Straia - https://www.straia.io/
+Alice - https://www.alice.tech/
+Eduaide - https://www.eduaide.ai/
+Ensinei - https://ensinei.com.br/
+Magic School - app.magicschool.ai
+Kira - https://www.kira-learning.com/
+Brisk Teaching - https://www.briskteaching.com/pt-br
+Edcafe AI - https://www.edcafe.ai/
+Monsha - https://monsha.ai/
+Brisk Teachig - app.briskteaching.com
+To - Teach - https://to-teach.ai/
+Eduaide - https://www.eduaide.ai/
+TPT - https://www.teacherspayteachers.com/
+Kajabi - https://kajabi.com/
+Teachable - https://www.teachable.com/
