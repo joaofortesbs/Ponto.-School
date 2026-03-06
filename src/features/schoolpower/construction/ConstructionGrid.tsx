@@ -212,7 +212,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         id: activity.id,
         metadata: {
           tipo: 'atividade_textual',
-          titulo: extractedTitle || activity.title || 'Atividade em Texto',
+          titulo: textData?.titulo || extractedTitle || activity.title || 'Atividade em Texto',
           subtitulo: extractedSubtitle || '',
           geradoEm: Date.now(),
           sessaoId: activity.id,
