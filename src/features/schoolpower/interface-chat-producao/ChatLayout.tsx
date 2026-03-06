@@ -364,7 +364,7 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack, initial
       
       const artifactSections = Array.isArray(sections) ? sections.map((sec: any, idx: number) => ({
         id: sec.id || `section-${idx}`,
-        titulo: sec.titulo || sec.title || `Seção ${idx + 1}`,
+        titulo: (sec.titulo || sec.title || `Seção ${idx + 1}`).replace(/^#+\s+/, ''),
         conteudo: sec.conteudo || sec.content || '',
         icone: sec.icone || sec.icon || '',
         ordem: sec.ordem ?? idx,
@@ -400,8 +400,8 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack, initial
         id: activityId,
         metadata: {
           tipo: 'atividade_textual',
-          titulo: constructionActivity.title || 'Atividade em Texto',
-          subtitulo: constructionActivity.description || '',
+          titulo: textData?.titulo || constructionActivity.title || 'Atividade em Texto',
+          subtitulo: '',
           geradoEm: Date.now(),
           sessaoId: activityId,
           versao: '2.0',

@@ -394,7 +394,7 @@ export function convertArtifactToEditorJS(artifact: ArtifactData): EditorJSData 
       id: `section-${section.id}`,
       type: 'header',
       data: {
-        text: section.titulo,
+        text: section.titulo.replace(/^#+\s+/, ''),
         level: 2
       }
     });
