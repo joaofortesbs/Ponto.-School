@@ -370,18 +370,26 @@ EXEMPLOS DE USO NA ATIVIDADE:
 - Use **negrito** para enunciados e conceitos-chave
 - Use SEPARADORES (---) entre questões ou seções da atividade
 
-REGRAS PARA O SUBTÍTULO:
-- Use o formato: "Esta atividade de [tipo] explora [tema concreto] para [série], promovendo [objetivo pedagógico em uma frase]."
-- Entre 80 e 160 caracteres
-- NUNCA repita o título no subtítulo
-- NUNCA use frases genéricas como "Atividade do tipo X" ou "Atividade pedagógica"
+METADADOS DO DOCUMENTO — SIGA COM EXATIDÃO ANTES DO CONTEÚDO:
+
+▶ CAMPO "titulo" — OBRIGATÓRIO:
+  Crie um título temático original. NUNCA use o nome do tipo "${templateName}" como título.
+  Formato: "[emoji relevante à disciplina] [Tema/Conteúdo real]: [Aspecto específico da atividade]"
+  Regras: 6 a 14 palavras | Comece SEMPRE pelo TEMA real | Capitalize cada palavra principal
+  CORRETO: "🎭 Revolução Francesa: Causas, Consequências e Legado Histórico"
+  ERRADO: "${templateName} — ${tema}" ou "${templateName}: ${tema}"
+
+▶ CAMPO "subtitulo" — OBRIGATÓRIO:
+  Frase completa de 80 a 160 caracteres. Descreva o conteúdo com precisão pedagógica.
+  Formato: "Esta atividade de [tipo da atividade] [verbo+conteúdo] para [série] de [disciplina], [objetivo pedagógico concreto]."
+  NÃO repita o título | NÃO use frases genéricas | SEMPRE termine a frase corretamente
 
 **FORMATO DE RESPOSTA (OBRIGATÓRIO):**
-Responda APENAS com um JSON no seguinte formato:
+Responda APENAS com um JSON válido no seguinte formato:
 
 {
-  "titulo": "${templateName}: ${tema}",
-  "subtitulo": "Esta atividade de ${templateName.toLowerCase()} explora ${tema} para ${serie} de ${disciplina}, promovendo aprendizagem ativa e engajamento pedagógico.",
+  "titulo": "[Título temático criado seguindo as regras — NÃO use '${templateName}' aqui]",
+  "subtitulo": "[Subtítulo descritivo e completo de 80-160 caracteres seguindo as regras]",
   "sections": [
 ${templateSections.length > 0 
   ? templateSections.map((s, i) => `    {"title": "${s}", "content": "Conteúdo completo e detalhado...", "icon": "file"}`).join(',\n')
@@ -641,7 +649,7 @@ function parseAIResponse(rawResponse: string, activityType?: string): {
       
       // Verificar se tem os campos esperados
       const result = {
-        titulo: parsed.titulo || parsed.title || 'Conteúdo Gerado',
+        titulo: (parsed.titulo || parsed.title || 'Conteúdo Gerado').replace(/^#+\s+/, '').trim() || 'Conteúdo Gerado',
         subtitulo: parsed.subtitulo || parsed.subtitle || '',
         sections: parsed.sections || [],
         textContent: parsed.textContent || parsed.text_content || parsed.conteudo || parsed.content || ''

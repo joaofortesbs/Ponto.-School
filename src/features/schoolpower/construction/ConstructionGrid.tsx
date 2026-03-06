@@ -136,18 +136,16 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     serie: string,
     disciplina: string
   ): string => {
+    const tipoPart = activityType?.trim() ? activityType.trim().toLowerCase() : '';
     const temaPart = tema?.trim() ? `explora ${tema.trim()}` : '';
     const seriePart = serie?.trim() ? `para ${serie.trim()}` : '';
     const disciplinaPart = disciplina?.trim() ? `de ${disciplina.trim()}` : '';
     const contextParts = [seriePart, disciplinaPart].filter(Boolean).join(' ');
-    if (temaPart && contextParts) {
-      return `Esta atividade ${temaPart} ${contextParts}, promovendo aprendizagem ativa e engajamento pedagógico.`;
-    } else if (temaPart) {
-      return `Esta atividade ${temaPart}, promovendo aprendizagem ativa e engajamento pedagógico.`;
-    } else if (contextParts) {
-      return `Atividade pedagógica ${contextParts}, promovendo o desenvolvimento de habilidades específicas.`;
-    }
-    return '';
+    if (temaPart && contextParts) return `Esta atividade ${temaPart} ${contextParts}, promovendo aprendizagem ativa e engajamento pedagógico.`;
+    if (temaPart) return `Esta atividade ${temaPart}, promovendo aprendizagem ativa e engajamento pedagógico.`;
+    if (contextParts) return `Atividade pedagógica ${contextParts}, promovendo o desenvolvimento de habilidades específicas.`;
+    if (tipoPart) return `Esta atividade de ${tipoPart} foi desenvolvida para promover aprendizagem ativa e engajamento dos estudantes.`;
+    return 'Atividade pedagógica desenvolvida para promover aprendizagem ativa e engajamento dos estudantes.';
   };
 
   const handleView = (activity: ConstructionActivity) => {
@@ -228,24 +226,10 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         });
       }
 
-      // Smart title resolution
-      let mainTitle = textData?.titulo || extractedTitle || '';
-      let finalSections = [...artifactSections];
-      if (!mainTitle && artifactSections.length > 0) {
-        const candidateTitle = artifactSections[0]?.titulo || '';
-        const templateName = activity.title || '';
-        if (candidateTitle && candidateTitle.toLowerCase() !== templateName.toLowerCase()) {
-          mainTitle = candidateTitle;
-          const introConteudo = artifactSections[0].conteudo || '';
-          finalSections = artifactSections.slice(1);
-          if (introConteudo && finalSections.length > 0) {
-            finalSections[0] = { ...finalSections[0], conteudo: introConteudo + '\n\n' + finalSections[0].conteudo };
-          } else if (introConteudo) {
-            finalSections = [{ ...artifactSections[0], titulo: '' }];
-          }
-        }
-      }
-      const resolvedTitle = mainTitle || activity.title || 'Atividade em Texto';
+      // Smart title resolution — priority: stored titulo → textContent # heading → template name
+      const resolvedTitle = ((textData?.titulo || extractedTitle || '').replace(/^#+\s+/, '').trim())
+        || activity.title || 'Atividade em Texto';
+      const finalSections = [...artifactSections];
 
       // Smart subtitle resolution
       const tema = activity.customFields?.theme || activity.customFields?.tema || activity.originalData?.theme || activity.originalData?.tema || '';

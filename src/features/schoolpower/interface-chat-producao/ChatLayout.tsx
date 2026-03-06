@@ -336,7 +336,8 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack, initial
     if (activityTipo === 'atividade-textual' || isTextByConfig || isTextBySignal) {
       console.log('📄 [ChatLayout] Atividade textual detectada, redirecionando para ArtifactViewModal', { activityTipo, isTextByConfig, isTextBySignal });
 
-      const buildSmartSubtitleForTextActivity = (tema: string, serie: string, disciplina: string): string => {
+      const buildSmartSubtitleForTextActivity = (activityType: string, tema: string, serie: string, disciplina: string): string => {
+        const tipoPart = activityType?.trim() ? activityType.trim().toLowerCase() : '';
         const temaPart = tema?.trim() ? `explora ${tema.trim()}` : '';
         const seriePart = serie?.trim() ? `para ${serie.trim()}` : '';
         const disciplinaPart = disciplina?.trim() ? `de ${disciplina.trim()}` : '';
@@ -344,7 +345,8 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack, initial
         if (temaPart && contextParts) return `Esta atividade ${temaPart} ${contextParts}, promovendo aprendizagem ativa e engajamento pedagógico.`;
         if (temaPart) return `Esta atividade ${temaPart}, promovendo aprendizagem ativa e engajamento pedagógico.`;
         if (contextParts) return `Atividade pedagógica ${contextParts}, promovendo o desenvolvimento de habilidades específicas.`;
-        return '';
+        if (tipoPart) return `Esta atividade de ${tipoPart} foi desenvolvida para promover aprendizagem ativa e engajamento dos estudantes.`;
+        return 'Atividade pedagógica desenvolvida para promover aprendizagem ativa e engajamento dos estudantes.';
       };
       
       const builtIdMatchCL = activityId.match(/^built-(.+)-\d+$/);
@@ -381,19 +383,43 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack, initial
         ordem: sec.ordem ?? idx,
       })) : [];
       
-      if (artifactSections.length === 0 && textContent) {
-        const markdownSections = textContent.split(/^##\s+/m).filter(Boolean);
+      // Extract title + subtitle + cleaned content from raw textContent (same pattern as artifact-generator.ts)
+      const extractTitleFromTextContentCL = (raw: string): { title: string; subtitle: string; cleaned: string } => {
+        if (!raw) return { title: '', subtitle: '', cleaned: '' };
+        let title = '';
+        let subtitle = '';
+        const cleanedLines: string[] = [];
+        for (const line of raw.split('\n')) {
+          const trimmed = line.trim();
+          if (!title) {
+            const h1Match = trimmed.match(/^#{1,2}\s+(.+)$/);
+            if (h1Match) { title = h1Match[1].replace(/^#+\s+/, '').trim(); continue; }
+          }
+          if (!subtitle) {
+            const subMatch = trimmed.match(/^\*\*Subt[ií]tulo:\*\*\s*(.+)$/i);
+            if (subMatch) { subtitle = subMatch[1].replace(/\*\*/g, '').trim(); continue; }
+          }
+          cleanedLines.push(line);
+        }
+        return { title, subtitle, cleaned: cleanedLines.join('\n') };
+      };
+      const { title: extractedTitleCL, subtitle: extractedSubtitleCL, cleaned: cleanedContentCL } = extractTitleFromTextContentCL(textContent);
+
+      if (artifactSections.length === 0 && cleanedContentCL.trim()) {
+        const markdownSections = cleanedContentCL.split(/^##\s+/m).filter((s: string) => s.trim().length > 0);
         markdownSections.forEach((block: string, idx: number) => {
           const lines = block.split('\n');
-          const title = lines[0]?.trim() || `Seção ${idx + 1}`;
+          const title = (lines[0]?.trim() || '').replace(/^#+\s+/, '') || `Seção ${idx + 1}`;
           const content = lines.slice(1).join('\n').trim();
-          artifactSections.push({
-            id: `section-${idx}`,
-            titulo: title,
-            conteudo: content,
-            icone: '',
-            ordem: idx,
-          });
+          if (title || content) {
+            artifactSections.push({
+              id: `section-${idx}`,
+              titulo: title,
+              conteudo: content,
+              icone: '',
+              ordem: idx,
+            });
+          }
         });
       }
       
@@ -401,36 +427,23 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack, initial
         artifactSections.push({
           id: 'section-0',
           titulo: constructionActivity.title || 'Conteúdo',
-          conteudo: textContent || 'Conteúdo não disponível. Tente gerar novamente.',
+          conteudo: cleanedContentCL || textContent || 'Conteúdo não disponível. Tente gerar novamente.',
           icone: '',
           ordem: 0,
         });
       }
       
-      // Smart title resolution
-      let mainTitleCL = textData?.titulo || '';
-      let finalSectionsCL = [...artifactSections];
-      if (!mainTitleCL && artifactSections.length > 0) {
-        const candidateTitle = artifactSections[0]?.titulo || '';
-        const templateName = constructionActivity.title || '';
-        if (candidateTitle && candidateTitle.toLowerCase() !== templateName.toLowerCase()) {
-          mainTitleCL = candidateTitle;
-          const introConteudo = artifactSections[0].conteudo || '';
-          finalSectionsCL = artifactSections.slice(1);
-          if (introConteudo && finalSectionsCL.length > 0) {
-            finalSectionsCL[0] = { ...finalSectionsCL[0], conteudo: introConteudo + '\n\n' + finalSectionsCL[0].conteudo };
-          } else if (introConteudo) {
-            finalSectionsCL = [{ ...artifactSections[0], titulo: '' }];
-          }
-        }
-      }
-      const resolvedTitleCL = mainTitleCL || constructionActivity.title || 'Atividade em Texto';
+      // Smart title resolution — priority: stored titulo → textContent # heading → template name
+      const resolvedTitleCL = ((textData as any)?.titulo || extractedTitleCL || '').replace(/^#+\s+/, '').trim()
+        || constructionActivity.title || 'Atividade em Texto';
+      const finalSectionsCL = [...artifactSections];
 
       // Smart subtitle resolution
       const temaCL = mergedContent?.theme || mergedContent?.tema || '';
       const serieCL = mergedContent?.schoolYear || mergedContent?.serie || '';
       const disciplinaCL = mergedContent?.subject || mergedContent?.disciplina || '';
-      const resolvedSubtituloCL = (textData as any)?.subtitulo || buildSmartSubtitleForTextActivity(temaCL, serieCL, disciplinaCL);
+      const activityTypeNameCL = constructionActivity.title || activityTipo || '';
+      const resolvedSubtituloCL = (textData as any)?.subtitulo || extractedSubtitleCL || buildSmartSubtitleForTextActivity(activityTypeNameCL, temaCL, serieCL, disciplinaCL);
 
       const artifact: ArtifactData = {
         id: activityId,
