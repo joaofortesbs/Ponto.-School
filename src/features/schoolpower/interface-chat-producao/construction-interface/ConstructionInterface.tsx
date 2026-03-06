@@ -751,15 +751,45 @@ export function ConstructionInterface({
       
       const constructionActivity = convertToConstructionActivity(activity);
 
+      // Emoji prefix helper
+      const CI_EMOJI_MAP: Record<string, string> = {
+        'sequencia-didatica': '📋', 'sequencia_didatica': '📋',
+        'plano-aula': '🗺️', 'plano_aula': '🗺️',
+        'debate-estruturado': '🎙️', 'debate_estruturado': '🎙️',
+        'icebreaker-acolhimento': '🤝', 'icebreaker_acolhimento': '🤝',
+        'aprendizagem-cooperativa': '🤝', 'aprendizagem_cooperativa': '🤝',
+        'questoes-dissertativas': '📝', 'questoes_dissertativas': '📝',
+        'bilhete-saida': '🎫', 'bilhete_saida': '🎫', 'exit-ticket': '🎫',
+        'quiz-game-show': '🎰', 'cruzadinha': '✏️', 'caca-palavras': '🔍',
+        'avaliacao': '📝', 'prova': '📝', 'roteiro-laboratorio': '🧪',
+        'atividade-steam': '🔬', 'cronograma-estudos': '⏰', 'revisao-espiral': '🌀',
+        'resumo-critico': '📜', 'roteiro-podcast': '🎤', 'fichamento-texto': '📓',
+        'apoio-redacao': '✍️', 'lista-exercicios': '📋', 'atividade-textual': '📄',
+      };
+      const ciHasEmoji = (s: string) => (s.codePointAt(0) || 0) > 0x2000;
+      const ciAddEmoji = (t: string, type: string) => {
+        if (!t || ciHasEmoji(t)) return t;
+        const e = CI_EMOJI_MAP[type.toLowerCase()] || CI_EMOJI_MAP[type.toLowerCase().replace(/-/g, '_')] || '';
+        return e ? `${e} ${t}` : t;
+      };
+
       // Smart title resolution — priority: stored titulo → textContent # heading → template name
-      const resolvedTitle = ((textData?.titulo || extractedTitle || '').replace(/^#+\s+/, '').trim())
+      const rawTitle = ((textData?.titulo || extractedTitle || '').replace(/^#+\s+/, '').trim())
         || constructionActivity.title || activity.name || 'Atividade em Texto';
+      const resolvedTitle = ciAddEmoji(rawTitle, activityType);
       const finalSections = [...artifactSections];
 
-      // Smart subtitle resolution
-      const tema = consolidatedFields.theme || consolidatedFields.tema || builtData.theme || builtData.tema || '';
-      const serie = consolidatedFields.schoolYear || consolidatedFields.serie || builtData.schoolYear || builtData.serie || '';
-      const disciplina = consolidatedFields.subject || consolidatedFields.disciplina || builtData.subject || builtData.disciplina || '';
+      // Smart subtitle resolution — expanded field name lookup for all activity types
+      const tema = consolidatedFields.theme || consolidatedFields.tema ||
+        consolidatedFields.tituloTemaAssunto || consolidatedFields.temaAssunto ||
+        builtData.theme || builtData.tema ||
+        builtData.tituloTemaAssunto || builtData.temaAssunto || '';
+      const serie = consolidatedFields.schoolYear || consolidatedFields.serie ||
+        consolidatedFields.anoSerie || consolidatedFields.turma ||
+        builtData.schoolYear || builtData.serie ||
+        builtData.anoSerie || builtData.turma || '';
+      const disciplina = consolidatedFields.subject || consolidatedFields.disciplina ||
+        builtData.subject || builtData.disciplina || '';
       const activityTypeName = constructionActivity.title || activity.name || activityType || '';
       const resolvedSubtitulo = (textData as any)?.subtitulo || extractedSubtitle || buildSmartSubtitleForTextActivity(activityTypeName, tema, serie, disciplina);
 

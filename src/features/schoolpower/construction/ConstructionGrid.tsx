@@ -226,15 +226,45 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         });
       }
 
+      // Emoji prefix helper
+      const GRID_EMOJI_MAP: Record<string, string> = {
+        'sequencia-didatica': '📋', 'sequencia_didatica': '📋',
+        'plano-aula': '🗺️', 'plano_aula': '🗺️',
+        'debate-estruturado': '🎙️', 'debate_estruturado': '🎙️',
+        'icebreaker-acolhimento': '🤝', 'icebreaker_acolhimento': '🤝',
+        'aprendizagem-cooperativa': '🤝', 'aprendizagem_cooperativa': '🤝',
+        'questoes-dissertativas': '📝', 'questoes_dissertativas': '📝',
+        'bilhete-saida': '🎫', 'bilhete_saida': '🎫', 'exit-ticket': '🎫',
+        'quiz-game-show': '🎰', 'cruzadinha': '✏️', 'caca-palavras': '🔍',
+        'avaliacao': '📝', 'prova': '📝', 'roteiro-laboratorio': '🧪',
+        'atividade-steam': '🔬', 'cronograma-estudos': '⏰', 'revisao-espiral': '🌀',
+        'resumo-critico': '📜', 'roteiro-podcast': '🎤', 'fichamento-texto': '📓',
+        'apoio-redacao': '✍️', 'lista-exercicios': '📋', 'atividade-textual': '📄',
+      };
+      const gridHasEmoji = (s: string) => (s.codePointAt(0) || 0) > 0x2000;
+      const gridAddEmoji = (t: string, type: string) => {
+        if (!t || gridHasEmoji(t)) return t;
+        const e = GRID_EMOJI_MAP[type.toLowerCase()] || GRID_EMOJI_MAP[type.toLowerCase().replace(/-/g, '_')] || '';
+        return e ? `${e} ${t}` : t;
+      };
+
       // Smart title resolution — priority: stored titulo → textContent # heading → template name
-      const resolvedTitle = ((textData?.titulo || extractedTitle || '').replace(/^#+\s+/, '').trim())
+      const rawTitle = ((textData?.titulo || extractedTitle || '').replace(/^#+\s+/, '').trim())
         || activity.title || 'Atividade em Texto';
+      const resolvedTitle = gridAddEmoji(rawTitle, activityType);
       const finalSections = [...artifactSections];
 
-      // Smart subtitle resolution
-      const tema = activity.customFields?.theme || activity.customFields?.tema || activity.originalData?.theme || activity.originalData?.tema || '';
-      const serie = activity.customFields?.schoolYear || activity.customFields?.serie || activity.originalData?.schoolYear || activity.originalData?.serie || '';
-      const disciplina = activity.customFields?.subject || activity.customFields?.disciplina || activity.originalData?.subject || activity.originalData?.disciplina || '';
+      // Smart subtitle resolution — expanded field name lookup for all activity types
+      const tema = activity.customFields?.theme || activity.customFields?.tema ||
+        activity.customFields?.tituloTemaAssunto || activity.customFields?.temaAssunto ||
+        activity.originalData?.theme || activity.originalData?.tema ||
+        activity.originalData?.tituloTemaAssunto || activity.originalData?.temaAssunto || '';
+      const serie = activity.customFields?.schoolYear || activity.customFields?.serie ||
+        activity.customFields?.anoSerie || activity.customFields?.turma ||
+        activity.originalData?.schoolYear || activity.originalData?.serie ||
+        activity.originalData?.anoSerie || activity.originalData?.turma || '';
+      const disciplina = activity.customFields?.subject || activity.customFields?.disciplina ||
+        activity.originalData?.subject || activity.originalData?.disciplina || '';
       const resolvedSubtitulo = (textData as any)?.subtitulo || extractedSubtitle || buildSmartSubtitleForTextActivity(activityType, tema, serie, disciplina);
 
       const artifact: ArtifactData = {

@@ -1587,16 +1587,20 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
 
   const handleCopyAll = useCallback(async () => {
     try {
-      const fullText = artifact.secoes
+      const cleanTitle = (editableTitle || artifact.metadata.titulo || '').replace(/<[^>]*>/g, '').trim();
+      const cleanSubtitle = (editableSubtitle || artifact.metadata.subtitulo || '').replace(/<[^>]*>/g, '').trim();
+      const header = [cleanTitle, cleanSubtitle].filter(Boolean).join('\n');
+      const body = artifact.secoes
         .map((s) => `## ${s.titulo}\n\n${s.conteudo}`)
         .join('\n\n---\n\n');
+      const fullText = header ? `${header}\n\n${body}` : body;
       await navigator.clipboard.writeText(fullText);
       setCopiedSection('all');
       setTimeout(() => setCopiedSection(null), 2000);
     } catch {
       console.warn('Falha ao copiar documento completo');
     }
-  }, [artifact.secoes]);
+  }, [artifact.secoes, artifact.metadata.titulo, artifact.metadata.subtitulo, editableTitle, editableSubtitle]);
 
   const handlePrint = useCallback(() => {
     const printWindow = window.open('', '_blank');
