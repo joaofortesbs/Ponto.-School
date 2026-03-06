@@ -373,16 +373,19 @@ EXEMPLOS DE USO NA ATIVIDADE:
 METADADOS DO DOCUMENTO — SIGA COM EXATIDÃO ANTES DO CONTEÚDO:
 
 ▶ CAMPO "titulo" — OBRIGATÓRIO:
-  Crie um título temático original. NUNCA use o nome do tipo "${templateName}" como título.
-  Formato: "[emoji relevante à disciplina] [Tema/Conteúdo real]: [Aspecto específico da atividade]"
-  Regras: 6 a 14 palavras | Comece SEMPRE pelo TEMA real | Capitalize cada palavra principal
-  CORRETO: "🎭 Revolução Francesa: Causas, Consequências e Legado Histórico"
-  ERRADO: "${templateName} — ${tema}" ou "${templateName}: ${tema}"
+  Formato exato: "[emoji relevante à ${disciplina || 'disciplina'}] ${templateName}: [conteúdo/tema específico em 4-8 palavras]"
+  Regras: SEMPRE comece com emoji + "${templateName}" | Depois do ":" coloque o aspecto concreto e capitalizado do tema
+  CORRETO: "📋 ${templateName}: ${tema} e suas Principais Implicações"
+  CORRETO: "🎯 ${templateName}: Causas, Consequências e Legado de [tema]"
+  ERRADO: Começar sem emoji | Omitir "${templateName}" | Colocar o tema cru após os ":" sem reformular
 
 ▶ CAMPO "subtitulo" — OBRIGATÓRIO:
-  Frase completa de 80 a 160 caracteres. Descreva o conteúdo com precisão pedagógica.
-  Formato: "Esta atividade de [tipo da atividade] [verbo+conteúdo] para [série] de [disciplina], [objetivo pedagógico concreto]."
-  NÃO repita o título | NÃO use frases genéricas | SEMPRE termine a frase corretamente
+  Frase descritiva e única de 80 a 160 caracteres que explique especificamente o QUE essa atividade faz, PARA QUEM e QUAL é o objetivo de aprendizagem concreto.
+  Formato: "Este [tipo de atividade] [verbo específico da atividade] [conteúdo concreto] para [série] de [disciplina], [resultado de aprendizagem esperado]."
+  NUNCA use: "foi desenvolvida para promover aprendizagem ativa" | "engajamento dos estudantes" como frase genérica
+  SEMPRE use verbos específicos: "apresenta", "organiza", "explora", "desenvolve", "propõe", "guia", "desafia", "avalia"
+  Exemplo para debate: "Este debate estruturado analisa as causas e consequências da Revolução Francesa para o 9º ano de História, desenvolvendo argumentação crítica e pesquisa histórica."
+  Exemplo para sequência: "Esta sequência didática guia os alunos do 7º ano de Ciências pelo estudo dos biomas brasileiros, promovendo investigação científica e consciência ambiental."
 
 **FORMATO DE RESPOSTA (OBRIGATÓRIO):**
 Responda APENAS com um JSON válido no seguinte formato:

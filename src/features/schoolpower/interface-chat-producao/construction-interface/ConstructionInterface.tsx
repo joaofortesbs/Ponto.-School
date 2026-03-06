@@ -620,8 +620,8 @@ export function ConstructionInterface({
         if (temaPart && contextParts) return `Esta atividade ${temaPart} ${contextParts}, promovendo aprendizagem ativa e engajamento pedagógico.`;
         if (temaPart) return `Esta atividade ${temaPart}, promovendo aprendizagem ativa e engajamento pedagógico.`;
         if (contextParts) return `Atividade pedagógica ${contextParts}, promovendo o desenvolvimento de habilidades específicas.`;
-        if (tipoPart) return `Esta atividade de ${tipoPart} foi desenvolvida para promover aprendizagem ativa e engajamento dos estudantes.`;
-        return 'Atividade pedagógica desenvolvida para promover aprendizagem ativa e engajamento dos estudantes.';
+        if (tipoPart) return `Este documento apresenta ${tipoPart}, desenvolvido para promover aprendizagem ativa e engajamento pedagógico.`;
+        return 'Documento pedagógico desenvolvido para promover aprendizagem ativa e engajamento dos estudantes.';
       };
       
       const builtData = activity.built_data || {};

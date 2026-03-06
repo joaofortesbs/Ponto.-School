@@ -52,6 +52,7 @@ const blockAnimVariants = {
 };
 
 const FONT_STYLES = {
+  title: { fontFamily: "'Lora', 'Georgia', 'Book Antiqua', serif" },
   heading: { fontFamily: "'Inter', 'SF Pro Display', -apple-system, sans-serif" },
   body: { fontFamily: "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif" },
   ui: { fontFamily: "'Inter', -apple-system, sans-serif" },
@@ -1860,7 +1861,7 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                     <EditableContent
                       html={editableTitle}
                       className="text-[2rem] font-bold leading-tight tracking-tight text-white mb-2"
-                      style={FONT_STYLES.heading}
+                      style={FONT_STYLES.title}
                       onUpdate={setEditableTitle}
                       placeholder="Adicione um título..."
                     />
@@ -1872,6 +1873,12 @@ export function ArtifactViewModal({ artifact, isOpen, onClose }: ArtifactViewMod
                       placeholder="Adicione um subtítulo..."
                     />
                   </motion.div>
+
+                  <div className="flex items-center justify-center gap-2 mb-8 -mt-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                  </div>
 
                   <DndContext
                     sensors={sensors}
