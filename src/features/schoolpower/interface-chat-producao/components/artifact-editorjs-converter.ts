@@ -390,14 +390,17 @@ export function convertArtifactToEditorJS(artifact: ArtifactData): EditorJSData 
   const blocks: EditorJSBlock[] = [];
 
   for (const section of artifact.secoes) {
-    blocks.push({
-      id: `section-${section.id}`,
-      type: 'header',
-      data: {
-        text: section.titulo.replace(/^#+\s+/, ''),
-        level: 2
-      }
-    });
+    const sectionTitle = section.titulo.replace(/^#+\s+/, '').trim();
+    if (sectionTitle) {
+      blocks.push({
+        id: `section-${section.id}`,
+        type: 'header',
+        data: {
+          text: sectionTitle,
+          level: 2
+        }
+      });
+    }
 
     const lines = section.conteudo.split('\n');
     let i = 0;

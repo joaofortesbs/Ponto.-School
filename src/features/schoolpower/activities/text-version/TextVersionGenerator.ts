@@ -37,6 +37,8 @@ export interface TextVersionOutput {
   success: boolean;
   activityId: string;
   activityType: string;
+  titulo: string;
+  subtitulo: string;
   textContent: string;
   sections: TextSection[];
   rawData?: any;
@@ -368,11 +370,18 @@ EXEMPLOS DE USO NA ATIVIDADE:
 - Use **negrito** para enunciados e conceitos-chave
 - Use SEPARADORES (---) entre questões ou seções da atividade
 
+REGRAS PARA O SUBTÍTULO:
+- Use o formato: "Esta atividade de [tipo] explora [tema concreto] para [série], promovendo [objetivo pedagógico em uma frase]."
+- Entre 80 e 160 caracteres
+- NUNCA repita o título no subtítulo
+- NUNCA use frases genéricas como "Atividade do tipo X" ou "Atividade pedagógica"
+
 **FORMATO DE RESPOSTA (OBRIGATÓRIO):**
 Responda APENAS com um JSON no seguinte formato:
 
 {
   "titulo": "${templateName}: ${tema}",
+  "subtitulo": "Esta atividade de ${templateName.toLowerCase()} explora ${tema} para ${serie} de ${disciplina}, promovendo aprendizagem ativa e engajamento pedagógico.",
   "sections": [
 ${templateSections.length > 0 
   ? templateSections.map((s, i) => `    {"title": "${s}", "content": "Conteúdo completo e detalhado...", "icon": "file"}`).join(',\n')
@@ -633,6 +642,7 @@ function parseAIResponse(rawResponse: string, activityType?: string): {
       // Verificar se tem os campos esperados
       const result = {
         titulo: parsed.titulo || parsed.title || 'Conteúdo Gerado',
+        subtitulo: parsed.subtitulo || parsed.subtitle || '',
         sections: parsed.sections || [],
         textContent: parsed.textContent || parsed.text_content || parsed.conteudo || parsed.content || ''
       };
@@ -1124,6 +1134,7 @@ export function storeTextVersionContent(
     activityId: content.activityId,
     activityType: content.activityType,
     titulo: content.titulo,
+    subtitulo: content.subtitulo || '',
     textContent: content.textContent,
     sections: content.sections,
     generatedAt: content.generatedAt,
@@ -1139,6 +1150,7 @@ export function storeTextVersionContent(
       activityId: content.activityId,
       activityType: content.activityType,
       titulo: content.titulo,
+      subtitulo: content.subtitulo || '',
       textContent: content.textContent.substring(0, 50000),
       sections: [],
       generatedAt: content.generatedAt,

@@ -130,6 +130,26 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     }
   };
 
+  const buildSmartSubtitleForTextActivity = (
+    activityType: string,
+    tema: string,
+    serie: string,
+    disciplina: string
+  ): string => {
+    const temaPart = tema?.trim() ? `explora ${tema.trim()}` : '';
+    const seriePart = serie?.trim() ? `para ${serie.trim()}` : '';
+    const disciplinaPart = disciplina?.trim() ? `de ${disciplina.trim()}` : '';
+    const contextParts = [seriePart, disciplinaPart].filter(Boolean).join(' ');
+    if (temaPart && contextParts) {
+      return `Esta atividade ${temaPart} ${contextParts}, promovendo aprendizagem ativa e engajamento pedagógico.`;
+    } else if (temaPart) {
+      return `Esta atividade ${temaPart}, promovendo aprendizagem ativa e engajamento pedagógico.`;
+    } else if (contextParts) {
+      return `Atividade pedagógica ${contextParts}, promovendo o desenvolvimento de habilidades específicas.`;
+    }
+    return '';
+  };
+
   const handleView = (activity: ConstructionActivity) => {
     console.log('👁️ Abrindo modal de visualização para atividade:', activity.title);
     const activityType = activity.originalData?.tipo || activity.categoryId || activity.type || '';
@@ -207,24 +227,49 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
           ordem: 0,
         });
       }
-      
+
+      // Smart title resolution
+      let mainTitle = textData?.titulo || extractedTitle || '';
+      let finalSections = [...artifactSections];
+      if (!mainTitle && artifactSections.length > 0) {
+        const candidateTitle = artifactSections[0]?.titulo || '';
+        const templateName = activity.title || '';
+        if (candidateTitle && candidateTitle.toLowerCase() !== templateName.toLowerCase()) {
+          mainTitle = candidateTitle;
+          const introConteudo = artifactSections[0].conteudo || '';
+          finalSections = artifactSections.slice(1);
+          if (introConteudo && finalSections.length > 0) {
+            finalSections[0] = { ...finalSections[0], conteudo: introConteudo + '\n\n' + finalSections[0].conteudo };
+          } else if (introConteudo) {
+            finalSections = [{ ...artifactSections[0], titulo: '' }];
+          }
+        }
+      }
+      const resolvedTitle = mainTitle || activity.title || 'Atividade em Texto';
+
+      // Smart subtitle resolution
+      const tema = activity.customFields?.theme || activity.customFields?.tema || activity.originalData?.theme || activity.originalData?.tema || '';
+      const serie = activity.customFields?.schoolYear || activity.customFields?.serie || activity.originalData?.schoolYear || activity.originalData?.serie || '';
+      const disciplina = activity.customFields?.subject || activity.customFields?.disciplina || activity.originalData?.subject || activity.originalData?.disciplina || '';
+      const resolvedSubtitulo = (textData as any)?.subtitulo || extractedSubtitle || buildSmartSubtitleForTextActivity(activityType, tema, serie, disciplina);
+
       const artifact: ArtifactData = {
         id: activity.id,
         metadata: {
           tipo: 'atividade_textual',
-          titulo: textData?.titulo || extractedTitle || activity.title || 'Atividade em Texto',
-          subtitulo: extractedSubtitle || '',
+          titulo: resolvedTitle,
+          subtitulo: resolvedSubtitulo,
           geradoEm: Date.now(),
           sessaoId: activity.id,
           versao: '2.0',
           tags: activity.tags || [],
           estatisticas: {
             palavras: textContent.split(/\s+/).length,
-            secoes: artifactSections.length,
+            secoes: finalSections.length,
             tempoGeracao: 0,
           },
         },
-        secoes: artifactSections,
+        secoes: finalSections,
         resumoPreview: textContent.substring(0, 200) + '...',
       };
       
