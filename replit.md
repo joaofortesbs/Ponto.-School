@@ -1,5 +1,32 @@
 # Ponto. School
 
+## SchoolPower Tab Session Persistence (Março 2026)
+Sistema completo de persistência de sessões por aba no SchoolPower (Jota Chat), com banco de dados PostgreSQL como fonte de verdade.
+
+### Arquivos novos/alterados
+- `api/neon-db.js` — métodos `createSpSessionsTable`, `createSpMessagesTable`, `initSpTables`
+- `api/school-power-sessions.js` — roteador Express com CRUD completo para sessões e mensagens
+- `api/server.js` — registra `spSessionsRouter` em `/api/sp` e chama `initSpTables` no startup
+- `src/features/schoolpower/components/tabs/useSessionsApi.ts` — hook frontend com todas as chamadas à API
+- `src/features/schoolpower/components/tabs/useSchoolPowerTabs.ts` — integração completa com DB
+- `src/sections/SchoolPower/SchoolPowerPage.tsx` — passa `userId` para `useSchoolPowerTabs`
+
+### Tabelas no banco
+- `sp_sessions` — uma linha por aba/sessão (metadados + estado do fluxo AI)
+- `sp_messages` — uma linha por mensagem (com ON DELETE CASCADE para sp_sessions)
+
+### Comportamento
+- DB é a fonte de verdade; Zustand/localStorage é cache
+- Sessões carregam do DB na montagem (por userId)
+- Mensagens novas são salvas automaticamente (debounce 600ms para streaming, imediato para mensagens finais do usuário)
+- Troca de abas sincroniza estado com o DB (debounce 800ms)
+- Lazy-load de mensagens ao ativar uma aba com histórico vazio no store
+- Migração automática: dados existentes do localStorage são migrados para o DB (roda uma vez por userId)
+- Sessões fechadas ficam com `is_active = false` (soft-delete, não apagados)
+- Layout: `SHELL_TOP_OFFSET_PX = -12` para ajuste fino da altura do container das abas
+
+
+
 ## Overview
 Ponto. School is an AI-powered educational platform providing personalized learning experiences and streamlining educational workflows for students and teachers. Its primary goal is to revolutionize education through tailored content and efficient tools, aiming to become a global leader in intelligent learning solutions. Key features include an AI assistant (Epictus), study groups, digital notebooks, smart worksheets, interactive quizzes, and automated lesson planning ("School Power").
 

@@ -90,6 +90,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     currentFlowData: flowData,
     restoreFlow: handleRestoreStateHook,
     resetFlow: handleResetFlowHook,
+    userId: profile?.id ?? profile?.user_id ?? null,
   });
 
   useEffect(() => {

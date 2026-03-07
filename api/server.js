@@ -20,6 +20,7 @@ import { createCalendarEventsRouter } from './calendar-events.js';
 import searchWebRoutes from './search-web.js';
 import aiProxyRoutes from './ai-proxy.js';
 import fileProcessorRoutes from './file-processor.js';
+import spSessionsRouter from './school-power-sessions.js';
 
 dotenv.config();
 
@@ -123,6 +124,7 @@ app.use('/api/calendar/events', createCalendarEventsRouter(neonDB));
 app.use('/api/search', searchWebRoutes);
 app.use('/api/ai', aiProxyRoutes);
 app.use('/api/files', fileProcessorRoutes);
+app.use('/api/sp', spSessionsRouter);
 
 // ========================================
 // ROTAS DE IA GROQ
@@ -1097,6 +1099,7 @@ async function startServer() {
     // Inicializar banco de dados
     console.log('🔄 Inicializando banco de dados...');
     await neonDB.initializeDatabase();
+    await neonDB.initSpTables();
 
     // REGISTRAR ROTAS APÓS INICIALIZAÇÃO DO BANCO
     registerActivityRoutes();

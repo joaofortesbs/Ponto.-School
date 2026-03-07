@@ -624,6 +624,70 @@ class NeonDBManager {
     }
   }
 
+  // ─── SchoolPower Sessions & Messages ────────────────────────────────────────
+
+  async createSpSessionsTable() {
+    const query = `
+      CREATE TABLE IF NOT EXISTS sp_sessions (
+        id                              VARCHAR(64)  PRIMARY KEY,
+        user_id                         VARCHAR(64)  NOT NULL,
+        title                           VARCHAR(120) NOT NULL DEFAULT 'Home',
+        icon                            VARCHAR(20)  NOT NULL DEFAULT 'home',
+        has_activity                    BOOLEAN      NOT NULL DEFAULT false,
+        flow_state                      VARCHAR(40)  NOT NULL DEFAULT 'idle',
+        flow_data                       JSONB,
+        chosen_activities               JSONB        NOT NULL DEFAULT '[]',
+        chosen_activities_session_id    VARCHAR(64),
+        is_decision_complete            BOOLEAN      NOT NULL DEFAULT false,
+        is_content_generation_complete  BOOLEAN      NOT NULL DEFAULT false,
+        chat_session_id                 VARCHAR(64),
+        chat_initial_message_processed  BOOLEAN      NOT NULL DEFAULT false,
+        chat_last_processed_message     TEXT,
+        is_active                       BOOLEAN      NOT NULL DEFAULT true,
+        created_at                      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        last_active_at                  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_sp_sessions_user_id   ON sp_sessions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_sp_sessions_active    ON sp_sessions(user_id, is_active, last_active_at DESC);
+    `;
+    const result = await this.executeQuery(query);
+    if (result.success) {
+      console.log('✅ Tabela "sp_sessions" criada/verificada');
+    } else {
+      console.error('❌ Erro ao criar sp_sessions:', result.error);
+    }
+    return result;
+  }
+
+  async createSpMessagesTable() {
+    const query = `
+      CREATE TABLE IF NOT EXISTS sp_messages (
+        id           VARCHAR(64)  PRIMARY KEY,
+        session_id   VARCHAR(64)  NOT NULL REFERENCES sp_sessions(id) ON DELETE CASCADE,
+        role         VARCHAR(20)  NOT NULL,
+        message_type VARCHAR(40)  NOT NULL DEFAULT 'text',
+        content      TEXT,
+        content_json JSONB,
+        metadata     JSONB,
+        attachments  JSONB        NOT NULL DEFAULT '[]',
+        created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_sp_messages_session ON sp_messages(session_id, created_at ASC);
+    `;
+    const result = await this.executeQuery(query);
+    if (result.success) {
+      console.log('✅ Tabela "sp_messages" criada/verificada');
+    } else {
+      console.error('❌ Erro ao criar sp_messages:', result.error);
+    }
+    return result;
+  }
+
+  async initSpTables() {
+    await this.createSpSessionsTable();
+    await this.createSpMessagesTable();
+  }
+
   // Deletar atividade
   async deleteActivity(codigo_unico, user_id) {
     const query = `
