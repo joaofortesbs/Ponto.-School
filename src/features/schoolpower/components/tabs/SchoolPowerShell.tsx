@@ -65,10 +65,11 @@ const DRAG = {
 
   // ── Swap animation (non-dragging tabs sliding into new position) ──────────
   // "Fluid ease-out": gentle start, smooth deceleration, no overshoot.
-  // 200 ms matches Comet/Arc's perceived smoothness for lateral slides.
+  // 280 ms — deliberately slower than snap-back so the slide feels deliberate
+  // and legible; the user can clearly see the displaced tab moving aside.
   // cubic-bezier(0.2, 0, 0, 1) is Material You's "emphasized" decelerate —
   // imperceptibly fast start, buttery slow finish → consistent with snap-back.
-  SWAP_ANIM_MS: 200,
+  SWAP_ANIM_MS: 280,
   SWAP_EASING:  'cubic-bezier(0.2, 0, 0, 1)',
 
   // ── Snap-back animation (floating card returns to merged slot on drop) ────
