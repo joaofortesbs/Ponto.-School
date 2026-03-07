@@ -229,7 +229,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
   const pathD  = useMemo(() => buildBorderPath(W, H, slots), [W, H, slots]);
   const canClose = tabs.length > 1;
 
-  const stroke = isDarkTheme ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.16)';
+  const stroke = isDarkTheme ? '#151c40' : 'rgba(0,0,0,0.16)';
 
   // + button left edge: right after the last tab's valley end, or at firstX if no tabs
   const plusX   = slots.length > 0
