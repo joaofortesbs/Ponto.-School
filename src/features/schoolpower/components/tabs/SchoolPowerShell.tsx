@@ -627,130 +627,36 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
           .sp-dragging { touch-action: none; }
         `}</style>
 
-        {/* ── Container screen position for portal coordinates ──────────── */}
-        {(() => {
-          // Compute once per render — read the container's viewport position
-          // so floating cards rendered in a body-level portal can be precisely
-          // positioned using `position: fixed`.
-          const cRect = containerRef.current?.getBoundingClientRect();
-          const cLeft = cRect?.left ?? 0;
-          const cTop  = cRect?.top  ?? 0;
-
-          return slots.map(({ startX, endX, tab }, slotIndex) => {
+        {/* ── Tab buttons (event layer) ─────────────────────────────────── */}
+        {/* The button ALWAYS lives in this container div, even while floating.
+            This is critical: setPointerCapture() binds to a specific DOM node.
+            Moving the node to a portal during an active drag destroys the node,
+            loses the capture, and orphans the drag (pointerup never fires).
+            Solution: keep the button here (invisible when floating) so pointer
+            capture is never broken. A separate visual-only portal <div> is
+            rendered below for the floating card appearance.                   */}
+        {slots.map(({ startX, endX, tab }, slotIndex) => {
           const isActive   = tab.tabId === activeTabId;
           const isDragging = activeDrag?.dragStarted === true && activeDrag.draggingTabId === tab.tabId;
           const isSnapping = snapBack?.tabId === tab.tabId;
           const isFloating = isDragging || isSnapping;
           const slotW      = endX - startX;
 
-          // ── Visual left position ─────────────────────────────────────────
-          // Dragging: follow the pointer via deltaX.
-          // Snapping:  phase "animating=false" stays at fromX; once
-          //            animating=true the CSS transition carries it to toX.
-          // Resting:   logical slot startX (other tabs animate via CSS).
-          const visualLeft = isDragging
-            ? startX + (activeDrag?.deltaX ?? 0)
-            : isSnapping
-              ? (snapBack!.animating ? snapBack!.toX : snapBack!.fromX)
-              : startX;
-
-          // ── CSS left transition ─────────────────────────────────────────
-          // Dragging:  no transition — must follow pointer instantly.
-          // Snapping:  spring curve (SNAP_EASING) animates both `left` and
-          //            `transform` so the card slides AND descends together.
-          // Resting:   snappy-settle curve (SWAP_EASING) so non-dragging tabs
-          //            slide into their new slots with Arc/Comet-style smoothness.
           const swapT = `left ${DRAG.SWAP_ANIM_MS}ms ${DRAG.SWAP_EASING}`;
-          const snapT = `left ${DRAG.SNAP_ANIM_MS}ms ${DRAG.SNAP_EASING}, transform ${DRAG.SNAP_ANIM_MS}ms ${DRAG.SNAP_EASING}`;
 
-          const leftTransition = isDragging
-            ? 'none'
-            : isSnapping
-              ? (snapBack!.animating ? snapT : 'none')
-              : swapT;
-
-          // ── Floating card visual style ──────────────────────────────────
-          // When floating (dragging or snapping), the button is rendered as
-          // a fully-rounded card lifted above the SVG border.  When resting,
-          // it is transparent so the SVG path provides all visual shape.
-          const floatingCardBg = isDarkTheme ? DRAG.TAB_BG_DARK : DRAG.TAB_BG_LIGHT;
-          // During drag: card floats up by TAB_FLOAT_GAP.
-          // During snap → animating: card descends back to 0 (CSS transition).
-          // At rest: no transform.
-          const floatTranslateY =
-            isDragging             ? -TAB_FLOAT_GAP
-            : (isSnapping && !snapBack!.animating) ? -TAB_FLOAT_GAP
-            : 0;
-
-          const floatingStyle: React.CSSProperties = isFloating
-            ? {
-                background:   floatingCardBg,
-                borderRadius: `${TAB_TOP_R}px`,
-                boxShadow:    DRAG.TAB_SHADOW,
-                border:       `1px solid ${stroke}`,
-                transform:    `translateY(${floatTranslateY}px)`,
-              }
-            : {
-                background: 'transparent',
-                border:     'none',
-              };
-
-          // ── Label color ─────────────────────────────────────────────────
-          // Active tab: orange. Floating tabs: use the INACTIVE_COLOR so the
-          // label is legible on the elevated card background. Resting inactive
-          // tabs blend into the card via inactiveColor (matches card bg).
+          // While floating the button is invisible; it only exists to hold
+          // pointer capture and dispatch pointer events. The visual card is
+          // rendered by the portal section below.
+          // While resting, the button IS the visual (transparent bg, SVG shapes
+          // behind it). Position is always logical (no deltaX) so it never needs
+          // to follow the pointer — that's the portal's job.
           const labelColor = isActive
             ? LABEL.ACTIVE_COLOR
             : (isFloating ? LABEL.INACTIVE_COLOR : inactiveColor);
 
-          // ── Hover gradient ──────────────────────────────────────────────
-          // Show on normal hover OR while the tab is floating.
-          const showHover = isFloating || (hoveredTabId === tab.tabId && !activeDrag?.dragStarted);
+          const showHover = !isFloating && (hoveredTabId === tab.tabId && !activeDrag?.dragStarted);
 
-          // ── Hover gradient border-radius ────────────────────────────────
-          // Floating: all 4 corners rounded. Resting: only top 2.
-          const hoverBorderRadius = isFloating
-            ? `${TAB_TOP_R}px`
-            : `${TAB_TOP_R}px ${TAB_TOP_R}px 0 0`;
-
-          // ── Build the button element ──────────────────────────────────
-          // Floating: position:fixed relative to viewport so it escapes every
-          //   stacking context and appears above the entire platform.
-          //   left = container's left edge + visual offset within container.
-          //   top  = container's top edge (gap is applied via transform).
-          //   zIndex: 9999 — truly above everything.
-          // Resting: position:absolute within the tabs container as before.
-          const buttonStyle: React.CSSProperties = isFloating
-            ? {
-                position:   'fixed',
-                left:       cLeft + visualLeft,
-                top:        cTop,
-                width:      slotW,
-                height:     TAB_H,
-                padding:    '0 12px',
-                outline:    'none',
-                transition: leftTransition,
-                zIndex:     9999,
-                opacity:    1,
-                cursor:     isDragging ? 'grabbing' : 'pointer',
-                ...floatingStyle,
-              }
-            : {
-                position:   'absolute',
-                left:       visualLeft,
-                top:        0,
-                width:      slotW,
-                height:     TAB_H,
-                padding:    '0 12px',
-                outline:    'none',
-                transition: leftTransition,
-                zIndex:     22,
-                opacity:    1,
-                cursor:     'pointer',
-                ...floatingStyle,
-              };
-
-          const buttonEl = (
+          return (
             <button
               key={tab.tabId}
               onPointerDown={e => handleTabPointerDown(e, tab.tabId, slotIndex)}
@@ -760,7 +666,22 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
               onMouseEnter={() => { if (!dragRef.current) setHoveredTabId(tab.tabId); }}
               onMouseLeave={() => setHoveredTabId(null)}
               className={`sp-tab flex items-center justify-center${isActive ? ' active' : ''}${canClose ? ' sp-has-close' : ''}${isDragging ? ' sp-dragging' : ''}`}
-              style={buttonStyle}
+              style={{
+                position:      'absolute',
+                left:          startX,
+                top:           0,
+                width:         slotW,
+                height:        TAB_H,
+                padding:       '0 12px',
+                outline:       'none',
+                transition:    isFloating ? 'none' : swapT,
+                zIndex:        22,
+                opacity:       isFloating ? 0 : 1,
+                cursor:        isDragging ? 'grabbing' : 'pointer',
+                background:    'transparent',
+                border:        'none',
+                pointerEvents: 'auto',
+              }}
             >
               {/* ── Hover gradient overlay ────────────────────────────────── */}
               <span
@@ -768,7 +689,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
                 style={{
                   position:      'absolute',
                   inset:         0,
-                  borderRadius:  hoverBorderRadius,
+                  borderRadius:  `${TAB_TOP_R}px ${TAB_TOP_R}px 0 0`,
                   background:    hoverGradient,
                   opacity:       showHover ? 1 : 0,
                   transition:    'opacity 0.22s ease',
@@ -817,16 +738,112 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
               )}
             </button>
           );
+        })}
 
-          // Floating: render in a body-level portal (position:fixed) so the
-          // card escapes every stacking context in the platform and appears
-          // above absolutely all other elements.  React event propagation
-          // still works through the React tree, so pointer capture / handlers
-          // work exactly as if the button were in its original position.
-          return isFloating
-            ? createPortal(buttonEl, document.body, `sp-float-${tab.tabId}`)
-            : buttonEl;
-        });
+        {/* ── Floating card portals (visual layer only) ─────────────────── */}
+        {/* Pure-visual divs rendered at document.body level via createPortal.
+            pointerEvents:none — all events still go to the invisible button
+            above which holds setPointerCapture.  This completely sidesteps the
+            "portal kills pointer capture" bug.                               */}
+        {(() => {
+          const cRect = containerRef.current?.getBoundingClientRect();
+          const cLeft = cRect?.left ?? 0;
+          const cTop  = cRect?.top  ?? 0;
+
+          return slots.map(({ startX, endX, tab }) => {
+            const isActive   = tab.tabId === activeTabId;
+            const isDragging = activeDrag?.dragStarted === true && activeDrag.draggingTabId === tab.tabId;
+            const isSnapping = snapBack?.tabId === tab.tabId;
+            const isFloating = isDragging || isSnapping;
+            if (!isFloating) return null;
+
+            const slotW = endX - startX;
+
+            // Visual left: dragging follows pointer; snapping animates via CSS.
+            const visualLeft = isDragging
+              ? startX + (activeDrag?.deltaX ?? 0)
+              : isSnapping
+                ? (snapBack!.animating ? snapBack!.toX : snapBack!.fromX)
+                : startX;
+
+            const snapT = `left ${DRAG.SNAP_ANIM_MS}ms ${DRAG.SNAP_EASING}, transform ${DRAG.SNAP_ANIM_MS}ms ${DRAG.SNAP_EASING}`;
+
+            const cardTransition = isSnapping && snapBack!.animating ? snapT : 'none';
+
+            // Card lifts TAB_FLOAT_GAP when floating; descends to 0 on snap.
+            const floatTranslateY =
+              isDragging ? -TAB_FLOAT_GAP
+              : (isSnapping && !snapBack!.animating) ? -TAB_FLOAT_GAP
+              : 0;
+
+            const floatingCardBg = isDarkTheme ? DRAG.TAB_BG_DARK : DRAG.TAB_BG_LIGHT;
+            const labelColor = isActive ? LABEL.ACTIVE_COLOR : LABEL.INACTIVE_COLOR;
+
+            const card = (
+              <div
+                style={{
+                  position:       'fixed',
+                  left:           cLeft + visualLeft,
+                  top:            cTop,
+                  width:          slotW,
+                  height:         TAB_H,
+                  padding:        '0 12px',
+                  pointerEvents:  'none',
+                  zIndex:         9999,
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  background:     floatingCardBg,
+                  borderRadius:   `${TAB_TOP_R}px`,
+                  boxShadow:      DRAG.TAB_SHADOW,
+                  border:         `1px solid ${stroke}`,
+                  transform:      `translateY(${floatTranslateY}px)`,
+                  transition:     cardTransition,
+                  cursor:         'grabbing',
+                }}
+              >
+                {/* Hover gradient — always visible on floating card */}
+                <span
+                  aria-hidden
+                  style={{
+                    position:      'absolute',
+                    inset:         0,
+                    borderRadius:  `${TAB_TOP_R}px`,
+                    background:    hoverGradient,
+                    opacity:       1,
+                    pointerEvents: 'none',
+                  }}
+                />
+
+                {/* Icon + text */}
+                <span
+                  className="flex items-center min-w-0 overflow-hidden"
+                  style={{ gap: LABEL.GAP_PX, position: 'relative', zIndex: 1 }}
+                >
+                  <IconByType icon={tab.icon} color={labelColor} />
+                  <span
+                    className="sp-label leading-none truncate"
+                    style={{
+                      fontSize:   LABEL.FONT_PX,
+                      fontWeight: LABEL.FONT_WEIGHT,
+                      color:      labelColor,
+                    }}
+                  >
+                    {tab.title}
+                  </span>
+                </span>
+
+                {tab.hasActivity && (
+                  <span
+                    className="w-[7px] h-[7px] rounded-full bg-[#fe6a03] flex-shrink-0 ml-1"
+                    style={{ position: 'relative', zIndex: 1 }}
+                  />
+                )}
+              </div>
+            );
+
+            return createPortal(card, document.body, `sp-float-${tab.tabId}`);
+          });
         })()}
 
         {/* + Nova aba */}
