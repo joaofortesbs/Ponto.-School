@@ -3,58 +3,64 @@ import { Home, MessageCircle, Zap, Plus, X } from 'lucide-react';
 import type { TabBarTab, TabIcon } from './types';
 
 // ─── Geometry constants ──────────────────────────────────────────────────────
-const TAB_H      = 42;   // tabs project this many px ABOVE the card body top
-const TAB_TOP_R  = 10;   // rounded corner radius at the TOP of each tab
-const CARD_R     = 16;   // rounded corner radius of the card body
-const VALLEY_R   = 12;   // radius of the concave arcs at each tab/valley junction
-const TAB_MIN_W  = 108;  // minimum tab slot width
-const TAB_MAX_W  = 180;  // maximum tab slot width
-const TAB_GAP    = 8;    // flat valley gap between tab endX and the next arc start
-const PLUS_W     = 28;   // size of the + button circle
-const PLUS_GAP   = 10;   // gap from the last tab's valley end to the + button
+//
+//  The combined shape looks like this (not to scale):
+//
+//        ┌────────────────────────┐
+//       ╱│    tab label text      │╲
+//  ─────╯  ─────────────────────  ╰─────────────── card border ───
+//  |                                                              |
+//  |                  card content area                          |
+//  └──────────────────────────────────────────────────────────────┘
+//
+//  The "╯" and "╰" are the "barriguinhas" — concave quarter-circle arcs.
+//
+const TAB_H     = 44;   // how many px the tab rises above the card border line
+const TAB_TOP_R = 12;   // radius of rounded corners at the TOP of each tab
+const CARD_R    = 16;   // radius of rounded corners of the card body
+const VALLEY_R  = 20;   // radius of the concave arcs at each tab base (the "barriguinhas")
+                        // MUST satisfy: TAB_H > VALLEY_R + TAB_TOP_R
+const TAB_MIN_W = 112;
+const TAB_MAX_W = 180;
+const TAB_GAP   =  8;   // flat floor between two adjacent tabs' valley ends
+const PLUS_W    = 28;
+const PLUS_GAP  = 12;
 
-// Between two adjacent tabs: endX → (endX+VALLEY_R) valley end → TAB_GAP flat → (nextStartX-VALLEY_R) arc start → nextStartX
-// Total spacing between tab endX and next tab startX = VALLEY_R + TAB_GAP + VALLEY_R = 2*VALLEY_R + TAB_GAP
-const SLOT_STEP = 2 * VALLEY_R + TAB_GAP; // 32px
+// horizontal space consumed between tab[i].endX and tab[i+1].startX:
+//   right valley arc (VALLEY_R) + flat gap (TAB_GAP) + left valley arc of next tab (VALLEY_R)
+const SLOT_STEP = 2 * VALLEY_R + TAB_GAP;   // 48 px
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-interface TabSlot {
-  startX: number;
-  endX: number;
-  tab: TabBarTab;
-}
+interface TabSlot { startX: number; endX: number; tab: TabBarTab }
+interface Dims    { W: number; H: number }
 
-interface Dims { W: number; H: number }
-
-// ─── Icon ────────────────────────────────────────────────────────────────────
+// ─── Icon helper ─────────────────────────────────────────────────────────────
 const IconByType: React.FC<{ icon: TabIcon; isActive: boolean }> = ({ icon, isActive }) => {
   const cls = `w-[14px] h-[14px] flex-shrink-0 transition-colors duration-150 ${
-    isActive ? 'text-[#F97316]' : 'text-white/28'
+    isActive ? 'text-[#F97316]' : 'text-white/30'
   }`;
-  switch (icon) {
-    case 'chat':     return <MessageCircle className={cls} />;
-    case 'activity': return <Zap className={cls} />;
-    default:         return <Home className={cls} />;
-  }
+  if (icon === 'chat')     return <MessageCircle className={cls} />;
+  if (icon === 'activity') return <Zap className={cls} />;
+  return <Home className={cls} />;
 };
 
-// ─── Tab width estimation ─────────────────────────────────────────────────────
+// ─── Tab width from title ─────────────────────────────────────────────────────
 function measureTabWidth(tab: TabBarTab): number {
-  const iconPx  = 14 + 6;   // 14px icon + 6px gap
+  const iconPx  = 14 + 6;
   const textPx  = Math.ceil(tab.title.length * 7.4);
-  const closePx = 16 + 6;   // 16px close btn + 6px gap
+  const closePx = 16 + 6;
   const dotPx   = tab.hasActivity ? 9 : 0;
-  const padPx   = 12 + 12;  // 12px each side
+  const padPx   = 12 + 12;
   return Math.max(TAB_MIN_W, Math.min(TAB_MAX_W, iconPx + textPx + closePx + dotPx + padPx));
 }
 
-// ─── Slot computation ─────────────────────────────────────────────────────────
+// ─── Slot layout ─────────────────────────────────────────────────────────────
 function computeTabSlots(tabs: TabBarTab[], W: number): TabSlot[] {
   if (W < 80 || tabs.length === 0) return [];
 
-  // First tab starts after: card corner arc (CARD_R) + one valley arc (VALLEY_R) + small breathing room (6px)
-  const firstX   = CARD_R + VALLEY_R + 6;
-  // Reserve room on the right for: the final valley arc back to card edge + plus button
+  // First tab: starts after card TL corner arc + left valley arc + breathing room
+  const firstX   = CARD_R + VALLEY_R + 4;
+  // Right boundary: reserve space for final valley arc + plus button
   const maxRight = W - CARD_R - VALLEY_R - PLUS_GAP - PLUS_W - 4;
 
   const slots: TabSlot[] = [];
@@ -66,90 +72,91 @@ function computeTabSlots(tabs: TabBarTab[], W: number): TabSlot[] {
     slots.push({ startX: x, endX: x + w, tab });
     x += w + SLOT_STEP;
   }
-
   return slots;
 }
 
 // ─── SVG path builder ─────────────────────────────────────────────────────────
 //
-// The path traces the OUTER boundary of the combined card+tabs shape CLOCKWISE,
-// starting at (CARD_R, TAB_H) — the top-left corner of the card body.
+// Traces the OUTER boundary of the card + tabs shape, CLOCKWISE, starting at
+// (CARD_R, TAB_H) which is the top-left "entry point" of the card border line.
 //
-// Top edge goes LEFT → RIGHT with tab "plateaus" erupting upward.
-// Each tab transition uses concave quarter-circle arcs (sweep=1, radius=VALLEY_R).
+// Top edge runs LEFT → RIGHT.  For each tab slot:
+//
+//   ① Flat at y=TAB_H until   (startX - VALLEY_R, TAB_H)
+//   ② "Barriguinha" LEFT arc  — concave quarter circle that sweeps from the
+//      flat border level UP to the tab's left wall.
+//      Arc center is at (startX, TAB_H); sweep=1 (clockwise in SVG coords).
+//      From (startX-VALLEY_R, TAB_H) → (startX, TAB_H-VALLEY_R)
+//   ③ Straight UP along the left wall: y goes TAB_H-VALLEY_R → TAB_TOP_R
+//   ④ Top-left rounded corner (sweep=1):
+//      From (startX, TAB_TOP_R) → (startX+TAB_TOP_R, 0)
+//   ⑤ Flat tab top: x goes startX+TAB_TOP_R → endX-TAB_TOP_R
+//   ⑥ Top-right rounded corner (sweep=1):
+//      From (endX-TAB_TOP_R, 0) → (endX, TAB_TOP_R)
+//   ⑦ Straight DOWN along the right wall: y goes TAB_TOP_R → TAB_H-VALLEY_R
+//   ⑧ "Barriguinha" RIGHT arc — concave quarter circle from the right wall DOWN
+//      to the flat border level.
+//      Arc center at (endX, TAB_H); sweep=1.
+//      From (endX, TAB_H-VALLEY_R) → (endX+VALLEY_R, TAB_H)
+//
+// After all tabs: flat to W-CARD_R, then card corners/sides/bottom.
 //
 function buildBorderPath(W: number, H: number, slots: TabSlot[]): string {
   if (W < 10 || H < 10) return '';
 
-  // Helper to format numbers without unnecessary decimals
-  const n = (v: number) => parseFloat(v.toFixed(2));
-  const A = (rx: number, ry: number, sf: 0 | 1, x: number, y: number) =>
-    `A ${n(rx)},${n(ry)} 0 0 ${sf} ${n(x)},${n(y)} `;
+  const n = (v: number) => +v.toFixed(2);
+  // arc helper:  A rx,ry  0  large-arc  sweep  x,y
+  const A = (r: number, sf: 0 | 1, x: number, y: number) =>
+    `A ${n(r)},${n(r)} 0 0 ${sf} ${n(x)},${n(y)} `;
 
-  let d = `M ${n(CARD_R)},${n(TAB_H)} `;
-  let curX = CARD_R;
+  let d  = `M ${n(CARD_R)},${n(TAB_H)} `;
+  let cx = CARD_R;   // current x position along the top edge
 
-  // ── TOP EDGE: left to right, with tab shape for each slot ──────────────────
   for (const { startX, endX } of slots) {
-    // Flat valley section up to the start of this tab's left-side arc
-    const arcStart = startX - VALLEY_R;
-    if (arcStart > curX) {
-      d += `L ${n(arcStart)},${n(TAB_H)} `;
-    }
 
-    // ① Valley floor → tab left wall (arc sweeps through upper-left = convex outward)
-    //   Center: (startX, TAB_H)  |  From angle 180° → 270° clockwise (sweep=1)
-    d += A(VALLEY_R, VALLEY_R, 1, startX, TAB_H - VALLEY_R);
+    // ① flat valley floor up to the arc entry point
+    const arcEntry = startX - VALLEY_R;
+    if (arcEntry > cx) d += `L ${n(arcEntry)},${n(TAB_H)} `;
 
-    // ② Tab left wall: straight up
+    // ② left "barriguinha" — concave, clockwise quarter circle
+    //    Center (startX, TAB_H), from 180° → 270° cw
+    d += A(VALLEY_R, 1, startX, TAB_H - VALLEY_R);
+
+    // ③ left wall straight up
     d += `L ${n(startX)},${n(TAB_TOP_R)} `;
 
-    // ③ Tab top-left rounded corner
-    //   Center: (startX + TAB_TOP_R, TAB_TOP_R)  |  180° → 270° cw (sweep=1)
-    d += A(TAB_TOP_R, TAB_TOP_R, 1, startX + TAB_TOP_R, 0);
+    // ④ top-left tab corner, clockwise
+    //    Center (startX + TAB_TOP_R, TAB_TOP_R), from 180° → 270° cw
+    d += A(TAB_TOP_R, 1, startX + TAB_TOP_R, 0);
 
-    // ④ Tab top flat section
+    // ⑤ flat top of tab
     d += `L ${n(endX - TAB_TOP_R)},0 `;
 
-    // ⑤ Tab top-right rounded corner
-    //   Center: (endX - TAB_TOP_R, TAB_TOP_R)  |  270° → 0° cw (sweep=1)
-    d += A(TAB_TOP_R, TAB_TOP_R, 1, endX, TAB_TOP_R);
+    // ⑥ top-right tab corner, clockwise
+    //    Center (endX - TAB_TOP_R, TAB_TOP_R), from 270° → 0° cw
+    d += A(TAB_TOP_R, 1, endX, TAB_TOP_R);
 
-    // ⑥ Tab right wall: straight down
+    // ⑦ right wall straight down
     d += `L ${n(endX)},${n(TAB_H - VALLEY_R)} `;
 
-    // ⑦ Tab right wall → valley floor (arc sweeps through upper-right = convex outward)
-    //   Center: (endX, TAB_H)  |  270° → 0° cw (sweep=1)
-    d += A(VALLEY_R, VALLEY_R, 1, endX + VALLEY_R, TAB_H);
+    // ⑧ right "barriguinha" — concave, clockwise quarter circle
+    //    Center (endX, TAB_H), from 270° → 0° cw
+    d += A(VALLEY_R, 1, endX + VALLEY_R, TAB_H);
 
-    curX = endX + VALLEY_R;
+    cx = endX + VALLEY_R;
   }
 
-  // ── Right portion of top edge → corners and sides of card ──────────────────
-
-  // Flat section to top-right card corner
+  // flat to top-right card corner
   d += `L ${n(W - CARD_R)},${n(TAB_H)} `;
 
-  // Top-right corner  (270° → 0° cw)
-  d += A(CARD_R, CARD_R, 1, W, TAB_H + CARD_R);
-
-  // Right edge
+  // card body corners + sides (all clockwise, sweep=1)
+  d += A(CARD_R, 1, W,          TAB_H + CARD_R);   // TR
   d += `L ${n(W)},${n(H - CARD_R)} `;
-
-  // Bottom-right corner  (0° → 90° cw)
-  d += A(CARD_R, CARD_R, 1, W - CARD_R, H);
-
-  // Bottom edge
+  d += A(CARD_R, 1, W - CARD_R, H);                // BR
   d += `L ${n(CARD_R)},${n(H)} `;
-
-  // Bottom-left corner  (90° → 180° cw)
-  d += A(CARD_R, CARD_R, 1, 0, H - CARD_R);
-
-  // Left edge
+  d += A(CARD_R, 1, 0,          H - CARD_R);       // BL
   d += `L 0,${n(TAB_H + CARD_R)} `;
-
-  // Top-left corner  (180° → 270° cw)  — closes path back to starting point
-  d += A(CARD_R, CARD_R, 1, CARD_R, TAB_H);
+  d += A(CARD_R, 1, CARD_R,     TAB_H);            // TL — back to start
 
   d += 'Z';
   return d;
@@ -157,13 +164,13 @@ function buildBorderPath(W: number, H: number, slots: TabSlot[]): string {
 
 // ─── Shell component ──────────────────────────────────────────────────────────
 interface SchoolPowerShellProps {
-  tabs: TabBarTab[];
+  tabs:        TabBarTab[];
   activeTabId: string;
-  onTabClick: (tabId: string) => void;
-  onNewTab: () => void;
-  onCloseTab: (tabId: string) => void;
+  onTabClick:  (tabId: string) => void;
+  onNewTab:    () => void;
+  onCloseTab:  (tabId: string) => void;
   isDarkTheme?: boolean;
-  children: React.ReactNode;
+  children:    React.ReactNode;
 }
 
 export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
@@ -194,17 +201,16 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
 
   const { W, H } = dims;
 
-  const slots = useMemo(() => computeTabSlots(tabs, W), [tabs, W]);
-  const pathD = useMemo(() => buildBorderPath(W, H, slots), [W, H, slots]);
+  const slots  = useMemo(() => computeTabSlots(tabs, W), [tabs, W]);
+  const pathD  = useMemo(() => buildBorderPath(W, H, slots), [W, H, slots]);
+  const canClose = tabs.length > 1;
 
-  const strokeColor = isDarkTheme ? 'rgba(255,255,255,0.13)' : 'rgba(0,0,0,0.14)';
-  const canClose    = tabs.length > 1;
+  const stroke = isDarkTheme ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.16)';
 
-  // Position of the + button (left edge)
-  const plusX = slots.length > 0
+  // + button left edge: right after the last tab's valley end, or at firstX if no tabs
+  const plusX   = slots.length > 0
     ? slots[slots.length - 1].endX + VALLEY_R + PLUS_GAP
-    : CARD_R + VALLEY_R + 6;
-
+    : CARD_R + VALLEY_R + 4;
   const plusTop = Math.round((TAB_H - PLUS_W) / 2);
 
   return (
@@ -213,18 +219,20 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
       className="relative w-full"
       style={{ flex: '1 1 0', minHeight: 0 }}
     >
-      {/* ── SVG border ─────────────────────────────────────────────────────── */}
+      {/* ── SVG border ──────────────────────────────────────────────────────── */}
       {W > 0 && H > 0 && (
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="absolute inset-0 w-full h-full"
           style={{ pointerEvents: 'none', zIndex: 20, overflow: 'visible' }}
+          aria-hidden
         >
           <path
             d={pathD}
             fill="none"
-            stroke={strokeColor}
+            stroke={stroke}
             strokeWidth={1}
+            vectorEffect="non-scaling-stroke"
           />
         </svg>
       )}
@@ -232,47 +240,44 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
       {/* ── Tab labels ──────────────────────────────────────────────────────── */}
       <div
         className="absolute top-0 left-0 right-0"
-        style={{ height: TAB_H, zIndex: 22 }}
+        style={{ height: TAB_H, zIndex: 22, pointerEvents: 'none' }}
       >
         <style>{`
-          .sp-shell-tab .sp-close-btn { opacity: 0; transition: opacity 0.12s; }
-          .sp-shell-tab:hover .sp-close-btn { opacity: 0.5; }
-          .sp-shell-tab.sp-tab-active .sp-close-btn { opacity: 0.45; }
-          .sp-shell-tab.sp-tab-active:hover .sp-close-btn { opacity: 0.75; }
-          .sp-close-btn:hover { opacity: 1 !important; background: rgba(255,255,255,0.12); border-radius: 50%; }
+          .sp-tab { pointer-events: auto; }
+          .sp-tab .sp-x { opacity: 0; transition: opacity 0.12s; }
+          .sp-tab:hover .sp-x { opacity: 0.45; }
+          .sp-tab.active .sp-x { opacity: 0.4; }
+          .sp-tab.active:hover .sp-x { opacity: 0.75; }
+          .sp-x:hover { opacity: 1 !important; background: rgba(255,255,255,0.1); border-radius: 50%; }
         `}</style>
 
         {slots.map(({ startX, endX, tab }) => {
           const isActive = tab.tabId === activeTabId;
           const slotW    = endX - startX;
-          const maxTextW = slotW - 14 - 6 - 16 - 6 - 24 - (tab.hasActivity ? 9 : 0);
 
           return (
             <button
               key={tab.tabId}
               onClick={() => onTabClick(tab.tabId)}
-              className={`sp-shell-tab absolute flex items-center gap-1.5 cursor-pointer transition-colors duration-150 ${
-                isActive ? 'sp-tab-active' : ''
-              }`}
+              className={`sp-tab absolute flex items-center gap-1.5 cursor-pointer transition-colors duration-150${isActive ? ' active' : ''}`}
               style={{
-                left: startX,
-                width: slotW,
-                top: 0,
-                height: TAB_H,
-                padding: '0 12px',
+                left:       startX,
+                width:      slotW,
+                top:        0,
+                height:     TAB_H,
+                padding:    '0 12px',
                 background: 'transparent',
-                border: 'none',
-                outline: 'none',
+                border:     'none',
+                outline:    'none',
               }}
               title={tab.title}
             >
               <IconByType icon={tab.icon} isActive={isActive} />
 
               <span
-                className={`text-[11.5px] font-medium leading-none truncate transition-colors duration-150 ${
-                  isActive ? 'text-white/82' : 'text-white/30'
+                className={`text-[11.5px] font-medium leading-none truncate flex-1 min-w-0 transition-colors duration-150 ${
+                  isActive ? 'text-white/82' : 'text-white/32'
                 }`}
-                style={{ maxWidth: maxTextW > 20 ? maxTextW : undefined, flex: '1 1 0', minWidth: 0 }}
               >
                 {tab.title}
               </span>
@@ -285,8 +290,8 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
                 <span
                   role="button"
                   tabIndex={-1}
-                  onClick={(e) => { e.stopPropagation(); onCloseTab(tab.tabId); }}
-                  className="sp-close-btn flex-shrink-0 w-[16px] h-[16px] flex items-center justify-center rounded-full cursor-pointer"
+                  onClick={e => { e.stopPropagation(); onCloseTab(tab.tabId); }}
+                  className="sp-x flex-shrink-0 w-[16px] h-[16px] flex items-center justify-center rounded-full cursor-pointer"
                   aria-label="Fechar aba"
                 >
                   <X style={{ width: 9, height: 9 }} className="text-white/55" />
@@ -296,30 +301,31 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
           );
         })}
 
-        {/* + New tab button */}
+        {/* + Nova aba */}
         <button
           onClick={onNewTab}
-          className="absolute flex items-center justify-center rounded-full transition-all duration-150 hover:border-white/25 hover:text-white/55"
+          className="absolute flex items-center justify-center rounded-full transition-all duration-150 hover:border-white/30 hover:text-white/60"
           style={{
-            left: plusX,
-            top: plusTop,
-            width: PLUS_W,
-            height: PLUS_W,
+            left:       plusX,
+            top:        plusTop,
+            width:      PLUS_W,
+            height:     PLUS_W,
             background: 'transparent',
-            border: `1px solid ${isDarkTheme ? 'rgba(255,255,255,0.11)' : 'rgba(0,0,0,0.14)'}`,
-            outline: 'none',
+            border:     `1px solid ${isDarkTheme ? 'rgba(255,255,255,0.13)' : 'rgba(0,0,0,0.16)'}`,
+            outline:    'none',
+            pointerEvents: 'auto',
           }}
           aria-label="Nova conversa"
           title="Nova conversa"
         >
           <Plus
             style={{ width: 12, height: 12 }}
-            className={isDarkTheme ? 'text-white/28' : 'text-black/35'}
+            className={isDarkTheme ? 'text-white/32' : 'text-black/40'}
           />
         </button>
       </div>
 
-      {/* ── Card content ────────────────────────────────────────────────────── */}
+      {/* ── Card content area ────────────────────────────────────────────────── */}
       <div
         className="absolute left-0 right-0 bottom-0 overflow-hidden"
         style={{ top: TAB_H }}
