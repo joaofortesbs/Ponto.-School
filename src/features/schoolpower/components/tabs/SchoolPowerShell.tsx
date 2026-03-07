@@ -64,24 +64,28 @@ const DRAG = {
   TAB_FLOAT_GAP: 6,
 
   // ── Swap animation (non-dragging tabs sliding into new position) ──────────
-  // "Snappy-settle": fast start, eases into place, no overshoot.
-  // Matches Arc / Chromium tab-strip feel.
-  SWAP_ANIM_MS: 160,
-  SWAP_EASING:  'cubic-bezier(0.25, 1.0, 0.5, 1.0)',
+  // "Fluid ease-out": gentle start, smooth deceleration, no overshoot.
+  // 200 ms matches Comet/Arc's perceived smoothness for lateral slides.
+  // cubic-bezier(0.2, 0, 0, 1) is Material You's "emphasized" decelerate —
+  // imperceptibly fast start, buttery slow finish → consistent with snap-back.
+  SWAP_ANIM_MS: 200,
+  SWAP_EASING:  'cubic-bezier(0.2, 0, 0, 1)',
 
   // ── Snap-back animation (floating card returns to merged slot on drop) ────
-  // Spring overshoot (y1 > 1) gives the "magnetic click" sensation —
+  // Spring overshoot (y2 > 1) gives the "magnetic click" sensation —
   // tab overshoots ~8% then settles, exactly like Arc/Comet.
-  SNAP_ANIM_MS: 220,
+  // 260 ms gives the spring enough time to feel weighty but not sluggish.
+  SNAP_ANIM_MS: 260,
   SNAP_EASING:  'cubic-bezier(0.34, 1.56, 0.64, 1)',
 
   // ── Drag & swap thresholds ────────────────────────────────────────────────
   // DRAG_THRESHOLD_PX: minimum pointer travel before press becomes a drag.
-  // HYSTERESIS_PX: dead zone around swap point to prevent ping-pong.
-  //   The floating tab's center must be HYSTERESIS_PX closer to the target
-  //   slot than to the current slot before a swap fires.
+  // HYSTERESIS_PX: dead zone around the swap midpoint to prevent ping-pong.
+  //   10 px (±5 px each side) makes swaps feel intentional and decisive;
+  //   smaller values cause swaps to fire at the exact midpoint which feels
+  //   twitchy and unpredictable at slow drag speeds.
   DRAG_THRESHOLD_PX: 5,
-  HYSTERESIS_PX:     6,
+  HYSTERESIS_PX:     10,
 };
 
 // ─── Destructure for use below ───────────────────────────────────────────────
@@ -521,6 +525,19 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
       const newMinDelta   = MIN_SLOT_X - (newDragSlot?.startX ?? dragSlot.startX);
       const newMaxDelta   = (newLastSlot?.endX ?? lastSlot.endX) - newDragSlotW - (newDragSlot?.startX ?? dragSlot.startX);
       drag.deltaX         = Math.min(newMaxDelta, Math.max(newMinDelta, drag.deltaX));
+
+      // ── Sync startPointerX so the NEXT pointermove's rawDelta calculation
+      // starts from the adjusted deltaX, not the original offset from the very
+      // first pointerdown.  Without this, the next frame overwrites drag.deltaX
+      // with rawDelta = clientX − originalStart, discarding the swap correction
+      // and causing the floating card to jump away from the cursor.
+      //
+      // By setting startPointerX = clientX − deltaX, we ensure:
+      //   rawDelta_next = clientX_next − startPointerX
+      //                 = deltaX + (clientX_next − clientX)        [incremental]
+      //   visual_next   = newStartX + rawDelta_next
+      //                 = newStartX + deltaX + incremental_move     ✓
+      drag.startPointerX = e.clientX - drag.deltaX;
     }
 
     setDragVersion(v => v + 1);
