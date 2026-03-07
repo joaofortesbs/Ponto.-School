@@ -233,10 +233,18 @@ export function useSchoolPowerTabs({
     if (!userId) return;
     const unsub = useChatState.subscribe((state, prevState) => {
       if (state.messages === prevState.messages) return;
-      if (state.messages.length <= prevState.messages.length) return;
-      const newMsgs = state.messages.slice(prevState.messages.length);
       const activeTabId = useTabsStore.getState().activeTabId;
-      newMsgs.forEach((msg) => enqueueSaveMessage(activeTabId, msg));
+
+      if (state.messages.length > prevState.messages.length) {
+        const newMsgs = state.messages.slice(prevState.messages.length);
+        newMsgs.forEach((msg) => enqueueSaveMessage(activeTabId, msg));
+      } else if (state.messages.length === prevState.messages.length) {
+        for (let i = 0; i < state.messages.length; i++) {
+          if (state.messages[i] !== prevState.messages[i]) {
+            enqueueSaveMessage(activeTabId, state.messages[i]);
+          }
+        }
+      }
     });
     return unsub;
   }, [userId]);
@@ -251,8 +259,18 @@ export function useSchoolPowerTabs({
 
       if (dbSessions.length > 0) {
         const firstSession = dbSessions[0];
+        const localTabs = useTabsStore.getState().tabs;
+        const mergedSessions = dbSessions.map((session) => {
+          const localTab = localTabs.find((t) => t.tabId === session.tabId);
+          return {
+            ...session,
+            chatMessages: localTab?.chatMessages?.length
+              ? localTab.chatMessages
+              : session.chatMessages,
+          };
+        });
         useTabsStore.setState({
-          tabs:        dbSessions,
+          tabs:        mergedSessions,
           activeTabId: firstSession.tabId,
         });
         await restoreTabState(firstSession.tabId);

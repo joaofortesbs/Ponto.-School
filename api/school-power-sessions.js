@@ -191,7 +191,11 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
     const query = `
       INSERT INTO sp_messages (id, session_id, role, message_type, content, content_json, metadata, attachments)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      ON CONFLICT (id) DO NOTHING
+      ON CONFLICT (id) DO UPDATE SET
+        content      = EXCLUDED.content,
+        content_json = EXCLUDED.content_json,
+        metadata     = EXCLUDED.metadata,
+        attachments  = EXCLUDED.attachments
     `;
     const result = await neonDB.executeQuery(query, [
       s.id, sessionId, s.role, s.message_type,
@@ -230,7 +234,11 @@ router.post('/sessions/:sessionId/messages/batch', async (req, res) => {
       const query = `
         INSERT INTO sp_messages (id, session_id, role, message_type, content, content_json, metadata, attachments)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT (id) DO NOTHING
+        ON CONFLICT (id) DO UPDATE SET
+          content      = EXCLUDED.content,
+          content_json = EXCLUDED.content_json,
+          metadata     = EXCLUDED.metadata,
+          attachments  = EXCLUDED.attachments
       `;
       const result = await neonDB.executeQuery(query, [
         s.id, sessionId, s.role, s.message_type,
