@@ -328,14 +328,11 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
 
   const slots  = useMemo(() => computeTabSlots(orderedTabs, W), [orderedTabs, W]);
 
-  // During drag: exclude the dragging tab's notch from the main SVG so a
-  // "ghost gap" appears where it will land, while a separate floating SVG
-  // renders the tab outline at the actual pointer position.
-  const dragExcludeId = activeDrag?.dragStarted ? activeDrag.draggingTabId : undefined;
-  const pathD = useMemo(
-    () => buildBorderPath(W, H, slots, dragExcludeId),
-    [W, H, slots, dragExcludeId] // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  // The main SVG always draws ALL tab notches — including the dragging tab's
+  // notch at its logical preview (destination) slot.  This keeps the card
+  // "open" at the destination so the card border never appears closed below
+  // the floating drag tab.  The floating SVG then travels freely on top.
+  const pathD = useMemo(() => buildBorderPath(W, H, slots), [W, H, slots]);
 
   const canClose = tabs.length > 1;
 
