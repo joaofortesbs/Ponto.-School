@@ -57,11 +57,15 @@ const HOVER = {
 const DRAG = {
   TAB_BG_DARK:  'rgba(17, 26, 48, 0.97)',
   TAB_BG_LIGHT: 'rgba(248, 250, 252, 0.97)',
-  TAB_SHADOW:   '0 6px 24px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.3)',
+  // Softer shadow — visible but not overpowering; spreads freely (no clip)
+  TAB_SHADOW:   '0 4px 16px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.18)',
+  // Gap between the floating card's bottom edge and the top of the main card border
+  TAB_FLOAT_GAP: 3,
 };
 
 // ─── Destructure for use below ───────────────────────────────────────────────
 const { TAB_H, TAB_TOP_R, CARD_R, VALLEY_R, TAB_MIN_W, TAB_MAX_W, TAB_GAP, PLUS_W, PLUS_GAP, FIRST_TAB_OFFSET } = SHAPE;
+const { TAB_FLOAT_GAP } = DRAG;
 
 // horizontal space consumed between tab[i].endX and tab[i+1].startX:
 //   right valley arc (VALLEY_R) + flat gap (TAB_GAP) + left valley arc of next tab (VALLEY_R)
@@ -567,9 +571,17 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
       )}
 
       {/* ── Tab labels ──────────────────────────────────────────────────────── */}
+      {/* When a tab is floating, bump this container's z-index above the card
+          content so the shadow is never clipped by inner layers, and set
+          overflow:visible so the shadow can extend beyond the TAB_H bounds. */}
       <div
         className="absolute top-0 left-0 right-0"
-        style={{ height: TAB_H, zIndex: 22, pointerEvents: 'none' }}
+        style={{
+          height:   TAB_H,
+          zIndex:   (activeDrag?.dragStarted || snapBack) ? 50 : 22,
+          overflow: 'visible',
+          pointerEvents: 'none',
+        }}
       >
         <style>{`
           .sp-tab { pointer-events: auto; }
@@ -605,11 +617,13 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
           // No transition while actively dragging (must follow pointer instantly).
           // Smooth ease during snap-back animation.
           // Normal 150ms ease for idle tabs (they slide on order change).
+          // Both `left` and `transform` are animated during snap-back so the
+          // card slides into position AND descends into the border simultaneously.
           const leftTransition = isDragging
             ? 'none'
             : isSnapping
               ? (snapBack!.animating
-                  ? 'left 0.18s cubic-bezier(0.4, 0, 0.2, 1)'
+                  ? 'left 0.18s cubic-bezier(0.4, 0, 0.2, 1), transform 0.18s cubic-bezier(0.4, 0, 0.2, 1)'
                   : 'none')
               : 'left 0.15s ease';
 
@@ -618,12 +632,21 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
           // a fully-rounded card lifted above the SVG border.  When resting,
           // it is transparent so the SVG path provides all visual shape.
           const floatingCardBg = isDarkTheme ? DRAG.TAB_BG_DARK : DRAG.TAB_BG_LIGHT;
+          // During drag: card floats up by TAB_FLOAT_GAP.
+          // During snap → animating: card descends back to 0 (CSS transition).
+          // At rest: no transform.
+          const floatTranslateY =
+            isDragging             ? -TAB_FLOAT_GAP
+            : (isSnapping && !snapBack!.animating) ? -TAB_FLOAT_GAP
+            : 0;
+
           const floatingStyle: React.CSSProperties = isFloating
             ? {
                 background:   floatingCardBg,
                 borderRadius: `${TAB_TOP_R}px`,
                 boxShadow:    DRAG.TAB_SHADOW,
                 border:       `1px solid ${stroke}`,
+                transform:    `translateY(${floatTranslateY}px)`,
               }
             : {
                 background: 'transparent',
