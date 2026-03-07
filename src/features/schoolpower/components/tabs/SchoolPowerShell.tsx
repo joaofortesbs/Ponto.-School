@@ -20,6 +20,18 @@ const SHAPE = {
                          // full left indent = CARD_R + VALLEY_R + FIRST_TAB_OFFSET
 };
 
+// ─── Tab label configuration ──────────────────────────────────────────────────
+//  Edit these values to adjust the visual style of the text/icon inside each tab.
+//
+const LABEL = {
+  FONT_PX:          13,                      // text size inside each tab (px)
+  FONT_WEIGHT:     800,                      // font weight  (700=bold · 800=extrabold · 900=black)
+  ICON_PX:          16,                      // icon size inside each tab (px)
+  GAP_PX:            3,                      // gap between icon and text (px)
+  ACTIVE_COLOR:    '#fe6a03',                // color of icon + text on the ACTIVE tab
+  INACTIVE_COLOR:  'rgba(255,255,255,0.32)', // color of icon + text on INACTIVE tabs
+};
+
 // ─── Destructure for use below ───────────────────────────────────────────────
 const { TAB_H, TAB_TOP_R, CARD_R, VALLEY_R, TAB_MIN_W, TAB_MAX_W, TAB_GAP, PLUS_W, PLUS_GAP, FIRST_TAB_OFFSET } = SHAPE;
 
@@ -32,23 +44,20 @@ interface TabSlot { startX: number; endX: number; tab: TabBarTab }
 interface Dims    { W: number; H: number }
 
 // ─── Icon helper ─────────────────────────────────────────────────────────────
-const IconByType: React.FC<{ icon: TabIcon; isActive: boolean }> = ({ icon, isActive }) => {
-  const cls = `w-[14px] h-[14px] flex-shrink-0 transition-colors duration-150 ${
-    isActive ? 'text-[#fe6a03]' : 'text-white/30'
-  }`;
-  if (icon === 'chat')     return <MessageCircle className={cls} />;
-  if (icon === 'activity') return <Zap className={cls} />;
-  return <Home className={cls} />;
+const IconByType: React.FC<{ icon: TabIcon; color: string }> = ({ icon, color }) => {
+  const s = { width: LABEL.ICON_PX, height: LABEL.ICON_PX, flexShrink: 0 as const, color, transition: 'color 0.15s' };
+  if (icon === 'chat')     return <MessageCircle style={s} />;
+  if (icon === 'activity') return <Zap style={s} />;
+  return <Home style={s} />;
 };
 
 // ─── Tab width from title ─────────────────────────────────────────────────────
 function measureTabWidth(tab: TabBarTab): number {
-  const iconPx  = 14 + 6;
-  const textPx  = Math.ceil(tab.title.length * 7.4);
-  const closePx = 16 + 6;
-  const dotPx   = tab.hasActivity ? 9 : 0;
-  const padPx   = 12 + 12;
-  return Math.max(TAB_MIN_W, Math.min(TAB_MAX_W, iconPx + textPx + closePx + dotPx + padPx));
+  const iconPx = LABEL.ICON_PX + LABEL.GAP_PX;
+  const textPx = Math.ceil(tab.title.length * (LABEL.FONT_PX * 0.62));
+  const dotPx  = tab.hasActivity ? 9 : 0;
+  const padPx  = 24;
+  return Math.max(TAB_MIN_W, Math.min(TAB_MAX_W, iconPx + textPx + dotPx + padPx));
 }
 
 // ─── Slot layout ─────────────────────────────────────────────────────────────
@@ -256,11 +265,13 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
           const isActive = tab.tabId === activeTabId;
           const slotW    = endX - startX;
 
+          const labelColor = isActive ? LABEL.ACTIVE_COLOR : LABEL.INACTIVE_COLOR;
+
           return (
             <button
               key={tab.tabId}
               onClick={() => onTabClick(tab.tabId)}
-              className={`sp-tab absolute flex items-center gap-1.5 cursor-pointer transition-colors duration-150${isActive ? ' active' : ''}`}
+              className={`sp-tab absolute flex items-center justify-center cursor-pointer${isActive ? ' active' : ''}`}
               style={{
                 left:       startX,
                 width:      slotW,
@@ -272,18 +283,27 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
                 outline:    'none',
               }}
             >
-              <IconByType icon={tab.icon} isActive={isActive} />
-
+              {/* Icon + text group — centered together */}
               <span
-                className={`sp-label text-[11.5px] font-bold leading-none truncate flex-1 min-w-0 transition-colors duration-150 ${
-                  isActive ? 'text-[#fe6a03]' : 'text-white/32'
-                }`}
+                className="flex items-center min-w-0 overflow-hidden"
+                style={{ gap: LABEL.GAP_PX }}
               >
-                {tab.title}
+                <IconByType icon={tab.icon} color={labelColor} />
+                <span
+                  className="sp-label leading-none truncate"
+                  style={{
+                    fontSize:   LABEL.FONT_PX,
+                    fontWeight: LABEL.FONT_WEIGHT,
+                    color:      labelColor,
+                    transition: 'color 0.15s',
+                  }}
+                >
+                  {tab.title}
+                </span>
               </span>
 
               {tab.hasActivity && (
-                <span className="w-[7px] h-[7px] rounded-full bg-[#fe6a03] flex-shrink-0" />
+                <span className="w-[7px] h-[7px] rounded-full bg-[#fe6a03] flex-shrink-0 ml-1" />
               )}
 
               {canClose && (
