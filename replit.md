@@ -30,6 +30,15 @@ const HOVER = {
 ### Fade de conteúdo
 Ao trocar de aba, o conteúdo faz fade de 120ms (`opacity: 0 → 1`) para transição suave.
 
+### Drag visual — tab body completo (Março 2026 — revisão)
+**Problema resolvido**: Antes da correção, apenas o label (texto+ícone) se movia durante o drag; o "entalhe" (notch) do SVG ficava na posição lógica de preview, criando desalinhamento visível.
+
+**Solução (padrão Chrome/Firefox/Edge):**
+1. `buildBorderPath(W, H, slots, excludeTabId?)` — quando `excludeTabId` está definido, pula o notch daquela aba e avança `cx` corretamente, deixando um "gap plano" no SVG principal
+2. `buildSingleTabOutline(slotW)` — nova função que gera o path SVG de UMA aba em coordenadas locais (largura total = VALLEY_R + slotW + VALLEY_R)
+3. SVG flutuante absolutamente posicionado em `left: dragSlotEntry.startX + deltaX - VALLEY_R` — segue o ponteiro em tempo real, filled com `DRAG.TAB_BG_DARK/LIGHT` + stroke border + `filter: drop-shadow(...)` para efeito de elevação
+4. Botão da aba arrastada: `background: transparent` (SVG cuida do fundo), `zIndex: 30` (label visível acima do SVG flutuante em z-index 29)
+
 ---
 
 ## SchoolPower Tab Session Persistence (Março 2026)

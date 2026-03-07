@@ -47,6 +47,19 @@ const HOVER = {
   TAB_HOVER_STOP:        65,
 };
 
+// ─── Tab drag configuration ───────────────────────────────────────────────────
+//  Controls how a tab looks while it is being dragged (lifted state).
+//
+//  TAB_BG_DARK:   background fill of the floating tab in dark theme
+//  TAB_BG_LIGHT:  background fill of the floating tab in light theme
+//  TAB_SHADOW:    CSS box-shadow giving the "elevated" feel
+//
+const DRAG = {
+  TAB_BG_DARK:  'rgba(17, 26, 48, 0.97)',
+  TAB_BG_LIGHT: 'rgba(248, 250, 252, 0.97)',
+  TAB_SHADOW:   '0 6px 24px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.3)',
+};
+
 // ─── Destructure for use below ───────────────────────────────────────────────
 const { TAB_H, TAB_TOP_R, CARD_R, VALLEY_R, TAB_MIN_W, TAB_MAX_W, TAB_GAP, PLUS_W, PLUS_GAP, FIRST_TAB_OFFSET } = SHAPE;
 
@@ -146,48 +159,52 @@ function computeTabSlots(tabs: TabBarTab[], W: number): TabSlot[] {
 //
 // After all tabs: flat to W-CARD_R, then card corners/sides/bottom.
 //
-function buildBorderPath(W: number, H: number, slots: TabSlot[]): string {
+// excludeTabId: when set, that tab's notch is replaced by a flat line (used
+//   during drag so the "ghost" gap appears in the tab bar while the floating
+//   drag tab travels freely).
+//
+function buildBorderPath(W: number, H: number, slots: TabSlot[], excludeTabId?: string): string {
   if (W < 10 || H < 10) return '';
 
   const n = (v: number) => +v.toFixed(2);
-  // arc helper:  A rx,ry  0  large-arc  sweep  x,y
   const A = (r: number, sf: 0 | 1, x: number, y: number) =>
     `A ${n(r)},${n(r)} 0 0 ${sf} ${n(x)},${n(y)} `;
 
   let d  = `M ${n(CARD_R)},${n(TAB_H)} `;
-  let cx = CARD_R;   // current x position along the top edge
+  let cx = CARD_R;
 
-  for (const { startX, endX } of slots) {
+  for (const { startX, endX, tab } of slots) {
+
+    // When this tab is being dragged, leave a flat gap at its logical slot.
+    // cx advances past the slot so the next tab's flat-line spans the gap.
+    if (tab.tabId === excludeTabId) {
+      cx = endX + VALLEY_R;
+      continue;
+    }
 
     // ① flat valley floor up to the arc entry point
     const arcEntry = startX - VALLEY_R;
     if (arcEntry > cx) d += `L ${n(arcEntry)},${n(TAB_H)} `;
 
     // ② left "barriguinha" — concave, CCW quarter circle (sweep=0)
-    //    Center (startX-VALLEY_R, TAB_H-VALLEY_R), from 90° → 0° ccw
-    //    Arc bows toward lower-right (interior) = concave from outside ✓
     d += A(VALLEY_R, 0, startX, TAB_H - VALLEY_R);
 
     // ③ left wall straight up
     d += `L ${n(startX)},${n(TAB_TOP_R)} `;
 
     // ④ top-left tab corner, clockwise
-    //    Center (startX + TAB_TOP_R, TAB_TOP_R), from 180° → 270° cw
     d += A(TAB_TOP_R, 1, startX + TAB_TOP_R, 0);
 
     // ⑤ flat top of tab
     d += `L ${n(endX - TAB_TOP_R)},0 `;
 
     // ⑥ top-right tab corner, clockwise
-    //    Center (endX - TAB_TOP_R, TAB_TOP_R), from 270° → 0° cw
     d += A(TAB_TOP_R, 1, endX, TAB_TOP_R);
 
     // ⑦ right wall straight down
     d += `L ${n(endX)},${n(TAB_H - VALLEY_R)} `;
 
     // ⑧ right "barriguinha" — concave, CCW quarter circle (sweep=0)
-    //    Center (endX+VALLEY_R, TAB_H-VALLEY_R), from 180° → 90° ccw
-    //    Arc bows toward lower-left (interior) = concave from outside ✓
     d += A(VALLEY_R, 0, endX + VALLEY_R, TAB_H);
 
     cx = endX + VALLEY_R;
@@ -197,15 +214,41 @@ function buildBorderPath(W: number, H: number, slots: TabSlot[]): string {
   d += `L ${n(W - CARD_R)},${n(TAB_H)} `;
 
   // card body corners + sides (all clockwise, sweep=1)
-  d += A(CARD_R, 1, W,          TAB_H + CARD_R);   // TR
+  d += A(CARD_R, 1, W,          TAB_H + CARD_R);
   d += `L ${n(W)},${n(H - CARD_R)} `;
-  d += A(CARD_R, 1, W - CARD_R, H);                // BR
+  d += A(CARD_R, 1, W - CARD_R, H);
   d += `L ${n(CARD_R)},${n(H)} `;
-  d += A(CARD_R, 1, 0,          H - CARD_R);       // BL
+  d += A(CARD_R, 1, 0,          H - CARD_R);
   d += `L 0,${n(TAB_H + CARD_R)} `;
-  d += A(CARD_R, 1, CARD_R,     TAB_H);            // TL — back to start
+  d += A(CARD_R, 1, CARD_R,     TAB_H);
 
   d += 'Z';
+  return d;
+}
+
+// ─── Single floating tab outline ─────────────────────────────────────────────
+//
+// Returns the SVG path for ONE tab's outline in a local coordinate system
+// where x=0 is the start of its left barriguinha.
+// Total bounding box: width = VALLEY_R + slotW + VALLEY_R, height = TAB_H.
+// Used to render the floating "ghost" of a dragged tab at the pointer position.
+//
+function buildSingleTabOutline(slotW: number): string {
+  const n = (v: number) => +v.toFixed(2);
+  const A = (r: number, sf: 0 | 1, x: number, y: number) =>
+    `A ${n(r)},${n(r)} 0 0 ${sf} ${n(x)},${n(y)} `;
+
+  const lx = VALLEY_R;                 // left wall x
+  const rx = VALLEY_R + slotW;         // right wall x
+
+  let d = `M 0,${n(TAB_H)} `;
+  d += A(VALLEY_R, 0, lx, TAB_H - VALLEY_R);         // left barriguinha
+  d += `L ${n(lx)},${n(TAB_TOP_R)} `;                // left wall up
+  d += A(TAB_TOP_R, 1, lx + TAB_TOP_R, 0);           // top-left corner
+  d += `L ${n(rx - TAB_TOP_R)},0 `;                  // flat top
+  d += A(TAB_TOP_R, 1, rx, TAB_TOP_R);               // top-right corner
+  d += `L ${n(rx)},${n(TAB_H - VALLEY_R)} `;         // right wall down
+  d += A(VALLEY_R, 0, rx + VALLEY_R, TAB_H);         // right barriguinha
   return d;
 }
 
@@ -284,7 +327,16 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
   }, [tabs, activeDrag?.previewTabIds, activeDrag?.dragStarted, dragVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const slots  = useMemo(() => computeTabSlots(orderedTabs, W), [orderedTabs, W]);
-  const pathD  = useMemo(() => buildBorderPath(W, H, slots), [W, H, slots]);
+
+  // During drag: exclude the dragging tab's notch from the main SVG so a
+  // "ghost gap" appears where it will land, while a separate floating SVG
+  // renders the tab outline at the actual pointer position.
+  const dragExcludeId = activeDrag?.dragStarted ? activeDrag.draggingTabId : undefined;
+  const pathD = useMemo(
+    () => buildBorderPath(W, H, slots, dragExcludeId),
+    [W, H, slots, dragExcludeId] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
   const canClose = tabs.length > 1;
 
   const stroke        = isDarkTheme ? '#111a30' : '#e5e7eb';
@@ -429,6 +481,53 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
         </svg>
       )}
 
+      {/* ── Floating drag-tab SVG outline ─────────────────────────────────────
+          Rendered only while a drag is active.  Draws the exact same curved
+          notch as the main SVG, but positioned at the pointer's visual offset
+          rather than the logical preview slot — this is what actually "moves"
+          together with the label button so the full tab body follows the drag.
+      ─────────────────────────────────────────────────────────────────────── */}
+      {W > 0 && (() => {
+        if (!activeDrag?.dragStarted) return null;
+        const dragSlotEntry = slots.find(s => s.tab.tabId === activeDrag.draggingTabId);
+        if (!dragSlotEntry) return null;
+        const slotW        = dragSlotEntry.endX - dragSlotEntry.startX;
+        const totalW       = slotW + 2 * VALLEY_R;
+        const visualLeft   = dragSlotEntry.startX + activeDrag.deltaX - VALLEY_R;
+        const outlinePath  = buildSingleTabOutline(slotW);
+        const dragTabBg    = isDarkTheme ? DRAG.TAB_BG_DARK : DRAG.TAB_BG_LIGHT;
+        const dragShadow   = isDarkTheme
+          ? 'drop-shadow(0 6px 16px rgba(0,0,0,0.65)) drop-shadow(0 2px 5px rgba(0,0,0,0.45))'
+          : 'drop-shadow(0 6px 16px rgba(0,0,0,0.22)) drop-shadow(0 2px 5px rgba(0,0,0,0.14))';
+        return (
+          <svg
+            key="drag-tab-outline"
+            viewBox={`0 0 ${totalW} ${TAB_H}`}
+            style={{
+              position:      'absolute',
+              top:           0,
+              left:          visualLeft,
+              width:         totalW,
+              height:        TAB_H,
+              pointerEvents: 'none',
+              zIndex:        29,
+              overflow:      'visible',
+              filter:        dragShadow,
+            }}
+            aria-hidden
+          >
+            <path d={outlinePath} fill={dragTabBg} stroke="none" />
+            <path
+              d={outlinePath}
+              fill="none"
+              stroke={stroke}
+              strokeWidth={1}
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        );
+      })()}
+
       {/* ── Tab labels ──────────────────────────────────────────────────────── */}
       <div
         className="absolute top-0 left-0 right-0"
@@ -451,7 +550,12 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
           const isDragging = activeDrag?.dragStarted === true && activeDrag.draggingTabId === tab.tabId;
           const slotW      = endX - startX;
 
-          const labelColor = isActive ? LABEL.ACTIVE_COLOR : inactiveColor;
+          // During drag: use the configured INACTIVE_COLOR so the label is
+          // readable against the elevated tab background (not the invisible
+          // "same as card" color used for resting inactive tabs).
+          const labelColor = isActive
+            ? LABEL.ACTIVE_COLOR
+            : (isDragging ? LABEL.INACTIVE_COLOR : inactiveColor);
 
           // Visual left position: offset for dragging tab, normal for others
           const visualLeft = isDragging
@@ -482,7 +586,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
                 outline:    'none',
                 transition: isDragging ? 'none' : 'left 0.15s ease',
                 zIndex:     isDragging ? 30 : 22,
-                opacity:    isDragging ? 0.72 : 1,
+                opacity:    1,
                 cursor:     isDragging ? 'grabbing' : 'pointer',
               }}
             >
