@@ -114,7 +114,9 @@ export function useSchoolPowerTabs({
             activePlanCardId:          null,
             activeDevModeCardId:       null,
             isLoading:                 false,
+            isRestoringMessages:       true,
           });
+          setTimeout(() => useChatState.setState({ isRestoringMessages: false }), 1250);
           useTabsStore.getState().saveTabState(tabId, { chatMessages: dbMessages });
 
           const flowData = targetTab.flowData ?? {
@@ -142,7 +144,9 @@ export function useSchoolPowerTabs({
       activePlanCardId:            null,
       activeDevModeCardId:         null,
       isLoading:                   false,
+      isRestoringMessages:         true,
     });
+    setTimeout(() => useChatState.setState({ isRestoringMessages: false }), 1250);
 
     const flowData = targetTab.flowData ?? {
       initialMessage: null,

@@ -23,6 +23,7 @@ export function MessageStream({ onApplyPlan, onOpenArtifact, onOpenActivity }: M
   const isLoading = useChatState((state) => state.isLoading);
   const fileProcessingStatus = useChatState((state) => state.fileProcessingStatus);
   const fileDebugEntries = useChatState((state) => state.fileDebugEntries);
+  const isRestoringMessages = useChatState((state) => state.isRestoringMessages);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export function MessageStream({ onApplyPlan, onOpenArtifact, onOpenActivity }: M
         {messages.map((message) => (
           <motion.div
             key={message.id}
-            initial={{ opacity: 0, y: 20 }}
+            initial={isRestoringMessages ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}

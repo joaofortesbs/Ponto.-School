@@ -177,19 +177,19 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack, initial
 
   function animateScrollToEnd(container: HTMLDivElement, durationMs = 950) {
     cancelScrollAnimation();
-    const startScrollTop = container.scrollTop;
-    const endScrollTop = container.scrollHeight - container.clientHeight;
-    const distance = endScrollTop - startScrollTop;
-    if (distance <= 0) return;
     const startTime = performance.now();
     function easeOutCubic(t: number) { return 1 - Math.pow(1 - t, 3); }
     function step(now: number) {
       const elapsed = now - startTime;
       const t = Math.min(elapsed / durationMs, 1);
-      container.scrollTop = startScrollTop + distance * easeOutCubic(t);
+      const currentMax = container.scrollHeight - container.clientHeight;
+      if (currentMax > 0) {
+        container.scrollTop = currentMax * easeOutCubic(t);
+      }
       if (t < 1) {
         animFrameRef.current = requestAnimationFrame(step);
       } else {
+        container.scrollTop = container.scrollHeight;
         animFrameRef.current = null;
       }
     }

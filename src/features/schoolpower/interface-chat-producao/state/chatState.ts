@@ -27,6 +27,7 @@ interface ChatState {
   _hasHydrated: boolean;
   fileProcessingStatus: FileProcessingStatus;
   fileDebugEntries: AIDebugEntry[];
+  isRestoringMessages: boolean;
 
   setHasHydrated: (state: boolean) => void;
   setLastProcessedInitialMessage: (message: string) => void;
@@ -71,6 +72,7 @@ export const useChatState = create<ChatState>()(
   _hasHydrated: false,
   fileProcessingStatus: { active: false, fileNames: [], status: 'processing' as const, processedCount: 0 },
   fileDebugEntries: [],
+  isRestoringMessages: false,
 
   setHasHydrated: (state) => {
     set({ _hasHydrated: state });
