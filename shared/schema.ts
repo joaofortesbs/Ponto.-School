@@ -68,3 +68,41 @@ export const calendarEvents = pgTable("calendar_events", {
 
 export type CalendarEvent = typeof calendarEvents.$inferSelect;
 export type InsertCalendarEvent = typeof calendarEvents.$inferInsert;
+
+export const spSessions = pgTable("sp_sessions", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  title: varchar("title", { length: 500 }).notNull().default("Home"),
+  icon: varchar("icon", { length: 100 }).notNull().default("home"),
+  hasActivity: boolean("has_activity").notNull().default(false),
+  flowState: varchar("flow_state", { length: 100 }).notNull().default("idle"),
+  flowData: jsonb("flow_data"),
+  chosenActivities: jsonb("chosen_activities").notNull().default([]),
+  chosenActivitiesSessionId: varchar("chosen_activities_session_id", { length: 255 }),
+  isDecisionComplete: boolean("is_decision_complete").notNull().default(false),
+  isContentGenerationComplete: boolean("is_content_generation_complete").notNull().default(false),
+  chatSessionId: varchar("chat_session_id", { length: 255 }),
+  chatInitialMessageProcessed: boolean("chat_initial_message_processed").notNull().default(false),
+  chatLastProcessedMessage: text("chat_last_processed_message"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  lastActiveAt: timestamp("last_active_at", { withTimezone: true }).notNull().defaultNow(),
+  tabOrder: integer("tab_order").notNull().default(0),
+});
+
+export const spMessages = pgTable("sp_messages", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  sessionId: varchar("session_id", { length: 255 }).notNull(),
+  role: varchar("role", { length: 50 }).notNull(),
+  messageType: varchar("message_type", { length: 50 }).notNull().default("text"),
+  content: text("content"),
+  contentJson: jsonb("content_json"),
+  metadata: jsonb("metadata"),
+  attachments: jsonb("attachments").notNull().default([]),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type SpSession = typeof spSessions.$inferSelect;
+export type InsertSpSession = typeof spSessions.$inferInsert;
+export type SpMessage = typeof spMessages.$inferSelect;
+export type InsertSpMessage = typeof spMessages.$inferInsert;
