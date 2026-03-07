@@ -328,11 +328,25 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
 
   const slots  = useMemo(() => computeTabSlots(orderedTabs, W), [orderedTabs, W]);
 
-  // The main SVG always draws ALL tab notches — including the dragging tab's
-  // notch at its logical preview (destination) slot.  This keeps the card
-  // "open" at the destination so the card border never appears closed below
-  // the floating drag tab.  The floating SVG then travels freely on top.
-  const pathD = useMemo(() => buildBorderPath(W, H, slots), [W, H, slots]);
+  // During drag we re-derive a "path slots" set where the dragging tab's
+  // notch is placed at the VISUAL pointer position (startX + deltaX) rather
+  // than its logical preview slot.  Other tabs keep their logical positions.
+  // The result is sorted left→right so the path builder stays consistent.
+  // This means ONE SVG with ONE notch that physically follows the pointer —
+  // no floating overlay needed, no "body stays fixed" mismatch.
+  const slotsForPath = useMemo(() => {
+    if (!activeDrag?.dragStarted) return slots;
+    const draggingId = activeDrag.draggingTabId;
+    const dx         = activeDrag.deltaX;
+    const adjusted   = slots.map(slot => {
+      if (slot.tab.tabId !== draggingId) return slot;
+      const w = slot.endX - slot.startX;
+      return { ...slot, startX: slot.startX + dx, endX: slot.startX + dx + w };
+    });
+    return [...adjusted].sort((a, b) => a.startX - b.startX);
+  }, [slots, activeDrag?.dragStarted, activeDrag?.draggingTabId, activeDrag?.deltaX, dragVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pathD = useMemo(() => buildBorderPath(W, H, slotsForPath), [W, H, slotsForPath]);
 
   const canClose = tabs.length > 1;
 
@@ -485,55 +499,6 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
           />
         </svg>
       )}
-
-      {/* ── Floating drag-tab SVG outline ─────────────────────────────────────
-          Rendered only while a drag is active.  Draws the exact same curved
-          notch as the main SVG, but positioned at the pointer's visual offset
-          rather than the logical preview slot — this is what actually "moves"
-          together with the label button so the full tab body follows the drag.
-      ─────────────────────────────────────────────────────────────────────── */}
-      {W > 0 && (() => {
-        if (!activeDrag?.dragStarted) return null;
-        const dragSlotEntry = slots.find(s => s.tab.tabId === activeDrag.draggingTabId);
-        if (!dragSlotEntry) return null;
-        const slotW        = dragSlotEntry.endX - dragSlotEntry.startX;
-        const totalW       = slotW + 2 * VALLEY_R;
-        const visualLeft   = dragSlotEntry.startX + activeDrag.deltaX - VALLEY_R;
-        const outlinePath  = buildSingleTabOutline(slotW);
-        const dragShadow = isDarkTheme
-          ? 'drop-shadow(0 -2px 8px rgba(0,0,0,0.55)) drop-shadow(-3px 0 8px rgba(0,0,0,0.35)) drop-shadow(3px 0 8px rgba(0,0,0,0.35))'
-          : 'drop-shadow(0 -2px 6px rgba(0,0,0,0.18)) drop-shadow(-2px 0 6px rgba(0,0,0,0.12)) drop-shadow(2px 0 6px rgba(0,0,0,0.12))';
-        return (
-          <svg
-            key="drag-tab-outline"
-            viewBox={`0 0 ${totalW} ${TAB_H}`}
-            style={{
-              position:  'absolute',
-              top:        0,
-              left:       visualLeft,
-              width:      totalW,
-              height:     TAB_H,
-              pointerEvents: 'none',
-              zIndex:     29,
-              overflow:   'visible',
-              // filter draws the shadow around the curved shape.
-              // clip-path then clips the result so nothing spills below y=TAB_H
-              // while allowing 70px overflow on the other 3 sides.
-              filter:     dragShadow,
-              clipPath:   'inset(-70px -70px 0px -70px)',
-            }}
-            aria-hidden
-          >
-            <path
-              d={outlinePath}
-              fill="none"
-              stroke={stroke}
-              strokeWidth={1}
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
-        );
-      })()}
 
       {/* ── Tab labels ──────────────────────────────────────────────────────── */}
       <div
