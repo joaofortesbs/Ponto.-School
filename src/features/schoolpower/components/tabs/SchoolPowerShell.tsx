@@ -105,6 +105,7 @@ interface ActiveDrag {
   fromIndex:     number;
   startPointerX: number;
   deltaX:        number;
+  visualX:       number;   // absolute px within container — authoritative position for the portal card
   previewTabIds: string[];
   dragStarted:   boolean;
 }
@@ -417,6 +418,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
       fromIndex:     tabIndex,
       startPointerX: e.clientX,
       deltaX:        0,
+      visualX:       0,
       previewTabIds: tabs.map(t => t.tabId),
       dragStarted:   false,
     };
@@ -463,6 +465,14 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
     const minDelta    = MIN_SLOT_X - dragSlot.startX;
     const maxDelta    = MAX_SLOT_X - dragSlot.startX;
     drag.deltaX       = Math.min(maxDelta, Math.max(minDelta, rawDelta));
+
+    // ── Authoritative visual position ────────────────────────────────────────
+    // Computed from FRESH currentSlots (not the stale useMemo in render).
+    // The portal card reads drag.visualX directly from the ref, bypassing the
+    // stale slots useMemo.  Without this, there is a 1-frame period after every
+    // swap where the portal uses oldStartX + adjustedDelta = wrong position,
+    // causing the subtle stutter / jump that the user perceives.
+    drag.visualX = dragSlot.startX + drag.deltaX;
 
     // ── Nearest-slot algorithm with hysteresis (Arc/Comet/Atlas style) ───────
     //
@@ -569,7 +579,9 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
     const destSlot  = newSlots[newIndex];
 
     if (destSlot) {
-      const fromX = destSlot.startX + drag.deltaX;
+      // drag.visualX is the authoritative position at moment of release —
+      // same value the portal was already rendering, so no position jump.
+      const fromX = drag.visualX;
       const toX   = destSlot.startX;
 
       // Phase 1 — place floating card at current visual position (no transition)
@@ -776,9 +788,14 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
 
             const slotW = endX - startX;
 
-            // Visual left: dragging follows pointer; snapping animates via CSS.
+            // Visual left: dragging uses drag.visualX from the ref (always
+            // computed from fresh currentSlots in the event handler, never from
+            // the stale useMemo slots). This eliminates the 1-frame stutter that
+            // occurred when startX (useMemo) was still the old slot position but
+            // activeDrag.deltaX was already the post-swap adjusted value.
+            // Snapping animates via CSS from fromX → toX.
             const visualLeft = isDragging
-              ? startX + (activeDrag?.deltaX ?? 0)
+              ? (activeDrag?.visualX ?? startX)
               : isSnapping
                 ? (snapBack!.animating ? snapBack!.toX : snapBack!.fromX)
                 : startX;
