@@ -384,8 +384,6 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
       drag.dragStarted = true;
     }
 
-    drag.deltaX = rawDelta;
-
     // Compute preview tab order ─────────────────────────────────────────────
     const currentPreview = [...drag.previewTabIds];
     const currentDragIdx = currentPreview.indexOf(drag.draggingTabId);
@@ -404,9 +402,19 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
       return;
     }
 
-    const dragSlot   = currentSlots[currentDragIdx];
-    const dragSlotW  = dragSlot.endX - dragSlot.startX;
-    const dragCenter = dragSlot.startX + dragSlotW / 2 + rawDelta;
+    const dragSlot  = currentSlots[currentDragIdx];
+    const dragSlotW = dragSlot.endX - dragSlot.startX;
+
+    // Left boundary: tab body cannot pass the first slot's left edge.
+    // Right boundary: tab body cannot pass the last slot's right edge.
+    const MIN_SLOT_X  = CARD_R + VALLEY_R + FIRST_TAB_OFFSET;
+    const lastSlot    = currentSlots[currentSlots.length - 1];
+    const MAX_SLOT_X  = lastSlot.endX - dragSlotW;
+    const minDelta    = MIN_SLOT_X - dragSlot.startX;
+    const maxDelta    = MAX_SLOT_X - dragSlot.startX;
+    drag.deltaX       = Math.min(maxDelta, Math.max(minDelta, rawDelta));
+
+    const dragCenter = dragSlot.startX + dragSlotW / 2 + drag.deltaX;
 
     let newIdx = currentDragIdx;
 
@@ -495,28 +503,30 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
         const totalW       = slotW + 2 * VALLEY_R;
         const visualLeft   = dragSlotEntry.startX + activeDrag.deltaX - VALLEY_R;
         const outlinePath  = buildSingleTabOutline(slotW);
-        const dragTabBg    = isDarkTheme ? DRAG.TAB_BG_DARK : DRAG.TAB_BG_LIGHT;
-        const dragShadow   = isDarkTheme
-          ? 'drop-shadow(0 6px 16px rgba(0,0,0,0.65)) drop-shadow(0 2px 5px rgba(0,0,0,0.45))'
-          : 'drop-shadow(0 6px 16px rgba(0,0,0,0.22)) drop-shadow(0 2px 5px rgba(0,0,0,0.14))';
+        const dragShadow = isDarkTheme
+          ? 'drop-shadow(0 -2px 8px rgba(0,0,0,0.55)) drop-shadow(-3px 0 8px rgba(0,0,0,0.35)) drop-shadow(3px 0 8px rgba(0,0,0,0.35))'
+          : 'drop-shadow(0 -2px 6px rgba(0,0,0,0.18)) drop-shadow(-2px 0 6px rgba(0,0,0,0.12)) drop-shadow(2px 0 6px rgba(0,0,0,0.12))';
         return (
           <svg
             key="drag-tab-outline"
             viewBox={`0 0 ${totalW} ${TAB_H}`}
             style={{
-              position:      'absolute',
-              top:           0,
-              left:          visualLeft,
-              width:         totalW,
-              height:        TAB_H,
+              position:  'absolute',
+              top:        0,
+              left:       visualLeft,
+              width:      totalW,
+              height:     TAB_H,
               pointerEvents: 'none',
-              zIndex:        29,
-              overflow:      'visible',
-              filter:        dragShadow,
+              zIndex:     29,
+              overflow:   'visible',
+              // filter draws the shadow around the curved shape.
+              // clip-path then clips the result so nothing spills below y=TAB_H
+              // while allowing 70px overflow on the other 3 sides.
+              filter:     dragShadow,
+              clipPath:   'inset(-70px -70px 0px -70px)',
             }}
             aria-hidden
           >
-            <path d={outlinePath} fill={dragTabBg} stroke="none" />
             <path
               d={outlinePath}
               fill="none"
@@ -562,8 +572,9 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
             ? startX + (activeDrag?.deltaX ?? 0)
             : startX;
 
-          // Hover gradient is shown when hovering AND not mid-drag
-          const showHover = hoveredTabId === tab.tabId && !activeDrag?.dragStarted;
+          // Hover gradient: shown when hovering normally, or whenever the tab
+          // is actively being dragged (replaces the old solid fill approach).
+          const showHover = isDragging || (hoveredTabId === tab.tabId && !activeDrag?.dragStarted);
 
           return (
             <button
