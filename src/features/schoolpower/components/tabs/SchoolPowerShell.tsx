@@ -278,7 +278,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
           .sp-x:hover { background: rgba(255,255,255,0.12) !important; }
         `}</style>
 
-        {slots.map(({ startX, endX, tab }) => {
+        {slots.map(({ startX, endX, tab }, tabIndex) => {
           const isActive = tab.tabId === activeTabId;
           const slotW    = endX - startX;
 
@@ -323,7 +323,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
                 <span className="w-[7px] h-[7px] rounded-full bg-[#fe6a03] flex-shrink-0 ml-1" />
               )}
 
-              {canClose && (
+              {canClose && tabIndex > 0 && (
                 <span
                   role="button"
                   tabIndex={-1}
