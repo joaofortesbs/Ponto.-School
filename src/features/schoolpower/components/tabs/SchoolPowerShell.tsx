@@ -532,7 +532,6 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
         const visualLeft = dragSlotEntry.startX + activeDrag.deltaX - VALLEY_R;
         const outlinePath = buildSingleTabOutline(slotW);
 
-        const cardBg = isDarkTheme ? '#111a30' : '#f8fafc';
         const [fhr, fhg, fhb] = HOVER.TAB_HOVER_COLOR;
         const gradId = 'sp-drag-hg';
         const dragFilter = isDarkTheme
@@ -568,10 +567,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
               </linearGradient>
             </defs>
 
-            {/* Background fill — gives the tab a solid body above the card */}
-            <path d={outlinePath} fill={cardBg} stroke="none" />
-
-            {/* Hover gradient overlay */}
+            {/* Hover gradient overlay — same visual as mouse-hover */}
             <path d={outlinePath} fill={`url(#${gradId})`} stroke="none" />
 
             {/* Border stroke — same style as main SVG */}
