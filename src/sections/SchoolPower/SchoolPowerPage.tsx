@@ -12,6 +12,7 @@ import { QuickAccessCards } from "./components/4-cards-pré-prompts";
 import { PresetBlocksGrid, parsePromptToNodes } from "./components/preset-blocks";
 import type { PromptNode } from "./components/preset-blocks";
 import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerFlow";
+import { SchoolPowerTabBar, useSchoolPowerTabs } from "../../features/schoolpower/components/tabs";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 import { HistoricoAtividadesCriadas } from "../../features/schoolpower/construction/HistoricoAtividadesCriadas";
 import { ChatLayout } from "../../features/schoolpower/interface-chat-producao/ChatLayout";
@@ -63,8 +64,24 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     submitContextualization: handleSubmitContextualizationHook,
     approveActionPlan: handleApproveActionPlanHook,
     resetFlow: handleResetFlowHook,
+    restoreState: handleRestoreStateHook,
     isLoading,
   } = useSchoolPowerFlow();
+
+  const {
+    tabs,
+    activeTabId,
+    handleTabClick,
+    handleNewTab,
+    handleCloseTab,
+    notifyMessageSent,
+    notifyFlowStateChange,
+  } = useSchoolPowerTabs({
+    currentFlowState: flowState,
+    currentFlowData: flowData,
+    restoreFlow: handleRestoreStateHook,
+    resetFlow: handleResetFlowHook,
+  });
 
   useEffect(() => {
     if (pendingMessageProcessed.current) return;
@@ -90,7 +107,8 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     if (flowState !== 'idle') {
       console.log('🔄 School Power - Estado alterado:', flowState);
     }
-  }, [flowState]);
+    notifyFlowStateChange(flowState);
+  }, [flowState, notifyFlowStateChange]);
 
   const handleSendMessage = async (message: string, files?: any[]) => {
     console.log('📨 Mensagem recebida:', message);
@@ -112,6 +130,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     }
 
     if (message.trim()) {
+      notifyMessageSent(message);
       handleSendInitialMessage(message);
     }
   };
@@ -150,13 +169,26 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
 
   return (
     <div
-      className={`relative flex ${isMobile && isQuizMode ? 'h-screen min-h-screen' : 'h-[calc(100vh-136px)]'} w-full max-w-[98%] sm:max-w-[1589px] mx-auto flex-col items-center justify-center overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10`}
-      style={{ 
-        backgroundColor: "transparent",
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none'
-      }}
+      className={`${isMobile && isQuizMode ? '' : 'flex flex-col h-[calc(100vh-136px)]'} w-full max-w-[98%] sm:max-w-[1589px] mx-auto`}
     >
+      {!(isMobile && isQuizMode) && (
+        <SchoolPowerTabBar
+          tabs={tabs}
+          activeTabId={activeTabId}
+          onTabClick={handleTabClick}
+          onNewTab={handleNewTab}
+          onCloseTab={handleCloseTab}
+        />
+      )}
+
+      <div
+        className={`relative flex ${isMobile && isQuizMode ? 'h-screen min-h-screen' : 'flex-1'} w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10`}
+        style={{ 
+          backgroundColor: "transparent",
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}
+      >
       <style>{`
         div:has(> *)::-webkit-scrollbar {
           display: none;
@@ -334,6 +366,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
           <GeminiApiMonitor />
         </React.Suspense>
       )}
+      </div>
     </div>
   );
 }

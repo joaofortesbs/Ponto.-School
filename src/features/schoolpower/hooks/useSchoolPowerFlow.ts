@@ -5,7 +5,7 @@ import { generatePersonalizedPlan } from '../services/generatePersonalizedPlan';
 
 export type FlowState = 'idle' | 'chat' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities' | 'activities';
 
-interface SchoolPowerFlowData {
+export interface SchoolPowerFlowData {
   initialMessage: string | null;
   contextualizationData: ContextualizationData | null;
   actionPlan: ActionPlanItem[] | null;
@@ -20,6 +20,7 @@ interface UseSchoolPowerFlowReturn {
   submitContextualization: (data: ContextualizationData) => void;
   approveActionPlan: (approvedItems: ActionPlanItem[]) => void;
   resetFlow: () => void;
+  restoreState: (state: FlowState, data: SchoolPowerFlowData) => void;
   isLoading: boolean;
 }
 
@@ -241,6 +242,15 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     console.log('✅ School Power Flow resetado');
   }, []);
 
+  const restoreState = useCallback((state: FlowState, data: SchoolPowerFlowData) => {
+    console.log('♻️ Restaurando School Power Flow:', state, data);
+    setFlowState(state);
+    setFlowData(data);
+    if (data.initialMessage) {
+      saveData(data);
+    }
+  }, [saveData]);
+
   return {
     flowState,
     flowData,
@@ -248,6 +258,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     submitContextualization,
     approveActionPlan,
     resetFlow,
+    restoreState,
     isLoading
   };
 }

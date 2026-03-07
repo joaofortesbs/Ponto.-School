@@ -1,0 +1,272 @@
+A ideia é: cada conversa de School Power vira uma “aba” que aparece na própria borda do card principal, como se a borda subisse um pouquinho para fazer o contorno das guias, e o usuário muda de chat clicando nessas saliências no topo.
+
+1. Explicação simples (visão de produto)
+O que é uma aba de School Power
+
+Cada vez que o professor inicia um chat novo dentro do School Power, criamos uma sessão de conversa.
+
+Cada sessão vira uma aba, com título curto (ex: “Planejar semana 5º ano”) e um indicador visual (cor ou ponto) para mostrar se está ativa ou em segundo plano.
+
+Como as abas aparecem no card
+
+O card de School Power continua sendo o grande container da área, mas a própria borda dele “desenha” as abas na parte de cima.
+
+Quando o usuário abre mais de uma conversa, a borda do topo vai ondulando e formando várias “curvinhas”, cada uma sendo uma aba clicável.
+
+A aba ativa está ligada de forma contínua à borda do card; as outras ficam visualmente “atrás”, mas ainda clicáveis.
+
+Como o histórico funciona
+
+Todas as conversas do usuário em School Power ficam salvas como sessões, mesmo que a aba não esteja visível naquele momento.
+
+Ao clicar em uma aba, o conteúdo dentro do card muda para mostrar o histórico daquela conversa específica.
+
+Se o usuário fechar a aba, a conversa não some do banco; ela só deixa de aparecer em cima. Ele pode reabrir a partir de uma lista de históricos (ex: “Últimas conversas do School Power”).
+
+Experiência do professor
+
+O professor pode ter várias tarefas em paralelo (planejar aula, corrigir atividades, criar jogos etc.) e alternar entre elas trocando de aba sem perder o contexto.
+
+Tudo isso sempre dentro do mesmo card de School Power, mantendo a sensação de “um espaço único” para criação, só que com várias conversas organizadas por guias.
+
+2. Explicação técnica para o time de desenvolvimento
+2.1. Modelo de domínio e persistência
+Objetivo: cada aba representa uma sessão de chat de School Power, versionável e reabrível.
+
+Criar uma entidade de sessão de School Power, separada por usuário:
+
+school_power_sessions
+
+id (UUID)
+
+user_id
+
+title (nome da aba)
+
+status (active, archived, error)
+
+context_type (ex: “lesson_planning”, “activity_generation”, se fizer sentido)
+
+created_at, updated_at, last_message_at
+
+Entidade de mensagens associadas:
+
+school_power_messages
+
+id
+
+session_id
+
+role (user, assistant, system)
+
+content (JSON ou texto)
+
+metadata (tipo de bloco, tool-calls, etc.)
+
+created_at
+
+Regras importantes:
+
+Nunca apagar sessão ao “fechar aba”; apenas marcar status ou deixá-la sem aba aberta.
+
+last_message_at será base para ordenar histórico e para mostrar a ordem de abas sugerida.
+
+2.2. API de sessões e abas
+Criar endpoints que separam lógica de sessão de lógica de mensagem:
+
+Sessão:
+
+POST /school-power/sessions
+
+Cria sessão vazia ou com mensagem inicial, retorna session_id e dados mínimos para a aba (título default, ex: “Nova conversa”).
+
+GET /school-power/sessions
+
+Lista sessões do usuário (com filtros: status, paginação, ordenação por last_message_at).
+
+GET /school-power/sessions/:id
+
+Retorna metadados da sessão (sem mensagens).
+
+PATCH /school-power/sessions/:id
+
+Permite renomear título, alterar status etc.
+
+Mensagem:
+
+GET /school-power/sessions/:id/messages
+
+Retorna histórico paginado (para otimizar).
+
+POST /school-power/sessions/:id/messages
+
+Recebe input do usuário, dispara pipeline de LLM/agents, persiste pergunta e resposta na mesma sessão.
+
+Opcional: endpoint específico para histórico utilizado em UI de reabertura de aba:
+
+GET /school-power/history → pequenos cards de sessão (id, title, last_message_at, status).
+
+2.3. Camada de estado no frontend (School Power)
+Dentro do módulo de School Power, criar um store de abas e sessões (Zustand, Redux ou Context):
+
+Estrutura sugerida de estado:
+
+tabs: Array<{ tabId, sessionId, title, isActive }>
+
+activeTabId: string | null
+
+sessionsCache: { [sessionId]: { meta, messages } }
+
+Responsabilidades:
+
+Abrir nova aba
+
+Ação: openNewTab(context?)
+
+Chama POST /school-power/sessions.
+
+Cria um tabId local e vincula ao sessionId retornado.
+
+Adiciona em tabs e define activeTabId.
+
+Inicializa sessionsCache[sessionId] com estrutura vazia ou com mensagens iniciais.
+
+Trocar aba ativa
+
+Ação: setActiveTab(tabId)
+
+Atualiza activeTabId.
+
+Localiza sessionId da aba.
+
+Se sessionsCache[sessionId] não existir ou estiver “stale”, dispara GET /school-power/sessions/:id/messages.
+
+Atualiza o componente principal de chat para usar o estado daquela sessão específica.
+
+Fechar aba
+
+Ação: closeTab(tabId)
+
+Remove a aba de tabs.
+
+Não altera nada no backend; a sessão continua existindo.
+
+Se a aba fechada era a ativa, decidir política:
+
+ir para a aba à esquerda,
+
+ou nenhuma aba ativa (tela “vazia” de School Power).
+
+Persistência de abas entre reloads
+
+Salvar tabs e activeTabId em localStorage ou em endpoint de preferências do usuário (opcional).
+
+Ao abrir School Power, reidratar estado de abas, validando se as sessionId ainda existem.
+
+2.4. Componente visual do card com borda‑abas
+Você quer que a própria borda do card desenhe as abas. A abordagem técnica deve separar três camadas:
+
+Layout e estrutura semântica
+
+Um componente SchoolPowerShell que recebe:
+
+tabs
+
+activeTabId
+
+callbacks: onTabClick, onCloseTab, onNewTab
+
+children (conteúdo da aba ativa, o chat).
+
+Estrutura DOM ideal:
+
+xml
+<div class="school-container">
+  <div class="school-border">
+    <div class="school-tabs">
+      <!-- cada aba -->
+      <button class="tab ...">Home</button>
+      <button class="tab ...">Atividades...</button>
+    </div>
+    <div class="school-content">
+      <!-- chat da sessão ativa -->
+    </div>
+  </div>
+</div>
+A borda geral (card) envolve tudo; as abas são posicionadas no topo e “fundidas” visualmente com essa borda.
+
+Desenho da borda ondulada / abas
+
+Para atingir o efeito mostrado na sua imagem (curvas suaves contínuas entre abas), usar uma de duas estratégias:
+
+SVG como borda:
+
+Um <svg> que desenha um path contínuo: sobe para formar uma aba, desce, sobe na próxima, e assim por diante, seguindo a quantidade e largura das abas.
+
+A largura de cada aba pode ser usada para gerar o path dinamicamente (JS calcula pontos, passa para atributo d do path).
+
+CSS com border-radius avançado + pseudo-elementos (se aceitarem um pouco menos de perfeição):
+
+Cada aba é um elemento absolutamente posicionado na borda do card, com border-radius grande, mesma cor do card, criando a impressão de continuidade.
+
+A borda principal do card é o “fundo”; as abas são overlays que parecem extensões da borda.
+
+A escolha ideal para fidelidade ao design é SVG, porque você consegue desenhar exatamente a onda contínua da sua referência.
+
+Estado visual da aba ativa
+
+A aba ativa precisa parecer “em primeiro plano” e ligada ao conteúdo.
+
+Implementar classes de estado: .tab--active, .tab--inactive, .tab--unread (se quiser mostrar notificação).
+
+Ajustar o path da borda ou cores para que a borda da aba ativa seja contínua com a borda do card e o restante pareça recuado.
+
+2.5. Integração chat ↔ abas
+Dentro do componente de chat de School Power:
+
+O componente não deve conhecer o conceito de múltiplas abas; ele só recebe sessionId atual e callbacks onSendMessage.
+
+O fluxo ao enviar mensagem:
+
+UI chama onSendMessage(content) com sessionId atual.
+
+Função dispara POST /school-power/sessions/:id/messages.
+
+Atualiza sessionsCache[sessionId].messages.
+
+Atualiza metadados da sessão (ex: last_message_at) tanto no cache quanto no backend (caso o backend já retorne isso).
+
+Isso garante que trocar de aba é apenas trocar de sessionId passado para o chat, sem acoplamento com layout de borda.
+
+2.6. Metodologia de implementação
+Sugestão de ordem de trabalho para o dev:
+
+Back-end primeiro
+
+Criar migrações/tabelas de school_power_sessions e school_power_messages.
+
+Implementar endpoints de sessão e de mensagens, com autenticação por user_id.
+
+Escrever testes simples que criem sessão, adicionem mensagens e retornem o histórico.
+
+Front sem curvas especiais
+
+Implementar o store de abas (estado) e um TabBar simples, reto, apenas para validar fluxo de múltiplas sessões.
+
+Garantir que: abrir, alternar, fechar aba, enviar mensagens por sessão funciona 100%.
+
+Substituir TabBar pelo layout de borda‑abas
+
+Criar o componente SchoolPowerShell com o card e a borda padrão.
+
+Implementar primeiro a borda e abas com CSS simples.
+
+Depois evoluir para SVG para chegar no visual “orgânico” das suas referências.
+
+Refino de UX
+
+Permitir renomear aba (título da sessão).
+
+Adicionar limite de abas simultâneas e fallback (ex: menu overflow).
+
+Integrar com uma tela de “Histórico do School Power” para reabrir sessões antigas em novas abas.
