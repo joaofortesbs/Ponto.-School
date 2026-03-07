@@ -19,6 +19,7 @@ import { ChatLayout } from "../../features/schoolpower/interface-chat-producao/C
 import type { FileAttachment } from "../../features/schoolpower/interface-chat-producao/chat-input-jota/ChatInputJota";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { useProfile } from "../../contexts/ProfileContext";
+import { useTheme } from "../../components/ThemeProvider";
 import { 
   getPendingMessage, 
   clearPendingMessage, 
@@ -47,7 +48,8 @@ interface SchoolPowerPageProps {
 }
 
 export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
-  const [isDarkTheme] = useState(true);
+  const { theme } = useTheme();
+  const isDarkTheme = theme !== 'light';
   const [showHistorico, setShowHistorico] = useState(false);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [presetMessage, setPresetMessage] = useState<string | null>(null);
