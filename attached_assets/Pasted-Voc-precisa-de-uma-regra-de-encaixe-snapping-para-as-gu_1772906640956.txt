@@ -1,0 +1,117 @@
+Você precisa de uma “regra de encaixe” (snapping) para as guias: enquanto o usuário arrasta, o sistema calcula em qual slot horizontal a guia deve cair, e as outras se reorganizam com animação suave, como Arc/Comet/Atlas fazem.
+
+Vou te passar isso como configuração de comportamento, não como código.
+
+1. Conceito geral do encaixe suave
+Imagine a linha de abas como uma sequência de slots: posição 0, 1, 2, 3… cada guia ocupa exatamente um slot.
+
+A guia arrastada vira um card flutuante e passa a ter um centro de arrasto (coordenada X).
+
+A cada movimento, você compara o centro da guia flutuante com os centros dos slots existentes:
+
+Quando o centro cruza o meio de outro slot, você considera que a guia quer assumir aquele slot.
+
+Nesse momento, você recalcula a ordem das guias, e elas se animam para as novas posições, abrindo espaço visualmente de forma suave.
+
+Ao soltar, a guia flutuante “cola” no slot atual com uma animação de retorno e volta a se fundir com a borda.
+
+2. Estados e parâmetros que você define
+Para cada guia:
+
+id – identificador estável.
+
+orderIndex – índice do slot atual.
+
+xSlotCenter – posição X do centro do slot (calculada a partir da largura acumulada).
+
+width – largura visual da guia.
+
+isDragging – se está em arrasto.
+
+mode – "merged" ou "floating" (como já planejamos).
+
+Parâmetros de comportamento (configuráveis):
+
+dragThresholdPx – distância mínima para transformar clique em arrasto (ex: 6 px).
+
+swapThresholdFactor – porcentagem além do centro do slot para efetuar troca (ex: 0.2 → 20% depois do centro).
+
+animationDurationMs – duração da animação de reposicionamento (ex: 160–200 ms, como browsers modernos).
+​
+
+easing – curva de animação (ex: cubic‑bezier suave, tipo Chrome).
+
+3. Regra de encaixe durante o arrasto
+Calcular posição do centro da guia flutuante
+
+floatingCenterX = dragStartTabCenterX + deltaX.
+
+Determinar slot alvo
+
+Percorra os slots na ordem e encontre o índice targetIndex tal que:
+
+floatingCenterX está mais próximo de xSlotCenter[targetIndex] do que de qualquer outro.
+
+Aplique a zona de histerese: só considere que mudou de slot quando
+
+floatingCenterX passa de xSlotCenter[currentIndex] + swapThresholdFactor * slotWidth.
+
+Aplicar a reordenação lógica
+
+Se targetIndex != currentIndex:
+
+Reordene o array de guias colocando a guia arrastada na posição targetIndex.
+
+Recalcule orderIndex de todas e seus xSlotCenter.
+
+Animar guias não arrastadas
+
+As guias que não estão em drag devem se mover para seus novos xSlotCenter usando transform: translateX com transition: animationDurationMs e o easing configurado.
+
+Isso gera aquele efeito de “escorregar” suave, como quando você arrasta uma aba no Arc ou em navegadores baseados em Chromium.
+
+4. Comportamento ao soltar a guia
+Quando o usuário solta o botão/retira o dedo:
+
+Fixar slot final
+
+O orderIndex atual já representa o slot final; não precisa recalcular.
+
+Animar card flutuante até o centro do slot
+
+A guia flutuante anima sua translateX até xSlotCenter[orderIndex].
+
+Usa a mesma animationDurationMs ou um pouco menor para sensação de “encaixe magnético”.
+
+Transição de volta para guia “fundida”
+
+Assim que a posição converge (ou após o tempo da animação):
+
+Troque mode de "floating" para "merged".
+
+Isso faz a aba voltar a fazer parte do path de borda que desenha as guias integradas ao card.
+
+Opcional: durante uns poucos milissegundos, use um pequeno fade/ajuste de sombra para reforçar visualmente que ela está se integrando à borda.
+
+5. Regras adicionais para suavidade estilo navegador
+Limites da linha
+
+Se floatingCenterX for menor que o centro do primeiro slot, trave o targetIndex em 0.
+
+Se for maior que o centro do último slot, trave em tabs.length - 1.
+
+Isso cria um efeito de “mola” nas extremidades, como nos browsers modernos.
+​
+
+Cancelamento de arrasto
+
+Se o usuário soltar antes de ultrapassar o dragThresholdPx total, trate como clique normal (não reordena).
+
+Se o arrasto for muito rápido e terminar fora da área da linha de abas, ainda assim use o targetIndex mais próximo para encaixar.
+
+Persistência da ordem
+
+Ao final do drop, envie a nova ordem ([{id, orderIndex}, ...]) para o backend para salvar a preferência do usuário.
+
+Na próxima visita, monte os slots iniciais já na ordem certa (isso é o que Comet/Arc fazem para sentir-se “vivo”).
+

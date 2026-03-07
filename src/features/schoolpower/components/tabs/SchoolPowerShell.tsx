@@ -62,6 +62,26 @@ const DRAG = {
   TAB_SHADOW:   '0 4px 16px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.18)',
   // Gap between the floating card's bottom edge and the top of the main card border
   TAB_FLOAT_GAP: 6,
+
+  // ── Swap animation (non-dragging tabs sliding into new position) ──────────
+  // "Snappy-settle": fast start, eases into place, no overshoot.
+  // Matches Arc / Chromium tab-strip feel.
+  SWAP_ANIM_MS: 160,
+  SWAP_EASING:  'cubic-bezier(0.25, 1.0, 0.5, 1.0)',
+
+  // ── Snap-back animation (floating card returns to merged slot on drop) ────
+  // Spring overshoot (y1 > 1) gives the "magnetic click" sensation —
+  // tab overshoots ~8% then settles, exactly like Arc/Comet.
+  SNAP_ANIM_MS: 220,
+  SNAP_EASING:  'cubic-bezier(0.34, 1.56, 0.64, 1)',
+
+  // ── Drag & swap thresholds ────────────────────────────────────────────────
+  // DRAG_THRESHOLD_PX: minimum pointer travel before press becomes a drag.
+  // HYSTERESIS_PX: dead zone around swap point to prevent ping-pong.
+  //   The floating tab's center must be HYSTERESIS_PX closer to the target
+  //   slot than to the current slot before a swap fires.
+  DRAG_THRESHOLD_PX: 5,
+  HYSTERESIS_PX:     6,
 };
 
 // ─── Destructure for use below ───────────────────────────────────────────────
@@ -404,9 +424,9 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
 
     const rawDelta = e.clientX - drag.startPointerX;
 
-    // Threshold: 5px before recognizing as drag (prevents accidental drags on clicks)
+    // Threshold: minimum travel before recognising as drag (prevents accidental drags on clicks)
     if (!drag.dragStarted) {
-      if (Math.abs(rawDelta) < 5) return;
+      if (Math.abs(rawDelta) < DRAG.DRAG_THRESHOLD_PX) return;
       drag.dragStarted = true;
     }
 
@@ -440,27 +460,38 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
     const maxDelta    = MAX_SLOT_X - dragSlot.startX;
     drag.deltaX       = Math.min(maxDelta, Math.max(minDelta, rawDelta));
 
-    // ── 50% overlap threshold (edge-based, same as Chrome/Arc) ──────────────
-    // Drag RIGHT: right edge of dragging tab crosses the midpoint of right neighbor.
-    // Drag LEFT:  left  edge of dragging tab crosses the midpoint of left  neighbor.
-    // This triggers ~40% earlier than center-vs-center and feels much more natural.
-    const dragLeftEdge  = dragSlot.startX + drag.deltaX;
-    const dragRightEdge = dragSlot.startX + dragSlotW + drag.deltaX;
+    // ── Nearest-slot algorithm with hysteresis (Arc/Comet/Atlas style) ───────
+    //
+    // Instead of checking only the immediate left/right neighbor, we scan ALL
+    // slots and find the one whose centre is closest to the floating tab's
+    // centre.  This handles fast drags that leap over multiple slots in a
+    // single pointermove event — the dragging tab lands in the right slot
+    // every time, no matter how quickly the user moves.
+    //
+    // Hysteresis: a swap only fires when the floating centre is at least
+    // HYSTERESIS_PX *closer* to the target slot than to its current slot.
+    // This creates a ±HYSTERESIS_PX/2 dead zone at each boundary, eliminating
+    // the ping-pong effect that occurs when hovering exactly at the midpoint.
+    //
+    const floatingCenterX  = dragSlot.startX + drag.deltaX + dragSlotW / 2;
+    const currentCenterX   = dragSlot.startX + dragSlotW / 2; // logical (no deltaX) centre
+    const distToCurrent    = Math.abs(floatingCenterX - currentCenterX);
 
-    let newIdx = currentDragIdx;
+    let nearestIdx  = currentDragIdx;
+    let nearestDist = Infinity;
 
-    // Check swap left
-    if (currentDragIdx > 0) {
-      const leftSlot   = currentSlots[currentDragIdx - 1];
-      const leftMid    = leftSlot.startX + (leftSlot.endX - leftSlot.startX) * 0.5;
-      if (dragLeftEdge < leftMid) newIdx = currentDragIdx - 1;
+    for (let i = 0; i < currentSlots.length; i++) {
+      if (i === currentDragIdx) continue;
+      const slotCenterX = (currentSlots[i].startX + currentSlots[i].endX) / 2;
+      const d = Math.abs(floatingCenterX - slotCenterX);
+      if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
     }
 
-    // Check swap right
-    if (newIdx === currentDragIdx && currentDragIdx < currentPreview.length - 1) {
-      const rightSlot  = currentSlots[currentDragIdx + 1];
-      const rightMid   = rightSlot.startX + (rightSlot.endX - rightSlot.startX) * 0.5;
-      if (dragRightEdge > rightMid) newIdx = currentDragIdx + 1;
+    // Only commit the swap when the floating centre is HYSTERESIS_PX closer to
+    // the target slot than to the current slot.
+    let newIdx = currentDragIdx;
+    if (nearestIdx !== currentDragIdx && distToCurrent - nearestDist >= DRAG.HYSTERESIS_PX) {
+      newIdx = nearestIdx;
     }
 
     if (newIdx !== currentDragIdx) {
@@ -537,7 +568,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
       snapTimerRef.current = setTimeout(() => {
         setSnapBack(null);
         setDragVersion(v => v + 1);
-      }, 230);
+      }, DRAG.SNAP_ANIM_MS + 10);
     }
 
     setDragVersion(v => v + 1);
@@ -624,18 +655,19 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
               : startX;
 
           // ── CSS left transition ─────────────────────────────────────────
-          // No transition while actively dragging (must follow pointer instantly).
-          // Smooth ease during snap-back animation.
-          // Normal 150ms ease for idle tabs (they slide on order change).
-          // Both `left` and `transform` are animated during snap-back so the
-          // card slides into position AND descends into the border simultaneously.
+          // Dragging:  no transition — must follow pointer instantly.
+          // Snapping:  spring curve (SNAP_EASING) animates both `left` and
+          //            `transform` so the card slides AND descends together.
+          // Resting:   snappy-settle curve (SWAP_EASING) so non-dragging tabs
+          //            slide into their new slots with Arc/Comet-style smoothness.
+          const swapT = `left ${DRAG.SWAP_ANIM_MS}ms ${DRAG.SWAP_EASING}`;
+          const snapT = `left ${DRAG.SNAP_ANIM_MS}ms ${DRAG.SNAP_EASING}, transform ${DRAG.SNAP_ANIM_MS}ms ${DRAG.SNAP_EASING}`;
+
           const leftTransition = isDragging
             ? 'none'
             : isSnapping
-              ? (snapBack!.animating
-                  ? 'left 0.18s cubic-bezier(0.4, 0, 0.2, 1), transform 0.18s cubic-bezier(0.4, 0, 0.2, 1)'
-                  : 'none')
-              : 'left 0.15s ease';
+              ? (snapBack!.animating ? snapT : 'none')
+              : swapT;
 
           // ── Floating card visual style ──────────────────────────────────
           // When floating (dragging or snapping), the button is rendered as
