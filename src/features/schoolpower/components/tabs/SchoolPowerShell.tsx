@@ -15,8 +15,8 @@ const SHAPE = {
   TAB_MAX_W:       180,  // maximum tab width (px)
   TAB_GAP:           8,  // flat valley floor between two adjacent tabs (px)
   PLUS_W:           28,  // width of the "+" add-tab button (px)
-  PLUS_GAP:         12,  // gap between last tab and the "+" button (px)
-  FIRST_TAB_OFFSET:  4,  // extra spacing between the card's top-left corner and the first tab (px)
+  PLUS_GAP:         -8,  // gap between last tab and the "+" button (px)
+  FIRST_TAB_OFFSET:  10,  // extra spacing between the card's top-left corner and the first tab (px)
                          // full left indent = CARD_R + VALLEY_R + FIRST_TAB_OFFSET
 };
 
