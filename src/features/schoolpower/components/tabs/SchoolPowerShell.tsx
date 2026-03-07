@@ -328,25 +328,13 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
 
   const slots  = useMemo(() => computeTabSlots(orderedTabs, W), [orderedTabs, W]);
 
-  // During drag we re-derive a "path slots" set where the dragging tab's
-  // notch is placed at the VISUAL pointer position (startX + deltaX) rather
-  // than its logical preview slot.  Other tabs keep their logical positions.
-  // The result is sorted left→right so the path builder stays consistent.
-  // This means ONE SVG with ONE notch that physically follows the pointer —
-  // no floating overlay needed, no "body stays fixed" mismatch.
-  const slotsForPath = useMemo(() => {
-    if (!activeDrag?.dragStarted) return slots;
-    const draggingId = activeDrag.draggingTabId;
-    const dx         = activeDrag.deltaX;
-    const adjusted   = slots.map(slot => {
-      if (slot.tab.tabId !== draggingId) return slot;
-      const w = slot.endX - slot.startX;
-      return { ...slot, startX: slot.startX + dx, endX: slot.startX + dx + w };
-    });
-    return [...adjusted].sort((a, b) => a.startX - b.startX);
-  }, [slots, activeDrag?.dragStarted, activeDrag?.draggingTabId, activeDrag?.deltaX, dragVersion]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const pathD = useMemo(() => buildBorderPath(W, H, slotsForPath), [W, H, slotsForPath]);
+  // The main SVG EXCLUDES the dragging tab, creating a flat "destination gap"
+  // that acts as the landing-zone placeholder (same pattern Chrome/Arc use).
+  // A separate floating SVG (with fill + shadow) shows the tab at the pointer.
+  const pathD = useMemo(
+    () => buildBorderPath(W, H, slots, activeDrag?.dragStarted ? activeDrag.draggingTabId : undefined),
+    [W, H, slots, activeDrag?.dragStarted, activeDrag?.draggingTabId, dragVersion] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const canClose = tabs.length > 1;
 
@@ -425,29 +413,56 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
     const maxDelta    = MAX_SLOT_X - dragSlot.startX;
     drag.deltaX       = Math.min(maxDelta, Math.max(minDelta, rawDelta));
 
-    const dragCenter = dragSlot.startX + dragSlotW / 2 + drag.deltaX;
+    // ── 50% overlap threshold (edge-based, same as Chrome/Arc) ──────────────
+    // Drag RIGHT: right edge of dragging tab crosses the midpoint of right neighbor.
+    // Drag LEFT:  left  edge of dragging tab crosses the midpoint of left  neighbor.
+    // This triggers ~40% earlier than center-vs-center and feels much more natural.
+    const dragLeftEdge  = dragSlot.startX + drag.deltaX;
+    const dragRightEdge = dragSlot.startX + dragSlotW + drag.deltaX;
 
     let newIdx = currentDragIdx;
 
     // Check swap left
     if (currentDragIdx > 0) {
       const leftSlot   = currentSlots[currentDragIdx - 1];
-      const leftCenter = leftSlot.startX + (leftSlot.endX - leftSlot.startX) / 2;
-      if (dragCenter < leftCenter) newIdx = currentDragIdx - 1;
+      const leftMid    = leftSlot.startX + (leftSlot.endX - leftSlot.startX) * 0.5;
+      if (dragLeftEdge < leftMid) newIdx = currentDragIdx - 1;
     }
 
     // Check swap right
     if (newIdx === currentDragIdx && currentDragIdx < currentPreview.length - 1) {
-      const rightSlot   = currentSlots[currentDragIdx + 1];
-      const rightCenter = rightSlot.startX + (rightSlot.endX - rightSlot.startX) / 2;
-      if (dragCenter > rightCenter) newIdx = currentDragIdx + 1;
+      const rightSlot  = currentSlots[currentDragIdx + 1];
+      const rightMid   = rightSlot.startX + (rightSlot.endX - rightSlot.startX) * 0.5;
+      if (dragRightEdge > rightMid) newIdx = currentDragIdx + 1;
     }
 
     if (newIdx !== currentDragIdx) {
+      // Record dragging tab's current logical startX before re-ordering
+      const oldStartX  = currentSlots[currentDragIdx].startX;
+
       const newPreview = [...currentPreview];
       newPreview.splice(currentDragIdx, 1);
       newPreview.splice(newIdx, 0, drag.draggingTabId);
       drag.previewTabIds = newPreview;
+
+      // Compute the dragging tab's NEW logical startX after the swap
+      const newPreviewTabs = newPreview
+        .map(id => tabs.find(t => t.tabId === id))
+        .filter(Boolean) as TabBarTab[];
+      const newSlots   = computeTabSlots(newPreviewTabs, W);
+      const newStartX  = newSlots[newIdx]?.startX ?? oldStartX;
+
+      // Adjust deltaX so the VISUAL position stays perfectly continuous
+      // (no "teleport" jump on swap):  newStartX + newDelta = oldStartX + oldDelta
+      drag.deltaX += oldStartX - newStartX;
+
+      // Re-clamp with new boundaries after slot change
+      const newDragSlot   = newSlots[newIdx];
+      const newDragSlotW  = newDragSlot ? newDragSlot.endX - newDragSlot.startX : dragSlotW;
+      const newLastSlot   = newSlots[newSlots.length - 1];
+      const newMinDelta   = MIN_SLOT_X - (newDragSlot?.startX ?? dragSlot.startX);
+      const newMaxDelta   = (newLastSlot?.endX ?? lastSlot.endX) - newDragSlotW - (newDragSlot?.startX ?? dragSlot.startX);
+      drag.deltaX         = Math.min(newMaxDelta, Math.max(newMinDelta, drag.deltaX));
     }
 
     setDragVersion(v => v + 1);
@@ -500,6 +515,77 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
         </svg>
       )}
 
+      {/* ── Floating dragging-tab SVG ────────────────────────────────────────
+          Rendered only while a drag is active.  Shows the complete filled tab
+          shape (background fill + border stroke + hover gradient) at the visual
+          pointer position, layered ABOVE the main SVG border (zIndex 35).
+          The main SVG has a flat gap at the logical destination slot (the
+          landing-zone placeholder), while this element is the "lifted" copy.
+      ─────────────────────────────────────────────────────────────────────── */}
+      {W > 0 && (() => {
+        if (!activeDrag?.dragStarted) return null;
+        const dragSlotEntry = slots.find(s => s.tab.tabId === activeDrag.draggingTabId);
+        if (!dragSlotEntry) return null;
+
+        const slotW      = dragSlotEntry.endX - dragSlotEntry.startX;
+        const totalW     = VALLEY_R + slotW + VALLEY_R;
+        const visualLeft = dragSlotEntry.startX + activeDrag.deltaX - VALLEY_R;
+        const outlinePath = buildSingleTabOutline(slotW);
+
+        const cardBg = isDarkTheme ? '#111a30' : '#f8fafc';
+        const [fhr, fhg, fhb] = HOVER.TAB_HOVER_COLOR;
+        const gradId = 'sp-drag-hg';
+        const dragFilter = isDarkTheme
+          ? 'drop-shadow(0 -3px 10px rgba(0,0,0,0.65)) drop-shadow(-3px 0 8px rgba(0,0,0,0.35)) drop-shadow(3px 0 8px rgba(0,0,0,0.35))'
+          : 'drop-shadow(0 -3px 8px rgba(0,0,0,0.22)) drop-shadow(-2px 0 6px rgba(0,0,0,0.14)) drop-shadow(2px 0 6px rgba(0,0,0,0.14))';
+
+        return (
+          <svg
+            key="sp-drag-tab"
+            viewBox={`0 0 ${totalW} ${TAB_H}`}
+            style={{
+              position:      'absolute',
+              top:            0,
+              left:           visualLeft,
+              width:          totalW,
+              height:         TAB_H,
+              pointerEvents: 'none',
+              zIndex:         35,
+              overflow:       'visible',
+              filter:         dragFilter,
+              clipPath:       'inset(-80px -80px 0px -80px)',
+            }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0"
+                  stopColor={`rgb(${fhr},${fhg},${fhb})`}
+                  stopOpacity={HOVER.TAB_HOVER_INTENSITY} />
+                <stop offset={HOVER.TAB_HOVER_STOP / 100}
+                  stopColor={`rgb(${fhr},${fhg},${fhb})`}
+                  stopOpacity={0} />
+              </linearGradient>
+            </defs>
+
+            {/* Background fill — gives the tab a solid body above the card */}
+            <path d={outlinePath} fill={cardBg} stroke="none" />
+
+            {/* Hover gradient overlay */}
+            <path d={outlinePath} fill={`url(#${gradId})`} stroke="none" />
+
+            {/* Border stroke — same style as main SVG */}
+            <path
+              d={outlinePath}
+              fill="none"
+              stroke={stroke}
+              strokeWidth={1}
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        );
+      })()}
+
       {/* ── Tab labels ──────────────────────────────────────────────────────── */}
       <div
         className="absolute top-0 left-0 right-0"
@@ -534,9 +620,10 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
             ? startX + (activeDrag?.deltaX ?? 0)
             : startX;
 
-          // Hover gradient: shown when hovering normally, or whenever the tab
-          // is actively being dragged (replaces the old solid fill approach).
-          const showHover = isDragging || (hoveredTabId === tab.tabId && !activeDrag?.dragStarted);
+          // Hover gradient on the button: shown only on normal hover.
+          // During drag the floating SVG already carries the gradient, so
+          // the button stays transparent to avoid doubling the effect.
+          const showHover = !isDragging && hoveredTabId === tab.tabId && !activeDrag?.dragStarted;
 
           return (
             <button
@@ -558,7 +645,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
                 border:     'none',
                 outline:    'none',
                 transition: isDragging ? 'none' : 'left 0.15s ease',
-                zIndex:     isDragging ? 30 : 22,
+                zIndex:     isDragging ? 36 : 22,
                 opacity:    1,
                 cursor:     isDragging ? 'grabbing' : 'pointer',
               }}
