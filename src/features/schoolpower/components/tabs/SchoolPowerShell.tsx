@@ -80,6 +80,14 @@ interface ActiveDrag {
   dragStarted:   boolean;
 }
 
+interface SnapBack {
+  tabId:     string;
+  fromX:     number;   // visual X where the drag ended
+  toX:       number;   // target (merged-slot) X
+  slotW:     number;
+  animating: boolean;
+}
+
 // ─── Icon helper — filled SVG icons (bold by nature) ────────────────────────
 const IconByType: React.FC<{ icon: TabIcon; color: string }> = ({ icon, color }) => {
   const s: React.CSSProperties = {
@@ -314,6 +322,15 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
   const dragRef = useRef<ActiveDrag | null>(null);
   const [dragVersion, setDragVersion] = useState(0);
 
+  // ─── Snap-back state ──────────────────────────────────────────────────────
+  // After the user releases a dragged tab, snapBack drives the CSS transition
+  // that animates the floating card from its current visual position back into
+  // the merged tab-bar slot.  Two phases:
+  //   animating = false → card is still at fromX (no transition yet)
+  //   animating = true  → CSS transition carries the card to toX
+  const [snapBack, setSnapBack] = useState<SnapBack | null>(null);
+  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // ─── Ordered tabs (normal or preview during drag) ─────────────────────────
   const activeDrag = dragRef.current;
 
@@ -328,26 +345,17 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
 
   const slots  = useMemo(() => computeTabSlots(orderedTabs, W), [orderedTabs, W]);
 
-  // During drag, compute a modified slot array where the dragging tab's notch
-  // is placed at the VISUAL pointer position (startX + deltaX).  Re-sort
-  // left→right so buildBorderPath always receives an ordered list.
-  // This means ONE SVG, ONE notch, physically following the pointer —
-  // no floating overlay, no "body stays fixed" mismatch, card never closes.
-  const slotsForPath = useMemo(() => {
-    if (!activeDrag?.dragStarted) return slots;
-    const draggingId = activeDrag.draggingTabId;
-    const dx         = activeDrag.deltaX;
-    const adjusted   = slots.map(slot => {
-      if (slot.tab.tabId !== draggingId) return slot;
-      const w = slot.endX - slot.startX;
-      return { ...slot, startX: slot.startX + dx, endX: slot.startX + dx + w };
-    });
-    return [...adjusted].sort((a, b) => a.startX - b.startX);
-  }, [slots, activeDrag?.dragStarted, activeDrag?.draggingTabId, activeDrag?.deltaX, dragVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  // While a tab is floating (dragging or snapping back) it is excluded from
+  // the main SVG path — the floating card div fills its visual role instead.
+  // This produces the "detached" effect: the tab visually lifts off the border.
+  const excludeId: string | undefined =
+    activeDrag?.dragStarted   ? activeDrag.draggingTabId
+    : snapBack                ? snapBack.tabId
+    : undefined;
 
   const pathD = useMemo(
-    () => buildBorderPath(W, H, slotsForPath),
-    [W, H, slotsForPath] // eslint-disable-line react-hooks/exhaustive-deps
+    () => buildBorderPath(W, H, slots, excludeId),
+    [W, H, slots, excludeId, dragVersion] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const canClose = tabs.length > 1;
@@ -488,18 +496,47 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
   ) {
     const drag = dragRef.current;
     dragRef.current = null;
-    setDragVersion(v => v + 1);
-
-    if (!drag) return;
+    if (!drag) { setDragVersion(v => v + 1); return; }
 
     if (!drag.dragStarted) {
       // No drag happened — treat as a click
+      setDragVersion(v => v + 1);
       onTabClick(tabId);
       return;
     }
 
-    // Drag completed — compute final index and reorder
+    // ── Snap-back animation ─────────────────────────────────────────────────
+    // Compute the final destination slot so we can animate the floating card
+    // from its current visual position back to the merged slot.
     const newIndex = drag.previewTabIds.indexOf(drag.draggingTabId);
+    const newOrderedTabs = drag.previewTabIds
+      .map(id => tabs.find(t => t.tabId === id))
+      .filter(Boolean) as TabBarTab[];
+    const newSlots  = computeTabSlots(newOrderedTabs, W);
+    const destSlot  = newSlots[newIndex];
+
+    if (destSlot) {
+      const fromX = destSlot.startX + drag.deltaX;
+      const toX   = destSlot.startX;
+
+      // Phase 1 — place floating card at current visual position (no transition)
+      setSnapBack({ tabId, fromX, toX, slotW: destSlot.endX - destSlot.startX, animating: false });
+
+      // Phase 2 — on next frame, set animating=true to trigger CSS transition
+      requestAnimationFrame(() => {
+        setSnapBack(s => s ? { ...s, animating: true } : null);
+      });
+
+      // Phase 3 — after animation completes, clear snap state → tab merges back
+      if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
+      snapTimerRef.current = setTimeout(() => {
+        setSnapBack(null);
+        setDragVersion(v => v + 1);
+      }, 230);
+    }
+
+    setDragVersion(v => v + 1);
+
     if (newIndex !== drag.fromIndex && onReorderTab) {
       onReorderTab(drag.fromIndex, newIndex);
     }
@@ -549,24 +586,67 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
         {slots.map(({ startX, endX, tab }, slotIndex) => {
           const isActive   = tab.tabId === activeTabId;
           const isDragging = activeDrag?.dragStarted === true && activeDrag.draggingTabId === tab.tabId;
+          const isSnapping = snapBack?.tabId === tab.tabId;
+          const isFloating = isDragging || isSnapping;
           const slotW      = endX - startX;
 
-          // During drag: use the configured INACTIVE_COLOR so the label is
-          // readable against the elevated tab background (not the invisible
-          // "same as card" color used for resting inactive tabs).
-          const labelColor = isActive
-            ? LABEL.ACTIVE_COLOR
-            : (isDragging ? LABEL.INACTIVE_COLOR : inactiveColor);
-
-          // Visual left position: offset for dragging tab, normal for others
+          // ── Visual left position ─────────────────────────────────────────
+          // Dragging: follow the pointer via deltaX.
+          // Snapping:  phase "animating=false" stays at fromX; once
+          //            animating=true the CSS transition carries it to toX.
+          // Resting:   logical slot startX (other tabs animate via CSS).
           const visualLeft = isDragging
             ? startX + (activeDrag?.deltaX ?? 0)
-            : startX;
+            : isSnapping
+              ? (snapBack!.animating ? snapBack!.toX : snapBack!.fromX)
+              : startX;
 
-          // Hover gradient shown on normal hover OR while this tab is being
-          // dragged.  No separate floating SVG exists, so the button itself
-          // is responsible for the gradient in both states.
-          const showHover = isDragging || (hoveredTabId === tab.tabId && !activeDrag?.dragStarted);
+          // ── CSS left transition ─────────────────────────────────────────
+          // No transition while actively dragging (must follow pointer instantly).
+          // Smooth ease during snap-back animation.
+          // Normal 150ms ease for idle tabs (they slide on order change).
+          const leftTransition = isDragging
+            ? 'none'
+            : isSnapping
+              ? (snapBack!.animating
+                  ? 'left 0.18s cubic-bezier(0.4, 0, 0.2, 1)'
+                  : 'none')
+              : 'left 0.15s ease';
+
+          // ── Floating card visual style ──────────────────────────────────
+          // When floating (dragging or snapping), the button is rendered as
+          // a fully-rounded card lifted above the SVG border.  When resting,
+          // it is transparent so the SVG path provides all visual shape.
+          const floatingCardBg = isDarkTheme ? DRAG.TAB_BG_DARK : DRAG.TAB_BG_LIGHT;
+          const floatingStyle: React.CSSProperties = isFloating
+            ? {
+                background:   floatingCardBg,
+                borderRadius: `${TAB_TOP_R}px`,
+                boxShadow:    DRAG.TAB_SHADOW,
+                border:       `1px solid ${stroke}`,
+              }
+            : {
+                background: 'transparent',
+                border:     'none',
+              };
+
+          // ── Label color ─────────────────────────────────────────────────
+          // Active tab: orange. Floating tabs: use the INACTIVE_COLOR so the
+          // label is legible on the elevated card background. Resting inactive
+          // tabs blend into the card via inactiveColor (matches card bg).
+          const labelColor = isActive
+            ? LABEL.ACTIVE_COLOR
+            : (isFloating ? LABEL.INACTIVE_COLOR : inactiveColor);
+
+          // ── Hover gradient ──────────────────────────────────────────────
+          // Show on normal hover OR while the tab is floating.
+          const showHover = isFloating || (hoveredTabId === tab.tabId && !activeDrag?.dragStarted);
+
+          // ── Hover gradient border-radius ────────────────────────────────
+          // Floating: all 4 corners rounded. Resting: only top 2.
+          const hoverBorderRadius = isFloating
+            ? `${TAB_TOP_R}px`
+            : `${TAB_TOP_R}px ${TAB_TOP_R}px 0 0`;
 
           return (
             <button
@@ -584,13 +664,12 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
                 top:        0,
                 height:     TAB_H,
                 padding:    '0 12px',
-                background: 'transparent',
-                border:     'none',
                 outline:    'none',
-                transition: isDragging ? 'none' : 'left 0.15s ease',
-                zIndex:     isDragging ? 36 : 22,
+                transition: leftTransition,
+                zIndex:     isFloating ? 36 : 22,
                 opacity:    1,
                 cursor:     isDragging ? 'grabbing' : 'pointer',
+                ...floatingStyle,
               }}
             >
               {/* ── Hover gradient overlay ────────────────────────────────── */}
@@ -599,7 +678,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
                 style={{
                   position:      'absolute',
                   inset:         0,
-                  borderRadius:  `${TAB_TOP_R}px ${TAB_TOP_R}px 0 0`,
+                  borderRadius:  hoverBorderRadius,
                   background:    hoverGradient,
                   opacity:       showHover ? 1 : 0,
                   transition:    'opacity 0.22s ease',

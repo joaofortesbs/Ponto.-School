@@ -1,0 +1,157 @@
+Você quer que, ao arrastar, a guia “descole” da borda e vire um card flutuante com 4 cantos arredondados, enquanto as outras guias se acomodam suavemente na linha, como em navegadores modernos.
+
+1. Comportamento desejado (visão simples)
+Quando o usuário pressiona uma guia e começa a arrastar para o lado, essa guia deixa de estar “fundida” na borda e vira um card solto, com as quatro extremidades arredondadas, pairando na mesma altura das outras.
+
+Enquanto ela flutua, as demais guias escorrem suavemente para esquerda/direita, abrindo espaço para o novo lugar onde essa guia vai cair.
+
+Ao soltar, a guia volta a se “fundir” na borda do card de School Power: a base volta a assumir o desenho especial que você definiu, com animação suave encaixando a aba na nova posição.
+
+O resultado é uma sensação parecida com arrastar abas no Comet/Arc/Atlas: rápido, previsível, sem travadas, e com feedback visual claro de onde a aba vai parar.
+
+2. Plano técnico para o desenvolvedor
+2.1. Estados principais por aba
+Para cada aba, mantenha:
+
+id
+
+orderIndex (posição na linha)
+
+xTarget (posição alvo na linha)
+
+isActive
+
+isDragging
+
+mode ( "merged" ou "floating" )
+
+Regras:
+
+mode: "merged" = guia desenhada como extensão da borda (formato “aba” atual).
+
+mode: "floating" = guia renderizada como card independente com 4 cantos arredondados, sem recorte especial na base.
+
+2.2. Ciclo de drag: merged → floating → merged
+Pressionar uma guia
+
+Ao pointerdown/mousedown sobre a área de drag:
+
+Guarde dragStartX e draggedTabId.
+
+Não muda o desenho ainda; só entra num estado de “potencial drag”.
+
+Começar a arrastar (threshold)
+
+Quando o cursor se mover mais que um limite (ex: 5–8 px), considere que é drag real:
+
+Atualize a aba para mode: "floating" e isDragging = true.
+
+Nesta hora, você troca o componente visual daquela aba:
+
+deixa de contribuir para o path da borda principal,
+
+passa a ser renderizada por cima, como card com 4 cantos arredondados e sombra sutil.
+
+Durante o drag
+
+A posição visual da aba flutuante segue o cursor: use translateX relativo ao ponto onde o drag começou.
+
+Paralelamente, recalcule em qual “slot” horizontal ela deveria estar (baseado em cruzar os centros das outras guias, como falamos antes).
+
+Quando o slot alvo muda, reordene o array de abas e atualize xTarget das outras guias; elas se animam para a nova posição usando transition.
+
+Soltar (drop)
+
+Ao pointerup/mouseup:
+
+Fixe o orderIndex final da aba de acordo com o slot atual.
+
+Inicie uma animação curta para mover a aba flutuante até a posição “encaixada” naquela faixa (xTarget).
+
+Quando essa animação terminar (ou depois de um pequeno timeout), troque mode dela de "floating" para "merged" e zere isDragging.
+
+No momento em que volta para "merged", você volta a incluir essa aba no cálculo do path da borda (ela volta a fazer parte da “onda” de School Power).
+
+2.3. Renderização condicional da forma
+Você terá duas “camadas”:
+
+Borda contínua + abas merged
+
+O path principal (SVG) só considera abas com mode: "merged".
+
+A cada alteração de ordem, reescreve o topo: subidas/descidas e vales entre as guias.
+
+Enquanto uma aba estiver floating, o path é recalculado sem ela, criando um “buraco” na linha onde ela estava.
+
+Card flutuante por cima
+
+Para a aba com mode: "floating", renderize um div/grupo de SVG independente com:
+
+fundo mesmo do card,
+
+borda mesma da borda principal,
+
+border-radius igual para os 4 cantos (ou path equivalente),
+
+sombra leve para destacar que está “acima”.
+
+Posicione com position: absolute sobre a linha de abas, usando left = xFloating, top fixo igual ao topo das abas.
+
+Visualmente, quando o usuário começa a arrastar, parece que “descola” a aba da borda e vira um card pronto para ser encaixado em outro lugar.
+
+2.4. Regra de “encaixe suave” (inspirada em navegadores)
+Implemente uma lógica de snapping semelhante a Chrome/Arc:
+
+Cada aba “fixa” tem um slot: centro em xTarget.
+
+Enquanto arrasta:
+
+Calcule floatingCenterX (centro da aba flutuante).
+
+Compare com os centros das outras abas.
+
+Se floatingCenterX passar do centro de uma aba vizinha, troque os orderIndex (swap) ou reordene para inserir a aba flutuante antes/depois daquela.
+
+Para suavizar:
+
+Não troque imediatamente ao tocar o centro; use uma pequena zona de histerese (ex: só troca depois de 10–15 px além do centro), o que dá mais controle.
+
+As outras abas se movem com transition: transform 150–200ms cubic-bezier(...) para reproduzir aquele “escorregar” dos browsers.
+
+Se o usuário arrastar muito rápido, a aba ainda segue o cursor, mas o snapping sempre garante que ela caia num slot inteiro, nunca entre duas abas sem encaixe.
+
+2.5. Animação de retorno merged
+Quando o usuário solta:
+
+Transição de card flutuante até o slot
+
+A aba flutuante anima sua posição X até xTarget (centro do slot final).
+
+Use a mesma duração da animação das outras abas ou um pouco menor (150–200 ms) para parecer “magnético”.
+
+Transição de shape
+
+Assim que a aba chegar ao slot (ou nos últimos frames), faça o seguinte:
+
+Diminua levemente a sombra/saturação da aba flutuante.
+
+Comece a desenhar a mesma aba no path principal (topo do card) e, em paralelo, faça desaparecer o card flutuante (fade out rápido).
+
+O dev pode fazer isso com:
+
+Um pequeno overlap de 1–2 frames em que as duas representações coexistem, ou
+
+Um switch instantâneo, mas mascarado por uma animação de opacidade.
+
+Resultado
+
+Para o usuário, parece que o card flutuante “mergeia” de novo na borda, encaixando na ondulação, como uma aba de navegador voltando para o trilho.
+
+2.6. Detalhes de UX que valem copiar dos browsers
+Velocidade: arrasto deve ser imediato; sem delay após o threshold inicial.
+
+Limites: não deixe a aba sair muito da área das outras; se arrastar além da primeira ou última, apenas segure-a no primeiro/último slot (efeito de mola).
+
+Feedback de alvo: enquanto o usuário arrasta, a posição onde a aba cairia é sempre clara porque as outras já se reorganizam em torno desse slot.
+
+Cancelar drag: se o usuário soltar sem mover além do threshold (ou sair da área rapidamente), simplesmente volte a aba ao lugar original e troque de floating para merged sem reordenar.
