@@ -328,12 +328,13 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
 
   const slots  = useMemo(() => computeTabSlots(orderedTabs, W), [orderedTabs, W]);
 
-  // The main SVG EXCLUDES the dragging tab, creating a flat "destination gap"
-  // that acts as the landing-zone placeholder (same pattern Chrome/Arc use).
-  // A separate floating SVG (with fill + shadow) shows the tab at the pointer.
+  // The main SVG ALWAYS draws every tab's notch — including the dragging tab
+  // at its logical destination slot.  This keeps the card open (the entalhe
+  // never disappears), acting as the visible "ghost slot" that shows where
+  // the tab will land.  The floating SVG travels on top at the pointer position.
   const pathD = useMemo(
-    () => buildBorderPath(W, H, slots, activeDrag?.dragStarted ? activeDrag.draggingTabId : undefined),
-    [W, H, slots, activeDrag?.dragStarted, activeDrag?.draggingTabId, dragVersion] // eslint-disable-line react-hooks/exhaustive-deps
+    () => buildBorderPath(W, H, slots),
+    [W, H, slots, dragVersion] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const canClose = tabs.length > 1;
