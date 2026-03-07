@@ -7,19 +7,21 @@ import type { TabBarTab, TabIcon } from './types';
 //  Rule: TAB_H  must be greater than  VALLEY_R + TAB_TOP_R
 //
 const SHAPE = {
-  TAB_H:     44,   // height of the tab above the card border (px)
-  TAB_TOP_R: 12,   // corner radius at the TOP of each tab (px)
-  CARD_R:    16,   // corner radius of the card body itself (px)
-  VALLEY_R:  20,   // radius of the concave "barriguinha" arcs at each tab base (px)
-  TAB_MIN_W: 112,  // minimum tab width (px)
-  TAB_MAX_W: 180,  // maximum tab width (px)
-  TAB_GAP:    8,   // flat valley floor between two adjacent tabs (px)
-  PLUS_W:    28,   // width of the "+" add-tab button (px)
-  PLUS_GAP:  12,   // gap between last tab and the "+" button (px)
+  TAB_H:            44,  // height of the tab above the card border (px)
+  TAB_TOP_R:        16,  // corner radius at the TOP of each tab (px)
+  CARD_R:           17,  // corner radius of the card body itself (px)
+  VALLEY_R:         16,  // radius of the concave "barriguinha" arcs at each tab base (px)
+  TAB_MIN_W:       112,  // minimum tab width (px)
+  TAB_MAX_W:       180,  // maximum tab width (px)
+  TAB_GAP:           8,  // flat valley floor between two adjacent tabs (px)
+  PLUS_W:           28,  // width of the "+" add-tab button (px)
+  PLUS_GAP:         12,  // gap between last tab and the "+" button (px)
+  FIRST_TAB_OFFSET:  4,  // extra spacing between the card's top-left corner and the first tab (px)
+                         // full left indent = CARD_R + VALLEY_R + FIRST_TAB_OFFSET
 };
 
 // ─── Destructure for use below ───────────────────────────────────────────────
-const { TAB_H, TAB_TOP_R, CARD_R, VALLEY_R, TAB_MIN_W, TAB_MAX_W, TAB_GAP, PLUS_W, PLUS_GAP } = SHAPE;
+const { TAB_H, TAB_TOP_R, CARD_R, VALLEY_R, TAB_MIN_W, TAB_MAX_W, TAB_GAP, PLUS_W, PLUS_GAP, FIRST_TAB_OFFSET } = SHAPE;
 
 // horizontal space consumed between tab[i].endX and tab[i+1].startX:
 //   right valley arc (VALLEY_R) + flat gap (TAB_GAP) + left valley arc of next tab (VALLEY_R)
@@ -53,8 +55,8 @@ function measureTabWidth(tab: TabBarTab): number {
 function computeTabSlots(tabs: TabBarTab[], W: number): TabSlot[] {
   if (W < 80 || tabs.length === 0) return [];
 
-  // First tab: starts after card TL corner arc + left valley arc + breathing room
-  const firstX   = CARD_R + VALLEY_R + 4;
+  // First tab: starts after card TL corner arc + left valley arc + configurable offset
+  const firstX   = CARD_R + VALLEY_R + FIRST_TAB_OFFSET;
   // Right boundary: reserve space for final valley arc + plus button
   const maxRight = W - CARD_R - VALLEY_R - PLUS_GAP - PLUS_W - 4;
 
