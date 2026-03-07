@@ -34,6 +34,13 @@ const GeminiApiMonitor = import.meta.env.DEV
   ? React.lazy(() => import('./components/GeminiApiMonitor'))
   : (() => null) as React.FC;
 
+// ─── Layout configuration ─────────────────────────────────────────────────────
+//  SHELL_TOP_OFFSET_PX: controls how high the Shell container sits on the page.
+//  Negative value  → Shell moves UP   (tabs closer to the top of the viewport)
+//  Positive value  → Shell moves DOWN (more space above the tabs)
+//  The height compensates automatically so the bottom edge never shifts.
+const SHELL_TOP_OFFSET_PX = -12;
+
 const PRESET_GRID_POSITION = {
   desktop: {
     bottomOffset: -145,
@@ -323,7 +330,11 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
 
   return (
     <div
-      className={`${isMobile && isQuizMode ? '' : 'flex flex-col h-[calc(100vh-136px)]'} w-full max-w-[98%] sm:max-w-[1589px] mx-auto`}
+      className={`${isMobile && isQuizMode ? '' : 'flex flex-col'} w-full max-w-[98%] sm:max-w-[1589px] mx-auto`}
+      style={!(isMobile && isQuizMode) ? {
+        height:    `calc(100vh - ${136 + SHELL_TOP_OFFSET_PX}px)`,
+        marginTop: SHELL_TOP_OFFSET_PX,
+      } : undefined}
     >
       {isMobile && isQuizMode ? (
         <div
