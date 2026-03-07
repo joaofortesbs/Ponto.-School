@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, X } from 'lucide-react';
 import type { TabBarTab, TabIcon } from './types';
 
@@ -60,7 +61,7 @@ const DRAG = {
   // Softer shadow — visible but not overpowering; spreads freely (no clip)
   TAB_SHADOW:   '0 4px 16px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.18)',
   // Gap between the floating card's bottom edge and the top of the main card border
-  TAB_FLOAT_GAP: 3,
+  TAB_FLOAT_GAP: 6,
 };
 
 // ─── Destructure for use below ───────────────────────────────────────────────
@@ -577,9 +578,9 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
       <div
         className="absolute top-0 left-0 right-0"
         style={{
-          height:   TAB_H,
-          zIndex:   (activeDrag?.dragStarted || snapBack) ? 50 : 22,
-          overflow: 'visible',
+          height:        TAB_H,
+          zIndex:        22,
+          overflow:      'visible',
           pointerEvents: 'none',
         }}
       >
@@ -595,7 +596,16 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
           .sp-dragging { touch-action: none; }
         `}</style>
 
-        {slots.map(({ startX, endX, tab }, slotIndex) => {
+        {/* ── Container screen position for portal coordinates ──────────── */}
+        {(() => {
+          // Compute once per render — read the container's viewport position
+          // so floating cards rendered in a body-level portal can be precisely
+          // positioned using `position: fixed`.
+          const cRect = containerRef.current?.getBoundingClientRect();
+          const cLeft = cRect?.left ?? 0;
+          const cTop  = cRect?.top  ?? 0;
+
+          return slots.map(({ startX, endX, tab }, slotIndex) => {
           const isActive   = tab.tabId === activeTabId;
           const isDragging = activeDrag?.dragStarted === true && activeDrag.draggingTabId === tab.tabId;
           const isSnapping = snapBack?.tabId === tab.tabId;
@@ -671,7 +681,44 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
             ? `${TAB_TOP_R}px`
             : `${TAB_TOP_R}px ${TAB_TOP_R}px 0 0`;
 
-          return (
+          // ── Build the button element ──────────────────────────────────
+          // Floating: position:fixed relative to viewport so it escapes every
+          //   stacking context and appears above the entire platform.
+          //   left = container's left edge + visual offset within container.
+          //   top  = container's top edge (gap is applied via transform).
+          //   zIndex: 9999 — truly above everything.
+          // Resting: position:absolute within the tabs container as before.
+          const buttonStyle: React.CSSProperties = isFloating
+            ? {
+                position:   'fixed',
+                left:       cLeft + visualLeft,
+                top:        cTop,
+                width:      slotW,
+                height:     TAB_H,
+                padding:    '0 12px',
+                outline:    'none',
+                transition: leftTransition,
+                zIndex:     9999,
+                opacity:    1,
+                cursor:     isDragging ? 'grabbing' : 'pointer',
+                ...floatingStyle,
+              }
+            : {
+                position:   'absolute',
+                left:       visualLeft,
+                top:        0,
+                width:      slotW,
+                height:     TAB_H,
+                padding:    '0 12px',
+                outline:    'none',
+                transition: leftTransition,
+                zIndex:     22,
+                opacity:    1,
+                cursor:     'pointer',
+                ...floatingStyle,
+              };
+
+          const buttonEl = (
             <button
               key={tab.tabId}
               onPointerDown={e => handleTabPointerDown(e, tab.tabId, slotIndex)}
@@ -680,20 +727,8 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
               onPointerCancel={e => handleTabPointerUp(e, tab.tabId)}
               onMouseEnter={() => { if (!dragRef.current) setHoveredTabId(tab.tabId); }}
               onMouseLeave={() => setHoveredTabId(null)}
-              className={`sp-tab absolute flex items-center justify-center${isActive ? ' active' : ''}${canClose ? ' sp-has-close' : ''}${isDragging ? ' sp-dragging' : ''}`}
-              style={{
-                left:       visualLeft,
-                width:      slotW,
-                top:        0,
-                height:     TAB_H,
-                padding:    '0 12px',
-                outline:    'none',
-                transition: leftTransition,
-                zIndex:     isFloating ? 36 : 22,
-                opacity:    1,
-                cursor:     isDragging ? 'grabbing' : 'pointer',
-                ...floatingStyle,
-              }}
+              className={`sp-tab flex items-center justify-center${isActive ? ' active' : ''}${canClose ? ' sp-has-close' : ''}${isDragging ? ' sp-dragging' : ''}`}
+              style={buttonStyle}
             >
               {/* ── Hover gradient overlay ────────────────────────────────── */}
               <span
@@ -750,7 +785,17 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
               )}
             </button>
           );
-        })}
+
+          // Floating: render in a body-level portal (position:fixed) so the
+          // card escapes every stacking context in the platform and appears
+          // above absolutely all other elements.  React event propagation
+          // still works through the React tree, so pointer capture / handlers
+          // work exactly as if the button were in its original position.
+          return isFloating
+            ? createPortal(buttonEl, document.body, `sp-float-${tab.tabId}`)
+            : buttonEl;
+        });
+        })()}
 
         {/* + Nova aba */}
         <button
