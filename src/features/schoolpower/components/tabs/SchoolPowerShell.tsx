@@ -269,9 +269,9 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
       >
         <style>{`
           .sp-tab { pointer-events: auto; }
-          .sp-tab .sp-x { opacity: 0; transition: opacity 0.18s ease; }
-          .sp-tab:hover .sp-x { opacity: 1; }
-          .sp-tab:hover .sp-label {
+          .sp-tab.sp-has-close .sp-x { opacity: 0; transition: opacity 0.18s ease; }
+          .sp-tab.sp-has-close:hover .sp-x { opacity: 1; }
+          .sp-tab.sp-has-close:hover .sp-label {
             -webkit-mask-image: linear-gradient(to right, black 50%, transparent 88%);
             mask-image: linear-gradient(to right, black 50%, transparent 88%);
           }
@@ -288,7 +288,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
             <button
               key={tab.tabId}
               onClick={() => onTabClick(tab.tabId)}
-              className={`sp-tab absolute flex items-center justify-center cursor-pointer${isActive ? ' active' : ''}`}
+              className={`sp-tab absolute flex items-center justify-center cursor-pointer${isActive ? ' active' : ''}${canClose && tabIndex > 0 ? ' sp-has-close' : ''}`}
               style={{
                 left:       startX,
                 width:      slotW,
