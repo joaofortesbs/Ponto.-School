@@ -34,7 +34,7 @@ interface Dims    { W: number; H: number }
 // ─── Icon helper ─────────────────────────────────────────────────────────────
 const IconByType: React.FC<{ icon: TabIcon; isActive: boolean }> = ({ icon, isActive }) => {
   const cls = `w-[14px] h-[14px] flex-shrink-0 transition-colors duration-150 ${
-    isActive ? 'text-[#F97316]' : 'text-white/30'
+    isActive ? 'text-[#fe6a03]' : 'text-white/30'
   }`;
   if (icon === 'chat')     return <MessageCircle className={cls} />;
   if (icon === 'activity') return <Zap className={cls} />;
@@ -242,12 +242,12 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
         style={{ height: TAB_H, zIndex: 22, pointerEvents: 'none' }}
       >
         <style>{`
-          .sp-tab { pointer-events: auto; }
-          .sp-tab .sp-x { opacity: 0; transition: opacity 0.12s; }
-          .sp-tab:hover .sp-x { opacity: 0.45; }
-          .sp-tab.active .sp-x { opacity: 0.4; }
-          .sp-tab.active:hover .sp-x { opacity: 0.75; }
-          .sp-x:hover { opacity: 1 !important; background: rgba(255,255,255,0.1); border-radius: 50%; }
+          .sp-tab { pointer-events: auto; position: relative; overflow: hidden; }
+          .sp-tab .sp-x   { opacity: 0; transition: opacity 0.18s ease; }
+          .sp-tab .sp-grad{ opacity: 0; transition: opacity 0.18s ease; }
+          .sp-tab:hover .sp-x    { opacity: 1; }
+          .sp-tab:hover .sp-grad { opacity: 1; }
+          .sp-x:hover { background: rgba(255,255,255,0.12) !important; }
         `}</style>
 
         {slots.map(({ startX, endX, tab }) => {
@@ -274,27 +274,33 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
               <IconByType icon={tab.icon} isActive={isActive} />
 
               <span
-                className={`text-[11.5px] font-medium leading-none truncate flex-1 min-w-0 transition-colors duration-150 ${
-                  isActive ? 'text-white/82' : 'text-white/32'
+                className={`text-[11.5px] font-bold leading-none truncate flex-1 min-w-0 transition-colors duration-150 ${
+                  isActive ? 'text-[#fe6a03]' : 'text-white/32'
                 }`}
               >
                 {tab.title}
               </span>
 
               {tab.hasActivity && (
-                <span className="w-[7px] h-[7px] rounded-full bg-[#F97316] flex-shrink-0" />
+                <span className="w-[7px] h-[7px] rounded-full bg-[#fe6a03] flex-shrink-0" />
               )}
 
               {canClose && (
-                <span
-                  role="button"
-                  tabIndex={-1}
-                  onClick={e => { e.stopPropagation(); onCloseTab(tab.tabId); }}
-                  className="sp-x flex-shrink-0 w-[16px] h-[16px] flex items-center justify-center rounded-full cursor-pointer"
-                  aria-label="Fechar aba"
-                >
-                  <X style={{ width: 9, height: 9 }} className="text-white/55" />
-                </span>
+                <>
+                  <span
+                    className="sp-grad pointer-events-none absolute right-0 top-0 bottom-0 w-8"
+                    style={{ background: 'linear-gradient(to left, rgba(8,13,30,0.92) 20%, transparent)' }}
+                  />
+                  <span
+                    role="button"
+                    tabIndex={-1}
+                    onClick={e => { e.stopPropagation(); onCloseTab(tab.tabId); }}
+                    className="sp-x absolute top-1 right-1 w-[16px] h-[16px] flex items-center justify-center rounded-full cursor-pointer"
+                    aria-label="Fechar aba"
+                  >
+                    <X style={{ width: 9, height: 9 }} className="text-white/60" />
+                  </span>
+                </>
               )}
             </button>
           );
