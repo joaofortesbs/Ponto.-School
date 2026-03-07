@@ -265,6 +265,32 @@ function buildBorderPath(W: number, H: number, slots: TabSlot[], excludeTabId?: 
   return d;
 }
 
+// ─── Card outer border (no tab notches) ──────────────────────────────────────
+//
+// Draws only the outer border of the card body — a rounded rectangle at
+// y=TAB_H with the full card corners + sides + bottom.  No tab notch shapes.
+// Used as the static base layer; individual tab notches are rendered as separate
+// <g> elements so each can animate via CSS transform independently.
+//
+function buildCardBorder(W: number, H: number): string {
+  if (W < 10 || H < 10) return '';
+  const n = (v: number) => +v.toFixed(2);
+  const A = (r: number, sf: 0 | 1, x: number, y: number) =>
+    `A ${n(r)},${n(r)} 0 0 ${sf} ${n(x)},${n(y)} `;
+
+  let d = `M ${n(CARD_R)},${n(TAB_H)} `;
+  d += `L ${n(W - CARD_R)},${n(TAB_H)} `;
+  d += A(CARD_R, 1, W,          TAB_H + CARD_R);
+  d += `L ${n(W)},${n(H - CARD_R)} `;
+  d += A(CARD_R, 1, W - CARD_R, H);
+  d += `L ${n(CARD_R)},${n(H)} `;
+  d += A(CARD_R, 1, 0,          H - CARD_R);
+  d += `L 0,${n(TAB_H + CARD_R)} `;
+  d += A(CARD_R, 1, CARD_R,     TAB_H);
+  d += 'Z';
+  return d;
+}
+
 // ─── Single floating tab outline ─────────────────────────────────────────────
 //
 // Returns the SVG path for ONE tab's outline in a local coordinate system
@@ -360,11 +386,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
   //   animating = false → card is still at fromX (no transition yet)
   //   animating = true  → CSS transition carries the card to toX
   const [snapBack, setSnapBack] = useState<SnapBack | null>(null);
-  const snapTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Tracks the excludeId value from the previous render so we can detect when
-  // the SVG path structure changes (drag start / drag end) vs only coordinates
-  // changing (tab swap).  Only coordinate-only changes can use CSS transition: d.
-  const prevExcludeIdRef = useRef<string | undefined>(undefined);
+  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ─── Ordered tabs (normal or preview during drag) ─────────────────────────
   const activeDrag = dragRef.current;
@@ -388,29 +410,16 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
     : snapBack                ? snapBack.tabId
     : undefined;
 
-  // ─── SVG path transition ──────────────────────────────────────────────────
-  // CSS `transition: d` interpolates between two SVG path values.  This ONLY
-  // works when the path structure (number and type of commands) is identical —
-  // i.e. when only the X-coordinates of the notches change (tab swap during an
-  // active drag).  When `excludeId` changes (drag start or drag end) the total
-  // number of path commands changes (N vs N-1 tabs), making interpolation
-  // impossible.  We use prevExcludeIdRef to detect this boundary and suppress
-  // the transition for exactly that one render, letting the path jump instantly.
-  const pathTransition =
-    excludeId !== undefined && excludeId === prevExcludeIdRef.current
-      ? `d ${DRAG.SWAP_ANIM_MS}ms ${DRAG.SWAP_EASING}`
-      : 'none';
-  prevExcludeIdRef.current = excludeId;   // keep in sync for next render
-
-  const pathD = useMemo(
-    () => buildBorderPath(W, H, slots, excludeId),
-    [W, H, slots, excludeId, dragVersion] // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  // Static card border — only changes when the container resizes.
+  // Tab notches are rendered as separate <g> elements below so they can animate
+  // independently via CSS transform (synchronized with button label transitions).
+  const cardBorderD = useMemo(() => buildCardBorder(W, H), [W, H]);
 
   const canClose = tabs.length > 1;
 
   const stroke        = isDarkTheme ? '#111a30' : '#e5e7eb';
   const inactiveColor = isDarkTheme ? '#111a30' : '#e5e7eb';
+  const isDragging    = activeDrag?.dragStarted === true;
 
   // + button left edge: right after the last tab's valley end, or at firstX if no tabs
   const plusX   = slots.length > 0
@@ -633,6 +642,16 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
       style={{ flex: '1 1 0', minHeight: 0 }}
     >
       {/* ── SVG border ──────────────────────────────────────────────────────── */}
+      {/* Architecture: two layers in one SVG.
+            1. cardBorderD   — static outer border (rounded rect at y=TAB_H + sides + bottom).
+                               No tab notches here, so it never needs to re-render on a swap.
+            2. Per-tab <g>   — each non-floating tab's notch in LOCAL coords, positioned via
+                               CSS transform: translateX(...).  When a swap fires, the translateX
+                               value changes and CSS transition animates the move — PERFECTLY IN
+                               SYNC with the button label's transition: left on the same easing
+                               curve and duration.  The floating/excluded tab's <g> is simply
+                               not rendered (gap is the static card-border flat line at y=TAB_H).
+      */}
       {W > 0 && H > 0 && (
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -640,14 +659,40 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
           style={{ pointerEvents: 'none', zIndex: 20, overflow: 'visible' }}
           aria-hidden
         >
+          {/* Static outer border */}
           <path
-            d={pathD}
+            d={cardBorderD}
             fill="none"
             stroke={stroke}
             strokeWidth={1}
             vectorEffect="non-scaling-stroke"
-            style={{ transition: pathTransition }}
           />
+          {/* Per-tab notch — animates via CSS transform, synced with button labels */}
+          {slots.map(({ startX, endX, tab }) => {
+            if (tab.tabId === excludeId) return null;
+            const slotW      = endX - startX;
+            const translateX = startX - VALLEY_R;
+            const notchPath  = buildSingleTabOutline(slotW);
+            return (
+              <g
+                key={tab.tabId}
+                style={{
+                  transform:  `translateX(${translateX}px)`,
+                  transition: isDragging
+                    ? `transform ${DRAG.SWAP_ANIM_MS}ms ${DRAG.SWAP_EASING}`
+                    : 'none',
+                }}
+              >
+                <path
+                  d={notchPath}
+                  fill="none"
+                  stroke={stroke}
+                  strokeWidth={1}
+                  vectorEffect="non-scaling-stroke"
+                />
+              </g>
+            );
+          })}
         </svg>
       )}
 
