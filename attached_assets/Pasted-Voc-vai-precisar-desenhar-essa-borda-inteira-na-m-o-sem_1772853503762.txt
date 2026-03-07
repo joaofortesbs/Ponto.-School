@@ -1,0 +1,212 @@
+Você vai precisar desenhar essa borda inteira na mão (sem imagem), e fazer com que ela se adapte dinamicamente à quantidade e posição das abas; a abordagem mais controlável é usar um <svg> ou um clip-path/mask em CSS para gerar esse contorno com as curvas entre as guias.
+
+1. Visão geral (sem código)
+O card principal continua existindo, mas a “borda mágica” que sobe e desce para formar as guias deixa de ser uma simples border e passa a ser um desenho vetorial: um caminho que contorna o card e faz as curvas das abas no topo.
+
+Cada aba é definida por uma faixa horizontal (x inicial, x final) dentro do topo do card; o desenho da borda sobe nessa faixa (criando o retângulo da aba), desce com uma curva suave, anda até a próxima aba, sobe de novo, e assim por diante.
+
+As labels “Home”, “Atividades…” e os ícones ficam posicionados em cima dessas áreas de aba, mas o que dá o efeito de “tudo é uma borda só” é o fato de o contorno ser um único caminho contínuo que envolve tanto o corpo do card quanto o topo das abas.
+
+Quando você abre ou fecha uma aba, o layout recalcula as larguras e posições das guias, e o caminho vetorial é recalculado para redesenhar a borda.
+
+Você não usa nenhuma imagem; tudo é feito com HTML + CSS + um pouco de lógica JS para montar o path (ou os pontos de um clip-path).
+
+2. Instruções técnicas para o dev (UI focada em borda/abas)
+2.1. Escolha da técnica
+Há duas estratégias viáveis só com código:
+
+SVG “frame” envolvendo o card
+
+Um <svg> que desenha o contorno completo (borda externa + “vales” entre abas) com um <path>.
+
+A área do conteúdo fica por baixo (ou dentro) do SVG, usando pointer-events: none nas partes da borda para não bloquear interação.
+
+Vantagem: controle total das curvas, igual ao Figma; dá para reproduzir exatamente o que você desenhou.
+
+CSS clip-path/mask com polygon + curvas (via SVG path como clip)
+
+O card é um div; você aplica um clip-path baseado num path SVG externo.
+
+Vantagem: conteúdo continua normal; desvantagem: um pouco mais chato de debugar e animar.
+
+Para a fidelidade que você quer (curvas perfeitas como no layout), recomende usar SVG com path calculado.
+
+2.2. Estrutura de componentes
+Pensa em um componente “casca” do School Power:
+
+SchoolPowerShell
+
+Recebe: tabs (com posição e título), activeTabId, callbacks.
+
+Renderiza:
+
+Um container div com position: relative.
+
+Um <svg> absolutamente posicionado ocupando o mesmo retângulo do card.
+
+Um <path> dentro do SVG, com stroke na cor da borda e fill com a cor do fundo do card.
+
+Um div para o conteúdo, com position: relative; z-index acima do fill.
+
+Um div para os rótulos das abas, absolutamente posicionados dentro do topo de cada faixa de aba.
+
+Esquema:
+
+text
+<div class="card-wrapper">
+  <svg class="card-border">
+    <path d="...gerado em runtime..." />
+  </svg>
+
+  <div class="tabs-labels">
+    <!-- um botão por aba, alinhado com o platô da aba no path -->
+  </div>
+
+  <div class="card-content">
+    <!-- chat / UI interna -->
+  </div>
+</div>
+2.3. Cálculo geométrico das abas e da borda
+Definir parâmetros fixos (em JS/TS ou CSS custom properties):
+
+cardWidth, cardHeight (ou ler via getBoundingClientRect).
+
+baseTopY: altura do topo do corpo do card (onde a borda é reta quando não tem aba).
+
+tabHeight: quanto a aba se projeta para cima.
+
+valleyDepth: quanto o “vale” entre abas entra para baixo (como na tua imagem).
+
+radius: raio das curvas (você pode usar o mesmo que o Figma).
+
+Definir faixas das abas
+
+Para cada aba, o layout calcula:
+
+tabStartX (posição esquerda)
+
+tabEndX (posição direita)
+
+Isso pode ser baseado na largura do texto + padding, ou um tamanho fixo.
+
+Você precisa garantir espaçamento mínimo entre abas para as curvas não se atropelarem.
+
+Montar o path do topo
+
+O path começa no canto superior esquerdo (0, baseTopY).
+
+Para cada aba, você desenha:
+
+Linha reta até o ponto onde a borda começa a subir para a aba.
+
+Curva (quadratic ou cubic) que sobe para o platô da aba.
+
+Segmento reto no topo da aba.
+
+Curva que desce para o “vale” entre abas (aquele arco para baixo que você desenhou).
+
+Segmento reto no vale até o início da próxima aba.
+
+Depois da última aba, você segue com borda reta até o canto superior direito.
+
+A partir daí, desenha os lados e a parte de baixo do card com retângulo de cantos arredondados tradicionais (ou mais curvas, se quiser).
+
+Exemplo conceitual do topo, em “pseudo path”:
+
+M 0,baseTopY
+
+L tab1StartX - offset, baseTopY
+
+Q ... (subida)
+
+L tab1EndX + offset, baseTopY - tabHeight
+
+Q ... (descida para o vale)
+
+L ... (até próxima aba)
+
+repetir para cada aba.
+
+O dev deve pensar assim: um laço (for) que concatena segmentos do path com base na lista de abas.
+
+2.4. Alinhamento dos labels das abas
+As labels não fazem parte do path; elas são elementos separados.
+
+Para cada aba, usar as mesmas tabStartX e tabEndX usadas para o path para posicionar o botão:
+
+left = tabStartX
+
+width = tabEndX - tabStartX
+
+top = baseTopY - tabHeight + algum offset interno (para alinhar texto).
+
+O botão deve ter background transparente e sem borda, para que pareça que o texto está “dentro” da aba desenhada pelo SVG.
+
+Para a aba ativa, você pode mudar o fill da faixa correspondente no path (ou desenhar uma segunda camada de path com estilo de aba ativa) ou apenas mudar a cor do texto e adicionar uma sombra interna.
+
+2.5. Responsividade e recalculo
+O componente precisa recalcular o path quando:
+
+muda a quantidade de abas,
+
+muda o tamanho do card (resize, breakpoint),
+
+muda a largura de uma aba (por exemplo, renomear título).
+
+Implementar um hook que:
+
+usa ResizeObserver no card para detectar mudanças de largura.
+
+recalcula cardWidth e as faixas das abas.
+
+reconstroi a string d do <path>.
+
+Para evitar flicker, manter o path anterior enquanto o novo é calculado e depois trocar.
+
+2.6. Interação (hover, click, estados)
+Cada label de aba (botão) cuida de onClick e onMouseEnter:
+
+onClick troca a aba ativa no estado global.
+
+onMouseEnter pode mostrar um highlight sutil (mudar cor do texto/ícone, ou aplicar filter mais claro no stroke da borda na faixa daquela aba).
+
+Como o path é contínuo, você não vai clicar nele diretamente; você só reage ao clique no botão que está por cima.
+
+Se quiser, pode criar um hitbox invisível sobre cada faixa de aba (div transparente) para facilitar o clique.
+
+2.7. Faseamento da implementação
+Para o dev conseguir entregar:
+
+Protótipo estático com duas abas
+
+Card com largura fixa.
+
+Path hardcoded em SVG reproduzindo exatamente o desenho do Figma para 2 abas em posições fixas.
+
+Labels posicionadas manualmente.
+
+Ajustar até o visual ficar idêntico ao design.
+
+Parametrização
+
+Extrair valores mágicos (larguras, offsets, raios) para variáveis.
+
+Criar função que recebe [ {startX, endX}, ...] e gera o topo do path com loops e curvas.
+
+Substituir os valores fixos do protótipo pela função.
+
+Integração com sistema de abas real
+
+Ligar a listagem de abas do estado de School Power na função que calcula as faixas.
+
+Recalcular ao abrir/fechar aba.
+
+Ligar os cliques das labels com o estado de sessão.
+
+Refino visual
+
+Ajustar anti‑aliasing do stroke e do fill (especialmente em monitores diferentes).
+
+Testar em diferentes resoluções e comprimentos de título.
+
+Implementar animações leves de transição de path (opcional) usando transition ou libs de animação de SVG.
