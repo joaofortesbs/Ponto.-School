@@ -360,7 +360,11 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
   //   animating = false → card is still at fromX (no transition yet)
   //   animating = true  → CSS transition carries the card to toX
   const [snapBack, setSnapBack] = useState<SnapBack | null>(null);
-  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const snapTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tracks the excludeId value from the previous render so we can detect when
+  // the SVG path structure changes (drag start / drag end) vs only coordinates
+  // changing (tab swap).  Only coordinate-only changes can use CSS transition: d.
+  const prevExcludeIdRef = useRef<string | undefined>(undefined);
 
   // ─── Ordered tabs (normal or preview during drag) ─────────────────────────
   const activeDrag = dragRef.current;
@@ -383,6 +387,20 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
     activeDrag?.dragStarted   ? activeDrag.draggingTabId
     : snapBack                ? snapBack.tabId
     : undefined;
+
+  // ─── SVG path transition ──────────────────────────────────────────────────
+  // CSS `transition: d` interpolates between two SVG path values.  This ONLY
+  // works when the path structure (number and type of commands) is identical —
+  // i.e. when only the X-coordinates of the notches change (tab swap during an
+  // active drag).  When `excludeId` changes (drag start or drag end) the total
+  // number of path commands changes (N vs N-1 tabs), making interpolation
+  // impossible.  We use prevExcludeIdRef to detect this boundary and suppress
+  // the transition for exactly that one render, letting the path jump instantly.
+  const pathTransition =
+    excludeId !== undefined && excludeId === prevExcludeIdRef.current
+      ? `d ${DRAG.SWAP_ANIM_MS}ms ${DRAG.SWAP_EASING}`
+      : 'none';
+  prevExcludeIdRef.current = excludeId;   // keep in sync for next render
 
   const pathD = useMemo(
     () => buildBorderPath(W, H, slots, excludeId),
@@ -628,6 +646,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
             stroke={stroke}
             strokeWidth={1}
             vectorEffect="non-scaling-stroke"
+            style={{ transition: pathTransition }}
           />
         </svg>
       )}
