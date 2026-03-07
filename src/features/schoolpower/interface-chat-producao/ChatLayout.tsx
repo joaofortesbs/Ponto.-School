@@ -159,12 +159,26 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack, initial
     };
   }, []);
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const prevMsgCountRef = useRef(0);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length === 0) {
+      prevMsgCountRef.current = 0;
+      return;
+    }
+    const delta = messages.length - prevMsgCountRef.current;
+    prevMsgCountRef.current = messages.length;
+    if (delta > 1) {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        scrollToBottom('instant');
+      }));
+    } else {
+      scrollToBottom('smooth');
+    }
   }, [messages, scrollToBottom]);
 
   const pendingArtifactsRef = useRef<ArtifactData[]>([]);

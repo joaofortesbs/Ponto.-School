@@ -25,6 +25,17 @@ Sistema completo de persistência de sessões por aba no SchoolPower (Jota Chat)
 - Sessões fechadas ficam com `is_active = false` (soft-delete, não apagados)
 - Layout: `SHELL_TOP_OFFSET_PX = -12` para ajuste fino da altura do container das abas
 
+### Upsert-first para FK safety (fix FK violations)
+- Problema original: mensagens chegavam ao backend antes da sessão existir em `sp_sessions` — race condition FK
+- Solução: endpoints `POST /sessions/:sessionId/messages` e `POST .../batch` aceitam `userId` no body e executam `INSERT INTO sp_sessions ... ON CONFLICT DO NOTHING` antes de qualquer insert de mensagem
+- Frontend: `saveMessage` e `saveMessages` em `useSessionsApi.ts` passam `userId: uid` no body automaticamente
+- Padrão "upsert-on-write" — elimina o race condition sem precisar garantir ordem no frontend
+
+### Auto-scroll ao restaurar mensagens (troca de aba)
+- `ChatLayout.tsx`: detecta restore em bulk (delta de messages > 1) via `prevMsgCountRef`
+- Usa duplo `requestAnimationFrame` + `behavior: 'instant'` para bulk restore (garante que DOM renderizou antes do scroll)
+- Usa `behavior: 'smooth'` para mensagens incrementais durante conversa ativa
+
 
 
 ## Overview

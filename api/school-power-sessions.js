@@ -177,8 +177,15 @@ router.get('/sessions/:sessionId/messages', async (req, res) => {
 router.post('/sessions/:sessionId/messages', async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const msg = req.body;
+    const { userId, ...msg } = req.body;
     if (!msg || !msg.id) return res.status(400).json({ error: 'Mensagem inválida' });
+
+    if (userId) {
+      await neonDB.executeQuery(
+        `INSERT INTO sp_sessions (id, user_id, title, icon) VALUES ($1, $2, 'Home', 'home') ON CONFLICT (id) DO NOTHING`,
+        [sessionId, userId]
+      );
+    }
 
     const s = serializeMsg(msg);
     const query = `
@@ -204,9 +211,16 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
 router.post('/sessions/:sessionId/messages/batch', async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { messages } = req.body;
+    const { messages, userId } = req.body;
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.json({ success: true, inserted: 0 });
+    }
+
+    if (userId) {
+      await neonDB.executeQuery(
+        `INSERT INTO sp_sessions (id, user_id, title, icon) VALUES ($1, $2, 'Home', 'home') ON CONFLICT (id) DO NOTHING`,
+        [sessionId, userId]
+      );
     }
 
     let inserted = 0;

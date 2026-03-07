@@ -69,7 +69,7 @@ export function useSessionsApi(userId: string | null) {
     if (!uid) return;
     await apiFetch(`/sessions/${tabId}/messages`, {
       method: 'POST',
-      body: JSON.stringify(msg),
+      body: JSON.stringify({ ...msg, userId: uid }),
     });
   }
 
@@ -77,7 +77,7 @@ export function useSessionsApi(userId: string | null) {
     if (!uid || messages.length === 0) return;
     await apiFetch(`/sessions/${tabId}/messages/batch`, {
       method: 'POST',
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages, userId: uid }),
     });
   }
 
