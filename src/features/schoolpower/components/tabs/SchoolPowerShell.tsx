@@ -2,29 +2,24 @@ import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import { Home, MessageCircle, Zap, Plus, X } from 'lucide-react';
 import type { TabBarTab, TabIcon } from './types';
 
-// ─── Geometry constants ──────────────────────────────────────────────────────
+// ─── Tab shape configuration ─────────────────────────────────────────────────
+//  Edit these numbers to change the visual appearance of the tabs.
+//  Rule: TAB_H  must be greater than  VALLEY_R + TAB_TOP_R
 //
-//  The combined shape looks like this (not to scale):
-//
-//        ┌────────────────────────┐
-//       ╱│    tab label text      │╲
-//  ─────╯  ─────────────────────  ╰─────────────── card border ───
-//  |                                                              |
-//  |                  card content area                          |
-//  └──────────────────────────────────────────────────────────────┘
-//
-//  The "╯" and "╰" are the "barriguinhas" — concave quarter-circle arcs.
-//
-const TAB_H     = 44;   // how many px the tab rises above the card border line
-const TAB_TOP_R = 12;   // radius of rounded corners at the TOP of each tab
-const CARD_R    = 16;   // radius of rounded corners of the card body
-const VALLEY_R  = 20;   // radius of the concave arcs at each tab base (the "barriguinhas")
-                        // MUST satisfy: TAB_H > VALLEY_R + TAB_TOP_R
-const TAB_MIN_W = 112;
-const TAB_MAX_W = 180;
-const TAB_GAP   =  8;   // flat floor between two adjacent tabs' valley ends
-const PLUS_W    = 28;
-const PLUS_GAP  = 12;
+const SHAPE = {
+  TAB_H:     44,   // height of the tab above the card border (px)
+  TAB_TOP_R: 12,   // corner radius at the TOP of each tab (px)
+  CARD_R:    16,   // corner radius of the card body itself (px)
+  VALLEY_R:  20,   // radius of the concave "barriguinha" arcs at each tab base (px)
+  TAB_MIN_W: 112,  // minimum tab width (px)
+  TAB_MAX_W: 180,  // maximum tab width (px)
+  TAB_GAP:    8,   // flat valley floor between two adjacent tabs (px)
+  PLUS_W:    28,   // width of the "+" add-tab button (px)
+  PLUS_GAP:  12,   // gap between last tab and the "+" button (px)
+};
+
+// ─── Destructure for use below ───────────────────────────────────────────────
+const { TAB_H, TAB_TOP_R, CARD_R, VALLEY_R, TAB_MIN_W, TAB_MAX_W, TAB_GAP, PLUS_W, PLUS_GAP } = SHAPE;
 
 // horizontal space consumed between tab[i].endX and tab[i+1].startX:
 //   right valley arc (VALLEY_R) + flat gap (TAB_GAP) + left valley arc of next tab (VALLEY_R)
