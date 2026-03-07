@@ -27,7 +27,8 @@ const LABEL = {
   FONT_PX:          13,                      // text size inside each tab (px)
   FONT_WEIGHT:     800,                      // font weight  (700=bold · 800=extrabold · 900=black)
   ICON_PX:          16,                      // icon size inside each tab (px)
-  GAP_PX:            3,                      // gap between icon and text (px)
+  ICON_STROKE:       2.5,                    // icon stroke-width — higher = bolder/heavier (default Lucide = 2)
+  GAP_PX:            7,                      // gap between icon and text (px)
   ACTIVE_COLOR:    '#fe6a03',                // color of icon + text on the ACTIVE tab
   INACTIVE_COLOR:  'rgba(255,255,255,0.32)', // color of icon + text on INACTIVE tabs
 };
@@ -46,9 +47,10 @@ interface Dims    { W: number; H: number }
 // ─── Icon helper ─────────────────────────────────────────────────────────────
 const IconByType: React.FC<{ icon: TabIcon; color: string }> = ({ icon, color }) => {
   const s = { width: LABEL.ICON_PX, height: LABEL.ICON_PX, flexShrink: 0 as const, color, transition: 'color 0.15s' };
-  if (icon === 'chat')     return <MessageCircle style={s} />;
-  if (icon === 'activity') return <Zap style={s} />;
-  return <Home style={s} />;
+  const sw = LABEL.ICON_STROKE;
+  if (icon === 'chat')     return <MessageCircle style={s} strokeWidth={sw} />;
+  if (icon === 'activity') return <Zap style={s} strokeWidth={sw} />;
+  return <Home style={s} strokeWidth={sw} />;
 };
 
 // ─── Tab width from title ─────────────────────────────────────────────────────
