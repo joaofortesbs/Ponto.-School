@@ -162,7 +162,7 @@ router.get('/sessions/:sessionId/messages', async (req, res) => {
     const query = `
       SELECT * FROM sp_messages
       WHERE session_id = $1
-      ORDER BY created_at ASC
+      ORDER BY id ASC
     `;
     const result = await neonDB.executeQuery(query, [sessionId]);
     if (!result.success) return res.status(500).json({ error: result.error });

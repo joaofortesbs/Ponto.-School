@@ -42,12 +42,11 @@ export function useSchoolPowerTabs({
   // ─── Message save queue (debounced for streaming, immediate for final) ────
   const msgQueueRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
-  function enqueueSaveMessage(tabId: string, msg: Message) {
+  function enqueueSaveMessage(tabId: string, msg: Message, delayOverride?: number) {
     if (!userId) return;
-    const isFinal = msg.role === 'user' || msg.metadata?.isStatic === true;
     const key = msg.id;
     if (msgQueueRef.current.has(key)) clearTimeout(msgQueueRef.current.get(key)!);
-    const delay = isFinal ? 0 : 600;
+    const delay = delayOverride !== undefined ? delayOverride : 0;
     const timer = setTimeout(() => {
       api.saveMessage(tabId, msg);
       msgQueueRef.current.delete(key);
@@ -241,7 +240,7 @@ export function useSchoolPowerTabs({
       } else if (state.messages.length === prevState.messages.length) {
         for (let i = 0; i < state.messages.length; i++) {
           if (state.messages[i] !== prevState.messages[i]) {
-            enqueueSaveMessage(activeTabId, state.messages[i]);
+            enqueueSaveMessage(activeTabId, state.messages[i], 800);
           }
         }
       }
