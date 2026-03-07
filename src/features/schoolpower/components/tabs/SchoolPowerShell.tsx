@@ -291,6 +291,54 @@ function buildCardBorder(W: number, H: number): string {
   return d;
 }
 
+// ─── Card border — floor segments only (no line under tabs) ──────────────────
+//
+// Like buildCardBorder but draws the top edge only in the gaps between
+// tab notches (i.e., the "floor" segments between tabs), never through a
+// tab's own area.  The excluded tab's slot becomes part of the adjacent
+// floor segment, producing the ghost gap during drag.
+//
+function buildCardBorderFloors(
+  W: number,
+  H: number,
+  slots: TabSlot[],
+  excludeId?: string
+): string {
+  if (W < 10 || H < 10) return '';
+
+  const n = (v: number) => +v.toFixed(2);
+  const A = (r: number, sf: 0 | 1, x: number, y: number) =>
+    `A ${n(r)},${n(r)} 0 0 ${sf} ${n(x)},${n(y)} `;
+
+  let d = '';
+  let segStart = CARD_R;
+
+  for (const { startX, endX, tab } of slots) {
+    if (tab.tabId === excludeId) continue;
+    const arcEntry = startX - VALLEY_R;
+    const arcExit  = endX   + VALLEY_R;
+    if (arcEntry > segStart) {
+      d += `M ${n(segStart)},${n(TAB_H)} L ${n(arcEntry)},${n(TAB_H)} `;
+    }
+    segStart = arcExit;
+  }
+
+  // Card body: floor after last tab + right corner + sides + bottom + left corner.
+  // Ends at (CARD_R, TAB_H) — the top-left corner of the card.  No Z, so the
+  // path is open at the top (no line drawn back through tab areas).
+  d += `M ${n(segStart)},${n(TAB_H)} `;
+  d += `L ${n(W - CARD_R)},${n(TAB_H)} `;
+  d += A(CARD_R, 1, W,          TAB_H + CARD_R);
+  d += `L ${n(W)},${n(H - CARD_R)} `;
+  d += A(CARD_R, 1, W - CARD_R, H);
+  d += `L ${n(CARD_R)},${n(H)} `;
+  d += A(CARD_R, 1, 0,          H - CARD_R);
+  d += `L 0,${n(TAB_H + CARD_R)} `;
+  d += A(CARD_R, 1, CARD_R,     TAB_H);
+
+  return d;
+}
+
 // ─── Single floating tab outline ─────────────────────────────────────────────
 //
 // Returns the SVG path for ONE tab's outline in a local coordinate system
@@ -410,10 +458,13 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
     : snapBack                ? snapBack.tabId
     : undefined;
 
-  // Static card border — only changes when the container resizes.
-  // Tab notches are rendered as separate <g> elements below so they can animate
-  // independently via CSS transform (synchronized with button label transitions).
-  const cardBorderD = useMemo(() => buildCardBorder(W, H), [W, H]);
+  // Card border with floor segments only — excludes tab areas from the top edge
+  // so no horizontal line appears under any tab.  Recomputes whenever the slot
+  // layout or the excluded (dragging) tab changes.
+  const cardBorderD = useMemo(
+    () => buildCardBorderFloors(W, H, slots, excludeId),
+    [W, H, slots, excludeId] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const canClose = tabs.length > 1;
 
@@ -678,9 +729,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
                 key={tab.tabId}
                 style={{
                   transform:  `translateX(${translateX}px)`,
-                  transition: isDragging
-                    ? `transform ${DRAG.SWAP_ANIM_MS}ms ${DRAG.SWAP_EASING}`
-                    : 'none',
+                  transition: `transform ${DRAG.SWAP_ANIM_MS}ms ${DRAG.SWAP_EASING}`,
                 }}
               >
                 <path
