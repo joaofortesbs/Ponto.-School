@@ -242,11 +242,13 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
         style={{ height: TAB_H, zIndex: 22, pointerEvents: 'none' }}
       >
         <style>{`
-          .sp-tab { pointer-events: auto; position: relative; overflow: hidden; }
-          .sp-tab .sp-x   { opacity: 0; transition: opacity 0.18s ease; }
-          .sp-tab .sp-grad{ opacity: 0; transition: opacity 0.18s ease; }
-          .sp-tab:hover .sp-x    { opacity: 1; }
-          .sp-tab:hover .sp-grad { opacity: 1; }
+          .sp-tab { pointer-events: auto; }
+          .sp-tab .sp-x { opacity: 0; transition: opacity 0.18s ease; }
+          .sp-tab:hover .sp-x { opacity: 1; }
+          .sp-tab:hover .sp-label {
+            -webkit-mask-image: linear-gradient(to right, black 50%, transparent 88%);
+            mask-image: linear-gradient(to right, black 50%, transparent 88%);
+          }
           .sp-x:hover { background: rgba(255,255,255,0.12) !important; }
         `}</style>
 
@@ -269,12 +271,11 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
                 border:     'none',
                 outline:    'none',
               }}
-              title={tab.title}
             >
               <IconByType icon={tab.icon} isActive={isActive} />
 
               <span
-                className={`text-[11.5px] font-bold leading-none truncate flex-1 min-w-0 transition-colors duration-150 ${
+                className={`sp-label text-[11.5px] font-bold leading-none truncate flex-1 min-w-0 transition-colors duration-150 ${
                   isActive ? 'text-[#fe6a03]' : 'text-white/32'
                 }`}
               >
@@ -286,21 +287,16 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
               )}
 
               {canClose && (
-                <>
-                  <span
-                    className="sp-grad pointer-events-none absolute right-0 top-0 bottom-0 w-8"
-                    style={{ background: 'linear-gradient(to left, rgba(8,13,30,0.92) 20%, transparent)' }}
-                  />
-                  <span
-                    role="button"
-                    tabIndex={-1}
-                    onClick={e => { e.stopPropagation(); onCloseTab(tab.tabId); }}
-                    className="sp-x absolute top-1 right-1 w-[16px] h-[16px] flex items-center justify-center rounded-full cursor-pointer"
-                    aria-label="Fechar aba"
-                  >
-                    <X style={{ width: 9, height: 9 }} className="text-white/60" />
-                  </span>
-                </>
+                <span
+                  role="button"
+                  tabIndex={-1}
+                  onClick={e => { e.stopPropagation(); onCloseTab(tab.tabId); }}
+                  className="sp-x absolute right-2 w-[16px] h-[16px] flex items-center justify-center rounded-full cursor-pointer"
+                  style={{ top: '50%', transform: 'translateY(-50%)' }}
+                  aria-label="Fechar aba"
+                >
+                  <X style={{ width: 9, height: 9 }} className="text-white/60" />
+                </span>
               )}
             </button>
           );
