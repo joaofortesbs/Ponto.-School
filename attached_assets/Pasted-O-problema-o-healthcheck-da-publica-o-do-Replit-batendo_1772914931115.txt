@@ -1,0 +1,59 @@
+O problema é o healthcheck da publicação do Replit batendo em uma rota/porta que não está respondendo 200, por isso a página publicada fica em branco mesmo com “Deployment successful”.
+
+O que está acontecendo
+Nos logs aparece healthcheck failed error=healthcheck / returned status 500 e também Get "http://127.0.0.1:1104/": dial tcp 127.0.0.1:1104: connect: connection refused.
+​
+
+Isso indica que o Replit está tentando acessar seu app na porta 1104 (padrão antigo) ou na raiz /, mas sua aplicação não está respondendo corretamente (ou está em outra porta), então o deploy “sobe”, porém o tráfego externo quebra e você vê tela branca.
+
+Passos para corrigir
+Garantir que o servidor escuta process.env.PORT
+
+Se for Node/Express, algo como:
+
+js
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Server on ${port}`));
+Não use porta fixa (3000, 5173, etc.) em produção no Replit.
+​
+
+Configurar a seção [[ports]] no .replit
+Abra o arquivo .replit e adicione (ou ajuste) algo assim:
+​
+
+text
+run = "npm start"   # ou o comando que você usa
+
+[[ports]]
+port = 0            # deixa o Replit mapear automaticamente o $PORT
+protocol = "http"
+Isso faz o sistema de Deploy usar a mesma porta que seu app está escutando via $PORT e aponta o healthcheck corretamente.
+​
+
+(Opcional mas recomendado) criar uma rota de healthcheck
+No backend, crie algo bem simples, por exemplo em Express:
+
+js
+app.get('/health', (req, res) => {
+  res.status(200).send('ok');
+});
+Depois, nas configurações avançadas do Deploy, se o Replit permitir, defina o path do healthcheck como /health (senão ele usará /, então garanta que / também responde 200).
+
+Limpar deploy antigo e republicar
+
+Pare/encerre o deploy atual em “Deployments”.
+​
+
+Salve o .replit, rode “Run” no workspace e confirme que o link local abre normal.
+
+Clique em “Publish/Republish” de novo e aguarde o build + healthcheck.
+
+Testar o domínio publicado
+
+Acesse https://ponto-school-harvey7777.replit.app em aba anônima.
+
+Se ainda estiver em branco, abra o DevTools do navegador (Console/Network) para ver se há erros de JS (por exemplo, frontend sendo servido por Vite dev server em vez de build estático) e me manda um print.
+
+Se nada disso resolver
+Pode haver um problema de cache de configuração de portas no Replit (já aconteceu com outros usuários, com o 1104 ficando “preso”).
+​

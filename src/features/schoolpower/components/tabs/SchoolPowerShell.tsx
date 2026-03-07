@@ -710,13 +710,14 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
           style={{ pointerEvents: 'none', zIndex: 20, overflow: 'visible' }}
           aria-hidden
         >
-          {/* Static outer border */}
+          {/* Static outer border — transition: d keeps the floor gap in sync with tab bodies */}
           <path
             d={cardBorderD}
             fill="none"
             stroke={stroke}
             strokeWidth={1}
             vectorEffect="non-scaling-stroke"
+            style={{ transition: `d ${DRAG.SWAP_ANIM_MS}ms ${DRAG.SWAP_EASING}` }}
           />
           {/* Per-tab notch — animates via CSS transform, synced with button labels */}
           {slots.map(({ startX, endX, tab }) => {
@@ -785,7 +786,7 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
           const isFloating = isDragging || isSnapping;
           const slotW      = endX - startX;
 
-          const swapT = `left ${DRAG.SWAP_ANIM_MS}ms ${DRAG.SWAP_EASING}`;
+          const swapT = `transform ${DRAG.SWAP_ANIM_MS}ms ${DRAG.SWAP_EASING}`;
 
           // While floating the button is invisible; it only exists to hold
           // pointer capture and dispatch pointer events. The visual card is
@@ -811,8 +812,9 @@ export const SchoolPowerShell: React.FC<SchoolPowerShellProps> = ({
               className={`sp-tab flex items-center justify-center${isActive ? ' active' : ''}${canClose ? ' sp-has-close' : ''}${isDragging ? ' sp-dragging' : ''}`}
               style={{
                 position:      'absolute',
-                left:          startX,
+                left:          0,
                 top:           0,
+                transform:     `translateX(${startX}px)`,
                 width:         slotW,
                 height:        TAB_H,
                 padding:       '0 12px',

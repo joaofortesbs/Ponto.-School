@@ -1,0 +1,51 @@
+O deploy em si está ok, mas o servidor que o Replit tenta acessar não está respondendo na porta esperada, então ele serve uma página em branco.
+
+O que está acontecendo
+Nos logs aparece várias vezes healthcheck failed ... returned status 500 logo após “starting up app application”.
+
+O healthcheck tenta bater em http://127.0.0.1:1104/ e não consegue conectar, o que indica que o processo que você sobe no Run command não está ouvindo na porta certa ou não está iniciando corretamente.
+
+No painel de Publish, o Replit mostra que ele encaminha o tráfego externo para a porta 80, mas o seu app provavelmente está ouvindo em outra (ex.: 3000, 3001, etc.).
+
+Como ajustar (passo a passo)
+Confirme a porta que o seu servidor usa
+No api/server.js (ou arquivo equivalente), procure algo como:
+
+js
+const port = process.env.PORT || 3001;
+app.listen(port, () => console.log(`Listening on ${port}`));
+Se estiver fixo em 3000/3001, troque para usar process.env.PORT (sem default fixo) ou deixe process.env.PORT || 80.
+
+Garanta que o app suba com o comando de Publish
+No painel de Publish:
+
+Build command: npm run build (como você já colocou).
+
+Run command: mantenha algo do tipo:
+
+bash
+bash -c "node api/server.js"
+Mas só funciona se dentro do server.js você estiver usando a porta de process.env.PORT.
+
+Checar o “Port configuration”
+Na parte de “App type → Web Server → Port configuration” deixe apenas a linha:
+
+Host: 0.0.0.0
+
+External Port: :80 (com o ✔️ verde)
+Remova qualquer extra (por exemplo, :3001 com X vermelho).
+
+Republish
+
+Salve as alterações no código.
+
+No Publish, clique em “Republish”.
+
+Acompanhe os logs: você deve ver algo como “Listening on port 80” e o healthcheck deixando de retornar 500.
+
+Se ainda ficar em branco
+
+Abra os logs (aba Logs → Errors only desmarcado) e veja se aparece algum erro de build (npm run build) ou erro de runtime do Node.
+
+Se for front-end SPA, verifique se a rota / está servindo o index.html (por exemplo com express.static('dist') ou configurando corretamente o framework).
+
