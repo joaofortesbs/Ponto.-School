@@ -14,7 +14,7 @@ const Home: React.FC = () => {
             <CabecalhoFlutuante />
           </div>
         </div>
-        <main className="flex-1 overflow-y-auto px-4 py-4">
+        <main className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 md:px-6">
           <Outlet />
         </main>
       </div>

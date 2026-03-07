@@ -150,7 +150,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
 
   return (
     <div
-      className={`relative flex ${isMobile && isQuizMode ? 'h-screen min-h-screen' : 'h-[90vh] min-h-[650px]'} w-full max-w-[98%] sm:max-w-[1600px] mx-auto flex-col items-center justify-center overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10`}
+      className={`relative flex ${isMobile && isQuizMode ? 'h-screen min-h-screen' : 'h-[90vh] min-h-[650px]'} w-full max-w-[98%] sm:max-w-[1589px] mx-auto flex-col items-center justify-center overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10`}
       style={{ 
         backgroundColor: "transparent",
         scrollbarWidth: 'none',
