@@ -118,9 +118,10 @@ function buildBorderPath(W: number, H: number, slots: TabSlot[]): string {
     const arcEntry = startX - VALLEY_R;
     if (arcEntry > cx) d += `L ${n(arcEntry)},${n(TAB_H)} `;
 
-    // ② left "barriguinha" — concave, clockwise quarter circle
-    //    Center (startX, TAB_H), from 180° → 270° cw
-    d += A(VALLEY_R, 1, startX, TAB_H - VALLEY_R);
+    // ② left "barriguinha" — concave, CCW quarter circle (sweep=0)
+    //    Center (startX-VALLEY_R, TAB_H-VALLEY_R), from 90° → 0° ccw
+    //    Arc bows toward lower-right (interior) = concave from outside ✓
+    d += A(VALLEY_R, 0, startX, TAB_H - VALLEY_R);
 
     // ③ left wall straight up
     d += `L ${n(startX)},${n(TAB_TOP_R)} `;
@@ -139,9 +140,10 @@ function buildBorderPath(W: number, H: number, slots: TabSlot[]): string {
     // ⑦ right wall straight down
     d += `L ${n(endX)},${n(TAB_H - VALLEY_R)} `;
 
-    // ⑧ right "barriguinha" — concave, clockwise quarter circle
-    //    Center (endX, TAB_H), from 270° → 0° cw
-    d += A(VALLEY_R, 1, endX + VALLEY_R, TAB_H);
+    // ⑧ right "barriguinha" — concave, CCW quarter circle (sweep=0)
+    //    Center (endX+VALLEY_R, TAB_H-VALLEY_R), from 180° → 90° ccw
+    //    Arc bows toward lower-left (interior) = concave from outside ✓
+    d += A(VALLEY_R, 0, endX + VALLEY_R, TAB_H);
 
     cx = endX + VALLEY_R;
   }

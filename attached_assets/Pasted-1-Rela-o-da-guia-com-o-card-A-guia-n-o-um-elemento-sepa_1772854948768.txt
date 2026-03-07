@@ -1,0 +1,77 @@
+1. Relação da guia com o card
+A guia não é um elemento separado colado em cima: ela é uma extensão da própria borda do card.
+
+O contorno sai da borda superior do card, sobe para formar a guia, desce novamente e continua pelo topo do card, tudo em um único traço, sem quebras visíveis.
+
+Não existe “step” ou quina entre card e guia; sempre que a borda muda de direção ela o faz com uma curva contínua.
+
+2. Topo da guia
+O topo da guia é um retângulo horizontal com cantos bem arredondados.
+
+As duas quinas superiores direitas e esquerdas são curvas suaves de raio grande (bem maior que o raio dos cantos do card), quase como um pill achatado, só que mais largo que alto.
+
+A linha superior é totalmente reta, paralela ao topo da viewport, numa altura claramente mais alta que a borda do card.
+
+A espessura da borda que contorna a guia é a mesma espessura da borda do card (mesma cor e largura de stroke), reforçando a sensação de peça única.
+
+3. Laterais da guia
+As laterais da guia são verticais do topo curvo até um certo ponto logo acima da transição para o card.
+
+Essas laterais não têm cantos arredondados entre si e o topo: a curva superior já “gira” direto nessa lateral, como um canto de retângulo com border-radius no topo, mas sem raio visível no ponto onde encontra a parte de baixo da guia.
+
+A altura da guia é suficiente para acomodar o ícone e o texto com bastante respiro vertical; a borda não encosta no conteúdo.
+
+4. Fundo da guia (transição para o card)
+Essa é a parte mais específica e que foge de um simples border-radius:
+
+A guia não termina com uma linha reta horizontal na base.
+
+Em vez disso, o contorno faz duas curvas côncavas que descem na direção do card e voltam a subir levemente para se alinharem com a borda superior do card:
+
+No canto inferior esquerdo da guia, a borda desce formando uma meia-lua voltada para baixo, que termina na borda superior do card.
+
+No canto inferior direito da guia, acontece o mesmo, porém espelhado.
+
+Essas curvas inferiores usam um raio grande, do mesmo “peso visual” do raio do topo do card; visualmente parecem partes de um grande círculo que cruza entre guia e card.
+
+Entre essas duas curvas inferiores existe um trecho de borda que corresponde ao “negativo” entre duas guias, formando aquele vale circular que você mostrou nas imagens iniciais (quando há duas guias lado a lado).
+
+5. Conexão com a borda do card
+No ponto em que o círculo inferior da guia encontra o card, o contorno continua sem quebra:
+
+O final da curva inferior da guia encosta exatamente na linha da borda superior do card.
+
+A partir dali, a borda segue o traçado do card (horizontal) até a próxima transição.
+
+Toda a borda (guia + card) tem a mesma cor e opacidade (um tom de cinza/laranja muito suave sobre o fundo azul escuro), sem mudança de espessura.
+
+As curvas internas (o “vale” entre uma guia e outra) respeitam o mesmo raio das curvas externas da borda do card, então tudo parece fluido.
+
+6. Interior da guia
+O interior da guia é preenchido com a mesma cor de fundo do card, ou um tom ligeiramente mais claro, mas não é uma cor isolada; é sutil, como se fosse o card elevando a borda.
+
+O ícone de casa e o texto “Home” ficam centralizados horizontalmente dentro da largura útil da guia, com padding esquerdo consistente (o ícone nunca encosta na borda).
+
+Verticalmente, o conteúdo fica alinhado mais ou menos no centro da altura da guia, deixando margens iguais acima e abaixo do texto.
+
+Não há sombra externa marcada; o destaque vem da borda clara sobre o fundo escuro e da cor do texto/ícone.
+
+7. Quando existem duas guias (imagem com “Home” e “Atividades…”)
+Entre elas, o topo do card forma um vale circular:
+
+O contorno desce em arco a partir do lado direito da primeira guia, atinge um ponto mais baixo (alinhado com o topo do card) e sobe de novo em arco para o lado esquerdo da segunda guia.
+
+Esse vale tem forma de um semicírculo perfeito ou quase perfeito, com o centro no eixo vertical entre as duas guias.
+
+A base do vale é exatamente na linha da borda do card; não há recorte arredondado para dentro do card – é só a borda que desce e sobe.
+
+A largura do vale é simétrica: a distância entre as duas guias é tal que a curva fique suave, sem pontas.
+
+8. Estado individual de uma guia (imagem só com “Home”)
+Na última imagem, onde só aparece a guia Home:
+
+A guia ganha mais destaque de altura em relação à borda do card – parece uma aba elevada em relação a uma trilha de fundo.
+
+Atrás dela, à direita, aparece um círculo com “+” que está numa profundidade visual menor (mesmo tipo de borda circular).
+
+Mesmo assim, o formato da guia respeita tudo acima: topo retangular arredondado, laterais retas, duas curvas inferiores que se ligam à borda do card.
