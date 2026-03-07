@@ -83,6 +83,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     handleTabClick,
     handleNewTab,
     handleCloseTab,
+    handleReorderTabs,
     notifyMessageSent,
     notifyFlowStateChange,
   } = useSchoolPowerTabs({
@@ -351,6 +352,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
           onTabClick={handleTabClick}
           onNewTab={handleNewTab}
           onCloseTab={handleCloseTab}
+          onReorderTab={handleReorderTabs}
           isDarkTheme={isDarkTheme}
         >
           <div

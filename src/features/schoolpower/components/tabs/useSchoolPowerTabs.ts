@@ -305,6 +305,16 @@ export function useSchoolPowerTabs({
     })();
   }, [userId]);
 
+  // ─── Reorder tabs ─────────────────────────────────────────────────────────
+  const handleReorderTabs = useCallback((fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    useTabsStore.getState().reorderTabs(fromIndex, toIndex);
+    if (!userId) return;
+    const updatedTabs = useTabsStore.getState().tabs;
+    const orders = updatedTabs.map((t, i) => ({ id: t.tabId, order: i }));
+    api.reorderSessions(orders);
+  }, [userId]);
+
   // ─── Notify helpers ───────────────────────────────────────────────────────
   const notifyMessageSent = useCallback((message: string) => {
     const activeTabId = useTabsStore.getState().activeTabId;
@@ -342,6 +352,7 @@ export function useSchoolPowerTabs({
     handleTabClick,
     handleNewTab,
     handleCloseTab,
+    handleReorderTabs,
     notifyMessageSent,
     notifyFlowStateChange,
     saveCurrentTabState,

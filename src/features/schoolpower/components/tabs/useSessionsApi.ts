@@ -81,6 +81,14 @@ export function useSessionsApi(userId: string | null) {
     });
   }
 
+  async function reorderSessions(orders: { id: string; order: number }[]): Promise<void> {
+    if (!uid || orders.length === 0) return;
+    await apiFetch('/sessions-order', {
+      method: 'PATCH',
+      body: JSON.stringify({ userId: uid, orders }),
+    });
+  }
+
   return {
     loadSessions,
     createSession,
@@ -89,5 +97,6 @@ export function useSessionsApi(userId: string | null) {
     loadMessages,
     saveMessage,
     saveMessages,
+    reorderSessions,
   };
 }

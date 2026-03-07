@@ -21,6 +21,7 @@ function snakeToCamel(row) {
     chatSessionId:                 row.chat_session_id ?? null,
     chatInitialMessageProcessed:   row.chat_initial_message_processed,
     chatLastProcessedMessage:      row.chat_last_processed_message ?? null,
+    tabOrder:                      row.tab_order ?? 0,
     createdAt:                     new Date(row.created_at).getTime(),
     lastActiveAt:                  new Date(row.last_active_at).getTime(),
     chatMessages:                  [],
@@ -87,7 +88,7 @@ router.get('/sessions/:userId', async (req, res) => {
     const query = `
       SELECT * FROM sp_sessions
       WHERE user_id = $1 AND is_active = true
-      ORDER BY last_active_at DESC
+      ORDER BY tab_order ASC, last_active_at DESC
     `;
     const result = await neonDB.executeQuery(query, [userId]);
     if (!result.success) return res.status(500).json({ error: result.error });
@@ -107,6 +108,7 @@ router.patch('/sessions/:sessionId', async (req, res) => {
       chosenActivities, chosenActivitiesSessionId,
       isDecisionComplete, isContentGenerationComplete,
       chatSessionId, chatInitialMessageProcessed, chatLastProcessedMessage,
+      tabOrder,
     } = req.body;
 
     const sets = [];
@@ -125,6 +127,7 @@ router.patch('/sessions/:sessionId', async (req, res) => {
     if (chatSessionId !== undefined)             { sets.push(`chat_session_id = $${idx++}`);                vals.push(chatSessionId); }
     if (chatInitialMessageProcessed !== undefined) { sets.push(`chat_initial_message_processed = $${idx++}`); vals.push(chatInitialMessageProcessed); }
     if (chatLastProcessedMessage !== undefined)  { sets.push(`chat_last_processed_message = $${idx++}`);   vals.push(chatLastProcessedMessage); }
+    if (tabOrder !== undefined)                  { sets.push(`tab_order = $${idx++}`);                      vals.push(tabOrder); }
 
     if (sets.length === 0) return res.json({ success: true });
 
@@ -137,6 +140,27 @@ router.patch('/sessions/:sessionId', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('[SP Sessions] PATCH /sessions/:sessionId error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/sp/sessions-order — batch update tab_order for all sessions of a user
+router.patch('/sessions-order', async (req, res) => {
+  try {
+    const { userId, orders } = req.body;
+    if (!userId || !Array.isArray(orders) || orders.length === 0) {
+      return res.status(400).json({ error: 'userId e orders são obrigatórios' });
+    }
+    for (const { id, order } of orders) {
+      if (!id || order === undefined) continue;
+      await neonDB.executeQuery(
+        `UPDATE sp_sessions SET tab_order = $1 WHERE id = $2 AND user_id = $3 AND is_active = true`,
+        [order, id, userId]
+      );
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[SP Sessions] PATCH /sessions-order error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

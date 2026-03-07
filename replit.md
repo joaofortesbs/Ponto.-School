@@ -1,5 +1,37 @@
 # Ponto. School
 
+## SchoolPower Tab Drag-and-Drop + Hover Gradient (Março 2026)
+Sistema de reordenação de abas por drag-and-drop com persistência no Neon DB e efeito hover configurável.
+
+### Arquivos alterados
+- `api/neon-db.js` — `ALTER TABLE sp_sessions ADD COLUMN IF NOT EXISTS tab_order SMALLINT NOT NULL DEFAULT 0`
+- `api/school-power-sessions.js` — `snakeToCamel` inclui `tabOrder`, GET ordena por `tab_order ASC`, PATCH aceita `tabOrder`, novo endpoint `PATCH /sessions-order` para batch reorder
+- `src/features/schoolpower/components/tabs/useSessionsApi.ts` — função `reorderSessions()` para batch update
+- `src/features/schoolpower/components/tabs/useSchoolPowerTabs.ts` — `handleReorderTabs` conectado ao DB
+- `src/features/schoolpower/components/tabs/SchoolPowerShell.tsx` — drag-and-drop nativo (pointer events), hover gradient configurável, fade de conteúdo, prop `onReorderTab`
+- `src/sections/SchoolPower/SchoolPowerPage.tsx` — passa `onReorderTab={handleReorderTabs}`
+
+### Comportamento do drag
+- Pointer events nativos (sem libs externas): `onPointerDown` → `setPointerCapture` → `onPointerMove` → `onPointerUp`
+- Threshold de 5px para distinguir click de drag
+- Preview visual em tempo real: tabs não-dragging deslizam suavemente (`transition: left 0.15s ease`)
+- SVG path recalculado em tempo real com a ordem de preview
+- Drop: chama `reorderTabs` (Zustand/localStorage) + `reorderSessions` (Neon DB)
+
+### Configuração HOVER (em SchoolPowerShell.tsx)
+```typescript
+const HOVER = {
+  TAB_HOVER_COLOR:     [255, 255, 255],  // RGB do gradiente
+  TAB_HOVER_INTENSITY:  0.10,             // opacidade máxima no topo (0–1)
+  TAB_HOVER_STOP:        65,              // % onde gradiente vira transparente
+};
+```
+
+### Fade de conteúdo
+Ao trocar de aba, o conteúdo faz fade de 120ms (`opacity: 0 → 1`) para transição suave.
+
+---
+
 ## SchoolPower Tab Session Persistence (Março 2026)
 Sistema completo de persistência de sessões por aba no SchoolPower (Jota Chat), com banco de dados PostgreSQL como fonte de verdade.
 

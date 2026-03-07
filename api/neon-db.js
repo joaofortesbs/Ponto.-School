@@ -647,8 +647,9 @@ class NeonDBManager {
         created_at                      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
         last_active_at                  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
       );
+      ALTER TABLE sp_sessions ADD COLUMN IF NOT EXISTS tab_order SMALLINT NOT NULL DEFAULT 0;
       CREATE INDEX IF NOT EXISTS idx_sp_sessions_user_id   ON sp_sessions(user_id);
-      CREATE INDEX IF NOT EXISTS idx_sp_sessions_active    ON sp_sessions(user_id, is_active, last_active_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_sp_sessions_active    ON sp_sessions(user_id, is_active, tab_order ASC, last_active_at DESC);
     `;
     const result = await this.executeQuery(query);
     if (result.success) {
