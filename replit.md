@@ -31,10 +31,13 @@ Sistema completo de persistência de sessões por aba no SchoolPower (Jota Chat)
 - Frontend: `saveMessage` e `saveMessages` em `useSessionsApi.ts` passam `userId: uid` no body automaticamente
 - Padrão "upsert-on-write" — elimina o race condition sem precisar garantir ordem no frontend
 
-### Auto-scroll ao restaurar mensagens (troca de aba)
+### Auto-scroll animado ao restaurar mensagens (troca de aba)
 - `ChatLayout.tsx`: detecta restore em bulk (delta de messages > 1) via `prevMsgCountRef`
-- Usa duplo `requestAnimationFrame` + `behavior: 'instant'` para bulk restore (garante que DOM renderizou antes do scroll)
-- Usa `behavior: 'smooth'` para mensagens incrementais durante conversa ativa
+- Para bulk restore (troca de aba): posiciona no topo (primeiro input visível) → 160ms delay → animação `easeOutCubic` de 950ms até o final da conversa
+- `animateScrollToEnd()`: usa `requestAnimationFrame` com `performance.now()` + `easeOutCubic(t) = 1 - (1-t)^3` — acelera e desacelera suavemente ao final
+- `scrollContainerRef` aponta para o `div.flex-1.overflow-y-auto` real (não usa `scrollIntoView`) para controle direto do `scrollTop`
+- Usa `animFrameRef` + `animTimerRef` para cancelamento seguro na desmontagem ou troca de aba durante animação
+- Para mensagens incrementais (delta = 1): mantém `behavior: 'smooth'` padrão via `scrollIntoView`
 
 
 

@@ -160,6 +160,41 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack, initial
   }, []);
 
   const prevMsgCountRef = useRef(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const animFrameRef = useRef<number | null>(null);
+  const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function cancelScrollAnimation() {
+    if (animFrameRef.current !== null) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    if (animTimerRef.current !== null) {
+      clearTimeout(animTimerRef.current);
+      animTimerRef.current = null;
+    }
+  }
+
+  function animateScrollToEnd(container: HTMLDivElement, durationMs = 950) {
+    cancelScrollAnimation();
+    const startScrollTop = container.scrollTop;
+    const endScrollTop = container.scrollHeight - container.clientHeight;
+    const distance = endScrollTop - startScrollTop;
+    if (distance <= 0) return;
+    const startTime = performance.now();
+    function easeOutCubic(t: number) { return 1 - Math.pow(1 - t, 3); }
+    function step(now: number) {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / durationMs, 1);
+      container.scrollTop = startScrollTop + distance * easeOutCubic(t);
+      if (t < 1) {
+        animFrameRef.current = requestAnimationFrame(step);
+      } else {
+        animFrameRef.current = null;
+      }
+    }
+    animFrameRef.current = requestAnimationFrame(step);
+  }
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -172,14 +207,26 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack, initial
     }
     const delta = messages.length - prevMsgCountRef.current;
     prevMsgCountRef.current = messages.length;
+
     if (delta > 1) {
+      cancelScrollAnimation();
       requestAnimationFrame(() => requestAnimationFrame(() => {
-        scrollToBottom('instant');
+        const container = scrollContainerRef.current;
+        if (!container) return;
+        container.scrollTop = 0;
+        animTimerRef.current = setTimeout(() => {
+          animTimerRef.current = null;
+          animateScrollToEnd(container, 950);
+        }, 160);
       }));
     } else {
       scrollToBottom('smooth');
     }
   }, [messages, scrollToBottom]);
+
+  useEffect(() => {
+    return () => { cancelScrollAnimation(); };
+  }, []);
 
   const pendingArtifactsRef = useRef<ArtifactData[]>([]);
 
@@ -1150,7 +1197,7 @@ export function ChatLayout({ initialMessage, userId: propUserId, onBack, initial
         <span className="text-xs font-bold uppercase tracking-wider">Sair</span>
       </button>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-64 relative">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 pb-64 relative">
         <div className="max-w-[1200px] mx-auto w-full">
           <MessageStream onApplyPlan={handleExecutePlan} onOpenArtifact={handleOpenArtifact} onOpenActivity={handleOpenActivity} />
         </div>
