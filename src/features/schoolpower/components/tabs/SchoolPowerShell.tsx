@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
-import { Home, MessageCircle, Zap, Plus, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import type { TabBarTab, TabIcon } from './types';
 
 // ─── Tab shape configuration ─────────────────────────────────────────────────
@@ -44,13 +44,27 @@ const SLOT_STEP = 2 * VALLEY_R + TAB_GAP;   // 48 px
 interface TabSlot { startX: number; endX: number; tab: TabBarTab }
 interface Dims    { W: number; H: number }
 
-// ─── Icon helper ─────────────────────────────────────────────────────────────
+// ─── Icon helper — filled SVG icons (bold by nature) ────────────────────────
 const IconByType: React.FC<{ icon: TabIcon; color: string }> = ({ icon, color }) => {
-  const s = { width: LABEL.ICON_PX, height: LABEL.ICON_PX, flexShrink: 0 as const, color, transition: 'color 0.15s' };
-  const sw = LABEL.ICON_STROKE;
-  if (icon === 'chat')     return <MessageCircle style={s} strokeWidth={sw} />;
-  if (icon === 'activity') return <Zap style={s} strokeWidth={sw} />;
-  return <Home style={s} strokeWidth={sw} />;
+  const s: React.CSSProperties = {
+    width: LABEL.ICON_PX, height: LABEL.ICON_PX,
+    flexShrink: 0, color, transition: 'color 0.15s', display: 'block',
+  };
+  if (icon === 'chat') return (
+    <svg style={s} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 2C6.477 2 2 6.477 2 12c0 1.82.487 3.53 1.338 5.003L2 22l5.003-1.338A9.954 9.954 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2Z"/>
+    </svg>
+  );
+  if (icon === 'activity') return (
+    <svg style={s} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+  );
+  return (
+    <svg style={s} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 3 2 12h3v9h5v-5h4v5h5v-9h3L12 3Z"/>
+    </svg>
+  );
 };
 
 // ─── Tab width from title ─────────────────────────────────────────────────────
