@@ -12,7 +12,7 @@ import { QuickAccessCards } from "./components/4-cards-pré-prompts";
 import { PresetBlocksGrid, parsePromptToNodes } from "./components/preset-blocks";
 import type { PromptNode } from "./components/preset-blocks";
 import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerFlow";
-import { SchoolPowerTabBar, useSchoolPowerTabs } from "../../features/schoolpower/components/tabs";
+import { SchoolPowerShell, useSchoolPowerTabs } from "../../features/schoolpower/components/tabs";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 import { HistoricoAtividadesCriadas } from "../../features/schoolpower/construction/HistoricoAtividadesCriadas";
 import { ChatLayout } from "../../features/schoolpower/interface-chat-producao/ChatLayout";
@@ -167,41 +167,12 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
 
   const componentsVisible = flowState === 'idle' && !showHistorico;
 
-  return (
-    <div
-      className={`${isMobile && isQuizMode ? '' : 'flex flex-col h-[calc(100vh-136px)]'} w-full max-w-[98%] sm:max-w-[1589px] mx-auto`}
-    >
-      {!(isMobile && isQuizMode) && (
-        <SchoolPowerTabBar
-          tabs={tabs}
-          activeTabId={activeTabId}
-          onTabClick={handleTabClick}
-          onNewTab={handleNewTab}
-          onCloseTab={handleCloseTab}
-        />
-      )}
-
-      <div
-        className={`relative flex ${isMobile && isQuizMode ? 'h-screen min-h-screen' : 'flex-1'} w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10`}
-        style={{ 
-          backgroundColor: "transparent",
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none'
-        }}
-      >
+  const cardInner = (
+    <>
       <style>{`
-        div:has(> *)::-webkit-scrollbar {
-          display: none;
-        }
-        html, body {
-          overflow-x: hidden;
-          overflow-y: hidden;
-          scrollbar-width: none;
-        }
-        html::-webkit-scrollbar,
-        body::-webkit-scrollbar {
-          display: none;
-        }
+        div:has(> *)::-webkit-scrollbar { display: none; }
+        html, body { overflow-x: hidden; overflow-y: hidden; scrollbar-width: none; }
+        html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
       `}</style>
 
       <div className="absolute inset-0 z-0">
@@ -224,24 +195,17 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
               >
                 <TopHeader isDarkTheme={isDarkTheme} isQuizMode={isQuizMode} />
               </div>
-
               <div className="absolute inset-0">
                 <Particles3D isDarkTheme={isDarkTheme} isBlurred={false} />
               </div>
-
               <div
                 className="absolute z-50 pointer-events-auto"
-                style={{
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                }}
+                style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
               >
                 <JotaAvatar />
               </div>
-
               <div
-                className={`absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto`}
+                className="absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto"
                 style={{
                   bottom: isMobile && isQuizMode ? "95px" : "90px",
                   width: isMobile && isQuizMode ? "110%" : "auto"
@@ -258,7 +222,6 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                   onTemplateNodesChange={setTemplateNodes}
                 />
               </div>
-
               <div
                 className="absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto"
                 style={{
@@ -266,12 +229,8 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                   width: isMobile && isQuizMode ? "110%" : "auto"
                 }}
               >
-                <QuickAccessCards
-                  selectedCard={selectedCard}
-                  onCardClick={handleCardClick}
-                />
+                <QuickAccessCards selectedCard={selectedCard} onCardClick={handleCardClick} />
               </div>
-
               <div
                 className="absolute left-1/2 transform -translate-x-1/2 z-40 pointer-events-auto"
                 style={{
@@ -283,13 +242,8 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                   onBlockClick={(prompt) => {
                     const nodes = parsePromptToNodes(prompt);
                     const hasSlots = nodes.some(n => n.type === 'slot');
-                    if (hasSlots) {
-                      setTemplateNodes(nodes);
-                      setPresetMessage(null);
-                    } else {
-                      setPresetMessage(prompt);
-                      setTemplateNodes(null);
-                    }
+                    if (hasSlots) { setTemplateNodes(nodes); setPresetMessage(null); }
+                    else { setPresetMessage(prompt); setTemplateNodes(null); }
                   }}
                 />
               </div>
@@ -301,9 +255,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
       {showHistorico && (
         <motion.div
           className="absolute inset-0 flex items-center justify-center z-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
         >
           <div className="w-full h-full">
             <HistoricoAtividadesCriadas onBack={handleBack} />
@@ -314,9 +266,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
       {flowState === 'chat' && flowData.initialMessage && (
         <motion.div
           className="absolute inset-0 flex items-center justify-center z-10 p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
         >
           <ChatLayout
             initialMessage={flowData.initialMessage}
@@ -330,9 +280,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
       {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
         <motion.div
           className="absolute inset-0 flex items-center justify-center z-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
         >
           <div className={`flex items-center justify-center w-full h-full ${isMobile ? 'p-2' : 'p-4'}`}>
             <div className={`w-full ${isMobile ? 'max-w-sm' : 'max-w-7xl'} mx-auto`}>
@@ -344,10 +292,12 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                   manualActivities: flowData?.manualActivities || []
                 }}
                 onBack={handleBack}
-                step={flowState === 'contextualizing' ? 'contextualization' :
-                      flowState === 'actionplan' ? 'actionPlan' :
-                      flowState === 'generating' ? 'generating' :
-                      flowState === 'generatingActivities' ? 'generatingActivities' : 'activities'}
+                step={
+                  flowState === 'contextualizing'      ? 'contextualization' :
+                  flowState === 'actionplan'           ? 'actionPlan' :
+                  flowState === 'generating'           ? 'generating' :
+                  flowState === 'generatingActivities' ? 'generatingActivities' : 'activities'
+                }
                 contextualizationData={flowData?.contextualizationData || null}
                 actionPlan={(flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : []}
                 onSubmitContextualization={handleSubmitContextualization}
@@ -366,7 +316,37 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
           <GeminiApiMonitor />
         </React.Suspense>
       )}
-      </div>
+    </>
+  );
+
+  return (
+    <div
+      className={`${isMobile && isQuizMode ? '' : 'flex flex-col h-[calc(100vh-136px)]'} w-full max-w-[98%] sm:max-w-[1589px] mx-auto`}
+    >
+      {isMobile && isQuizMode ? (
+        <div
+          className="relative flex h-screen min-h-screen w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10"
+          style={{ backgroundColor: "transparent", scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {cardInner}
+        </div>
+      ) : (
+        <SchoolPowerShell
+          tabs={tabs}
+          activeTabId={activeTabId}
+          onTabClick={handleTabClick}
+          onNewTab={handleNewTab}
+          onCloseTab={handleCloseTab}
+          isDarkTheme={isDarkTheme}
+        >
+          <div
+            className="relative w-full h-full"
+            style={{ backgroundColor: "transparent", scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {cardInner}
+          </div>
+        </SchoolPowerShell>
+      )}
     </div>
   );
 }
