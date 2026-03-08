@@ -24,7 +24,13 @@ class NeonDBManager {
     }
 
     if (!connectionString) {
-      throw new Error('❌ [NeonDB] Nenhuma variável de ambiente de banco de dados encontrada. Configure DATABASE_URL.');
+      console.error('⚠️ [NeonDB] Nenhuma variável de ambiente de banco de dados encontrada.');
+      console.error('⚠️ [NeonDB] Configure DATABASE_URL para habilitar funcionalidades de banco.');
+      console.error('⚠️ [NeonDB] O servidor continuará funcionando sem banco de dados.');
+      this.pool = null;
+      this.connectionConfig = null;
+      this._unavailable = true;
+      return;
     }
 
     const isProduction = process.env.NODE_ENV === 'production' || 
@@ -65,6 +71,10 @@ class NeonDBManager {
 
   // Executar query COM RETRY e EXPONENTIAL BACKOFF (para lidar com Neon auto-suspend)
   async executeQuery(query, params = [], retries = 3) {
+    if (this._unavailable || !this.pool) {
+      return { success: false, error: 'Banco de dados não configurado (DATABASE_URL ausente)', data: [], rowCount: 0 };
+    }
+
     let attempt = 0;
     
     while (attempt < retries) {
@@ -125,8 +135,10 @@ class NeonDBManager {
   // Fechar pool (chamar ao desligar servidor)
   async closePool() {
     try {
-      await this.pool.end();
-      console.log('✅ [NeonDB] Pool de conexões encerrado');
+      if (this.pool) {
+        await this.pool.end();
+        console.log('✅ [NeonDB] Pool de conexões encerrado');
+      }
     } catch (error) {
       console.error('❌ [NeonDB] Erro ao fechar pool:', error.message);
     }
@@ -252,6 +264,9 @@ class NeonDBManager {
 
   // Inicializar banco de dados (criar tabelas necessárias)
   async initializeDatabase() {
+    if (this._unavailable) {
+      throw new Error('Banco de dados não configurado (DATABASE_URL ausente)');
+    }
     console.log('🚀 Inicializando banco de dados...');
 
     // Testar conexão primeiro
@@ -688,6 +703,7 @@ class NeonDBManager {
   }
 
   async initSpTables() {
+    if (this._unavailable) return;
     await this.createSpSessionsTable();
     await this.createSpMessagesTable();
   }

@@ -41,7 +41,15 @@ const isProduction = process.env.REPLIT_DEPLOYMENT === '1' ||
 // Sempre respeitar PORT do ambiente (Railway, Render, etc.), senão usar 5000 em produção ou 3001 em dev
 const PORT = process.env.PORT || (isProduction ? 5000 : 3001);
 
+let dbReady = false;
+
 console.log(`🌍 Ambiente: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+console.log(`🔎 [ENV] DATABASE_URL: ${process.env.DATABASE_URL ? '✅ configurado' : '❌ NÃO configurado'}`);
+console.log(`🔎 [ENV] RAILWAY_ENVIRONMENT: ${process.env.RAILWAY_ENVIRONMENT || 'não definido'}`);
+console.log(`🔎 [ENV] NODE_ENV: ${process.env.NODE_ENV || 'não definido'}`);
+console.log(`🔎 [ENV] PORT: ${process.env.PORT || 'não definido (usando padrão)'}`);
+console.log(`🔎 [ENV] REPLIT_DEPLOYMENT: ${process.env.REPLIT_DEPLOYMENT || 'não definido'}`);
+console.log(`🔎 [ENV] __dirname: ${path.resolve(__dirname)}`);
 
 // Middleware
 app.use(cors({
@@ -62,7 +70,7 @@ app.use(express.urlencoded({
 
 // Health check endpoint — responde imediatamente, sem depender de arquivos estáticos
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', dbReady, uptime: process.uptime(), timestamp: new Date().toISOString() });
 });
 
 // Middleware para logs de requisições com status de resposta
@@ -1135,16 +1143,23 @@ async function startServer() {
     }
 
     // Inicializar banco de dados em segundo plano (após servidor já estar escutando)
-    console.log('🔄 Inicializando banco de dados...');
-    await neonDB.initializeDatabase();
-    await neonDB.initSpTables();
+    // NÃO-FATAL: se o DB falhar, o frontend continua funcionando
+    try {
+      console.log('🔄 Inicializando banco de dados...');
+      await neonDB.initializeDatabase();
+      await neonDB.initSpTables();
+      registerActivityRoutes();
+      dbReady = true;
+      console.log('✅ Banco de dados inicializado com sucesso');
+    } catch (dbError) {
+      console.error('⚠️ [DB] Falha ao inicializar banco de dados (frontend continua funcionando):');
+      console.error('⚠️ [DB]', dbError.message || dbError);
+      console.error('⚠️ [DB] Endpoints de API que dependem do banco retornarão 503');
+    }
 
-    // REGISTRAR ROTAS DE ATIVIDADES APÓS INICIALIZAÇÃO DO BANCO
-    registerActivityRoutes();
-
-    console.log('✅ Servidor completamente inicializado');
+    console.log('✅ Servidor completamente inicializado (DB:', dbReady ? 'conectado' : 'indisponível', ')');
   } catch (error) {
-    console.error('❌ Erro ao inicializar servidor:', error);
+    console.error('❌ Erro CRÍTICO ao inicializar servidor (listen falhou):', error);
     process.exit(1);
   }
 }

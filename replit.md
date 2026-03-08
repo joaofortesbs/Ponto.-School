@@ -143,10 +143,13 @@ Correções para deploy em Railway, Render, Vercel e Replit.
 - **SPA FALLBACK ERROR HANDLING**: `res.sendFile()` agora tem callback de erro. Se index.html não existir, retorna mensagem de erro clara ao invés de 500 genérico "Internal Server Error"
 - **COLD START FIX**: `sharp` (biblioteca nativa pesada de imagens) era importada no nível do módulo via `scripts/convert-images-to-webp.js`. Agora usa import dinâmico lazy (`getSharp()`) para reduzir o tempo de cold start
 - **HEALTH CHECK**: Endpoint `/api/health` adicionado, responde imediatamente sem depender de arquivos estáticos
-- **STARTUP VERIFICATION**: Servidor verifica existência de `dist/public/index.html` ao iniciar e loga resultado
+- **STARTUP VERIFICATION**: Servidor verifica existência de `dist/index.html` ao iniciar e loga resultado
 - **REACT CHUNK SPLITTING FIX**: `manualChunks` no vite.config.ts colocava `react-dom` no chunk `vendor-react` mas o pacote `react` core (e `scheduler`) ficava em outro chunk (ex: `vendor-dnd`). Isso causava `Cannot read properties of undefined (reading '__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED')`. Fix: adicionado `node_modules/react/` e `node_modules/scheduler/` ao filtro do chunk `vendor-react`
 - **CDN CACHE FIX**: `publicDir = "dist/public"` no `.replit` criava uma camada CDN que cacheava HTML/JS antigos após novos deploys, servindo builds desatualizadas aos usuários. Fix: build output movido de volta para `dist/` (padrão do Vite), que NÃO coincide com `publicDir`. CDN de `dist/public/` fica vazia, forçando TODAS as requisições a passarem por Express com cache headers corretos
 - **RESPONSE LOGGING**: Express agora loga status HTTP de cada resposta em produção: `📊 [REQ] GET /path → 200 (5ms)`. Essencial para diagnosticar 500s
+- **RAILWAY RESILIENCE FIX**: `neon-db.js` crashava no construtor quando DATABASE_URL ausente, impedindo o servidor de iniciar. Fix: construtor agora seta `_unavailable=true` e retorna sem throw. `executeQuery()` retorna `{success:false}` quando DB indisponível. `startServer()` não faz `process.exit(1)` se DB falhar — frontend continua servindo normalmente
+- **STARTUP DIAGNOSTICS**: Servidor loga estado de todas as variáveis de ambiente relevantes (DATABASE_URL, RAILWAY_ENVIRONMENT, PORT, NODE_ENV) no boot, sem expor valores
+- **RAILWAY HEALTHCHECK**: Mudado de `/api/status` para `/api/health` (endpoint leve que responde sem depender de DB). Timeout aumentado para 60s
 
 ### Arquitetura de deploy
 - **Dev**: Vite (porta 5000) + Express API (porta 3001), proxy via vite.config.ts
