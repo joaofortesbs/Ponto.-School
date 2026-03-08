@@ -153,10 +153,10 @@ Correções para deploy em Railway, Render, Vercel e Replit.
 
 ### Arquitetura de deploy
 - **Dev**: Vite (porta 5000) + Express API (porta 3001), proxy via vite.config.ts
-- **Prod (Replit)**: Express serve static `dist/` + API na porta 5000 (REPLIT_DEPLOYMENT=1). CDN desabilitada (dist/public vazio)
-- **Prod (Railway)**: Express serve static `dist/` + API na porta atribuída pelo Railway (process.env.PORT)
+- **Prod (Replit)**: Vite build para `dist/public/`, CDN do Replit serve assets estáticos, Express serve API + SPA fallback na porta 5000
+- **Prod (Railway)**: Express serve static `dist/public/` + API na porta atribuída pelo Railway (process.env.PORT)
 - **Prod (Render/Vercel)**: Mesma lógica, porta do ambiente
-- **IMPORTANTE**: NÃO usar `publicDir` apontando para o mesmo diretório do build. Causa cache de CDN stale
+- **IMPORTANTE**: `publicDir` no `.replit` DEVE coincidir com o `outDir` do Vite (`dist/public`). Caso contrário o deployment falha
 - **Frontend API calls**: Todas usam caminhos relativos (`/api/...`) — funciona em qualquer ambiente
 - **IMPORTANTE**: Variáveis PORT e NODE_ENV ficam SOMENTE em [userenv.development], NUNCA em [userenv.shared]
 

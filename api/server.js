@@ -127,7 +127,7 @@ const compressionHeaders = (req, res, next) => {
 
 // Em produção, servir arquivos estáticos do build com cache otimizado
 if (isProduction) {
-  const distPath = path.join(__dirname, '..', 'dist');
+  const distPath = path.join(__dirname, '..', 'dist', 'public');
   console.log(`📁 Servindo arquivos estáticos de: ${distPath}`);
   
   app.use(compressionHeaders);
@@ -1097,7 +1097,7 @@ app.delete('/api/delete-png-originals', async (req, res) => {
 // SPA Fallback - Servir index.html para todas as rotas não-API em produção
 // IMPORTANTE: Deve ser a ÚLTIMA rota registrada antes de app.listen!
 if (isProduction) {
-  const spaIndexPath = path.join(__dirname, '..', 'dist', 'index.html');
+  const spaIndexPath = path.join(__dirname, '..', 'dist', 'public', 'index.html');
   app.use((req, res, next) => {
     if (!req.path.startsWith('/api')) {
       res.sendFile(spaIndexPath, (err) => {
@@ -1130,15 +1130,16 @@ async function startServer() {
     });
 
     if (isProduction) {
-      const checkPath = path.join(__dirname, '..', 'dist', 'index.html');
+      const checkPath = path.join(__dirname, '..', 'dist', 'public', 'index.html');
       if (fs.existsSync(checkPath)) {
         const stats = fs.statSync(checkPath);
-        console.log(`✅ [BUILD] dist/index.html encontrado (${(stats.size / 1024).toFixed(1)}KB)`);
-        const jsFiles = fs.readdirSync(path.join(__dirname, '..', 'dist', 'assets', 'js')).filter(f => f.endsWith('.js'));
-        console.log(`✅ [BUILD] ${jsFiles.length} chunks JS em dist/assets/js/`);
+        console.log(`✅ [BUILD] dist/public/index.html encontrado (${(stats.size / 1024).toFixed(1)}KB)`);
+        const jsFiles = fs.readdirSync(path.join(__dirname, '..', 'dist', 'public', 'assets', 'js')).filter(f => f.endsWith('.js'));
+        console.log(`✅ [BUILD] ${jsFiles.length} chunks JS em dist/public/assets/js/`);
       } else {
-        console.error(`❌ [BUILD] dist/index.html NÃO ENCONTRADO em: ${checkPath}`);
-        console.error(`❌ [BUILD] Listando dist/: ${fs.existsSync(path.join(__dirname, '..', 'dist')) ? fs.readdirSync(path.join(__dirname, '..', 'dist')).join(', ') : 'DIRETÓRIO NÃO EXISTE'}`);
+        console.error(`❌ [BUILD] dist/public/index.html NÃO ENCONTRADO em: ${checkPath}`);
+        const distPublicDir = path.join(__dirname, '..', 'dist', 'public');
+        console.error(`❌ [BUILD] Listando dist/public/: ${fs.existsSync(distPublicDir) ? fs.readdirSync(distPublicDir).join(', ') : 'DIRETÓRIO NÃO EXISTE'}`);
       }
     }
 
