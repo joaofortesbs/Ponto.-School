@@ -38,3 +38,9 @@ undefined
 **/tempobook/storyboards/
 
 core
+
+# Replit-specific Python config (confuses Railway Railpack into detecting Python)
+pyproject.toml
+uv.lock
+.pythonlibs/
+poetry.lock
