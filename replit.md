@@ -134,8 +134,10 @@ Correções para deploy em Railway, Render, Vercel e Replit.
 - **migrateFromLocalStorage**: Adicionado export nomeado em `activitiesApiService.ts` para eliminar warning do Vite build
 - **Replit deployment config**: Corrigido para `autoscale` com build `npm run build` e run `node api/server.js`
 - **isDeployment duplicado**: Removidas detecções de ambiente duplicadas em server.js, usando a variável global `isProduction`
-- **ENV VARS FIX (causa raiz da página em branco)**: `PORT=3001` e `NODE_ENV=development` estavam em `[userenv.shared]` — isso vazava para o deploy, fazendo o servidor escutar na porta 3001 (Replit espera 5000). Movido para `[userenv.development]` apenas.
+- **ENV VARS FIX**: `PORT=3001` e `NODE_ENV=development` estavam em `[userenv.shared]` — isso vazava para o deploy, fazendo o servidor escutar na porta 3001 (Replit espera 5000). Movido para `[userenv.development]` apenas.
 - **pyproject.toml no .gitignore**: Railway detectava Python ao invés de Node.js por causa desse arquivo
+- **REACT PRODUCTION MODE FIX (causa raiz da página em branco)**: `define: { 'process.env': {} }` no vite.config.ts substituía `process.env.NODE_ENV` por `undefined`, causando React a empacotar `react-dom.development.js` (340KB) ao invés de `react-dom.production.min.js` (177KB). Fix: adicionado `'process.env.NODE_ENV': JSON.stringify(mode)` que tem precedência sobre `'process.env': '{}'`
+- **Server startup order**: `app.listen()` agora é chamado ANTES de `initializeDatabase()` para que o healthcheck responda imediatamente. SPA fallback middleware movido para fora de `startServer()`
 
 ### Arquitetura de deploy
 - **Dev**: Vite (porta 5000) + Express API (porta 3001), proxy via vite.config.ts

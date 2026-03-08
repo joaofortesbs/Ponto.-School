@@ -1085,39 +1085,41 @@ app.delete('/api/delete-png-originals', async (req, res) => {
 
 // Rotas de atividades foram registradas com sucesso na função registerActivityRoutes()
 
-// Inicializar banco de dados e iniciar servidor
+// SPA Fallback - Servir index.html para todas as rotas não-API em produção
+// IMPORTANTE: Deve ser a ÚLTIMA rota registrada antes de app.listen!
+if (isProduction) {
+  app.use((req, res, next) => {
+    if (!req.path.startsWith('/api')) {
+      const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
+      res.sendFile(indexPath);
+    } else {
+      next();
+    }
+  });
+  console.log('✅ SPA Fallback configurado (servindo index.html para rotas não-API)');
+}
+
+// Iniciar servidor PRIMEIRO, depois inicializar banco de dados
 async function startServer() {
   try {
-    // Inicializar banco de dados
+    // Iniciar servidor imediatamente para que o healthcheck passe
+    await new Promise((resolve) => {
+      app.listen(PORT, '0.0.0.0', () => {
+        console.log(`🚀 Servidor de API rodando na porta ${PORT}`);
+        console.log(`🌐 Acesse em: http://localhost:${PORT}/api/status`);
+        resolve();
+      });
+    });
+
+    // Inicializar banco de dados em segundo plano (após servidor já estar escutando)
     console.log('🔄 Inicializando banco de dados...');
     await neonDB.initializeDatabase();
     await neonDB.initSpTables();
 
-    // REGISTRAR ROTAS APÓS INICIALIZAÇÃO DO BANCO
+    // REGISTRAR ROTAS DE ATIVIDADES APÓS INICIALIZAÇÃO DO BANCO
     registerActivityRoutes();
 
-    // SPA Fallback - Servir index.html para todas as rotas não-API em produção
-    // IMPORTANTE: Deve ser a ÚLTIMA rota registrada!
-    if (isProduction) {
-      // Usando middleware ao invés de wildcard route para evitar problemas com path-to-regexp
-      app.use((req, res, next) => {
-        // Se a rota não for de API, servir index.html
-        if (!req.path.startsWith('/api')) {
-          const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
-          console.log(`📄 Servindo index.html de: ${indexPath} para rota: ${req.path}`);
-          res.sendFile(indexPath);
-        } else {
-          next();
-        }
-      });
-      console.log('✅ SPA Fallback configurado (servindo index.html para rotas não-API)');
-    }
-
-    // Iniciar servidor
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Servidor de API rodando na porta ${PORT}`);
-      console.log(`🌐 Acesse em: http://localhost:${PORT}/api/status`);
-    });
+    console.log('✅ Servidor completamente inicializado');
   } catch (error) {
     console.error('❌ Erro ao inicializar servidor:', error);
     process.exit(1);

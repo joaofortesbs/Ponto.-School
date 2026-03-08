@@ -36,7 +36,8 @@ export default defineConfig(({ command, mode }) => ({
     },
   },
   define: {
-    'process.env': {},
+    'process.env.NODE_ENV': JSON.stringify(mode),
+    'process.env': '{}',
     'global': 'globalThis',
   },
   esbuild: {
