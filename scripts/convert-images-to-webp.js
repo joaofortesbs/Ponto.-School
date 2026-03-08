@@ -1,7 +1,14 @@
-import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+let _sharp = null;
+async function getSharp() {
+  if (!_sharp) {
+    _sharp = (await import('sharp')).default;
+  }
+  return _sharp;
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -76,6 +83,7 @@ async function convertPngToWebp(pngFile) {
     const originalStats = fs.statSync(pngFile.fullPath);
     const originalSize = originalStats.size;
     
+    const sharp = await getSharp();
     await sharp(pngFile.fullPath)
       .webp({ quality: WEBP_QUALITY })
       .toFile(webpPath);

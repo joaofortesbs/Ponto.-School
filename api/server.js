@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import emailRoutes from './enviar-email.js';
 import neonDB from './neon-db.js';
@@ -58,6 +59,11 @@ app.use(express.urlencoded({
   extended: true, 
   limit: '50mb' 
 }));
+
+// Health check endpoint — responde imediatamente, sem depender de arquivos estáticos
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
+});
 
 // Middleware para logs de requisições
 app.use((req, res, next) => {
@@ -957,59 +963,44 @@ app.delete('/api/atividades/:codigo_unico', async (req, res) => {
 console.log('✅ Todas as rotas de atividades registradas com sucesso!');
 }
 
-// Rota raiz
-app.get('/', (req, res) => {
-  res.send(`
-    <html>
-      <head>
-        <title>API Epictus</title>
-        <style>
-          body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-          h1 { color: #FF6B00; }
-          .endpoint { background: #f4f4f4; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
-          code { background: #e0e0e0; padding: 2px 4px; border-radius: 3px; }
-        </style>
-      </head>
-      <body>
-        <h1>Servidor API Epictus</h1>
-        <p>O servidor está funcionando corretamente!</p>
-        <h2>Endpoints disponíveis:</h2>
-        <div class="endpoint">
-          <p><strong>GET /api/status</strong> - Verificar status do servidor</p>
-          <p>Exemplo: <code>${req.protocol}://${req.get('host')}/api/status</code></p>
-        </div>
-        <div class="endpoint">
-          <p><strong>POST /api/enviar-email</strong> - Enviar email</p>
-        </div>
-        <div class="endpoint">
-          <p><strong>GET /api/perfis</strong> - Buscar perfil</p>
-        </div>
-        <div class="endpoint">
-          <p><strong>POST /api/perfis</strong> - Criar perfil</p>
-        </div>
-        <div class="endpoint">
-          <p><strong>POST /api/upload-avatar</strong> - Upload de avatar</p>
-        </div>
-        <h3>Endpoints de Atividades:</h3>
-        <div class="endpoint">
-          <p><strong>POST /api/atividades</strong> - Criar nova atividade</p>
-        </div>
-        <div class="endpoint">
-          <p><strong>PUT /api/atividades/:codigo_unico</strong> - Atualizar atividade</p>
-        </div>
-        <div class="endpoint">
-          <p><strong>GET /api/atividades/usuario/:user_id</strong> - Buscar atividades do usuário</p>
-        </div>
-        <div class="endpoint">
-          <p><strong>GET /api/atividades/:codigo_unico</strong> - Buscar atividade por código</p>
-        </div>
-        <div class="endpoint">
-          <p><strong>DELETE /api/atividades/:codigo_unico</strong> - Deletar atividade</p>
-        </div>
-      </body>
-    </html>
-  `);
-});
+if (!isProduction) {
+  app.get('/', (req, res) => {
+    res.send(`
+      <html>
+        <head>
+          <title>API Epictus</title>
+          <style>
+            body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+            h1 { color: #FF6B00; }
+            .endpoint { background: #f4f4f4; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+            code { background: #e0e0e0; padding: 2px 4px; border-radius: 3px; }
+          </style>
+        </head>
+        <body>
+          <h1>Servidor API Epictus</h1>
+          <p>O servidor está funcionando corretamente!</p>
+          <h2>Endpoints disponíveis:</h2>
+          <div class="endpoint">
+            <p><strong>GET /api/status</strong> - Verificar status do servidor</p>
+            <p>Exemplo: <code>${req.protocol}://${req.get('host')}/api/status</code></p>
+          </div>
+          <div class="endpoint">
+            <p><strong>POST /api/enviar-email</strong> - Enviar email</p>
+          </div>
+          <div class="endpoint">
+            <p><strong>GET /api/perfis</strong> - Buscar perfil</p>
+          </div>
+          <div class="endpoint">
+            <p><strong>POST /api/perfis</strong> - Criar perfil</p>
+          </div>
+          <div class="endpoint">
+            <p><strong>POST /api/upload-avatar</strong> - Upload de avatar</p>
+          </div>
+        </body>
+      </html>
+    `);
+  });
+}
 
 // Rota de teste
 app.get('/api/status', (req, res) => {
@@ -1091,10 +1082,20 @@ app.delete('/api/delete-png-originals', async (req, res) => {
 // SPA Fallback - Servir index.html para todas as rotas não-API em produção
 // IMPORTANTE: Deve ser a ÚLTIMA rota registrada antes de app.listen!
 if (isProduction) {
+  const spaIndexPath = path.join(__dirname, '..', 'dist', 'public', 'index.html');
   app.use((req, res, next) => {
     if (!req.path.startsWith('/api')) {
-      const indexPath = path.join(__dirname, '..', 'dist', 'public', 'index.html');
-      res.sendFile(indexPath);
+      res.sendFile(spaIndexPath, (err) => {
+        if (err) {
+          console.error(`❌ [SPA] Erro ao servir index.html: ${err.message}`);
+          console.error(`❌ [SPA] Caminho tentado: ${spaIndexPath}`);
+          res.status(500).send(`<html><body style="font-family:monospace;padding:40px;background:#000822;color:#fff">
+            <h1 style="color:#FF6B00">Ponto.School — Erro de Deploy</h1>
+            <p>Arquivos da aplicação não encontrados.</p>
+            <p>Verifique se o build foi executado com sucesso.</p>
+          </body></html>`);
+        }
+      });
     } else {
       next();
     }
@@ -1109,10 +1110,20 @@ async function startServer() {
     await new Promise((resolve) => {
       app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Servidor de API rodando na porta ${PORT}`);
-        console.log(`🌐 Acesse em: http://localhost:${PORT}/api/status`);
         resolve();
       });
     });
+
+    if (isProduction) {
+      const checkPath = path.join(__dirname, '..', 'dist', 'public', 'index.html');
+      if (fs.existsSync(checkPath)) {
+        const stats = fs.statSync(checkPath);
+        console.log(`✅ [BUILD] dist/public/index.html encontrado (${(stats.size / 1024).toFixed(1)}KB)`);
+      } else {
+        console.error(`❌ [BUILD] dist/public/index.html NÃO ENCONTRADO em: ${checkPath}`);
+        console.error(`❌ [BUILD] Listando dist/: ${fs.existsSync(path.join(__dirname, '..', 'dist')) ? fs.readdirSync(path.join(__dirname, '..', 'dist')).join(', ') : 'DIRETÓRIO NÃO EXISTE'}`);
+      }
+    }
 
     // Inicializar banco de dados em segundo plano (após servidor já estar escutando)
     console.log('🔄 Inicializando banco de dados...');

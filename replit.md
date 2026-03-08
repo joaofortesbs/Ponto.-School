@@ -139,11 +139,16 @@ Correções para deploy em Railway, Render, Vercel e Replit.
 - **REACT PRODUCTION MODE FIX**: `define: { 'process.env': {} }` no vite.config.ts substituía `process.env.NODE_ENV` por `undefined`, causando React a empacotar `react-dom.development.js` ao invés de `react-dom.production.min.js`. Fix: adicionado `'process.env.NODE_ENV': JSON.stringify(mode)` que tem precedência
 - **Server startup order**: `app.listen()` agora é chamado ANTES de `initializeDatabase()` para que o healthcheck responda imediatamente. SPA fallback middleware movido para fora de `startServer()`
 - **MISMATCH dist/public FIX (causa raiz REAL da página em branco)**: O `.replit` usa `publicDir = "dist/public"` para servir assets estáticos via CDN, mas o Vite estava buildando para `dist/` (sem `/public`). O CDN interceptava `/assets/*.js` e retornava 404 silencioso pois `dist/public` não existia. Express só recebia `GET /` (o HTML), nunca os assets. Fix: mudado `build.outDir` para `dist/public` no vite.config.ts, e caminhos do Express atualizados para `dist/public`
+- **CONFLITO ROTA `/` FIX**: `app.get('/')` na linha 961 retornava HTML de status da API (não o React app). Em produção, se `express.static` não encontrasse index.html, Express servia essa página de status ao invés do React. Fix: envolvido em `if (!isProduction)` para que em produção apenas `express.static` e SPA fallback sirvam `/`
+- **SPA FALLBACK ERROR HANDLING**: `res.sendFile()` agora tem callback de erro. Se index.html não existir, retorna mensagem de erro clara ao invés de 500 genérico "Internal Server Error"
+- **COLD START FIX**: `sharp` (biblioteca nativa pesada de imagens) era importada no nível do módulo via `scripts/convert-images-to-webp.js`. Agora usa import dinâmico lazy (`getSharp()`) para reduzir o tempo de cold start
+- **HEALTH CHECK**: Endpoint `/api/health` adicionado, responde imediatamente sem depender de arquivos estáticos
+- **STARTUP VERIFICATION**: Servidor verifica existência de `dist/public/index.html` ao iniciar e loga resultado
 
 ### Arquitetura de deploy
 - **Dev**: Vite (porta 5000) + Express API (porta 3001), proxy via vite.config.ts
-- **Prod (Replit)**: Express serve static `dist/` + API na porta 5000 (REPLIT_DEPLOYMENT=1)
-- **Prod (Railway)**: Express serve static `dist/` + API na porta atribuída pelo Railway (process.env.PORT)
+- **Prod (Replit)**: Express serve static `dist/public/` + API na porta 5000 (REPLIT_DEPLOYMENT=1). CDN serve assets de `dist/public/`
+- **Prod (Railway)**: Express serve static `dist/public/` + API na porta atribuída pelo Railway (process.env.PORT)
 - **Prod (Render/Vercel)**: Mesma lógica, porta do ambiente
 - **Frontend API calls**: Todas usam caminhos relativos (`/api/...`) — funciona em qualquer ambiente
 - **IMPORTANTE**: Variáveis PORT e NODE_ENV ficam SOMENTE em [userenv.development], NUNCA em [userenv.shared]
