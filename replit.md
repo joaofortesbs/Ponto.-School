@@ -129,15 +129,21 @@ Correções para deploy em Railway, Render, Vercel e Replit.
 - **PORT hardcoded**: `api/server.js` agora usa `process.env.PORT || (isProduction ? 5000 : 3001)` — Railway/Render/Vercel fornecem PORT via env var
 - **isProduction detection**: Agora detecta `RAILWAY_ENVIRONMENT`, `RENDER`, `VERCEL` além de `REPLIT_DEPLOYMENT` e `NODE_ENV=production`
 - **Procfile criado**: `web: node api/server.js` na raiz para Railway
+- **railway.toml criado**: Build e start commands explícitos para Railway (override de auto-detecção Python)
 - **package.json "start"**: Aponta para `node api/server.js` diretamente (Railway/Render executam `npm start`)
 - **migrateFromLocalStorage**: Adicionado export nomeado em `activitiesApiService.ts` para eliminar warning do Vite build
 - **Replit deployment config**: Corrigido para `autoscale` com build `npm run build` e run `node api/server.js`
 - **isDeployment duplicado**: Removidas detecções de ambiente duplicadas em server.js, usando a variável global `isProduction`
+- **ENV VARS FIX (causa raiz da página em branco)**: `PORT=3001` e `NODE_ENV=development` estavam em `[userenv.shared]` — isso vazava para o deploy, fazendo o servidor escutar na porta 3001 (Replit espera 5000). Movido para `[userenv.development]` apenas.
+- **pyproject.toml no .gitignore**: Railway detectava Python ao invés de Node.js por causa desse arquivo
 
 ### Arquitetura de deploy
 - **Dev**: Vite (porta 5000) + Express API (porta 3001), proxy via vite.config.ts
-- **Prod**: Express único serve static files de `dist/` + API na mesma porta (PORT env var)
+- **Prod (Replit)**: Express serve static `dist/` + API na porta 5000 (REPLIT_DEPLOYMENT=1)
+- **Prod (Railway)**: Express serve static `dist/` + API na porta atribuída pelo Railway (process.env.PORT)
+- **Prod (Render/Vercel)**: Mesma lógica, porta do ambiente
 - **Frontend API calls**: Todas usam caminhos relativos (`/api/...`) — funciona em qualquer ambiente
+- **IMPORTANTE**: Variáveis PORT e NODE_ENV ficam SOMENTE em [userenv.development], NUNCA em [userenv.shared]
 
 ## Replit Migration (Março 2026)
 Migração concluída do ambiente Replit Agent para Replit.
