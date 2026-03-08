@@ -7,7 +7,7 @@ channel = "stable-25_05"
 [deployment]
 run = ["node", "api/server.js"]
 deploymentTarget = "autoscale"
-build = ["bash", "-c", "npm install --include=dev && npm run build"]
+build = ["npm", "run", "build"]
 publicDir = "dist/public"
 
 [[ports]]
