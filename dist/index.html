@@ -27,6 +27,21 @@
     <!-- Preload critical fonts -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" />
     
+    <!-- Production error capture (diagnóstico) -->
+    <script>
+      window.__BUILD_TIME = new Date().toISOString();
+      window.onerror = function(msg, src, line, col, err) {
+        var d = document.getElementById('root');
+        if (d && (!d.children || d.children.length === 0)) {
+          d.innerHTML = '<div style="color:#fff;background:#000;padding:20px;font-family:monospace;font-size:12px"><b>JS Error:</b> ' + msg + '<br>Source: ' + src + ':' + line + '</div>';
+        }
+        console.error('[PROD-ERROR]', msg, src, line, col, err);
+      };
+      window.addEventListener('unhandledrejection', function(e) {
+        console.error('[PROD-REJECTION]', e.reason);
+      });
+    </script>
+
     <!-- Critical CSS inlined for faster FCP -->
     <style>
       *,*::before,*::after{box-sizing:border-box}
@@ -46,14 +61,14 @@
     <!-- Font Awesome loaded with lower priority -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" /></noscript>
-    <script type="module" crossorigin src="/assets/js/index-CPYz9D2u.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/js/vendor-react-BnNhJ7M9.js">
-    <link rel="modulepreload" crossorigin href="/assets/js/vendor-dnd-Bk0uCLZh.js">
-    <link rel="modulepreload" crossorigin href="/assets/js/vendor-pdf-rIeVEN6z.js">
-    <link rel="modulepreload" crossorigin href="/assets/js/vendor-motion-DTXDxMAn.js">
-    <link rel="modulepreload" crossorigin href="/assets/js/vendor-ui-T310bGui.js">
+    <script type="module" crossorigin src="/assets/js/index-D1DNBWEO.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/js/vendor-pdf-0-kJnl9s.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/vendor-react-WwUsDBzj.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/vendor-ui-DjHHnMiM.js">
     <link rel="modulepreload" crossorigin href="/assets/js/vendor-utils-DEVWMqOY.js">
-    <link rel="modulepreload" crossorigin href="/assets/js/vendor-icons-JI-XpGv6.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/vendor-motion-D-wwGN6B.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/vendor-icons-X7-yo3ht.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/vendor-dnd-D2W-MO4V.js">
     <link rel="stylesheet" crossorigin href="/assets/css/index-Cgjxqr4O.css">
   </head>
   <body>

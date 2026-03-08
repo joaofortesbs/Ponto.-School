@@ -145,12 +145,15 @@ Correções para deploy em Railway, Render, Vercel e Replit.
 - **HEALTH CHECK**: Endpoint `/api/health` adicionado, responde imediatamente sem depender de arquivos estáticos
 - **STARTUP VERIFICATION**: Servidor verifica existência de `dist/public/index.html` ao iniciar e loga resultado
 - **REACT CHUNK SPLITTING FIX**: `manualChunks` no vite.config.ts colocava `react-dom` no chunk `vendor-react` mas o pacote `react` core (e `scheduler`) ficava em outro chunk (ex: `vendor-dnd`). Isso causava `Cannot read properties of undefined (reading '__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED')`. Fix: adicionado `node_modules/react/` e `node_modules/scheduler/` ao filtro do chunk `vendor-react`
+- **CDN CACHE FIX**: `publicDir = "dist/public"` no `.replit` criava uma camada CDN que cacheava HTML/JS antigos após novos deploys, servindo builds desatualizadas aos usuários. Fix: build output movido de volta para `dist/` (padrão do Vite), que NÃO coincide com `publicDir`. CDN de `dist/public/` fica vazia, forçando TODAS as requisições a passarem por Express com cache headers corretos
+- **RESPONSE LOGGING**: Express agora loga status HTTP de cada resposta em produção: `📊 [REQ] GET /path → 200 (5ms)`. Essencial para diagnosticar 500s
 
 ### Arquitetura de deploy
 - **Dev**: Vite (porta 5000) + Express API (porta 3001), proxy via vite.config.ts
-- **Prod (Replit)**: Express serve static `dist/public/` + API na porta 5000 (REPLIT_DEPLOYMENT=1). CDN serve assets de `dist/public/`
-- **Prod (Railway)**: Express serve static `dist/public/` + API na porta atribuída pelo Railway (process.env.PORT)
+- **Prod (Replit)**: Express serve static `dist/` + API na porta 5000 (REPLIT_DEPLOYMENT=1). CDN desabilitada (dist/public vazio)
+- **Prod (Railway)**: Express serve static `dist/` + API na porta atribuída pelo Railway (process.env.PORT)
 - **Prod (Render/Vercel)**: Mesma lógica, porta do ambiente
+- **IMPORTANTE**: NÃO usar `publicDir` apontando para o mesmo diretório do build. Causa cache de CDN stale
 - **Frontend API calls**: Todas usam caminhos relativos (`/api/...`) — funciona em qualquer ambiente
 - **IMPORTANTE**: Variáveis PORT e NODE_ENV ficam SOMENTE em [userenv.development], NUNCA em [userenv.shared]
 
