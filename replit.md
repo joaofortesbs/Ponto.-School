@@ -136,8 +136,9 @@ Correções para deploy em Railway, Render, Vercel e Replit.
 - **isDeployment duplicado**: Removidas detecções de ambiente duplicadas em server.js, usando a variável global `isProduction`
 - **ENV VARS FIX**: `PORT=3001` e `NODE_ENV=development` estavam em `[userenv.shared]` — isso vazava para o deploy, fazendo o servidor escutar na porta 3001 (Replit espera 5000). Movido para `[userenv.development]` apenas.
 - **pyproject.toml no .gitignore**: Railway detectava Python ao invés de Node.js por causa desse arquivo
-- **REACT PRODUCTION MODE FIX (causa raiz da página em branco)**: `define: { 'process.env': {} }` no vite.config.ts substituía `process.env.NODE_ENV` por `undefined`, causando React a empacotar `react-dom.development.js` (340KB) ao invés de `react-dom.production.min.js` (177KB). Fix: adicionado `'process.env.NODE_ENV': JSON.stringify(mode)` que tem precedência sobre `'process.env': '{}'`
+- **REACT PRODUCTION MODE FIX**: `define: { 'process.env': {} }` no vite.config.ts substituía `process.env.NODE_ENV` por `undefined`, causando React a empacotar `react-dom.development.js` ao invés de `react-dom.production.min.js`. Fix: adicionado `'process.env.NODE_ENV': JSON.stringify(mode)` que tem precedência
 - **Server startup order**: `app.listen()` agora é chamado ANTES de `initializeDatabase()` para que o healthcheck responda imediatamente. SPA fallback middleware movido para fora de `startServer()`
+- **MISMATCH dist/public FIX (causa raiz REAL da página em branco)**: O `.replit` usa `publicDir = "dist/public"` para servir assets estáticos via CDN, mas o Vite estava buildando para `dist/` (sem `/public`). O CDN interceptava `/assets/*.js` e retornava 404 silencioso pois `dist/public` não existia. Express só recebia `GET /` (o HTML), nunca os assets. Fix: mudado `build.outDir` para `dist/public` no vite.config.ts, e caminhos do Express atualizados para `dist/public`
 
 ### Arquitetura de deploy
 - **Dev**: Vite (porta 5000) + Express API (porta 3001), proxy via vite.config.ts

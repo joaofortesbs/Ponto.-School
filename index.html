@@ -27,6 +27,21 @@
     <!-- Preload critical fonts -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" />
     
+    <!-- Production error capture (diagnóstico) -->
+    <script>
+      window.__BUILD_TIME = new Date().toISOString();
+      window.onerror = function(msg, src, line, col, err) {
+        var d = document.getElementById('root');
+        if (d && (!d.children || d.children.length === 0)) {
+          d.innerHTML = '<div style="color:#fff;background:#000;padding:20px;font-family:monospace;font-size:12px"><b>JS Error:</b> ' + msg + '<br>Source: ' + src + ':' + line + '</div>';
+        }
+        console.error('[PROD-ERROR]', msg, src, line, col, err);
+      };
+      window.addEventListener('unhandledrejection', function(e) {
+        console.error('[PROD-REJECTION]', e.reason);
+      });
+    </script>
+
     <!-- Critical CSS inlined for faster FCP -->
     <style>
       *,*::before,*::after{box-sizing:border-box}

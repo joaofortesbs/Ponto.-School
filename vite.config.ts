@@ -44,6 +44,7 @@ export default defineConfig(({ command, mode }) => ({
     target: 'esnext',
   },
   build: {
+    outDir: 'dist/public',
     target: 'esnext',
     minify: 'esbuild',
     cssMinify: true,

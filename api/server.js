@@ -62,6 +62,9 @@ app.use(express.urlencoded({
 // Middleware para logs de requisições
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  if (isProduction && req.path.startsWith('/assets/')) {
+    console.log(`📦 [ASSET] ${req.method} ${req.path} — Express recebeu requisição de asset`);
+  }
   next();
 });
 
@@ -103,7 +106,7 @@ const compressionHeaders = (req, res, next) => {
 
 // Em produção, servir arquivos estáticos do build com cache otimizado
 if (isProduction) {
-  const distPath = path.join(__dirname, '..', 'dist');
+  const distPath = path.join(__dirname, '..', 'dist', 'public');
   console.log(`📁 Servindo arquivos estáticos de: ${distPath}`);
   
   app.use(compressionHeaders);
@@ -1090,7 +1093,7 @@ app.delete('/api/delete-png-originals', async (req, res) => {
 if (isProduction) {
   app.use((req, res, next) => {
     if (!req.path.startsWith('/api')) {
-      const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
+      const indexPath = path.join(__dirname, '..', 'dist', 'public', 'index.html');
       res.sendFile(indexPath);
     } else {
       next();
