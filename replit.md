@@ -144,6 +144,7 @@ Correções para deploy em Railway, Render, Vercel e Replit.
 - **COLD START FIX**: `sharp` (biblioteca nativa pesada de imagens) era importada no nível do módulo via `scripts/convert-images-to-webp.js`. Agora usa import dinâmico lazy (`getSharp()`) para reduzir o tempo de cold start
 - **HEALTH CHECK**: Endpoint `/api/health` adicionado, responde imediatamente sem depender de arquivos estáticos
 - **STARTUP VERIFICATION**: Servidor verifica existência de `dist/public/index.html` ao iniciar e loga resultado
+- **REACT CHUNK SPLITTING FIX**: `manualChunks` no vite.config.ts colocava `react-dom` no chunk `vendor-react` mas o pacote `react` core (e `scheduler`) ficava em outro chunk (ex: `vendor-dnd`). Isso causava `Cannot read properties of undefined (reading '__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED')`. Fix: adicionado `node_modules/react/` e `node_modules/scheduler/` ao filtro do chunk `vendor-react`
 
 ### Arquitetura de deploy
 - **Dev**: Vite (porta 5000) + Express API (porta 3001), proxy via vite.config.ts

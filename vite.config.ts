@@ -58,7 +58,7 @@ export default defineConfig(({ command, mode }) => ({
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            if (id.includes('react-dom') || id.includes('react-router')) {
+            if (id.includes('node_modules/react/') || id.includes('react-dom') || id.includes('react-router') || id.includes('node_modules/scheduler/')) {
               return 'vendor-react';
             }
             if (id.includes('@radix-ui')) {
