@@ -23,6 +23,8 @@ import aiProxyRoutes from './ai-proxy.js';
 import fileProcessorRoutes from './file-processor.js';
 import spSessionsRouter from './school-power-sessions.js';
 
+console.log('🔧 [BOOT] Todos os módulos carregados com sucesso');
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
