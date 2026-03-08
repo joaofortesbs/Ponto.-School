@@ -29,7 +29,10 @@ class NeonDBManager {
 
     const isProduction = process.env.NODE_ENV === 'production' || 
                          process.env.REPLIT_DEPLOYMENT === '1' ||
-                         process.env.REPL_DEPLOYMENT === '1';
+                         process.env.REPL_DEPLOYMENT === '1' ||
+                         !!process.env.RAILWAY_ENVIRONMENT ||
+                         !!process.env.RENDER ||
+                         !!process.env.VERCEL;
 
     console.log('🔗 [NeonDB] ==========================================');
     console.log(`   - Ambiente: ${isProduction ? 'PRODUÇÃO' : 'DESENVOLVIMENTO'}`);

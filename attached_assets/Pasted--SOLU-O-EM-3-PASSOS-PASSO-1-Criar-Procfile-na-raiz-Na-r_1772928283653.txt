@@ -1,0 +1,90 @@
+📋 SOLUÇÃO EM 3 PASSOS
+PASSO 1: Criar Procfile na raiz
+Na raiz do seu repositório (mesma pasta onde estão as pastas api/ e src/), crie um arquivo chamado Procfile (sem extensão):
+
+text
+web: node api/server.js
+Por quê? Isso diz ao Railpack: "Execute o servidor Express que está em api/server.js"
+
+PASSO 2: Atualizar package.json raiz
+No seu package.json principal (na raiz), adicione/atualize:
+
+json
+{
+  "name": "ponto-school",
+  "scripts": {
+    "start": "node api/server.js",
+    "dev": "npm run backend:dev & npm run frontend:dev",
+    "build": "npm run frontend:build",
+    "preview": "npm run frontend:build && npm run start"
+  }
+}
+PASSO 3: Deletar a variável START do Railway
+Acesse Railway Dashboard → seu serviço Ponto.-Escola
+
+Clique em Variáveis (Variables)
+
+Localize e delete a variável START que configurei
+
+Clique Implantar o serviço para aplicar
+
+🎯 POR QUE ISSO VAI FUNCIONAR?
+confirma que o Railpack automaticamente detecta e usa Procfile para determinar como iniciar a aplicação. Quando Railway encontra:
+​
+
+text
+web: node api/server.js
+Ele:
+
+✅ Instala dependências (npm install)
+
+✅ Executa build se necessário (npm run build)
+
+✅ Inicia a aplicação com o comando do Procfile
+
+✅ Expõe na porta padrão do NODE_PORT
+
+📚 ARQUITETURA CONFIRMADA (do seu replit.md)
+Sua estrutura é um Monorepo validado:
+
+text
+ponto-school/
+├── package.json          ← RAIZ (precisa de "start" script)
+├── Procfile              ← CRIAR AQUI
+├── api/
+│   ├── package.json
+│   ├── server.js         ← Express na porta 3001
+│   ├── neon-db.js
+│   └── ...
+├── src/
+│   ├── index.tsx         ← React/Vite
+│   ├── vite.config.ts
+│   └── ...
+└── .git/
+Railway suporta isso nativamente,.
+
+✅ CHECKLIST DE IMPLEMENTAÇÃO
+ Criar Procfile na raiz com web: node api/server.js
+
+ Verificar package.json raiz tem "start": "node api/server.js"
+
+ Deletar variável START do Railway
+
+ Fazer push ao GitHub
+
+ Acionar nova implantação no Railway
+
+ Verificar logs: procurar por ✅ "Servidor rodando na porta..."
+
+🚀 RESULTADO ESPERADO
+Após implementar:
+
+Build: Sucesso com Railpack
+
+Logs: Servidor Express iniciado corretamente
+
+URL: Sua plataforma acessível via domínio do Railway
+
+Status: Verde (Deployed) no dashboard
+
+A compilação deve levar ~2-5 minutos.

@@ -11,7 +11,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview --host 0.0.0.0 --port 5000",
     "check-health": "node scripts/app-health-check.js",
-    "start": "node scripts/start-production.js",
+    "start": "node api/server.js",
     "start:dev": "node scripts/start-app.js",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"

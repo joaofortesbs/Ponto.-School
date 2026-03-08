@@ -328,3 +328,4 @@ export const createActivity = (activityData: Omit<ActivityData, 'id' | 'criado_e
 export const getActivityByCode = (codigo_unico: string) => activitiesApi.getActivityByCode(codigo_unico);
 export const deleteActivity = (codigo_unico: string, user_id: string) => activitiesApi.deleteActivity(codigo_unico, user_id);
 export const generateUniqueCode = () => activitiesApi.generateUniqueCode();
+export const migrateFromLocalStorage = (user_id: string, localStorageData: any, activityId: string) => activitiesApi.migrateFromLocalStorage(user_id, localStorageData, activityId);

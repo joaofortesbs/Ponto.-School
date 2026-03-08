@@ -6,7 +6,7 @@ channel = "stable-25_05"
 
 [deployment]
 run = ["bash", "-c", "node api/server.js"]
-deploymentTarget = "vm"
+deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 publicDir = "dist/public"
 
@@ -17,6 +17,10 @@ externalPort = 3001
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8888
+externalPort = 3002
 
 [workflows]
 runButton = "Project"

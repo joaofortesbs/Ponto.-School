@@ -122,6 +122,23 @@ Dropdown de exportação no header do `ArtifactViewModal` (botão Download). Cor
 2. **PDF**: `container.innerHTML = fullHTMLDoc` descartava os `<style>` do `<head>` → migrado para estilos inline em cada elemento HTML
 3. **DOCX**: `stripHtml` removia bold/italic → implementado `parseInlineHtml` que preserva formatação; bordas de tabela reforçadas (`size: 6`), cor de header `C5D8FF`, células com margens internas
 
+## Production Deployment Fix (Março 2026)
+Correções para deploy em Railway, Render, Vercel e Replit.
+
+### Problemas corrigidos
+- **PORT hardcoded**: `api/server.js` agora usa `process.env.PORT || (isProduction ? 5000 : 3001)` — Railway/Render/Vercel fornecem PORT via env var
+- **isProduction detection**: Agora detecta `RAILWAY_ENVIRONMENT`, `RENDER`, `VERCEL` além de `REPLIT_DEPLOYMENT` e `NODE_ENV=production`
+- **Procfile criado**: `web: node api/server.js` na raiz para Railway
+- **package.json "start"**: Aponta para `node api/server.js` diretamente (Railway/Render executam `npm start`)
+- **migrateFromLocalStorage**: Adicionado export nomeado em `activitiesApiService.ts` para eliminar warning do Vite build
+- **Replit deployment config**: Corrigido para `autoscale` com build `npm run build` e run `node api/server.js`
+- **isDeployment duplicado**: Removidas detecções de ambiente duplicadas em server.js, usando a variável global `isProduction`
+
+### Arquitetura de deploy
+- **Dev**: Vite (porta 5000) + Express API (porta 3001), proxy via vite.config.ts
+- **Prod**: Express único serve static files de `dist/` + API na mesma porta (PORT env var)
+- **Frontend API calls**: Todas usam caminhos relativos (`/api/...`) — funciona em qualquer ambiente
+
 ## Replit Migration (Março 2026)
 Migração concluída do ambiente Replit Agent para Replit.
 

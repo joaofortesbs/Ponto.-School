@@ -32,10 +32,13 @@ const app = express();
 // Detectar ambiente
 const isProduction = process.env.REPLIT_DEPLOYMENT === '1' || 
                      process.env.NODE_ENV === 'production' ||
-                     process.env.REPL_DEPLOYMENT === '1';
+                     process.env.REPL_DEPLOYMENT === '1' ||
+                     !!process.env.RAILWAY_ENVIRONMENT ||
+                     !!process.env.RENDER ||
+                     !!process.env.VERCEL;
 
-// Em produção usa porta 5000 (porta única), em dev usa 3001 (backend separado)
-const PORT = isProduction ? 5000 : (process.env.PORT || 3001);
+// Sempre respeitar PORT do ambiente (Railway, Render, etc.), senão usar 5000 em produção ou 3001 em dev
+const PORT = process.env.PORT || (isProduction ? 5000 : 3001);
 
 console.log(`🌍 Ambiente: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
 
@@ -623,18 +626,13 @@ app.get('/api/test-db-connection', async (req, res) => {
   try {
     console.log('🔍 [TEST] Testando conexão com banco de dados Neon...');
     
-    // Detectar ambiente
-    const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || 
-                         process.env.NODE_ENV === 'production' ||
-                         process.env.REPL_DEPLOYMENT === '1' ||
-                         process.env.REPLIT_ENV === 'production';
-    
     const environmentInfo = {
-      ambiente: isDeployment ? 'DEPLOYMENT (Publicado)' : 'DEVELOPMENT (Replit)',
+      ambiente: isProduction ? 'DEPLOYMENT (Publicado)' : 'DEVELOPMENT (Replit)',
       REPLIT_DEPLOYMENT: process.env.REPLIT_DEPLOYMENT || 'não definido',
       NODE_ENV: process.env.NODE_ENV || 'não definido',
       REPL_DEPLOYMENT: process.env.REPL_DEPLOYMENT || 'não definido',
-      REPLIT_ENV: process.env.REPLIT_ENV || 'não definido',
+      RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT || 'não definido',
+      RENDER: process.env.RENDER || 'não definido',
       hasDeploymentSecret: !!process.env.DEPLOYMENT_DB_URL,
       hasProductionSecret: !!process.env.PRODUCTION_DB_URL
     };
@@ -672,12 +670,6 @@ app.get('/api/test-db-connection', async (req, res) => {
 app.get('/api/db-status', async (req, res) => {
   try {
     console.log('🏥 [HEALTH CHECK] Verificando status do banco de dados...');
-    
-    // Detectar ambiente
-    const isDeployment = process.env.REPLIT_DEPLOYMENT === '1' || 
-                         process.env.NODE_ENV === 'production' ||
-                         process.env.REPL_DEPLOYMENT === '1' ||
-                         process.env.REPLIT_ENV === 'production';
     
     // 1. Teste de conexão básico (SELECT 1)
     const testQuery = await neonDB.executeQuery('SELECT 1 as test');
@@ -717,7 +709,7 @@ app.get('/api/db-status', async (req, res) => {
     const healthStatus = {
       status: 'OK',
       timestamp: new Date().toISOString(),
-      environment: isDeployment ? 'PRODUCTION (Deployment)' : 'DEVELOPMENT (Local)',
+      environment: isProduction ? 'PRODUCTION (Deployment)' : 'DEVELOPMENT (Local)',
       test_query: testQuery.data,
       database_info: dbInfoQuery.success ? dbInfoQuery.data[0] : null,
       connections: {
