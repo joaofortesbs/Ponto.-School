@@ -5,8 +5,8 @@ run = "npm run dev"
 channel = "stable-25_05"
 
 [deployment]
-run = ["bash", "-c", "node api/server.js"]
-deploymentTarget = "gce"
+run = ["node", "api/server.js"]
+deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 publicDir = "dist/public"
 
@@ -81,5 +81,7 @@ integrations = ["javascript_database:1.0.0"]
 [userenv]
 
 [userenv.shared]
-NODE_ENV = "development"
+
+[userenv.development]
 PORT = "3001"
+NODE_ENV = "development"
